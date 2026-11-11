@@ -11,6 +11,6 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
   WidgetsFlutterBinding.ensureInitialized();
   await initFirebase(options: options, env: env);
   sl.registerSingleton<AppEnv>(env);
-  registerModules(const [AuthModule()]);
+  registerModules(const [AuthModule(guestStart: true)]);
   runApp(const App());
 }
