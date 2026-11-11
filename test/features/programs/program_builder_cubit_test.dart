@@ -450,6 +450,63 @@ void main() {
     });
   });
 
+  group('items that no longer fit their exercise', () {
+    // 'a' logs weight and reps, 'plank' a duration; an admin changed both.
+    final stale = Program(
+      id: 'p1',
+      name: 'Old',
+      days: [
+        ProgramDay(
+          items: [
+            item('a', repMin: null, repMax: null, durationS: 45),
+            item('plank', targetKg: 20),
+            item('b'),
+          ],
+        ),
+      ],
+    );
+
+    setUp(() {
+      when(() => repository.getProgram('u1', 'p1'))
+          .thenAnswer((_) async => Ok(stale));
+    });
+
+    void expectFitted(ProgramBuilderCubit cubit) {
+      expect(cubit.state.day!.items, [
+        item('a'),
+        item('plank', repMin: null, repMax: null, durationS: 30),
+        item('b'),
+      ]);
+      expect(cubit.state.adjusted, unorderedEquals(['a', 'plank']));
+      expect(cubit.state.dirty, isTrue);
+    }
+
+    test('are fitted on load and reported once', () async {
+      final cubit = await build(programId: 'p1');
+      expectFitted(cubit);
+      cubit.adjustedShown();
+      expect(cubit.state.adjusted, isEmpty);
+      await cubit.save();
+      expect(cubit.state.status, ProgramBuilderStatus.saved);
+    });
+
+    test('also when the catalogue arrives after the program', () async {
+      final cubit = await build(programId: 'p1', catalogueReady: false);
+      expect(cubit.state.program, stale);
+      exercises.add(catalogue);
+      await pumpEventQueue();
+      expectFitted(cubit);
+    });
+
+    test('a program that fits is left as stored', () async {
+      when(() => repository.getProgram('u1', 'p1'))
+          .thenAnswer((_) async => Ok(program(id: 'p1')));
+      final cubit = await build(programId: 'p1');
+      expect(cubit.state.adjusted, isEmpty);
+      expect(cubit.state.dirty, isFalse);
+    });
+  });
+
   test('closes when the user changes and then ignores edits', () async {
     final cubit = await filled(['a']);
     when(() => auth.currentUser).thenReturn(null);

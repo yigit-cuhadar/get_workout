@@ -396,6 +396,8 @@
   "@programMissedMove": {"placeholders": {"weekday": {"type": "String"}}},
   "programMissedSkip": "Skip",
   "programMissedFailed": "Couldn't update your plan. Try again.",
+  "programAdjusted": "Updated to fit how these exercises are logged now: {names}. Check the targets and save.",
+  "@programAdjusted": {"placeholders": {"names": {"type": "String"}}},
   "programDayDone": "Done",
   "programDayMissed": "Missed",
   "programDayPlanned": "Planned",

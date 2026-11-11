@@ -39,6 +39,7 @@ class ProgramBuilderState extends Equatable {
     this.dirty = false,
     this.failure,
     this.savedId,
+    this.adjusted = const [],
   });
 
   final ProgramBuilderStatus status;
@@ -65,6 +66,11 @@ class ProgramBuilderState extends Equatable {
 
   /// The stored program's id after [ProgramBuilderStatus.saved].
   final String? savedId;
+
+  /// Exercises whose items were changed on load to fit their exercise's
+  /// current logging type; tell the user, then call
+  /// [ProgramBuilderCubit.adjustedShown].
+  final List<String> adjusted;
 
   ProgramDay? get day => program.days.elementAtOrNull(selectedDay);
 
@@ -95,6 +101,7 @@ class ProgramBuilderState extends Equatable {
     bool? dirty,
     Failure? failure,
     String? savedId,
+    List<String>? adjusted,
   }) => ProgramBuilderState(
     status: status ?? this.status,
     program: program ?? this.program,
@@ -105,6 +112,7 @@ class ProgramBuilderState extends Equatable {
     dirty: dirty ?? this.dirty,
     failure: failure,
     savedId: savedId ?? this.savedId,
+    adjusted: adjusted ?? this.adjusted,
   );
 
   @override
@@ -118,6 +126,7 @@ class ProgramBuilderState extends Equatable {
     dirty,
     failure,
     savedId,
+    adjusted,
   ];
 }
 
@@ -168,6 +177,7 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
   /// What [ProgramBuilderState.dirty] compares against.
   Program _initial = _empty;
   bool _submitted = false;
+  bool _fitted = false;
 
   static const _empty = Program(name: '', days: [ProgramDay()]);
 
@@ -197,6 +207,7 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
             dirty: false,
           ),
         );
+        _fitToExercises();
       case Err(failure: NotFoundFailure()):
         emit(state.copyWith(status: ProgramBuilderStatus.notFound));
       case Err(:final failure):
@@ -219,6 +230,45 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
         validation: _submitted ? _validate(state.program, exercises) : null,
       ),
     );
+    _fitToExercises();
+  }
+
+  void adjustedShown() => emit(state.copyWith(adjusted: const []));
+
+  /// Once a stored program and the catalogue are both known, fits every item
+  /// to its exercise's logging type, which an admin may have changed since
+  /// the program was saved. The program is then unsaved.
+  void _fitToExercises() {
+    if (_fitted ||
+        !isEditing ||
+        !state.catalogueReady ||
+        state.status != ProgramBuilderStatus.editing) {
+      return;
+    }
+    _fitted = true;
+    final adjusted = <String>{};
+    final days = [
+      for (final day in state.program.days)
+        day.copyWith(
+          items: [
+            for (final item in day.items)
+              switch (state.exercises[item.exerciseId]) {
+                null => item,
+                final exercise => () {
+                  final fitted = editing.fitToLoggingType(
+                    item,
+                    exercise.loggingType,
+                  );
+                  if (!identical(fitted, item)) adjusted.add(item.exerciseId);
+                  return fitted;
+                }(),
+              },
+          ],
+        ),
+    ];
+    if (adjusted.isEmpty) return;
+    _edit(state.program.copyWith(days: days));
+    emit(state.copyWith(adjusted: adjusted.toList()));
   }
 
   void setName(String name) => _edit(state.program.copyWith(name: name));

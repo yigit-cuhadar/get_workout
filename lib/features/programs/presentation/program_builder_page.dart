@@ -42,8 +42,22 @@ class _BuilderView extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ProgramBuilderCubit>();
     return BlocConsumer<ProgramBuilderCubit, ProgramBuilderState>(
-      listenWhen: (previous, current) => previous.status != current.status,
+      listenWhen: (previous, current) =>
+          previous.status != current.status || current.adjusted.isNotEmpty,
       listener: (context, state) {
+        if (state.adjusted.isNotEmpty) {
+          final names = [
+            for (final id in state.adjusted)
+              state.exercises[id]?.localized(context).name ?? id,
+          ];
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.programAdjusted(l10n.inlineList(names))),
+            ),
+          );
+          cubit.adjustedShown();
+          return;
+        }
         switch (state.status) {
           case ProgramBuilderStatus.saved when cubit.isEditing:
             context.pop();

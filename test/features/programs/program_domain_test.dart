@@ -346,6 +346,61 @@ void main() {
     });
   });
 
+  group('fitToLoggingType', () {
+    test('an item that fits is returned as it is', () {
+      final fitting = item('a', targetKg: 50);
+      expect(
+        identical(fitToLoggingType(fitting, LoggingType.weightReps), fitting),
+        isTrue,
+      );
+    });
+
+    test('reps become a duration and back, keeping sets, rest and group', () {
+      final reps = item('a', sets: 4, restS: 30, group: 'A', targetKg: 20);
+      expect(
+        fitToLoggingType(reps, LoggingType.duration),
+        const ProgramItem(
+          exerciseId: 'a',
+          sets: 4,
+          durationS: 30,
+          restS: 30,
+          group: 'A',
+        ),
+      );
+      final timed = item('a', repMin: null, repMax: null, durationS: 45);
+      expect(fitToLoggingType(timed, LoggingType.reps), item('a'));
+    });
+
+    test('keeps what fits of a mixed item', () {
+      final mixed = item('a', repMin: 5, repMax: 6, durationS: 40);
+      expect(
+        fitToLoggingType(mixed, LoggingType.reps),
+        item('a', repMin: 5, repMax: 6),
+      );
+      expect(
+        fitToLoggingType(mixed, LoggingType.weightDuration),
+        item('a', repMin: null, repMax: null, durationS: 40),
+      );
+    });
+
+    test('the result always passes the logging type\'s checks', () {
+      for (final stored in [
+        item('a', targetKg: 30),
+        item('a', repMax: null),
+        item('a', repMin: null, repMax: null),
+        item('a', durationS: 40, targetKg: 10),
+      ]) {
+        for (final type in LoggingType.values) {
+          expect(
+            validateItem(fitToLoggingType(stored, type), type),
+            isEmpty,
+            reason: '$stored as $type',
+          );
+        }
+      }
+    });
+  });
+
   group('replaceExercise', () {
     final current = item(
       'a',

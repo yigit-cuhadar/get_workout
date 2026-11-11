@@ -1,5 +1,10 @@
 import '../../exercises/domain/exercise.dart';
+import '../../exercises/domain/vocabulary.dart';
 import 'program.dart';
+
+const _defaultRepMin = 8;
+const _defaultRepMax = 12;
+const _defaultDurationS = 30;
 
 /// A new item for [exercise]: 3 sets of 8-12 reps, or of 30 s for duration
 /// exercises, resting the exercise's default rest.
@@ -8,30 +13,36 @@ ProgramItem defaultItem(Exercise exercise) {
   return ProgramItem(
     exerciseId: exercise.id,
     sets: 3,
-    repMin: timed ? null : 8,
-    repMax: timed ? null : 12,
-    durationS: timed ? 30 : null,
+    repMin: timed ? null : _defaultRepMin,
+    repMax: timed ? null : _defaultRepMax,
+    durationS: timed ? _defaultDurationS : null,
     restS: exercise.defaultRestS.clamp(0, ProgramLimits.maxRestS),
   );
 }
 
-/// [item] doing [exercise] instead. Sets, rest and group stay; reps or
-/// duration stay when both exercises use the same kind, and the target when
-/// the new one logs a weight.
-ProgramItem replaceExercise(ProgramItem item, Exercise exercise) {
-  final type = exercise.loggingType;
-  final defaults = defaultItem(exercise);
-  final sameKind =
-      (item.durationS != null) == type.isDurationBased &&
-      (item.repMin != null || item.repMax != null) == !type.isDurationBased;
-  return item.copyWith(
-    exerciseId: exercise.id,
-    repMin: () => sameKind ? item.repMin : defaults.repMin,
-    repMax: () => sameKind ? item.repMax : defaults.repMax,
-    durationS: () => sameKind ? item.durationS : defaults.durationS,
+/// [item] with the kind of target [type] takes: a rep range, or a
+/// duration, the other removed; kept when stored, the defaults of
+/// [defaultItem] when not; and a target weight only when [type] logs one.
+/// Returns [item] itself when it already fits.
+ProgramItem fitToLoggingType(ProgramItem item, LoggingType type) {
+  final timed = type.isDurationBased;
+  final hasRange = item.repMin != null && item.repMax != null;
+  final fitted = item.copyWith(
+    repMin: () => timed ? null : (hasRange ? item.repMin : _defaultRepMin),
+    repMax: () => timed ? null : (hasRange ? item.repMax : _defaultRepMax),
+    durationS: () => timed ? item.durationS ?? _defaultDurationS : null,
     targetKg: () => type.logsWeight ? item.targetKg : null,
   );
+  return fitted == item ? item : fitted;
 }
+
+/// [item] doing [exercise] instead. Sets, rest and group stay, and the
+/// targets as far as they fit; see [fitToLoggingType].
+ProgramItem replaceExercise(ProgramItem item, Exercise exercise) =>
+    fitToLoggingType(
+      item.copyWith(exerciseId: exercise.id),
+      exercise.loggingType,
+    );
 
 /// The items of a day as they move: a group is one block, any other item a
 /// block of its own. Returns `[start, end)` ranges.
