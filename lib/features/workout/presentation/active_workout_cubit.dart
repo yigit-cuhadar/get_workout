@@ -11,6 +11,7 @@ import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_list_cubit.dart';
+import '../../settings/domain/settings_usecases.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/exercise_stats.dart';
 import '../domain/rest.dart';
@@ -161,6 +162,9 @@ class ActiveWorkoutState extends Equatable {
 /// A finished workout stays on the device until the server confirms it; one
 /// the server refuses comes back as the workout in progress. Stats computed
 /// from what the device knew are rebuilt from the workouts once online.
+///
+/// Ticking a set starts its rest under the user's rest timer settings; see
+/// [_restAfterEdit].
 class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   ActiveWorkoutCubit({
     required WatchAuthUser watchAuthUser,
@@ -174,6 +178,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     required this._saveAsProgram,
     required this._programs,
     required this._catalogue,
+    required this._watchSettings,
     DateTime Function()? clock,
     this.retryDelay = const Duration(minutes: 1),
   }) : _clock = clock ?? DateTime.now,
@@ -194,12 +199,17 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   final SaveWorkoutAsProgram _saveAsProgram;
   final ProgramListCubit _programs;
   final ExerciseCatalogueCubit _catalogue;
+  final WatchSettings _watchSettings;
   final DateTime Function() _clock;
 
   /// How long to wait before syncing again after the server could not be
   /// asked.
   final Duration retryDelay;
   late final StreamSubscription<String?> _userSubscription;
+  StreamSubscription<UserSettings>? _settingsSubscription;
+
+  /// The signed-in user's, as they arrive.
+  RestTimerSettings _restTimer = const RestTimerSettings();
   final _statsSubscriptions = <String, StreamSubscription<ExerciseStats?>>{};
   String? _uid;
 
@@ -225,6 +235,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     _local = null;
     _retry?.cancel();
     _stopStats();
+    unawaited(_settingsSubscription?.cancel());
+    _restTimer = const RestTimerSettings();
+    _settingsSubscription = uid == null
+        ? null
+        : _watchSettings(uid).listen(
+            (settings) => _restTimer = settings.restTimer,
+            // The settings feature logs it; the last known ones stay.
+            onError: (Object _) {},
+          );
     emit(
       ActiveWorkoutState(
         status: uid == null ? WorkoutStatus.none : WorkoutStatus.loading,
@@ -360,11 +379,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         state.workout?.exercises.length != count;
   }
 
-  void removeExercise(int index) => _edit(
-    (workout) => _withExercises(
-      workout,
-      (list) => _has(list, index) ? grouping.removeItem(list, index) : list,
-    ),
+  void removeExercise(int index) => _editExercises(
+    (list) => _has(list, index) ? grouping.removeItem(list, index) : list,
     movesSets: true,
   );
 
@@ -372,13 +388,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       _editExercise(index, (e) => editing.swapExercise(e, exercise, language));
 
   /// [to] is where the exercise lands; see [grouping.moveItem].
-  void moveExercise(int from, int to) => _edit(
-    (workout) => _withExercises(
-      workout,
-      (list) => _has(list, from) && _has(list, to)
-          ? grouping.moveItem(list, from, to)
-          : list,
-    ),
+  void moveExercise(int from, int to) => _editExercises(
+    (list) => _has(list, from) && _has(list, to)
+        ? grouping.moveItem(list, from, to)
+        : list,
     movesSets: true,
   );
 
@@ -414,14 +427,11 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         : e.copyWith(sets: [...e.sets, const WorkoutSet()]),
   );
 
-  void removeSet(SetRef ref) => _edit(
-    (workout) => _withExercise(
-      workout,
-      ref.exercise,
-      (e) => _has(e.sets, ref.set)
-          ? e.copyWith(sets: [...e.sets]..removeAt(ref.set))
-          : e,
-    ),
+  void removeSet(SetRef ref) => _editExercise(
+    ref.exercise,
+    (e) => _has(e.sets, ref.set)
+        ? e.copyWith(sets: [...e.sets]..removeAt(ref.set))
+        : e,
     movesSets: true,
   );
 
@@ -484,11 +494,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   /// Ticks the set done, its empty values taken from
   /// [ActiveWorkoutState.suggestion]; one that still lacks values stays
   /// undone and is marked as [ActiveWorkoutState.invalidSet]. A done set is
-  /// unticked, which ends the rest its tick started.
-  ///
-  /// A tick starts the rest [restAfterTick] gives under [restTimer],
-  /// replacing the one running; otherwise the running one goes on.
-  void toggleDone(SetRef ref, {required RestTimerSettings restTimer}) {
+  /// unticked.
+  void toggleDone(SetRef ref) {
     final workout = state.workout;
     if (state.status != WorkoutStatus.active ||
         workout == null ||
@@ -505,35 +512,19 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       emit(state.copyWith(invalidSet: () => ref));
       return;
     }
-    final catalogue = _exercises;
-    _edit(
-      (workout) => _withSet(workout, ref, toggled),
-      startRest: toggled.done
-          ? (changed) => switch (restAfterTick(
-              changed,
-              ref,
-              settings: restTimer,
-              exerciseRestS: (id) => catalogue[id]?.defaultRestS,
-            )) {
-              final duration? => Rest(
-                endsAt: _clock().add(duration),
-                after: ref,
-              ),
-              null => null,
-            }
-          : null,
-    );
+    _replaceSet(ref, toggled);
   }
 
   /// Adds [restExtension] to the running rest.
   void extendRest() {
     final rest = state.rest;
+    final now = _clock();
     if (state.status != WorkoutStatus.active ||
         rest == null ||
-        !rest.runsAt(_clock())) {
+        !rest.runsAt(now)) {
       return;
     }
-    emit(state.copyWith(rest: () => rest.extendedBy(restExtension)));
+    emit(state.copyWith(rest: () => rest.extendedAt(now)));
     _keep();
   }
 
@@ -768,77 +759,73 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     _replaceSet(ref, changed);
   }
 
-  void _replaceSet(SetRef ref, WorkoutSet set) =>
-      _edit((workout) => _withSet(workout, ref, set));
+  void _replaceSet(SetRef ref, WorkoutSet set) => _editExercise(
+    ref.exercise,
+    (e) => e.copyWith(
+      sets: [for (final (i, s) in e.sets.indexed) i == ref.set ? set : s],
+    ),
+  );
 
   void _editExercise(
     int index,
-    WorkoutExercise Function(WorkoutExercise exercise) change,
-  ) => _edit((workout) => _withExercise(workout, index, change));
+    WorkoutExercise Function(WorkoutExercise exercise) change, {
+    bool movesSets = false,
+  }) => _editExercises(
+    (list) => [for (final (i, e) in list.indexed) i == index ? change(e) : e],
+    movesSets: movesSets,
+  );
 
   void _editExercises(
-    List<WorkoutExercise> Function(List<WorkoutExercise> list) change,
-  ) => _edit((workout) => _withExercises(workout, change));
+    List<WorkoutExercise> Function(List<WorkoutExercise> list) change, {
+    bool movesSets = false,
+  }) => _edit(
+    (workout) => workout.copyWith(exercises: change(workout.exercises)),
+    movesSets: movesSets,
+  );
 
   /// Applies [change] to the workout in progress and keeps the result.
-  ///
-  /// The rest becomes what [startRest] gives for the changed workout, if
-  /// anything; otherwise it ends when the set that started it is no longer
-  /// done, and forgets that set when [movesSets] (the change moves sets to
-  /// other positions).
+  /// [movesSets] says the change may move sets to other positions.
   void _edit(
     Workout Function(Workout workout) change, {
     bool movesSets = false,
-    Rest? Function(Workout changed)? startRest,
   }) {
     final workout = state.workout;
     if (state.status != WorkoutStatus.active || workout == null) return;
     final changed = change(workout);
     if (changed == workout) return;
-    final rest = startRest?.call(changed) ?? state.rest;
-    final after = rest?.after;
     _emitWorkout(
       changed,
       status: WorkoutStatus.active,
-      rest: () => switch (after) {
-        null => rest,
-        _ when movesSets => rest!.detached(),
-        _ =>
-          changed.exercises
-                      .elementAtOrNull(after.exercise)
-                      ?.sets
-                      .elementAtOrNull(after.set)
-                      ?.done ??
-                  false
-              ? rest
-              : null,
-      },
+      rest: () => _restAfterEdit(workout, changed, movesSets: movesSets),
     );
     _keep();
   }
 
-  static Workout _withSet(Workout workout, SetRef ref, WorkoutSet set) =>
-      _withExercise(
-        workout,
-        ref.exercise,
-        (e) => e.copyWith(
-          sets: [for (final (i, s) in e.sets.indexed) i == ref.set ? set : s],
-        ),
+  /// The rest once an edit made [after] of [before]: a set ticked done
+  /// starts the rest [restAfterTick] gives, replacing the running one;
+  /// otherwise the running one goes on, ends when the set that started it
+  /// is no longer done, or forgets that set when the edit [movesSets] (see
+  /// [Rest.followEdit]).
+  Rest? _restAfterEdit(
+    Workout before,
+    Workout after, {
+    required bool movesSets,
+  }) {
+    final ticked = movesSets ? null : newlyDone(before, after);
+    if (ticked != null) {
+      final catalogue = _exercises;
+      final duration = restAfterTick(
+        after,
+        ticked,
+        settings: _restTimer,
+        exerciseRestS: (id) => catalogue[id]?.defaultRestS,
       );
-
-  static Workout _withExercise(
-    Workout workout,
-    int index,
-    WorkoutExercise Function(WorkoutExercise exercise) change,
-  ) => _withExercises(
-    workout,
-    (list) => [for (final (i, e) in list.indexed) i == index ? change(e) : e],
-  );
-
-  static Workout _withExercises(
-    Workout workout,
-    List<WorkoutExercise> Function(List<WorkoutExercise> list) change,
-  ) => workout.copyWith(exercises: change(workout.exercises));
+      if (duration != null) {
+        return Rest(endsAt: _clock().add(duration), after: ticked);
+      }
+    }
+    return state.rest?.followEdit(after, movesSets: movesSets);
+  }
 
   void _emitWorkout(
     Workout? workout, {
@@ -931,6 +918,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   Future<void> close() async {
     _retry?.cancel();
     await _userSubscription.cancel();
+    await _settingsSubscription?.cancel();
     _stopStats();
     return super.close();
   }

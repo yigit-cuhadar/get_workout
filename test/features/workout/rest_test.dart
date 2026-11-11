@@ -164,6 +164,79 @@ void main() {
     });
   });
 
+  group('warm-ups in a group', () {
+    // A = [W, 1, 2, 3], B = [1, 2, 3]: A's warm-up shifts no round.
+    WorkoutSet warmup() => const WorkoutSet(type: SetType.warmup);
+    final w = workout('w', [
+      exercise('bench', [warmup(), open(), open(), open()], group: 'A'),
+      withGoal(exercise('fly', [open(), open(), open()], group: 'A'), 45),
+    ]);
+
+    test('rounds count working sets', () {
+      expect(rest(w, (exercise: 0, set: 0)), isNull);
+      expect(rest(w, (exercise: 0, set: 1)), isNull);
+      expect(rest(w, (exercise: 1, set: 0)), const Duration(seconds: 45));
+      expect(rest(w, (exercise: 0, set: 3)), isNull);
+      expect(rest(w, (exercise: 1, set: 2)), const Duration(seconds: 45));
+    });
+
+    test('the next set follows the same rounds, warm-ups first', () {
+      expect(nextSet(w, null), (exercise: 0, set: 0));
+      expect(nextSet(w, (exercise: 0, set: 0)), (exercise: 0, set: 1));
+      expect(nextSet(w, (exercise: 0, set: 1)), (exercise: 1, set: 0));
+      expect(nextSet(w, (exercise: 1, set: 0)), (exercise: 0, set: 2));
+      expect(nextSet(w, (exercise: 0, set: 3)), (exercise: 1, set: 2));
+    });
+  });
+
+  group('edits', () {
+    final before = workout('w', [
+      exercise('squat', [lift(100, 5), open()]),
+      exercise('bench', [open()]),
+    ]);
+    Workout edited(List<WorkoutExercise> exercises) => workout('w', exercises);
+    final end = DateTime(2026, 11, 11, 18, 2);
+    final rest = Rest(endsAt: end, after: (exercise: 0, set: 0));
+
+    test('newlyDone finds the ticked set', () {
+      final after = edited([
+        exercise('squat', [lift(100, 5), lift(100, 5)]),
+        exercise('bench', [open()]),
+      ]);
+      expect(newlyDone(before, after), (exercise: 0, set: 1));
+      expect(newlyDone(after, before), isNull);
+    });
+
+    test('newlyDone ignores edits that change the shape', () {
+      final after = edited([
+        exercise('bench', [lift(60, 8)]),
+        exercise('squat', [lift(100, 5), open()]),
+      ]);
+      expect(newlyDone(before, after), isNull);
+    });
+
+    test('the rest ends when its set is unticked', () {
+      final after = edited([
+        exercise('squat', [open(), open()]),
+        exercise('bench', [open()]),
+      ]);
+      expect(rest.followEdit(after, movesSets: false), isNull);
+    });
+
+    test('the rest goes on through other edits', () {
+      final after = edited([
+        exercise('squat', [lift(100, 5), open(), open()]),
+        exercise('bench', [open()]),
+        exercise('row', [open()]),
+      ]);
+      expect(rest.followEdit(after, movesSets: false), rest);
+    });
+
+    test('an edit that moves sets forgets the set', () {
+      expect(rest.followEdit(before, movesSets: true), Rest(endsAt: end));
+    });
+  });
+
   group('Rest', () {
     final end = DateTime(2026, 11, 11, 18, 2);
     final rest = Rest(endsAt: end, after: (exercise: 1, set: 2));
@@ -174,10 +247,23 @@ void main() {
     });
 
     test('+15 s moves the end and keeps the set', () {
+      final now = end.subtract(const Duration(minutes: 1));
       expect(
-        rest.extendedBy(restExtension),
+        rest.extendedAt(now),
         Rest(endsAt: end.add(const Duration(seconds: 15)), after: rest.after),
       );
+    });
+
+    test('+15 s never goes past the cap', () {
+      final now = end.subtract(maxRestAhead);
+      expect(rest.extendedAt(now).endsAt, end);
+    });
+
+    test('an end further ahead than the cap does not run', () {
+      final now = end
+          .subtract(maxRestAhead)
+          .subtract(const Duration(seconds: 1));
+      expect(rest.runsAt(now), isFalse);
     });
 
     test('detached forgets the set', () {

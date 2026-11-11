@@ -46,7 +46,7 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
     try {
       final json = jsonDecode(await file.readAsString());
       final workouts = json is Map && json['uid'] == uid
-          ? fromJson(json)
+          ? fromJson(json, now: _clock())
           : null;
       if (workouts == null) throw const FormatException('unknown content');
       _blocked.remove(uid);
@@ -109,7 +109,11 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
   };
 
   /// Null for an unknown version or content that is not a known shape.
-  static LocalWorkouts? fromJson(Map<Object?, Object?> json) {
+  /// A rest that cannot be believed at [now] is left out.
+  static LocalWorkouts? fromJson(
+    Map<Object?, Object?> json, {
+    required DateTime now,
+  }) {
     if (json['version'] != version) return null;
     final draft = json['draft'];
     final finished = json['finished'];
@@ -123,7 +127,9 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
     }
     return LocalWorkouts(
       draft: parsedDraft,
-      rest: parsedDraft == null ? null : _restFromJson(json['rest']),
+      rest: parsedDraft == null
+          ? null
+          : _restFromJson(json['rest'], parsedDraft, now),
       finished: [for (final w in parsedFinished) w!],
       staleStats: {
         for (final id in stale)
@@ -140,19 +146,32 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
     },
   };
 
-  /// Null for anything without an end; a rest is never worth losing a
-  /// workout over.
-  static Rest? _restFromJson(Object? json) {
-    if (json is! Map || json['endsAt'] is! int) return null;
+  /// Null for anything without a believable end (not more than
+  /// [maxRestAhead] after [now]); a set that is not in [draft] is dropped.
+  /// A rest is never worth losing a workout over, so this never throws.
+  static Rest? _restFromJson(Object? json, Workout draft, DateTime now) {
+    if (json is! Map) return null;
+    final endsAt = json['endsAt'];
+    // Beyond what DateTime holds, and long past or far ahead anyway.
+    if (endsAt is! int || endsAt.abs() > _maxEpochMs) return null;
+    final end = DateTime.fromMillisecondsSinceEpoch(endsAt);
+    if (end.isAfter(now.add(maxRestAhead))) return null;
     final exercise = WorkoutMaps.whole(json['exercise']);
     final set = WorkoutMaps.whole(json['set']);
+    final known =
+        exercise != null &&
+        set != null &&
+        exercise >= 0 &&
+        set >= 0 &&
+        exercise < draft.exercises.length &&
+        set < draft.exercises[exercise].sets.length;
     return Rest(
-      endsAt: DateTime.fromMillisecondsSinceEpoch(json['endsAt'] as int),
-      after: exercise == null || set == null
-          ? null
-          : (exercise: exercise, set: set),
+      endsAt: end,
+      after: known ? (exercise: exercise, set: set) : null,
     );
   }
+
+  static const _maxEpochMs = 8640000000000000;
 
   static Map<String, Object?> _workoutToJson(Workout workout) => {
     'id': workout.id,

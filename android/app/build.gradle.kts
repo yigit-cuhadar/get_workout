@@ -10,7 +10,7 @@ plugins {
 android {
     namespace = "com.getworkout.get_workout"
     // flutter_local_notifications 23 needs 37 or later.
-    compileSdk = 37
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

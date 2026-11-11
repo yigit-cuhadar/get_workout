@@ -281,7 +281,17 @@ void main() {
     });
 
     group('the rest', () {
-      final endsAt = DateTime.fromMillisecondsSinceEpoch(1700000000000);
+      // The store's clock reads 42 ms.
+      final endsAt = DateTime.fromMillisecondsSinceEpoch(42 + 90000);
+
+      /// What loads after the kept file's rest is replaced by [rest].
+      Future<LocalWorkouts?> loadWithRest(Object? rest) async {
+        await store.save('u1', kept);
+        final path = file('workouts_u1.json');
+        final json = jsonDecode(path.readAsStringSync()) as Map;
+        path.writeAsStringSync(jsonEncode({...json, 'rest': rest}));
+        return (await store.load('u1')).valueOrNull;
+      }
 
       test('is kept with the draft, with or without its set', () async {
         for (final rest in [
@@ -316,16 +326,46 @@ void main() {
       });
 
       test('a malformed one is dropped, the workout kept', () async {
-        await store.save('u1', kept);
-        final path = file('workouts_u1.json');
-        final json = jsonDecode(path.readAsStringSync()) as Map;
-        path.writeAsStringSync(
-          jsonEncode({
-            ...json,
-            'rest': {'endsAt': 'soon'},
-          }),
+        for (final rest in [
+          {'endsAt': 'soon'},
+          {'endsAt': 9e15},
+          {'endsAt': 9007199254740991},
+          {'endsAt': -9007199254740991},
+          'rest',
+        ]) {
+          expect(await loadWithRest(rest), kept, reason: '$rest');
+        }
+      });
+
+      test('one ending beyond the cap is dropped', () async {
+        final tooLate = 42 + maxRestAhead.inMilliseconds + 1;
+        expect(await loadWithRest({'endsAt': tooLate}), kept);
+        final atCap = 42 + maxRestAhead.inMilliseconds;
+        expect(
+          (await loadWithRest({'endsAt': atCap}))?.rest,
+          Rest(endsAt: DateTime.fromMillisecondsSinceEpoch(atCap)),
         );
-        expect((await store.load('u1')).valueOrNull, kept);
+      });
+
+      test('a set that is not in the draft is forgotten', () async {
+        // The draft has two exercises; the squat has three sets.
+        for (final (exercise, set) in [
+          (-1, 0),
+          (0, -1),
+          (2, 0),
+          (0, 3),
+          (1.5, 0),
+        ]) {
+          expect(
+            (await loadWithRest({
+              'endsAt': endsAt.millisecondsSinceEpoch,
+              'exercise': exercise,
+              'set': set,
+            }))?.rest,
+            Rest(endsAt: endsAt),
+            reason: '($exercise, $set)',
+          );
+        }
       });
     });
 

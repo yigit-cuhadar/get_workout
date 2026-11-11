@@ -6,9 +6,12 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../core/device_localizations.dart';
 import '../programs/domain/completed_days.dart';
+import 'data/device_rest_notifications.dart';
 import 'data/file_local_workout_store.dart';
 import 'data/firestore_workout_repository.dart';
 import 'data/workout_completed_days.dart';
+import 'domain/rest_notifications.dart';
+import 'domain/rest_usecases.dart';
 import 'domain/workout_repository.dart';
 import 'domain/workout_usecases.dart';
 import 'presentation/active_workout_cubit.dart';
@@ -34,6 +37,17 @@ class WorkoutModule implements FeatureModule {
       ..registerLazySingleton<LocalWorkoutStore>(
         () => FileLocalWorkoutStore(getApplicationSupportDirectory),
       )
+      ..registerLazySingleton<RestNotifications>(
+        () => DeviceRestNotifications(
+          sl.getAsync<Notifications>(),
+          getApplicationSupportDirectory,
+        ),
+      )
+      ..registerFactory(() => ShouldAskRestNotifications(sl()))
+      ..registerFactory(() => AllowRestNotifications(sl()))
+      ..registerFactory(() => DeclineRestNotifications(sl()))
+      ..registerFactory(() => ScheduleRestNotification(sl()))
+      ..registerFactory(() => CancelRestNotification(sl()))
       ..registerFactory(() => LoadLocalWorkouts(sl()))
       ..registerFactory(() => KeepLocalWorkouts(sl()))
       ..registerFactory(() => ConfirmStoredWorkout(sl()))
@@ -56,13 +70,18 @@ class WorkoutModule implements FeatureModule {
           saveAsProgram: sl(),
           programs: sl(),
           catalogue: sl(),
+          watchSettings: sl(),
         ),
       )
       ..registerLazySingleton(
         () => RestTimerCubit(
           workout: sl(),
           settings: sl(),
-          notifications: sl.getAsync<Notifications>(),
+          shouldAsk: sl(),
+          allow: sl(),
+          decline: sl(),
+          schedule: sl(),
+          cancel: sl(),
           text: (workout, next) {
             final l10n = deviceLocalizations();
             return (
