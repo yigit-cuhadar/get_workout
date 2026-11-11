@@ -182,7 +182,40 @@ void main() {
       expect(data['favoriteExerciseIds'], ['e1']);
     });
 
-    test('a completion time still pending on the server counts', () async {
+    // On a device, the snapshot right after the write holds the completion
+    // time as a pending server timestamp, which reads as null until the
+    // server confirms it (never, while offline). fake_cloud_firestore
+    // resolves server timestamps at once, so it cannot produce that
+    // snapshot; this checks what it can: the completion is in the very next
+    // snapshot, with the write's own time.
+    test('completion shows in the next snapshot, with the time of the '
+        'write', () async {
+      final before = DateTime.now();
+      final snapshots = repository.watchProfile('u1');
+      final expectation = expectLater(
+        snapshots,
+        emitsInOrder([
+          const UserProfile(),
+          isA<UserProfile>().having(
+            (profile) => profile.onboardingCompletedAt,
+            'onboardingCompletedAt',
+            isA<DateTime>().having(
+              (at) => at.isBefore(before.subtract(const Duration(seconds: 1))),
+              'before the write',
+              isFalse,
+            ),
+          ),
+        ]),
+      );
+
+      await repository.completeOnboarding('u1', const UserProfile());
+
+      await expectation;
+    });
+
+    // The device's view of that pending timestamp (key present, value null)
+    // has to be written by hand here.
+    test('a completion key without a time yet counts as completed', () async {
       await user().set({
         'profile': {'onboardingCompletedAt': null},
       });

@@ -19,6 +19,7 @@ class ProfileFormState extends Equatable {
   const ProfileFormState({
     required this.questions,
     required this.answers,
+    required this.onboarding,
     this.step = 0,
     this.invalid = const {},
     this.status = ProfileFormStatus.editing,
@@ -27,6 +28,9 @@ class ProfileFormState extends Equatable {
 
   /// Asked one per step, in this order.
   final List<ProfileField> questions;
+
+  /// All questions and a summary; otherwise one question being edited.
+  final bool onboarding;
 
   /// Index into [questions]; [questions].length is the closing summary.
   final int step;
@@ -50,8 +54,12 @@ class ProfileFormState extends Equatable {
     final question = this.question;
     if (question == null) return true;
     if (invalid.contains(question)) return false;
-    return question.optional || answers.answered(question);
+    // Onboarding skips a personal question with [ProfileFormCubit.skipQuestion]
+    // instead; editing saves an empty one as cleared.
+    return answers.answered(question) || (!onboarding && question.optional);
   }
+
+  bool get canSkipQuestion => onboarding && (question?.optional ?? false);
 
   ProfileFormState copyWith({
     int? step,
@@ -61,6 +69,7 @@ class ProfileFormState extends Equatable {
     Failure? failure,
   }) => ProfileFormState(
     questions: questions,
+    onboarding: onboarding,
     step: step ?? this.step,
     answers: answers ?? this.answers,
     invalid: invalid ?? this.invalid,
@@ -71,6 +80,7 @@ class ProfileFormState extends Equatable {
   @override
   List<Object?> get props => [
     questions,
+    onboarding,
     step,
     answers,
     invalid,
@@ -89,10 +99,13 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     required UserProfile initial,
     required CompleteOnboarding completeOnboarding,
     this._now = DateTime.now,
-  }) : _summary = true,
-       _save = ((answers) => completeOnboarding((uid: uid, answers: answers))),
+  }) : _save = ((answers) => completeOnboarding((uid: uid, answers: answers))),
        super(
-         ProfileFormState(questions: ProfileField.values, answers: initial),
+         ProfileFormState(
+           questions: ProfileField.values,
+           answers: initial,
+           onboarding: true,
+         ),
        );
 
   /// The one question [field]. Finishing only marks the answer submitted;
@@ -102,12 +115,16 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     required ProfileField field,
     required UserProfile initial,
     this._now = DateTime.now,
-  }) : _summary = false,
-       _save = null,
-       super(ProfileFormState(questions: [field], answers: initial));
+  }) : _save = null,
+       super(
+         ProfileFormState(
+           questions: [field],
+           answers: initial,
+           onboarding: false,
+         ),
+       );
 
   final DateTime Function() _now;
-  final bool _summary;
   final Future<Result<void>> Function(UserProfile answers)? _save;
 
   /// The birth years [enterBirthYear] accepts this year.
@@ -185,7 +202,9 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     if (state.status != ProfileFormStatus.editing || !state.canContinue) {
       return;
     }
-    final last = _summary ? state.questions.length : state.questions.length - 1;
+    final last = state.onboarding
+        ? state.questions.length
+        : state.questions.length - 1;
     if (state.step < last) return emit(state.copyWith(step: state.step + 1));
     await _submit();
   }
@@ -198,7 +217,26 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
 
   /// Ends onboarding now with the answers given so far.
   Future<void> skip() async {
-    if (_summary && state.status == ProfileFormStatus.editing) await _submit();
+    if (state.onboarding && state.status == ProfileFormStatus.editing) {
+      await _submit();
+    }
+  }
+
+  /// Leaves a personal question unanswered and moves on.
+  void skipQuestion() {
+    final question = state.question;
+    if (!state.canSkipQuestion ||
+        question == null ||
+        state.status != ProfileFormStatus.editing) {
+      return;
+    }
+    emit(
+      state.copyWith(
+        step: state.step + 1,
+        answers: state.answers.without(question),
+        invalid: {...state.invalid}..remove(question),
+      ),
+    );
   }
 
   Future<void> _submit() async {

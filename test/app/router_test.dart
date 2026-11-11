@@ -642,6 +642,68 @@ void main() {
       expect(find.byType(OnboardingPage), findsNothing);
     });
 
+    testWidgets('a returning user signs in from onboarding; their profile '
+        'decides', (tester) async {
+      storedProfile = const UserProfile();
+      await startAsGuest(tester);
+
+      await tester.tap(find.text('I already have an account'));
+      await tester.pumpAndSettle();
+      final auth = tester.widget<AuthPage>(find.byType(AuthPage));
+      expect(auth.initialSignUp, isFalse);
+      expect(find.byType(NavigationBar), findsNothing);
+
+      // The account (another uid) has completed onboarding.
+      storedProfile = onboarded;
+      users.add(const AuthUser(id: 'u2', email: 'b@c.de'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TodayPage), findsOneWidget);
+      expect(find.byType(AuthPage), findsNothing);
+      // The guest wrote no profile to get there.
+      verifyNever(() => profiles.completeOnboarding(any(), any()));
+      verifyNever(() => profiles.saveFields(any(), any(), any()));
+    });
+
+    testWidgets('an account without a completed profile is onboarded', (
+      tester,
+    ) async {
+      storedProfile = const UserProfile();
+      await startAsGuest(tester);
+      await tester.tap(find.text('I already have an account'));
+      await tester.pumpAndSettle();
+
+      users.add(const AuthUser(id: 'u2', email: 'b@c.de'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OnboardingPage), findsOneWidget);
+      expect(find.byType(AuthPage), findsNothing);
+      expect(find.text('Question 1 of 9'), findsOneWidget);
+    });
+
+    testWidgets('a personal question can be skipped on its own', (
+      tester,
+    ) async {
+      storedProfile = const UserProfile(
+        goal: Goal.loseFat,
+        level: Level.beginner,
+        daysPerWeek: 3,
+        equipment: {},
+      );
+      await startAsGuest(tester);
+      for (var i = 0; i < 4; i++) {
+        expect(find.text('Skip this question'), findsNothing);
+        await tester.tap(find.text('Next'));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Question 5 of 9'), findsOneWidget);
+
+      await tester.tap(find.text('Skip this question'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Question 6 of 9'), findsOneWidget);
+    });
+
     testWidgets('linking the guest does not bring onboarding back', (
       tester,
     ) async {

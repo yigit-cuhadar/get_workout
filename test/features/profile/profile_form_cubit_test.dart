@@ -104,13 +104,68 @@ void main() {
       expect(cubit.state.step, 1);
     });
 
-    test('the target weight may stay empty', () async {
-      final cubit = onboarding(complete.without(ProfileField.targetWeight));
-      await goTo(cubit, ProfileField.targetWeight);
-      expect(cubit.state.canContinue, isTrue);
+    test('a personal question needs an answer or a skip', () async {
+      final cubit = onboarding(complete.without(ProfileField.sex));
+      await goTo(cubit, ProfileField.sex);
+      expect(cubit.state.canContinue, isFalse);
+      expect(cubit.state.canSkipQuestion, isTrue);
 
-      await cubit.next();
+      cubit.skipQuestion();
+      expect(cubit.state.question, ProfileField.birthYear);
+      expect(cubit.state.answers.sex, isNull);
+    });
+
+    test('skipping a question drops its entry, valid or not', () async {
+      final cubit = onboarding(complete);
+      await goTo(cubit, ProfileField.weight);
+      cubit
+        ..enterWeight('2000', WeightUnit.kg)
+        ..skipQuestion();
+      expect(cubit.state.question, ProfileField.targetWeight);
+      expect(cubit.state.invalid, isEmpty);
+      expect(cubit.state.answers.weightKg, isNull);
+
+      cubit.skipQuestion();
       expect(cubit.state.question, isNull);
+      expect(cubit.state.answers.targetWeightKg, isNull);
+    });
+
+    test('the training questions cannot be skipped one by one', () async {
+      final cubit = onboarding();
+      for (final field in [
+        ProfileField.goal,
+        ProfileField.level,
+        ProfileField.daysPerWeek,
+        ProfileField.equipment,
+      ]) {
+        expect(cubit.state.question, field);
+        expect(cubit.state.canSkipQuestion, isFalse);
+        cubit.skipQuestion();
+        expect(cubit.state.question, field);
+        switch (field) {
+          case ProfileField.goal:
+            cubit.setGoal(Goal.loseFat);
+          case ProfileField.level:
+            cubit.setLevel(Level.beginner);
+          case ProfileField.daysPerWeek:
+            cubit.setDaysPerWeek(3);
+          default:
+            cubit.applyPreset(EquipmentPreset.homeGym);
+        }
+        await cubit.next();
+      }
+      expect(cubit.state.question, ProfileField.sex);
+    });
+
+    test('a birth year is a plausibility check, not an age gate', () async {
+      // An implausible year blocks only its own answer; skipping it moves on.
+      final cubit = onboarding(complete.without(ProfileField.birthYear));
+      await goTo(cubit, ProfileField.birthYear);
+      cubit.enterBirthYear('2020');
+      expect(cubit.state.canContinue, isFalse);
+
+      cubit.skipQuestion();
+      expect(cubit.state.question, ProfileField.height);
     });
 
     test('back returns to the previous question and keeps answers', () async {
@@ -380,6 +435,16 @@ void main() {
       await cubit.next();
 
       expect(cubit.state.status, ProfileFormStatus.editing);
+    });
+
+    test('a personal answer may be cleared', () {
+      final cubit = edit(ProfileField.sex, const UserProfile());
+      expect(cubit.state.canContinue, isTrue);
+      expect(cubit.state.canSkipQuestion, isFalse);
+      expect(
+        edit(ProfileField.goal, const UserProfile()).state.canContinue,
+        isFalse,
+      );
     });
 
     test('skip does nothing outside onboarding', () async {

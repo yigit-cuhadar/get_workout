@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../app/router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -96,12 +99,31 @@ class _OnboardingView extends StatelessWidget {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(Gap.md),
-                    child: ForgeButton(
-                      label: question == null
-                          ? l10n.onboardingStart
-                          : l10n.onboardingNext,
-                      loading: submitted,
-                      onPressed: state.canContinue ? cubit.next : null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ForgeButton(
+                          label: question == null
+                              ? l10n.onboardingStart
+                              : l10n.onboardingNext,
+                          loading: submitted,
+                          onPressed: state.canContinue ? cubit.next : null,
+                        ),
+                        if (state.canSkipQuestion)
+                          TextButton(
+                            onPressed: submitted ? null : cubit.skipQuestion,
+                            child: Text(l10n.onboardingSkipQuestion),
+                          ),
+                        // Nothing is stored before this, so a returning user
+                        // leaves no profile behind on the guest.
+                        if (state.step == 0)
+                          TextButton(
+                            onPressed: submitted
+                                ? null
+                                : () => context.go(Routes.onboardingSignIn),
+                            child: Text(l10n.accountHaveOne),
+                          ),
+                      ],
                     ),
                   ),
                 ],

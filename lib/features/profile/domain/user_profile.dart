@@ -36,8 +36,12 @@ enum ProfileField {
   weight,
   targetWeight;
 
-  /// The only answer a user may leave empty and still continue.
-  bool get optional => this == targetWeight;
+  /// A personal question: onboarding lets the user skip it on its own, and
+  /// editing may clear it. The others need an answer to continue.
+  bool get optional => switch (this) {
+    sex || birthYear || height || weight || targetWeight => true,
+    goal || level || daysPerWeek || equipment => false,
+  };
 }
 
 /// Quick picks that fill the equipment answer; it can be fine-tuned after.

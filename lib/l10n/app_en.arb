@@ -387,6 +387,7 @@
 
   "onboardingNext": "Next",
   "onboardingSkip": "Skip for now",
+  "onboardingSkipQuestion": "Skip this question",
   "onboardingStart": "Start training",
   "onboardingProgress": "Question {step} of {count}",
   "@onboardingProgress": {"placeholders": {"step": {"type": "int"}, "count": {"type": "int"}}},

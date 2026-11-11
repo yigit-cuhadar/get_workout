@@ -35,6 +35,10 @@ abstract final class Routes {
   static const home = today;
   static const onboarding = '/onboarding';
 
+  /// For a returning user; the account's profile then decides whether
+  /// onboarding is still needed.
+  static const onboardingSignIn = '$onboarding/sign-in';
+
   /// Where finishing or skipping onboarding lands. The program suggestion
   /// (programs catalogue) plugs in here.
   static const afterOnboarding = today;
@@ -95,7 +99,9 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
       final location = state.matchedLocation;
       final atGate =
           location == Routes.splash || location == Routes.startFailed;
-      final atOnboarding = location == Routes.onboarding;
+      final atOnboarding =
+          location == Routes.onboarding ||
+          location.startsWith('${Routes.onboarding}/');
       return switch (auth.state) {
         AuthUnknown() => Routes.splash,
         Unauthenticated() => Routes.startFailed,
@@ -140,6 +146,16 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
       GoRoute(
         path: Routes.onboarding,
         builder: (_, _) => const OnboardingPage(),
+        routes: [
+          GoRoute(
+            path: 'sign-in',
+            builder: (context, _) => AuthPage(
+              strings: localizedAuthStrings(AppLocalizations.of(context)),
+              initialSignUp: false,
+              onSignedIn: () => context.pop(),
+            ),
+          ),
+        ],
       ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AppShell(shell: shell),
