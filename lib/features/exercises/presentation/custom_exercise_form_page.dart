@@ -124,6 +124,14 @@ class _FormViewState extends State<_FormView> {
             title: Text(
               _cubit.isEditing ? l10n.customEditTitle : l10n.customNew,
             ),
+            // In the app bar, so the keyboard closing never moves it from
+            // under the finger.
+            actions: [
+              TextButton(
+                onPressed: state.isSaving ? null : _cubit.save,
+                child: Text(l10n.customSave),
+              ),
+            ],
           ),
           body: ListView(
             padding: const EdgeInsets.symmetric(vertical: Gap.md),
@@ -207,15 +215,6 @@ class _FormViewState extends State<_FormView> {
                     errorText: error(CustomExerciseIssue.noteTooLong),
                   ),
                   onChanged: _cubit.setNote,
-                ),
-              ),
-              const SizedBox(height: Gap.lg),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: ForgeButton(
-                  label: l10n.customSave,
-                  loading: state.isSaving,
-                  onPressed: state.isSaving ? null : _cubit.save,
                 ),
               ),
             ],
