@@ -48,8 +48,7 @@ class PurchaserSession {
     if (_cancelled || uid != _uid || result.isOk) return;
     Log.e(
       'purchases',
-      'Switching the store user failed; retrying in '
-          '$_nextDelay',
+      'Switching the store user failed; retrying in $_nextDelay',
       result.failureOrNull,
     );
     _retry = Timer(_nextDelay, resume);

@@ -1,15 +1,20 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
+import 'package:forge_core/forge_core.dart';
+import 'package:forge_purchases/forge_purchases.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_section.dart';
+import '../../subscription/presentation/fake_store_controls.dart';
+import '../../subscription/presentation/premium_tile.dart';
 import 'profile_cubit.dart';
 
-/// The Profile tab: the account, profile and calculators rows, then the
-/// settings.
+/// The Profile tab: the account, Premium, profile and calculators rows, then
+/// the settings.
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
@@ -38,6 +43,7 @@ class ProfilePage extends StatelessWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.go(Routes.account),
             ),
+            const PremiumTile(),
             ListTile(
               leading: const Icon(Icons.person_outline),
               title: Text(l10n.profileDetails),
@@ -51,6 +57,8 @@ class ProfilePage extends StatelessWidget {
               onTap: () => context.go(Routes.calculators),
             ),
             const SettingsSection(),
+            if (kDebugMode && sl.isRegistered<FakePurchasesRepository>())
+              FakeStoreControls(sl()),
           ],
         ),
       ),
