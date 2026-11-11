@@ -39,27 +39,27 @@ dependencies:
   forge_core:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: ecf5f9803f3148822bdb3fcd4c7f9b626c58c7fb
+      ref: 6b9b0011273bd2138a3a81fec61406944df723a6
       path: packages/forge_core
   forge_model_viewer:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: ecf5f9803f3148822bdb3fcd4c7f9b626c58c7fb
+      ref: 6b9b0011273bd2138a3a81fec61406944df723a6
       path: packages/forge_model_viewer
   forge_ui:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: ecf5f9803f3148822bdb3fcd4c7f9b626c58c7fb
+      ref: 6b9b0011273bd2138a3a81fec61406944df723a6
       path: packages/forge_ui
   forge_firebase:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: ecf5f9803f3148822bdb3fcd4c7f9b626c58c7fb
+      ref: 6b9b0011273bd2138a3a81fec61406944df723a6
       path: packages/forge_firebase
   forge_auth:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: ecf5f9803f3148822bdb3fcd4c7f9b626c58c7fb
+      ref: 6b9b0011273bd2138a3a81fec61406944df723a6
       path: packages/forge_auth
   cloud_firestore: ^7.1.0
   firebase_auth: ^7.0.1

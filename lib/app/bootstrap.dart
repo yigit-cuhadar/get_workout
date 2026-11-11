@@ -8,6 +8,7 @@ import '../features/calculators/calculators_module.dart';
 import '../features/cardio/cardio_module.dart';
 import '../features/exercises/exercises_module.dart';
 import '../features/profile/profile_module.dart';
+import '../features/programs/programs_module.dart';
 import '../features/settings/settings_module.dart';
 import 'app.dart';
 
@@ -23,6 +24,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     CardioModule(),
     CalculatorsModule(),
     ExercisesModule(),
+    ProgramsModule(completedDays: ProgramsModule.nothingDone),
   ]);
   runApp(const App());
 }
