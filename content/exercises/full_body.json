@@ -1573,7 +1573,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 382,
+    "popularity": 383,
     "l10n": {
       "en": {
         "name": "Kettlebell Front Rack Carry",
@@ -1626,7 +1626,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 4,
-    "popularity": 389,
+    "popularity": 391,
     "l10n": {
       "en": {
         "name": "Kettlebell Waiter's Walk",
@@ -1677,7 +1677,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 391,
+    "popularity": 393,
     "l10n": {
       "en": {
         "name": "Backward Sled Drag",
@@ -1729,7 +1729,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 392,
+    "popularity": 394,
     "l10n": {
       "en": {
         "name": "Forward Sled Drag",
@@ -1782,7 +1782,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 393,
+    "popularity": 395,
     "l10n": {
       "en": {
         "name": "Sled Rope Pull",
@@ -1834,7 +1834,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 394,
+    "popularity": 396,
     "l10n": {
       "en": {
         "name": "Single-Arm Kettlebell Swing",
@@ -1888,7 +1888,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 396,
+    "popularity": 398,
     "l10n": {
       "en": {
         "name": "Zercher Carry",
@@ -1937,7 +1937,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 397,
+    "popularity": 399,
     "l10n": {
       "en": {
         "name": "Plate Pinch Carry",
@@ -1988,7 +1988,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 5,
-    "popularity": 398,
+    "popularity": 400,
     "l10n": {
       "en": {
         "name": "Trap Bar Jump",

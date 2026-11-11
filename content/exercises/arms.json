@@ -2308,5 +2308,109 @@
         ]
       }
     }
+  },
+  {
+    "id": "ex_ez_bar_overhead_triceps_extension",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "overhand",
+    "gripWidth": "narrow",
+    "equipment": [
+      "ez_bar",
+      "bench"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "overhead_triceps_extension",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 381,
+    "l10n": {
+      "en": {
+        "name": "EZ-Bar Overhead Triceps Extension",
+        "aliases": [
+          "Seated EZ-Bar French Press"
+        ],
+        "setup": [
+          "Sit on an upright bench holding an EZ bar overhead with a narrow grip.",
+          "Keep your upper arms close to your head."
+        ],
+        "execution": [
+          "Bend your elbows to lower the bar behind your head.",
+          "Straighten your arms to lift it back up."
+        ],
+        "mistakes": [
+          "Letting the elbows flare wide.",
+          "Arching the lower back."
+        ],
+        "cues": [
+          "Elbows point up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ring_support_hold",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "vertical_push",
+    "position": "hanging",
+    "equipment": [
+      "rings"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "pec",
+      "front_delt",
+      "abdominal"
+    ],
+    "family": "ring_support_hold",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 389,
+    "l10n": {
+      "en": {
+        "name": "Ring Support Hold",
+        "aliases": [
+          "Ring Support",
+          "Top Ring Hold"
+        ],
+        "setup": [
+          "Set the rings at about hip height.",
+          "Grip them and jump up to straight arms with the rings beside your hips."
+        ],
+        "execution": [
+          "Hold with locked elbows, shoulders pushed down and rings pressed into your sides.",
+          "Step down when the rings start to shake out of control."
+        ],
+        "mistakes": [
+          "Letting the rings drift away from the body.",
+          "Shrugging the shoulders up."
+        ],
+        "cues": [
+          "Arms locked",
+          "Rings to the hips"
+        ]
+      }
+    }
   }
 ]
