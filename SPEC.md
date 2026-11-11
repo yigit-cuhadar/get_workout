@@ -233,8 +233,8 @@ Group 3, exercises
 - [x] Exercise domain and sync — incremental sync by `updatedAt` — library works offline after first sync
 - [ ] Admin panel — sign-in, exercise list, exercise editor with validation, draft/live/retire — an edit appears in the app after sync
 - [ ] Exercise content — 400+ exercises in English, loaded through the admin import — every muscle and equipment profile is covered
-- [ ] Library — model tab with muscle sheet (main vs secondary), list, search, filters, sort — find any exercise in a few taps
-- [ ] Exercise detail — text sections, model with worked muscles, alternatives, variations, favorite, add to workout or program
+- [x] Library — model tab with muscle sheet (main vs secondary), list, search, filters, sort — find any exercise in a few taps
+- [x] Exercise detail — text sections, model with worked muscles, alternatives, variations, favorite, add to workout or program
 - [ ] Custom exercises — short form, edit, delete — shown with a "Custom" label everywhere
 
 Group 4, programs
