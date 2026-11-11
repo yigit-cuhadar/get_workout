@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/core/text_length.dart';
+import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
@@ -334,6 +336,16 @@ void main() {
           ),
         );
       }
+    });
+
+    test('a custom exercise, which has no rest, rests 90 s', () {
+      final custom = Exercise.custom(
+        id: 'custom_a',
+        name: 'Band Pull-Apart',
+        loggingType: LoggingType.reps,
+        mainMuscles: const [Muscle.rearDelt],
+      );
+      expect(defaultItem(custom).restS, 90);
     });
 
     test('the rest is kept inside the limits', () {

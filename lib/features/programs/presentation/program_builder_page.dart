@@ -6,6 +6,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/max_length_formatter.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
@@ -203,7 +204,9 @@ class _FormState extends State<_Form> {
             TextField(
               controller: _name,
               textCapitalization: TextCapitalization.sentences,
-              inputFormatters: [_maxLength(ProgramLimits.maxNameLength)],
+              inputFormatters: [
+                maxLengthFormatter(ProgramLimits.maxNameLength),
+              ],
               decoration: InputDecoration(
                 labelText: l10n.programName,
                 errorText: programError({
@@ -265,7 +268,7 @@ class _FormState extends State<_Form> {
                     initialValue: day.name,
                     textCapitalization: TextCapitalization.sentences,
                     inputFormatters: [
-                      _maxLength(ProgramLimits.maxDayNameLength),
+                      maxLengthFormatter(ProgramLimits.maxDayNameLength),
                     ],
                     decoration: InputDecoration(
                       labelText: l10n.programDayName,
@@ -645,19 +648,6 @@ class _ItemEditorState extends State<_ItemEditor> {
     );
   }
 }
-
-/// Cuts text to [max] code units, counted like validation counts them;
-/// [LengthLimitingTextInputFormatter] counts characters, so a name it
-/// accepts could still be too long.
-TextInputFormatter _maxLength(int max) =>
-    TextInputFormatter.withFunction((_, value) {
-      if (value.text.length <= max) return value;
-      final text = cutToLength(value.text, max);
-      return TextEditingValue(
-        text: text,
-        selection: TextSelection.collapsed(offset: text.length),
-      );
-    });
 
 class _NumberField extends StatelessWidget {
   const _NumberField({
