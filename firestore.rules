@@ -1,6 +1,46 @@
 rules_version = '2';
+
+// Expected results. There is no emulator here, so check changes against this.
+//
+//   Path                     Who                                    Read  Write
+//   exercises/{id}           signed out                             deny  deny
+//   exercises/{id}           any signed-in user, guests included    allow deny
+//   exercises/{id}           admin claim                            allow allow
+//   programs/{id}            signed out                             deny  deny
+//   programs/{id}            any signed-in user, guests included    allow deny
+//   programs/{id}            admin claim                            allow allow
+//   programs/{id}/detail/x   signed out                             deny  deny
+//   programs/{id}/detail/x   signed in, program premium missing     allow deny
+//                            or false
+//   programs/{id}/detail/x   signed in, program premium true,       deny  deny
+//                            no entitlement / premium false /
+//                            expiresAt <= now
+//   programs/{id}/detail/x   signed in, program premium true,       allow deny
+//                            entitlement premium true, expiresAt
+//                            > now
+//   programs/{id}/detail/x   admin claim, any program               allow allow
+//   entitlements/{uid}       owner                                  allow deny
+//   entitlements/{uid}       anyone else, admins included           deny  deny
+//   users/{uid}/**           owner                                  allow allow
+//   users/{uid}/**           anyone else                            deny  deny
+//   anything else            anyone                                 deny  deny
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.get('admin', false) == true;
+    }
+
+    function hasEntitlement() {
+      let path = /databases/$(database)/documents/entitlements/$(request.auth.uid);
+      return exists(path)
+        && get(path).data.get('premium', false) == true
+        && get(path).data.expiresAt > request.time;
+    }
+
     // Deny by default. Each feature adds the narrowest rule it needs.
     match /{document=**} {
       allow read, write: if false;
@@ -9,6 +49,30 @@ service cloud.firestore {
     // A user's own data, guest or not.
     match /users/{uid}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /exercises/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /programs/{programId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+
+      match /detail/{doc} {
+        allow read: if isAdmin()
+          || (signedIn()
+            && (get(/databases/$(database)/documents/programs/$(programId))
+                  .data.get('premium', false) != true
+              || hasEntitlement()));
+        allow write: if isAdmin();
+      }
+    }
+
+    // Written only by the RevenueCat webhook through the Admin SDK.
+    match /entitlements/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
     }
   }
 }

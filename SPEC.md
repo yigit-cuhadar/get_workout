@@ -116,17 +116,18 @@ Firestore. Timestamps are server timestamps; ids are generated on the client.
 | `loggingType`, `mechanic`, `laterality`, `level`, `force`, `movementPattern`, `position` | code | |
 | `grip`, `gripWidth` | code? | |
 | `equipment` | code[] | 1+ |
-| `equipmentAlternatives` | code[][]? | 0-3 other equipment sets, each 1+ codes, none equal to `equipment` or each other; the exercise can be done with `equipment` or any one set |
+| `equipmentAlternatives` | `{items: code[]}[]`? | 0-3 other equipment sets, each 1+ codes, none equal to `equipment` or each other; the exercise can be done with `equipment` or any one set. Content files write `code[][]`; Firestore has no arrays of arrays, so the import stores each set as `{items}` |
 | `mainMuscles` | code[] | 1-2 |
 | `secondaryMuscles` | code[] | 0-4 |
 | `family` | string | Groups variations, e.g. `bench_press` |
 | `familyRank` | int | Easier → harder within the family |
 | `pinnedAlternatives`, `excludedAlternatives` | id[] | Admin overrides of the computed list |
 | `defaultRestS` | int | |
-| `incrementKg` | number? | Step for "add weight" |
+| `incrementKg` | double? | Step for "add weight"; stored as a double even when the file says `1` |
 | `popularity` | int | Lower sorts first |
 | `l10n.<lang>` | map | `name`, `aliases[]`, `setup[]`, `execution[]`, `mistakes[]`, `safety?`, `cues[]` |
 | `updatedAt` | timestamp | Clients sync incrementally on this |
+| `contentHash` | string | SHA-256 of the stored content; the import skips unchanged exercises |
 
 Alternatives are computed on device: same main muscle and movement pattern,
 the user's equipment first (an exercise fits when `equipment` or any of its
