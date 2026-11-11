@@ -18,19 +18,28 @@ import 'vocabulary_labels.dart';
 import 'widgets/exercise_tile.dart';
 
 class ExerciseDetailPage extends StatelessWidget {
-  const ExerciseDetailPage({super.key, required this.exerciseId});
+  const ExerciseDetailPage({
+    super.key,
+    required this.exerciseId,
+    required this.exerciseRoute,
+  });
 
   final String exerciseId;
+
+  /// Where another exercise opens, so it stays in the tab hosting this one.
+  final String Function(String id) exerciseRoute;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => sl<ExerciseDetailCubit>(param1: exerciseId),
-    child: const _DetailView(),
+    child: _DetailView(exerciseRoute),
   );
 }
 
 class _DetailView extends StatelessWidget {
-  const _DetailView();
+  const _DetailView(this.exerciseRoute);
+
+  final String Function(String id) exerciseRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +93,7 @@ class _DetailView extends StatelessWidget {
             onRetry: context.read<ExerciseCatalogueCubit>().retry,
           ),
           DetailNotFound() => EmptyView(message: l10n.detailNotFound),
-          DetailReady() => _DetailBody(state),
+          DetailReady() => _DetailBody(state, exerciseRoute),
         },
       ),
     );
@@ -115,9 +124,10 @@ class _DetailView extends StatelessWidget {
 }
 
 class _DetailBody extends StatelessWidget {
-  const _DetailBody(this.detail);
+  const _DetailBody(this.detail, this.exerciseRoute);
 
   final DetailReady detail;
+  final String Function(String id) exerciseRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -210,10 +220,11 @@ class _DetailBody extends StatelessWidget {
     ],
   ];
 
-  static List<Widget> _exercises(String title, List<Exercise> exercises) => [
+  List<Widget> _exercises(String title, List<Exercise> exercises) => [
     if (exercises.isNotEmpty) ...[
       _Header(title),
-      for (final exercise in exercises) ExerciseTile(exercise),
+      for (final exercise in exercises)
+        ExerciseTile(exercise, route: exerciseRoute),
     ],
   ];
 }

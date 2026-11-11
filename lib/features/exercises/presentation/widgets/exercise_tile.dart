@@ -8,9 +8,10 @@ import '../../domain/exercise.dart';
 import '../favorites_cubit.dart';
 import '../vocabulary_labels.dart';
 
-/// A row opening the exercise's detail page: name, main muscles and
-/// equipment, marked when custom, with a favourite star when [showFavorite].
-/// With [onSelect] it shows a checkbox for [selected] and selects instead.
+/// A row opening the exercise's detail page at [route]: name, main muscles
+/// and equipment, marked when custom, with a favourite star when
+/// [showFavorite]. With [onSelect] it shows a checkbox for [selected] and
+/// selects instead.
 class ExerciseTile extends StatelessWidget {
   const ExerciseTile(
     this.exercise, {
@@ -18,12 +19,16 @@ class ExerciseTile extends StatelessWidget {
     this.showFavorite = false,
     this.selected = false,
     this.onSelect,
+    this.route = Routes.exercise,
   });
 
   final Exercise exercise;
   final bool showFavorite;
   final bool selected;
   final VoidCallback? onSelect;
+
+  /// The detail page's location for an exercise id.
+  final String Function(String id) route;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +49,7 @@ class ExerciseTile extends StatelessWidget {
       title: Text(exercise.localized(context).name),
       subtitle: Text(exercise.isCustom ? l10n.customSummary(summary) : summary),
       trailing: showFavorite ? FavoriteButton(exercise.id) : null,
-      onTap: onSelect ?? () => context.push(Routes.exercise(exercise.id)),
+      onTap: onSelect ?? () => context.push(route(exercise.id)),
     );
   }
 }

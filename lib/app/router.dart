@@ -225,6 +225,11 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
                         path: 'exercises/:exerciseId',
                         builder: (_, state) => ExerciseDetailPage(
                           exerciseId: state.pathParameters['exerciseId']!,
+                          exerciseRoute: (exerciseId) =>
+                              Routes.catalogueExercise(
+                                state.pathParameters['id']!,
+                                exerciseId,
+                              ),
                         ),
                       ),
                     ],
@@ -259,8 +264,10 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
               ),
               GoRoute(
                 path: ':id',
-                builder: (_, state) =>
-                    ExerciseDetailPage(exerciseId: state.pathParameters['id']!),
+                builder: (_, state) => ExerciseDetailPage(
+                  exerciseId: state.pathParameters['id']!,
+                  exerciseRoute: Routes.exercise,
+                ),
                 routes: [
                   GoRoute(
                     path: 'edit',

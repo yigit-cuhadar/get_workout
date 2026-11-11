@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
@@ -10,19 +11,24 @@ import '../domain/program.dart';
 import '../domain/program_editing.dart';
 import 'program_text.dart';
 
-/// One day of a program, read-only: its name and estimate, then its
-/// exercises. With [onExerciseTap], an exercise of the library opens.
+/// One day of a program, read-only: its name and estimate, [action] if
+/// any, then its exercises. With [onExerciseTap], an exercise of the
+/// library opens.
 class ProgramDaySection extends StatelessWidget {
   const ProgramDaySection({
     super.key,
     required this.day,
     required this.index,
     this.onExerciseTap,
+    this.action,
   });
 
   final ProgramDay day;
   final int index;
   final ValueChanged<String>? onExerciseTap;
+
+  /// Something to do with this day, e.g. start it.
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +59,14 @@ class ProgramDaySection extends StatelessWidget {
               ? null
               : Text(l10n.estimateText(estimateDay(day))),
         ),
+        if (action case final action?)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: action,
+            ),
+          ),
         for (final (i, item) in day.items.indexed)
           ListTile(
             dense: true,
