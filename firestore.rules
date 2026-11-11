@@ -46,6 +46,19 @@ rules_version = '2';
 // | note not a string, or longer than 500 characters               | deny   |
 // | any request for another user's sessions, or signed out         | deny   |
 //
+// users/{uid}/programs/{id}, as the signed-in user `uid` (anyone else: deny):
+// | Request                                                        | Result |
+// |----------------------------------------------------------------|--------|
+// | read, list, delete own program                                 | allow  |
+// | create/update: name string of 1-60 characters, days a list of  | allow  |
+// | 1-7 entries, origin "own", "catalog" or "generated"            |        |
+// | ... plus fields the app does not know (kept by edits)          | allow  |
+// | missing name, days or origin                                   | deny   |
+// | name empty, longer than 60 characters or not a string          | deny   |
+// | days empty, more than 7 entries or not a list                  | deny   |
+// | origin any other value                                         | deny   |
+// | any request for another user's programs, or signed out         | deny   |
+//
 // users/{uid}/customExercises/{id}, as the signed-in user `uid` (anyone
 // else: deny). The 500-per-user limit is the app's; rules cannot count.
 // | Request                                                        | Result |
@@ -111,6 +124,18 @@ service cloud.firestore {
         && (!('note' in data) || (data.note is string && data.note.size() <= 500));
     }
 
+    // Updates write only name, length, days and updatedAt; origin stays as
+    // stored and is checked on the result.
+    function isProgram(data) {
+      return data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 60
+        && data.days is list
+        && data.days.size() >= 1
+        && data.days.size() <= 7
+        && data.origin in ['own', 'catalog', 'generated'];
+    }
+
     // SPEC.md, "Vocabulary"; keep in step with lib/.../vocabulary.dart.
     function loggingTypes() {
       return ['reps', 'weight_reps', 'weighted_bodyweight',
@@ -171,6 +196,12 @@ service cloud.firestore {
       }
 
       // Validated; only reachable here, the rule below excludes it.
+      match /programs/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isProgram(request.resource.data);
+      }
+
+      // Validated; only reachable here, the rule below excludes it.
       match /customExercises/{id} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
@@ -180,7 +211,7 @@ service cloud.firestore {
       // Every other subcollection, at any depth, as before.
       match /{collection}/{document=**} {
         allow read, write: if isOwner(uid)
-          && !(collection in ['cardio', 'customExercises']);
+          && !(collection in ['cardio', 'programs', 'customExercises']);
       }
     }
 

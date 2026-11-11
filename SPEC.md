@@ -51,6 +51,20 @@ from the earlier FitLab app.
   split except abdominal and oblique) plus the body. A female model with the
   same mesh names is required before release; the user supplies it.
 - **Units**: stored metric. kg/lb and cm/in chosen by the user.
+- **Programs**: a name of 1-60 characters, 1-7 days, day names of at most
+  40 characters, 1-20 exercises per day, an optional length of 1-52 weeks;
+  lengths count UTF-16 code units in the fields and in validation. The
+  Firestore rules validate the top-level fields only (`name`, `days` count,
+  `origin`); the app validates days and items. Items whose exercise's
+  logging type changed are fitted to the new type when the builder loads
+  them, and the user is told.
+- **Schedule**: `activeProgram.nextDate` is a calendar date stored as a
+  `YYYY-MM-DD` string, so it is the same date in every time zone, and
+  `startedAt` is a device-clock timestamp because starting a program must
+  work offline. A missed next day stays the next day until the user does
+  it today, moves it to the next training weekday or skips it; the week
+  plan shows it once, on its date. A program with a length ends that many
+  weeks after its start date.
 - **Effort scale**: optional per set, off by default. RIR by default, worded
   plainly ("How many more reps could you do?"); RPE selectable. Stored as RIR
   (`rpe = 10 - rir`).
@@ -79,7 +93,8 @@ from the earlier FitLab app.
   may repeat a catalogue name; the label tells them apart. Equipment left
   empty means unspecified and counts as doable with any. Deleting one also
   removes it from favourites in the same write; programs then show it as
-  unavailable, like a retired exercise, and workouts keep their copy. The
+  unavailable, like a retired exercise, and workouts keep their copy. Added
+  to a program, one rests 90 s by default, having no rest of its own. The
   500 limit is checked by the app on create, counting what Firestore's
   cache holds (kept current by the catalogue's listener); rules cannot
   count.
@@ -176,17 +191,18 @@ program is not premium or the reader has an active entitlement.
 birthYear, heightCm, weightKg, targetWeightKg), `settings` (units,
 effortScale, restTimer, bar and plates, stepGoal, reminder times,
 trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
-`activeProgram` (`programId`, `weekdays[]`, `nextDayIndex`, `nextDate`,
-`startedAt`).
+`activeProgram` (`programId`, `weekdays[]` ISO 1-7, `nextDayIndex`,
+`nextDate` `YYYY-MM-DD`, `startedAt` device-clock timestamp).
 
 **`users/{uid}/customExercises/{id}`**: `name`, `loggingType`,
 `mainMuscles[]`, `secondaryMuscles[]`, `equipment[]`, `note`. Max 500.
 
 **`users/{uid}/programs/{id}`**: `name`, `origin` (`own` \| `catalog` \|
-`generated`), `sourceId?`, `lengthWeeks?`, `days[]`, `updatedAt`. Starting a
-catalog program copies it here, so later catalog edits do not change it.
+`generated`), `sourceId?`, `lengthWeeks?` (1-52), `days[]` (1-7),
+`updatedAt`. Starting a catalog program copies it here, so later catalog
+edits do not change it. `name` is 1-60 characters.
 
-- `days[]`: `name`, `items[]`
+- `days[]`: `name` (at most 40 characters, may be empty), `items[]` (1-20)
 - `items[]`: `exerciseId`, `sets` (1-10), `repMin`/`repMax` or `durationS`,
   `restS`, `targetKg?`, `group?` (items sharing a group letter form a superset
   of 2 or a circuit of 3+; rest runs after the last item of each round)
@@ -258,8 +274,8 @@ Group 3, exercises
 - [ ] Custom exercises — short form, edit, delete — shown with a "Custom" label everywhere
 
 Group 4, programs
-- [ ] Program builder — days, exercise picker, sets and rep range, rest, supersets and circuits, reorder
-- [ ] My programs and schedule — start a program, pick weekdays, missed-day prompt (do today, move, skip)
+- [x] Program builder — days, exercise picker, sets and rep range, rest, supersets and circuits, reorder
+- [x] My programs and schedule — start a program, pick weekdays, missed-day prompt (do today, move, skip)
 
 Group 5, workout
 - [ ] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery

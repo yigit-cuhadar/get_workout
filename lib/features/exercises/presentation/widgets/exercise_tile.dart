@@ -10,11 +10,20 @@ import '../vocabulary_labels.dart';
 
 /// A row opening the exercise's detail page: name, main muscles and
 /// equipment, marked when custom, with a favourite star when [showFavorite].
+/// With [onSelect] it shows a checkbox for [selected] and selects instead.
 class ExerciseTile extends StatelessWidget {
-  const ExerciseTile(this.exercise, {super.key, this.showFavorite = false});
+  const ExerciseTile(
+    this.exercise, {
+    super.key,
+    this.showFavorite = false,
+    this.selected = false,
+    this.onSelect,
+  });
 
   final Exercise exercise;
   final bool showFavorite;
+  final bool selected;
+  final VoidCallback? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +35,16 @@ class ExerciseTile extends StatelessWidget {
             muscles,
             l10n.equipmentNames(exercise.equipment),
           );
+    final onSelect = this.onSelect;
     return ListTile(
+      leading: onSelect == null
+          ? null
+          : Checkbox(value: selected, onChanged: (_) => onSelect()),
+      selected: selected,
       title: Text(exercise.localized(context).name),
       subtitle: Text(exercise.isCustom ? l10n.customSummary(summary) : summary),
       trailing: showFavorite ? FavoriteButton(exercise.id) : null,
-      onTap: () => context.push(Routes.exercise(exercise.id)),
+      onTap: onSelect ?? () => context.push(Routes.exercise(exercise.id)),
     );
   }
 }
