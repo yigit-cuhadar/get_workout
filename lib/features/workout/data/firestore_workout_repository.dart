@@ -177,14 +177,12 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
   @override
   Future<Result<bool>> isStored(String uid, String id) => guard(() async {
     // The batch's own answer tells a refusal from a later deletion.
-    if (_commits['$uid/$id'] case final commit?) {
+    if (_commits.remove('$uid/$id') case final commit?) {
       try {
         await commit;
         return true;
       } on Object {
         return false;
-      } finally {
-        _commits.remove('$uid/$id');
       }
     }
     await _waitForPendingWrites();
