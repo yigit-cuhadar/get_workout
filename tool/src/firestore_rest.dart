@@ -118,13 +118,15 @@ class FirestoreRest {
     await _send('POST', uri, {'writes': writes});
   }
 
-  /// Commits [writes] in batches of at most [batchSize], in order.
+  /// Commits [units] of writes in order, in batches of at most [batchSize]
+  /// writes; the writes of one unit always share a commit, so they succeed
+  /// or fail together.
   Future<void> commitInBatches(
-    List<Map<String, Object?>> writes, {
+    List<List<Map<String, Object?>>> units, {
     int batchSize = maxWritesPerCommit,
   }) async {
     var written = 0;
-    for (final batch in batches(writes, size: batchSize)) {
+    for (final batch in packUnits(units, size: batchSize)) {
       try {
         await commit(batch);
       } on FirestoreException catch (e) {

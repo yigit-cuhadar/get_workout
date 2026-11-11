@@ -172,6 +172,11 @@ class RemoteDocument {
   bool get editedElsewhere => storedHash != actualHash;
 }
 
+/// The unit [path] is imported in: its top-level document. A program's card
+/// `programs/<id>` and its detail `programs/<id>/detail/main` are one unit,
+/// written together or not at all; an exercise is a unit of its own.
+String importUnit(String path) => path.split('/').take(2).join('/');
+
 /// What an import does, by document path. Each list is sorted, so exercises
 /// come before programs and a card before its detail.
 class ImportPlan {
@@ -180,6 +185,7 @@ class ImportPlan {
     required this.updated,
     required this.unchanged,
     required this.edited,
+    required this.held,
     required this.orphaned,
     required this.force,
   });
@@ -191,6 +197,11 @@ class ImportPlan {
   /// Edited outside the import and different from the file. Skipped unless
   /// [force], so an edit made in the admin panel is never lost silently.
   final List<String> edited;
+
+  /// New or changed, but in the same [importUnit] as an [edited] document
+  /// and so held back with it (never with [force]): a program's card and
+  /// detail never get out of step. Not in [created] or [updated].
+  final List<String> held;
 
   /// In Firestore but not in the files. Never deleted: content is retired by
   /// setting `status` in its file.
@@ -227,21 +238,52 @@ ImportPlan planImport(
     }
   }
   final orphaned = remote.keys.where((id) => !local.containsKey(id)).toList();
+  final editedUnits = force ? const <String>{} : edited.map(importUnit).toSet();
+  bool isHeld(String id) => editedUnits.contains(importUnit(id));
+  final held = [...created, ...updated].where(isHeld).toList();
+  created.removeWhere(isHeld);
+  updated.removeWhere(isHeld);
   return ImportPlan(
     created: created..sort(),
     updated: updated..sort(),
     unchanged: unchanged..sort(),
     edited: edited..sort(),
+    held: held..sort(),
     orphaned: orphaned..sort(),
     force: force,
   );
 }
 
-/// Splits [items] into chunks of at most [size].
-List<List<T>> batches<T>(List<T> items, {int size = maxWritesPerCommit}) => [
-  for (var i = 0; i < items.length; i += size)
-    items.sublist(i, i + size > items.length ? items.length : i + size),
-];
+/// [paths] grouped by [importUnit], in order of first appearance.
+List<List<String>> groupByUnit(List<String> paths) {
+  final units = <String, List<String>>{};
+  for (final path in paths) {
+    (units[importUnit(path)] ??= []).add(path);
+  }
+  return units.values.toList();
+}
+
+/// Packs [units] in order into batches of at most [size] items, never
+/// splitting a unit, so each unit is committed atomically.
+List<List<T>> packUnits<T>(
+  List<List<T>> units, {
+  int size = maxWritesPerCommit,
+}) {
+  final result = <List<T>>[];
+  var batch = <T>[];
+  for (final unit in units) {
+    if (unit.length > size) {
+      throw ArgumentError.value(unit.length, 'units', 'a unit exceeds $size');
+    }
+    if (batch.length + unit.length > size) {
+      result.add(batch);
+      batch = [];
+    }
+    batch.addAll(unit);
+  }
+  if (batch.isNotEmpty) result.add(batch);
+  return result;
+}
 
 /// A `documents:commit` write that replaces the document at [doc]'s path
 /// with it and sets `updatedAt` to the server time. With [updateTime] (from the read) it

@@ -24,7 +24,9 @@ contentHash with the document. The admin panel leaves contentHash untouched,
 so a document edited there no longer matches it and counts as "edited
 elsewhere": it is skipped, listed, and the run exits non-zero. --force
 overwrites such documents with the file. A panel that wants a document managed
-by this import again must store the matching contentHash itself.
+by this import again must store the matching contentHash itself. A program
+is one unit: if its card or its detail was edited elsewhere, neither is
+written (without --force), and the two are always in the same commit.
 
 Every write carries a precondition (the document's updateTime from the read,
 or "does not exist" for a new one), so a concurrent edit fails the commit
@@ -106,19 +108,23 @@ Future<void> main(List<String> args) async {
 
     if (!dryRun) {
       await firestore.commitInBatches([
-        for (final id in plan.toWrite)
-          contentWrite(
-            firestore.databasePath,
-            docs[id]!,
-            updateTime: remote[id]?.updateTime,
-          ),
+        for (final unit in groupByUnit(plan.toWrite))
+          [
+            for (final path in unit)
+              contentWrite(
+                firestore.databasePath,
+                docs[path]!,
+                updateTime: remote[path]?.updateTime,
+              ),
+          ],
       ]);
     }
     _printPlan(plan, project: project, dryRun: dryRun);
     if (plan.skipped.isNotEmpty) {
       _fail(
-        '${plan.skipped.length} document(s) were edited elsewhere and skipped. '
-        'Bring the edit into the file, or run with --force to overwrite.',
+        '${plan.skipped.length} document(s) were edited elsewhere and skipped, '
+        'with ${plan.held.length} more of the same program(s). Bring the edit '
+        'into the file, or run with --force to overwrite.',
       );
     }
   } on PartialCommitException catch (e) {
@@ -148,7 +154,8 @@ void _printPlan(
   stdout.writeln(
     '$verb to $project: ${plan.created.length} created, '
     '${plan.updated.length} updated, $overwritten overwritten, '
-    '${plan.unchanged.length} unchanged, ${plan.skipped.length} skipped.',
+    '${plan.unchanged.length} unchanged, ${plan.skipped.length} skipped, '
+    '${plan.held.length} held back.',
   );
   for (final id in plan.created) {
     stdout.writeln('  created $id');
@@ -162,6 +169,12 @@ void _printPlan(
           ? '  overwritten $id (was edited elsewhere)'
           : 'WARNING $id was edited elsewhere and differs from its file; '
                 'skipped.',
+    );
+  }
+  for (final id in plan.held) {
+    stdout.writeln(
+      'WARNING $id was held back: another document of ${importUnit(id)} was '
+      'edited elsewhere.',
     );
   }
   for (final id in plan.orphaned) {

@@ -442,6 +442,54 @@ void main() {
     });
   });
 
+  group('planImport holds a program back as one unit', () {
+    RemoteDocument remote(String stored, String actual) =>
+        RemoteDocument(storedHash: stored, actualHash: actual, updateTime: 't');
+
+    final local = {
+      'programs/pr_a': 'card-new',
+      'programs/pr_a/detail/main': 'days',
+      'programs/pr_b': 'card',
+      'programs/pr_b/detail/main': 'days-new',
+    };
+    final existing = {
+      // pr_a: the detail was edited in the panel, the card changed in the
+      // file. pr_b: the card was edited in the panel, the days changed.
+      'programs/pr_a': remote('card', 'card'),
+      'programs/pr_a/detail/main': remote('days-old', 'panel'),
+      'programs/pr_b': remote('card-old', 'panel'),
+      'programs/pr_b/detail/main': remote('days', 'days'),
+    };
+
+    test('either document edited elsewhere skips both', () {
+      final plan = planImport(local, existing);
+
+      expect(plan.edited, ['programs/pr_a/detail/main', 'programs/pr_b']);
+      expect(plan.held, ['programs/pr_a', 'programs/pr_b/detail/main']);
+      expect(plan.updated, isEmpty);
+      expect(plan.toWrite, isEmpty);
+    });
+
+    test('force writes both', () {
+      final plan = planImport(local, existing, force: true);
+
+      expect(plan.held, isEmpty);
+      expect(plan.toWrite, local.keys.toList()..sort());
+    });
+
+    test('an edited exercise holds back nothing else', () {
+      final plan = planImport(
+        {'exercises/ex_a': 'new', 'exercises/ex_b': 'new'},
+        {
+          'exercises/ex_a': remote('old', 'panel'),
+          'exercises/ex_b': remote('old', 'old'),
+        },
+      );
+      expect(plan.held, isEmpty);
+      expect(plan.toWrite, ['exercises/ex_b']);
+    });
+  });
+
   test('planImport sorts program documents like exercises', () {
     RemoteDocument remote(String stored, String actual) =>
         RemoteDocument(storedHash: stored, actualHash: actual, updateTime: 't');
@@ -483,10 +531,71 @@ void main() {
     ]);
   });
 
-  test('batches split at 500 writes', () {
-    expect(batches(<int>[]), isEmpty);
-    expect(batches(List.filled(500, 0)).map((b) => b.length), [500]);
-    expect(batches(List.filled(1001, 0)).map((b) => b.length), [500, 500, 1]);
+  group('packUnits', () {
+    test('fills batches up to the size, in order', () {
+      expect(packUnits<int>([]), isEmpty);
+      expect(
+        packUnits([
+          for (var i = 0; i < 1001; i++) [i],
+        ]).map((b) => b.length),
+        [500, 500, 1],
+      );
+    });
+
+    test('never splits a unit across batches', () {
+      expect(
+        packUnits([
+          [1],
+          [2, 3],
+          [4, 5],
+          [6],
+        ], size: 2),
+        [
+          [1],
+          [2, 3],
+          [4, 5],
+          [6],
+        ],
+      );
+      expect(
+        packUnits([
+          [1],
+          [2],
+          [3, 4],
+        ], size: 3),
+        [
+          [1, 2],
+          [3, 4],
+        ],
+      );
+    });
+
+    test('rejects a unit larger than a batch', () {
+      expect(
+        () => packUnits([
+          [1, 2, 3],
+        ], size: 2),
+        throwsArgumentError,
+      );
+    });
+  });
+
+  test('groupByUnit keeps a card with its detail', () {
+    expect(importUnit('programs/pr_a/detail/main'), 'programs/pr_a');
+    expect(importUnit('exercises/ex_a'), 'exercises/ex_a');
+    expect(
+      groupByUnit([
+        'exercises/ex_a',
+        'programs/pr_a',
+        'programs/pr_a/detail/main',
+        'programs/pr_b/detail/main',
+      ]),
+      [
+        ['exercises/ex_a'],
+        ['programs/pr_a', 'programs/pr_a/detail/main'],
+        ['programs/pr_b/detail/main'],
+      ],
+    );
   });
 
   group('contentWrite', () {
