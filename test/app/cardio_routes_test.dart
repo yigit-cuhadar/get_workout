@@ -14,6 +14,12 @@ import 'package:get_workout/features/cardio/presentation/cardio_form_cubit.dart'
 import 'package:get_workout/features/cardio/presentation/cardio_form_page.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_list_cubit.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_list_page.dart';
+import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
+import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
+import 'package:get_workout/features/profile/domain/profile_repository.dart';
+import 'package:get_workout/features/profile/domain/profile_usecases.dart';
+import 'package:get_workout/features/profile/domain/user_profile.dart';
+import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:get_workout/features/progress/presentation/progress_page.dart';
 import 'package:get_workout/features/settings/domain/settings_repository.dart';
 import 'package:get_workout/features/settings/domain/settings_usecases.dart';
@@ -29,6 +35,10 @@ class MockSettingsRepository extends Mock implements SettingsRepository {}
 
 class MockCardioRepository extends Mock implements CardioRepository {}
 
+class MockProfileRepository extends Mock implements ProfileRepository {}
+
+class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
+
 void main() {
   const guest = AuthUser(id: 'u1', isAnonymous: true);
   final run = CardioSession(
@@ -43,6 +53,7 @@ void main() {
   late StreamController<List<CardioSession>> sessions;
   late AuthCubit auth;
   late SettingsCubit settings;
+  late ProfileCubit profile;
   late GoRouter router;
 
   // Created inside each test so stream events run in the test's fake zone.
@@ -69,6 +80,19 @@ void main() {
       watchSettings: WatchSettings(settingsRepository),
       updateSettings: UpdateSettings(settingsRepository),
       defaults: UserSettings.defaultsFor(null),
+    );
+    // Onboarding is covered by the router tests; this user has done it.
+    final profiles = MockProfileRepository();
+    when(() => profiles.watchProfile('u1')).thenAnswer(
+      (_) => Stream.value(UserProfile(onboardingCompletedAt: DateTime(2026))),
+    );
+    profile = ProfileCubit(
+      watchAuthUser: WatchAuthUser(sessionAuth),
+      watchProfile: WatchProfile(profiles),
+      updateProfile: UpdateProfile(
+        profiles,
+        SaveOwnedEquipment(MockUserLibraryRepository()),
+      ),
     );
     final cardio = MockCardioRepository();
     sessions = StreamController<List<CardioSession>>();
@@ -102,7 +126,7 @@ void main() {
         child: MaterialApp.router(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          routerConfig: router = buildRouter(auth),
+          routerConfig: router = buildRouter(auth, profile),
         ),
       ),
     );
@@ -113,6 +137,7 @@ void main() {
   tearDown(() async {
     await auth.close();
     await settings.close();
+    await profile.close();
     await sl.reset();
   });
 

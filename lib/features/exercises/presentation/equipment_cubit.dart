@@ -4,7 +4,7 @@ import 'package:forge_core/forge_core.dart';
 
 import '../domain/exercise_usecases.dart';
 import '../domain/vocabulary.dart';
-import 'user_stream_follower.dart';
+import '../../../core/user_stream_follower.dart';
 
 class EquipmentState extends Equatable {
   const EquipmentState(this.owned, {this.failure});

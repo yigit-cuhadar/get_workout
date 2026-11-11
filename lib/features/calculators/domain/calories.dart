@@ -1,9 +1,9 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../profile/domain/user_profile.dart';
 import 'calculation.dart';
 
-/// The two sexes the Mifflin-St Jeor and US Navy formulas define.
-enum Sex { male, female }
+export '../../profile/domain/user_profile.dart' show Sex;
 
 enum ActivityLevel {
   sedentary(1.2),

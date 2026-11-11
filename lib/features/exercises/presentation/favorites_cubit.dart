@@ -3,7 +3,7 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../domain/exercise_usecases.dart';
-import 'user_stream_follower.dart';
+import '../../../core/user_stream_follower.dart';
 
 class FavoritesState extends Equatable {
   const FavoritesState(this.ids, {this.failure});

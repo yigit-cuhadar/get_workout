@@ -63,6 +63,12 @@ from the earlier FitLab app.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk).
+- **Onboarding questions**: goal, level, days per week and equipment need
+  an answer to continue. The personal questions (sex, birth year, height,
+  weight, target weight) can each be skipped with "Skip this question";
+  "Skip for now" still ends onboarding with whatever was answered.
+- **Birth year**: a plausibility range (age 13-100), not an age gate. An
+  implausible year is only not accepted as an answer; nothing is blocked.
 - **Notifications**: local for rest end, workout reminders and measurement
   reminders; FCM topic push for announcements.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
@@ -266,7 +272,7 @@ Group 8, body and extras
 - [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
 
 Group 9, launch readiness
-- [ ] Onboarding — nine questions, suggested free program
+- [x] Onboarding — nine questions, suggested free program
 - [ ] Notifications — workout and measurement reminders, FCM announcements
 - [ ] Subscription — paywall, RevenueCat, entitlement checks, restore
 - [ ] Account — delete account, privacy policy link, analytics consent
