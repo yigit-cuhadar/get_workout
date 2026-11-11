@@ -7,6 +7,14 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/app/router.dart';
 import 'package:get_workout/features/account/presentation/account_page.dart';
+import 'package:get_workout/features/calculators/calculators_module.dart';
+import 'package:get_workout/features/calculators/presentation/body_fat_page.dart';
+import 'package:get_workout/features/calculators/presentation/body_indices_page.dart';
+import 'package:get_workout/features/calculators/presentation/calculators_page.dart';
+import 'package:get_workout/features/calculators/presentation/calories_page.dart';
+import 'package:get_workout/features/calculators/presentation/macros_page.dart';
+import 'package:get_workout/features/calculators/presentation/one_rep_max_page.dart';
+import 'package:get_workout/features/calculators/presentation/plates_page.dart';
 import 'package:get_workout/features/profile/presentation/profile_page.dart';
 import 'package:get_workout/features/programs/presentation/programs_page.dart';
 import 'package:get_workout/features/settings/domain/settings_repository.dart';
@@ -52,6 +60,7 @@ void main() {
         getCurrentUser: GetCurrentUser(repository),
       ),
     );
+    const CalculatorsModule().register(sl);
     // Settings are covered by their own tests; here they stay at defaults.
     final settingsAuth = MockAuthRepository();
     when(settingsAuth.watchUser).thenAnswer((_) => const Stream.empty());
@@ -209,5 +218,57 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(TodayPage), findsOneWidget);
+  });
+
+  testWidgets('Profile opens the calculators inside the tab', (tester) async {
+    await startAsGuest(tester);
+    await tapTab(tester, 'Profile');
+
+    await tester.tap(find.text('Calculators'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CalculatorsPage), findsOneWidget);
+
+    await tester.tap(find.text('Calories'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CaloriesPage), findsOneWidget);
+    expect(find.byType(NavigationBar), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(CalculatorsPage), findsOneWidget);
+  });
+
+  testWidgets('every calculator has a route under Profile', (tester) async {
+    await startAsGuest(tester);
+    final pages = {
+      Routes.calories: CaloriesPage,
+      Routes.bodyFat: BodyFatPage,
+      Routes.oneRepMax: OneRepMaxPage,
+      Routes.plates: PlatesPage,
+      Routes.macros: MacrosPage,
+      Routes.bodyIndices: BodyIndicesPage,
+    };
+
+    for (final MapEntry(key: route, value: page) in pages.entries) {
+      router.go(route);
+      await tester.pumpAndSettle();
+      expect(find.byType(page), findsOneWidget, reason: route);
+      expect(find.byType(NavigationBar), findsOneWidget, reason: route);
+      expect(route, startsWith('${Routes.calculators}/'));
+    }
+  });
+
+  testWidgets('a calculator keeps its place when switching tabs', (
+    tester,
+  ) async {
+    await startAsGuest(tester);
+    await tapTab(tester, 'Profile');
+    router.go(Routes.plates);
+    await tester.pumpAndSettle();
+
+    await tapTab(tester, 'Today');
+    await tapTab(tester, 'Profile');
+
+    expect(find.byType(PlatesPage), findsOneWidget);
   });
 }

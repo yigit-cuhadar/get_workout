@@ -7,6 +7,13 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
+import '../features/calculators/presentation/body_fat_page.dart';
+import '../features/calculators/presentation/body_indices_page.dart';
+import '../features/calculators/presentation/calculators_page.dart';
+import '../features/calculators/presentation/calories_page.dart';
+import '../features/calculators/presentation/macros_page.dart';
+import '../features/calculators/presentation/one_rep_max_page.dart';
+import '../features/calculators/presentation/plates_page.dart';
 import '../features/exercises/presentation/exercises_page.dart';
 import '../features/profile/presentation/profile_page.dart';
 import '../features/programs/presentation/programs_page.dart';
@@ -30,6 +37,14 @@ abstract final class Routes {
   /// Opens in sign-up mode; [accountSignIn] opens it in sign-in mode.
   static const accountAuth = '$account/auth';
   static const accountSignIn = '$accountAuth?mode=sign-in';
+
+  static const calculators = '$profile/calculators';
+  static const calories = '$calculators/calories';
+  static const bodyFat = '$calculators/body-fat';
+  static const oneRepMax = '$calculators/one-rep-max';
+  static const plates = '$calculators/plates';
+  static const macros = '$calculators/macros';
+  static const bodyIndices = '$calculators/bmi-ffmi';
 }
 
 /// All routes live here. There is always a user (a guest until they create
@@ -101,6 +116,18 @@ GoRouter buildRouter(AuthCubit auth) {
                   ),
                 ],
               ),
+              GoRoute(
+                path: 'calculators',
+                builder: (_, _) => const CalculatorsPage(),
+                routes: [
+                  _page('calories', const CaloriesPage()),
+                  _page('body-fat', const BodyFatPage()),
+                  _page('one-rep-max', const OneRepMaxPage()),
+                  _page('plates', const PlatesPage()),
+                  _page('macros', const MacrosPage()),
+                  _page('bmi-ffmi', const BodyIndicesPage()),
+                ],
+              ),
             ],
           ),
         ],
@@ -108,6 +135,9 @@ GoRouter buildRouter(AuthCubit auth) {
     ],
   );
 }
+
+GoRoute _page(String path, Widget page) =>
+    GoRoute(path: path, builder: (_, _) => page);
 
 StatefulShellBranch _tab(
   String path,

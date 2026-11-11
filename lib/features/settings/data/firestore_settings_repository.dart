@@ -62,14 +62,44 @@ class FirestoreSettingsRepository implements SettingsRepository {
         map['themeMode'],
         defaults.themePreference,
       ),
+      customBarWeightKg: _barWeight(map['barWeightKg']),
+      customPlates: _plates(map['plates']),
     );
   }
 
+  /// The bar and plates are written only while customised; deleting them
+  /// returns the user to the standard set of their weight unit.
   static Map<String, Object?> _toMap(UserSettings settings) => {
     'weightUnit': _weightCodes[settings.weightUnit],
     'lengthUnit': _lengthCodes[settings.lengthUnit],
     'themeMode': _themeCodes[settings.themePreference],
+    'barWeightKg': settings.customBarWeightKg ?? FieldValue.delete(),
+    'plates':
+        settings.customPlates
+            ?.map((plate) => {'weightKg': plate.weightKg, 'pairs': plate.pairs})
+            .toList() ??
+        FieldValue.delete(),
   };
+
+  static double? _barWeight(Object? raw) =>
+      raw is num && raw >= 0 ? raw.toDouble() : null;
+
+  /// Malformed entries are dropped rather than failing the whole settings.
+  static List<Plate>? _plates(Object? raw) {
+    if (raw is! List) return null;
+    return [
+      for (final entry in raw)
+        if (entry is Map &&
+            entry['weightKg'] is num &&
+            (entry['weightKg'] as num) > 0 &&
+            entry['pairs'] is int &&
+            (entry['pairs'] as int) >= 0)
+          Plate(
+            weightKg: (entry['weightKg'] as num).toDouble(),
+            pairs: entry['pairs'] as int,
+          ),
+    ];
+  }
 
   /// Unknown or missing codes fall back, so a newer app version's values never
   /// break an older one.
