@@ -204,7 +204,7 @@ Ordered. Tick when merged to main. Each: name — screens — acceptance.
 Group 1, foundation
 - [x] Scaffold and Firebase — dev and prod projects, rules deployed — app runs on the simulator against dev
 - [x] Guest start and account linking — account sheet, sign-in — a guest's data survives linking; existing-account sign-in warns and replaces
-- [ ] App shell — five tabs, l10n, settings skeleton — tabs switch and keep state
+- [x] App shell — five tabs, l10n, settings skeleton — tabs switch and keep state
 
 Group 2, the model
 - [ ] 3D renderer — rotate, zoom, tap a muscle, press-and-slide across muscles with label and haptic — smooth on a mid-range phone, picks the right mesh
