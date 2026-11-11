@@ -6,6 +6,7 @@ import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
+import 'package:get_workout/core/grouping.dart';
 import 'package:get_workout/features/programs/domain/program_editing.dart';
 import 'package:get_workout/features/programs/domain/program_repository.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -11,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/equipment_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
+import '../../../core/max_length_formatter.dart';
 import '../../../core/text_length.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_text.dart';
@@ -464,7 +464,9 @@ class _ExerciseSection extends StatelessWidget {
           autofocus: true,
           maxLines: null,
           textCapitalization: TextCapitalization.sentences,
-          inputFormatters: [_maxLength(WorkoutLimits.maxExerciseNoteLength)],
+          inputFormatters: [
+            maxLengthFormatter(WorkoutLimits.maxExerciseNoteLength),
+          ],
           decoration: InputDecoration(labelText: l10n.workoutExerciseNote),
         ),
         actions: [
@@ -569,22 +571,11 @@ class _NoteFieldState extends State<_NoteField> {
     controller: _controller,
     maxLines: null,
     textCapitalization: TextCapitalization.sentences,
-    inputFormatters: [_maxLength(widget.maxLength)],
+    inputFormatters: [maxLengthFormatter(widget.maxLength)],
     decoration: InputDecoration(labelText: widget.label),
     onChanged: widget.onChanged,
   );
 }
-
-/// Cuts text to [max] code units, as the rules count them.
-TextInputFormatter _maxLength(int max) =>
-    TextInputFormatter.withFunction((_, value) {
-      if (value.text.length <= max) return value;
-      final text = cutToLength(value.text, max);
-      return TextEditingValue(
-        text: text,
-        selection: TextSelection.collapsed(offset: text.length),
-      );
-    });
 
 class _Summary extends StatelessWidget {
   const _Summary(this.state);
@@ -669,7 +660,7 @@ class _Summary extends StatelessWidget {
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.sentences,
-          inputFormatters: [_maxLength(ProgramLimits.maxNameLength)],
+          inputFormatters: [maxLengthFormatter(ProgramLimits.maxNameLength)],
           decoration: InputDecoration(labelText: l10n.workoutSaveAsProgramName),
         ),
         actions: [

@@ -3,6 +3,7 @@ import '../../exercises/domain/vocabulary.dart';
 import '../../../core/text_length.dart';
 import '../../programs/domain/active_program.dart';
 import '../../programs/domain/program.dart';
+import '../../../core/grouping.dart';
 import '../../programs/domain/program_editing.dart';
 import '../../programs/domain/program_schedule.dart';
 import 'exercise_stats.dart';
@@ -139,8 +140,9 @@ bool advancesProgram(Workout workout, ActiveProgram? active, Program? program) {
 /// A one-day program of the user's own repeating finished [workout], named
 /// [name]: per exercise its working sets, their rep range or longest
 /// duration, and its heaviest weight (least assistance) as the target.
-/// Exercises not in [catalogue] are left out; rest is the program's, or
-/// the exercise's default. The result still needs `validateProgram`.
+/// Rest is the exercise's default ([fallbackRestS] for a custom one).
+/// Exercises not in [catalogue] are left out. The result still needs
+/// `validateProgram`.
 Program programFromWorkout(
   Workout workout, {
   required String name,
@@ -171,8 +173,10 @@ Program programFromWorkout(
               ProgramLimits.maxDurationS,
             )
           : null,
-      restS: (exercise.goal?.restS ?? known.defaultRestS ?? fallbackRestS)
-          .clamp(0, ProgramLimits.maxRestS),
+      restS: (known.defaultRestS ?? fallbackRestS).clamp(
+        0,
+        ProgramLimits.maxRestS,
+      ),
       targetKg: type.logsWeight && weights.isNotEmpty
           ? (type == LoggingType.assistedBodyweight
                     ? weights.first

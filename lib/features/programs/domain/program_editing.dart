@@ -3,8 +3,6 @@ import '../../exercises/domain/exercise.dart';
 import '../../exercises/domain/vocabulary.dart';
 import 'program.dart';
 
-export '../../../core/grouping.dart';
-
 const _defaultRepMin = 8;
 const _defaultRepMax = 12;
 const _defaultDurationS = 30;

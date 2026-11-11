@@ -14,6 +14,7 @@ import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
+import '../../../core/grouping.dart';
 import '../domain/program_editing.dart';
 import '../domain/program_schedule.dart';
 import 'program_detail_cubit.dart';
