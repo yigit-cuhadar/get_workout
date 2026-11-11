@@ -78,7 +78,7 @@ CatalogueProgram card(
   Goal goal = Goal.buildMuscle,
   int daysPerWeek = 3,
   int? lengthWeeks,
-  List<Equipment> equipment = const [Equipment.dumbbell, Equipment.bench],
+  List<Equipment>? equipment = const [Equipment.dumbbell, Equipment.bench],
   EquipmentProfile profile = EquipmentProfile.dumbbells,
   int order = 1,
 }) => CatalogueProgram(

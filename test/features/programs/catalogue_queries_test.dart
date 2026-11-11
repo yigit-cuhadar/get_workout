@@ -34,7 +34,14 @@ void main() {
       expect(home.fits({Equipment.dumbbell}), isFalse);
     });
 
-    test('a bodyweight program fits everyone', () {
+    test('an unknown equipment list fits only through the profile', () {
+      final unknown = card('u', equipment: null);
+
+      expect(unknown.fits({Equipment.dumbbell}), isFalse);
+      expect(unknown.fits({Equipment.dumbbell, Equipment.bench}), isTrue);
+    });
+
+    test('a program of bodyweight exercises only fits everyone', () {
       final bodyweight = card(
         'bw',
         equipment: const [Equipment.bodyweight],
@@ -63,7 +70,7 @@ void main() {
 
     test('an empty filter lets everything through', () {
       const filter = CatalogueFilter();
-      expect(filter.isEmpty, isTrue);
+      expect(filter.isActive(const {}), isFalse);
       expect(ids(filter), ['a', 'b']);
     });
 
@@ -92,7 +99,8 @@ void main() {
     test('fits my equipment applies once the equipment is known', () {
       const filter = CatalogueFilter(fitsMyEquipment: true);
 
-      expect(filter.isEmpty, isFalse);
+      expect(filter.isActive({Equipment.barbell}), isTrue);
+      expect(filter.isActive(null), isFalse);
       expect(ids(filter, owned: {Equipment.dumbbell, Equipment.bench}), ['a']);
       expect(ids(filter, owned: {Equipment.barbell}), ['b']);
       expect(ids(filter), ['a', 'b']);
@@ -102,8 +110,16 @@ void main() {
   group('recommendPrograms', () {
     List<String> recommend(
       List<CatalogueProgram> programs,
-      TrainingProfile profile,
-    ) => [for (final r in recommendPrograms(programs, profile)) r.program.id];
+      TrainingProfile profile, {
+      bool freeFirst = false,
+    }) => [
+      for (final r in recommendPrograms(
+        programs,
+        profile,
+        freeFirst: freeFirst,
+      ))
+        r.program.id,
+    ];
 
     test('recommends nothing without answers', () {
       expect(recommend([card('a')], const TrainingProfile()), isEmpty);
@@ -138,6 +154,7 @@ void main() {
     test('says why', () {
       expect(
         recommendPrograms(
+          freeFirst: false,
           [card('a')],
           const TrainingProfile(
             goal: Goal.buildMuscle,
@@ -159,10 +176,11 @@ void main() {
 
     test('a day more or less counts, but is no reason to name', () {
       expect(
-        recommendPrograms([
-          card('near', daysPerWeek: 4),
-          card('far', daysPerWeek: 6),
-        ], const TrainingProfile(daysPerWeek: 3)),
+        recommendPrograms(
+          [card('near', daysPerWeek: 4), card('far', daysPerWeek: 6)],
+          const TrainingProfile(daysPerWeek: 3),
+          freeFirst: false,
+        ),
         [Recommendation(card('near', daysPerWeek: 4), const [])],
       );
     });
@@ -190,6 +208,32 @@ void main() {
         ),
         ['easy'],
       );
+    });
+
+    test('an unanswered level counts as beginner, claiming no match', () {
+      final programs = [card('hard', level: Level.intermediate), card('easy')];
+
+      expect(
+        recommendPrograms(
+          programs,
+          const TrainingProfile(goal: Goal.buildMuscle),
+          freeFirst: false,
+        ),
+        [
+          Recommendation(card('easy'), const [MatchReason.goal]),
+        ],
+      );
+    });
+
+    test('free programs first for a user without premium', () {
+      final programs = [
+        card('paid', premium: true, daysPerWeek: 3),
+        card('free', daysPerWeek: 4),
+      ];
+      const profile = TrainingProfile(goal: Goal.buildMuscle, daysPerWeek: 3);
+
+      expect(recommend(programs, profile), ['paid', 'free']);
+      expect(recommend(programs, profile, freeFirst: true), ['free', 'paid']);
     });
 
     test('recommends at most $recommendedCount', () {

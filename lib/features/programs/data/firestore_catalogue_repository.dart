@@ -79,7 +79,6 @@ class FirestoreCatalogueRepository implements CatalogueRepository {
     final days = map['daysPerWeek'];
     final order = map['order'];
     final weeks = map['lengthWeeks'];
-    final equipment = map['equipment'];
     final l10n = {
       if (map['l10n'] case final Map<Object?, Object?> l10n)
         for (final MapEntry(:key, :value) in l10n.entries)
@@ -101,14 +100,21 @@ class FirestoreCatalogueRepository implements CatalogueRepository {
       goal: goal,
       daysPerWeek: days,
       lengthWeeks: weeks is int ? weeks : null,
-      equipment: [
-        if (equipment is List)
-          for (final code in equipment) ?Equipment.values.byCode(code),
-      ],
+      equipment: _equipment(map['equipment']),
       equipmentProfile: profile,
       order: order,
       l10n: l10n,
     );
+  }
+
+  /// Null unless every code is known: an unknown one is needed equipment
+  /// nobody can be said to own.
+  static List<Equipment>? _equipment(Object? value) {
+    if (value is! List || value.isEmpty) return null;
+    final equipment = [
+      for (final code in value) ?Equipment.values.byCode(code),
+    ];
+    return equipment.length == value.length ? equipment : null;
   }
 
   static CatalogueText? _text(Object? value) {

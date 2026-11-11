@@ -24,7 +24,7 @@ class CatalogueProgram extends Equatable {
     required this.goal,
     required this.daysPerWeek,
     this.lengthWeeks,
-    required this.equipment,
+    this.equipment,
     required this.equipmentProfile,
     required this.order,
     required this.l10n,
@@ -39,8 +39,10 @@ class CatalogueProgram extends Equatable {
   final int daysPerWeek;
   final int? lengthWeeks;
 
-  /// The primary equipment of every exercise, in vocabulary order.
-  final List<Equipment> equipment;
+  /// The primary equipment of every exercise, in vocabulary order; null
+  /// when the card's list is missing, empty or has a code this app does not
+  /// know, so it cannot tell what is needed.
+  final List<Equipment>? equipment;
 
   /// Every exercise can be done with this profile's equipment, through its
   /// own equipment or an alternative set.
@@ -58,9 +60,14 @@ class CatalogueProgram extends Equatable {
   /// Whether someone owning [owned] (bodyweight is always available) can do
   /// every exercise: they own all of [equipment], or all of the
   /// [equipmentProfile], which every exercise fits.
-  bool fits(Set<Equipment> owned) =>
-      equipment.every((e) => e == Equipment.bodyweight || owned.contains(e)) ||
-      owned.containsAll(equipmentProfile.equipment);
+  bool fits(Set<Equipment> owned) {
+    final equipment = this.equipment;
+    return (equipment != null &&
+            equipment.every(
+              (e) => e == Equipment.bodyweight || owned.contains(e),
+            )) ||
+        owned.containsAll(equipmentProfile.equipment);
+  }
 
   /// The user's own copy of this program with [days], named in [language].
   Program copy(List<ProgramDay> days, String language) => Program(

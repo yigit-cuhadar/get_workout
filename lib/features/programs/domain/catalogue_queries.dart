@@ -18,16 +18,18 @@ class CatalogueFilter extends Equatable {
   final Set<Goal> goals;
   final Set<EquipmentProfile> profiles;
 
-  /// Only programs [CatalogueProgram.fits] the user's equipment; ignored
-  /// while that is unknown.
+  /// Only programs [CatalogueProgram.fits] the user's equipment; neither
+  /// applied nor active while that is unknown.
   final bool fitsMyEquipment;
 
-  bool get isEmpty =>
-      levels.isEmpty &&
-      daysPerWeek.isEmpty &&
-      goals.isEmpty &&
-      profiles.isEmpty &&
-      !fitsMyEquipment;
+  /// Whether the filter leaves anything out for someone owning [owned]
+  /// (null while unknown).
+  bool isActive(Set<Equipment>? owned) =>
+      levels.isNotEmpty ||
+      daysPerWeek.isNotEmpty ||
+      goals.isNotEmpty ||
+      profiles.isNotEmpty ||
+      (fitsMyEquipment && owned != null);
 
   /// [owned] is the user's equipment, null when unknown.
   bool matches(CatalogueProgram program, Set<Equipment>? owned) =>
@@ -101,20 +103,24 @@ const recommendedCount = 3;
 /// The programs that suit [profile] best, at most [recommendedCount].
 ///
 /// A program that needs equipment the user lacks, or is of a higher level
-/// than theirs, is never recommended. The rest score 3 for the user's goal,
-/// 2 for their level, 2 for their days per week and 1 for a day more or
-/// less; a program scoring nothing is left out. Ties keep catalogue order.
+/// than theirs (beginner while unanswered), is never recommended. The rest
+/// score 3 for the user's goal, 2 for their level, 2 for their days per
+/// week and 1 for a day more or less; a program scoring nothing is left
+/// out. With [freeFirst] (a user without premium) free programs come before
+/// premium ones; within that, by score, ties in catalogue order.
 List<Recommendation> recommendPrograms(
   List<CatalogueProgram> programs,
-  TrainingProfile profile,
-) {
+  TrainingProfile profile, {
+  required bool freeFirst,
+}) {
   final owned = profile.equipment;
   final level = profile.level;
+  final ceiling = level ?? Level.beginner;
   final days = profile.daysPerWeek;
   final scored = <(int, Recommendation)>[];
   for (final program in programs) {
     if (owned != null && !program.fits(owned)) continue;
-    if (level != null && program.level.index > level.index) continue;
+    if (program.level.index > ceiling.index) continue;
     final dayGap = days == null ? null : (program.daysPerWeek - days).abs();
     final reasons = [
       if (program.goal == profile.goal) MatchReason.goal,
@@ -138,9 +144,13 @@ List<Recommendation> recommendPrograms(
       ]),
     ));
   }
+  int tier((int, Recommendation) entry) =>
+      freeFirst && entry.$2.program.premium ? 1 : 0;
   // Indexes break ties, keeping catalogue order.
   final ranked = scored.indexed.toList()
     ..sort((a, b) {
+      final byTier = tier(a.$2).compareTo(tier(b.$2));
+      if (byTier != 0) return byTier;
       final byScore = b.$2.$1.compareTo(a.$2.$1);
       return byScore != 0 ? byScore : a.$1.compareTo(b.$1);
     });

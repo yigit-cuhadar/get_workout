@@ -95,6 +95,7 @@ class ProgramsModule implements FeatureModule {
       // One catalogue for the whole app, keeping its filters.
       ..registerLazySingleton(
         () => ProgramCatalogueCubit(
+          watchAuthUser: sl(),
           watchCatalogue: sl(),
           watchPremium: sl(),
           profile: sl(),

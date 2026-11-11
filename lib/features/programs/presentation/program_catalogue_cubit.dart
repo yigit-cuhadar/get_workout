@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../../core/user_stream_follower.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/equipment_cubit.dart';
 import '../../profile/presentation/profile_cubit.dart';
@@ -47,7 +49,12 @@ class ProgramCatalogueState extends Equatable {
       if (filter.matches(program, profile.equipment)) program,
   ];
 
-  List<Recommendation> get recommended => recommendPrograms(programs, profile);
+  /// Whether the filters leave anything out.
+  bool get filtering => filter.isActive(profile.equipment);
+
+  /// Free programs first unless the user is known to have premium.
+  List<Recommendation> get recommended =>
+      recommendPrograms(programs, profile, freeFirst: premium != true);
 
   /// The days per week the programs have, for the filter.
   List<int> get dayOptions =>
@@ -78,14 +85,41 @@ class ProgramCatalogueState extends Equatable {
 /// the user's profile and premium status mean for them.
 class ProgramCatalogueCubit extends Cubit<ProgramCatalogueState> {
   ProgramCatalogueCubit({
-    required this._watchCatalogue,
+    required WatchAuthUser watchAuthUser,
+    required WatchCatalogue watchCatalogue,
     required WatchPremium watchPremium,
     required ProfileCubit profile,
     required EquipmentCubit equipment,
+    Duration retryDelay = const Duration(seconds: 1),
   }) : _profile = profile,
        _equipment = equipment,
        super(const ProgramCatalogueState()) {
-    _follow();
+    // Listens again for every user (the rules need one, and signing out
+    // ends the listener with an error) and after every failure.
+    _follower = UserStreamFollower(
+      userIds: watchAuthUser().map((user) => user?.id),
+      watch: (_) => watchCatalogue(),
+      onUser: (_) {},
+      onData: (programs) => emit(
+        state.copyWith(
+          status: ProgramCatalogueStatus.ready,
+          programs: programs,
+        ),
+      ),
+      onError: (error) {
+        // Cards on screen stay; they are only as old as the last change.
+        if (state.status == ProgramCatalogueStatus.ready) return;
+        emit(
+          state.copyWith(
+            status: error is NetworkFailure
+                ? ProgramCatalogueStatus.offline
+                : ProgramCatalogueStatus.failure,
+          ),
+        );
+      },
+      logTag: 'catalogue',
+      retryDelay: retryDelay,
+    );
     _premiumSubscription = watchPremium().listen(
       (premium) => emit(state.copyWith(premium: () => premium)),
       onError: (Object error, StackTrace stack) =>
@@ -96,19 +130,19 @@ class ProgramCatalogueCubit extends Cubit<ProgramCatalogueState> {
     _equipmentSubscription = equipment.stream.listen((_) => _updateProfile());
   }
 
-  final WatchCatalogue _watchCatalogue;
   final ProfileCubit _profile;
   final EquipmentCubit _equipment;
-  StreamSubscription<List<CatalogueProgram>>? _programsSubscription;
+  late final UserStreamFollower<List<CatalogueProgram>> _follower;
   late final StreamSubscription<bool?> _premiumSubscription;
   late final StreamSubscription<Object?> _profileSubscription;
   late final StreamSubscription<Object?> _equipmentSubscription;
 
-  /// Listens again after a failure.
+  /// Listens again at once after a failure.
   void retry() {
-    if (state.status == ProgramCatalogueStatus.ready) return;
-    emit(state.copyWith(status: ProgramCatalogueStatus.loading));
-    _follow();
+    if (state.status != ProgramCatalogueStatus.ready) {
+      emit(state.copyWith(status: ProgramCatalogueStatus.loading));
+    }
+    _follower.resume();
   }
 
   void toggleLevel(Level level) => _setFilter(
@@ -141,29 +175,6 @@ class ProgramCatalogueCubit extends Cubit<ProgramCatalogueState> {
       ? ({...values}..remove(value))
       : {...values, value};
 
-  void _follow() {
-    unawaited(_programsSubscription?.cancel());
-    _programsSubscription = _watchCatalogue().listen(
-      (programs) => emit(
-        state.copyWith(
-          status: ProgramCatalogueStatus.ready,
-          programs: programs,
-        ),
-      ),
-      onError: (Object error) {
-        // Cards on screen stay; they are only as old as the last change.
-        if (state.status == ProgramCatalogueStatus.ready) return;
-        emit(
-          state.copyWith(
-            status: error is NetworkFailure
-                ? ProgramCatalogueStatus.offline
-                : ProgramCatalogueStatus.failure,
-          ),
-        );
-      },
-    );
-  }
-
   void _updateProfile() {
     final profile = _profile.state.profile;
     emit(
@@ -180,7 +191,7 @@ class ProgramCatalogueCubit extends Cubit<ProgramCatalogueState> {
 
   @override
   Future<void> close() async {
-    await _programsSubscription?.cancel();
+    await _follower.cancel();
     await _premiumSubscription.cancel();
     await _profileSubscription.cancel();
     await _equipmentSubscription.cancel();

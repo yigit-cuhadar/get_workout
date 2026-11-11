@@ -78,6 +78,7 @@ void main() {
   late StreamController<UserProfile> profile;
   late StreamController<Set<Equipment>?> owned;
   late StreamController<List<Program>> userPrograms;
+  late StreamController<AuthUser?> users;
   late FakePremium premiumStatus;
   late ProfileCubit profileCubit;
   late EquipmentCubit equipmentCubit;
@@ -99,6 +100,7 @@ void main() {
     profile = StreamController.broadcast();
     owned = StreamController.broadcast();
     userPrograms = StreamController.broadcast();
+    users = StreamController.broadcast();
     premiumStatus = FakePremium();
 
     when(() => auth.currentUser).thenReturn(member);
@@ -127,7 +129,17 @@ void main() {
       watchEquipment: WatchOwnedEquipment(library),
       saveEquipment: SaveOwnedEquipment(library),
     );
+    final catalogueAuth = MockAuthRepository();
+    // Like Firebase, the current user arrives on subscription.
+    Stream<AuthUser?> watchUser() async* {
+      yield member;
+      yield* users.stream;
+    }
+
+    when(catalogueAuth.watchUser).thenAnswer((_) => watchUser());
     catalogue = ProgramCatalogueCubit(
+      watchAuthUser: WatchAuthUser(catalogueAuth),
+      retryDelay: Duration.zero,
       watchCatalogue: WatchCatalogue(catalogueRepository),
       watchPremium: WatchPremium(premiumStatus),
       profile: profileCubit,
@@ -192,7 +204,7 @@ void main() {
       expect(catalogue.state.status, ProgramCatalogueStatus.failure);
 
       catalogue.retry();
-      expect(catalogue.state.status, ProgramCatalogueStatus.loading);
+      await pumpEventQueue();
       cards.add([free]);
       await pumpEventQueue();
 
@@ -200,14 +212,34 @@ void main() {
       verify(catalogueRepository.watchPrograms).called(2);
     });
 
-    test('cards on screen stay after a failure', () async {
+    test('cards on screen stay after a failure, which listens again', () async {
       cards.add([free]);
       await pumpEventQueue();
-      cards.addError(const NetworkFailure());
+      cards.addError(const PermissionFailure());
       await pumpEventQueue();
 
       expect(catalogue.state.status, ProgramCatalogueStatus.ready);
       expect(catalogue.state.programs, [free]);
+      verify(catalogueRepository.watchPrograms).called(2);
+
+      cards.add([free, paid]);
+      await pumpEventQueue();
+      expect(catalogue.state.programs, [free, paid]);
+    });
+
+    test('listens again for every user, and not while signed out', () async {
+      cards.add([free]);
+      await pumpEventQueue();
+      verify(catalogueRepository.watchPrograms).called(1);
+
+      users.add(null);
+      await pumpEventQueue();
+      verifyNever(catalogueRepository.watchPrograms);
+      expect(catalogue.state.programs, [free]);
+
+      users.add(const AuthUser(id: 'u2', isAnonymous: true));
+      await pumpEventQueue();
+      verify(catalogueRepository.watchPrograms).called(1);
     });
 
     test('filters, and clears them', () async {
@@ -241,6 +273,7 @@ void main() {
     });
 
     test('recommends from the profile and the equipment', () async {
+      premiumStatus.controller.add(true);
       cards.add([free, paid]);
       profile.add(
         const UserProfile(
@@ -256,6 +289,35 @@ void main() {
       await pumpEventQueue();
       expect(catalogue.state.recommended.map((r) => r.program), [free]);
     });
+
+    test('puts free programs first until premium is known', () async {
+      cards.add([free, paid]);
+      profile.add(
+        const UserProfile(
+          goal: Goal.getStronger,
+          level: Level.advanced,
+          daysPerWeek: 4,
+        ),
+      );
+      await pumpEventQueue();
+
+      expect(catalogue.state.recommended.map((r) => r.program), [free, paid]);
+    });
+
+    test(
+      'fits my equipment is no filter while the equipment is unknown',
+      () async {
+        cards.add([free, paid]);
+        catalogue.setFitsMyEquipment(true);
+        await pumpEventQueue();
+
+        expect(catalogue.state.filtering, isFalse);
+
+        owned.add({Equipment.dumbbell, Equipment.bench});
+        await pumpEventQueue();
+        expect(catalogue.state.filtering, isTrue);
+      },
+    );
 
     test('follows the premium status', () async {
       expect(catalogue.state.premium, isNull);

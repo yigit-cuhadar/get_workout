@@ -138,7 +138,7 @@ class _Program extends StatelessWidget {
     final ready = state.status == CatalogueDetailStatus.ready;
     // Bodyweight is everyone's; listing it says nothing.
     final equipment = [
-      for (final e in program.equipment)
+      for (final e in program.equipment ?? const <Equipment>[])
         if (e != Equipment.bodyweight) e,
     ];
     return Scaffold(

@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/data/firestore_catalogue_repository.dart';
 import 'package:get_workout/features/programs/domain/catalogue_rules.dart';
 
@@ -82,7 +81,7 @@ void main() {
           reason: card.id,
         );
         expect(
-          [for (final e in card.equipment) e.code],
+          [for (final e in card.equipment!) e.code],
           json['equipment'],
           reason: card.id,
         );
@@ -131,7 +130,8 @@ void main() {
       final cards = await repository.watchPrograms().first;
 
       expect([for (final c in cards) c.id], ['ok']);
-      expect(cards.single.equipment, [Equipment.dumbbell, Equipment.bench]);
+      // An unknown code makes the list unusable, not shorter.
+      expect(cards.single.equipment, isNull);
       expect(cards.single.lengthWeeks, isNull);
     });
 

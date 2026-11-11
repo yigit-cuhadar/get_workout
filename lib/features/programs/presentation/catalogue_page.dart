@@ -8,6 +8,7 @@ import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
+import '../../exercises/presentation/widgets/choice_section.dart';
 import '../../profile/presentation/profile_questions.dart';
 import '../domain/catalogue_program.dart';
 import '../domain/catalogue_queries.dart';
@@ -42,7 +43,7 @@ class _CatalogueView extends StatelessWidget {
               IconButton(
                 tooltip: l10n.catalogueFilters,
                 icon: Badge(
-                  isLabelVisible: !state.filter.isEmpty,
+                  isLabelVisible: state.filtering,
                   child: const Icon(Icons.filter_list),
                 ),
                 onPressed: () => _showFilterSheet(context),
@@ -77,7 +78,7 @@ class _Programs extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final visible = state.visible;
     // Recommendations would hide what the filters ask for.
-    final recommended = state.filter.isEmpty
+    final recommended = !state.filtering
         ? state.recommended
         : const <Recommendation>[];
     return ListView(
@@ -197,7 +198,7 @@ class _FilterSheet extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               trailing: TextButton(
-                onPressed: filter.isEmpty ? null : cubit.clearFilters,
+                onPressed: state.filtering ? cubit.clearFilters : null,
                 child: Text(l10n.catalogueClearFilters),
               ),
             ),
@@ -209,28 +210,28 @@ class _FilterSheet extends StatelessWidget {
               value: filter.fitsMyEquipment && equipmentKnown,
               onChanged: equipmentKnown ? cubit.setFitsMyEquipment : null,
             ),
-            _ChoiceSection(
+            ChoiceSection(
               title: l10n.catalogueFilterLevel,
               values: Level.values,
               selected: filter.levels,
               labelOf: l10n.levelName,
               onToggle: cubit.toggleLevel,
             ),
-            _ChoiceSection(
+            ChoiceSection(
               title: l10n.catalogueFilterDays,
               values: state.dayOptions,
               selected: filter.daysPerWeek,
               labelOf: l10n.programDayCount,
               onToggle: cubit.toggleDays,
             ),
-            _ChoiceSection(
+            ChoiceSection(
               title: l10n.catalogueFilterGoal,
               values: Goal.values,
               selected: filter.goals,
               labelOf: l10n.goalName,
               onToggle: cubit.toggleGoal,
             ),
-            _ChoiceSection(
+            ChoiceSection(
               title: l10n.catalogueFilterEquipment,
               values: EquipmentProfile.values,
               selected: filter.profiles,
@@ -252,44 +253,4 @@ class _FilterSheet extends StatelessWidget {
       },
     );
   }
-}
-
-/// A titled group of filter chips, any number selected.
-class _ChoiceSection<T> extends StatelessWidget {
-  const _ChoiceSection({
-    required this.title,
-    required this.values,
-    required this.selected,
-    required this.labelOf,
-    required this.onToggle,
-  });
-
-  final String title;
-  final List<T> values;
-  final Set<T> selected;
-  final String Function(T value) labelOf;
-  final ValueChanged<T> onToggle;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      ListTile(dense: true, title: Text(title)),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-        child: Wrap(
-          spacing: Gap.sm,
-          runSpacing: Gap.xs,
-          children: [
-            for (final value in values)
-              FilterChip(
-                label: Text(labelOf(value)),
-                selected: selected.contains(value),
-                onSelected: (_) => onToggle(value),
-              ),
-          ],
-        ),
-      ),
-    ],
-  );
 }
