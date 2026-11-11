@@ -235,6 +235,11 @@
     "equipment": [
       "dumbbell"
     ],
+    "equipmentAlternatives": [
+      [
+        "kettlebell"
+      ]
+    ],
     "mainMuscles": [
       "hamstring",
       "glute"
@@ -511,7 +516,12 @@
     "movementPattern": "isolation",
     "position": "kneeling",
     "equipment": [
-      "other"
+      "back_extension_bench"
+    ],
+    "equipmentAlternatives": [
+      [
+        "other"
+      ]
     ],
     "mainMuscles": [
       "hamstring"
@@ -534,7 +544,8 @@
           "Nordic Hamstring Lowering"
         ],
         "setup": [
-          "Kneel on a pad with your heels anchored under a bar, a partner's hands or a fixed object.",
+          "Kneel on the pad of a GHD or Nordic bench with your heels locked under the foot pads.",
+          "If you have no bench, kneel on a mat and have a partner hold your ankles or hook your heels under a fixed object.",
           "Keep a straight line from knees to head."
         ],
         "execution": [
@@ -615,6 +626,11 @@
     "position": "standing",
     "equipment": [
       "dumbbell"
+    ],
+    "equipmentAlternatives": [
+      [
+        "kettlebell"
+      ]
     ],
     "mainMuscles": [
       "hamstring",
@@ -717,6 +733,11 @@
     "equipment": [
       "kettlebell"
     ],
+    "equipmentAlternatives": [
+      [
+        "dumbbell"
+      ]
+    ],
     "mainMuscles": [
       "glute",
       "hamstring"
@@ -766,7 +787,7 @@
     "movementPattern": "isolation",
     "position": "prone",
     "equipment": [
-      "machine"
+      "back_extension_bench"
     ],
     "mainMuscles": [
       "hamstring",
@@ -931,7 +952,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 288,
+    "popularity": 289,
     "l10n": {
       "en": {
         "name": "Band Good Morning",
@@ -978,7 +999,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 303,
+    "popularity": 304,
     "l10n": {
       "en": {
         "name": "Band Leg Curl",
@@ -1027,7 +1048,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 318,
+    "popularity": 319,
     "l10n": {
       "en": {
         "name": "Dumbbell Leg Curl",
@@ -1076,7 +1097,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 336,
+    "popularity": 337,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Leg Curl",
@@ -1130,7 +1151,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 353,
+    "popularity": 354,
     "l10n": {
       "en": {
         "name": "Stiff-Leg Deadlift",
@@ -1169,6 +1190,11 @@
     "equipment": [
       "dumbbell"
     ],
+    "equipmentAlternatives": [
+      [
+        "kettlebell"
+      ]
+    ],
     "mainMuscles": [
       "hamstring",
       "glute"
@@ -1182,7 +1208,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2,
-    "popularity": 367,
+    "popularity": 369,
     "l10n": {
       "en": {
         "name": "Kickstand Romanian Deadlift",
@@ -1234,7 +1260,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2.5,
-    "popularity": 383,
+    "popularity": 385,
     "l10n": {
       "en": {
         "name": "Landmine Romanian Deadlift",

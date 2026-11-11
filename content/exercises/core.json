@@ -954,7 +954,7 @@
     "level": "beginner",
     "force": "pull",
     "movementPattern": "core_flexion",
-    "position": "hanging",
+    "position": "supported",
     "equipment": [
       "dip_station"
     ],
@@ -1346,7 +1346,7 @@
     "level": "advanced",
     "force": "static",
     "movementPattern": "core_stability",
-    "position": "seated",
+    "position": "supported",
     "equipment": [
       "dip_station"
     ],
@@ -1451,6 +1451,11 @@
     "position": "standing",
     "equipment": [
       "dumbbell"
+    ],
+    "equipmentAlternatives": [
+      [
+        "kettlebell"
+      ]
     ],
     "mainMuscles": [
       "oblique"
@@ -1707,7 +1712,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 290,
+    "popularity": 291,
     "l10n": {
       "en": {
         "name": "Side Plank Hip Dip",
@@ -1741,7 +1746,6 @@
     "movementPattern": "core_stability",
     "position": "prone",
     "equipment": [
-      "bodyweight",
       "plate"
     ],
     "mainMuscles": [
@@ -1757,7 +1761,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 305,
+    "popularity": 306,
     "l10n": {
       "en": {
         "name": "Weighted Plank",
@@ -1804,7 +1808,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 320,
+    "popularity": 321,
     "l10n": {
       "en": {
         "name": "Kneeling Side Plank",
@@ -1852,7 +1856,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 327,
+    "popularity": 328,
     "l10n": {
       "en": {
         "name": "Band Pallof Press",
@@ -1901,7 +1905,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 338,
+    "popularity": 339,
     "l10n": {
       "en": {
         "name": "Standing Ab Wheel Rollout",
@@ -1950,7 +1954,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 345,
+    "popularity": 346,
     "l10n": {
       "en": {
         "name": "Rotary Torso Machine",
@@ -2002,7 +2006,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 354,
+    "popularity": 355,
     "l10n": {
       "en": {
         "name": "Hanging Windshield Wiper",
@@ -2038,6 +2042,14 @@
     "equipment": [
       "plate"
     ],
+    "equipmentAlternatives": [
+      [
+        "dumbbell"
+      ],
+      [
+        "medicine_ball"
+      ]
+    ],
     "mainMuscles": [
       "oblique"
     ],
@@ -2051,7 +2063,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 361,
+    "popularity": 363,
     "l10n": {
       "en": {
         "name": "Plate Russian Twist",
@@ -2100,7 +2112,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 369,
+    "popularity": 371,
     "l10n": {
       "en": {
         "name": "Band Woodchop",
@@ -2150,7 +2162,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 376,
+    "popularity": 378,
     "l10n": {
       "en": {
         "name": "Low-to-High Cable Woodchop",
@@ -2200,7 +2212,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 384,
+    "popularity": 386,
     "l10n": {
       "en": {
         "name": "Stability Ball Rollout",
@@ -2249,7 +2261,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 392,
+    "popularity": 394,
     "l10n": {
       "en": {
         "name": "Ab Wheel Wall Rollout",
@@ -2297,7 +2309,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 403,
+    "popularity": 405,
     "l10n": {
       "en": {
         "name": "Ab Wheel Diagonal Rollout",
@@ -2347,7 +2359,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 405,
+    "popularity": 407,
     "l10n": {
       "en": {
         "name": "Stir the Pot",
@@ -2393,7 +2405,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 406,
+    "popularity": 408,
     "l10n": {
       "en": {
         "name": "Stability Ball Knee Tuck",
@@ -2441,7 +2453,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 407,
+    "popularity": 409,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Knee Tuck",
@@ -2490,7 +2502,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 408,
+    "popularity": 410,
     "l10n": {
       "en": {
         "name": "Stability Ball Pike",
@@ -2538,7 +2550,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 410,
+    "popularity": 412,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Pike",
@@ -2559,6 +2571,112 @@
         ],
         "cues": [
           "Hips high, legs straight"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ghd_sit_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "seated",
+    "equipment": [
+      "back_extension_bench"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [
+      "quads"
+    ],
+    "family": "ghd_sit_up",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 280,
+    "l10n": {
+      "en": {
+        "name": "GHD Sit-Up",
+        "aliases": [
+          "Glute-Ham Developer Sit-Up"
+        ],
+        "setup": [
+          "Sit on the GHD pad facing away from the foot plate with your hips just off the front of the pad.",
+          "Lock your feet under the rollers with your knees slightly bent."
+        ],
+        "execution": [
+          "Lean back with control until your torso is about parallel to the floor.",
+          "Kick your knees straight and curl your torso up to sit tall.",
+          "Reach toward the foot plate, then lower again."
+        ],
+        "mistakes": [
+          "Dropping far below parallel in the first sessions.",
+          "Letting the lower back sag at the bottom."
+        ],
+        "safety": "Start with a short range and few reps; this movement causes heavy soreness and strains the hip flexors at first.",
+        "cues": [
+          "Lean back with control",
+          "Kick and curl"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_45_degree_side_bend",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "side_lying",
+    "equipment": [
+      "back_extension_bench"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "erector"
+    ],
+    "family": "side_bend",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 360,
+    "l10n": {
+      "en": {
+        "name": "45-Degree Side Bend",
+        "aliases": [
+          "Back Extension Side Bend",
+          "Hyperextension Side Bend"
+        ],
+        "setup": [
+          "Stand side-on in a 45-degree back extension bench with your hip against the pad.",
+          "Hook your feet under the foot pads and cross your arms on your chest, or hug a plate."
+        ],
+        "execution": [
+          "Bend sideways toward the floor until you feel a stretch along your top side.",
+          "Lift your torso back up until your body is in a straight line.",
+          "Finish the set, then switch sides."
+        ],
+        "mistakes": [
+          "Twisting the torso toward the floor.",
+          "Bouncing out of the bottom."
+        ],
+        "cues": [
+          "Straight side to side",
+          "Lift with the top side"
         ]
       }
     }

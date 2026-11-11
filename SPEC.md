@@ -75,12 +75,16 @@ Stored as these string codes.
   `abdominal`, `oblique`, `erector`, `glute`, `hip_flexor`, `abductor`,
   `adductor`, `quads`, `hamstring`, `calf`. Muscles the model lacks are filed
   under the nearest group (rhomboids → `trap`, serratus → `pec`, neck → `trap`,
-  tibialis → `calf`). The mesh for `forearm` is named `wrist_*`.
-- **equipment** (22): `barbell`, `ez_bar`, `trap_bar`, `dumbbell`,
-  `kettlebell`, `plate`, `cable`, `machine`, `smith_machine`, `bench`,
-  `pull_up_bar`, `dip_station`, `resistance_band`, `suspension_trainer`,
-  `rings`, `medicine_ball`, `stability_ball`, `ab_wheel`, `landmine`, `sled`,
-  `bodyweight`, `other`
+  tibialis → `calf`, rotator cuff → `rear_delt`, brachioradialis →
+  `forearm`). The mesh for `forearm` is named `wrist_*`.
+- **equipment** (25): `barbell`, `ez_bar`, `trap_bar`, `dumbbell`,
+  `kettlebell`, `plate`, `cable`, `machine`, `smith_machine`, `bench`, `box`,
+  `back_extension_bench`, `pull_up_bar`, `dip_station`, `resistance_band`,
+  `suspension_trainer`, `rings`, `medicine_ball`, `stability_ball`,
+  `ab_wheel`, `landmine`, `sled`, `jump_rope`, `bodyweight`, `other`.
+  `box` is any plyo box, step or raised surface; `back_extension_bench`
+  covers back extension and GHD benches. `bodyweight` means no equipment at
+  all, so it is only ever listed alone.
 - **movementPattern** (14): `squat`, `hinge`, `lunge`, `horizontal_push`,
   `vertical_push`, `horizontal_pull`, `vertical_pull`, `carry`,
   `core_flexion`, `core_stability`, `rotation`, `explosive`, `isolation`,
@@ -91,7 +95,8 @@ Stored as these string codes.
 - **level**: `beginner`, `intermediate`, `advanced`
 - **force**: `push`, `pull`, `static`
 - **position**: `standing`, `seated`, `supine`, `prone`, `incline`, `decline`,
-  `hanging`, `kneeling`, `side_lying`, `quadruped`
+  `hanging`, `supported` (on the arms: dips, L-sit, ring support),
+  `inverted` (head down: handstands), `kneeling`, `side_lying`, `quadruped`
 - **grip** (optional): `overhand`, `underhand`, `neutral`, `mixed`;
   **gripWidth** (optional): `narrow`, `shoulder`, `wide`
 - **setType**: `normal`, `warmup`, `drop`
@@ -111,6 +116,7 @@ Firestore. Timestamps are server timestamps; ids are generated on the client.
 | `loggingType`, `mechanic`, `laterality`, `level`, `force`, `movementPattern`, `position` | code | |
 | `grip`, `gripWidth` | code? | |
 | `equipment` | code[] | 1+ |
+| `equipmentAlternatives` | code[][]? | 0-3 other equipment sets, each 1+ codes, none equal to `equipment` or each other; the exercise can be done with `equipment` or any one set |
 | `mainMuscles` | code[] | 1-2 |
 | `secondaryMuscles` | code[] | 0-4 |
 | `family` | string | Groups variations, e.g. `bench_press` |
@@ -123,7 +129,9 @@ Firestore. Timestamps are server timestamps; ids are generated on the client.
 | `updatedAt` | timestamp | Clients sync incrementally on this |
 
 Alternatives are computed on device: same main muscle and movement pattern,
-the user's equipment first, then popularity; pinned first, excluded removed.
+the user's equipment first (an exercise fits when `equipment` or any of its
+`equipmentAlternatives` sets fits), then popularity; pinned first, excluded
+removed.
 Variations are the other exercises of the same `family`, ordered by rank.
 
 **`programs/{id}`** (catalog card): `status`, `premium`, `level`, `goal`,

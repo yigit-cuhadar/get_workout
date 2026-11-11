@@ -276,6 +276,12 @@
       "ez_bar",
       "bench"
     ],
+    "equipmentAlternatives": [
+      [
+        "barbell",
+        "bench"
+      ]
+    ],
     "mainMuscles": [
       "triceps"
     ],
@@ -431,7 +437,7 @@
     "level": "intermediate",
     "force": "push",
     "movementPattern": "vertical_push",
-    "position": "hanging",
+    "position": "supported",
     "grip": "neutral",
     "gripWidth": "shoulder",
     "equipment": [
@@ -543,6 +549,12 @@
     "equipment": [
       "ez_bar",
       "bench"
+    ],
+    "equipmentAlternatives": [
+      [
+        "barbell",
+        "bench"
+      ]
     ],
     "mainMuscles": [
       "biceps"
@@ -738,9 +750,14 @@
     "level": "beginner",
     "force": "push",
     "movementPattern": "vertical_push",
-    "position": "seated",
+    "position": "supported",
     "equipment": [
       "bench"
+    ],
+    "equipmentAlternatives": [
+      [
+        "box"
+      ]
     ],
     "mainMuscles": [
       "triceps"
@@ -1249,6 +1266,11 @@
     "gripWidth": "shoulder",
     "equipment": [
       "ez_bar"
+    ],
+    "equipmentAlternatives": [
+      [
+        "barbell"
+      ]
     ],
     "mainMuscles": [
       "forearm",
@@ -1806,7 +1828,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 289,
+    "popularity": 290,
     "l10n": {
       "en": {
         "name": "Band Hammer Curl",
@@ -1853,7 +1875,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 294,
+    "popularity": 295,
     "l10n": {
       "en": {
         "name": "Band Reverse Curl",
@@ -1901,7 +1923,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 304,
+    "popularity": 305,
     "l10n": {
       "en": {
         "name": "Zottman Curl",
@@ -1948,7 +1970,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 311,
+    "popularity": 312,
     "l10n": {
       "en": {
         "name": "Cable Triceps Kickback",
@@ -1997,7 +2019,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 319,
+    "popularity": 320,
     "l10n": {
       "en": {
         "name": "Bayesian Cable Curl",
@@ -2047,7 +2069,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 325,
+    "popularity": 326,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Biceps Curl",
@@ -2095,7 +2117,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 337,
+    "popularity": 338,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Triceps Extension",
@@ -2144,7 +2166,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 343,
+    "popularity": 344,
     "l10n": {
       "en": {
         "name": "Single-Arm Reverse-Grip Pushdown",
@@ -2193,7 +2215,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 360,
+    "popularity": 362,
     "l10n": {
       "en": {
         "name": "One-Arm Dead Hang",
@@ -2240,7 +2262,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 368,
+    "popularity": 370,
     "l10n": {
       "en": {
         "name": "Plate Pinch Hold",
@@ -2289,7 +2311,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 375,
+    "popularity": 377,
     "l10n": {
       "en": {
         "name": "Wrist Roller",
@@ -2373,7 +2395,7 @@
     "level": "intermediate",
     "force": "static",
     "movementPattern": "vertical_push",
-    "position": "hanging",
+    "position": "supported",
     "equipment": [
       "rings"
     ],
@@ -2390,7 +2412,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 391,
+    "popularity": 393,
     "l10n": {
       "en": {
         "name": "Ring Support Hold",

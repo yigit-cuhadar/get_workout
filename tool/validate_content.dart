@@ -53,6 +53,8 @@ const equipment = [
   'machine',
   'smith_machine',
   'bench',
+  'box',
+  'back_extension_bench',
   'pull_up_bar',
   'dip_station',
   'resistance_band',
@@ -63,6 +65,7 @@ const equipment = [
   'ab_wheel',
   'landmine',
   'sled',
+  'jump_rope',
   'bodyweight',
   'other',
 ];
@@ -94,6 +97,8 @@ const positions = {
   'incline',
   'decline',
   'hanging',
+  'supported',
+  'inverted',
   'kneeling',
   'side_lying',
   'quadruped',
@@ -107,6 +112,7 @@ const statuses = {'draft', 'live', 'retired'};
 const minTotal = 400;
 const minMainPerMuscle = 12;
 const minPerEquipment = 4;
+const minPerEquipmentOverrides = {'jump_rope': 1};
 const minPerPattern = 8;
 const minPerProfileMuscle = 3;
 const equipmentProfiles = {
@@ -128,6 +134,7 @@ const allowedKeys = {
   'grip',
   'gripWidth',
   'equipment',
+  'equipmentAlternatives',
   'mainMuscles',
   'secondaryMuscles',
   'family',
@@ -164,6 +171,18 @@ class Exercise {
   List<String> strings(String key) {
     final value = data[key];
     return value is List ? value.whereType<String>().toList() : const [];
+  }
+
+  /// `equipment` followed by every `equipmentAlternatives` set; the exercise
+  /// can be done with any one of them.
+  List<List<String>> get equipmentSets {
+    final alternatives = data['equipmentAlternatives'];
+    return [
+      strings('equipment'),
+      if (alternatives is List)
+        for (final set in alternatives)
+          if (set is List) set.whereType<String>().toList(),
+    ];
   }
 
   Map<String, Object?> get text {
@@ -289,6 +308,41 @@ void checkExercise(Exercise e) {
   }
 
   codeList('equipment', equipment, 1, equipment.length);
+  final alternatives = d['equipmentAlternatives'];
+  if (alternatives != null) {
+    if (alternatives is! List) {
+      err('equipmentAlternatives must be a list of equipment sets');
+    } else {
+      if (alternatives.length > 3) {
+        err('equipmentAlternatives has ${alternatives.length} sets, max 3');
+      }
+      for (final set in alternatives) {
+        if (set is! List || set.isEmpty) {
+          err('equipmentAlternatives sets must be non-empty lists');
+          continue;
+        }
+        for (final item in set) {
+          if (item is! String || !equipment.contains(item)) {
+            err('equipmentAlternatives has unknown code "$item"');
+          }
+        }
+        if (set.toSet().length != set.length) {
+          err('equipmentAlternatives set $set has duplicates');
+        }
+      }
+    }
+  }
+  final sets = e.equipmentSets.map((s) => s.toSet()).toList();
+  for (final (i, set) in sets.indexed) {
+    if (set.contains('bodyweight') && set.length > 1) {
+      err('bodyweight must be listed alone: ${set.join(', ')}');
+    }
+    for (final other in sets.take(i)) {
+      if (other.length == set.length && other.containsAll(set)) {
+        err('equipment set {${set.join(', ')}} is listed twice');
+      }
+    }
+  }
   codeList('mainMuscles', muscles, 1, 2);
   codeList('secondaryMuscles', muscles, 0, 4);
   final overlap = e
@@ -507,12 +561,12 @@ String checkCoverage(List<Exercise> exercises) {
   out.writeln(' Equipment');
   for (final item in equipment) {
     final count = exercises
-        .where((e) => e.strings('equipment').contains(item))
+        .where((e) => e.equipmentSets.any((set) => set.contains(item)))
         .length;
     if (item == 'other') {
       out.writeln('     ${item.padRight(28)} $count');
     } else {
-      line(item, count, minPerEquipment);
+      line(item, count, minPerEquipmentOverrides[item] ?? minPerEquipment);
     }
   }
 
@@ -527,7 +581,7 @@ String checkCoverage(List<Exercise> exercises) {
   equipmentProfiles.forEach((profile, allowed) {
     out.writeln(' Profile $profile {${allowed.join(', ')}}');
     final doable = exercises.where(
-      (e) => e.strings('equipment').every(allowed.contains),
+      (e) => e.equipmentSets.any((set) => set.every(allowed.contains)),
     );
     for (final muscle in muscles) {
       final count = doable
