@@ -62,14 +62,46 @@ class FirestoreSettingsRepository implements SettingsRepository {
         map['themeMode'],
         defaults.themePreference,
       ),
+      customBarWeightKg: _barWeight(map['barWeightKg']),
+      customPlates: _plates(map['plates']),
     );
   }
 
+  /// The bar and plates are written only while customised; deleting them
+  /// returns the user to the standard set of their weight unit.
   static Map<String, Object?> _toMap(UserSettings settings) => {
     'weightUnit': _weightCodes[settings.weightUnit],
     'lengthUnit': _lengthCodes[settings.lengthUnit],
     'themeMode': _themeCodes[settings.themePreference],
+    'barWeightKg': settings.customBarWeightKg ?? FieldValue.delete(),
+    'plates':
+        settings.customPlates
+            ?.map((plate) => {'weightKg': plate.weightKg, 'pairs': plate.pairs})
+            .toList() ??
+        FieldValue.delete(),
   };
+
+  static double? _barWeight(Object? raw) =>
+      raw is num ? raw.toDouble().clamp(0, maxBarWeightKg) : null;
+
+  /// Malformed entries are dropped and values outside the limits clamped,
+  /// rather than failing the whole settings.
+  static List<Plate>? _plates(Object? raw) {
+    if (raw is! List) return null;
+    final plates = [
+      for (final entry in raw)
+        if (entry case {'weightKg': final num weight, 'pairs': final int pairs}
+            when weight > 0)
+          Plate(
+            weightKg: weight.toDouble().clamp(
+              minPlateWeightKg,
+              maxPlateWeightKg,
+            ),
+            pairs: pairs.clamp(0, maxPlatePairs),
+          ),
+    ]..sort((a, b) => b.weightKg.compareTo(a.weightKg));
+    return plates.take(maxPlateSizes).toList();
+  }
 
   /// Unknown or missing codes fall back, so a newer app version's values never
   /// break an older one.
