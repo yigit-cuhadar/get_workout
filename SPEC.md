@@ -95,6 +95,22 @@ from the earlier FitLab app.
   while the screen judges any week of any user. Focus programs and
   equipment-limited ones exceed or miss a band on purpose and say so in
   their summary.
+- **Catalogue in the app**: clients read the whole `programs` collection,
+  every status, and keep the live cards on device by `order` (no composite
+  index; offline from Firestore's cache after the first load). A premium
+  program's days are read only once the user is known to have premium; a
+  refusal by the rules shows as locked, never as an error. "Use this
+  program" copies it into `users/{uid}/programs` (`origin: catalog`,
+  `sourceId`) through the builder's validation and opens the copy, which is
+  started like any own program; when a copy from the same `sourceId`
+  exists, it is offered first. Recommended for you: never a program above
+  the user's level or needing equipment they lack (a program fits when the
+  user owns all its primary `equipment` or all of its equipment profile);
+  the rest score 3 for the goal, 2 for the level, 2 for the days per week
+  (1 for a day more or less); the top 3 show, ties in catalogue order.
+  Until the subscription feature exists, `ProgramsModule` takes the premium
+  status and the premium action as parameters; bootstrap passes "no
+  premium" and a "coming soon" message.
 - **Steps**: read-only from Apple Health / Health Connect; not stored.
 - **Photos**: private app storage plus Cloud Storage backup. Never the gallery.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
