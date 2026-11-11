@@ -4,6 +4,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/exercises/domain/custom_exercise.dart';
+import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
@@ -14,6 +16,9 @@ import 'package:mocktail/mocktail.dart';
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockExerciseRepository extends Mock implements ExerciseRepository {}
+
+class MockCustomExerciseRepository extends Mock
+    implements CustomExerciseRepository {}
 
 const _guest = AuthUser(id: 'g1', isAnonymous: true);
 const _offline = NetworkFailure();
@@ -36,34 +41,61 @@ const _squat = Exercise(
   l10n: {'en': ExerciseText(name: 'Squat')},
 );
 
+const _press = CustomExercise(
+  id: 'custom_a',
+  name: 'Landmine Press',
+  mainMuscles: [Muscle.frontDelt],
+);
+
 void main() {
   late MockAuthRepository auth;
   late MockExerciseRepository repository;
+  late MockCustomExerciseRepository customRepository;
   late StreamController<AuthUser?> users;
   late StreamController<List<Exercise>> exercises;
+  late Map<String, StreamController<List<CustomExercise>>> custom;
   late DateTime now;
 
   setUp(() {
     auth = MockAuthRepository();
     repository = MockExerciseRepository();
-    users = StreamController<AuthUser?>();
+    customRepository = MockCustomExerciseRepository();
+    // Followed for the sync and for the custom exercises.
+    users = StreamController<AuthUser?>.broadcast();
     exercises = StreamController<List<Exercise>>();
+    custom = {};
     now = DateTime(2026, 11, 11, 9);
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
     when(() => repository.watchExercises()).thenAnswer((_) => exercises.stream);
+    when(() => customRepository.watchCustomExercises(any())).thenAnswer(
+      (call) => custom
+          .putIfAbsent(
+            call.positionalArguments.single as String,
+            StreamController<List<CustomExercise>>.broadcast,
+          )
+          .stream,
+    );
   });
 
   tearDown(() async {
     await users.close();
     await exercises.close();
+    for (final controller in custom.values) {
+      await controller.close();
+    }
   });
 
   ExerciseCatalogueCubit build() => ExerciseCatalogueCubit(
     watchAuthUser: WatchAuthUser(auth),
     watchExercises: WatchExercises(repository),
+    watchCustomExercises: WatchCustomExercises(customRepository),
     syncExercises: SyncExercises(repository),
     now: () => now,
   );
+
+  /// Custom exercises of user [uid] arrive.
+  void customOf(String uid, List<CustomExercise> list) =>
+      custom[uid]!.add(list);
 
   /// A sync that publishes [list] first, as the repository does.
   void syncPublishes(List<Exercise> list) =>
@@ -192,4 +224,113 @@ void main() {
     },
     verify: (_) => verify(() => repository.sync()).called(2),
   );
+
+  group('custom exercises', () {
+    final press = _press.toExercise();
+
+    blocTest<ExerciseCatalogueCubit, ExerciseCatalogueState>(
+      'wait for the catalogue, then come first in it',
+      setUp: () => syncPublishes([_squat]),
+      build: build,
+      act: (cubit) async {
+        when(() => repository.sync()).thenAnswer((_) async => const Ok(null));
+        users.add(_guest);
+        await pumpEventQueue();
+        customOf('g1', [_press]);
+        await pumpEventQueue();
+        exercises.add([_squat]);
+      },
+      expect: () => [
+        CatalogueReady([press, _squat]),
+      ],
+    );
+
+    blocTest<ExerciseCatalogueCubit, ExerciseCatalogueState>(
+      'follow edits and deletes',
+      setUp: () => syncPublishes([_squat]),
+      build: build,
+      act: (cubit) async {
+        users.add(_guest);
+        await pumpEventQueue();
+        customOf('g1', [_press]);
+        await pumpEventQueue();
+        customOf('g1', [
+          const CustomExercise(
+            id: 'custom_a',
+            name: 'Half-Kneeling Landmine Press',
+            mainMuscles: [Muscle.frontDelt],
+          ),
+        ]);
+        await pumpEventQueue();
+        customOf('g1', []);
+      },
+      expect: () => [
+        const CatalogueReady([_squat]),
+        CatalogueReady([press, _squat]),
+        CatalogueReady([
+          Exercise.custom(
+            id: 'custom_a',
+            name: 'Half-Kneeling Landmine Press',
+            loggingType: LoggingType.weightReps,
+            mainMuscles: const [Muscle.frontDelt],
+          ),
+          _squat,
+        ]),
+        const CatalogueReady([_squat]),
+      ],
+    );
+
+    blocTest<ExerciseCatalogueCubit, ExerciseCatalogueState>(
+      "a change of user drops the previous user's at once",
+      setUp: () => syncPublishes([_squat]),
+      build: build,
+      act: (cubit) async {
+        users.add(_guest);
+        await pumpEventQueue();
+        customOf('g1', [_press]);
+        await pumpEventQueue();
+        users.add(const AuthUser(id: 'u2', email: 'a@b.co'));
+        await pumpEventQueue();
+        // A late value for the previous user is not followed any more.
+        custom['g1']!.add([_press]);
+        await pumpEventQueue();
+        customOf('u2', []);
+      },
+      expect: () => [
+        const CatalogueReady([_squat]),
+        CatalogueReady([press, _squat]),
+        const CatalogueReady([_squat]),
+      ],
+    );
+
+    blocTest<ExerciseCatalogueCubit, ExerciseCatalogueState>(
+      'keep the last list when their stream fails, and follow it again',
+      setUp: () => syncPublishes([_squat]),
+      build: () => ExerciseCatalogueCubit(
+        watchAuthUser: WatchAuthUser(auth),
+        watchExercises: WatchExercises(repository),
+        watchCustomExercises: WatchCustomExercises(customRepository),
+        syncExercises: SyncExercises(repository),
+        now: () => now,
+        retryDelay: Duration.zero,
+      ),
+      act: (cubit) async {
+        users.add(_guest);
+        await pumpEventQueue();
+        customOf('g1', [_press]);
+        await pumpEventQueue();
+        custom['g1']!.addError(_offline);
+        await pumpEventQueue();
+        customOf('g1', []);
+        await pumpEventQueue();
+      },
+      expect: () => [
+        const CatalogueReady([_squat]),
+        CatalogueReady([press, _squat]),
+        const CatalogueReady([_squat]),
+      ],
+      verify: (_) =>
+          verify(() => customRepository.watchCustomExercises('g1')).called(2),
+    );
+  });
 }

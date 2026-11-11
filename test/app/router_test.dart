@@ -7,12 +7,16 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/router.dart';
+import 'package:get_workout/features/exercises/domain/custom_exercise.dart';
+import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
 import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/body_model_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/custom_exercise_form_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/custom_exercise_form_page.dart';
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_cubit.dart';
@@ -55,6 +59,9 @@ class MockProfileRepository extends Mock implements ProfileRepository {}
 class MockExerciseRepository extends Mock implements ExerciseRepository {}
 
 class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
+
+class MockCustomExerciseRepository extends Mock
+    implements CustomExerciseRepository {}
 
 const _squat = Exercise(
   id: 'squat',
@@ -132,6 +139,7 @@ void main() {
     // Settings are covered by their own tests; here they stay at defaults.
     final settingsAuth = MockAuthRepository();
     when(settingsAuth.watchUser).thenAnswer((_) => const Stream.empty());
+    when(() => settingsAuth.currentUser).thenReturn(null);
     final settingsRepository = MockSettingsRepository();
     settings = SettingsCubit(
       watchAuthUser: WatchAuthUser(settingsAuth),
@@ -146,9 +154,13 @@ void main() {
     if (!holdCatalogue) exerciseFeed.add([_squat]);
     when(exercises.watchExercises).thenAnswer((_) => exerciseFeed.stream);
     final userLibrary = MockUserLibraryRepository();
+    final customExercises = MockCustomExerciseRepository();
+    when(() => customExercises.rejectedWrites)
+        .thenAnswer((_) => const Stream.empty());
     catalogue = ExerciseCatalogueCubit(
       watchAuthUser: WatchAuthUser(settingsAuth),
       watchExercises: WatchExercises(exercises),
+      watchCustomExercises: WatchCustomExercises(customExercises),
       syncExercises: SyncExercises(exercises),
     );
     favorites = FavoritesCubit(
@@ -169,12 +181,28 @@ void main() {
           catalogue: catalogue,
           favorites: favorites,
           equipment: equipment,
+          watchRejectedCustomWrites: WatchRejectedCustomExerciseWrites(
+            customExercises,
+          ),
         ),
         dispose: (cubit) => cubit.close(),
       )
       ..registerFactoryParam<ExerciseDetailCubit, String, void>(
-        (id, _) =>
-            ExerciseDetailCubit(id, catalogue: catalogue, equipment: equipment),
+        (id, _) => ExerciseDetailCubit(
+          id,
+          catalogue: catalogue,
+          equipment: equipment,
+          getCurrentUser: GetCurrentUser(settingsAuth),
+          deleteCustomExercise: DeleteCustomExercise(customExercises),
+        ),
+      )
+      ..registerFactoryParam<CustomExerciseFormCubit, CustomExercise?, void>(
+        (exercise, _) => CustomExerciseFormCubit(
+          saveExercise: SaveCustomExercise(customExercises),
+          getCurrentUser: GetCurrentUser(settingsAuth),
+          watchAuthUser: WatchAuthUser(settingsAuth),
+          initial: exercise,
+        ),
       );
     profiles = MockProfileRepository();
     when(() => profiles.watchProfile(any())).thenAnswer((_) {
@@ -408,6 +436,34 @@ void main() {
     expect(find.byType(ExerciseDetailPage), findsOneWidget);
     expect(find.text('This exercise is no longer available.'), findsOneWidget);
     expect(find.byType(NavigationBar), findsOneWidget);
+  });
+
+  testWidgets('the list view opens a new custom exercise inside the tab', (
+    tester,
+  ) async {
+    await startAsGuest(tester);
+    await tapTab(tester, 'Exercises');
+    expect(find.byTooltip('New custom exercise'), findsNothing);
+    await tester.tap(find.text('List'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('New custom exercise'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CustomExerciseNewPage), findsOneWidget);
+    expect(find.byType(NavigationBar), findsOneWidget);
+  });
+
+  testWidgets('editing an exercise that is not custom shows not found', (
+    tester,
+  ) async {
+    await startAsGuest(tester);
+
+    router.go(Routes.customExerciseEdit('squat'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CustomExerciseEditPage), findsOneWidget);
+    expect(find.text('This exercise is no longer available.'), findsOneWidget);
   });
 
   testWidgets('Profile opens the calculators inside the tab', (tester) async {

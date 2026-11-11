@@ -107,12 +107,12 @@ Map<String, Object?> _storedForm(Exercise exercise) {
   List<String> codes(List<Coded> values) => [for (final v in values) v.code];
   return {
     'loggingType': exercise.loggingType.code,
-    'mechanic': exercise.mechanic.code,
-    'laterality': exercise.laterality.code,
-    'level': exercise.level.code,
-    'force': exercise.force.code,
-    'movementPattern': exercise.movementPattern.code,
-    'position': exercise.position.code,
+    'mechanic': exercise.mechanic!.code,
+    'laterality': exercise.laterality!.code,
+    'level': exercise.level!.code,
+    'force': exercise.force!.code,
+    'movementPattern': exercise.movementPattern!.code,
+    'position': exercise.position!.code,
     'grip': ?exercise.grip?.code,
     'gripWidth': ?exercise.gripWidth?.code,
     'equipment': codes(exercise.equipment),

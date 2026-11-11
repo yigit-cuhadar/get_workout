@@ -4,8 +4,10 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/exercise_queries.dart';
+import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
@@ -17,6 +19,9 @@ import 'package:mocktail/mocktail.dart';
 import 'fixtures.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
+
+class MockCustomExerciseRepository extends Mock
+    implements CustomExerciseRepository {}
 
 class MockCatalogueCubit extends MockCubit<ExerciseCatalogueState>
     implements ExerciseCatalogueCubit {}
@@ -74,6 +79,8 @@ void main() {
   late StreamController<ExerciseCatalogueState> catalogueChanges;
   late StreamController<FavoritesState> favoriteChanges;
   late StreamController<EquipmentState> equipmentChanges;
+  late StreamController<Failure> rejectedWrites;
+  late MockCustomExerciseRepository customRepository;
 
   setUp(() {
     catalogue = MockCatalogueCubit();
@@ -85,6 +92,10 @@ void main() {
     catalogueChanges = StreamController.broadcast();
     favoriteChanges = StreamController.broadcast();
     equipmentChanges = StreamController.broadcast();
+    rejectedWrites = StreamController.broadcast();
+    customRepository = MockCustomExerciseRepository();
+    when(() => customRepository.rejectedWrites)
+        .thenAnswer((_) => rejectedWrites.stream);
     whenListen(
       catalogue,
       catalogueChanges.stream,
@@ -107,6 +118,7 @@ void main() {
     await favoriteChanges.close();
     await equipmentChanges.close();
     await users.close();
+    await rejectedWrites.close();
   });
 
   LibraryCubit build() => LibraryCubit(
@@ -114,6 +126,9 @@ void main() {
     catalogue: catalogue,
     favorites: favorites,
     equipment: equipment,
+    watchRejectedCustomWrites: WatchRejectedCustomExerciseWrites(
+      customRepository,
+    ),
   );
 
   List<String> results(LibraryCubit cubit) => ids(cubit.state.results);
@@ -423,4 +438,115 @@ void main() {
       expect(results(cubit), ['curl', 'row']);
     });
   });
+
+  group('custom exercises', () {
+    final band = Exercise.custom(
+      id: 'custom_band',
+      name: 'Band Fly',
+      loggingType: LoggingType.reps,
+      mainMuscles: const [Muscle.pec],
+      equipment: const [Equipment.resistanceBand],
+    );
+    final noEquipment = Exercise.custom(
+      id: 'custom_plank',
+      name: 'Wall Plank',
+      loggingType: LoggingType.duration,
+      mainMuscles: const [Muscle.abdominal],
+      secondaryMuscles: const [Muscle.pec],
+    );
+
+    setUp(
+      () => whenListen(
+        catalogue,
+        catalogueChanges.stream,
+        initialState: CatalogueReady(
+          withCustomExercises(_all, [noEquipment, band]),
+        ),
+      ),
+    );
+
+    test('come first, by name, and are found by search', () {
+      final cubit = build();
+      expect(results(cubit), [
+        'custom_band',
+        'custom_plank',
+        'bench_press',
+        'push_up',
+        'squat',
+        'curl',
+      ]);
+      cubit.setQuery('band');
+      expect(results(cubit), ['custom_band']);
+    });
+
+    test('match muscle and equipment filters, never level or pattern', () {
+      final cubit = build()..toggleMuscle(Muscle.pec);
+      expect(results(cubit), [
+        'custom_band',
+        'custom_plank',
+        'bench_press',
+        'push_up',
+      ]);
+      cubit
+        ..clearFilters()
+        ..toggleEquipment(Equipment.resistanceBand);
+      expect(results(cubit), ['custom_band']);
+      cubit
+        ..clearFilters()
+        ..toggleLevel(Level.beginner);
+      expect(results(cubit), isNot(contains('custom_band')));
+      cubit
+        ..clearFilters()
+        ..toggleMovementPattern(MovementPattern.horizontalPush);
+      expect(results(cubit), ['bench_press', 'push_up']);
+    });
+
+    test('without equipment count as doable with any', () {
+      final cubit = build()..setOnlyDoable(true);
+      expect(results(cubit), ['custom_plank', 'push_up']);
+    });
+
+    blocTest<LibraryCubit, LibraryState>(
+      'show in favourites and on the muscle sheet',
+      build: build,
+      act: (cubit) async {
+        favoriteChanges.add(const FavoritesState({'custom_band'}));
+        await pumpEventQueue();
+        cubit
+          ..setOnlyFavorites(true)
+          ..selectMuscle(Muscle.pec);
+      },
+      verify: (cubit) {
+        expect(results(cubit), ['custom_band']);
+        expect(ids(cubit.state.muscleExercises!.main), [
+          'custom_band',
+          'bench_press',
+          'push_up',
+        ]);
+        expect(ids(cubit.state.muscleExercises!.alsoWorks), ['custom_plank']);
+      },
+    );
+  });
+
+  blocTest<LibraryCubit, LibraryState>(
+    'a refused custom exercise write is flagged until shown',
+    build: build,
+    act: (cubit) async {
+      rejectedWrites.add(const PermissionFailure());
+      await pumpEventQueue();
+      cubit.rejectionShown();
+    },
+    expect: () => [
+      isA<LibraryState>().having(
+        (state) => state.customWriteRejected,
+        'customWriteRejected',
+        isTrue,
+      ),
+      isA<LibraryState>().having(
+        (state) => state.customWriteRejected,
+        'customWriteRejected',
+        isFalse,
+      ),
+    ],
+  );
 }

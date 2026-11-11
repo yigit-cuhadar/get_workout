@@ -118,12 +118,14 @@ class ExerciseDetailCubit extends Cubit<ExerciseDetailState> {
         (current is DetailReady && current.deleting)) {
       return;
     }
-    emit(switch (_catalogue) {
-      CatalogueLoading() => const DetailLoading(),
-      CatalogueFailed() => const DetailFailed(),
-      CatalogueReady(:final exercises) => _detail(exercises),
-    });
+    emit(_current());
   }
+
+  ExerciseDetailState _current() => switch (_catalogue) {
+    CatalogueLoading() => const DetailLoading(),
+    CatalogueFailed() => const DetailFailed(),
+    CatalogueReady(:final exercises) => _detail(exercises),
+  };
 
   /// Deletes the shown custom exercise; does nothing for a catalogue one.
   Future<void> delete() async {
@@ -139,11 +141,13 @@ class ExerciseDetailCubit extends Cubit<ExerciseDetailState> {
     final result = await _deleteCustomExercise((uid: uid, id: exerciseId));
     if (isClosed) return;
     if (result.failureOrNull case final failure?) {
-      emit(current._copyWith());
-      _update();
-      if (state case final DetailReady latest) {
-        emit(latest._copyWith(deleteFailure: failure));
-      }
+      // The catalogue may have changed meanwhile.
+      final latest = _current();
+      emit(
+        latest is DetailReady
+            ? latest._copyWith(deleteFailure: failure)
+            : latest,
+      );
     } else {
       emit(const DetailDeleted());
     }
