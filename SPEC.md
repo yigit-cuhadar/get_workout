@@ -34,6 +34,10 @@ from the earlier FitLab app.
 - **Backend**: Blaze plan. Cloud Functions are used only where a client cannot
   be trusted or cannot do the job: RevenueCat webhook, account deletion,
   sending push announcements. The program generator runs on device.
+- **Content ownership**: Firestore is the source of truth for content once
+  it is seeded. `content/*.json` is the seed and the bulk-edit path;
+  the admin panel edits Firestore directly and leaves `contentHash` alone, so
+  the import skips (and fails on) documents edited there unless `--force`.
 - **Offline**: Firestore's persistent cache is the local database. The workout
   in progress is also kept in a local file so a crash never loses sets.
   Derived numbers are computed from workouts on read wherever the query is
@@ -127,7 +131,7 @@ Firestore. Timestamps are server timestamps; ids are generated on the client.
 | `popularity` | int | Lower sorts first |
 | `l10n.<lang>` | map | `name`, `aliases[]`, `setup[]`, `execution[]`, `mistakes[]`, `safety?`, `cues[]` |
 | `updatedAt` | timestamp | Clients sync incrementally on this |
-| `contentHash` | string | SHA-256 of the stored content; the import skips unchanged exercises |
+| `contentHash` | string | SHA-256 of the stored content, written by the import; a mismatch marks a document edited elsewhere |
 
 Alternatives are computed on device: same main muscle and movement pattern,
 the user's equipment first (an exercise fits when `equipment` or any of its
@@ -191,8 +195,9 @@ upper arm, forearm, thigh, calf), `photos` (map of `front` \| `right` \|
 
 ### Server-written
 
-**`entitlements/{uid}`**: `premium`, `expiresAt`, `productId`. Written only by
-the RevenueCat webhook; readable by its owner.
+**`entitlements/{uid}`**: `premium`, `expiresAt` (a Firestore timestamp; the
+webhook converts), `productId`. Written only by the
+RevenueCat webhook; readable by its owner.
 
 ### Storage
 
@@ -204,7 +209,8 @@ the RevenueCat webhook; readable by its owner.
 - `deleteAccount` (callable) → deletes the user's documents, photos and auth user
 - `sendAnnouncement` (callable, admin) → FCM topic push
 
-Admin access is a custom claim set by a script run with a service account.
+Admin access is a custom claim set by `tool/set_admin.sh`, using the project
+owner's gcloud access token passed in `GOOGLE_ACCESS_TOKEN`.
 
 ## Features
 

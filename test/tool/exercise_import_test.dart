@@ -201,17 +201,125 @@ void main() {
     });
   });
 
-  test('planImport sorts exercises into new, changed, unchanged, orphaned', () {
-    final plan = planImport(
-      {'ex_new': 'h1', 'ex_same': 'h2', 'ex_changed': 'h3', 'ex_nohash': 'h4'},
-      {'ex_same': 'h2', 'ex_changed': 'old', 'ex_nohash': null, 'ex_gone': 'h'},
-    );
+  group('decodeValue', () {
+    test('reverses encodeValue for every content type', () {
+      final value = {
+        'n': null,
+        'b': false,
+        'i': 60,
+        'd': 2.5,
+        'whole': 1.0,
+        's': 'x',
+        'empty': <Object?>[],
+        'emptyMap': <String, Object?>{},
+        'alts': [
+          {
+            'items': ['dumbbell'],
+          },
+        ],
+      };
+      final decoded = decodeValue(encodeValue(value));
 
-    expect(plan.created, ['ex_new']);
-    expect(plan.updated, ['ex_changed', 'ex_nohash']);
-    expect(plan.unchanged, ['ex_same']);
-    expect(plan.orphaned, ['ex_gone']);
-    expect(plan.toWrite, ['ex_changed', 'ex_new', 'ex_nohash']);
+      expect(decoded, value);
+      expect((decoded! as Map)['whole'], isA<double>());
+      expect((decoded as Map)['i'], isA<int>());
+    });
+
+    test('reads doubles sent as JSON integers or strings', () {
+      expect(decodeValue({'doubleValue': 1}), isA<double>());
+      expect(decodeValue({'doubleValue': 'NaN'}), isNaN);
+      expect(decodeValue({'integerValue': '7'}), 7);
+    });
+
+    test('keeps unknown types apart from content', () {
+      expect(decodeValue({'timestampValue': '2026-01-01T00:00:00Z'}), {
+        'timestampValue': '2026-01-01T00:00:00Z',
+      });
+    });
+
+    test('a stored exercise hashes the same as its file', () {
+      final report = validateContent(Directory('content/exercises'));
+      for (final e in report.exercises) {
+        final doc = ExerciseDoc.fromJson(e.data);
+        final stored = {
+          ...doc.fields,
+          'updatedAt': {'timestampValue': '2026-11-11T10:00:00Z'},
+        };
+        final remote = RemoteExercise.fromFields(decodeFields(stored), 't');
+        expect(remote.actualHash, doc.hash, reason: e.id);
+        expect(remote.editedElsewhere, isFalse, reason: e.id);
+      }
+    });
+  });
+
+  group('RemoteExercise', () {
+    final doc = ExerciseDoc('ex_a', {'status': 'live', 'defaultRestS': 60});
+
+    RemoteExercise stored(Map<String, Object?> fields) =>
+        RemoteExercise.fromFields(decodeFields(encodeFields(fields)), 't');
+
+    test('is not edited when its content matches contentHash', () {
+      final remote = stored({...doc.content, 'contentHash': doc.hash});
+      expect(remote.editedElsewhere, isFalse);
+    });
+
+    test('is edited when content changed but contentHash did not', () {
+      final remote = stored({
+        ...doc.content,
+        'defaultRestS': 90,
+        'contentHash': doc.hash,
+      });
+      expect(remote.editedElsewhere, isTrue);
+    });
+
+    test('is edited when it has no contentHash', () {
+      expect(stored(doc.content).editedElsewhere, isTrue);
+    });
+  });
+
+  group('planImport', () {
+    RemoteExercise remote(String stored, String actual) =>
+        RemoteExercise(storedHash: stored, actualHash: actual, updateTime: 't');
+
+    final local = {
+      'ex_new': 'h1',
+      'ex_same': 'h2',
+      'ex_changed': 'h3',
+      'ex_edited': 'h4',
+      'ex_edited_to_file': 'h5',
+    };
+    final existing = {
+      'ex_same': remote('h2', 'h2'),
+      'ex_changed': remote('old', 'old'),
+      'ex_edited': remote('old', 'panel'),
+      'ex_edited_to_file': remote('old', 'h5'),
+      'ex_gone': remote('h', 'h'),
+    };
+
+    test('sorts exercises into new, changed, unchanged, edited, orphaned', () {
+      final plan = planImport(local, existing);
+
+      expect(plan.created, ['ex_new']);
+      expect(plan.updated, ['ex_changed', 'ex_edited_to_file']);
+      expect(plan.unchanged, ['ex_same']);
+      expect(plan.edited, ['ex_edited']);
+      expect(plan.orphaned, ['ex_gone']);
+      expect(plan.skipped, ['ex_edited']);
+      expect(plan.toWrite, ['ex_changed', 'ex_edited_to_file', 'ex_new']);
+    });
+
+    test('overwrites edited exercises only with force', () {
+      final plan = planImport(local, existing, force: true);
+
+      expect(plan.edited, ['ex_edited']);
+      expect(plan.skipped, isEmpty);
+      expect(plan.toWrite, [
+        'ex_changed',
+        'ex_edited',
+        'ex_edited_to_file',
+        'ex_new',
+      ]);
+    });
   });
 
   test('batches split at 500 writes', () {
@@ -220,21 +328,29 @@ void main() {
     expect(batches(List.filled(1001, 0)).map((b) => b.length), [500, 500, 1]);
   });
 
-  test('exerciseWrite replaces the document and stamps updatedAt', () {
+  group('exerciseWrite', () {
     final doc = ExerciseDoc('ex_a', {'status': 'live'});
-    final write = exerciseWrite('projects/p/databases/(default)', doc);
+    const db = 'projects/p/databases/(default)';
 
-    expect(write, {
-      'update': {
-        'name': 'projects/p/databases/(default)/documents/exercises/ex_a',
-        'fields': {
-          'status': {'stringValue': 'live'},
-          'contentHash': {'stringValue': doc.hash},
+    test('creates only if the document does not exist', () {
+      expect(exerciseWrite(db, doc), {
+        'update': {
+          'name': '$db/documents/exercises/ex_a',
+          'fields': {
+            'status': {'stringValue': 'live'},
+            'contentHash': {'stringValue': doc.hash},
+          },
         },
-      },
-      'updateTransforms': [
-        {'fieldPath': 'updatedAt', 'setToServerValue': 'REQUEST_TIME'},
-      ],
+        'updateTransforms': [
+          {'fieldPath': 'updatedAt', 'setToServerValue': 'REQUEST_TIME'},
+        ],
+        'currentDocument': {'exists': false},
+      });
+    });
+
+    test('updates only if the document is unchanged since the read', () {
+      final write = exerciseWrite(db, doc, updateTime: '2026-11-11T10:00:00Z');
+      expect(write['currentDocument'], {'updateTime': '2026-11-11T10:00:00Z'});
     });
   });
 }

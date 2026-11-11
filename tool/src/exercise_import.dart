@@ -93,35 +93,125 @@ class ExerciseDoc {
       encodeFields({...content, 'contentHash': hash});
 }
 
+/// A JSON value for a Firestore REST `Value`. Types the content never uses
+/// (timestamps, references, ...) come back as `{kind: raw}`, so a document
+/// holding one never matches a hash of file content.
+Object? decodeValue(Map<String, Object?> value) {
+  final MapEntry(key: kind, value: raw) = value.entries.single;
+  return switch (kind) {
+    'nullValue' => null,
+    'booleanValue' || 'stringValue' => raw,
+    'integerValue' => int.parse(raw! as String),
+    // JSON may carry 1.0 as 1, and NaN or Infinity as strings.
+    'doubleValue' when raw is num => raw.toDouble(),
+    'doubleValue' => double.parse(raw! as String),
+    'arrayValue' => [
+      for (final item
+          in (raw! as Map<String, Object?>)['values'] as List<Object?>? ??
+              const [])
+        decodeValue(item! as Map<String, Object?>),
+    ],
+    'mapValue' => decodeFields(
+      (raw! as Map<String, Object?>)['fields'] as Map<String, Object?>? ??
+          const {},
+    ),
+    _ => {kind: raw},
+  };
+}
+
+/// JSON for Firestore REST `fields`.
+Map<String, Object?> decodeFields(Map<String, Object?> fields) => {
+  for (final MapEntry(:key, :value) in fields.entries)
+    key: decodeValue(value! as Map<String, Object?>),
+};
+
+/// What the import needs to know about an existing `exercises/<id>`.
+class RemoteExercise {
+  RemoteExercise({
+    required this.storedHash,
+    required this.actualHash,
+    required this.updateTime,
+  });
+
+  /// Hashes the decoded [fields] of a document read with [updateTime].
+  factory RemoteExercise.fromFields(
+    Map<String, Object?> fields,
+    String updateTime,
+  ) {
+    final content = Map<String, Object?>.of(fields)
+      ..remove('contentHash')
+      ..remove('updatedAt');
+    final stored = fields['contentHash'];
+    return RemoteExercise(
+      storedHash: stored is String ? stored : null,
+      actualHash: contentHash(content),
+      updateTime: updateTime,
+    );
+  }
+
+  /// The `contentHash` field, written by the last import.
+  final String? storedHash;
+
+  /// The hash of what the document holds now.
+  final String actualHash;
+
+  /// Used as the write precondition.
+  final String updateTime;
+
+  /// Changed since the last import, by the admin panel or by hand: the panel
+  /// leaves `contentHash` alone, so it no longer matches.
+  bool get editedElsewhere => storedHash != actualHash;
+}
+
 /// What an import does, by exercise id. Each list is sorted.
 class ImportPlan {
   ImportPlan({
     required this.created,
     required this.updated,
     required this.unchanged,
+    required this.edited,
     required this.orphaned,
+    required this.force,
   });
 
   final List<String> created;
   final List<String> updated;
   final List<String> unchanged;
 
+  /// Edited outside the import and different from the file. Skipped unless
+  /// [force], so an edit made in the admin panel is never lost silently.
+  final List<String> edited;
+
   /// In Firestore but not in the files. Never deleted: an exercise is retired
   /// by setting `status` in its file.
   final List<String> orphaned;
 
-  List<String> get toWrite => [...created, ...updated]..sort();
+  final bool force;
+
+  List<String> get toWrite =>
+      [...created, ...updated, if (force) ...edited]..sort();
+
+  /// Edited documents left as they are; the import then fails.
+  List<String> get skipped => force ? const [] : edited;
 }
 
-/// Compares local hashes with the remote ones (`null` when a document has no
-/// `contentHash`, which counts as changed).
-ImportPlan planImport(Map<String, String> local, Map<String, String?> remote) {
+/// Compares the files' hashes ([local]) with what Firestore holds ([remote]).
+ImportPlan planImport(
+  Map<String, String> local,
+  Map<String, RemoteExercise> remote, {
+  bool force = false,
+}) {
   final created = <String>[], updated = <String>[], unchanged = <String>[];
+  final edited = <String>[];
   for (final MapEntry(key: id, value: hash) in local.entries) {
-    if (!remote.containsKey(id)) {
+    final existing = remote[id];
+    if (existing == null) {
       created.add(id);
-    } else if (remote[id] == hash) {
-      unchanged.add(id);
+    } else if (existing.actualHash == hash) {
+      // Same content as the file. Rewrite only to repair a stale hash.
+      (existing.editedElsewhere ? updated : unchanged).add(id);
+    } else if (existing.editedElsewhere) {
+      edited.add(id);
     } else {
       updated.add(id);
     }
@@ -131,7 +221,9 @@ ImportPlan planImport(Map<String, String> local, Map<String, String?> remote) {
     created: created..sort(),
     updated: updated..sort(),
     unchanged: unchanged..sort(),
+    edited: edited..sort(),
     orphaned: orphaned..sort(),
+    force: force,
   );
 }
 
@@ -142,8 +234,14 @@ List<List<T>> batches<T>(List<T> items, {int size = maxWritesPerCommit}) => [
 ];
 
 /// A `documents:commit` write that replaces `exercises/<id>` with [doc] and
-/// sets `updatedAt` to the server time.
-Map<String, Object?> exerciseWrite(String databasePath, ExerciseDoc doc) => {
+/// sets `updatedAt` to the server time. With [updateTime] (from the read) it
+/// only succeeds if the document has not changed since; without it, only if
+/// the document still does not exist.
+Map<String, Object?> exerciseWrite(
+  String databasePath,
+  ExerciseDoc doc, {
+  String? updateTime,
+}) => {
   'update': {
     'name': '$databasePath/documents/exercises/${doc.id}',
     'fields': doc.fields,
@@ -151,4 +249,7 @@ Map<String, Object?> exerciseWrite(String databasePath, ExerciseDoc doc) => {
   'updateTransforms': [
     {'fieldPath': 'updatedAt', 'setToServerValue': 'REQUEST_TIME'},
   ],
+  'currentDocument': updateTime == null
+      ? {'exists': false}
+      : {'updateTime': updateTime},
 };

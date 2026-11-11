@@ -7,4 +7,4 @@ Built with MobileAppForge. Work from the forge root (this repo is cloned at
 - Run: `flutter run` (debug and profile use the dev Firebase project, release uses prod)
 - Check before every commit: `dart format lib tool test && flutter analyze && flutter test`
 - Grant or revoke the admin claim: `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) tool/set_admin.sh <project-id> <email> [--revoke]`
-- Import the exercise library (validates first, writes only changes): `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) dart run tool/import_content.dart --project <project-id> [--dry-run]`
+- Import the exercise library (validates first, writes only changes): `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) dart run tool/import_content.dart --project <project-id> [--dry-run] [--force]` (`--force` overwrites exercises edited in the admin panel)

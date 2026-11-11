@@ -10,14 +10,17 @@ rules_version = '2';
 //   programs/{id}            any signed-in user, guests included    allow deny
 //   programs/{id}            admin claim                            allow allow
 //   programs/{id}/detail/x   signed out                             deny  deny
-//   programs/{id}/detail/x   signed in, program premium missing     allow deny
-//                            or false
-//   programs/{id}/detail/x   signed in, program premium true,       deny  deny
-//                            no entitlement / premium false /
-//                            expiresAt <= now
-//   programs/{id}/detail/x   signed in, program premium true,       allow deny
-//                            entitlement premium true, expiresAt
-//                            > now
+//   programs/{id}/detail/x   signed in, program premium absent      allow deny
+//                            or exactly false
+//   programs/{id}/detail/x   signed in, program premium any other   deny  deny
+//                            value (true, null, "false", 0, ...),
+//                            entitlement absent / premium not true
+//                            / expiresAt missing or <= now
+//   programs/{id}/detail/x   signed in, program premium any other   allow deny
+//                            value, entitlement premium true and
+//                            expiresAt > now
+//   programs/{id}/detail/x   signed in, program does not exist,     deny  deny
+//                            no active entitlement
 //   programs/{id}/detail/x   admin claim, any program               allow allow
 //   entitlements/{uid}       owner                                  allow deny
 //   entitlements/{uid}       anyone else, admins included           deny  deny
@@ -32,6 +35,11 @@ service cloud.firestore {
 
     function isAdmin() {
       return signedIn() && request.auth.token.get('admin', false) == true;
+    }
+
+    // Fails closed: only an absent or exactly false premium is free.
+    function isFree(program) {
+      return !('premium' in program.data) || program.data.premium == false;
     }
 
     function hasEntitlement() {
@@ -63,8 +71,7 @@ service cloud.firestore {
       match /detail/{doc} {
         allow read: if isAdmin()
           || (signedIn()
-            && (get(/databases/$(database)/documents/programs/$(programId))
-                  .data.get('premium', false) != true
+            && (isFree(get(/databases/$(database)/documents/programs/$(programId)))
               || hasEntitlement()));
         allow write: if isAdmin();
       }

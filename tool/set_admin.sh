@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Grants or revokes the admin custom claim of a Firebase Auth user, keeping
-# the user's other custom claims. The user must sign in again (or refresh the
-# ID token) before the change reaches Firestore rules.
+# the user's other custom claims. See usage() for when a change takes effect.
 set -euo pipefail
 
 usage() {
@@ -10,8 +9,12 @@ Usage: GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) \
          tool/set_admin.sh <project-id> <email> [--revoke]
 
 Sets {"admin": true} in the custom claims of the Firebase Auth user with that
-email, or removes it with --revoke. The token needs Firebase Auth admin access
-to the project.
+email, or removes it with --revoke. Other custom claims are kept. The token
+needs Firebase Auth admin access to the project.
+
+Claims travel in the user's ID token, so a change is not instant: a grant
+takes effect once the user signs in again or refreshes the token, and a
+revoke only when the token refreshes (up to an hour later).
 EOF
   exit 2
 }
