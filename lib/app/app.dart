@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../features/exercises/presentation/body_model_cubit.dart';
@@ -11,6 +14,7 @@ import '../features/profile/presentation/profile_cubit.dart';
 import '../features/exercises/presentation/favorites_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/settings_cubit.dart';
+import '../features/subscription/presentation/purchaser_session.dart';
 import '../l10n/app_localizations.dart';
 import 'router.dart';
 
@@ -28,8 +32,13 @@ class _AppState extends State<App> {
   @override
   void initState() {
     super.initState();
+    // Created now so the store follows the user from the first auth event.
+    final purchaser = sl<PurchaserSession>();
     _lifecycle = AppLifecycleListener(
-      onResume: sl<ExerciseCatalogueCubit>().appResumed,
+      onResume: () {
+        unawaited(sl<ExerciseCatalogueCubit>().appResumed());
+        purchaser.resume();
+      },
     );
   }
 
@@ -51,6 +60,7 @@ class _AppState extends State<App> {
         BlocProvider.value(value: sl<FavoritesCubit>()),
         BlocProvider.value(value: sl<EquipmentCubit>()),
         BlocProvider.value(value: sl<BodyModelCubit>()),
+        BlocProvider.value(value: sl<EntitlementCubit>()),
       ],
       child: BlocSelector<SettingsCubit, SettingsState, ThemePreference>(
         selector: (state) => state.settings.themePreference,
