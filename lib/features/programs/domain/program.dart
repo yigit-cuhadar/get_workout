@@ -1,5 +1,6 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../../core/grouping.dart';
 import '../../exercises/domain/vocabulary.dart';
 
 /// Where a user's program came from. Only [own] is created by the builder.
@@ -45,7 +46,7 @@ extension LoggingTypeTargets on LoggingType {
 
 /// One exercise of a program day. Rep-based exercises use [repMin] and
 /// [repMax], duration-based ones [durationS]; see [LoggingTypeTargets].
-class ProgramItem extends Equatable {
+class ProgramItem extends Equatable implements Groupable<ProgramItem> {
   const ProgramItem({
     required this.exerciseId,
     required this.sets,
@@ -70,6 +71,7 @@ class ProgramItem extends Equatable {
 
   /// Items of a day sharing this letter, always adjacent, form a superset
   /// (two) or a circuit (three or more).
+  @override
   final String? group;
 
   /// Stored fields this app version does not know, written back unchanged.
@@ -95,6 +97,9 @@ class ProgramItem extends Equatable {
     group: group != null ? group() : this.group,
     extra: extra,
   );
+
+  @override
+  ProgramItem withGroup(String? group) => copyWith(group: () => group);
 
   @override
   List<Object?> get props => [
