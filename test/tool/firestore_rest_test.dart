@@ -154,8 +154,12 @@ void main() {
   });
 
   group('commitInBatches', () {
-    List<Map<String, Object?>> writes(int count) => [
-      for (var i = 0; i < count; i++) {'n': i},
+    /// [count] units of one write each.
+    List<List<Map<String, Object?>>> writes(int count) => [
+      for (var i = 0; i < count; i++)
+        [
+          {'n': i},
+        ],
     ];
 
     test('commits in order, at most batchSize writes each', () async {
@@ -176,6 +180,30 @@ void main() {
           [0, 1],
           [2, 3],
           [4],
+        ],
+      );
+    });
+
+    test('keeps the writes of a unit in one commit', () async {
+      stub.responses.addAll([(200, {}), (200, {})]);
+
+      await firestore.commitInBatches([
+        [
+          {'n': 0},
+        ],
+        [
+          {'n': 1},
+          {'n': 2},
+        ],
+      ], batchSize: 2);
+
+      expect(
+        stub.requests.map(
+          (r) => ((r.body! as Map)['writes'] as List).map((w) => w['n']),
+        ),
+        [
+          [0],
+          [1, 2],
         ],
       );
     });

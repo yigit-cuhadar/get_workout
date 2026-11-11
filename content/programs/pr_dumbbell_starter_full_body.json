@@ -1,0 +1,179 @@
+{
+  "id": "pr_dumbbell_starter_full_body",
+  "status": "live",
+  "premium": false,
+  "order": 2,
+  "level": "beginner",
+  "goal": "build_muscle",
+  "equipmentProfile": "dumbbells",
+  "daysPerWeek": 3,
+  "lengthWeeks": 8,
+  "equipment": [
+    "dumbbell",
+    "bench",
+    "bodyweight"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Dumbbell Starter: Full Body 3-Day",
+      "summary": "A beginner full-body plan that needs only a pair of dumbbells and a bench. Each session trains legs, push and pull with simple, repeatable exercises."
+    }
+  },
+  "days": [
+    {
+      "name": "Full Body A",
+      "items": [
+        {
+          "exerciseId": "ex_goblet_squat",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_bench_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_one_arm_dumbbell_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_romanian_deadlift",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dead_bug",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 45
+        }
+      ]
+    },
+    {
+      "name": "Full Body B",
+      "items": [
+        {
+          "exerciseId": "ex_dumbbell_reverse_lunge",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_chest_supported_dumbbell_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_kickstand_romanian_deadlift",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_calf_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_dumbbell_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_overhead_triceps_extension",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Full Body C",
+      "items": [
+        {
+          "exerciseId": "ex_dumbbell_sumo_squat",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_incline_dumbbell_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_bent_over_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_hammer_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_single_leg_calf_raise",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_crunch",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        }
+      ]
+    }
+  ]
+}

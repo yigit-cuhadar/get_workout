@@ -1,0 +1,276 @@
+{
+  "id": "pr_lean_down_circuits_3_day",
+  "status": "live",
+  "premium": true,
+  "order": 18,
+  "level": "intermediate",
+  "goal": "lose_fat",
+  "equipmentProfile": "dumbbells",
+  "daysPerWeek": 3,
+  "lengthWeeks": 8,
+  "equipment": [
+    "dumbbell",
+    "bench",
+    "bodyweight"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Lean-Down Circuits 3-Day",
+      "summary": "Dumbbell and bodyweight circuits with short rests between rounds, three times a week. A busy, sweaty way to train the whole body that pairs well with sensible eating."
+    }
+  },
+  "days": [
+    {
+      "name": "Circuit Day 1",
+      "items": [
+        {
+          "exerciseId": "ex_goblet_squat",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_push_up",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_one_arm_dumbbell_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_bodyweight_good_morning",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 90,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_dumbbell_curl",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_dumbbell_overhead_triceps_extension",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_dead_bug",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_mountain_climber",
+          "sets": 3,
+          "repMin": 20,
+          "repMax": 30,
+          "restS": 0,
+          "group": "C"
+        },
+        {
+          "exerciseId": "ex_plank",
+          "sets": 3,
+          "durationS": 30,
+          "restS": 60,
+          "group": "C"
+        }
+      ]
+    },
+    {
+      "name": "Circuit Day 2",
+      "items": [
+        {
+          "exerciseId": "ex_dumbbell_reverse_lunge",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_bench_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_bent_over_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_leg_curl",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 90,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_dumbbell_hammer_curl",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_dumbbell_kickback",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_bicycle_crunch",
+          "sets": 3,
+          "repMin": 16,
+          "repMax": 20,
+          "restS": 90,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_burpee",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 0,
+          "group": "C"
+        },
+        {
+          "exerciseId": "ex_high_plank",
+          "sets": 3,
+          "durationS": 30,
+          "restS": 60,
+          "group": "C"
+        }
+      ]
+    },
+    {
+      "name": "Circuit Day 3",
+      "items": [
+        {
+          "exerciseId": "ex_dumbbell_sumo_squat",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_chest_supported_dumbbell_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_romanian_deadlift",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 90,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_dumbbell_curl",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_dumbbell_pullover",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_russian_twist",
+          "sets": 3,
+          "repMin": 16,
+          "repMax": 20,
+          "restS": 90,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_mountain_climber",
+          "sets": 3,
+          "repMin": 20,
+          "repMax": 30,
+          "restS": 0,
+          "group": "C"
+        },
+        {
+          "exerciseId": "ex_side_plank",
+          "sets": 3,
+          "durationS": 30,
+          "restS": 60,
+          "group": "C"
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,6 @@
-// Pure parts of tool/import_content.dart: turning content JSON into Firestore
-// documents, hashing them and deciding what to write.
+// Pure parts of tool/import_content.dart: turning content JSON (exercises and
+// programs) into Firestore documents, hashing them and deciding what to
+// write.
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -61,14 +62,16 @@ Map<String, Object?> encodeFields(Map<String, Object?> map) => {
   for (final entry in map.entries) entry.key: encodeValue(entry.value),
 };
 
-/// An exercise ready to be written.
-class ExerciseDoc {
-  ExerciseDoc(this.id, this.content) : hash = contentHash(content);
+/// A content document ready to be written.
+class ContentDoc {
+  ContentDoc(this.path, this.content) : hash = contentHash(content);
 
-  factory ExerciseDoc.fromJson(Map<String, Object?> json) =>
-      ExerciseDoc(json['id']! as String, exerciseContent(json));
+  /// `exercises/<id>` for an entry of `content/exercises/*.json`.
+  factory ContentDoc.exercise(Map<String, Object?> json) =>
+      ContentDoc('exercises/${json['id']}', exerciseContent(json));
 
-  final String id;
+  /// The document path below `documents/`, e.g. `exercises/ex_a`.
+  final String path;
   final Map<String, Object?> content;
   final String hash;
 
@@ -110,16 +113,33 @@ Map<String, Object?> decodeFields(Map<String, Object?> fields) => {
     key: decodeValue(value! as Map<String, Object?>),
 };
 
-/// What the import needs to know about an existing `exercises/<id>`.
-class RemoteExercise {
-  RemoteExercise({
+/// The two documents of a `content/programs/<id>.json`: the catalog card
+/// `programs/<id>` (every field but `id` and `days`) and its detail
+/// `programs/<id>/detail/main` (`days`), each with its own hash, so the card
+/// list never loads the days and either can change alone.
+({ContentDoc card, ContentDoc detail}) programDocs(Map<String, Object?> json) {
+  final path = 'programs/${json['id']}';
+  return (
+    card: ContentDoc(
+      path,
+      Map<String, Object?>.of(json)
+        ..remove('id')
+        ..remove('days'),
+    ),
+    detail: ContentDoc('$path/detail/main', {'days': json['days']}),
+  );
+}
+
+/// What the import needs to know about an existing content document.
+class RemoteDocument {
+  RemoteDocument({
     required this.storedHash,
     required this.actualHash,
     required this.updateTime,
   });
 
   /// Hashes the decoded [fields] of a document read with [updateTime].
-  factory RemoteExercise.fromFields(
+  factory RemoteDocument.fromFields(
     Map<String, Object?> fields,
     String updateTime,
   ) {
@@ -127,11 +147,11 @@ class RemoteExercise {
       ..remove('contentHash')
       ..remove('updatedAt');
     // A whole number written from the web (the admin panel) is stored as an
-    // integer; the file's 2 and 2.0 are the same increment.
+    // integer; an exercise file's 2 and 2.0 are the same increment.
     final increment = content['incrementKg'];
     if (increment is int) content['incrementKg'] = increment.toDouble();
     final stored = fields['contentHash'];
-    return RemoteExercise(
+    return RemoteDocument(
       storedHash: stored is String ? stored : null,
       actualHash: contentHash(content),
       updateTime: updateTime,
@@ -152,13 +172,20 @@ class RemoteExercise {
   bool get editedElsewhere => storedHash != actualHash;
 }
 
-/// What an import does, by exercise id. Each list is sorted.
+/// The unit [path] is imported in: its top-level document. A program's card
+/// `programs/<id>` and its detail `programs/<id>/detail/main` are one unit,
+/// written together or not at all; an exercise is a unit of its own.
+String importUnit(String path) => path.split('/').take(2).join('/');
+
+/// What an import does, by document path. Each list is sorted, so exercises
+/// come before programs and a card before its detail.
 class ImportPlan {
   ImportPlan({
     required this.created,
     required this.updated,
     required this.unchanged,
     required this.edited,
+    required this.held,
     required this.orphaned,
     required this.force,
   });
@@ -171,8 +198,13 @@ class ImportPlan {
   /// [force], so an edit made in the admin panel is never lost silently.
   final List<String> edited;
 
-  /// In Firestore but not in the files. Never deleted: an exercise is retired
-  /// by setting `status` in its file.
+  /// New or changed, but in the same [importUnit] as an [edited] document
+  /// and so held back with it (never with [force]): a program's card and
+  /// detail never get out of step. Not in [created] or [updated].
+  final List<String> held;
+
+  /// In Firestore but not in the files. Never deleted: content is retired by
+  /// setting `status` in its file.
   final List<String> orphaned;
 
   final bool force;
@@ -187,7 +219,7 @@ class ImportPlan {
 /// Compares the files' hashes ([local]) with what Firestore holds ([remote]).
 ImportPlan planImport(
   Map<String, String> local,
-  Map<String, RemoteExercise> remote, {
+  Map<String, RemoteDocument> remote, {
   bool force = false,
 }) {
   final created = <String>[], updated = <String>[], unchanged = <String>[];
@@ -206,33 +238,64 @@ ImportPlan planImport(
     }
   }
   final orphaned = remote.keys.where((id) => !local.containsKey(id)).toList();
+  final editedUnits = force ? const <String>{} : edited.map(importUnit).toSet();
+  bool isHeld(String id) => editedUnits.contains(importUnit(id));
+  final held = [...created, ...updated].where(isHeld).toList();
+  created.removeWhere(isHeld);
+  updated.removeWhere(isHeld);
   return ImportPlan(
     created: created..sort(),
     updated: updated..sort(),
     unchanged: unchanged..sort(),
     edited: edited..sort(),
+    held: held..sort(),
     orphaned: orphaned..sort(),
     force: force,
   );
 }
 
-/// Splits [items] into chunks of at most [size].
-List<List<T>> batches<T>(List<T> items, {int size = maxWritesPerCommit}) => [
-  for (var i = 0; i < items.length; i += size)
-    items.sublist(i, i + size > items.length ? items.length : i + size),
-];
+/// [paths] grouped by [importUnit], in order of first appearance.
+List<List<String>> groupByUnit(List<String> paths) {
+  final units = <String, List<String>>{};
+  for (final path in paths) {
+    (units[importUnit(path)] ??= []).add(path);
+  }
+  return units.values.toList();
+}
 
-/// A `documents:commit` write that replaces `exercises/<id>` with [doc] and
-/// sets `updatedAt` to the server time. With [updateTime] (from the read) it
+/// Packs [units] in order into batches of at most [size] items, never
+/// splitting a unit, so each unit is committed atomically.
+List<List<T>> packUnits<T>(
+  List<List<T>> units, {
+  int size = maxWritesPerCommit,
+}) {
+  final result = <List<T>>[];
+  var batch = <T>[];
+  for (final unit in units) {
+    if (unit.length > size) {
+      throw ArgumentError.value(unit.length, 'units', 'a unit exceeds $size');
+    }
+    if (batch.length + unit.length > size) {
+      result.add(batch);
+      batch = [];
+    }
+    batch.addAll(unit);
+  }
+  if (batch.isNotEmpty) result.add(batch);
+  return result;
+}
+
+/// A `documents:commit` write that replaces the document at [doc]'s path
+/// with it and sets `updatedAt` to the server time. With [updateTime] (from the read) it
 /// only succeeds if the document has not changed since; without it, only if
 /// the document still does not exist.
-Map<String, Object?> exerciseWrite(
+Map<String, Object?> contentWrite(
   String databasePath,
-  ExerciseDoc doc, {
+  ContentDoc doc, {
   String? updateTime,
 }) => {
   'update': {
-    'name': '$databasePath/documents/exercises/${doc.id}',
+    'name': '$databasePath/documents/${doc.path}',
     'fields': doc.fields,
   },
   'updateTransforms': [

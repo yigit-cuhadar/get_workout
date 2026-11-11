@@ -1,0 +1,233 @@
+{
+  "id": "pr_glute_focus_4_day",
+  "status": "live",
+  "premium": true,
+  "order": 15,
+  "level": "intermediate",
+  "goal": "build_muscle",
+  "equipmentProfile": "full_gym",
+  "daysPerWeek": 4,
+  "lengthWeeks": 10,
+  "equipment": [
+    "barbell",
+    "dumbbell",
+    "cable",
+    "machine",
+    "bench",
+    "box"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Glute Focus 4-Day",
+      "summary": "Two lower-body days built around hip thrusts, hinges and single-leg work, plus two lighter upper-body days. Glute volume is set well above a standard program on purpose, while the upper body gets enough to keep progressing."
+    }
+  },
+  "days": [
+    {
+      "name": "Glutes and Hamstrings",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_hip_thrust",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_romanian_deadlift",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_bulgarian_split_squat",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_cable_glute_kickback",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_hip_abduction_machine",
+          "sets": 3,
+          "repMin": 15,
+          "repMax": 20,
+          "restS": 45
+        }
+      ]
+    },
+    {
+      "name": "Upper A",
+      "items": [
+        {
+          "exerciseId": "ex_dumbbell_bench_press",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_lat_pulldown",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_seated_cable_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 4,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_triceps_pushdown",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60,
+          "group": "A"
+        }
+      ]
+    },
+    {
+      "name": "Glutes and Quads",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_back_squat",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_hip_thrust_machine",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_step_up",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_pull_through",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_hip_abduction",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_lying_leg_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Upper B",
+      "items": [
+        {
+          "exerciseId": "ex_incline_dumbbell_press",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_chest_supported_dumbbell_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_machine_assisted_pull_up",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_cable_lateral_raise",
+          "sets": 4,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_pec_deck",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_face_pull",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_overhead_triceps_extension",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_cable_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60,
+          "group": "A"
+        }
+      ]
+    }
+  ]
+}

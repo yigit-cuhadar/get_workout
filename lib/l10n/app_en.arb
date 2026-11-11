@@ -573,8 +573,6 @@
 
   "presetFullGym": "Full gym",
   "presetHomeGym": "Home gym",
-  "presetDumbbellsOnly": "Dumbbells only",
-  "presetBodyweight": "Bodyweight",
 
   "customLabel": "Custom",
   "customSummary": "Custom · {details}",
@@ -605,5 +603,8 @@
   "customErrorEquipment": "Bodyweight can't be combined with other equipment",
   "customErrorNote": "Use at most {max} characters",
   "@customErrorNote": {"placeholders": {"max": {"type": "int"}}},
-  "detailNote": "Note"
+  "detailNote": "Note",
+  "presetDumbbells": "Dumbbells and a bench",
+  "presetBodyweight": "Pull-up bar and dip bars",
+  "presetBands": "Resistance bands"
 }

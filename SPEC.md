@@ -72,6 +72,29 @@ from the earlier FitLab app.
 - **Volume**: each completed working set counts 1 for every main muscle and
   0.5 for every secondary muscle. Warm-up sets do not count. A drop set counts
   as one set. Reference band is 10-20 sets per muscle per week.
+- **Equipment profiles**: one list, `EquipmentProfile` in
+  `vocabulary.dart`, serves onboarding's quick picks and the catalogue's
+  `equipmentProfile`. Full gym = everything; home gym = barbell, plates,
+  dumbbells, bench, pull-up bar (a barbell at home implies a rack, which has
+  no code); dumbbells = dumbbells and a bench; bodyweight = pull-up bar and
+  dip bars; bands = resistance bands. Bodyweight is always available and is
+  never stored. Profiles store only equipment codes, so changing a pick's
+  equipment never touches stored data.
+- **Catalogue rules** (`lib/features/programs/domain/catalogue_rules.dart`):
+  every catalogue program must pass the app's own `validateProgram`, and
+  its session lengths are the app's `estimateDay`. On top: every exercise
+  fits the program's equipment profile (through `equipment` or an
+  alternative set) and is at most one level above the program (no advanced
+  exercise in a beginner program); `equipment[]` is computed from the
+  exercises' primary equipment; live programs are exactly 6 free and 19
+  premium. Weekly sets per major muscle (pec, lat, mid delt, biceps,
+  triceps, glute, quads, hamstrings) are warned about outside 6-12 for
+  beginner, 10-18 for intermediate and 12-20 for advanced programs. These
+  bands are narrower than the 10-20 reference band of the volume screen
+  because they describe what a program of one level should prescribe,
+  while the screen judges any week of any user. Focus programs and
+  equipment-limited ones exceed or miss a band on purpose and say so in
+  their summary.
 - **Steps**: read-only from Apple Health / Health Connect; not stored.
 - **Photos**: private app storage plus Cloud Storage backup. Never the gallery.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
@@ -179,11 +202,17 @@ removed.
 Variations are the other exercises of the same `family`, ordered by rank.
 
 **`programs/{id}`** (catalog card): `status`, `premium`, `level`, `goal`,
-`daysPerWeek`, `lengthWeeks?`, `equipment[]`, `l10n.<lang>.{name, summary}`,
-`updatedAt`.
+`daysPerWeek`, `lengthWeeks?`, `equipment[]` (the primary `equipment` of
+every exercise used, computed by the validator), `equipmentProfile`
+(`full_gym` \| `home_gym` \| `dumbbells` \| `bodyweight` \| `bands`, for
+filtering; every exercise fits it through `equipment` or an alternative set),
+`order` (unique int, the catalogue's default sort),
+`l10n.<lang>.{name, summary}`, `updatedAt`, `contentHash`. Seeded from
+`content/programs/<id>.json`, which holds the card and `days` together.
 
-**`programs/{id}/detail/main`**: `days[]` (shape below). Readable when the
-program is not premium or the reader has an active entitlement.
+**`programs/{id}/detail/main`**: `days[]` (shape below, without `targetKg`),
+`updatedAt`, `contentHash`. Readable when the program is not premium or the
+reader has an active entitlement.
 
 ### Per user (read/write: owner only)
 

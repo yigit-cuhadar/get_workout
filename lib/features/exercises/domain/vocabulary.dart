@@ -194,6 +194,59 @@ enum GripWidth implements Coded {
   final String code;
 }
 
+/// What a user trains for, and what a program is built for.
+enum Goal implements Coded {
+  buildMuscle('build_muscle'),
+  getStronger('get_stronger'),
+  loseFat('lose_fat'),
+  generalFitness('general_fitness');
+
+  const Goal(this.code);
+  @override
+  final String code;
+}
+
+/// A kind of place to train, with the equipment it has. Onboarding offers
+/// these as quick picks for the user's equipment, and every ready-made
+/// program is written for one. [Equipment.bodyweight] is always available,
+/// so no profile lists it.
+enum EquipmentProfile implements Coded {
+  fullGym('full_gym'),
+  homeGym('home_gym'),
+  dumbbells('dumbbells'),
+  bodyweight('bodyweight'),
+  bands('bands');
+
+  const EquipmentProfile(this.code);
+  @override
+  final String code;
+
+  Set<Equipment> get equipment => switch (this) {
+    fullGym => Equipment.values.toSet()..remove(Equipment.bodyweight),
+    // A barbell at home means a rack to squat and press from; the
+    // vocabulary has no code for it.
+    homeGym => const {
+      Equipment.barbell,
+      Equipment.plate,
+      Equipment.dumbbell,
+      Equipment.bench,
+      Equipment.pullUpBar,
+    },
+    dumbbells => const {Equipment.dumbbell, Equipment.bench},
+    bodyweight => const {Equipment.pullUpBar, Equipment.dipStation},
+    bands => const {Equipment.resistanceBand},
+  };
+
+  /// Whether every code of an exercise's equipment [set] is available here.
+  bool has(Iterable<String> set) {
+    final codes = {
+      Equipment.bodyweight.code,
+      for (final e in equipment) e.code,
+    };
+    return set.every(codes.contains);
+  }
+}
+
 /// Whether users see an exercise. Exercises are never deleted, only retired.
 enum ExerciseStatus implements Coded {
   draft('draft'),

@@ -150,7 +150,7 @@ void main() {
           case ProfileField.daysPerWeek:
             cubit.setDaysPerWeek(3);
           default:
-            cubit.applyPreset(EquipmentPreset.homeGym);
+            cubit.applyPreset(EquipmentProfile.homeGym);
         }
         await cubit.next();
       }
@@ -203,15 +203,16 @@ void main() {
     );
 
     test('the equipment is saved through the library', () async {
-      final cubit = onboarding()..applyPreset(EquipmentPreset.dumbbellsOnly);
+      final cubit = onboarding()..applyPreset(EquipmentProfile.dumbbells);
 
       await cubit.skip();
 
-      verify(() => library.saveEquipment('u1', {Equipment.dumbbell})).called(1);
+      const owned = {Equipment.dumbbell, Equipment.bench};
+      verify(() => library.saveEquipment('u1', owned)).called(1);
       verify(
         () => profiles.completeOnboarding(
           'u1',
-          const UserProfile(equipment: {Equipment.dumbbell}),
+          const UserProfile(equipment: owned),
         ),
       ).called(1);
     });
@@ -224,7 +225,7 @@ void main() {
     test('a failed equipment save fails the completion', () async {
       when(() => library.saveEquipment(any(), any()))
           .thenAnswer((_) async => const Err(NetworkFailure()));
-      final cubit = onboarding()..applyPreset(EquipmentPreset.bodyweight);
+      final cubit = onboarding()..applyPreset(EquipmentProfile.bodyweight);
 
       await cubit.skip();
 
@@ -282,19 +283,25 @@ void main() {
     });
 
     test('a preset fills the equipment, which can then be tuned', () {
-      final cubit = onboarding()..applyPreset(EquipmentPreset.dumbbellsOnly);
-      expect(cubit.state.answers.equipment, {Equipment.dumbbell});
+      final cubit = onboarding()..applyPreset(EquipmentProfile.dumbbells);
+      expect(cubit.state.answers.equipment, {
+        Equipment.dumbbell,
+        Equipment.bench,
+      });
 
       cubit
-        ..toggleEquipment(Equipment.bench)
+        ..toggleEquipment(Equipment.box)
         ..toggleEquipment(Equipment.dumbbell);
-      expect(cubit.state.answers.equipment, {Equipment.bench});
+      expect(cubit.state.answers.equipment, {Equipment.bench, Equipment.box});
     });
 
     test('bodyweight is an answer: no equipment at all', () {
       final cubit = edit(ProfileField.equipment, const UserProfile());
       expect(cubit.state.canContinue, isFalse);
-      cubit.applyPreset(EquipmentPreset.bodyweight);
+      cubit
+        ..applyPreset(EquipmentProfile.bodyweight)
+        ..toggleEquipment(Equipment.pullUpBar)
+        ..toggleEquipment(Equipment.dipStation);
       expect(cubit.state.answers.equipment, isEmpty);
       expect(cubit.state.canContinue, isTrue);
     });

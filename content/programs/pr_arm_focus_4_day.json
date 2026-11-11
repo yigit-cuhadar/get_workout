@@ -1,0 +1,253 @@
+{
+  "id": "pr_arm_focus_4_day",
+  "status": "live",
+  "premium": true,
+  "order": 16,
+  "level": "intermediate",
+  "goal": "build_muscle",
+  "equipmentProfile": "full_gym",
+  "daysPerWeek": 4,
+  "lengthWeeks": 8,
+  "equipment": [
+    "barbell",
+    "ez_bar",
+    "dumbbell",
+    "cable",
+    "machine",
+    "bench",
+    "pull_up_bar",
+    "dip_station"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Arm Focus 4-Day",
+      "summary": "Two upper-body days and one lower-body day, plus a dedicated arm day of curl and extension supersets. Biceps and triceps get well above standard volume for a focused block, while the rest of the body gets a standard workload."
+    }
+  },
+  "days": [
+    {
+      "name": "Upper A",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_bench_press",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_chin_up",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_seated_cable_row",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_ez_bar_curl",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_ez_bar_skull_crusher",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 75,
+          "group": "A"
+        }
+      ]
+    },
+    {
+      "name": "Upper B",
+      "items": [
+        {
+          "exerciseId": "ex_close_grip_bench_press",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_lat_pulldown",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_incline_dumbbell_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_chest_supported_dumbbell_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_hammer_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_rope_triceps_pushdown",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60,
+          "group": "A"
+        }
+      ]
+    },
+    {
+      "name": "Lower",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_back_squat",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_romanian_deadlift",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_leg_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_leg_extension",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_lying_leg_curl",
+          "sets": 4,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_standing_calf_raise",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Arms",
+      "items": [
+        {
+          "exerciseId": "ex_triceps_dip",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_barbell_curl",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_incline_dumbbell_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_cable_overhead_triceps_extension",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_preacher_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_triceps_pushdown",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_cable_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_wrist_curl",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        }
+      ]
+    }
+  ]
+}
