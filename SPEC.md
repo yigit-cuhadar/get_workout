@@ -131,7 +131,7 @@ Firestore. Timestamps are server timestamps; ids are generated on the client.
 | `familyRank` | int | Easier → harder within the family |
 | `pinnedAlternatives`, `excludedAlternatives` | id[] | Admin overrides of the computed list |
 | `defaultRestS` | int | |
-| `incrementKg` | double? | Step for "add weight"; stored as a double even when the file says `1` |
+| `incrementKg` | number? | Step for "add weight"; the import stores a double, but a web client (the admin panel) stores a whole number as an integer, so readers accept int or double and hashing treats `2` and `2.0` alike |
 | `popularity` | int | Lower sorts first |
 | `l10n.<lang>` | map | `name`, `aliases[]`, `setup[]`, `execution[]`, `mistakes[]`, `safety?`, `cues[]` |
 | `updatedAt` | timestamp | Clients sync incrementally on this |
@@ -231,7 +231,7 @@ Group 2, the model
 
 Group 3, exercises
 - [x] Exercise domain and sync — incremental sync by `updatedAt` — library works offline after first sync
-- [ ] Admin panel — sign-in, exercise list, exercise editor with validation, draft/live/retire — an edit appears in the app after sync
+- [x] Admin panel — sign-in, exercise list, exercise editor with validation, draft/live/retire — an edit appears in the app after sync
 - [ ] Exercise content — 400+ exercises in English, loaded through the admin import — every muscle and equipment profile is covered
 - [x] Library — model tab with muscle sheet (main vs secondary), list, search, filters, sort — find any exercise in a few taps
 - [x] Exercise detail — text sections, model with worked muscles, alternatives, variations, favorite, add to workout or program

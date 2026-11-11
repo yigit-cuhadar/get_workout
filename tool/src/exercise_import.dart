@@ -3,28 +3,13 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:get_workout/features/exercises/data/exercise_content.dart';
+
+export 'package:get_workout/features/exercises/data/exercise_content.dart'
+    show exerciseContent;
 
 /// Firestore allows at most 500 writes in one commit.
 const maxWritesPerCommit = 500;
-
-/// The stored content of an exercise read from content/exercises/*.json.
-///
-/// The id becomes the document id and is not stored. Firestore has no arrays
-/// of arrays, so each `equipmentAlternatives` set is stored as
-/// `{"items": [...]}`. `incrementKg` is always a double, so clients read one
-/// type whether the file says `1` or `2.5`.
-Map<String, Object?> exerciseContent(Map<String, Object?> json) {
-  final content = Map<String, Object?>.of(json)..remove('id');
-  final alternatives = content['equipmentAlternatives'];
-  if (alternatives is List) {
-    content['equipmentAlternatives'] = [
-      for (final set in alternatives) {'items': set},
-    ];
-  }
-  final increment = content['incrementKg'];
-  if (increment is num) content['incrementKg'] = increment.toDouble();
-  return content;
-}
 
 /// JSON with map keys sorted at every level, so equal content always gives
 /// the same string.
@@ -141,6 +126,10 @@ class RemoteExercise {
     final content = Map<String, Object?>.of(fields)
       ..remove('contentHash')
       ..remove('updatedAt');
+    // A whole number written from the web (the admin panel) is stored as an
+    // integer; the file's 2 and 2.0 are the same increment.
+    final increment = content['incrementKg'];
+    if (increment is int) content['incrementKg'] = increment.toDouble();
     final stored = fields['contentHash'];
     return RemoteExercise(
       storedHash: stored is String ? stored : null,
