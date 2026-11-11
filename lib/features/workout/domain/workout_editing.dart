@@ -8,8 +8,9 @@ import 'exercise_stats.dart';
 import 'set_logging.dart';
 import 'workout.dart';
 
-/// [exercise] as a workout exercise named in [language]: one empty set per
-/// set of [goal], or a single one without a goal.
+/// [exercise] as a workout exercise named in [language], in [goal]'s group:
+/// one empty set per set of [goal], or a single one without a goal. The
+/// goal keeps only its targets.
 WorkoutExercise exerciseFor(
   Exercise exercise,
   String language, {
@@ -25,7 +26,17 @@ WorkoutExercise exerciseFor(
     (goal?.sets ?? 1).clamp(1, WorkoutLimits.maxSets),
     const WorkoutSet(),
   ),
-  goal: goal,
+  goal: goal == null
+      ? null
+      : ProgramItem(
+          exerciseId: goal.exerciseId,
+          sets: goal.sets,
+          repMin: goal.repMin,
+          repMax: goal.repMax,
+          durationS: goal.durationS,
+          restS: goal.restS,
+          targetKg: goal.targetKg,
+        ),
 );
 
 /// A workout of day [dayIndex] of [program], its items as goals. Items whose
