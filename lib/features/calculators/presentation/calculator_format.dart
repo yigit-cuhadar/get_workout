@@ -37,11 +37,13 @@ class CalculatorFormat {
       ).format(value);
 
   /// Trailing zeros dropped, so 2.5 and 1.25 kg plates read naturally.
-  String weight(double kg, {int maxDecimals = 1}) {
-    final format = NumberFormat.decimalPattern(_locale)
-      ..maximumFractionDigits = maxDecimals;
-    return '${format.format(weightUnit.fromKg(kg))} $weightUnitLabel';
-  }
+  String weight(double kg, {int maxDecimals = 1}) =>
+      '${_trimmed(weightUnit.fromKg(kg), maxDecimals)} $weightUnitLabel';
+
+  String _trimmed(double value, int maxDecimals) =>
+      (NumberFormat.decimalPattern(
+        _locale,
+      )..maximumFractionDigits = maxDecimals).format(value);
 
   /// A weight as an editable number in the user's unit, without grouping.
   String editableWeight(double kg) {
@@ -81,8 +83,8 @@ class CalculatorFormat {
       final min = (convert(range.min) * factor).ceil() / factor;
       final max = (convert(range.max) * factor).floor() / factor;
       return l10n.calcOutOfRange(
-        number(min, decimals: decimals),
-        number(max, decimals: decimals),
+        _trimmed(min, decimals),
+        _trimmed(max, decimals),
       );
     }
 

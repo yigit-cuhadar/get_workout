@@ -65,7 +65,9 @@ void main() {
   });
 
   test('a result above 60 % is a measurement problem', () {
-    // log10(370) = 2.568202; density 0.897; 495 / 0.897 − 450 = 101.8.
+    // log10(370) = 2.568202, log10(150) = 2.176091;
+    // 1.29579 − 0.35004·2.568202 + 0.22100·2.176091 = 0.877732;
+    // 495 / 0.877732 − 450 = 113.95.
     expect(
       estimateBodyFat(
         sex: Sex.female,

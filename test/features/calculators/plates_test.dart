@@ -158,8 +158,14 @@ void main() {
       checkPlate(weightKg: 0.5, pairs: 3),
       const Calculated(Plate(weightKg: 0.5, pairs: 3)),
     );
+    // 0.25 lb change plates are 0.113 kg.
     expect(
-      checkPlate(weightKg: 0.1, pairs: 1),
+      checkPlate(weightKg: WeightUnit.lb.toKg(0.25), pairs: 1),
+      isA<Calculated<Plate>>(),
+    );
+    expect(checkPlate(weightKg: 0.1, pairs: 1), isA<Calculated<Plate>>());
+    expect(
+      checkPlate(weightKg: 0.09, pairs: 1),
       const OutOfRange<Plate>(CalculatorInput.plateWeight, plateWeightRangeKg),
     );
     expect(
@@ -167,5 +173,104 @@ void main() {
       const OutOfRange<Plate>(CalculatorInput.platePairs, platePairsRange),
     );
     expect(checkPlate(weightKg: 10, pairs: -1), isA<OutOfRange<Plate>>());
+  });
+
+  test('the pair range matches the inventory limit', () {
+    expect(platePairsRange.max, maxPlatePairs);
+  });
+
+  group('lb plates mixed with kg plates', () {
+    // The reviewer's inventory: lb defaults plus a 2.5 kg and a 1.25 kg pair.
+    final mixed = [
+      ...lbPlates,
+      const Plate(weightKg: 2.5, pairs: 1),
+      const Plate(weightKg: 1.25, pairs: 1),
+    ];
+
+    /// The heaviest total not above the target, trying every combination.
+    double bruteForce(double targetKg) {
+      var best = lbBar;
+      void search(int index, double total) {
+        if (total > targetKg + plateToleranceKg) return;
+        if (total > best) best = total;
+        if (index == mixed.length) return;
+        for (var count = 0; count <= mixed[index].pairs; count++) {
+          search(index + 1, total + 2 * count * mixed[index].weightKg);
+        }
+      }
+
+      search(0, lbBar);
+      return best;
+    }
+
+    test('whole-pound targets are never overshot and are optimal', () {
+      for (var pounds = 45; pounds <= 600; pounds++) {
+        final targetKg = WeightUnit.lb.toKg(pounds.toDouble());
+        final result = load(targetKg, barKg: lbBar, plates: mixed);
+        final reason = '$pounds lb';
+        expect(
+          result.totalKg,
+          lessThanOrEqualTo(targetKg + plateToleranceKg),
+          reason: reason,
+        );
+        expect(
+          result.exact,
+          (targetKg - result.totalKg).abs() <= plateToleranceKg,
+          reason: reason,
+        );
+        expect(
+          result.totalKg,
+          closeTo(bruteForce(targetKg), plateToleranceKg),
+          reason: reason,
+        );
+      }
+    });
+
+    test('56 lb is not overshot by a 2.5 kg pair', () {
+      // Per side 5.5 lb = 2.495 kg; a 2.5 kg plate would make 56.02 lb.
+      final result = load(WeightUnit.lb.toKg(56), barKg: lbBar, plates: mixed);
+      expect(WeightUnit.lb.fromKg(result.totalKg), lessThanOrEqualTo(56));
+      expect(result.exact, isFalse);
+    });
+  });
+
+  group('inventory limits', () {
+    test('only the 12 largest sizes and 20 pairs each are used', () {
+      final result = load(
+        1000,
+        barKg: 0,
+        plates: [
+          const Plate(weightKg: 1, pairs: 50),
+          for (var i = 0; i < 12; i++) Plate(weightKg: 50.0 + i, pairs: 1),
+        ],
+      );
+      // The 1 kg plate is the 13th size and is left out.
+      expect(result.perSide.any((p) => p.weightKg == 1), isFalse);
+
+      final pairs = load(
+        100,
+        barKg: 0,
+        plates: const [Plate(weightKg: 1, pairs: 50)],
+      );
+      expect(pairs.perSide, const [PlateCount(weightKg: 1, count: 20)]);
+    });
+
+    test('the worst-case inventory at 1,000 kg stays fast', () {
+      // 12 sizes of 20 pairs with odd gram weights, so no exact hit ends the
+      // search early, and capacity above the 500 kg per side searched.
+      final worst = [
+        for (var i = 0; i < maxPlateSizes; i++)
+          Plate(weightKg: 99.997 - i * 7.919, pairs: maxPlatePairs),
+      ];
+      loadPlates(targetKg: 999.999, barKg: 0, plates: worst); // warm-up
+      final stopwatch = Stopwatch()..start();
+      final result = loadPlates(targetKg: 999.999, barKg: 0, plates: worst);
+      stopwatch.stop();
+
+      expect(result, isA<Calculated<PlateLoad>>());
+      // Measured 7-16 ms on an M1 (6 million steps); an exponential search
+      // over 21^12 combinations would never finish.
+      expect(stopwatch.elapsedMilliseconds, lessThan(250));
+    });
   });
 }

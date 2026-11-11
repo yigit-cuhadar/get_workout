@@ -159,7 +159,9 @@ class _Equipment extends StatelessWidget {
         Wrap(
           children: [
             TextButton(
-              onPressed: () => editPlate(null),
+              onPressed: state.plates.length < maxPlateSizes
+                  ? () => editPlate(null)
+                  : null,
               child: Text(l10n.calcAddPlate),
             ),
             if (custom)

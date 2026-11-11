@@ -94,11 +94,15 @@ class _Estimate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = format.l10n;
-    Widget target(String label, CalorieTarget target) => ResultTile(
-      label: label,
-      value: format.kcal(target.kcal),
-      note: target.floored ? l10n.calcFloored(format.kcal(target.kcal)) : null,
-    );
+    Widget target(String label, CalorieTarget? target) => target == null
+        ? ResultTile(label: label, value: '', note: l10n.calcNoDeficit)
+        : ResultTile(
+            label: label,
+            value: format.kcal(target.kcal),
+            note: target.floored
+                ? l10n.calcFloored(format.kcal(target.kcal))
+                : null,
+          );
     return Column(
       children: [
         ResultTile(label: l10n.calcBmr, value: format.kcal(estimate.bmr)),

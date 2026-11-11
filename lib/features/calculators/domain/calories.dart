@@ -40,9 +40,12 @@ class CalorieEstimate extends Equatable {
   final double bmr;
   final double maintenance;
 
-  /// Maintenance −500, −250 and +250 kcal.
-  final CalorieTarget lose;
-  final CalorieTarget loseSlowly;
+  /// Maintenance −500 and −250 kcal. Null when the minimum intake leaves no
+  /// deficit, as a "lose" target at or above maintenance is no deficit.
+  final CalorieTarget? lose;
+  final CalorieTarget? loseSlowly;
+
+  /// Maintenance +250 kcal.
   final CalorieTarget gain;
 
   @override
@@ -89,12 +92,18 @@ Calculation<CalorieEstimate> estimateCalories({
         : CalorieTarget(kcal: kcal, floored: false);
   }
 
+  // At least a whole kcal below, so it never shows as equal to maintenance.
+  CalorieTarget? deficit(double offset) {
+    final candidate = target(offset);
+    return maintenance - candidate.kcal >= 1 ? candidate : null;
+  }
+
   return Calculated(
     CalorieEstimate(
       bmr: bmr,
       maintenance: maintenance,
-      lose: target(-500),
-      loseSlowly: target(-250),
+      lose: deficit(-500),
+      loseSlowly: deficit(-250),
       gain: target(250),
     ),
   );

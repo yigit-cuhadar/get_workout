@@ -33,6 +33,14 @@ extension LengthUnitConversion on LengthUnit {
   };
 }
 
+/// Limits of the bar and plate inventory. They keep the plate calculator's
+/// search bounded and let 0.25 lb (0.113 kg) change plates in.
+const maxBarWeightKg = 100.0;
+const minPlateWeightKg = 0.1;
+const maxPlateWeightKg = 100.0;
+const maxPlateSizes = 12;
+const maxPlatePairs = 20;
+
 /// One plate size the user can load, and how many pairs of it they have.
 class Plate extends Equatable {
   const Plate({required this.weightKg, required this.pairs});

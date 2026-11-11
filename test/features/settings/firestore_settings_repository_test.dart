@@ -162,5 +162,30 @@ void main() {
       );
       expect(settings.plates, const [Plate(weightKg: 10, pairs: 2)]);
     });
+
+    test('stored equipment beyond the limits is clamped', () async {
+      await user().set({
+        'settings': {
+          'barWeightKg': 250,
+          'plates': [
+            {'weightKg': 0.05, 'pairs': 1},
+            {'weightKg': 150, 'pairs': 30},
+            {'weightKg': 10, 'pairs': -2},
+            for (var i = 1; i <= 12; i++) {'weightKg': 20 + i, 'pairs': 1},
+          ],
+        },
+      });
+
+      final settings = await repository.watchSettings('u1').first;
+
+      expect(settings.barWeightKg, maxBarWeightKg);
+      expect(settings.plates, hasLength(maxPlateSizes));
+      expect(
+        settings.plates.first,
+        const Plate(weightKg: maxPlateWeightKg, pairs: maxPlatePairs),
+      );
+      // The 12 largest win; 21 kg, 10 kg and the clamped 0.1 kg are dropped.
+      expect(settings.plates.last, const Plate(weightKg: 22, pairs: 1));
+    });
   });
 }

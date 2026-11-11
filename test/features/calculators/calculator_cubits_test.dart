@@ -44,7 +44,7 @@ void main() {
       final pounds = valueOf(imperial.state.result);
       expect(kg.bmr, closeTo(1780, 1e-9));
       expect(pounds.bmr, closeTo(kg.bmr, 1e-9));
-      expect(pounds.lose.kcal, closeTo(kg.lose.kcal, 1e-9));
+      expect(pounds.lose!.kcal, closeTo(kg.lose!.kcal, 1e-9));
     });
 
     test('no result until every input is filled in', () {

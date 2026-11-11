@@ -82,23 +82,25 @@ class FirestoreSettingsRepository implements SettingsRepository {
   };
 
   static double? _barWeight(Object? raw) =>
-      raw is num && raw >= 0 ? raw.toDouble() : null;
+      raw is num ? raw.toDouble().clamp(0, maxBarWeightKg) : null;
 
-  /// Malformed entries are dropped rather than failing the whole settings.
+  /// Malformed entries are dropped and values outside the limits clamped,
+  /// rather than failing the whole settings.
   static List<Plate>? _plates(Object? raw) {
     if (raw is! List) return null;
-    return [
+    final plates = [
       for (final entry in raw)
-        if (entry is Map &&
-            entry['weightKg'] is num &&
-            (entry['weightKg'] as num) > 0 &&
-            entry['pairs'] is int &&
-            (entry['pairs'] as int) >= 0)
+        if (entry case {'weightKg': final num weight, 'pairs': final int pairs}
+            when weight > 0)
           Plate(
-            weightKg: (entry['weightKg'] as num).toDouble(),
-            pairs: entry['pairs'] as int,
+            weightKg: weight.toDouble().clamp(
+              minPlateWeightKg,
+              maxPlateWeightKg,
+            ),
+            pairs: pairs.clamp(0, maxPlatePairs),
           ),
-    ];
+    ]..sort((a, b) => b.weightKg.compareTo(a.weightKg));
+    return plates.take(maxPlateSizes).toList();
   }
 
   /// Unknown or missing codes fall back, so a newer app version's values never
