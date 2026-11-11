@@ -41,6 +41,11 @@ dependencies:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
       ref: b9cf5f03da886c331fb20671a5aa071d777c8e3d
       path: packages/forge_core
+  forge_model_viewer:
+    git:
+      url: https://github.com/yigit-cuhadar/MobileAppForge.git
+      ref: b9cf5f03da886c331fb20671a5aa071d777c8e3d
+      path: packages/forge_model_viewer
   forge_ui:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
@@ -88,6 +93,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/models/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
