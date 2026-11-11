@@ -156,6 +156,13 @@
           "restS": 60
         },
         {
+          "exerciseId": "ex_seated_calf_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
           "exerciseId": "ex_dead_bug",
           "sets": 2,
           "repMin": 8,

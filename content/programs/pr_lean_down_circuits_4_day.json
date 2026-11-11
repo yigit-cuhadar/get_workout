@@ -144,7 +144,7 @@
           "sets": 3,
           "repMin": 10,
           "repMax": 12,
-          "restS": 75,
+          "restS": 90,
           "group": "A"
         },
         {
@@ -176,7 +176,7 @@
           "sets": 3,
           "repMin": 15,
           "repMax": 20,
-          "restS": 60,
+          "restS": 75,
           "group": "B"
         },
         {

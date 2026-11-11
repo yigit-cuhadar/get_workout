@@ -82,53 +82,6 @@
       ]
     },
     {
-      "name": "Lower",
-      "items": [
-        {
-          "exerciseId": "ex_barbell_back_squat",
-          "sets": 4,
-          "repMin": 6,
-          "repMax": 8,
-          "restS": 180
-        },
-        {
-          "exerciseId": "ex_romanian_deadlift",
-          "sets": 3,
-          "repMin": 8,
-          "repMax": 10,
-          "restS": 150
-        },
-        {
-          "exerciseId": "ex_leg_press",
-          "sets": 3,
-          "repMin": 10,
-          "repMax": 12,
-          "restS": 120
-        },
-        {
-          "exerciseId": "ex_leg_extension",
-          "sets": 3,
-          "repMin": 12,
-          "repMax": 15,
-          "restS": 60
-        },
-        {
-          "exerciseId": "ex_lying_leg_curl",
-          "sets": 4,
-          "repMin": 10,
-          "repMax": 12,
-          "restS": 60
-        },
-        {
-          "exerciseId": "ex_standing_calf_raise",
-          "sets": 3,
-          "repMin": 10,
-          "repMax": 15,
-          "restS": 60
-        }
-      ]
-    },
-    {
       "name": "Upper B",
       "items": [
         {
@@ -181,6 +134,53 @@
           "repMax": 12,
           "restS": 60,
           "group": "A"
+        }
+      ]
+    },
+    {
+      "name": "Lower",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_back_squat",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_romanian_deadlift",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_leg_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_leg_extension",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_lying_leg_curl",
+          "sets": 4,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_standing_calf_raise",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 60
         }
       ]
     },

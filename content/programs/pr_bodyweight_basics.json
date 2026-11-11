@@ -20,14 +20,14 @@
   },
   "days": [
     {
-      "name": "Day 1: Squat and Push",
+      "name": "Squat and Push",
       "items": [
         {
           "exerciseId": "ex_bodyweight_squat",
           "sets": 3,
           "repMin": 12,
           "repMax": 15,
-          "restS": 75
+          "restS": 90
         },
         {
           "exerciseId": "ex_push_up",
@@ -59,7 +59,7 @@
         },
         {
           "exerciseId": "ex_bodyweight_calf_raise",
-          "sets": 2,
+          "sets": 3,
           "repMin": 15,
           "repMax": 20,
           "restS": 45
@@ -67,14 +67,14 @@
       ]
     },
     {
-      "name": "Day 2: Lunge and Pull",
+      "name": "Lunge and Pull",
       "items": [
         {
           "exerciseId": "ex_reverse_lunge",
           "sets": 3,
           "repMin": 8,
           "repMax": 10,
-          "restS": 75
+          "restS": 90
         },
         {
           "exerciseId": "ex_flexed_arm_hang",
@@ -94,7 +94,7 @@
           "sets": 2,
           "repMin": 8,
           "repMax": 10,
-          "restS": 75
+          "restS": 90
         },
         {
           "exerciseId": "ex_close_grip_push_up",
@@ -114,18 +114,25 @@
           "sets": 2,
           "durationS": 30,
           "restS": 45
+        },
+        {
+          "exerciseId": "ex_bodyweight_calf_raise",
+          "sets": 2,
+          "repMin": 15,
+          "repMax": 20,
+          "restS": 45
         }
       ]
     },
     {
-      "name": "Day 3: Full Body",
+      "name": "Full Body",
       "items": [
         {
           "exerciseId": "ex_split_squat",
           "sets": 2,
           "repMin": 8,
           "repMax": 10,
-          "restS": 75
+          "restS": 90
         },
         {
           "exerciseId": "ex_negative_pull_up",
@@ -150,14 +157,14 @@
         },
         {
           "exerciseId": "ex_prone_y_raise",
-          "sets": 2,
+          "sets": 3,
           "repMin": 10,
           "repMax": 12,
           "restS": 45
         },
         {
           "exerciseId": "ex_hanging_knee_raise",
-          "sets": 2,
+          "sets": 3,
           "repMin": 8,
           "repMax": 12,
           "restS": 75

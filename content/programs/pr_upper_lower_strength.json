@@ -21,7 +21,7 @@
   "l10n": {
     "en": {
       "name": "Upper/Lower Strength 4-Day",
-      "summary": "A heavy and a volume session for the upper and lower body each week, built on the squat, bench press, deadlift and overhead press. Main lifts stay in the 3-6 rep range with long rests."
+      "summary": "A heavy day for the upper and the lower body puts the bench press, overhead press, squat and deadlift in sets of 3-6 with long rests. A volume day for each follows with related lifts in sets of 5-10."
     }
   },
   "days": [
@@ -83,18 +83,11 @@
           "restS": 240
         },
         {
-          "exerciseId": "ex_romanian_deadlift",
+          "exerciseId": "ex_barbell_deadlift",
           "sets": 3,
-          "repMin": 5,
-          "repMax": 6,
-          "restS": 180
-        },
-        {
-          "exerciseId": "ex_dumbbell_walking_lunge",
-          "sets": 2,
-          "repMin": 8,
-          "repMax": 10,
-          "restS": 90
+          "repMin": 3,
+          "repMax": 5,
+          "restS": 240
         },
         {
           "exerciseId": "ex_lying_leg_curl",
@@ -107,7 +100,7 @@
           "exerciseId": "ex_standing_calf_raise",
           "sets": 3,
           "repMin": 8,
-          "repMax": 12,
+          "repMax": 10,
           "restS": 60
         },
         {
@@ -160,8 +153,8 @@
         {
           "exerciseId": "ex_cable_lateral_raise",
           "sets": 3,
-          "repMin": 12,
-          "repMax": 15,
+          "repMin": 10,
+          "repMax": 12,
           "restS": 60
         },
         {
@@ -177,24 +170,31 @@
       "name": "Lower Volume",
       "items": [
         {
-          "exerciseId": "ex_barbell_deadlift",
-          "sets": 4,
-          "repMin": 3,
-          "repMax": 5,
-          "restS": 240
-        },
-        {
           "exerciseId": "ex_front_squat",
           "sets": 3,
-          "repMin": 5,
-          "repMax": 6,
+          "repMin": 6,
+          "repMax": 8,
           "restS": 180
+        },
+        {
+          "exerciseId": "ex_romanian_deadlift",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_dumbbell_walking_lunge",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
         },
         {
           "exerciseId": "ex_barbell_hip_thrust",
           "sets": 2,
-          "repMin": 6,
-          "repMax": 8,
+          "repMin": 8,
+          "repMax": 10,
           "restS": 120
         },
         {
@@ -208,7 +208,7 @@
           "exerciseId": "ex_hanging_leg_raise",
           "sets": 3,
           "repMin": 8,
-          "repMax": 12,
+          "repMax": 10,
           "restS": 60
         }
       ]

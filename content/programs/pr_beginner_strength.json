@@ -24,7 +24,7 @@
   },
   "days": [
     {
-      "name": "Day 1: Squat and Bench",
+      "name": "Squat and Bench A",
       "items": [
         {
           "exerciseId": "ex_barbell_back_squat",
@@ -64,7 +64,7 @@
       ]
     },
     {
-      "name": "Day 2: Deadlift and Press",
+      "name": "Deadlift and Press",
       "items": [
         {
           "exerciseId": "ex_barbell_deadlift",
@@ -104,7 +104,7 @@
       ]
     },
     {
-      "name": "Day 3: Squat and Bench",
+      "name": "Squat and Bench B",
       "items": [
         {
           "exerciseId": "ex_barbell_back_squat",

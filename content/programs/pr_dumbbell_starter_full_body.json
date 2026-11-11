@@ -72,10 +72,10 @@
       "items": [
         {
           "exerciseId": "ex_dumbbell_reverse_lunge",
-          "sets": 3,
+          "sets": 2,
           "repMin": 8,
           "repMax": 10,
-          "restS": 90
+          "restS": 120
         },
         {
           "exerciseId": "ex_seated_dumbbell_shoulder_press",
@@ -92,11 +92,18 @@
           "restS": 90
         },
         {
-          "exerciseId": "ex_dumbbell_leg_curl",
+          "exerciseId": "ex_kickstand_romanian_deadlift",
           "sets": 2,
           "repMin": 10,
           "repMax": 12,
-          "restS": 60
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_calf_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
         },
         {
           "exerciseId": "ex_dumbbell_curl",
@@ -160,9 +167,10 @@
           "restS": 45
         },
         {
-          "exerciseId": "ex_plank",
+          "exerciseId": "ex_crunch",
           "sets": 2,
-          "durationS": 30,
+          "repMin": 12,
+          "repMax": 15,
           "restS": 45
         }
       ]

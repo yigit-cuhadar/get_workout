@@ -51,8 +51,15 @@
           "restS": 120
         },
         {
+          "exerciseId": "ex_dumbbell_bench_press",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
           "exerciseId": "ex_dumbbell_lateral_raise",
-          "sets": 5,
+          "sets": 4,
           "repMin": 12,
           "repMax": 15,
           "restS": 60
@@ -62,20 +69,6 @@
           "sets": 3,
           "repMin": 12,
           "repMax": 15,
-          "restS": 60
-        },
-        {
-          "exerciseId": "ex_dumbbell_bench_press",
-          "sets": 4,
-          "repMin": 8,
-          "repMax": 12,
-          "restS": 90
-        },
-        {
-          "exerciseId": "ex_dumbbell_shrug",
-          "sets": 2,
-          "repMin": 10,
-          "repMax": 12,
           "restS": 60
         }
       ]
@@ -145,27 +138,6 @@
           "restS": 90
         },
         {
-          "exerciseId": "ex_cable_lateral_raise",
-          "sets": 5,
-          "repMin": 12,
-          "repMax": 15,
-          "restS": 60
-        },
-        {
-          "exerciseId": "ex_straight_arm_pulldown",
-          "sets": 3,
-          "repMin": 12,
-          "repMax": 15,
-          "restS": 60
-        },
-        {
-          "exerciseId": "ex_face_pull",
-          "sets": 3,
-          "repMin": 12,
-          "repMax": 15,
-          "restS": 60
-        },
-        {
           "exerciseId": "ex_incline_dumbbell_press",
           "sets": 4,
           "repMin": 8,
@@ -175,6 +147,20 @@
         {
           "exerciseId": "ex_cable_crossover",
           "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_lateral_raise",
+          "sets": 4,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_face_pull",
+          "sets": 3,
           "repMin": 12,
           "repMax": 15,
           "restS": 60

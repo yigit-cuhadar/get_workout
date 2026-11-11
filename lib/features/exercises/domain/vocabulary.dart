@@ -223,13 +223,14 @@ enum EquipmentProfile implements Coded {
 
   Set<Equipment> get equipment => switch (this) {
     fullGym => Equipment.values.toSet()..remove(Equipment.bodyweight),
+    // A barbell at home means a rack to squat and press from; the
+    // vocabulary has no code for it.
     homeGym => const {
       Equipment.barbell,
       Equipment.plate,
       Equipment.dumbbell,
       Equipment.bench,
       Equipment.pullUpBar,
-      Equipment.resistanceBand,
     },
     dumbbells => const {Equipment.dumbbell, Equipment.bench},
     bodyweight => const {Equipment.pullUpBar, Equipment.dipStation},

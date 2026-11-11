@@ -21,7 +21,7 @@
   "l10n": {
     "en": {
       "name": "Advanced Hypertrophy 6-Day",
-      "summary": "An antagonist split run twice a week: chest with back, shoulders with arms, then legs. Each muscle gets two hard sessions with a heavier and a lighter emphasis, for lifters with years of training behind them."
+      "summary": "An antagonist split run twice a week: chest with back, legs, then shoulders with arms. The second chest day leans on flyes, so pressing muscles are never loaded heavily two days in a row."
     }
   },
   "days": [
@@ -75,62 +75,6 @@
       ]
     },
     {
-      "name": "Shoulders and Arms A",
-      "items": [
-        {
-          "exerciseId": "ex_overhead_press",
-          "sets": 4,
-          "repMin": 6,
-          "repMax": 8,
-          "restS": 150
-        },
-        {
-          "exerciseId": "ex_dumbbell_lateral_raise",
-          "sets": 4,
-          "repMin": 12,
-          "repMax": 15,
-          "restS": 60
-        },
-        {
-          "exerciseId": "ex_reverse_pec_deck",
-          "sets": 3,
-          "repMin": 12,
-          "repMax": 15,
-          "restS": 60
-        },
-        {
-          "exerciseId": "ex_barbell_curl",
-          "sets": 3,
-          "repMin": 8,
-          "repMax": 10,
-          "restS": 75
-        },
-        {
-          "exerciseId": "ex_close_grip_bench_press",
-          "sets": 2,
-          "repMin": 8,
-          "repMax": 10,
-          "restS": 120
-        },
-        {
-          "exerciseId": "ex_dumbbell_hammer_curl",
-          "sets": 2,
-          "repMin": 10,
-          "repMax": 12,
-          "restS": 0,
-          "group": "A"
-        },
-        {
-          "exerciseId": "ex_rope_triceps_pushdown",
-          "sets": 2,
-          "repMin": 12,
-          "repMax": 15,
-          "restS": 60,
-          "group": "A"
-        }
-      ]
-    },
-    {
       "name": "Legs A",
       "items": [
         {
@@ -171,15 +115,64 @@
       ]
     },
     {
-      "name": "Chest and Back B",
+      "name": "Shoulders and Arms A",
       "items": [
         {
-          "exerciseId": "ex_incline_barbell_bench_press",
+          "exerciseId": "ex_overhead_press",
           "sets": 4,
-          "repMin": 8,
-          "repMax": 10,
+          "repMin": 6,
+          "repMax": 8,
           "restS": 150
         },
+        {
+          "exerciseId": "ex_close_grip_bench_press",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 4,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_reverse_pec_deck",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_barbell_curl",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_dumbbell_hammer_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_rope_triceps_pushdown",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60,
+          "group": "A"
+        }
+      ]
+    },
+    {
+      "name": "Chest and Back B",
+      "items": [
         {
           "exerciseId": "ex_t_bar_row",
           "sets": 4,
@@ -202,8 +195,69 @@
           "restS": 60
         },
         {
+          "exerciseId": "ex_cable_crossover",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_pec_deck",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
           "exerciseId": "ex_single_arm_cable_row",
           "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Legs B",
+      "items": [
+        {
+          "exerciseId": "ex_hack_squat",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_barbell_hip_thrust",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_dumbbell_walking_lunge",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_leg_extension",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_seated_leg_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_seated_calf_raise",
+          "sets": 4,
           "repMin": 12,
           "repMax": 15,
           "restS": 60
@@ -263,53 +317,6 @@
           "repMax": 15,
           "restS": 60,
           "group": "A"
-        }
-      ]
-    },
-    {
-      "name": "Legs B",
-      "items": [
-        {
-          "exerciseId": "ex_hack_squat",
-          "sets": 4,
-          "repMin": 8,
-          "repMax": 12,
-          "restS": 120
-        },
-        {
-          "exerciseId": "ex_barbell_hip_thrust",
-          "sets": 3,
-          "repMin": 8,
-          "repMax": 12,
-          "restS": 120
-        },
-        {
-          "exerciseId": "ex_dumbbell_walking_lunge",
-          "sets": 2,
-          "repMin": 10,
-          "repMax": 12,
-          "restS": 90
-        },
-        {
-          "exerciseId": "ex_leg_extension",
-          "sets": 3,
-          "repMin": 12,
-          "repMax": 15,
-          "restS": 60
-        },
-        {
-          "exerciseId": "ex_seated_leg_curl",
-          "sets": 3,
-          "repMin": 10,
-          "repMax": 12,
-          "restS": 60
-        },
-        {
-          "exerciseId": "ex_seated_calf_raise",
-          "sets": 4,
-          "repMin": 12,
-          "repMax": 15,
-          "restS": 60
         }
       ]
     }

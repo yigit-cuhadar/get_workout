@@ -135,7 +135,7 @@
           "sets": 3,
           "repMin": 6,
           "repMax": 12,
-          "restS": 75
+          "restS": 90
         },
         {
           "exerciseId": "ex_band_single_arm_row",
@@ -176,6 +176,13 @@
           "exerciseId": "ex_kneeling_side_plank",
           "sets": 3,
           "durationS": 30,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_band_calf_press",
+          "sets": 2,
+          "repMin": 15,
+          "repMax": 20,
           "restS": 45
         }
       ]
