@@ -18,14 +18,18 @@ class OnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profile = context.read<ProfileCubit>().state;
-    final uid = profile.uid;
-    // The router opens this page only for a signed-in user's loaded profile.
+    // The form belongs to whoever is signed in: a user change starts it over
+    // for the new user, once their profile has loaded.
+    final uid = context.select(
+      (ProfileCubit cubit) =>
+          cubit.state.status == ProfileStatus.loaded ? cubit.state.uid : null,
+    );
     if (uid == null) return const Scaffold(body: LoadingView());
     return BlocProvider(
-      create: (_) => ProfileFormCubit.onboarding(
+      key: ValueKey(uid),
+      create: (context) => ProfileFormCubit.onboarding(
         uid: uid,
-        initial: profile.profile,
+        initial: context.read<ProfileCubit>().state.profile,
         completeOnboarding: sl(),
       ),
       child: const _OnboardingView(),

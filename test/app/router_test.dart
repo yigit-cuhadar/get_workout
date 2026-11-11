@@ -203,6 +203,7 @@ void main() {
     profile = ProfileCubit(
       watchAuthUser: WatchAuthUser(repository),
       watchProfile: WatchProfile(profiles),
+      updateProfile: UpdateProfile(profiles, SaveOwnedEquipment(userLibrary)),
     );
   }
 
@@ -692,6 +693,151 @@ void main() {
     expect(find.byType(ProfileDetailsPage), findsOneWidget);
     expect(find.text('Get stronger'), findsOneWidget);
     expect(find.byType(NavigationBar), findsOneWidget);
+  });
+
+  group('pages follow the signed-in user', () {
+    const other = AuthUser(id: 'u2', isAnonymous: true);
+
+    testWidgets('onboarding starts over for a new user, writing only theirs', (
+      tester,
+    ) async {
+      storedProfile = const UserProfile();
+      await startAsGuest(tester);
+      await tester.tap(find.text('Lose fat'));
+      await tester.pumpAndSettle();
+
+      users.add(other);
+      await tester.pump();
+      // Never an endless loader: the new user's profile arrives.
+      await tester.pumpAndSettle();
+      expect(find.byType(OnboardingPage), findsOneWidget);
+      expect(find.text('Question 1 of 9'), findsOneWidget);
+
+      await tester.tap(find.text('Skip for now'));
+      await tester.pumpAndSettle();
+
+      verify(() => profiles.completeOnboarding('u2', const UserProfile()))
+          .called(1);
+      verifyNever(() => profiles.completeOnboarding('u1', any()));
+      expect(find.byType(TodayPage), findsOneWidget);
+    });
+
+    testWidgets('an open question shows and saves the new user\'s answer', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      router.go(Routes.profileQuestion(ProfileField.goal));
+      await tester.pumpAndSettle();
+
+      storedProfile = onboarded.copyWith(goal: Goal.generalFitness);
+      users.add(other);
+      await tester.pumpAndSettle();
+      expect(find.byType(ProfileQuestionPage), findsOneWidget);
+      expect(
+        tester
+            .widget<RadioGroup<Goal>>(find.byType(RadioGroup<Goal>))
+            .groupValue,
+        Goal.generalFitness,
+      );
+
+      await tester.tap(find.text('Get stronger'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => profiles.saveFields(
+          'u2',
+          onboarded.copyWith(goal: Goal.getStronger),
+          {ProfileField.goal},
+        ),
+      ).called(1);
+      verifyNever(() => profiles.saveFields('u1', any(), any()));
+    });
+
+    testWidgets('a question opened while the profile loads waits for it', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      router.go(Routes.profileQuestion(ProfileField.goal));
+      await tester.pumpAndSettle();
+
+      storedProfile = null;
+      users.add(const AuthUser(id: 'u2', email: 'b@c.de'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(LoadingView), findsOneWidget);
+
+      profileStream.add(onboarded);
+      await tester.pumpAndSettle();
+      expect(find.text('Get stronger'), findsOneWidget);
+    });
+  });
+
+  group('Your profile', () {
+    testWidgets('shows a loader, then a retry when the profile is unreadable', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      await tapTab(tester, 'Profile');
+      await tester.tap(find.text('Your profile'));
+      await tester.pumpAndSettle();
+
+      storedProfile = null;
+      users.add(const AuthUser(id: 'u2', email: 'b@c.de'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(LoadingView), findsOneWidget);
+      expect(find.text('Not answered'), findsNothing);
+
+      profileStream.addError(const NetworkFailure());
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.text("Couldn't load your profile. Check your connection."),
+        findsOneWidget,
+      );
+
+      storedProfile = onboarded;
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+      expect(find.text('Not answered'), findsWidgets);
+    });
+
+    testWidgets('a rejected save is reported once after the page closed', (
+      tester,
+    ) async {
+      final rejection = Completer<Result<void>>();
+      await startAsGuest(tester);
+      when(() => profiles.saveFields(any(), any(), any()))
+          .thenAnswer((_) => rejection.future);
+      await tapTab(tester, 'Profile');
+      await tester.tap(find.text('Your profile'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Goal'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Get stronger'));
+      await tester.pumpAndSettle();
+
+      // The page closes at once, before the server answers.
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ProfileDetailsPage), findsOneWidget);
+
+      rejection.complete(const Err(PermissionFailure()));
+      await tester.pumpAndSettle();
+      expect(
+        find.text("A change to your profile couldn't be saved."),
+        findsOneWidget,
+      );
+
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pumpAndSettle();
+      expect(
+        find.text("A change to your profile couldn't be saved."),
+        findsNothing,
+      );
+    });
   });
 
   testWidgets('a detail link opened while the catalogue loads waits for it', (

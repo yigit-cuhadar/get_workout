@@ -49,10 +49,8 @@ void main() {
 
   ProfileFormCubit edit(ProfileField field, UserProfile initial) =>
       ProfileFormCubit.edit(
-        uid: 'u1',
         field: field,
         initial: initial,
-        updateProfile: UpdateProfile(profiles, SaveOwnedEquipment(library)),
         now: () => DateTime(2026, 11, 11),
       );
 
@@ -321,59 +319,44 @@ void main() {
   group('editing', () {
     const stored = UserProfile(goal: Goal.loseFat, targetWeightKg: 70);
 
-    test('asks only its question and saves only that field', () async {
+    test('asks only its question and submits without writing', () async {
       final cubit = edit(ProfileField.goal, stored)..setGoal(Goal.buildMuscle);
       expect(cubit.state.questions, [ProfileField.goal]);
 
       await cubit.next();
 
       expect(cubit.state.status, ProfileFormStatus.submitted);
-      verify(
-        () => profiles.saveFields(
-          'u1',
-          const UserProfile(goal: Goal.buildMuscle, targetWeightKg: 70),
-          {ProfileField.goal},
-        ),
-      ).called(1);
-      verifyNever(() => profiles.completeOnboarding(any(), any()));
+      expect(
+        cubit.state.answers,
+        const UserProfile(goal: Goal.buildMuscle, targetWeightKg: 70),
+      );
+      verifyZeroInteractions(profiles);
+      verifyZeroInteractions(library);
     });
 
-    test('an emptied target weight is saved as unanswered', () async {
+    test('an emptied target weight is submitted as unanswered', () async {
       final cubit = edit(ProfileField.targetWeight, stored)
         ..enterTargetWeight('', WeightUnit.kg);
 
       await cubit.next();
 
-      verify(
-        () => profiles.saveFields('u1', const UserProfile(goal: Goal.loseFat), {
-          ProfileField.targetWeight,
-        }),
-      ).called(1);
+      expect(cubit.state.status, ProfileFormStatus.submitted);
+      expect(cubit.state.answers, const UserProfile(goal: Goal.loseFat));
     });
 
-    test('an invalid entry is not saved', () async {
+    test('an invalid entry is not submitted', () async {
       final cubit = edit(ProfileField.targetWeight, stored)
         ..enterTargetWeight('500', WeightUnit.kg);
 
       await cubit.next();
 
       expect(cubit.state.status, ProfileFormStatus.editing);
-      verifyNever(() => profiles.saveFields(any(), any(), any()));
-    });
-
-    test('editing the equipment saves only through the library', () async {
-      final cubit = edit(ProfileField.equipment, stored)
-        ..applyPreset(EquipmentPreset.bodyweight);
-
-      await cubit.next();
-
-      verify(() => library.saveEquipment('u1', <Equipment>{})).called(1);
-      verifyNever(() => profiles.saveFields(any(), any(), any()));
     });
 
     test('skip does nothing outside onboarding', () async {
-      await edit(ProfileField.goal, stored).skip();
-      verifyNever(() => profiles.saveFields(any(), any(), any()));
+      final cubit = edit(ProfileField.goal, stored);
+      await cubit.skip();
+      expect(cubit.state.status, ProfileFormStatus.editing);
     });
   });
 }

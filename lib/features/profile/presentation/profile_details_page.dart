@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,24 +18,28 @@ class ProfileDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final profile = context.select((ProfileCubit c) => c.state.profile);
+    final state = context.watch<ProfileCubit>().state;
     final settings = context.select((SettingsCubit c) => c.state.settings);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profileDetails)),
-      body: ListView(
-        children: [
-          for (final field in ProfileField.values)
-            ListTile(
-              title: Text(l10n.fieldName(field)),
-              subtitle: Text(
-                l10n.answerText(profile, field, settings) ??
-                    l10n.profileNotAnswered,
+      body: switch (state.status) {
+        ProfileStatus.loading => const LoadingView(),
+        ProfileStatus.unavailable => _Unavailable(l10n),
+        ProfileStatus.loaded => ListView(
+          children: [
+            for (final field in ProfileField.values)
+              ListTile(
+                title: Text(l10n.fieldName(field)),
+                subtitle: Text(
+                  l10n.answerText(state.profile, field, settings) ??
+                      l10n.profileNotAnswered,
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.go(Routes.profileQuestion(field)),
               ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go(Routes.profileQuestion(field)),
-            ),
-        ],
-      ),
+          ],
+        ),
+      },
     );
   }
 }
@@ -50,23 +53,40 @@ class ProfileQuestionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final profile = context.read<ProfileCubit>().state;
-    final uid = profile.uid;
+    final (:uid, :status) = context.select(
+      (ProfileCubit cubit) =>
+          (uid: cubit.state.uid, status: cubit.state.status),
+    );
     return Scaffold(
       appBar: AppBar(title: Text(l10n.fieldName(field))),
-      body: uid == null
-          ? const LoadingView()
-          : BlocProvider(
-              create: (_) => ProfileFormCubit.edit(
-                uid: uid,
-                field: field,
-                initial: profile.profile,
-                updateProfile: sl(),
-              ),
-              child: const _QuestionForm(),
-            ),
+      body: switch (status) {
+        ProfileStatus.loading => const LoadingView(),
+        ProfileStatus.unavailable => _Unavailable(l10n),
+        // A user change starts the answer over from the new user's profile.
+        ProfileStatus.loaded => BlocProvider(
+          key: ValueKey(uid),
+          create: (context) => ProfileFormCubit.edit(
+            field: field,
+            initial: context.read<ProfileCubit>().state.profile,
+          ),
+          child: const _QuestionForm(),
+        ),
+      },
     );
   }
+}
+
+class _Unavailable extends StatelessWidget {
+  const _Unavailable(this.l10n);
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) => ErrorView(
+    message: l10n.profileUnavailable,
+    retryLabel: l10n.retry,
+    onRetry: context.read<ProfileCubit>().resume,
+  );
 }
 
 class _QuestionForm extends StatelessWidget {
@@ -76,33 +96,33 @@ class _QuestionForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ProfileFormCubit>();
-    return BlocConsumer<ProfileFormCubit, ProfileFormState>(
-      listener: (context, state) {
-        if (state.failure != null) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(l10n.profileSaveFailed)));
-        } else if (state.status == ProfileFormStatus.submitted) {
-          // The answer is already in Firestore's local cache; a server
-          // rejection is logged and the stored value reappears.
-          context.pop();
-        }
-      },
+    return BlocListener<ProfileFormCubit, ProfileFormState>(
       listenWhen: (previous, current) =>
-          current.status != previous.status ||
-          (current.failure != null && current.failure != previous.failure),
-      builder: (context, state) => SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: ProfileQuestion(state.questions.single)),
-            Padding(
-              padding: const EdgeInsets.all(Gap.md),
-              child: ForgeButton(
-                label: l10n.save,
-                onPressed: state.canContinue ? cubit.next : null,
+          current.status == ProfileFormStatus.submitted &&
+          previous.status != current.status,
+      // Saved through the app-wide cubit, which reports a rejection on the
+      // Profile tab after this page has closed.
+      listener: (context, state) {
+        context.read<ProfileCubit>().save(state.answers, {
+          state.questions.single,
+        });
+        context.pop();
+      },
+      child: BlocBuilder<ProfileFormCubit, ProfileFormState>(
+        builder: (context, state) => SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: ProfileQuestion(state.questions.single)),
+              Padding(
+                padding: const EdgeInsets.all(Gap.md),
+                child: ForgeButton(
+                  label: l10n.save,
+                  onPressed: state.canContinue ? cubit.next : null,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -95,21 +95,20 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
          ProfileFormState(questions: ProfileField.values, answers: initial),
        );
 
-  /// The one question [field]; finishing saves only that answer.
+  /// The one question [field]. Finishing only marks the answer submitted;
+  /// the page hands it to the app-wide `ProfileCubit`, which outlives the
+  /// page and reports a late rejection.
   ProfileFormCubit.edit({
-    required String uid,
     required ProfileField field,
     required UserProfile initial,
-    required UpdateProfile updateProfile,
     this._now = DateTime.now,
   }) : _summary = false,
-       _save = ((answers) =>
-           updateProfile((uid: uid, profile: answers, fields: {field}))),
+       _save = null,
        super(ProfileFormState(questions: [field], answers: initial));
 
   final DateTime Function() _now;
   final bool _summary;
-  final Future<Result<void>> Function(UserProfile answers) _save;
+  final Future<Result<void>> Function(UserProfile answers)? _save;
 
   /// The birth years [enterBirthYear] accepts this year.
   ({int min, int max}) get birthYearRange {
@@ -204,7 +203,9 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
 
   Future<void> _submit() async {
     emit(state.copyWith(status: ProfileFormStatus.submitted));
-    final failure = (await _save(state.answers)).failureOrNull;
+    final save = _save;
+    if (save == null) return;
+    final failure = (await save(state.answers)).failureOrNull;
     if (failure != null && !isClosed) {
       emit(state.copyWith(status: ProfileFormStatus.editing, failure: failure));
     }

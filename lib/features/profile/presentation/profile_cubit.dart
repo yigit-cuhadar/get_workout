@@ -20,6 +20,7 @@ class ProfileState extends Equatable {
     this.uid,
     this.status = ProfileStatus.loading,
     this.profile = const UserProfile(),
+    this.writeRejected = false,
   });
 
   /// Whose profile this is; null while nobody is signed in.
@@ -27,8 +28,12 @@ class ProfileState extends Equatable {
   final ProfileStatus status;
   final UserProfile profile;
 
+  /// A save was rejected after its page had closed; shown once, then
+  /// cleared with [ProfileCubit.rejectionShown].
+  final bool writeRejected;
+
   @override
-  List<Object?> get props => [uid, status, profile];
+  List<Object?> get props => [uid, status, profile, writeRejected];
 }
 
 /// App-wide profile of whoever is signed in. Starts over, empty and loading,
@@ -39,6 +44,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   ProfileCubit({
     required WatchAuthUser watchAuthUser,
     required WatchProfile watchProfile,
+    required this._updateProfile,
     Duration retryDelay = const Duration(seconds: 1),
   }) : super(const ProfileState()) {
     _follower = UserStreamFollower(
@@ -53,6 +59,7 @@ class ProfileCubit extends Cubit<ProfileState> {
           uid: _follower.uid,
           status: ProfileStatus.loaded,
           profile: profile,
+          writeRejected: state.writeRejected,
         ),
       ),
       onError: (_) {
@@ -65,7 +72,44 @@ class ProfileCubit extends Cubit<ProfileState> {
     );
   }
 
+  final UpdateProfile _updateProfile;
   late final UserStreamFollower<UserProfile> _follower;
+
+  /// Saves [fields] of [profile] for the current user. The change shows up
+  /// through the profile stream at once, from Firestore's local cache, so
+  /// pages do not wait for this; a rejection, possibly much later, sets
+  /// [ProfileState.writeRejected].
+  Future<void> save(UserProfile profile, Set<ProfileField> fields) async {
+    final uid = _follower.uid;
+    if (uid == null) return;
+    resume();
+    final result = await _updateProfile((
+      uid: uid,
+      profile: profile,
+      fields: fields,
+    ));
+    // A rejection for a previous user says nothing about the current one.
+    if (result.isOk || isClosed || _follower.uid != uid) return;
+    emit(
+      ProfileState(
+        uid: uid,
+        status: state.status,
+        profile: state.profile,
+        writeRejected: true,
+      ),
+    );
+  }
+
+  void rejectionShown() {
+    if (!state.writeRejected) return;
+    emit(
+      ProfileState(
+        uid: state.uid,
+        status: state.status,
+        profile: state.profile,
+      ),
+    );
+  }
 
   /// Follows the profile again at once if its stream failed. Call when
   /// saving, so the saved answers show up.

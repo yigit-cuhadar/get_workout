@@ -382,6 +382,8 @@
   "profileDetails": "Your profile",
   "profileSaveFailed": "Couldn't save your profile. Try again",
   "profileNotAnswered": "Not answered",
+  "profileUnavailable": "Couldn't load your profile. Check your connection.",
+  "profileWriteRejected": "A change to your profile couldn't be saved.",
 
   "onboardingNext": "Next",
   "onboardingSkip": "Skip for now",

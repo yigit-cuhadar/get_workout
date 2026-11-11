@@ -14,6 +14,8 @@ import 'package:get_workout/features/cardio/presentation/cardio_form_cubit.dart'
 import 'package:get_workout/features/cardio/presentation/cardio_form_page.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_list_cubit.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_list_page.dart';
+import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
+import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
 import 'package:get_workout/features/profile/domain/profile_repository.dart';
 import 'package:get_workout/features/profile/domain/profile_usecases.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
@@ -34,6 +36,8 @@ class MockSettingsRepository extends Mock implements SettingsRepository {}
 class MockCardioRepository extends Mock implements CardioRepository {}
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
+
+class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
 
 void main() {
   const guest = AuthUser(id: 'u1', isAnonymous: true);
@@ -85,6 +89,10 @@ void main() {
     profile = ProfileCubit(
       watchAuthUser: WatchAuthUser(sessionAuth),
       watchProfile: WatchProfile(profiles),
+      updateProfile: UpdateProfile(
+        profiles,
+        SaveOwnedEquipment(MockUserLibraryRepository()),
+      ),
     );
     final cardio = MockCardioRepository();
     sessions = StreamController<List<CardioSession>>();

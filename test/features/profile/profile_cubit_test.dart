@@ -14,6 +14,8 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
 
+class MockUpdateProfile extends Mock implements UpdateProfile {}
+
 void main() {
   const guest = AuthUser(id: 'g1', isAnonymous: true);
   const member = AuthUser(id: 'u1', email: 'a@b.co');
@@ -22,10 +24,21 @@ void main() {
 
   late MockAuthRepository auth;
   late MockProfileRepository profiles;
+  late MockUpdateProfile updateProfile;
   late StreamController<AuthUser?> users;
   late Map<String, StreamController<UserProfile>> stored;
 
+  setUpAll(() {
+    registerFallbackValue((
+      uid: '',
+      profile: const UserProfile(),
+      fields: <ProfileField>{},
+    ));
+  });
+
   setUp(() {
+    updateProfile = MockUpdateProfile();
+    when(() => updateProfile(any())).thenAnswer((_) async => const Ok(null));
     auth = MockAuthRepository();
     profiles = MockProfileRepository();
     users = StreamController<AuthUser?>();
@@ -46,6 +59,7 @@ void main() {
   ProfileCubit build() => ProfileCubit(
     watchAuthUser: WatchAuthUser(auth),
     watchProfile: WatchProfile(profiles),
+    updateProfile: updateProfile,
     retryDelay: retryDelay,
   );
 
@@ -176,6 +190,7 @@ void main() {
     build: () => ProfileCubit(
       watchAuthUser: WatchAuthUser(auth),
       watchProfile: WatchProfile(profiles),
+      updateProfile: updateProfile,
       retryDelay: const Duration(hours: 1),
     ),
     act: (cubit) async {
@@ -214,4 +229,101 @@ void main() {
     ],
     verify: (_) => verify(() => profiles.watchProfile('g1')).called(1),
   );
+
+  group('save', () {
+    blocTest<ProfileCubit, ProfileState>(
+      'saves for the current user without changing the state',
+      build: build,
+      act: (cubit) async {
+        users.add(member);
+        await pumpEventQueue();
+        await cubit.save(strong, {ProfileField.goal});
+      },
+      expect: () => [const ProfileState(uid: 'u1')],
+      verify: (_) {
+        final update =
+            verify(() => updateProfile(captureAny())).captured.single
+                as ProfileFieldsUpdate;
+        expect(update.uid, 'u1');
+        expect(update.profile, strong);
+        expect(update.fields, {ProfileField.goal});
+      },
+    );
+
+    blocTest<ProfileCubit, ProfileState>(
+      'a rejection is reported once, keeping the profile',
+      setUp: () =>
+          when(() => updateProfile(any()))
+              .thenAnswer((_) async => const Err(PermissionFailure())),
+      build: build,
+      act: (cubit) async {
+        users.add(member);
+        await pumpEventQueue();
+        stored['u1']!.add(strong);
+        await pumpEventQueue();
+        await cubit.save(lean, {ProfileField.goal});
+        cubit
+          ..rejectionShown()
+          ..rejectionShown();
+      },
+      expect: () => [
+        const ProfileState(uid: 'u1'),
+        loaded('u1', strong),
+        const ProfileState(
+          uid: 'u1',
+          status: ProfileStatus.loaded,
+          profile: strong,
+          writeRejected: true,
+        ),
+        loaded('u1', strong),
+      ],
+    );
+
+    blocTest<ProfileCubit, ProfileState>(
+      "a previous user's rejection is not reported",
+      build: build,
+      act: (cubit) async {
+        final answer = Completer<Result<void>>();
+        when(() => updateProfile(any())).thenAnswer((_) => answer.future);
+        users.add(guest);
+        await pumpEventQueue();
+        final saving = cubit.save(lean, {ProfileField.goal});
+        users.add(member);
+        await pumpEventQueue();
+        answer.complete(const Err(PermissionFailure()));
+        await saving;
+      },
+      expect: () => [
+        const ProfileState(uid: 'g1'),
+        const ProfileState(uid: 'u1'),
+      ],
+    );
+
+    blocTest<ProfileCubit, ProfileState>(
+      'saving follows a failed stream again',
+      build: () => ProfileCubit(
+        watchAuthUser: WatchAuthUser(auth),
+        watchProfile: WatchProfile(profiles),
+        updateProfile: updateProfile,
+        retryDelay: const Duration(hours: 1),
+      ),
+      act: (cubit) async {
+        users.add(member);
+        await pumpEventQueue();
+        stored['u1']!
+          ..add(strong)
+          ..addError(const NetworkFailure());
+        await pumpEventQueue();
+        await cubit.save(lean, {ProfileField.goal});
+      },
+      verify: (_) => verify(() => profiles.watchProfile('u1')).called(2),
+    );
+
+    blocTest<ProfileCubit, ProfileState>(
+      'without a user nothing is saved',
+      build: build,
+      act: (cubit) => cubit.save(lean, {ProfileField.goal}),
+      verify: (_) => verifyNever(() => updateProfile(any())),
+    );
+  });
 }

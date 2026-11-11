@@ -22,7 +22,11 @@ class ProfileModule implements FeatureModule {
       ..registerFactory(() => UpdateProfile(sl(), sl()))
       ..registerFactory(() => CompleteOnboarding(sl(), sl()))
       ..registerLazySingleton(
-        () => ProfileCubit(watchAuthUser: sl(), watchProfile: sl()),
+        () => ProfileCubit(
+          watchAuthUser: sl(),
+          watchProfile: sl(),
+          updateProfile: sl(),
+        ),
       );
   }
 }
