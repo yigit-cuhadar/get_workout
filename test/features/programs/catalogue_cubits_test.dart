@@ -336,6 +336,7 @@ void main() {
       getDays: GetCatalogueDays(catalogueRepository),
       saveProgram: SaveProgram(programRepository),
       getCurrentUser: GetCurrentUser(auth),
+      retryDelay: Duration.zero,
     );
 
     Future<CatalogueDetailCubit> open(
@@ -411,20 +412,51 @@ void main() {
       verifyNever(() => catalogueRepository.getDays(any()));
     });
 
-    test('days the server refuses are locked, and read again when the '
-        'status changes', () async {
+    test('days refused to a premium user are read again a few times, '
+        'then on retry', () async {
       when(() => catalogueRepository.getDays(paid.id))
           .thenAnswer((_) async => const Err(PermissionFailure()));
       final cubit = await open(paid.id, premium: true);
-      expect(cubit.state.status, CatalogueDetailStatus.locked);
+
+      expect(cubit.state.status, CatalogueDetailStatus.unlocking);
+      verify(() => catalogueRepository.getDays(paid.id)).called(4);
 
       when(() => catalogueRepository.getDays(paid.id))
           .thenAnswer((_) async => Ok(days));
-      premiumStatus.controller
-        ..add(null)
-        ..add(true);
+      cubit.retry();
       await pumpEventQueue();
+      expect(cubit.state.status, CatalogueDetailStatus.ready);
+    });
 
+    test('a free program the server refuses is a failure', () async {
+      when(() => catalogueRepository.getDays(free.id))
+          .thenAnswer((_) async => const Err(PermissionFailure()));
+      final cubit = await open(free.id);
+
+      expect(cubit.state.status, CatalogueDetailStatus.failure);
+      verify(() => catalogueRepository.getDays(free.id)).called(1);
+    });
+
+    test('days read before the premium status changed are dropped', () async {
+      final first = Completer<Result<List<ProgramDay>>>();
+      final second = Completer<Result<List<ProgramDay>>>();
+      final answers = [first, second];
+      when(() => catalogueRepository.getDays(paid.id))
+          .thenAnswer((_) => answers.removeAt(0).future);
+      final cubit = await open(paid.id, premium: true);
+      expect(cubit.state.status, CatalogueDetailStatus.loading);
+
+      premiumStatus.controller.add(false);
+      await pumpEventQueue();
+      first.complete(Ok(days));
+      await pumpEventQueue();
+      expect(cubit.state.status, CatalogueDetailStatus.locked);
+
+      premiumStatus.controller.add(true);
+      await pumpEventQueue();
+      expect(cubit.state.status, CatalogueDetailStatus.loading);
+      second.complete(Ok(days));
+      await pumpEventQueue();
       expect(cubit.state.status, CatalogueDetailStatus.ready);
     });
 
@@ -540,19 +572,57 @@ void main() {
       expect(cubit.state.copyStatus, CopyStatus.copied);
     });
 
-    test('a program the app would not accept is not copied', () async {
+    test('a program using an exercise no longer available is not '
+        'copied', () async {
       when(() => catalogueRepository.getDays(free.id)).thenAnswer(
         (_) async => Ok([
-          ProgramDay(items: [item('retired')]),
+          ProgramDay(items: [item('a'), item('retired')]),
         ]),
       );
       final cubit = await open(free.id);
+      expect(cubit.state.useStatus, UseStatus.exercisesMissing);
 
       await cubit.use();
 
-      expect(cubit.state.copyStatus, CopyStatus.failed);
-      expect(cubit.state.copyFailure, isA<ValidationFailure>());
+      expect(cubit.state.copyStatus, CopyStatus.idle);
       verifyNever(() => programRepository.createProgram(any(), any()));
+    });
+
+    test('use waits for the user\'s programs', () async {
+      cards.add([free]);
+      premiumStatus.controller.add(false);
+      await pumpEventQueue();
+      final cubit = detail(free.id);
+      addTearDown(cubit.close);
+      await pumpEventQueue();
+      expect(cubit.state.status, CatalogueDetailStatus.ready);
+      expect(cubit.state.useStatus, UseStatus.waiting);
+
+      await cubit.use();
+      verifyNever(() => programRepository.createProgram(any(), any()));
+
+      userPrograms.add([
+        Program(
+          id: 'mine1',
+          name: 'My version',
+          origin: ProgramOrigin.catalog,
+          sourceId: free.id,
+          days: days,
+        ),
+      ]);
+      await pumpEventQueue();
+      expect(cubit.state.useStatus, UseStatus.ready);
+      await cubit.use();
+      expect(cubit.state.copyStatus, CopyStatus.alreadyCopied);
+    });
+
+    test('a double tap copies once', () async {
+      final cubit = await open(free.id);
+
+      await Future.wait([cubit.use(), cubit.use()]);
+
+      verify(() => programRepository.createProgram('u1', any())).called(1);
+      expect(cubit.state.copyStatus, CopyStatus.copied);
     });
 
     test('a locked program cannot be copied', () async {

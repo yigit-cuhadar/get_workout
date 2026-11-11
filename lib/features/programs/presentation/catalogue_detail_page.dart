@@ -28,12 +28,14 @@ class CatalogueDetailPage extends StatelessWidget {
       param1: id,
       param2: Localizations.localeOf(context).languageCode,
     ),
-    child: const _CatalogueDetailView(),
+    child: _CatalogueDetailView(sl<PremiumPrompt>()),
   );
 }
 
 class _CatalogueDetailView extends StatelessWidget {
-  const _CatalogueDetailView();
+  const _CatalogueDetailView(this.premium);
+
+  final PremiumPrompt premium;
 
   @override
   Widget build(BuildContext context) {
@@ -55,11 +57,11 @@ class _CatalogueDetailView extends StatelessWidget {
             cubit.copyHandled();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                  state.copyFailure is NetworkFailure
-                      ? l10n.errorNetwork
-                      : l10n.catalogueCopyFailed,
-                ),
+                content: Text(switch (state.copyFailure) {
+                  NetworkFailure() => l10n.errorNetwork,
+                  ValidationFailure() => l10n.catalogueCopyInvalid,
+                  _ => l10n.catalogueCopyFailed,
+                }),
               ),
             );
           case CopyStatus.idle || CopyStatus.copying:
@@ -88,7 +90,7 @@ class _CatalogueDetailView extends StatelessWidget {
             },
           );
         }
-        return _Program(program: program, state: state);
+        return _Program(program: program, state: state, premium: premium);
       },
     );
   }
@@ -124,10 +126,15 @@ class _CatalogueDetailView extends StatelessWidget {
 }
 
 class _Program extends StatelessWidget {
-  const _Program({required this.program, required this.state});
+  const _Program({
+    required this.program,
+    required this.state,
+    required this.premium,
+  });
 
   final CatalogueProgram program;
   final CatalogueDetailState state;
+  final PremiumPrompt premium;
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +166,7 @@ class _Program extends StatelessWidget {
                   Text(l10n.catalogueEquipment(l10n.equipmentNames(equipment))),
                 if (ready) Text(l10n.sessionMinutes(state.days)),
                 const SizedBox(height: Gap.md),
-                _Action(state),
+                _Action(state, premium),
               ],
             ),
           ),
@@ -182,22 +189,11 @@ class _Program extends StatelessWidget {
                   CatalogueDetailStatus.failure)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    state.status == CatalogueDetailStatus.offline
-                        ? l10n.catalogueDetailOffline
-                        : l10n.catalogueDetailFailed,
-                  ),
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: TextButton(
-                      onPressed: cubit.retry,
-                      child: Text(l10n.retry),
-                    ),
-                  ),
-                ],
+              child: _Notice(
+                message: state.status == CatalogueDetailStatus.offline
+                    ? l10n.catalogueDetailOffline
+                    : l10n.catalogueDetailFailed,
+                onRetry: cubit.retry,
               ),
             ),
           if (state.status == CatalogueDetailStatus.notFound)
@@ -213,37 +209,62 @@ class _Program extends StatelessWidget {
 
 /// Use the program, or, when it is locked, the premium call to action.
 class _Action extends StatelessWidget {
-  const _Action(this.state);
+  const _Action(this.state, this.premium);
 
   final CatalogueDetailState state;
+  final PremiumPrompt premium;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final cubit = context.read<CatalogueDetailCubit>();
     return switch (state.status) {
-      CatalogueDetailStatus.ready => ForgeButton(
-        label: l10n.catalogueUse,
-        loading: state.copyStatus == CopyStatus.copying,
-        onPressed: context.read<CatalogueDetailCubit>().use,
+      CatalogueDetailStatus.ready => switch (state.useStatus) {
+        UseStatus.exercisesMissing => Text(l10n.catalogueExercisesMissing),
+        UseStatus.exercisesFailed => _Notice(
+          message: l10n.catalogueExercisesFailed,
+          onRetry: cubit.retryExercises,
+        ),
+        UseStatus.waiting || UseStatus.ready => ForgeButton(
+          label: l10n.catalogueUse,
+          loading:
+              state.useStatus == UseStatus.waiting ||
+              state.copyStatus == CopyStatus.copying,
+          onPressed: cubit.use,
+        ),
+      },
+      CatalogueDetailStatus.locked => PremiumLock(
+        message: l10n.catalogueLockedBody,
+        prompt: premium,
       ),
-      CatalogueDetailStatus.locked => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.lock_outline),
-              const SizedBox(width: Gap.sm),
-              Expanded(child: Text(l10n.catalogueLockedBody)),
-            ],
-          ),
-          const SizedBox(height: Gap.sm),
-          ForgeButton(
-            label: l10n.catalogueGetPremium,
-            onPressed: () => sl<PremiumPrompt>().show(context),
-          ),
-        ],
+      CatalogueDetailStatus.unlocking => _Notice(
+        message: l10n.catalogueUnlocking,
+        onRetry: cubit.retry,
       ),
       _ => const SizedBox.shrink(),
     };
   }
+}
+
+/// A message with a retry.
+class _Notice extends StatelessWidget {
+  const _Notice({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(message),
+      Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: TextButton(
+          onPressed: onRetry,
+          child: Text(AppLocalizations.of(context).retry),
+        ),
+      ),
+    ],
+  );
 }
