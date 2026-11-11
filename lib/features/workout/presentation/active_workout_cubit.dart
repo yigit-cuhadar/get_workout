@@ -78,17 +78,24 @@ class ActiveWorkoutState extends Equatable {
   bool get inProgress =>
       status == WorkoutStatus.active || status == WorkoutStatus.finishing;
 
-  /// What the exercise did last time, as the sets of its latest workout.
-  List<WorkoutSet> lastSets(int exercise) {
+  /// The working sets of the exercise's latest workout.
+  List<WorkoutSet> _lastSets(int exercise) {
     final id = workout?.exercises.elementAtOrNull(exercise)?.exerciseId;
     return stats[id]?.last?.sets ?? const [];
   }
+
+  /// What the set did last time; see [lastTimeSet].
+  WorkoutSet? lastTime(SetRef ref) => lastTimeSet(
+    workout!.exercises[ref.exercise],
+    ref.set,
+    _lastSets(ref.exercise),
+  );
 
   /// The values an empty field of the set shows, and takes when ticked.
   SetValues suggestion(SetRef ref) => suggestedValues(
     workout!.exercises[ref.exercise],
     ref.set,
-    lastSets(ref.exercise),
+    _lastSets(ref.exercise),
   );
 
   ActiveWorkoutState copyWith({
@@ -352,6 +359,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
   void setToFailure(SetRef ref, bool toFailure) =>
       _editSet(ref, (set, _) => set.copyWith(toFailure: toFailure));
+
+  /// Blank removes it.
+  void setSetNote(SetRef ref, String text) =>
+      _editSet(ref, (set, _) => set.copyWith(note: () => _note(text)));
 
   /// Reps in reserve; null clears it.
   void setRir(SetRef ref, int? rir) =>

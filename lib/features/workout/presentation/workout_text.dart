@@ -65,9 +65,10 @@ extension WorkoutText on AppLocalizations {
   String effortText(int rir, {required bool rpe}) =>
       rpe ? workoutRpe(10 - rir) : workoutRir(rir);
 
+  /// Whole minutes; under one, "< 1 min".
   String durationMinutes(Duration duration) {
-    final minutes = (duration.inSeconds / 60).round();
-    return workoutMinutes(minutes);
+    if (duration.inSeconds < 60) return workoutUnderAMinute;
+    return workoutMinutes((duration.inSeconds / 60).round());
   }
 
   String recordText(NewRecord record, WeightUnit unit) {

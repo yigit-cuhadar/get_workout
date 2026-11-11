@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../../../core/max_length_formatter.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../programs/domain/program.dart';
@@ -82,7 +83,7 @@ class SetRow extends StatelessWidget {
     final exercise = state.workout!.exercises[ref.exercise];
     final set = exercise.sets[ref.set];
     final type = exercise.loggingType;
-    final previous = state.lastSets(ref.exercise).elementAtOrNull(ref.set);
+    final previous = state.lastTime(ref);
     final hint = state.suggestion(ref);
     final number = exercise.sets
         .take(ref.set + 1)
@@ -92,6 +93,7 @@ class SetRow extends StatelessWidget {
       if (set.toFailure) l10n.workoutFailureShort,
       if (set.rir case final rir?)
         l10n.effortText(rir, rpe: effort == EffortScale.rpe),
+      ?set.note,
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -367,7 +369,11 @@ class _SetOptions extends StatelessWidget {
         return SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+            padding: EdgeInsets.only(
+              left: Gap.md,
+              right: Gap.md,
+              bottom: MediaQuery.viewInsetsOf(context).bottom,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -422,6 +428,16 @@ class _SetOptions extends StatelessWidget {
                     ],
                   ),
                 ],
+                TextFormField(
+                  initialValue: set.note,
+                  maxLines: null,
+                  textCapitalization: TextCapitalization.sentences,
+                  inputFormatters: [
+                    maxLengthFormatter(WorkoutLimits.maxSetNoteLength),
+                  ],
+                  decoration: InputDecoration(labelText: l10n.workoutSetNote),
+                  onChanged: (text) => cubit.setSetNote(ref, text),
+                ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(

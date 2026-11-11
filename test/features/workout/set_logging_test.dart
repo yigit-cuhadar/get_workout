@@ -63,10 +63,7 @@ void main() {
         {SetIssue.durationOutOfRange},
       );
       expect(
-        validateSet(
-          lift(60, 8).copyWith(rir: () => 11),
-          LoggingType.weightReps,
-        ),
+        validateSet(lift(60, 8).copyWith(rir: () => 6), LoggingType.weightReps),
         {SetIssue.rirOutOfRange},
       );
     });
@@ -116,6 +113,51 @@ void main() {
       ));
     });
 
+    test('this workout\'s previous done set of the same type first', () {
+      final carried = exercise('bench', [
+        lift(40, 10, type: SetType.warmup),
+        lift(80, 6),
+        lift(85, 5, done: false),
+        const WorkoutSet(),
+        const WorkoutSet(type: SetType.warmup),
+      ]);
+      // A first-time exercise carries the weight over.
+      expect(suggestedValues(carried, 3, const []), (
+        weightKg: 80,
+        reps: 6,
+        durationS: null,
+      ));
+      expect(suggestedValues(carried, 4, [lift(100, 5)]), (
+        weightKg: 40,
+        reps: 10,
+        durationS: null,
+      ));
+    });
+
+    test('per value, the next source fills what the first lacks', () {
+      final partial = exercise(
+        'dip',
+        [const WorkoutSet(reps: 12, done: true), const WorkoutSet()],
+        type: LoggingType.weightedBodyweight,
+      ).copyWith(goal: () => item('dip', targetKg: 10));
+      expect(suggestedValues(partial, 1, const []), (
+        weightKg: 10,
+        reps: 12,
+        durationS: null,
+      ));
+    });
+
+    test('a warm-up gets nothing from last time or the goal', () {
+      final warm = exercise('squat', const [
+        WorkoutSet(type: SetType.warmup),
+      ]).copyWith(goal: () => item('squat', targetKg: 100));
+      expect(suggestedValues(warm, 0, [lift(100, 5)]), (
+        weightKg: null,
+        reps: null,
+        durationS: null,
+      ));
+    });
+
     test('then the goal, at the bottom of its range', () {
       final planned = squat.copyWith(
         goal: () => item('squat', repMin: 6, repMax: 10, targetKg: 80),
@@ -131,6 +173,19 @@ void main() {
         durationS: null,
       ));
     });
+  });
+
+  test('lastTimeSet matches working sets in order, warm-ups none', () {
+    final today = exercise('squat', [
+      const WorkoutSet(type: SetType.warmup),
+      const WorkoutSet(),
+      const WorkoutSet(),
+    ]);
+    final last = [lift(100, 5), lift(105, 3)];
+    expect(lastTimeSet(today, 0, last), isNull);
+    expect(lastTimeSet(today, 1, last), lift(100, 5));
+    expect(lastTimeSet(today, 2, last), lift(105, 3));
+    expect(lastTimeSet(today, 3, last), isNull);
   });
 
   group('completeSet', () {

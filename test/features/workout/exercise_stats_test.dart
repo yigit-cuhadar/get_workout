@@ -180,6 +180,18 @@ void main() {
       expect(stats.history.single.volumeKg, 740);
     });
 
+    test('a warm-up-only session adds no point and keeps last', () {
+      final before = applyWorkout(null, first, 'squat');
+      final warmups = workout('w3', [
+        exercise('squat', [lift(60, 5, type: SetType.warmup)]),
+      ], startedAt: friday);
+      expect(applyWorkout(before, warmups, 'squat'), same(before));
+      final mixed = workout('w4', [
+        exercise('squat', [lift(60, 5, type: SetType.warmup), lift(90, 5)]),
+      ], startedAt: friday);
+      expect(applyWorkout(before, mixed, 'squat')!.last!.sets, [lift(90, 5)]);
+    });
+
     test('leaves the stats alone without a done set', () {
       final none = workout('w3', [
         exercise('squat', [lift(100, 5, done: false)]),

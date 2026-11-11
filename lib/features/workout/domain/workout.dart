@@ -23,13 +23,16 @@ abstract final class WorkoutLimits {
   static const maxNameLength = 100;
   static const maxNoteLength = 1000;
   static const maxExerciseNoteLength = 500;
+  static const maxSetNoteLength = 200;
   static const maxExercises = 40;
   static const maxSets = 30;
   static const maxDrops = 5;
   static const maxReps = 1000;
   static const maxWeightKg = 1000.0;
   static const maxDurationS = 86400;
-  static const maxRir = 10;
+
+  /// 5 stands for "5 or more".
+  static const maxRir = 5;
 }
 
 /// One lighter part of a drop set.
@@ -87,6 +90,7 @@ class WorkoutSet extends Equatable {
     int? Function()? durationS,
     bool? toFailure,
     int? Function()? rir,
+    String? Function()? note,
     List<Drop>? drops,
     bool? done,
   }) => WorkoutSet(
@@ -96,7 +100,7 @@ class WorkoutSet extends Equatable {
     durationS: durationS != null ? durationS() : this.durationS,
     toFailure: toFailure ?? this.toFailure,
     rir: rir != null ? rir() : this.rir,
-    note: note,
+    note: note != null ? note() : this.note,
     drops: drops ?? this.drops,
     done: done ?? this.done,
   );

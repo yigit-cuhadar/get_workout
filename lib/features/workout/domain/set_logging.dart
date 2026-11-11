@@ -79,30 +79,46 @@ bool _validReps(int? reps) =>
 /// False for NaN, whose comparisons are all false.
 bool _within(num value, num min, num max) => value >= min && value <= max;
 
+/// The set at the place of set [index] of [exercise] last time: its
+/// working sets matched in order; a warm-up has none. [lastSets] are the
+/// working sets of the exercise's latest workout.
+WorkoutSet? lastTimeSet(
+  WorkoutExercise exercise,
+  int index,
+  List<WorkoutSet> lastSets,
+) {
+  final set = exercise.sets.elementAtOrNull(index);
+  if (set == null || set.isWarmup) return null;
+  final position = exercise.sets.take(index).where((s) => !s.isWarmup).length;
+  return lastSets.elementAtOrNull(position);
+}
+
 /// The values shown as hints in the empty fields of set [index] of
-/// [exercise], and logged when it is ticked with them still empty: the set
-/// at the same place last time, or else the program's target (the bottom of
-/// its rep range).
+/// [exercise], and logged when it is ticked with them still empty. Each
+/// value comes from the first that has it: the closest done set of the same
+/// type before it in this workout, the same set last time (see
+/// [lastTimeSet]), the program's target (the bottom of its rep range). A
+/// warm-up only follows the warm-up before it.
 SetValues suggestedValues(
   WorkoutExercise exercise,
   int index,
   List<WorkoutSet> lastSets,
 ) {
-  final last = lastSets.elementAtOrNull(index);
-  if (last != null) {
-    return (
-      weightKg: last.weightKg,
-      reps: last.reps,
-      durationS: last.durationS,
-    );
-  }
-  final goal = exercise.goal;
+  final set = exercise.sets.elementAtOrNull(index);
+  if (set == null) return (weightKg: null, reps: null, durationS: null);
+  final previous = exercise.sets
+      .take(index)
+      .lastWhere((s) => s.done && s.type == set.type, orElse: () => _none);
+  final last = lastTimeSet(exercise, index, lastSets);
+  final goal = set.isWarmup ? null : exercise.goal;
   return (
-    weightKg: goal?.targetKg,
-    reps: goal?.repMin,
-    durationS: goal?.durationS,
+    weightKg: previous.weightKg ?? last?.weightKg ?? goal?.targetKg,
+    reps: previous.reps ?? last?.reps ?? goal?.repMin,
+    durationS: previous.durationS ?? last?.durationS ?? goal?.durationS,
   );
 }
+
+const _none = WorkoutSet();
 
 /// [set] ticked done, its empty values taken from [suggestion] where
 /// [type] records them; null when it is still not valid.

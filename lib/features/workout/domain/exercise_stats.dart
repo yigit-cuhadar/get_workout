@@ -47,7 +47,8 @@ class StatRecord extends Equatable {
   List<Object?> get props => [value, date, workoutId];
 }
 
-/// The exercise's sets in its latest workout, shown as "last time".
+/// The exercise's working sets in its latest workout, shown as "last
+/// time".
 class LastSession extends Equatable {
   const LastSession({
     required this.date,
@@ -204,11 +205,11 @@ Map<RecordKind, double> sessionBests(
 double sessionVolume(Iterable<WorkoutSet> sets, LoggingType type) =>
     workingSets(sets).fold(0, (sum, set) => sum + setVolume(set, type));
 
-/// [stats] (null: none yet) with [workout]'s sets of [exerciseId] added:
-/// records it beats, `last` when it is the latest workout, and its history
-/// point, replacing one of the same workout. Unchanged when [workout] has
-/// no done set of the exercise. Applying a workout twice changes nothing
-/// the second time.
+/// [stats] (null: none yet) with [workout]'s working sets of [exerciseId]
+/// added: records it beats, `last` when it is the latest workout, and its
+/// history point, replacing one of the same workout. Unchanged when
+/// [workout] has no done working set of the exercise (warm-ups only).
+/// Applying a workout twice changes nothing the second time.
 ExerciseStats? applyWorkout(
   ExerciseStats? stats,
   Workout workout,
@@ -218,7 +219,7 @@ ExerciseStats? applyWorkout(
     for (final exercise in workout.exercises)
       if (exercise.exerciseId == exerciseId) exercise,
   ];
-  final done = [for (final entry in entries) ...entry.doneSets];
+  final done = workingSets([for (final entry in entries) ...entry.sets]);
   if (done.isEmpty) return stats;
   final type = entries.first.loggingType;
   final date = workout.startedAt;
@@ -234,7 +235,7 @@ ExerciseStats? applyWorkout(
     }
   }
   final last = stats?.last;
-  final bests = [for (final set in workingSets(done)) ?setE1rm(set, type)];
+  final bests = [for (final set in done) ?setE1rm(set, type)];
   final history = [
     for (final point in stats?.history ?? const <HistoryPoint>[])
       if (point.workoutId != workout.id) point,

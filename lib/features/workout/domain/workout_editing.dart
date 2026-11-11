@@ -118,7 +118,10 @@ bool fitsLimits(Workout workout) =>
     workout.exercises.every(
       (e) =>
           e.sets.length <= WorkoutLimits.maxSets &&
-          (e.note?.length ?? 0) <= WorkoutLimits.maxExerciseNoteLength,
+          (e.note?.length ?? 0) <= WorkoutLimits.maxExerciseNoteLength &&
+          e.sets.every(
+            (s) => (s.note?.length ?? 0) <= WorkoutLimits.maxSetNoteLength,
+          ),
     );
 
 /// Whether [workout] did the next day of the [active] program, which then

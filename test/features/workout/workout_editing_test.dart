@@ -133,6 +133,16 @@ void main() {
     expect(
       fitsLimits(
         ok.copyWith(
+          exercises: [
+            exercise('squat', [lift(100, 5).copyWith(note: () => 'x' * 201)]),
+          ],
+        ),
+      ),
+      isFalse,
+    );
+    expect(
+      fitsLimits(
+        ok.copyWith(
           exercises: List.filled(
             WorkoutLimits.maxExercises + 1,
             ok.exercises.single,
