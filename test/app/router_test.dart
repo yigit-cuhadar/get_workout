@@ -42,11 +42,17 @@ import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:get_workout/features/profile/presentation/profile_details_page.dart';
 import 'package:get_workout/features/profile/presentation/profile_page.dart';
 import 'package:get_workout/features/programs/data/no_premium.dart';
+import 'package:get_workout/features/programs/domain/catalogue_program.dart';
+import 'package:get_workout/features/programs/domain/catalogue_repository.dart';
+import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_repository.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/programs/data/no_completed_days.dart';
+import 'package:get_workout/features/programs/presentation/catalogue_detail_cubit.dart';
 import 'package:get_workout/features/programs/presentation/premium_prompt.dart';
+import 'package:get_workout/features/programs/presentation/program_catalogue_cubit.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
+import 'package:get_workout/features/programs/presentation/program_suggestion_page.dart';
 import 'package:get_workout/features/programs/presentation/programs_page.dart';
 import 'package:get_workout/features/settings/domain/settings_repository.dart';
 import 'package:get_workout/features/settings/domain/settings_usecases.dart';
@@ -56,6 +62,8 @@ import 'package:get_workout/features/today/presentation/today_page.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../features/programs/fixtures.dart' show card;
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -71,6 +79,8 @@ class MockCustomExerciseRepository extends Mock
     implements CustomExerciseRepository {}
 
 class MockProgramRepository extends Mock implements ProgramRepository {}
+
+class MockCatalogueRepository extends Mock implements CatalogueRepository {}
 
 const _squat = Exercise(
   id: 'squat',
@@ -109,6 +119,9 @@ void main() {
   var holdCatalogue = false;
   late GoRouter router;
   final onboarded = UserProfile(onboardingCompletedAt: DateTime(2026));
+
+  /// The ready-made programs; none unless a test sets them.
+  var readyMade = <CatalogueProgram>[];
 
   /// What the user's profile stream emits first; null emits nothing until
   /// the test adds to [profileStream].
@@ -205,7 +218,53 @@ void main() {
       ),
       dispose: (cubit) => cubit.close(),
     );
+    // The catalogue knows the user owns no equipment.
+    final catalogueLibrary = MockUserLibraryRepository();
+    when(() => catalogueLibrary.watchEquipment(any()))
+        .thenAnswer((_) => Stream.value(const {}));
+    final catalogueEquipment = EquipmentCubit(
+      watchAuthUser: WatchAuthUser(programAuth),
+      watchEquipment: WatchOwnedEquipment(catalogueLibrary),
+      saveEquipment: SaveOwnedEquipment(catalogueLibrary),
+    );
+    final readyMadePrograms = MockCatalogueRepository();
+    when(readyMadePrograms.watchPrograms)
+        .thenAnswer((_) => Stream.value(readyMade));
+    when(() => readyMadePrograms.getDays(any())).thenAnswer(
+      (_) async => const Ok([
+        ProgramDay(
+          items: [
+            ProgramItem(exerciseId: 'squat', sets: 3, repMin: 8, restS: 60),
+          ],
+        ),
+      ]),
+    );
     sl
+      ..registerLazySingleton(
+        () => ProgramCatalogueCubit(
+          watchAuthUser: WatchAuthUser(programAuth),
+          watchCatalogue: WatchCatalogue(readyMadePrograms),
+          watchPremium: const WatchPremium(NoPremium()),
+          profile: profile,
+          equipment: catalogueEquipment,
+        ),
+        dispose: (cubit) async {
+          await cubit.close();
+          await catalogueEquipment.close();
+        },
+      )
+      ..registerFactoryParam<CatalogueDetailCubit, String, String>(
+        (id, language) => CatalogueDetailCubit(
+          id,
+          language: language,
+          catalogue: sl(),
+          list: sl(),
+          exercises: catalogue,
+          getDays: GetCatalogueDays(readyMadePrograms),
+          saveProgram: SaveProgram(programs),
+          getCurrentUser: GetCurrentUser(programAuth),
+        ),
+      )
       ..registerLazySingleton(
         () => LibraryCubit(
           watchAuthUser: WatchAuthUser(settingsAuth),
@@ -280,6 +339,7 @@ void main() {
     await bodyModel.close();
     await exerciseFeed.close();
     holdCatalogue = false;
+    readyMade = [];
   });
 
   Future<void> pumpApp(WidgetTester tester) => tester.pumpWidget(
@@ -625,6 +685,44 @@ void main() {
       ).called(1);
       expect(find.byType(TodayPage), findsOneWidget);
       expect(find.byType(OnboardingPage), findsNothing);
+    });
+
+    testWidgets('a fitting free program is suggested after onboarding', (
+      tester,
+    ) async {
+      readyMade = [
+        card(
+          'pr_free',
+          goal: Goal.loseFat,
+          equipment: const [Equipment.bodyweight],
+          profile: EquipmentProfile.bodyweight,
+        ),
+        card('pr_paid', premium: true, goal: Goal.loseFat, order: 2),
+      ];
+      storedProfile = const UserProfile();
+      await startAsGuest(tester);
+      when(() => profiles.completeOnboarding(any(), any())).thenAnswer((_) {
+        profileStream.add(
+          storedProfile = UserProfile(
+            goal: Goal.loseFat,
+            onboardingCompletedAt: DateTime(2026),
+          ),
+        );
+        return Future.value(const Ok(null));
+      });
+
+      await tester.tap(find.text('Lose fat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Skip for now'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ProgramSuggestionPage), findsOneWidget);
+      expect(find.text('Program pr_free'), findsOneWidget);
+      expect(find.text('Program pr_paid'), findsNothing);
+
+      await tester.tap(find.text('Not now'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TodayPage), findsOneWidget);
     });
 
     testWidgets('onboarding goes forward and back one question at a time', (

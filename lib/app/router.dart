@@ -27,6 +27,7 @@ import '../features/profile/presentation/profile_page.dart';
 import '../features/programs/presentation/catalogue_detail_page.dart';
 import '../features/programs/presentation/catalogue_page.dart';
 import '../features/programs/presentation/exercise_picker_page.dart';
+import '../features/programs/presentation/program_suggestion_page.dart';
 import '../features/programs/presentation/program_builder_page.dart';
 import '../features/programs/presentation/program_detail_page.dart';
 import '../features/programs/presentation/programs_page.dart';
@@ -45,9 +46,9 @@ abstract final class Routes {
   /// onboarding is still needed.
   static const onboardingSignIn = '$onboarding/sign-in';
 
-  /// Where finishing or skipping onboarding lands. The program suggestion
-  /// (programs catalogue) plugs in here.
-  static const afterOnboarding = today;
+  /// Where finishing or skipping onboarding lands: a suggested program,
+  /// which goes on to Today.
+  static const afterOnboarding = '/suggested-program';
 
   static const today = '/today';
   static const programs = '/programs';
@@ -107,6 +108,8 @@ abstract final class Routes {
 /// user's profile resolve, a retry screen when the guest sign-in failed, and
 /// onboarding until the profile records it as completed.
 GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
+  // Who onboarding was last shown to.
+  String? onboardingUid;
   return GoRouter(
     initialLocation: Routes.splash,
     // Refresh only when the redirect can change. A refresh re-parses the
@@ -144,13 +147,18 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
           // onboarding flash. Someone already in the app stays where they are.
           _ProfileGate.pending =>
             location == Routes.startFailed ? Routes.splash : null,
-          _ProfileGate.onboarding => atOnboarding ? null : Routes.onboarding,
+          _ProfileGate.onboarding => () {
+            onboardingUid = user.id;
+            return atOnboarding ? null : Routes.onboarding;
+          }(),
           // Includes a profile that could not be read: never trap the user.
+          // Signing in from onboarding to an account already onboarded is
+          // no onboarding done here.
           _ProfileGate.ready =>
-            atGate
-                ? Routes.home
-                : atOnboarding
+            atOnboarding && user.id == onboardingUid
                 ? Routes.afterOnboarding
+                : atGate || atOnboarding
+                ? Routes.home
                 : null,
         },
       };
@@ -187,6 +195,10 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
             ),
           ),
         ],
+      ),
+      GoRoute(
+        path: Routes.afterOnboarding,
+        builder: (_, _) => const ProgramSuggestionPage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AppShell(shell: shell),

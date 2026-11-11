@@ -23,13 +23,14 @@ class CatalogueDetailPage extends StatelessWidget {
   final String id;
 
   @override
-  Widget build(BuildContext context) => BlocProvider(
-    create: (context) => sl<CatalogueDetailCubit>(
-      param1: id,
-      param2: Localizations.localeOf(context).languageCode,
-    ),
-    child: _CatalogueDetailView(sl<PremiumPrompt>()),
-  );
+  Widget build(BuildContext context) {
+    // Read here: a provider's create may not depend on inherited widgets.
+    final language = Localizations.localeOf(context).languageCode;
+    return BlocProvider(
+      create: (_) => sl<CatalogueDetailCubit>(param1: id, param2: language),
+      child: _CatalogueDetailView(sl<PremiumPrompt>()),
+    );
+  }
 }
 
 class _CatalogueDetailView extends StatelessWidget {

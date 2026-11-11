@@ -87,7 +87,7 @@ class _Programs extends StatelessWidget {
         if (recommended.isNotEmpty) ...[
           _Header(l10n.catalogueRecommended),
           for (final recommendation in recommended)
-            _ProgramTile(
+            CatalogueProgramTile(
               recommendation.program,
               premium: state.premium,
               reasons: recommendation.reasons,
@@ -103,7 +103,7 @@ class _Programs extends StatelessWidget {
             ),
           ),
         for (final program in visible)
-          _ProgramTile(program, premium: state.premium),
+          CatalogueProgramTile(program, premium: state.premium),
       ],
     );
   }
@@ -120,8 +120,15 @@ class _Header extends StatelessWidget {
   );
 }
 
-class _ProgramTile extends StatelessWidget {
-  const _ProgramTile(this.program, {required this.premium, this.reasons});
+/// A ready-made program's card, opening its page; locked when [premium] is
+/// false, with why it suits the user when [reasons] are given.
+class CatalogueProgramTile extends StatelessWidget {
+  const CatalogueProgramTile(
+    this.program, {
+    super.key,
+    required this.premium,
+    this.reasons,
+  });
 
   final CatalogueProgram program;
 
