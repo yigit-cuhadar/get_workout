@@ -19,8 +19,8 @@ class HistoryPage extends StatelessWidget {
   const HistoryPage({super.key});
 
   @override
-  Widget build(BuildContext context) => BlocProvider.value(
-    value: sl<HistoryListCubit>(),
+  Widget build(BuildContext context) => BlocProvider(
+    create: (_) => sl<HistoryListCubit>(),
     child: const _HistoryView(),
   );
 }

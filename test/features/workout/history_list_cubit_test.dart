@@ -105,6 +105,8 @@ void main() {
 
     cubit.loadMore();
     expect(cubit.state.loadingMore, isTrue);
+    // So the list keeps a row for the spinner.
+    expect(cubit.state.more, isTrue);
     expect(pages.keys, containsAll(['u1 null c1', 'u1 c1 null']));
     // Asking again while loading changes nothing.
     cubit.loadMore();
@@ -128,6 +130,33 @@ void main() {
     await emit('u1 c1 null', page(['w2', 'w1']));
     expect(ids(cubit), ['w3', 'w2', 'w1']);
     await cubit.close();
+  });
+
+  test('pages past the live ones are read once', () async {
+    final cubit = await signedIn();
+    String? after;
+    for (var i = 0; i <= HistoryListCubit.maxLivePages; i++) {
+      final end = HistoryCursor('c$i');
+      await emit('u1 $after null', page(['w$i'], end: end, more: true));
+      after = 'c$i';
+      cubit.loadMore();
+    }
+    // Page 6 (index 5) is the first read once: it stops after its answer.
+    final once = pages['u1 c4 c5']!;
+    expect(once.hasListener, isTrue);
+    await emit('u1 c4 c5', page(['w5'], end: const HistoryCursor('c5')));
+    expect(once.hasListener, isFalse);
+    expect(pages['u1 c3 c4']!.hasListener, isTrue);
+    expect(ids(cubit), ['w0', 'w1', 'w2', 'w3', 'w4', 'w5']);
+    await cubit.close();
+  });
+
+  test('closing stops every listener', () async {
+    final cubit = await signedIn();
+    await emit('u1 null null', page(['w1'], end: c1, more: true));
+    cubit.loadMore();
+    await cubit.close();
+    expect(pages.values.any((c) => c.hasListener), isFalse);
   });
 
   test('without more nothing loads', () async {

@@ -62,9 +62,9 @@ class WorkoutModule implements FeatureModule {
       ..registerFactory(() => WatchStoredWorkout(sl()))
       ..registerFactory(() => WatchRejectedWorkoutEdits(sl()))
       ..registerFactory(() => SaveWorkoutChange(sl()))
-      // One history for the whole app: the list and the workout pages share
-      // it, and it reports refused edits wherever they happened.
-      ..registerLazySingleton(
+      // One per history page. The workout pages open above it, so it is
+      // there to report their refused edits.
+      ..registerFactory(
         () => HistoryListCubit(
           watchAuthUser: sl(),
           watchHistory: sl(),

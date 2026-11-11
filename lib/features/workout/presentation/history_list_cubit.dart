@@ -68,9 +68,11 @@ class _Page {
 }
 
 /// The finished workouts of whoever is signed in, newest first, a page at a
-/// time. Each page is followed live, so edits, deletions and new workouts
-/// show at once; a page gets a fixed end once the next one loads, so pages
-/// never skip or repeat a workout. Resets to loading on every user change.
+/// time, for as long as the history page is open. The first [maxLivePages]
+/// pages are followed live, so edits, deletions and new workouts show at
+/// once; older ones are read once. A page gets a fixed end once the next one
+/// loads, so pages never skip or repeat a workout. Resets to loading on
+/// every user change.
 class HistoryListCubit extends Cubit<HistoryListState> {
   HistoryListCubit({
     required WatchAuthUser watchAuthUser,
@@ -91,6 +93,9 @@ class HistoryListCubit extends Cubit<HistoryListState> {
   late final StreamSubscription<Failure> _rejectedSubscription;
   final _pages = <_Page>[];
   String? _uid;
+
+  /// Pages followed live; a listener each.
+  static const maxLivePages = 5;
 
   void _onUser(String? uid) {
     _uid = uid;
@@ -123,12 +128,14 @@ class HistoryListCubit extends Cubit<HistoryListState> {
     final uid = _uid;
     if (uid == null) return;
     if (!_pages.contains(page)) _pages.add(page);
+    final live = _pages.indexOf(page) < maxLivePages;
     unawaited(page.subscription?.cancel());
     page.subscription =
         _watchHistory((uid: uid, after: page.after, through: page.through))
             .listen(
               (data) {
                 page.data = data;
+                if (!live) unawaited(page.subscription?.cancel());
                 _publish();
               },
               onError: (Object error) {
@@ -160,7 +167,8 @@ class HistoryListCubit extends Cubit<HistoryListState> {
             for (final workout in page.data?.workouts ?? const <Workout>[])
               if (seen.add(workout.id)) workout,
         ],
-        more: last?.more ?? false,
+        // While the last page loads, it is still to come.
+        more: last?.more ?? true,
         loadingMore: last == null,
         writeRejected: state.writeRejected,
       ),
