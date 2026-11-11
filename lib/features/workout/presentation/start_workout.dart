@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:forge_core/forge_core.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
@@ -19,7 +19,7 @@ Future<void> startWorkout(
   bool Function(ActiveWorkoutCubit cubit) start,
 ) async {
   final l10n = AppLocalizations.of(context);
-  final cubit = sl<ActiveWorkoutCubit>();
+  final cubit = context.read<ActiveWorkoutCubit>();
   final current = cubit.state.workout;
   if (cubit.state.inProgress && current != null) {
     final choice = await showDialog<_InProgressChoice>(

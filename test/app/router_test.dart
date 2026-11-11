@@ -127,7 +127,6 @@ void main() {
       deleteAccount: DeleteAccount(repository),
       signInAnonymously: SignInAnonymously(repository),
     );
-    registerNoWorkout();
     sl.registerFactory(
       () => AuthFormCubit(
         signInWithEmail: SignInWithEmail(repository),
@@ -254,6 +253,7 @@ void main() {
       providers: [
         BlocProvider.value(value: auth),
         BlocProvider.value(value: settings),
+        noWorkout(),
         BlocProvider.value(value: profile),
         BlocProvider.value(value: catalogue),
         BlocProvider.value(value: favorites),

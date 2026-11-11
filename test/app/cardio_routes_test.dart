@@ -100,7 +100,6 @@ void main() {
     sessions = StreamController<List<CardioSession>>();
     when(() => cardio.watchSessions('u1')).thenAnswer((_) => sessions.stream);
     when(() => cardio.rejectedWrites).thenAnswer((_) => const Stream.empty());
-    registerNoWorkout();
     sl
       ..registerLazySingleton(
         () => CardioListCubit(
@@ -125,6 +124,8 @@ void main() {
         providers: [
           BlocProvider.value(value: auth),
           BlocProvider.value(value: settings),
+          noWorkout(),
+          noWorkout(),
         ],
         child: MaterialApp.router(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -27,16 +27,6 @@ class WorkoutPage extends StatelessWidget {
   const WorkoutPage({super.key});
 
   @override
-  Widget build(BuildContext context) => BlocProvider.value(
-    value: sl<ActiveWorkoutCubit>(),
-    child: const _WorkoutView(),
-  );
-}
-
-class _WorkoutView extends StatelessWidget {
-  const _WorkoutView();
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ActiveWorkoutCubit>();

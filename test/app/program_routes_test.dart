@@ -140,7 +140,6 @@ void main() {
         .thenAnswer((_) => const Stream.empty());
     when(() => repository.getProgram('u1', 'p1'))
         .thenAnswer((_) async => Ok(stored));
-    registerNoWorkout();
     sl
       ..registerLazySingleton(
         () => ProgramListCubit(
@@ -195,6 +194,8 @@ void main() {
         providers: [
           BlocProvider.value(value: auth),
           BlocProvider.value(value: settings),
+          noWorkout(),
+          noWorkout(),
           BlocProvider.value(value: catalogue),
           BlocProvider.value(value: favorites),
           BlocProvider.value(value: equipment),
