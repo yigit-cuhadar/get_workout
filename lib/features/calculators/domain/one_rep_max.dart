@@ -1,8 +1,8 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../../core/one_rep_max.dart';
 import 'calculation.dart';
 
-const maxEpleyReps = 12;
 const InputRange liftedWeightRangeKg = (min: 0.5, max: 1000);
 
 class PercentLoad extends Equatable {
@@ -29,9 +29,9 @@ class OneRepMax extends Equatable {
   List<Object?> get props => [estimateKg, loads];
 }
 
-/// Epley: `weight * (1 + reps / 30)`; a single rep is the weight itself.
-/// [incrementKg] is the smallest step the user can load (2.5 kg, or 5 lb
-/// expressed in kg), so table loads land on real bar weights.
+/// See [epleyOneRepMax]. [incrementKg] is the smallest step the user can
+/// load (2.5 kg, or 5 lb expressed in kg), so table loads land on real bar
+/// weights.
 Calculation<OneRepMax> estimateOneRepMax({
   required double weightKg,
   required int reps,
@@ -50,7 +50,7 @@ Calculation<OneRepMax> estimateOneRepMax({
   if (reps > maxEpleyReps) return const Rejected(CalculatorProblem.tooManyReps);
   assert(incrementKg > 0, 'incrementKg must be positive');
 
-  final estimate = reps == 1 ? weightKg : weightKg * (1 + reps / 30);
+  final estimate = epleyOneRepMax(weightKg, reps)!;
   return Calculated(
     OneRepMax(
       estimateKg: estimate,

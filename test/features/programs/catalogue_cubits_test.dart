@@ -15,7 +15,6 @@ import 'package:get_workout/features/profile/domain/profile_usecases.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:get_workout/features/programs/data/no_completed_days.dart';
-import 'package:get_workout/features/programs/data/no_premium.dart';
 import 'package:get_workout/features/programs/domain/catalogue_program.dart';
 import 'package:get_workout/features/programs/domain/catalogue_queries.dart';
 import 'package:get_workout/features/programs/domain/catalogue_repository.dart';
@@ -145,7 +144,7 @@ void main() {
       watchCompletedDays: const WatchCompletedDays(NoCompletedDays()),
       watchRejectedWrites: WatchRejectedProgramWrites(programRepository),
       resolveMissedDay: ResolveMissedDay(programRepository),
-      watchPremium: const WatchPremium(NoPremium()),
+      watchPremium: const WatchPremium(FixedPremium(false)),
     );
     final exerciseRepository = MockExerciseRepository();
     when(exerciseRepository.watchExercises)

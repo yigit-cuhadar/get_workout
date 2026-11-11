@@ -508,4 +508,25 @@ void main() {
     },
     verify: (cubit) => expect(cubit.state, const ProgramListState()),
   );
+
+  test('nextDayIndex is the active program\'s next day while it runs', () {
+    ProgramListState ready({List<Program>? programs, bool finished = false}) =>
+        ProgramListState(
+          status: ProgramListStatus.ready,
+          programs: programs ?? [upperLower],
+          active: active,
+          finished: finished,
+        );
+    expect(ready().nextDayIndex, 1);
+    expect(
+      ready(
+        programs: [
+          upperLower.copyWith(days: [upperLower.days.first]),
+        ],
+      ).nextDayIndex,
+      0,
+    );
+    expect(ready(finished: true).nextDayIndex, isNull);
+    expect(ready(programs: [other]).nextDayIndex, isNull);
+  });
 }

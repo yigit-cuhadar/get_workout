@@ -8,12 +8,12 @@ import '../settings/domain/user_settings.dart';
 import 'data/firestore_catalogue_repository.dart';
 import 'data/firestore_program_repository.dart';
 import 'data/no_completed_days.dart';
-import 'data/no_premium.dart';
 import 'domain/catalogue_repository.dart';
 import 'domain/completed_days.dart';
 import 'domain/premium_status.dart';
 import 'domain/program_repository.dart';
 import 'domain/program_usecases.dart';
+import 'presentation/add_to_program_cubit.dart';
 import 'presentation/catalogue_detail_cubit.dart';
 import 'presentation/exercise_picker_cubit.dart';
 import 'presentation/program_builder_cubit.dart';
@@ -27,27 +27,24 @@ import 'presentation/program_list_cubit.dart';
 class ProgramsModule implements FeatureModule {
   const ProgramsModule({
     this.completedDays = nothingDone,
-    this.premium = notPremium,
-    this.showPremium = showPremiumComingSoon,
+    required this.premium,
+    required this.showPremium,
   });
 
   /// Builds what reports the program days done; the workout feature passes
   /// its own in bootstrap.
   final CompletedDays Function(GetIt sl) completedDays;
 
-  /// Builds what reports whether the user has premium; the subscription
-  /// feature passes its own in bootstrap.
+  /// Builds what reports whether the user has premium: the subscription
+  /// feature's, passed in bootstrap.
   final PremiumStatus Function(GetIt sl) premium;
 
-  /// What a premium call to action does; the subscription feature passes
-  /// its paywall in bootstrap.
+  /// What a premium call to action does: the subscription feature's
+  /// paywall, passed in bootstrap.
   final void Function(BuildContext context) showPremium;
 
   /// Reports nothing done.
   static CompletedDays nothingDone(GetIt _) => const NoCompletedDays();
-
-  /// Reports no premium.
-  static PremiumStatus notPremium(GetIt _) => const NoPremium();
 
   /// The exercise picker's own [LibraryCubit], so picking never changes the
   /// Exercises tab's search and filters.
@@ -77,7 +74,6 @@ class ProgramsModule implements FeatureModule {
       ..registerFactory(() => ChangeWeekdays(sl()))
       ..registerFactory(() => StopProgram(sl()))
       ..registerFactory(() => ResolveMissedDay(sl()))
-      ..registerFactory(() => CompleteProgramDay(sl()))
       ..registerFactory(() => WatchCatalogue(sl()))
       ..registerFactory(() => GetCatalogueDays(sl()))
       ..registerFactory(() => WatchPremium(sl()))
@@ -137,6 +133,15 @@ class ProgramsModule implements FeatureModule {
           watchAuthUser: sl(),
           catalogue: sl(),
           weightUnit: unit,
+        ),
+      )
+      ..registerFactory(() => AddExerciseToProgram(sl()))
+      ..registerFactory(
+        () => AddToProgramCubit(
+          list: sl(),
+          addExercise: sl(),
+          catalogue: sl(),
+          getCurrentUser: sl(),
         ),
       )
       ..registerFactoryParam<ExercisePickerCubit, int, bool>(

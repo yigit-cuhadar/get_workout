@@ -3,19 +3,12 @@ import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
 
-/// What a premium call to action does: the subscription feature opens its
-/// paywall here.
+/// What a premium call to action does: the subscription feature's paywall.
 class PremiumPrompt {
   const PremiumPrompt(this.show);
 
   final void Function(BuildContext context) show;
 }
-
-/// Until the subscription feature exists: says premium is coming.
-void showPremiumComingSoon(BuildContext context) =>
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context).premiumComingSoon)),
-    );
 
 /// Why something is locked, and the premium call to action.
 class PremiumLock extends StatelessWidget {

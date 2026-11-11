@@ -20,7 +20,6 @@ import 'package:get_workout/features/exercises/presentation/exercise_catalogue_c
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:get_workout/features/programs/data/no_completed_days.dart';
-import 'package:get_workout/features/programs/data/no_premium.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_repository.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
@@ -43,6 +42,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../features/programs/fixtures.dart';
+import 'no_workout.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -150,7 +150,7 @@ void main() {
     when(() => repository.getProgram('u1', 'p1'))
         .thenAnswer((_) async => Ok(stored));
     sl
-      ..registerSingleton(const PremiumPrompt(showPremiumComingSoon))
+      ..registerSingleton(PremiumPrompt((_) {}))
       ..registerLazySingleton(
         () => ProgramListCubit(
           watchAuthUser: WatchAuthUser(sessionAuth),
@@ -159,7 +159,7 @@ void main() {
           watchCompletedDays: const WatchCompletedDays(NoCompletedDays()),
           watchRejectedWrites: WatchRejectedProgramWrites(repository),
           resolveMissedDay: ResolveMissedDay(repository),
-          watchPremium: const WatchPremium(NoPremium()),
+          watchPremium: const WatchPremium(FixedPremium(false)),
         ),
         dispose: (cubit) => cubit.close(),
       )
@@ -205,6 +205,8 @@ void main() {
         providers: [
           BlocProvider.value(value: auth),
           BlocProvider.value(value: settings),
+          noWorkout(),
+          noWorkout(),
           BlocProvider.value(value: catalogue),
           BlocProvider.value(value: favorites),
           BlocProvider.value(value: equipment),

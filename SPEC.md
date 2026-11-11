@@ -31,6 +31,28 @@ from the earlier FitLab app.
   trial on yearly. Premium = program generator, 19 of 25 ready-made programs,
   advanced statistics (charts beyond 12 weeks, volume trend). Everything else
   is free. Until store accounts exist, purchases run against a fake gateway.
+- **Subscription wiring**: `forge_purchases`, entitlement `premium`. RevenueCat
+  when this platform's public SDK key is passed with `--dart-define`
+  (`REVENUECAT_IOS_KEY`, `REVENUECAT_ANDROID_KEY`; never committed), else the
+  fake in debug and profile builds (a debug-only "Fake store" section on the
+  Profile tab steers it), else, in release, an unavailable store: nobody is
+  Premium and the paywall says purchases are not available yet.
+  `PurchaserSession` identifies the signed-in uid (guests too; linking keeps
+  it) or resets, at startup and on every auth change, retrying failures.
+- **Premium gate**: `context.watchPremium()` gives unknown / free / premium for
+  locks; `await context.requirePremium()` before entering a premium feature
+  (`lib/features/subscription/presentation/premium.dart`). Unknown never shows
+  a paywall or a lock. The client value is for UI only; paid data is
+  enforced by `entitlements/{uid}` in the rules.
+- **Client vs server Premium**: until the RevenueCat webhook exists nothing
+  writes `entitlements/{uid}`, so client Premium (fake or RevenueCat) and
+  server access can disagree. Features treat a server refusal of premium
+  content as locked, whatever the client says. On dev,
+  `tool/set_premium.sh` writes the entitlement for demos.
+- **Paywall**: full-screen `/paywall`, yearly selected by default, prices as
+  the store gives them, trial shown only when the plan carries one, restore
+  and legal links always visible. Terms and privacy URLs live in
+  `lib/app/legal_links.dart`; placeholders until the pages exist.
 - **Backend**: Blaze plan. Cloud Functions are used only where a client cannot
   be trusted or cannot do the job: RevenueCat webhook, account deletion,
   sending push announcements. The program generator runs on device.
@@ -169,6 +191,88 @@ from the earlier FitLab app.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
   / Progress / Profile. The active workout is full-screen and can be minimized
   to a bar above the tabs.
+- **Workouts on the device**: per user one JSON file
+  (`workouts_<uid>.json` in the app's private support directory, versioned)
+  holds the workout in progress, finished workouts the server has not
+  confirmed yet, and the exercises whose stats need rebuilding. It is
+  rewritten after every change (only the latest of a burst, replaced
+  atomically, so moving a workout from in progress to finished is one
+  write) and read on launch, the workout in progress behind the minimized
+  bar. A user never gets another's. A file that cannot be read, or of an
+  unknown version, is renamed `.unreadable-<time>`, never overwritten, and
+  the user is told. A file outlives Firestore cache eviction and costs no
+  write per keystroke. The workout id is made at the start, so storing a
+  workout twice stores it once.
+- **Finishing**: the workout, its exercises' stats and, when it did the
+  active program's next day, the program moved on
+  (`users/{uid}.activeProgram`) are one batch, so the server takes all or
+  none; it works offline. Whether the program moves on is decided from the programs the
+  device knows at that moment; if they are not loaded the program is left
+  and the summary says so. The finished workout stays on the device until
+  the server confirms it (after all pending writes are answered, a server
+  read finds it); one the server refused comes back as the workout in
+  progress, once none is open, and the user is told, so a workout is never
+  lost. Its program advance went back with the batch.
+- **Workout times**: `startedAt` and `finishedAt` are device-clock
+  timestamps, so a workout done offline keeps its real times; `finishedAt`
+  is never before `startedAt`. A program day counts as done on the local
+  date its workout started.
+- **Logging a set**: empty fields show a suggestion, which ticking takes;
+  each value comes from the first that has it: this workout's previous done
+  set of the same type and exercise, the same working set last time, the
+  program target (weight, bottom of the rep range, duration). A warm-up only
+  follows the warm-up before it. A done set edited into an invalid one is
+  unticked. A weighted or assisted bodyweight set without a weight has none
+  added. Effort is a whole number: RIR 0-5 (5 means 5+) or RPE 10-5. Sets
+  take a note of up to 200 characters. Durations are typed in seconds; a
+  minutes and seconds input is left to the design phase.
+- **Records**: heaviest weight (every type with a weight except assisted),
+  best e1RM and best set volume (`weight_reps`, `weighted_bodyweight` on the
+  added weight), most reps (rep types), longest duration (duration types).
+  Warm-ups never count: a session of only warm-ups adds no history point and
+  leaves "last time", which holds working sets only. A drop set's volume
+  includes its drops, its other records use its first part. A record must be
+  beaten, not equalled; an exercise's first workout sets its records but
+  celebrates none.
+- **Workout summary**: duration ("< 1 min" under a minute), volume (weight ×
+  reps of the working sets of `weight_reps` and `weighted_bodyweight`;
+  assistance is no load), working sets and exercises.
+- **Stats update**: stats are computed from what the device knows at
+  finishing, the server's when it answers for all of them within 2 s, else
+  the cache's
+  (transactions do not work offline). Stats from the cache, and those that
+  cannot be read at all (offline, never loaded here; left alone rather than
+  overwritten), are listed on the device and, once the finished workouts
+  are confirmed, rebuilt from that exercise's workouts read from the server
+  (`rebuildStats`, at most 500 workouts; beyond that they are left). This
+  also repairs two devices finishing at once. History keeps the latest 1000
+  points, each with its `workoutId`.
+- **Program progress**: doing another day of the active program shows it as
+  done but leaves the schedule. Done days are read from workouts by date
+  only, so no composite index is needed.
+- **Starting a workout**: the Programs tab starts the next day, a program's
+  page any of its days, the Today tab an empty workout until that tab is
+  built, and an exercise's page adds it to the workout in progress or, after
+  asking, starts one with it. A program day waits until the user's custom
+  exercises are loaded; exercises really gone are left out and the user is
+  told how many. Starting while a workout is in progress asks to resume it
+  or discard it.
+- **Add to program**: an exercise's page appends it, with the default
+  targets, to a day of one of the user's programs through the program's
+  validation; a full day cannot be picked, and without programs it offers to
+  create one.
+- **Swapping an exercise**: the same logging type keeps the sets, another
+  gets as many empty ones; up to eight alternatives are offered before the
+  whole library.
+- **Save as program**: a free workout becomes a one-day program of the
+  user's own: its working sets, the rep range done or the longest duration,
+  the heaviest weight (least assistance) as target, the exercise's default
+  rest (90 s for a custom one). Exercises no longer in the library are left
+  out; a program that would not be valid (over 20 exercises) is refused.
+- **Workout limits**: name 1-100 characters, note 1000, exercise note 500,
+  set note 200, 40 exercises, 30 sets each, 5 drops per set. The rules
+  validate the top-level fields of `workouts` and `exerciseStats` (allowed
+  keys, types, sizes); the app checks sets before storing.
 - **Blocked on accounts the user will open when needed**: Apple Developer
   (Apple sign-in, HealthKit, iOS push, Live Activity on a real device), Google
   Play Console, RevenueCat. Development continues without them.
@@ -292,11 +396,13 @@ edits do not change it. `name` is 1-60 characters.
 - `sets[]`: `type`, `weightKg?`, `reps?`, `durationS?`, `toFailure`, `rir?`,
   `note?`, `drops[]?` (`weightKg`, `reps`), `done`
 
-**`users/{uid}/exerciseStats/{exerciseId}`**: `records` (heaviest weight, best
-e1RM, best set volume, most reps or longest duration; each with value, date,
-workoutId), `last` (date and sets of the latest workout, shown as "last
-time"), `history[]` (date, best e1RM, total volume; one point per workout).
-Rebuilt from that exercise's workouts whenever one is edited or deleted.
+**`users/{uid}/exerciseStats/{exerciseId}`**: `records` (keys
+`heaviestWeight`, `bestE1rm`, `bestSetVolume`, `mostReps`,
+`longestDuration`; each `value`, `date`, `workoutId`), `last` (`date`,
+`workoutId` and `sets` of the latest workout, shown as "last time"),
+`history[]` (`date`, `workoutId`, `bestE1rmKg?`, `volumeKg`; one point per
+workout). Rebuilt from that exercise's workouts whenever one is edited or
+deleted.
 
 **`users/{uid}/cardio/{id}`**: `type`, `date`, `durationS`, `distanceKm?`,
 `calories?`, `avgHeartRate?`, `incline?`, `note?`.
@@ -354,11 +460,11 @@ Group 4, programs
 - [x] My programs and schedule — start a program, pick weekdays, missed-day prompt (do today, move, skip)
 
 Group 5, workout
-- [ ] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery
-- [ ] Free workout — start empty, save as program at the end
+- [x] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery
+- [x] Free workout — start empty, save as program at the end
 - [ ] Rest timer — auto start, +15 s, skip, notification
 - [ ] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification
-- [ ] Finish and summary — records with a short celebration, `exerciseStats` update
+- [x] Finish and summary — records with a short celebration, `exerciseStats` update
 - [ ] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
 
 Group 6, progress
@@ -393,3 +499,26 @@ Group 9, launch readiness
 - A guest who signs in to an existing account leaves an orphaned anonymous user and its data behind; clean these up with a scheduled function when Cloud Functions arrive.
 - The projects are not linked to a billing account yet; needed before photo backup and Cloud Functions.
 - Female body model with the same mesh names: the user supplies it before release.
+- RevenueCat webhook (`revenueCatWebhook`, needs the Blaze plan): verify the
+  Authorization header secret, write `entitlements/{app_user_id}` with
+  `premium`, `expiresAt` (a timestamp; lifetime products would need a far
+  date, the rules compare it) and `productId` on every event, including
+  TRANSFER (two uids) and EXPIRATION. Rules for `entitlements/{uid}` and the
+  premium program detail are already in `firestore.rules`.
+- Store setup once the accounts exist: products (monthly, yearly with a
+  7-day trial) in App Store Connect and Play Console, one RevenueCat project
+  with entitlement `premium` and a current offering, the In-App Purchase
+  capability on the App ID, the .p8 key and Play service account in
+  RevenueCat, server notifications to RevenueCat, license testers. Check that
+  `com.android.vending.BILLING` is in the merged Android manifest on the
+  first build. Android launchMode (`singleTop`), Kotlin 2.4 and compileSdk 36
+  already meet the SDK's needs; iOS uses Swift Package Manager.
+- Release blocker: the Terms of Use and Privacy Policy links in
+  `lib/app/legal_links.dart` are placeholders; publish the pages and
+  replace them.
+- The admin web build now bundles and loads the RevenueCat web script,
+  because `purchases_flutter` registers a web plugin. Harmless; revisit if
+  the admin build is split from the app.
+- `forge_purchases` has no "unavailable" backend; the app swaps in its own
+  repository for release builds without keys. Move it into the package when
+  it is next changed.

@@ -6,11 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
 import '../domain/calendar_date.dart';
 import '../domain/program_schedule.dart';
 import '../domain/program_usecases.dart';
-import 'premium_prompt.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
 
@@ -22,14 +22,12 @@ class ProgramsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocProvider.value(
     value: sl<ProgramListCubit>(),
-    child: _ProgramsView(sl<PremiumPrompt>()),
+    child: const _ProgramsView(),
   );
 }
 
 class _ProgramsView extends StatefulWidget {
-  const _ProgramsView(this.premium);
-
-  final PremiumPrompt premium;
+  const _ProgramsView();
 
   @override
   State<_ProgramsView> createState() => _ProgramsViewState();
@@ -118,7 +116,7 @@ class _ProgramsViewState extends State<_ProgramsView> {
                 ],
               ),
             ),
-            ProgramListStatus.ready => _Programs(state, widget.premium),
+            ProgramListStatus.ready => _Programs(state),
           },
         );
       },
@@ -127,9 +125,8 @@ class _ProgramsViewState extends State<_ProgramsView> {
 }
 
 class _Programs extends StatelessWidget {
-  const _Programs(this.state, this.premium);
+  const _Programs(this.state);
   final ProgramListState state;
-  final PremiumPrompt premium;
 
   @override
   Widget build(BuildContext context) {
@@ -156,13 +153,30 @@ class _Programs extends StatelessWidget {
                 ? l10n.programFinished
                 : l10n.weekdayList(state.active!.weekdays),
           ),
+          // Locked, it opens the paywall instead.
+          if (state.nextDayIndex case final day?)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Gap.md,
+                vertical: Gap.sm,
+              ),
+              child: ForgeButton(
+                label: l10n.workoutStartDay(
+                  l10n.dayName(active.days[day], day),
+                ),
+                onPressed: () => startProgramDay(context, active, day),
+              ),
+            ),
           // Kept, not stopped: it carries on once premium is back.
           if (access == ProgramAccess.locked)
             Padding(
               padding: const EdgeInsets.all(Gap.md),
-              child: PremiumLock(
-                message: l10n.programLockedActive,
-                prompt: premium,
+              child: Row(
+                children: [
+                  const Icon(Icons.lock_outline),
+                  const SizedBox(width: Gap.sm),
+                  Expanded(child: Text(l10n.programLockedActive)),
+                ],
               ),
             )
           else if (access == ProgramAccess.waiting)

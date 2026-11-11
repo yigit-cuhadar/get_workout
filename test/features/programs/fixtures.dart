@@ -109,3 +109,13 @@ class FakePremium implements PremiumStatus {
   @override
   Stream<bool?> watch() => controller.stream;
 }
+
+/// A premium status that never changes.
+class FixedPremium implements PremiumStatus {
+  const FixedPremium(this.premium);
+
+  final bool? premium;
+
+  @override
+  Stream<bool?> watch() => Stream.value(premium);
+}

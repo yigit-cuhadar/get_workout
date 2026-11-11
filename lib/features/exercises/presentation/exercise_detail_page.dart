@@ -9,6 +9,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../programs/presentation/add_to_program.dart';
+import '../../programs/presentation/add_to_program_cubit.dart';
+import '../../workout/presentation/start_workout.dart';
 import '../domain/exercise.dart';
 import '../domain/muscle_meshes.dart';
 import 'body_model_cubit.dart';
@@ -35,6 +38,8 @@ class ExerciseDetailPage extends StatelessWidget {
     child: _DetailView(exerciseRoute),
   );
 }
+
+enum _DetailAction { workout, program }
 
 class _DetailView extends StatelessWidget {
   const _DetailView(this.exerciseRoute);
@@ -82,6 +87,29 @@ class _DetailView extends StatelessWidget {
                 ),
               ],
               FavoriteButton(state.exercise.id),
+              PopupMenuButton<_DetailAction>(
+                tooltip: l10n.detailActions,
+                onSelected: (action) => switch (action) {
+                  _DetailAction.workout => addToWorkout(
+                    context,
+                    state.exercise,
+                  ),
+                  _DetailAction.program => _addToProgram(
+                    context,
+                    state.exercise,
+                  ),
+                },
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: _DetailAction.workout,
+                    child: Text(l10n.addToWorkout),
+                  ),
+                  PopupMenuItem(
+                    value: _DetailAction.program,
+                    child: Text(l10n.addToProgram),
+                  ),
+                ],
+              ),
             ],
           ],
         ),
@@ -97,6 +125,15 @@ class _DetailView extends StatelessWidget {
         },
       ),
     );
+  }
+
+  static Future<void> _addToProgram(
+    BuildContext context,
+    Exercise exercise,
+  ) async {
+    final cubit = sl<AddToProgramCubit>();
+    await addToProgram(context, exercise, cubit);
+    await cubit.close();
   }
 
   static Future<void> _delete(BuildContext context) async {

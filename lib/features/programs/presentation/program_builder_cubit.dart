@@ -9,6 +9,7 @@ import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/program.dart';
+import '../../../core/grouping.dart' as editing;
 import '../domain/program_editing.dart' as editing;
 import '../domain/program_usecases.dart';
 import '../domain/program_validation.dart';

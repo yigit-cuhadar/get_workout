@@ -1,5 +1,6 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../exercises/domain/exercise.dart';
 import '../../exercises/domain/vocabulary.dart';
 import 'active_program.dart';
 import 'calendar_date.dart';
@@ -7,6 +8,7 @@ import 'catalogue_program.dart';
 import 'catalogue_repository.dart';
 import 'completed_days.dart';
 import 'program.dart';
+import 'program_editing.dart';
 import 'program_repository.dart';
 import 'program_schedule.dart';
 import 'program_validation.dart';
@@ -49,13 +51,13 @@ typedef MissedDayResolution = ({
   MissedDayChoice choice,
 });
 
-/// Program day [dayIndex] of the active program was done [on] that date.
-typedef DayCompletion = ({
+/// [loggingTypes]: see [validateProgram].
+typedef ExerciseAddition = ({
   String uid,
-  ActiveProgram active,
-  int dayCount,
+  Program program,
   int dayIndex,
-  CalendarDate on,
+  Exercise exercise,
+  Map<String, LoggingType> loggingTypes,
 });
 typedef CompletedDaysQuery = ({
   String uid,
@@ -234,24 +236,36 @@ class ResolveMissedDay implements UseCase<void, MissedDayResolution> {
   }
 }
 
-/// Moves the active program on after a program day was done; see
-/// [ProgramSchedule.complete]. Called by the workout feature.
-class CompleteProgramDay implements UseCase<void, DayCompletion> {
-  const CompleteProgramDay(this._repository);
-  final ProgramRepository _repository;
+/// Appends [ExerciseAddition.exercise] to a day of a stored program with
+/// the default targets (see [defaultItem]) and saves it like
+/// [SaveProgram]; refused with a [ValidationFailure] when the day is full or
+/// the program would not be valid.
+class AddExerciseToProgram implements UseCase<void, ExerciseAddition> {
+  const AddExerciseToProgram(this._saveProgram);
+  final SaveProgram _saveProgram;
 
   @override
-  Future<Result<void>> call(DayCompletion params) async {
-    if (params.dayCount < 1 ||
-        params.dayIndex < 0 ||
-        params.dayIndex >= params.dayCount) {
-      return const Err(ValidationFailure('no such program day'));
+  Future<Result<void>> call(ExerciseAddition params) async {
+    final program = params.program;
+    final day = program.days.elementAtOrNull(params.dayIndex);
+    if (program.id == null ||
+        day == null ||
+        day.items.length >= ProgramLimits.maxItemsPerDay) {
+      return const Err(ValidationFailure('no room on that day'));
     }
-    final schedule = ProgramSchedule(params.active, dayCount: params.dayCount);
-    return _repository.updateActiveProgram(
-      params.uid,
-      schedule.complete(dayIndex: params.dayIndex, on: params.on),
+    final changed = program.copyWith(
+      days: [
+        for (final (i, d) in program.days.indexed)
+          i == params.dayIndex
+              ? d.copyWith(items: [...d.items, defaultItem(params.exercise)])
+              : d,
+      ],
     );
+    return (await _saveProgram((
+      uid: params.uid,
+      program: changed,
+      loggingTypes: params.loggingTypes,
+    ))).map((_) {});
   }
 }
 

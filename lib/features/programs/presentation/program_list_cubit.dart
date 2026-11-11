@@ -75,6 +75,13 @@ class ProgramListState extends Equatable {
 
   ProgramAccess access(Program program) => programAccess(program, premium);
 
+  /// The active program's day to do next, unless it has run its length.
+  int? get nextDayIndex {
+    final days = activeProgram?.days.length ?? 0;
+    if (days == 0 || finished) return null;
+    return active!.nextDayIndex % days;
+  }
+
   List<Program> get otherPrograms => [
     for (final program in programs)
       if (program.id != active?.programId) program,

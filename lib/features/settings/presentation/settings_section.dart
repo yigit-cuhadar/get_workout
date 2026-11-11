@@ -5,7 +5,7 @@ import '../../../l10n/app_localizations.dart';
 import '../domain/user_settings.dart';
 import 'settings_cubit.dart';
 
-/// Units and appearance rows. Needs [SettingsCubit] above it.
+/// Units, workout and appearance rows. Needs [SettingsCubit] above it.
 class SettingsSection extends StatelessWidget {
   const SettingsSection({super.key});
 
@@ -46,6 +46,19 @@ class SettingsSection extends StatelessWidget {
               },
               onChanged: (unit) =>
                   cubit.update(settings.copyWith(lengthUnit: unit)),
+            ),
+            _Header(l10n.settingsWorkout),
+            _ChoiceTile(
+              title: l10n.settingsEffort,
+              values: EffortScale.values,
+              selected: settings.effortScale,
+              labelOf: (scale) => switch (scale) {
+                EffortScale.off => l10n.effortOff,
+                EffortScale.rir => l10n.effortRir,
+                EffortScale.rpe => l10n.effortRpe,
+              },
+              onChanged: (scale) =>
+                  cubit.update(settings.copyWith(effortScale: scale)),
             ),
             _Header(l10n.settingsAppearance),
             _ChoiceTile(

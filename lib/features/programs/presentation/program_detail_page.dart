@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
 import '../domain/program_schedule.dart';
 import 'program_detail_cubit.dart';
@@ -230,7 +231,19 @@ class _ProgramDetailView extends StatelessWidget {
               if (program.lengthWeeks case final weeks?)
                 ListTile(title: Text(l10n.programWeekCount(weeks))),
               for (final (index, day) in program.days.indexed)
-                ProgramDaySection(day: day, index: index),
+                ProgramDaySection(
+                  day: day,
+                  index: index,
+                  // Locked, it opens the paywall instead.
+                  action: day.items.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: l10n.workoutStartThisDay,
+                          icon: const Icon(Icons.play_arrow),
+                          onPressed: () =>
+                              startProgramDay(context, program, index),
+                        ),
+                ),
             ],
           ),
         );
