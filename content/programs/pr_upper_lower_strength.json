@@ -1,0 +1,217 @@
+{
+  "id": "pr_upper_lower_strength",
+  "status": "live",
+  "premium": true,
+  "order": 9,
+  "level": "intermediate",
+  "goal": "get_stronger",
+  "equipmentProfile": "full_gym",
+  "daysPerWeek": 4,
+  "lengthWeeks": 12,
+  "equipment": [
+    "barbell",
+    "ez_bar",
+    "dumbbell",
+    "cable",
+    "machine",
+    "bench",
+    "pull_up_bar",
+    "ab_wheel"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Upper/Lower Strength 4-Day",
+      "summary": "A heavy and a volume session for the upper and lower body each week, built on the squat, bench press, deadlift and overhead press. Main lifts stay in the 3-6 rep range with long rests."
+    }
+  },
+  "days": [
+    {
+      "name": "Upper Heavy",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_bench_press",
+          "sets": 5,
+          "repMin": 3,
+          "repMax": 5,
+          "restS": 240
+        },
+        {
+          "exerciseId": "ex_barbell_row",
+          "sets": 4,
+          "repMin": 4,
+          "repMax": 6,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_overhead_press",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 6,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_pull_up",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 6,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 4,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_triceps_pushdown",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Lower Heavy",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_back_squat",
+          "sets": 5,
+          "repMin": 3,
+          "repMax": 5,
+          "restS": 240
+        },
+        {
+          "exerciseId": "ex_romanian_deadlift",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 6,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_dumbbell_walking_lunge",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_lying_leg_curl",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_standing_calf_raise",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_ab_wheel_rollout",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Upper Volume",
+      "items": [
+        {
+          "exerciseId": "ex_incline_barbell_bench_press",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_chin_up",
+          "sets": 4,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_chest_supported_dumbbell_row",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_close_grip_bench_press",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_cable_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_ez_bar_curl",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Lower Volume",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_deadlift",
+          "sets": 4,
+          "repMin": 3,
+          "repMax": 5,
+          "restS": 240
+        },
+        {
+          "exerciseId": "ex_front_squat",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 6,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_barbell_hip_thrust",
+          "sets": 2,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_seated_leg_curl",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_hanging_leg_raise",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    }
+  ]
+}
