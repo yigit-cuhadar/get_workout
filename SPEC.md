@@ -230,7 +230,7 @@ Group 2, the model
 - [x] Muscle coloring API — per-muscle intensity — used later by exercise detail and volume
 
 Group 3, exercises
-- [ ] Exercise domain and sync — incremental sync by `updatedAt` — library works offline after first sync
+- [x] Exercise domain and sync — incremental sync by `updatedAt` — library works offline after first sync
 - [ ] Admin panel — sign-in, exercise list, exercise editor with validation, draft/live/retire — an edit appears in the app after sync
 - [ ] Exercise content — 400+ exercises in English, loaded through the admin import — every muscle and equipment profile is covered
 - [ ] Library — model tab with muscle sheet (main vs secondary), list, search, filters, sort — find any exercise in a few taps
