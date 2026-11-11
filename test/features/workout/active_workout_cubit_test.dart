@@ -279,6 +279,104 @@ void main() {
       await cubit.close();
     });
 
+    group('a premium copy', () {
+      final paid = Program(
+        id: 'p9',
+        name: 'Paid',
+        premium: true,
+        days: [
+          ProgramDay(items: [item('squat')]),
+        ],
+      );
+
+      ProgramListState listWith(bool? premium) => ProgramListState(
+        status: ProgramListStatus.ready,
+        programs: [paid],
+        premium: premium,
+      );
+
+      Future<WorkoutStart> start(ActiveWorkoutCubit cubit) =>
+          cubit.startProgramDay(paid, 0, name: 'Paid', language: 'en');
+
+      test('starts with premium', () async {
+        when(() => programs.state).thenReturn(listWith(true));
+        final cubit = await signedIn();
+        expect(cubit.access(paid), ProgramAccess.open);
+        expect((await start(cubit)).started, isTrue);
+        await cubit.close();
+      });
+
+      test('does not start without premium', () async {
+        when(() => programs.state).thenReturn(listWith(false));
+        when(() => programs.stream).thenAnswer((_) => const Stream.empty());
+        final cubit = await signedIn();
+        expect(cubit.access(paid), ProgramAccess.locked);
+        expect(await start(cubit), (started: false, skipped: 0));
+        expect(cubit.state.workout, isNull);
+        await cubit.close();
+      });
+
+      test('waits for premium, e.g. right after the paywall', () async {
+        final lists = StreamController<ProgramListState>.broadcast();
+        addTearDown(lists.close);
+        when(() => programs.state).thenReturn(listWith(null));
+        when(() => programs.stream).thenAnswer((_) => lists.stream);
+        final cubit = await signedIn();
+        expect(cubit.access(paid), ProgramAccess.waiting);
+
+        final starting = start(cubit);
+        await pumpEventQueue();
+        expect(cubit.state.workout, isNull);
+        when(() => programs.state).thenReturn(listWith(true));
+        lists.add(listWith(true));
+
+        expect((await starting).started, isTrue);
+        await cubit.close();
+      });
+
+      test('an own program is never gated', () async {
+        when(() => programs.state).thenReturn(listWith(false));
+        final cubit = await signedIn();
+        expect(cubit.access(legs), ProgramAccess.open);
+        expect(
+          (await cubit.startProgramDay(
+            legs,
+            1,
+            name: 'Legs',
+            language: 'en',
+          )).started,
+          isTrue,
+        );
+        await cubit.close();
+      });
+
+      test('one in progress can still be finished without premium', () async {
+        when(() => programs.state).thenReturn(listWith(false));
+        final cubit = await signedIn(
+          draft: Workout(
+            id: 'w1',
+            startedAt: now,
+            programId: 'p9',
+            dayIndex: 0,
+            name: 'Paid',
+            exercises: [
+              exercise('squat', [lift(100, 5)]),
+            ],
+          ),
+        );
+        await cubit.finish();
+        verify(
+          () => repository.saveWorkout(
+            'u1',
+            any(),
+            any(),
+            advance: any(named: 'advance'),
+          ),
+        ).called(1);
+        await cubit.close();
+      });
+    });
+
     test('only one workout at a time', () async {
       final cubit = await signedIn(draft: saved);
       expect(cubit.startFree('Workout'), isFalse);
