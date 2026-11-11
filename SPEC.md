@@ -31,6 +31,28 @@ from the earlier FitLab app.
   trial on yearly. Premium = program generator, 19 of 25 ready-made programs,
   advanced statistics (charts beyond 12 weeks, volume trend). Everything else
   is free. Until store accounts exist, purchases run against a fake gateway.
+- **Subscription wiring**: `forge_purchases`, entitlement `premium`. RevenueCat
+  when this platform's public SDK key is passed with `--dart-define`
+  (`REVENUECAT_IOS_KEY`, `REVENUECAT_ANDROID_KEY`; never committed), else the
+  fake in debug and profile builds (a debug-only "Fake store" section on the
+  Profile tab steers it), else, in release, an unavailable store: nobody is
+  Premium and the paywall says purchases are not available yet.
+  `PurchaserSession` identifies the signed-in uid (guests too; linking keeps
+  it) or resets, at startup and on every auth change, retrying failures.
+- **Premium gate**: `context.watchPremium()` gives unknown / free / premium for
+  locks; `await context.requirePremium()` before entering a premium feature
+  (`lib/features/subscription/presentation/premium.dart`). Unknown never shows
+  a paywall or a lock. The client value is for UI only; paid data is
+  enforced by `entitlements/{uid}` in the rules.
+- **Client vs server Premium**: until the RevenueCat webhook exists nothing
+  writes `entitlements/{uid}`, so client Premium (fake or RevenueCat) and
+  server access can disagree. Features treat a server refusal of premium
+  content as locked, whatever the client says. On dev,
+  `tool/set_premium.sh` writes the entitlement for demos.
+- **Paywall**: full-screen `/paywall`, yearly selected by default, prices as
+  the store gives them, trial shown only when the plan carries one, restore
+  and legal links always visible. Terms and privacy URLs live in
+  `lib/app/legal_links.dart`; placeholders until the pages exist.
 - **Backend**: Blaze plan. Cloud Functions are used only where a client cannot
   be trusted or cannot do the job: RevenueCat webhook, account deletion,
   sending push announcements. The program generator runs on device.
@@ -346,3 +368,26 @@ Group 9, launch readiness
 - A guest who signs in to an existing account leaves an orphaned anonymous user and its data behind; clean these up with a scheduled function when Cloud Functions arrive.
 - The projects are not linked to a billing account yet; needed before photo backup and Cloud Functions.
 - Female body model with the same mesh names: the user supplies it before release.
+- RevenueCat webhook (`revenueCatWebhook`, needs the Blaze plan): verify the
+  Authorization header secret, write `entitlements/{app_user_id}` with
+  `premium`, `expiresAt` (a timestamp; lifetime products would need a far
+  date, the rules compare it) and `productId` on every event, including
+  TRANSFER (two uids) and EXPIRATION. Rules for `entitlements/{uid}` and the
+  premium program detail are already in `firestore.rules`.
+- Store setup once the accounts exist: products (monthly, yearly with a
+  7-day trial) in App Store Connect and Play Console, one RevenueCat project
+  with entitlement `premium` and a current offering, the In-App Purchase
+  capability on the App ID, the .p8 key and Play service account in
+  RevenueCat, server notifications to RevenueCat, license testers. Check that
+  `com.android.vending.BILLING` is in the merged Android manifest on the
+  first build. Android launchMode (`singleTop`), Kotlin 2.4 and compileSdk 36
+  already meet the SDK's needs; iOS uses Swift Package Manager.
+- Release blocker: the Terms of Use and Privacy Policy links in
+  `lib/app/legal_links.dart` are placeholders; publish the pages and
+  replace them.
+- The admin web build now bundles and loads the RevenueCat web script,
+  because `purchases_flutter` registers a web plugin. Harmless; revisit if
+  the admin build is split from the app.
+- `forge_purchases` has no "unavailable" backend; the app swaps in its own
+  repository for release builds without keys. Move it into the package when
+  it is next changed.

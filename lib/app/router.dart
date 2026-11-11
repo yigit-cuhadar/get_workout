@@ -29,6 +29,7 @@ import '../features/programs/presentation/program_builder_page.dart';
 import '../features/programs/presentation/program_detail_page.dart';
 import '../features/programs/presentation/programs_page.dart';
 import '../features/progress/presentation/progress_page.dart';
+import '../features/subscription/presentation/paywall_page.dart';
 import '../features/today/presentation/today_page.dart';
 import '../l10n/app_localizations.dart';
 import 'app_shell.dart';
@@ -90,13 +91,22 @@ abstract final class Routes {
   static const plates = '$calculators/plates';
   static const macros = '$calculators/macros';
   static const bodyIndices = '$calculators/bmi-ffmi';
+
+  /// Full-screen over the tabs; push it, it pops when done. Premium
+  /// features go through `context.requirePremium()` instead.
+  static const paywall = '/paywall';
 }
 
 /// All routes live here. There is always a user (a guest until they create
 /// an account), so the gates are the splash while the session and then the
 /// user's profile resolve, a retry screen when the guest sign-in failed, and
 /// onboarding until the profile records it as completed.
-GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
+/// [profileDebugSection] ends the Profile tab in debug builds.
+GoRouter buildRouter(
+  AuthCubit auth,
+  ProfileCubit profile, {
+  Widget? profileDebugSection,
+}) {
   return GoRouter(
     initialLocation: Routes.splash,
     // Refresh only when the redirect can change. A refresh re-parses the
@@ -177,6 +187,11 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
             ),
           ),
         ],
+      ),
+      GoRoute(
+        path: Routes.paywall,
+        pageBuilder: (_, _) =>
+            const MaterialPage(fullscreenDialog: true, child: PaywallPage()),
       ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AppShell(shell: shell),
@@ -267,7 +282,7 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
           ),
           _tab(
             Routes.profile,
-            const ProfilePage(),
+            ProfilePage(debugSection: profileDebugSection),
             routes: [
               GoRoute(
                 path: 'account',
