@@ -259,8 +259,8 @@ Group 3, exercises
 - [ ] Custom exercises — short form, edit, delete — shown with a "Custom" label everywhere
 
 Group 4, programs
-- [ ] Program builder — days, exercise picker, sets and rep range, rest, supersets and circuits, reorder
-- [ ] My programs and schedule — start a program, pick weekdays, missed-day prompt (do today, move, skip)
+- [x] Program builder — days, exercise picker, sets and rep range, rest, supersets and circuits, reorder
+- [x] My programs and schedule — start a program, pick weekdays, missed-day prompt (do today, move, skip)
 
 Group 5, workout
 - [ ] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery
