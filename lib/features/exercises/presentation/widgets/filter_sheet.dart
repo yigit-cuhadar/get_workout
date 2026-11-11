@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/vocabulary.dart';
 import '../library_cubit.dart';
 import '../vocabulary_labels.dart';
+import 'choice_section.dart';
 import 'equipment_picker.dart';
 
 /// The list's filters. Every change applies at once.
@@ -85,28 +86,28 @@ class _FilterSheet extends StatelessWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => showEquipmentPicker(context),
             ),
-            _ChoiceSection(
+            ChoiceSection(
               title: l10n.libraryFilterMuscle,
               values: Muscle.values,
               selected: filter.muscles,
               labelOf: l10n.muscleName,
               onToggle: library.toggleMuscle,
             ),
-            _ChoiceSection(
+            ChoiceSection(
               title: l10n.libraryFilterEquipment,
               values: Equipment.values,
               selected: filter.equipment,
               labelOf: l10n.equipmentName,
               onToggle: library.toggleEquipment,
             ),
-            _ChoiceSection(
+            ChoiceSection(
               title: l10n.libraryFilterLevel,
               values: Level.values,
               selected: filter.levels,
               labelOf: l10n.levelName,
               onToggle: library.toggleLevel,
             ),
-            _ChoiceSection(
+            ChoiceSection(
               title: l10n.libraryFilterMovementPattern,
               values: MovementPattern.values,
               selected: filter.movementPatterns,
@@ -126,48 +127,6 @@ class _FilterSheet extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-/// A titled group of filter chips, any number selected.
-class _ChoiceSection<T> extends StatelessWidget {
-  const _ChoiceSection({
-    required this.title,
-    required this.values,
-    required this.selected,
-    required this.labelOf,
-    required this.onToggle,
-  });
-
-  final String title;
-  final List<T> values;
-  final Set<T> selected;
-  final String Function(T value) labelOf;
-  final ValueChanged<T> onToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ListTile(dense: true, title: Text(title)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-          child: Wrap(
-            spacing: Gap.sm,
-            runSpacing: Gap.xs,
-            children: [
-              for (final value in values)
-                FilterChip(
-                  label: Text(labelOf(value)),
-                  selected: selected.contains(value),
-                  onSelected: (_) => onToggle(value),
-                ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

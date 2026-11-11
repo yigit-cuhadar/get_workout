@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
@@ -23,6 +25,12 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 class MockProgramRepository extends Mock implements ProgramRepository {}
 
 class MockExerciseRepository extends Mock implements ExerciseRepository {}
+
+class MockCustomExerciseRepository extends Mock
+    implements CustomExerciseRepository {}
+
+class MockCatalogueCubit extends MockCubit<ExerciseCatalogueState>
+    implements ExerciseCatalogueCubit {}
 
 void main() {
   const member = AuthUser(id: 'u1', email: 'a@b.co');
@@ -64,6 +72,9 @@ void main() {
     catalogueCubit = ExerciseCatalogueCubit(
       watchAuthUser: WatchAuthUser(idle),
       watchExercises: WatchExercises(exerciseRepository),
+      watchCustomExercises: WatchCustomExercises(
+        MockCustomExerciseRepository(),
+      ),
       syncExercises: SyncExercises(exerciseRepository),
     );
   });
@@ -447,6 +458,92 @@ void main() {
       expect(cubit.state.day!.items, [item('a')]);
       await cubit.save();
       expect(cubit.state.status, ProgramBuilderStatus.saved);
+    });
+  });
+
+  group("items of the user's custom exercises", () {
+    // The user changed the custom exercise to a duration since.
+    final band = Exercise.custom(
+      id: 'custom_band',
+      name: 'Band Hold',
+      loggingType: LoggingType.duration,
+      mainMuscles: const [Muscle.rearDelt],
+    );
+    final stale = Program(
+      id: 'p1',
+      name: 'Old',
+      days: [
+        ProgramDay(
+          items: [
+            item('a', repMin: null, repMax: null, durationS: 45),
+            item('custom_band'),
+          ],
+        ),
+      ],
+    );
+    late MockCatalogueCubit catalogue;
+    late StreamController<ExerciseCatalogueState> changes;
+
+    setUp(() {
+      catalogue = MockCatalogueCubit();
+      changes = StreamController.broadcast();
+      whenListen(
+        catalogue,
+        changes.stream,
+        initialState: CatalogueReady([byId('a')], customLoaded: false),
+      );
+      when(() => repository.getProgram('u1', 'p1'))
+          .thenAnswer((_) async => Ok(stale));
+    });
+
+    tearDown(() => changes.close());
+
+    Future<ProgramBuilderCubit> open() async {
+      final cubit = ProgramBuilderCubit(
+        programId: 'p1',
+        getProgram: GetProgram(repository),
+        saveProgram: SaveProgram(repository),
+        getCurrentUser: GetCurrentUser(auth),
+        watchAuthUser: WatchAuthUser(auth),
+        catalogue: catalogue,
+        weightUnit: WeightUnit.kg,
+      );
+      addTearDown(cubit.close);
+      await pumpEventQueue();
+      return cubit;
+    }
+
+    test('wait for them: not unavailable, not fitted, not savable', () async {
+      final cubit = await open();
+      final custom = cubit.state.day!.items[1];
+      expect(cubit.state.isUnavailable(custom), isFalse);
+      expect(custom, item('custom_band'));
+      // Catalogue items are fitted already.
+      expect(cubit.state.day!.items[0], item('a'));
+      expect(cubit.state.adjusted, ['a']);
+      expect(cubit.state.canResolve, isFalse);
+      await cubit.save();
+      verifyNever(() => repository.updateProgram(any(), any()));
+    });
+
+    test('are fitted once they arrive, and then save', () async {
+      final cubit = await open();
+      changes.add(CatalogueReady([byId('a'), band]));
+      await pumpEventQueue();
+      expect(cubit.state.day!.items, [
+        item('a'),
+        item('custom_band', repMin: null, repMax: null, durationS: 30),
+      ]);
+      expect(cubit.state.adjusted, unorderedEquals(['a', 'custom_band']));
+      await cubit.save();
+      expect(cubit.state.status, ProgramBuilderStatus.saved);
+    });
+
+    test('show as unavailable once known to be gone', () async {
+      final cubit = await open();
+      changes.add(CatalogueReady([byId('a')]));
+      await pumpEventQueue();
+      expect(cubit.state.isUnavailable(cubit.state.day!.items[1]), isTrue);
     });
   });
 

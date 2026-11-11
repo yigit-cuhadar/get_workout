@@ -423,4 +423,93 @@ void main() {
       expect(results(cubit), ['curl', 'row']);
     });
   });
+
+  group('custom exercises', () {
+    final band = Exercise.custom(
+      id: 'custom_band',
+      name: 'Band Fly',
+      loggingType: LoggingType.reps,
+      mainMuscles: const [Muscle.pec],
+      equipment: const [Equipment.resistanceBand],
+    );
+    final noEquipment = Exercise.custom(
+      id: 'custom_plank',
+      name: 'Wall Plank',
+      loggingType: LoggingType.duration,
+      mainMuscles: const [Muscle.abdominal],
+      secondaryMuscles: const [Muscle.pec],
+    );
+
+    setUp(
+      () => whenListen(
+        catalogue,
+        catalogueChanges.stream,
+        initialState: CatalogueReady(
+          withCustomExercises(_all, [noEquipment, band]),
+        ),
+      ),
+    );
+
+    test('come first, by name, and are found by search', () {
+      final cubit = build();
+      expect(results(cubit), [
+        'custom_band',
+        'custom_plank',
+        'bench_press',
+        'push_up',
+        'squat',
+        'curl',
+      ]);
+      cubit.setQuery('band');
+      expect(results(cubit), ['custom_band']);
+    });
+
+    test('match muscle and equipment filters, never level or pattern', () {
+      final cubit = build()..toggleMuscle(Muscle.pec);
+      expect(results(cubit), [
+        'custom_band',
+        'custom_plank',
+        'bench_press',
+        'push_up',
+      ]);
+      cubit
+        ..clearFilters()
+        ..toggleEquipment(Equipment.resistanceBand);
+      expect(results(cubit), ['custom_band']);
+      cubit
+        ..clearFilters()
+        ..toggleLevel(Level.beginner);
+      expect(results(cubit), isNot(contains('custom_band')));
+      cubit
+        ..clearFilters()
+        ..toggleMovementPattern(MovementPattern.horizontalPush);
+      expect(results(cubit), ['bench_press', 'push_up']);
+    });
+
+    test('without equipment count as doable with any', () {
+      final cubit = build()..setOnlyDoable(true);
+      expect(results(cubit), ['custom_plank', 'push_up']);
+    });
+
+    blocTest<LibraryCubit, LibraryState>(
+      'show in favourites and on the muscle sheet',
+      build: build,
+      act: (cubit) async {
+        favoriteChanges.add(const FavoritesState({'custom_band'}));
+        await pumpEventQueue();
+        cubit
+          ..setOnlyFavorites(true)
+          ..selectMuscle(Muscle.pec);
+      },
+      verify: (cubit) {
+        expect(results(cubit), ['custom_band']);
+        expect(ids(cubit.state.muscleExercises!.main), [
+          'custom_band',
+          'bench_press',
+          'push_up',
+        ]);
+        expect(ids(cubit.state.muscleExercises!.alsoWorks), ['custom_plank']);
+      },
+    );
+  });
 }

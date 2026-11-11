@@ -5,7 +5,8 @@ import 'vocabulary.dart';
 
 extension ExerciseEquipment on Exercise {
   /// Whether [owned] covers [Exercise.equipment] or one of the
-  /// [Exercise.equipmentAlternatives] sets. Bodyweight is always owned.
+  /// [Exercise.equipmentAlternatives] sets. Bodyweight is always owned, and
+  /// a custom exercise without equipment needs none.
   bool isDoableWith(Set<Equipment> owned) {
     bool covered(List<Equipment> set) => set.every(
       (item) => item == Equipment.bodyweight || owned.contains(item),
@@ -63,6 +64,9 @@ class ExerciseFilter extends Equatable {
   /// Matched against [Exercise.equipment] only, not the alternative sets, so
   /// "dumbbell" lists dumbbell exercises.
   final Set<Equipment> equipment;
+
+  /// A custom exercise has no level or movement pattern, so it never matches
+  /// a selection of these.
   final Set<Level> levels;
   final Set<MovementPattern> movementPatterns;
 
@@ -126,12 +130,15 @@ List<Exercise> sortExercises(
 /// What to suggest instead of [exercise]: its pinned alternatives in their
 /// order, then the exercises sharing a main muscle and its movement pattern,
 /// those doable with [owned] first, then by popularity. Excluded ones never
-/// show, even when also pinned.
+/// show, even when also pinned. A custom exercise has no movement pattern,
+/// so it has no alternatives and is no one's.
 List<Exercise> alternativesFor(
   Exercise exercise,
   Iterable<Exercise> catalogue, {
   required Set<Equipment> owned,
 }) {
+  final pattern = exercise.movementPattern;
+  if (pattern == null) return const [];
   final byId = {for (final other in catalogue) other.id: other};
   final skip = {exercise.id, ...exercise.excludedAlternatives};
   final pinned = [
@@ -142,7 +149,7 @@ List<Exercise> alternativesFor(
   final computed = [
     for (final other in byId.values)
       if (!skip.contains(other.id) &&
-          other.movementPattern == exercise.movementPattern &&
+          other.movementPattern == pattern &&
           other.mainMuscles.any(exercise.mainMuscles.contains))
         other,
   ];
@@ -158,21 +165,47 @@ List<Exercise> alternativesFor(
   return [...pinned, ...computed];
 }
 
-/// The other exercises of [exercise]'s family, easier to harder.
-List<Exercise> variationsOf(Exercise exercise, Iterable<Exercise> catalogue) =>
-    [
-      for (final other in catalogue)
-        if (other.family == exercise.family && other.id != exercise.id) other,
-    ]..sort((a, b) {
-      final byRank = a.familyRank.compareTo(b.familyRank);
-      return byRank != 0 ? byRank : compareByPopularity(a, b);
-    });
-
-/// Popularity, then id so equal popularity still sorts the same every time.
-int compareByPopularity(Exercise a, Exercise b) {
-  final byPopularity = a.popularity.compareTo(b.popularity);
-  return byPopularity != 0 ? byPopularity : a.id.compareTo(b.id);
+/// The other exercises of [exercise]'s family, easier to harder; none for a
+/// custom exercise, which has no family.
+List<Exercise> variationsOf(Exercise exercise, Iterable<Exercise> catalogue) {
+  final family = exercise.family;
+  if (family == null) return const [];
+  return [
+    for (final other in catalogue)
+      if (other.family == family && other.id != exercise.id) other,
+  ]..sort((a, b) {
+    final byRank = a.familyRank!.compareTo(b.familyRank!);
+    return byRank != 0 ? byRank : compareByPopularity(a, b);
+  });
 }
+
+/// Custom exercises first, by name, as the user's own are what they look
+/// for most; then popularity. Ties go by id, so the order is the same every
+/// time.
+int compareByPopularity(Exercise a, Exercise b) {
+  final aPopularity = a.popularity;
+  final bPopularity = b.popularity;
+  final int order;
+  if (aPopularity == null || bPopularity == null) {
+    order = aPopularity == bPopularity
+        ? _foldCase(a.text(Exercise.fallbackLanguage).name)
+              .compareTo(_foldCase(b.text(Exercise.fallbackLanguage).name))
+        : (aPopularity == null ? -1 : 1);
+  } else {
+    order = aPopularity.compareTo(bPopularity);
+  }
+  return order != 0 ? order : a.id.compareTo(b.id);
+}
+
+/// The [catalogue] with the user's [custom] exercises, by popularity.
+List<Exercise> withCustomExercises(
+  List<Exercise> catalogue,
+  List<Exercise> custom,
+) => custom.isEmpty
+    ? catalogue
+    : List.unmodifiable(
+        <Exercise>[...custom, ...catalogue]..sort(compareByPopularity),
+      );
 
 /// [text] lowercased, without diacritics, spaces or punctuation.
 String _foldForSearch(String text) =>
