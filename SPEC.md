@@ -203,7 +203,36 @@ from the earlier FitLab app.
   are confirmed, rebuilt from that exercise's workouts read from the server
   (`rebuildStats`, at most 500 workouts; beyond that they are left). This
   also repairs two devices finishing at once. History keeps the latest 1000
-  points, each with its `workoutId`.
+  points, each with its `workoutId`. A rebuild first waits for the
+  device's pending writes, so it never reads past an edit the server has
+  not seen.
+- **History**: Progress → Workout history lists finished workouts newest
+  first, 20 per page. Each page is a live listener (cache first, so it
+  works offline) and gets a fixed end (`endAtDocument`) once the page after
+  it (`startAfterDocument`) loads, so pages never skip or repeat a workout.
+  Rows carry no records mark: it would need every exercise's stats. The
+  workout page names exercises from the catalogue (custom ones included),
+  else by the name stored with the workout (retired and deleted ones); a
+  program that no longer exists shows as deleted.
+- **Editing workouts**: editing, deleting and adding a past workout store
+  the workout and the stats of every exercise it touches, before and after,
+  rebuilt with `rebuildStats`, in one batch. They never change
+  `activeProgram`; a past workout has no program, and moving a program
+  workout's start only moves the day shown as done. Edits keep ticked sets
+  only and pass the same checks as finishing (`isStorable`); a start in the
+  future is refused and a duration is 0-24 h. The exercises' workouts are
+  read from the server when it answers within 2 s after the pending writes,
+  else from the cache; then those exercises join the device's stale-stats
+  list and are rebuilt from the server, as after finishing. An exercise
+  with more than 500 workouts keeps its stats, as a rebuild does.
+- **Unconfirmed workouts**: a workout with a change the server has not
+  confirmed (`hasPendingWrites`: just finished, finished offline or just
+  edited) can be viewed but not edited or deleted; its page says it waits
+  to sync. A confirmed workout the user deletes also leaves the device's
+  list of finished workouts awaiting confirmation, so a confirmation in
+  flight never brings it back. A refused edit or delete is undone by
+  Firestore together with its stats (one batch) and reported on the
+  history list.
 - **Program progress**: doing another day of the active program shows it as
   done but leaves the schedule. Done days are read from workouts by date
   only, so no composite index is needed.
