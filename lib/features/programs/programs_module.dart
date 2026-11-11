@@ -93,7 +93,6 @@ class ProgramsModule implements FeatureModule {
           catalogue: sl(),
           favorites: sl(),
           equipment: sl(),
-          watchRejectedCustomWrites: sl(),
         ),
         instanceName: pickerLibrary,
       );

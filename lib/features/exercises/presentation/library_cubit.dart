@@ -6,7 +6,6 @@ import 'package:forge_core/forge_core.dart';
 
 import '../domain/exercise.dart';
 import '../domain/exercise_queries.dart';
-import '../domain/exercise_usecases.dart';
 import '../domain/vocabulary.dart';
 import 'equipment_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
@@ -74,7 +73,6 @@ class LibraryState extends Equatable {
     this.equipmentChosen = false,
     this.selectedMuscle,
     this.muscleExercises,
-    this.customWriteRejected = false,
   });
 
   final LibraryView view;
@@ -95,10 +93,6 @@ class LibraryState extends Equatable {
   /// The exercises of [selectedMuscle]; null when none is selected.
   final MuscleExercises? muscleExercises;
 
-  /// The server refused a save or delete of a custom exercise that already
-  /// looked done; tell the user, then call [LibraryCubit.rejectionShown].
-  final bool customWriteRejected;
-
   LibraryState copyWith({
     LibraryView? view,
     String? query,
@@ -108,7 +102,6 @@ class LibraryState extends Equatable {
     bool? equipmentChosen,
     Muscle? Function()? selectedMuscle,
     MuscleExercises? Function()? muscleExercises,
-    bool? customWriteRejected,
   }) => LibraryState(
     view: view ?? this.view,
     query: query ?? this.query,
@@ -122,7 +115,6 @@ class LibraryState extends Equatable {
     muscleExercises: muscleExercises != null
         ? muscleExercises()
         : this.muscleExercises,
-    customWriteRejected: customWriteRejected ?? this.customWriteRejected,
   );
 
   @override
@@ -137,7 +129,6 @@ class LibraryState extends Equatable {
     // Records compare their lists by identity; these compare by content.
     muscleExercises?.main,
     muscleExercises?.alsoWorks,
-    customWriteRejected,
   ];
 }
 
@@ -151,7 +142,6 @@ class LibraryCubit extends Cubit<LibraryState> {
     required ExerciseCatalogueCubit catalogue,
     required FavoritesCubit favorites,
     required EquipmentCubit equipment,
-    required WatchRejectedCustomExerciseWrites watchRejectedCustomWrites,
   }) : super(const LibraryState()) {
     _catalogue = _exercisesOf(catalogue.state) ?? const [];
     _favorites = favorites.state.ids;
@@ -179,9 +169,6 @@ class LibraryCubit extends Cubit<LibraryState> {
           .distinct()
           .skip(1)
           .listen((_) => _reset()),
-      watchRejectedCustomWrites().listen(
-        (_) => emit(state.copyWith(customWriteRejected: true)),
-      ),
     ];
   }
 
@@ -202,8 +189,6 @@ class LibraryCubit extends Cubit<LibraryState> {
   }
 
   void setView(LibraryView view) => emit(state.copyWith(view: view));
-
-  void rejectionShown() => emit(state.copyWith(customWriteRejected: false));
 
   void setQuery(String query) => _recompute(query: query);
 

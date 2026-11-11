@@ -17,6 +17,7 @@ import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/body_model_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/custom_exercise_form_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/custom_exercise_form_page.dart';
+import 'package:get_workout/features/exercises/presentation/custom_write_rejections_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_cubit.dart';
@@ -207,9 +208,12 @@ void main() {
           catalogue: catalogue,
           favorites: favorites,
           equipment: equipment,
-          watchRejectedCustomWrites: WatchRejectedCustomExerciseWrites(
-            customExercises,
-          ),
+        ),
+        dispose: (cubit) => cubit.close(),
+      )
+      ..registerLazySingleton(
+        () => CustomWriteRejectionsCubit(
+          WatchRejectedCustomExerciseWrites(customExercises),
         ),
         dispose: (cubit) => cubit.close(),
       )

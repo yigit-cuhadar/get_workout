@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import 'equipment_cubit.dart';
+import 'custom_write_rejections_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
 import 'favorites_cubit.dart';
 import 'library_cubit.dart';
@@ -18,9 +19,12 @@ class ExercisesPage extends StatelessWidget {
   const ExercisesPage({super.key});
 
   @override
-  Widget build(BuildContext context) => BlocProvider.value(
-    // App-wide, so the view, search and filters last while the app runs.
-    value: sl<LibraryCubit>(),
+  Widget build(BuildContext context) => MultiBlocProvider(
+    providers: [
+      // App-wide, so the view, search and filters last while the app runs.
+      BlocProvider.value(value: sl<LibraryCubit>()),
+      BlocProvider.value(value: sl<CustomWriteRejectionsCubit>()),
+    ],
     child: const _ExercisesView(),
   );
 }
@@ -67,12 +71,11 @@ class _ExercisesViewState extends State<_ExercisesView> {
                 current.failure != null && current.failure != previous.failure,
             listener: (context, _) => _report(context, l10n.favoriteSaveFailed),
           ),
-          BlocListener<LibraryCubit, LibraryState>(
-            listenWhen: (previous, current) =>
-                current.customWriteRejected && !previous.customWriteRejected,
+          BlocListener<CustomWriteRejectionsCubit, bool>(
+            listenWhen: (_, rejected) => rejected,
             listener: (context, _) {
               _report(context, l10n.customWriteRejected);
-              context.read<LibraryCubit>().rejectionShown();
+              context.read<CustomWriteRejectionsCubit>().shown();
             },
           ),
           BlocListener<EquipmentCubit, EquipmentState>(

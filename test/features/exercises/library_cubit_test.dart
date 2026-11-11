@@ -4,10 +4,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/exercise_queries.dart';
-import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
@@ -19,9 +17,6 @@ import 'package:mocktail/mocktail.dart';
 import 'fixtures.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
-
-class MockCustomExerciseRepository extends Mock
-    implements CustomExerciseRepository {}
 
 class MockCatalogueCubit extends MockCubit<ExerciseCatalogueState>
     implements ExerciseCatalogueCubit {}
@@ -79,8 +74,6 @@ void main() {
   late StreamController<ExerciseCatalogueState> catalogueChanges;
   late StreamController<FavoritesState> favoriteChanges;
   late StreamController<EquipmentState> equipmentChanges;
-  late StreamController<Failure> rejectedWrites;
-  late MockCustomExerciseRepository customRepository;
 
   setUp(() {
     catalogue = MockCatalogueCubit();
@@ -92,10 +85,6 @@ void main() {
     catalogueChanges = StreamController.broadcast();
     favoriteChanges = StreamController.broadcast();
     equipmentChanges = StreamController.broadcast();
-    rejectedWrites = StreamController.broadcast();
-    customRepository = MockCustomExerciseRepository();
-    when(() => customRepository.rejectedWrites)
-        .thenAnswer((_) => rejectedWrites.stream);
     whenListen(
       catalogue,
       catalogueChanges.stream,
@@ -118,7 +107,6 @@ void main() {
     await favoriteChanges.close();
     await equipmentChanges.close();
     await users.close();
-    await rejectedWrites.close();
   });
 
   LibraryCubit build() => LibraryCubit(
@@ -126,9 +114,6 @@ void main() {
     catalogue: catalogue,
     favorites: favorites,
     equipment: equipment,
-    watchRejectedCustomWrites: WatchRejectedCustomExerciseWrites(
-      customRepository,
-    ),
   );
 
   List<String> results(LibraryCubit cubit) => ids(cubit.state.results);
@@ -527,26 +512,4 @@ void main() {
       },
     );
   });
-
-  blocTest<LibraryCubit, LibraryState>(
-    'a refused custom exercise write is flagged until shown',
-    build: build,
-    act: (cubit) async {
-      rejectedWrites.add(const PermissionFailure());
-      await pumpEventQueue();
-      cubit.rejectionShown();
-    },
-    expect: () => [
-      isA<LibraryState>().having(
-        (state) => state.customWriteRejected,
-        'customWriteRejected',
-        isTrue,
-      ),
-      isA<LibraryState>().having(
-        (state) => state.customWriteRejected,
-        'customWriteRejected',
-        isFalse,
-      ),
-    ],
-  );
 }

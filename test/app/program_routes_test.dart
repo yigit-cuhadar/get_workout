@@ -192,9 +192,6 @@ void main() {
           catalogue: catalogue,
           favorites: favorites,
           equipment: equipment,
-          watchRejectedCustomWrites: WatchRejectedCustomExerciseWrites(
-            customExercises,
-          ),
         ),
         instanceName: ProgramsModule.pickerLibrary,
       );

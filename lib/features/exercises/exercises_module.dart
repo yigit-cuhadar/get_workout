@@ -15,6 +15,7 @@ import 'domain/exercise_usecases.dart';
 import 'domain/user_library_repository.dart';
 import 'presentation/body_model_cubit.dart';
 import 'presentation/custom_exercise_form_cubit.dart';
+import 'presentation/custom_write_rejections_cubit.dart';
 import 'presentation/equipment_cubit.dart';
 import 'presentation/exercise_catalogue_cubit.dart';
 import 'presentation/exercise_detail_cubit.dart';
@@ -87,9 +88,9 @@ class ExercisesModule implements FeatureModule {
           catalogue: sl(),
           favorites: sl(),
           equipment: sl(),
-          watchRejectedCustomWrites: sl(),
         ),
       )
+      ..registerLazySingleton(() => CustomWriteRejectionsCubit(sl()))
       ..registerFactoryParam<ExerciseDetailCubit, String, void>(
         (exerciseId, _) => ExerciseDetailCubit(
           exerciseId,
