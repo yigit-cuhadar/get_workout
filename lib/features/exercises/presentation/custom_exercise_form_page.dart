@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/max_length_formatter.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/custom_exercise.dart';
 import '../domain/exercise.dart';
@@ -134,9 +134,7 @@ class _FormViewState extends State<_FormView> {
                   controller: _name,
                   textCapitalization: TextCapitalization.words,
                   inputFormatters: [
-                    LengthLimitingTextInputFormatter(
-                      CustomExerciseLimits.maxNameLength,
-                    ),
+                    maxLengthFormatter(CustomExerciseLimits.maxNameLength),
                   ],
                   decoration: InputDecoration(
                     labelText: l10n.customName,
@@ -202,9 +200,7 @@ class _FormViewState extends State<_FormView> {
                   maxLines: 4,
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [
-                    LengthLimitingTextInputFormatter(
-                      CustomExerciseLimits.maxNoteLength,
-                    ),
+                    maxLengthFormatter(CustomExerciseLimits.maxNoteLength),
                   ],
                   decoration: InputDecoration(
                     labelText: l10n.customNote,
