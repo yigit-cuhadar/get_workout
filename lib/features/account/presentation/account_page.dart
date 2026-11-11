@@ -5,6 +5,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Account status: offers a guest to create an account or sign in, and a
 /// signed-in user to sign out.
@@ -13,24 +14,16 @@ class AccountPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Account')),
+      appBar: AppBar(title: Text(l10n.accountTitle)),
       body: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) => switch (state) {
           Authenticated(:final user) => ListView(
             padding: const EdgeInsets.all(Gap.lg),
-            children: [
-              if (user.isAnonymous)
-                ..._guest(context)
-              else
-                ..._member(context, user),
-              const SizedBox(height: Gap.xl),
-              // TODO(app-shell): remove; shown only to verify linking keeps the uid.
-              Text(
-                'User id: ${user.id}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+            children: user.isAnonymous
+                ? _guest(context, l10n)
+                : _member(context, l10n, user),
           ),
           _ => const LoadingView(),
         },
@@ -38,44 +31,48 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  List<Widget> _guest(BuildContext context) => [
-    const Text(
-      "You're using GetWorkout as a guest. Create an account to keep your "
-      'data if you change phones.',
-    ),
+  List<Widget> _guest(BuildContext context, AppLocalizations l10n) => [
+    Text(l10n.accountGuestInfo),
     const SizedBox(height: Gap.lg),
     ForgeButton(
-      label: 'Create account',
+      label: l10n.accountCreate,
       onPressed: () => context.push(Routes.accountAuth),
     ),
     TextButton(
       onPressed: () => context.push(Routes.accountSignIn),
-      child: const Text('I already have an account'),
+      child: Text(l10n.accountHaveOne),
     ),
   ];
 
-  List<Widget> _member(BuildContext context, AuthUser user) => [
+  List<Widget> _member(
+    BuildContext context,
+    AppLocalizations l10n,
+    AuthUser user,
+  ) => [
     Text(user.email ?? '', style: Theme.of(context).textTheme.titleMedium),
     const SizedBox(height: Gap.lg),
-    ForgeButton(label: 'Sign out', onPressed: () => _signOut(context)),
+    ForgeButton(
+      label: l10n.accountSignOut,
+      onPressed: () => _signOut(context, l10n),
+    ),
   ];
 
-  Future<void> _signOut(BuildContext context) async {
+  Future<void> _signOut(BuildContext context, AppLocalizations l10n) async {
     final auth = context.read<AuthCubit>();
     final messenger = ScaffoldMessenger.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sign out?'),
-        content: const Text("You'll continue as a new guest on this device."),
+        title: Text(l10n.accountSignOutTitle),
+        content: Text(l10n.accountSignOutBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Sign out'),
+            child: Text(l10n.accountSignOut),
           ),
         ],
       ),
@@ -84,7 +81,7 @@ class AccountPage extends StatelessWidget {
     final result = await auth.signOut();
     if (!result.isOk) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Could not sign out. Try again')),
+        SnackBar(content: Text(l10n.accountSignOutFailed)),
       );
     }
   }
