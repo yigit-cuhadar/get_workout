@@ -32,9 +32,6 @@ enum WorkoutStatus {
   finished,
 }
 
-/// A set of the workout: its exercise's index and its own.
-typedef SetRef = ({int exercise, int set});
-
 /// Whether a workout started, and how many of its program day's exercises
 /// were left out as no longer available.
 typedef WorkoutStart = ({bool started, int skipped});

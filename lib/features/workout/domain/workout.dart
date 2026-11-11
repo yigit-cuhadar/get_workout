@@ -35,6 +35,9 @@ abstract final class WorkoutLimits {
   static const maxRir = 5;
 }
 
+/// A set of a workout: its exercise's index and its own.
+typedef SetRef = ({int exercise, int set});
+
 /// One lighter part of a drop set.
 class Drop extends Equatable {
   const Drop({this.weightKg, this.reps});
