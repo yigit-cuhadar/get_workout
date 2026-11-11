@@ -1,11 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../domain/exercise.dart';
 import '../domain/vocabulary.dart';
 
 /// Builds an [Exercise] from a stored document: a Firestore document, or an
 /// entry of `content/exercises/*.json` (which carries its own `id` and no
-/// `updatedAt`). Fields it does not know, like `contentHash`, are ignored.
+/// `updatedAt`). `status` and `updatedAt` are the sync's business, not the
+/// entity's, and are not read; neither are unknown fields like `contentHash`.
 ///
 /// Firestore cannot hold arrays of arrays, so there `equipmentAlternatives`
 /// is a list of `{items: [code, ...]}` maps; the content files keep plain
@@ -26,7 +25,6 @@ Exercise exerciseFromMap(String id, Map<String, Object?> map) {
   }
   return Exercise(
     id: id,
-    status: read.code('status', ExerciseStatus.values),
     loggingType: read.code('loggingType', LoggingType.values),
     mechanic: read.code('mechanic', Mechanic.values),
     laterality: read.code('laterality', Laterality.values),
@@ -56,55 +54,8 @@ Exercise exerciseFromMap(String id, Map<String, Object?> map) {
     incrementKg: read.optionalNumber('incrementKg')?.toDouble(),
     popularity: read.integer('popularity'),
     l10n: l10n,
-    updatedAt: read.optionalTimestamp('updatedAt'),
   );
 }
-
-/// The Firestore form of [exercise], without `id` (the document id) and
-/// `updatedAt` (set by the server on write). Optional fields that are unset
-/// are left out.
-Map<String, Object?> exerciseToMap(Exercise exercise) => {
-  'status': exercise.status.code,
-  'loggingType': exercise.loggingType.code,
-  'mechanic': exercise.mechanic.code,
-  'laterality': exercise.laterality.code,
-  'level': exercise.level.code,
-  'force': exercise.force.code,
-  'movementPattern': exercise.movementPattern.code,
-  'position': exercise.position.code,
-  'grip': ?exercise.grip?.code,
-  'gripWidth': ?exercise.gripWidth?.code,
-  'equipment': _codes(exercise.equipment),
-  if (exercise.equipmentAlternatives.isNotEmpty)
-    'equipmentAlternatives': [
-      for (final set in exercise.equipmentAlternatives) {'items': _codes(set)},
-    ],
-  'mainMuscles': _codes(exercise.mainMuscles),
-  'secondaryMuscles': _codes(exercise.secondaryMuscles),
-  'family': exercise.family,
-  'familyRank': exercise.familyRank,
-  'pinnedAlternatives': exercise.pinnedAlternatives,
-  'excludedAlternatives': exercise.excludedAlternatives,
-  'defaultRestS': exercise.defaultRestS,
-  'incrementKg': ?exercise.incrementKg,
-  'popularity': exercise.popularity,
-  'l10n': {
-    for (final MapEntry(key: language, value: text) in exercise.l10n.entries)
-      language: {
-        'name': text.name,
-        'aliases': text.aliases,
-        'setup': text.setup,
-        'execution': text.execution,
-        'mistakes': text.mistakes,
-        'safety': ?text.safety,
-        'cues': text.cues,
-      },
-  },
-};
-
-List<String> _codes(List<Coded> values) => [
-  for (final value in values) value.code,
-];
 
 ExerciseText _textFromMap(
   String id,
@@ -159,9 +110,6 @@ class _Reader {
   int integer(String field) => _required<int>(field);
 
   num? optionalNumber(String field) => _optional<num>(field);
-
-  DateTime? optionalTimestamp(String field) =>
-      _optional<Timestamp>(field)?.toDate();
 
   Map<String, Object?> map(String field) =>
       Map<String, Object?>.from(_required<Map<Object?, Object?>>(field));

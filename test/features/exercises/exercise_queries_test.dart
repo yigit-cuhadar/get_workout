@@ -21,7 +21,6 @@ Exercise exercise(
   Map<String, ExerciseText> translations = const {},
 }) => Exercise(
   id: id,
-  status: ExerciseStatus.live,
   loggingType: LoggingType.reps,
   mechanic: Mechanic.compound,
   laterality: Laterality.bilateral,

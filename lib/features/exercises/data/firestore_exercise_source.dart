@@ -26,6 +26,14 @@ class FirestoreExerciseSource {
     Source.server,
   );
 
+  /// How many documents the server holds, at the cost of one read.
+  Future<int> serverCount() async {
+    final snapshot = await _exercises.count().get(
+      source: AggregateSource.server,
+    );
+    return snapshot.count ?? 0;
+  }
+
   static Future<List<ExerciseDocument>> _read(
     Query<Map<String, dynamic>> query,
     Source source,

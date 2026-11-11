@@ -34,14 +34,13 @@ class ExerciseText extends Equatable {
   ];
 }
 
-/// An exercise of the shared catalogue (`exercises/{id}`).
+/// A live exercise of the shared catalogue (`exercises/{id}`).
 class Exercise extends Equatable {
   /// Language every exercise has, used when the requested one is missing.
   static const fallbackLanguage = 'en';
 
   const Exercise({
     required this.id,
-    required this.status,
     required this.loggingType,
     required this.mechanic,
     required this.laterality,
@@ -63,11 +62,9 @@ class Exercise extends Equatable {
     this.incrementKg,
     required this.popularity,
     required this.l10n,
-    this.updatedAt,
   });
 
   final String id;
-  final ExerciseStatus status;
   final LoggingType loggingType;
   final Mechanic mechanic;
   final Laterality laterality;
@@ -102,9 +99,6 @@ class Exercise extends Equatable {
   /// Text per language code; always has [fallbackLanguage].
   final Map<String, ExerciseText> l10n;
 
-  /// Null for content that has not been stored in Firestore yet.
-  final DateTime? updatedAt;
-
   /// The text in [language], or in [fallbackLanguage] when there is none.
   ExerciseText text(String language) =>
       l10n[language] ?? l10n[fallbackLanguage]!;
@@ -112,7 +106,6 @@ class Exercise extends Equatable {
   @override
   List<Object?> get props => [
     id,
-    status,
     loggingType,
     mechanic,
     laterality,
@@ -134,6 +127,5 @@ class Exercise extends Equatable {
     incrementKg,
     popularity,
     l10n,
-    updatedAt,
   ];
 }

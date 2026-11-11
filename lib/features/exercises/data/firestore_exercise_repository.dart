@@ -5,23 +5,27 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 
 import '../domain/exercise.dart';
+import '../domain/exercise_queries.dart';
 import '../domain/exercise_repository.dart';
-import '../domain/vocabulary.dart';
 import 'exercise_map.dart';
 import 'firestore_exercise_source.dart';
 
 /// The catalogue, kept in Firestore's offline cache. A sync reads the cache,
 /// then asks the server only for documents with a newer `updatedAt`; a
 /// document that left `live` arrives that way too and drops out of the list.
+///
+/// Documents of every status are read, so the cache can be checked against
+/// the server's document count: a cache missing older documents (an
+/// interrupted first fetch, eviction) has the right newest `updatedAt` but
+/// too few documents, and is then rebuilt with a full fetch.
 class FirestoreExerciseRepository implements ExerciseRepository {
   FirestoreExerciseRepository(this._source);
+
+  static const _liveStatus = 'live';
 
   final FirestoreExerciseSource _source;
   final _changes = StreamController<List<Exercise>>.broadcast();
   List<Exercise>? _current;
-
-  /// Newest `updatedAt` among the documents [_current] was built from.
-  Timestamp? _currentNewest;
   Future<Result<void>>? _syncing;
 
   @override
@@ -45,37 +49,55 @@ class FirestoreExerciseRepository implements ExerciseRepository {
 
   Future<Result<void>> _sync() async {
     final cached = await guard(_source.cached, mapper: mapFirebaseError);
-    final documents = {
+    var documents = {
       for (final document in cached.valueOrNull ?? <ExerciseDocument>[])
         document.id: document,
     };
-    // Show what is there while the server answers; an empty cache is not
-    // shown so a first sync goes straight from nothing to the full list.
-    if (_current == null && documents.isNotEmpty) _publish(documents.values);
+    // Show what is there while the server answers. An empty cache is never
+    // published: it would read as an empty catalogue.
+    if (documents.isNotEmpty) _publish(documents.values);
 
-    final changed = await guard(
-      () => _source.changedSince(_newestUpdate(documents.values)),
-      mapper: mapFirebaseError,
-    );
-    for (final document in changed.valueOrNull ?? <ExerciseDocument>[]) {
-      documents[document.id] = document;
-    }
-    // Also catches documents that reached the cache some other way.
-    if (_current == null || _newestUpdate(documents.values) != _currentNewest) {
-      _publish(documents.values);
-    }
-    return changed.map((_) {});
+    final result = await guard(() async {
+      final changed = await _source.changedSince(_newestUpdate(documents));
+      for (final document in changed) {
+        documents[document.id] = document;
+      }
+      final count = await _source.serverCount();
+      if (count != documents.length) {
+        Log.d(
+          'exercises',
+          'Cache has ${documents.length} of $count exercises; full fetch',
+        );
+        documents = {
+          for (final document in await _source.changedSince(null))
+            document.id: document,
+        };
+      }
+    }, mapper: mapFirebaseError);
+
+    // After a failure, whatever arrived before it is still worth showing.
+    if (result.isOk || documents.isNotEmpty) _publish(documents.values);
+    return result;
   }
 
+  /// Publishes the live exercises unless they equal the current list.
   void _publish(Iterable<ExerciseDocument> documents) {
     final exercises = [
       for (final document in documents)
-        if (document.data['status'] == ExerciseStatus.live.code)
-          ?_parse(document),
-    ]..sort((a, b) => a.popularity.compareTo(b.popularity));
+        if (document.data['status'] == _liveStatus) ?_parse(document),
+    ]..sort(compareByPopularity);
+    final current = _current;
+    if (current != null && _sameList(current, exercises)) return;
     _current = List.unmodifiable(exercises);
-    _currentNewest = _newestUpdate(documents);
     _changes.add(_current!);
+  }
+
+  static bool _sameList(List<Exercise> a, List<Exercise> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   static Exercise? _parse(ExerciseDocument document) {
@@ -87,9 +109,9 @@ class FirestoreExerciseRepository implements ExerciseRepository {
     }
   }
 
-  static Timestamp? _newestUpdate(Iterable<ExerciseDocument> documents) {
+  static Timestamp? _newestUpdate(Map<String, ExerciseDocument> documents) {
     Timestamp? newest;
-    for (final document in documents) {
+    for (final document in documents.values) {
       if (document.data['updatedAt'] case final Timestamp updatedAt
           when newest == null || updatedAt.compareTo(newest) > 0) {
         newest = updatedAt;

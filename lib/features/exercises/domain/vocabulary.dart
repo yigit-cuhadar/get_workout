@@ -14,16 +14,6 @@ extension CodedValues<T extends Coded> on List<T> {
   }
 }
 
-enum ExerciseStatus implements Coded {
-  draft('draft'),
-  live('live'),
-  retired('retired');
-
-  const ExerciseStatus(this.code);
-  @override
-  final String code;
-}
-
 enum LoggingType implements Coded {
   reps('reps'),
   weightReps('weight_reps'),

@@ -37,7 +37,10 @@ List<Exercise> searchExercises(
       other.add(exercise);
     }
   }
-  return [...prefix..sort(_byPopularity), ...other..sort(_byPopularity)];
+  return [
+    ...prefix..sort(compareByPopularity),
+    ...other..sort(compareByPopularity),
+  ];
 }
 
 /// What the library shows. Within one criterion any selected value matches;
@@ -106,7 +109,7 @@ List<Exercise> sortExercises(
   final sorted = exercises.toList();
   switch (sort) {
     case ExerciseSort.popularity:
-      sorted.sort(_byPopularity);
+      sorted.sort(compareByPopularity);
     case ExerciseSort.alphabetical:
       final keys = {
         for (final exercise in sorted)
@@ -114,7 +117,7 @@ List<Exercise> sortExercises(
       };
       sorted.sort((a, b) {
         final byName = keys[a.id]!.compareTo(keys[b.id]!);
-        return byName != 0 ? byName : _byPopularity(a, b);
+        return byName != 0 ? byName : compareByPopularity(a, b);
       });
   }
   return sorted;
@@ -150,7 +153,7 @@ List<Exercise> alternativesFor(
   computed.sort((a, b) {
     final aDoable = doable.contains(a.id);
     if (aDoable != doable.contains(b.id)) return aDoable ? -1 : 1;
-    return _byPopularity(a, b);
+    return compareByPopularity(a, b);
   });
   return [...pinned, ...computed];
 }
@@ -162,10 +165,11 @@ List<Exercise> variationsOf(Exercise exercise, Iterable<Exercise> catalogue) =>
         if (other.family == exercise.family && other.id != exercise.id) other,
     ]..sort((a, b) {
       final byRank = a.familyRank.compareTo(b.familyRank);
-      return byRank != 0 ? byRank : _byPopularity(a, b);
+      return byRank != 0 ? byRank : compareByPopularity(a, b);
     });
 
-int _byPopularity(Exercise a, Exercise b) {
+/// Popularity, then id so equal popularity still sorts the same every time.
+int compareByPopularity(Exercise a, Exercise b) {
   final byPopularity = a.popularity.compareTo(b.popularity);
   return byPopularity != 0 ? byPopularity : a.id.compareTo(b.id);
 }

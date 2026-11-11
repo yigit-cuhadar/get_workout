@@ -4,7 +4,9 @@ import 'exercise.dart';
 
 abstract interface class ExerciseRepository {
   /// Emits the live exercises, ordered by popularity: the current list right
-  /// away when there is one, then again whenever a sync changes it.
+  /// away when there is one, then again whenever a sync changes it. Emits
+  /// nothing until a list is known; an empty list means an empty catalogue,
+  /// never a failure.
   Stream<List<Exercise>> watchExercises();
 
   /// Brings the list up to date with the server, fetching only what changed

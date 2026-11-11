@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/features/exercises/data/exercise_map.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
@@ -46,16 +45,14 @@ Map<String, Object?> validMap() => {
 
 void main() {
   test('reads every field', () {
-    final updatedAt = DateTime.utc(2026, 11, 1);
     final exercise = exerciseFromMap('ex_1', {
       ...validMap(),
       'grip': 'neutral',
       'incrementKg': 2,
-      'updatedAt': Timestamp.fromDate(updatedAt),
+      'contentHash': 'abc123',
     });
 
     expect(exercise.id, 'ex_1');
-    expect(exercise.status, ExerciseStatus.live);
     expect(exercise.equipment, [Equipment.dumbbell, Equipment.bench]);
     expect(exercise.equipmentAlternatives, [
       [Equipment.kettlebell, Equipment.bench],
@@ -63,7 +60,6 @@ void main() {
     expect(exercise.grip, Grip.neutral);
     expect(exercise.gripWidth, isNull);
     expect(exercise.incrementKg, 2.0);
-    expect(exercise.updatedAt?.toUtc(), updatedAt);
   });
 
   test('text falls back to English for a missing language', () {
@@ -84,19 +80,10 @@ void main() {
           'items': ['bodyweight'],
         },
       ],
-      'contentHash': 'abc123',
     });
     expect(exercise.equipmentAlternatives, [
       [Equipment.kettlebell, Equipment.bench],
       [Equipment.bodyweight],
-    ]);
-    expect(exerciseToMap(exercise)['equipmentAlternatives'], [
-      {
-        'items': ['kettlebell', 'bench'],
-      },
-      {
-        'items': ['bodyweight'],
-      },
     ]);
   });
 

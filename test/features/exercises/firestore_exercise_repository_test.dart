@@ -96,7 +96,6 @@ void main() {
           [Equipment.dumbbell, Equipment.bench],
         ]);
         expect(exercises.first.incrementKg, 2.5);
-        expect(exercises.first.updatedAt?.toUtc(), DateTime.utc(2026, 11, 2));
       },
     );
 
@@ -137,6 +136,24 @@ void main() {
       final subscription = repository.watchExercises().listen(emitted.add);
 
       await repository.sync();
+      await pumpEventQueue();
+      await subscription.cancel();
+
+      expect(emitted, hasLength(1));
+    });
+
+    test('edits to draft or retired documents emit nothing new', () async {
+      await repository.sync();
+      final emitted = <List<Exercise>>[];
+      final subscription = repository.watchExercises().listen(emitted.add);
+      final exercises = firestore.collection('exercises');
+      await exercises.doc('draft').update({
+        'popularity': 0,
+        'updatedAt': at(5),
+      });
+      await exercises.doc('retired').update({'updatedAt': at(6)});
+
+      expect((await repository.sync()).isOk, isTrue);
       await pumpEventQueue();
       await subscription.cancel();
 
@@ -189,6 +206,20 @@ void main() {
       code: 'unavailable',
     );
 
+    /// Emissions of [repository] while [body] runs.
+    Future<List<List<String>>> emissionsDuring(
+      Future<void> Function() body,
+    ) async {
+      final emitted = <List<String>>[];
+      final subscription = repository.watchExercises().listen(
+        (list) => emitted.add(ids(list)),
+      );
+      await body();
+      await pumpEventQueue();
+      await subscription.cancel();
+      return emitted;
+    }
+
     setUpAll(() => registerFallbackValue(at(1)));
 
     setUp(() {
@@ -196,33 +227,61 @@ void main() {
       repository = FirestoreExerciseRepository(source);
     });
 
-    test('an empty cache fetches everything', () async {
+    test('an empty cache fetches everything once', () async {
       when(() => source.cached()).thenAnswer((_) async => []);
       when(() => source.changedSince(any()))
           .thenAnswer((_) async => [doc('a', day: 1)]);
+      when(() => source.serverCount()).thenAnswer((_) async => 1);
 
-      await repository.sync();
+      expect((await repository.sync()).isOk, isTrue);
 
       verify(() => source.changedSince(null)).called(1);
       expect(ids(await repository.watchExercises().first), ['a']);
     });
 
     test(
-      'a filled cache asks only for what is newer than its newest',
+      'a full cache asks only for what is newer, with no full fetch',
       () async {
         when(() => source.cached()).thenAnswer(
           (_) async => [doc('a', day: 3), doc('b', popularity: 2, day: 5)],
         );
         when(() => source.changedSince(any()))
             .thenAnswer((_) async => [doc('a', status: 'retired', day: 6)]);
+        when(() => source.serverCount()).thenAnswer((_) async => 2);
 
-        final result = await repository.sync();
+        expect((await repository.sync()).isOk, isTrue);
 
-        expect(result.isOk, isTrue);
         verify(() => source.changedSince(at(5))).called(1);
+        verifyNever(() => source.changedSince(null));
         expect(ids(await repository.watchExercises().first), ['b']);
       },
     );
+
+    test('a cache missing older documents is rebuilt in full', () async {
+      // The newest document is cached, so the incremental fetch finds
+      // nothing; only the count shows that 'a' and 'r' are missing.
+      when(() => source.cached())
+          .thenAnswer((_) async => [doc('b', popularity: 2, day: 5)]);
+      when(() => source.changedSince(at(5))).thenAnswer((_) async => []);
+      when(() => source.serverCount()).thenAnswer((_) async => 3);
+      when(() => source.changedSince(null)).thenAnswer(
+        (_) async => [
+          doc('a', day: 1),
+          doc('b', popularity: 2, day: 5),
+          doc('r', status: 'retired', day: 2),
+        ],
+      );
+
+      final emitted = await emissionsDuring(() async {
+        expect((await repository.sync()).isOk, isTrue);
+      });
+
+      verify(() => source.changedSince(null)).called(1);
+      expect(emitted, [
+        ['b'],
+        ['a', 'b'],
+      ]);
+    });
 
     test(
       'offline, the cached list stays and sync reports a network failure',
@@ -239,18 +298,45 @@ void main() {
       },
     );
 
-    test(
-      'offline with an empty cache, the list is empty, not pending',
-      () async {
-        when(() => source.cached()).thenAnswer((_) async => []);
-        when(() => source.changedSince(any())).thenThrow(offline);
+    test('a count failing offline keeps the cached list', () async {
+      when(() => source.cached()).thenAnswer((_) async => [doc('a', day: 1)]);
+      when(() => source.changedSince(any())).thenAnswer((_) async => []);
+      when(() => source.serverCount()).thenThrow(offline);
 
-        final result = await repository.sync();
+      late Result<void> result;
+      final emitted = await emissionsDuring(
+        () async => result = await repository.sync(),
+      );
 
-        expect(result.failureOrNull, isA<NetworkFailure>());
-        expect(await repository.watchExercises().first, isEmpty);
-      },
-    );
+      expect(result.failureOrNull, isA<NetworkFailure>());
+      verifyNever(() => source.changedSince(null));
+      expect(emitted, [
+        ['a'],
+      ]);
+    });
+
+    test('offline with an empty cache, nothing is published', () async {
+      when(() => source.cached()).thenAnswer((_) async => []);
+      when(() => source.changedSince(any())).thenThrow(offline);
+
+      late Result<void> result;
+      final emitted = await emissionsDuring(
+        () async => result = await repository.sync(),
+      );
+
+      expect(result.failureOrNull, isA<NetworkFailure>());
+      expect(emitted, isEmpty);
+    });
+
+    test('an empty catalogue on the server is published as empty', () async {
+      when(() => source.cached()).thenAnswer((_) async => []);
+      when(() => source.changedSince(any())).thenAnswer((_) async => []);
+      when(() => source.serverCount()).thenAnswer((_) async => 0);
+
+      final emitted = await emissionsDuring(repository.sync);
+
+      expect(emitted, [<String>[]]);
+    });
 
     test('an unreadable cache falls back to a full fetch', () async {
       when(() => source.cached()).thenThrow(
@@ -258,15 +344,29 @@ void main() {
       );
       when(() => source.changedSince(any()))
           .thenAnswer((_) async => [doc('a', day: 1)]);
+      when(() => source.serverCount()).thenAnswer((_) async => 1);
 
       expect((await repository.sync()).isOk, isTrue);
       verify(() => source.changedSince(null)).called(1);
+    });
+
+    test('equal popularity sorts by id', () async {
+      when(() => source.cached()).thenAnswer(
+        (_) async => [doc('c', day: 1), doc('a', day: 1), doc('b', day: 1)],
+      );
+      when(() => source.changedSince(any())).thenAnswer((_) async => []);
+      when(() => source.serverCount()).thenAnswer((_) async => 3);
+
+      await repository.sync();
+
+      expect(ids(await repository.watchExercises().first), ['a', 'b', 'c']);
     });
 
     test('calls during a running sync share it', () async {
       final cache = Completer<List<ExerciseDocument>>();
       when(() => source.cached()).thenAnswer((_) => cache.future);
       when(() => source.changedSince(any())).thenAnswer((_) async => []);
+      when(() => source.serverCount()).thenAnswer((_) async => 1);
 
       final first = repository.sync();
       final second = repository.sync();
@@ -281,11 +381,13 @@ void main() {
       when(() => source.cached()).thenAnswer((_) async => []);
       when(() => source.changedSince(any()))
           .thenAnswer((_) async => [doc('a', day: 1)]);
+      when(() => source.serverCount()).thenAnswer((_) async => 1);
       await repository.sync();
 
       when(() => source.cached()).thenAnswer((_) async => [doc('a', day: 1)]);
       when(() => source.changedSince(any()))
           .thenAnswer((_) async => [doc('b', popularity: 0, day: 2)]);
+      when(() => source.serverCount()).thenAnswer((_) async => 2);
       final expectation = expectLater(
         repository.watchExercises().map(ids),
         emitsInOrder([
