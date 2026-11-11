@@ -11,6 +11,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/equipment_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
+import '../../../core/text_length.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';

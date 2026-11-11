@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/app/router.dart';
 import 'package:get_workout/features/exercises/domain/exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
@@ -49,6 +50,9 @@ class MockSettingsRepository extends Mock implements SettingsRepository {}
 class MockExerciseRepository extends Mock implements ExerciseRepository {}
 
 class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
+
+class MockCustomExerciseRepository extends Mock
+    implements CustomExerciseRepository {}
 
 class MockProgramRepository extends Mock implements ProgramRepository {}
 
@@ -113,9 +117,13 @@ void main() {
     final exercises = MockExerciseRepository();
     when(exercises.watchExercises).thenAnswer((_) => Stream.value([squat]));
     final userLibrary = MockUserLibraryRepository();
+    final customExercises = MockCustomExerciseRepository();
+    when(() => customExercises.rejectedWrites)
+        .thenAnswer((_) => const Stream.empty());
     final catalogue = ExerciseCatalogueCubit(
       watchAuthUser: WatchAuthUser(idle),
       watchExercises: WatchExercises(exercises),
+      watchCustomExercises: WatchCustomExercises(customExercises),
       syncExercises: SyncExercises(exercises),
     );
     final favorites = FavoritesCubit(

@@ -5,7 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/exercise.dart';
 import '../domain/muscle_meshes.dart';
@@ -33,18 +35,49 @@ class _DetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return BlocBuilder<ExerciseDetailCubit, ExerciseDetailState>(
+    return BlocConsumer<ExerciseDetailCubit, ExerciseDetailState>(
+      listener: (context, state) {
+        if (state is DetailDeleted) {
+          context.pop();
+        } else if (state case DetailReady(:final deleteFailure?)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                deleteFailure is NetworkFailure
+                    ? l10n.errorNetwork
+                    : l10n.customDeleteFailed,
+              ),
+            ),
+          );
+        }
+      },
       builder: (context, state) => Scaffold(
         appBar: AppBar(
           title: state is DetailReady
               ? Text(state.exercise.localized(context).name)
               : null,
           actions: [
-            if (state is DetailReady) FavoriteButton(state.exercise.id),
+            if (state is DetailReady) ...[
+              if (state.exercise.isCustom) ...[
+                IconButton(
+                  tooltip: l10n.customEdit,
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => context.push(
+                    Routes.customExerciseEdit(state.exercise.id),
+                  ),
+                ),
+                IconButton(
+                  tooltip: l10n.customDelete,
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: state.deleting ? null : () => _delete(context),
+                ),
+              ],
+              FavoriteButton(state.exercise.id),
+            ],
           ],
         ),
         body: switch (state) {
-          DetailLoading() => const LoadingView(),
+          DetailLoading() || DetailDeleted() => const LoadingView(),
           DetailFailed() => ErrorView(
             message: l10n.libraryLoadFailed,
             retryLabel: l10n.retry,
@@ -55,6 +88,29 @@ class _DetailView extends StatelessWidget {
         },
       ),
     );
+  }
+
+  static Future<void> _delete(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final cubit = context.read<ExerciseDetailCubit>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.customDeleteTitle),
+        content: Text(l10n.customDeleteBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.customDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await cubit.delete();
   }
 }
 
@@ -74,6 +130,14 @@ class _DetailBody extends StatelessWidget {
     String bulleted(int _, String line) => l10n.stepBullet(line);
     return ListView(
       children: [
+        if (exercise.isCustom)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Chip(label: Text(l10n.customLabel)),
+            ),
+          ),
         if (text.aliases.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: Gap.md),
@@ -91,27 +155,32 @@ class _DetailBody extends StatelessWidget {
             title: Text(l10n.detailSecondaryMuscles),
             subtitle: Text(l10n.muscleNames(exercise.secondaryMuscles)),
           ),
-        ListTile(
-          title: Text(l10n.detailEquipment),
-          subtitle: Text(
-            [
-              l10n.equipmentNames(exercise.equipment),
-              for (final set in exercise.equipmentAlternatives)
-                l10n.detailEquipmentOr(l10n.equipmentNames(set)),
-            ].join('\n'),
+        if (exercise.equipment.isNotEmpty)
+          ListTile(
+            title: Text(l10n.detailEquipment),
+            subtitle: Text(
+              [
+                l10n.equipmentNames(exercise.equipment),
+                for (final set in exercise.equipmentAlternatives)
+                  l10n.detailEquipmentOr(l10n.equipmentNames(set)),
+              ].join('\n'),
+            ),
           ),
-        ),
-        _Fact(l10n.detailLevel, l10n.levelName(exercise.level)),
-        _Fact(l10n.detailMechanic, l10n.mechanicName(exercise.mechanic)),
-        _Fact(
-          l10n.detailMovementPattern,
-          l10n.movementPatternName(exercise.movementPattern),
-        ),
-        _Fact(l10n.detailLaterality, l10n.lateralityName(exercise.laterality)),
+        // A custom exercise has none of these but the logging type.
+        if (exercise.level case final level?)
+          _Fact(l10n.detailLevel, l10n.levelName(level)),
+        if (exercise.mechanic case final mechanic?)
+          _Fact(l10n.detailMechanic, l10n.mechanicName(mechanic)),
+        if (exercise.movementPattern case final pattern?)
+          _Fact(l10n.detailMovementPattern, l10n.movementPatternName(pattern)),
+        if (exercise.laterality case final laterality?)
+          _Fact(l10n.detailLaterality, l10n.lateralityName(laterality)),
         _Fact(
           l10n.detailLoggingType,
           l10n.loggingTypeName(exercise.loggingType),
         ),
+        if (exercise.note case final note?)
+          ..._lines(l10n.detailNote, [note], (_, line) => line),
         ..._lines(l10n.detailSetup, text.setup, numbered),
         ..._lines(l10n.detailExecution, text.execution, numbered),
         ..._lines(l10n.detailMistakes, text.mistakes, bulleted),

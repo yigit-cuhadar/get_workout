@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import 'equipment_cubit.dart';
+import 'custom_write_rejections_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
 import 'favorites_cubit.dart';
 import 'library_cubit.dart';
@@ -16,9 +19,12 @@ class ExercisesPage extends StatelessWidget {
   const ExercisesPage({super.key});
 
   @override
-  Widget build(BuildContext context) => BlocProvider.value(
-    // App-wide, so the view, search and filters last while the app runs.
-    value: sl<LibraryCubit>(),
+  Widget build(BuildContext context) => MultiBlocProvider(
+    providers: [
+      // App-wide, so the view, search and filters last while the app runs.
+      BlocProvider.value(value: sl<LibraryCubit>()),
+      BlocProvider.value(value: sl<CustomWriteRejectionsCubit>()),
+    ],
     child: const _ExercisesView(),
   );
 }
@@ -44,15 +50,33 @@ class _ExercisesViewState extends State<_ExercisesView> {
     final l10n = AppLocalizations.of(context);
     final view = context.select((LibraryCubit library) => library.state.view);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.tabExercises)),
-      // Favourites and equipment change only on this tab's pages, which all
-      // sit above this one, so their failures are reported once, here.
+      appBar: AppBar(
+        title: Text(l10n.tabExercises),
+        actions: [
+          if (view == LibraryView.list)
+            IconButton(
+              tooltip: l10n.customNew,
+              icon: const Icon(Icons.add),
+              onPressed: () => context.push(Routes.customExerciseNew),
+            ),
+        ],
+      ),
+      // Favourites, equipment and custom exercises change only on this tab's
+      // pages, which all sit above this one, so their failures are reported
+      // once, here.
       body: MultiBlocListener(
         listeners: [
           BlocListener<FavoritesCubit, FavoritesState>(
             listenWhen: (previous, current) =>
                 current.failure != null && current.failure != previous.failure,
             listener: (context, _) => _report(context, l10n.favoriteSaveFailed),
+          ),
+          BlocListener<CustomWriteRejectionsCubit, bool>(
+            listenWhen: (_, rejected) => rejected,
+            listener: (context, _) {
+              _report(context, l10n.customWriteRejected);
+              context.read<CustomWriteRejectionsCubit>().shown();
+            },
           ),
           BlocListener<EquipmentCubit, EquipmentState>(
             listenWhen: (previous, current) =>

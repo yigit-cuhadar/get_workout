@@ -90,6 +90,24 @@ rules_version = '2';
 // | 1000 points, or missing records or history                     |        |
 // | any other field                                                | deny   |
 // | any request for another user's stats, or signed out            | deny   |
+
+// users/{uid}/customExercises/{id}, as the signed-in user `uid` (anyone
+// else: deny). The 500-per-user limit is the app's; rules cannot count.
+// | Request                                                        | Result |
+// |----------------------------------------------------------------|--------|
+// | read, list, delete own custom exercise                         | allow  |
+// | create/update, id custom_ + 20 letters or digits: name string  | allow  |
+// | 1-60, known loggingType, 1+ known mainMuscles, known           |        |
+// | secondaryMuscles and equipment lists (may be empty)            |        |
+// | ... plus note string of 1-500 characters                       | allow  |
+// | id without the custom_ prefix or not an auto id                | deny   |
+// | a field missing (note excepted) or any other field             | deny   |
+// | name empty, longer than 60 or not a string                     | deny   |
+// | unknown loggingType, muscle or equipment code                  | deny   |
+// | no main muscle; a muscle twice, or both main and secondary     | deny   |
+// | equipment twice, or bodyweight with anything else              | deny   |
+// | note empty, longer than 500 or not a string                    | deny   |
+// | any request for another user's custom exercises, or signed out | deny   |
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -185,6 +203,55 @@ service cloud.firestore {
         && data.history.size() <= 1000;
     }
 
+    // SPEC.md, "Vocabulary"; keep in step with lib/.../vocabulary.dart.
+    function loggingTypes() {
+      return ['reps', 'weight_reps', 'weighted_bodyweight',
+        'assisted_bodyweight', 'duration', 'weight_duration'];
+    }
+
+    function muscles() {
+      return ['pec', 'lat', 'trap', 'front_delt', 'mid_delt', 'rear_delt',
+        'biceps', 'triceps', 'forearm', 'abdominal', 'oblique', 'erector',
+        'glute', 'hip_flexor', 'abductor', 'adductor', 'quads', 'hamstring',
+        'calf'];
+    }
+
+    function equipmentCodes() {
+      return ['barbell', 'ez_bar', 'trap_bar', 'dumbbell', 'kettlebell',
+        'plate', 'cable', 'machine', 'smith_machine', 'bench', 'box',
+        'back_extension_bench', 'pull_up_bar', 'dip_station',
+        'resistance_band', 'suspension_trainer', 'rings', 'medicine_ball',
+        'stability_ball', 'ab_wheel', 'landmine', 'sled', 'jump_rope',
+        'bodyweight', 'other'];
+    }
+
+    function isCodeList(value, codes) {
+      return value is list
+        && value.hasOnly(codes)
+        && value.toSet().size() == value.size();
+    }
+
+    // Mirrors validateCustomExercise in lib/features/exercises/domain.
+    function isCustomExercise(id, data) {
+      return id.matches('custom_[A-Za-z0-9]{20}')
+        && data.keys().hasAll(['name', 'loggingType', 'mainMuscles',
+          'secondaryMuscles', 'equipment'])
+        && data.keys().hasOnly(['name', 'loggingType', 'mainMuscles',
+          'secondaryMuscles', 'equipment', 'note'])
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 60
+        && data.loggingType in loggingTypes()
+        && isCodeList(data.mainMuscles, muscles())
+        && data.mainMuscles.size() >= 1
+        && isCodeList(data.secondaryMuscles, muscles())
+        && !data.mainMuscles.hasAny(data.secondaryMuscles)
+        && isCodeList(data.equipment, equipmentCodes())
+        && (!('bodyweight' in data.equipment) || data.equipment.size() == 1)
+        && (!('note' in data)
+          || (data.note is string && data.note.size() >= 1 && data.note.size() <= 500));
+    }
+
     // A user's own data, guest or not.
     match /users/{uid} {
       allow read, write: if isOwner(uid);
@@ -214,10 +281,17 @@ service cloud.firestore {
           && isExerciseStats(request.resource.data);
       }
 
+      // Validated; only reachable here, the rule below excludes it.
+      match /customExercises/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && isCustomExercise(id, request.resource.data);
+      }
+
       // Every other subcollection, at any depth, as before.
       match /{collection}/{document=**} {
         allow read, write: if isOwner(uid)
-          && !(collection in ['cardio', 'programs', 'workouts', 'exerciseStats']);
+          && !(collection in ['cardio', 'programs', 'workouts', 'exerciseStats', 'customExercises']);
       }
     }
 

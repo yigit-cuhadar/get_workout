@@ -1,5 +1,6 @@
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/domain/vocabulary.dart';
+import '../../../core/text_length.dart';
 import '../../programs/domain/active_program.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/domain/program_editing.dart';
@@ -170,10 +171,8 @@ Program programFromWorkout(
               ProgramLimits.maxDurationS,
             )
           : null,
-      restS: (exercise.goal?.restS ?? known.defaultRestS).clamp(
-        0,
-        ProgramLimits.maxRestS,
-      ),
+      restS: (exercise.goal?.restS ?? known.defaultRestS ?? fallbackRestS)
+          .clamp(0, ProgramLimits.maxRestS),
       targetKg: type.logsWeight && weights.isNotEmpty
           ? (type == LoggingType.assistedBodyweight
                     ? weights.first
