@@ -9,21 +9,39 @@ import 'elapsed_text.dart';
 
 /// The minimized workout, above the tab bar on every tab while one is in
 /// progress or its summary waits; tapping it opens the workout. Also tells
-/// the user when the server refused a stored workout.
+/// the user when a workout refused by the server is back in progress, or
+/// kept workouts could not be read.
 class WorkoutBar extends StatelessWidget {
   const WorkoutBar({super.key});
 
   @override
   Widget build(BuildContext context) =>
       BlocConsumer<ActiveWorkoutCubit, ActiveWorkoutState>(
-        listenWhen: (_, current) => current.writeRejected,
-        listener: (context, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context).workoutWritesRejected),
-            ),
-          );
-          context.read<ActiveWorkoutCubit>().rejectionShown();
+        listenWhen: (_, current) =>
+            current.restored != null || current.localUnreadable,
+        listener: (context, state) {
+          final l10n = AppLocalizations.of(context);
+          final cubit = context.read<ActiveWorkoutCubit>();
+          final messenger = ScaffoldMessenger.of(context);
+          if (state.restored case final name?) {
+            messenger.showSnackBar(
+              SnackBar(
+                duration: const Duration(seconds: 10),
+                content: Text(l10n.workoutRestored(name)),
+                action: SnackBarAction(
+                  label: l10n.workoutOpen,
+                  onPressed: () => context.push(Routes.workout),
+                ),
+              ),
+            );
+            cubit.restoredShown();
+          }
+          if (state.localUnreadable) {
+            messenger.showSnackBar(
+              SnackBar(content: Text(l10n.workoutLocalUnreadable)),
+            );
+            cubit.localUnreadableShown();
+          }
         },
         builder: (context, state) {
           final workout = state.workout;

@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
-import '../../../l10n/app_localizations.dart';
 import '../../../core/text_length.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../exercises/domain/exercise.dart';
+import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_text.dart';
 import '../domain/workout.dart';
@@ -17,7 +19,7 @@ enum _InProgressChoice { resume, discard }
 /// summary is still open is put away.
 Future<void> startWorkout(
   BuildContext context,
-  bool Function(ActiveWorkoutCubit cubit) start,
+  Future<WorkoutStart> Function(ActiveWorkoutCubit cubit) start,
 ) async {
   final l10n = AppLocalizations.of(context);
   final cubit = context.read<ActiveWorkoutCubit>();
@@ -52,13 +54,19 @@ Future<void> startWorkout(
     await cubit.discard();
   }
   cubit.summaryShown();
+  final result = await start(cubit);
   if (!context.mounted) return;
-  if (start(cubit)) {
-    await context.push(Routes.workout);
-  } else {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(l10n.workoutStartFailed)));
+  final messenger = ScaffoldMessenger.of(context);
+  if (!result.started) {
+    messenger.showSnackBar(SnackBar(content: Text(l10n.workoutStartFailed)));
+    return;
   }
+  if (result.skipped > 0) {
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.workoutSkippedExercises(result.skipped))),
+    );
+  }
+  await context.push(Routes.workout);
 }
 
 /// Starts day [dayIndex] of [program]; see [startWorkout].
@@ -87,5 +95,60 @@ Future<void> startProgramDay(
 /// Starts an empty workout; see [startWorkout].
 Future<void> startFreeWorkout(BuildContext context) {
   final name = AppLocalizations.of(context).workoutFreeName;
-  return startWorkout(context, (cubit) => cubit.startFree(name));
+  return startWorkout(
+    context,
+    (cubit) async => (started: cubit.startFree(name), skipped: 0),
+  );
+}
+
+/// Adds [exercise] to the workout in progress, or, after asking, starts a
+/// workout with it.
+Future<void> addToWorkout(BuildContext context, Exercise exercise) async {
+  final l10n = AppLocalizations.of(context);
+  final cubit = context.read<ActiveWorkoutCubit>();
+  final language = Localizations.localeOf(context).languageCode;
+  final name = exercise.localized(context).name;
+  final workout = cubit.state.workout;
+  if (cubit.state.status == WorkoutStatus.active && workout != null) {
+    final added = cubit.addExercises([exercise], language);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          added ? l10n.workoutAdded(name, workout.name) : l10n.workoutAddFailed,
+        ),
+        action: added
+            ? SnackBarAction(
+                label: l10n.workoutOpen,
+                onPressed: () => context.push(Routes.workout),
+              )
+            : null,
+      ),
+    );
+    return;
+  }
+  final start = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l10n.workoutStartWithTitle),
+      content: Text(l10n.workoutStartWithBody(name)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(l10n.cancel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(l10n.workoutStartWorkout),
+        ),
+      ],
+    ),
+  );
+  if (start != true || !context.mounted) return;
+  await startWorkout(
+    context,
+    (cubit) async => (
+      started: cubit.startWith(exercise, l10n.workoutFreeName, language),
+      skipped: 0,
+    ),
+  );
 }

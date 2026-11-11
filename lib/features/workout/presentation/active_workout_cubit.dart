@@ -9,15 +9,14 @@ import '../../exercises/domain/exercise.dart';
 import '../../exercises/domain/exercise_queries.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
-import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
-import '../../programs/domain/program_usecases.dart';
 import '../../programs/presentation/program_list_cubit.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/exercise_stats.dart';
 import '../domain/set_logging.dart';
 import '../domain/workout.dart';
 import '../domain/workout_editing.dart' as editing;
+import '../domain/workout_repository.dart';
 import '../domain/workout_usecases.dart';
 
 enum WorkoutStatus {
@@ -36,6 +35,10 @@ enum WorkoutStatus {
 /// A set of the workout: its exercise's index and its own.
 typedef SetRef = ({int exercise, int set});
 
+/// Whether a workout started, and how many of its program day's exercises
+/// were left out as no longer available.
+typedef WorkoutStart = ({bool started, int skipped});
+
 class ActiveWorkoutState extends Equatable {
   const ActiveWorkoutState({
     this.status = WorkoutStatus.loading,
@@ -44,7 +47,8 @@ class ActiveWorkoutState extends Equatable {
     this.invalidSet,
     this.summary,
     this.failure,
-    this.writeRejected = false,
+    this.restored,
+    this.localUnreadable = false,
     this.savingProgram = false,
     this.savedProgramId,
   });
@@ -66,9 +70,13 @@ class ActiveWorkoutState extends Equatable {
   /// [ActiveWorkoutCubit.failureShown].
   final Failure? failure;
 
-  /// The server refused a stored workout; tell the user, then call
-  /// [ActiveWorkoutCubit.rejectionShown].
-  final bool writeRejected;
+  /// The server refused a finished workout, now in progress again; tell
+  /// the user its name, then call [ActiveWorkoutCubit.restoredShown].
+  final String? restored;
+
+  /// Workouts kept on the device could not be read and were set aside; tell
+  /// the user, then call [ActiveWorkoutCubit.localUnreadableShown].
+  final bool localUnreadable;
   final bool savingProgram;
 
   /// The program the finished workout was saved as.
@@ -105,7 +113,8 @@ class ActiveWorkoutState extends Equatable {
     SetRef? Function()? invalidSet,
     WorkoutSummary? Function()? summary,
     Failure? Function()? failure,
-    bool? writeRejected,
+    String? Function()? restored,
+    bool? localUnreadable,
     bool? savingProgram,
     String? Function()? savedProgramId,
   }) => ActiveWorkoutState(
@@ -115,7 +124,8 @@ class ActiveWorkoutState extends Equatable {
     invalidSet: invalidSet != null ? invalidSet() : this.invalidSet,
     summary: summary != null ? summary() : this.summary,
     failure: failure != null ? failure() : this.failure,
-    writeRejected: writeRejected ?? this.writeRejected,
+    restored: restored != null ? restored() : this.restored,
+    localUnreadable: localUnreadable ?? this.localUnreadable,
     savingProgram: savingProgram ?? this.savingProgram,
     savedProgramId: savedProgramId != null
         ? savedProgramId()
@@ -130,7 +140,8 @@ class ActiveWorkoutState extends Equatable {
     invalidSet,
     summary,
     failure,
-    writeRejected,
+    restored,
+    localUnreadable,
     savingProgram,
     savedProgramId,
   ];
@@ -140,51 +151,63 @@ class ActiveWorkoutState extends Equatable {
 /// at a time, kept on the device after every change and brought back on the
 /// next launch. On every user change it starts over with that user's own,
 /// so one user's workout never shows for another.
+///
+/// A finished workout stays on the device until the server confirms it; one
+/// the server refuses comes back as the workout in progress. Stats computed
+/// from what the device knew are rebuilt from the workouts once online.
 class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   ActiveWorkoutCubit({
     required WatchAuthUser watchAuthUser,
-    required this._loadActiveWorkout,
-    required this._keepActiveWorkout,
-    required this._clearActiveWorkout,
+    required this._loadLocal,
+    required this._keepLocal,
     required this._newWorkoutId,
     required this._watchStats,
     required this._finishWorkout,
+    required this._confirmStored,
+    required this._rebuildStats,
     required this._saveAsProgram,
-    required this._completeProgramDay,
-    required WatchRejectedWorkoutWrites watchRejectedWrites,
     required this._programs,
     required this._catalogue,
     DateTime Function()? clock,
+    this.retryDelay = const Duration(minutes: 1),
   }) : _clock = clock ?? DateTime.now,
        super(const ActiveWorkoutState()) {
     _userSubscription = watchAuthUser()
         .map((user) => user?.id)
         .distinct()
         .listen(_onUser);
-    _rejectedSubscription = watchRejectedWrites().listen(
-      (_) => emit(state.copyWith(writeRejected: true)),
-    );
   }
 
-  final LoadActiveWorkout _loadActiveWorkout;
-  final KeepActiveWorkout _keepActiveWorkout;
-  final ClearActiveWorkout _clearActiveWorkout;
+  final LoadLocalWorkouts _loadLocal;
+  final KeepLocalWorkouts _keepLocal;
   final NewWorkoutId _newWorkoutId;
   final WatchExerciseStats _watchStats;
   final FinishWorkout _finishWorkout;
+  final ConfirmStoredWorkout _confirmStored;
+  final RebuildExerciseStats _rebuildStats;
   final SaveWorkoutAsProgram _saveAsProgram;
-  final CompleteProgramDay _completeProgramDay;
   final ProgramListCubit _programs;
   final ExerciseCatalogueCubit _catalogue;
   final DateTime Function() _clock;
+
+  /// How long to wait before syncing again after the server could not be
+  /// asked.
+  final Duration retryDelay;
   late final StreamSubscription<String?> _userSubscription;
-  late final StreamSubscription<Failure> _rejectedSubscription;
   final _statsSubscriptions = <String, StreamSubscription<ExerciseStats?>>{};
   String? _uid;
 
-  /// How long finishing waits for the programs to load to move the active
-  /// program on.
-  static const programsWait = Duration(seconds: 5);
+  /// What the device keeps for [_uid]; null until loaded, and while it
+  /// cannot be read nothing is kept.
+  LocalWorkouts? _local;
+
+  /// The user a sync runs for, and whether another was asked for meanwhile.
+  String? _syncing;
+  bool _syncAgain = false;
+  Timer? _retry;
+
+  /// How long starting a program day waits for the catalogue.
+  static const catalogueWait = Duration(seconds: 10);
 
   Map<String, Exercise> get _exercises => switch (_catalogue.state) {
     CatalogueReady(:final exercises) => {for (final e in exercises) e.id: e},
@@ -193,6 +216,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
   Future<void> _onUser(String? uid) async {
     _uid = uid;
+    _local = null;
+    _retry?.cancel();
     _stopStats();
     emit(
       ActiveWorkoutState(
@@ -200,18 +225,22 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       ),
     );
     if (uid == null) return;
-    final result = await _loadActiveWorkout(uid);
+    final result = await _loadLocal(uid);
     if (isClosed || _uid != uid || state.status != WorkoutStatus.loading) {
       return;
     }
-    final workout = result.valueOrNull;
+    // Set aside by the store; what is kept from now on starts empty.
+    final local = result.valueOrNull ?? const LocalWorkouts();
+    _local = local;
     if (result.failureOrNull case final failure?) {
-      Log.e('workout', 'workout in progress unreadable: ${failure.message}');
+      Log.e('workout', 'kept workouts unreadable: ${failure.message}');
+      emit(state.copyWith(localUnreadable: true));
     }
     _emitWorkout(
-      workout,
-      status: workout == null ? WorkoutStatus.none : WorkoutStatus.active,
+      local.draft,
+      status: local.draft == null ? WorkoutStatus.none : WorkoutStatus.active,
     );
+    unawaited(_sync(uid));
   }
 
   /// Starts an empty workout named [name]; false while another is in
@@ -219,37 +248,77 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   bool startFree(String name) =>
       _start((id, now) => Workout(id: id, startedAt: now, name: name));
 
+  /// Starts an empty workout named [name] with [exercise] in it, named in
+  /// [language]; false while another is in progress.
+  bool startWith(Exercise exercise, String name, String language) => _start(
+    (id, now) => Workout(
+      id: id,
+      startedAt: now,
+      name: name,
+      exercises: [editing.exerciseFor(exercise, language)],
+    ),
+  );
+
   /// Starts day [dayIndex] of [program] with its items as goals, named
-  /// [name], exercise names in [language]. False while another workout is
-  /// in progress, or when none of the day's exercises is available.
-  bool startProgramDay(
+  /// [name], exercise names in [language], once the catalogue knows every
+  /// item's exercise (custom ones included). Items whose exercise is gone
+  /// are left out and counted in [WorkoutStart.skipped]; nothing starts while
+  /// another workout is in progress, the catalogue does not load, or none
+  /// of the day's exercises is available.
+  Future<WorkoutStart> startProgramDay(
     Program program,
     int dayIndex, {
     required String name,
     required String language,
-  }) {
+  }) async {
+    const notStarted = (started: false, skipped: 0);
     if (program.id == null || dayIndex < 0 || dayIndex >= program.days.length) {
-      return false;
+      return notStarted;
     }
-    return _start((id, now) {
-      final workout = editing.workoutFromProgramDay(
+    final ids = [
+      for (final item in program.days[dayIndex].items) item.exerciseId,
+    ];
+    bool knowsAll(ExerciseCatalogueState state) =>
+        state is CatalogueReady && ids.every(state.knows);
+    if (!knowsAll(_catalogue.state)) {
+      try {
+        await _catalogue.stream.firstWhere(knowsAll).timeout(catalogueWait);
+      } on Object {
+        return notStarted;
+      }
+    }
+    if (isClosed) return notStarted;
+    final catalogue = _exercises;
+    final started = _start(
+      (id, now) => editing.workoutFromProgramDay(
         id: id,
         startedAt: now,
         name: name,
         program: program,
         dayIndex: dayIndex,
-        catalogue: _exercises,
+        catalogue: catalogue,
         language: language,
-      );
-      return workout.exercises.isEmpty ? null : workout;
-    });
+      ),
+      allowEmpty: false,
+    );
+    return (
+      started: started,
+      skipped: started
+          ? ids.where((id) => !catalogue.containsKey(id)).length
+          : 0,
+    );
   }
 
-  bool _start(Workout? Function(String id, DateTime now) build) {
+  bool _start(
+    Workout Function(String id, DateTime now) build, {
+    bool allowEmpty = true,
+  }) {
     final uid = _uid;
-    if (uid == null || state.status != WorkoutStatus.none) return false;
+    if (uid == null || _local == null || state.status != WorkoutStatus.none) {
+      return false;
+    }
     final workout = build(_newWorkoutId(uid), _clock());
-    if (workout == null) return false;
+    if (!allowEmpty && workout.exercises.isEmpty) return false;
     _emitWorkout(workout, status: WorkoutStatus.active);
     _keep();
     return true;
@@ -260,26 +329,29 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     final uid = _uid;
     if (uid == null || state.status != WorkoutStatus.active) return;
     _emitWorkout(null, status: WorkoutStatus.none);
-    final failure = (await _clearActiveWorkout(uid)).failureOrNull;
-    if (failure != null) {
-      Log.e('workout', 'discarded workout not removed: ${failure.message}');
-    }
+    _keep();
+    unawaited(_sync(uid));
   }
 
   void setNote(String text) =>
       _edit((workout) => workout.copyWith(note: () => _note(text)));
 
-  /// Adds [exercises], named in [language], as many as fit.
-  void addExercises(List<Exercise> exercises, String language) =>
-      _editExercises(
-        (list) => [
-          ...list,
-          for (final exercise in exercises.take(
-            WorkoutLimits.maxExercises - list.length,
-          ))
-            editing.exerciseFor(exercise, language),
-        ],
-      );
+  /// Adds [exercises], named in [language], as many as fit; false when none
+  /// was added.
+  bool addExercises(List<Exercise> exercises, String language) {
+    final count = state.workout?.exercises.length;
+    _editExercises(
+      (list) => [
+        ...list,
+        for (final exercise in exercises.take(
+          WorkoutLimits.maxExercises - list.length,
+        ))
+          editing.exerciseFor(exercise, language),
+      ],
+    );
+    return state.status == WorkoutStatus.active &&
+        state.workout?.exercises.length != count;
+  }
 
   void removeExercise(int index) => _editExercises(
     (list) => _has(list, index) ? grouping.removeItem(list, index) : list,
@@ -414,17 +486,28 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     _replaceSet(ref, toggled);
   }
 
-  /// Finishes and stores the workout; its unticked sets are left out.
+  /// Finishes and stores the workout; its unticked sets are left out. The
+  /// program moves on with it when the programs are known now; otherwise
+  /// the summary says it did not.
   Future<void> finish() async {
     final uid = _uid;
     final workout = state.workout;
+    final local = _local;
     if (uid == null ||
         workout == null ||
+        local == null ||
         state.status != WorkoutStatus.active) {
       return;
     }
     emit(state.copyWith(status: WorkoutStatus.finishing));
-    final result = await _finishWorkout((uid: uid, workout: workout));
+    final programs = _programs.state;
+    final result = await _finishWorkout((
+      uid: uid,
+      workout: workout,
+      program: programs.status == ProgramListStatus.ready
+          ? (active: programs.active, program: programs.activeProgram)
+          : null,
+    ));
     if (isClosed || _uid != uid) return;
     switch (result) {
       case Err(:final failure):
@@ -433,6 +516,14 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         );
       case Ok(:final value):
         _stopStats();
+        _local = LocalWorkouts(
+          finished: [
+            for (final w in local.finished)
+              if (w.id != value.workout.id) w,
+            value.workout,
+          ],
+          staleStats: {...local.staleStats, ...value.staleStats},
+        );
         emit(
           state.copyWith(
             status: WorkoutStatus.finished,
@@ -441,43 +532,101 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
             invalidSet: () => null,
           ),
         );
-        final cleared = (await _clearActiveWorkout(uid)).failureOrNull;
-        if (cleared != null) {
-          Log.e('workout', 'finished workout not removed: ${cleared.message}');
-        }
-        await _advanceProgram(uid, value.workout);
+        _keep();
+        unawaited(_sync(uid));
     }
   }
 
-  /// Moves the active program on when [workout] did its next day.
-  Future<void> _advanceProgram(String uid, Workout workout) async {
-    if (!workout.isFromProgram) return;
-    var programs = _programs.state;
-    if (programs.status == ProgramListStatus.loading) {
-      try {
-        programs = await _programs.stream
-            .firstWhere((s) => s.status != ProgramListStatus.loading)
-            .timeout(programsWait);
-      } on TimeoutException {
-        Log.e('workout', 'programs not loaded; program not moved on');
-        return;
-      }
-    }
-    final active = programs.active;
-    final program = programs.activeProgram;
-    if (_uid != uid || !editing.advancesProgram(workout, active, program)) {
+  /// Settles what the device keeps for [uid] with the server: finished
+  /// workouts it confirmed are dropped, one it refused comes back as the
+  /// workout in progress (once none is), then stale stats are rebuilt. Waits
+  /// while offline; tries again after [retryDelay] when the server could
+  /// not be asked.
+  Future<void> _sync(String uid) async {
+    if (_syncing == uid) {
+      _syncAgain = true;
       return;
     }
-    final failure = (await _completeProgramDay((
-      uid: uid,
-      active: active!,
-      dayCount: program!.days.length,
-      dayIndex: workout.dayIndex!,
-      on: CalendarDate.of(workout.startedAt),
-    ))).failureOrNull;
-    if (failure != null) {
-      Log.e('workout', 'program not moved on: ${failure.message}');
+    _syncing = uid;
+    try {
+      do {
+        _syncAgain = false;
+        if (!await _syncOnce(uid)) {
+          _retry?.cancel();
+          _retry = Timer(retryDelay, () => unawaited(_sync(uid)));
+          return;
+        }
+      } while (_syncAgain && _uid == uid && !isClosed);
+    } finally {
+      if (_syncing == uid) _syncing = null;
     }
+  }
+
+  /// False when the server could not be asked.
+  Future<bool> _syncOnce(String uid) async {
+    for (final workout in [...?_local?.finished]) {
+      final stored = await _confirmStored((uid: uid, id: workout.id));
+      if (isClosed || _uid != uid) return true;
+      switch (stored) {
+        case Err(:final failure):
+          Log.e('workout', 'workout not confirmed: ${failure.message}');
+          return false;
+        case Ok(value: true):
+          _dropFinished(workout.id);
+        case Ok(value: false):
+          _restore(workout);
+      }
+    }
+    if (_local?.finished.isNotEmpty ?? true) return true;
+    for (final id in [..._local!.staleStats]) {
+      final rebuilt = await _rebuildStats((uid: uid, exerciseId: id));
+      if (isClosed || _uid != uid) return true;
+      if (rebuilt.failureOrNull case final failure?) {
+        Log.e('workout', 'stats of $id not rebuilt: ${failure.message}');
+        return false;
+      }
+      final local = _local!;
+      _local = local.copyWith(staleStats: {...local.staleStats}..remove(id));
+      _keep();
+    }
+    return true;
+  }
+
+  void _dropFinished(String id) {
+    final local = _local!;
+    _local = local.copyWith(
+      finished: [
+        for (final w in local.finished)
+          if (w.id != id) w,
+      ],
+    );
+    _keep();
+  }
+
+  /// Brings back [workout], refused by the server, as the workout in
+  /// progress, unless another is in progress or its summary is open; it is
+  /// then tried again after that one.
+  void _restore(Workout workout) {
+    if (state.status != WorkoutStatus.none) return;
+    final restored = Workout(
+      id: workout.id,
+      startedAt: workout.startedAt,
+      programId: workout.programId,
+      dayIndex: workout.dayIndex,
+      name: workout.name,
+      note: workout.note,
+      exercises: workout.exercises,
+    );
+    final local = _local!;
+    _local = local.copyWith(
+      finished: [
+        for (final w in local.finished)
+          if (w.id != workout.id) w,
+      ],
+    );
+    _emitWorkout(restored, status: WorkoutStatus.active);
+    emit(state.copyWith(restored: () => workout.name));
+    _keep();
   }
 
   /// Stores the finished free workout as a program named [name].
@@ -513,18 +662,22 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
   /// The summary was seen; the next workout can start.
   void summaryShown() {
-    if (state.status != WorkoutStatus.finished) return;
+    final uid = _uid;
+    if (uid == null || state.status != WorkoutStatus.finished) return;
     emit(
       ActiveWorkoutState(
         status: WorkoutStatus.none,
-        writeRejected: state.writeRejected,
+        localUnreadable: state.localUnreadable,
       ),
     );
+    unawaited(_sync(uid));
   }
 
   void failureShown() => emit(state.copyWith(failure: () => null));
 
-  void rejectionShown() => emit(state.copyWith(writeRejected: false));
+  void restoredShown() => emit(state.copyWith(restored: () => null));
+
+  void localUnreadableShown() => emit(state.copyWith(localUnreadable: false));
 
   void _editDrop(SetRef ref, int drop, Drop Function(Drop drop) change) =>
       _editSet(
@@ -596,16 +749,19 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     _followStats();
   }
 
-  /// Writes the workout in progress to the device; the store writes only
-  /// the latest of quick changes.
+  /// Writes what the device keeps, with the workout in progress as shown;
+  /// the store writes only the latest of quick changes.
   void _keep() {
     final uid = _uid;
-    final workout = state.workout;
-    if (uid == null || workout == null) return;
+    final local = _local;
+    if (uid == null || local == null) return;
+    final draft = state.inProgress ? state.workout : null;
+    final kept = local.copyWith(draft: () => draft);
+    _local = kept;
     unawaited(
-      _keepActiveWorkout((uid: uid, workout: workout)).then((result) {
+      _keepLocal((uid: uid, workouts: kept)).then((result) {
         if (result.failureOrNull case final failure?) {
-          Log.e('workout', 'workout in progress not kept: ${failure.message}');
+          Log.e('workout', 'workouts not kept: ${failure.message}');
         }
       }),
     );
@@ -663,8 +819,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
   @override
   Future<void> close() async {
+    _retry?.cancel();
     await _userSubscription.cancel();
-    await _rejectedSubscription.cancel();
     _stopStats();
     return super.close();
   }

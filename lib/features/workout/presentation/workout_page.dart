@@ -621,6 +621,11 @@ class _Summary extends StatelessWidget {
             title: Text(l10n.workoutExercises),
             trailing: Text('${summary.exerciseCount}'),
           ),
+          if (summary.programUnknown)
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: Text(l10n.workoutProgramUnknown),
+            ),
           for (final record in summary.records)
             ListTile(
               leading: Icon(

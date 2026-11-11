@@ -132,6 +132,7 @@ class WorkoutSummary extends Equatable {
     required this.setCount,
     required this.exerciseCount,
     this.records = const [],
+    this.programUnknown = false,
   });
 
   final Duration duration;
@@ -142,6 +143,10 @@ class WorkoutSummary extends Equatable {
   final int exerciseCount;
   final List<NewRecord> records;
 
+  /// The workout came from a program whose state was not known when it
+  /// finished, so the program was not moved on.
+  final bool programUnknown;
+
   @override
   List<Object?> get props => [
     duration,
@@ -149,6 +154,7 @@ class WorkoutSummary extends Equatable {
     setCount,
     exerciseCount,
     records,
+    programUnknown,
   ];
 }
 
@@ -284,7 +290,11 @@ List<RecordKind> beatenRecords(
 ];
 
 /// The summary of finished [workout] with the [records] it set.
-WorkoutSummary summarizeWorkout(Workout workout, List<NewRecord> records) {
+WorkoutSummary summarizeWorkout(
+  Workout workout,
+  List<NewRecord> records, {
+  bool programUnknown = false,
+}) {
   final finished = workout.finishedAt ?? workout.startedAt;
   return WorkoutSummary(
     duration: finished.difference(workout.startedAt),
@@ -298,5 +308,6 @@ WorkoutSummary summarizeWorkout(Workout workout, List<NewRecord> records) {
     ),
     exerciseCount: workout.exerciseIds.length,
     records: records,
+    programUnknown: programUnknown,
   );
 }

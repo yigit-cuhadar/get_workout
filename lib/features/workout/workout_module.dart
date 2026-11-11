@@ -4,7 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../programs/domain/completed_days.dart';
-import 'data/file_active_workout_store.dart';
+import 'data/file_local_workout_store.dart';
 import 'data/firestore_workout_repository.dart';
 import 'data/workout_completed_days.dart';
 import 'domain/workout_repository.dart';
@@ -27,30 +27,29 @@ class WorkoutModule implements FeatureModule {
         () => FirestoreWorkoutRepository(FirebaseFirestore.instance),
       )
       // App support files are private and not shown to the user.
-      ..registerLazySingleton<ActiveWorkoutStore>(
-        () => FileActiveWorkoutStore(getApplicationSupportDirectory),
+      ..registerLazySingleton<LocalWorkoutStore>(
+        () => FileLocalWorkoutStore(getApplicationSupportDirectory),
       )
-      ..registerFactory(() => LoadActiveWorkout(sl()))
-      ..registerFactory(() => KeepActiveWorkout(sl()))
-      ..registerFactory(() => ClearActiveWorkout(sl()))
+      ..registerFactory(() => LoadLocalWorkouts(sl()))
+      ..registerFactory(() => KeepLocalWorkouts(sl()))
+      ..registerFactory(() => ConfirmStoredWorkout(sl()))
+      ..registerFactory(() => RebuildExerciseStats(sl()))
       ..registerFactory(() => NewWorkoutId(sl()))
       ..registerFactory(() => WatchExerciseStats(sl()))
-      ..registerFactory(() => WatchRejectedWorkoutWrites(sl()))
       ..registerFactory(() => FinishWorkout(sl()))
       ..registerFactory(() => SaveWorkoutAsProgram(sl()))
       // One workout in progress for the whole app.
       ..registerLazySingleton(
         () => ActiveWorkoutCubit(
           watchAuthUser: sl(),
-          loadActiveWorkout: sl(),
-          keepActiveWorkout: sl(),
-          clearActiveWorkout: sl(),
+          loadLocal: sl(),
+          keepLocal: sl(),
+          confirmStored: sl(),
+          rebuildStats: sl(),
           newWorkoutId: sl(),
           watchStats: sl(),
           finishWorkout: sl(),
           saveAsProgram: sl(),
-          completeProgramDay: sl(),
-          watchRejectedWrites: sl(),
           programs: sl(),
           catalogue: sl(),
         ),

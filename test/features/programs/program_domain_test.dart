@@ -864,41 +864,6 @@ void main() {
       });
     });
 
-    test('completing a day moves the program on', () async {
-      final active = ActiveProgram(
-        programId: 'p1',
-        weekdays: const [1, 4],
-        nextDayIndex: 1,
-        nextDate: CalendarDate(2026, 11, 12),
-        startedAt: DateTime(2026, 11, 2),
-      );
-      final complete = CompleteProgramDay(repository);
-      await complete((
-        uid: 'u1',
-        active: active,
-        dayCount: 2,
-        dayIndex: 1,
-        on: CalendarDate(2026, 11, 12),
-      ));
-      verify(
-        () => repository.updateActiveProgram(
-          'u1',
-          active.copyWith(
-            nextDayIndex: 0,
-            nextDate: CalendarDate(2026, 11, 16),
-          ),
-        ),
-      ).called(1);
-      final refused = await complete((
-        uid: 'u1',
-        active: active,
-        dayCount: 2,
-        dayIndex: 2,
-        on: CalendarDate(2026, 11, 12),
-      ));
-      expect(refused.failureOrNull, isA<ValidationFailure>());
-    });
-
     test('changing weekdays replans the next day from today', () async {
       final active = ActiveProgram(
         programId: 'p1',

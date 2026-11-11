@@ -4,23 +4,35 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 
+import '../../programs/data/firestore_program_repository.dart';
+import '../../programs/domain/active_program.dart';
 import '../domain/exercise_stats.dart';
 import '../domain/workout.dart';
 import '../domain/workout_repository.dart';
 import 'workout_maps.dart';
 
 /// Workouts live in `users/{uid}/workouts/{id}`, stats in
-/// `users/{uid}/exerciseStats/{exerciseId}`. `FirestoreCollection` is not
-/// used: a workout and its stats go in one batch, and a bad document must
-/// not fail a whole stream.
+/// `users/{uid}/exerciseStats/{exerciseId}`, the active program in the
+/// `activeProgram` map of `users/{uid}`. `FirestoreCollection` is not used:
+/// a workout, its stats and the program go in one batch, and a bad document
+/// must not fail a whole stream.
 class FirestoreWorkoutRepository implements WorkoutRepository {
-  FirestoreWorkoutRepository(this._firestore);
+  FirestoreWorkoutRepository(
+    this._firestore, {
+    Future<void> Function()? waitForPendingWrites,
+  }) : _waitForPendingWrites =
+           waitForPendingWrites ?? _firestore.waitForPendingWrites;
 
   final FirebaseFirestore _firestore;
-  final _rejected = StreamController<Failure>.broadcast();
+  final Future<void> Function() _waitForPendingWrites;
 
-  @override
-  Stream<Failure> get rejectedWrites => _rejected.stream;
+  /// How long finishing waits for the server's stats before taking the
+  /// cache's.
+  static const serverWait = Duration(seconds: 3);
+
+  /// The most workouts of one exercise a rebuild reads, years of training;
+  /// beyond it the stats are left as they are.
+  static const maxRebuildWorkouts = 500;
 
   @override
   String newWorkoutId(String uid) => _workouts(uid).doc().id;
@@ -43,29 +55,33 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
           );
 
   @override
-  Future<Result<Map<String, ExerciseStats?>>> getStats(
+  Future<Result<Map<String, StatsRead>>> getStats(
     String uid,
     List<String> exerciseIds,
   ) => guard(() async {
-    final stats = <String, ExerciseStats?>{};
+    final stats = <String, StatsRead>{};
     for (final id in exerciseIds) {
       final doc = await _read(_stats(uid).doc(id));
-      if (doc != null) stats[id] = statsFromMap(doc.data());
+      if (doc != null) {
+        stats[id] = (
+          stats: statsFromMap(doc.data()),
+          current: !doc.metadata.isFromCache,
+        );
+      }
     }
     return stats;
   }, mapper: mapFirebaseError);
 
-  /// From the cache, which listeners keep current, so this is instant and
-  /// works offline; from the server when the document was never loaded.
-  /// Null when neither can be reached.
+  /// From the server when it answers within [serverWait], else from the
+  /// cache. Null when neither can be read.
   static Future<DocumentSnapshot<Map<String, dynamic>>?> _read(
     DocumentReference<Map<String, dynamic>> doc,
   ) async {
     try {
-      return await doc.get(const GetOptions(source: Source.cache));
-    } on FirebaseException {
+      return await doc.get().timeout(serverWait);
+    } on Object {
       try {
-        return await doc.get();
+        return await doc.get(const GetOptions(source: Source.cache));
       } on FirebaseException catch (error, stack) {
         Log.e('workout', 'stats ${doc.id} unreadable', error, stack);
         return null;
@@ -77,28 +93,66 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
   Future<Result<void>> saveWorkout(
     String uid,
     Workout workout,
-    Map<String, ExerciseStats> stats,
-  ) => guard(() async {
+    Map<String, ExerciseStats> stats, {
+    ActiveProgram? advance,
+  }) => guard(() async {
     final batch = _firestore.batch()
       ..set(_workouts(uid).doc(workout.id), workoutToMap(workout));
     for (final MapEntry(key: id, value: value) in stats.entries) {
       batch.set(_stats(uid).doc(id), statsToMap(value));
     }
-    _confirmLater(batch.commit());
+    if (advance != null) {
+      batch.set(_firestore.collection('users').doc(uid), {
+        'activeProgram': FirestoreProgramRepository.activeToMap(advance),
+      }, SetOptions(merge: true));
+    }
+    _logRejection(batch.commit());
+  }, mapper: mapFirebaseError);
+
+  @override
+  Future<Result<bool>> isStored(String uid, String id) => guard(() async {
+    await _waitForPendingWrites();
+    final doc = await _workouts(uid)
+        .doc(id)
+        .get(const GetOptions(source: Source.server));
+    return doc.exists;
+  }, mapper: mapFirebaseError);
+
+  @override
+  Future<Result<ExerciseWorkouts>> workoutsWith(
+    String uid,
+    String exerciseId,
+  ) => guard(() async {
+    final snap = await _workouts(uid)
+        .where('exerciseIds', arrayContains: exerciseId)
+        .limit(maxRebuildWorkouts)
+        .get(const GetOptions(source: Source.server));
+    return (
+      workouts: [
+        for (final doc in snap.docs) ?workoutFromMap(doc.id, doc.data()),
+      ],
+      complete: snap.docs.length < maxRebuildWorkouts,
+    );
+  }, mapper: mapFirebaseError);
+
+  @override
+  Future<Result<void>> saveStats(
+    String uid,
+    String exerciseId,
+    ExerciseStats? stats,
+  ) => guard(() async {
+    final doc = _stats(uid).doc(exerciseId);
+    _logRejection(stats == null ? doc.delete() : doc.set(statsToMap(stats)));
   }, mapper: mapFirebaseError);
 
   /// Firestore applies a write to its cache at once but completes it only
   /// when the server confirms, which never happens offline, so callers do
-  /// not wait for that.
-  void _confirmLater(Future<void> write) => unawaited(
+  /// not wait for that; [isStored] finds out what happened to a workout.
+  static void _logRejection(Future<void> write) => unawaited(
     write.then(
       (_) {},
-      onError: (Object error, StackTrace stack) {
-        final failure =
-            mapFirebaseError(error) ?? UnknownFailure('$error', error);
-        Log.e('workout', 'write rejected: ${failure.message}', error, stack);
-        _rejected.add(failure);
-      },
+      onError: (Object error, StackTrace stack) =>
+          Log.e('workout', 'write rejected', error, stack),
     ),
   );
 
