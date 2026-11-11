@@ -166,8 +166,8 @@ from the earlier FitLab app.
   none; it works offline. Whether the program moves on is decided from the programs the
   device knows at that moment; if they are not loaded the program is left
   and the summary says so. The finished workout stays on the device until
-  the server confirms it (after all pending writes are answered, a server
-  read finds it); one the server refused comes back as the workout in
+  the server confirms it (its batch is acknowledged; see Unconfirmed
+  workouts); one the server refused comes back as the workout in
   progress, once none is open, and the user is told, so a workout is never
   lost. Its program advance went back with the batch.
 - **Workout times**: `startedAt` and `finishedAt` are device-clock
