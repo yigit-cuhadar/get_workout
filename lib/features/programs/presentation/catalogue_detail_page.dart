@@ -164,7 +164,8 @@ class _Program extends StatelessWidget {
                 Text(l10n.presetName(program.equipmentProfile)),
                 if (equipment.isNotEmpty)
                   Text(l10n.catalogueEquipment(l10n.equipmentNames(equipment))),
-                if (ready) Text(l10n.sessionMinutes(state.days)),
+                if (program.minutes case final minutes?)
+                  Text(l10n.sessionMinutesText(minutes)),
                 const SizedBox(height: Gap.md),
                 _Action(state, premium),
               ],

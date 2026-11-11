@@ -13,6 +13,10 @@
     "bench",
     "bodyweight"
   ],
+  "minutes": {
+    "min": 31,
+    "max": 44
+  },
   "l10n": {
     "en": {
       "name": "Dumbbell Upper/Lower 4-Day",

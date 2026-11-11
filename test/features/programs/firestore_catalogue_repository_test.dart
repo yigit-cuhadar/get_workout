@@ -85,6 +85,11 @@ void main() {
           json['equipment'],
           reason: card.id,
         );
+        final minutes = json['minutes']! as Map;
+        expect(card.minutes, (
+          min: minutes['min'],
+          max: minutes['max'],
+        ), reason: card.id);
         expect(card.text('en').name, text['name'], reason: card.id);
         expect(card.text('en').summary, text['summary'], reason: card.id);
       }
@@ -133,6 +138,33 @@ void main() {
       // An unknown code makes the list unusable, not shorter.
       expect(cards.single.equipment, isNull);
       expect(cards.single.lengthWeeks, isNull);
+      expect(cards.single.minutes, isNull);
+    });
+
+    test('reads minutes, and shows a card with unreadable ones '
+        'without them', () async {
+      await firestore.doc('programs/a').set({
+        ...card(),
+        'minutes': {'min': 30, 'max': 45.0},
+      });
+      for (final (id, minutes) in [
+        ('b', {'min': 0, 'max': 10}),
+        ('c', {'min': 40, 'max': 30}),
+        ('d', {'min': '30', 'max': 40}),
+        ('e', 35),
+      ]) {
+        await firestore.doc('programs/$id').set({
+          ...card(),
+          'minutes': minutes,
+        });
+      }
+
+      final cards = await repository.watchPrograms().first;
+
+      expect(
+        [for (final c in cards) c.minutes],
+        [(min: 30, max: 45), null, null, null, null],
+      );
     });
 
     test('is free only without premium or with exactly false', () async {

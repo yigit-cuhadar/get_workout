@@ -17,6 +17,10 @@
     "bench",
     "pull_up_bar"
   ],
+  "minutes": {
+    "min": 33,
+    "max": 41
+  },
   "l10n": {
     "en": {
       "name": "Five-Day Hypertrophy Split",

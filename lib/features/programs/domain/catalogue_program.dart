@@ -2,6 +2,7 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../exercises/domain/vocabulary.dart';
 import 'program.dart';
+import 'program_editing.dart';
 
 class CatalogueText extends Equatable {
   const CatalogueText({required this.name, required this.summary});
@@ -25,6 +26,7 @@ class CatalogueProgram extends Equatable {
     required this.daysPerWeek,
     this.lengthWeeks,
     this.equipment,
+    this.minutes,
     required this.equipmentProfile,
     required this.order,
     required this.l10n,
@@ -43,6 +45,9 @@ class CatalogueProgram extends Equatable {
   /// when the card's list is missing, empty or has a code this app does not
   /// know, so it cannot tell what is needed.
   final List<Equipment>? equipment;
+
+  /// The shortest and longest session; null when the card has none.
+  final SessionMinutes? minutes;
 
   /// Every exercise can be done with this profile's equipment, through its
   /// own equipment or an alternative set.
@@ -88,6 +93,7 @@ class CatalogueProgram extends Equatable {
     daysPerWeek,
     lengthWeeks,
     equipment,
+    minutes,
     equipmentProfile,
     order,
     l10n,

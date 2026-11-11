@@ -16,6 +16,10 @@
     "bench",
     "box"
   ],
+  "minutes": {
+    "min": 32,
+    "max": 39
+  },
   "l10n": {
     "en": {
       "name": "Glute Focus 4-Day",

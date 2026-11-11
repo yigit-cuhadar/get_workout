@@ -219,7 +219,10 @@ Variations are the other exercises of the same `family`, ordered by rank.
 
 **`programs/{id}`** (catalog card): `status`, `premium`, `level`, `goal`,
 `daysPerWeek`, `lengthWeeks?`, `equipment[]` (the primary `equipment` of
-every exercise used, computed by the validator), `equipmentProfile`
+every exercise used, computed by the validator), `minutes` (`{min, max}`,
+the shortest and longest session by the app's `estimateDay`, each day
+rounded to whole minutes and at least 1; checked by the validator; the app
+shows a card without a readable one without minutes), `equipmentProfile`
 (`full_gym` \| `home_gym` \| `dumbbells` \| `bodyweight` \| `bands`, for
 filtering; every exercise fits it through `equipment` or an alternative set),
 `order` (unique int, the catalogue's default sort),

@@ -19,6 +19,10 @@
     "pull_up_bar",
     "ab_wheel"
   ],
+  "minutes": {
+    "min": 44,
+    "max": 57
+  },
   "l10n": {
     "en": {
       "name": "Strength Builder 4-Day",

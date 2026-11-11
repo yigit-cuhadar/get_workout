@@ -625,6 +625,17 @@ void main() {
     });
   });
 
+  test('sessionMinutes is the shortest and longest day, at least 1', () {
+    expect(sessionMinutes(const []), isNull);
+    expect(
+      sessionMinutes([
+        ProgramDay(items: [item('a', sets: 1, restS: 0, repMin: 1, repMax: 1)]),
+        ProgramDay(items: [item('a', restS: 60), item('b', restS: 60)]),
+      ]),
+      (min: 1, max: 9),
+    );
+  });
+
   group('Program.duplicate', () {
     test('copies the content as a new program of the user', () {
       final original = Program(

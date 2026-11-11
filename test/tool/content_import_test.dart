@@ -348,6 +348,7 @@ void main() {
       'status': 'live',
       'premium': true,
       'order': 3,
+      'minutes': {'min': 6, 'max': 6},
       'l10n': {
         'en': {'name': 'A', 'summary': 'A program.'},
       },
@@ -376,7 +377,21 @@ void main() {
       final (:card, :detail) = programDocs(program);
 
       expect(card.path, 'programs/pr_a');
-      expect(card.content.keys, ['status', 'premium', 'order', 'l10n']);
+      expect(card.content.keys, [
+        'status',
+        'premium',
+        'order',
+        'minutes',
+        'l10n',
+      ]);
+      expect(card.fields['minutes'], {
+        'mapValue': {
+          'fields': {
+            'min': {'integerValue': '6'},
+            'max': {'integerValue': '6'},
+          },
+        },
+      });
       expect(detail.path, 'programs/pr_a/detail/main');
       expect(detail.content, {'days': program['days']});
       expect(card.hash, contentHash(card.content));

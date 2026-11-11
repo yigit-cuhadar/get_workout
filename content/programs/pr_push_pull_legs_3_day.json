@@ -17,6 +17,10 @@
     "bench",
     "pull_up_bar"
   ],
+  "minutes": {
+    "min": 46,
+    "max": 55
+  },
   "l10n": {
     "en": {
       "name": "Push Pull Legs 3-Day",

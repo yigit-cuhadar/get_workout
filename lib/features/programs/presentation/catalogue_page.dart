@@ -140,7 +140,11 @@ class _ProgramTile extends StatelessWidget {
       subtitle: Text(
         [
           l10n.catalogueFacts(program),
-          l10n.presetName(program.equipmentProfile),
+          [
+            l10n.presetName(program.equipmentProfile),
+            if (program.minutes case final minutes?)
+              l10n.sessionMinutesText(minutes),
+          ].join(' · '),
           if (reasons != null && reasons.isNotEmpty) l10n.matchText(reasons),
         ].join('\n'),
       ),

@@ -21,6 +21,10 @@
     "bodyweight",
     "other"
   ],
+  "minutes": {
+    "min": 30,
+    "max": 33
+  },
   "l10n": {
     "en": {
       "name": "Lean-Down Circuits 4-Day",

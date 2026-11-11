@@ -80,6 +80,7 @@ Map<String, Object?> validProgram({
   'daysPerWeek': 1,
   'lengthWeeks': 8,
   'equipment': ['dumbbell', 'bench', 'bodyweight'],
+  'minutes': {'min': 6, 'max': 6},
   'l10n': {
     'en': {'name': name, 'summary': 'One short day. It has two exercises.'},
   },
@@ -371,6 +372,14 @@ void main() {
         'equipment',
         'equipment must be [dumbbell, bench, bodyweight]',
       ),
+    ),
+    'minutes not the app\'s estimate': (
+      (p) => p['minutes'] = {'min': 5, 'max': 6},
+      const ContentProblem('minutes', 'minutes must be {"min": 6, "max": 6}'),
+    ),
+    'minutes missing': (
+      (p) => p.remove('minutes'),
+      const ContentProblem('minutes', 'minutes must be {"min": 6, "max": 6}'),
     ),
     'group is one capital letter': (
       (p) {

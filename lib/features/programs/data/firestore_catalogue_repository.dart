@@ -6,6 +6,7 @@ import 'package:forge_firebase/forge_firebase.dart';
 
 import '../../exercises/domain/vocabulary.dart';
 import '../domain/catalogue_program.dart';
+import '../domain/program_editing.dart';
 import '../domain/catalogue_repository.dart';
 import '../domain/program.dart';
 import 'firestore_program_repository.dart';
@@ -101,6 +102,7 @@ class FirestoreCatalogueRepository implements CatalogueRepository {
       daysPerWeek: days,
       lengthWeeks: weeks is int ? weeks : null,
       equipment: _equipment(map['equipment']),
+      minutes: _minutes(map['minutes']),
       equipmentProfile: profile,
       order: order,
       l10n: l10n,
@@ -116,6 +118,21 @@ class FirestoreCatalogueRepository implements CatalogueRepository {
     ];
     return equipment.length == value.length ? equipment : null;
   }
+
+  /// Null unless whole minutes with 1 ≤ min ≤ max.
+  static SessionMinutes? _minutes(Object? value) {
+    if (value is! Map) return null;
+    final min = _whole(value['min']);
+    final max = _whole(value['max']);
+    if (min == null || max == null || min < 1 || max < min) return null;
+    return (min: min, max: max);
+  }
+
+  static int? _whole(Object? value) => switch (value) {
+    int() => value,
+    double() when value == value.roundToDouble() => value.round(),
+    _ => null,
+  };
 
   static CatalogueText? _text(Object? value) {
     if (value is! Map) return null;

@@ -3,7 +3,6 @@ import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../profile/presentation/profile_questions.dart';
 import '../domain/catalogue_program.dart';
 import '../domain/catalogue_queries.dart';
-import '../domain/program.dart';
 import '../domain/program_editing.dart';
 
 extension CatalogueTextLabels on AppLocalizations {
@@ -28,17 +27,8 @@ extension CatalogueTextLabels on AppLocalizations {
     ),
   );
 
-  /// The shortest and longest session by the app's [estimateDay], in whole
-  /// minutes, rounded as the day estimates are.
-  String sessionMinutes(List<ProgramDay> days) {
-    final minutes = [for (final day in days) _minutes(estimateDay(day))]
-      ..sort();
-    final (min, max) = (minutes.first, minutes.last);
-    return min == max ? catalogueMinutes(min) : catalogueMinutesRange(min, max);
-  }
-
-  static int _minutes(Duration duration) {
-    final minutes = (duration.inSeconds / 60).round();
-    return minutes < 1 ? 1 : minutes;
-  }
+  String sessionMinutesText(SessionMinutes minutes) =>
+      minutes.min == minutes.max
+      ? catalogueMinutes(minutes.min)
+      : catalogueMinutesRange(minutes.min, minutes.max);
 }

@@ -55,6 +55,7 @@ const programKeys = {
   'daysPerWeek',
   'lengthWeeks',
   'equipment',
+  'minutes',
   'equipmentProfile',
   'order',
   'l10n',
@@ -237,6 +238,13 @@ List<ContentProblem> programProblems(
       equipment.length != expected.length ||
       !expected.indexed.every((e) => equipment[e.$1] == e.$2)) {
     check.err('equipment', 'equipment must be [${expected.join(', ')}]');
+  }
+
+  if (sessionMinutes(entry.program.days) case (:final min, :final max)) {
+    final minutes = d['minutes'];
+    if (minutes is! Map || minutes['min'] != min || minutes['max'] != max) {
+      check.err('minutes', 'minutes must be {"min": $min, "max": $max}');
+    }
   }
   return check.problems;
 }
