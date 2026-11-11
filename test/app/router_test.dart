@@ -1085,6 +1085,22 @@ void main() {
       expect(find.textContaining('Free trial until'), findsOneWidget);
     });
 
+    testWidgets('a restore after a failed load keeps the load message', (
+      tester,
+    ) async {
+      await openProfileAsFreeGuest(tester);
+      store.failure = const NetworkFailure();
+      await tapVisible(tester, 'GetWorkout Premium');
+      expect(find.text('No internet connection'), findsOneWidget);
+
+      store.failure = null;
+      await tapVisible(tester, 'Restore purchases');
+
+      expect(find.textContaining('No purchases to restore'), findsOneWidget);
+      expect(find.text('Retry'), findsOneWidget);
+      expect(find.text('Start free trial'), findsNothing);
+    });
+
     testWidgets('a pending purchase closes the paywall once approved', (
       tester,
     ) async {

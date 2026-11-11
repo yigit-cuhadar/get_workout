@@ -119,4 +119,23 @@ void main() {
 
     expect(allowed, isFalse);
   });
+
+  testWidgets('a second call while the paywall is open opens no other', (
+    tester,
+  ) async {
+    await pump(tester);
+    await tester.runAsync(() => entitlement.identify('u1'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Open'));
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    expect(allowed, isFalse);
+
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Buy'), findsNothing);
+    expect(find.text('Open'), findsOneWidget);
+  });
 }

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/legal_links.dart';
@@ -49,7 +48,11 @@ class _PaywallViewState extends State<_PaywallView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
-    context.pop(true);
+    // Closes this paywall's own route, even when something is above it.
+    final route = ModalRoute.of(context);
+    if (route == null) return;
+    final navigator = Navigator.of(context);
+    route.isCurrent ? navigator.pop(true) : navigator.removeRoute(route, true);
   }
 
   void _show(String message) => ScaffoldMessenger.of(context)
@@ -99,16 +102,18 @@ class _PaywallViewState extends State<_PaywallView> {
       child: Scaffold(
         appBar: AppBar(title: Text(l10n.premiumTitle)),
         body: BlocBuilder<PaywallCubit, PaywallState>(
-          builder: (context, state) => switch (state.status) {
-            PaywallStatus.loading => const LoadingView(),
-            PaywallStatus.loadFailed => ErrorView(
-              message: switch (state.loadFailure) {
-                final PurchaseFailure failure => l10n.purchaseError(failure),
-                final NetworkFailure failure => l10n.purchaseError(failure),
+          // A restore after a failed load keeps the load's message; the
+          // footer shows the restore in progress.
+          builder: (context, state) => switch (state) {
+            PaywallState(status: PaywallStatus.loading) => const LoadingView(),
+            PaywallState(:final loadFailure?) => ErrorView(
+              message: switch (loadFailure) {
+                PurchaseFailure() ||
+                NetworkFailure() => l10n.purchaseError(loadFailure),
                 _ => l10n.paywallLoadFailed,
               },
               retryLabel: l10n.retry,
-              onRetry: context.read<PaywallCubit>().load,
+              onRetry: state.isBusy ? null : context.read<PaywallCubit>().load,
             ),
             _ => _Offer(state),
           },
@@ -200,7 +205,7 @@ class _Footer extends StatelessWidget {
           child: state.status == PaywallStatus.restoring
               ? const SizedBox.square(
                   dimension: Gap.md,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(),
                 )
               : Text(l10n.paywallRestore),
         ),

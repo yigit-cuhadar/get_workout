@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_purchases/forge_purchases.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../app/router.dart';
+import 'premium.dart';
 import '../../../l10n/app_localizations.dart';
 import 'subscription_summary.dart';
 import 'subscription_text.dart';
@@ -29,7 +28,7 @@ class PremiumTile extends StatelessWidget {
           : const Icon(Icons.chevron_right),
       onTap: switch (summary) {
         SubscriptionChecking() => null,
-        SubscriptionFree() => () => context.push<bool>(Routes.paywall),
+        SubscriptionFree() => context.openPaywall,
         _ => () => _manage(context),
       },
     );

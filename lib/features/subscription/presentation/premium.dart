@@ -25,10 +25,9 @@ extension PremiumGate on BuildContext {
 
   /// True when the user has Premium. A free user gets the paywall and true
   /// only if they unlocked it there; while the status is unknown the user is
-  /// asked to wait and it is false.
+  /// asked to wait and it is false, as it is while a paywall is open.
   Future<bool> requirePremium() async {
-    final entitlement = read<EntitlementCubit>();
-    switch (premiumStatusOf(entitlement.state)) {
+    switch (premiumStatusOf(read<EntitlementCubit>().state)) {
       case PremiumStatus.premium:
         return true;
       case PremiumStatus.unknown:
@@ -39,9 +38,26 @@ extension PremiumGate on BuildContext {
         );
         return false;
       case PremiumStatus.free:
-        // The paywall pops with true before the cubit may have caught up.
-        final unlocked = await push<bool>(Routes.paywall);
-        return unlocked == true || entitlement.isActive;
+        return openPaywall();
     }
   }
+
+  /// Opens the paywall unless one is already open, and tells whether the
+  /// user has Premium afterwards. The only way the app opens it.
+  Future<bool> openPaywall() async {
+    final router = GoRouter.of(this);
+    if (_paywallOpen[router] ?? false) return false;
+    _paywallOpen[router] = true;
+    final bool? unlocked;
+    try {
+      unlocked = await router.push<bool>(Routes.paywall);
+    } finally {
+      _paywallOpen[router] = false;
+    }
+    // The paywall pops with true before the cubit may have caught up.
+    return unlocked == true || (mounted && read<EntitlementCubit>().isActive);
+  }
 }
+
+/// One paywall at a time per router, whoever asks for it.
+final _paywallOpen = Expando<bool>();
