@@ -1,0 +1,2139 @@
+[
+  {
+    "id": "ex_barbell_bench_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "supine",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "family": "bench_press",
+    "familyRank": 9,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 180,
+    "incrementKg": 2.5,
+    "popularity": 2,
+    "l10n": {
+      "en": {
+        "name": "Barbell Bench Press",
+        "aliases": [
+          "Bench Press",
+          "Flat Bench Press",
+          "Flat Barbell Bench"
+        ],
+        "setup": [
+          "Lie on the bench with your eyes under the bar.",
+          "Plant your feet flat and squeeze your shoulder blades together.",
+          "Grip the bar a little wider than your shoulders and unrack it over your chest."
+        ],
+        "execution": [
+          "Lower the bar under control to your mid chest.",
+          "Keep your elbows about 45 degrees from your body.",
+          "Press the bar back up and slightly toward your face until your arms are straight."
+        ],
+        "mistakes": [
+          "Bouncing the bar off the chest.",
+          "Flaring the elbows straight out to the sides.",
+          "Lifting the hips off the bench."
+        ],
+        "safety": "Use a spotter or safety arms when you work close to failure.",
+        "cues": [
+          "Shoulder blades back and down",
+          "Touch, then drive"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_push_up",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt",
+      "abdominal"
+    ],
+    "family": "push_up",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 6,
+    "l10n": {
+      "en": {
+        "name": "Push-Up",
+        "aliases": [
+          "Press-Up",
+          "Floor Push-Up"
+        ],
+        "setup": [
+          "Place your hands on the floor slightly wider than your shoulders.",
+          "Step your feet back so your body forms a straight line from head to heels."
+        ],
+        "execution": [
+          "Bend your elbows and lower your chest until it nearly touches the floor.",
+          "Keep your elbows angled back, not flared wide.",
+          "Push the floor away until your arms are straight."
+        ],
+        "mistakes": [
+          "Letting the hips sag or pike up.",
+          "Doing half reps that stop well above the floor.",
+          "Dropping the head forward."
+        ],
+        "cues": [
+          "Body like a plank",
+          "Chest to the floor"
+        ]
+      }
+    },
+    "incrementKg": 2.5
+  },
+  {
+    "id": "ex_dumbbell_bench_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "supine",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "family": "bench_press",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2,
+    "popularity": 14,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Bench Press",
+        "aliases": [
+          "Flat Dumbbell Press",
+          "DB Bench Press"
+        ],
+        "setup": [
+          "Sit on the end of the bench with the dumbbells on your thighs.",
+          "Lie back and bring the dumbbells to the sides of your chest.",
+          "Set your feet and pull your shoulder blades together."
+        ],
+        "execution": [
+          "Press the dumbbells up until your arms are straight above your chest.",
+          "Lower them slowly until your elbows are just below the bench.",
+          "Keep your forearms vertical throughout."
+        ],
+        "mistakes": [
+          "Clanging the dumbbells together at the top.",
+          "Letting the elbows drop far below the bench.",
+          "Dropping the dumbbells to the floor while the arms are still bent."
+        ],
+        "cues": [
+          "Forearms vertical",
+          "Slow on the way down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_incline_dumbbell_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "incline",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "family": "incline_press",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2,
+    "popularity": 19,
+    "l10n": {
+      "en": {
+        "name": "Incline Dumbbell Press",
+        "aliases": [
+          "Incline DB Press",
+          "Incline Dumbbell Bench Press"
+        ],
+        "setup": [
+          "Set the bench to an incline of 30 to 45 degrees.",
+          "Sit back with the dumbbells at the sides of your upper chest.",
+          "Pull your shoulder blades back against the bench."
+        ],
+        "execution": [
+          "Press the dumbbells up over your upper chest.",
+          "Lower them under control until you feel a stretch across your chest.",
+          "Keep your elbows slightly tucked."
+        ],
+        "mistakes": [
+          "Setting the bench so steep it becomes a shoulder press.",
+          "Arching the lower back off the bench."
+        ],
+        "cues": [
+          "Press over the collarbones",
+          "Shoulder blades pinned"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_incline_barbell_bench_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "incline",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "family": "incline_press",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 26,
+    "l10n": {
+      "en": {
+        "name": "Incline Barbell Bench Press",
+        "aliases": [
+          "Incline Bench Press",
+          "Incline Barbell Press"
+        ],
+        "setup": [
+          "Set the bench to 30 to 45 degrees and sit with your eyes under the bar.",
+          "Grip slightly wider than your shoulders and squeeze your shoulder blades.",
+          "Unrack the bar over your upper chest."
+        ],
+        "execution": [
+          "Lower the bar to the top of your chest, just below the collarbones.",
+          "Press it back up in a straight line until your arms lock out."
+        ],
+        "mistakes": [
+          "Bouncing the bar off the chest.",
+          "Letting the hips leave the seat."
+        ],
+        "safety": "Use a spotter or safety arms when you work close to failure.",
+        "cues": [
+          "Bar to upper chest",
+          "Stay tight on the bench"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_machine_chest_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "seated",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "family": "bench_press",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 30,
+    "l10n": {
+      "en": {
+        "name": "Machine Chest Press",
+        "aliases": [
+          "Seated Chest Press",
+          "Chest Press Machine"
+        ],
+        "setup": [
+          "Adjust the seat so the handles line up with your mid chest.",
+          "Sit with your back against the pad and grip the handles."
+        ],
+        "execution": [
+          "Press the handles forward until your arms are almost straight.",
+          "Return slowly until you feel a stretch in your chest."
+        ],
+        "mistakes": [
+          "Letting the shoulders roll forward at the end of each rep.",
+          "Letting the weight stack crash between reps."
+        ],
+        "cues": [
+          "Chest up",
+          "Smooth and controlled"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_crossover",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "chest_fly",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 34,
+    "l10n": {
+      "en": {
+        "name": "Cable Crossover",
+        "aliases": [
+          "Cable Fly",
+          "Standing Cable Fly",
+          "High Cable Crossover"
+        ],
+        "setup": [
+          "Set both pulleys above shoulder height and hold a handle in each hand.",
+          "Take a step forward and lean your torso slightly.",
+          "Keep a soft bend in your elbows."
+        ],
+        "execution": [
+          "Bring the handles down and together in a wide arc in front of your hips.",
+          "Squeeze your chest for a moment.",
+          "Let your arms open slowly until you feel a stretch."
+        ],
+        "mistakes": [
+          "Bending the elbows and turning it into a press.",
+          "Using momentum from the torso."
+        ],
+        "cues": [
+          "Hug a big tree",
+          "Squeeze, then stretch"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_fly",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "supine",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "chest_fly",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 39,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Fly",
+        "aliases": [
+          "Dumbbell Chest Fly",
+          "Flat Dumbbell Fly"
+        ],
+        "setup": [
+          "Lie on a flat bench holding the dumbbells above your chest, palms facing each other.",
+          "Bend your elbows slightly and keep that angle fixed."
+        ],
+        "execution": [
+          "Open your arms in a wide arc until you feel a stretch across your chest.",
+          "Bring the dumbbells back up along the same arc."
+        ],
+        "mistakes": [
+          "Lowering the dumbbells so far that the shoulders hurt.",
+          "Straightening the arms completely, which strains the elbows."
+        ],
+        "safety": "Stop the stretch at shoulder level to protect the front of the shoulder.",
+        "cues": [
+          "Soft elbows",
+          "Wide arc"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_pec_deck",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "neutral",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "chest_fly",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 44,
+    "l10n": {
+      "en": {
+        "name": "Pec Deck",
+        "aliases": [
+          "Machine Fly",
+          "Pec Deck Fly",
+          "Butterfly Machine"
+        ],
+        "setup": [
+          "Adjust the seat so the handles are at chest height.",
+          "Sit with your back flat against the pad and grab the handles."
+        ],
+        "execution": [
+          "Bring the handles together in front of your chest.",
+          "Pause and squeeze, then let them open slowly until you feel a stretch."
+        ],
+        "mistakes": [
+          "Letting the hands travel behind the body.",
+          "Rushing the return."
+        ],
+        "cues": [
+          "Squeeze in the middle",
+          "Shoulders down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_chest_dip",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "hanging",
+    "grip": "neutral",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "dip_station"
+    ],
+    "mainMuscles": [
+      "pec",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "dip",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 50,
+    "l10n": {
+      "en": {
+        "name": "Chest Dip",
+        "aliases": [
+          "Dip",
+          "Parallel Bar Dip",
+          "Weighted Dip"
+        ],
+        "setup": [
+          "Grip the bars and jump up to support yourself with straight arms.",
+          "Lean your torso forward and bend your knees slightly."
+        ],
+        "execution": [
+          "Lower yourself until your shoulders are slightly below your elbows.",
+          "Keep the forward lean and press back up to straight arms."
+        ],
+        "mistakes": [
+          "Sinking too deep and straining the shoulders.",
+          "Shrugging the shoulders up toward the ears."
+        ],
+        "safety": "Stop the descent at a depth your shoulders tolerate without pain.",
+        "cues": [
+          "Lean forward",
+          "Shoulders down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_pullover",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "supine",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec",
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "family": "pullover",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 2,
+    "popularity": 87,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Pullover",
+        "aliases": [
+          "DB Pullover",
+          "Lying Dumbbell Pullover"
+        ],
+        "setup": [
+          "Lie across or along a bench holding one dumbbell with both hands above your chest.",
+          "Keep a slight bend in your elbows."
+        ],
+        "execution": [
+          "Lower the dumbbell behind your head in an arc until you feel a stretch in your chest and lats.",
+          "Pull it back over your chest along the same arc."
+        ],
+        "mistakes": [
+          "Bending the elbows so the move becomes a triceps extension.",
+          "Arching the lower back to reach further."
+        ],
+        "cues": [
+          "Long arms",
+          "Stretch, then pull"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_incline_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "push_up",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 75,
+    "l10n": {
+      "en": {
+        "name": "Incline Push-Up",
+        "aliases": [
+          "Hands-Elevated Push-Up"
+        ],
+        "setup": [
+          "Place your hands on a bench, box or sturdy counter, slightly wider than your shoulders.",
+          "Walk your feet back until your body forms a straight line."
+        ],
+        "execution": [
+          "Lower your chest to the edge of the surface.",
+          "Push back up until your arms are straight."
+        ],
+        "mistakes": [
+          "Letting the hips sag.",
+          "Placing the hands too far forward of the shoulders."
+        ],
+        "cues": [
+          "Straight line",
+          "Chest to the edge"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_knee_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "kneeling",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "push_up",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 81,
+    "l10n": {
+      "en": {
+        "name": "Knee Push-Up",
+        "aliases": [
+          "Kneeling Push-Up",
+          "Modified Push-Up"
+        ],
+        "setup": [
+          "Kneel and place your hands on the floor slightly wider than your shoulders.",
+          "Shift forward so your body is straight from knees to head."
+        ],
+        "execution": [
+          "Lower your chest toward the floor.",
+          "Press back up until your arms are straight."
+        ],
+        "mistakes": [
+          "Bending at the hips instead of keeping a straight line.",
+          "Shortening the range of motion."
+        ],
+        "cues": [
+          "Knees to head in one line"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_smith_machine_bench_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "supine",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "smith_machine",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "family": "bench_press",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 96,
+    "l10n": {
+      "en": {
+        "name": "Smith Machine Bench Press",
+        "aliases": [
+          "Smith Bench Press"
+        ],
+        "setup": [
+          "Place a flat bench under the bar so it lines up with your mid chest.",
+          "Lie down, grip slightly wider than your shoulders and set your shoulder blades.",
+          "Set the safety stops just below the bar's lowest point.",
+          "Unhook the bar by rotating it."
+        ],
+        "execution": [
+          "Lower the bar to your mid chest.",
+          "Press it back up until your arms are straight."
+        ],
+        "mistakes": [
+          "Positioning the bench so the bar lands on the neck or belly.",
+          "Forgetting to set the safety stops."
+        ],
+        "cues": [
+          "Mid chest",
+          "Elbows at 45 degrees"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_decline_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "family": "push_up",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 100,
+    "l10n": {
+      "en": {
+        "name": "Decline Push-Up",
+        "aliases": [
+          "Feet-Elevated Push-Up"
+        ],
+        "setup": [
+          "Place your feet on a bench or box and your hands on the floor under your shoulders.",
+          "Brace so your body forms a straight line."
+        ],
+        "execution": [
+          "Lower your chest toward the floor.",
+          "Push back up until your arms are straight."
+        ],
+        "mistakes": [
+          "Letting the lower back sag.",
+          "Placing the feet so high that the move becomes a shoulder press."
+        ],
+        "cues": [
+          "Hips in line",
+          "Full lockout"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_wide_grip_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "prone",
+    "gripWidth": "wide",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "family": "push_up",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 106,
+    "l10n": {
+      "en": {
+        "name": "Wide-Grip Push-Up",
+        "aliases": [
+          "Wide Push-Up"
+        ],
+        "setup": [
+          "Place your hands about one and a half shoulder widths apart.",
+          "Step back into a straight plank."
+        ],
+        "execution": [
+          "Lower your chest toward the floor.",
+          "Press back up while keeping your body straight."
+        ],
+        "mistakes": [
+          "Placing the hands so wide that the shoulders hurt.",
+          "Letting the hips sag."
+        ],
+        "cues": [
+          "Wide hands, full depth"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_decline_barbell_bench_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "decline",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "decline_press",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 112,
+    "l10n": {
+      "en": {
+        "name": "Decline Barbell Bench Press",
+        "aliases": [
+          "Decline Bench Press"
+        ],
+        "setup": [
+          "Hook your legs under the pads of a decline bench and lie back.",
+          "Grip slightly wider than your shoulders and unrack the bar with help or carefully."
+        ],
+        "execution": [
+          "Lower the bar to your lower chest.",
+          "Press it back up until your arms are straight."
+        ],
+        "mistakes": [
+          "Bouncing the bar off the chest.",
+          "Unracking alone without control."
+        ],
+        "safety": "Use a spotter; getting out from under a stuck bar on a decline is hard.",
+        "cues": [
+          "Bar to lower chest"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_machine_incline_chest_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "seated",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "family": "incline_press",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 119,
+    "l10n": {
+      "en": {
+        "name": "Machine Incline Chest Press",
+        "aliases": [
+          "Incline Chest Press Machine",
+          "Incline Machine Press"
+        ],
+        "setup": [
+          "Set the seat so the handles start level with your upper chest.",
+          "Sit back against the pad and grip the handles."
+        ],
+        "execution": [
+          "Press the handles up and forward until your arms are almost straight.",
+          "Return slowly to the start."
+        ],
+        "mistakes": [
+          "Pushing the head and shoulders forward off the pad.",
+          "Bouncing the weight stack."
+        ],
+        "cues": [
+          "Upper chest drives"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_low_to_high_cable_fly",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "chest_fly",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 127,
+    "l10n": {
+      "en": {
+        "name": "Low-to-High Cable Fly",
+        "aliases": [
+          "Low Cable Fly",
+          "Upward Cable Fly"
+        ],
+        "setup": [
+          "Set both pulleys at the lowest position and hold a handle in each hand.",
+          "Step forward with a staggered stance and a slight bend in the elbows."
+        ],
+        "execution": [
+          "Sweep your hands up and together to the height of your upper chest.",
+          "Lower them slowly along the same path."
+        ],
+        "mistakes": [
+          "Lifting with the shoulders and shrugging.",
+          "Bending the arms into a curl."
+        ],
+        "cues": [
+          "Scoop up and in"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_incline_smith_machine_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "incline",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "smith_machine",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "family": "incline_press",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 130,
+    "l10n": {
+      "en": {
+        "name": "Incline Smith Machine Press",
+        "aliases": [
+          "Smith Incline Press"
+        ],
+        "setup": [
+          "Place an incline bench under the bar so it lines up with your upper chest.",
+          "Set the safety stops just below the bar's lowest point.",
+          "Lie back, grip slightly wider than your shoulders and unhook the bar."
+        ],
+        "execution": [
+          "Lower the bar to your upper chest.",
+          "Press it back up until your arms are straight."
+        ],
+        "mistakes": [
+          "Lowering the bar to the neck.",
+          "Not setting the safety stops."
+        ],
+        "cues": [
+          "Bar to upper chest"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_incline_dumbbell_fly",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "incline",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "chest_fly",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 143,
+    "l10n": {
+      "en": {
+        "name": "Incline Dumbbell Fly",
+        "aliases": [
+          "Incline DB Fly"
+        ],
+        "setup": [
+          "Set the bench to about 30 degrees and lie back with the dumbbells above your chest.",
+          "Keep a soft bend in your elbows."
+        ],
+        "execution": [
+          "Open your arms in a wide arc until you feel a stretch in your upper chest.",
+          "Bring the dumbbells back together over your chest."
+        ],
+        "mistakes": [
+          "Lowering too far and stressing the shoulders.",
+          "Pressing the weight instead of hugging it."
+        ],
+        "cues": [
+          "Soft elbows",
+          "Stretch the upper chest"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_clap_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "plyo_push_up",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "popularity": 168,
+    "l10n": {
+      "en": {
+        "name": "Clap Push-Up",
+        "aliases": [
+          "Plyometric Clap Push-Up"
+        ],
+        "setup": [
+          "Start in a strong push-up position.",
+          "Brace your core so your body stays straight in the air."
+        ],
+        "execution": [
+          "Lower quickly, then push so hard that your hands leave the floor.",
+          "Clap once and land with soft elbows.",
+          "Reset before the next rep if needed."
+        ],
+        "mistakes": [
+          "Landing with locked elbows.",
+          "Letting the hips sag on the landing."
+        ],
+        "safety": "Master the explosive push-up first, and stop when your landing gets sloppy.",
+        "cues": [
+          "Push fast",
+          "Land soft"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_chest_press",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "bench_press",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 173,
+    "l10n": {
+      "en": {
+        "name": "Band Chest Press",
+        "aliases": [
+          "Resistance Band Chest Press",
+          "Banded Chest Press"
+        ],
+        "setup": [
+          "Anchor the band behind you at chest height and hold one end in each hand.",
+          "Step forward until the band is taut and stand in a staggered stance."
+        ],
+        "execution": [
+          "Press your hands forward until your arms are straight.",
+          "Return slowly until your hands are beside your chest."
+        ],
+        "mistakes": [
+          "Leaning the torso forward to finish the rep.",
+          "Letting the band snap back."
+        ],
+        "cues": [
+          "Press straight out",
+          "Slow return"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_explosive_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "plyo_push_up",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "popularity": 177,
+    "l10n": {
+      "en": {
+        "name": "Explosive Push-Up",
+        "aliases": [
+          "Plyo Push-Up",
+          "Plyometric Push-Up"
+        ],
+        "setup": [
+          "Start in a push-up position with your hands under your shoulders.",
+          "Brace your core so your body stays straight."
+        ],
+        "execution": [
+          "Lower with control, then push up as fast as you can so your hands leave the floor.",
+          "Land softly and go straight into the next rep."
+        ],
+        "mistakes": [
+          "Letting the body bend in the middle.",
+          "Landing hard on straight arms."
+        ],
+        "cues": [
+          "Fast up",
+          "Soft landing"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_chest_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "bench_press",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2.5,
+    "popularity": 188,
+    "l10n": {
+      "en": {
+        "name": "Cable Chest Press",
+        "aliases": [
+          "Standing Cable Press"
+        ],
+        "setup": [
+          "Set the pulleys at chest height and hold a handle in each hand.",
+          "Step forward into a staggered stance with the handles beside your chest."
+        ],
+        "execution": [
+          "Press the handles forward and slightly together until your arms are straight.",
+          "Return slowly to the start."
+        ],
+        "mistakes": [
+          "Leaning forward to move the weight.",
+          "Letting the elbows drift above shoulder height."
+        ],
+        "cues": [
+          "Brace and press"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_weighted_push_up",
+    "status": "retired",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "prone",
+    "equipment": [
+      "plate"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "push_up",
+    "familyRank": 11,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 411,
+    "l10n": {
+      "en": {
+        "name": "Weighted Push-Up",
+        "aliases": [
+          "Plate Push-Up"
+        ],
+        "setup": [
+          "Get into a push-up position.",
+          "Have a partner place a weight plate flat on your upper back, or wear a weight vest."
+        ],
+        "execution": [
+          "Lower your chest to the floor with the load steady.",
+          "Press back up until your arms are straight."
+        ],
+        "mistakes": [
+          "Letting the hips sag under the extra weight.",
+          "Letting the plate slide toward the neck."
+        ],
+        "cues": [
+          "Stay rigid",
+          "Full range"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_decline_dumbbell_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "decline",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "decline_press",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2,
+    "popularity": 204,
+    "l10n": {
+      "en": {
+        "name": "Decline Dumbbell Press",
+        "aliases": [
+          "Decline DB Press"
+        ],
+        "setup": [
+          "Hook your legs under the pads of a decline bench with a dumbbell on each thigh.",
+          "Lie back and bring the dumbbells to your lower chest."
+        ],
+        "execution": [
+          "Press the dumbbells up until your arms are straight.",
+          "Lower them slowly to the sides of your lower chest."
+        ],
+        "mistakes": [
+          "Letting the dumbbells drift toward the face.",
+          "Rushing the lowering."
+        ],
+        "cues": [
+          "Press over the lower chest"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_floor_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "supine",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "pec",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "bench_press",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 212,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Floor Press",
+        "aliases": [
+          "DB Floor Press"
+        ],
+        "setup": [
+          "Lie on your back with your knees bent and a dumbbell in each hand.",
+          "Rest your upper arms on the floor at about 45 degrees from your body."
+        ],
+        "execution": [
+          "Press the dumbbells up until your arms are straight.",
+          "Lower them until your upper arms touch the floor lightly, then press again."
+        ],
+        "mistakes": [
+          "Bouncing the elbows off the floor.",
+          "Flaring the elbows straight out."
+        ],
+        "cues": [
+          "Pause on the floor"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_squeeze_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "supine",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "bench_press",
+    "familyRank": 7,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 223,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Squeeze Press",
+        "aliases": [
+          "Hex Press",
+          "Crush Press"
+        ],
+        "setup": [
+          "Lie on a flat bench and hold two dumbbells together above your chest, palms facing each other.",
+          "Press the dumbbells firmly into each other."
+        ],
+        "execution": [
+          "Lower the dumbbells to your chest while squeezing them together.",
+          "Press back up without letting them separate."
+        ],
+        "mistakes": [
+          "Letting the dumbbells drift apart.",
+          "Using dumbbells too heavy to keep together."
+        ],
+        "cues": [
+          "Squeeze the whole time"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_barbell_floor_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "supine",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "pec",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "bench_press",
+    "familyRank": 8,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 230,
+    "l10n": {
+      "en": {
+        "name": "Barbell Floor Press",
+        "aliases": [
+          "Floor Press"
+        ],
+        "setup": [
+          "Set the bar in a rack at a height you can reach while lying on the floor.",
+          "Lie under it with your knees bent and grip slightly wider than your shoulders."
+        ],
+        "execution": [
+          "Lower the bar until your upper arms rest on the floor.",
+          "Pause briefly, then press the bar back up."
+        ],
+        "mistakes": [
+          "Bouncing the elbows off the floor.",
+          "Letting the bar drift toward the face."
+        ],
+        "cues": [
+          "Pause, then press"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_chest_fly",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "chest_fly",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 234,
+    "l10n": {
+      "en": {
+        "name": "Band Chest Fly",
+        "aliases": [
+          "Resistance Band Fly"
+        ],
+        "setup": [
+          "Anchor a band behind you at chest height and hold one end in each hand.",
+          "Step forward until the band is taut, arms open and elbows soft."
+        ],
+        "execution": [
+          "Bring your hands together in front of your chest in a wide arc.",
+          "Open your arms slowly back to the start."
+        ],
+        "mistakes": [
+          "Bending the elbows into a press.",
+          "Letting the band pull the arms behind the body."
+        ],
+        "cues": [
+          "Wide arc, soft elbows"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_suspension_trainer_chest_press",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "suspension_trainer"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt",
+      "abdominal"
+    ],
+    "family": "push_up",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 245,
+    "l10n": {
+      "en": {
+        "name": "Suspension Trainer Chest Press",
+        "aliases": [
+          "TRX Chest Press"
+        ],
+        "setup": [
+          "Face away from the anchor and hold the handles at chest height.",
+          "Walk your feet back to lean forward, body straight."
+        ],
+        "execution": [
+          "Lower your chest between the handles by bending your elbows.",
+          "Press back to straight arms without letting the straps rub your arms."
+        ],
+        "mistakes": [
+          "Letting the hips sag.",
+          "Letting the handles drift wide apart."
+        ],
+        "cues": [
+          "Plank the whole time",
+          "Elbows back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_archer_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "advanced",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "prone",
+    "gripWidth": "wide",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "push_up",
+    "familyRank": 8,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 259,
+    "l10n": {
+      "en": {
+        "name": "Archer Push-Up",
+        "aliases": [],
+        "setup": [
+          "Set your hands very wide in a push-up position.",
+          "Keep your body straight from head to heels."
+        ],
+        "execution": [
+          "Lower toward one hand while the other arm stays nearly straight.",
+          "Push back to the middle, then repeat on the other side."
+        ],
+        "mistakes": [
+          "Twisting the hips.",
+          "Bending both arms equally, which turns it into a wide push-up."
+        ],
+        "cues": [
+          "Work arm bends, helper arm straight"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ring_dip",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "hanging",
+    "grip": "neutral",
+    "equipment": [
+      "rings"
+    ],
+    "mainMuscles": [
+      "pec",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "abdominal"
+    ],
+    "family": "dip",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 272,
+    "l10n": {
+      "en": {
+        "name": "Ring Dip",
+        "aliases": [],
+        "setup": [
+          "Set the rings at about hip height and jump into a support with straight arms.",
+          "Press the rings against your sides and turn your palms slightly forward."
+        ],
+        "execution": [
+          "Lower until your shoulders are just below your elbows while keeping the rings close.",
+          "Press back up to a locked support."
+        ],
+        "mistakes": [
+          "Letting the rings drift away from the body.",
+          "Dropping too deep before the shoulders are ready."
+        ],
+        "safety": "Build a steady ring support hold and solid bar dips before trying ring dips.",
+        "cues": [
+          "Rings close to the body"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_scapular_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "trap"
+    ],
+    "family": "scapular_push_up",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 283,
+    "l10n": {
+      "en": {
+        "name": "Scapular Push-Up",
+        "aliases": [
+          "Serratus Push-Up",
+          "Push-Up Plus"
+        ],
+        "setup": [
+          "Get into a push-up position with straight arms.",
+          "Set your hands under your shoulders and brace your core."
+        ],
+        "execution": [
+          "Keeping your arms locked, let your chest sink so your shoulder blades come together.",
+          "Push the floor away so your upper back rounds and the shoulder blades spread."
+        ],
+        "mistakes": [
+          "Bending the elbows.",
+          "Letting the hips sag."
+        ],
+        "cues": [
+          "Arms locked",
+          "Move only the shoulder blades"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ring_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "prone",
+    "equipment": [
+      "rings"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt",
+      "abdominal"
+    ],
+    "family": "push_up",
+    "familyRank": 7,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 291,
+    "l10n": {
+      "en": {
+        "name": "Ring Push-Up",
+        "aliases": [],
+        "setup": [
+          "Set the rings a few centimetres off the floor and grip them in a push-up position.",
+          "Keep the rings under your shoulders."
+        ],
+        "execution": [
+          "Lower your chest between the rings while keeping them steady.",
+          "Press back up and turn the palms slightly forward at the top."
+        ],
+        "mistakes": [
+          "Letting the rings slide out to the sides.",
+          "Letting the hips sag."
+        ],
+        "cues": [
+          "Rings steady, body straight"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_svend_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "plate"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "svend_press",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 1.25,
+    "popularity": 297,
+    "l10n": {
+      "en": {
+        "name": "Svend Press",
+        "aliases": [
+          "Plate Squeeze Press",
+          "Plate Press"
+        ],
+        "setup": [
+          "Stand tall with your feet hip-width apart.",
+          "Press two small plates together between your palms at chest height."
+        ],
+        "execution": [
+          "Squeeze the plates hard and push them straight forward until your arms are extended.",
+          "Bring them back to your chest without easing the squeeze."
+        ],
+        "mistakes": [
+          "Letting the squeeze relax during the rep.",
+          "Leaning back."
+        ],
+        "cues": [
+          "Crush the plates"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_one_arm_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "advanced",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "oblique",
+      "abdominal"
+    ],
+    "family": "push_up",
+    "familyRank": 10,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "popularity": 313,
+    "l10n": {
+      "en": {
+        "name": "One-Arm Push-Up",
+        "aliases": [],
+        "setup": [
+          "Set your feet wider than your hips and place one hand under your chest.",
+          "Put the other hand behind your back and brace hard."
+        ],
+        "execution": [
+          "Lower your chest toward the floor without twisting.",
+          "Press back up to a straight arm."
+        ],
+        "mistakes": [
+          "Rotating the hips toward the floor.",
+          "Shortening the range."
+        ],
+        "cues": [
+          "Square hips",
+          "Squeeze everything"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_suspension_trainer_fly",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "suspension_trainer"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "abdominal"
+    ],
+    "family": "chest_fly",
+    "familyRank": 7,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 329,
+    "l10n": {
+      "en": {
+        "name": "Suspension Trainer Fly",
+        "aliases": [
+          "TRX Fly"
+        ],
+        "setup": [
+          "Face away from the anchor and hold the handles in front of your chest with straight arms.",
+          "Lean forward with your body straight."
+        ],
+        "execution": [
+          "Open your arms wide in an arc as your chest moves forward.",
+          "Squeeze your chest to bring the handles back together."
+        ],
+        "mistakes": [
+          "Bending the elbows too much.",
+          "Going so wide that the shoulders are overstretched."
+        ],
+        "safety": "Start with a small lean; this exercise loads the shoulders hard.",
+        "cues": [
+          "Hug, then open slowly"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_pseudo_planche_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec",
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "abdominal"
+    ],
+    "family": "push_up",
+    "familyRank": 9,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "popularity": 347,
+    "l10n": {
+      "en": {
+        "name": "Pseudo Planche Push-Up",
+        "aliases": [],
+        "setup": [
+          "Place your hands at your waist with your fingers turned outward.",
+          "Lean your shoulders forward past your hands and lock your body straight."
+        ],
+        "execution": [
+          "Lower your chest toward the floor while keeping the forward lean.",
+          "Press back up without losing the lean."
+        ],
+        "mistakes": [
+          "Letting the shoulders drift back over the hands.",
+          "Letting the hips sag."
+        ],
+        "safety": "Build up slowly; the forward lean puts heavy strain on wrists and elbows.",
+        "cues": [
+          "Shoulders ahead of hands"
+        ]
+      }
+    }
+  }
+]

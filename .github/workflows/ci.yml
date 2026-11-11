@@ -17,8 +17,10 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: dart format --output=none --set-exit-if-changed lib $([ -d test ] && echo test)
+      - run: dart format --output=none --set-exit-if-changed lib tool $([ -d test ] && echo test)
       - run: flutter analyze
+      - name: Validate exercise content
+        run: dart run tool/validate_content.dart
       - name: Test
         run: |
           if find test -name '*_test.dart' 2>/dev/null | grep -q .; then flutter test; fi

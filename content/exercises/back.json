@@ -1,0 +1,2700 @@
+[
+  {
+    "id": "ex_pull_up",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "hanging",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "trap",
+      "rear_delt",
+      "forearm"
+    ],
+    "family": "pull_up",
+    "familyRank": 7,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 4,
+    "l10n": {
+      "en": {
+        "name": "Pull-Up",
+        "aliases": [
+          "Pullup",
+          "Overhand Pull-Up",
+          "Weighted Pull-Up"
+        ],
+        "setup": [
+          "Grip the bar with palms facing away, hands slightly wider than your shoulders.",
+          "Hang with straight arms and brace your core."
+        ],
+        "execution": [
+          "Pull your shoulder blades down, then pull your chest toward the bar.",
+          "Lift until your chin is over the bar.",
+          "Lower yourself all the way to straight arms."
+        ],
+        "mistakes": [
+          "Kicking or swinging to get up.",
+          "Stopping short of straight arms at the bottom.",
+          "Reaching the chin forward instead of lifting the chest."
+        ],
+        "cues": [
+          "Elbows to your back pockets",
+          "Chest to the bar"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_barbell_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps",
+      "erector",
+      "forearm"
+    ],
+    "family": "bent_over_row",
+    "familyRank": 7,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 7,
+    "l10n": {
+      "en": {
+        "name": "Barbell Row",
+        "aliases": [
+          "Bent-Over Row",
+          "Barbell Bent-Over Row",
+          "BB Row"
+        ],
+        "setup": [
+          "Hold the bar with an overhand grip just outside your knees.",
+          "Hinge at the hips until your torso is at about 45 degrees or lower.",
+          "Keep your back flat and knees softly bent."
+        ],
+        "execution": [
+          "Pull the bar to your lower ribs, driving the elbows back.",
+          "Squeeze your shoulder blades together at the top.",
+          "Lower the bar until your arms are straight."
+        ],
+        "mistakes": [
+          "Standing up more with every rep.",
+          "Rounding the lower back.",
+          "Jerking the weight up with the hips."
+        ],
+        "cues": [
+          "Flat back",
+          "Elbows back, not out"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_lat_pulldown",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "seated",
+    "grip": "overhand",
+    "gripWidth": "wide",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "trap",
+      "rear_delt"
+    ],
+    "family": "lat_pulldown",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 5,
+    "popularity": 10,
+    "l10n": {
+      "en": {
+        "name": "Lat Pulldown",
+        "aliases": [
+          "Wide-Grip Lat Pulldown",
+          "Cable Pulldown",
+          "Pulldown"
+        ],
+        "setup": [
+          "Set the thigh pad so your legs are locked in.",
+          "Grip the bar wider than your shoulders with palms facing away.",
+          "Sit tall with a slight lean back."
+        ],
+        "execution": [
+          "Pull the bar down to your upper chest while driving the elbows down.",
+          "Pause, then let the bar rise until your arms are straight."
+        ],
+        "mistakes": [
+          "Pulling the bar behind the neck.",
+          "Leaning far back and turning it into a row.",
+          "Letting the weight yank the arms up."
+        ],
+        "cues": [
+          "Elbows down to the ribs",
+          "Chest up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_seated_cable_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "seated",
+    "grip": "neutral",
+    "gripWidth": "narrow",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps",
+      "forearm"
+    ],
+    "family": "seated_row",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 5,
+    "popularity": 12,
+    "l10n": {
+      "en": {
+        "name": "Seated Cable Row",
+        "aliases": [
+          "Cable Row",
+          "Low Row",
+          "Seated Row"
+        ],
+        "setup": [
+          "Sit at the row station with your feet on the platform and knees slightly bent.",
+          "Hold the handle with straight arms and sit tall."
+        ],
+        "execution": [
+          "Pull the handle to your belly while keeping your torso still.",
+          "Squeeze your shoulder blades together.",
+          "Let the handle go forward until your arms are straight and your shoulders reach."
+        ],
+        "mistakes": [
+          "Rocking the torso back and forth.",
+          "Rounding the back at the front of the rep."
+        ],
+        "cues": [
+          "Sit tall",
+          "Pull to the belly button"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_chin_up",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "hanging",
+    "grip": "underhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "lat",
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "rear_delt",
+      "forearm"
+    ],
+    "family": "pull_up",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 13,
+    "l10n": {
+      "en": {
+        "name": "Chin-Up",
+        "aliases": [
+          "Chinup",
+          "Underhand Pull-Up",
+          "Weighted Chin-Up"
+        ],
+        "setup": [
+          "Grip the bar with palms facing you, hands about shoulder-width apart.",
+          "Hang with straight arms and brace your core."
+        ],
+        "execution": [
+          "Pull until your chin clears the bar.",
+          "Lower yourself slowly to straight arms."
+        ],
+        "mistakes": [
+          "Using half reps.",
+          "Swinging the legs for momentum."
+        ],
+        "cues": [
+          "Chest to the bar",
+          "Full hang every rep"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_one_arm_dumbbell_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "bent_over_row",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 17,
+    "l10n": {
+      "en": {
+        "name": "One-Arm Dumbbell Row",
+        "aliases": [
+          "Single-Arm Dumbbell Row",
+          "DB Row",
+          "One-Arm DB Row"
+        ],
+        "setup": [
+          "Place one knee and the same hand on a bench.",
+          "Hold a dumbbell in the other hand with your arm straight.",
+          "Keep your back flat and parallel to the floor."
+        ],
+        "execution": [
+          "Pull the dumbbell toward your hip, keeping the elbow close.",
+          "Lower it until your arm is straight and the shoulder stretches."
+        ],
+        "mistakes": [
+          "Twisting the torso to lift the weight.",
+          "Pulling toward the chest instead of the hip."
+        ],
+        "cues": [
+          "Elbow to the hip",
+          "Keep the shoulders square"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_shrug",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "shrug",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2,
+    "popularity": 54,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Shrug",
+        "aliases": [
+          "DB Shrug"
+        ],
+        "setup": [
+          "Stand tall with a dumbbell in each hand at your sides.",
+          "Let your arms hang straight with palms facing in."
+        ],
+        "execution": [
+          "Lift your shoulders straight up toward your ears.",
+          "Hold the top for a second, then lower slowly."
+        ],
+        "mistakes": [
+          "Rolling the shoulders in circles.",
+          "Bending the elbows to help."
+        ],
+        "cues": [
+          "Straight up, straight down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_barbell_shrug",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "shrug",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 58,
+    "l10n": {
+      "en": {
+        "name": "Barbell Shrug",
+        "aliases": [
+          "BB Shrug"
+        ],
+        "setup": [
+          "Hold the bar in front of your thighs with an overhand grip just outside your hips.",
+          "Stand tall with your arms straight."
+        ],
+        "execution": [
+          "Shrug your shoulders straight up as high as you can.",
+          "Pause, then lower the bar slowly."
+        ],
+        "mistakes": [
+          "Rolling the shoulders.",
+          "Using a bouncing motion with the knees."
+        ],
+        "cues": [
+          "Ears to shoulders"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_back_extension",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "prone",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "family": "back_extension",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2.5,
+    "popularity": 60,
+    "l10n": {
+      "en": {
+        "name": "Back Extension",
+        "aliases": [
+          "Hyperextension",
+          "45-Degree Back Extension",
+          "Roman Chair Back Extension"
+        ],
+        "setup": [
+          "Set the pad just below your hip bones and hook your heels under the foot pads.",
+          "Cross your arms over your chest or hug a plate for extra load."
+        ],
+        "execution": [
+          "Lower your torso by bending at the hips until you feel a stretch in the hamstrings.",
+          "Raise your torso until your body is in a straight line."
+        ],
+        "mistakes": [
+          "Arching far past straight at the top.",
+          "Setting the pad so high that the hips cannot bend."
+        ],
+        "cues": [
+          "Hinge at the hips",
+          "Stop at a straight line"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_t_bar_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "neutral",
+    "gripWidth": "narrow",
+    "equipment": [
+      "landmine"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps",
+      "erector"
+    ],
+    "family": "bent_over_row",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 63,
+    "l10n": {
+      "en": {
+        "name": "T-Bar Row",
+        "aliases": [
+          "Landmine Row",
+          "T Bar Row"
+        ],
+        "setup": [
+          "Load one end of a barbell set in a landmine and straddle it.",
+          "Hook a V-handle under the bar near the plates.",
+          "Hinge until your torso is about 45 degrees, back flat."
+        ],
+        "execution": [
+          "Pull the handle to your chest, driving the elbows back.",
+          "Lower until your arms are straight."
+        ],
+        "mistakes": [
+          "Rounding the lower back.",
+          "Using the legs to heave the weight."
+        ],
+        "cues": [
+          "Chest proud",
+          "Pull to the sternum"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_close_grip_lat_pulldown",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "seated",
+    "grip": "neutral",
+    "gripWidth": "narrow",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "trap",
+      "rear_delt"
+    ],
+    "family": "lat_pulldown",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 5,
+    "popularity": 66,
+    "l10n": {
+      "en": {
+        "name": "Close-Grip Lat Pulldown",
+        "aliases": [
+          "V-Bar Pulldown",
+          "Neutral-Grip Pulldown"
+        ],
+        "setup": [
+          "Attach a V-handle and sit with your thighs under the pad.",
+          "Hold the handle with palms facing each other."
+        ],
+        "execution": [
+          "Pull the handle to your upper chest while leaning back slightly.",
+          "Let it rise until your arms are straight."
+        ],
+        "mistakes": [
+          "Pulling with the arms only.",
+          "Rocking the torso."
+        ],
+        "cues": [
+          "Elbows close and down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_machine_assisted_pull_up",
+    "status": "live",
+    "loggingType": "assisted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "kneeling",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "trap",
+      "rear_delt"
+    ],
+    "family": "pull_up",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 69,
+    "l10n": {
+      "en": {
+        "name": "Machine-Assisted Pull-Up",
+        "aliases": [
+          "Assisted Pull-Up",
+          "Gravitron"
+        ],
+        "setup": [
+          "Set the assistance weight; more weight makes it easier.",
+          "Kneel or stand on the platform and grip the handles."
+        ],
+        "execution": [
+          "Pull your chest up toward the handles.",
+          "Lower yourself slowly to straight arms."
+        ],
+        "mistakes": [
+          "Bouncing off the platform.",
+          "Using so much help that the reps are effortless."
+        ],
+        "cues": [
+          "Full range, chest up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_bent_over_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps",
+      "erector"
+    ],
+    "family": "bent_over_row",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2,
+    "popularity": 78,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Bent-Over Row",
+        "aliases": [
+          "Two-Arm Dumbbell Row",
+          "DB Bent-Over Row"
+        ],
+        "setup": [
+          "Hold a dumbbell in each hand and hinge at the hips with knees soft.",
+          "Keep your back flat with the dumbbells hanging under your shoulders."
+        ],
+        "execution": [
+          "Row both dumbbells to your hips.",
+          "Lower them until your arms are straight."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Standing more upright as the set goes on."
+        ],
+        "cues": [
+          "Flat back",
+          "Row to the hips"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_machine_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "seated",
+    "grip": "neutral",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "seated_row",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 84,
+    "l10n": {
+      "en": {
+        "name": "Machine Row",
+        "aliases": [
+          "Chest-Supported Machine Row",
+          "Seated Machine Row"
+        ],
+        "setup": [
+          "Adjust the seat so the handles line up with your lower chest.",
+          "Sit with your chest against the pad and grip the handles."
+        ],
+        "execution": [
+          "Pull the handles back until your elbows pass your torso.",
+          "Squeeze your shoulder blades, then return slowly."
+        ],
+        "mistakes": [
+          "Lifting the chest off the pad.",
+          "Shrugging the shoulders."
+        ],
+        "cues": [
+          "Chest on the pad",
+          "Squeeze the back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_chest_supported_dumbbell_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "prone",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "bent_over_row",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 90,
+    "l10n": {
+      "en": {
+        "name": "Chest-Supported Dumbbell Row",
+        "aliases": [
+          "Incline Dumbbell Row",
+          "Prone Dumbbell Row"
+        ],
+        "setup": [
+          "Set a bench to a low incline and lie face down on it.",
+          "Let a dumbbell hang from each hand under your shoulders."
+        ],
+        "execution": [
+          "Row the dumbbells up until your elbows pass your torso.",
+          "Lower them until your arms are straight."
+        ],
+        "mistakes": [
+          "Lifting the chest off the bench.",
+          "Curling the weight with the biceps."
+        ],
+        "cues": [
+          "Chest stays down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_straight_arm_pulldown",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "family": "pullover",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 93,
+    "l10n": {
+      "en": {
+        "name": "Straight-Arm Pulldown",
+        "aliases": [
+          "Straight-Arm Cable Pulldown",
+          "Cable Pullover",
+          "Lat Pushdown"
+        ],
+        "setup": [
+          "Attach a straight bar or rope to a high pulley.",
+          "Step back, hinge slightly and hold the bar with straight arms at eye level."
+        ],
+        "execution": [
+          "Sweep the bar down to your thighs while keeping the arms straight.",
+          "Let it rise slowly back to eye level."
+        ],
+        "mistakes": [
+          "Bending the elbows into a pushdown.",
+          "Shrugging the shoulders up."
+        ],
+        "cues": [
+          "Long arms",
+          "Drive to the thighs"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_inverted_row",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "supine",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "inverted_row",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 103,
+    "l10n": {
+      "en": {
+        "name": "Inverted Row",
+        "aliases": [
+          "Bodyweight Row",
+          "Australian Pull-Up"
+        ],
+        "setup": [
+          "Set a bar in a rack or Smith machine at about waist height.",
+          "Hang under it with straight arms and heels on the floor, body straight."
+        ],
+        "execution": [
+          "Pull your chest to the bar.",
+          "Lower yourself until your arms are straight."
+        ],
+        "mistakes": [
+          "Letting the hips sag.",
+          "Reaching with the chin instead of the chest."
+        ],
+        "cues": [
+          "Body straight",
+          "Chest to the bar"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_neutral_grip_pull_up",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "hanging",
+    "grip": "neutral",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "trap",
+      "rear_delt",
+      "forearm"
+    ],
+    "family": "pull_up",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 109,
+    "l10n": {
+      "en": {
+        "name": "Neutral-Grip Pull-Up",
+        "aliases": [
+          "Hammer-Grip Pull-Up",
+          "Parallel-Grip Pull-Up"
+        ],
+        "setup": [
+          "Grip the parallel handles with palms facing each other.",
+          "Hang with straight arms."
+        ],
+        "execution": [
+          "Pull up until your chin is above the handles.",
+          "Lower yourself all the way down."
+        ],
+        "mistakes": [
+          "Kipping.",
+          "Cutting the bottom of the rep short."
+        ],
+        "cues": [
+          "Chest up, elbows down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_wide_grip_pull_up",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "hanging",
+    "grip": "overhand",
+    "gripWidth": "wide",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "pull_up",
+    "familyRank": 8,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 116,
+    "l10n": {
+      "en": {
+        "name": "Wide-Grip Pull-Up",
+        "aliases": [
+          "Wide Pull-Up"
+        ],
+        "setup": [
+          "Grip the bar well wider than your shoulders with palms facing away.",
+          "Hang with straight arms and brace."
+        ],
+        "execution": [
+          "Pull your chest toward the bar until your chin clears it.",
+          "Lower under control to straight arms."
+        ],
+        "mistakes": [
+          "Using a grip so wide the range becomes tiny.",
+          "Swinging."
+        ],
+        "cues": [
+          "Elbows down and back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_pendlay_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps",
+      "erector"
+    ],
+    "family": "bent_over_row",
+    "familyRank": 10,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 123,
+    "l10n": {
+      "en": {
+        "name": "Pendlay Row",
+        "aliases": [
+          "Dead-Stop Row"
+        ],
+        "setup": [
+          "Set the bar on the floor and hinge until your torso is close to parallel.",
+          "Grip the bar a little wider than shoulders with a flat back."
+        ],
+        "execution": [
+          "Pull the bar explosively to your lower chest.",
+          "Return it to the floor and let it settle before the next rep."
+        ],
+        "mistakes": [
+          "Lifting the torso as the bar rises.",
+          "Rounding the back to reach the bar."
+        ],
+        "safety": "Keep the back flat; this position loads the lower back heavily.",
+        "cues": [
+          "Torso still",
+          "Reset on the floor"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_superman",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "superman",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 134,
+    "l10n": {
+      "en": {
+        "name": "Superman",
+        "aliases": [
+          "Prone Back Extension",
+          "Superman Raise"
+        ],
+        "setup": [
+          "Lie face down with your arms stretched overhead and legs straight.",
+          "Keep your forehead just above the floor."
+        ],
+        "execution": [
+          "Lift your arms, chest and legs a few centimetres off the floor together.",
+          "Hold for a breath, then lower slowly."
+        ],
+        "mistakes": [
+          "Cranking the neck up to look forward.",
+          "Lifting by swinging rather than squeezing."
+        ],
+        "cues": [
+          "Long and low",
+          "Squeeze the glutes"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_reverse_grip_lat_pulldown",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "seated",
+    "grip": "underhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "lat",
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "rear_delt"
+    ],
+    "family": "lat_pulldown",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 5,
+    "popularity": 138,
+    "l10n": {
+      "en": {
+        "name": "Reverse-Grip Lat Pulldown",
+        "aliases": [
+          "Underhand Lat Pulldown",
+          "Supinated Pulldown"
+        ],
+        "setup": [
+          "Sit with your thighs under the pad.",
+          "Grip the bar about shoulder width with palms facing you."
+        ],
+        "execution": [
+          "Pull the bar to your upper chest.",
+          "Let it return until your arms are straight."
+        ],
+        "mistakes": [
+          "Leaning far back.",
+          "Letting the elbows flare."
+        ],
+        "cues": [
+          "Elbows to the ribs"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_negative_pull_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "hanging",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "trap"
+    ],
+    "family": "pull_up",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 147,
+    "l10n": {
+      "en": {
+        "name": "Negative Pull-Up",
+        "aliases": [
+          "Eccentric Pull-Up",
+          "Pull-Up Negative"
+        ],
+        "setup": [
+          "Use a box or a jump to get your chin above the bar.",
+          "Grip with palms facing away, shoulder width."
+        ],
+        "execution": [
+          "Lower yourself as slowly as you can, aiming for three to five seconds.",
+          "Step back up and repeat."
+        ],
+        "mistakes": [
+          "Dropping quickly through the bottom half.",
+          "Letting the shoulders shrug up at the bottom."
+        ],
+        "cues": [
+          "Slow all the way down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_underhand_barbell_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "underhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "biceps",
+      "rear_delt",
+      "erector"
+    ],
+    "family": "bent_over_row",
+    "familyRank": 8,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 151,
+    "l10n": {
+      "en": {
+        "name": "Underhand Barbell Row",
+        "aliases": [
+          "Reverse-Grip Barbell Row",
+          "Yates Row"
+        ],
+        "setup": [
+          "Hold the bar with palms facing forward, hands shoulder width.",
+          "Hinge to about 45 degrees with a flat back."
+        ],
+        "execution": [
+          "Row the bar to your lower belly, keeping the elbows close.",
+          "Lower until your arms are straight."
+        ],
+        "mistakes": [
+          "Heaving with the hips.",
+          "Curling the weight with the biceps."
+        ],
+        "cues": [
+          "Elbows close",
+          "Pull to the belly"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_assisted_pull_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "hanging",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "pull_up_bar",
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "trap"
+    ],
+    "family": "pull_up",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 155,
+    "l10n": {
+      "en": {
+        "name": "Band-Assisted Pull-Up",
+        "aliases": [
+          "Banded Pull-Up"
+        ],
+        "setup": [
+          "Loop a band over the bar and put one knee or foot into it.",
+          "Grip the bar slightly wider than your shoulders and hang."
+        ],
+        "execution": [
+          "Pull your chin over the bar.",
+          "Lower slowly to straight arms."
+        ],
+        "mistakes": [
+          "Letting the band launch you at the bottom.",
+          "Using the same thick band forever."
+        ],
+        "cues": [
+          "Control the bottom",
+          "Chest to the bar"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_suspension_trainer_row",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "suspension_trainer"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "inverted_row",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 159,
+    "l10n": {
+      "en": {
+        "name": "Suspension Trainer Row",
+        "aliases": [
+          "TRX Row",
+          "Suspension Row"
+        ],
+        "setup": [
+          "Face the anchor holding a handle in each hand.",
+          "Walk your feet forward and lean back with straight arms and a straight body."
+        ],
+        "execution": [
+          "Pull your chest to the handles.",
+          "Lower yourself until your arms are straight."
+        ],
+        "mistakes": [
+          "Letting the hips drop.",
+          "Shrugging the shoulders."
+        ],
+        "cues": [
+          "Body straight"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_scapular_pull_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "hanging",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "trap",
+      "lat"
+    ],
+    "secondaryMuscles": [],
+    "family": "scapular_pull_up",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 163,
+    "l10n": {
+      "en": {
+        "name": "Scapular Pull-Up",
+        "aliases": [
+          "Scap Pull-Up"
+        ],
+        "setup": [
+          "Hang from the bar with straight arms.",
+          "Let your shoulders rise toward your ears."
+        ],
+        "execution": [
+          "Without bending the arms, pull your shoulder blades down so your body rises a few centimetres.",
+          "Lower back to a relaxed hang."
+        ],
+        "mistakes": [
+          "Bending the elbows.",
+          "Swinging the legs."
+        ],
+        "cues": [
+          "Straight arms, shoulders down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ring_row",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "rings"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "inverted_row",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 184,
+    "l10n": {
+      "en": {
+        "name": "Ring Row",
+        "aliases": [
+          "Ring Inverted Row"
+        ],
+        "setup": [
+          "Set the rings at about waist height and grip one in each hand.",
+          "Walk your feet forward and lean back with a straight body."
+        ],
+        "execution": [
+          "Pull your chest up to the rings, turning your palms in as you rise.",
+          "Lower until your arms are straight."
+        ],
+        "mistakes": [
+          "Letting the hips sag.",
+          "Pulling the rings far apart."
+        ],
+        "cues": [
+          "Body straight",
+          "Rings to the ribs"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_close_grip_chin_up",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "hanging",
+    "grip": "underhand",
+    "gripWidth": "narrow",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "biceps",
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "forearm"
+    ],
+    "family": "pull_up",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 194,
+    "l10n": {
+      "en": {
+        "name": "Close-Grip Chin-Up",
+        "aliases": [
+          "Narrow Chin-Up"
+        ],
+        "setup": [
+          "Grip the bar with palms facing you and hands a few centimetres apart.",
+          "Hang with straight arms."
+        ],
+        "execution": [
+          "Pull up until your chin clears the bar, elbows staying in front of the body.",
+          "Lower to straight arms."
+        ],
+        "mistakes": [
+          "Half reps at the bottom.",
+          "Swinging."
+        ],
+        "cues": [
+          "Elbows forward and down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bar_muscle_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "hanging",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "lat",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "pec",
+      "biceps",
+      "front_delt",
+      "abdominal"
+    ],
+    "family": "muscle_up",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "popularity": 196,
+    "l10n": {
+      "en": {
+        "name": "Bar Muscle-Up",
+        "aliases": [
+          "Muscle-Up"
+        ],
+        "setup": [
+          "Grip the bar with palms facing away, slightly narrower than for a pull-up.",
+          "Hang and start a small, controlled swing."
+        ],
+        "execution": [
+          "Pull explosively toward your hips, bringing the bar low on your chest.",
+          "Lean the chest over the bar as you rotate the wrists over it.",
+          "Press up to straight arms above the bar."
+        ],
+        "mistakes": [
+          "Pulling straight up to the chin instead of toward the hips.",
+          "Getting one arm over before the other."
+        ],
+        "safety": "Be able to do strict pull-ups and dips with control before you try muscle-ups.",
+        "cues": [
+          "Pull to the hips",
+          "Chest over the bar"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_single_arm_cable_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "seated",
+    "grip": "neutral",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "seated_row",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 2.5,
+    "popularity": 208,
+    "l10n": {
+      "en": {
+        "name": "Single-Arm Cable Row",
+        "aliases": [
+          "One-Arm Cable Row"
+        ],
+        "setup": [
+          "Attach a single handle to a low or mid pulley.",
+          "Sit or stand facing it and hold the handle with one arm straight."
+        ],
+        "execution": [
+          "Row the handle to your side, driving the elbow back.",
+          "Let it return slowly, reaching the shoulder forward."
+        ],
+        "mistakes": [
+          "Twisting the torso to move the weight.",
+          "Shrugging."
+        ],
+        "cues": [
+          "Elbow to the hip"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_lat_pulldown",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "kneeling",
+    "grip": "overhand",
+    "gripWidth": "wide",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "trap"
+    ],
+    "family": "lat_pulldown",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 219,
+    "l10n": {
+      "en": {
+        "name": "Band Lat Pulldown",
+        "aliases": [
+          "Resistance Band Pulldown"
+        ],
+        "setup": [
+          "Anchor a band high, such as over a door or bar.",
+          "Kneel facing it and hold the ends with straight arms overhead."
+        ],
+        "execution": [
+          "Pull your hands down to your shoulders, driving the elbows to your sides.",
+          "Let your arms rise slowly."
+        ],
+        "mistakes": [
+          "Bending forward at the waist.",
+          "Letting the band snap the arms up."
+        ],
+        "cues": [
+          "Elbows down to the ribs"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_seated_row",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "seated",
+    "grip": "neutral",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "seated_row",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 226,
+    "l10n": {
+      "en": {
+        "name": "Band Seated Row",
+        "aliases": [
+          "Resistance Band Row"
+        ],
+        "setup": [
+          "Sit with your legs straight and loop the band around your feet.",
+          "Hold the ends with straight arms and sit tall."
+        ],
+        "execution": [
+          "Pull your hands to your waist, squeezing the shoulder blades.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Leaning back to pull.",
+          "Rounding the back at the start."
+        ],
+        "cues": [
+          "Sit tall",
+          "Squeeze the back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_seal_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "prone",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "bent_over_row",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 240,
+    "l10n": {
+      "en": {
+        "name": "Seal Row",
+        "aliases": [
+          "Bench Row"
+        ],
+        "setup": [
+          "Raise a flat bench on blocks so your arms hang straight without the bar touching the floor.",
+          "Lie face down with the bar below you."
+        ],
+        "execution": [
+          "Pull the bar up to the underside of the bench.",
+          "Lower it until your arms are straight."
+        ],
+        "mistakes": [
+          "Lifting the chest off the bench.",
+          "Using a bench too low for a full stretch."
+        ],
+        "cues": [
+          "Chest glued to the bench"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_wide_grip_seated_cable_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "seated",
+    "grip": "overhand",
+    "gripWidth": "wide",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "trap",
+      "rear_delt"
+    ],
+    "secondaryMuscles": [
+      "lat",
+      "biceps"
+    ],
+    "family": "seated_row",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 246,
+    "l10n": {
+      "en": {
+        "name": "Wide-Grip Seated Cable Row",
+        "aliases": [
+          "Wide Cable Row",
+          "Upper-Back Row"
+        ],
+        "setup": [
+          "Attach a long straight bar to the low pulley.",
+          "Sit tall and grip the bar wider than your shoulders."
+        ],
+        "execution": [
+          "Row the bar to your lower chest with the elbows flared to about 60 degrees.",
+          "Squeeze the upper back, then return slowly."
+        ],
+        "mistakes": [
+          "Rocking the torso.",
+          "Shrugging the shoulders."
+        ],
+        "cues": [
+          "Elbows wide, squeeze the upper back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_meadows_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "landmine"
+    ],
+    "mainMuscles": [
+      "lat",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "bent_over_row",
+    "familyRank": 9,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2.5,
+    "popularity": 254,
+    "l10n": {
+      "en": {
+        "name": "Meadows Row",
+        "aliases": [],
+        "setup": [
+          "Stand side-on to the end of a landmine bar in a staggered stance.",
+          "Hinge forward and grip the thick end of the bar with an overhand grip."
+        ],
+        "execution": [
+          "Row the bar up and back toward your hip.",
+          "Lower until your arm is straight."
+        ],
+        "mistakes": [
+          "Rotating the torso.",
+          "Rounding the back."
+        ],
+        "cues": [
+          "Elbow up and back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_kettlebell_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "bent_over_row",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 4,
+    "popularity": 266,
+    "l10n": {
+      "en": {
+        "name": "Kettlebell Row",
+        "aliases": [
+          "Single-Arm Kettlebell Row"
+        ],
+        "setup": [
+          "Stand in a split stance and rest one hand on your front thigh or a bench.",
+          "Hold a kettlebell in the other hand with your arm straight."
+        ],
+        "execution": [
+          "Row the kettlebell to your hip.",
+          "Lower it slowly until your arm is straight."
+        ],
+        "mistakes": [
+          "Twisting to lift.",
+          "Rounding the upper back."
+        ],
+        "cues": [
+          "Elbow to the hip"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_back_extension_machine",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "family": "back_extension",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 5,
+    "popularity": 273,
+    "l10n": {
+      "en": {
+        "name": "Back Extension Machine",
+        "aliases": [
+          "Seated Back Extension"
+        ],
+        "setup": [
+          "Adjust the machine so the pad sits across your upper back.",
+          "Fasten the belt or foot rest and sit tall."
+        ],
+        "execution": [
+          "Push back against the pad by extending your spine and hips.",
+          "Return slowly to the start."
+        ],
+        "mistakes": [
+          "Using momentum.",
+          "Throwing the head back."
+        ],
+        "cues": [
+          "Slow and controlled"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_single_arm_kneeling_lat_pulldown",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "kneeling",
+    "grip": "neutral",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "biceps"
+    ],
+    "family": "lat_pulldown",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 2.5,
+    "popularity": 280,
+    "l10n": {
+      "en": {
+        "name": "Single-Arm Kneeling Lat Pulldown",
+        "aliases": [
+          "One-Arm Pulldown"
+        ],
+        "setup": [
+          "Attach a handle to a high pulley and kneel facing it.",
+          "Hold the handle with one arm straight overhead."
+        ],
+        "execution": [
+          "Pull the elbow down to your side.",
+          "Let the arm rise until you feel a stretch in your lat."
+        ],
+        "mistakes": [
+          "Rotating the torso to pull.",
+          "Stopping short at the top."
+        ],
+        "cues": [
+          "Elbow to the hip"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_stability_ball_back_extension",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "prone",
+    "equipment": [
+      "stability_ball"
+    ],
+    "mainMuscles": [
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "family": "back_extension",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 287,
+    "l10n": {
+      "en": {
+        "name": "Stability Ball Back Extension",
+        "aliases": [
+          "Ball Back Extension"
+        ],
+        "setup": [
+          "Lie face down over a stability ball with the ball under your hips.",
+          "Brace your feet wide against a wall or the floor."
+        ],
+        "execution": [
+          "Lift your chest until your body is in a straight line.",
+          "Lower slowly over the ball."
+        ],
+        "mistakes": [
+          "Arching too far at the top.",
+          "Letting the ball roll."
+        ],
+        "cues": [
+          "Lift to straight"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_flexed_arm_hang",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "vertical_pull",
+    "position": "hanging",
+    "grip": "underhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "biceps",
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "forearm",
+      "trap"
+    ],
+    "family": "flexed_arm_hang",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 309,
+    "l10n": {
+      "en": {
+        "name": "Flexed-Arm Hang",
+        "aliases": [
+          "Chin-Up Hold",
+          "Top Hold"
+        ],
+        "setup": [
+          "Stand on a box under the bar and grip it with palms facing you.",
+          "Step or jump up until your chin is above the bar."
+        ],
+        "execution": [
+          "Hold the top position with your chest close to the bar.",
+          "Lower slowly when you can no longer keep your chin up."
+        ],
+        "mistakes": [
+          "Letting the chin rest on the bar.",
+          "Kicking the legs."
+        ],
+        "cues": [
+          "Chin over, chest up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_trap_bar_shrug",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "trap_bar"
+    ],
+    "mainMuscles": [
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "shrug",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 306,
+    "l10n": {
+      "en": {
+        "name": "Trap Bar Shrug",
+        "aliases": [
+          "Hex Bar Shrug"
+        ],
+        "setup": [
+          "Stand inside the trap bar and lift it with a neutral grip.",
+          "Stand tall with arms straight."
+        ],
+        "execution": [
+          "Shrug your shoulders straight up.",
+          "Hold, then lower slowly."
+        ],
+        "mistakes": [
+          "Bending the elbows.",
+          "Rolling the shoulders."
+        ],
+        "cues": [
+          "Straight up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_shrug",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "shrug",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 321,
+    "l10n": {
+      "en": {
+        "name": "Cable Shrug",
+        "aliases": [],
+        "setup": [
+          "Attach a straight bar to a low pulley.",
+          "Stand close and hold the bar in front of your thighs."
+        ],
+        "execution": [
+          "Shrug straight up and pause.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Leaning back.",
+          "Short, bouncy reps."
+        ],
+        "cues": [
+          "Pause at the top"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_swimmer",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "rear_delt"
+    ],
+    "family": "superman",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 334,
+    "l10n": {
+      "en": {
+        "name": "Swimmer",
+        "aliases": [
+          "Alternating Superman",
+          "Prone Swimmers"
+        ],
+        "setup": [
+          "Lie face down with arms overhead and legs straight.",
+          "Lift your chest, arms and legs slightly off the floor."
+        ],
+        "execution": [
+          "Lift the opposite arm and leg a little higher, then switch in a steady flutter.",
+          "Keep everything off the floor until the set ends."
+        ],
+        "mistakes": [
+          "Holding the breath.",
+          "Letting the neck crank up."
+        ],
+        "cues": [
+          "Small, steady flutter"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_single_arm_row",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "rear_delt",
+      "biceps"
+    ],
+    "family": "seated_row",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 339,
+    "l10n": {
+      "en": {
+        "name": "Band Single-Arm Row",
+        "aliases": [
+          "Resistance Band One-Arm Row"
+        ],
+        "setup": [
+          "Anchor a band at waist height.",
+          "Stand facing it in a staggered stance holding the band in one hand."
+        ],
+        "execution": [
+          "Row your elbow back past your torso.",
+          "Return slowly with the arm straight."
+        ],
+        "mistakes": [
+          "Twisting the torso.",
+          "Letting the shoulder shrug."
+        ],
+        "cues": [
+          "Elbow to the hip"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_shrug",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "trap"
+    ],
+    "secondaryMuscles": [],
+    "family": "shrug",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 356,
+    "l10n": {
+      "en": {
+        "name": "Band Shrug",
+        "aliases": [],
+        "setup": [
+          "Stand on the middle of a band with your feet hip-width apart.",
+          "Hold the ends at your sides with straight arms."
+        ],
+        "execution": [
+          "Shrug your shoulders straight up against the band.",
+          "Pause and lower slowly."
+        ],
+        "mistakes": [
+          "Bending the elbows.",
+          "Rolling the shoulders."
+        ],
+        "cues": [
+          "Shoulders to ears"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_straight_arm_pulldown",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "family": "pullover",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 363,
+    "l10n": {
+      "en": {
+        "name": "Band Straight-Arm Pulldown",
+        "aliases": [
+          "Band Pullover"
+        ],
+        "setup": [
+          "Anchor a band above head height.",
+          "Step back, hinge slightly and hold the band with straight arms in front of you."
+        ],
+        "execution": [
+          "Sweep your hands down to your thighs.",
+          "Let them rise slowly back to eye level."
+        ],
+        "mistakes": [
+          "Bending the elbows.",
+          "Shrugging."
+        ],
+        "cues": [
+          "Long arms, drive down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_archer_pull_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "hanging",
+    "grip": "overhand",
+    "gripWidth": "wide",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "trap",
+      "rear_delt"
+    ],
+    "family": "pull_up",
+    "familyRank": 9,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "popularity": 371,
+    "l10n": {
+      "en": {
+        "name": "Archer Pull-Up",
+        "aliases": [],
+        "setup": [
+          "Grip the bar very wide with palms facing away.",
+          "Hang with straight arms."
+        ],
+        "execution": [
+          "Pull toward one hand while the other arm straightens along the bar.",
+          "Lower to the middle and switch sides."
+        ],
+        "mistakes": [
+          "Bending both arms equally.",
+          "Swinging the body."
+        ],
+        "cues": [
+          "Pull to one hand"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ring_muscle_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "hanging",
+    "grip": "neutral",
+    "equipment": [
+      "rings"
+    ],
+    "mainMuscles": [
+      "lat",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "pec",
+      "biceps",
+      "front_delt",
+      "abdominal"
+    ],
+    "family": "muscle_up",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "popularity": 378,
+    "l10n": {
+      "en": {
+        "name": "Ring Muscle-Up",
+        "aliases": [],
+        "setup": [
+          "Set the rings high and grip them with a false grip, wrists over the rings.",
+          "Hang with straight arms."
+        ],
+        "execution": [
+          "Pull the rings toward your lower chest while leaning back.",
+          "Turn your chest over the rings quickly and drop into the bottom of a dip.",
+          "Press up to straight arms."
+        ],
+        "mistakes": [
+          "Losing the false grip.",
+          "Letting the rings drift wide during the transition."
+        ],
+        "safety": "Learn ring dips and false-grip pull-ups first; the transition strains the elbows and shoulders.",
+        "cues": [
+          "Rings to the ribs",
+          "Fast transition"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dip_shrug",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "hanging",
+    "grip": "neutral",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "dip_station"
+    ],
+    "mainMuscles": [
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "pec",
+      "lat"
+    ],
+    "family": "scapular_dip",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 386,
+    "l10n": {
+      "en": {
+        "name": "Dip Shrug",
+        "aliases": [
+          "Scapular Dip"
+        ],
+        "setup": [
+          "Grip the dip bars and jump up to a support with straight arms.",
+          "Bend your knees slightly and brace."
+        ],
+        "execution": [
+          "Let your body sink by letting the shoulders rise toward your ears.",
+          "Push the bars down to lift your body back up, keeping the arms straight."
+        ],
+        "mistakes": [
+          "Bending the elbows.",
+          "Sinking so far that the shoulders hurt."
+        ],
+        "cues": [
+          "Straight arms",
+          "Shoulders away from ears"
+        ]
+      }
+    }
+  }
+]

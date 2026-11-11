@@ -1,0 +1,1963 @@
+[
+  {
+    "id": "ex_barbell_hip_thrust",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "supine",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "quads",
+      "adductor"
+    ],
+    "family": "hip_thrust",
+    "familyRank": 8,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 5,
+    "popularity": 25,
+    "l10n": {
+      "en": {
+        "name": "Barbell Hip Thrust",
+        "aliases": [
+          "Hip Thrust",
+          "Barbell Glute Thrust"
+        ],
+        "setup": [
+          "Sit on the floor with your upper back against the side of a bench.",
+          "Roll a padded barbell over your hips.",
+          "Plant your feet flat, about hip width, with shins vertical at the top."
+        ],
+        "execution": [
+          "Drive through your heels to lift your hips until your body is flat from shoulders to knees.",
+          "Squeeze your glutes at the top with your chin tucked.",
+          "Lower your hips under control."
+        ],
+        "mistakes": [
+          "Arching the lower back at the top instead of squeezing the glutes.",
+          "Placing the feet so far out that the hamstrings take over."
+        ],
+        "cues": [
+          "Chin tucked, ribs down",
+          "Squeeze at the top"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_glute_bridge",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring"
+    ],
+    "family": "hip_thrust",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 38,
+    "l10n": {
+      "en": {
+        "name": "Glute Bridge",
+        "aliases": [
+          "Floor Bridge",
+          "Bridge"
+        ],
+        "setup": [
+          "Lie on your back with knees bent and feet flat, hip-width apart.",
+          "Rest your arms by your sides."
+        ],
+        "execution": [
+          "Press through your heels to lift your hips until your body is straight from shoulders to knees.",
+          "Squeeze your glutes, then lower slowly."
+        ],
+        "mistakes": [
+          "Pushing through the toes.",
+          "Overarching the lower back."
+        ],
+        "cues": [
+          "Heels down, hips up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_hip_abduction_machine",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "abductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "hip_abduction",
+    "familyRank": 7,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 49,
+    "l10n": {
+      "en": {
+        "name": "Hip Abduction Machine",
+        "aliases": [
+          "Seated Hip Abduction",
+          "Outer Thigh Machine"
+        ],
+        "setup": [
+          "Sit in the machine with the pads against the outside of your knees.",
+          "Sit tall and hold the handles."
+        ],
+        "execution": [
+          "Push your knees apart as far as you can.",
+          "Return slowly without letting the weights touch."
+        ],
+        "mistakes": [
+          "Letting the weight snap back.",
+          "Rocking the torso."
+        ],
+        "cues": [
+          "Push out, return slow"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_hip_adduction_machine",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "adductor"
+    ],
+    "secondaryMuscles": [],
+    "family": "hip_adduction",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 53,
+    "l10n": {
+      "en": {
+        "name": "Hip Adduction Machine",
+        "aliases": [
+          "Seated Hip Adduction",
+          "Inner Thigh Machine"
+        ],
+        "setup": [
+          "Sit in the machine with the pads on the inside of your knees.",
+          "Set a range that gives a light stretch at the start."
+        ],
+        "execution": [
+          "Squeeze your knees together.",
+          "Open them slowly back to the start."
+        ],
+        "mistakes": [
+          "Starting with a stretch so wide it strains the groin.",
+          "Bouncing out of the stretch."
+        ],
+        "cues": [
+          "Squeeze, then slow"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_glute_kickback",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring"
+    ],
+    "family": "glute_kickback",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 2.5,
+    "popularity": 71,
+    "l10n": {
+      "en": {
+        "name": "Cable Glute Kickback",
+        "aliases": [
+          "Glute Kickback"
+        ],
+        "setup": [
+          "Attach an ankle strap to a low pulley and fasten it to one ankle.",
+          "Face the stack, hold the frame and hinge slightly forward."
+        ],
+        "execution": [
+          "Push your leg back by extending at the hip until your glute is fully squeezed.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Arching the lower back to kick higher.",
+          "Swinging the leg."
+        ],
+        "cues": [
+          "Squeeze the glute, not the back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_single_leg_glute_bridge",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring"
+    ],
+    "family": "hip_thrust",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 83,
+    "l10n": {
+      "en": {
+        "name": "Single-Leg Glute Bridge",
+        "aliases": [],
+        "setup": [
+          "Lie on your back with one knee bent and that foot flat.",
+          "Lift the other leg straight or hold that knee toward your chest."
+        ],
+        "execution": [
+          "Drive through the planted heel to lift your hips.",
+          "Keep your hips level, then lower slowly."
+        ],
+        "mistakes": [
+          "Letting the hips tilt.",
+          "Pushing through the toes."
+        ],
+        "cues": [
+          "Hips level"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_lateral_walk",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "abductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "lateral_walk",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 99,
+    "l10n": {
+      "en": {
+        "name": "Band Lateral Walk",
+        "aliases": [
+          "Lateral Band Walk",
+          "Side Band Walk",
+          "Crab Walk"
+        ],
+        "setup": [
+          "Place a mini band around your legs above the knees or at the ankles.",
+          "Bend your knees slightly into a quarter squat."
+        ],
+        "execution": [
+          "Step sideways with one foot, then follow with the other without letting the band go slack.",
+          "Walk the set distance, then return."
+        ],
+        "mistakes": [
+          "Standing up tall.",
+          "Letting the knees cave in."
+        ],
+        "cues": [
+          "Stay low, band tight"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_clamshell",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "side_lying",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "hip_abduction",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 105,
+    "l10n": {
+      "en": {
+        "name": "Clamshell",
+        "aliases": [
+          "Clam"
+        ],
+        "setup": [
+          "Lie on your side with hips and knees bent and feet together.",
+          "Rest your head on your arm."
+        ],
+        "execution": [
+          "Keeping your feet together, lift your top knee as high as you can without rolling back.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Rolling the hips backward.",
+          "Rushing the reps."
+        ],
+        "cues": [
+          "Feet together, hips still"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_donkey_kick",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "quadruped",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring"
+    ],
+    "family": "glute_kickback",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 113,
+    "l10n": {
+      "en": {
+        "name": "Donkey Kick",
+        "aliases": [
+          "Quadruped Hip Extension",
+          "Donkey Kickback"
+        ],
+        "setup": [
+          "Kneel on all fours with hands under shoulders and knees under hips.",
+          "Brace your core."
+        ],
+        "execution": [
+          "Lift one leg with the knee bent until the thigh is level with your body.",
+          "Lower it slowly."
+        ],
+        "mistakes": [
+          "Arching the lower back.",
+          "Swinging the leg."
+        ],
+        "cues": [
+          "Push the heel to the ceiling"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_fire_hydrant",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "quadruped",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abductor",
+      "glute"
+    ],
+    "secondaryMuscles": [],
+    "family": "fire_hydrant",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 124,
+    "l10n": {
+      "en": {
+        "name": "Fire Hydrant",
+        "aliases": [],
+        "setup": [
+          "Kneel on all fours with a flat back.",
+          "Brace your core."
+        ],
+        "execution": [
+          "Lift one bent knee out to the side as high as you can without tilting the hips.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Leaning the body away.",
+          "Rotating the hips."
+        ],
+        "cues": [
+          "Knee out, hips square"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_hip_thrust",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "supine",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "quads"
+    ],
+    "family": "hip_thrust",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 131,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Hip Thrust",
+        "aliases": [],
+        "setup": [
+          "Sit with your upper back against a bench.",
+          "Rest a dumbbell across your hips and hold it in place."
+        ],
+        "execution": [
+          "Drive through your heels to lift your hips level with your shoulders and knees.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Arching the lower back.",
+          "Letting the knees cave."
+        ],
+        "cues": [
+          "Chin tucked",
+          "Squeeze at the top"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_glute_kickback_machine",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring"
+    ],
+    "family": "glute_kickback",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 2.5,
+    "popularity": 139,
+    "l10n": {
+      "en": {
+        "name": "Glute Kickback Machine",
+        "aliases": [
+          "Machine Glute Kickback"
+        ],
+        "setup": [
+          "Set the machine and place one foot against the pad.",
+          "Hold the handles with your chest supported."
+        ],
+        "execution": [
+          "Push the pad back by extending your hip.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Arching the lower back.",
+          "Swinging."
+        ],
+        "cues": [
+          "Squeeze the glute"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_side_lying_leg_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "side_lying",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "hip_abduction",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 148,
+    "l10n": {
+      "en": {
+        "name": "Side-Lying Leg Raise",
+        "aliases": [
+          "Side-Lying Hip Abduction",
+          "Lying Lateral Leg Raise"
+        ],
+        "setup": [
+          "Lie on your side with legs straight and stacked.",
+          "Rest your head on your arm."
+        ],
+        "execution": [
+          "Raise your top leg up to about 45 degrees, leading with the heel.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Rolling the hips back.",
+          "Swinging the leg high."
+        ],
+        "cues": [
+          "Heel leads, toes forward"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_pull_through",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "erector"
+    ],
+    "family": "pull_through",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 5,
+    "popularity": 156,
+    "l10n": {
+      "en": {
+        "name": "Cable Pull-Through",
+        "aliases": [
+          "Rope Pull-Through"
+        ],
+        "setup": [
+          "Attach a rope to a low pulley and face away from it.",
+          "Hold the rope between your legs and walk forward a few steps."
+        ],
+        "execution": [
+          "Hinge at the hips, letting the rope pull your hands back between your legs.",
+          "Drive your hips forward to stand tall and squeeze your glutes."
+        ],
+        "mistakes": [
+          "Squatting instead of hinging.",
+          "Pulling with the arms."
+        ],
+        "cues": [
+          "Hips back, hips through"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_monster_walk",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "abductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "lateral_walk",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 164,
+    "l10n": {
+      "en": {
+        "name": "Monster Walk",
+        "aliases": [],
+        "setup": [
+          "Place a mini band around your ankles or above your knees.",
+          "Bend into a quarter squat with feet hip-width apart."
+        ],
+        "execution": [
+          "Walk forward diagonally, stepping out wide with each foot.",
+          "Keep tension on the band the whole way."
+        ],
+        "mistakes": [
+          "Letting the knees cave.",
+          "Standing upright."
+        ],
+        "cues": [
+          "Wide, low steps"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_copenhagen_plank",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "side_lying",
+    "equipment": [
+      "bench"
+    ],
+    "mainMuscles": [
+      "adductor"
+    ],
+    "secondaryMuscles": [
+      "oblique",
+      "abdominal"
+    ],
+    "family": "copenhagen_plank",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 174,
+    "l10n": {
+      "en": {
+        "name": "Copenhagen Plank",
+        "aliases": [
+          "Copenhagen Adductor Plank"
+        ],
+        "setup": [
+          "Lie on your side next to a bench and place your top foot on it.",
+          "Rest on your forearm with the bottom leg underneath."
+        ],
+        "execution": [
+          "Lift your hips and bottom leg so your body forms a straight line.",
+          "Hold, then switch sides."
+        ],
+        "mistakes": [
+          "Letting the hips drop.",
+          "Rolling forward."
+        ],
+        "safety": "Start with the short version on the knee if the groin feels strained.",
+        "cues": [
+          "Squeeze the top leg down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cossack_squat",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "adductor"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "family": "cossack_squat",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 185,
+    "l10n": {
+      "en": {
+        "name": "Cossack Squat",
+        "aliases": [],
+        "setup": [
+          "Stand with your feet very wide and toes slightly turned out.",
+          "Shift your weight toward one side."
+        ],
+        "execution": [
+          "Squat down over one leg while the other stays straight with toes pointing up.",
+          "Push back up and shift to the other side."
+        ],
+        "mistakes": [
+          "Lifting the heel of the bent leg.",
+          "Rounding the back."
+        ],
+        "cues": [
+          "Heel down",
+          "Chest up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_smith_machine_hip_thrust",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "supine",
+    "equipment": [
+      "smith_machine",
+      "bench"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "quads"
+    ],
+    "family": "hip_thrust",
+    "familyRank": 7,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 195,
+    "l10n": {
+      "en": {
+        "name": "Smith Machine Hip Thrust",
+        "aliases": [],
+        "setup": [
+          "Set a bench beside the Smith machine and sit with your upper back on it.",
+          "Line the padded bar up over your hips."
+        ],
+        "execution": [
+          "Unhook the bar and drive your hips up to a straight line.",
+          "Lower slowly and repeat."
+        ],
+        "mistakes": [
+          "Overarching the lower back.",
+          "Poor bar position."
+        ],
+        "cues": [
+          "Squeeze at the top"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_hip_thrust_machine",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "supine",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring"
+    ],
+    "family": "hip_thrust",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 209,
+    "l10n": {
+      "en": {
+        "name": "Hip Thrust Machine",
+        "aliases": [
+          "Glute Drive Machine"
+        ],
+        "setup": [
+          "Sit in the machine with the pad across your hips and your upper back on the backrest.",
+          "Set your feet flat on the platform."
+        ],
+        "execution": [
+          "Drive your hips up until they are in line with your shoulders and knees.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Arching the back.",
+          "Short reps."
+        ],
+        "cues": [
+          "Squeeze at the top"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_frog_pump",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor"
+    ],
+    "family": "hip_thrust",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 220,
+    "l10n": {
+      "en": {
+        "name": "Frog Pump",
+        "aliases": [],
+        "setup": [
+          "Lie on your back and press the soles of your feet together, knees falling out.",
+          "Pull your heels close to your hips."
+        ],
+        "execution": [
+          "Drive your hips up by squeezing your glutes.",
+          "Lower and repeat quickly."
+        ],
+        "mistakes": [
+          "Arching the lower back.",
+          "Letting the feet separate."
+        ],
+        "cues": [
+          "Soles together, squeeze"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_banded_glute_bridge",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "supine",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "glute",
+      "abductor"
+    ],
+    "secondaryMuscles": [
+      "hamstring"
+    ],
+    "family": "hip_thrust",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 231,
+    "l10n": {
+      "en": {
+        "name": "Banded Glute Bridge",
+        "aliases": [],
+        "setup": [
+          "Place a mini band just above your knees.",
+          "Lie on your back with knees bent and feet flat."
+        ],
+        "execution": [
+          "Press your knees out against the band and lift your hips.",
+          "Lower slowly without letting the knees cave."
+        ],
+        "mistakes": [
+          "Knees falling in.",
+          "Pushing through the toes."
+        ],
+        "cues": [
+          "Knees out, hips up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_hip_abduction",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "abductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "hip_abduction",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 2.5,
+    "popularity": 241,
+    "l10n": {
+      "en": {
+        "name": "Cable Hip Abduction",
+        "aliases": [
+          "Standing Cable Abduction"
+        ],
+        "setup": [
+          "Attach an ankle strap to a low pulley and fasten it to the far ankle.",
+          "Stand side-on and hold the frame."
+        ],
+        "execution": [
+          "Lift the strapped leg out to the side.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Leaning the torso.",
+          "Swinging."
+        ],
+        "cues": [
+          "Stay tall"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_hip_adduction",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "adductor"
+    ],
+    "secondaryMuscles": [],
+    "family": "hip_adduction",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 2.5,
+    "popularity": 247,
+    "l10n": {
+      "en": {
+        "name": "Cable Hip Adduction",
+        "aliases": [
+          "Standing Cable Adduction"
+        ],
+        "setup": [
+          "Attach an ankle strap to a low pulley and fasten it to the near ankle.",
+          "Stand side-on and hold the frame for balance."
+        ],
+        "execution": [
+          "Pull the strapped leg across in front of the standing leg.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Leaning.",
+          "Swinging."
+        ],
+        "cues": [
+          "Squeeze the inner thigh"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_reverse_hyperextension_machine",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "prone",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "glute",
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "hamstring"
+    ],
+    "family": "reverse_hyper",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 5,
+    "popularity": 255,
+    "l10n": {
+      "en": {
+        "name": "Reverse Hyperextension Machine",
+        "aliases": [
+          "Reverse Hyper"
+        ],
+        "setup": [
+          "Lie face down on the reverse hyper pad with your hips at the edge.",
+          "Hook your ankles into the strap and hold the handles."
+        ],
+        "execution": [
+          "Raise your legs until they are level with your body.",
+          "Lower them under control."
+        ],
+        "mistakes": [
+          "Swinging out of control at the bottom.",
+          "Overextending the back at the top."
+        ],
+        "cues": [
+          "Lift with the glutes"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_glute_kickback",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring"
+    ],
+    "family": "glute_kickback",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 267,
+    "l10n": {
+      "en": {
+        "name": "Band Glute Kickback",
+        "aliases": [],
+        "setup": [
+          "Anchor a band low or loop it around one foot.",
+          "Stand tall holding a support."
+        ],
+        "execution": [
+          "Push the leg back by squeezing the glute.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Arching the back.",
+          "Swinging."
+        ],
+        "cues": [
+          "Squeeze the glute"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_single_leg_hip_thrust",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "supine",
+    "equipment": [
+      "bench"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "quads"
+    ],
+    "family": "hip_thrust",
+    "familyRank": 9,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 274,
+    "l10n": {
+      "en": {
+        "name": "Single-Leg Hip Thrust",
+        "aliases": [],
+        "setup": [
+          "Sit with your upper back against a bench and one foot flat.",
+          "Lift the other leg off the floor."
+        ],
+        "execution": [
+          "Drive through the planted heel to lift your hips level.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Tilting the hips.",
+          "Arching the back."
+        ],
+        "cues": [
+          "Hips level"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_goblet_cossack_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "adductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "cossack_squat",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 4,
+    "popularity": 284,
+    "l10n": {
+      "en": {
+        "name": "Goblet Cossack Squat",
+        "aliases": [],
+        "setup": [
+          "Hold a kettlebell or dumbbell at your chest.",
+          "Stand with your feet very wide."
+        ],
+        "execution": [
+          "Squat over one leg while the other stays straight.",
+          "Push back up and shift sides."
+        ],
+        "mistakes": [
+          "Heel lifting.",
+          "Leaning far forward."
+        ],
+        "cues": [
+          "Chest up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_short_lever_copenhagen_plank",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "side_lying",
+    "equipment": [
+      "bench"
+    ],
+    "mainMuscles": [
+      "adductor"
+    ],
+    "secondaryMuscles": [
+      "oblique"
+    ],
+    "family": "copenhagen_plank",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 292,
+    "l10n": {
+      "en": {
+        "name": "Short-Lever Copenhagen Plank",
+        "aliases": [
+          "Kneeling Copenhagen Plank"
+        ],
+        "setup": [
+          "Lie on your side next to a bench and rest your top knee on it.",
+          "Rest on your forearm."
+        ],
+        "execution": [
+          "Lift your hips and bottom leg so your body is straight.",
+          "Hold, then switch sides."
+        ],
+        "mistakes": [
+          "Dropping the hips.",
+          "Rolling forward."
+        ],
+        "cues": [
+          "Press the knee down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_side_lying_hip_adduction",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "side_lying",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "adductor"
+    ],
+    "secondaryMuscles": [],
+    "family": "hip_adduction",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 298,
+    "l10n": {
+      "en": {
+        "name": "Side-Lying Hip Adduction",
+        "aliases": [
+          "Inner Thigh Raise"
+        ],
+        "setup": [
+          "Lie on your side and cross the top leg over, foot flat in front of the bottom knee.",
+          "Keep the bottom leg straight."
+        ],
+        "execution": [
+          "Lift the bottom leg as high as you can.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Rolling the hips back.",
+          "Swinging."
+        ],
+        "cues": [
+          "Lift from the inner thigh"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_standing_band_hip_abduction",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "abductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "hip_abduction",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 307,
+    "l10n": {
+      "en": {
+        "name": "Standing Band Hip Abduction",
+        "aliases": [],
+        "setup": [
+          "Loop a band around both ankles.",
+          "Stand tall holding a support."
+        ],
+        "execution": [
+          "Lift one leg out to the side against the band.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Leaning sideways.",
+          "Rotating the foot out."
+        ],
+        "cues": [
+          "Stay tall"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_seated_band_abduction",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "abductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "hip_abduction",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 314,
+    "l10n": {
+      "en": {
+        "name": "Seated Band Abduction",
+        "aliases": [],
+        "setup": [
+          "Sit on a bench or chair with a mini band above your knees.",
+          "Plant your feet hip-width apart."
+        ],
+        "execution": [
+          "Push your knees apart against the band.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Rocking the torso.",
+          "Letting the band snap back."
+        ],
+        "cues": [
+          "Knees out"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_banded_clamshell",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "side_lying",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "abductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "hip_abduction",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 322,
+    "l10n": {
+      "en": {
+        "name": "Banded Clamshell",
+        "aliases": [],
+        "setup": [
+          "Place a mini band above your knees.",
+          "Lie on your side with knees bent and feet together."
+        ],
+        "execution": [
+          "Lift your top knee against the band without rolling back.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Rolling the hips.",
+          "Rushing."
+        ],
+        "cues": [
+          "Feet together"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_side_plank_leg_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "core_stability",
+    "position": "side_lying",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abductor",
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "side_plank",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 331,
+    "l10n": {
+      "en": {
+        "name": "Side Plank Leg Raise",
+        "aliases": [
+          "Side Plank Abduction"
+        ],
+        "setup": [
+          "Set up in a side plank on your forearm.",
+          "Lift your hips into a straight line."
+        ],
+        "execution": [
+          "Raise your top leg toward the ceiling.",
+          "Lower it without dropping the hips."
+        ],
+        "mistakes": [
+          "Hips dropping.",
+          "Rotating."
+        ],
+        "cues": [
+          "Hips high"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bench_reverse_hyperextension",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "prone",
+    "equipment": [
+      "bench"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "erector"
+    ],
+    "family": "reverse_hyper",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 340,
+    "l10n": {
+      "en": {
+        "name": "Bench Reverse Hyperextension",
+        "aliases": [
+          "Reverse Hyper on Bench"
+        ],
+        "setup": [
+          "Lie face down on a bench with your hips at the end.",
+          "Hold the bench and let your legs hang."
+        ],
+        "execution": [
+          "Lift your straight legs until they are level with your body.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Overarching at the top.",
+          "Swinging."
+        ],
+        "cues": [
+          "Squeeze the glutes"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_pull_through",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "secondaryMuscles": [],
+    "family": "pull_through",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 348,
+    "l10n": {
+      "en": {
+        "name": "Band Pull-Through",
+        "aliases": [],
+        "setup": [
+          "Anchor a band low behind you.",
+          "Hold it between your legs and walk forward."
+        ],
+        "execution": [
+          "Hinge at the hips.",
+          "Drive the hips forward to stand tall."
+        ],
+        "mistakes": [
+          "Squatting.",
+          "Pulling with the arms."
+        ],
+        "cues": [
+          "Hips through"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_hip_adduction",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "adductor"
+    ],
+    "secondaryMuscles": [],
+    "family": "hip_adduction",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 357,
+    "l10n": {
+      "en": {
+        "name": "Band Hip Adduction",
+        "aliases": [],
+        "setup": [
+          "Anchor a band at ankle height and loop it around the near ankle.",
+          "Stand side-on holding a support."
+        ],
+        "execution": [
+          "Pull the leg across your body.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Leaning.",
+          "Swinging."
+        ],
+        "cues": [
+          "Inner thigh squeeze"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_medicine_ball_adductor_squeeze",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "isolation",
+    "position": "supine",
+    "equipment": [
+      "medicine_ball"
+    ],
+    "mainMuscles": [
+      "adductor"
+    ],
+    "secondaryMuscles": [],
+    "family": "adductor_squeeze",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 364,
+    "l10n": {
+      "en": {
+        "name": "Medicine Ball Adductor Squeeze",
+        "aliases": [
+          "Ball Squeeze"
+        ],
+        "setup": [
+          "Lie on your back with knees bent.",
+          "Place a medicine ball or soft ball between your knees."
+        ],
+        "execution": [
+          "Squeeze the ball hard and hold.",
+          "Release slowly."
+        ],
+        "mistakes": [
+          "Lifting the hips.",
+          "Holding the breath."
+        ],
+        "cues": [
+          "Steady squeeze"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_hip_flexion",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [
+      "quads"
+    ],
+    "family": "hip_flexion",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 2.5,
+    "popularity": 372,
+    "l10n": {
+      "en": {
+        "name": "Cable Hip Flexion",
+        "aliases": [
+          "Standing Cable Knee Raise"
+        ],
+        "setup": [
+          "Attach an ankle strap to a low pulley and fasten it to one ankle.",
+          "Face away from the stack and hold a support."
+        ],
+        "execution": [
+          "Drive the knee up to hip height.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Leaning back.",
+          "Swinging."
+        ],
+        "cues": [
+          "Knee up, stay tall"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_supine_march",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "supine",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [
+      "abdominal"
+    ],
+    "family": "hip_flexion",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 379,
+    "l10n": {
+      "en": {
+        "name": "Band Supine March",
+        "aliases": [
+          "Banded March"
+        ],
+        "setup": [
+          "Loop a mini band around your feet.",
+          "Lie on your back with your lower back pressed down."
+        ],
+        "execution": [
+          "Pull one knee toward your chest against the band.",
+          "Lower and switch."
+        ],
+        "mistakes": [
+          "Arching the back.",
+          "Rushing."
+        ],
+        "cues": [
+          "Back flat"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_glute_medius_wall_press",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "wall_press",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 387,
+    "l10n": {
+      "en": {
+        "name": "Glute Medius Wall Press",
+        "aliases": [
+          "Standing Hip Hike Wall Press"
+        ],
+        "setup": [
+          "Stand side-on to a wall with the near knee bent and pressed into the wall at hip height.",
+          "Stand tall on the outer leg."
+        ],
+        "execution": [
+          "Press the bent knee into the wall while the standing hip works to keep you level.",
+          "Hold, then switch."
+        ],
+        "mistakes": [
+          "Leaning into the wall.",
+          "Letting the standing knee cave."
+        ],
+        "cues": [
+          "Stand tall, press firm"
+        ]
+      }
+    }
+  }
+]

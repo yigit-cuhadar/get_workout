@@ -1,0 +1,2016 @@
+[
+  {
+    "id": "ex_kettlebell_swing",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "erector",
+      "forearm",
+      "abdominal"
+    ],
+    "family": "kettlebell_swing",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 4,
+    "popularity": 47,
+    "l10n": {
+      "en": {
+        "name": "Kettlebell Swing",
+        "aliases": [
+          "Russian Kettlebell Swing",
+          "Two-Hand Swing",
+          "KB Swing"
+        ],
+        "setup": [
+          "Stand with feet a little wider than hips and the kettlebell about 30 cm in front of you.",
+          "Hinge and grip the handle with both hands, back flat."
+        ],
+        "execution": [
+          "Hike the bell back like passing a ball back between your legs.",
+          "Snap your hips forward to stand tall, letting the bell float to chest height.",
+          "Let it fall back and hinge again as it passes your hips."
+        ],
+        "mistakes": [
+          "Squatting the swing instead of hinging.",
+          "Lifting the bell with the arms.",
+          "Leaning back at the top."
+        ],
+        "cues": [
+          "Hips snap, arms are ropes",
+          "Stand tall like a plank"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_farmer_s_carry",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "carry",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "forearm",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "oblique",
+      "glute"
+    ],
+    "family": "farmer_carry",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 73,
+    "l10n": {
+      "en": {
+        "name": "Farmer's Carry",
+        "aliases": [
+          "Farmer's Walk",
+          "Farmer Carry",
+          "Dumbbell Farmer's Walk"
+        ],
+        "setup": [
+          "Stand between two heavy dumbbells.",
+          "Deadlift them up with a flat back and stand tall."
+        ],
+        "execution": [
+          "Walk with short, quick steps while keeping your shoulders down and back.",
+          "Set the weights down with a flat back at the end."
+        ],
+        "mistakes": [
+          "Letting the shoulders round forward.",
+          "Leaning to one side."
+        ],
+        "cues": [
+          "Tall and tight",
+          "Crush the handles"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_burpee",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt",
+      "abdominal",
+      "glute"
+    ],
+    "family": "burpee",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 79,
+    "l10n": {
+      "en": {
+        "name": "Burpee",
+        "aliases": [],
+        "setup": [
+          "Stand with feet hip-width apart.",
+          "Clear some space around you."
+        ],
+        "execution": [
+          "Squat down and place your hands on the floor.",
+          "Jump your feet back to a plank and do a push-up.",
+          "Jump your feet back in and leap up with arms overhead."
+        ],
+        "mistakes": [
+          "Letting the hips sag in the plank.",
+          "Landing stiff-legged."
+        ],
+        "cues": [
+          "Smooth, not sloppy"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_box_jump",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "other"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "calf",
+      "hamstring"
+    ],
+    "family": "box_jump",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 85,
+    "l10n": {
+      "en": {
+        "name": "Box Jump",
+        "aliases": [],
+        "setup": [
+          "Stand about 30 cm in front of a sturdy box.",
+          "Set your feet hip-width apart."
+        ],
+        "execution": [
+          "Swing your arms back, then drive them up as you jump onto the box.",
+          "Land softly with both feet flat and knees bent.",
+          "Stand tall, then step down."
+        ],
+        "mistakes": [
+          "Jumping down off the box every rep.",
+          "Choosing a box so high you land in a deep squat."
+        ],
+        "safety": "Step down rather than jump down to protect your Achilles tendons.",
+        "cues": [
+          "Soft landing",
+          "Step down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_power_clean",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "glute",
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "trap",
+      "erector",
+      "calf"
+    ],
+    "family": "clean",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 180,
+    "incrementKg": 2.5,
+    "popularity": 91,
+    "l10n": {
+      "en": {
+        "name": "Power Clean",
+        "aliases": [
+          "Barbell Power Clean"
+        ],
+        "setup": [
+          "Stand with the bar over your midfoot and grip it just outside your legs.",
+          "Set your back flat with shoulders slightly in front of the bar."
+        ],
+        "execution": [
+          "Lift the bar off the floor smoothly to above your knees.",
+          "Drive your hips and knees to straight explosively and shrug the bar up.",
+          "Pull yourself under it and catch it on your shoulders in a quarter squat with elbows high."
+        ],
+        "mistakes": [
+          "Pulling early with the arms.",
+          "Catching with low elbows.",
+          "Letting the bar swing away from the body."
+        ],
+        "safety": "Learn the lift with an empty bar and, ideally, a coach before adding load.",
+        "cues": [
+          "Jump, then catch",
+          "Elbows fast"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_jump_squat",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "calf",
+      "hamstring"
+    ],
+    "family": "jump_squat",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 97,
+    "l10n": {
+      "en": {
+        "name": "Jump Squat",
+        "aliases": [
+          "Squat Jump"
+        ],
+        "setup": [
+          "Stand with feet about shoulder width.",
+          "Hold your arms ready to swing."
+        ],
+        "execution": [
+          "Squat down to about quarter or half depth.",
+          "Jump as high as you can.",
+          "Land softly and go into the next rep."
+        ],
+        "mistakes": [
+          "Landing with straight, stiff legs.",
+          "Knees caving on landing."
+        ],
+        "cues": [
+          "Land quiet"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_thruster",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "triceps"
+    ],
+    "family": "thruster",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2,
+    "popularity": 117,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Thruster",
+        "aliases": [
+          "Thruster",
+          "Squat to Press"
+        ],
+        "setup": [
+          "Hold dumbbells at your shoulders.",
+          "Stand with feet shoulder width."
+        ],
+        "execution": [
+          "Squat down with the dumbbells at your shoulders.",
+          "Drive up and use that momentum to press them overhead in one motion.",
+          "Lower them to your shoulders as you squat again."
+        ],
+        "mistakes": [
+          "Pressing before the legs finish.",
+          "Chest dropping in the squat."
+        ],
+        "cues": [
+          "Legs drive the press"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_medicine_ball_slam",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "medicine_ball"
+    ],
+    "mainMuscles": [
+      "lat",
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delt"
+    ],
+    "family": "med_ball_slam",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 133,
+    "l10n": {
+      "en": {
+        "name": "Medicine Ball Slam",
+        "aliases": [
+          "Ball Slam",
+          "Slam Ball"
+        ],
+        "setup": [
+          "Hold a slam ball overhead.",
+          "Stand with feet shoulder width."
+        ],
+        "execution": [
+          "Slam the ball into the floor as hard as you can by pulling with your arms and bending at the hips.",
+          "Pick it up and repeat."
+        ],
+        "mistakes": [
+          "Using a ball that bounces back into your face.",
+          "Rounding the back to pick it up."
+        ],
+        "cues": [
+          "Slam through the floor"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_hang_power_clean",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "glute",
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "trap",
+      "erector",
+      "forearm"
+    ],
+    "family": "clean",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 142,
+    "l10n": {
+      "en": {
+        "name": "Hang Power Clean",
+        "aliases": [
+          "Hang Clean"
+        ],
+        "setup": [
+          "Stand tall holding the bar at your thighs with a grip just outside them.",
+          "Hinge slightly so the bar sits just above your knees."
+        ],
+        "execution": [
+          "Jump explosively and shrug the bar upward.",
+          "Pull under and catch it on your shoulders with elbows high."
+        ],
+        "mistakes": [
+          "Pulling with the arms early.",
+          "Swinging the bar forward."
+        ],
+        "safety": "Learn the lift with an empty bar before adding load.",
+        "cues": [
+          "Jump and catch"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_clean_and_jerk",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "hamstring",
+      "trap",
+      "triceps"
+    ],
+    "family": "clean",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 180,
+    "incrementKg": 2.5,
+    "popularity": 167,
+    "l10n": {
+      "en": {
+        "name": "Clean and Jerk",
+        "aliases": [],
+        "setup": [
+          "Set up as for a clean.",
+          "Grip the bar just outside your legs."
+        ],
+        "execution": [
+          "Clean the bar to your shoulders.",
+          "Dip and drive with your legs, then push yourself under the bar into a split stance with arms locked overhead.",
+          "Bring the feet together, then lower the bar."
+        ],
+        "mistakes": [
+          "Pressing the bar out instead of driving under it.",
+          "Short split stance."
+        ],
+        "safety": "Learn the lift with a coach; both phases go wrong quickly under load.",
+        "cues": [
+          "Drive, then get under"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_turkish_get_up",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "core_stability",
+    "position": "supine",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "oblique",
+      "triceps"
+    ],
+    "family": "turkish_get_up",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 4,
+    "popularity": 176,
+    "l10n": {
+      "en": {
+        "name": "Turkish Get-Up",
+        "aliases": [
+          "Get-Up",
+          "TGU"
+        ],
+        "setup": [
+          "Lie on your back holding a kettlebell straight up in one hand, the same-side knee bent.",
+          "Keep your eyes on the bell."
+        ],
+        "execution": [
+          "Roll onto the opposite elbow, then hand.",
+          "Lift your hips and sweep the straight leg under you to a kneeling position.",
+          "Stand up, then reverse each step to lie back down."
+        ],
+        "mistakes": [
+          "Taking your eyes off the bell.",
+          "Letting the arm bend."
+        ],
+        "safety": "Practise the steps without weight first.",
+        "cues": [
+          "Arm locked, eyes on the bell"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_kettlebell_snatch",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "glute",
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "trap",
+      "triceps"
+    ],
+    "family": "snatch",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 4,
+    "popularity": 187,
+    "l10n": {
+      "en": {
+        "name": "Kettlebell Snatch",
+        "aliases": [],
+        "setup": [
+          "Stand with a kettlebell between your feet.",
+          "Hinge and grip it with one hand."
+        ],
+        "execution": [
+          "Hike the bell back, then snap your hips forward.",
+          "Guide the bell up close to your body and punch your hand through so it lands softly on your forearm overhead.",
+          "Lower it back down in one arc."
+        ],
+        "mistakes": [
+          "Letting the bell flip over and bang the wrist.",
+          "Pressing it up."
+        ],
+        "cues": [
+          "Punch through at the top"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_sled_push",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "sled"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "calf",
+      "front_delt",
+      "triceps",
+      "abdominal"
+    ],
+    "family": "sled_push",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 10,
+    "popularity": 199,
+    "l10n": {
+      "en": {
+        "name": "Sled Push",
+        "aliases": [
+          "Prowler Push"
+        ],
+        "setup": [
+          "Load the sled and grip the high or low handles.",
+          "Lean in with arms straight and body at about 45 degrees."
+        ],
+        "execution": [
+          "Drive the sled forward with strong, short steps.",
+          "Keep your back flat and push through the balls of your feet."
+        ],
+        "mistakes": [
+          "Standing upright.",
+          "Taking long, slow steps."
+        ],
+        "cues": [
+          "Low and driving"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_wall_ball",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "medicine_ball"
+    ],
+    "mainMuscles": [
+      "quads",
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "triceps"
+    ],
+    "family": "wall_ball",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 201,
+    "l10n": {
+      "en": {
+        "name": "Wall Ball",
+        "aliases": [
+          "Wall Ball Shot"
+        ],
+        "setup": [
+          "Stand facing a wall about an arm's length away.",
+          "Hold a medicine ball at your chest."
+        ],
+        "execution": [
+          "Squat down.",
+          "Drive up and throw the ball to a target high on the wall.",
+          "Catch it and go straight into the next squat."
+        ],
+        "mistakes": [
+          "Throwing with only the arms.",
+          "Shallow squats."
+        ],
+        "cues": [
+          "Legs throw the ball"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_battle_rope_waves",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "other"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "forearm",
+      "abdominal"
+    ],
+    "family": "battle_rope",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 211,
+    "l10n": {
+      "en": {
+        "name": "Battle Rope Waves",
+        "aliases": [
+          "Battle Ropes",
+          "Alternating Rope Waves"
+        ],
+        "setup": [
+          "Hold one end of the rope in each hand.",
+          "Stand in a half squat with your chest up."
+        ],
+        "execution": [
+          "Whip your arms up and down alternately to send waves down the rope.",
+          "Keep the waves going for the set time."
+        ],
+        "mistakes": [
+          "Standing up straight.",
+          "Using only the hands."
+        ],
+        "cues": [
+          "Low stance, big waves"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_suitcase_carry",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "carry",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "oblique",
+      "forearm"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "abdominal"
+    ],
+    "family": "suitcase_carry",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2,
+    "popularity": 222,
+    "l10n": {
+      "en": {
+        "name": "Suitcase Carry",
+        "aliases": [
+          "One-Arm Farmer's Walk"
+        ],
+        "setup": [
+          "Pick up a heavy dumbbell or kettlebell in one hand.",
+          "Stand tall with your shoulders level."
+        ],
+        "execution": [
+          "Walk without leaning toward or away from the weight.",
+          "Switch hands for the next set."
+        ],
+        "mistakes": [
+          "Leaning to one side.",
+          "Letting the shoulder drop."
+        ],
+        "cues": [
+          "Stand tall, shoulders level"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_broad_jump",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "glute",
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "calf"
+    ],
+    "family": "broad_jump",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 233,
+    "l10n": {
+      "en": {
+        "name": "Broad Jump",
+        "aliases": [
+          "Standing Long Jump"
+        ],
+        "setup": [
+          "Stand with feet hip-width apart.",
+          "Swing your arms back as you load your hips."
+        ],
+        "execution": [
+          "Jump forward as far as you can, swinging your arms forward.",
+          "Land softly with knees bent and hold the landing."
+        ],
+        "mistakes": [
+          "Landing with straight legs.",
+          "Falling forward."
+        ],
+        "cues": [
+          "Swing and stick it"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_tuck_jump",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "calf",
+      "abdominal"
+    ],
+    "family": "jump_squat",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 244,
+    "l10n": {
+      "en": {
+        "name": "Tuck Jump",
+        "aliases": [],
+        "setup": [
+          "Stand with feet hip-width apart.",
+          "Bend your knees slightly."
+        ],
+        "execution": [
+          "Jump high and pull your knees toward your chest.",
+          "Land softly and repeat."
+        ],
+        "mistakes": [
+          "Landing stiff.",
+          "Rounding the back to reach the knees."
+        ],
+        "cues": [
+          "Knees up, soft landing"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_renegade_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "prone",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "lat",
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "oblique",
+      "biceps"
+    ],
+    "family": "renegade_row",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 258,
+    "l10n": {
+      "en": {
+        "name": "Renegade Row",
+        "aliases": [],
+        "setup": [
+          "Get into a high plank holding a dumbbell in each hand.",
+          "Set your feet wider than your hips."
+        ],
+        "execution": [
+          "Row one dumbbell to your hip without letting the hips twist.",
+          "Set it down and row the other side."
+        ],
+        "mistakes": [
+          "Rotating the hips.",
+          "Feet too close together."
+        ],
+        "cues": [
+          "Hips square"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bear_crawl",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "core_stability",
+    "position": "quadruped",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "quads",
+      "triceps"
+    ],
+    "family": "bear_crawl",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 271,
+    "l10n": {
+      "en": {
+        "name": "Bear Crawl",
+        "aliases": [],
+        "setup": [
+          "Start on all fours with your knees just off the floor.",
+          "Keep your back flat."
+        ],
+        "execution": [
+          "Crawl forward by moving opposite hand and foot together.",
+          "Keep your knees low and hips level."
+        ],
+        "mistakes": [
+          "Hips high.",
+          "Rushing."
+        ],
+        "cues": [
+          "Knees hover"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_snatch",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "glute",
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "quads",
+      "trap",
+      "triceps"
+    ],
+    "family": "snatch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 282,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Snatch",
+        "aliases": [
+          "Single-Arm Dumbbell Snatch"
+        ],
+        "setup": [
+          "Stand with a dumbbell between your feet.",
+          "Squat down and grip it with one hand."
+        ],
+        "execution": [
+          "Drive up explosively with the legs and hips.",
+          "Pull the dumbbell up close to your body and punch it overhead.",
+          "Lower it back to the floor."
+        ],
+        "mistakes": [
+          "Pressing it up slowly.",
+          "Rounding the back."
+        ],
+        "cues": [
+          "Jump and punch"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_split_jump",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "calf",
+      "hamstring"
+    ],
+    "family": "split_jump",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 296,
+    "l10n": {
+      "en": {
+        "name": "Split Jump",
+        "aliases": [
+          "Jumping Lunge",
+          "Lunge Jump"
+        ],
+        "setup": [
+          "Stand in a lunge position.",
+          "Keep your torso upright."
+        ],
+        "execution": [
+          "Jump up and switch legs in the air.",
+          "Land softly in a lunge on the other side."
+        ],
+        "mistakes": [
+          "Landing hard.",
+          "Front knee caving."
+        ],
+        "cues": [
+          "Switch and land soft"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_lateral_bound",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "glute",
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "abductor",
+      "adductor",
+      "calf"
+    ],
+    "family": "lateral_bound",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 312,
+    "l10n": {
+      "en": {
+        "name": "Lateral Bound",
+        "aliases": [
+          "Skater Jump",
+          "Skater Hop"
+        ],
+        "setup": [
+          "Stand on one leg.",
+          "Bend into a quarter squat."
+        ],
+        "execution": [
+          "Jump sideways onto the other leg.",
+          "Land softly and hold briefly before jumping back."
+        ],
+        "mistakes": [
+          "Landing with the knee caving.",
+          "Not sticking the landing."
+        ],
+        "cues": [
+          "Stick each landing"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_overhead_carry",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "carry",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "trap",
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "triceps",
+      "abdominal"
+    ],
+    "family": "overhead_carry",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 328,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Overhead Carry",
+        "aliases": [
+          "Overhead Walk"
+        ],
+        "setup": [
+          "Press a dumbbell up in each hand.",
+          "Lock your arms overhead."
+        ],
+        "execution": [
+          "Walk slowly with your arms locked and ribs down.",
+          "Lower the weights carefully at the end."
+        ],
+        "mistakes": [
+          "Arching the lower back.",
+          "Letting the arms drift forward."
+        ],
+        "cues": [
+          "Arms by the ears"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_trap_bar_carry",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "carry",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "trap_bar"
+    ],
+    "mainMuscles": [
+      "forearm",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "glute",
+      "quads"
+    ],
+    "family": "farmer_carry",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 346,
+    "l10n": {
+      "en": {
+        "name": "Trap Bar Carry",
+        "aliases": [
+          "Trap Bar Farmer's Walk"
+        ],
+        "setup": [
+          "Stand inside the trap bar.",
+          "Deadlift it up and stand tall."
+        ],
+        "execution": [
+          "Walk with short steps.",
+          "Set it down with a flat back."
+        ],
+        "mistakes": [
+          "Rounding the shoulders.",
+          "Letting the bar swing."
+        ],
+        "cues": [
+          "Steady steps"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_medicine_ball_chest_pass",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "medicine_ball"
+    ],
+    "mainMuscles": [
+      "pec",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "med_ball_chest_pass",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 355,
+    "l10n": {
+      "en": {
+        "name": "Medicine Ball Chest Pass",
+        "aliases": [],
+        "setup": [
+          "Stand facing a solid wall about two metres away.",
+          "Hold a medicine ball at your chest."
+        ],
+        "execution": [
+          "Throw the ball explosively at the wall by straightening your arms.",
+          "Catch it on the rebound and repeat."
+        ],
+        "mistakes": [
+          "Throwing only with the hands.",
+          "Standing too close."
+        ],
+        "cues": [
+          "Push it hard"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_medicine_ball_rotational_throw",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "medicine_ball"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "glute",
+      "front_delt"
+    ],
+    "family": "med_ball_rotational_throw",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 362,
+    "l10n": {
+      "en": {
+        "name": "Medicine Ball Rotational Throw",
+        "aliases": [
+          "Rotational Med Ball Throw",
+          "Side Toss"
+        ],
+        "setup": [
+          "Stand side-on to a solid wall with a medicine ball at your hip.",
+          "Bend your knees slightly."
+        ],
+        "execution": [
+          "Turn your hips and chest to throw the ball into the wall.",
+          "Catch it and repeat, then switch sides."
+        ],
+        "mistakes": [
+          "Throwing only with the arms.",
+          "Twisting the lower back."
+        ],
+        "cues": [
+          "Hips lead"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_power_snatch",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "wide",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "glute",
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "trap",
+      "front_delt",
+      "erector"
+    ],
+    "family": "snatch",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 180,
+    "incrementKg": 2.5,
+    "popularity": 370,
+    "l10n": {
+      "en": {
+        "name": "Power Snatch",
+        "aliases": [
+          "Barbell Power Snatch"
+        ],
+        "setup": [
+          "Stand with the bar over your midfoot and grip it wide.",
+          "Set your back flat."
+        ],
+        "execution": [
+          "Lift the bar to above your knees.",
+          "Jump explosively and pull yourself under, catching the bar overhead with arms locked in a quarter squat.",
+          "Stand up."
+        ],
+        "mistakes": [
+          "Pulling early with the arms.",
+          "Catching with bent arms."
+        ],
+        "safety": "Learn the lift with a coach and a light bar.",
+        "cues": [
+          "Jump, then punch under"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_kettlebell_clean",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "forearm",
+      "trap",
+      "abdominal"
+    ],
+    "family": "clean",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 4,
+    "popularity": 377,
+    "l10n": {
+      "en": {
+        "name": "Kettlebell Clean",
+        "aliases": [],
+        "setup": [
+          "Stand with a kettlebell between your feet.",
+          "Hinge and grip it with one hand."
+        ],
+        "execution": [
+          "Hike the bell back and snap your hips forward.",
+          "Keep the elbow close and let the bell land softly in the rack position on your forearm.",
+          "Lower it back down."
+        ],
+        "mistakes": [
+          "Letting the bell bang the forearm.",
+          "Curling it up."
+        ],
+        "cues": [
+          "Zip up the jacket"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_kettlebell_front_rack_carry",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "carry",
+    "position": "standing",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "forearm"
+    ],
+    "family": "front_rack_carry",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 4,
+    "popularity": 385,
+    "l10n": {
+      "en": {
+        "name": "Kettlebell Front Rack Carry",
+        "aliases": [
+          "Rack Walk"
+        ],
+        "setup": [
+          "Clean two kettlebells to the rack position.",
+          "Stand tall with elbows tucked."
+        ],
+        "execution": [
+          "Walk with short steps.",
+          "Keep your ribs down."
+        ],
+        "mistakes": [
+          "Leaning back.",
+          "Letting elbows flare."
+        ],
+        "cues": [
+          "Elbows tucked"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_kettlebell_waiter_s_walk",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "carry",
+    "position": "standing",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "trap",
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "abdominal",
+      "oblique"
+    ],
+    "family": "overhead_carry",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 4,
+    "popularity": 393,
+    "l10n": {
+      "en": {
+        "name": "Kettlebell Waiter's Walk",
+        "aliases": [
+          "Waiter's Walk"
+        ],
+        "setup": [
+          "Press a kettlebell overhead with one arm.",
+          "Lock the arm with the bell over your shoulder."
+        ],
+        "execution": [
+          "Walk slowly with the arm locked.",
+          "Switch arms."
+        ],
+        "mistakes": [
+          "Leaning away.",
+          "Bending the arm."
+        ],
+        "cues": [
+          "Arm locked"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_backward_sled_drag",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "sled"
+    ],
+    "mainMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "calf",
+      "glute"
+    ],
+    "family": "sled_drag",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 10,
+    "popularity": 395,
+    "l10n": {
+      "en": {
+        "name": "Backward Sled Drag",
+        "aliases": [
+          "Reverse Sled Drag"
+        ],
+        "setup": [
+          "Attach straps or a rope to the sled.",
+          "Face it and lean back slightly with arms straight."
+        ],
+        "execution": [
+          "Walk backward with short steps, pushing through the balls of your feet.",
+          "Keep tension on the strap."
+        ],
+        "mistakes": [
+          "Leaning too far back.",
+          "Long steps."
+        ],
+        "cues": [
+          "Short steps"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_forward_sled_drag",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "sled"
+    ],
+    "mainMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "quads",
+      "calf"
+    ],
+    "family": "sled_drag",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 10,
+    "popularity": 396,
+    "l10n": {
+      "en": {
+        "name": "Forward Sled Drag",
+        "aliases": [
+          "Sled Pull",
+          "Harness Drag"
+        ],
+        "setup": [
+          "Attach the sled to a harness or hold straps over your shoulders.",
+          "Lean forward."
+        ],
+        "execution": [
+          "Walk forward with strong steps.",
+          "Keep a steady pace."
+        ],
+        "mistakes": [
+          "Upright posture.",
+          "Shuffling."
+        ],
+        "cues": [
+          "Lean and drive"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_sled_rope_pull",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "equipment": [
+      "sled"
+    ],
+    "mainMuscles": [
+      "lat",
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearm",
+      "trap"
+    ],
+    "family": "sled_rope_pull",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 10,
+    "popularity": 397,
+    "l10n": {
+      "en": {
+        "name": "Sled Rope Pull",
+        "aliases": [
+          "Hand-Over-Hand Sled Pull"
+        ],
+        "setup": [
+          "Attach a rope to the sled and walk it out.",
+          "Stand in a half squat facing the sled."
+        ],
+        "execution": [
+          "Pull the rope hand over hand to bring the sled to you.",
+          "Keep your back flat."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Short pulls."
+        ],
+        "cues": [
+          "Long pulls"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_single_arm_kettlebell_swing",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "oblique",
+      "forearm"
+    ],
+    "family": "kettlebell_swing",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 4,
+    "popularity": 300,
+    "l10n": {
+      "en": {
+        "name": "Single-Arm Kettlebell Swing",
+        "aliases": [
+          "One-Arm KB Swing"
+        ],
+        "setup": [
+          "Set up as for a two-hand swing.",
+          "Grip the handle with one hand."
+        ],
+        "execution": [
+          "Hike and snap the hips.",
+          "Let the bell float to chest height.",
+          "Resist the twist."
+        ],
+        "mistakes": [
+          "Rotating the torso.",
+          "Lifting with the arm."
+        ],
+        "cues": [
+          "Square hips"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_zercher_carry",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "static",
+    "movementPattern": "carry",
+    "position": "standing",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "trap",
+      "quads"
+    ],
+    "family": "zercher_carry",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 399,
+    "l10n": {
+      "en": {
+        "name": "Zercher Carry",
+        "aliases": [],
+        "setup": [
+          "Set the bar in a rack at waist height.",
+          "Hold it in the crooks of your elbows."
+        ],
+        "execution": [
+          "Stand and walk with short steps.",
+          "Keep your chest up."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Letting the bar slide."
+        ],
+        "safety": "Set the bar down as soon as your upper back starts to round.",
+        "cues": [
+          "Chest up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_plate_pinch_carry",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "carry",
+    "position": "standing",
+    "equipment": [
+      "plate"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [
+      "trap"
+    ],
+    "family": "plate_pinch",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 400,
+    "l10n": {
+      "en": {
+        "name": "Plate Pinch Carry",
+        "aliases": [],
+        "setup": [
+          "Pinch two plates together in each hand.",
+          "Stand tall."
+        ],
+        "execution": [
+          "Walk with the plates pinched.",
+          "Set them down before they slip."
+        ],
+        "mistakes": [
+          "Using the palm.",
+          "Shuffling."
+        ],
+        "cues": [
+          "Squeeze the fingertips"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_trap_bar_jump",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "trap_bar"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "calf"
+    ],
+    "family": "jump_squat",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 5,
+    "popularity": 401,
+    "l10n": {
+      "en": {
+        "name": "Trap Bar Jump",
+        "aliases": [
+          "Hex Bar Jump"
+        ],
+        "setup": [
+          "Stand in the trap bar holding a light load.",
+          "Feet hip width."
+        ],
+        "execution": [
+          "Dip and jump explosively.",
+          "Land softly and reset."
+        ],
+        "mistakes": [
+          "Too much load.",
+          "Landing stiff."
+        ],
+        "cues": [
+          "Light and fast"
+        ]
+      }
+    }
+  }
+]

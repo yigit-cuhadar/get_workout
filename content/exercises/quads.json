@@ -1,0 +1,1799 @@
+[
+  {
+    "id": "ex_barbell_back_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "wide",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "hamstring",
+      "erector"
+    ],
+    "family": "squat",
+    "familyRank": 7,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 180,
+    "incrementKg": 5,
+    "popularity": 1,
+    "l10n": {
+      "en": {
+        "name": "Barbell Back Squat",
+        "aliases": [
+          "Back Squat",
+          "High-Bar Squat",
+          "Low-Bar Squat"
+        ],
+        "setup": [
+          "Set the bar in a rack at mid-chest height.",
+          "Step under it and rest it across your upper back, not your neck.",
+          "Walk it out and stand with feet about shoulder width, toes slightly out."
+        ],
+        "execution": [
+          "Take a big breath and brace your core.",
+          "Sit down between your heels by bending knees and hips together, keeping your chest up.",
+          "Go as deep as you can with a neutral back, then drive up through the whole foot."
+        ],
+        "mistakes": [
+          "Letting the knees cave inward.",
+          "Rising with the hips first so the chest drops.",
+          "Lifting the heels."
+        ],
+        "safety": "Squat inside a rack with safety bars set just below your bottom position.",
+        "cues": [
+          "Brace, then sit down",
+          "Knees track the toes",
+          "Whole foot pressure"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_leg_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "hamstring"
+    ],
+    "family": "machine_squat",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 5,
+    "popularity": 11,
+    "l10n": {
+      "en": {
+        "name": "Leg Press",
+        "aliases": [
+          "Machine Leg Press",
+          "45-Degree Leg Press"
+        ],
+        "setup": [
+          "Sit in the machine with your back and hips flat against the pad.",
+          "Place your feet hip to shoulder width in the middle of the platform.",
+          "Release the safety handles."
+        ],
+        "execution": [
+          "Lower the platform by bending your knees toward your chest.",
+          "Stop before your lower back peels off the pad.",
+          "Press the platform back up without locking your knees hard."
+        ],
+        "mistakes": [
+          "Letting the hips roll off the seat at the bottom.",
+          "Snapping the knees into lockout.",
+          "Using tiny reps with a huge load."
+        ],
+        "cues": [
+          "Hips stay down",
+          "Push through the whole foot"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_leg_extension",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [],
+    "family": "leg_extension",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 18,
+    "l10n": {
+      "en": {
+        "name": "Leg Extension",
+        "aliases": [
+          "Quad Extension",
+          "Knee Extension"
+        ],
+        "setup": [
+          "Adjust the back pad so your knees line up with the machine's pivot.",
+          "Set the shin pad just above your ankles."
+        ],
+        "execution": [
+          "Straighten your knees to lift the pad.",
+          "Pause and squeeze, then lower slowly."
+        ],
+        "mistakes": [
+          "Swinging the weight up.",
+          "Lifting the hips off the seat."
+        ],
+        "cues": [
+          "Squeeze at the top",
+          "Slow down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_goblet_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "abdominal"
+    ],
+    "family": "squat",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 22,
+    "l10n": {
+      "en": {
+        "name": "Goblet Squat",
+        "aliases": [
+          "Dumbbell Goblet Squat",
+          "Kettlebell Goblet Squat"
+        ],
+        "setup": [
+          "Hold one dumbbell or kettlebell vertically against your chest with both hands.",
+          "Stand with feet about shoulder width, toes slightly out."
+        ],
+        "execution": [
+          "Squat down between your heels, keeping the weight close and your chest tall.",
+          "Push your knees out at the bottom.",
+          "Drive back up to standing."
+        ],
+        "mistakes": [
+          "Letting the weight pull you forward.",
+          "Lifting the heels."
+        ],
+        "cues": [
+          "Elbows inside the knees",
+          "Chest tall"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bulgarian_split_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "hamstring"
+    ],
+    "family": "split_squat",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 27,
+    "l10n": {
+      "en": {
+        "name": "Bulgarian Split Squat",
+        "aliases": [
+          "Rear-Foot Elevated Split Squat",
+          "RFESS"
+        ],
+        "setup": [
+          "Stand about one long stride in front of a bench and rest the top of one foot on it.",
+          "Hold a dumbbell in each hand."
+        ],
+        "execution": [
+          "Lower your back knee toward the floor while your front shin stays fairly upright.",
+          "Drive through the front foot to stand."
+        ],
+        "mistakes": [
+          "Standing too close to the bench.",
+          "Pushing off the back foot."
+        ],
+        "cues": [
+          "Front foot does the work",
+          "Straight down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_front_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "abdominal",
+      "erector"
+    ],
+    "family": "squat",
+    "familyRank": 8,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 180,
+    "incrementKg": 2.5,
+    "popularity": 37,
+    "l10n": {
+      "en": {
+        "name": "Front Squat",
+        "aliases": [
+          "Barbell Front Squat"
+        ],
+        "setup": [
+          "Set the bar in a rack at shoulder height.",
+          "Rest it on the front of your shoulders with your fingertips under the bar and elbows high.",
+          "Step back with feet about shoulder width."
+        ],
+        "execution": [
+          "Brace and squat straight down, keeping your elbows up and torso upright.",
+          "Drive up through the whole foot."
+        ],
+        "mistakes": [
+          "Dropping the elbows so the bar rolls forward.",
+          "Rounding the upper back."
+        ],
+        "safety": "Squat inside a rack with safety bars, and drop the bar forward if you lose it.",
+        "cues": [
+          "Elbows high",
+          "Stay upright"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_hack_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "adductor"
+    ],
+    "family": "machine_squat",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 5,
+    "popularity": 43,
+    "l10n": {
+      "en": {
+        "name": "Hack Squat",
+        "aliases": [
+          "Machine Hack Squat"
+        ],
+        "setup": [
+          "Stand on the platform with your back against the pad and shoulders under the pads.",
+          "Place feet shoulder width in the middle of the platform."
+        ],
+        "execution": [
+          "Release the safety and squat down as deep as you control.",
+          "Press back up without locking the knees hard."
+        ],
+        "mistakes": [
+          "Letting the heels lift.",
+          "Cutting depth."
+        ],
+        "cues": [
+          "Deep and controlled"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bodyweight_squat",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "hamstring"
+    ],
+    "family": "squat",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 45,
+    "l10n": {
+      "en": {
+        "name": "Bodyweight Squat",
+        "aliases": [
+          "Air Squat"
+        ],
+        "setup": [
+          "Stand with feet about shoulder width and toes slightly out.",
+          "Hold your arms in front for balance."
+        ],
+        "execution": [
+          "Sit down between your heels as deep as you comfortably can.",
+          "Stand back up by pushing through the whole foot."
+        ],
+        "mistakes": [
+          "Knees caving in.",
+          "Heels lifting."
+        ],
+        "cues": [
+          "Sit between the heels"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_walking_lunge",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "hamstring"
+    ],
+    "family": "lunge",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 57,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Walking Lunge",
+        "aliases": [
+          "Walking Lunge"
+        ],
+        "setup": [
+          "Stand tall with a dumbbell in each hand at your sides.",
+          "Clear a path in front of you."
+        ],
+        "execution": [
+          "Step forward and lower your back knee toward the floor.",
+          "Push through the front foot and step straight into the next lunge with the other leg."
+        ],
+        "mistakes": [
+          "Taking short steps so the front knee shoots far forward.",
+          "Leaning the torso forward a lot."
+        ],
+        "cues": [
+          "Long step, tall chest"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_reverse_lunge",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "hamstring"
+    ],
+    "family": "lunge",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 64,
+    "l10n": {
+      "en": {
+        "name": "Reverse Lunge",
+        "aliases": [
+          "Backward Lunge",
+          "Step-Back Lunge"
+        ],
+        "setup": [
+          "Stand tall with feet hip-width apart.",
+          "Put your hands on your hips."
+        ],
+        "execution": [
+          "Step one foot back and lower your back knee toward the floor.",
+          "Push through the front foot to return to standing."
+        ],
+        "mistakes": [
+          "Stepping back too short.",
+          "Letting the front knee cave in."
+        ],
+        "cues": [
+          "Step back, drop straight down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_smith_machine_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "equipment": [
+      "smith_machine"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor"
+    ],
+    "family": "squat",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 5,
+    "popularity": 76,
+    "l10n": {
+      "en": {
+        "name": "Smith Machine Squat",
+        "aliases": [
+          "Smith Squat"
+        ],
+        "setup": [
+          "Set the bar at upper chest height and step under it, resting it on your upper back.",
+          "Set the safety stops just below the bar's lowest point.",
+          "Place your feet slightly in front of the bar, about shoulder width."
+        ],
+        "execution": [
+          "Unhook the bar and squat down with control.",
+          "Drive back up."
+        ],
+        "mistakes": [
+          "Feet too far forward or directly under the bar.",
+          "Not setting the safety stops."
+        ],
+        "cues": [
+          "Brace and sit"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_forward_lunge",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "hamstring"
+    ],
+    "family": "lunge",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 88,
+    "l10n": {
+      "en": {
+        "name": "Forward Lunge",
+        "aliases": [
+          "Lunge",
+          "Front Lunge"
+        ],
+        "setup": [
+          "Stand tall with feet hip-width apart.",
+          "Put your hands on your hips."
+        ],
+        "execution": [
+          "Step forward and lower your back knee toward the floor.",
+          "Push off the front foot to return."
+        ],
+        "mistakes": [
+          "Front heel lifting.",
+          "Torso falling forward."
+        ],
+        "cues": [
+          "Step long, push back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_step_up",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring"
+    ],
+    "family": "step_up",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 94,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Step-Up",
+        "aliases": [
+          "Weighted Step-Up"
+        ],
+        "setup": [
+          "Stand facing a bench or sturdy box with a dumbbell in each hand.",
+          "Place one whole foot on top."
+        ],
+        "execution": [
+          "Drive through the top foot to stand up on the bench.",
+          "Step down slowly with the same leg leading back."
+        ],
+        "mistakes": [
+          "Pushing off the bottom foot.",
+          "Using a box so high the hips sink below the knee."
+        ],
+        "cues": [
+          "Top leg does the work"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_wall_sit",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "squat",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "adductor"
+    ],
+    "family": "wall_sit",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 107,
+    "l10n": {
+      "en": {
+        "name": "Wall Sit",
+        "aliases": [
+          "Wall Squat"
+        ],
+        "setup": [
+          "Stand with your back against a wall.",
+          "Walk your feet forward about two foot-lengths."
+        ],
+        "execution": [
+          "Slide down until your thighs are parallel to the floor and knees are over your ankles.",
+          "Hold for the set time."
+        ],
+        "mistakes": [
+          "Hands pushing on the thighs.",
+          "Knees drifting past the toes."
+        ],
+        "cues": [
+          "Back flat, thighs level"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_split_squat",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "hamstring"
+    ],
+    "family": "split_squat",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 114,
+    "l10n": {
+      "en": {
+        "name": "Split Squat",
+        "aliases": [
+          "Static Lunge"
+        ],
+        "setup": [
+          "Stand in a long split stance, back heel raised.",
+          "Keep your torso upright."
+        ],
+        "execution": [
+          "Lower your back knee straight down toward the floor.",
+          "Push back up without moving your feet."
+        ],
+        "mistakes": [
+          "Stance too short.",
+          "Front heel lifting."
+        ],
+        "cues": [
+          "Straight down, straight up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_step_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "bench"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring"
+    ],
+    "family": "step_up",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 120,
+    "l10n": {
+      "en": {
+        "name": "Step-Up",
+        "aliases": [
+          "Box Step-Up",
+          "Bench Step-Up"
+        ],
+        "setup": [
+          "Stand facing a bench or sturdy box.",
+          "Place one whole foot on top."
+        ],
+        "execution": [
+          "Drive through the top foot to stand up on the bench.",
+          "Step down slowly."
+        ],
+        "mistakes": [
+          "Pushing off the back foot.",
+          "Leaning far forward."
+        ],
+        "cues": [
+          "Push the box away"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_box_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "wide",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "adductor",
+      "erector"
+    ],
+    "family": "squat",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 5,
+    "popularity": 135,
+    "l10n": {
+      "en": {
+        "name": "Box Squat",
+        "aliases": [],
+        "setup": [
+          "Place a box or bench behind you at a height that puts your thighs about parallel.",
+          "Set up with the bar on your upper back."
+        ],
+        "execution": [
+          "Sit back onto the box with control and pause briefly without relaxing.",
+          "Drive up from the box."
+        ],
+        "mistakes": [
+          "Dropping onto the box.",
+          "Rocking back and losing tension."
+        ],
+        "safety": "Squat inside a rack with safety bars set just below your bottom position.",
+        "cues": [
+          "Sit, pause, drive"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_lateral_lunge",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "adductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "lateral_lunge",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 144,
+    "l10n": {
+      "en": {
+        "name": "Lateral Lunge",
+        "aliases": [
+          "Side Lunge"
+        ],
+        "setup": [
+          "Stand with your feet together.",
+          "Hold your hands in front of your chest."
+        ],
+        "execution": [
+          "Take a big step to the side and sit your hips back over that foot, keeping the other leg straight.",
+          "Push off to return and switch sides."
+        ],
+        "mistakes": [
+          "Letting the knee cave.",
+          "Rounding the back."
+        ],
+        "cues": [
+          "Hips back, chest up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_reverse_lunge",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "hamstring"
+    ],
+    "family": "lunge",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 149,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Reverse Lunge",
+        "aliases": [],
+        "setup": [
+          "Stand tall with a dumbbell in each hand.",
+          "Feet hip-width apart."
+        ],
+        "execution": [
+          "Step back and lower your back knee toward the floor.",
+          "Push through the front foot to return."
+        ],
+        "mistakes": [
+          "Short steps.",
+          "Front knee caving."
+        ],
+        "cues": [
+          "Step back, drop down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_single_leg_leg_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor"
+    ],
+    "family": "machine_squat",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 5,
+    "popularity": 160,
+    "l10n": {
+      "en": {
+        "name": "Single-Leg Leg Press",
+        "aliases": [],
+        "setup": [
+          "Sit in the leg press and place one foot in the middle of the platform.",
+          "Rest the other foot on the floor or frame."
+        ],
+        "execution": [
+          "Lower the platform with control.",
+          "Press back up."
+        ],
+        "mistakes": [
+          "Hips peeling off the seat.",
+          "Knee caving."
+        ],
+        "cues": [
+          "Knee over toes"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_landmine_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "equipment": [
+      "landmine"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "abdominal"
+    ],
+    "family": "squat",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2.5,
+    "popularity": 169,
+    "l10n": {
+      "en": {
+        "name": "Landmine Squat",
+        "aliases": [],
+        "setup": [
+          "Hold the end of a landmine bar at your chest with both hands.",
+          "Stand with feet shoulder width, leaning slightly into the bar."
+        ],
+        "execution": [
+          "Squat down while keeping the bar against your chest.",
+          "Drive back up."
+        ],
+        "mistakes": [
+          "Letting the bar drift from the chest.",
+          "Heels lifting."
+        ],
+        "cues": [
+          "Chest on the bar"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_curtsy_lunge",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "glute",
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "abductor"
+    ],
+    "family": "lunge",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 179,
+    "l10n": {
+      "en": {
+        "name": "Curtsy Lunge",
+        "aliases": [],
+        "setup": [
+          "Stand tall with feet hip-width apart.",
+          "Put your hands on your hips."
+        ],
+        "execution": [
+          "Step one leg diagonally behind the other and lower into a lunge.",
+          "Push back to the start and switch."
+        ],
+        "mistakes": [
+          "Twisting the hips a lot.",
+          "Front knee caving."
+        ],
+        "cues": [
+          "Hips face forward"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_barbell_reverse_lunge",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "wide",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "hamstring"
+    ],
+    "family": "lunge",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 190,
+    "l10n": {
+      "en": {
+        "name": "Barbell Reverse Lunge",
+        "aliases": [],
+        "setup": [
+          "Set up with a barbell on your upper back as for a squat.",
+          "Stand tall with feet hip-width apart."
+        ],
+        "execution": [
+          "Step back and lower your back knee toward the floor.",
+          "Drive through the front foot to return."
+        ],
+        "mistakes": [
+          "Losing balance from short steps.",
+          "Leaning forward."
+        ],
+        "safety": "Start well below your squat weight; with a bar on your back, balance is the limit.",
+        "cues": [
+          "Tall and steady"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_sumo_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "adductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "sumo_squat",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 203,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Sumo Squat",
+        "aliases": [
+          "Plie Squat",
+          "Sumo Goblet Squat"
+        ],
+        "setup": [
+          "Stand with feet wide and toes turned out.",
+          "Hold one dumbbell by its end between your legs."
+        ],
+        "execution": [
+          "Squat down while pushing your knees out over your toes.",
+          "Stand back up."
+        ],
+        "mistakes": [
+          "Knees caving.",
+          "Leaning forward."
+        ],
+        "cues": [
+          "Knees out"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_sissy_squat",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [],
+    "family": "sissy_squat",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 214,
+    "l10n": {
+      "en": {
+        "name": "Sissy Squat",
+        "aliases": [],
+        "setup": [
+          "Hold a support with one hand.",
+          "Rise onto the balls of your feet."
+        ],
+        "execution": [
+          "Lean back and push your knees forward as you lower, keeping a straight line from knees to shoulders.",
+          "Return by straightening the knees."
+        ],
+        "mistakes": [
+          "Bending at the hips.",
+          "Going deeper than your knees tolerate."
+        ],
+        "safety": "Start with a small range; this exercise loads the knees heavily.",
+        "cues": [
+          "Knees forward, hips straight"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_pistol_squat",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "advanced",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "abdominal"
+    ],
+    "family": "single_leg_squat",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 225,
+    "l10n": {
+      "en": {
+        "name": "Pistol Squat",
+        "aliases": [
+          "Single-Leg Squat"
+        ],
+        "setup": [
+          "Stand on one leg with the other held straight in front.",
+          "Reach your arms forward for balance."
+        ],
+        "execution": [
+          "Squat all the way down on the standing leg.",
+          "Drive back up without letting the other foot touch."
+        ],
+        "mistakes": [
+          "Heel lifting.",
+          "Knee caving."
+        ],
+        "cues": [
+          "Arms forward, heel down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_lateral_step_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "bench"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "abductor"
+    ],
+    "family": "step_up",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 236,
+    "l10n": {
+      "en": {
+        "name": "Lateral Step-Up",
+        "aliases": [],
+        "setup": [
+          "Stand side-on to a bench or box.",
+          "Place the near foot on top."
+        ],
+        "execution": [
+          "Drive through the top foot to stand on the box.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Pushing off the floor foot.",
+          "Knee caving."
+        ],
+        "cues": [
+          "Top foot drives"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_goblet_lateral_lunge",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "adductor"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "lateral_lunge",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 2,
+    "popularity": 249,
+    "l10n": {
+      "en": {
+        "name": "Goblet Lateral Lunge",
+        "aliases": [],
+        "setup": [
+          "Hold a dumbbell at your chest.",
+          "Stand with feet together."
+        ],
+        "execution": [
+          "Step wide to one side and sit back over that foot.",
+          "Push back and switch."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Knee caving."
+        ],
+        "cues": [
+          "Sit back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_reverse_nordic",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "kneeling",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "hip_flexor"
+    ],
+    "family": "reverse_nordic",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 261,
+    "l10n": {
+      "en": {
+        "name": "Reverse Nordic",
+        "aliases": [
+          "Reverse Nordic Curl"
+        ],
+        "setup": [
+          "Kneel on a soft surface with knees hip-width apart.",
+          "Keep a straight line from knees to head."
+        ],
+        "execution": [
+          "Lean back slowly, staying straight at the hips.",
+          "Return to upright using your quads."
+        ],
+        "mistakes": [
+          "Bending at the hips.",
+          "Leaning too far."
+        ],
+        "safety": "Start with a small range; this exercise loads the knees heavily.",
+        "cues": [
+          "Straight from knees to head"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_leg_extension",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [],
+    "family": "leg_extension",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 276,
+    "l10n": {
+      "en": {
+        "name": "Band Leg Extension",
+        "aliases": [],
+        "setup": [
+          "Sit on a bench or chair and anchor a band behind it.",
+          "Loop the band around one ankle."
+        ],
+        "execution": [
+          "Straighten the knee against the band.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Swinging.",
+          "Lifting the thigh."
+        ],
+        "cues": [
+          "Squeeze the quad"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_spanish_squat",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "squat",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "spanish_squat",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 286,
+    "l10n": {
+      "en": {
+        "name": "Spanish Squat",
+        "aliases": [],
+        "setup": [
+          "Loop a heavy band around a fixed post and step inside it so it sits behind your knees.",
+          "Walk back until the band is taut."
+        ],
+        "execution": [
+          "Sit back into a squat with shins vertical, letting the band hold your knees.",
+          "Hold for the set time."
+        ],
+        "mistakes": [
+          "Letting the shins tilt forward.",
+          "Too little band tension."
+        ],
+        "cues": [
+          "Shins vertical"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_skater_squat",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor"
+    ],
+    "family": "single_leg_squat",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 301,
+    "l10n": {
+      "en": {
+        "name": "Skater Squat",
+        "aliases": [],
+        "setup": [
+          "Stand on one leg with the other knee bent behind you.",
+          "Reach your arms forward."
+        ],
+        "execution": [
+          "Lower until the back knee lightly touches the floor.",
+          "Drive back up."
+        ],
+        "mistakes": [
+          "Front heel lifting.",
+          "Dropping fast."
+        ],
+        "cues": [
+          "Soft touch"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_assisted_pistol_squat",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "equipment": [
+      "suspension_trainer"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor"
+    ],
+    "family": "single_leg_squat",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 316,
+    "l10n": {
+      "en": {
+        "name": "Assisted Pistol Squat",
+        "aliases": [
+          "TRX Pistol Squat"
+        ],
+        "setup": [
+          "Hold the handles of a suspension trainer in front of you.",
+          "Stand on one leg with the other held forward."
+        ],
+        "execution": [
+          "Squat down on one leg, using the straps only as needed.",
+          "Stand back up."
+        ],
+        "mistakes": [
+          "Pulling hard with the arms.",
+          "Knee caving."
+        ],
+        "cues": [
+          "Legs first, arms help"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_overhead_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "wide",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "abdominal",
+      "trap"
+    ],
+    "family": "squat",
+    "familyRank": 9,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 333,
+    "l10n": {
+      "en": {
+        "name": "Overhead Squat",
+        "aliases": [],
+        "setup": [
+          "Hold a barbell overhead with a wide snatch grip.",
+          "Stand with feet shoulder width."
+        ],
+        "execution": [
+          "Squat down while keeping the bar over your midfoot and arms locked.",
+          "Stand back up."
+        ],
+        "mistakes": [
+          "Bar drifting forward.",
+          "Elbows bending."
+        ],
+        "safety": "Practise with an empty bar or dowel until your mobility allows a stable bottom position.",
+        "cues": [
+          "Push the bar up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_kettlebell_front_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "abdominal"
+    ],
+    "family": "squat",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 4,
+    "popularity": 350,
+    "l10n": {
+      "en": {
+        "name": "Kettlebell Front Squat",
+        "aliases": [
+          "Double Kettlebell Front Squat"
+        ],
+        "setup": [
+          "Clean two kettlebells to the rack position on your chest.",
+          "Stand with feet shoulder width."
+        ],
+        "execution": [
+          "Squat down keeping the elbows tucked and chest up.",
+          "Drive back up."
+        ],
+        "mistakes": [
+          "Elbows flaring.",
+          "Chest dropping."
+        ],
+        "cues": [
+          "Tall chest"
+        ]
+      }
+    }
+  }
+]

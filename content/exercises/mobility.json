@@ -1,0 +1,1262 @@
+[
+  {
+    "id": "ex_kneeling_hip_flexor_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "kneeling",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [
+      "quads"
+    ],
+    "family": "hip_flexor_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 152,
+    "l10n": {
+      "en": {
+        "name": "Kneeling Hip Flexor Stretch",
+        "aliases": [
+          "Half-Kneeling Hip Flexor Stretch",
+          "Lunge Stretch"
+        ],
+        "setup": [
+          "Kneel on one knee with the other foot flat in front.",
+          "Tuck your pelvis under and squeeze the back glute."
+        ],
+        "execution": [
+          "Shift your hips forward slightly until you feel a stretch in the front of the back hip.",
+          "Hold and breathe, then switch sides."
+        ],
+        "mistakes": [
+          "Arching the lower back instead of tucking the pelvis.",
+          "Lunging far forward."
+        ],
+        "cues": [
+          "Tuck and squeeze"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_pigeon_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "abductor"
+    ],
+    "family": "pigeon_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 178,
+    "l10n": {
+      "en": {
+        "name": "Pigeon Stretch",
+        "aliases": [
+          "Pigeon Pose"
+        ],
+        "setup": [
+          "From all fours, bring one knee forward and place it behind the same-side wrist.",
+          "Extend the other leg straight back."
+        ],
+        "execution": [
+          "Lower your hips toward the floor and fold over the front leg if comfortable.",
+          "Hold, then switch sides."
+        ],
+        "mistakes": [
+          "Forcing the front knee into pain.",
+          "Leaning onto one hip."
+        ],
+        "safety": "Back off if you feel pain in the front knee.",
+        "cues": [
+          "Hips square"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cat_cow",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "quadruped",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "abdominal"
+    ],
+    "family": "cat_cow",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 189,
+    "l10n": {
+      "en": {
+        "name": "Cat-Cow",
+        "aliases": [
+          "Cat-Camel"
+        ],
+        "setup": [
+          "Kneel on all fours with hands under shoulders and knees under hips.",
+          "Start with a flat back."
+        ],
+        "execution": [
+          "Round your back up toward the ceiling and tuck your chin.",
+          "Then let your belly drop and lift your chest and tailbone.",
+          "Move slowly between the two."
+        ],
+        "mistakes": [
+          "Rushing.",
+          "Moving only the neck."
+        ],
+        "cues": [
+          "Move one vertebra at a time"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_standing_hamstring_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "calf"
+    ],
+    "family": "hamstring_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 202,
+    "l10n": {
+      "en": {
+        "name": "Standing Hamstring Stretch",
+        "aliases": [],
+        "setup": [
+          "Place one heel on a low step with the leg straight.",
+          "Stand tall with hands on your hips."
+        ],
+        "execution": [
+          "Hinge forward from the hips until you feel a stretch behind the thigh.",
+          "Hold, then switch sides."
+        ],
+        "mistakes": [
+          "Rounding the back to reach further.",
+          "Locking the knee hard."
+        ],
+        "cues": [
+          "Hinge, don't slump"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_child_s_pose",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "kneeling",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "lat"
+    ],
+    "secondaryMuscles": [
+      "erector"
+    ],
+    "family": "childs_pose",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 213,
+    "l10n": {
+      "en": {
+        "name": "Child's Pose",
+        "aliases": [
+          "Child Pose"
+        ],
+        "setup": [
+          "Kneel with your big toes together and knees apart.",
+          "Sit back toward your heels."
+        ],
+        "execution": [
+          "Walk your hands forward and rest your chest toward the floor.",
+          "Breathe slowly into your back."
+        ],
+        "mistakes": [
+          "Forcing the hips down.",
+          "Holding the breath."
+        ],
+        "cues": [
+          "Breathe into the back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_world_s_greatest_stretch",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "hip_flexor",
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "adductor",
+      "oblique"
+    ],
+    "family": "worlds_greatest_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 224,
+    "l10n": {
+      "en": {
+        "name": "World's Greatest Stretch",
+        "aliases": [],
+        "setup": [
+          "Step into a long lunge with your back knee straight.",
+          "Place both hands on the floor inside the front foot."
+        ],
+        "execution": [
+          "Drop the inside elbow toward the front instep.",
+          "Rotate and reach that arm to the ceiling.",
+          "Return the hand, straighten the front leg to stretch the hamstring, then switch sides."
+        ],
+        "mistakes": [
+          "Rushing through the positions.",
+          "Letting the back knee bend."
+        ],
+        "cues": [
+          "Long lunge, big reach"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_butterfly_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "seated",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "adductor"
+    ],
+    "secondaryMuscles": [],
+    "family": "butterfly_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 235,
+    "l10n": {
+      "en": {
+        "name": "Butterfly Stretch",
+        "aliases": [
+          "Seated Groin Stretch"
+        ],
+        "setup": [
+          "Sit with the soles of your feet together and knees falling out.",
+          "Hold your feet with your hands."
+        ],
+        "execution": [
+          "Sit tall and gently lean forward from the hips.",
+          "Hold and breathe."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Pushing the knees down hard."
+        ],
+        "cues": [
+          "Sit tall, lean from the hips"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_doorway_chest_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "chest_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 248,
+    "l10n": {
+      "en": {
+        "name": "Doorway Chest Stretch",
+        "aliases": [
+          "Doorway Pec Stretch"
+        ],
+        "setup": [
+          "Stand in a doorway and place your forearm on the frame with the elbow at shoulder height.",
+          "Step through with the same-side foot."
+        ],
+        "execution": [
+          "Turn your chest gently away until you feel a stretch in the chest.",
+          "Hold, then switch sides."
+        ],
+        "mistakes": [
+          "Pushing into pain at the front of the shoulder.",
+          "Shrugging."
+        ],
+        "cues": [
+          "Gentle turn away"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_couch_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "kneeling",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [],
+    "family": "couch_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 260,
+    "l10n": {
+      "en": {
+        "name": "Couch Stretch",
+        "aliases": [],
+        "setup": [
+          "Kneel with your back to a wall or couch and slide one shin up against it.",
+          "Bring the other foot forward into a half-kneel."
+        ],
+        "execution": [
+          "Lift your torso upright and squeeze the back glute.",
+          "Hold, then switch sides."
+        ],
+        "mistakes": [
+          "Arching the lower back.",
+          "Forcing into a position you cannot breathe in."
+        ],
+        "cues": [
+          "Tall torso, glute on"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_wall_calf_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "calf_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 275,
+    "l10n": {
+      "en": {
+        "name": "Wall Calf Stretch",
+        "aliases": [
+          "Standing Calf Stretch"
+        ],
+        "setup": [
+          "Place your hands on a wall and step one foot back.",
+          "Keep the back leg straight and heel down."
+        ],
+        "execution": [
+          "Lean your hips toward the wall until you feel a stretch in the calf.",
+          "Hold, then switch sides."
+        ],
+        "mistakes": [
+          "Lifting the back heel.",
+          "Turning the back foot out."
+        ],
+        "cues": [
+          "Heel down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_90_90_hip_switch",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "seated",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "abductor",
+      "adductor"
+    ],
+    "family": "hip_90_90",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 285,
+    "l10n": {
+      "en": {
+        "name": "90/90 Hip Switch",
+        "aliases": [
+          "90-90 Hip Stretch"
+        ],
+        "setup": [
+          "Sit with both knees bent to 90 degrees, one leg in front of you and one to the side.",
+          "Sit tall with hands behind you if needed."
+        ],
+        "execution": [
+          "Rotate both knees to the other side without lifting your feet.",
+          "Sit tall in each position before switching back."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Swinging the knees fast."
+        ],
+        "cues": [
+          "Sit tall, rotate slow"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_thoracic_open_book",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "side_lying",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "pec",
+      "erector"
+    ],
+    "family": "open_book",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 299,
+    "l10n": {
+      "en": {
+        "name": "Thoracic Open Book",
+        "aliases": [
+          "Open Book Stretch"
+        ],
+        "setup": [
+          "Lie on your side with knees bent to 90 degrees and arms straight in front.",
+          "Keep your knees together on the floor."
+        ],
+        "execution": [
+          "Open the top arm across your body, rotating your chest toward the ceiling.",
+          "Return slowly and repeat, then switch sides."
+        ],
+        "mistakes": [
+          "Letting the knees lift.",
+          "Forcing the arm to the floor."
+        ],
+        "cues": [
+          "Knees down, chest turns"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_wrist_flexor_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "wrist_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 308,
+    "l10n": {
+      "en": {
+        "name": "Wrist Flexor Stretch",
+        "aliases": [
+          "Forearm Flexor Stretch"
+        ],
+        "setup": [
+          "Hold one arm straight in front with the palm up.",
+          "Use the other hand to gently pull the fingers down and back."
+        ],
+        "execution": [
+          "Hold until you feel a stretch in the inside of the forearm.",
+          "Switch arms."
+        ],
+        "mistakes": [
+          "Bending the elbow.",
+          "Pulling too hard."
+        ],
+        "cues": [
+          "Gentle pull"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_wrist_extensor_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "wrist_stretch",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 315,
+    "l10n": {
+      "en": {
+        "name": "Wrist Extensor Stretch",
+        "aliases": [
+          "Forearm Extensor Stretch"
+        ],
+        "setup": [
+          "Hold one arm straight in front with the palm down.",
+          "Use the other hand to gently press the back of the hand down."
+        ],
+        "execution": [
+          "Hold until you feel a stretch on the top of the forearm.",
+          "Switch arms."
+        ],
+        "mistakes": [
+          "Bending the elbow.",
+          "Pressing too hard."
+        ],
+        "cues": [
+          "Gentle press"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_arm_circles",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "mid_delt"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "rear_delt"
+    ],
+    "family": "arm_circles",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 323,
+    "l10n": {
+      "en": {
+        "name": "Arm Circles",
+        "aliases": [],
+        "setup": [
+          "Stand tall with arms out to the sides at shoulder height.",
+          "Keep your shoulders away from your ears."
+        ],
+        "execution": [
+          "Make small circles forward, gradually making them bigger.",
+          "Reverse direction halfway through."
+        ],
+        "mistakes": [
+          "Shrugging.",
+          "Swinging wildly."
+        ],
+        "cues": [
+          "Small to big"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_shoulder_pass_through",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "front_delt",
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "rear_delt"
+    ],
+    "family": "shoulder_pass_through",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 332,
+    "l10n": {
+      "en": {
+        "name": "Band Shoulder Pass-Through",
+        "aliases": [
+          "Shoulder Dislocate",
+          "Band Pass-Through"
+        ],
+        "setup": [
+          "Hold a light band wide in front of your thighs.",
+          "Stand tall with ribs down."
+        ],
+        "execution": [
+          "Raise your straight arms overhead and behind you in an arc.",
+          "Bring them back to the front."
+        ],
+        "mistakes": [
+          "Gripping too narrow.",
+          "Arching the lower back."
+        ],
+        "cues": [
+          "Wide grip, straight arms"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_frog_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "quadruped",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "adductor"
+    ],
+    "secondaryMuscles": [],
+    "family": "frog_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 341,
+    "l10n": {
+      "en": {
+        "name": "Frog Stretch",
+        "aliases": [],
+        "setup": [
+          "Kneel on all fours and slide your knees wide apart.",
+          "Keep your ankles in line with your knees."
+        ],
+        "execution": [
+          "Rock your hips back slowly until you feel a stretch in the inner thighs.",
+          "Hold and breathe."
+        ],
+        "mistakes": [
+          "Forcing the knees too wide.",
+          "Arching the back."
+        ],
+        "cues": [
+          "Slow rock back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cross_body_shoulder_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "rear_delt"
+    ],
+    "secondaryMuscles": [
+      "trap"
+    ],
+    "family": "shoulder_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 349,
+    "l10n": {
+      "en": {
+        "name": "Cross-Body Shoulder Stretch",
+        "aliases": [],
+        "setup": [
+          "Bring one straight arm across your chest.",
+          "Hold it above the elbow with the other hand."
+        ],
+        "execution": [
+          "Gently pull the arm closer to your chest.",
+          "Hold, then switch."
+        ],
+        "mistakes": [
+          "Shrugging.",
+          "Twisting the torso."
+        ],
+        "cues": [
+          "Shoulder down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_overhead_triceps_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "lat"
+    ],
+    "family": "triceps_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 358,
+    "l10n": {
+      "en": {
+        "name": "Overhead Triceps Stretch",
+        "aliases": [],
+        "setup": [
+          "Raise one arm overhead and bend the elbow so the hand drops behind your head.",
+          "Hold the elbow with the other hand."
+        ],
+        "execution": [
+          "Gently pull the elbow toward the back of your head.",
+          "Hold, then switch."
+        ],
+        "mistakes": [
+          "Arching the back.",
+          "Pulling hard on the elbow."
+        ],
+        "cues": [
+          "Gentle pull"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_jefferson_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "erector",
+      "hamstring"
+    ],
+    "secondaryMuscles": [],
+    "family": "jefferson_curl",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 365,
+    "l10n": {
+      "en": {
+        "name": "Jefferson Curl",
+        "aliases": [],
+        "setup": [
+          "Stand on a box holding a very light dumbbell.",
+          "Keep your legs straight."
+        ],
+        "execution": [
+          "Tuck your chin and roll down slowly one vertebra at a time, letting the weight lower past your toes.",
+          "Roll back up slowly."
+        ],
+        "mistakes": [
+          "Using a heavy load.",
+          "Rushing."
+        ],
+        "safety": "Start with no weight or a very light one, skip it if you have back pain or a disc injury, and never take it to failure.",
+        "cues": [
+          "Slow roll"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_deep_squat_hold",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "adductor"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "calf"
+    ],
+    "family": "deep_squat_hold",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 373,
+    "l10n": {
+      "en": {
+        "name": "Deep Squat Hold",
+        "aliases": [
+          "Squat Hold"
+        ],
+        "setup": [
+          "Stand with feet shoulder width and toes slightly out.",
+          "Hold a support if needed."
+        ],
+        "execution": [
+          "Sink into the deepest squat you can with heels down.",
+          "Push your knees out with your elbows and hold."
+        ],
+        "mistakes": [
+          "Heels lifting.",
+          "Collapsing the back."
+        ],
+        "cues": [
+          "Heels down, chest up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_knee_to_wall_ankle_mobilization",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "kneeling",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "ankle_mobility",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 380,
+    "l10n": {
+      "en": {
+        "name": "Knee-to-Wall Ankle Mobilization",
+        "aliases": [
+          "Ankle Dorsiflexion Drill"
+        ],
+        "setup": [
+          "Kneel in a half-kneel facing a wall with the front foot a few centimetres away.",
+          "Keep the heel down."
+        ],
+        "execution": [
+          "Drive the front knee toward the wall over the toes.",
+          "Return and repeat."
+        ],
+        "mistakes": [
+          "Lifting the heel.",
+          "Letting the knee cave in."
+        ],
+        "cues": [
+          "Heel down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cobra_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "hip_flexor"
+    ],
+    "family": "cobra_stretch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 388,
+    "l10n": {
+      "en": {
+        "name": "Cobra Stretch",
+        "aliases": [
+          "Cobra Pose"
+        ],
+        "setup": [
+          "Lie face down with hands under your shoulders.",
+          "Keep your hips on the floor."
+        ],
+        "execution": [
+          "Press your chest up gently while your hips stay down.",
+          "Hold and breathe."
+        ],
+        "mistakes": [
+          "Shrugging.",
+          "Forcing into lower back pain."
+        ],
+        "cues": [
+          "Long through the spine"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_supine_hamstring_band_stretch",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "supine",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "calf"
+    ],
+    "family": "hamstring_stretch",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 402,
+    "l10n": {
+      "en": {
+        "name": "Supine Hamstring Band Stretch",
+        "aliases": [],
+        "setup": [
+          "Lie on your back with a band around one foot.",
+          "Keep the other leg flat."
+        ],
+        "execution": [
+          "Raise the banded leg straight until you feel a stretch.",
+          "Hold, then switch."
+        ],
+        "mistakes": [
+          "Bending the knee.",
+          "Lifting the hips."
+        ],
+        "cues": [
+          "Straight leg"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_lying_spinal_twist",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "erector"
+    ],
+    "family": "spinal_twist",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 15,
+    "popularity": 330,
+    "l10n": {
+      "en": {
+        "name": "Lying Spinal Twist",
+        "aliases": [
+          "Supine Twist"
+        ],
+        "setup": [
+          "Lie on your back and pull one knee toward your chest.",
+          "Stretch the arms out wide."
+        ],
+        "execution": [
+          "Let the bent knee fall across your body.",
+          "Hold, then switch."
+        ],
+        "mistakes": [
+          "Lifting the shoulder.",
+          "Forcing the knee down."
+        ],
+        "cues": [
+          "Shoulders down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_inchworm",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "mobility",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "inchworm",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 30,
+    "popularity": 250,
+    "l10n": {
+      "en": {
+        "name": "Inchworm",
+        "aliases": [
+          "Hand Walkout"
+        ],
+        "setup": [
+          "Stand tall with feet hip-width apart.",
+          "Reach to the floor bending your knees only as much as needed."
+        ],
+        "execution": [
+          "Walk your hands forward to a high plank.",
+          "Walk them back and stand up."
+        ],
+        "mistakes": [
+          "Hips sagging in the plank.",
+          "Rushing."
+        ],
+        "cues": [
+          "Legs as straight as you can"
+        ]
+      }
+    }
+  }
+]
