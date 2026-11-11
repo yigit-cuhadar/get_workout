@@ -19,12 +19,24 @@ extension SubscriptionText on AppLocalizations {
     PlanPeriod.lifetime => paywallOnce(plan.price),
   };
 
-  /// `7 days free, then $39.99 per year`, or just the price.
+  /// `7 days free, then $39.99 per year`, with any paid intro price
+  /// between, or just the price.
   String planOffer(Plan plan) {
     final trial = plan.trial;
     return trial == null
-        ? planPrice(plan)
-        : paywallTrialThen(offerPeriod(trial), planPrice(plan));
+        ? _afterTrial(plan)
+        : paywallTrialThen(offerPeriod(trial), _afterTrial(plan));
+  }
+
+  /// `$0.99 per month for 3 months` or `$0.99 for 1 month`.
+  String introOffer(IntroOffer intro) {
+    final period = intro.period;
+    final total = offerPeriod(
+      OfferPeriod(period.count * intro.cycles, period.unit),
+    );
+    return intro.cycles == 1
+        ? paywallIntroOnce(intro.price, total)
+        : paywallIntroEach(intro.price, _every(period), total);
   }
 
   String offerPeriod(OfferPeriod period) => switch (period.unit) {
@@ -34,11 +46,16 @@ extension SubscriptionText on AppLocalizations {
     PeriodUnit.year => periodYears(period.count),
   };
 
-  String purchaseButton(Plan plan) => plan.trial != null
-      ? paywallStartTrial
-      : plan.period == PlanPeriod.lifetime
-      ? paywallBuy
-      : paywallSubscribe;
+  String purchaseButton(Plan plan) {
+    final intro = plan.intro;
+    return plan.trial != null
+        ? paywallStartTrial
+        : intro != null
+        ? paywallStartIntro(intro.price)
+        : plan.period == PlanPeriod.lifetime
+        ? paywallBuy
+        : paywallSubscribe;
+  }
 
   /// What the store charges and when, as the stores' review guidelines ask.
   List<String> purchaseTerms(Plan plan) {
@@ -46,13 +63,32 @@ extension SubscriptionText on AppLocalizations {
       return [paywallLifetimeTerms(plan.price)];
     }
     final trial = plan.trial;
+    final intro = plan.intro;
     return [
-      trial == null
-          ? paywallChargeTerms
-          : paywallTrialTerms(offerPeriod(trial), planPrice(plan)),
+      trial != null
+          ? paywallTrialTerms(offerPeriod(trial), _afterTrial(plan))
+          : intro != null
+          ? paywallIntroTerms(introOffer(intro), planPrice(plan))
+          : paywallChargeTerms,
       paywallRenewTerms(planPrice(plan)),
     ];
   }
+
+  /// The paid intro price, if any, then the regular price.
+  String _afterTrial(Plan plan) {
+    final intro = plan.intro;
+    return intro == null
+        ? planPrice(plan)
+        : paywallThen(introOffer(intro), planPrice(plan));
+  }
+
+  /// `per month`, `every 2 weeks`.
+  String _every(OfferPeriod period) => switch (period.unit) {
+    PeriodUnit.day => everyDays(period.count),
+    PeriodUnit.week => everyWeeks(period.count),
+    PeriodUnit.month => everyMonths(period.count),
+    PeriodUnit.year => everyYears(period.count),
+  };
 
   String purchaseError(Failure failure) => switch (failure) {
     NetworkFailure() => errorNetwork,

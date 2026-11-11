@@ -105,6 +105,76 @@ void main() {
       expect(l10n.purchaseTerms(monthly).first, l10n.paywallChargeTerms);
     });
 
+    group('a paid intro offer', () {
+      const intro = Plan(
+        id: 'm',
+        period: PlanPeriod.monthly,
+        price: r'$4.99',
+        priceAmount: 4.99,
+        currencyCode: 'USD',
+        intro: IntroOffer(
+          price: r'$0.99',
+          period: OfferPeriod(1, PeriodUnit.month),
+          cycles: 3,
+        ),
+      );
+
+      test('is stated, then the regular price', () {
+        expect(
+          l10n.planOffer(intro),
+          r'$0.99 per month for 3 months, then $4.99 per month',
+        );
+        expect(l10n.purchaseButton(intro), r'Start for $0.99');
+        final terms = l10n.purchaseTerms(intro);
+        expect(terms.first, contains(r'Introductory price: $0.99 per month'));
+        expect(terms.first, contains(r'costs $4.99 per month'));
+        expect(
+          terms.last,
+          contains(r'renews automatically at $4.99 per month'),
+        );
+      });
+
+      test('a single period reads as a length', () {
+        const once = IntroOffer(
+          price: r'$1.99',
+          period: OfferPeriod(2, PeriodUnit.week),
+          cycles: 1,
+        );
+        expect(l10n.introOffer(once), r'$1.99 for 2 weeks');
+        const each = IntroOffer(
+          price: r'$1.99',
+          period: OfferPeriod(2, PeriodUnit.week),
+          cycles: 2,
+        );
+        expect(l10n.introOffer(each), r'$1.99 every 2 weeks for 4 weeks');
+      });
+
+      test('follows a free trial', () {
+        final both = Plan(
+          id: intro.id,
+          period: intro.period,
+          price: intro.price,
+          priceAmount: intro.priceAmount,
+          currencyCode: intro.currencyCode,
+          trial: const OfferPeriod(7, PeriodUnit.day),
+          intro: intro.intro,
+        );
+        expect(
+          l10n.planOffer(both),
+          r'7 days free, then $0.99 per month for 3 months, '
+          r'then $4.99 per month',
+        );
+        expect(l10n.purchaseButton(both), 'Start free trial');
+        expect(
+          l10n.purchaseTerms(both).first,
+          startsWith(
+            r'Free for 7 days, then $0.99 per month for 3 months, '
+            r'then $4.99 per month.',
+          ),
+        );
+      });
+    });
+
     test('maps failures to messages', () {
       expect(
         l10n.purchaseError(
