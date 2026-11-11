@@ -52,6 +52,7 @@ class _BodyViewState extends State<BodyView> {
     // The viewer also ends a scrub when it is disposed.
     if (!mounted) return;
     setState(() => _scrubbed = null);
+    // An interrupted scrub reports no part and opens nothing.
     if (part != null) _open(muscleOfMesh(part));
   }
 
