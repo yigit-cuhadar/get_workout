@@ -7,7 +7,8 @@ import '../../tool/src/content_validator.dart';
 void main() {
   test('reports the same errors as the standalone validator did', () {
     // broken_errors.txt is the stderr of the validator before it became a
-    // library, run on the same fixture.
+    // library, run on the same fixture, with the coverage lines of the
+    // equipment profiles updated when they became EquipmentProfile.
     final expected = File('test/tool/fixtures/broken_errors.txt')
         .readAsLinesSync()
         .where((line) => line.isNotEmpty)

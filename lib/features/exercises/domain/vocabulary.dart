@@ -194,6 +194,59 @@ enum GripWidth implements Coded {
   final String code;
 }
 
+/// What a user trains for, and what a program is built for.
+enum Goal implements Coded {
+  buildMuscle('build_muscle'),
+  getStronger('get_stronger'),
+  loseFat('lose_fat'),
+  generalFitness('general_fitness');
+
+  const Goal(this.code);
+  @override
+  final String code;
+}
+
+/// The kind of place a ready-made program is written for, with the equipment
+/// it has. An exercise fits a profile when its `equipment` or one of its
+/// `equipmentAlternatives` sets is within [equipment].
+enum EquipmentProfile implements Coded {
+  /// Everything in [Equipment].
+  fullGym('full_gym', null),
+  homeGym('home_gym', {
+    Equipment.barbell,
+    Equipment.plate,
+    Equipment.dumbbell,
+    Equipment.bench,
+    Equipment.pullUpBar,
+    Equipment.resistanceBand,
+    Equipment.bodyweight,
+  }),
+  dumbbells('dumbbells', {
+    Equipment.dumbbell,
+    Equipment.bench,
+    Equipment.bodyweight,
+  }),
+  bodyweight('bodyweight', {
+    Equipment.bodyweight,
+    Equipment.pullUpBar,
+    Equipment.dipStation,
+  }),
+  bands('bands', {Equipment.resistanceBand, Equipment.bodyweight});
+
+  const EquipmentProfile(this.code, this._equipment);
+  @override
+  final String code;
+  final Set<Equipment>? _equipment;
+
+  Set<Equipment> get equipment => _equipment ?? Equipment.values.toSet();
+
+  /// Whether every code of [set] is equipment of this profile.
+  bool has(Iterable<String> set) {
+    final codes = {for (final e in equipment) e.code};
+    return set.every(codes.contains);
+  }
+}
+
 /// Whether users see an exercise. Exercises are never deleted, only retired.
 enum ExerciseStatus implements Coded {
   draft('draft'),

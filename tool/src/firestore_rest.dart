@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'exercise_import.dart';
+import 'content_import.dart';
 
 /// Any failure talking to Firestore. [toString] is safe to print: it never
 /// contains the token.

@@ -2,16 +2,7 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../exercises/domain/vocabulary.dart';
 
-enum Goal implements Coded {
-  buildMuscle('build_muscle'),
-  getStronger('get_stronger'),
-  loseFat('lose_fat'),
-  generalFitness('general_fitness');
-
-  const Goal(this.code);
-  @override
-  final String code;
-}
+export '../../exercises/domain/vocabulary.dart' show Goal;
 
 /// The two sexes the calorie (Mifflin-St Jeor) and body-fat (US Navy)
 /// formulas define.

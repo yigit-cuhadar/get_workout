@@ -1,0 +1,184 @@
+{
+  "id": "pr_bands_anywhere",
+  "status": "live",
+  "premium": false,
+  "order": 4,
+  "level": "beginner",
+  "goal": "general_fitness",
+  "equipmentProfile": "bands",
+  "daysPerWeek": 3,
+  "lengthWeeks": 8,
+  "equipment": [
+    "resistance_band",
+    "bodyweight"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Bands Anywhere 3-Day",
+      "summary": "A full-body plan for a set of resistance bands and a door anchor, ideal for travel or a small room. Three sessions a week mix band work with simple bodyweight moves."
+    }
+  },
+  "days": [
+    {
+      "name": "Full Body A",
+      "items": [
+        {
+          "exerciseId": "ex_bodyweight_squat",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_band_chest_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_band_seated_row",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_band_pull_through",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_band_lateral_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_band_pallof_press",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_band_calf_press",
+          "sets": 2,
+          "repMin": 15,
+          "repMax": 20,
+          "restS": 45
+        }
+      ]
+    },
+    {
+      "name": "Full Body B",
+      "items": [
+        {
+          "exerciseId": "ex_reverse_lunge",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_band_overhead_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_band_lat_pulldown",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_band_good_morning",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_band_upright_row",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_band_biceps_curl",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_band_triceps_pushdown",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        }
+      ]
+    },
+    {
+      "name": "Full Body C",
+      "items": [
+        {
+          "exerciseId": "ex_push_up",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_band_single_arm_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_split_squat",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_band_lateral_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_band_face_pull",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_dead_bug",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_kneeling_side_plank",
+          "sets": 3,
+          "durationS": 30,
+          "restS": 45
+        }
+      ]
+    }
+  ]
+}

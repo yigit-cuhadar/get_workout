@@ -1,0 +1,153 @@
+{
+  "id": "pr_home_barbell_basics",
+  "status": "live",
+  "premium": false,
+  "order": 5,
+  "level": "beginner",
+  "goal": "get_stronger",
+  "equipmentProfile": "home_gym",
+  "daysPerWeek": 3,
+  "lengthWeeks": 8,
+  "equipment": [
+    "barbell",
+    "dumbbell",
+    "bench",
+    "pull_up_bar",
+    "resistance_band"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Home Barbell Basics 3-Day",
+      "summary": "Squat, press, hinge and pull with a barbell, a pair of dumbbells, a bench and a pull-up bar. Three full-body sessions a week that add weight in small steps."
+    }
+  },
+  "days": [
+    {
+      "name": "Workout A",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_back_squat",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_barbell_bench_press",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_one_arm_dumbbell_row",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_band_pull_apart",
+          "sets": 2,
+          "repMin": 15,
+          "repMax": 20,
+          "restS": 45
+        }
+      ]
+    },
+    {
+      "name": "Workout B",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_deadlift",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 5,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_overhead_press",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_band_assisted_pull_up",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_reverse_lunge",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Workout C",
+      "items": [
+        {
+          "exerciseId": "ex_goblet_squat",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_barbell_bench_press",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_barbell_row",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_dumbbell_leg_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_overhead_triceps_extension",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    }
+  ]
+}

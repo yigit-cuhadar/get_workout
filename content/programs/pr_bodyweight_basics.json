@@ -1,0 +1,175 @@
+{
+  "id": "pr_bodyweight_basics",
+  "status": "live",
+  "premium": false,
+  "order": 3,
+  "level": "beginner",
+  "goal": "general_fitness",
+  "equipmentProfile": "bodyweight",
+  "daysPerWeek": 3,
+  "lengthWeeks": 8,
+  "equipment": [
+    "pull_up_bar",
+    "bodyweight"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Bodyweight Basics 3-Day",
+      "summary": "Learn squats, lunges, push-ups and pulling with your own bodyweight and a pull-up bar. Three short sessions a week that you can do at home or in a park."
+    }
+  },
+  "days": [
+    {
+      "name": "Day 1: Squat and Push",
+      "items": [
+        {
+          "exerciseId": "ex_bodyweight_squat",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_push_up",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_negative_pull_up",
+          "sets": 3,
+          "repMin": 3,
+          "repMax": 5,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_prone_y_raise",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_dead_bug",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_bodyweight_calf_raise",
+          "sets": 2,
+          "repMin": 15,
+          "repMax": 20,
+          "restS": 45
+        }
+      ]
+    },
+    {
+      "name": "Day 2: Lunge and Pull",
+      "items": [
+        {
+          "exerciseId": "ex_reverse_lunge",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_flexed_arm_hang",
+          "sets": 3,
+          "durationS": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_pike_push_up",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_bodyweight_single_leg_romanian_deadlift",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_close_grip_push_up",
+          "sets": 2,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_wall_isometric_shoulder_abduction",
+          "sets": 2,
+          "durationS": 30,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_plank",
+          "sets": 2,
+          "durationS": 30,
+          "restS": 45
+        }
+      ]
+    },
+    {
+      "name": "Day 3: Full Body",
+      "items": [
+        {
+          "exerciseId": "ex_split_squat",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_negative_pull_up",
+          "sets": 3,
+          "repMin": 3,
+          "repMax": 5,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_wide_grip_push_up",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_bodyweight_good_morning",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_prone_y_raise",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_hanging_knee_raise",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_single_leg_calf_raise",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 45
+        }
+      ]
+    }
+  ]
+}

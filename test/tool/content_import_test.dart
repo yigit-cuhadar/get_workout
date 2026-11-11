@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../tool/src/content_validator.dart';
-import '../../tool/src/exercise_import.dart';
+import '../../tool/src/content_import.dart';
 
 void main() {
   group('encodeValue', () {
@@ -144,7 +144,7 @@ void main() {
     test('encodes the whole library without errors', () {
       final report = validateContent(Directory('content/exercises'));
       for (final e in report.exercises) {
-        final doc = ExerciseDoc.fromJson(e.data);
+        final doc = ContentDoc.exercise(e.data);
         expect(doc.fields['contentHash'], {'stringValue': doc.hash});
         expect(doc.fields.containsKey('id'), isFalse);
       }
@@ -195,8 +195,8 @@ void main() {
 
     test('is not affected by the id', () {
       expect(
-        ExerciseDoc.fromJson({'id': 'ex_a', 'family': 'f'}).hash,
-        ExerciseDoc.fromJson({'id': 'ex_b', 'family': 'f'}).hash,
+        ContentDoc.exercise({'id': 'ex_a', 'family': 'f'}).hash,
+        ContentDoc.exercise({'id': 'ex_b', 'family': 'f'}).hash,
       );
     });
   });
@@ -240,23 +240,26 @@ void main() {
     test('a stored exercise hashes the same as its file', () {
       final report = validateContent(Directory('content/exercises'));
       for (final e in report.exercises) {
-        final doc = ExerciseDoc.fromJson(e.data);
+        final doc = ContentDoc.exercise(e.data);
         final stored = {
           ...doc.fields,
           'updatedAt': {'timestampValue': '2026-11-11T10:00:00Z'},
         };
-        final remote = RemoteExercise.fromFields(decodeFields(stored), 't');
+        final remote = RemoteDocument.fromFields(decodeFields(stored), 't');
         expect(remote.actualHash, doc.hash, reason: e.id);
         expect(remote.editedElsewhere, isFalse, reason: e.id);
       }
     });
   });
 
-  group('RemoteExercise', () {
-    final doc = ExerciseDoc('ex_a', {'status': 'live', 'defaultRestS': 60});
+  group('RemoteDocument', () {
+    final doc = ContentDoc('exercises/ex_a', {
+      'status': 'live',
+      'defaultRestS': 60,
+    });
 
-    RemoteExercise stored(Map<String, Object?> fields) =>
-        RemoteExercise.fromFields(decodeFields(encodeFields(fields)), 't');
+    RemoteDocument stored(Map<String, Object?> fields) =>
+        RemoteDocument.fromFields(decodeFields(encodeFields(fields)), 't');
 
     test('is not edited when its content matches contentHash', () {
       final remote = stored({...doc.content, 'contentHash': doc.hash});
@@ -278,7 +281,7 @@ void main() {
 
     test('a whole increment stored as an integer hashes like the file', () {
       // The admin panel writes from the web, where 2.0 becomes an integer.
-      final file = ExerciseDoc.fromJson({
+      final file = ContentDoc.exercise({
         'id': 'ex_a',
         'loggingType': 'weight_reps',
         'incrementKg': 2.0,
@@ -287,15 +290,15 @@ void main() {
         ...file.fields,
         'incrementKg': {'integerValue': '2'},
       };
-      final remote = RemoteExercise.fromFields(decodeFields(fields), 't');
+      final remote = RemoteDocument.fromFields(decodeFields(fields), 't');
       expect(remote.actualHash, file.hash);
       expect(remote.editedElsewhere, isFalse);
     });
   });
 
   group('planImport', () {
-    RemoteExercise remote(String stored, String actual) =>
-        RemoteExercise(storedHash: stored, actualHash: actual, updateTime: 't');
+    RemoteDocument remote(String stored, String actual) =>
+        RemoteDocument(storedHash: stored, actualHash: actual, updateTime: 't');
 
     final local = {
       'ex_new': 'h1',
@@ -345,11 +348,11 @@ void main() {
   });
 
   group('exerciseWrite', () {
-    final doc = ExerciseDoc('ex_a', {'status': 'live'});
+    final doc = ContentDoc('exercises/ex_a', {'status': 'live'});
     const db = 'projects/p/databases/(default)';
 
     test('creates only if the document does not exist', () {
-      expect(exerciseWrite(db, doc), {
+      expect(contentWrite(db, doc), {
         'update': {
           'name': '$db/documents/exercises/ex_a',
           'fields': {
@@ -365,7 +368,7 @@ void main() {
     });
 
     test('updates only if the document is unchanged since the read', () {
-      final write = exerciseWrite(db, doc, updateTime: '2026-11-11T10:00:00Z');
+      final write = contentWrite(db, doc, updateTime: '2026-11-11T10:00:00Z');
       expect(write['currentDocument'], {'updateTime': '2026-11-11T10:00:00Z'});
     });
   });
