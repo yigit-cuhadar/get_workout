@@ -111,6 +111,59 @@ from the earlier FitLab app.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
   / Progress / Profile. The active workout is full-screen and can be minimized
   to a bar above the tabs.
+- **Workout in progress**: one per user, in a JSON file of its own
+  (`active_workout_<uid>.json` in the app's private support directory),
+  rewritten after every change (only the latest of a burst, replaced
+  atomically) and restored on launch behind the minimized bar. A user never
+  gets another's. A file outlives Firestore cache eviction and costs no
+  write per keystroke. Its id is made at the start, so finishing it twice
+  stores it once.
+- **Workout times**: `startedAt` and `finishedAt` are device-clock
+  timestamps, so a workout done offline keeps its real times; `finishedAt`
+  is never before `startedAt`. A program day counts as done on the local
+  date its workout started.
+- **Logging a set**: empty fields show a suggestion, last time's set at the
+  same place or else the program target (weight, bottom of the rep range,
+  duration), which ticking takes. A done set edited into an invalid one is
+  unticked. A weighted or assisted bodyweight set without a weight has none
+  added. Effort is a whole number: RIR 0-5 (5 means 5+) or RPE 10-5.
+- **Records**: heaviest weight (every type with a weight except assisted),
+  best e1RM and best set volume (`weight_reps`, `weighted_bodyweight` on the
+  added weight), most reps (rep types), longest duration (duration types).
+  Warm-ups never count; a drop set's volume includes its drops, its other
+  records use its first part. A record must be beaten, not equalled; an
+  exercise's first workout sets its records but celebrates none.
+- **Workout summary**: duration, volume (weight × reps of the working sets
+  of `weight_reps` and `weighted_bodyweight`; assistance is no load),
+  working sets and exercises.
+- **Stats update**: `exerciseStats` go in the same batch as the workout, so
+  finishing works offline (transactions do not), computed from what the
+  device knows: the cache, which the open workout keeps current by
+  listening, else the server. Stats that cannot be read (offline, never
+  loaded on this device) are left alone rather than overwritten, and two
+  devices finishing at once leave the later write; rebuilding from the
+  workouts (`rebuildStats`, for History's edit and delete) repairs both.
+  History keeps the latest 1000 points, each with its `workoutId`.
+- **Program progress**: finishing a workout of the active program's next day
+  moves the program on, dated the workout's start; doing another of its days
+  shows as done but leaves the schedule. Done days are read from workouts by
+  date only, so no composite index is needed.
+- **Starting a workout**: the Programs tab starts the next day, a program's
+  page any of its days, and the Today tab an empty workout until that tab
+  is built. Starting while one is in progress asks to resume it or discard
+  it.
+- **Swapping an exercise**: the same logging type keeps the sets, another
+  gets as many empty ones; up to eight alternatives are offered before the
+  whole library.
+- **Save as program**: a free workout becomes a one-day program of the
+  user's own: its working sets, the rep range done or the longest duration,
+  the heaviest weight (least assistance) as target, the exercise's default
+  rest. Exercises no longer in the library are left out; a program that
+  would not be valid (over 20 exercises) is refused.
+- **Workout limits**: name 1-100 characters, note 1000, exercise note 500,
+  40 exercises, 30 sets each, 5 drops per set. The rules validate the
+  top-level fields of `workouts` and `exerciseStats` (allowed keys, types,
+  sizes); the app checks sets before storing.
 - **Blocked on accounts the user will open when needed**: Apple Developer
   (Apple sign-in, HealthKit, iOS push, Live Activity on a real device), Google
   Play Console, RevenueCat. Development continues without them.
@@ -230,11 +283,13 @@ edits do not change it. `name` is 1-60 characters.
 - `sets[]`: `type`, `weightKg?`, `reps?`, `durationS?`, `toFailure`, `rir?`,
   `note?`, `drops[]?` (`weightKg`, `reps`), `done`
 
-**`users/{uid}/exerciseStats/{exerciseId}`**: `records` (heaviest weight, best
-e1RM, best set volume, most reps or longest duration; each with value, date,
-workoutId), `last` (date and sets of the latest workout, shown as "last
-time"), `history[]` (date, best e1RM, total volume; one point per workout).
-Rebuilt from that exercise's workouts whenever one is edited or deleted.
+**`users/{uid}/exerciseStats/{exerciseId}`**: `records` (keys
+`heaviestWeight`, `bestE1rm`, `bestSetVolume`, `mostReps`,
+`longestDuration`; each `value`, `date`, `workoutId`), `last` (`date`,
+`workoutId` and `sets` of the latest workout, shown as "last time"),
+`history[]` (`date`, `workoutId`, `bestE1rmKg?`, `volumeKg`; one point per
+workout). Rebuilt from that exercise's workouts whenever one is edited or
+deleted.
 
 **`users/{uid}/cardio/{id}`**: `type`, `date`, `durationS`, `distanceKm?`,
 `calories?`, `avgHeartRate?`, `incline?`, `note?`.
