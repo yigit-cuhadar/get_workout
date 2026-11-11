@@ -1,0 +1,2379 @@
+[
+  {
+    "id": "ex_overhead_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "triceps",
+      "trap",
+      "abdominal"
+    ],
+    "family": "overhead_press",
+    "familyRank": 8,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 180,
+    "incrementKg": 2.5,
+    "popularity": 3,
+    "l10n": {
+      "en": {
+        "name": "Overhead Press",
+        "aliases": [
+          "Military Press",
+          "Standing Barbell Press",
+          "OHP",
+          "Shoulder Press"
+        ],
+        "setup": [
+          "Set the bar in a rack at upper chest height.",
+          "Grip it just outside your shoulders and step back with feet hip-width apart.",
+          "Rest the bar on your upper chest with elbows slightly in front of the bar."
+        ],
+        "execution": [
+          "Squeeze your glutes and press the bar straight up, moving your head back out of its path.",
+          "Push your head through once the bar passes your forehead and lock out overhead.",
+          "Lower the bar back to your upper chest."
+        ],
+        "mistakes": [
+          "Leaning back and turning it into an incline press.",
+          "Pressing the bar forward around the face.",
+          "Letting the lower back arch."
+        ],
+        "cues": [
+          "Glutes tight",
+          "Bar over the midfoot"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_lateral_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "mid_delt"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "front_delt"
+    ],
+    "family": "lateral_raise",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 7,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Lateral Raise",
+        "aliases": [
+          "Side Raise",
+          "Lateral Raise",
+          "Side Lateral Raise"
+        ],
+        "setup": [
+          "Stand tall with a light dumbbell in each hand at your sides.",
+          "Bend your elbows slightly and lean forward a little."
+        ],
+        "execution": [
+          "Raise the dumbbells out to the sides until your arms are level with your shoulders.",
+          "Lower slowly to your sides."
+        ],
+        "mistakes": [
+          "Swinging the weight with the hips.",
+          "Shrugging the shoulders up.",
+          "Raising far above shoulder height."
+        ],
+        "cues": [
+          "Lead with the elbows",
+          "Pour out a jug at the top"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_seated_dumbbell_shoulder_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "seated",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "triceps"
+    ],
+    "family": "overhead_press",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2,
+    "popularity": 14,
+    "l10n": {
+      "en": {
+        "name": "Seated Dumbbell Shoulder Press",
+        "aliases": [
+          "Dumbbell Shoulder Press",
+          "DB Overhead Press",
+          "Seated DB Press"
+        ],
+        "setup": [
+          "Set a bench upright and sit with your back against it.",
+          "Bring the dumbbells to shoulder height with palms facing forward."
+        ],
+        "execution": [
+          "Press the dumbbells overhead until your arms are straight.",
+          "Lower them back to shoulder height."
+        ],
+        "mistakes": [
+          "Arching the back away from the pad.",
+          "Lowering only halfway."
+        ],
+        "cues": [
+          "Ribs down",
+          "Press up and slightly in"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_face_pull",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "rear_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "mid_delt"
+    ],
+    "family": "face_pull",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 20,
+    "l10n": {
+      "en": {
+        "name": "Face Pull",
+        "aliases": [
+          "Cable Face Pull",
+          "Rope Face Pull"
+        ],
+        "setup": [
+          "Attach a rope to a pulley at face height.",
+          "Grip the ends with thumbs pointing back and step away until your arms are straight."
+        ],
+        "execution": [
+          "Pull the rope toward your face, splitting the ends apart.",
+          "Finish with your hands beside your ears and elbows high.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Leaning back to move heavy weight.",
+          "Letting the elbows drop below the hands."
+        ],
+        "cues": [
+          "Pull apart",
+          "Hands by the ears"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_front_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "pec"
+    ],
+    "family": "front_raise",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 27,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Front Raise",
+        "aliases": [
+          "Front Raise",
+          "Front Delt Raise"
+        ],
+        "setup": [
+          "Stand tall holding dumbbells in front of your thighs, palms facing you.",
+          "Brace your core and keep a slight bend in the elbows."
+        ],
+        "execution": [
+          "Raise the dumbbells straight in front of you to shoulder height.",
+          "Lower them slowly."
+        ],
+        "mistakes": [
+          "Rocking the body to swing the weight.",
+          "Lifting far above the shoulders."
+        ],
+        "cues": [
+          "No swinging"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_arnold_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "seated",
+    "grip": "underhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "triceps"
+    ],
+    "family": "overhead_press",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2,
+    "popularity": 29,
+    "l10n": {
+      "en": {
+        "name": "Arnold Press",
+        "aliases": [],
+        "setup": [
+          "Sit on an upright bench holding dumbbells in front of your shoulders, palms facing you.",
+          "Keep your elbows in front of your body."
+        ],
+        "execution": [
+          "Press the dumbbells up while turning your palms to face forward.",
+          "Finish with straight arms overhead.",
+          "Reverse the turn as you lower."
+        ],
+        "mistakes": [
+          "Rushing the rotation.",
+          "Arching the lower back."
+        ],
+        "cues": [
+          "Turn as you press"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_reverse_pec_deck",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "neutral",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "rear_delt"
+    ],
+    "secondaryMuscles": [
+      "trap"
+    ],
+    "family": "rear_delt_fly",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 31,
+    "l10n": {
+      "en": {
+        "name": "Reverse Pec Deck",
+        "aliases": [
+          "Reverse Machine Fly",
+          "Rear Delt Machine"
+        ],
+        "setup": [
+          "Sit facing the pad of the pec deck with the handles set to the back position.",
+          "Grip the handles with straight arms at shoulder height."
+        ],
+        "execution": [
+          "Sweep your arms back until they line up with your body.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Squeezing the shoulder blades hard so the traps take over.",
+          "Using momentum."
+        ],
+        "cues": [
+          "Arms wide, push back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_machine_shoulder_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "seated",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "triceps"
+    ],
+    "family": "overhead_press",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 38,
+    "l10n": {
+      "en": {
+        "name": "Machine Shoulder Press",
+        "aliases": [
+          "Seated Machine Press",
+          "Shoulder Press Machine"
+        ],
+        "setup": [
+          "Adjust the seat so the handles start at shoulder height.",
+          "Sit with your back against the pad."
+        ],
+        "execution": [
+          "Press the handles up until your arms are straight.",
+          "Lower them slowly to shoulder height."
+        ],
+        "mistakes": [
+          "Lifting the hips off the seat.",
+          "Using a short range."
+        ],
+        "cues": [
+          "Back on the pad"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_lateral_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "mid_delt"
+    ],
+    "secondaryMuscles": [
+      "trap"
+    ],
+    "family": "lateral_raise",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 44,
+    "l10n": {
+      "en": {
+        "name": "Cable Lateral Raise",
+        "aliases": [
+          "Single-Arm Cable Lateral Raise"
+        ],
+        "setup": [
+          "Set a pulley at the lowest position and stand side-on to it.",
+          "Hold the handle with the far hand, arm in front of your hips."
+        ],
+        "execution": [
+          "Raise your arm out to the side to shoulder height.",
+          "Lower slowly across your body."
+        ],
+        "mistakes": [
+          "Leaning away a lot to cheat the weight up.",
+          "Shrugging."
+        ],
+        "cues": [
+          "Lead with the elbow"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_barbell_upright_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "mid_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "biceps"
+    ],
+    "family": "upright_row",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2.5,
+    "popularity": 53,
+    "l10n": {
+      "en": {
+        "name": "Barbell Upright Row",
+        "aliases": [
+          "Upright Row"
+        ],
+        "setup": [
+          "Hold the bar with an overhand grip about shoulder width.",
+          "Stand tall with the bar resting on your thighs."
+        ],
+        "execution": [
+          "Pull the bar up close to your body, leading with the elbows.",
+          "Stop when your elbows reach shoulder height.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Pulling the bar to the chin with a narrow grip.",
+          "Leaning back."
+        ],
+        "safety": "Stop at shoulder height; pulling higher pinches the shoulder in many people.",
+        "cues": [
+          "Elbows lead",
+          "Stop at the shoulders"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bent_over_dumbbell_reverse_fly",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "rear_delt"
+    ],
+    "secondaryMuscles": [
+      "trap"
+    ],
+    "family": "rear_delt_fly",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 55,
+    "l10n": {
+      "en": {
+        "name": "Bent-Over Dumbbell Reverse Fly",
+        "aliases": [
+          "Rear Delt Fly",
+          "Bent-Over Lateral Raise",
+          "Reverse Dumbbell Fly"
+        ],
+        "setup": [
+          "Hold light dumbbells and hinge forward until your torso is almost parallel to the floor.",
+          "Let the dumbbells hang under your chest with soft elbows."
+        ],
+        "execution": [
+          "Raise your arms out to the sides until they are level with your back.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Standing up as you lift.",
+          "Squeezing the shoulder blades instead of moving the arms."
+        ],
+        "cues": [
+          "Arms out wide, not back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_pike_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "trap"
+    ],
+    "family": "handstand_push_up",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 59,
+    "l10n": {
+      "en": {
+        "name": "Pike Push-Up",
+        "aliases": [],
+        "setup": [
+          "Start in a push-up position and walk your feet in until your hips are high.",
+          "Your body should form an upside-down V."
+        ],
+        "execution": [
+          "Bend your elbows and lower the top of your head toward the floor in front of your hands.",
+          "Press back up until your arms are straight."
+        ],
+        "mistakes": [
+          "Turning it into a regular push-up by dropping the hips.",
+          "Flaring the elbows straight out."
+        ],
+        "cues": [
+          "Hips high",
+          "Head forward of the hands"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_pull_apart",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "rear_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [],
+    "family": "rear_delt_fly",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 64,
+    "l10n": {
+      "en": {
+        "name": "Band Pull-Apart",
+        "aliases": [],
+        "setup": [
+          "Hold a light band in front of your chest with straight arms.",
+          "Grip it about shoulder width."
+        ],
+        "execution": [
+          "Pull the band apart until it touches your chest.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Bending the elbows.",
+          "Arching the lower back."
+        ],
+        "cues": [
+          "Long arms",
+          "Squeeze the upper back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_push_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "quads",
+      "glute"
+    ],
+    "family": "overhead_press",
+    "familyRank": 9,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 70,
+    "l10n": {
+      "en": {
+        "name": "Push Press",
+        "aliases": [],
+        "setup": [
+          "Set up as for an overhead press with the bar on your upper chest.",
+          "Stand with feet hip-width apart."
+        ],
+        "execution": [
+          "Dip a few centimetres by bending the knees, torso upright.",
+          "Drive up through the legs and press the bar overhead in one motion.",
+          "Lower the bar back to your chest."
+        ],
+        "mistakes": [
+          "Dipping too deep or leaning forward in the dip.",
+          "Pressing before the legs finish driving."
+        ],
+        "cues": [
+          "Short dip, fast drive"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_standing_dumbbell_shoulder_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "triceps",
+      "abdominal"
+    ],
+    "family": "overhead_press",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2,
+    "popularity": 74,
+    "l10n": {
+      "en": {
+        "name": "Standing Dumbbell Shoulder Press",
+        "aliases": [
+          "Standing DB Press"
+        ],
+        "setup": [
+          "Stand with feet hip-width apart and dumbbells at your shoulders.",
+          "Brace your core and squeeze your glutes."
+        ],
+        "execution": [
+          "Press the dumbbells overhead until your arms are straight.",
+          "Lower them to your shoulders."
+        ],
+        "mistakes": [
+          "Leaning back to finish the rep.",
+          "Pressing the dumbbells forward instead of up."
+        ],
+        "cues": [
+          "Ribs down",
+          "Straight up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_landmine_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "standing",
+    "equipment": [
+      "landmine"
+    ],
+    "mainMuscles": [
+      "front_delt",
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "abdominal"
+    ],
+    "family": "landmine_press",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2.5,
+    "popularity": 82,
+    "l10n": {
+      "en": {
+        "name": "Landmine Press",
+        "aliases": [
+          "Single-Arm Landmine Press"
+        ],
+        "setup": [
+          "Stand facing the end of a landmine bar in a staggered stance.",
+          "Hold the end of the bar at your shoulder with one hand."
+        ],
+        "execution": [
+          "Press the bar up and forward until your arm is straight.",
+          "Lower it back to your shoulder."
+        ],
+        "mistakes": [
+          "Leaning back.",
+          "Letting the hips twist."
+        ],
+        "cues": [
+          "Press up and out"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_smith_machine_shoulder_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "seated",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "smith_machine",
+      "bench"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "triceps"
+    ],
+    "family": "overhead_press",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 86,
+    "l10n": {
+      "en": {
+        "name": "Smith Machine Shoulder Press",
+        "aliases": [
+          "Smith Overhead Press"
+        ],
+        "setup": [
+          "Place an upright bench under the bar so it lowers just in front of your face.",
+          "Sit and grip the bar slightly wider than your shoulders."
+        ],
+        "execution": [
+          "Press the bar up until your arms are straight.",
+          "Lower it to chin height."
+        ],
+        "mistakes": [
+          "Setting the bench so the bar hits the face or chest.",
+          "Arching off the bench."
+        ],
+        "cues": [
+          "Back flat on the bench"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_handstand_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "hanging",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "front_delt",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "trap",
+      "abdominal"
+    ],
+    "family": "handstand_push_up",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "popularity": 92,
+    "l10n": {
+      "en": {
+        "name": "Handstand Push-Up",
+        "aliases": [
+          "Wall Handstand Push-Up",
+          "HSPU"
+        ],
+        "setup": [
+          "Kick up into a handstand with your heels against a wall.",
+          "Place your hands slightly wider than your shoulders."
+        ],
+        "execution": [
+          "Lower your head to the floor under control.",
+          "Press back up to straight arms."
+        ],
+        "mistakes": [
+          "Dropping onto the head.",
+          "Letting the back arch heavily."
+        ],
+        "safety": "Put a folded mat under your head and build up from pike push-ups.",
+        "cues": [
+          "Head and hands form a triangle"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_plate_front_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "plate"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "pec"
+    ],
+    "family": "front_raise",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 96,
+    "l10n": {
+      "en": {
+        "name": "Plate Front Raise",
+        "aliases": [],
+        "setup": [
+          "Stand tall holding a weight plate by its sides at your thighs.",
+          "Brace your core."
+        ],
+        "execution": [
+          "Raise the plate in front of you to eye level.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Leaning back.",
+          "Swinging the plate up."
+        ],
+        "cues": [
+          "Arms nearly straight"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_front_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt"
+    ],
+    "family": "front_raise",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 106,
+    "l10n": {
+      "en": {
+        "name": "Cable Front Raise",
+        "aliases": [],
+        "setup": [
+          "Attach a straight bar or rope to a low pulley.",
+          "Stand facing away from it, holding the attachment between your legs."
+        ],
+        "execution": [
+          "Raise your arms in front to shoulder height.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Leaning back.",
+          "Bending the elbows heavily."
+        ],
+        "cues": [
+          "Smooth and steady"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_machine_lateral_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "mid_delt"
+    ],
+    "secondaryMuscles": [
+      "trap"
+    ],
+    "family": "lateral_raise",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 109,
+    "l10n": {
+      "en": {
+        "name": "Machine Lateral Raise",
+        "aliases": [],
+        "setup": [
+          "Adjust the seat so your shoulders line up with the machine's pivot.",
+          "Place your arms against the pads."
+        ],
+        "execution": [
+          "Raise your arms out to the sides to shoulder height.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Shrugging.",
+          "Bouncing at the bottom."
+        ],
+        "cues": [
+          "Elbows push out"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_seated_barbell_shoulder_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "seated",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "triceps"
+    ],
+    "family": "overhead_press",
+    "familyRank": 7,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 116,
+    "l10n": {
+      "en": {
+        "name": "Seated Barbell Shoulder Press",
+        "aliases": [
+          "Seated Military Press"
+        ],
+        "setup": [
+          "Sit on an upright bench inside a rack with the bar at about head height.",
+          "Grip slightly wider than your shoulders and unrack."
+        ],
+        "execution": [
+          "Lower the bar to your upper chest.",
+          "Press it overhead until your arms are straight."
+        ],
+        "mistakes": [
+          "Arching off the pad.",
+          "Lowering the bar behind the neck."
+        ],
+        "cues": [
+          "Bar close to the face"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_external_rotation",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "rear_delt"
+    ],
+    "secondaryMuscles": [],
+    "family": "external_rotation",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 1.25,
+    "popularity": 123,
+    "l10n": {
+      "en": {
+        "name": "Cable External Rotation",
+        "aliases": [
+          "Cable Shoulder External Rotation"
+        ],
+        "setup": [
+          "Set a pulley at elbow height and stand side-on to it.",
+          "Hold the handle in the far hand with your elbow bent 90 degrees and tucked to your side."
+        ],
+        "execution": [
+          "Rotate your forearm outward, away from your belly, keeping the elbow pinned.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Letting the elbow drift away from the side.",
+          "Using a weight so heavy the torso twists."
+        ],
+        "cues": [
+          "Elbow glued to the ribs"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_kettlebell_overhead_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "triceps",
+      "abdominal"
+    ],
+    "family": "overhead_press",
+    "familyRank": 10,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 4,
+    "popularity": 125,
+    "l10n": {
+      "en": {
+        "name": "Kettlebell Overhead Press",
+        "aliases": [
+          "Single-Arm Kettlebell Press"
+        ],
+        "setup": [
+          "Clean the kettlebell to your shoulder so it rests on the back of your forearm.",
+          "Stand tall with glutes and core tight."
+        ],
+        "execution": [
+          "Press the kettlebell overhead, turning the palm forward as it rises.",
+          "Lower it back to the rack position."
+        ],
+        "mistakes": [
+          "Leaning sideways.",
+          "Letting the wrist bend back."
+        ],
+        "cues": [
+          "Straight wrist",
+          "Stay tall"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_reverse_fly",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "rear_delt"
+    ],
+    "secondaryMuscles": [
+      "trap"
+    ],
+    "family": "rear_delt_fly",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 128,
+    "l10n": {
+      "en": {
+        "name": "Cable Reverse Fly",
+        "aliases": [
+          "Cable Rear Delt Fly",
+          "Reverse Cable Crossover"
+        ],
+        "setup": [
+          "Set both pulleys at shoulder height and cross the cables, holding the left cable in the right hand and vice versa.",
+          "Stand in the middle with your arms straight in front."
+        ],
+        "execution": [
+          "Pull your hands out and back until your arms line up with your body.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Bending the elbows into a row.",
+          "Arching the back."
+        ],
+        "cues": [
+          "Wide arc"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_external_rotation",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "rear_delt"
+    ],
+    "secondaryMuscles": [],
+    "family": "external_rotation",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 134,
+    "l10n": {
+      "en": {
+        "name": "Band External Rotation",
+        "aliases": [],
+        "setup": [
+          "Anchor a band at elbow height and stand side-on to it.",
+          "Hold it in the far hand with your elbow bent 90 degrees at your side."
+        ],
+        "execution": [
+          "Rotate your forearm outward against the band.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Moving the elbow off the side.",
+          "Twisting the torso."
+        ],
+        "cues": [
+          "Elbow stays put"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_overhead_press",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "triceps"
+    ],
+    "family": "overhead_press",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 139,
+    "l10n": {
+      "en": {
+        "name": "Band Overhead Press",
+        "aliases": [
+          "Resistance Band Shoulder Press"
+        ],
+        "setup": [
+          "Stand on the middle of a band with feet hip-width apart.",
+          "Hold the ends at your shoulders with palms forward."
+        ],
+        "execution": [
+          "Press your hands overhead until your arms are straight.",
+          "Lower slowly to your shoulders."
+        ],
+        "mistakes": [
+          "Arching the lower back.",
+          "Letting the band pull the hands forward."
+        ],
+        "cues": [
+          "Ribs down",
+          "Press straight up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_face_pull",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "horizontal_pull",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "rear_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "mid_delt"
+    ],
+    "family": "face_pull",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 142,
+    "l10n": {
+      "en": {
+        "name": "Band Face Pull",
+        "aliases": [],
+        "setup": [
+          "Anchor a band at face height.",
+          "Hold it with both hands, palms down, arms straight."
+        ],
+        "execution": [
+          "Pull the band toward your face, spreading your hands apart.",
+          "Finish with elbows high and hands beside your ears."
+        ],
+        "mistakes": [
+          "Letting the elbows drop.",
+          "Leaning back."
+        ],
+        "cues": [
+          "Pull apart, elbows high"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_elevated_pike_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "trap"
+    ],
+    "family": "handstand_push_up",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "popularity": 146,
+    "l10n": {
+      "en": {
+        "name": "Elevated Pike Push-Up",
+        "aliases": [
+          "Feet-Elevated Pike Push-Up",
+          "Box Pike Push-Up"
+        ],
+        "setup": [
+          "Place your feet on a bench or box and your hands on the floor.",
+          "Walk your hands back until your hips are over your shoulders."
+        ],
+        "execution": [
+          "Lower your head toward the floor in front of your hands.",
+          "Press back up to straight arms."
+        ],
+        "mistakes": [
+          "Letting the hips drift back down.",
+          "Flaring the elbows."
+        ],
+        "cues": [
+          "Hips over shoulders"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_lateral_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "mid_delt"
+    ],
+    "secondaryMuscles": [
+      "trap"
+    ],
+    "family": "lateral_raise",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 149,
+    "l10n": {
+      "en": {
+        "name": "Band Lateral Raise",
+        "aliases": [],
+        "setup": [
+          "Stand on the middle of a band and hold the ends at your sides.",
+          "Keep a slight bend in your elbows."
+        ],
+        "execution": [
+          "Raise your arms out to the sides to shoulder height.",
+          "Lower slowly against the band."
+        ],
+        "mistakes": [
+          "Shrugging.",
+          "Swinging."
+        ],
+        "cues": [
+          "Elbows lead"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_side_lying_dumbbell_external_rotation",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "side_lying",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "rear_delt"
+    ],
+    "secondaryMuscles": [],
+    "family": "external_rotation",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 1,
+    "popularity": 152,
+    "l10n": {
+      "en": {
+        "name": "Side-Lying Dumbbell External Rotation",
+        "aliases": [
+          "Side-Lying External Rotation"
+        ],
+        "setup": [
+          "Lie on your side holding a light dumbbell in your top hand.",
+          "Bend the elbow 90 degrees and rest it on your side, forearm across your belly."
+        ],
+        "execution": [
+          "Rotate the forearm upward as far as is comfortable while the elbow stays on your side.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Lifting the elbow off the body.",
+          "Rolling the torso back."
+        ],
+        "cues": [
+          "Elbow pinned"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_upright_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "mid_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "biceps"
+    ],
+    "family": "upright_row",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 2.5,
+    "popularity": 156,
+    "l10n": {
+      "en": {
+        "name": "Cable Upright Row",
+        "aliases": [],
+        "setup": [
+          "Attach a straight bar to a low pulley.",
+          "Stand close and hold it with an overhand grip about shoulder width."
+        ],
+        "execution": [
+          "Pull the bar up along your body until your elbows reach shoulder height.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Pulling higher than the shoulders.",
+          "Leaning back."
+        ],
+        "cues": [
+          "Elbows lead"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_prone_y_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "trap",
+      "mid_delt"
+    ],
+    "secondaryMuscles": [
+      "rear_delt"
+    ],
+    "family": "prone_raise",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 159,
+    "l10n": {
+      "en": {
+        "name": "Prone Y Raise",
+        "aliases": [
+          "Floor Y Raise",
+          "Y Raise"
+        ],
+        "setup": [
+          "Lie face down with your arms overhead in a Y shape, thumbs pointing up.",
+          "Rest your forehead on a folded towel."
+        ],
+        "execution": [
+          "Lift your arms off the floor by drawing your shoulder blades down.",
+          "Hold briefly and lower."
+        ],
+        "mistakes": [
+          "Lifting the chest high off the floor.",
+          "Shrugging toward the ears."
+        ],
+        "cues": [
+          "Thumbs up",
+          "Shoulders down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_wall_handstand_hold",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "vertical_push",
+    "position": "hanging",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "trap",
+      "abdominal"
+    ],
+    "family": "handstand",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 162,
+    "l10n": {
+      "en": {
+        "name": "Wall Handstand Hold",
+        "aliases": [
+          "Wall Handstand",
+          "Chest-to-Wall Handstand"
+        ],
+        "setup": [
+          "Place your hands about a hand's length from a wall.",
+          "Walk your feet up the wall until your body is nearly vertical, chest facing the wall."
+        ],
+        "execution": [
+          "Push the floor away and hold your body in a straight line.",
+          "Walk down carefully when your form breaks."
+        ],
+        "mistakes": [
+          "Letting the lower back arch.",
+          "Sinking into the shoulders."
+        ],
+        "safety": "Learn to come down safely before holding for time.",
+        "cues": [
+          "Push tall",
+          "Squeeze the legs together"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_upright_row",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "mid_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "upright_row",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 1,
+    "popularity": 163,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Upright Row",
+        "aliases": [],
+        "setup": [
+          "Stand tall with dumbbells in front of your thighs.",
+          "Keep the palms facing your body."
+        ],
+        "execution": [
+          "Pull the dumbbells up, leading with the elbows, to shoulder height.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Pulling above the shoulders.",
+          "Swinging."
+        ],
+        "cues": [
+          "Elbows above the hands"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_prone_t_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "rear_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [],
+    "family": "prone_raise",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 165,
+    "l10n": {
+      "en": {
+        "name": "Prone T Raise",
+        "aliases": [
+          "Floor T Raise"
+        ],
+        "setup": [
+          "Lie face down with your arms straight out to the sides, thumbs up.",
+          "Rest your forehead on a folded towel."
+        ],
+        "execution": [
+          "Lift your arms off the floor by squeezing your shoulder blades together.",
+          "Hold briefly and lower."
+        ],
+        "mistakes": [
+          "Lifting the head.",
+          "Bending the elbows."
+        ],
+        "cues": [
+          "Arms out like a T"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_z_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "seated",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt",
+      "triceps",
+      "abdominal"
+    ],
+    "family": "overhead_press",
+    "familyRank": 11,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 168,
+    "l10n": {
+      "en": {
+        "name": "Z Press",
+        "aliases": [],
+        "setup": [
+          "Sit on the floor inside a rack with your legs straight in front of you.",
+          "Unrack the bar at your upper chest with a grip just outside your shoulders."
+        ],
+        "execution": [
+          "Press the bar overhead without leaning back.",
+          "Lower it to your upper chest."
+        ],
+        "mistakes": [
+          "Rounding the lower back.",
+          "Leaning back to press."
+        ],
+        "safety": "Use safety arms set just below shoulder height in case you miss a rep.",
+        "cues": [
+          "Sit tall",
+          "Straight up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_prone_w_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "rear_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [],
+    "family": "prone_raise",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 171,
+    "l10n": {
+      "en": {
+        "name": "Prone W Raise",
+        "aliases": [
+          "Floor W Raise"
+        ],
+        "setup": [
+          "Lie face down with your elbows bent and pulled in so your arms form a W.",
+          "Rest your forehead on a folded towel."
+        ],
+        "execution": [
+          "Lift your elbows and hands off the floor by squeezing the shoulder blades together and down.",
+          "Hold briefly and lower."
+        ],
+        "mistakes": [
+          "Shrugging.",
+          "Lifting the chest."
+        ],
+        "cues": [
+          "Squeeze and hold"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_front_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "mid_delt"
+    ],
+    "family": "front_raise",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 175,
+    "l10n": {
+      "en": {
+        "name": "Band Front Raise",
+        "aliases": [],
+        "setup": [
+          "Stand on the band and hold the ends in front of your thighs.",
+          "Keep your arms nearly straight."
+        ],
+        "execution": [
+          "Raise your arms in front to shoulder height.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Leaning back.",
+          "Letting the band snap the arms down."
+        ],
+        "cues": [
+          "Slow on the way down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_incline_dumbbell_y_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "mid_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt"
+    ],
+    "family": "prone_raise",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 1,
+    "popularity": 174,
+    "l10n": {
+      "en": {
+        "name": "Incline Dumbbell Y Raise",
+        "aliases": [
+          "Incline Y Raise"
+        ],
+        "setup": [
+          "Set a bench to a low incline and lie face down on it.",
+          "Hold light dumbbells with your arms hanging and thumbs pointing up."
+        ],
+        "execution": [
+          "Raise your arms forward and out into a Y until they line up with your body.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Using weights heavy enough to make you swing.",
+          "Shrugging."
+        ],
+        "cues": [
+          "Thumbs up",
+          "Reach long"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_upright_row",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "vertical_pull",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "mid_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "upright_row",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 178,
+    "l10n": {
+      "en": {
+        "name": "Band Upright Row",
+        "aliases": [],
+        "setup": [
+          "Stand on the middle of a band.",
+          "Hold the ends in front of your thighs."
+        ],
+        "execution": [
+          "Pull your hands up along your body until the elbows reach shoulder height.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Pulling above shoulder height.",
+          "Leaning back."
+        ],
+        "cues": [
+          "Elbows lead"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_suspension_trainer_y_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "suspension_trainer"
+    ],
+    "mainMuscles": [
+      "mid_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [
+      "rear_delt"
+    ],
+    "family": "prone_raise",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 177,
+    "l10n": {
+      "en": {
+        "name": "Suspension Trainer Y Raise",
+        "aliases": [
+          "TRX Y Raise",
+          "TRX Y Fly"
+        ],
+        "setup": [
+          "Face the anchor holding the handles with straight arms.",
+          "Walk your feet forward and lean back, body straight."
+        ],
+        "execution": [
+          "Raise your arms up and out into a Y, pulling your body up with them.",
+          "Lower slowly back to the lean."
+        ],
+        "mistakes": [
+          "Bending the elbows.",
+          "Letting the hips sag."
+        ],
+        "cues": [
+          "Arms long",
+          "Steeper lean, harder rep"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_suspension_trainer_reverse_fly",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "suspension_trainer"
+    ],
+    "mainMuscles": [
+      "rear_delt"
+    ],
+    "secondaryMuscles": [
+      "trap"
+    ],
+    "family": "rear_delt_fly",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 180,
+    "l10n": {
+      "en": {
+        "name": "Suspension Trainer Reverse Fly",
+        "aliases": [
+          "TRX Reverse Fly",
+          "TRX T Raise"
+        ],
+        "setup": [
+          "Face the anchor holding the handles in front of your chest with straight arms.",
+          "Lean back with a straight body."
+        ],
+        "execution": [
+          "Open your arms out to the sides into a T, pulling your body up.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Bending the elbows to row.",
+          "Letting the hips drop."
+        ],
+        "cues": [
+          "Open wide"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_reverse_snow_angel",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "rear_delt",
+      "trap"
+    ],
+    "secondaryMuscles": [],
+    "family": "snow_angel",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 181,
+    "l10n": {
+      "en": {
+        "name": "Reverse Snow Angel",
+        "aliases": [
+          "Prone Snow Angel"
+        ],
+        "setup": [
+          "Lie face down with your arms by your sides, palms down.",
+          "Lift your arms and chest slightly off the floor."
+        ],
+        "execution": [
+          "Sweep your arms in a wide arc overhead, keeping them off the floor.",
+          "Sweep them back to your hips."
+        ],
+        "mistakes": [
+          "Letting the arms touch down.",
+          "Cranking the neck back."
+        ],
+        "cues": [
+          "Arms hover all the way round"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_wall_isometric_shoulder_abduction",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "mid_delt"
+    ],
+    "secondaryMuscles": [],
+    "family": "lateral_raise",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 182,
+    "l10n": {
+      "en": {
+        "name": "Wall Isometric Shoulder Abduction",
+        "aliases": [
+          "Isometric Lateral Raise",
+          "Wall Press-Out"
+        ],
+        "setup": [
+          "Stand side-on to a wall with your arm at your side and the back of your wrist against the wall.",
+          "Bend the elbow slightly."
+        ],
+        "execution": [
+          "Press your arm outward into the wall as if raising it to the side.",
+          "Hold steady pressure for the set time."
+        ],
+        "mistakes": [
+          "Leaning the body into the wall.",
+          "Shrugging."
+        ],
+        "cues": [
+          "Push out, stay tall"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_freestanding_handstand",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "static",
+    "movementPattern": "vertical_push",
+    "position": "hanging",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "front_delt"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "trap",
+      "forearm",
+      "abdominal"
+    ],
+    "family": "handstand",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 179,
+    "l10n": {
+      "en": {
+        "name": "Freestanding Handstand",
+        "aliases": [
+          "Handstand Hold"
+        ],
+        "setup": [
+          "Warm up the wrists and shoulders.",
+          "Place your hands shoulder-width apart, fingers spread."
+        ],
+        "execution": [
+          "Kick up into a straight handstand away from any wall.",
+          "Balance by pressing through your fingers and palms.",
+          "Come down by stepping one leg down or rolling out."
+        ],
+        "mistakes": [
+          "Arching the back into a banana shape.",
+          "Locking the elbows softly."
+        ],
+        "safety": "Learn to bail out by turning sideways before practising away from a wall.",
+        "cues": [
+          "Push tall",
+          "Fingers do the balancing"
+        ]
+      }
+    }
+  }
+]

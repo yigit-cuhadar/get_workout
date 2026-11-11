@@ -1,0 +1,2310 @@
+[
+  {
+    "id": "ex_dumbbell_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "biceps_curl",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 6,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Curl",
+        "aliases": [
+          "Dumbbell Biceps Curl",
+          "DB Curl",
+          "Alternating Dumbbell Curl"
+        ],
+        "setup": [
+          "Stand tall with a dumbbell in each hand, palms facing forward.",
+          "Keep your elbows close to your sides."
+        ],
+        "execution": [
+          "Curl the dumbbells up toward your shoulders without moving your elbows forward much.",
+          "Squeeze at the top, then lower slowly to straight arms."
+        ],
+        "mistakes": [
+          "Swinging the weights with the hips.",
+          "Cutting the lowering short."
+        ],
+        "cues": [
+          "Elbows still",
+          "Slow down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_barbell_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "biceps_curl",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 2.5,
+    "popularity": 15,
+    "l10n": {
+      "en": {
+        "name": "Barbell Curl",
+        "aliases": [
+          "Standing Barbell Curl",
+          "BB Curl"
+        ],
+        "setup": [
+          "Hold the bar with palms facing forward, hands shoulder width.",
+          "Stand tall with the bar against your thighs."
+        ],
+        "execution": [
+          "Curl the bar up to chest height, keeping your elbows at your sides.",
+          "Lower it slowly until your arms are straight."
+        ],
+        "mistakes": [
+          "Leaning back to swing the bar up.",
+          "Letting the elbows drift forward."
+        ],
+        "cues": [
+          "Elbows pinned",
+          "Full stretch at the bottom"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_triceps_pushdown",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "narrow",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "triceps_pushdown",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 16,
+    "l10n": {
+      "en": {
+        "name": "Triceps Pushdown",
+        "aliases": [
+          "Cable Pushdown",
+          "Straight-Bar Pushdown",
+          "Triceps Press-Down"
+        ],
+        "setup": [
+          "Attach a straight or angled bar to a high pulley.",
+          "Grip it overhand and pin your elbows to your sides."
+        ],
+        "execution": [
+          "Push the bar down until your arms are straight.",
+          "Let it rise until your forearms pass parallel to the floor."
+        ],
+        "mistakes": [
+          "Letting the elbows move forward and back.",
+          "Leaning over the bar to push with body weight."
+        ],
+        "cues": [
+          "Elbows glued to the ribs"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_rope_triceps_pushdown",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "triceps_pushdown",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 18,
+    "l10n": {
+      "en": {
+        "name": "Rope Triceps Pushdown",
+        "aliases": [
+          "Rope Pushdown",
+          "Cable Rope Pushdown"
+        ],
+        "setup": [
+          "Attach a rope to a high pulley and hold the ends with palms facing each other.",
+          "Tuck your elbows at your sides."
+        ],
+        "execution": [
+          "Push the rope down and spread the ends apart at the bottom.",
+          "Return slowly until your forearms are just above parallel."
+        ],
+        "mistakes": [
+          "Moving the elbows.",
+          "Shortening the range."
+        ],
+        "cues": [
+          "Split the rope at the bottom"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_hammer_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "biceps",
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "hammer_curl",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 22,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Hammer Curl",
+        "aliases": [
+          "Hammer Curl",
+          "Neutral-Grip Curl"
+        ],
+        "setup": [
+          "Stand tall with dumbbells at your sides, palms facing in.",
+          "Keep your elbows close to your body."
+        ],
+        "execution": [
+          "Curl the dumbbells up while keeping the palms facing each other.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Swinging.",
+          "Letting the wrists bend."
+        ],
+        "cues": [
+          "Thumbs up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ez_bar_skull_crusher",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "supine",
+    "grip": "overhand",
+    "gripWidth": "narrow",
+    "equipment": [
+      "ez_bar",
+      "bench"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "lying_triceps_extension",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 2.5,
+    "popularity": 24,
+    "l10n": {
+      "en": {
+        "name": "EZ-Bar Skull Crusher",
+        "aliases": [
+          "Skull Crusher",
+          "Lying Triceps Extension",
+          "French Press"
+        ],
+        "setup": [
+          "Lie on a flat bench holding the EZ bar above your chest with a narrow grip.",
+          "Tilt your arms slightly back toward your head."
+        ],
+        "execution": [
+          "Bend your elbows to lower the bar toward the top of your head.",
+          "Extend your elbows to return the bar above your chest."
+        ],
+        "mistakes": [
+          "Letting the elbows flare out.",
+          "Moving the upper arms as well as the forearms."
+        ],
+        "safety": "Use a weight you control; a dropped bar lands on the face.",
+        "cues": [
+          "Upper arms still",
+          "Elbows in"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ez_bar_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "ez_bar"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "biceps_curl",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 26,
+    "l10n": {
+      "en": {
+        "name": "EZ-Bar Curl",
+        "aliases": [
+          "EZ Curl"
+        ],
+        "setup": [
+          "Grip the angled parts of an EZ bar with palms facing up.",
+          "Stand tall with the bar at your thighs."
+        ],
+        "execution": [
+          "Curl the bar up while your elbows stay at your sides.",
+          "Lower it slowly."
+        ],
+        "mistakes": [
+          "Rocking the torso.",
+          "Half reps."
+        ],
+        "cues": [
+          "Elbows still"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_close_grip_bench_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "supine",
+    "grip": "overhand",
+    "gripWidth": "narrow",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "triceps",
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "close_grip_press",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 35,
+    "l10n": {
+      "en": {
+        "name": "Close-Grip Bench Press",
+        "aliases": [
+          "CGBP",
+          "Narrow-Grip Bench Press"
+        ],
+        "setup": [
+          "Lie on a flat bench and grip the bar about shoulder-width apart.",
+          "Set your shoulder blades and unrack the bar."
+        ],
+        "execution": [
+          "Lower the bar to your lower chest with elbows tucked close to your body.",
+          "Press until your arms are straight."
+        ],
+        "mistakes": [
+          "Gripping so narrow that the wrists bend.",
+          "Flaring the elbows."
+        ],
+        "safety": "Use a spotter or safety arms when you work close to failure.",
+        "cues": [
+          "Elbows tucked"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_triceps_dip",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "hanging",
+    "grip": "neutral",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "dip_station"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "pec",
+      "front_delt"
+    ],
+    "family": "dip",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 40,
+    "l10n": {
+      "en": {
+        "name": "Triceps Dip",
+        "aliases": [
+          "Upright Dip",
+          "Parallel Bar Triceps Dip"
+        ],
+        "setup": [
+          "Grip the dip bars and press up to a support with straight arms.",
+          "Keep your torso upright and legs under you."
+        ],
+        "execution": [
+          "Bend your elbows to lower until your upper arms are about parallel to the floor.",
+          "Press back up to straight arms."
+        ],
+        "mistakes": [
+          "Leaning far forward, which shifts the work to the chest.",
+          "Dropping too deep."
+        ],
+        "safety": "Stop the descent where your shoulders stay comfortable.",
+        "cues": [
+          "Stay upright",
+          "Elbows back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_overhead_triceps_extension",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "overhead_triceps_extension",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2,
+    "popularity": 42,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Overhead Triceps Extension",
+        "aliases": [
+          "Seated Overhead Extension",
+          "Two-Hand Dumbbell Extension"
+        ],
+        "setup": [
+          "Sit on an upright bench holding one dumbbell with both hands overhead.",
+          "Cup the top plate of the dumbbell in your palms."
+        ],
+        "execution": [
+          "Lower the dumbbell behind your head by bending your elbows.",
+          "Straighten your arms to lift it back up."
+        ],
+        "mistakes": [
+          "Letting the elbows flare wide.",
+          "Arching the lower back."
+        ],
+        "cues": [
+          "Elbows point up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_preacher_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "underhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "ez_bar",
+      "bench"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "preacher_curl",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 47,
+    "l10n": {
+      "en": {
+        "name": "Preacher Curl",
+        "aliases": [
+          "EZ-Bar Preacher Curl",
+          "Scott Curl"
+        ],
+        "setup": [
+          "Sit at a preacher bench with your upper arms flat on the pad.",
+          "Hold an EZ bar with palms up."
+        ],
+        "execution": [
+          "Curl the bar up until your forearms are nearly vertical.",
+          "Lower it slowly until your arms are almost straight."
+        ],
+        "mistakes": [
+          "Dropping fast to the bottom.",
+          "Lifting the elbows off the pad."
+        ],
+        "cues": [
+          "Slow at the bottom"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "biceps_curl",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 50,
+    "l10n": {
+      "en": {
+        "name": "Cable Curl",
+        "aliases": [
+          "Cable Biceps Curl"
+        ],
+        "setup": [
+          "Attach a straight bar to a low pulley.",
+          "Stand close and grip it with palms up."
+        ],
+        "execution": [
+          "Curl the bar to your chest while the elbows stay at your sides.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Leaning back.",
+          "Letting the elbows slide forward."
+        ],
+        "cues": [
+          "Constant tension"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_incline_dumbbell_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "incline",
+    "grip": "underhand",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "biceps_curl",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 57,
+    "l10n": {
+      "en": {
+        "name": "Incline Dumbbell Curl",
+        "aliases": [
+          "Incline Curl"
+        ],
+        "setup": [
+          "Set a bench to about 45 degrees and lie back with a dumbbell in each hand.",
+          "Let your arms hang straight down behind your torso."
+        ],
+        "execution": [
+          "Curl the dumbbells up without moving your upper arms forward.",
+          "Lower slowly into the full stretch."
+        ],
+        "mistakes": [
+          "Lifting the shoulders off the bench.",
+          "Bringing the elbows forward."
+        ],
+        "cues": [
+          "Arms hang back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_concentration_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "underhand",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "biceps_curl",
+    "familyRank": 7,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 1,
+    "popularity": 61,
+    "l10n": {
+      "en": {
+        "name": "Concentration Curl",
+        "aliases": [],
+        "setup": [
+          "Sit on a bench with your legs apart.",
+          "Hold a dumbbell and rest the back of your upper arm on your inner thigh."
+        ],
+        "execution": [
+          "Curl the dumbbell toward your shoulder.",
+          "Lower it slowly to a straight arm."
+        ],
+        "mistakes": [
+          "Lifting the elbow off the thigh.",
+          "Swinging the body."
+        ],
+        "cues": [
+          "Squeeze at the top"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bench_dip",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "seated",
+    "equipment": [
+      "bench"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "pec",
+      "front_delt"
+    ],
+    "family": "dip",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 66,
+    "l10n": {
+      "en": {
+        "name": "Bench Dip",
+        "aliases": [
+          "Chair Dip",
+          "Triceps Bench Dip"
+        ],
+        "setup": [
+          "Sit on the edge of a bench with your hands next to your hips.",
+          "Slide your hips off the bench and walk your feet out."
+        ],
+        "execution": [
+          "Bend your elbows to lower your hips until your upper arms are about parallel to the floor.",
+          "Press back up to straight arms."
+        ],
+        "mistakes": [
+          "Lowering too far and straining the front of the shoulder.",
+          "Letting the hips drift away from the bench."
+        ],
+        "cues": [
+          "Hips close to the bench"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_diamond_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "prone",
+    "gripWidth": "narrow",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "triceps",
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "close_grip_press",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 68,
+    "l10n": {
+      "en": {
+        "name": "Diamond Push-Up",
+        "aliases": [
+          "Triangle Push-Up"
+        ],
+        "setup": [
+          "Place your hands close together under your chest so your thumbs and index fingers form a diamond.",
+          "Step back into a straight plank."
+        ],
+        "execution": [
+          "Lower your chest toward your hands, keeping the elbows close.",
+          "Press back up to straight arms."
+        ],
+        "mistakes": [
+          "Letting the elbows flare.",
+          "Sagging hips."
+        ],
+        "cues": [
+          "Elbows brush the ribs"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_kickback",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "triceps_kickback",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 1,
+    "popularity": 72,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Kickback",
+        "aliases": [
+          "Triceps Kickback"
+        ],
+        "setup": [
+          "Place one knee and hand on a bench and hold a dumbbell in the other hand.",
+          "Raise the upper arm so it is parallel to your torso."
+        ],
+        "execution": [
+          "Straighten your elbow until your arm is fully extended behind you.",
+          "Bend it slowly back to 90 degrees."
+        ],
+        "mistakes": [
+          "Letting the upper arm drop.",
+          "Swinging the weight."
+        ],
+        "cues": [
+          "Upper arm stays parallel"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_overhead_triceps_extension",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "overhead_triceps_extension",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 76,
+    "l10n": {
+      "en": {
+        "name": "Cable Overhead Triceps Extension",
+        "aliases": [
+          "Rope Overhead Extension"
+        ],
+        "setup": [
+          "Attach a rope to a pulley at about head height or lower.",
+          "Face away from it holding the rope behind your head and step forward into a staggered stance."
+        ],
+        "execution": [
+          "Extend your arms forward and up until they are straight.",
+          "Let your hands return slowly behind your head."
+        ],
+        "mistakes": [
+          "Letting the elbows flare.",
+          "Arching the lower back."
+        ],
+        "cues": [
+          "Elbows point forward"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_wrist_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "underhand",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "wrist_curl",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 1,
+    "popularity": 78,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Wrist Curl",
+        "aliases": [
+          "Seated Wrist Curl"
+        ],
+        "setup": [
+          "Sit on a bench and rest your forearms on your thighs, palms up.",
+          "Let your wrists hang past your knees with a dumbbell in each hand."
+        ],
+        "execution": [
+          "Curl your wrists up as far as possible.",
+          "Lower slowly, letting the dumbbells roll toward your fingers."
+        ],
+        "mistakes": [
+          "Lifting the forearms off the thighs.",
+          "Bouncing the weight."
+        ],
+        "cues": [
+          "Only the wrists move"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dead_hang",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "isolation",
+    "position": "hanging",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [
+      "lat",
+      "trap"
+    ],
+    "family": "dead_hang",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 80,
+    "l10n": {
+      "en": {
+        "name": "Dead Hang",
+        "aliases": [
+          "Bar Hang",
+          "Passive Hang"
+        ],
+        "setup": [
+          "Grip a pull-up bar with palms facing away, hands shoulder width.",
+          "Step off the box or lift your feet to hang."
+        ],
+        "execution": [
+          "Hang with straight arms and relaxed shoulders.",
+          "Breathe steadily until your grip is close to failing."
+        ],
+        "mistakes": [
+          "Holding the breath.",
+          "Gripping with the fingertips only."
+        ],
+        "cues": [
+          "Relax the body, squeeze the bar"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_rope_hammer_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "biceps",
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "hammer_curl",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 84,
+    "l10n": {
+      "en": {
+        "name": "Rope Hammer Curl",
+        "aliases": [
+          "Cable Hammer Curl"
+        ],
+        "setup": [
+          "Attach a rope to a low pulley.",
+          "Hold the ends with palms facing each other."
+        ],
+        "execution": [
+          "Curl the rope toward your shoulders, elbows still.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Swinging.",
+          "Elbows drifting forward."
+        ],
+        "cues": [
+          "Thumbs up, elbows still"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_spider_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "grip": "underhand",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "preacher_curl",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 88,
+    "l10n": {
+      "en": {
+        "name": "Spider Curl",
+        "aliases": [],
+        "setup": [
+          "Set a bench to a steep incline and lie face down on it.",
+          "Let your arms hang straight down with a dumbbell in each hand."
+        ],
+        "execution": [
+          "Curl the dumbbells up while your upper arms stay vertical.",
+          "Lower slowly to straight arms."
+        ],
+        "mistakes": [
+          "Swinging the arms back.",
+          "Lifting the chest off the bench."
+        ],
+        "cues": [
+          "Upper arms stay vertical"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_close_grip_push_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "horizontal_push",
+    "position": "prone",
+    "gripWidth": "narrow",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "triceps",
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "close_grip_press",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 90,
+    "l10n": {
+      "en": {
+        "name": "Close-Grip Push-Up",
+        "aliases": [
+          "Narrow Push-Up",
+          "Triceps Push-Up"
+        ],
+        "setup": [
+          "Place your hands under your shoulders.",
+          "Step back into a straight plank."
+        ],
+        "execution": [
+          "Lower your chest while your elbows brush your sides.",
+          "Press back up."
+        ],
+        "mistakes": [
+          "Flaring the elbows.",
+          "Shortening the range."
+        ],
+        "cues": [
+          "Elbows back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_lying_triceps_extension",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "supine",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "lying_triceps_extension",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 93,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Lying Triceps Extension",
+        "aliases": [
+          "Dumbbell Skull Crusher"
+        ],
+        "setup": [
+          "Lie on a flat bench with a dumbbell in each hand above your chest.",
+          "Turn your palms to face each other."
+        ],
+        "execution": [
+          "Bend your elbows to lower the dumbbells beside your head.",
+          "Extend your elbows to lift them again."
+        ],
+        "mistakes": [
+          "Flaring the elbows.",
+          "Moving the upper arms."
+        ],
+        "cues": [
+          "Upper arms still"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ez_bar_reverse_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "ez_bar"
+    ],
+    "mainMuscles": [
+      "forearm",
+      "biceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "reverse_curl",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 99,
+    "l10n": {
+      "en": {
+        "name": "EZ-Bar Reverse Curl",
+        "aliases": [
+          "Reverse Curl",
+          "Overhand Curl"
+        ],
+        "setup": [
+          "Hold an EZ bar with palms facing down.",
+          "Stand tall with the bar at your thighs."
+        ],
+        "execution": [
+          "Curl the bar up while keeping the wrists straight.",
+          "Lower it slowly."
+        ],
+        "mistakes": [
+          "Letting the wrists bend back.",
+          "Swinging."
+        ],
+        "cues": [
+          "Knuckles up, wrists flat"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_reverse_wrist_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "overhand",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "reverse_wrist_curl",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 1,
+    "popularity": 102,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Reverse Wrist Curl",
+        "aliases": [
+          "Wrist Extension"
+        ],
+        "setup": [
+          "Sit on a bench and rest your forearms on your thighs, palms down.",
+          "Let your hands hang past your knees with light dumbbells."
+        ],
+        "execution": [
+          "Lift the backs of your hands as high as possible.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Using heavy weight and jerking it.",
+          "Lifting the forearms."
+        ],
+        "cues": [
+          "Only the wrists move"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_machine_assisted_dip",
+    "status": "live",
+    "loggingType": "assisted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "kneeling",
+    "grip": "neutral",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "triceps",
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "dip",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 104,
+    "l10n": {
+      "en": {
+        "name": "Machine-Assisted Dip",
+        "aliases": [
+          "Assisted Dip"
+        ],
+        "setup": [
+          "Set the assistance weight; more weight makes it easier.",
+          "Kneel on the pad and grip the dip handles with straight arms."
+        ],
+        "execution": [
+          "Lower until your upper arms are about parallel to the floor.",
+          "Press back up."
+        ],
+        "mistakes": [
+          "Bouncing off the pad.",
+          "Leaning far forward."
+        ],
+        "cues": [
+          "Controlled depth"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_seated_dip_machine",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "vertical_push",
+    "position": "seated",
+    "grip": "neutral",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "pec",
+      "front_delt"
+    ],
+    "family": "dip",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 107,
+    "l10n": {
+      "en": {
+        "name": "Seated Dip Machine",
+        "aliases": [
+          "Machine Dip",
+          "Triceps Dip Machine"
+        ],
+        "setup": [
+          "Adjust the seat so the handles are at your sides.",
+          "Sit tall and grip the handles."
+        ],
+        "execution": [
+          "Press the handles down until your arms are straight.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Leaning forward.",
+          "Shrugging."
+        ],
+        "cues": [
+          "Shoulders down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_barbell_wrist_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "underhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "wrist_curl",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 2.5,
+    "popularity": 112,
+    "l10n": {
+      "en": {
+        "name": "Barbell Wrist Curl",
+        "aliases": [],
+        "setup": [
+          "Sit on a bench and rest your forearms on your thighs, palms up, holding a barbell.",
+          "Let your wrists hang past your knees."
+        ],
+        "execution": [
+          "Curl your wrists up.",
+          "Lower slowly, letting the bar roll to your fingers."
+        ],
+        "mistakes": [
+          "Bouncing.",
+          "Lifting the forearms."
+        ],
+        "cues": [
+          "Roll it down, curl it up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cross_body_hammer_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "biceps",
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "hammer_curl",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 114,
+    "l10n": {
+      "en": {
+        "name": "Cross-Body Hammer Curl",
+        "aliases": [
+          "Pinwheel Curl"
+        ],
+        "setup": [
+          "Stand tall with dumbbells at your sides, palms facing in.",
+          "Keep your elbows close to your body."
+        ],
+        "execution": [
+          "Curl one dumbbell up and across your body toward the opposite shoulder.",
+          "Lower it and repeat with the other arm."
+        ],
+        "mistakes": [
+          "Twisting the torso.",
+          "Swinging."
+        ],
+        "cues": [
+          "Across, not up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_preacher_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "underhand",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "preacher_curl",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 1,
+    "popularity": 118,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Preacher Curl",
+        "aliases": [],
+        "setup": [
+          "Sit at a preacher bench or kneel behind an incline bench.",
+          "Rest the back of one upper arm on the pad with a dumbbell in hand."
+        ],
+        "execution": [
+          "Curl the dumbbell up.",
+          "Lower slowly to nearly straight."
+        ],
+        "mistakes": [
+          "Dropping into the bottom.",
+          "Lifting the elbow."
+        ],
+        "cues": [
+          "Slow at the bottom"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_machine_biceps_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "underhand",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "preacher_curl",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 121,
+    "l10n": {
+      "en": {
+        "name": "Machine Biceps Curl",
+        "aliases": [
+          "Biceps Curl Machine"
+        ],
+        "setup": [
+          "Adjust the seat so your elbows line up with the machine's pivot.",
+          "Rest your upper arms on the pad and grip the handles."
+        ],
+        "execution": [
+          "Curl the handles up.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Lifting off the seat.",
+          "Short range."
+        ],
+        "cues": [
+          "Full stretch each rep"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_biceps_curl",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "biceps_curl",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 126,
+    "l10n": {
+      "en": {
+        "name": "Band Biceps Curl",
+        "aliases": [
+          "Resistance Band Curl"
+        ],
+        "setup": [
+          "Stand on the middle of a band with feet hip-width apart.",
+          "Hold the ends with palms forward."
+        ],
+        "execution": [
+          "Curl your hands to your shoulders.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Swinging.",
+          "Letting the band snap down."
+        ],
+        "cues": [
+          "Elbows still"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_triceps_pushdown",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "triceps_pushdown",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 129,
+    "l10n": {
+      "en": {
+        "name": "Band Triceps Pushdown",
+        "aliases": [
+          "Resistance Band Pushdown"
+        ],
+        "setup": [
+          "Anchor a band high, such as over a door or bar.",
+          "Hold the ends with your elbows at your sides."
+        ],
+        "execution": [
+          "Push your hands down until your arms are straight.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Moving the elbows.",
+          "Leaning in."
+        ],
+        "cues": [
+          "Elbows pinned"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_overhead_triceps_extension",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "overhead_triceps_extension",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 132,
+    "l10n": {
+      "en": {
+        "name": "Band Overhead Triceps Extension",
+        "aliases": [],
+        "setup": [
+          "Stand on one end of a band in a staggered stance.",
+          "Hold the other end with both hands behind your head, elbows pointing up."
+        ],
+        "execution": [
+          "Straighten your arms overhead.",
+          "Lower your hands slowly behind your head."
+        ],
+        "mistakes": [
+          "Flaring the elbows.",
+          "Arching the back."
+        ],
+        "cues": [
+          "Elbows to the ceiling"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_hammer_curl",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "biceps",
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "hammer_curl",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 137,
+    "l10n": {
+      "en": {
+        "name": "Band Hammer Curl",
+        "aliases": [],
+        "setup": [
+          "Stand on the middle of a band.",
+          "Hold the ends with palms facing in."
+        ],
+        "execution": [
+          "Curl your hands up, keeping the palms facing each other.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Swinging.",
+          "Elbows moving forward."
+        ],
+        "cues": [
+          "Thumbs up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_reverse_curl",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "forearm",
+      "biceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "reverse_curl",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 140,
+    "l10n": {
+      "en": {
+        "name": "Band Reverse Curl",
+        "aliases": [],
+        "setup": [
+          "Stand on the middle of a band.",
+          "Hold the ends with palms facing back."
+        ],
+        "execution": [
+          "Curl your hands up with wrists straight.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Bending the wrists.",
+          "Swinging."
+        ],
+        "cues": [
+          "Knuckles up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_zottman_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "biceps",
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "reverse_curl",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 143,
+    "l10n": {
+      "en": {
+        "name": "Zottman Curl",
+        "aliases": [],
+        "setup": [
+          "Stand tall with dumbbells at your sides.",
+          "Turn your palms to face forward."
+        ],
+        "execution": [
+          "Curl the dumbbells up with palms facing up.",
+          "At the top, turn the palms down.",
+          "Lower slowly with palms facing down, then turn them up again at the bottom."
+        ],
+        "mistakes": [
+          "Rushing the overhand lowering.",
+          "Swinging."
+        ],
+        "cues": [
+          "Up palms up, down palms down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_kickback",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "triceps_kickback",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 2.5,
+    "popularity": 147,
+    "l10n": {
+      "en": {
+        "name": "Cable Kickback",
+        "aliases": [],
+        "setup": [
+          "Set a pulley low and hold the cable without a handle or with a small handle.",
+          "Hinge forward and pin your upper arm by your side, elbow bent."
+        ],
+        "execution": [
+          "Extend your elbow until the arm is straight behind you.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Swinging the upper arm.",
+          "Rotating the torso."
+        ],
+        "cues": [
+          "Upper arm still"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bayesian_cable_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "biceps_curl",
+    "familyRank": 8,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 150,
+    "l10n": {
+      "en": {
+        "name": "Bayesian Cable Curl",
+        "aliases": [
+          "Behind-the-Body Cable Curl"
+        ],
+        "setup": [
+          "Set a pulley low and face away from it, holding the handle with one hand.",
+          "Step forward so your arm is pulled slightly behind your body."
+        ],
+        "execution": [
+          "Curl the handle forward and up while the upper arm stays back.",
+          "Lower slowly into the stretch."
+        ],
+        "mistakes": [
+          "Letting the elbow swing forward.",
+          "Leaning."
+        ],
+        "cues": [
+          "Elbow stays back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_suspension_trainer_biceps_curl",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "equipment": [
+      "suspension_trainer"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "biceps_curl",
+    "familyRank": 9,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 153,
+    "l10n": {
+      "en": {
+        "name": "Suspension Trainer Biceps Curl",
+        "aliases": [
+          "TRX Biceps Curl"
+        ],
+        "setup": [
+          "Face the anchor and hold the handles with palms up and arms straight.",
+          "Walk your feet forward and lean back with a straight body."
+        ],
+        "execution": [
+          "Curl your hands toward your forehead, pulling your body up.",
+          "Lower slowly to straight arms."
+        ],
+        "mistakes": [
+          "Letting the elbows drop.",
+          "Bending at the hips."
+        ],
+        "cues": [
+          "Elbows high and still"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_suspension_trainer_triceps_extension",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "suspension_trainer"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "lying_triceps_extension",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 157,
+    "l10n": {
+      "en": {
+        "name": "Suspension Trainer Triceps Extension",
+        "aliases": [
+          "TRX Triceps Extension"
+        ],
+        "setup": [
+          "Face away from the anchor holding the handles overhead with straight arms.",
+          "Lean forward with a straight body."
+        ],
+        "execution": [
+          "Bend your elbows to lower your head between your hands.",
+          "Straighten your arms to push back up."
+        ],
+        "mistakes": [
+          "Letting the hips sag.",
+          "Elbows flaring."
+        ],
+        "cues": [
+          "Body straight"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_single_arm_reverse_grip_pushdown",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "family": "triceps_pushdown",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 2.5,
+    "popularity": 160,
+    "l10n": {
+      "en": {
+        "name": "Single-Arm Reverse-Grip Pushdown",
+        "aliases": [
+          "Underhand Pushdown"
+        ],
+        "setup": [
+          "Attach a single handle to a high pulley.",
+          "Hold it with your palm facing up and the elbow at your side."
+        ],
+        "execution": [
+          "Push the handle down until your arm is straight.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Moving the elbow.",
+          "Leaning over."
+        ],
+        "cues": [
+          "Elbow pinned"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_one_arm_dead_hang",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "advanced",
+    "force": "static",
+    "movementPattern": "isolation",
+    "position": "hanging",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [
+      "lat"
+    ],
+    "family": "dead_hang",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 166,
+    "l10n": {
+      "en": {
+        "name": "One-Arm Dead Hang",
+        "aliases": [],
+        "setup": [
+          "Hang from a bar with both hands.",
+          "Release one hand and keep the other shoulder engaged."
+        ],
+        "execution": [
+          "Hold with one arm for the set time.",
+          "Switch arms."
+        ],
+        "mistakes": [
+          "Letting the shoulder sag fully.",
+          "Spinning wildly."
+        ],
+        "safety": "Build up from two-arm hangs to protect the shoulder and elbow.",
+        "cues": [
+          "Shoulder engaged"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_plate_pinch_hold",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "plate"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "plate_pinch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 169,
+    "l10n": {
+      "en": {
+        "name": "Plate Pinch Hold",
+        "aliases": [
+          "Plate Pinch"
+        ],
+        "setup": [
+          "Place two plates together with the smooth sides out.",
+          "Pinch them between your fingers and thumb in each hand."
+        ],
+        "execution": [
+          "Stand tall and hold the plates for the set time.",
+          "Set them down before they slip."
+        ],
+        "mistakes": [
+          "Using the palm.",
+          "Letting the plates touch the leg."
+        ],
+        "cues": [
+          "Squeeze with the fingertips"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_wrist_roller",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "other",
+      "plate"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "wrist_roller",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 172,
+    "l10n": {
+      "en": {
+        "name": "Wrist Roller",
+        "aliases": [],
+        "setup": [
+          "Hold a wrist roller at shoulder height with straight arms.",
+          "Hang a light plate from the rope."
+        ],
+        "execution": [
+          "Turn the handle wrist over wrist to roll the rope up.",
+          "Reverse to lower it slowly."
+        ],
+        "mistakes": [
+          "Bending the arms.",
+          "Using the shoulders."
+        ],
+        "cues": [
+          "Wrists do the work"
+        ]
+      }
+    }
+  }
+]
