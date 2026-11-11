@@ -124,6 +124,17 @@ bool fitsLimits(Workout workout) =>
           ),
     );
 
+/// Whether finished [workout] can be stored: it has an exercise, every set
+/// is valid for its exercise, it [fitsLimits] and it does not finish before
+/// it started.
+bool isStorable(Workout workout) =>
+    workout.exercises.isNotEmpty &&
+    workout.exercises.every(
+      (e) => e.sets.every((s) => validateSet(s, e.loggingType).isEmpty),
+    ) &&
+    fitsLimits(workout) &&
+    !(workout.finishedAt?.isBefore(workout.startedAt) ?? false);
+
 /// Whether [workout] did the next day of the [active] program, which then
 /// moves on. [program] is the active program as it is now.
 bool advancesProgram(Workout workout, ActiveProgram? active, Program? program) {

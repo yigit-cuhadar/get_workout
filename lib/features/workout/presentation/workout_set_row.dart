@@ -10,7 +10,7 @@ import '../../programs/domain/program.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/set_logging.dart';
 import '../domain/workout.dart';
-import 'active_workout_cubit.dart';
+import 'workout_editor.dart';
 import 'workout_text.dart';
 
 /// The column widths of a set row, shared with its heading.
@@ -66,12 +66,14 @@ class SetRow extends StatelessWidget {
     super.key,
     required this.ref,
     required this.state,
+    required this.editor,
     required this.unit,
     required this.effort,
   });
 
   final SetRef ref;
-  final ActiveWorkoutState state;
+  final EditedWorkout state;
+  final WorkoutEditor<EditedWorkout> editor;
   final WeightUnit unit;
   final EffortScale effort;
 
@@ -79,7 +81,7 @@ class SetRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final cubit = context.read<ActiveWorkoutCubit>();
+    final cubit = editor;
     final exercise = state.workout!.exercises[ref.exercise];
     final set = exercise.sets[ref.set];
     final type = exercise.loggingType;
@@ -174,7 +176,14 @@ class SetRow extends StatelessWidget {
             ),
           ),
         for (final (d, drop) in set.drops.indexed)
-          _DropRow(ref: ref, index: d, drop: drop, type: type, unit: unit),
+          _DropRow(
+            ref: ref,
+            index: d,
+            drop: drop,
+            type: type,
+            unit: unit,
+            editor: editor,
+          ),
         if (set.type == SetType.drop &&
             set.drops.length < WorkoutLimits.maxDrops)
           _Indented(
@@ -191,18 +200,12 @@ class SetRow extends StatelessWidget {
     );
   }
 
-  void _openOptions(BuildContext context) {
-    final cubit = context.read<ActiveWorkoutCubit>();
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (_) => BlocProvider.value(
-        value: cubit,
-        child: _SetOptions(ref: ref, effort: effort),
-      ),
-    );
-  }
+  void _openOptions(BuildContext context) => showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (_) => _SetOptions(ref: ref, effort: effort, editor: editor),
+  );
 }
 
 class _Indented extends StatelessWidget {
@@ -223,6 +226,7 @@ class _DropRow extends StatelessWidget {
     required this.drop,
     required this.type,
     required this.unit,
+    required this.editor,
   });
 
   final SetRef ref;
@@ -230,11 +234,12 @@ class _DropRow extends StatelessWidget {
   final Drop drop;
   final LoggingType type;
   final WeightUnit unit;
+  final WorkoutEditor<EditedWorkout> editor;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final cubit = context.read<ActiveWorkoutCubit>();
+    final cubit = editor;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Gap.sm),
       child: Row(
@@ -347,10 +352,15 @@ class _NumberCellState extends State<NumberCell> {
 /// A set's kind, failure flag, effort and removal; every change applies at
 /// once.
 class _SetOptions extends StatelessWidget {
-  const _SetOptions({required this.ref, required this.effort});
+  const _SetOptions({
+    required this.ref,
+    required this.effort,
+    required this.editor,
+  });
 
   final SetRef ref;
   final EffortScale effort;
+  final WorkoutEditor<EditedWorkout> editor;
 
   /// Reps in reserve offered; 5 stands for "5 or more".
   static const _rirChoices = [0, 1, 2, 3, 4, 5];
@@ -359,8 +369,9 @@ class _SetOptions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final cubit = context.read<ActiveWorkoutCubit>();
-    return BlocBuilder<ActiveWorkoutCubit, ActiveWorkoutState>(
+    final cubit = editor;
+    return BlocBuilder<WorkoutEditor<EditedWorkout>, EditedWorkout>(
+      bloc: editor,
       builder: (context, state) {
         final exercise = state.workout?.exercises.elementAtOrNull(ref.exercise);
         final set = exercise?.sets.elementAtOrNull(ref.set);

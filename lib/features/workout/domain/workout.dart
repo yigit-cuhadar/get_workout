@@ -236,16 +236,18 @@ class Workout extends Equatable {
   bool get hasUndoneSets => exercises.any((e) => e.sets.any((s) => !s.done));
 
   Workout copyWith({
+    DateTime? startedAt,
     DateTime? finishedAt,
+    String? name,
     String? Function()? note,
     List<WorkoutExercise>? exercises,
   }) => Workout(
     id: id,
-    startedAt: startedAt,
+    startedAt: startedAt ?? this.startedAt,
     finishedAt: finishedAt ?? this.finishedAt,
     programId: programId,
     dayIndex: dayIndex,
-    name: name,
+    name: name ?? this.name,
     note: note != null ? note() : this.note,
     exercises: exercises ?? this.exercises,
   );
