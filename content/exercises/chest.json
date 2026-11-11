@@ -261,7 +261,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 19,
+    "popularity": 20,
     "l10n": {
       "en": {
         "name": "Incline Barbell Bench Press",
@@ -318,7 +318,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 5,
-    "popularity": 21,
+    "popularity": 22,
     "l10n": {
       "en": {
         "name": "Machine Chest Press",
@@ -371,7 +371,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 24,
+    "popularity": 25,
     "l10n": {
       "en": {
         "name": "Cable Crossover",
@@ -428,7 +428,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 27,
+    "popularity": 29,
     "l10n": {
       "en": {
         "name": "Dumbbell Fly",
@@ -482,7 +482,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 30,
+    "popularity": 32,
     "l10n": {
       "en": {
         "name": "Pec Deck",
@@ -538,7 +538,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 33,
+    "popularity": 36,
     "l10n": {
       "en": {
         "name": "Chest Dip",
@@ -595,7 +595,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2,
-    "popularity": 58,
+    "popularity": 64,
     "l10n": {
       "en": {
         "name": "Dumbbell Pullover",
@@ -647,7 +647,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 50,
+    "popularity": 55,
     "l10n": {
       "en": {
         "name": "Incline Push-Up",
@@ -699,7 +699,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 54,
+    "popularity": 59,
     "l10n": {
       "en": {
         "name": "Knee Push-Up",
@@ -754,7 +754,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 64,
+    "popularity": 70,
     "l10n": {
       "en": {
         "name": "Smith Machine Bench Press",
@@ -806,7 +806,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 66,
+    "popularity": 73,
     "l10n": {
       "en": {
         "name": "Decline Push-Up",
@@ -858,7 +858,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 70,
+    "popularity": 78,
     "l10n": {
       "en": {
         "name": "Wide-Grip Push-Up",
@@ -912,7 +912,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 75,
+    "popularity": 83,
     "l10n": {
       "en": {
         "name": "Decline Barbell Bench Press",
@@ -966,7 +966,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 5,
-    "popularity": 79,
+    "popularity": 88,
     "l10n": {
       "en": {
         "name": "Machine Incline Chest Press",
@@ -1018,7 +1018,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 84,
+    "popularity": 94,
     "l10n": {
       "en": {
         "name": "Low-to-High Cable Fly",
@@ -1073,7 +1073,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 87,
+    "popularity": 97,
     "l10n": {
       "en": {
         "name": "Incline Smith Machine Press",
@@ -1125,7 +1125,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 94,
+    "popularity": 106,
     "l10n": {
       "en": {
         "name": "Incline Dumbbell Fly",
@@ -1176,7 +1176,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 109,
+    "popularity": 124,
     "l10n": {
       "en": {
         "name": "Clap Push-Up",
@@ -1230,7 +1230,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 112,
+    "popularity": 127,
     "l10n": {
       "en": {
         "name": "Band Chest Press",
@@ -1282,7 +1282,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 114,
+    "popularity": 130,
     "l10n": {
       "en": {
         "name": "Explosive Push-Up",
@@ -1336,7 +1336,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2.5,
-    "popularity": 120,
+    "popularity": 137,
     "l10n": {
       "en": {
         "name": "Cable Chest Press",
@@ -1388,7 +1388,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 126,
+    "popularity": 144,
     "l10n": {
       "en": {
         "name": "Weighted Push-Up",
@@ -1443,7 +1443,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2,
-    "popularity": 127,
+    "popularity": 145,
     "l10n": {
       "en": {
         "name": "Decline Dumbbell Press",
@@ -1495,7 +1495,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 132,
+    "popularity": 151,
     "l10n": {
       "en": {
         "name": "Dumbbell Floor Press",
@@ -1548,7 +1548,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 138,
+    "popularity": 158,
     "l10n": {
       "en": {
         "name": "Dumbbell Squeeze Press",
@@ -1602,7 +1602,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 142,
+    "popularity": 162,
     "l10n": {
       "en": {
         "name": "Barbell Floor Press",
@@ -1652,7 +1652,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 144,
+    "popularity": 165,
     "l10n": {
       "en": {
         "name": "Band Chest Fly",
@@ -1704,7 +1704,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 149,
+    "popularity": 171,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Chest Press",
@@ -1756,7 +1756,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 156,
+    "popularity": 180,
     "l10n": {
       "en": {
         "name": "Archer Push-Up",
@@ -1807,7 +1807,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 163,
+    "popularity": 188,
     "l10n": {
       "en": {
         "name": "Ring Dip",
@@ -1855,7 +1855,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 169,
+    "popularity": 195,
     "l10n": {
       "en": {
         "name": "Scapular Push-Up",
@@ -1908,7 +1908,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 173,
+    "popularity": 200,
     "l10n": {
       "en": {
         "name": "Ring Push-Up",
@@ -1956,7 +1956,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1.25,
-    "popularity": 176,
+    "popularity": 204,
     "l10n": {
       "en": {
         "name": "Svend Press",
@@ -2009,7 +2009,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 184,
+    "popularity": 214,
     "l10n": {
       "en": {
         "name": "One-Arm Push-Up",
@@ -2059,7 +2059,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 192,
+    "popularity": 224,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Fly",
@@ -2111,7 +2111,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 201,
+    "popularity": 235,
     "l10n": {
       "en": {
         "name": "Pseudo Planche Push-Up",
