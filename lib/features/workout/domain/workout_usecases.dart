@@ -74,8 +74,8 @@ class WatchRejectedWorkoutWrites {
 
 /// Finishes the workout in progress now (see [finishWorkout]) and stores it
 /// with each exercise's stats updated, in one batch that also works
-/// offline. Refused with a [ValidationFailure] when no set is done or a
-/// done set is invalid.
+/// offline. Refused with a [ValidationFailure] when no set is done, a
+/// done set is invalid or the workout exceeds its limits.
 ///
 /// Firestore transactions need the server, so the stats are computed from
 /// what the device knows. Stats that cannot be read at all (offline, never
@@ -96,7 +96,9 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutDraft> {
     final invalid = workout.exercises.any(
       (e) => e.sets.any((s) => validateSet(s, e.loggingType).isNotEmpty),
     );
-    if (invalid) return const Err(ValidationFailure('invalid set'));
+    if (invalid || !fitsLimits(workout)) {
+      return const Err(ValidationFailure('invalid workout'));
+    }
     final read = await _repository.getStats(params.uid, workout.exerciseIds);
     if (read case Err(:final failure)) return Err(failure);
     final before = read.valueOrNull!;

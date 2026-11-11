@@ -58,6 +58,38 @@ rules_version = '2';
 // | days empty, more than 7 entries or not a list                  | deny   |
 // | origin any other value                                         | deny   |
 // | any request for another user's programs, or signed out         | deny   |
+//
+// users/{uid}/workouts/{id}, as the signed-in user `uid` (anyone else: deny):
+// | Request                                                        | Result |
+// |----------------------------------------------------------------|--------|
+// | read, list, delete own workout                                 | allow  |
+// | create/update: startedAt and finishedAt timestamps, finishedAt | allow  |
+// | not before startedAt, name string of 1-100 characters,         |        |
+// | exercises and exerciseIds lists of 1-40 entries                |        |
+// | ... plus programId string, dayIndex int 0-6, note string of at | allow  |
+// | most 1000 characters                                           |        |
+// | missing startedAt, finishedAt, name, exercises or exerciseIds  | deny   |
+// | finishedAt before startedAt, either not a timestamp            | deny   |
+// | name empty, longer than 100 characters or not a string         | deny   |
+// | exercises or exerciseIds empty, above 40 entries or not a list | deny   |
+// | programId not a string, dayIndex not an int or outside 0-6     | deny   |
+// | note not a string, or longer than 1000 characters              | deny   |
+// | any other field                                                | deny   |
+// | any request for another user's workouts, or signed out         | deny   |
+//
+// users/{uid}/exerciseStats/{exerciseId}, as the signed-in user `uid`
+// (anyone else: deny):
+// | Request                                                        | Result |
+// |----------------------------------------------------------------|--------|
+// | read, list, delete own stats                                   | allow  |
+// | create/update: records map, history list of at most 1000       | allow  |
+// | points, optional last map                                      |        |
+// | records with a key other than heaviestWeight, bestE1rm,        | deny   |
+// | bestSetVolume, mostReps or longestDuration                     |        |
+// | records not a map, last not a map, history not a list or above | deny   |
+// | 1000 points, or missing records or history                     |        |
+// | any other field                                                | deny   |
+// | any request for another user's stats, or signed out            | deny   |
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -118,6 +150,41 @@ service cloud.firestore {
         && data.origin in ['own', 'catalog', 'generated'];
     }
 
+    // Exercises are checked by the app; a document stays under 1 MB at
+    // 40 exercises of 30 sets.
+    function isWorkout(data) {
+      return data.keys().hasOnly([
+          'startedAt', 'finishedAt', 'programId', 'dayIndex', 'name', 'note',
+          'exerciseIds', 'exercises'])
+        && data.startedAt is timestamp
+        && data.finishedAt is timestamp
+        && data.finishedAt >= data.startedAt
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 100
+        && data.exercises is list
+        && data.exercises.size() >= 1
+        && data.exercises.size() <= 40
+        && data.exerciseIds is list
+        && data.exerciseIds.size() >= 1
+        && data.exerciseIds.size() <= 40
+        && (!('programId' in data) || data.programId is string)
+        && (!('dayIndex' in data)
+          || (data.dayIndex is int && data.dayIndex >= 0 && data.dayIndex <= 6))
+        && (!('note' in data) || (data.note is string && data.note.size() <= 1000));
+    }
+
+    function isExerciseStats(data) {
+      return data.keys().hasOnly(['records', 'last', 'history'])
+        && data.records is map
+        && data.records.keys().hasOnly([
+          'heaviestWeight', 'bestE1rm', 'bestSetVolume', 'mostReps',
+          'longestDuration'])
+        && (!('last' in data) || data.last is map)
+        && data.history is list
+        && data.history.size() <= 1000;
+    }
+
     // A user's own data, guest or not.
     match /users/{uid} {
       allow read, write: if isOwner(uid);
@@ -134,10 +201,23 @@ service cloud.firestore {
         allow create, update: if isOwner(uid) && isProgram(request.resource.data);
       }
 
+      // Validated; only reachable here, the rule below excludes it.
+      match /workouts/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isWorkout(request.resource.data);
+      }
+
+      // Validated; only reachable here, the rule below excludes it.
+      match /exerciseStats/{exerciseId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && isExerciseStats(request.resource.data);
+      }
+
       // Every other subcollection, at any depth, as before.
       match /{collection}/{document=**} {
         allow read, write: if isOwner(uid)
-          && !(collection in ['cardio', 'programs']);
+          && !(collection in ['cardio', 'programs', 'workouts', 'exerciseStats']);
       }
     }
 

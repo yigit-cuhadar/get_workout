@@ -110,6 +110,52 @@ void main() {
     expect(finished.exercises.first.group, isNull);
   });
 
+  test('finishWorkout never ends before the start', () {
+    final draft = workout('w1', [
+      exercise('squat', [lift(100, 5)]),
+    ], startedAt: start);
+    final earlier = start.subtract(const Duration(minutes: 5));
+    expect(finishWorkout(draft, earlier).finishedAt, start);
+  });
+
+  test('fitsLimits checks name, note, exercises and sets', () {
+    final ok = workout('w1', [
+      exercise('squat', [lift(100, 5)]),
+    ]);
+    expect(fitsLimits(ok), isTrue);
+    expect(
+      fitsLimits(
+        Workout(id: 'w1', startedAt: start, name: '', exercises: ok.exercises),
+      ),
+      isFalse,
+    );
+    expect(fitsLimits(ok.copyWith(note: () => 'x' * 1001)), isFalse);
+    expect(
+      fitsLimits(
+        ok.copyWith(
+          exercises: List.filled(
+            WorkoutLimits.maxExercises + 1,
+            ok.exercises.single,
+          ),
+        ),
+      ),
+      isFalse,
+    );
+    expect(
+      fitsLimits(
+        ok.copyWith(
+          exercises: [
+            exercise(
+              'squat',
+              List.filled(WorkoutLimits.maxSets + 1, lift(1, 1)),
+            ),
+          ],
+        ),
+      ),
+      isFalse,
+    );
+  });
+
   group('advancesProgram', () {
     final active = ActiveProgram(
       programId: 'p1',

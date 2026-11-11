@@ -94,16 +94,30 @@ WorkoutExercise swapExercise(
   );
 }
 
-/// [workout] finished [at]: only its done sets, exercises left without one
-/// removed, and no program goals.
+/// [workout] finished [at], never before it started (a device clock set
+/// back): only its done sets, exercises left without one removed, and no
+/// program goals.
 Workout finishWorkout(Workout workout, DateTime at) => workout.copyWith(
-  finishedAt: at,
+  finishedAt: at.isBefore(workout.startedAt) ? workout.startedAt : at,
   exercises: relabelGroups([
     for (final exercise in workout.exercises)
       if (exercise.doneSets case final done when done.isNotEmpty)
         exercise.copyWith(sets: done, goal: () => null),
   ]),
 );
+
+/// Whether [workout] stays within [WorkoutLimits], which the rules
+/// enforce: a name, and no more exercises, sets or note text than allowed.
+bool fitsLimits(Workout workout) =>
+    workout.name.isNotEmpty &&
+    workout.name.length <= WorkoutLimits.maxNameLength &&
+    (workout.note?.length ?? 0) <= WorkoutLimits.maxNoteLength &&
+    workout.exercises.length <= WorkoutLimits.maxExercises &&
+    workout.exercises.every(
+      (e) =>
+          e.sets.length <= WorkoutLimits.maxSets &&
+          (e.note?.length ?? 0) <= WorkoutLimits.maxExerciseNoteLength,
+    );
 
 /// Whether [workout] did the next day of the [active] program, which then
 /// moves on. [program] is the active program as it is now.
