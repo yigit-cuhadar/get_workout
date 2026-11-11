@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/router.dart';
 import 'package:get_workout/features/exercises/domain/exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
@@ -370,5 +371,70 @@ void main() {
     expect(find.byType(ProgramDetailPage), findsNothing);
     expect(find.byType(ProgramsPage), findsOneWidget);
     expect(path(), Routes.programs);
+  });
+
+  testWidgets('a just-created program is waited for, then not found', (
+    tester,
+  ) async {
+    await start(tester);
+    programs.add(const []);
+    router.go(Routes.program('p9', created: true));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(LoadingView), findsOneWidget);
+    expect(find.text('This program no longer exists.'), findsNothing);
+
+    await tester.pump(ProgramDetailPage.createdWait);
+    await tester.pump();
+    expect(find.text('This program no longer exists.'), findsOneWidget);
+  });
+
+  testWidgets('a just-created program shows once the list has it', (
+    tester,
+  ) async {
+    await start(tester);
+    programs.add(const []);
+    router.go(Routes.program('p1', created: true));
+    await tester.pump();
+    await tester.pump();
+    expect(find.byType(LoadingView), findsOneWidget);
+
+    programs.add([stored]);
+    await tester.pumpAndSettle();
+    expect(find.text('Leg Day'), findsOneWidget);
+    expect(find.text('Back Squat'), findsOneWidget);
+  });
+
+  testWidgets('the name field stops at the limit validation uses', (
+    tester,
+  ) async {
+    await start(tester);
+    await openPrograms(tester);
+    await tap(tester, find.text('New program'));
+
+    // 40 emoji are 80 code units; 30 fit, none is cut in half.
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Program name'),
+      '💪' * 40,
+    );
+    await tester.pump();
+
+    final field = tester.widget<TextField>(
+      find.widgetWithText(TextField, 'Program name'),
+    );
+    expect(field.controller!.text, '💪' * 30);
+  });
+
+  testWidgets('an empty day shows no estimate', (tester) async {
+    await start(tester);
+    await openPrograms(tester);
+    await tap(tester, find.text('New program'));
+
+    expect(find.textContaining('min'), findsNothing);
+    await tap(tester, find.text('Add exercises'));
+    await tap(tester, find.text('Back Squat'));
+    await tap(tester, find.text('Add 1'));
+    expect(find.textContaining('min'), findsOneWidget);
   });
 }

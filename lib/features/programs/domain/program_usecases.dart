@@ -16,7 +16,13 @@ typedef ProgramSave = ({
   Map<String, LoggingType> loggingTypes,
 });
 typedef ProgramRef = ({String uid, String id});
-typedef ProgramCopy = ({String uid, Program program, String name});
+
+/// [nameOf] makes the copy's name from the original's.
+typedef ProgramCopy = ({
+  String uid,
+  Program program,
+  String Function(String name) nameOf,
+});
 
 /// [activeProgramId] is the program active when the delete was asked for.
 typedef ProgramDelete = ({String uid, String id, String? activeProgramId});
@@ -115,7 +121,7 @@ class SaveProgram implements UseCase<String, ProgramSave> {
   }
 }
 
-/// Stores a copy of the program as the user's own, named [ProgramCopy.name],
+/// Stores a copy of the program as the user's own (see [Program.duplicate])
 /// and returns its id. It is copied as it is, unavailable exercises
 /// included, so a copy never fails where the original loads.
 class DuplicateProgram implements UseCase<String, ProgramCopy> {
@@ -125,7 +131,7 @@ class DuplicateProgram implements UseCase<String, ProgramCopy> {
   @override
   Future<Result<String>> call(ProgramCopy params) => _repository.createProgram(
     params.uid,
-    params.program.duplicate(params.name),
+    params.program.duplicate(params.nameOf),
   );
 }
 

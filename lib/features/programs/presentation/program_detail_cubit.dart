@@ -103,24 +103,25 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
     return _withProgram((uid, _) => _stopProgram(uid));
   }
 
-  /// [name] is the copy's name.
-  Future<void> duplicate(String name) => _withProgram((uid, program) async {
-    final result = await _duplicateProgram((
-      uid: uid,
-      program: program,
-      name: name,
-    ));
-    return result.map((id) {
-      if (!isClosed && state.status != ProgramDetailStatus.closed) {
-        emit(
-          ProgramDetailState(
-            status: ProgramDetailStatus.duplicated,
-            copyId: id,
-          ),
-        );
-      }
-    });
-  });
+  /// [nameOf] makes the copy's name from the original's.
+  Future<void> duplicate(String Function(String name) nameOf) =>
+      _withProgram((uid, program) async {
+        final result = await _duplicateProgram((
+          uid: uid,
+          program: program,
+          nameOf: nameOf,
+        ));
+        return result.map((id) {
+          if (!isClosed && state.status != ProgramDetailStatus.closed) {
+            emit(
+              ProgramDetailState(
+                status: ProgramDetailStatus.duplicated,
+                copyId: id,
+              ),
+            );
+          }
+        });
+      });
 
   Future<void> delete() => _withProgram((uid, _) async {
     final result = await _deleteProgram((

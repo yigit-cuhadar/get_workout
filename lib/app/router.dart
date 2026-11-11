@@ -49,8 +49,12 @@ abstract final class Routes {
   static const today = '/today';
   static const programs = '/programs';
   static const programNew = '$programs/new';
-  static String program(String id) => '$programs/${Uri.encodeComponent(id)}';
-  static String programEdit(String id) => '${program(id)}/edit';
+
+  /// [created]: the program was just stored; see [ProgramDetailPage.created].
+  static String program(String id, {bool created = false}) =>
+      '$programs/${Uri.encodeComponent(id)}${created ? '?created=true' : ''}';
+  static String programEdit(String id) =>
+      '$programs/${Uri.encodeComponent(id)}/edit';
 
   /// Pops with the chosen exercises: up to [max], or with [multiple] off
   /// the one tapped.
@@ -194,8 +198,10 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
               ),
               GoRoute(
                 path: ':id',
-                builder: (_, state) =>
-                    ProgramDetailPage(id: state.pathParameters['id']!),
+                builder: (_, state) => ProgramDetailPage(
+                  id: state.pathParameters['id']!,
+                  created: state.uri.queryParameters['created'] == 'true',
+                ),
                 routes: [
                   GoRoute(
                     path: 'edit',

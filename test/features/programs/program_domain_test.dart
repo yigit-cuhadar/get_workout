@@ -14,6 +14,8 @@ import 'fixtures.dart';
 
 class MockProgramRepository extends Mock implements ProgramRepository {}
 
+String copyOf(String name) => '$name (copy)';
+
 void main() {
   setUpAll(() {
     registerFallbackValue(program());
@@ -621,7 +623,7 @@ void main() {
         lengthWeeks: 8,
         days: program().days,
       );
-      final copy = original.duplicate('PPL (copy)');
+      final copy = original.duplicate(copyOf);
       expect(copy.id, isNull);
       expect(copy.origin, ProgramOrigin.own);
       expect(copy.sourceId, isNull);
@@ -630,9 +632,47 @@ void main() {
       expect(copy.days, original.days);
     });
 
-    test('cuts the name to the limit', () {
-      final copy = program().duplicate('${'x' * 58} (copy)');
+    test('shortens the name to make room for the suffix', () {
+      final copy = program(name: 'x' * 60).duplicate(copyOf);
+      expect(copy.name, '${'x' * 53} (copy)');
       expect(copy.name.length, ProgramLimits.maxNameLength);
+    });
+
+    test('differs from a name that already ends in the suffix', () {
+      final name = '${'x' * 53} (copy)';
+      final copy = program(name: name).duplicate(copyOf);
+      expect(copy.name, isNot(name));
+      expect(copy.name, '${'x' * 52} (copy)');
+      expect(
+        program(name: 'Push (copy)').duplicate(copyOf).name,
+        'Push (copy) (copy)',
+      );
+    });
+
+    test('never splits a surrogate pair', () {
+      // Each emoji is two code units.
+      final copy = program(name: '💪' * 30).duplicate(copyOf);
+      expect(copy.name, '${'💪' * 26} (copy)');
+      expect(copy.name.length, lessThanOrEqualTo(ProgramLimits.maxNameLength));
+      expect(
+        copy.name.runes.every((rune) => rune < 0xD800 || rune > 0xDFFF),
+        isTrue,
+      );
+    });
+
+    test('drops spaces left at the cut', () {
+      final copy = program(name: '${'x' * 52} yy').duplicate(copyOf);
+      expect(copy.name, '${'x' * 52} (copy)');
+    });
+  });
+
+  group('cutting text', () {
+    test('drops whole characters only', () {
+      expect(dropLastCharacter('ab💪'), 'ab');
+      expect(dropLastCharacter(''), '');
+      expect(cutToLength('a💪b', 2), 'a');
+      expect(cutToLength('a💪b', 3), 'a💪');
+      expect(cutToLength('abc', 5), 'abc');
     });
   });
 

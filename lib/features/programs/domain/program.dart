@@ -13,6 +13,8 @@ enum ProgramOrigin implements Coded {
   final String code;
 }
 
+/// Name lengths count UTF-16 code units ([String.length]) everywhere: the
+/// text fields, validation and the rules' limits, which count no more.
 abstract final class ProgramLimits {
   static const maxNameLength = 60;
   static const maxDayNameLength = 40;
@@ -168,16 +170,45 @@ class Program extends Equatable {
     days: days ?? this.days,
   );
 
-  /// A new program of the user's own with this one's content, named [name]
-  /// (cut to the name limit).
-  Program duplicate(String name) => Program(
-    name: name.length > ProgramLimits.maxNameLength
-        ? name.substring(0, ProgramLimits.maxNameLength).trimRight()
-        : name,
-    lengthWeeks: lengthWeeks,
-    days: days,
-  );
+  /// A new program of the user's own with this one's content, named
+  /// [nameOf] this one's name, e.g. "Push (copy)". Characters come off the
+  /// end of the name until the copy's name fits the limit and differs from
+  /// this one's.
+  Program duplicate(String Function(String name) nameOf) {
+    var base = name.trim();
+    var copyName = nameOf(base);
+    while ((copyName.length > ProgramLimits.maxNameLength ||
+            copyName == name) &&
+        base.isNotEmpty) {
+      base = dropLastCharacter(base).trimRight();
+      copyName = nameOf(base);
+    }
+    return Program(
+      name: copyName.length > ProgramLimits.maxNameLength
+          ? cutToLength(copyName, ProgramLimits.maxNameLength)
+          : copyName,
+      lengthWeeks: lengthWeeks,
+      days: days,
+    );
+  }
 
   @override
   List<Object?> get props => [id, name, origin, sourceId, lengthWeeks, days];
+}
+
+/// [text] without its last character; never half of a surrogate pair.
+String dropLastCharacter(String text) {
+  if (text.isEmpty) return text;
+  final runes = text.runes.toList()..removeLast();
+  return String.fromCharCodes(runes);
+}
+
+/// [text] cut to at most [max] code units, without splitting a surrogate
+/// pair.
+String cutToLength(String text, int max) {
+  var cut = text;
+  while (cut.length > max) {
+    cut = dropLastCharacter(cut);
+  }
+  return cut;
 }

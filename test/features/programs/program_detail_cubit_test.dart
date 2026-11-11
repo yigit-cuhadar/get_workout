@@ -19,6 +19,8 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockProgramRepository extends Mock implements ProgramRepository {}
 
+String copyOf(String name) => '$name (copy)';
+
 void main() {
   const member = AuthUser(id: 'u1', email: 'a@b.co');
   // Wednesday 11 November 2026.
@@ -190,7 +192,7 @@ void main() {
     'a duplicate is stored as the user\'s own and opened',
     setUp: () => activeIs(null),
     build: build,
-    act: (cubit) => cubit.duplicate('Upper Lower (copy)'),
+    act: (cubit) => cubit.duplicate(copyOf),
     expect: () => const [
       ProgramDetailState(status: ProgramDetailStatus.working),
       ProgramDetailState(
@@ -199,10 +201,7 @@ void main() {
       ),
     ],
     verify: (_) => verify(
-      () => repository.createProgram(
-        'u1',
-        upperLower.duplicate('Upper Lower (copy)'),
-      ),
+      () => repository.createProgram('u1', upperLower.duplicate(copyOf)),
     ).called(1),
   );
 

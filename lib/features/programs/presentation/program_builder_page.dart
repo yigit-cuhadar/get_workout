@@ -62,7 +62,7 @@ class _BuilderView extends StatelessWidget {
           case ProgramBuilderStatus.saved when cubit.isEditing:
             context.pop();
           case ProgramBuilderStatus.saved:
-            context.go(Routes.program(state.savedId!));
+            context.go(Routes.program(state.savedId!, created: true));
           case ProgramBuilderStatus.closed:
             context.go(Routes.programs);
           case ProgramBuilderStatus.saveFailed:
@@ -203,9 +203,7 @@ class _FormState extends State<_Form> {
             TextField(
               controller: _name,
               textCapitalization: TextCapitalization.sentences,
-              inputFormatters: [
-                LengthLimitingTextInputFormatter(ProgramLimits.maxNameLength),
-              ],
+              inputFormatters: [_maxLength(ProgramLimits.maxNameLength)],
               decoration: InputDecoration(
                 labelText: l10n.programName,
                 errorText: programError({
@@ -267,14 +265,14 @@ class _FormState extends State<_Form> {
                     initialValue: day.name,
                     textCapitalization: TextCapitalization.sentences,
                     inputFormatters: [
-                      LengthLimitingTextInputFormatter(
-                        ProgramLimits.maxDayNameLength,
-                      ),
+                      _maxLength(ProgramLimits.maxDayNameLength),
                     ],
                     decoration: InputDecoration(
                       labelText: l10n.programDayName,
                       hintText: l10n.programDayDefault(dayIndex + 1),
-                      helperText: l10n.estimateText(estimateDay(day)),
+                      helperText: day.items.isEmpty
+                          ? null
+                          : l10n.estimateText(estimateDay(day)),
                       errorText: dayIssues.contains(DayIssue.nameTooLong)
                           ? l10n.dayIssueText(DayIssue.nameTooLong)
                           : null,
@@ -647,6 +645,19 @@ class _ItemEditorState extends State<_ItemEditor> {
     );
   }
 }
+
+/// Cuts text to [max] code units, counted like validation counts them;
+/// [LengthLimitingTextInputFormatter] counts characters, so a name it
+/// accepts could still be too long.
+TextInputFormatter _maxLength(int max) =>
+    TextInputFormatter.withFunction((_, value) {
+      if (value.text.length <= max) return value;
+      final text = cutToLength(value.text, max);
+      return TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    });
 
 class _NumberField extends StatelessWidget {
   const _NumberField({

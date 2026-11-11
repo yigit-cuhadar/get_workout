@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
@@ -21,10 +23,41 @@ import 'weekday_dialog.dart';
 /// One program: its days and exercises, and starting, stopping, editing,
 /// duplicating and deleting it. Taken from the shared list, so it opens at
 /// once from the list and also works from a bare link.
-class ProgramDetailPage extends StatelessWidget {
-  const ProgramDetailPage({super.key, required this.id});
+class ProgramDetailPage extends StatefulWidget {
+  const ProgramDetailPage({super.key, required this.id, this.created = false});
 
   final String id;
+
+  /// The program was just stored: the list may not show it yet, so the page
+  /// waits for it, for up to [createdWait], before saying it does not exist.
+  final bool created;
+
+  static const createdWait = Duration(seconds: 3);
+
+  @override
+  State<ProgramDetailPage> createState() => _ProgramDetailPageState();
+}
+
+class _ProgramDetailPageState extends State<ProgramDetailPage> {
+  Timer? _wait;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.created) {
+      _wait = Timer(ProgramDetailPage.createdWait, () => setState(() {}));
+    }
+  }
+
+  @override
+  void dispose() {
+    _wait?.cancel();
+    super.dispose();
+  }
+
+  bool get _waiting => _wait?.isActive ?? false;
+
+  String get id => widget.id;
 
   @override
   Widget build(BuildContext context) => BlocProvider.value(
@@ -52,6 +85,7 @@ class ProgramDetailPage extends StatelessWidget {
               retryLabel: l10n.retry,
               onRetry: context.read<ProgramListCubit>().retry,
             ),
+            ProgramListStatus.ready when _waiting => const LoadingView(),
             ProgramListStatus.ready => EmptyView(message: l10n.programNotFound),
           },
         );
@@ -78,7 +112,7 @@ class _ProgramDetailView extends StatelessWidget {
           case ProgramDetailStatus.deleted || ProgramDetailStatus.closed:
             context.go(Routes.programs);
           case ProgramDetailStatus.duplicated:
-            context.go(Routes.program(state.copyId!));
+            context.go(Routes.program(state.copyId!, created: true));
           case ProgramDetailStatus.failed:
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -110,8 +144,7 @@ class _ProgramDetailView extends StatelessWidget {
                 onSelected: (action) => action(),
                 itemBuilder: (_) => [
                   PopupMenuItem(
-                    value: () =>
-                        cubit.duplicate(l10n.programCopyName(program.name)),
+                    value: () => cubit.duplicate(l10n.programCopyName),
                     child: Text(l10n.programDuplicate),
                   ),
                   PopupMenuItem(
@@ -286,7 +319,9 @@ class _DaySection extends StatelessWidget {
             l10n.dayName(day, index),
             style: theme.textTheme.titleMedium,
           ),
-          trailing: Text(l10n.estimateText(estimateDay(day))),
+          trailing: day.items.isEmpty
+              ? null
+              : Text(l10n.estimateText(estimateDay(day))),
         ),
         for (final (i, item) in day.items.indexed)
           ListTile(
