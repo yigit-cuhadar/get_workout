@@ -101,7 +101,12 @@ abstract final class Routes {
 /// an account), so the gates are the splash while the session and then the
 /// user's profile resolve, a retry screen when the guest sign-in failed, and
 /// onboarding until the profile records it as completed.
-GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
+/// [profileDebugSection] ends the Profile tab in debug builds.
+GoRouter buildRouter(
+  AuthCubit auth,
+  ProfileCubit profile, {
+  Widget? profileDebugSection,
+}) {
   return GoRouter(
     initialLocation: Routes.splash,
     // Refresh only when the redirect can change. A refresh re-parses the
@@ -277,7 +282,7 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
           ),
           _tab(
             Routes.profile,
-            const ProfilePage(),
+            ProfilePage(debugSection: profileDebugSection),
             routes: [
               GoRoute(
                 path: 'account',

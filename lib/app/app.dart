@@ -15,6 +15,7 @@ import '../features/exercises/presentation/favorites_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/settings_cubit.dart';
 import '../features/subscription/presentation/purchaser_session.dart';
+import '../features/subscription/subscription_module.dart';
 import '../l10n/app_localizations.dart';
 import 'router.dart';
 
@@ -26,7 +27,11 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  late final _router = buildRouter(sl<AuthCubit>(), sl<ProfileCubit>());
+  late final _router = buildRouter(
+    sl<AuthCubit>(),
+    sl<ProfileCubit>(),
+    profileDebugSection: SubscriptionModule.debugControls(sl),
+  );
   late final AppLifecycleListener _lifecycle;
 
   @override

@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_it/get_it.dart';
 
 import 'data/unavailable_purchases_repository.dart';
+import 'presentation/fake_store_controls.dart';
 import 'presentation/premium_paywall_cubit.dart';
 import 'presentation/purchaser_session.dart';
 
@@ -53,6 +55,12 @@ class SubscriptionModule implements FeatureModule {
   const SubscriptionModule({required this.backend});
 
   final PurchasesBackend? backend;
+
+  /// The fake store's controls in a debug build running on the fake.
+  static Widget? debugControls(GetIt sl) =>
+      kDebugMode && sl.isRegistered<FakePurchasesRepository>()
+      ? FakeStoreControls(sl())
+      : null;
 
   @override
   void register(GetIt sl) {
