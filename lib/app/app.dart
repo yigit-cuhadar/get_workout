@@ -4,6 +4,9 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../features/settings/domain/user_settings.dart';
+import '../features/settings/presentation/settings_cubit.dart';
+import '../l10n/app_localizations.dart';
 import 'router.dart';
 
 class App extends StatefulWidget {
@@ -24,13 +27,26 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: sl<AuthCubit>(),
-      child: MaterialApp.router(
-        title: 'App',
-        theme: ForgeTheme.light(),
-        darkTheme: ForgeTheme.dark(),
-        routerConfig: _router,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: sl<AuthCubit>()),
+        BlocProvider.value(value: sl<SettingsCubit>()),
+      ],
+      child: BlocSelector<SettingsCubit, SettingsState, ThemePreference>(
+        selector: (state) => state.settings.themePreference,
+        builder: (context, theme) => MaterialApp.router(
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: ForgeTheme.light(),
+          darkTheme: ForgeTheme.dark(),
+          themeMode: switch (theme) {
+            ThemePreference.system => ThemeMode.system,
+            ThemePreference.light => ThemeMode.light,
+            ThemePreference.dark => ThemeMode.dark,
+          },
+          routerConfig: _router,
+        ),
       ),
     );
   }
