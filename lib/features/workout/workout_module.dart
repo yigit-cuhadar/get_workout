@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_notifications/forge_notifications.dart';
 import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../core/device_localizations.dart';
 import '../programs/domain/completed_days.dart';
 import 'data/file_local_workout_store.dart';
 import 'data/firestore_workout_repository.dart';
@@ -10,9 +12,11 @@ import 'data/workout_completed_days.dart';
 import 'domain/workout_repository.dart';
 import 'domain/workout_usecases.dart';
 import 'presentation/active_workout_cubit.dart';
+import 'presentation/rest_timer_cubit.dart';
 
-/// Registers the workout feature. Needs `AuthModule`, `ExercisesModule` and
-/// `ProgramsModule`, which takes [completedDays] for its plan.
+/// Registers the workout feature. Needs `AuthModule`, `SettingsModule`,
+/// `NotificationsModule`, `ExercisesModule` and `ProgramsModule`, which
+/// takes [completedDays] for its plan.
 class WorkoutModule implements FeatureModule {
   const WorkoutModule();
 
@@ -52,6 +56,25 @@ class WorkoutModule implements FeatureModule {
           saveAsProgram: sl(),
           programs: sl(),
           catalogue: sl(),
+        ),
+      )
+      ..registerLazySingleton(
+        () => RestTimerCubit(
+          workout: sl(),
+          settings: sl(),
+          notifications: sl.getAsync<Notifications>(),
+          text: (workout, next) {
+            final l10n = deviceLocalizations();
+            return (
+              title: l10n.restOver,
+              body: next == null
+                  ? l10n.restNotificationBack
+                  : l10n.restNotificationNext(
+                      workout.exercises[next.exercise].name,
+                      next.set + 1,
+                    ),
+            );
+          },
         ),
       );
   }
