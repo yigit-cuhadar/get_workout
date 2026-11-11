@@ -4,7 +4,10 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../features/exercises/presentation/body_model_cubit.dart';
+import '../features/exercises/presentation/equipment_cubit.dart';
 import '../features/exercises/presentation/exercise_catalogue_cubit.dart';
+import '../features/exercises/presentation/favorites_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/settings_cubit.dart';
 import '../l10n/app_localizations.dart';
@@ -43,6 +46,9 @@ class _AppState extends State<App> {
         BlocProvider.value(value: sl<AuthCubit>()),
         BlocProvider.value(value: sl<SettingsCubit>()),
         BlocProvider.value(value: sl<ExerciseCatalogueCubit>()),
+        BlocProvider.value(value: sl<FavoritesCubit>()),
+        BlocProvider.value(value: sl<EquipmentCubit>()),
+        BlocProvider.value(value: sl<BodyModelCubit>()),
       ],
       child: BlocSelector<SettingsCubit, SettingsState, ThemePreference>(
         selector: (state) => state.settings.themePreference,
