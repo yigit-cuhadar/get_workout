@@ -41,15 +41,12 @@ void main() {
     users = StreamController<AuthUser?>.broadcast();
     when(() => auth.currentUser).thenReturn(member);
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
-    when(
-      () => repository.countCustomExercises(any()),
-    ).thenAnswer((_) async => const Ok(0));
-    when(
-      () => repository.createCustomExercise(any(), any()),
-    ).thenAnswer((_) async => const Ok(null));
-    when(
-      () => repository.updateCustomExercise(any(), any()),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => repository.countCustomExercises(any()))
+        .thenAnswer((_) async => const Ok(0));
+    when(() => repository.createCustomExercise(any(), any()))
+        .thenAnswer((_) async => const Ok(null));
+    when(() => repository.updateCustomExercise(any(), any()))
+        .thenAnswer((_) async => const Ok(null));
   });
 
   tearDown(() => users.close());
@@ -133,21 +130,21 @@ void main() {
       ),
       const CustomExerciseFormState(name: 'Press', mainMuscles: {Muscle.pec}),
     ],
-    verify: (_) => verifyNever(
-      () => repository.createCustomExercise(any(), any()),
-    ),
+    verify: (_) =>
+        verifyNever(() => repository.createCustomExercise(any(), any())),
   );
 
   blocTest<CustomExerciseFormCubit, CustomExerciseFormState>(
     'saves a new one, muscles and equipment in vocabulary order',
     build: build,
-    act: (cubit) => (cubit
-          ..setName(' Cossack Squat ')
-          ..toggleMainMuscle(Muscle.quads)
-          ..toggleMainMuscle(Muscle.adductor)
-          ..toggleEquipment(Equipment.kettlebell)
-          ..toggleEquipment(Equipment.plate))
-        .save(),
+    act: (cubit) =>
+        (cubit
+              ..setName(' Cossack Squat ')
+              ..toggleMainMuscle(Muscle.quads)
+              ..toggleMainMuscle(Muscle.adductor)
+              ..toggleEquipment(Equipment.kettlebell)
+              ..toggleEquipment(Equipment.plate))
+            .save(),
     skip: 5,
     expect: () => [
       isA<CustomExerciseFormState>().having(
@@ -197,14 +194,15 @@ void main() {
 
   blocTest<CustomExerciseFormCubit, CustomExerciseFormState>(
     'reports the limit as the save failure',
-    setUp: () => when(
-      () => repository.countCustomExercises('u1'),
-    ).thenAnswer((_) async => const Ok(CustomExerciseLimits.maxCount)),
+    setUp: () =>
+        when(() => repository.countCustomExercises('u1'))
+            .thenAnswer((_) async => const Ok(CustomExerciseLimits.maxCount)),
     build: build,
-    act: (cubit) => (cubit
-          ..setName('Press')
-          ..toggleMainMuscle(Muscle.pec))
-        .save(),
+    act: (cubit) =>
+        (cubit
+              ..setName('Press')
+              ..toggleMainMuscle(Muscle.pec))
+            .save(),
     verify: (cubit) {
       expect(cubit.state.status, CustomExerciseFormStatus.saveFailed);
       expect(cubit.state.failure, CustomExerciseLimits.limitReached);
@@ -228,8 +226,7 @@ void main() {
         CustomExerciseFormStatus.closed,
       ),
     ],
-    verify: (_) => verifyNever(
-      () => repository.updateCustomExercise(any(), any()),
-    ),
+    verify: (_) =>
+        verifyNever(() => repository.updateCustomExercise(any(), any())),
   );
 }
