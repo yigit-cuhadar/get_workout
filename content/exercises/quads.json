@@ -465,7 +465,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 56,
+    "popularity": 57,
     "l10n": {
       "en": {
         "name": "Dumbbell Walking Lunge",
@@ -516,7 +516,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 63,
+    "popularity": 64,
     "l10n": {
       "en": {
         "name": "Reverse Lunge",
@@ -568,7 +568,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 5,
-    "popularity": 74,
+    "popularity": 76,
     "l10n": {
       "en": {
         "name": "Smith Machine Squat",
@@ -619,7 +619,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 84,
+    "popularity": 88,
     "l10n": {
       "en": {
         "name": "Forward Lunge",
@@ -672,7 +672,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 89,
+    "popularity": 94,
     "l10n": {
       "en": {
         "name": "Dumbbell Step-Up",
@@ -722,7 +722,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 101,
+    "popularity": 107,
     "l10n": {
       "en": {
         "name": "Wall Sit",
@@ -773,7 +773,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 108,
+    "popularity": 114,
     "l10n": {
       "en": {
         "name": "Split Squat",
@@ -823,7 +823,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 113,
+    "popularity": 120,
     "l10n": {
       "en": {
         "name": "Step-Up",
@@ -880,7 +880,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 5,
-    "popularity": 127,
+    "popularity": 135,
     "l10n": {
       "en": {
         "name": "Box Squat",
@@ -928,7 +928,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 135,
+    "popularity": 144,
     "l10n": {
       "en": {
         "name": "Lateral Lunge",
@@ -980,7 +980,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 140,
+    "popularity": 149,
     "l10n": {
       "en": {
         "name": "Dumbbell Reverse Lunge",
@@ -1029,7 +1029,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 5,
-    "popularity": 150,
+    "popularity": 160,
     "l10n": {
       "en": {
         "name": "Single-Leg Leg Press",
@@ -1078,7 +1078,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2.5,
-    "popularity": 158,
+    "popularity": 169,
     "l10n": {
       "en": {
         "name": "Landmine Squat",
@@ -1127,7 +1127,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 166,
+    "popularity": 179,
     "l10n": {
       "en": {
         "name": "Curtsy Lunge",
@@ -1179,7 +1179,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 175,
+    "popularity": 190,
     "l10n": {
       "en": {
         "name": "Barbell Reverse Lunge",
@@ -1228,7 +1228,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 185,
+    "popularity": 203,
     "l10n": {
       "en": {
         "name": "Dumbbell Sumo Squat",
@@ -1276,7 +1276,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 194,
+    "popularity": 214,
     "l10n": {
       "en": {
         "name": "Sissy Squat",
@@ -1326,7 +1326,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 203,
+    "popularity": 225,
     "l10n": {
       "en": {
         "name": "Pistol Squat",
@@ -1376,7 +1376,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 212,
+    "popularity": 236,
     "l10n": {
       "en": {
         "name": "Lateral Step-Up",
@@ -1425,7 +1425,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2,
-    "popularity": 223,
+    "popularity": 249,
     "l10n": {
       "en": {
         "name": "Goblet Lateral Lunge",
@@ -1472,7 +1472,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 232,
+    "popularity": 260,
     "l10n": {
       "en": {
         "name": "Reverse Nordic",
@@ -1519,7 +1519,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 245,
+    "popularity": 275,
     "l10n": {
       "en": {
         "name": "Band Leg Extension",
@@ -1566,7 +1566,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 253,
+    "popularity": 285,
     "l10n": {
       "en": {
         "name": "Spanish Squat",
@@ -1614,7 +1614,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 265,
+    "popularity": 299,
     "l10n": {
       "en": {
         "name": "Skater Squat",
@@ -1662,7 +1662,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 277,
+    "popularity": 314,
     "l10n": {
       "en": {
         "name": "Assisted Pistol Squat",
@@ -1717,7 +1717,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 290,
+    "popularity": 330,
     "l10n": {
       "en": {
         "name": "Overhead Squat",
@@ -1767,7 +1767,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 4,
-    "popularity": 304,
+    "popularity": 347,
     "l10n": {
       "en": {
         "name": "Kettlebell Front Squat",
