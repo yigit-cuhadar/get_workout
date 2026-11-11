@@ -207,8 +207,8 @@ Group 1, foundation
 - [x] App shell — five tabs, l10n, settings skeleton — tabs switch and keep state
 
 Group 2, the model
-- [ ] 3D renderer — rotate, zoom, tap a muscle, press-and-slide across muscles with label and haptic — smooth on a mid-range phone, picks the right mesh
-- [ ] Muscle coloring API — per-muscle intensity — used later by exercise detail and volume
+- [x] 3D renderer — rotate, zoom, tap a muscle, press-and-slide across muscles with label and haptic — smooth on a mid-range phone, picks the right mesh
+- [x] Muscle coloring API — per-muscle intensity — used later by exercise detail and volume
 
 Group 3, exercises
 - [ ] Exercise domain and sync — incremental sync by `updatedAt` — library works offline after first sync
