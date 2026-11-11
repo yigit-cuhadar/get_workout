@@ -19,7 +19,7 @@ jobs:
       - run: flutter pub get
       - run: dart format --output=none --set-exit-if-changed lib tool $([ -d test ] && echo test)
       - run: flutter analyze
-      - name: Validate exercise content
+      - name: Validate content
         run: dart run tool/validate_content.dart
       - name: Test
         run: |
