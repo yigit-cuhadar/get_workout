@@ -263,7 +263,7 @@ Group 8, body and extras
 - [ ] Weight log and measurement day — steps for weight, tracked measurements, four photos with ghost overlay, reminders, photo backup, compare
 - [ ] Cardio — log, list, detail, weekly chart
 - [ ] Steps — health permission, today, week and 30-day chart, daily goal
-- [ ] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
+- [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
 
 Group 9, launch readiness
 - [ ] Onboarding — nine questions, suggested free program
