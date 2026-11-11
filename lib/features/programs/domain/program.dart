@@ -144,6 +144,7 @@ class Program extends Equatable {
     this.sourceId,
     this.lengthWeeks,
     required this.days,
+    this.premium = false,
   });
 
   /// Null until the program is stored.
@@ -158,6 +159,10 @@ class Program extends Equatable {
   final int? lengthWeeks;
   final List<ProgramDay> days;
 
+  /// Copied from a premium catalogue program: only started or scheduled
+  /// with premium (see [programAccess]). Kept by edits and duplicates.
+  final bool premium;
+
   Program copyWith({
     String? name,
     int? Function()? lengthWeeks,
@@ -169,6 +174,7 @@ class Program extends Equatable {
     sourceId: sourceId,
     lengthWeeks: lengthWeeks != null ? lengthWeeks() : this.lengthWeeks,
     days: days ?? this.days,
+    premium: premium,
   );
 
   /// A new program of the user's own with this one's content, named
@@ -190,9 +196,38 @@ class Program extends Equatable {
           : copyName,
       lengthWeeks: lengthWeeks,
       days: days,
+      premium: premium,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, origin, sourceId, lengthWeeks, days];
+  List<Object?> get props => [
+    id,
+    name,
+    origin,
+    sourceId,
+    lengthWeeks,
+    days,
+    premium,
+  ];
 }
+
+/// Whether a program may be started, scheduled or trained now.
+enum ProgramAccess {
+  open,
+
+  /// It needs premium and the premium status is not known yet.
+  waiting,
+
+  /// It needs premium, which the user does not have.
+  locked,
+}
+
+/// [program]'s access for a user whose premium status is [premium] (null
+/// while unknown). The workout feature asks this before starting a day.
+ProgramAccess programAccess(Program program, bool? premium) =>
+    !program.premium || premium == true
+    ? ProgramAccess.open
+    : premium == null
+    ? ProgramAccess.waiting
+    : ProgramAccess.locked;

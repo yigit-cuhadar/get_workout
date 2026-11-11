@@ -41,9 +41,11 @@ import 'package:get_workout/features/profile/presentation/onboarding_page.dart';
 import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:get_workout/features/profile/presentation/profile_details_page.dart';
 import 'package:get_workout/features/profile/presentation/profile_page.dart';
+import 'package:get_workout/features/programs/data/no_premium.dart';
 import 'package:get_workout/features/programs/domain/program_repository.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/programs/data/no_completed_days.dart';
+import 'package:get_workout/features/programs/presentation/premium_prompt.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/features/programs/presentation/programs_page.dart';
 import 'package:get_workout/features/settings/domain/settings_repository.dart';
@@ -190,6 +192,7 @@ void main() {
     when(() => programs.watchActiveProgram(any()))
         .thenAnswer((_) => Stream.value(null));
     when(() => programs.rejectedWrites).thenAnswer((_) => const Stream.empty());
+    sl.registerSingleton(const PremiumPrompt(showPremiumComingSoon));
     sl.registerLazySingleton(
       () => ProgramListCubit(
         watchAuthUser: WatchAuthUser(programAuth),
@@ -198,6 +201,7 @@ void main() {
         watchCompletedDays: const WatchCompletedDays(NoCompletedDays()),
         watchRejectedWrites: WatchRejectedProgramWrites(programs),
         resolveMissedDay: ResolveMissedDay(programs),
+        watchPremium: const WatchPremium(NoPremium()),
       ),
       dispose: (cubit) => cubit.close(),
     );

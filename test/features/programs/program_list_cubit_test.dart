@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/programs/data/no_premium.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/completed_days.dart';
@@ -98,6 +99,7 @@ void main() {
     watchCompletedDays: WatchCompletedDays(completedDays),
     watchRejectedWrites: WatchRejectedProgramWrites(repository),
     resolveMissedDay: ResolveMissedDay(repository, clock: () => now),
+    watchPremium: const WatchPremium(NoPremium()),
     clock: () => now,
   );
 

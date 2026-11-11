@@ -20,9 +20,11 @@ import 'package:get_workout/features/exercises/presentation/exercise_catalogue_c
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:get_workout/features/programs/data/no_completed_days.dart';
+import 'package:get_workout/features/programs/data/no_premium.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_repository.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
+import 'package:get_workout/features/programs/presentation/premium_prompt.dart';
 import 'package:get_workout/features/programs/presentation/exercise_picker_cubit.dart';
 import 'package:get_workout/features/programs/presentation/exercise_picker_page.dart';
 import 'package:get_workout/features/programs/presentation/program_builder_cubit.dart';
@@ -148,6 +150,7 @@ void main() {
     when(() => repository.getProgram('u1', 'p1'))
         .thenAnswer((_) async => Ok(stored));
     sl
+      ..registerSingleton(const PremiumPrompt(showPremiumComingSoon))
       ..registerLazySingleton(
         () => ProgramListCubit(
           watchAuthUser: WatchAuthUser(sessionAuth),
@@ -156,6 +159,7 @@ void main() {
           watchCompletedDays: const WatchCompletedDays(NoCompletedDays()),
           watchRejectedWrites: WatchRejectedProgramWrites(repository),
           resolveMissedDay: ResolveMissedDay(repository),
+          watchPremium: const WatchPremium(NoPremium()),
         ),
         dispose: (cubit) => cubit.close(),
       )

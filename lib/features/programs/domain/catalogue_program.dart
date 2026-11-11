@@ -76,6 +76,7 @@ class CatalogueProgram extends Equatable {
     sourceId: id,
     lengthWeeks: lengthWeeks,
     days: days,
+    premium: premium,
   );
 
   @override

@@ -558,6 +558,8 @@
   "catalogueDetailFailed": "Couldn't load this program.",
   "catalogueNotFound": "This program is no longer available.",
   "premiumComingSoon": "Premium is coming soon.",
+  "programLockedStart": "This program came from Premium. Get Premium to start it.",
+  "programLockedActive": "This program came from Premium, which has ended. It carries on once you get Premium again.",
   "pickerTitleOne": "Pick an exercise",
   "pickerTitleMany": "{count} of {max} picked",
   "@pickerTitleMany": {"placeholders": {"count": {"type": "int"}, "max": {"type": "int"}}},

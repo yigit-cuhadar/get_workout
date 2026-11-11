@@ -90,6 +90,7 @@ class ProgramsModule implements FeatureModule {
           watchCompletedDays: sl(),
           watchRejectedWrites: sl(),
           resolveMissedDay: sl(),
+          watchPremium: sl(),
         ),
       )
       // One catalogue for the whole app, keeping its filters.

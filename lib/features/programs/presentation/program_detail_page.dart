@@ -11,6 +11,7 @@ import '../../../l10n/app_localizations.dart';
 import '../domain/program.dart';
 import '../domain/program_schedule.dart';
 import 'program_detail_cubit.dart';
+import 'premium_prompt.dart';
 import 'program_day_section.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
@@ -68,7 +69,11 @@ class _ProgramDetailPageState extends State<ProgramDetailPage> {
         if (program != null) {
           return BlocProvider(
             create: (_) => sl<ProgramDetailCubit>(param1: id),
-            child: _ProgramDetailView(program: program, list: state),
+            child: _ProgramDetailView(
+              program: program,
+              list: state,
+              premium: sl<PremiumPrompt>(),
+            ),
           );
         }
         final l10n = AppLocalizations.of(context);
@@ -91,16 +96,22 @@ class _ProgramDetailPageState extends State<ProgramDetailPage> {
 }
 
 class _ProgramDetailView extends StatelessWidget {
-  const _ProgramDetailView({required this.program, required this.list});
+  const _ProgramDetailView({
+    required this.program,
+    required this.list,
+    required this.premium,
+  });
 
   final Program program;
   final ProgramListState list;
+  final PremiumPrompt premium;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ProgramDetailCubit>();
     final active = list.active?.programId == program.id ? list.active : null;
+    final access = list.access(program);
     return BlocConsumer<ProgramDetailCubit, ProgramDetailState>(
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
@@ -156,10 +167,15 @@ class _ProgramDetailView extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: active == null
+                child: active == null && access == ProgramAccess.locked
+                    ? PremiumLock(
+                        message: l10n.programLockedStart,
+                        prompt: premium,
+                      )
+                    : active == null
                     ? ForgeButton(
                         label: l10n.programStart,
-                        loading: busy,
+                        loading: busy || access == ProgramAccess.waiting,
                         onPressed: () => _start(context),
                       )
                     : Column(
@@ -182,7 +198,8 @@ class _ProgramDetailView extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: OutlinedButton(
-                                  onPressed: busy
+                                  onPressed:
+                                      busy || access != ProgramAccess.open
                                       ? null
                                       : () => _changeWeekdays(
                                           context,
@@ -200,6 +217,13 @@ class _ProgramDetailView extends StatelessWidget {
                               ),
                             ],
                           ),
+                          if (access == ProgramAccess.locked) ...[
+                            const SizedBox(height: Gap.sm),
+                            PremiumLock(
+                              message: l10n.programLockedActive,
+                              prompt: premium,
+                            ),
+                          ],
                         ],
                       ),
               ),

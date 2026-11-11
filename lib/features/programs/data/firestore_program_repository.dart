@@ -184,6 +184,7 @@ class FirestoreProgramRepository implements ProgramRepository {
     'sourceId': ?program.sourceId,
     'lengthWeeks': ?program.lengthWeeks,
     'days': _daysToList(program.days),
+    if (program.premium) 'premium': true,
     'updatedAt': FieldValue.serverTimestamp(),
   };
 
@@ -228,6 +229,7 @@ class FirestoreProgramRepository implements ProgramRepository {
       sourceId: sourceId is String ? sourceId : null,
       lengthWeeks: _whole(map['lengthWeeks']),
       days: daysFromList(days),
+      premium: map['premium'] == true,
     );
   }
 

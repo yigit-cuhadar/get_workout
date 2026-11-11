@@ -10,6 +10,7 @@ import '../domain/program.dart';
 import '../domain/calendar_date.dart';
 import '../domain/program_schedule.dart';
 import '../domain/program_usecases.dart';
+import 'premium_prompt.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
 
@@ -21,12 +22,14 @@ class ProgramsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocProvider.value(
     value: sl<ProgramListCubit>(),
-    child: const _ProgramsView(),
+    child: _ProgramsView(sl<PremiumPrompt>()),
   );
 }
 
 class _ProgramsView extends StatefulWidget {
-  const _ProgramsView();
+  const _ProgramsView(this.premium);
+
+  final PremiumPrompt premium;
 
   @override
   State<_ProgramsView> createState() => _ProgramsViewState();
@@ -115,7 +118,7 @@ class _ProgramsViewState extends State<_ProgramsView> {
                 ],
               ),
             ),
-            ProgramListStatus.ready => _Programs(state),
+            ProgramListStatus.ready => _Programs(state, widget.premium),
           },
         );
       },
@@ -124,14 +127,16 @@ class _ProgramsViewState extends State<_ProgramsView> {
 }
 
 class _Programs extends StatelessWidget {
-  const _Programs(this.state);
+  const _Programs(this.state, this.premium);
   final ProgramListState state;
+  final PremiumPrompt premium;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final active = state.activeProgram;
     final others = state.otherPrograms;
+    final access = active == null ? null : state.access(active);
     return ListView(
       padding: const EdgeInsets.only(bottom: Gap.xl * 2),
       children: [
@@ -146,22 +151,41 @@ class _Programs extends StatelessWidget {
           _Header(l10n.programActive),
           _ProgramTile(
             active,
+            locked: access == ProgramAccess.locked,
             subtitle: state.finished
                 ? l10n.programFinished
                 : l10n.weekdayList(state.active!.weekdays),
           ),
-          if (state.missed case final missed?)
-            _MissedDay(
-              program: active,
-              missed: missed,
-              moveDate: state.moveDate!,
-              busy: state.resolving,
-            ),
-          if (!state.finished) _WeekPlan(program: active, plan: state.weekPlan),
+          // Kept, not stopped: it carries on once premium is back.
+          if (access == ProgramAccess.locked)
+            Padding(
+              padding: const EdgeInsets.all(Gap.md),
+              child: PremiumLock(
+                message: l10n.programLockedActive,
+                prompt: premium,
+              ),
+            )
+          else if (access == ProgramAccess.waiting)
+            const Padding(padding: EdgeInsets.all(Gap.md), child: LoadingView())
+          else ...[
+            if (state.missed case final missed?)
+              _MissedDay(
+                program: active,
+                missed: missed,
+                moveDate: state.moveDate!,
+                busy: state.resolving,
+              ),
+            if (!state.finished)
+              _WeekPlan(program: active, plan: state.weekPlan),
+          ],
         ],
         if (others.isNotEmpty) ...[
           _Header(active == null ? l10n.programsMine : l10n.programsOther),
-          for (final program in others) _ProgramTile(program),
+          for (final program in others)
+            _ProgramTile(
+              program,
+              locked: state.access(program) == ProgramAccess.locked,
+            ),
         ],
       ],
     );
@@ -180,9 +204,10 @@ class _Header extends StatelessWidget {
 }
 
 class _ProgramTile extends StatelessWidget {
-  const _ProgramTile(this.program, {this.subtitle});
+  const _ProgramTile(this.program, {required this.locked, this.subtitle});
 
   final Program program;
+  final bool locked;
   final String? subtitle;
 
   @override
@@ -197,7 +222,9 @@ class _ProgramTile extends StatelessWidget {
       title: Text(program.name),
       subtitle: Text(subtitle == null ? details : '$subtitle\n$details'),
       isThreeLine: subtitle != null,
-      trailing: const Icon(Icons.chevron_right),
+      trailing: locked
+          ? Icon(Icons.lock_outline, semanticLabel: l10n.catalogueLockedLabel)
+          : const Icon(Icons.chevron_right),
       onTap: () => context.go(Routes.program(program.id!)),
     );
   }

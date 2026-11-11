@@ -26,6 +26,7 @@ class ProgramListState extends Equatable {
     this.writeRejected = false,
     this.resolving = false,
     this.resolveFailure,
+    this.premium,
   });
 
   final ProgramListStatus status;
@@ -60,6 +61,9 @@ class ProgramListState extends Equatable {
   /// [ProgramListCubit.resolveFailureShown].
   final Failure? resolveFailure;
 
+  /// Whether the user has premium; null while unknown.
+  final bool? premium;
+
   Program? program(String id) =>
       programs.where((program) => program.id == id).firstOrNull;
 
@@ -68,6 +72,8 @@ class ProgramListState extends Equatable {
     final id = active?.programId;
     return id == null ? null : program(id);
   }
+
+  ProgramAccess access(Program program) => programAccess(program, premium);
 
   List<Program> get otherPrograms => [
     for (final program in programs)
@@ -78,6 +84,7 @@ class ProgramListState extends Equatable {
     bool? writeRejected,
     bool? resolving,
     Failure? Function()? resolveFailure,
+    bool? Function()? premium,
   }) => ProgramListState(
     status: status,
     programs: programs,
@@ -92,6 +99,7 @@ class ProgramListState extends Equatable {
     resolveFailure: resolveFailure != null
         ? resolveFailure()
         : this.resolveFailure,
+    premium: premium != null ? premium() : this.premium,
   );
 
   @override
@@ -107,6 +115,7 @@ class ProgramListState extends Equatable {
     writeRejected,
     resolving,
     resolveFailure,
+    premium,
   ];
 }
 
@@ -121,9 +130,15 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     required this._watchCompletedDays,
     required WatchRejectedProgramWrites watchRejectedWrites,
     required this._resolveMissedDay,
+    required WatchPremium watchPremium,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now,
        super(const ProgramListState()) {
+    _premiumSubscription = watchPremium().listen(
+      (premium) => emit(state.copyWith(premium: () => premium)),
+      onError: (Object error, StackTrace stack) =>
+          Log.e('programs', 'premium status failed', error, stack),
+    );
     _userSubscription = watchAuthUser()
         .map((user) => user?.id)
         .distinct()
@@ -140,6 +155,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
   final DateTime Function() _clock;
   late final StreamSubscription<String?> _userSubscription;
   late final StreamSubscription<Failure> _rejectedSubscription;
+  late final StreamSubscription<bool?> _premiumSubscription;
   StreamSubscription<List<Program>>? _programsSubscription;
   StreamSubscription<ActiveProgram?>? _activeSubscription;
   StreamSubscription<List<CompletedDay>>? _completedSubscription;
@@ -179,7 +195,8 @@ class ProgramListCubit extends Cubit<ProgramListState> {
         active == null ||
         program == null ||
         state.missed == null ||
-        state.resolving) {
+        state.resolving ||
+        state.access(program) != ProgramAccess.open) {
       return;
     }
     emit(state.copyWith(resolving: true));
@@ -209,6 +226,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     _activeKnown = false;
     final loading = ProgramListState(
       writeRejected: keepNotices && state.writeRejected,
+      premium: state.premium,
     );
     if (state != loading) emit(loading);
     final uid = _uid;
@@ -288,6 +306,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
         writeRejected: state.writeRejected,
         resolving: state.resolving,
         resolveFailure: state.resolveFailure,
+        premium: state.premium,
       ),
     );
   }
@@ -299,6 +318,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
         status: ProgramListStatus.failure,
         failure: error is Failure ? error : UnknownFailure('$error', error),
         writeRejected: state.writeRejected,
+        premium: state.premium,
       ),
     );
   }
@@ -318,6 +338,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
   Future<void> close() async {
     await _userSubscription.cancel();
     await _rejectedSubscription.cancel();
+    await _premiumSubscription.cancel();
     _cancel();
     return super.close();
   }
