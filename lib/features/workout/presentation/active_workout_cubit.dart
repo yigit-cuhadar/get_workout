@@ -544,13 +544,26 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     unawaited(_sync(uid));
   }
 
-  /// Has the stats of [exerciseIds] of user [uid] rebuilt from the
-  /// server's workouts once the finished workouts are confirmed, like those
-  /// finishing computed from the cache.
-  void rebuildStatsLater(String uid, Set<String> exerciseIds) {
+  /// Takes note of a change user [uid] made to stored workout [id]: the
+  /// stats of [staleStats] are rebuilt from the server's workouts once the
+  /// finished workouts are confirmed, like those finishing computed from
+  /// the cache. A deleted workout is no longer awaited, so a confirmation
+  /// that finds it gone never brings it back.
+  void storedWorkoutChanged(
+    String uid,
+    String id, {
+    required bool deleted,
+    required Set<String> staleStats,
+  }) {
     final local = _local;
-    if (uid != _uid || local == null || exerciseIds.isEmpty) return;
-    _local = local.copyWith(staleStats: {...local.staleStats, ...exerciseIds});
+    if (uid != _uid || local == null) return;
+    _local = local.copyWith(
+      finished: [
+        for (final w in local.finished)
+          if (!deleted || w.id != id) w,
+      ],
+      staleStats: {...local.staleStats, ...staleStats},
+    );
     _keep();
     unawaited(_sync(uid));
   }
