@@ -59,6 +59,7 @@ class FileActiveWorkoutStore implements ActiveWorkoutStore {
       if (file.existsSync()) await file.delete();
       return;
     }
+    await file.parent.create(recursive: true);
     final temporary = File('${file.path}.tmp');
     await temporary.writeAsString(content, flush: true);
     await temporary.rename(file.path);
