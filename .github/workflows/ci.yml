@@ -24,3 +24,6 @@ jobs:
       - name: Test
         run: |
           if find test -name '*_test.dart' 2>/dev/null | grep -q .; then flutter test; fi
+      # CI runs in UTC, where daylight saving never shifts a week.
+      - name: Test cardio weeks across DST
+        run: TZ=Europe/Berlin flutter test test/features/cardio/cardio_domain_test.dart
