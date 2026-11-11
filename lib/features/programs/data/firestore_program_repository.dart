@@ -107,15 +107,21 @@ class FirestoreProgramRepository implements ProgramRepository {
           .map((snap) => activeFromMap(snap.data()?[_active]))
           .transform(_failures());
 
-  /// `mergeFields` replaces the whole map, so nothing of a previous active
-  /// program is left in it, while the rest of the document stays.
+  /// Removing the map first, in the same batch, leaves nothing of a
+  /// previous active program in it, while the rest of the document stays.
   @override
   Future<Result<void>> startProgram(String uid, ActiveProgram active) =>
       guard(() async {
+        final user = _user(uid);
         _confirmLater(
-          _user(uid).set({
-            _active: activeToMap(active),
-          }, SetOptions(mergeFields: [_active])),
+          (_firestore.batch()
+                ..set(user, {
+                  _active: FieldValue.delete(),
+                }, SetOptions(merge: true))
+                ..set(user, {
+                  _active: activeToMap(active),
+                }, SetOptions(merge: true)))
+              .commit(),
         );
       }, mapper: mapFirebaseError);
 
