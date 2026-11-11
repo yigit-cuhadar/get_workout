@@ -10,6 +10,7 @@ import '../features/home/presentation/home_page.dart';
 
 abstract final class Routes {
   static const splash = '/splash';
+  static const startFailed = '/start-failed';
   static const home = '/';
   static const account = '/account';
 
@@ -19,20 +20,40 @@ abstract final class Routes {
 }
 
 /// All routes live here. There is always a user (a guest until they create
-/// an account), so the only gate is the splash while the session resolves.
+/// an account), so the only gates are the splash while the session resolves
+/// and a retry screen when the guest sign-in failed.
 GoRouter buildRouter(AuthCubit auth) {
   return GoRouter(
     initialLocation: Routes.splash,
-    refreshListenable: _StreamListenable(auth.stream),
-    redirect: (context, state) => switch (auth.state) {
-      AuthUnknown() || Unauthenticated() => Routes.splash,
-      Authenticated() =>
-        state.matchedLocation == Routes.splash ? Routes.home : null,
+    // Refresh only when the redirect can change. A refresh re-parses the
+    // current location; if it lands while a page pops itself on the same
+    // auth change (AuthPage.onSignedIn), it restores that page.
+    refreshListenable: _StreamListenable(
+      auth.stream.map((state) => state.runtimeType).distinct(),
+    ),
+    redirect: (context, state) {
+      final atGate =
+          state.matchedLocation == Routes.splash ||
+          state.matchedLocation == Routes.startFailed;
+      return switch (auth.state) {
+        AuthUnknown() => Routes.splash,
+        Unauthenticated() => Routes.startFailed,
+        Authenticated() => atGate ? Routes.home : null,
+      };
     },
     routes: [
       GoRoute(
         path: Routes.splash,
         builder: (_, _) => const Scaffold(body: LoadingView()),
+      ),
+      GoRoute(
+        path: Routes.startFailed,
+        builder: (_, _) => Scaffold(
+          body: ErrorView(
+            message: "Couldn't start. Check your connection and try again.",
+            onRetry: auth.retryGuestSignIn,
+          ),
+        ),
       ),
       GoRoute(path: Routes.home, builder: (_, _) => const HomePage()),
       GoRoute(
