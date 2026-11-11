@@ -27,6 +27,10 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
   final Future<void> Function() _waitForPendingWrites;
   final _rejectedEdits = StreamController<Failure>.broadcast();
 
+  /// The commit of each [saveWorkout] since the app started, by user and
+  /// workout, until [isStored] has its answer.
+  final _commits = <String, Future<void>>{};
+
   /// How long finishing waits for the server's stats, all of them
   /// together, before taking the cache's.
   static const serverWait = Duration(seconds: 2);
@@ -165,11 +169,24 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
         'activeProgram': FirestoreProgramRepository.activeToMap(advance),
       }, SetOptions(merge: true));
     }
-    _logRejection(batch.commit());
+    final commit = batch.commit();
+    _commits['$uid/${workout.id}'] = commit;
+    _logRejection(commit);
   }, mapper: mapFirebaseError);
 
   @override
   Future<Result<bool>> isStored(String uid, String id) => guard(() async {
+    // The batch's own answer tells a refusal from a later deletion.
+    if (_commits['$uid/$id'] case final commit?) {
+      try {
+        await commit;
+        return true;
+      } on Object {
+        return false;
+      } finally {
+        _commits.remove('$uid/$id');
+      }
+    }
     await _waitForPendingWrites();
     final doc = await _workouts(uid)
         .doc(id)
@@ -183,6 +200,7 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
     String exerciseId,
   ) => guard(() async {
     // A pending edit would otherwise be missed, and its stats overwritten.
+    // Offline this waits until the device is online again.
     await _waitForPendingWrites();
     return _exerciseWorkouts(
       await _doing(

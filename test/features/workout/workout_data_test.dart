@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -163,6 +164,70 @@ void main() {
       await pumpEventQueue();
       expect((await repository.isStored('u1', 'w1')).valueOrNull, isTrue);
       expect((await repository.isStored('u1', 'w9')).valueOrNull, isFalse);
+    });
+
+    test(
+      'an acknowledged workout deleted since still counts as stored',
+      () async {
+        await repository.saveWorkout('u1', full, const {});
+        await pumpEventQueue();
+        // Deleted on another device before the confirmation runs.
+        await firestore.doc('users/u1/workouts/w1').delete();
+        expect((await repository.isStored('u1', 'w1')).valueOrNull, isTrue);
+      },
+    );
+
+    test('a refused workout is not stored', () async {
+      final refusing = FakeFirebaseFirestore(
+        securityRules: '''
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
+''',
+      );
+      final repository = FirestoreWorkoutRepository(
+        refusing,
+        waitForPendingWrites: () async {},
+      );
+      await repository.saveWorkout('u1', full, const {});
+      expect((await repository.isStored('u1', 'w1')).valueOrNull, isFalse);
+    });
+
+    test('after a restart the server\'s copy decides', () async {
+      await repository.saveWorkout('u1', full, const {});
+      await pumpEventQueue();
+      final restarted = FirestoreWorkoutRepository(
+        firestore,
+        waitForPendingWrites: () async {},
+      );
+      expect((await restarted.isStored('u1', 'w1')).valueOrNull, isTrue);
+      await firestore.doc('users/u1/workouts/w1').delete();
+      expect((await restarted.isStored('u1', 'w1')).valueOrNull, isFalse);
+    });
+
+    test('a rebuild reads only once pending writes are answered', () async {
+      final pending = Completer<void>();
+      final repository = FirestoreWorkoutRepository(
+        firestore,
+        waitForPendingWrites: () => pending.future,
+      );
+      var done = false;
+      final read = repository
+          .workoutsWith('u1', 'squat')
+          .whenComplete(() => done = true);
+      await pumpEventQueue();
+      expect(done, isFalse);
+      // The edit lands before the read.
+      await firestore
+          .doc('users/u1/workouts/w1')
+          .set(FirestoreWorkoutRepository.workoutToMap(full));
+      pending.complete();
+      expect((await read).valueOrNull!.workouts, [full]);
     });
 
     test('rebuild reads the exercise\'s workouts and replaces stats', () async {

@@ -67,10 +67,12 @@ abstract interface class WorkoutRepository {
     ActiveProgram? advance,
   });
 
-  /// Whether the server holds workout [id], once every write this device
-  /// started has been answered; true after a successful [saveWorkout],
-  /// false after a refused one. Waits while offline; fails when the server
-  /// cannot be asked.
+  /// Whether the server took workout [id]: true once a [saveWorkout] of it
+  /// is acknowledged, even if it was deleted since (on another device),
+  /// false when it was refused. For a save started before the app last
+  /// restarted, whose answer is lost, whether the server holds it once
+  /// every write this device started has been answered. Waits while
+  /// offline; fails when the server cannot be asked.
   Future<Result<bool>> isStored(String uid, String id);
 
   /// The workouts doing [exerciseId], from the server once every write
