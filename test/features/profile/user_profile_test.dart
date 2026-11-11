@@ -72,23 +72,4 @@ void main() {
       ]);
     });
   });
-
-  group('equipment presets', () {
-    test('a full gym has everything but bodyweight', () {
-      expect(
-        EquipmentPreset.fullGym.equipment,
-        Equipment.values.toSet()..remove(Equipment.bodyweight),
-      );
-    });
-
-    test('bodyweight is no equipment at all', () {
-      expect(EquipmentPreset.bodyweight.equipment, isEmpty);
-    });
-
-    test('no preset lists bodyweight', () {
-      for (final preset in EquipmentPreset.values) {
-        expect(preset.equipment, isNot(contains(Equipment.bodyweight)));
-      }
-    });
-  });
 }

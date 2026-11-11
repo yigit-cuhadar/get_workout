@@ -1,0 +1,175 @@
+{
+  "id": "pr_gym_starter_full_body",
+  "status": "live",
+  "premium": false,
+  "order": 1,
+  "level": "beginner",
+  "goal": "general_fitness",
+  "equipmentProfile": "full_gym",
+  "daysPerWeek": 3,
+  "lengthWeeks": 8,
+  "equipment": [
+    "trap_bar",
+    "dumbbell",
+    "cable",
+    "machine",
+    "bench",
+    "bodyweight"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Gym Starter: Full Body 3-Day",
+      "summary": "Three full-body sessions a week on machines, cables and dumbbells, covering every main movement pattern. A steady first program for learning the gym floor and building the habit."
+    }
+  },
+  "days": [
+    {
+      "name": "Full Body A",
+      "items": [
+        {
+          "exerciseId": "ex_leg_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_dumbbell_bench_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_lat_pulldown",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_lying_leg_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_crunch",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Full Body B",
+      "items": [
+        {
+          "exerciseId": "ex_goblet_squat",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_machine_shoulder_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_seated_cable_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_romanian_deadlift",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_triceps_pushdown",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Full Body C",
+      "items": [
+        {
+          "exerciseId": "ex_trap_bar_deadlift",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_machine_chest_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_chest_supported_dumbbell_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_leg_extension",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_lateral_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_seated_calf_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dead_bug",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 45
+        }
+      ]
+    }
+  ]
+}

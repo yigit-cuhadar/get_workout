@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../tool/src/content_validator.dart';
-import '../../tool/src/exercise_import.dart';
+import '../../tool/src/content_import.dart';
 
 void main() {
   group('encodeValue', () {
@@ -144,7 +145,7 @@ void main() {
     test('encodes the whole library without errors', () {
       final report = validateContent(Directory('content/exercises'));
       for (final e in report.exercises) {
-        final doc = ExerciseDoc.fromJson(e.data);
+        final doc = ContentDoc.exercise(e.data);
         expect(doc.fields['contentHash'], {'stringValue': doc.hash});
         expect(doc.fields.containsKey('id'), isFalse);
       }
@@ -195,8 +196,8 @@ void main() {
 
     test('is not affected by the id', () {
       expect(
-        ExerciseDoc.fromJson({'id': 'ex_a', 'family': 'f'}).hash,
-        ExerciseDoc.fromJson({'id': 'ex_b', 'family': 'f'}).hash,
+        ContentDoc.exercise({'id': 'ex_a', 'family': 'f'}).hash,
+        ContentDoc.exercise({'id': 'ex_b', 'family': 'f'}).hash,
       );
     });
   });
@@ -240,23 +241,26 @@ void main() {
     test('a stored exercise hashes the same as its file', () {
       final report = validateContent(Directory('content/exercises'));
       for (final e in report.exercises) {
-        final doc = ExerciseDoc.fromJson(e.data);
+        final doc = ContentDoc.exercise(e.data);
         final stored = {
           ...doc.fields,
           'updatedAt': {'timestampValue': '2026-11-11T10:00:00Z'},
         };
-        final remote = RemoteExercise.fromFields(decodeFields(stored), 't');
+        final remote = RemoteDocument.fromFields(decodeFields(stored), 't');
         expect(remote.actualHash, doc.hash, reason: e.id);
         expect(remote.editedElsewhere, isFalse, reason: e.id);
       }
     });
   });
 
-  group('RemoteExercise', () {
-    final doc = ExerciseDoc('ex_a', {'status': 'live', 'defaultRestS': 60});
+  group('RemoteDocument', () {
+    final doc = ContentDoc('exercises/ex_a', {
+      'status': 'live',
+      'defaultRestS': 60,
+    });
 
-    RemoteExercise stored(Map<String, Object?> fields) =>
-        RemoteExercise.fromFields(decodeFields(encodeFields(fields)), 't');
+    RemoteDocument stored(Map<String, Object?> fields) =>
+        RemoteDocument.fromFields(decodeFields(encodeFields(fields)), 't');
 
     test('is not edited when its content matches contentHash', () {
       final remote = stored({...doc.content, 'contentHash': doc.hash});
@@ -278,7 +282,7 @@ void main() {
 
     test('a whole increment stored as an integer hashes like the file', () {
       // The admin panel writes from the web, where 2.0 becomes an integer.
-      final file = ExerciseDoc.fromJson({
+      final file = ContentDoc.exercise({
         'id': 'ex_a',
         'loggingType': 'weight_reps',
         'incrementKg': 2.0,
@@ -287,15 +291,15 @@ void main() {
         ...file.fields,
         'incrementKg': {'integerValue': '2'},
       };
-      final remote = RemoteExercise.fromFields(decodeFields(fields), 't');
+      final remote = RemoteDocument.fromFields(decodeFields(fields), 't');
       expect(remote.actualHash, file.hash);
       expect(remote.editedElsewhere, isFalse);
     });
   });
 
   group('planImport', () {
-    RemoteExercise remote(String stored, String actual) =>
-        RemoteExercise(storedHash: stored, actualHash: actual, updateTime: 't');
+    RemoteDocument remote(String stored, String actual) =>
+        RemoteDocument(storedHash: stored, actualHash: actual, updateTime: 't');
 
     final local = {
       'ex_new': 'h1',
@@ -338,18 +342,268 @@ void main() {
     });
   });
 
-  test('batches split at 500 writes', () {
-    expect(batches(<int>[]), isEmpty);
-    expect(batches(List.filled(500, 0)).map((b) => b.length), [500]);
-    expect(batches(List.filled(1001, 0)).map((b) => b.length), [500, 500, 1]);
+  group('programDocs', () {
+    final program = {
+      'id': 'pr_a',
+      'status': 'live',
+      'premium': true,
+      'order': 3,
+      'l10n': {
+        'en': {'name': 'A', 'summary': 'A program.'},
+      },
+      'days': [
+        {
+          'name': 'Day 1',
+          'items': [
+            {
+              'exerciseId': 'ex_a',
+              'sets': 3,
+              'repMin': 8,
+              'repMax': 12,
+              'restS': 60,
+            },
+          ],
+        },
+      ],
+    };
+    Map<String, Object?> edited(void Function(Map<String, Object?>) change) {
+      final copy = jsonDecode(jsonEncode(program)) as Map<String, Object?>;
+      change(copy);
+      return copy;
+    }
+
+    test('splits a program into its card and its days', () {
+      final (:card, :detail) = programDocs(program);
+
+      expect(card.path, 'programs/pr_a');
+      expect(card.content.keys, ['status', 'premium', 'order', 'l10n']);
+      expect(detail.path, 'programs/pr_a/detail/main');
+      expect(detail.content, {'days': program['days']});
+      expect(card.hash, contentHash(card.content));
+      expect(detail.hash, contentHash(detail.content));
+      expect(detail.fields['contentHash'], {'stringValue': detail.hash});
+    });
+
+    test('a card change leaves the detail hash alone, and back', () {
+      final docs = programDocs(program);
+      final renamed = programDocs(edited((p) => p['order'] = 4));
+      final moreSets = programDocs(
+        edited(
+          (p) =>
+              (((p['days']! as List).first! as Map)['items']! as List)
+                      .cast<Map<String, Object?>>()
+                      .first['sets'] =
+                  4,
+        ),
+      );
+
+      expect(renamed.card.hash, isNot(docs.card.hash));
+      expect(renamed.detail.hash, docs.detail.hash);
+      expect(moreSets.card.hash, docs.card.hash);
+      expect(moreSets.detail.hash, isNot(docs.detail.hash));
+    });
+
+    test('every program file encodes and hashes like its stored form', () {
+      final report = validateContent(
+        Directory('content/exercises'),
+        programs: Directory('content/programs'),
+      );
+      expect(report.programs, isNotEmpty);
+      for (final p in report.programs) {
+        final (:card, :detail) = programDocs(p.data);
+        for (final doc in [card, detail]) {
+          final stored = {
+            ...doc.fields,
+            'updatedAt': {'timestampValue': '2026-11-11T10:00:00Z'},
+          };
+          final remote = RemoteDocument.fromFields(decodeFields(stored), 't');
+          expect(remote.actualHash, doc.hash, reason: doc.path);
+          expect(remote.editedElsewhere, isFalse, reason: doc.path);
+        }
+      }
+    });
+
+    test('a detail edited elsewhere no longer matches its contentHash', () {
+      final (:card, :detail) = programDocs(program);
+      final fields = decodeFields(detail.fields);
+      (((fields['days']! as List).first! as Map)['items']! as List)
+              .cast<Map<String, Object?>>()
+              .first['restS'] =
+          90;
+
+      expect(RemoteDocument.fromFields(fields, 't').editedElsewhere, isTrue);
+      expect(
+        RemoteDocument.fromFields(
+          decodeFields(card.fields),
+          't',
+        ).editedElsewhere,
+        isFalse,
+      );
+    });
   });
 
-  group('exerciseWrite', () {
-    final doc = ExerciseDoc('ex_a', {'status': 'live'});
+  group('planImport holds a program back as one unit', () {
+    RemoteDocument remote(String stored, String actual) =>
+        RemoteDocument(storedHash: stored, actualHash: actual, updateTime: 't');
+
+    final local = {
+      'programs/pr_a': 'card-new',
+      'programs/pr_a/detail/main': 'days',
+      'programs/pr_b': 'card',
+      'programs/pr_b/detail/main': 'days-new',
+    };
+    final existing = {
+      // pr_a: the detail was edited in the panel, the card changed in the
+      // file. pr_b: the card was edited in the panel, the days changed.
+      'programs/pr_a': remote('card', 'card'),
+      'programs/pr_a/detail/main': remote('days-old', 'panel'),
+      'programs/pr_b': remote('card-old', 'panel'),
+      'programs/pr_b/detail/main': remote('days', 'days'),
+    };
+
+    test('either document edited elsewhere skips both', () {
+      final plan = planImport(local, existing);
+
+      expect(plan.edited, ['programs/pr_a/detail/main', 'programs/pr_b']);
+      expect(plan.held, ['programs/pr_a', 'programs/pr_b/detail/main']);
+      expect(plan.updated, isEmpty);
+      expect(plan.toWrite, isEmpty);
+    });
+
+    test('force writes both', () {
+      final plan = planImport(local, existing, force: true);
+
+      expect(plan.held, isEmpty);
+      expect(plan.toWrite, local.keys.toList()..sort());
+    });
+
+    test('an edited exercise holds back nothing else', () {
+      final plan = planImport(
+        {'exercises/ex_a': 'new', 'exercises/ex_b': 'new'},
+        {
+          'exercises/ex_a': remote('old', 'panel'),
+          'exercises/ex_b': remote('old', 'old'),
+        },
+      );
+      expect(plan.held, isEmpty);
+      expect(plan.toWrite, ['exercises/ex_b']);
+    });
+  });
+
+  test('planImport sorts program documents like exercises', () {
+    RemoteDocument remote(String stored, String actual) =>
+        RemoteDocument(storedHash: stored, actualHash: actual, updateTime: 't');
+
+    final plan = planImport(
+      {
+        'exercises/ex_a': 'e1',
+        'programs/pr_new': 'c1',
+        'programs/pr_new/detail/main': 'd1',
+        'programs/pr_same': 'c2',
+        'programs/pr_same/detail/main': 'd2',
+        'programs/pr_edited': 'c3',
+        'programs/pr_edited/detail/main': 'd3',
+      },
+      {
+        'exercises/ex_a': remote('e1', 'e1'),
+        'programs/pr_same': remote('c2', 'c2'),
+        'programs/pr_same/detail/main': remote('old', 'old'),
+        'programs/pr_edited': remote('c3', 'c3'),
+        'programs/pr_edited/detail/main': remote('old', 'panel'),
+        'programs/pr_gone': remote('c', 'c'),
+      },
+    );
+
+    expect(plan.created, ['programs/pr_new', 'programs/pr_new/detail/main']);
+    expect(plan.updated, ['programs/pr_same/detail/main']);
+    expect(plan.unchanged, [
+      'exercises/ex_a',
+      'programs/pr_edited',
+      'programs/pr_same',
+    ]);
+    expect(plan.edited, ['programs/pr_edited/detail/main']);
+    expect(plan.orphaned, ['programs/pr_gone']);
+    // Exercises sort before programs, and a card before its detail.
+    expect(plan.toWrite, [
+      'programs/pr_new',
+      'programs/pr_new/detail/main',
+      'programs/pr_same/detail/main',
+    ]);
+  });
+
+  group('packUnits', () {
+    test('fills batches up to the size, in order', () {
+      expect(packUnits<int>([]), isEmpty);
+      expect(
+        packUnits([
+          for (var i = 0; i < 1001; i++) [i],
+        ]).map((b) => b.length),
+        [500, 500, 1],
+      );
+    });
+
+    test('never splits a unit across batches', () {
+      expect(
+        packUnits([
+          [1],
+          [2, 3],
+          [4, 5],
+          [6],
+        ], size: 2),
+        [
+          [1],
+          [2, 3],
+          [4, 5],
+          [6],
+        ],
+      );
+      expect(
+        packUnits([
+          [1],
+          [2],
+          [3, 4],
+        ], size: 3),
+        [
+          [1, 2],
+          [3, 4],
+        ],
+      );
+    });
+
+    test('rejects a unit larger than a batch', () {
+      expect(
+        () => packUnits([
+          [1, 2, 3],
+        ], size: 2),
+        throwsArgumentError,
+      );
+    });
+  });
+
+  test('groupByUnit keeps a card with its detail', () {
+    expect(importUnit('programs/pr_a/detail/main'), 'programs/pr_a');
+    expect(importUnit('exercises/ex_a'), 'exercises/ex_a');
+    expect(
+      groupByUnit([
+        'exercises/ex_a',
+        'programs/pr_a',
+        'programs/pr_a/detail/main',
+        'programs/pr_b/detail/main',
+      ]),
+      [
+        ['exercises/ex_a'],
+        ['programs/pr_a', 'programs/pr_a/detail/main'],
+        ['programs/pr_b/detail/main'],
+      ],
+    );
+  });
+
+  group('contentWrite', () {
+    final doc = ContentDoc('exercises/ex_a', {'status': 'live'});
     const db = 'projects/p/databases/(default)';
 
     test('creates only if the document does not exist', () {
-      expect(exerciseWrite(db, doc), {
+      expect(contentWrite(db, doc), {
         'update': {
           'name': '$db/documents/exercises/ex_a',
           'fields': {
@@ -364,8 +618,16 @@ void main() {
       });
     });
 
+    test('writes a program detail at its subcollection path', () {
+      final detail = ContentDoc('programs/pr_a/detail/main', {'days': []});
+      expect(
+        (contentWrite(db, detail)['update']! as Map)['name'],
+        '$db/documents/programs/pr_a/detail/main',
+      );
+    });
+
     test('updates only if the document is unchanged since the read', () {
-      final write = exerciseWrite(db, doc, updateTime: '2026-11-11T10:00:00Z');
+      final write = contentWrite(db, doc, updateTime: '2026-11-11T10:00:00Z');
       expect(write['currentDocument'], {'updateTime': '2026-11-11T10:00:00Z'});
     });
   });

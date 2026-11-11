@@ -1,0 +1,227 @@
+{
+  "id": "pr_shoulders_back_focus_4_day",
+  "status": "live",
+  "premium": true,
+  "order": 17,
+  "level": "intermediate",
+  "goal": "build_muscle",
+  "equipmentProfile": "full_gym",
+  "daysPerWeek": 4,
+  "lengthWeeks": 10,
+  "equipment": [
+    "barbell",
+    "ez_bar",
+    "trap_bar",
+    "dumbbell",
+    "cable",
+    "machine",
+    "bench",
+    "pull_up_bar",
+    "landmine"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Shoulders and Back Focus 4-Day",
+      "summary": "Two upper days that lead with rows, pulldowns, presses and raises, and two lower days to keep the legs moving forward. Back and shoulder volume runs above a standard program on purpose."
+    }
+  },
+  "days": [
+    {
+      "name": "Back and Shoulders A",
+      "items": [
+        {
+          "exerciseId": "ex_pull_up",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_overhead_press",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_barbell_row",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_dumbbell_bench_press",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 4,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_reverse_pec_deck",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Lower A",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_back_squat",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_romanian_deadlift",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_leg_extension",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_lying_leg_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_standing_calf_raise",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Back and Shoulders B",
+      "items": [
+        {
+          "exerciseId": "ex_t_bar_row",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_lat_pulldown",
+          "sets": 4,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_incline_dumbbell_press",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_cable_crossover",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_lateral_raise",
+          "sets": 4,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_face_pull",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_ez_bar_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_triceps_pushdown",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60,
+          "group": "A"
+        }
+      ]
+    },
+    {
+      "name": "Lower B",
+      "items": [
+        {
+          "exerciseId": "ex_trap_bar_deadlift",
+          "sets": 4,
+          "repMin": 5,
+          "repMax": 6,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_bulgarian_split_squat",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_leg_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_seated_leg_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_hanging_knee_raise",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    }
+  ]
+}

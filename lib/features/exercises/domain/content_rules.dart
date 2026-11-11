@@ -48,11 +48,6 @@ const minPerEquipment = 4;
 const minPerEquipmentOverrides = {'jump_rope': 1};
 const minPerPattern = 8;
 const minPerProfileMuscle = 3;
-const equipmentProfiles = {
-  'bodyweight-only': {'bodyweight', 'pull_up_bar', 'dip_station'},
-  'dumbbells': {'dumbbell', 'bench', 'bodyweight'},
-  'bands': {'resistance_band', 'bodyweight'},
-};
 
 const allowedKeys = {
   'id',
@@ -358,6 +353,9 @@ class ExerciseEntry {
     ];
   }
 
+  /// Whether it can be done with the equipment of [profile].
+  bool fitsProfile(EquipmentProfile profile) => equipmentSets.any(profile.has);
+
   Map<String, Object?> get text {
     final l10n = data['l10n'];
     final en = l10n is Map ? l10n['en'] : null;
@@ -589,17 +587,19 @@ String _checkCoverage(List<ExerciseEntry> exercises, List<String> errors) {
     line(pattern, count, minPerPattern);
   }
 
-  equipmentProfiles.forEach((profile, allowed) {
-    out.writeln(' Profile $profile {${allowed.join(', ')}}');
-    final doable = exercises.where(
-      (e) => e.equipmentSets.any((set) => set.every(allowed.contains)),
+  for (final profile in EquipmentProfile.values) {
+    if (profile == EquipmentProfile.fullGym) continue;
+    out.writeln(
+      ' Profile ${profile.code} '
+      '{${profile.equipment.map((e) => e.code).join(', ')}}',
     );
+    final doable = exercises.where((e) => e.fitsProfile(profile));
     for (final muscle in muscles) {
       final count = doable
           .where((e) => e.strings('mainMuscles').contains(muscle))
           .length;
-      line('$profile: $muscle', count, minPerProfileMuscle);
+      line('${profile.code}: $muscle', count, minPerProfileMuscle);
     }
-  });
+  }
   return out.toString();
 }

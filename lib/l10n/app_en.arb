@@ -573,6 +573,7 @@
 
   "presetFullGym": "Full gym",
   "presetHomeGym": "Home gym",
-  "presetDumbbellsOnly": "Dumbbells only",
-  "presetBodyweight": "Bodyweight"
+  "presetDumbbells": "Dumbbells and a bench",
+  "presetBodyweight": "Pull-up bar and dip bars",
+  "presetBands": "Resistance bands"
 }

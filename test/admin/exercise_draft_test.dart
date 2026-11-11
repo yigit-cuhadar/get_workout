@@ -5,7 +5,7 @@ import 'package:get_workout/admin/exercises/domain/exercise_draft.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 
 import '../../tool/src/content_validator.dart';
-import '../../tool/src/exercise_import.dart';
+import '../../tool/src/content_import.dart';
 import 'fixtures.dart';
 
 void main() {

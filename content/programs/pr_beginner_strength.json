@@ -1,0 +1,147 @@
+{
+  "id": "pr_beginner_strength",
+  "status": "live",
+  "premium": true,
+  "order": 11,
+  "level": "beginner",
+  "goal": "get_stronger",
+  "equipmentProfile": "full_gym",
+  "daysPerWeek": 3,
+  "lengthWeeks": 12,
+  "equipment": [
+    "barbell",
+    "dumbbell",
+    "cable",
+    "bench",
+    "pull_up_bar",
+    "bodyweight"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Beginner Strength 3-Day",
+      "summary": "Learn and progress the big barbell lifts with three full-body sessions of low-rep sets. Each session adds a little weight to the squat, press or pull while the rest stays simple."
+    }
+  },
+  "days": [
+    {
+      "name": "Squat and Bench A",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_back_squat",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 5,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_barbell_bench_press",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 5,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_barbell_row",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 6,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_curl",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Deadlift and Press",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_deadlift",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 5,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_overhead_press",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 5,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_lat_pulldown",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_triceps_pushdown",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dead_bug",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 45
+        }
+      ]
+    },
+    {
+      "name": "Squat and Bench B",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_back_squat",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 5,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_barbell_bench_press",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 5,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_chin_up",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_romanian_deadlift",
+          "sets": 2,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    }
+  ]
+}

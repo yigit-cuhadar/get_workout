@@ -1,0 +1,249 @@
+{
+  "id": "pr_hypertrophy_5_day_split",
+  "status": "live",
+  "premium": true,
+  "order": 10,
+  "level": "intermediate",
+  "goal": "build_muscle",
+  "equipmentProfile": "full_gym",
+  "daysPerWeek": 5,
+  "lengthWeeks": 10,
+  "equipment": [
+    "barbell",
+    "ez_bar",
+    "dumbbell",
+    "cable",
+    "machine",
+    "bench",
+    "pull_up_bar"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Five-Day Hypertrophy Split",
+      "summary": "An upper and lower day followed by push, pull and legs, so every muscle is trained about twice a week. Moderate weights in the 6-15 rep range with a steady weekly increase."
+    }
+  },
+  "days": [
+    {
+      "name": "Upper",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_bench_press",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_barbell_row",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_lat_pulldown",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Lower",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_back_squat",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_romanian_deadlift",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_leg_extension",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_lying_leg_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_standing_calf_raise",
+          "sets": 4,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Push",
+      "items": [
+        {
+          "exerciseId": "ex_incline_dumbbell_press",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_machine_shoulder_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_cable_crossover",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_triceps_pushdown",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_overhead_triceps_extension",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Pull",
+      "items": [
+        {
+          "exerciseId": "ex_pull_up",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_seated_cable_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_straight_arm_pulldown",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_face_pull",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_ez_bar_curl",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_hammer_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Legs",
+      "items": [
+        {
+          "exerciseId": "ex_leg_press",
+          "sets": 4,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_bulgarian_split_squat",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_seated_leg_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_hip_thrust_machine",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_seated_calf_raise",
+          "sets": 4,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_crunch",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    }
+  ]
+}

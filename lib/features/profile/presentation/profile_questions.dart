@@ -33,11 +33,12 @@ extension ProfileLabels on AppLocalizations {
     Sex.female => calcSexFemale,
   };
 
-  String presetName(EquipmentPreset preset) => switch (preset) {
-    EquipmentPreset.fullGym => presetFullGym,
-    EquipmentPreset.homeGym => presetHomeGym,
-    EquipmentPreset.dumbbellsOnly => presetDumbbellsOnly,
-    EquipmentPreset.bodyweight => presetBodyweight,
+  String presetName(EquipmentProfile preset) => switch (preset) {
+    EquipmentProfile.fullGym => presetFullGym,
+    EquipmentProfile.homeGym => presetHomeGym,
+    EquipmentProfile.dumbbells => presetDumbbells,
+    EquipmentProfile.bodyweight => presetBodyweight,
+    EquipmentProfile.bands => presetBands,
   };
 
   String fieldName(ProfileField field) => switch (field) {
@@ -242,7 +243,7 @@ class _EquipmentAnswer extends StatelessWidget {
           spacing: Gap.sm,
           runSpacing: Gap.sm,
           children: [
-            for (final preset in EquipmentPreset.values)
+            for (final preset in EquipmentProfile.values)
               ChoiceChip(
                 label: Text(l10n.presetName(preset)),
                 selected:

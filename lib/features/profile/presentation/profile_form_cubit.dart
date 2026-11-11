@@ -145,7 +145,7 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
 
   void setSex(Sex sex) => _answer(state.answers.copyWith(sex: sex));
 
-  void applyPreset(EquipmentPreset preset) =>
+  void applyPreset(EquipmentProfile preset) =>
       _answer(state.answers.copyWith(equipment: preset.equipment));
 
   void toggleEquipment(Equipment item) {
