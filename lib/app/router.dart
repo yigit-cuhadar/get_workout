@@ -23,6 +23,8 @@ import '../features/profile/presentation/onboarding_page.dart';
 import '../features/profile/presentation/profile_cubit.dart';
 import '../features/profile/presentation/profile_details_page.dart';
 import '../features/profile/presentation/profile_page.dart';
+import '../features/programs/presentation/catalogue_detail_page.dart';
+import '../features/programs/presentation/catalogue_page.dart';
 import '../features/programs/presentation/exercise_picker_page.dart';
 import '../features/programs/presentation/program_builder_page.dart';
 import '../features/programs/presentation/program_detail_page.dart';
@@ -49,6 +51,14 @@ abstract final class Routes {
   static const today = '/today';
   static const programs = '/programs';
   static const programNew = '$programs/new';
+  static const catalogue = '$programs/catalogue';
+  static String catalogueProgram(String id) =>
+      '$catalogue/${Uri.encodeComponent(id)}';
+
+  /// An exercise of a ready-made program, opened inside the Programs tab.
+  static String catalogueExercise(String programId, String exerciseId) =>
+      '${catalogueProgram(programId)}/exercises/'
+      '${Uri.encodeComponent(exerciseId)}';
 
   /// [created]: the program was just stored; see [ProgramDetailPage.created].
   static String program(String id, {bool created = false}) =>
@@ -195,6 +205,25 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
                     multiple: query['multiple'] == 'true',
                   );
                 },
+              ),
+              GoRoute(
+                path: 'catalogue',
+                builder: (_, _) => const CataloguePage(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) =>
+                        CatalogueDetailPage(id: state.pathParameters['id']!),
+                    routes: [
+                      GoRoute(
+                        path: 'exercises/:exerciseId',
+                        builder: (_, state) => ExerciseDetailPage(
+                          exerciseId: state.pathParameters['exerciseId']!,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               GoRoute(
                 path: ':id',

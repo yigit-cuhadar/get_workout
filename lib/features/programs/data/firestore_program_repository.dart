@@ -227,12 +227,16 @@ class FirestoreProgramRepository implements ProgramRepository {
       origin: ProgramOrigin.values.byCode(map['origin']) ?? ProgramOrigin.own,
       sourceId: sourceId is String ? sourceId : null,
       lengthWeeks: _whole(map['lengthWeeks']),
-      days: [
-        for (final day in days)
-          if (day is Map) _dayFromMap(day),
-      ],
+      days: daysFromList(days),
     );
   }
+
+  /// The stored `days` of a user's or a catalogue program, read as
+  /// [programFromMap] reads them.
+  static List<ProgramDay> daysFromList(List<Object?> days) => [
+    for (final day in days)
+      if (day is Map) _dayFromMap(day),
+  ];
 
   static ProgramDay _dayFromMap(Map<Object?, Object?> map) {
     final name = map['name'];

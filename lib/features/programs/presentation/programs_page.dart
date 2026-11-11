@@ -13,8 +13,8 @@ import '../domain/program_usecases.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
 
-/// The Programs tab: the active program with this week's plan, then the
-/// other programs.
+/// The Programs tab: the way into the ready-made programs, the active
+/// program with this week's plan, then the other programs.
 class ProgramsPage extends StatelessWidget {
   const ProgramsPage({super.key});
 
@@ -99,7 +99,21 @@ class _ProgramsViewState extends State<_ProgramsView> {
             ),
             ProgramListStatus.ready when !hasPrograms => EmptyView(
               message: l10n.programsEmpty,
-              action: ForgeButton(label: l10n.programNew, onPressed: create),
+              action: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ForgeButton(
+                    label: l10n.catalogueBrowse,
+                    onPressed: () => context.go(Routes.catalogue),
+                  ),
+                  const SizedBox(height: Gap.sm),
+                  OutlinedButton(
+                    onPressed: create,
+                    child: Text(l10n.programNew),
+                  ),
+                ],
+              ),
             ),
             ProgramListStatus.ready => _Programs(state),
           },
@@ -121,6 +135,13 @@ class _Programs extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(bottom: Gap.xl * 2),
       children: [
+        ListTile(
+          leading: const Icon(Icons.auto_awesome_outlined),
+          title: Text(l10n.catalogueTitle),
+          subtitle: Text(l10n.catalogueEntryInfo),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go(Routes.catalogue),
+        ),
         if (active != null) ...[
           _Header(l10n.programActive),
           _ProgramTile(

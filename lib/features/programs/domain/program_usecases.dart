@@ -3,11 +3,14 @@ import 'package:forge_core/forge_core.dart';
 import '../../exercises/domain/vocabulary.dart';
 import 'active_program.dart';
 import 'calendar_date.dart';
+import 'catalogue_program.dart';
+import 'catalogue_repository.dart';
 import 'completed_days.dart';
 import 'program.dart';
 import 'program_repository.dart';
 import 'program_schedule.dart';
 import 'program_validation.dart';
+import 'premium_status.dart';
 
 /// [loggingTypes]: see [validateProgram].
 typedef ProgramSave = ({
@@ -259,4 +262,28 @@ class StopProgram implements UseCase<void, String> {
   /// [params] is the user's id.
   @override
   Future<Result<void>> call(String params) => _repository.stopProgram(params);
+}
+
+class WatchCatalogue {
+  const WatchCatalogue(this._repository);
+  final CatalogueRepository _repository;
+
+  Stream<List<CatalogueProgram>> call() => _repository.watchPrograms();
+}
+
+class GetCatalogueDays implements UseCase<List<ProgramDay>, String> {
+  const GetCatalogueDays(this._repository);
+  final CatalogueRepository _repository;
+
+  /// [params] is the catalogue program's id.
+  @override
+  Future<Result<List<ProgramDay>>> call(String params) =>
+      _repository.getDays(params);
+}
+
+class WatchPremium {
+  const WatchPremium(this._premium);
+  final PremiumStatus _premium;
+
+  Stream<bool?> call() => _premium.watch();
 }
