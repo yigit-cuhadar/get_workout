@@ -16,6 +16,7 @@ import '../features/calculators/presentation/calories_page.dart';
 import '../features/calculators/presentation/macros_page.dart';
 import '../features/calculators/presentation/one_rep_max_page.dart';
 import '../features/calculators/presentation/plates_page.dart';
+import '../features/exercises/presentation/exercise_detail_page.dart';
 import '../features/exercises/presentation/exercises_page.dart';
 import '../features/profile/presentation/profile_page.dart';
 import '../features/programs/presentation/programs_page.dart';
@@ -32,6 +33,7 @@ abstract final class Routes {
   static const today = '/today';
   static const programs = '/programs';
   static const exercises = '/exercises';
+  static String exercise(String id) => '$exercises/${Uri.encodeComponent(id)}';
   static const progress = '/progress';
   static const cardio = '$progress/cardio';
   static const cardioNew = '$cardio/new';
@@ -98,7 +100,17 @@ GoRouter buildRouter(AuthCubit auth) {
         branches: [
           _tab(Routes.today, const TodayPage()),
           _tab(Routes.programs, const ProgramsPage()),
-          _tab(Routes.exercises, const ExercisesPage()),
+          _tab(
+            Routes.exercises,
+            const ExercisesPage(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (_, state) =>
+                    ExerciseDetailPage(exerciseId: state.pathParameters['id']!),
+              ),
+            ],
+          ),
           _tab(
             Routes.progress,
             const ProgressPage(),
