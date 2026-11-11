@@ -6,6 +6,10 @@ enum LengthUnit { cm, inch }
 
 enum ThemePreference { system, light, dark }
 
+/// How effort is asked for per set, if at all. Always stored as reps in
+/// reserve (RIR); RPE is shown as `10 - RIR`.
+enum EffortScale { off, rir, rpe }
+
 const kgPerLb = 0.45359237;
 const cmPerInch = 2.54;
 
@@ -59,6 +63,7 @@ class UserSettings extends Equatable {
     required this.weightUnit,
     required this.lengthUnit,
     this.themePreference = ThemePreference.system,
+    this.effortScale = EffortScale.off,
     this.customBarWeightKg,
     this.customPlates,
   });
@@ -77,6 +82,7 @@ class UserSettings extends Equatable {
   final WeightUnit weightUnit;
   final LengthUnit lengthUnit;
   final ThemePreference themePreference;
+  final EffortScale effortScale;
 
   /// Set once the user edits their bar; until then [barWeightKg] follows
   /// [weightUnit], so switching units also switches the standard bar.
@@ -122,12 +128,14 @@ class UserSettings extends Equatable {
     WeightUnit? weightUnit,
     LengthUnit? lengthUnit,
     ThemePreference? themePreference,
+    EffortScale? effortScale,
     double? customBarWeightKg,
     List<Plate>? customPlates,
   }) => UserSettings(
     weightUnit: weightUnit ?? this.weightUnit,
     lengthUnit: lengthUnit ?? this.lengthUnit,
     themePreference: themePreference ?? this.themePreference,
+    effortScale: effortScale ?? this.effortScale,
     customBarWeightKg: customBarWeightKg ?? this.customBarWeightKg,
     customPlates: customPlates ?? this.customPlates,
   );
@@ -137,6 +145,7 @@ class UserSettings extends Equatable {
     weightUnit: weightUnit,
     lengthUnit: lengthUnit,
     themePreference: themePreference,
+    effortScale: effortScale,
   );
 
   @override
@@ -144,6 +153,7 @@ class UserSettings extends Equatable {
     weightUnit,
     lengthUnit,
     themePreference,
+    effortScale,
     customBarWeightKg,
     customPlates,
   ];

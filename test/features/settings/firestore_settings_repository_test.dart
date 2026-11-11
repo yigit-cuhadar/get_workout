@@ -39,18 +39,41 @@ void main() {
     );
   });
 
+  test('the effort scale reads its codes, off when unknown', () async {
+    await user().set({
+      'settings': {'effortScale': 'rir'},
+    });
+    expect(
+      (await repository.watchSettings('u1').first).effortScale,
+      EffortScale.rir,
+    );
+    await user().set({
+      'settings': {'effortScale': 'borg'},
+    });
+    expect(
+      (await repository.watchSettings('u1').first).effortScale,
+      EffortScale.off,
+    );
+  });
+
   test('save writes the settings map with stored codes', () async {
     const settings = UserSettings(
       weightUnit: WeightUnit.kg,
       lengthUnit: LengthUnit.inch,
       themePreference: ThemePreference.dark,
+      effortScale: EffortScale.rpe,
     );
 
     final result = await repository.saveSettings('u1', settings);
 
     expect(result.isOk, isTrue);
     expect((await user().get()).data(), {
-      'settings': {'weightUnit': 'kg', 'lengthUnit': 'in', 'themeMode': 'dark'},
+      'settings': {
+        'weightUnit': 'kg',
+        'lengthUnit': 'in',
+        'themeMode': 'dark',
+        'effortScale': 'rpe',
+      },
     });
     expect(await repository.watchSettings('u1').first, settings);
   });
@@ -58,7 +81,7 @@ void main() {
   test('save keeps the other fields of the user document', () async {
     await user().set({
       'profile': {'goal': 'get_stronger'},
-      'settings': {'effortScale': 'rir', 'weightUnit': 'lb'},
+      'settings': {'restTimer': true, 'weightUnit': 'lb'},
     });
 
     await repository.saveSettings(
@@ -69,10 +92,11 @@ void main() {
     expect((await user().get()).data(), {
       'profile': {'goal': 'get_stronger'},
       'settings': {
-        'effortScale': 'rir',
+        'restTimer': true,
         'weightUnit': 'kg',
         'lengthUnit': 'in',
         'themeMode': 'system',
+        'effortScale': 'off',
       },
     });
   });
@@ -129,14 +153,14 @@ void main() {
     test('saving equipment keeps the other fields', () async {
       await user().set({
         'profile': {'goal': 'get_stronger'},
-        'settings': {'effortScale': 'rir', 'weightUnit': 'kg'},
+        'settings': {'restTimer': true, 'weightUnit': 'kg'},
       });
 
       await repository.saveSettings('u1', custom);
 
       final data = (await user().get()).data()!;
       expect(data['profile'], {'goal': 'get_stronger'});
-      expect((data['settings'] as Map)['effortScale'], 'rir');
+      expect((data['settings'] as Map)['restTimer'], true);
       expect((data['settings'] as Map)['barWeightKg'], 15);
     });
 

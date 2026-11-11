@@ -25,6 +25,11 @@ class FirestoreSettingsRepository implements SettingsRepository {
     ThemePreference.light: 'light',
     ThemePreference.dark: 'dark',
   };
+  static const _effortCodes = {
+    EffortScale.off: 'off',
+    EffortScale.rir: 'rir',
+    EffortScale.rpe: 'rpe',
+  };
 
   @override
   Stream<UserSettings> watchSettings(String uid) =>
@@ -62,6 +67,11 @@ class FirestoreSettingsRepository implements SettingsRepository {
         map['themeMode'],
         defaults.themePreference,
       ),
+      effortScale: _decode(
+        _effortCodes,
+        map['effortScale'],
+        defaults.effortScale,
+      ),
       customBarWeightKg: _barWeight(map['barWeightKg']),
       customPlates: _plates(map['plates']),
     );
@@ -73,6 +83,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
     'weightUnit': _weightCodes[settings.weightUnit],
     'lengthUnit': _lengthCodes[settings.lengthUnit],
     'themeMode': _themeCodes[settings.themePreference],
+    'effortScale': _effortCodes[settings.effortScale],
     'barWeightKg': settings.customBarWeightKg ?? FieldValue.delete(),
     'plates':
         settings.customPlates
