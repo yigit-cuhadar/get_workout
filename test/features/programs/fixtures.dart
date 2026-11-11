@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/catalogue_program.dart';
+import 'package:get_workout/features/programs/domain/premium_status.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 
 /// An exercise with defaults for everything a program test does not care
@@ -49,16 +52,21 @@ ProgramItem item(
 );
 
 /// A valid two-day program of weighted rep exercises `a` to `d`.
-Program program({String? id, String name = 'Upper Lower', int? lengthWeeks}) =>
-    Program(
-      id: id,
-      name: name,
-      lengthWeeks: lengthWeeks,
-      days: [
-        ProgramDay(name: 'Upper', items: [item('a'), item('b')]),
-        ProgramDay(name: 'Lower', items: [item('c'), item('d')]),
-      ],
-    );
+Program program({
+  String? id,
+  String name = 'Upper Lower',
+  int? lengthWeeks,
+  bool premium = false,
+}) => Program(
+  id: id,
+  name: name,
+  lengthWeeks: lengthWeeks,
+  premium: premium,
+  days: [
+    ProgramDay(name: 'Upper', items: [item('a'), item('b')]),
+    ProgramDay(name: 'Lower', items: [item('c'), item('d')]),
+  ],
+);
 
 const loggingTypes = {
   'a': LoggingType.weightReps,
@@ -93,3 +101,11 @@ CatalogueProgram card(
   order: order,
   l10n: {'en': CatalogueText(name: 'Program $id', summary: 'For $id.')},
 );
+
+/// A premium status the test sets; unknown until it adds one.
+class FakePremium implements PremiumStatus {
+  final controller = StreamController<bool?>.broadcast();
+
+  @override
+  Stream<bool?> watch() => controller.stream;
+}

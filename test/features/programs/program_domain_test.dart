@@ -644,6 +644,13 @@ void main() {
       expect(copy.days, original.days);
     });
 
+    test('keeps the premium mark, also through edits', () {
+      final paid = program(id: 'p1', premium: true);
+      expect(paid.duplicate(copyOf).premium, isTrue);
+      expect(paid.copyWith(name: 'Mine').premium, isTrue);
+      expect(program().duplicate(copyOf).premium, isFalse);
+    });
+
     test('shortens the name to make room for the suffix', () {
       final copy = program(name: 'x' * 60).duplicate(copyOf);
       expect(copy.name, '${'x' * 53} (copy)');
@@ -675,6 +682,21 @@ void main() {
     test('drops spaces left at the cut', () {
       final copy = program(name: '${'x' * 52} yy').duplicate(copyOf);
       expect(copy.name, '${'x' * 52} (copy)');
+    });
+  });
+
+  group('programAccess', () {
+    test('a program without the premium mark is always open', () {
+      for (final premium in [null, false, true]) {
+        expect(programAccess(program(), premium), ProgramAccess.open);
+      }
+    });
+
+    test('a premium copy needs premium, and waits while unknown', () {
+      final paid = program(premium: true);
+      expect(programAccess(paid, true), ProgramAccess.open);
+      expect(programAccess(paid, false), ProgramAccess.locked);
+      expect(programAccess(paid, null), ProgramAccess.waiting);
     });
   });
 

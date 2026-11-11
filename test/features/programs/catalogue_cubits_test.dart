@@ -19,7 +19,6 @@ import 'package:get_workout/features/programs/data/no_premium.dart';
 import 'package:get_workout/features/programs/domain/catalogue_program.dart';
 import 'package:get_workout/features/programs/domain/catalogue_queries.dart';
 import 'package:get_workout/features/programs/domain/catalogue_repository.dart';
-import 'package:get_workout/features/programs/domain/premium_status.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_repository.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
@@ -44,13 +43,6 @@ class MockExerciseRepository extends Mock implements ExerciseRepository {}
 
 class MockCustomExerciseRepository extends Mock
     implements CustomExerciseRepository {}
-
-class FakePremium implements PremiumStatus {
-  final controller = StreamController<bool?>.broadcast();
-
-  @override
-  Stream<bool?> watch() => controller.stream;
-}
 
 void main() {
   const member = AuthUser(id: 'u1', email: 'a@b.co');
@@ -489,12 +481,26 @@ void main() {
       expect(stored, free.copy(days, 'en'));
       expect(stored.origin, ProgramOrigin.catalog);
       expect(stored.sourceId, free.id);
+      expect(stored.premium, isFalse);
       expect(cubit.state.copyStatus, CopyStatus.copied);
       expect(cubit.state.copyId, 'copy1');
 
       cubit.copyHandled();
       expect(cubit.state.copyStatus, CopyStatus.idle);
       expect(cubit.state.copyId, isNull);
+    });
+
+    test('a copy of a premium program is marked premium', () async {
+      final cubit = await open(paid.id, premium: true);
+
+      await cubit.use();
+
+      final stored =
+          verify(() => programRepository.createProgram('u1', captureAny()))
+                  .captured
+                  .single
+              as Program;
+      expect(stored.premium, isTrue);
     });
 
     test('a program already copied offers the copy instead', () async {
