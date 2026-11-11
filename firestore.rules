@@ -27,6 +27,24 @@ rules_version = '2';
 //   users/{uid}/**           owner                                  allow allow
 //   users/{uid}/**           anyone else                            deny  deny
 //   anything else            anyone                                 deny  deny
+//
+// Firestore ORs every matching `allow`, so a path a validating rule guards
+// must not also match a broader rule that allows it.
+//
+// users/{uid}/cardio/{id}, as the signed-in user `uid` (anyone else: deny):
+// | Request                                                        | Result |
+// |----------------------------------------------------------------|--------|
+// | read, list, delete own session                                 | allow  |
+// | create/update: type string, date timestamp, durationS 1-86400  | allow  |
+// | ... plus numeric distanceKm/calories/avgHeartRate/incline      | allow  |
+// | ... plus note string of at most 500 characters                 | allow  |
+// | ... plus fields the app does not know (kept by edits)          | allow  |
+// | missing type, date or durationS                                | deny   |
+// | type not a string, date not a timestamp                        | deny   |
+// | durationS 0, negative, above 86400 or not a number             | deny   |
+// | an optional number field holding a string or other non-number  | deny   |
+// | note not a string, or longer than 500 characters               | deny   |
+// | any request for another user's sessions, or signed out         | deny   |
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -54,9 +72,41 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function optionalNumber(data, field) {
+      return !(field in data) || data[field] is number;
+    }
+
+    function isCardio(data) {
+      return data.type is string
+        && data.date is timestamp
+        && data.durationS is number
+        && data.durationS > 0
+        && data.durationS <= 86400
+        && optionalNumber(data, 'distanceKm')
+        && optionalNumber(data, 'calories')
+        && optionalNumber(data, 'avgHeartRate')
+        && optionalNumber(data, 'incline')
+        && (!('note' in data) || (data.note is string && data.note.size() <= 500));
+    }
+
     // A user's own data, guest or not.
-    match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      // Validated; only reachable here, the rule below excludes it.
+      match /cardio/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isCardio(request.resource.data);
+      }
+
+      // Every other subcollection, at any depth, as before.
+      match /{collection}/{document=**} {
+        allow read, write: if isOwner(uid) && collection != 'cardio';
+      }
     }
 
     match /exercises/{id} {
