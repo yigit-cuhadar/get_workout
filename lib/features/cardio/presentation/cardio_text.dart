@@ -76,6 +76,7 @@ extension CardioText on AppLocalizations {
     CardioIssue.caloriesOutOfRange => cardioErrorCalories,
     CardioIssue.heartRateOutOfRange => cardioErrorHeartRate,
     CardioIssue.inclineOutOfRange => cardioErrorIncline,
+    CardioIssue.noteTooLong => cardioErrorNote,
   };
 
   String typeName(CardioType type) => switch (type) {

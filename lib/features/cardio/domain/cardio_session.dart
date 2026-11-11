@@ -14,11 +14,18 @@ enum DistanceUnit {
   double toKm(double value) => value * kmPerUnit;
 }
 
+/// The optional fields of a session; a partial update names the ones it
+/// writes.
+enum CardioField { distanceKm, calories, avgHeartRate, incline, note }
+
 /// One logged cardio session.
 class CardioSession extends Equatable {
-  const CardioSession({
+  /// [typeCode] is the stored code when it is none of [CardioType]'s, so a
+  /// newer app version's type survives an edit here; otherwise [type]'s.
+  CardioSession({
     this.id,
-    required this.type,
+    required CardioType type,
+    String? typeCode,
     required this.date,
     required this.duration,
     this.distanceKm,
@@ -26,11 +33,11 @@ class CardioSession extends Equatable {
     this.avgHeartRate,
     this.incline,
     this.note,
-  });
+  }) : typeCode = typeCode ?? type.code;
 
   /// Null until the session is stored.
   final String? id;
-  final CardioType type;
+  final String typeCode;
 
   /// When the session started.
   final DateTime date;
@@ -45,26 +52,35 @@ class CardioSession extends Equatable {
   final double? incline;
   final String? note;
 
-  /// Time per [unit] of distance; null without a distance.
+  /// Unknown codes read as [CardioType.other].
+  CardioType get type => CardioType.fromCode(typeCode);
+
+  /// Time per [unit] of distance; null without a usable distance.
   Duration? pace(DistanceUnit unit) {
     final distance = distanceKm;
     if (distance == null || distance <= 0) return null;
-    return Duration(
-      microseconds: (duration.inMicroseconds / unit.fromKm(distance)).round(),
-    );
+    final micros = duration.inMicroseconds / unit.fromKm(distance);
+    // Bounded so the rounding below never overflows or sees NaN.
+    if (!micros.isFinite || micros > _maxPaceMicros) return null;
+    return Duration(microseconds: micros.round());
   }
 
-  /// [unit]s per hour; null without a distance or duration.
+  static const _maxPaceMicros = 1000 * Duration.microsecondsPerDay;
+
+  /// [unit]s per hour; null without a usable distance and duration.
   double? speed(DistanceUnit unit) {
     final distance = distanceKm;
     if (distance == null || duration <= Duration.zero) return null;
-    return unit.fromKm(distance) /
+    final speed =
+        unit.fromKm(distance) /
         (duration.inMicroseconds / Duration.microsecondsPerHour);
+    return speed.isFinite ? speed : null;
   }
 
   CardioSession withId(String id) => CardioSession(
     id: id,
     type: type,
+    typeCode: typeCode,
     date: date,
     duration: duration,
     distanceKm: distanceKm,
@@ -77,7 +93,7 @@ class CardioSession extends Equatable {
   @override
   List<Object?> get props => [
     id,
-    type,
+    typeCode,
     date,
     duration,
     distanceKm,

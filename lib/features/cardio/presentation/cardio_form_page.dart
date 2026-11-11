@@ -89,13 +89,9 @@ class _CardioFormView extends StatefulWidget {
 
 class _CardioFormViewState extends State<_CardioFormView> {
   late final CardioFormCubit _cubit = context.read<CardioFormCubit>();
-  late final _hours = _controller(_part(_cubit.state.duration.inHours));
-  late final _minutes = _controller(
-    _part(_cubit.state.duration.inMinutes % 60),
-  );
-  late final _seconds = _controller(
-    _part(_cubit.state.duration.inSeconds % 60),
-  );
+  late final _hours = _controller(_cubit.state.hours);
+  late final _minutes = _controller(_cubit.state.minutes);
+  late final _seconds = _controller(_cubit.state.seconds);
   late final _distance = _controller(_cubit.state.distance);
   late final _calories = _controller(_cubit.state.calories);
   late final _heartRate = _controller(_cubit.state.heartRate);
@@ -107,22 +103,6 @@ class _CardioFormViewState extends State<_CardioFormView> {
     final controller = TextEditingController(text: text);
     _controllers.add(controller);
     return controller;
-  }
-
-  /// Empty when the session has no time in this part, so a new form starts
-  /// with blank fields.
-  String _part(int value) =>
-      _cubit.state.duration == Duration.zero ? '' : '$value';
-
-  void _durationChanged(String _) {
-    int read(TextEditingController c) => int.tryParse(c.text) ?? 0;
-    _cubit.setDuration(
-      Duration(
-        hours: read(_hours),
-        minutes: read(_minutes),
-        seconds: read(_seconds),
-      ),
-    );
   }
 
   @override
@@ -140,7 +120,9 @@ class _CardioFormViewState extends State<_CardioFormView> {
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
         switch (state.status) {
-          case CardioFormStatus.saved || CardioFormStatus.deleted:
+          case CardioFormStatus.saved ||
+              CardioFormStatus.deleted ||
+              CardioFormStatus.closed:
             context.pop();
           case CardioFormStatus.saveFailed || CardioFormStatus.deleteFailed:
             ScaffoldMessenger.of(
@@ -208,10 +190,22 @@ class _CardioFormViewState extends State<_CardioFormView> {
               Text(l10n.cardioDuration),
               Row(
                 children: [
-                  for (final (controller, label) in [
-                    (_hours, l10n.cardioHours),
-                    (_minutes, l10n.cardioMinutesShort),
-                    (_seconds, l10n.cardioSeconds),
+                  for (final (controller, label, onChanged) in [
+                    (
+                      _hours,
+                      l10n.cardioHours,
+                      (String text) => _cubit.setDuration(hours: text),
+                    ),
+                    (
+                      _minutes,
+                      l10n.cardioMinutesShort,
+                      (String text) => _cubit.setDuration(minutes: text),
+                    ),
+                    (
+                      _seconds,
+                      l10n.cardioSeconds,
+                      (String text) => _cubit.setDuration(seconds: text),
+                    ),
                   ])
                     Expanded(
                       child: Padding(
@@ -219,11 +213,9 @@ class _CardioFormViewState extends State<_CardioFormView> {
                         child: TextField(
                           controller: controller,
                           keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
+                          inputFormatters: _wholeNumber(5),
                           decoration: InputDecoration(labelText: label),
-                          onChanged: _durationChanged,
+                          onChanged: onChanged,
                         ),
                       ),
                     ),
@@ -238,18 +230,21 @@ class _CardioFormViewState extends State<_CardioFormView> {
                   ),
                   error: error(CardioIssue.distanceOutOfRange),
                   decimal: true,
+                  formatters: _decimalNumber(6),
                   onChanged: _cubit.setDistance,
                 ),
               _NumberField(
                 controller: _calories,
                 label: l10n.cardioCalories,
                 error: error(CardioIssue.caloriesOutOfRange),
+                formatters: _wholeNumber(5),
                 onChanged: _cubit.setCalories,
               ),
               _NumberField(
                 controller: _heartRate,
                 label: l10n.cardioHeartRate,
                 error: error(CardioIssue.heartRateOutOfRange),
+                formatters: _wholeNumber(3),
                 onChanged: _cubit.setHeartRate,
               ),
               if (state.type.incline)
@@ -259,6 +254,7 @@ class _CardioFormViewState extends State<_CardioFormView> {
                   error: error(CardioIssue.inclineOutOfRange),
                   decimal: true,
                   signed: true,
+                  formatters: _decimalNumber(5, signed: true),
                   onChanged: _cubit.setIncline,
                 ),
               const SizedBox(height: Gap.sm),
@@ -267,7 +263,13 @@ class _CardioFormViewState extends State<_CardioFormView> {
                 minLines: 1,
                 maxLines: 4,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(labelText: l10n.cardioNote),
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(CardioLimits.maxNoteLength),
+                ],
+                decoration: InputDecoration(
+                  labelText: l10n.cardioNote,
+                  errorText: error(CardioIssue.noteTooLong),
+                ),
                 onChanged: _cubit.setNote,
               ),
               const SizedBox(height: Gap.lg),
@@ -351,12 +353,28 @@ class _CardioFormViewState extends State<_CardioFormView> {
   }
 }
 
+/// Digits only, so nothing like "1e9" or "NaN" can be typed; the cubit
+/// still checks what it parses.
+List<TextInputFormatter> _wholeNumber(int maxLength) => [
+  FilteringTextInputFormatter.digitsOnly,
+  LengthLimitingTextInputFormatter(maxLength),
+];
+
+List<TextInputFormatter> _decimalNumber(
+  int maxLength, {
+  bool signed = false,
+}) => [
+  FilteringTextInputFormatter.allow(RegExp(signed ? r'[0-9.,-]' : r'[0-9.,]')),
+  LengthLimitingTextInputFormatter(maxLength),
+];
+
 class _NumberField extends StatelessWidget {
   const _NumberField({
     required this.controller,
     required this.label,
     required this.error,
     required this.onChanged,
+    required this.formatters,
     this.decimal = false,
     this.signed = false,
   });
@@ -365,6 +383,7 @@ class _NumberField extends StatelessWidget {
   final String label;
   final String? error;
   final ValueChanged<String> onChanged;
+  final List<TextInputFormatter> formatters;
   final bool decimal;
   final bool signed;
 
@@ -377,6 +396,7 @@ class _NumberField extends StatelessWidget {
         decimal: decimal,
         signed: signed,
       ),
+      inputFormatters: formatters,
       decoration: InputDecoration(labelText: label, errorText: error),
       onChanged: onChanged,
     ),

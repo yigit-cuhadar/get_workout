@@ -20,17 +20,23 @@ class CardioModule implements FeatureModule {
         () => FirestoreCardioRepository(FirebaseFirestore.instance),
       )
       ..registerFactory(() => WatchCardioSessions(sl()))
+      ..registerFactory(() => WatchRejectedCardioWrites(sl()))
       ..registerFactory(() => SaveCardioSession(sl()))
       ..registerFactory(() => DeleteCardioSession(sl()))
       // One list for the whole app: the list and the session pages share it.
       ..registerLazySingleton(
-        () => CardioListCubit(watchAuthUser: sl(), watchSessions: sl()),
+        () => CardioListCubit(
+          watchAuthUser: sl(),
+          watchSessions: sl(),
+          watchRejectedWrites: sl(),
+        ),
       )
       ..registerFactoryParam<CardioFormCubit, CardioSession?, DistanceUnit>(
         (session, unit) => CardioFormCubit(
           saveSession: sl(),
           deleteSession: sl(),
           getCurrentUser: sl(),
+          watchAuthUser: sl(),
           unit: unit,
           initial: session,
         ),

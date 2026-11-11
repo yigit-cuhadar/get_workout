@@ -23,41 +23,75 @@ class CardioListPage extends StatelessWidget {
   );
 }
 
-class _CardioListView extends StatelessWidget {
+class _CardioListView extends StatefulWidget {
   const _CardioListView();
+
+  @override
+  State<_CardioListView> createState() => _CardioListViewState();
+}
+
+class _CardioListViewState extends State<_CardioListView> {
+  late final CardioListCubit _cubit = context.read<CardioListCubit>();
+
+  late final AppLifecycleListener _lifecycle;
+
+  /// The chart's current week moves on while the page is away or the app
+  /// sleeps, without a new snapshot to recompute it.
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onResume: _cubit.refreshNow);
+    _cubit.refreshNow();
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final state = context.watch<CardioListCubit>().state;
-    final hasSessions = state.sessions.isNotEmpty;
-    void log() => context.go(Routes.cardioNew);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.cardioTitle)),
-      floatingActionButton: hasSessions
-          ? FloatingActionButton.extended(
-              onPressed: log,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.cardioLog),
-            )
-          : null,
-      body: switch (state.status) {
-        CardioListStatus.loading => const LoadingView(),
-        CardioListStatus.failure => ErrorView(
-          message: l10n.cardioLoadFailed,
-          retryLabel: l10n.retry,
-          onRetry: context.read<CardioListCubit>().retry,
-        ),
-        CardioListStatus.ready when !hasSessions => EmptyView(
-          message: l10n.cardioEmpty,
-          action: ForgeButton(label: l10n.cardioLog, onPressed: log),
-        ),
-        CardioListStatus.ready => _Sessions(state),
+    return BlocConsumer<CardioListCubit, CardioListState>(
+      listenWhen: (_, current) => current.writeRejected,
+      listener: (context, _) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.cardioWritesRejected)));
+        _cubit.rejectionShown();
+      },
+      builder: (context, state) {
+        final hasSessions = state.sessions.isNotEmpty;
+        void log() => context.go(Routes.cardioNew);
+        return Scaffold(
+          appBar: AppBar(title: Text(l10n.cardioTitle)),
+          floatingActionButton: hasSessions
+              ? FloatingActionButton.extended(
+                  onPressed: log,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.cardioLog),
+                )
+              : null,
+          body: switch (state.status) {
+            CardioListStatus.loading => const LoadingView(),
+            CardioListStatus.failure => ErrorView(
+              message: l10n.cardioLoadFailed,
+              retryLabel: l10n.retry,
+              onRetry: _cubit.retry,
+            ),
+            CardioListStatus.ready when !hasSessions => EmptyView(
+              message: l10n.cardioEmpty,
+              action: ForgeButton(label: l10n.cardioLog, onPressed: log),
+            ),
+            CardioListStatus.ready => _Sessions(state),
+          },
+        );
       },
     );
   }
 }
 
+/// The chart, then a header and the sessions of each week, built lazily.
 class _Sessions extends StatelessWidget {
   const _Sessions(this.state);
   final CardioListState state;
@@ -66,23 +100,23 @@ class _Sessions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final dates = MaterialLocalizations.of(context);
-    return ListView(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(Gap.md),
-          child: WeeklyCardioChart(weeks: state.chart),
+    final rows = <WidgetBuilder>[
+      (_) => Padding(
+        padding: const EdgeInsets.all(Gap.md),
+        child: WeeklyCardioChart(weeks: state.chart),
+      ),
+      for (final week in state.weeks) ...[
+        (_) => ListTile(
+          dense: true,
+          title: Text(l10n.cardioWeekOf(dates.formatShortMonthDay(week.start))),
+          trailing: Text(l10n.cardioMinutesOf(week.duration)),
         ),
-        for (final week in state.weeks) ...[
-          ListTile(
-            dense: true,
-            title: Text(
-              l10n.cardioWeekOf(dates.formatShortMonthDay(week.start)),
-            ),
-            trailing: Text(l10n.cardioMinutesOf(week.duration)),
-          ),
-          for (final session in week.sessions) _SessionTile(session),
-        ],
+        for (final session in week.sessions) (_) => _SessionTile(session),
       ],
+    ];
+    return ListView.builder(
+      itemCount: rows.length,
+      itemBuilder: (context, index) => rows[index](context),
     );
   }
 }

@@ -13,11 +13,6 @@ class CardioWeek extends Equatable {
   Duration get duration =>
       sessions.fold(Duration.zero, (sum, session) => sum + session.duration);
 
-  double get distanceKm =>
-      sessions.fold(0, (sum, session) => sum + (session.distanceKm ?? 0));
-
-  int get count => sessions.length;
-
   @override
   List<Object?> get props => [start, sessions];
 }

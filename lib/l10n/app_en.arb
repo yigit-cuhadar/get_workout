@@ -114,10 +114,12 @@
   "cardioErrorDuration": "Enter a duration",
   "cardioErrorDurationTooLong": "A session can last at most 24 hours",
   "cardioErrorDateInFuture": "The start can't be in the future",
-  "cardioErrorDistance": "Enter a distance up to 500 km (310 mi)",
+  "cardioErrorDistance": "Enter a distance from 0.01 to 500 km (310 mi)",
   "cardioErrorCalories": "Enter calories from 1 to 10000",
   "cardioErrorHeartRate": "Enter a heart rate from 30 to 240 bpm",
   "cardioErrorIncline": "Enter an incline from -10 to 40%",
+  "cardioErrorNote": "Keep the note under 500 characters",
+  "cardioWritesRejected": "Some changes couldn't be saved",
 
   "cardioTypeTreadmillRun": "Treadmill run",
   "cardioTypeTreadmillWalk": "Treadmill walk",

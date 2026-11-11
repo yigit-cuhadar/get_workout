@@ -9,20 +9,24 @@ enum CardioIssue {
   caloriesOutOfRange,
   heartRateOutOfRange,
   inclineOutOfRange,
+  noteTooLong,
 }
 
 abstract final class CardioLimits {
   static const maxDuration = Duration(hours: 24);
+  static const minDistanceKm = 0.01;
   static const maxDistanceKm = 500.0;
   static const maxCalories = 10000;
   static const minHeartRate = 30;
   static const maxHeartRate = 240;
   static const minIncline = -10.0;
   static const maxIncline = 40.0;
+  static const maxNoteLength = 500;
 }
 
 /// Everything wrong with [session] as of [now]; empty when it can be saved.
-/// Fields the session's type does not use are ignored.
+/// Fields the session's type does not use are ignored. NaN and infinities
+/// fail every range check.
 Set<CardioIssue> validateCardio(
   CardioSession session, {
   required DateTime now,
@@ -39,19 +43,29 @@ Set<CardioIssue> validateCardio(
     if (session.date.isAfter(now)) CardioIssue.dateInFuture,
     if (type.distance &&
         distance != null &&
-        (distance <= 0 || distance > CardioLimits.maxDistanceKm))
+        !_within(
+          distance,
+          CardioLimits.minDistanceKm,
+          CardioLimits.maxDistanceKm,
+        ))
       CardioIssue.distanceOutOfRange,
-    if (calories != null &&
-        (calories <= 0 || calories > CardioLimits.maxCalories))
+    if (calories != null && !_within(calories, 1, CardioLimits.maxCalories))
       CardioIssue.caloriesOutOfRange,
     if (heartRate != null &&
-        (heartRate < CardioLimits.minHeartRate ||
-            heartRate > CardioLimits.maxHeartRate))
+        !_within(
+          heartRate,
+          CardioLimits.minHeartRate,
+          CardioLimits.maxHeartRate,
+        ))
       CardioIssue.heartRateOutOfRange,
     if (type.incline &&
         incline != null &&
-        (incline < CardioLimits.minIncline ||
-            incline > CardioLimits.maxIncline))
+        !_within(incline, CardioLimits.minIncline, CardioLimits.maxIncline))
       CardioIssue.inclineOutOfRange,
+    if ((session.note?.length ?? 0) > CardioLimits.maxNoteLength)
+      CardioIssue.noteTooLong,
   };
 }
+
+/// False for NaN, whose comparisons are all false.
+bool _within(num value, num min, num max) => value >= min && value <= max;

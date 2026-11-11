@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
@@ -16,6 +18,7 @@ class MockCardioRepository extends Mock implements CardioRepository {}
 
 void main() {
   const member = AuthUser(id: 'u1', email: 'a@b.co');
+  const other = AuthUser(id: 'u2', email: 'c@d.co');
   final now = DateTime(2026, 11, 11, 12, 34, 56);
   final stored = CardioSession(
     id: 's1',
@@ -28,17 +31,32 @@ void main() {
     incline: 1.5,
     note: 'Steady',
   );
+  final unknown = CardioSession(
+    id: 's2',
+    type: CardioType.other,
+    typeCode: 'unicycle',
+    date: DateTime(2026, 11, 9, 8),
+    duration: const Duration(minutes: 10),
+    distanceKm: 3.2,
+    calories: 100,
+  );
 
   late MockAuthRepository auth;
   late MockCardioRepository cardio;
+  late StreamController<AuthUser?> users;
 
-  setUpAll(() => registerFallbackValue(stored));
+  setUpAll(() {
+    registerFallbackValue(stored);
+    registerFallbackValue(<CardioField>{});
+  });
 
   setUp(() {
     auth = MockAuthRepository();
     cardio = MockCardioRepository();
+    users = StreamController<AuthUser?>.broadcast();
     when(() => auth.currentUser).thenReturn(member);
-    when(() => cardio.saveSession(any(), any()))
+    when(() => auth.watchUser()).thenAnswer((_) => users.stream);
+    when(() => cardio.saveSession(any(), any(), fields: any(named: 'fields')))
         .thenAnswer((_) async => const Ok(null));
     when(() => cardio.deleteSession(any(), any()))
         .thenAnswer((_) async => const Ok(null));
@@ -51,14 +69,27 @@ void main() {
     saveSession: SaveCardioSession(cardio, clock: () => now),
     deleteSession: DeleteCardioSession(cardio),
     getCurrentUser: GetCurrentUser(auth),
+    watchAuthUser: WatchAuthUser(auth),
     unit: unit,
     initial: initial,
     clock: () => now,
   );
 
-  CardioSession saved() =>
-      verify(() => cardio.saveSession('u1', captureAny())).captured.single
-          as CardioSession;
+  /// The one save's session and fields.
+  (CardioSession, Set<CardioField>) saved() {
+    final captured = verify(
+      () => cardio.saveSession(
+        'u1',
+        captureAny(),
+        fields: captureAny(named: 'fields'),
+      ),
+    ).captured;
+    return (captured.first as CardioSession, captured.last as Set<CardioField>);
+  }
+
+  void neverSaved() => verifyNever(
+    () => cardio.saveSession(any(), any(), fields: any(named: 'fields')),
+  );
 
   group('initial state', () {
     test('a new session starts now, to the minute, with empty fields', () {
@@ -74,15 +105,14 @@ void main() {
     });
 
     test('an edit shows the stored values, distance in km', () {
-      final cubit = build(initial: stored);
-      expect(cubit.isEditing, isTrue);
-      expect(cubit.state.type, CardioType.treadmillRun);
-      expect(cubit.state.duration, stored.duration);
-      expect(cubit.state.distance, '10');
-      expect(cubit.state.calories, '600');
-      expect(cubit.state.heartRate, '150');
-      expect(cubit.state.incline, '1.5');
-      expect(cubit.state.note, 'Steady');
+      final state = build(initial: stored).state;
+      expect(state.type, CardioType.treadmillRun);
+      expect((state.hours, state.minutes, state.seconds), ('1', '2', '3'));
+      expect(state.distance, '10');
+      expect(state.calories, '600');
+      expect(state.heartRate, '150');
+      expect(state.incline, '1.5');
+      expect(state.note, 'Steady');
     });
 
     test('an edit shows the distance in miles for an imperial user', () {
@@ -91,9 +121,13 @@ void main() {
         '6.21',
       );
     });
+
+    test('an unknown stored type shows as other', () {
+      expect(build(initial: unknown).state.type, CardioType.other);
+    });
   });
 
-  group('save', () {
+  group('validation', () {
     blocTest<CardioFormCubit, CardioFormState>(
       'shows every issue and saves nothing while the form is invalid',
       build: build,
@@ -107,7 +141,7 @@ void main() {
               CardioIssue.heartRateOutOfRange,
             }),
       ],
-      verify: (_) => verifyNever(() => cardio.saveSession(any(), any())),
+      verify: (_) => neverSaved(),
     );
 
     blocTest<CardioFormCubit, CardioFormState>(
@@ -115,7 +149,7 @@ void main() {
       build: build,
       act: (cubit) async {
         await cubit.save();
-        cubit.setDuration(const Duration(minutes: 20));
+        cubit.setDuration(minutes: '20');
       },
       verify: (cubit) => expect(cubit.state.issues, isEmpty),
     );
@@ -132,23 +166,110 @@ void main() {
       build: build,
       act: (cubit) =>
           (cubit
-                ..setDuration(const Duration(minutes: 30))
+                ..setDuration(minutes: '30')
                 ..setDistance('5..2')
                 ..setCalories('1.5'))
               .save(),
+      verify: (cubit) {
+        expect(cubit.state.issues, {
+          CardioIssue.distanceOutOfRange,
+          CardioIssue.caloriesOutOfRange,
+        });
+        neverSaved();
+      },
+    );
+
+    for (final (text, issues) in [
+      ('NaN', {CardioIssue.distanceOutOfRange, CardioIssue.inclineOutOfRange}),
+      (
+        'Infinity',
+        {CardioIssue.distanceOutOfRange, CardioIssue.inclineOutOfRange},
+      ),
+      (
+        '-Infinity',
+        {CardioIssue.distanceOutOfRange, CardioIssue.inclineOutOfRange},
+      ),
+      (
+        '1e400',
+        {CardioIssue.distanceOutOfRange, CardioIssue.inclineOutOfRange},
+      ),
+      // Readable, but far below the minimum distance; a fine incline.
+      ('1e-300', {CardioIssue.distanceOutOfRange}),
+    ]) {
+      blocTest<CardioFormCubit, CardioFormState>(
+        '"$text" is never saved as a distance or incline',
+        build: build,
+        act: (cubit) =>
+            (cubit
+                  ..setType(CardioType.treadmillRun)
+                  ..setDuration(minutes: '30')
+                  ..setDistance(text)
+                  ..setIncline(text))
+                .save(),
+        verify: (cubit) {
+          expect(cubit.state.issues, issues);
+          neverSaved();
+        },
+      );
+    }
+
+    blocTest<CardioFormCubit, CardioFormState>(
+      'huge digit strings are issues, not numbers',
+      build: build,
+      act: (cubit) =>
+          (cubit
+                ..setDuration(minutes: '30')
+                ..setCalories('9' * 40)
+                ..setHeartRate('1' * 25))
+              .save(),
       verify: (cubit) => expect(cubit.state.issues, {
-        CardioIssue.distanceOutOfRange,
         CardioIssue.caloriesOutOfRange,
+        CardioIssue.heartRateOutOfRange,
       }),
     );
 
+    for (final (name, hours, minutes, seconds) in [
+      ('a digit string too long to read', '9' * 30, '', ''),
+      ('more minutes than a day holds', '', '99999', ''),
+      ('24 hours and a second', '24', '0', '1'),
+    ]) {
+      blocTest<CardioFormCubit, CardioFormState>(
+        'a duration of $name is too long, not zero',
+        build: build,
+        act: (cubit) =>
+            (cubit..setDuration(
+                  hours: hours,
+                  minutes: minutes,
+                  seconds: seconds,
+                ))
+                .save(),
+        verify: (cubit) {
+          expect(cubit.state.issues, {CardioIssue.durationTooLong});
+          neverSaved();
+        },
+      );
+    }
+
+    blocTest<CardioFormCubit, CardioFormState>(
+      'a note longer than 500 characters is an issue',
+      build: build,
+      act: (cubit) =>
+          (cubit
+                ..setDuration(minutes: '30')
+                ..setNote('x' * 501))
+              .save(),
+      verify: (cubit) => expect(cubit.state.issues, {CardioIssue.noteTooLong}),
+    );
+  });
+
+  group('save', () {
     blocTest<CardioFormCubit, CardioFormState>(
       'a valid new session is saved for the current user',
       build: build,
       act: (cubit) =>
           (cubit
                 ..setType(CardioType.treadmillWalk)
-                ..setDuration(const Duration(minutes: 45))
+                ..setDuration(hours: '1', minutes: '5', seconds: '30')
                 ..setDistance('4,5')
                 ..setCalories(' 300 ')
                 ..setHeartRate('')
@@ -158,11 +279,11 @@ void main() {
       verify: (cubit) {
         expect(cubit.state.status, CardioFormStatus.saved);
         expect(
-          saved(),
+          saved().$1,
           CardioSession(
             type: CardioType.treadmillWalk,
             date: DateTime(2026, 11, 11, 12, 34),
-            duration: const Duration(minutes: 45),
+            duration: const Duration(hours: 1, minutes: 5, seconds: 30),
             distanceKm: 4.5,
             calories: 300,
             incline: -2,
@@ -178,7 +299,7 @@ void main() {
       seed: () => CardioFormState(
         type: CardioType.hiit,
         date: DateTime(2026, 11, 11),
-        duration: const Duration(minutes: 20),
+        minutes: '20',
       ),
       act: (cubit) => cubit.save(),
       expect: () => [
@@ -200,10 +321,10 @@ void main() {
       build: () => build(unit: DistanceUnit.mile),
       act: (cubit) =>
           (cubit
-                ..setDuration(const Duration(minutes: 30))
+                ..setDuration(minutes: '30')
                 ..setDistance('3'))
               .save(),
-      verify: (_) => expect(saved().distanceKm, closeTo(4.828032, 1e-9)),
+      verify: (_) => expect(saved().$1.distanceKm, closeTo(4.828032, 1e-9)),
     );
 
     blocTest<CardioFormCubit, CardioFormState>(
@@ -211,7 +332,7 @@ void main() {
       build: () => build(initial: stored, unit: DistanceUnit.mile),
       act: (cubit) => (cubit..setNote('Changed')).save(),
       verify: (_) {
-        final session = saved();
+        final session = saved().$1;
         expect(session.id, 's1');
         expect(session.distanceKm, 10);
         expect(session.note, 'Changed');
@@ -219,16 +340,63 @@ void main() {
     );
 
     blocTest<CardioFormCubit, CardioFormState>(
-      'fields the new type does not use are dropped',
+      'an edit writes the fields the form shows; cleared ones are null',
+      build: () => build(initial: stored),
+      act: (cubit) => (cubit..setIncline('')).save(),
+      verify: (_) {
+        final (session, fields) = saved();
+        expect(fields, {...CardioField.values});
+        expect(session.incline, isNull);
+        expect(session.distanceKm, 10);
+      },
+    );
+
+    blocTest<CardioFormCubit, CardioFormState>(
+      'a type change drops what the new type does not use',
       build: () => build(initial: stored),
       act: (cubit) => (cubit..setType(CardioType.elliptical)).save(),
       verify: (_) {
-        final session = saved();
-        expect(session.type, CardioType.elliptical);
+        final (session, fields) = saved();
+        expect(session.typeCode, 'elliptical');
         expect(session.distanceKm, isNull);
         expect(session.incline, isNull);
         expect(session.calories, 600);
-        expect(session.avgHeartRate, 150);
+        // Named, so the stored distance and incline are removed.
+        expect(
+          fields,
+          containsAll([CardioField.distanceKm, CardioField.incline]),
+        );
+      },
+    );
+
+    blocTest<CardioFormCubit, CardioFormState>(
+      'an edit of an unknown type keeps its code and the fields it hides',
+      build: () => build(initial: unknown),
+      act: (cubit) =>
+          (cubit
+                ..setType(CardioType.other)
+                ..setCalories('120'))
+              .save(),
+      verify: (_) {
+        final (session, fields) = saved();
+        expect(session.typeCode, 'unicycle');
+        expect(session.calories, 120);
+        expect(fields, {
+          CardioField.calories,
+          CardioField.avgHeartRate,
+          CardioField.note,
+        });
+      },
+    );
+
+    blocTest<CardioFormCubit, CardioFormState>(
+      'picking a new type replaces an unknown one',
+      build: () => build(initial: unknown),
+      act: (cubit) => (cubit..setType(CardioType.outdoorCycle)).save(),
+      verify: (_) {
+        final (session, fields) = saved();
+        expect(session.typeCode, 'outdoor_cycle');
+        expect(fields, contains(CardioField.distanceKm));
       },
     );
 
@@ -236,9 +404,9 @@ void main() {
 
     blocTest<CardioFormCubit, CardioFormState>(
       'a failed save keeps the inputs and reports the failure',
-      setUp: () =>
-          when(() => cardio.saveSession(any(), any()))
-              .thenAnswer((_) async => const Err(failure)),
+      setUp: () => when(
+        () => cardio.saveSession(any(), any(), fields: any(named: 'fields')),
+      ).thenAnswer((_) async => const Err(failure)),
       build: () => build(initial: stored),
       act: (cubit) => cubit.save(),
       verify: (cubit) {
@@ -250,9 +418,9 @@ void main() {
 
     blocTest<CardioFormCubit, CardioFormState>(
       'editing after a failure clears it',
-      setUp: () =>
-          when(() => cardio.saveSession(any(), any()))
-              .thenAnswer((_) async => const Err(failure)),
+      setUp: () => when(
+        () => cardio.saveSession(any(), any(), fields: any(named: 'fields')),
+      ).thenAnswer((_) async => const Err(failure)),
       build: () => build(initial: stored),
       act: (cubit) async {
         await cubit.save();
@@ -263,18 +431,62 @@ void main() {
         expect(cubit.state.failure, isNull);
       },
     );
+  });
+
+  group('user change', () {
+    blocTest<CardioFormCubit, CardioFormState>(
+      'the same user signing in again keeps the form open',
+      build: () => build(initial: stored),
+      act: (_) => users.add(member),
+      expect: () => const <CardioFormState>[],
+    );
 
     blocTest<CardioFormCubit, CardioFormState>(
-      'never saves for a user other than the one it was opened for',
+      "another user closes the form, and it ignores input after that",
+      build: () => build(initial: stored),
+      act: (cubit) async {
+        users.add(other);
+        await pumpEventQueue();
+        cubit.setNote('typed late');
+        await cubit.save();
+        await cubit.delete();
+      },
+      expect: () => [
+        isA<CardioFormState>().having(
+          (s) => s.status,
+          'status',
+          CardioFormStatus.closed,
+        ),
+      ],
+      verify: (_) {
+        neverSaved();
+        verifyNever(() => cardio.deleteSession(any(), any()));
+      },
+    );
+
+    blocTest<CardioFormCubit, CardioFormState>(
+      'signing out closes a new-session form too',
+      build: build,
+      act: (_) => users.add(null),
+      expect: () => [
+        isA<CardioFormState>().having(
+          (s) => s.status,
+          'status',
+          CardioFormStatus.closed,
+        ),
+      ],
+    );
+
+    blocTest<CardioFormCubit, CardioFormState>(
+      'a user change not yet announced still blocks the save',
       build: () => build(initial: stored),
       act: (cubit) {
-        when(() => auth.currentUser)
-            .thenReturn(const AuthUser(id: 'u2', email: 'c@d.co'));
+        when(() => auth.currentUser).thenReturn(other);
         return cubit.save();
       },
       verify: (cubit) {
-        expect(cubit.state.status, CardioFormStatus.saveFailed);
-        verifyNever(() => cardio.saveSession(any(), any()));
+        expect(cubit.state.status, CardioFormStatus.closed);
+        neverSaved();
       },
     );
   });

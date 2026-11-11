@@ -12,6 +12,9 @@ class WeeklyCardioChart extends StatelessWidget {
 
   final List<CardioWeek> weeks;
 
+  /// Width to height of the bar area.
+  static const _aspectRatio = 3.0;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -27,7 +30,7 @@ class WeeklyCardioChart extends StatelessWidget {
         Text(l10n.cardioChartCaption, style: theme.textTheme.labelLarge),
         const SizedBox(height: Gap.sm),
         AspectRatio(
-          aspectRatio: 3,
+          aspectRatio: _aspectRatio,
           child: Row(
             children: [
               for (final week in weeks)
@@ -37,9 +40,7 @@ class WeeklyCardioChart extends StatelessWidget {
                         '${l10n.cardioWeekOf(dates.formatShortMonthDay(week.start))}'
                         ': ${l10n.cardioMinutesOf(week.duration)}',
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Gap.xs / 2,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
                       child: Align(
                         alignment: Alignment.bottomCenter,
                         child: FractionallySizedBox(

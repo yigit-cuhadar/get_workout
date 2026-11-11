@@ -30,6 +30,18 @@ CardioSession session({
 
 void main() {
   group('CardioType', () {
+    test('a session keeps an unknown stored code and shows it as other', () {
+      final odd = CardioSession(
+        type: CardioType.other,
+        typeCode: 'unicycle',
+        date: DateTime(2026, 11, 1),
+        duration: const Duration(minutes: 5),
+      );
+      expect(odd.typeCode, 'unicycle');
+      expect(odd.type, CardioType.other);
+      expect(session(type: CardioType.rowing).typeCode, 'rowing');
+    });
+
     test('every stored code reads back as its type', () {
       for (final type in CardioType.values) {
         expect(CardioType.fromCode(type.code), type);
@@ -100,6 +112,30 @@ void main() {
       expect(instant.speed(DistanceUnit.km), isNull);
     });
 
+    test('never fail on absurd or non-finite distances', () {
+      for (final km in [
+        double.nan,
+        double.infinity,
+        double.minPositive,
+        1e-300,
+        1e300,
+      ]) {
+        final odd = session(
+          duration: const Duration(hours: 24),
+          distanceKm: km,
+        );
+        expect(() => odd.pace(DistanceUnit.mile), returnsNormally);
+        expect(() => odd.speed(DistanceUnit.km), returnsNormally);
+      }
+      final tiny = session(distanceKm: 1e-300);
+      expect(tiny.pace(DistanceUnit.km), isNull);
+      expect(session(distanceKm: double.nan).pace(DistanceUnit.km), isNull);
+      expect(
+        session(distanceKm: double.infinity).speed(DistanceUnit.km),
+        isNull,
+      );
+    });
+
     test('miles convert both ways', () {
       expect(DistanceUnit.mile.toKm(1), 1.609344);
       expect(DistanceUnit.mile.fromKm(1.609344), 1);
@@ -143,8 +179,15 @@ void main() {
       });
     });
 
-    test('distance must be above zero and at most 500 km', () {
+    test('distance must be 0.01 to 500 km', () {
       expect(check(session(distanceKm: 0)), {CardioIssue.distanceOutOfRange});
+      expect(check(session(distanceKm: 0.009)), {
+        CardioIssue.distanceOutOfRange,
+      });
+      expect(check(session(distanceKm: 1e-300)), {
+        CardioIssue.distanceOutOfRange,
+      });
+      expect(check(session(distanceKm: 0.01)), isEmpty);
       expect(check(session(distanceKm: 500)), isEmpty);
       expect(check(session(distanceKm: 500.1)), {
         CardioIssue.distanceOutOfRange,
@@ -178,6 +221,37 @@ void main() {
       expect(check(treadmill(41)), {CardioIssue.inclineOutOfRange});
     });
 
+    test('NaN and infinities are out of range', () {
+      for (final bad in [
+        double.nan,
+        double.infinity,
+        double.negativeInfinity,
+      ]) {
+        expect(
+          check(
+            session(
+              type: CardioType.treadmillRun,
+              distanceKm: bad,
+              incline: bad,
+            ),
+          ),
+          {CardioIssue.distanceOutOfRange, CardioIssue.inclineOutOfRange},
+          reason: '$bad',
+        );
+      }
+    });
+
+    test('a note may have at most 500 characters', () {
+      CardioSession noted(int length) => CardioSession(
+        type: CardioType.hiit,
+        date: DateTime(2026, 11, 10),
+        duration: const Duration(minutes: 20),
+        note: 'x' * length,
+      );
+      expect(check(noted(500)), isEmpty);
+      expect(check(noted(501)), {CardioIssue.noteTooLong});
+    });
+
     test('fields the type does not use are ignored', () {
       expect(
         check(session(type: CardioType.hiit, distanceKm: -1, incline: 99)),
@@ -208,28 +282,42 @@ void main() {
     late SaveCardioSession save;
     final now = DateTime(2026, 11, 11, 12);
 
-    setUpAll(() => registerFallbackValue(session()));
+    setUpAll(() {
+      registerFallbackValue(session());
+      registerFallbackValue(<CardioField>{});
+    });
 
     setUp(() {
       repository = MockCardioRepository();
       save = SaveCardioSession(repository, clock: () => now);
-      when(() => repository.saveSession(any(), any()))
-          .thenAnswer((_) async => const Ok(null));
+      when(
+        () =>
+            repository.saveSession(any(), any(), fields: any(named: 'fields')),
+      ).thenAnswer((_) async => const Ok(null));
     });
 
     test('saves a valid session for the user', () async {
       final valid = session(distanceKm: 5);
-      expect((await save((uid: 'u1', session: valid))).isOk, isTrue);
-      verify(() => repository.saveSession('u1', valid)).called(1);
+      const fields = {CardioField.note};
+      expect(
+        (await save((uid: 'u1', session: valid, fields: fields))).isOk,
+        isTrue,
+      );
+      verify(() => repository.saveSession('u1', valid, fields: fields))
+          .called(1);
     });
 
     test('refuses an invalid session without touching storage', () async {
       final result = await save((
         uid: 'u1',
         session: session(duration: Duration.zero),
+        fields: const <CardioField>{},
       ));
       expect(result.failureOrNull, isA<ValidationFailure>());
-      verifyNever(() => repository.saveSession(any(), any()));
+      verifyNever(
+        () =>
+            repository.saveSession(any(), any(), fields: any(named: 'fields')),
+      );
     });
   });
 
@@ -273,8 +361,7 @@ void main() {
       ]);
       expect(weeks[1].sessions, [sessions[1], sessions[2]]);
       expect(weeks[1].duration, const Duration(minutes: 65));
-      expect(weeks[1].distanceKm, 8);
-      expect(weeks[1].count, 2);
+      expect(weeks[1].sessions, hasLength(2));
     });
 
     test('lastWeeks gives 12 weeks oldest first, empty ones included', () {
@@ -295,9 +382,8 @@ void main() {
       expect(weeks.last.duration, const Duration(minutes: 30));
       expect(weeks[10].start, DateTime(2025, 12, 29));
       expect(weeks[10].duration, const Duration(minutes: 60));
-      expect(weeks[10].distanceKm, 3);
-      expect(weeks[10].count, 2);
-      expect(weeks.take(10).every((w) => w.count == 0), isTrue);
+      expect(weeks[10].sessions, hasLength(2));
+      expect(weeks.take(10).every((w) => w.sessions.isEmpty), isTrue);
     });
 
     // Daylight saving starts on 29 Mar 2026 in the EU and 8 Mar 2026 in the

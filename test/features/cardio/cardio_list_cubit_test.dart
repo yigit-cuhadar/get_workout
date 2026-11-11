@@ -19,7 +19,7 @@ class MockCardioRepository extends Mock implements CardioRepository {}
 void main() {
   const guest = AuthUser(id: 'g1', isAnonymous: true);
   const member = AuthUser(id: 'u1', email: 'a@b.co');
-  final now = DateTime(2026, 11, 11, 12);
+  var now = DateTime(2026, 11, 11, 12);
   final guestRun = CardioSession(
     id: 'a',
     type: CardioType.outdoorRun,
@@ -37,12 +37,16 @@ void main() {
   late MockCardioRepository cardio;
   late StreamController<AuthUser?> users;
   late Map<String, StreamController<List<CardioSession>>> stored;
+  late StreamController<Failure> rejected;
 
   setUp(() {
     auth = MockAuthRepository();
     cardio = MockCardioRepository();
     users = StreamController<AuthUser?>();
     stored = {};
+    rejected = StreamController<Failure>.broadcast();
+    now = DateTime(2026, 11, 11, 12);
+    when(() => cardio.rejectedWrites).thenAnswer((_) => rejected.stream);
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
     when(() => cardio.watchSessions(any())).thenAnswer(
       (call) => stored
@@ -57,6 +61,7 @@ void main() {
   CardioListCubit build() => CardioListCubit(
     watchAuthUser: WatchAuthUser(auth),
     watchSessions: WatchCardioSessions(cardio),
+    watchRejectedWrites: WatchRejectedCardioWrites(cardio),
     clock: () => now,
   );
 
@@ -160,5 +165,68 @@ void main() {
       ready([memberRide]),
     ],
     verify: (_) => verify(() => cardio.watchSessions('u1')).called(2),
+  );
+
+  blocTest<CardioListCubit, CardioListState>(
+    'a rejected write is reported once, until shown',
+    build: build,
+    act: (cubit) async {
+      users.add(member);
+      await pumpEventQueue();
+      stored['u1']!.add([memberRide]);
+      await pumpEventQueue();
+      rejected
+        ..add(const PermissionFailure())
+        ..add(const PermissionFailure());
+      await pumpEventQueue();
+      cubit.rejectionShown();
+    },
+    expect: () => [
+      ready([memberRide]),
+      ready([memberRide]).copyWith(writeRejected: true),
+      ready([memberRide]),
+    ],
+  );
+
+  blocTest<CardioListCubit, CardioListState>(
+    'a rejection survives a user change until it is shown',
+    build: build,
+    act: (_) async {
+      rejected.add(const PermissionFailure());
+      await pumpEventQueue();
+      users.add(member);
+    },
+    verify: (cubit) => expect(cubit.state.writeRejected, isTrue),
+  );
+
+  blocTest<CardioListCubit, CardioListState>(
+    'refreshNow moves the chart to the current week without a snapshot',
+    build: build,
+    act: (cubit) async {
+      users.add(member);
+      await pumpEventQueue();
+      stored['u1']!.add([guestRun]);
+      await pumpEventQueue();
+      // A week later, guestRun's week is no longer the current one.
+      now = now.add(const Duration(days: 7));
+      cubit.refreshNow();
+    },
+    skip: 1,
+    expect: () => [
+      isA<CardioListState>()
+          .having(
+            (s) => s.chart.last.start,
+            'current week',
+            DateTime(2026, 11, 16),
+          )
+          .having((s) => s.chart[10].sessions, 'last week', [guestRun]),
+    ],
+  );
+
+  blocTest<CardioListCubit, CardioListState>(
+    'refreshNow while loading does nothing',
+    build: build,
+    act: (cubit) => cubit.refreshNow(),
+    expect: () => const <CardioListState>[],
   );
 }

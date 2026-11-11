@@ -73,11 +73,13 @@ void main() {
     final cardio = MockCardioRepository();
     sessions = StreamController<List<CardioSession>>();
     when(() => cardio.watchSessions('u1')).thenAnswer((_) => sessions.stream);
+    when(() => cardio.rejectedWrites).thenAnswer((_) => const Stream.empty());
     sl
       ..registerLazySingleton(
         () => CardioListCubit(
           watchAuthUser: WatchAuthUser(sessionAuth),
           watchSessions: WatchCardioSessions(cardio),
+          watchRejectedWrites: WatchRejectedCardioWrites(cardio),
         ),
       )
       ..registerFactoryParam<CardioFormCubit, CardioSession?, DistanceUnit>(
@@ -85,6 +87,7 @@ void main() {
           saveSession: SaveCardioSession(cardio),
           deleteSession: DeleteCardioSession(cardio),
           getCurrentUser: GetCurrentUser(sessionAuth),
+          watchAuthUser: WatchAuthUser(sessionAuth),
           unit: unit,
           initial: session,
         ),

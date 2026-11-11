@@ -4,7 +4,13 @@ import 'cardio_repository.dart';
 import 'cardio_session.dart';
 import 'cardio_validation.dart';
 
-typedef CardioSave = ({String uid, CardioSession session});
+/// [fields] are the optional fields an edit writes; see
+/// [CardioRepository.saveSession].
+typedef CardioSave = ({
+  String uid,
+  CardioSession session,
+  Set<CardioField> fields,
+});
 typedef CardioDelete = ({String uid, String id});
 
 class WatchCardioSessions {
@@ -13,6 +19,13 @@ class WatchCardioSessions {
 
   Stream<List<CardioSession>> call(String uid) =>
       _repository.watchSessions(uid);
+}
+
+class WatchRejectedCardioWrites {
+  const WatchRejectedCardioWrites(this._repository);
+  final CardioRepository _repository;
+
+  Stream<Failure> call() => _repository.rejectedWrites;
 }
 
 /// Saves a valid session; an invalid one is refused with a
@@ -29,7 +42,11 @@ class SaveCardioSession implements UseCase<void, CardioSave> {
     if (issues.isNotEmpty) {
       return Err(ValidationFailure(issues.map((i) => i.name).join(', ')));
     }
-    return _repository.saveSession(params.uid, params.session);
+    return _repository.saveSession(
+      params.uid,
+      params.session,
+      fields: params.fields,
+    );
   }
 }
 

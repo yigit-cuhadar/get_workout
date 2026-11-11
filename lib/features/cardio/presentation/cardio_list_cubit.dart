@@ -17,6 +17,7 @@ class CardioListState extends Equatable {
     this.weeks = const [],
     this.chart = const [],
     this.failure,
+    this.writeRejected = false,
   });
 
   final CardioListStatus status;
@@ -31,8 +32,29 @@ class CardioListState extends Equatable {
   final List<CardioWeek> chart;
   final Failure? failure;
 
+  /// The server refused a save or delete that already looked done; tell the
+  /// user, then call [CardioListCubit.rejectionShown].
+  final bool writeRejected;
+
+  CardioListState copyWith({List<CardioWeek>? chart, bool? writeRejected}) =>
+      CardioListState(
+        status: status,
+        sessions: sessions,
+        weeks: weeks,
+        chart: chart ?? this.chart,
+        failure: failure,
+        writeRejected: writeRejected ?? this.writeRejected,
+      );
+
   @override
-  List<Object?> get props => [status, sessions, weeks, chart, failure];
+  List<Object?> get props => [
+    status,
+    sessions,
+    weeks,
+    chart,
+    failure,
+    writeRejected,
+  ];
 }
 
 /// The cardio sessions of whoever is signed in. Resets to loading on every
@@ -41,6 +63,7 @@ class CardioListCubit extends Cubit<CardioListState> {
   CardioListCubit({
     required WatchAuthUser watchAuthUser,
     required this._watchSessions,
+    required WatchRejectedCardioWrites watchRejectedWrites,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now,
        super(const CardioListState()) {
@@ -48,11 +71,15 @@ class CardioListCubit extends Cubit<CardioListState> {
         .map((user) => user?.id)
         .distinct()
         .listen(_onUser);
+    _rejectedSubscription = watchRejectedWrites().listen(
+      (_) => emit(state.copyWith(writeRejected: true)),
+    );
   }
 
   final WatchCardioSessions _watchSessions;
   final DateTime Function() _clock;
   late final StreamSubscription<String?> _userSubscription;
+  late final StreamSubscription<Failure> _rejectedSubscription;
   StreamSubscription<List<CardioSession>>? _sessionsSubscription;
   String? _uid;
 
@@ -64,9 +91,18 @@ class CardioListCubit extends Cubit<CardioListState> {
   /// Subscribes again after a failure.
   void retry() => _follow();
 
+  void rejectionShown() => emit(state.copyWith(writeRejected: false));
+
+  /// Moves the 12-week chart to the current week, e.g. after the app was in
+  /// the background over a Monday.
+  void refreshNow() {
+    if (state.status != CardioListStatus.ready) return;
+    emit(state.copyWith(chart: lastWeeks(state.sessions, now: _clock())));
+  }
+
   void _follow() {
     unawaited(_sessionsSubscription?.cancel());
-    const loading = CardioListState();
+    final loading = CardioListState(writeRejected: state.writeRejected);
     if (state != loading) emit(loading);
     final uid = _uid;
     _sessionsSubscription = uid == null
@@ -78,6 +114,7 @@ class CardioListCubit extends Cubit<CardioListState> {
                 sessions: sessions,
                 weeks: groupByWeek(sessions),
                 chart: lastWeeks(sessions, now: _clock()),
+                writeRejected: state.writeRejected,
               ),
             ),
             onError: (Object error) => emit(
@@ -86,6 +123,7 @@ class CardioListCubit extends Cubit<CardioListState> {
                 failure: error is Failure
                     ? error
                     : UnknownFailure('$error', error),
+                writeRejected: state.writeRejected,
               ),
             ),
           );
@@ -94,6 +132,7 @@ class CardioListCubit extends Cubit<CardioListState> {
   @override
   Future<void> close() async {
     await _userSubscription.cancel();
+    await _rejectedSubscription.cancel();
     await _sessionsSubscription?.cancel();
     return super.close();
   }
