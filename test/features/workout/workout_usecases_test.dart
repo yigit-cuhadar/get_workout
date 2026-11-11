@@ -72,7 +72,7 @@ void main() {
         kind: RecordKind.heaviestWeight,
         value: 110,
       ),
-      NewRecord(
+      const NewRecord(
         exerciseId: 'squat',
         name: 'squat',
         kind: RecordKind.bestE1rm,
