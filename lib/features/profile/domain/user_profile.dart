@@ -1,9 +1,6 @@
 import 'package:forge_core/forge_core.dart';
 
-import '../../calculators/domain/calories.dart';
 import '../../exercises/domain/vocabulary.dart';
-
-export '../../calculators/domain/calories.dart' show Sex;
 
 enum Goal implements Coded {
   buildMuscle('build_muscle'),
@@ -12,6 +9,17 @@ enum Goal implements Coded {
   generalFitness('general_fitness');
 
   const Goal(this.code);
+  @override
+  final String code;
+}
+
+/// The two sexes the calorie (Mifflin-St Jeor) and body-fat (US Navy)
+/// formulas define.
+enum Sex implements Coded {
+  male('male'),
+  female('female');
+
+  const Sex(this.code);
   @override
   final String code;
 }

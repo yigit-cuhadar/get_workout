@@ -384,7 +384,6 @@
   "profileNotAnswered": "Not answered",
 
   "onboardingNext": "Next",
-  "onboardingBack": "Back",
   "onboardingSkip": "Skip for now",
   "onboardingStart": "Start training",
   "onboardingProgress": "Question {step} of {count}",

@@ -86,7 +86,7 @@ class FirestoreProfileRepository implements ProfileRepository {
         ProfileField.level => profile.level?.code,
         ProfileField.daysPerWeek => profile.daysPerWeek,
         ProfileField.equipment => null,
-        ProfileField.sex => profile.sex?.name,
+        ProfileField.sex => profile.sex?.code,
         ProfileField.birthYear => profile.birthYear,
         ProfileField.height => profile.heightCm,
         ProfileField.weight => profile.weightKg,
@@ -106,7 +106,7 @@ class FirestoreProfileRepository implements ProfileRepository {
           ? {for (final code in equipment) ?Equipment.values.byCode(code)}
                 .difference(const {Equipment.bodyweight})
           : null,
-      sex: Sex.values.asNameMap()[map['sex']],
+      sex: Sex.values.byCode(map['sex']),
       birthYear: _int(map['birthYear']),
       heightCm: _double(map['heightCm']),
       weightKg: _double(map['weightKg']),
