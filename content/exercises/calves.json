@@ -1,0 +1,575 @@
+[
+  {
+    "id": "ex_standing_calf_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "calf_raise",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 29,
+    "l10n": {
+      "en": {
+        "name": "Standing Calf Raise",
+        "aliases": [
+          "Machine Calf Raise",
+          "Standing Calf Raise Machine"
+        ],
+        "setup": [
+          "Stand with the balls of your feet on the edge of the platform and the pads on your shoulders.",
+          "Straighten your legs with knees soft."
+        ],
+        "execution": [
+          "Lower your heels as far as you can for a full stretch.",
+          "Rise onto your toes as high as possible and pause."
+        ],
+        "mistakes": [
+          "Bouncing at the bottom.",
+          "Bending the knees to push the weight."
+        ],
+        "cues": [
+          "Stretch, pause, squeeze"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_seated_calf_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "seated_calf_raise",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 66,
+    "l10n": {
+      "en": {
+        "name": "Seated Calf Raise",
+        "aliases": [
+          "Seated Calf Machine"
+        ],
+        "setup": [
+          "Sit in the machine with the balls of your feet on the platform.",
+          "Fix the pad snugly over your lower thighs."
+        ],
+        "execution": [
+          "Lower your heels into a deep stretch.",
+          "Push up onto your toes and pause."
+        ],
+        "mistakes": [
+          "Short, bouncy reps.",
+          "Lifting with the hands."
+        ],
+        "cues": [
+          "Full stretch every rep"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bodyweight_calf_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "calf_raise",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 119,
+    "l10n": {
+      "en": {
+        "name": "Bodyweight Calf Raise",
+        "aliases": [
+          "Calf Raise",
+          "Heel Raise"
+        ],
+        "setup": [
+          "Stand on the edge of a step with your heels hanging off, or on flat ground.",
+          "Hold a wall or rail for balance."
+        ],
+        "execution": [
+          "Lower your heels as far as you can.",
+          "Rise onto your toes as high as you can and pause."
+        ],
+        "mistakes": [
+          "Rushing.",
+          "Rolling onto the outside of the foot."
+        ],
+        "cues": [
+          "High on the big toe"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_single_leg_calf_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "calf_raise",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 133,
+    "l10n": {
+      "en": {
+        "name": "Single-Leg Calf Raise",
+        "aliases": [],
+        "setup": [
+          "Stand on one foot on the edge of a step.",
+          "Hold a support for balance."
+        ],
+        "execution": [
+          "Lower the heel slowly.",
+          "Rise as high as you can."
+        ],
+        "mistakes": [
+          "Bending the knee to bounce.",
+          "Half reps."
+        ],
+        "cues": [
+          "Slow down, high up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_leg_press_calf_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "calf_raise",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 148,
+    "l10n": {
+      "en": {
+        "name": "Leg Press Calf Raise",
+        "aliases": [
+          "Calf Press"
+        ],
+        "setup": [
+          "Sit in the leg press with the balls of your feet on the bottom edge of the platform.",
+          "Straighten your legs without locking them."
+        ],
+        "execution": [
+          "Let the platform push your toes back for a stretch.",
+          "Press it away with your toes."
+        ],
+        "mistakes": [
+          "Letting the feet slip.",
+          "Bending the knees."
+        ],
+        "safety": "Keep a firm foot position so the platform cannot slide off your toes.",
+        "cues": [
+          "Toes push, knees still"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_single_leg_calf_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "calf_raise",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 2,
+    "popularity": 156,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Single-Leg Calf Raise",
+        "aliases": [],
+        "setup": [
+          "Hold a dumbbell in one hand and stand on the same-side foot on a step.",
+          "Hold a support with the other hand."
+        ],
+        "execution": [
+          "Lower the heel.",
+          "Rise high and pause."
+        ],
+        "mistakes": [
+          "Bouncing.",
+          "Leaning on the support too much."
+        ],
+        "cues": [
+          "Full range"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_smith_machine_calf_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "smith_machine"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "calf_raise",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 183,
+    "l10n": {
+      "en": {
+        "name": "Smith Machine Calf Raise",
+        "aliases": [],
+        "setup": [
+          "Place a plate or step under the Smith bar and stand on it with your heels off.",
+          "Rest the bar on your upper back."
+        ],
+        "execution": [
+          "Lower the heels.",
+          "Rise onto your toes and pause."
+        ],
+        "mistakes": [
+          "Short range.",
+          "Bending the knees."
+        ],
+        "cues": [
+          "Pause at the top"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_tibialis_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "tibialis_raise",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 219,
+    "l10n": {
+      "en": {
+        "name": "Tibialis Raise",
+        "aliases": [
+          "Tib Raise",
+          "Toe Raise"
+        ],
+        "setup": [
+          "Lean your back against a wall with your feet about a foot in front.",
+          "Keep your legs straight."
+        ],
+        "execution": [
+          "Lift your toes toward your shins as high as you can.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Bending the knees.",
+          "Rushing."
+        ],
+        "cues": [
+          "Toes to shins"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_seated_dumbbell_calf_raise",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "seated_calf_raise",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 2,
+    "popularity": 241,
+    "l10n": {
+      "en": {
+        "name": "Seated Dumbbell Calf Raise",
+        "aliases": [],
+        "setup": [
+          "Sit on a bench with the balls of your feet on a plate or step.",
+          "Rest dumbbells on your lower thighs."
+        ],
+        "execution": [
+          "Lower your heels.",
+          "Rise onto your toes."
+        ],
+        "mistakes": [
+          "Short range.",
+          "Lifting with the hands."
+        ],
+        "cues": [
+          "Big stretch"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_pogo_hop",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [
+      "quads"
+    ],
+    "family": "pogo_hop",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 262,
+    "l10n": {
+      "en": {
+        "name": "Pogo Hop",
+        "aliases": [
+          "Pogo Jump",
+          "Ankle Hop"
+        ],
+        "setup": [
+          "Stand tall with feet hip-width apart.",
+          "Keep your knees nearly straight."
+        ],
+        "execution": [
+          "Bounce quickly off the balls of your feet with stiff ankles.",
+          "Keep each ground contact as short as possible."
+        ],
+        "mistakes": [
+          "Bending the knees a lot.",
+          "Landing on the heels."
+        ],
+        "cues": [
+          "Quick, springy contacts"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_calf_press",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [],
+    "family": "band_calf_press",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 286,
+    "l10n": {
+      "en": {
+        "name": "Band Calf Press",
+        "aliases": [
+          "Band Plantar Flexion"
+        ],
+        "setup": [
+          "Sit on the floor with legs straight.",
+          "Loop a band around the balls of your feet and hold the ends."
+        ],
+        "execution": [
+          "Point your toes away against the band.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Bending the knees.",
+          "Letting the band snap back."
+        ],
+        "cues": [
+          "Point and return"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_jump_rope",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "other"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [
+      "quads",
+      "front_delt"
+    ],
+    "family": "jump_rope",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 300,
+    "l10n": {
+      "en": {
+        "name": "Jump Rope",
+        "aliases": [
+          "Skipping Rope"
+        ],
+        "setup": [
+          "Hold the rope handles at hip height.",
+          "Set the rope behind your heels."
+        ],
+        "execution": [
+          "Turn the rope with your wrists and hop over it on the balls of your feet.",
+          "Keep the hops low and steady."
+        ],
+        "mistakes": [
+          "Jumping too high.",
+          "Turning the rope with the whole arm."
+        ],
+        "cues": [
+          "Low hops, wrists turn"
+        ]
+      }
+    }
+  }
+]

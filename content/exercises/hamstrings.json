@@ -1,0 +1,1257 @@
+[
+  {
+    "id": "ex_barbell_deadlift",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "grip": "mixed",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "erector",
+      "quads",
+      "trap",
+      "forearm"
+    ],
+    "family": "deadlift",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 180,
+    "incrementKg": 5,
+    "popularity": 3,
+    "l10n": {
+      "en": {
+        "name": "Barbell Deadlift",
+        "aliases": [
+          "Deadlift",
+          "Conventional Deadlift"
+        ],
+        "setup": [
+          "Stand with the bar over the middle of your feet, feet about hip width.",
+          "Hinge down and grip the bar just outside your legs.",
+          "Bend your knees until your shins touch the bar, then lift your chest and flatten your back."
+        ],
+        "execution": [
+          "Brace hard and push the floor away, keeping the bar against your legs.",
+          "Stand tall by driving the hips forward once the bar passes your knees.",
+          "Lower the bar by pushing the hips back first, then bending the knees."
+        ],
+        "mistakes": [
+          "Rounding the lower back.",
+          "Letting the bar drift away from the legs.",
+          "Leaning back hard at the top."
+        ],
+        "safety": "Keep a flat back; reduce the weight as soon as your back starts to round.",
+        "cues": [
+          "Push the floor away",
+          "Bar stays close",
+          "Chest up, hips through"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_romanian_deadlift",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "erector",
+      "forearm"
+    ],
+    "family": "romanian_deadlift",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 2.5,
+    "popularity": 20,
+    "l10n": {
+      "en": {
+        "name": "Romanian Deadlift",
+        "aliases": [
+          "RDL",
+          "Barbell RDL"
+        ],
+        "setup": [
+          "Stand tall holding the bar at your thighs with an overhand grip.",
+          "Soften your knees slightly."
+        ],
+        "execution": [
+          "Push your hips back and slide the bar down your thighs while your back stays flat.",
+          "Stop when you feel a strong stretch in your hamstrings, usually around mid-shin.",
+          "Drive the hips forward to stand tall."
+        ],
+        "mistakes": [
+          "Bending the knees more and turning it into a squat.",
+          "Rounding the back to reach lower."
+        ],
+        "cues": [
+          "Hips back",
+          "Bar close to the legs"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_lying_leg_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "calf"
+    ],
+    "family": "leg_curl",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 33,
+    "l10n": {
+      "en": {
+        "name": "Lying Leg Curl",
+        "aliases": [
+          "Prone Leg Curl",
+          "Hamstring Curl"
+        ],
+        "setup": [
+          "Lie face down on the machine with your knees just past the edge of the pad.",
+          "Set the pad just above your heels."
+        ],
+        "execution": [
+          "Curl your heels toward your glutes.",
+          "Lower slowly until your legs are almost straight."
+        ],
+        "mistakes": [
+          "Lifting the hips off the pad.",
+          "Dropping the weight quickly."
+        ],
+        "cues": [
+          "Hips down",
+          "Slow lowering"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_seated_leg_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "calf"
+    ],
+    "family": "leg_curl",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 40,
+    "l10n": {
+      "en": {
+        "name": "Seated Leg Curl",
+        "aliases": [
+          "Seated Hamstring Curl"
+        ],
+        "setup": [
+          "Sit with your knees lined up with the machine's pivot.",
+          "Lock the thigh pad down over your legs."
+        ],
+        "execution": [
+          "Curl your heels under the seat.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Rushing the return.",
+          "Leaning forward."
+        ],
+        "cues": [
+          "Squeeze, then slow"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_romanian_deadlift",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "erector",
+      "forearm"
+    ],
+    "family": "romanian_deadlift",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 60,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Romanian Deadlift",
+        "aliases": [
+          "DB RDL"
+        ],
+        "setup": [
+          "Stand tall holding a dumbbell in each hand in front of your thighs.",
+          "Soften your knees slightly."
+        ],
+        "execution": [
+          "Push your hips back and lower the dumbbells along your legs with a flat back.",
+          "Drive your hips forward to stand."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Squatting down instead of hinging."
+        ],
+        "cues": [
+          "Hips back, back flat"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_trap_bar_deadlift",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "grip": "neutral",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "trap_bar"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "erector",
+      "trap",
+      "forearm"
+    ],
+    "family": "deadlift",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 180,
+    "incrementKg": 5,
+    "popularity": 69,
+    "l10n": {
+      "en": {
+        "name": "Trap Bar Deadlift",
+        "aliases": [
+          "Hex Bar Deadlift"
+        ],
+        "setup": [
+          "Stand in the centre of the trap bar with feet hip-width apart.",
+          "Hinge and bend your knees to grip the handles.",
+          "Flatten your back and lift your chest."
+        ],
+        "execution": [
+          "Push through the floor to stand up tall.",
+          "Lower the bar by pushing the hips back and bending the knees."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Letting the hips shoot up first."
+        ],
+        "cues": [
+          "Push the floor away"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_sumo_deadlift",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "grip": "mixed",
+    "gripWidth": "narrow",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "glute",
+      "adductor"
+    ],
+    "secondaryMuscles": [
+      "quads",
+      "hamstring",
+      "erector",
+      "forearm"
+    ],
+    "family": "deadlift",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 180,
+    "incrementKg": 5,
+    "popularity": 95,
+    "l10n": {
+      "en": {
+        "name": "Sumo Deadlift",
+        "aliases": [],
+        "setup": [
+          "Stand with feet wide and toes turned out, shins close to the bar.",
+          "Grip the bar inside your legs with arms straight down.",
+          "Push your knees out and lift your chest."
+        ],
+        "execution": [
+          "Push the floor apart and stand up, keeping the bar close.",
+          "Lock out by squeezing your glutes.",
+          "Lower under control."
+        ],
+        "mistakes": [
+          "Knees caving in.",
+          "Hips rising before the bar moves."
+        ],
+        "safety": "Keep a flat back; reduce the weight as soon as your back starts to round.",
+        "cues": [
+          "Spread the floor"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_good_morning",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "wide",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "good_morning",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 160,
+    "l10n": {
+      "en": {
+        "name": "Good Morning",
+        "aliases": [
+          "Barbell Good Morning"
+        ],
+        "setup": [
+          "Rest a barbell on your upper back as for a squat.",
+          "Stand with feet hip-width apart and knees soft."
+        ],
+        "execution": [
+          "Push your hips back and lower your torso toward parallel with a flat back.",
+          "Drive the hips forward to stand."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Using heavy weight before the pattern is solid."
+        ],
+        "safety": "Start light; this loads the lower back at a long lever.",
+        "cues": [
+          "Hips back, flat back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_rack_pull",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "grip": "mixed",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "erector",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "trap",
+      "forearm"
+    ],
+    "family": "deadlift",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 150,
+    "incrementKg": 5,
+    "popularity": 169,
+    "l10n": {
+      "en": {
+        "name": "Rack Pull",
+        "aliases": [
+          "Block Pull",
+          "Partial Deadlift"
+        ],
+        "setup": [
+          "Set the bar on rack pins or blocks just below your knees.",
+          "Grip it as for a deadlift and flatten your back."
+        ],
+        "execution": [
+          "Stand up by driving the hips forward.",
+          "Lower back to the pins with control."
+        ],
+        "mistakes": [
+          "Leaning back at the top.",
+          "Rounding the back."
+        ],
+        "cues": [
+          "Hips through"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_nordic_hamstring_curl",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "kneeling",
+    "equipment": [
+      "other"
+    ],
+    "mainMuscles": [
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "calf"
+    ],
+    "family": "nordic",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "popularity": 177,
+    "l10n": {
+      "en": {
+        "name": "Nordic Hamstring Curl",
+        "aliases": [
+          "Nordic Curl",
+          "Nordic Hamstring Lowering"
+        ],
+        "setup": [
+          "Kneel on a pad with your heels anchored under a bar, a partner's hands or a fixed object.",
+          "Keep a straight line from knees to head."
+        ],
+        "execution": [
+          "Lower your body forward as slowly as you can.",
+          "Catch yourself with your hands and push back up to start."
+        ],
+        "mistakes": [
+          "Bending at the hips.",
+          "Dropping fast in the first part of the move."
+        ],
+        "safety": "Start with a few slow lowerings; this exercise causes heavy soreness at first.",
+        "cues": [
+          "Straight line, slow fall"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bodyweight_single_leg_romanian_deadlift",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "erector"
+    ],
+    "family": "single_leg_rdl",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 187,
+    "l10n": {
+      "en": {
+        "name": "Bodyweight Single-Leg Romanian Deadlift",
+        "aliases": [
+          "Single-Leg RDL",
+          "Single-Leg Hip Hinge"
+        ],
+        "setup": [
+          "Stand on one leg with a soft knee.",
+          "Reach your arms forward for balance."
+        ],
+        "execution": [
+          "Hinge forward as the free leg extends behind you.",
+          "Stop when your body is near parallel, then return to standing."
+        ],
+        "mistakes": [
+          "Opening the hips toward the ceiling.",
+          "Rounding the back."
+        ],
+        "cues": [
+          "Hips square"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_single_leg_romanian_deadlift",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "erector",
+      "forearm"
+    ],
+    "family": "single_leg_rdl",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 2,
+    "popularity": 196,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Single-Leg Romanian Deadlift",
+        "aliases": [
+          "Dumbbell Single-Leg RDL"
+        ],
+        "setup": [
+          "Hold a dumbbell in the hand opposite your standing leg.",
+          "Stand on one leg with a soft knee."
+        ],
+        "execution": [
+          "Hinge forward, lowering the dumbbell along the standing leg.",
+          "Return to standing."
+        ],
+        "mistakes": [
+          "Rotating the hips open.",
+          "Rounding the back."
+        ],
+        "cues": [
+          "Hips square, reach long"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_stability_ball_leg_curl",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "supine",
+    "equipment": [
+      "stability_ball"
+    ],
+    "mainMuscles": [
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "leg_curl",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 205,
+    "l10n": {
+      "en": {
+        "name": "Stability Ball Leg Curl",
+        "aliases": [
+          "Swiss Ball Hamstring Curl"
+        ],
+        "setup": [
+          "Lie on your back with your heels on a stability ball.",
+          "Lift your hips into a bridge."
+        ],
+        "execution": [
+          "Curl the ball toward you by bending your knees, keeping the hips up.",
+          "Roll it back out slowly."
+        ],
+        "mistakes": [
+          "Letting the hips drop.",
+          "Rushing."
+        ],
+        "cues": [
+          "Hips stay high"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_kettlebell_deadlift",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "equipment": [
+      "kettlebell"
+    ],
+    "mainMuscles": [
+      "glute",
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "quads",
+      "erector",
+      "forearm"
+    ],
+    "family": "deadlift",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 4,
+    "popularity": 214,
+    "l10n": {
+      "en": {
+        "name": "Kettlebell Deadlift",
+        "aliases": [],
+        "setup": [
+          "Stand with a kettlebell between your feet.",
+          "Hinge and bend your knees to grip the handle with a flat back."
+        ],
+        "execution": [
+          "Stand up by pushing the floor away.",
+          "Lower it by hinging back down."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Squatting straight down without a hinge."
+        ],
+        "cues": [
+          "Hips back, chest up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_glute_ham_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "calf",
+      "erector"
+    ],
+    "family": "nordic",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "popularity": 224,
+    "l10n": {
+      "en": {
+        "name": "Glute-Ham Raise",
+        "aliases": [
+          "GHR",
+          "Glute-Ham Developer Raise"
+        ],
+        "setup": [
+          "Set the GHD so your knees sit just behind the pad and feet are locked in.",
+          "Start with your torso upright from the knees."
+        ],
+        "execution": [
+          "Lower your torso forward until your body is near horizontal.",
+          "Pull yourself back up by curling with your hamstrings."
+        ],
+        "mistakes": [
+          "Bending at the hips.",
+          "Swinging up."
+        ],
+        "cues": [
+          "Knees drive into the pad"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_hamstring_walkout",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "glute"
+    ],
+    "secondaryMuscles": [],
+    "family": "bridge_walkout",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 234,
+    "l10n": {
+      "en": {
+        "name": "Hamstring Walkout",
+        "aliases": [
+          "Bridge Walkout",
+          "Glute Bridge Walkout"
+        ],
+        "setup": [
+          "Lie on your back and lift your hips into a glute bridge.",
+          "Keep your arms at your sides."
+        ],
+        "execution": [
+          "Walk your heels out a few small steps while keeping the hips up.",
+          "Walk them back in."
+        ],
+        "mistakes": [
+          "Letting the hips drop.",
+          "Taking big steps."
+        ],
+        "cues": [
+          "Small steps, hips high"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bodyweight_good_morning",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "good_morning",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 246,
+    "l10n": {
+      "en": {
+        "name": "Bodyweight Good Morning",
+        "aliases": [
+          "Hip Hinge"
+        ],
+        "setup": [
+          "Stand with feet hip-width apart.",
+          "Place your hands behind your head or across your chest."
+        ],
+        "execution": [
+          "Push your hips back and lean your torso forward with a flat back.",
+          "Drive your hips forward to stand."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Bending the knees too much."
+        ],
+        "cues": [
+          "Hips back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_good_morning",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "good_morning",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 255,
+    "l10n": {
+      "en": {
+        "name": "Band Good Morning",
+        "aliases": [],
+        "setup": [
+          "Stand on a band and loop the other end behind your neck and shoulders.",
+          "Stand tall with knees soft."
+        ],
+        "execution": [
+          "Hinge forward with a flat back against the band.",
+          "Drive your hips forward to stand."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Squatting down."
+        ],
+        "cues": [
+          "Hips through"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_leg_curl",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "calf"
+    ],
+    "family": "leg_curl",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 267,
+    "l10n": {
+      "en": {
+        "name": "Band Leg Curl",
+        "aliases": [],
+        "setup": [
+          "Anchor a band low in front of you and loop it around one ankle.",
+          "Lie face down far enough away for tension."
+        ],
+        "execution": [
+          "Curl your heel toward your glute.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Lifting the hips.",
+          "Letting the band snap back."
+        ],
+        "cues": [
+          "Hips down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_leg_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "prone",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "mainMuscles": [
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "calf"
+    ],
+    "family": "leg_curl",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 279,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Leg Curl",
+        "aliases": [
+          "Prone Dumbbell Leg Curl"
+        ],
+        "setup": [
+          "Lie face down on a bench with your knees at the end.",
+          "Have a partner place a dumbbell between your feet, or set it there carefully."
+        ],
+        "execution": [
+          "Curl your heels toward your glutes while squeezing the dumbbell.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Letting the dumbbell slip.",
+          "Lifting the hips."
+        ],
+        "cues": [
+          "Squeeze the feet together"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_suspension_trainer_leg_curl",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "supine",
+    "equipment": [
+      "suspension_trainer"
+    ],
+    "mainMuscles": [
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "glute"
+    ],
+    "family": "leg_curl",
+    "familyRank": 6,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 293,
+    "l10n": {
+      "en": {
+        "name": "Suspension Trainer Leg Curl",
+        "aliases": [
+          "TRX Hamstring Curl"
+        ],
+        "setup": [
+          "Lie on your back with your heels in the foot cradles.",
+          "Lift your hips into a bridge."
+        ],
+        "execution": [
+          "Pull your heels toward your glutes.",
+          "Extend slowly."
+        ],
+        "mistakes": [
+          "Hips dropping.",
+          "Swinging."
+        ],
+        "cues": [
+          "Hips up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_stiff_leg_deadlift",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "grip": "overhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "hamstring"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "erector",
+      "forearm"
+    ],
+    "family": "romanian_deadlift",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 120,
+    "incrementKg": 2.5,
+    "popularity": 307,
+    "l10n": {
+      "en": {
+        "name": "Stiff-Leg Deadlift",
+        "aliases": [
+          "Straight-Leg Deadlift"
+        ],
+        "setup": [
+          "Set the bar on the floor and stand with feet hip-width apart.",
+          "Hinge to grip it with legs nearly straight and back flat."
+        ],
+        "execution": [
+          "Lift the bar by driving your hips forward.",
+          "Lower it by hinging until it touches the floor or your hamstrings stop you."
+        ],
+        "mistakes": [
+          "Rounding the back to reach the floor.",
+          "Bending the knees."
+        ],
+        "cues": [
+          "Legs long, back flat"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_kickstand_romanian_deadlift",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "erector"
+    ],
+    "family": "single_leg_rdl",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 2,
+    "popularity": 317,
+    "l10n": {
+      "en": {
+        "name": "Kickstand Romanian Deadlift",
+        "aliases": [
+          "B-Stance RDL",
+          "Staggered-Stance RDL"
+        ],
+        "setup": [
+          "Hold a dumbbell in each hand.",
+          "Place one foot slightly behind you with only the toes touching for balance."
+        ],
+        "execution": [
+          "Hinge on the front leg, lowering the dumbbells.",
+          "Drive the front hip forward to stand."
+        ],
+        "mistakes": [
+          "Pushing off the back foot.",
+          "Rounding the back."
+        ],
+        "cues": [
+          "Front leg works"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_landmine_romanian_deadlift",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "hinge",
+    "position": "standing",
+    "equipment": [
+      "landmine"
+    ],
+    "mainMuscles": [
+      "hamstring",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "erector"
+    ],
+    "family": "romanian_deadlift",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2.5,
+    "popularity": 329,
+    "l10n": {
+      "en": {
+        "name": "Landmine Romanian Deadlift",
+        "aliases": [],
+        "setup": [
+          "Stand facing the end of a landmine bar.",
+          "Hold the end with both hands at your thighs."
+        ],
+        "execution": [
+          "Hinge back, letting the bar move down your legs.",
+          "Stand tall."
+        ],
+        "mistakes": [
+          "Rounding the back.",
+          "Squatting."
+        ],
+        "cues": [
+          "Hips back"
+        ]
+      }
+    }
+  }
+]

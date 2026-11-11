@@ -25,7 +25,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 7,
+    "popularity": 9,
     "l10n": {
       "en": {
         "name": "Dumbbell Curl",
@@ -80,7 +80,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2.5,
-    "popularity": 17,
+    "popularity": 23,
     "l10n": {
       "en": {
         "name": "Barbell Curl",
@@ -132,7 +132,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 18,
+    "popularity": 24,
     "l10n": {
       "en": {
         "name": "Triceps Pushdown",
@@ -183,7 +183,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 21,
+    "popularity": 28,
     "l10n": {
       "en": {
         "name": "Rope Triceps Pushdown",
@@ -234,7 +234,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 27,
+    "popularity": 36,
     "l10n": {
       "en": {
         "name": "Dumbbell Hammer Curl",
@@ -286,7 +286,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2.5,
-    "popularity": 31,
+    "popularity": 42,
     "l10n": {
       "en": {
         "name": "EZ-Bar Skull Crusher",
@@ -342,7 +342,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 33,
+    "popularity": 46,
     "l10n": {
       "en": {
         "name": "EZ-Bar Curl",
@@ -396,7 +396,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 48,
+    "popularity": 64,
     "l10n": {
       "en": {
         "name": "Close-Grip Bench Press",
@@ -451,7 +451,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 56,
+    "popularity": 75,
     "l10n": {
       "en": {
         "name": "Triceps Dip",
@@ -503,7 +503,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2,
-    "popularity": 58,
+    "popularity": 77,
     "l10n": {
       "en": {
         "name": "Dumbbell Overhead Triceps Extension",
@@ -555,7 +555,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 65,
+    "popularity": 85,
     "l10n": {
       "en": {
         "name": "Preacher Curl",
@@ -608,7 +608,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 69,
+    "popularity": 90,
     "l10n": {
       "en": {
         "name": "Cable Curl",
@@ -658,7 +658,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 79,
+    "popularity": 102,
     "l10n": {
       "en": {
         "name": "Incline Dumbbell Curl",
@@ -707,7 +707,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1,
-    "popularity": 85,
+    "popularity": 109,
     "l10n": {
       "en": {
         "name": "Concentration Curl",
@@ -755,7 +755,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 93,
+    "popularity": 118,
     "l10n": {
       "en": {
         "name": "Bench Dip",
@@ -807,7 +807,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 95,
+    "popularity": 121,
     "l10n": {
       "en": {
         "name": "Diamond Push-Up",
@@ -857,7 +857,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1,
-    "popularity": 101,
+    "popularity": 128,
     "l10n": {
       "en": {
         "name": "Dumbbell Kickback",
@@ -906,7 +906,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 107,
+    "popularity": 136,
     "l10n": {
       "en": {
         "name": "Cable Overhead Triceps Extension",
@@ -956,7 +956,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1,
-    "popularity": 111,
+    "popularity": 141,
     "l10n": {
       "en": {
         "name": "Dumbbell Wrist Curl",
@@ -1008,7 +1008,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 113,
+    "popularity": 143,
     "l10n": {
       "en": {
         "name": "Dead Hang",
@@ -1059,7 +1059,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 119,
+    "popularity": 151,
     "l10n": {
       "en": {
         "name": "Rope Hammer Curl",
@@ -1109,7 +1109,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 125,
+    "popularity": 159,
     "l10n": {
       "en": {
         "name": "Spider Curl",
@@ -1158,7 +1158,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 129,
+    "popularity": 164,
     "l10n": {
       "en": {
         "name": "Close-Grip Push-Up",
@@ -1209,7 +1209,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 132,
+    "popularity": 168,
     "l10n": {
       "en": {
         "name": "Dumbbell Lying Triceps Extension",
@@ -1260,7 +1260,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 143,
+    "popularity": 182,
     "l10n": {
       "en": {
         "name": "EZ-Bar Reverse Curl",
@@ -1311,7 +1311,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1,
-    "popularity": 146,
+    "popularity": 188,
     "l10n": {
       "en": {
         "name": "Dumbbell Reverse Wrist Curl",
@@ -1363,7 +1363,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 5,
-    "popularity": 150,
+    "popularity": 192,
     "l10n": {
       "en": {
         "name": "Machine-Assisted Dip",
@@ -1415,7 +1415,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 5,
-    "popularity": 153,
+    "popularity": 197,
     "l10n": {
       "en": {
         "name": "Seated Dip Machine",
@@ -1467,7 +1467,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 160,
+    "popularity": 206,
     "l10n": {
       "en": {
         "name": "Barbell Wrist Curl",
@@ -1515,7 +1515,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 164,
+    "popularity": 210,
     "l10n": {
       "en": {
         "name": "Cross-Body Hammer Curl",
@@ -1565,7 +1565,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1,
-    "popularity": 170,
+    "popularity": 218,
     "l10n": {
       "en": {
         "name": "Dumbbell Preacher Curl",
@@ -1612,7 +1612,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 174,
+    "popularity": 225,
     "l10n": {
       "en": {
         "name": "Machine Biceps Curl",
@@ -1662,7 +1662,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 182,
+    "popularity": 235,
     "l10n": {
       "en": {
         "name": "Band Biceps Curl",
@@ -1709,7 +1709,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 187,
+    "popularity": 240,
     "l10n": {
       "en": {
         "name": "Band Triceps Pushdown",
@@ -1756,7 +1756,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 191,
+    "popularity": 247,
     "l10n": {
       "en": {
         "name": "Band Overhead Triceps Extension",
@@ -1803,7 +1803,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 198,
+    "popularity": 256,
     "l10n": {
       "en": {
         "name": "Band Hammer Curl",
@@ -1850,7 +1850,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 203,
+    "popularity": 261,
     "l10n": {
       "en": {
         "name": "Band Reverse Curl",
@@ -1898,7 +1898,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 207,
+    "popularity": 268,
     "l10n": {
       "en": {
         "name": "Zottman Curl",
@@ -1945,7 +1945,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 213,
+    "popularity": 274,
     "l10n": {
       "en": {
         "name": "Cable Triceps Kickback",
@@ -1994,7 +1994,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 217,
+    "popularity": 280,
     "l10n": {
       "en": {
         "name": "Bayesian Cable Curl",
@@ -2044,7 +2044,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 222,
+    "popularity": 285,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Biceps Curl",
@@ -2092,7 +2092,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 228,
+    "popularity": 294,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Triceps Extension",
@@ -2141,7 +2141,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 233,
+    "popularity": 299,
     "l10n": {
       "en": {
         "name": "Single-Arm Reverse-Grip Pushdown",
@@ -2190,7 +2190,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 243,
+    "popularity": 312,
     "l10n": {
       "en": {
         "name": "One-Arm Dead Hang",
@@ -2237,7 +2237,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 248,
+    "popularity": 318,
     "l10n": {
       "en": {
         "name": "Plate Pinch Hold",
@@ -2286,7 +2286,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 253,
+    "popularity": 323,
     "l10n": {
       "en": {
         "name": "Wrist Roller",

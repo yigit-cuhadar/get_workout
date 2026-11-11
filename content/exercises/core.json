@@ -25,7 +25,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 2,
+    "popularity": 4,
     "l10n": {
       "en": {
         "name": "Plank",
@@ -76,7 +76,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 13,
+    "popularity": 16,
     "l10n": {
       "en": {
         "name": "Crunch",
@@ -129,7 +129,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 23,
+    "popularity": 31,
     "l10n": {
       "en": {
         "name": "Hanging Leg Raise",
@@ -179,7 +179,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 26,
+    "popularity": 35,
     "l10n": {
       "en": {
         "name": "Sit-Up",
@@ -227,7 +227,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 30,
+    "popularity": 41,
     "l10n": {
       "en": {
         "name": "Russian Twist",
@@ -274,7 +274,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 37,
+    "popularity": 50,
     "l10n": {
       "en": {
         "name": "Cable Crunch",
@@ -327,7 +327,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 41,
+    "popularity": 54,
     "l10n": {
       "en": {
         "name": "Mountain Climber",
@@ -376,7 +376,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 44,
+    "popularity": 58,
     "l10n": {
       "en": {
         "name": "Side Plank",
@@ -425,7 +425,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 46,
+    "popularity": 61,
     "l10n": {
       "en": {
         "name": "Bicycle Crunch",
@@ -473,7 +473,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 50,
+    "popularity": 67,
     "l10n": {
       "en": {
         "name": "Ab Wheel Rollout",
@@ -524,7 +524,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 54,
+    "popularity": 72,
     "l10n": {
       "en": {
         "name": "Lying Leg Raise",
@@ -575,7 +575,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 63,
+    "popularity": 82,
     "l10n": {
       "en": {
         "name": "Dead Bug",
@@ -624,7 +624,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 67,
+    "popularity": 87,
     "l10n": {
       "en": {
         "name": "Bird Dog",
@@ -672,7 +672,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 71,
+    "popularity": 92,
     "l10n": {
       "en": {
         "name": "Reverse Crunch",
@@ -720,7 +720,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 82,
+    "popularity": 105,
     "l10n": {
       "en": {
         "name": "Flutter Kick",
@@ -769,7 +769,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 87,
+    "popularity": 111,
     "l10n": {
       "en": {
         "name": "V-Up",
@@ -820,7 +820,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 90,
+    "popularity": 115,
     "l10n": {
       "en": {
         "name": "Cable Woodchop",
@@ -871,7 +871,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 96,
+    "popularity": 122,
     "l10n": {
       "en": {
         "name": "Cable Pallof Press",
@@ -922,7 +922,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 102,
+    "popularity": 129,
     "l10n": {
       "en": {
         "name": "Hanging Knee Raise",
@@ -968,7 +968,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 108,
+    "popularity": 137,
     "l10n": {
       "en": {
         "name": "Captain's Chair Knee Raise",
@@ -1020,7 +1020,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 114,
+    "popularity": 144,
     "l10n": {
       "en": {
         "name": "Toes-to-Bar",
@@ -1068,7 +1068,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 120,
+    "popularity": 152,
     "l10n": {
       "en": {
         "name": "Decline Crunch",
@@ -1115,7 +1115,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 126,
+    "popularity": 161,
     "l10n": {
       "en": {
         "name": "Hollow Body Hold",
@@ -1165,7 +1165,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 133,
+    "popularity": 170,
     "l10n": {
       "en": {
         "name": "Decline Sit-Up",
@@ -1213,7 +1213,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 136,
+    "popularity": 173,
     "l10n": {
       "en": {
         "name": "Machine Crunch",
@@ -1264,7 +1264,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 139,
+    "popularity": 178,
     "l10n": {
       "en": {
         "name": "High Plank",
@@ -1312,7 +1312,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 147,
+    "popularity": 189,
     "l10n": {
       "en": {
         "name": "Stability Ball Crunch",
@@ -1363,7 +1363,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 154,
+    "popularity": 198,
     "l10n": {
       "en": {
         "name": "L-Sit",
@@ -1414,7 +1414,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 161,
+    "popularity": 207,
     "l10n": {
       "en": {
         "name": "Dragon Flag",
@@ -1462,7 +1462,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2,
-    "popularity": 167,
+    "popularity": 215,
     "l10n": {
       "en": {
         "name": "Dumbbell Side Bend",
@@ -1509,7 +1509,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 175,
+    "popularity": 226,
     "l10n": {
       "en": {
         "name": "Heel Touch",
@@ -1559,7 +1559,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 179,
+    "popularity": 230,
     "l10n": {
       "en": {
         "name": "Plank Shoulder Tap",
@@ -1608,7 +1608,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 183,
+    "popularity": 236,
     "l10n": {
       "en": {
         "name": "Landmine Rotation",
@@ -1659,7 +1659,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 192,
+    "popularity": 248,
     "l10n": {
       "en": {
         "name": "Lying Windshield Wiper",
@@ -1707,7 +1707,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 199,
+    "popularity": 257,
     "l10n": {
       "en": {
         "name": "Side Plank Hip Dip",
@@ -1757,7 +1757,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 208,
+    "popularity": 269,
     "l10n": {
       "en": {
         "name": "Weighted Plank",
@@ -1804,7 +1804,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 218,
+    "popularity": 281,
     "l10n": {
       "en": {
         "name": "Kneeling Side Plank",
@@ -1852,7 +1852,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 223,
+    "popularity": 287,
     "l10n": {
       "en": {
         "name": "Band Pallof Press",
@@ -1901,7 +1901,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 229,
+    "popularity": 295,
     "l10n": {
       "en": {
         "name": "Standing Ab Wheel Rollout",
@@ -1950,7 +1950,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 5,
-    "popularity": 234,
+    "popularity": 301,
     "l10n": {
       "en": {
         "name": "Rotary Torso Machine",
@@ -2002,7 +2002,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 239,
+    "popularity": 308,
     "l10n": {
       "en": {
         "name": "Hanging Windshield Wiper",
@@ -2051,7 +2051,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 244,
+    "popularity": 313,
     "l10n": {
       "en": {
         "name": "Plate Russian Twist",
@@ -2100,7 +2100,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 249,
+    "popularity": 319,
     "l10n": {
       "en": {
         "name": "Band Woodchop",
@@ -2150,7 +2150,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 254,
+    "popularity": 324,
     "l10n": {
       "en": {
         "name": "Low-to-High Cable Woodchop",
@@ -2200,7 +2200,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 259,
+    "popularity": 330,
     "l10n": {
       "en": {
         "name": "Stability Ball Rollout",
@@ -2249,7 +2249,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 264,
+    "popularity": 335,
     "l10n": {
       "en": {
         "name": "Ab Wheel Wall Rollout",
@@ -2297,7 +2297,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 267,
+    "popularity": 338,
     "l10n": {
       "en": {
         "name": "Ab Wheel Diagonal Rollout",
@@ -2347,7 +2347,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 269,
+    "popularity": 340,
     "l10n": {
       "en": {
         "name": "Stir the Pot",
@@ -2393,7 +2393,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 270,
+    "popularity": 341,
     "l10n": {
       "en": {
         "name": "Stability Ball Knee Tuck",
@@ -2441,7 +2441,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 271,
+    "popularity": 342,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Knee Tuck",
@@ -2490,7 +2490,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 272,
+    "popularity": 343,
     "l10n": {
       "en": {
         "name": "Stability Ball Pike",
@@ -2538,7 +2538,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 274,
+    "popularity": 345,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Pike",
