@@ -336,10 +336,9 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
   }
 
   Future<void> save() async {
-    if (state.isBusy || _closed || !state.catalogueReady) return;
-    if (state.status == ProgramBuilderStatus.loading ||
-        state.status == ProgramBuilderStatus.notFound ||
-        state.status == ProgramBuilderStatus.loadFailed) {
+    if (!state.catalogueReady ||
+        (state.status != ProgramBuilderStatus.editing &&
+            state.status != ProgramBuilderStatus.saveFailed)) {
       return;
     }
     _submitted = true;
@@ -418,9 +417,9 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
       );
 
   void _edit(Program program, {int? selectedDay}) {
-    if (_closed ||
-        state.isBusy ||
-        state.status == ProgramBuilderStatus.loading) {
+    // Only a shown program can change.
+    if (state.status != ProgramBuilderStatus.editing &&
+        state.status != ProgramBuilderStatus.saveFailed) {
       return;
     }
     emit(
