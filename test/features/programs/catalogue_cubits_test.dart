@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
 import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
@@ -39,6 +40,9 @@ class MockProfileRepository extends Mock implements ProfileRepository {}
 class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
 
 class MockExerciseRepository extends Mock implements ExerciseRepository {}
+
+class MockCustomExerciseRepository extends Mock
+    implements CustomExerciseRepository {}
 
 class FakePremium implements PremiumStatus {
   final controller = StreamController<bool?>.broadcast();
@@ -145,6 +149,9 @@ void main() {
     exercises = ExerciseCatalogueCubit(
       watchAuthUser: WatchAuthUser(idle),
       watchExercises: WatchExercises(exerciseRepository),
+      watchCustomExercises: WatchCustomExercises(
+        MockCustomExerciseRepository(),
+      ),
       syncExercises: SyncExercises(exerciseRepository),
     );
   });
