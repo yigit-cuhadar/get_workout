@@ -320,4 +320,55 @@ void main() {
     expect(find.byType(ProgramBuilderPage), findsNothing);
     expect(find.byType(ProgramsPage), findsOneWidget);
   });
+
+  Future<void> reselectPrograms(WidgetTester tester) => tap(
+    tester,
+    find.descendant(
+      of: find.byType(NavigationBar),
+      matching: find.text('Programs'),
+    ),
+  );
+
+  testWidgets('reselecting the tab asks before discarding changes', (
+    tester,
+  ) async {
+    await start(tester);
+    await openPrograms(tester, [stored]);
+    await tap(tester, find.text('Leg Day'));
+    await tap(tester, find.byTooltip('Edit'));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Leg Day'),
+      'Leg Day 2',
+    );
+    // The page refuses to pop from the next frame on.
+    await tester.pump();
+
+    await reselectPrograms(tester);
+    expect(find.text('Discard changes?'), findsOneWidget);
+    await tap(tester, find.text('Keep editing'));
+    expect(find.byType(ProgramBuilderPage), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Leg Day 2'), findsOneWidget);
+
+    await reselectPrograms(tester);
+    await tap(tester, find.text('Discard'));
+    expect(find.byType(ProgramBuilderPage), findsNothing);
+    expect(find.byType(ProgramDetailPage), findsOneWidget);
+  });
+
+  testWidgets('reselecting the tab without changes returns to its first page', (
+    tester,
+  ) async {
+    await start(tester);
+    await openPrograms(tester, [stored]);
+    await tap(tester, find.text('Leg Day'));
+    await tap(tester, find.byTooltip('Edit'));
+
+    await reselectPrograms(tester);
+
+    expect(find.text('Discard changes?'), findsNothing);
+    expect(find.byType(ProgramBuilderPage), findsNothing);
+    expect(find.byType(ProgramDetailPage), findsNothing);
+    expect(find.byType(ProgramsPage), findsOneWidget);
+    expect(path(), Routes.programs);
+  });
 }
