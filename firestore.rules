@@ -45,6 +45,19 @@ rules_version = '2';
 // | an optional number field holding a string or other non-number  | deny   |
 // | note not a string, or longer than 500 characters               | deny   |
 // | any request for another user's sessions, or signed out         | deny   |
+//
+// users/{uid}/programs/{id}, as the signed-in user `uid` (anyone else: deny):
+// | Request                                                        | Result |
+// |----------------------------------------------------------------|--------|
+// | read, list, delete own program                                 | allow  |
+// | create/update: name string of 1-60 characters, days a list of  | allow  |
+// | 1-7 entries, origin "own", "catalog" or "generated"            |        |
+// | ... plus fields the app does not know (kept by edits)          | allow  |
+// | missing name, days or origin                                   | deny   |
+// | name empty, longer than 60 characters or not a string          | deny   |
+// | days empty, more than 7 entries or not a list                  | deny   |
+// | origin any other value                                         | deny   |
+// | any request for another user's programs, or signed out         | deny   |
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -93,6 +106,18 @@ service cloud.firestore {
         && (!('note' in data) || (data.note is string && data.note.size() <= 500));
     }
 
+    // Updates write only name, length, days and updatedAt; origin stays as
+    // stored and is checked on the result.
+    function isProgram(data) {
+      return data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 60
+        && data.days is list
+        && data.days.size() >= 1
+        && data.days.size() <= 7
+        && data.origin in ['own', 'catalog', 'generated'];
+    }
+
     // A user's own data, guest or not.
     match /users/{uid} {
       allow read, write: if isOwner(uid);
@@ -103,9 +128,16 @@ service cloud.firestore {
         allow create, update: if isOwner(uid) && isCardio(request.resource.data);
       }
 
+      // Validated; only reachable here, the rule below excludes it.
+      match /programs/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isProgram(request.resource.data);
+      }
+
       // Every other subcollection, at any depth, as before.
       match /{collection}/{document=**} {
-        allow read, write: if isOwner(uid) && collection != 'cardio';
+        allow read, write: if isOwner(uid)
+          && !(collection in ['cardio', 'programs']);
       }
     }
 
