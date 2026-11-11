@@ -206,43 +206,42 @@ enum Goal implements Coded {
   final String code;
 }
 
-/// The kind of place a ready-made program is written for, with the equipment
-/// it has. An exercise fits a profile when its `equipment` or one of its
-/// `equipmentAlternatives` sets is within [equipment].
+/// A kind of place to train, with the equipment it has. Onboarding offers
+/// these as quick picks for the user's equipment, and every ready-made
+/// program is written for one. [Equipment.bodyweight] is always available,
+/// so no profile lists it.
 enum EquipmentProfile implements Coded {
-  /// Everything in [Equipment].
-  fullGym('full_gym', null),
-  homeGym('home_gym', {
-    Equipment.barbell,
-    Equipment.plate,
-    Equipment.dumbbell,
-    Equipment.bench,
-    Equipment.pullUpBar,
-    Equipment.resistanceBand,
-    Equipment.bodyweight,
-  }),
-  dumbbells('dumbbells', {
-    Equipment.dumbbell,
-    Equipment.bench,
-    Equipment.bodyweight,
-  }),
-  bodyweight('bodyweight', {
-    Equipment.bodyweight,
-    Equipment.pullUpBar,
-    Equipment.dipStation,
-  }),
-  bands('bands', {Equipment.resistanceBand, Equipment.bodyweight});
+  fullGym('full_gym'),
+  homeGym('home_gym'),
+  dumbbells('dumbbells'),
+  bodyweight('bodyweight'),
+  bands('bands');
 
-  const EquipmentProfile(this.code, this._equipment);
+  const EquipmentProfile(this.code);
   @override
   final String code;
-  final Set<Equipment>? _equipment;
 
-  Set<Equipment> get equipment => _equipment ?? Equipment.values.toSet();
+  Set<Equipment> get equipment => switch (this) {
+    fullGym => Equipment.values.toSet()..remove(Equipment.bodyweight),
+    homeGym => const {
+      Equipment.barbell,
+      Equipment.plate,
+      Equipment.dumbbell,
+      Equipment.bench,
+      Equipment.pullUpBar,
+      Equipment.resistanceBand,
+    },
+    dumbbells => const {Equipment.dumbbell, Equipment.bench},
+    bodyweight => const {Equipment.pullUpBar, Equipment.dipStation},
+    bands => const {Equipment.resistanceBand},
+  };
 
-  /// Whether every code of [set] is equipment of this profile.
+  /// Whether every code of an exercise's equipment [set] is available here.
   bool has(Iterable<String> set) {
-    final codes = {for (final e in equipment) e.code};
+    final codes = {
+      Equipment.bodyweight.code,
+      for (final e in equipment) e.code,
+    };
     return set.every(codes.contains);
   }
 }

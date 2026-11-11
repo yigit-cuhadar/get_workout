@@ -2,8 +2,6 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../exercises/domain/vocabulary.dart';
 
-export '../../exercises/domain/vocabulary.dart' show Goal;
-
 /// The two sexes the calorie (Mifflin-St Jeor) and body-fat (US Navy)
 /// formulas define.
 enum Sex implements Coded {
@@ -32,28 +30,6 @@ enum ProfileField {
   bool get optional => switch (this) {
     sex || birthYear || height || weight || targetWeight => true,
     goal || level || daysPerWeek || equipment => false,
-  };
-}
-
-/// Quick picks that fill the equipment answer; it can be fine-tuned after.
-enum EquipmentPreset {
-  fullGym,
-  homeGym,
-  dumbbellsOnly,
-  bodyweight;
-
-  Set<Equipment> get equipment => switch (this) {
-    fullGym => Equipment.values.toSet()..remove(Equipment.bodyweight),
-    homeGym => const {
-      Equipment.barbell,
-      Equipment.dumbbell,
-      Equipment.plate,
-      Equipment.bench,
-      Equipment.pullUpBar,
-      Equipment.resistanceBand,
-    },
-    dumbbellsOnly => const {Equipment.dumbbell},
-    bodyweight => const {},
   };
 }
 
