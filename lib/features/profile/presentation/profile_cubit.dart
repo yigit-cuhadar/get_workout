@@ -1,9 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../../core/user_stream_follower.dart';
 import '../domain/profile_usecases.dart';
 import '../domain/user_profile.dart';
 
@@ -12,7 +11,7 @@ enum ProfileStatus {
   loading,
   loaded,
 
-  /// The profile could not be read; the app carries on without it.
+  /// The first read failed. It is retried; the app carries on meanwhile.
   unavailable,
 }
 
@@ -33,49 +32,48 @@ class ProfileState extends Equatable {
 }
 
 /// App-wide profile of whoever is signed in. Starts over, empty and loading,
-/// on every user change, so the previous user's answers are never shown.
+/// on every user change, so the previous user's answers are never shown. A
+/// failed read is retried with backoff; a profile already shown stays
+/// meanwhile.
 class ProfileCubit extends Cubit<ProfileState> {
   ProfileCubit({
     required WatchAuthUser watchAuthUser,
-    required this._watchProfile,
+    required WatchProfile watchProfile,
+    Duration retryDelay = const Duration(seconds: 1),
   }) : super(const ProfileState()) {
-    _userSubscription = watchAuthUser()
-        .map((user) => user?.id)
-        .distinct()
-        .listen(_onUser);
+    _follower = UserStreamFollower(
+      userIds: watchAuthUser().map((user) => user?.id),
+      watch: watchProfile.call,
+      onUser: (uid) {
+        final reset = ProfileState(uid: uid);
+        if (state != reset) emit(reset);
+      },
+      onData: (profile) => emit(
+        ProfileState(
+          uid: _follower.uid,
+          status: ProfileStatus.loaded,
+          profile: profile,
+        ),
+      ),
+      onError: (_) {
+        if (state.status == ProfileStatus.loading) {
+          emit(ProfileState(uid: state.uid, status: ProfileStatus.unavailable));
+        }
+      },
+      logTag: 'profile',
+      retryDelay: retryDelay,
+    );
   }
 
-  final WatchProfile _watchProfile;
-  late final StreamSubscription<String?> _userSubscription;
-  StreamSubscription<UserProfile>? _profileSubscription;
+  late final UserStreamFollower<UserProfile> _follower;
 
-  void _onUser(String? uid) {
-    unawaited(_profileSubscription?.cancel());
-    final reset = ProfileState(uid: uid);
-    if (state != reset) emit(reset);
-    _profileSubscription = uid == null
-        ? null
-        : _watchProfile(uid).listen(
-            (profile) => emit(
-              ProfileState(
-                uid: uid,
-                status: ProfileStatus.loaded,
-                profile: profile,
-              ),
-            ),
-            // The repository logs it. A profile already shown stays.
-            onError: (Object _) {
-              if (state.status == ProfileStatus.loading) {
-                emit(ProfileState(uid: uid, status: ProfileStatus.unavailable));
-              }
-            },
-          );
-  }
+  /// Follows the profile again at once if its stream failed. Call when
+  /// saving, so the saved answers show up.
+  void resume() => _follower.resume();
 
   @override
   Future<void> close() async {
-    await _userSubscription.cancel();
-    await _profileSubscription?.cancel();
+    await _follower.cancel();
     return super.close();
   }
 }

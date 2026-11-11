@@ -77,17 +77,17 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
     // Refresh only when the redirect can change. A refresh re-parses the
     // current location; if it lands while a page pops itself on the same
     // auth change (AuthPage.onSignedIn), it restores that page. A pending
-    // profile never changes the redirect, so a user change between two
-    // onboarded users (linking keeps the uid; signing in to an existing
-    // account does not) refreshes nothing.
+    // profile never changes the redirect; a new user's settled profile can,
+    // even when its gate equals the previous user's (the splash after a
+    // retried guest start), hence the uid in the key.
     refreshListenable: Listenable.merge([
       _StreamListenable(
         auth.stream.map((state) => state.runtimeType).distinct(),
       ),
       _StreamListenable(
         profile.stream
-            .map(_profileGate)
-            .where((gate) => gate != _ProfileGate.pending)
+            .map((state) => (uid: state.uid, gate: _profileGate(state)))
+            .where((key) => key.gate != _ProfileGate.pending)
             .distinct(),
       ),
     ]),

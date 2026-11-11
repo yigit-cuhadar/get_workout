@@ -42,10 +42,18 @@ class _OnboardingView extends StatelessWidget {
     final cubit = context.read<ProfileFormCubit>();
     return BlocConsumer<ProfileFormCubit, ProfileFormState>(
       listenWhen: (previous, current) =>
-          current.failure != null && current.failure != previous.failure,
-      listener: (context, _) =>
+          current.status != previous.status ||
+          (current.failure != null && current.failure != previous.failure),
+      listener: (context, state) {
+        if (state.failure != null) {
           ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(l10n.profileSaveFailed))),
+              .showSnackBar(SnackBar(content: Text(l10n.profileSaveFailed)));
+        } else if (state.status == ProfileFormStatus.submitted) {
+          // If the profile stream is down, the completion would never show
+          // up and the user would stay here.
+          context.read<ProfileCubit>().resume();
+        }
+      },
       builder: (context, state) {
         final question = state.question;
         final count = state.questions.length;

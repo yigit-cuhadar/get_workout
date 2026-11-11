@@ -184,11 +184,13 @@ void main() {
     });
     // Like Firestore's local cache: the write shows up in the stream at once.
     when(() => profiles.completeOnboarding(any(), any())).thenAnswer((call) {
-      profileStream.add(onboarded);
+      profileStream.add(storedProfile = onboarded);
       return Future.value(const Ok(null));
     });
     when(() => profiles.saveFields(any(), any(), any())).thenAnswer((call) {
-      profileStream.add(call.positionalArguments[1] as UserProfile);
+      profileStream.add(
+        storedProfile = call.positionalArguments[1] as UserProfile,
+      );
       return Future.value(const Ok(null));
     });
     sl
@@ -505,6 +507,12 @@ void main() {
 
       expect(find.byType(TodayPage), findsOneWidget);
       expect(find.byType(OnboardingPage), findsNothing);
+
+      // The read is retried; a new user is not let off onboarding by it.
+      storedProfile = const UserProfile();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      expect(find.byType(OnboardingPage), findsOneWidget);
     });
 
     testWidgets('skipping completes onboarding and lands on Today', (
@@ -544,6 +552,67 @@ void main() {
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       expect(find.text('Question 1 of 9'), findsOneWidget);
+    });
+
+    testWidgets('a retried guest start ends the splash for the new guest', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      var attempts = 0;
+      when(() => repository.signInAnonymously()).thenAnswer((_) async {
+        if (++attempts == 1) return const Err(NetworkFailure());
+        users.add(const AuthUser(id: 'u2', isAnonymous: true));
+        return const Ok(guest);
+      });
+
+      // Signed out, and the new guest could not start.
+      users.add(null);
+      await tester.pumpAndSettle();
+      expect(find.text('Retry'), findsOneWidget);
+
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+
+      // Same gate as the previous user, but a different user: it refreshes.
+      expect(find.byType(TodayPage), findsOneWidget);
+      expect(find.byType(LoadingView), findsNothing);
+      verify(() => profiles.watchProfile('u2')).called(1);
+    });
+
+    testWidgets('signing out onboards the new guest', (tester) async {
+      await startAsGuest(tester);
+      await tapTab(tester, 'Profile');
+      when(() => repository.signInAnonymously()).thenAnswer((_) async {
+        users.add(const AuthUser(id: 'u2', isAnonymous: true));
+        return const Ok(guest);
+      });
+      storedProfile = const UserProfile();
+
+      // Like Firebase: no user for a moment, while the auth cubit stays
+      // signed in as the old user and starts a new guest.
+      users.add(null);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OnboardingPage), findsOneWidget);
+      expect(find.byType(NavigationBar), findsNothing);
+    });
+
+    testWidgets('a profile stream that dies on onboarding does not trap', (
+      tester,
+    ) async {
+      storedProfile = const UserProfile();
+      await startAsGuest(tester);
+
+      profileStream.addError(const NetworkFailure());
+      await tester.pump();
+      expect(find.byType(OnboardingPage), findsOneWidget);
+
+      // Completing follows the profile again at once and moves on.
+      await tester.tap(find.text('Skip for now'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TodayPage), findsOneWidget);
+      expect(find.byType(OnboardingPage), findsNothing);
     });
 
     testWidgets('a deep link waits behind onboarding, which lands on Today', (
