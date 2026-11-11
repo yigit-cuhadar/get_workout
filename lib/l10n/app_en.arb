@@ -10,6 +10,7 @@
   "tabExercises": "Exercises",
   "tabProgress": "Progress",
   "tabProfile": "Profile",
+  "modelLoadFailed": "Couldn't load the body model.",
 
   "profileAccountGuest": "Create account or sign in",
 
