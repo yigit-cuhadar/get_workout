@@ -1,0 +1,2566 @@
+[
+  {
+    "id": "ex_plank",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "oblique",
+      "glute",
+      "front_delt"
+    ],
+    "family": "plank",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 2,
+    "l10n": {
+      "en": {
+        "name": "Plank",
+        "aliases": [
+          "Forearm Plank",
+          "Front Plank",
+          "Elbow Plank"
+        ],
+        "setup": [
+          "Rest on your forearms with your elbows under your shoulders.",
+          "Step your feet back so your body forms a straight line from head to heels."
+        ],
+        "execution": [
+          "Squeeze your glutes and brace your stomach as if about to be poked.",
+          "Hold the position while breathing steadily."
+        ],
+        "mistakes": [
+          "Letting the hips sag toward the floor.",
+          "Pushing the hips high into a pike.",
+          "Holding the breath."
+        ],
+        "cues": [
+          "Ribs down, glutes tight",
+          "Breathe behind the brace"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_crunch",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [],
+    "family": "crunch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 13,
+    "l10n": {
+      "en": {
+        "name": "Crunch",
+        "aliases": [
+          "Floor Crunch",
+          "Abdominal Crunch"
+        ],
+        "setup": [
+          "Lie on your back with knees bent and feet flat.",
+          "Rest your fingertips beside your head or cross your arms on your chest."
+        ],
+        "execution": [
+          "Curl your shoulders off the floor by bringing your ribs toward your hips.",
+          "Pause, then lower slowly."
+        ],
+        "mistakes": [
+          "Pulling on the head with the hands.",
+          "Lifting the whole back off the floor with momentum."
+        ],
+        "cues": [
+          "Ribs to hips",
+          "Chin off the chest"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_hanging_leg_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "hanging",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [
+      "forearm",
+      "oblique"
+    ],
+    "family": "leg_raise",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "popularity": 22,
+    "l10n": {
+      "en": {
+        "name": "Hanging Leg Raise",
+        "aliases": [
+          "Hanging Straight Leg Raise"
+        ],
+        "setup": [
+          "Hang from a bar with straight arms and your legs together.",
+          "Pull your shoulders down slightly to stop swinging."
+        ],
+        "execution": [
+          "Raise your straight legs until they are at least level with your hips, curling the pelvis up at the top.",
+          "Lower them slowly without swinging."
+        ],
+        "mistakes": [
+          "Swinging the body to throw the legs up.",
+          "Lifting only with the hip flexors and never curling the pelvis."
+        ],
+        "cues": [
+          "Curl the pelvis",
+          "No swinging"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_sit_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "hip_flexor"
+    ],
+    "family": "sit_up",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 25,
+    "l10n": {
+      "en": {
+        "name": "Sit-Up",
+        "aliases": [],
+        "setup": [
+          "Lie on your back with knees bent and feet flat, anchored if needed.",
+          "Cross your arms on your chest."
+        ],
+        "execution": [
+          "Curl up through your spine until your chest is near your thighs.",
+          "Roll back down slowly one segment at a time."
+        ],
+        "mistakes": [
+          "Yanking the neck forward.",
+          "Dropping back to the floor quickly."
+        ],
+        "cues": [
+          "Roll up, roll down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_russian_twist",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "rotation",
+    "position": "seated",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "family": "russian_twist",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 28,
+    "l10n": {
+      "en": {
+        "name": "Russian Twist",
+        "aliases": [],
+        "setup": [
+          "Sit with knees bent and lean back until your torso is about 45 degrees.",
+          "Clasp your hands in front of your chest and lift your feet if you can."
+        ],
+        "execution": [
+          "Rotate your shoulders to one side, then to the other.",
+          "Keep the chest up throughout."
+        ],
+        "mistakes": [
+          "Moving only the arms instead of the torso.",
+          "Rounding the back."
+        ],
+        "cues": [
+          "Turn the shoulders",
+          "Chest up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_crunch",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "kneeling",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [],
+    "family": "crunch",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 34,
+    "l10n": {
+      "en": {
+        "name": "Cable Crunch",
+        "aliases": [
+          "Kneeling Cable Crunch",
+          "Rope Crunch"
+        ],
+        "setup": [
+          "Attach a rope to a high pulley and kneel facing it.",
+          "Hold the rope beside your head."
+        ],
+        "execution": [
+          "Crunch down by curling your ribs toward your hips.",
+          "Return slowly until your back is long."
+        ],
+        "mistakes": [
+          "Sitting back and pulling with the hips.",
+          "Pulling with the arms."
+        ],
+        "cues": [
+          "Ribs to hips",
+          "Hips stay still"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_mountain_climber",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "core_stability",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "quads"
+    ],
+    "family": "mountain_climber",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 37,
+    "l10n": {
+      "en": {
+        "name": "Mountain Climber",
+        "aliases": [],
+        "setup": [
+          "Start in a high plank with your hands under your shoulders.",
+          "Brace your core."
+        ],
+        "execution": [
+          "Drive one knee toward your chest, then switch legs quickly.",
+          "Keep your hips level and shoulders over your hands."
+        ],
+        "mistakes": [
+          "Bouncing the hips up and down.",
+          "Letting the shoulders drift behind the hands."
+        ],
+        "cues": [
+          "Hips low, knees fast"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_side_plank",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "side_lying",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "abductor",
+      "glute"
+    ],
+    "family": "side_plank",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 40,
+    "l10n": {
+      "en": {
+        "name": "Side Plank",
+        "aliases": [],
+        "setup": [
+          "Lie on your side with your elbow under your shoulder and legs stacked.",
+          "Lift your hips so your body forms a straight line."
+        ],
+        "execution": [
+          "Hold the line while breathing steadily.",
+          "Switch sides."
+        ],
+        "mistakes": [
+          "Letting the hips drop.",
+          "Rolling the chest toward the floor."
+        ],
+        "cues": [
+          "Hips high",
+          "Stack the shoulders"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bicycle_crunch",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "rotation",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "hip_flexor"
+    ],
+    "family": "bicycle_crunch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 42,
+    "l10n": {
+      "en": {
+        "name": "Bicycle Crunch",
+        "aliases": [],
+        "setup": [
+          "Lie on your back with your hands lightly beside your head.",
+          "Lift your shoulders and bring your knees above your hips."
+        ],
+        "execution": [
+          "Turn one shoulder toward the opposite knee as that leg pulls in and the other extends.",
+          "Switch sides in a steady rhythm."
+        ],
+        "mistakes": [
+          "Pulling the head with the hands.",
+          "Moving the elbows instead of rotating the torso."
+        ],
+        "cues": [
+          "Shoulder to knee, slow"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ab_wheel_rollout",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "core_stability",
+    "position": "kneeling",
+    "equipment": [
+      "ab_wheel"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "lat",
+      "oblique"
+    ],
+    "family": "rollout",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 46,
+    "l10n": {
+      "en": {
+        "name": "Ab Wheel Rollout",
+        "aliases": [
+          "Kneeling Ab Wheel Rollout",
+          "Ab Roller"
+        ],
+        "setup": [
+          "Kneel on a mat holding the wheel under your shoulders.",
+          "Tuck your pelvis and brace your core."
+        ],
+        "execution": [
+          "Roll the wheel forward as far as you can without letting your lower back sag.",
+          "Pull the wheel back to the start using your abs."
+        ],
+        "mistakes": [
+          "Letting the lower back arch.",
+          "Pushing the hips back first on the return."
+        ],
+        "safety": "Stop the roll before your lower back starts to arch.",
+        "cues": [
+          "Hollow back",
+          "Short range is fine"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_lying_leg_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [],
+    "family": "leg_raise",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 49,
+    "l10n": {
+      "en": {
+        "name": "Lying Leg Raise",
+        "aliases": [
+          "Floor Leg Raise"
+        ],
+        "setup": [
+          "Lie on your back with your legs straight and hands under your hips or by your sides.",
+          "Press your lower back into the floor."
+        ],
+        "execution": [
+          "Raise your legs until they point at the ceiling.",
+          "Lower them slowly as far as you can while the lower back stays down."
+        ],
+        "mistakes": [
+          "Letting the lower back arch off the floor.",
+          "Dropping the legs quickly."
+        ],
+        "cues": [
+          "Back flat",
+          "Slow down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dead_bug",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "hip_flexor",
+      "oblique"
+    ],
+    "family": "dead_bug",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 57,
+    "l10n": {
+      "en": {
+        "name": "Dead Bug",
+        "aliases": [],
+        "setup": [
+          "Lie on your back with your arms pointing at the ceiling.",
+          "Lift your knees above your hips with shins parallel to the floor."
+        ],
+        "execution": [
+          "Lower one arm overhead and the opposite leg toward the floor at the same time.",
+          "Return and switch sides."
+        ],
+        "mistakes": [
+          "Letting the lower back lift.",
+          "Moving too fast."
+        ],
+        "cues": [
+          "Back glued down",
+          "Exhale as you reach"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_bird_dog",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "quadruped",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "erector"
+    ],
+    "secondaryMuscles": [
+      "glute",
+      "abdominal"
+    ],
+    "family": "bird_dog",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 61,
+    "l10n": {
+      "en": {
+        "name": "Bird Dog",
+        "aliases": [],
+        "setup": [
+          "Kneel on all fours with hands under shoulders and knees under hips.",
+          "Keep your back flat."
+        ],
+        "execution": [
+          "Reach one arm forward and the opposite leg back until both are level with your body.",
+          "Hold briefly, return and switch."
+        ],
+        "mistakes": [
+          "Rotating the hips.",
+          "Arching the lower back to lift the leg higher."
+        ],
+        "cues": [
+          "Long, not high",
+          "Hips level"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_reverse_crunch",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "hip_flexor"
+    ],
+    "family": "reverse_crunch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 65,
+    "l10n": {
+      "en": {
+        "name": "Reverse Crunch",
+        "aliases": [],
+        "setup": [
+          "Lie on your back with arms by your sides.",
+          "Lift your knees above your hips, bent at 90 degrees."
+        ],
+        "execution": [
+          "Curl your hips off the floor by bringing your knees toward your chest.",
+          "Lower your hips slowly."
+        ],
+        "mistakes": [
+          "Swinging the legs for momentum.",
+          "Only moving the legs without lifting the hips."
+        ],
+        "cues": [
+          "Hips up, slow down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_flutter_kick",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_stability",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "hip_flexor",
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "quads"
+    ],
+    "family": "flutter_kick",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 74,
+    "l10n": {
+      "en": {
+        "name": "Flutter Kick",
+        "aliases": [
+          "Flutter Kicks",
+          "Scissor Kicks"
+        ],
+        "setup": [
+          "Lie on your back with your legs straight and hands under your hips.",
+          "Lift your heels a few centimetres off the floor."
+        ],
+        "execution": [
+          "Kick your legs up and down in small, quick alternating movements.",
+          "Keep your lower back pressed down."
+        ],
+        "mistakes": [
+          "Letting the lower back arch.",
+          "Kicking too high."
+        ],
+        "cues": [
+          "Small kicks, back flat"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_v_up",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [],
+    "family": "sit_up",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 78,
+    "l10n": {
+      "en": {
+        "name": "V-Up",
+        "aliases": [
+          "Jackknife Sit-Up"
+        ],
+        "setup": [
+          "Lie flat with your arms overhead and legs straight.",
+          "Brace your stomach."
+        ],
+        "execution": [
+          "Lift your arms and legs together, reaching your hands toward your feet.",
+          "Lower back down with control."
+        ],
+        "mistakes": [
+          "Bending the knees heavily.",
+          "Flopping back to the floor."
+        ],
+        "cues": [
+          "Reach for the toes"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_woodchop",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "rotation",
+    "position": "standing",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "front_delt"
+    ],
+    "family": "woodchop",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 81,
+    "l10n": {
+      "en": {
+        "name": "Cable Woodchop",
+        "aliases": [
+          "High-to-Low Woodchop",
+          "Cable Wood Chop"
+        ],
+        "setup": [
+          "Set a pulley high and stand side-on to it.",
+          "Hold the handle with both hands above your near shoulder."
+        ],
+        "execution": [
+          "Pull the handle down and across your body to the opposite hip, turning your torso.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Pulling only with the arms.",
+          "Twisting through the lower back instead of turning the hips and chest."
+        ],
+        "cues": [
+          "Turn the chest",
+          "Pivot the back foot"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_cable_pallof_press",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "core_stability",
+    "position": "standing",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "oblique",
+      "abdominal"
+    ],
+    "secondaryMuscles": [],
+    "family": "pallof_press",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 86,
+    "l10n": {
+      "en": {
+        "name": "Cable Pallof Press",
+        "aliases": [
+          "Pallof Press",
+          "Anti-Rotation Press"
+        ],
+        "setup": [
+          "Set a pulley at chest height and stand side-on to it.",
+          "Hold the handle against your chest and step away until the cable is taut."
+        ],
+        "execution": [
+          "Press the handle straight out in front of you without letting your body turn.",
+          "Hold for a breath, then bring it back."
+        ],
+        "mistakes": [
+          "Letting the torso rotate toward the stack.",
+          "Standing too close for any tension."
+        ],
+        "cues": [
+          "Don't let it turn you"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_hanging_knee_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "hanging",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "leg_raise",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 91,
+    "l10n": {
+      "en": {
+        "name": "Hanging Knee Raise",
+        "aliases": [],
+        "setup": [
+          "Hang from a bar with straight arms.",
+          "Pull your shoulders down slightly."
+        ],
+        "execution": [
+          "Raise your knees toward your chest, curling your pelvis up.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Swinging.",
+          "Raising the knees only to hip height without curling."
+        ],
+        "cues": [
+          "Knees up, pelvis curls"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_captain_s_chair_knee_raise",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "hanging",
+    "equipment": [
+      "dip_station"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [],
+    "family": "leg_raise",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 96,
+    "l10n": {
+      "en": {
+        "name": "Captain's Chair Knee Raise",
+        "aliases": [
+          "Vertical Knee Raise",
+          "Captain's Chair Leg Raise"
+        ],
+        "setup": [
+          "Support yourself on your forearms in a captain's chair or between dip bars.",
+          "Press your back against the pad."
+        ],
+        "execution": [
+          "Raise your knees toward your chest.",
+          "Lower them slowly."
+        ],
+        "mistakes": [
+          "Swinging the legs.",
+          "Shrugging into the shoulders."
+        ],
+        "cues": [
+          "Lift with the abs"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_toes_to_bar",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "hanging",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [
+      "lat",
+      "forearm"
+    ],
+    "family": "leg_raise",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 101,
+    "l10n": {
+      "en": {
+        "name": "Toes-to-Bar",
+        "aliases": [
+          "T2B"
+        ],
+        "setup": [
+          "Hang from a bar with straight arms, hands about shoulder width.",
+          "Brace your core."
+        ],
+        "execution": [
+          "Pull down on the bar slightly and raise your feet until they touch the bar.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Big uncontrolled swings.",
+          "Bending the knees a lot."
+        ],
+        "cues": [
+          "Press the bar down",
+          "Feet to the bar"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_decline_crunch",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "decline",
+    "equipment": [
+      "bench"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [],
+    "family": "crunch",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 106,
+    "l10n": {
+      "en": {
+        "name": "Decline Crunch",
+        "aliases": [],
+        "setup": [
+          "Lie on a decline bench with your feet hooked under the pads.",
+          "Cross your arms on your chest."
+        ],
+        "execution": [
+          "Curl your shoulders up until your upper back leaves the bench.",
+          "Lower slowly."
+        ],
+        "mistakes": [
+          "Yanking the head.",
+          "Sitting all the way up."
+        ],
+        "cues": [
+          "Curl, don't sit"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_hollow_body_hold",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "hip_flexor"
+    ],
+    "family": "hollow_hold",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 111,
+    "l10n": {
+      "en": {
+        "name": "Hollow Body Hold",
+        "aliases": [
+          "Hollow Hold"
+        ],
+        "setup": [
+          "Lie on your back with arms overhead and legs straight.",
+          "Press your lower back into the floor."
+        ],
+        "execution": [
+          "Lift your arms, shoulders and legs off the floor into a shallow banana shape.",
+          "Hold while breathing steadily."
+        ],
+        "mistakes": [
+          "Letting the lower back lift.",
+          "Holding the breath."
+        ],
+        "cues": [
+          "Back flat, reach long"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_decline_sit_up",
+    "status": "live",
+    "loggingType": "weighted_bodyweight",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "decline",
+    "equipment": [
+      "bench"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "hip_flexor"
+    ],
+    "family": "sit_up",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 117,
+    "l10n": {
+      "en": {
+        "name": "Decline Sit-Up",
+        "aliases": [
+          "Weighted Decline Sit-Up"
+        ],
+        "setup": [
+          "Hook your feet under the pads of a decline bench.",
+          "Hold a plate against your chest for extra load if needed."
+        ],
+        "execution": [
+          "Curl up until your torso is upright.",
+          "Lower slowly to the bench."
+        ],
+        "mistakes": [
+          "Bouncing off the bench.",
+          "Pulling with the neck."
+        ],
+        "cues": [
+          "Slow on the way down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_machine_crunch",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [],
+    "family": "crunch",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 5,
+    "popularity": 119,
+    "l10n": {
+      "en": {
+        "name": "Machine Crunch",
+        "aliases": [
+          "Ab Crunch Machine"
+        ],
+        "setup": [
+          "Adjust the seat and hold the handles or pads.",
+          "Sit tall."
+        ],
+        "execution": [
+          "Crunch forward by curling your ribs toward your hips.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Pulling with the arms.",
+          "Using momentum."
+        ],
+        "cues": [
+          "Curl the spine"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_high_plank",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "front_delt",
+      "pec",
+      "glute"
+    ],
+    "family": "plank",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 122,
+    "l10n": {
+      "en": {
+        "name": "High Plank",
+        "aliases": [
+          "Straight-Arm Plank",
+          "Push-Up Plank"
+        ],
+        "setup": [
+          "Place your hands under your shoulders and straighten your arms.",
+          "Step back so your body is straight."
+        ],
+        "execution": [
+          "Hold the position while bracing your stomach and squeezing your glutes.",
+          "Breathe steadily."
+        ],
+        "mistakes": [
+          "Sagging hips.",
+          "Locking the elbows hard."
+        ],
+        "cues": [
+          "Push the floor away"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_stability_ball_crunch",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "supine",
+    "equipment": [
+      "stability_ball"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [],
+    "family": "crunch",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 129,
+    "l10n": {
+      "en": {
+        "name": "Stability Ball Crunch",
+        "aliases": [
+          "Swiss Ball Crunch"
+        ],
+        "setup": [
+          "Sit on a stability ball and walk your feet out until the ball supports your lower back.",
+          "Let your upper back drape over the ball."
+        ],
+        "execution": [
+          "Curl your ribs toward your hips.",
+          "Lower back over the ball slowly."
+        ],
+        "mistakes": [
+          "Rolling the ball instead of crunching.",
+          "Pulling the head."
+        ],
+        "cues": [
+          "Stretch, then crunch"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_l_sit",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "seated",
+    "equipment": [
+      "dip_station"
+    ],
+    "mainMuscles": [
+      "hip_flexor",
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "quads",
+      "triceps"
+    ],
+    "family": "l_sit",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 135,
+    "l10n": {
+      "en": {
+        "name": "L-Sit",
+        "aliases": [
+          "L-Sit Hold"
+        ],
+        "setup": [
+          "Grip the dip bars or parallettes with straight arms.",
+          "Press down so your shoulders are away from your ears."
+        ],
+        "execution": [
+          "Lift your legs straight in front of you until they are level with your hips.",
+          "Hold for the set time."
+        ],
+        "mistakes": [
+          "Bending the knees.",
+          "Letting the shoulders shrug up."
+        ],
+        "cues": [
+          "Push down, legs long"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dragon_flag",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "supine",
+    "equipment": [
+      "bench"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "hip_flexor",
+      "lat",
+      "oblique"
+    ],
+    "family": "dragon_flag",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 141,
+    "l10n": {
+      "en": {
+        "name": "Dragon Flag",
+        "aliases": [],
+        "setup": [
+          "Lie on a bench and grip it behind your head.",
+          "Lift your legs and hips so your weight rests on your upper back."
+        ],
+        "execution": [
+          "Lower your straight body slowly toward the bench, hinging only at the shoulders.",
+          "Raise it back up without bending at the hips."
+        ],
+        "mistakes": [
+          "Bending at the hips.",
+          "Arching the lower back."
+        ],
+        "safety": "Learn negatives first; this places heavy load on the lower back if your form breaks.",
+        "cues": [
+          "Straight body",
+          "Slow lowering"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_side_bend",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "standing",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [],
+    "family": "side_bend",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 2,
+    "popularity": 146,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Side Bend",
+        "aliases": [],
+        "setup": [
+          "Stand tall with a dumbbell in one hand at your side.",
+          "Place the other hand on your hip."
+        ],
+        "execution": [
+          "Bend sideways toward the dumbbell.",
+          "Return to upright using the opposite side of your waist."
+        ],
+        "mistakes": [
+          "Leaning forward or back.",
+          "Holding a dumbbell in each hand, which cancels the load."
+        ],
+        "cues": [
+          "Straight side to side"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_heel_touch",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal"
+    ],
+    "family": "heel_touch",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 152,
+    "l10n": {
+      "en": {
+        "name": "Heel Touch",
+        "aliases": [
+          "Alternating Heel Touch"
+        ],
+        "setup": [
+          "Lie on your back with knees bent and feet flat, a little wider than hips.",
+          "Lift your shoulders slightly off the floor."
+        ],
+        "execution": [
+          "Reach one hand toward the same-side heel by bending sideways.",
+          "Switch sides."
+        ],
+        "mistakes": [
+          "Letting the head drop back down.",
+          "Pulling the neck."
+        ],
+        "cues": [
+          "Side to side, shoulders up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_plank_shoulder_tap",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "prone",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "plank",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 155,
+    "l10n": {
+      "en": {
+        "name": "Plank Shoulder Tap",
+        "aliases": [],
+        "setup": [
+          "Start in a high plank with feet a little wider than hips.",
+          "Brace your core."
+        ],
+        "execution": [
+          "Lift one hand and touch the opposite shoulder.",
+          "Switch hands without letting the hips sway."
+        ],
+        "mistakes": [
+          "Rocking the hips side to side.",
+          "Rushing."
+        ],
+        "cues": [
+          "Hips still"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_landmine_rotation",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "rotation",
+    "position": "standing",
+    "equipment": [
+      "landmine"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "front_delt"
+    ],
+    "family": "landmine_rotation",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 159,
+    "l10n": {
+      "en": {
+        "name": "Landmine Rotation",
+        "aliases": [
+          "Landmine 180",
+          "Landmine Rainbow"
+        ],
+        "setup": [
+          "Stand facing a landmine bar and hold its end with both hands at arm's length above your head.",
+          "Set your feet wider than your hips."
+        ],
+        "execution": [
+          "Lower the bar in an arc to one hip, turning your torso and pivoting your feet.",
+          "Bring it back over the top and to the other side."
+        ],
+        "mistakes": [
+          "Bending the arms.",
+          "Twisting only from the lower back."
+        ],
+        "cues": [
+          "Arms long",
+          "Pivot the feet"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_lying_windshield_wiper",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "rotation",
+    "position": "supine",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal"
+    ],
+    "family": "windshield_wiper",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 166,
+    "l10n": {
+      "en": {
+        "name": "Lying Windshield Wiper",
+        "aliases": [],
+        "setup": [
+          "Lie on your back with arms out wide and legs raised straight up.",
+          "Press your shoulders into the floor."
+        ],
+        "execution": [
+          "Lower your legs to one side while keeping both shoulders down.",
+          "Bring them back to the middle and go to the other side."
+        ],
+        "mistakes": [
+          "Letting the shoulders lift.",
+          "Dropping the legs quickly."
+        ],
+        "cues": [
+          "Shoulders pinned"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_side_plank_hip_dip",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_stability",
+    "position": "side_lying",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "abductor"
+    ],
+    "family": "side_plank",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 172,
+    "l10n": {
+      "en": {
+        "name": "Side Plank Hip Dip",
+        "aliases": [],
+        "setup": [
+          "Set up in a side plank on your forearm with legs stacked.",
+          "Lift your hips into a straight line."
+        ],
+        "execution": [
+          "Lower your hip toward the floor without touching it.",
+          "Lift it back up above the line."
+        ],
+        "mistakes": [
+          "Rotating the chest.",
+          "Moving fast."
+        ],
+        "cues": [
+          "Down slow, up high"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_weighted_plank",
+    "status": "live",
+    "loggingType": "weight_duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "prone",
+    "equipment": [
+      "bodyweight",
+      "plate"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "oblique",
+      "glute"
+    ],
+    "family": "plank",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 179,
+    "l10n": {
+      "en": {
+        "name": "Weighted Plank",
+        "aliases": [],
+        "setup": [
+          "Set up in a forearm plank.",
+          "Have a partner place a plate on your upper back, below the neck."
+        ],
+        "execution": [
+          "Hold a straight body for the set time.",
+          "Have the plate removed before you drop."
+        ],
+        "mistakes": [
+          "Sagging under the weight.",
+          "Placing the plate on the lower back."
+        ],
+        "cues": [
+          "Brace like a plank, just heavier"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_kneeling_side_plank",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "side_lying",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal"
+    ],
+    "family": "side_plank",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 187,
+    "l10n": {
+      "en": {
+        "name": "Kneeling Side Plank",
+        "aliases": [
+          "Modified Side Plank"
+        ],
+        "setup": [
+          "Lie on your side on your forearm with knees bent behind you.",
+          "Line up your head, hips and knees."
+        ],
+        "execution": [
+          "Lift your hips and hold the line.",
+          "Switch sides."
+        ],
+        "mistakes": [
+          "Letting the hips drop.",
+          "Rolling forward."
+        ],
+        "cues": [
+          "Hips up"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_pallof_press",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "core_stability",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "oblique",
+      "abdominal"
+    ],
+    "secondaryMuscles": [],
+    "family": "pallof_press",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 191,
+    "l10n": {
+      "en": {
+        "name": "Band Pallof Press",
+        "aliases": [],
+        "setup": [
+          "Anchor a band at chest height and stand side-on to it.",
+          "Hold it at your chest and step away until it is taut."
+        ],
+        "execution": [
+          "Press your hands straight out and hold for a breath.",
+          "Bring them back without turning."
+        ],
+        "mistakes": [
+          "Rotating toward the anchor.",
+          "Leaning away."
+        ],
+        "cues": [
+          "Stay square"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_standing_ab_wheel_rollout",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "core_stability",
+    "position": "standing",
+    "equipment": [
+      "ab_wheel"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "lat",
+      "oblique",
+      "hip_flexor"
+    ],
+    "family": "rollout",
+    "familyRank": 5,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 196,
+    "l10n": {
+      "en": {
+        "name": "Standing Ab Wheel Rollout",
+        "aliases": [],
+        "setup": [
+          "Stand with feet hip-width apart and place the wheel on the floor in front of your feet.",
+          "Bend at the hips to grip it."
+        ],
+        "execution": [
+          "Roll forward until your body is nearly parallel to the floor.",
+          "Pull back to the start without bending the hips first."
+        ],
+        "mistakes": [
+          "Letting the lower back sag.",
+          "Rolling further than you can return from."
+        ],
+        "safety": "Master full kneeling rollouts first; this variation loads the lower back heavily.",
+        "cues": [
+          "Hollow body all the way"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_rotary_torso_machine",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "rotation",
+    "position": "seated",
+    "equipment": [
+      "machine"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal"
+    ],
+    "family": "torso_rotation",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "incrementKg": 5,
+    "popularity": 200,
+    "l10n": {
+      "en": {
+        "name": "Rotary Torso Machine",
+        "aliases": [
+          "Seated Torso Rotation"
+        ],
+        "setup": [
+          "Sit in the machine and lock your legs in place.",
+          "Hold the handles with your chest against the pad."
+        ],
+        "execution": [
+          "Rotate your torso to one side against the resistance.",
+          "Return slowly and finish the set before switching sides."
+        ],
+        "mistakes": [
+          "Rotating too fast.",
+          "Using a range that hurts the lower back."
+        ],
+        "cues": [
+          "Slow turns"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_hanging_windshield_wiper",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "rotation",
+    "position": "hanging",
+    "equipment": [
+      "pull_up_bar"
+    ],
+    "mainMuscles": [
+      "oblique",
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "hip_flexor",
+      "lat",
+      "forearm"
+    ],
+    "family": "windshield_wiper",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "popularity": 204,
+    "l10n": {
+      "en": {
+        "name": "Hanging Windshield Wiper",
+        "aliases": [],
+        "setup": [
+          "Hang from a bar and raise your straight legs until your feet are near the bar.",
+          "Hold the top position."
+        ],
+        "execution": [
+          "Rotate your legs to one side, then to the other, like windshield wipers.",
+          "Keep the upper body steady."
+        ],
+        "mistakes": [
+          "Swinging.",
+          "Bending the knees."
+        ],
+        "cues": [
+          "Legs up, rotate slow"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_plate_russian_twist",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "alternating",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "rotation",
+    "position": "seated",
+    "equipment": [
+      "plate"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "family": "russian_twist",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 208,
+    "l10n": {
+      "en": {
+        "name": "Plate Russian Twist",
+        "aliases": [
+          "Weighted Russian Twist"
+        ],
+        "setup": [
+          "Sit with knees bent and hold a plate at your chest.",
+          "Lean back to about 45 degrees."
+        ],
+        "execution": [
+          "Rotate the plate to one side, then the other.",
+          "Keep your chest up."
+        ],
+        "mistakes": [
+          "Moving only the arms.",
+          "Rounding the back."
+        ],
+        "cues": [
+          "Turn the chest"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_woodchop",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "rotation",
+    "position": "standing",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal"
+    ],
+    "family": "woodchop",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 212,
+    "l10n": {
+      "en": {
+        "name": "Band Woodchop",
+        "aliases": [],
+        "setup": [
+          "Anchor a band high and stand side-on to it.",
+          "Hold it with both hands above your near shoulder."
+        ],
+        "execution": [
+          "Pull down and across to the opposite hip, turning your chest.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Pulling only with the arms.",
+          "Rounding the back."
+        ],
+        "cues": [
+          "Turn the chest"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_low_to_high_cable_woodchop",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "rotation",
+    "position": "standing",
+    "equipment": [
+      "cable"
+    ],
+    "mainMuscles": [
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "front_delt",
+      "glute"
+    ],
+    "family": "woodchop",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 216,
+    "l10n": {
+      "en": {
+        "name": "Low-to-High Cable Woodchop",
+        "aliases": [
+          "Reverse Woodchop",
+          "Cable Lift"
+        ],
+        "setup": [
+          "Set a pulley low and stand side-on to it.",
+          "Hold the handle with both hands by your near hip."
+        ],
+        "execution": [
+          "Pull the handle up and across your body to above the opposite shoulder.",
+          "Return slowly."
+        ],
+        "mistakes": [
+          "Lifting only with the arms.",
+          "Twisting the lower back."
+        ],
+        "cues": [
+          "Drive with the hips"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_stability_ball_rollout",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_stability",
+    "position": "kneeling",
+    "equipment": [
+      "stability_ball"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "lat"
+    ],
+    "family": "rollout",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 220,
+    "l10n": {
+      "en": {
+        "name": "Stability Ball Rollout",
+        "aliases": [
+          "Swiss Ball Rollout"
+        ],
+        "setup": [
+          "Kneel behind a stability ball with your forearms on top of it.",
+          "Brace your core with your body straight from knees to head."
+        ],
+        "execution": [
+          "Roll the ball forward on your forearms until your body is extended.",
+          "Pull back to the start."
+        ],
+        "mistakes": [
+          "Arching the back.",
+          "Bending at the hips."
+        ],
+        "cues": [
+          "Straight line"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ab_wheel_wall_rollout",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_stability",
+    "position": "kneeling",
+    "equipment": [
+      "ab_wheel"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "lat"
+    ],
+    "family": "rollout",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 224,
+    "l10n": {
+      "en": {
+        "name": "Ab Wheel Wall Rollout",
+        "aliases": [],
+        "setup": [
+          "Kneel facing a wall with the ab wheel between you and the wall.",
+          "Set the distance so the wheel stops at a range you can control."
+        ],
+        "execution": [
+          "Roll forward until the wheel touches the wall.",
+          "Pull back to the start."
+        ],
+        "mistakes": [
+          "Letting the back sag.",
+          "Rushing."
+        ],
+        "cues": [
+          "Wall sets the range"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_ab_wheel_diagonal_rollout",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "core_stability",
+    "position": "kneeling",
+    "equipment": [
+      "ab_wheel"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "oblique"
+    ],
+    "secondaryMuscles": [
+      "lat"
+    ],
+    "family": "rollout",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 227,
+    "l10n": {
+      "en": {
+        "name": "Ab Wheel Diagonal Rollout",
+        "aliases": [
+          "Oblique Rollout"
+        ],
+        "setup": [
+          "Kneel holding the ab wheel under your shoulders.",
+          "Brace with your pelvis tucked."
+        ],
+        "execution": [
+          "Roll the wheel forward and diagonally to one side.",
+          "Pull back and repeat to the other side."
+        ],
+        "mistakes": [
+          "Twisting the hips.",
+          "Letting the back sag."
+        ],
+        "cues": [
+          "Hollow back"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_stir_the_pot",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "core_stability",
+    "position": "prone",
+    "equipment": [
+      "stability_ball"
+    ],
+    "mainMuscles": [
+      "abdominal"
+    ],
+    "secondaryMuscles": [
+      "oblique",
+      "front_delt"
+    ],
+    "family": "stir_the_pot",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 229,
+    "l10n": {
+      "en": {
+        "name": "Stir the Pot",
+        "aliases": [],
+        "setup": [
+          "Place your forearms on a stability ball and step back into a plank.",
+          "Set your feet slightly wider than hips."
+        ],
+        "execution": [
+          "Move your forearms in small circles as if stirring a pot.",
+          "Change direction halfway through."
+        ],
+        "mistakes": [
+          "Letting the hips sag.",
+          "Making huge circles."
+        ],
+        "cues": [
+          "Small circles, still hips"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_stability_ball_knee_tuck",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "prone",
+    "equipment": [
+      "stability_ball"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [],
+    "family": "knee_tuck",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 230,
+    "l10n": {
+      "en": {
+        "name": "Stability Ball Knee Tuck",
+        "aliases": [
+          "Ball Jackknife"
+        ],
+        "setup": [
+          "Place your shins on a stability ball and your hands on the floor in a push-up position.",
+          "Brace so your body is straight."
+        ],
+        "execution": [
+          "Pull your knees toward your chest, rolling the ball forward.",
+          "Roll it back out to the start."
+        ],
+        "mistakes": [
+          "Sagging hips.",
+          "Letting the shoulders drift behind the hands."
+        ],
+        "cues": [
+          "Knees to chest"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_suspension_trainer_knee_tuck",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "prone",
+    "equipment": [
+      "suspension_trainer"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [],
+    "family": "knee_tuck",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 231,
+    "l10n": {
+      "en": {
+        "name": "Suspension Trainer Knee Tuck",
+        "aliases": [
+          "TRX Knee Tuck",
+          "TRX Crunch"
+        ],
+        "setup": [
+          "Place your feet in the foot cradles facing the floor.",
+          "Walk out into a push-up position."
+        ],
+        "execution": [
+          "Pull your knees toward your chest.",
+          "Extend back to a plank."
+        ],
+        "mistakes": [
+          "Letting the hips sag.",
+          "Swinging."
+        ],
+        "cues": [
+          "Smooth tuck"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_stability_ball_pike",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "prone",
+    "equipment": [
+      "stability_ball"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [],
+    "family": "knee_tuck",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 232,
+    "l10n": {
+      "en": {
+        "name": "Stability Ball Pike",
+        "aliases": [],
+        "setup": [
+          "Place your shins on a stability ball in a push-up position.",
+          "Brace your core."
+        ],
+        "execution": [
+          "Lift your hips high, rolling the ball toward your hands with straight legs.",
+          "Lower back to a plank."
+        ],
+        "mistakes": [
+          "Bending the knees.",
+          "Collapsing the shoulders."
+        ],
+        "cues": [
+          "Hips to the ceiling"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_suspension_trainer_pike",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "advanced",
+    "force": "pull",
+    "movementPattern": "core_flexion",
+    "position": "prone",
+    "equipment": [
+      "suspension_trainer"
+    ],
+    "mainMuscles": [
+      "abdominal",
+      "hip_flexor"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "knee_tuck",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 234,
+    "l10n": {
+      "en": {
+        "name": "Suspension Trainer Pike",
+        "aliases": [
+          "TRX Pike"
+        ],
+        "setup": [
+          "Place your feet in the foot cradles facing the floor.",
+          "Walk out into a push-up position."
+        ],
+        "execution": [
+          "Lift your hips toward the ceiling, keeping legs straight.",
+          "Lower back to a plank."
+        ],
+        "mistakes": [
+          "Bending the knees.",
+          "Sagging at the bottom."
+        ],
+        "cues": [
+          "Hips high, legs straight"
+        ]
+      }
+    }
+  }
+]
