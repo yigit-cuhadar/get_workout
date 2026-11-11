@@ -10,6 +10,7 @@ import '../features/exercises/exercises_module.dart';
 import '../features/profile/profile_module.dart';
 import '../features/programs/programs_module.dart';
 import '../features/settings/settings_module.dart';
+import '../features/workout/workout_module.dart';
 import 'app.dart';
 
 /// Composition root: every feature module is registered here.
@@ -24,7 +25,8 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     CardioModule(),
     CalculatorsModule(),
     ExercisesModule(),
-    ProgramsModule(completedDays: ProgramsModule.nothingDone),
+    ProgramsModule(completedDays: WorkoutModule.completedDays),
+    WorkoutModule(),
   ]);
   runApp(const App());
 }

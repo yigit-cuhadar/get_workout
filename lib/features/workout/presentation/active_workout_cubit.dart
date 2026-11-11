@@ -6,6 +6,7 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../../core/grouping.dart' as grouping;
 import '../../exercises/domain/exercise.dart';
+import '../../exercises/domain/exercise_queries.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../programs/domain/calendar_date.dart';
@@ -296,6 +297,17 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   void ungroup(int index) => _editExercises(
     (list) => _has(list, index) ? grouping.ungroup(list, index) : list,
   );
+
+  /// What could replace exercise [index], best first; empty when it is no
+  /// longer in the library. [owned] is the user's equipment.
+  List<Exercise> alternatives(int index, Set<Equipment> owned) {
+    final exercises = _exercises;
+    final id = state.workout?.exercises.elementAtOrNull(index)?.exerciseId;
+    final exercise = exercises[id];
+    return exercise == null
+        ? const []
+        : alternativesFor(exercise, exercises.values, owned: owned);
+  }
 
   void setExerciseNote(int index, String text) =>
       _editExercise(index, (e) => e.copyWith(note: () => _note(text)));
