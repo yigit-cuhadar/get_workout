@@ -230,6 +230,35 @@ from the earlier FitLab app.
   set note 200, 40 exercises, 30 sets each, 5 drops per set. The rules
   validate the top-level fields of `workouts` and `exerciseStats` (allowed
   keys, types, sizes); the app checks sets before storing.
+- **Rest timer**: ticking a set starts a rest of its program item's
+  `restS`, else the exercise's `defaultRestS`, else the settings' default
+  (`settings.restTimer`: `enabled`, default on; `defaultS`, 90 s, 15-600;
+  `notify`). A rest of 0 is none. In a superset or circuit only the last
+  exercise of the group that has a set at that position starts it, for the
+  rest of the group's last exercise (as the program estimate counts it).
+  Warm-ups start none and leave a running one alone; a drop set rests like
+  any set. A new tick replaces the running rest; unticking the set that
+  started it (or an edit that unticks it) ends it, unless exercises or
+  sets were moved or removed since, which keeps it running unlinked.
+  Finishing, discarding and a user change end it. The rest is its end time
+  on the device clock, kept with the workout in progress in the local file
+  (optional `rest` field, still version 2), so it survives minimizing,
+  backgrounding and restarts; a rest that ended while the app was away
+  ends quietly, one that reaches zero in front of the user buzzes and
+  shows "Rest over" for 3 s. +15 s moves the end; there is no −15 s.
+- **Rest notification**: local, scheduled only when the app hides and
+  cancelled when it shows or the rest changes, since the notifications
+  package cannot hide one over the app in front; a rest left running when
+  the app is killed in front gets none. The user is asked once, in the app,
+  the first time they start a rest; the answer is stored as
+  `settings.restTimer.notify` and can be changed on the settings page.
+  "Allow" asks the device, then on Android for exact alarms (without them
+  the notification falls back to an inexact alarm, possibly late); a
+  device refusal is stored as no. A stored yes is checked against the
+  device at the first rest of each app run (a new device asks the system
+  once). The rest notification has id 1 on one Android channel,
+  `workout` ("Workout", high importance).
+
 - **Blocked on accounts the user will open when needed**: Apple Developer
   (Apple sign-in, HealthKit, iOS push, Live Activity on a real device), Google
   Play Console, RevenueCat. Development continues without them.
