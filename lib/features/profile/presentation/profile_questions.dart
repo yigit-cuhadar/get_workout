@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:intl/intl.dart';
@@ -112,6 +113,15 @@ extension ProfileLabels on AppLocalizations {
 
 /// At most one decimal, without a trailing zero.
 String formatProfileNumber(double value) => NumberFormat('0.#').format(value);
+
+/// The metric range [min]..[max] in a display unit, to the one decimal shown,
+/// rounded inwards so a value at a shown bound is accepted.
+({double min, double max}) displayRange(
+  double min,
+  double max,
+  double Function(double metric) toUnit,
+) =>
+    (min: (toUnit(min) * 10).ceil() / 10, max: (toUnit(max) * 10).floor() / 10);
 
 /// One question of the profile, answered into the [ProfileFormCubit] above
 /// it. Heights and weights are entered in the units of [SettingsCubit]; their
@@ -309,9 +319,13 @@ class _HeightAnswer extends StatelessWidget {
           label: l10n.calcHeight(l10n.lengthUnitName(unit)),
           initialValue: cm == null ? '' : formatProfileNumber(unit.fromCm(cm)),
           errorText: state.invalid.contains(ProfileField.height)
-              ? l10n.calcOutOfRange(
-                  formatProfileNumber(unit.fromCm(ProfileLimits.minHeightCm)),
-                  formatProfileNumber(unit.fromCm(ProfileLimits.maxHeightCm)),
+              ? _outOfRange(
+                  l10n,
+                  displayRange(
+                    ProfileLimits.minHeightCm,
+                    ProfileLimits.maxHeightCm,
+                    unit.fromCm,
+                  ),
                 )
               : null,
           onChanged: (text) => cubit.enterHeight(text, unit),
@@ -358,9 +372,13 @@ class _WeightAnswer extends StatelessWidget {
               : l10n.calcBodyWeight(unitName),
           initialValue: kg == null ? '' : formatProfileNumber(unit.fromKg(kg)),
           errorText: state.invalid.contains(field)
-              ? l10n.calcOutOfRange(
-                  formatProfileNumber(unit.fromKg(ProfileLimits.minWeightKg)),
-                  formatProfileNumber(unit.fromKg(ProfileLimits.maxWeightKg)),
+              ? _outOfRange(
+                  l10n,
+                  displayRange(
+                    ProfileLimits.minWeightKg,
+                    ProfileLimits.maxWeightKg,
+                    unit.fromKg,
+                  ),
                 )
               : null,
           onChanged: (text) => target
@@ -371,6 +389,12 @@ class _WeightAnswer extends StatelessWidget {
     );
   }
 }
+
+String _outOfRange(AppLocalizations l10n, ({double min, double max}) range) =>
+    l10n.calcOutOfRange(
+      formatProfileNumber(range.min),
+      formatProfileNumber(range.max),
+    );
 
 class _UnitSwitch<T> extends StatelessWidget {
   const _UnitSwitch({
@@ -436,6 +460,13 @@ class _NumberEntryState extends State<_NumberEntry> {
     autofocus: true,
     onChanged: widget.onChanged,
     keyboardType: TextInputType.numberWithOptions(decimal: !widget.wholeNumber),
+    // Plain numbers only; the length fits every valid answer.
+    inputFormatters: [
+      widget.wholeNumber
+          ? FilteringTextInputFormatter.digitsOnly
+          : FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+      LengthLimitingTextInputFormatter(widget.wholeNumber ? 4 : 6),
+    ],
     decoration: InputDecoration(
       labelText: widget.label,
       errorText: widget.errorText,

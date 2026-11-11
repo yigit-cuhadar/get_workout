@@ -231,9 +231,18 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     );
   }
 
+  /// Far beyond every limit, far below where conversions lose meaning.
+  static const _absurd = 1e6;
+
+  /// Null when empty; NaN, which every limit rejects, when not a plain
+  /// number: "Infinity", "NaN", overflowing exponents and digit strings.
   static double? _parse(String text) {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return null;
-    return double.tryParse(trimmed.replaceAll(',', '.')) ?? double.nan;
+    final value = double.tryParse(trimmed.replaceAll(',', '.'));
+    if (value == null || !value.isFinite || value.abs() > _absurd) {
+      return double.nan;
+    }
+    return value;
   }
 }

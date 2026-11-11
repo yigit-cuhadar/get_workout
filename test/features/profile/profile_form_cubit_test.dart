@@ -258,6 +258,35 @@ void main() {
       expect(cubit.birthYearRange, (min: 1926, max: 2013));
     });
 
+    test('non-finite and absurd entries are invalid, never exceptions', () {
+      const entries = [
+        'Infinity',
+        '-Infinity',
+        'NaN',
+        '1e400',
+        '-1e400',
+        '1e7',
+        '99999999999999999999999999',
+        '12abc',
+        '..',
+      ];
+      final cubit = onboarding();
+      for (final text in entries) {
+        cubit
+          ..enterBirthYear(text)
+          ..enterHeight(text, LengthUnit.inch)
+          ..enterWeight(text, WeightUnit.lb)
+          ..enterTargetWeight(text, WeightUnit.kg);
+        expect(cubit.state.invalid, {
+          ProfileField.birthYear,
+          ProfileField.height,
+          ProfileField.weight,
+          ProfileField.targetWeight,
+        }, reason: text);
+        expect(cubit.state.answers, const UserProfile(), reason: text);
+      }
+    });
+
     test('an invalid entry blocks its question', () async {
       final cubit = onboarding(complete);
       await goTo(cubit, ProfileField.weight);
