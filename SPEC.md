@@ -34,6 +34,14 @@ from the earlier FitLab app.
 - **Backend**: Blaze plan. Cloud Functions are used only where a client cannot
   be trusted or cannot do the job: RevenueCat webhook, account deletion,
   sending push announcements. The program generator runs on device.
+- **Exercise sync**: clients read `exercises` of every status, so a
+  retirement or a return to draft is noticed by the incremental sync on
+  `updatedAt`, and filter to `live` on device. A cache whose document count
+  differs from the server's `count()` is rebuilt with a full fetch.
+- **Content ownership**: Firestore is the source of truth for content once
+  it is seeded. `content/*.json` is the seed and the bulk-edit path;
+  the admin panel edits Firestore directly and leaves `contentHash` alone, so
+  the import skips (and fails on) documents edited there unless `--force`.
 - **Offline**: Firestore's persistent cache is the local database. The workout
   in progress is also kept in a local file so a crash never loses sets.
   Derived numbers are computed from workouts on read wherever the query is
@@ -112,21 +120,22 @@ Firestore. Timestamps are server timestamps; ids are generated on the client.
 
 | Field | Type | Notes |
 |---|---|---|
-| `status` | `draft` \| `live` \| `retired` | Clients query `live`; never hard-deleted |
+| `status` | `draft` \| `live` \| `retired` | Clients read every status and show only `live`; never hard-deleted |
 | `loggingType`, `mechanic`, `laterality`, `level`, `force`, `movementPattern`, `position` | code | |
 | `grip`, `gripWidth` | code? | |
 | `equipment` | code[] | 1+ |
-| `equipmentAlternatives` | code[][]? | 0-3 other equipment sets, each 1+ codes, none equal to `equipment` or each other; the exercise can be done with `equipment` or any one set |
+| `equipmentAlternatives` | `{items: code[]}[]`? | 0-3 other equipment sets, each 1+ codes, none equal to `equipment` or each other; the exercise can be done with `equipment` or any one set. Content files write `code[][]`; Firestore has no arrays of arrays, so the import stores each set as `{items}` |
 | `mainMuscles` | code[] | 1-2 |
 | `secondaryMuscles` | code[] | 0-4 |
 | `family` | string | Groups variations, e.g. `bench_press` |
 | `familyRank` | int | Easier → harder within the family |
 | `pinnedAlternatives`, `excludedAlternatives` | id[] | Admin overrides of the computed list |
 | `defaultRestS` | int | |
-| `incrementKg` | number? | Step for "add weight" |
+| `incrementKg` | double? | Step for "add weight"; stored as a double even when the file says `1` |
 | `popularity` | int | Lower sorts first |
 | `l10n.<lang>` | map | `name`, `aliases[]`, `setup[]`, `execution[]`, `mistakes[]`, `safety?`, `cues[]` |
 | `updatedAt` | timestamp | Clients sync incrementally on this |
+| `contentHash` | string | SHA-256 of the stored content, written by the import; a mismatch marks a document edited elsewhere |
 
 Alternatives are computed on device: same main muscle and movement pattern,
 the user's equipment first (an exercise fits when `equipment` or any of its
@@ -190,8 +199,9 @@ upper arm, forearm, thigh, calf), `photos` (map of `front` \| `right` \|
 
 ### Server-written
 
-**`entitlements/{uid}`**: `premium`, `expiresAt`, `productId`. Written only by
-the RevenueCat webhook; readable by its owner.
+**`entitlements/{uid}`**: `premium`, `expiresAt` (a Firestore timestamp; the
+webhook converts), `productId`. Written only by the
+RevenueCat webhook; readable by its owner.
 
 ### Storage
 
@@ -203,7 +213,8 @@ the RevenueCat webhook; readable by its owner.
 - `deleteAccount` (callable) → deletes the user's documents, photos and auth user
 - `sendAnnouncement` (callable, admin) → FCM topic push
 
-Admin access is a custom claim set by a script run with a service account.
+Admin access is a custom claim set by `tool/set_admin.sh`, using the project
+owner's gcloud access token passed in `GOOGLE_ACCESS_TOKEN`.
 
 ## Features
 
@@ -252,7 +263,7 @@ Group 8, body and extras
 - [ ] Weight log and measurement day — steps for weight, tracked measurements, four photos with ghost overlay, reminders, photo backup, compare
 - [ ] Cardio — log, list, detail, weekly chart
 - [ ] Steps — health permission, today, week and 30-day chart, daily goal
-- [ ] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
+- [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
 
 Group 9, launch readiness
 - [ ] Onboarding — nine questions, suggested free program

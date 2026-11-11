@@ -1,0 +1,134 @@
+exercises.json [ex_Bad]: unknown field "color"
+exercises.json [ex_Bad]: id must match ^ex_[a-z0-9]+(_[a-z0-9]+)*$
+exercises.json [ex_Bad]: equipmentAlternatives has unknown code "laser"
+exercises.json [ex_Bad]: bodyweight must be listed alone: barbell, bodyweight
+exercises.json [ex_Bad]: bodyweight must be listed alone: barbell, bodyweight
+exercises.json [ex_Bad]: equipment set {barbell, bodyweight} is listed twice
+exercises.json [ex_Bad]: muscles both main and secondary: forearm
+exercises.json [ex_Bad]: incrementKg must be absent for reps
+not_a_list.json: top level must be a JSON array
+exercises.json [ex_dumbbell_curl]: duplicate id, also in exercises.json
+exercises.json [ex_Bad]: pinnedAlternatives has invalid id "ex_missing"
+exercises.json [ex_dumbbell_curl]: popularity 8 also used by ex_dumbbell_curl
+popularity 1 is unused
+popularity 2 is unused
+popularity 3 is unused
+exercises.json [ex_Bad]: alias "Dumbbell Curl" is the name of ex_dumbbell_curl
+family biceps_curl has no exercise with rank 1
+family biceps_curl has repeated ranks: ex_dumbbell_curl=3, ex_Bad=5, ex_dumbbell_curl=3
+family biceps_curl ranks are not 1..3: ex_dumbbell_curl=3, ex_Bad=5, ex_dumbbell_curl=3
+coverage: total has 3, needs 400
+coverage: pec has 0, needs 12
+coverage: lat has 0, needs 12
+coverage: trap has 0, needs 12
+coverage: front_delt has 0, needs 12
+coverage: mid_delt has 0, needs 12
+coverage: rear_delt has 0, needs 12
+coverage: biceps has 3, needs 12
+coverage: triceps has 0, needs 12
+coverage: forearm has 1, needs 12
+coverage: abdominal has 0, needs 12
+coverage: oblique has 0, needs 12
+coverage: erector has 0, needs 12
+coverage: glute has 0, needs 12
+coverage: hip_flexor has 0, needs 12
+coverage: abductor has 0, needs 12
+coverage: adductor has 0, needs 12
+coverage: quads has 0, needs 12
+coverage: hamstring has 0, needs 12
+coverage: calf has 0, needs 12
+coverage: barbell has 1, needs 4
+coverage: ez_bar has 0, needs 4
+coverage: trap_bar has 0, needs 4
+coverage: dumbbell has 2, needs 4
+coverage: kettlebell has 0, needs 4
+coverage: plate has 0, needs 4
+coverage: cable has 0, needs 4
+coverage: machine has 0, needs 4
+coverage: smith_machine has 0, needs 4
+coverage: bench has 0, needs 4
+coverage: box has 0, needs 4
+coverage: back_extension_bench has 0, needs 4
+coverage: pull_up_bar has 0, needs 4
+coverage: dip_station has 0, needs 4
+coverage: resistance_band has 0, needs 4
+coverage: suspension_trainer has 0, needs 4
+coverage: rings has 0, needs 4
+coverage: medicine_ball has 0, needs 4
+coverage: stability_ball has 0, needs 4
+coverage: ab_wheel has 0, needs 4
+coverage: landmine has 0, needs 4
+coverage: sled has 0, needs 4
+coverage: jump_rope has 0, needs 1
+coverage: bodyweight has 1, needs 4
+coverage: squat has 0, needs 8
+coverage: hinge has 0, needs 8
+coverage: lunge has 0, needs 8
+coverage: horizontal_push has 0, needs 8
+coverage: vertical_push has 0, needs 8
+coverage: horizontal_pull has 0, needs 8
+coverage: vertical_pull has 0, needs 8
+coverage: carry has 0, needs 8
+coverage: core_flexion has 0, needs 8
+coverage: core_stability has 0, needs 8
+coverage: rotation has 0, needs 8
+coverage: explosive has 0, needs 8
+coverage: isolation has 3, needs 8
+coverage: mobility has 0, needs 8
+coverage: bodyweight-only: pec has 0, needs 3
+coverage: bodyweight-only: lat has 0, needs 3
+coverage: bodyweight-only: trap has 0, needs 3
+coverage: bodyweight-only: front_delt has 0, needs 3
+coverage: bodyweight-only: mid_delt has 0, needs 3
+coverage: bodyweight-only: rear_delt has 0, needs 3
+coverage: bodyweight-only: biceps has 0, needs 3
+coverage: bodyweight-only: triceps has 0, needs 3
+coverage: bodyweight-only: forearm has 0, needs 3
+coverage: bodyweight-only: abdominal has 0, needs 3
+coverage: bodyweight-only: oblique has 0, needs 3
+coverage: bodyweight-only: erector has 0, needs 3
+coverage: bodyweight-only: glute has 0, needs 3
+coverage: bodyweight-only: hip_flexor has 0, needs 3
+coverage: bodyweight-only: abductor has 0, needs 3
+coverage: bodyweight-only: adductor has 0, needs 3
+coverage: bodyweight-only: quads has 0, needs 3
+coverage: bodyweight-only: hamstring has 0, needs 3
+coverage: bodyweight-only: calf has 0, needs 3
+coverage: dumbbells: pec has 0, needs 3
+coverage: dumbbells: lat has 0, needs 3
+coverage: dumbbells: trap has 0, needs 3
+coverage: dumbbells: front_delt has 0, needs 3
+coverage: dumbbells: mid_delt has 0, needs 3
+coverage: dumbbells: rear_delt has 0, needs 3
+coverage: dumbbells: biceps has 2, needs 3
+coverage: dumbbells: triceps has 0, needs 3
+coverage: dumbbells: forearm has 0, needs 3
+coverage: dumbbells: abdominal has 0, needs 3
+coverage: dumbbells: oblique has 0, needs 3
+coverage: dumbbells: erector has 0, needs 3
+coverage: dumbbells: glute has 0, needs 3
+coverage: dumbbells: hip_flexor has 0, needs 3
+coverage: dumbbells: abductor has 0, needs 3
+coverage: dumbbells: adductor has 0, needs 3
+coverage: dumbbells: quads has 0, needs 3
+coverage: dumbbells: hamstring has 0, needs 3
+coverage: dumbbells: calf has 0, needs 3
+coverage: bands: pec has 0, needs 3
+coverage: bands: lat has 0, needs 3
+coverage: bands: trap has 0, needs 3
+coverage: bands: front_delt has 0, needs 3
+coverage: bands: mid_delt has 0, needs 3
+coverage: bands: rear_delt has 0, needs 3
+coverage: bands: biceps has 0, needs 3
+coverage: bands: triceps has 0, needs 3
+coverage: bands: forearm has 0, needs 3
+coverage: bands: abdominal has 0, needs 3
+coverage: bands: oblique has 0, needs 3
+coverage: bands: erector has 0, needs 3
+coverage: bands: glute has 0, needs 3
+coverage: bands: hip_flexor has 0, needs 3
+coverage: bands: abductor has 0, needs 3
+coverage: bands: adductor has 0, needs 3
+coverage: bands: quads has 0, needs 3
+coverage: bands: hamstring has 0, needs 3
+coverage: bands: calf has 0, needs 3
