@@ -135,4 +135,34 @@ void main() {
       session.cancel();
     });
   });
+
+  group('crash reports', () {
+    late List<Object> reported;
+
+    setUp(() {
+      reported = [];
+      Log.onError = (error, _, _) => reported.add(error);
+    });
+
+    tearDown(() => Log.onError = null);
+
+    void failRepeatedly(Failure failure) => fakeAsync((async) {
+      start();
+      when(() => entitlement.identify('g1'))
+          .thenAnswer((_) async => Err(failure));
+      users.add(guest);
+      async.elapse(const Duration(seconds: 10));
+      session.cancel();
+    });
+
+    test('being offline is not reported', () {
+      failRepeatedly(const NetworkFailure());
+      expect(reported, isEmpty);
+    });
+
+    test('an unexpected failure is reported once, not per retry', () {
+      failRepeatedly(const UnknownFailure());
+      expect(reported, hasLength(1));
+    });
+  });
 }

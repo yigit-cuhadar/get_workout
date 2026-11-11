@@ -31,11 +31,15 @@ class PurchaserSession {
   String? _uid;
   bool _cancelled = false;
 
+  /// Whether an unexpected failure of this user's switch was reported.
+  bool _reported = false;
+
   void _userChanged(String? uid) {
     _uid = uid;
     _retry?.cancel();
     _retry = null;
     _nextDelay = retryDelay;
+    _reported = false;
     unawaited(_switch());
   }
 
@@ -46,11 +50,16 @@ class PurchaserSession {
         : await _entitlement.identify(uid);
     // A later user change has started its own switch.
     if (_cancelled || uid != _uid || result.isOk) return;
-    Log.e(
-      'purchases',
-      'Switching the store user failed; retrying in $_nextDelay',
-      result.failureOrNull,
-    );
+    final failure = result.failureOrNull!;
+    final message = 'Switching the store user failed; retrying in $_nextDelay';
+    // Being offline is expected; anything else is reported once per user,
+    // not on every retry.
+    if (failure is NetworkFailure || _reported) {
+      Log.d('purchases', '$message: $failure');
+    } else {
+      _reported = true;
+      Log.e('purchases', message, failure);
+    }
     _retry = Timer(_nextDelay, resume);
     final doubled = _nextDelay * 2;
     _nextDelay = doubled > maxRetryDelay ? maxRetryDelay : doubled;
