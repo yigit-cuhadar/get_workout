@@ -20,8 +20,7 @@ String dateTimeLabel(DateTime? value) =>
 /// What the panel says about a failed load or save.
 String failureMessage(Failure failure) => switch (failure) {
   PermissionFailure() =>
-    'You are not allowed to edit: the admin claim is missing or expired. '
-        'Refresh access on the sign-in screen, or sign out and in again.',
+    'You are not allowed to edit: this account has no current admin claim.',
   NetworkFailure() => 'No connection to Firebase. Try again.',
   NotFoundFailure() => 'This exercise does not exist.',
   AuthFailure(:final code) => switch (code) {

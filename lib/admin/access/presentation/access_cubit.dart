@@ -45,15 +45,18 @@ final class AccessCheckFailed extends AccessState {
 }
 
 /// Who uses the panel and whether they may edit. Routes follow this state.
+///
+/// The claims are read again at every ID token change, so a claim granted or
+/// revoked takes effect at the next token refresh. Such a re-check never
+/// interrupts an admin: it shows no progress state, and a failed read keeps
+/// the access already granted.
 class AccessCubit extends Cubit<AccessState> {
   AccessCubit({
-    required WatchAuthUser watchAuthUser,
+    required WatchAccessChanges watchAccessChanges,
     required this._checkAdminAccess,
     required this._signOut,
   }) : super(const AccessChecking()) {
-    _subscription = watchAuthUser()
-        .distinct((a, b) => a?.id == b?.id)
-        .listen(_onUser);
+    _subscription = watchAccessChanges().listen(_onToken);
   }
 
   final CheckAdminAccess _checkAdminAccess;
@@ -61,9 +64,15 @@ class AccessCubit extends Cubit<AccessState> {
   late final StreamSubscription<AuthUser?> _subscription;
   AuthUser? _user;
 
-  Future<void> _onUser(AuthUser? user) async {
+  /// Counts checks, so only the latest one's result is used.
+  int _checks = 0;
+
+  Future<void> _onToken(AuthUser? user) async {
     _user = user;
-    if (user == null) return emit(const SignedOut());
+    if (user == null) {
+      _checks++;
+      return emit(const SignedOut());
+    }
     await _check(user, refresh: false);
   }
 
@@ -76,16 +85,24 @@ class AccessCubit extends Cubit<AccessState> {
   Future<Result<void>> signOut() => _signOut();
 
   Future<void> _check(AuthUser user, {required bool refresh}) async {
-    emit(const AccessChecking());
+    final check = ++_checks;
+    final admitted = switch (state) {
+      SignedIn(user: final current, isAdmin: true) => current.id == user.id,
+      _ => false,
+    };
+    if (!admitted) emit(const AccessChecking());
     final result = await _checkAdminAccess(refresh);
-    // A sign-out or another user while the claims were read wins.
-    if (isClosed || _user != user) return;
-    emit(
-      result.fold(
-        (isAdmin) => SignedIn(user, isAdmin: isAdmin),
-        (failure) => AccessCheckFailed(user, failure),
-      ),
-    );
+    // A sign-out, another user or a newer check while the claims were read
+    // wins.
+    if (isClosed || check != _checks) return;
+    switch (result) {
+      case Ok(value: final isAdmin):
+        emit(SignedIn(user, isAdmin: isAdmin));
+      case Err(:final failure) when admitted:
+        Log.e('access', 'Claims re-check failed; access kept', failure);
+      case Err(:final failure):
+        emit(AccessCheckFailed(user, failure));
+    }
   }
 
   @override

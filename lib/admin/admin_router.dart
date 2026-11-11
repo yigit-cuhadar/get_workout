@@ -20,21 +20,34 @@ abstract final class AdminRoutes {
   static String exercise(String id) => '$exercises/$id';
 }
 
-/// Every route of the panel. Only an admin gets past the sign-in and access
-/// pages.
+/// Where [location] leads in [access], or null to stay. Only an admin gets
+/// past the sign-in and access pages; they carry the location asked for in
+/// `from`, so an admin lands there once admitted (a reload of an exercise's
+/// page comes back to it).
+String? adminRedirect(AccessState access, Uri location) {
+  final path = location.path;
+  final atGate = path == AdminRoutes.signIn || path == AdminRoutes.access;
+  final from = atGate ? location.queryParameters['from'] : location.toString();
+  // Only paths of this app, never a full URL.
+  final target = from != null && from.startsWith('/') && !from.startsWith('//')
+      ? from
+      : AdminRoutes.exercises;
+  String gate(String gatePath) => target == AdminRoutes.exercises
+      ? gatePath
+      : Uri(path: gatePath, queryParameters: {'from': target}).toString();
+  return switch (access) {
+    SignedIn(isAdmin: true) => atGate ? target : null,
+    SignedOut() => path == AdminRoutes.signIn ? null : gate(AdminRoutes.signIn),
+    _ => path == AdminRoutes.access ? null : gate(AdminRoutes.access),
+  };
+}
+
+/// Every route of the panel.
 GoRouter buildAdminRouter(AccessCubit access) {
   return GoRouter(
     initialLocation: AdminRoutes.exercises,
     refreshListenable: _StreamListenable(access.stream),
-    redirect: (context, state) {
-      final at = state.matchedLocation;
-      final gate = at == AdminRoutes.signIn || at == AdminRoutes.access;
-      return switch (access.state) {
-        SignedOut() => at == AdminRoutes.signIn ? null : AdminRoutes.signIn,
-        SignedIn(isAdmin: true) => gate ? AdminRoutes.exercises : null,
-        _ => at == AdminRoutes.access ? null : AdminRoutes.access,
-      };
-    },
+    redirect: (_, state) => adminRedirect(access.state, state.uri),
     routes: [
       GoRoute(path: '/', redirect: (_, _) => AdminRoutes.exercises),
       GoRoute(path: AdminRoutes.signIn, builder: (_, _) => const SignInPage()),

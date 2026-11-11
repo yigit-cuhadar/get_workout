@@ -53,4 +53,11 @@ void main() {
     expect(json.containsKey('incrementKg'), isFalse);
     expect((json['l10n']! as Map)['en'], isNot(contains('safety')));
   });
+
+  test('a whole increment stored as an integer reads as a double', () {
+    // What a web client writes for 2.0.
+    final draft = ExerciseDraft.fromJson({...validJson(), 'incrementKg': 2});
+    expect(draft.incrementKg, 2.0);
+    expect(draft.incrementKg, isA<double>());
+  });
 }

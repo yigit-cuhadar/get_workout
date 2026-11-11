@@ -317,8 +317,9 @@ sealed class SaveOutcome extends Equatable {
 final class Saved extends SaveOutcome {
   const Saved(this.record);
 
-  /// The document as stored, with its new `updatedAt`.
-  final ExerciseRecord record;
+  /// The document as stored, with its new `updatedAt`; null when the write
+  /// went through but reading it back failed.
+  final ExerciseRecord? record;
 
   @override
   List<Object?> get props => [record];

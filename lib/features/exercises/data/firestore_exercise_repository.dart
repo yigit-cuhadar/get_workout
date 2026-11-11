@@ -7,6 +7,7 @@ import 'package:forge_firebase/forge_firebase.dart';
 import '../domain/exercise.dart';
 import '../domain/exercise_queries.dart';
 import '../domain/exercise_repository.dart';
+import '../domain/vocabulary.dart';
 import 'exercise_map.dart';
 import 'firestore_exercise_source.dart';
 
@@ -20,8 +21,6 @@ import 'firestore_exercise_source.dart';
 /// too few documents, and is then rebuilt with a full fetch.
 class FirestoreExerciseRepository implements ExerciseRepository {
   FirestoreExerciseRepository(this._source);
-
-  static const _liveStatus = 'live';
 
   final FirestoreExerciseSource _source;
   final _changes = StreamController<List<Exercise>>.broadcast();
@@ -84,7 +83,8 @@ class FirestoreExerciseRepository implements ExerciseRepository {
   void _publish(Iterable<ExerciseDocument> documents) {
     final exercises = [
       for (final document in documents)
-        if (document.data['status'] == _liveStatus) ?_parse(document),
+        if (document.data['status'] == ExerciseStatus.live.code)
+          ?_parse(document),
     ]..sort(compareByPopularity);
     final current = _current;
     if (current != null && _sameList(current, exercises)) return;

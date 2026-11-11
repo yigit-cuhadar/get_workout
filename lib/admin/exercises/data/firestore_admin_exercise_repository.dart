@@ -22,6 +22,9 @@ class FirestoreAdminExerciseRepository implements AdminExerciseRepository {
   /// Fields the editor owns; every other stored field is kept as it is.
   static final _managedKeys = allowedKeys.difference({'id'});
 
+  /// The only language the panel edits.
+  static const _language = 'en';
+
   CollectionReference<Map<String, dynamic>> get _exercises =>
       _firestore.collection('exercises');
 
@@ -68,32 +71,54 @@ class FirestoreAdminExerciseRepository implements AdminExerciseRepository {
   Future<Result<SaveOutcome>> _save(
     ExerciseDraft draft,
     SaveOutcome? Function(Map<String, Object?>? stored) refuse,
-  ) => guard(() async {
+  ) async {
     final ref = _exercises.doc(draft.id);
-    final refused = await _firestore.runTransaction((transaction) async {
-      final stored = (await transaction.get(ref)).data();
-      final refused = refuse(stored);
-      if (refused == null) transaction.set(ref, _fields(stored, draft));
-      return refused;
-    });
-    return refused ?? Saved(await _read(ref));
-  }, mapper: mapFirebaseError);
+    final written = await guard(
+      () => _firestore.runTransaction((transaction) async {
+        final stored = (await transaction.get(ref)).data();
+        final refused = refuse(stored);
+        if (refused == null) transaction.set(ref, _fields(stored, draft));
+        return refused;
+      }),
+      mapper: mapFirebaseError,
+    );
+    if (written case Ok(value: final refused?)) return Ok(refused);
+    if (written case Err(:final failure)) return Err(failure);
+    // Committed. Reading the new updatedAt back is a separate step: if it
+    // fails, the save still happened and must not be reported as failed.
+    final read = await guard(() => _read(ref), mapper: mapFirebaseError);
+    return Ok(Saved(read.valueOrNull));
+  }
 
   /// [stored] with the managed fields replaced by [draft]'s. Other languages
-  /// of `l10n` are kept; the panel edits English only.
+  /// of `l10n`, and fields of `l10n.en` the panel does not know, are kept.
   static Map<String, Object?> _fields(
     Map<String, Object?>? stored,
     ExerciseDraft draft,
   ) {
     final content = exerciseContent(draft.toJson());
-    final storedL10n = stored?['l10n'];
+    final storedL10n = switch (stored?['l10n']) {
+      final Map<String, Object?> l10n => l10n,
+      _ => const <String, Object?>{},
+    };
+    final storedText = switch (storedL10n[_language]) {
+      final Map<String, Object?> text => text,
+      _ => const <String, Object?>{},
+    };
+    final text =
+        (content['l10n']! as Map<String, Object?>)[_language]!
+            as Map<String, Object?>;
     return {
       for (final MapEntry(:key, :value) in (stored ?? const {}).entries)
         if (!_managedKeys.contains(key)) key: value,
       ...content,
       'l10n': {
-        if (storedL10n is Map<String, Object?>) ...storedL10n,
-        ...content['l10n']! as Map<String, Object?>,
+        ...storedL10n,
+        _language: {
+          for (final MapEntry(:key, :value) in storedText.entries)
+            if (!allowedTextKeys.contains(key)) key: value,
+          ...text,
+        },
       },
       'updatedAt': FieldValue.serverTimestamp(),
     };

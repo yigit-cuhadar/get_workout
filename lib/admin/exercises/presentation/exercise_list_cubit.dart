@@ -122,28 +122,62 @@ class ExerciseListState extends Equatable {
 }
 
 /// The whole library, live from Firestore, with search, filters and the
-/// library-wide health of what is loaded.
+/// library-wide health of what is loaded. After a stream error it listens
+/// again, waiting longer after each failure in a row.
 class ExerciseListCubit extends Cubit<ExerciseListState> {
-  ExerciseListCubit({required WatchExerciseRecords watchExerciseRecords})
-    : super(const ExerciseListState()) {
-    _subscription = watchExerciseRecords().listen(
-      (records) => emit(
-        state.copyWith(
-          records: records,
-          health: LibraryHealth.of(records),
-          failure: () => null,
-        ),
-      ),
-      onError: (Object error) => emit(
-        state.copyWith(
-          failure: () =>
-              error is Failure ? error : UnknownFailure('$error', error),
-        ),
-      ),
+  ExerciseListCubit({
+    required this._watchExerciseRecords,
+    this.firstRetryDelay = const Duration(seconds: 1),
+  }) : super(const ExerciseListState()) {
+    _listen();
+  }
+
+  final WatchExerciseRecords _watchExerciseRecords;
+
+  /// Doubles with each failure in a row, up to [maxRetryDelay].
+  final Duration firstRetryDelay;
+  static const maxRetryDelay = Duration(seconds: 30);
+
+  StreamSubscription<List<ExerciseRecord>>? _subscription;
+  Timer? _retryTimer;
+  int _failures = 0;
+
+  void _listen() {
+    unawaited(_subscription?.cancel());
+    _subscription = _watchExerciseRecords().listen(
+      (records) {
+        _failures = 0;
+        emit(
+          state.copyWith(
+            records: records,
+            health: LibraryHealth.of(records),
+            failure: () => null,
+          ),
+        );
+      },
+      onError: (Object error) {
+        emit(
+          state.copyWith(
+            failure: () =>
+                error is Failure ? error : UnknownFailure('$error', error),
+          ),
+        );
+        final delay = firstRetryDelay * (1 << _failures.clamp(0, 10));
+        _failures++;
+        _retryTimer?.cancel();
+        _retryTimer = Timer(
+          delay < maxRetryDelay ? delay : maxRetryDelay,
+          _listen,
+        );
+      },
     );
   }
 
-  late final StreamSubscription<List<ExerciseRecord>> _subscription;
+  /// Listens again now, without waiting for the next automatic retry.
+  void retry() {
+    _retryTimer?.cancel();
+    _listen();
+  }
 
   void search(String query) => emit(state.copyWith(query: query));
 
@@ -160,7 +194,8 @@ class ExerciseListCubit extends Cubit<ExerciseListState> {
 
   @override
   Future<void> close() async {
-    await _subscription.cancel();
+    _retryTimer?.cancel();
+    await _subscription?.cancel();
     return super.close();
   }
 }

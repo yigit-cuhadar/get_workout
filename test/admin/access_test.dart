@@ -7,6 +7,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/admin/access/domain/access_usecases.dart';
 import 'package:get_workout/admin/access/domain/admin_access_repository.dart';
 import 'package:get_workout/admin/access/presentation/access_cubit.dart';
+import 'package:get_workout/admin/admin_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
@@ -35,7 +36,7 @@ void main() {
       auth = MockAuthRepository();
       access = MockAccessRepository();
       users = StreamController<AuthUser?>();
-      when(() => auth.watchUser()).thenAnswer((_) => users.stream);
+      when(() => access.watchToken()).thenAnswer((_) => users.stream);
       when(() => auth.signOut()).thenAnswer((_) async => const Ok(null));
     });
 
@@ -44,7 +45,7 @@ void main() {
             .thenAnswer((_) async => Ok(claims));
 
     AccessCubit build() => AccessCubit(
-      watchAuthUser: WatchAuthUser(auth),
+      watchAccessChanges: WatchAccessChanges(access),
       checkAdminAccess: CheckAdminAccess(access),
       signOut: SignOut(auth),
     );
@@ -126,5 +127,90 @@ void main() {
       },
       expect: () => [const AccessChecking(), const SignedOut()],
     );
+
+    blocTest<AccessCubit, AccessState>(
+      'a token change re-checks quietly and can revoke access',
+      setUp: () => claims({'admin': true}),
+      build: build,
+      act: (_) async {
+        users.add(admin);
+        await pumpEventQueue();
+        claims({});
+        // The token refreshed, e.g. an hour later or after a denied write.
+        users.add(admin);
+      },
+      expect: () => [
+        const AccessChecking(),
+        const SignedIn(admin, isAdmin: true),
+        const SignedIn(admin, isAdmin: false),
+      ],
+    );
+
+    blocTest<AccessCubit, AccessState>(
+      'a failed re-check keeps the access of an admin',
+      setUp: () => claims({'admin': true}),
+      build: build,
+      act: (_) async {
+        users.add(admin);
+        await pumpEventQueue();
+        when(() => access.claims(refresh: false))
+            .thenAnswer((_) async => const Err(NetworkFailure()));
+        users.add(admin);
+      },
+      expect: () => [
+        const AccessChecking(),
+        const SignedIn(admin, isAdmin: true),
+      ],
+    );
+  });
+
+  group('adminRedirect', () {
+    const checking = AccessChecking();
+    const signedOut = SignedOut();
+    const admitted = SignedIn(admin, isAdmin: true);
+    const refused = SignedIn(other, isAdmin: false);
+
+    String? redirect(AccessState state, String location) =>
+        adminRedirect(state, Uri.parse(location));
+
+    test('a deep link survives sign-in and the access check', () {
+      const link = '/exercises/ex_curl';
+      final atSignIn = redirect(signedOut, link)!;
+      expect(atSignIn, '/sign-in?from=%2Fexercises%2Fex_curl');
+      // Signed in: the claims are read.
+      final atAccess = redirect(checking, atSignIn)!;
+      expect(atAccess, '/access?from=%2Fexercises%2Fex_curl');
+      expect(redirect(checking, atAccess), isNull);
+      expect(redirect(admitted, atAccess), link);
+      expect(redirect(admitted, link), isNull);
+    });
+
+    test('a reload while the claims are read comes back to the page', () {
+      const link = '/exercises/new';
+      final atAccess = redirect(checking, link)!;
+      expect(redirect(admitted, atAccess), link);
+    });
+
+    test('without a deep link an admin lands on the list', () {
+      expect(redirect(signedOut, '/exercises'), '/sign-in');
+      expect(redirect(admitted, '/sign-in'), '/exercises');
+      expect(redirect(admitted, '/access'), '/exercises');
+    });
+
+    test('a user without the claim stays at the access page', () {
+      expect(
+        redirect(refused, '/exercises/ex_curl'),
+        '/access?from=%2Fexercises%2Fex_curl',
+      );
+      expect(redirect(refused, '/access?from=%2Fexercises'), isNull);
+    });
+
+    test('never leaves the app', () {
+      expect(
+        redirect(admitted, '/access?from=https://evil.example'),
+        '/exercises',
+      );
+      expect(redirect(admitted, '/access?from=//evil.example'), '/exercises');
+    });
   });
 }

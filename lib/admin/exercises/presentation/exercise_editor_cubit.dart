@@ -5,6 +5,7 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../../features/exercises/domain/content_rules.dart';
 import '../../../features/exercises/domain/vocabulary.dart';
+import '../../access/domain/access_usecases.dart';
 import '../domain/exercise_admin_usecases.dart';
 import '../domain/exercise_draft.dart';
 
@@ -32,6 +33,7 @@ class ExerciseEditorState extends Equatable {
     this.problems = const [],
     this.status = EditorStatus.editing,
     this.failure,
+    this.accessRefreshed = false,
     this.formVersion = 0,
   });
 
@@ -53,6 +55,11 @@ class ExerciseEditorState extends Equatable {
   /// [EditorStatus.saveFailed].
   final Failure? failure;
 
+  /// After a save denied by the rules: the token was refreshed and still
+  /// carries the admin claim, so saving again may work. (Without the claim,
+  /// the access gate takes over.)
+  final bool accessRefreshed;
+
   /// Changes whenever the draft is replaced from outside the form, so the
   /// form rebuilds its fields.
   final int formVersion;
@@ -64,6 +71,14 @@ class ExerciseEditorState extends Equatable {
 
   bool get isDirty => draft != (loaded?.draft ?? const ExerciseDraft());
 
+  /// Whether saving with [status] (null: the current one) would write
+  /// anything. A new exercise always can.
+  bool canSave([ExerciseStatus? status]) {
+    final stored = loaded;
+    if (isNew || stored == null) return true;
+    return draft.copyWith(status: status) != stored.draft;
+  }
+
   ExerciseEditorState copyWith({
     bool? isNew,
     ExerciseDraft? draft,
@@ -72,6 +87,7 @@ class ExerciseEditorState extends Equatable {
     List<ContentProblem>? problems,
     EditorStatus? status,
     Failure? failure,
+    bool? accessRefreshed,
     int? formVersion,
   }) => ExerciseEditorState(
     isNew: isNew ?? this.isNew,
@@ -82,6 +98,9 @@ class ExerciseEditorState extends Equatable {
     status: status ?? this.status,
     // A failure belongs to its status and goes with it.
     failure: status == null ? this.failure : failure,
+    accessRefreshed: status == null
+        ? this.accessRefreshed
+        : accessRefreshed ?? false,
     formVersion: formVersion ?? this.formVersion,
   );
 
@@ -94,6 +113,7 @@ class ExerciseEditorState extends Equatable {
     problems,
     status,
     failure,
+    accessRefreshed,
     formVersion,
   ];
 }
@@ -109,6 +129,7 @@ class ExerciseEditorCubit extends Cubit<ExerciseEditorState> {
     required WatchExerciseRecords watchExerciseRecords,
     required this._createExercise,
     required this._updateExercise,
+    required this._checkAdminAccess,
   }) : _id = id,
        super(
          ExerciseEditorState(
@@ -127,8 +148,13 @@ class ExerciseEditorCubit extends Cubit<ExerciseEditorState> {
   final LoadExerciseRecord _loadExerciseRecord;
   final CreateExercise _createExercise;
   final UpdateExercise _updateExercise;
+  final CheckAdminAccess _checkAdminAccess;
   late final StreamSubscription<List<ExerciseRecord>> _library;
   String? _id;
+
+  /// The last save went through but its new `updatedAt` is unknown; the next
+  /// save reads it first.
+  bool _updatedAtUnknown = false;
 
   /// Replaces the draft with the stored document, dropping local changes.
   Future<void> reload() async {
@@ -139,13 +165,16 @@ class ExerciseEditorCubit extends Cubit<ExerciseEditorState> {
     if (isClosed) return;
     emit(
       result.fold(
-        (record) => state.copyWith(
-          loaded: record,
-          draft: record.draft,
-          problems: const [],
-          status: EditorStatus.editing,
-          formVersion: state.formVersion + 1,
-        ),
+        (record) {
+          _updatedAtUnknown = false;
+          return state.copyWith(
+            loaded: record,
+            draft: record.draft,
+            problems: const [],
+            status: EditorStatus.editing,
+            formVersion: state.formVersion + 1,
+          );
+        },
         (failure) =>
             state.copyWith(status: EditorStatus.loadFailed, failure: failure),
       ),
@@ -169,15 +198,17 @@ class ExerciseEditorCubit extends Cubit<ExerciseEditorState> {
     );
   }
 
-  /// Saves with the current status.
+  /// Saves with the current status. Does nothing without changes.
   Future<void> save() => _save(state.draft);
 
-  /// Saves and moves to [status]: draft, live (publish) or retired.
+  /// Saves and moves to [status]: draft, live (publish) or retired. Does
+  /// nothing when neither the status nor anything else changes.
   Future<void> saveAs(ExerciseStatus status) =>
       _save(state.draft.copyWith(status: status));
 
   Future<void> _save(ExerciseDraft draft) async {
     if (state.status case EditorStatus.saving || EditorStatus.loading) return;
+    if (!state.canSave(draft.status)) return;
     final problems = _validate(draft);
     if (problems.isNotEmpty) {
       return emit(
@@ -185,22 +216,32 @@ class ExerciseEditorCubit extends Cubit<ExerciseEditorState> {
       );
     }
     emit(state.copyWith(problems: const [], status: EditorStatus.saving));
-    final loaded = state.loaded;
-    final result = loaded == null
-        ? await _createExercise(draft)
-        : await _updateExercise((
-            draft: draft,
-            loadedUpdatedAt: loaded.updatedAt,
-          ));
+    final Result<SaveOutcome> result;
+    if (state.loaded == null) {
+      result = await _createExercise(draft);
+    } else {
+      final base = await _confirmedBase();
+      result = base == null
+          ? const Ok(ChangedSinceLoaded())
+          : await switch (base) {
+              Ok(value: final loaded) => _updateExercise((
+                draft: draft,
+                loadedUpdatedAt: loaded.updatedAt,
+              )),
+              Err(:final failure) => Future.value(Err(failure)),
+            };
+    }
     if (isClosed) return;
     switch (result) {
       case Ok(value: Saved(:final record)):
-        _id = record.id;
+        _id = draft.id;
+        _updatedAtUnknown = record == null;
         emit(
           state.copyWith(
             isNew: false,
-            loaded: record,
-            draft: record.draft,
+            loaded:
+                record ?? ExerciseRecord(json: draft.toJson(), updatedAt: null),
+            draft: draft,
             status: EditorStatus.saved,
           ),
         );
@@ -215,9 +256,36 @@ class ExerciseEditorCubit extends Cubit<ExerciseEditorState> {
         );
       case Ok(value: ChangedSinceLoaded()):
         emit(state.copyWith(status: EditorStatus.changedSinceLoaded));
+      case Err(failure: final PermissionFailure failure):
+        // The claim may have been revoked, or the token may just be stale:
+        // a refreshed token tells. Without the claim, the access gate (which
+        // follows token changes) leaves this page.
+        final access = await _checkAdminAccess(true);
+        if (isClosed) return;
+        emit(
+          state.copyWith(
+            status: EditorStatus.saveFailed,
+            failure: failure,
+            accessRefreshed: access.valueOrNull ?? false,
+          ),
+        );
       case Err(:final failure):
         emit(state.copyWith(status: EditorStatus.saveFailed, failure: failure));
     }
+  }
+
+  /// The stored document to save over: the loaded one, or after a save whose
+  /// `updatedAt` is unknown, the one stored now if it is still what that save
+  /// wrote (null when someone changed it since).
+  Future<Result<ExerciseRecord>?> _confirmedBase() async {
+    final loaded = state.loaded!;
+    if (!_updatedAtUnknown) return Ok(loaded);
+    final result = await _loadExerciseRecord(loaded.id);
+    if (result case Ok(value: final stored)) {
+      if (stored.draft != loaded.draft) return null;
+      _updatedAtUnknown = false;
+    }
+    return result;
   }
 
   List<ContentProblem> _validate(ExerciseDraft draft) =>

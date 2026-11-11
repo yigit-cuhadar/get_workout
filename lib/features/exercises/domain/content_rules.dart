@@ -363,6 +363,71 @@ class ExerciseEntry {
     final en = l10n is Map ? l10n['en'] : null;
     return en is Map<String, Object?> ? en : const {};
   }
+
+  /// The English name, when there is one.
+  String? get name => switch (text['name']) {
+    final String name when name.isNotEmpty => name,
+    _ => null,
+  };
+
+  List<String> get aliases => switch (text['aliases']) {
+    final List<Object?> aliases => aliases.whereType<String>().toList(),
+    _ => const [],
+  };
+}
+
+/// Pinned and excluded alternatives of [entry] that are not among [ids], or
+/// are [entry] itself.
+List<ContentProblem> referenceProblems(ExerciseEntry entry, Set<String> ids) =>
+    [
+      for (final key in ['pinnedAlternatives', 'excludedAlternatives'])
+        for (final ref in entry.strings(key))
+          if (ref == entry.id || !ids.contains(ref))
+            ContentProblem(key, '$key has invalid id "$ref"'),
+    ];
+
+// The name rules across exercises. Names and aliases compare
+// case-insensitively.
+String _nameKey(String text) => text.toLowerCase();
+
+ContentProblem _nameUsedBy(String name, String id) =>
+    ContentProblem('l10n.en.name', 'name "$name" also used by $id');
+
+ContentProblem _aliasIsNameOf(String alias, String id) =>
+    ContentProblem('l10n.en.aliases', 'alias "$alias" is the name of $id');
+
+ContentProblem _nameIsAliasOf(String name, String id) =>
+    ContentProblem('l10n.en.name', 'name "$name" is an alias of $id');
+
+/// The name rules of [entry] against the rest of the library ([others]): no
+/// other exercise has its name, none of its aliases is another's name, and
+/// its name is no other's alias. [checkLibrary] reports that last case once,
+/// on the alias's owner; this reports it on [entry], so an editor of the
+/// named exercise sees it too.
+List<ContentProblem> nameProblems(
+  ExerciseEntry entry,
+  Iterable<ExerciseEntry> others,
+) {
+  final problems = <ContentProblem>[];
+  final name = entry.name;
+  for (final other in others) {
+    final otherName = other.name;
+    if (name != null &&
+        otherName != null &&
+        _nameKey(name) == _nameKey(otherName)) {
+      problems.add(_nameUsedBy(name, other.id));
+    }
+    for (final alias in entry.aliases) {
+      if (otherName != null && _nameKey(alias) == _nameKey(otherName)) {
+        problems.add(_aliasIsNameOf(alias, other.id));
+      }
+    }
+    if (name != null &&
+        other.aliases.any((alias) => _nameKey(alias) == _nameKey(name))) {
+      problems.add(_nameIsAliasOf(name, other.id));
+    }
+  }
+  return problems;
 }
 
 /// What [checkLibrary] found across a library.
@@ -407,12 +472,8 @@ void _checkReferences(
 
   final ids = byId.keys.toSet();
   for (final e in exercises) {
-    for (final key in ['pinnedAlternatives', 'excludedAlternatives']) {
-      for (final ref in e.strings(key)) {
-        if (ref == e.id || !ids.contains(ref)) {
-          errors.add('${e.where}: $key has invalid id "$ref"');
-        }
-      }
+    for (final problem in referenceProblems(e, ids)) {
+      errors.add('${e.where}: ${problem.message}');
     }
   }
 
@@ -435,21 +496,19 @@ void _checkReferences(
   for (final e in exercises) {
     final name = e.text['name'];
     if (name is! String) continue;
-    final key = name.toLowerCase();
+    final key = _nameKey(name);
     if (byName.containsKey(key)) {
-      errors.add('${e.where}: name "$name" also used by ${byName[key]!.id}');
+      errors.add('${e.where}: ${_nameUsedBy(name, byName[key]!.id).message}');
     }
     byName[key] = e;
   }
   final aliasOwners = <String, List<String>>{};
   for (final e in exercises) {
-    final aliases = e.text['aliases'];
-    if (aliases is! List) continue;
-    for (final alias in aliases.whereType<String>()) {
-      final key = alias.toLowerCase();
+    for (final alias in e.aliases) {
+      final key = _nameKey(alias);
       final named = byName[key];
       if (named != null && named.id != e.id) {
-        errors.add('${e.where}: alias "$alias" is the name of ${named.id}');
+        errors.add('${e.where}: ${_aliasIsNameOf(alias, named.id).message}');
       }
       (aliasOwners[key] ??= []).add(e.id);
     }

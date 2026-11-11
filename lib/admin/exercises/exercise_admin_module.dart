@@ -31,6 +31,7 @@ class ExerciseAdminModule implements FeatureModule {
           watchExerciseRecords: sl(),
           createExercise: sl(),
           updateExercise: sl(),
+          checkAdminAccess: sl(),
         ),
       );
   }

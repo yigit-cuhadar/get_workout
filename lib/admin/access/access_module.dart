@@ -18,9 +18,10 @@ class AdminAccessModule implements FeatureModule {
         () => FirebaseAdminAccessRepository(FirebaseAuth.instance),
       )
       ..registerFactory(() => CheckAdminAccess(sl()))
+      ..registerFactory(() => WatchAccessChanges(sl()))
       ..registerLazySingleton(
         () => AccessCubit(
-          watchAuthUser: sl(),
+          watchAccessChanges: sl(),
           checkAdminAccess: sl(),
           signOut: sl(),
         ),

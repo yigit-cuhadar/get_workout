@@ -5,6 +5,9 @@ import 'package:forge_ui/forge_ui.dart';
 import '../../shell/admin_text.dart';
 import 'access_cubit.dart';
 
+/// The widest the message grows on a desktop screen.
+const _maxWidth = 480.0;
+
 /// Shown while the claims are read, and to a signed-in user who may not
 /// edit or whose claims could not be read.
 class AccessPage extends StatelessWidget {
@@ -46,16 +49,12 @@ class _Message extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(Gap.lg),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
+          constraints: const BoxConstraints(maxWidth: _maxWidth),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(
-                Icons.lock_outline,
-                size: 48,
-                color: theme.colorScheme.error,
-              ),
+              Icon(Icons.lock_outline, color: theme.colorScheme.error),
               const SizedBox(height: Gap.md),
               Text(
                 title,

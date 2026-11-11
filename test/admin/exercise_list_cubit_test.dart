@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/admin/exercises/domain/admin_exercise_repository.dart';
@@ -139,5 +140,74 @@ void main() {
     await pumpEventQueue();
     expect(cubit.state.failure, isA<PermissionFailure>());
     expect(cubit.state.records, hasLength(4));
+  });
+
+  group('after a stream error', () {
+    late List<StreamController<List<ExerciseRecord>>> streams;
+
+    setUp(() {
+      streams = [];
+      when(() => repository.watchAll()).thenAnswer((_) {
+        final stream = StreamController<List<ExerciseRecord>>();
+        streams.add(stream);
+        return stream.stream;
+      });
+    });
+
+    test('listens again, waiting longer after each failure in a row', () {
+      fakeAsync((async) {
+        final cubit = ExerciseListCubit(
+          watchExerciseRecords: WatchExerciseRecords(repository),
+        );
+        async.flushMicrotasks();
+        streams.last.addError(const NetworkFailure());
+        async.flushMicrotasks();
+        expect(cubit.state.failure, isA<NetworkFailure>());
+
+        async.elapse(const Duration(milliseconds: 999));
+        expect(streams, hasLength(1));
+        async.elapse(const Duration(milliseconds: 1));
+        expect(streams, hasLength(2));
+
+        // A second failure in a row waits twice as long.
+        streams.last.addError(const NetworkFailure());
+        async.elapse(const Duration(milliseconds: 1999));
+        expect(streams, hasLength(2));
+        async.elapse(const Duration(milliseconds: 1));
+        expect(streams, hasLength(3));
+
+        // Data clears the failure and the backoff.
+        streams.last.add([press]);
+        async.flushMicrotasks();
+        expect(cubit.state.failure, isNull);
+        expect(cubit.state.records, [press]);
+        streams.last.addError(const NetworkFailure());
+        async.elapse(const Duration(seconds: 1));
+        expect(streams, hasLength(4));
+
+        cubit.close();
+        async.flushMicrotasks();
+      });
+    });
+
+    test('retry listens again at once', () {
+      fakeAsync((async) {
+        final cubit = ExerciseListCubit(
+          watchExerciseRecords: WatchExerciseRecords(repository),
+        );
+        async.flushMicrotasks();
+        streams.last.addError(const NetworkFailure());
+        async.flushMicrotasks();
+
+        cubit.retry();
+        expect(streams, hasLength(2));
+        // The scheduled retry was replaced.
+        async.elapse(const Duration(seconds: 5));
+        expect(streams, hasLength(2));
+
+        cubit.close();
+        async.flushMicrotasks();
+      });
+    });
   });
 }

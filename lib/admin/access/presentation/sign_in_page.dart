@@ -6,6 +6,9 @@ import 'package:forge_ui/forge_ui.dart';
 
 import '../../shell/admin_text.dart';
 
+/// The widest the form grows on a desktop screen.
+const _maxWidth = 420.0;
+
 /// Email and password sign-in only: admins are existing accounts.
 /// The router leaves this page once `AccessCubit` sees the session.
 class SignInPage extends StatelessWidget {
@@ -71,7 +74,7 @@ class _SignInViewState extends State<_SignInView> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(Gap.lg),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(maxWidth: _maxWidth),
               child: Form(
                 key: _formKey,
                 child: AutofillGroup(

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/admin/access/domain/access_usecases.dart';
+import 'package:get_workout/admin/access/domain/admin_access_repository.dart';
 import 'package:get_workout/admin/exercises/domain/admin_exercise_repository.dart';
 import 'package:get_workout/admin/exercises/domain/exercise_admin_usecases.dart';
 import 'package:get_workout/admin/exercises/domain/exercise_draft.dart';
@@ -14,8 +16,11 @@ import 'fixtures.dart';
 
 class MockRepository extends Mock implements AdminExerciseRepository {}
 
+class MockAccessRepository extends Mock implements AdminAccessRepository {}
+
 void main() {
   late MockRepository repository;
+  late MockAccessRepository access;
   late StreamController<List<ExerciseRecord>> library;
 
   final loadedAt = DateTime.utc(2026, 11, 1);
@@ -29,6 +34,9 @@ void main() {
 
   setUp(() {
     repository = MockRepository();
+    access = MockAccessRepository();
+    when(() => access.claims(refresh: true))
+        .thenAnswer((_) async => const Ok({'admin': true}));
     library = StreamController();
     when(() => repository.watchAll()).thenAnswer((_) => library.stream);
     when(() => repository.load('ex_dumbbell_press'))
@@ -58,6 +66,7 @@ void main() {
       watchExerciseRecords: WatchExerciseRecords(repository),
       createExercise: CreateExercise(repository),
       updateExercise: UpdateExercise(repository),
+      checkAdminAccess: CheckAdminAccess(access),
     );
     addTearDown(cubit.close);
     library.add([press, curl]);
@@ -178,7 +187,9 @@ void main() {
 
     test('the next save uses the updatedAt of the last one', () async {
       final cubit = await open('ex_dumbbell_press');
+      cubit.change((d) => d.copyWith(popularity: 4));
       await cubit.save();
+      cubit.change((d) => d.copyWith(popularity: 5));
       await cubit.save();
       verify(() => repository.update(any(), loadedUpdatedAt: savedAt))
           .called(1);
@@ -186,8 +197,43 @@ void main() {
 
     test('its own name is no conflict', () async {
       final cubit = await open('ex_dumbbell_press');
+      cubit.change((d) => d.copyWith(popularity: 4));
       await cubit.save();
       expect(cubit.state.problems, isEmpty);
+      expect(cubit.state.status, EditorStatus.saved);
+    });
+
+    test('its name may not be an alias of another exercise', () async {
+      final cubit = await open('ex_dumbbell_press');
+      // The curl's alias is "Curl Alias".
+      cubit.change((d) => d.copyWith(name: 'curl alias'));
+      await cubit.save();
+      expect(cubit.state.problemsFor('l10n.en.name'), [
+        'name "curl alias" is an alias of ex_curl',
+      ]);
+    });
+
+    test('without changes nothing is written', () async {
+      final cubit = await open('ex_dumbbell_press');
+      expect(cubit.state.canSave(), isFalse);
+      expect(cubit.state.canSave(ExerciseStatus.live), isFalse);
+      expect(cubit.state.canSave(ExerciseStatus.retired), isTrue);
+
+      await cubit.save();
+      await cubit.saveAs(ExerciseStatus.live);
+
+      verifyNever(
+        () => repository.update(
+          any(),
+          loadedUpdatedAt: any(named: 'loadedUpdatedAt'),
+        ),
+      );
+      expect(cubit.state.status, EditorStatus.editing);
+
+      cubit.change((d) => d.copyWith(popularity: 4));
+      expect(cubit.state.canSave(), isTrue);
+      cubit.change((d) => d.copyWith(popularity: 1));
+      expect(cubit.state.canSave(), isFalse);
     });
 
     test('pinned and excluded ids must exist and not be itself', () async {
@@ -298,14 +344,96 @@ void main() {
       ),
     ).thenAnswer((_) async => const Err(PermissionFailure()));
     final cubit = await open('ex_dumbbell_press');
+    cubit.change((d) => d.copyWith(popularity: 4));
 
     await cubit.save();
 
     expect(cubit.state.status, EditorStatus.saveFailed);
     expect(cubit.state.failure, isA<PermissionFailure>());
+    // The token was refreshed and still carries the claim: saving again may
+    // work, and the save stays possible.
+    verify(() => access.claims(refresh: true)).called(1);
+    expect(cubit.state.accessRefreshed, isTrue);
+    expect(cubit.state.canSave(), isTrue);
     expect(
       failureMessage(cubit.state.failure!),
       startsWith('You are not allowed to edit'),
     );
+  });
+
+  test(
+    'a denied write by a revoked admin leaves it to the access gate',
+    () async {
+      when(
+        () => repository.update(
+          any(),
+          loadedUpdatedAt: any(named: 'loadedUpdatedAt'),
+        ),
+      ).thenAnswer((_) async => const Err(PermissionFailure()));
+      when(() => access.claims(refresh: true))
+          .thenAnswer((_) async => const Ok({}));
+      final cubit = await open('ex_dumbbell_press');
+      cubit.change((d) => d.copyWith(popularity: 4));
+
+      await cubit.save();
+
+      expect(cubit.state.status, EditorStatus.saveFailed);
+      expect(cubit.state.accessRefreshed, isFalse);
+    },
+  );
+
+  group('a save whose new updatedAt could not be read', () {
+    setUp(
+      () => when(
+        () => repository.update(
+          any(),
+          loadedUpdatedAt: any(named: 'loadedUpdatedAt'),
+        ),
+      ).thenAnswer((_) async => const Ok(Saved(null))),
+    );
+
+    test('is reported as saved, and the next save reads it first', () async {
+      final cubit = await open('ex_dumbbell_press');
+      cubit.change((d) => d.copyWith(popularity: 4));
+      await cubit.save();
+      expect(cubit.state.status, EditorStatus.saved);
+      expect(cubit.state.isDirty, isFalse);
+
+      final written = record(
+        press.draft.copyWith(popularity: 4).toJson(),
+        updatedAt: savedAt,
+      );
+      when(() => repository.load('ex_dumbbell_press'))
+          .thenAnswer((_) async => Ok(written));
+      cubit.change((d) => d.copyWith(popularity: 5));
+      await cubit.save();
+
+      verify(() => repository.update(any(), loadedUpdatedAt: savedAt))
+          .called(1);
+      expect(cubit.state.status, EditorStatus.saved);
+    });
+
+    test('a change by someone else since then is still refused', () async {
+      final cubit = await open('ex_dumbbell_press');
+      cubit.change((d) => d.copyWith(popularity: 4));
+      await cubit.save();
+
+      final theirs = record(
+        press.draft.copyWith(popularity: 9).toJson(),
+        updatedAt: DateTime.utc(2026, 11, 3),
+      );
+      when(() => repository.load('ex_dumbbell_press'))
+          .thenAnswer((_) async => Ok(theirs));
+      cubit.change((d) => d.copyWith(popularity: 5));
+      await cubit.save();
+
+      expect(cubit.state.status, EditorStatus.changedSinceLoaded);
+      verify(
+        () => repository.update(
+          any(),
+          loadedUpdatedAt: any(named: 'loadedUpdatedAt'),
+        ),
+      ).called(1);
+    });
   });
 }

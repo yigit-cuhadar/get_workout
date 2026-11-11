@@ -12,6 +12,9 @@ import '../../shell/admin_text.dart';
 import '../domain/exercise_draft.dart';
 import 'exercise_editor_cubit.dart';
 
+/// The widest the form grows on a desktop screen.
+const _maxContentWidth = 960.0;
+
 /// Creates an exercise ([id] null) or edits one, field by field, with the
 /// content rules' problems shown next to the fields they concern.
 class ExerciseEditorPage extends StatelessWidget {
@@ -50,7 +53,13 @@ class _EditorView extends StatelessWidget {
               context.go(AdminRoutes.exercise(state.draft.id));
             }
           case EditorStatus.saveFailed:
-            _show(context, failureMessage(state.failure!));
+            _show(
+              context,
+              state.accessRefreshed
+                  ? 'The save was refused, but this account still has admin '
+                        'access and its token is now refreshed. Save again.'
+                  : failureMessage(state.failure!),
+            );
           case EditorStatus.editing when state.problems.isNotEmpty:
             _show(context, 'Not saved: ${state.problems.length} problem(s).');
           default:
@@ -203,22 +212,28 @@ class _Actions extends StatelessWidget {
             children: [
               if (stored != null)
                 FilledButton(
-                  onPressed: saving ? null : cubit.save,
+                  onPressed: saving || !state.canSave() ? null : cubit.save,
                   child: Text('Save (stays ${codeLabel(stored)})'),
                 ),
               if (stored != ExerciseStatus.draft)
                 OutlinedButton(
-                  onPressed: saving ? null : toDraft,
+                  onPressed: saving || !state.canSave(ExerciseStatus.draft)
+                      ? null
+                      : toDraft,
                   child: const Text('Save as draft'),
                 ),
               if (stored != ExerciseStatus.live)
                 OutlinedButton(
-                  onPressed: saving ? null : publish,
+                  onPressed: saving || !state.canSave(ExerciseStatus.live)
+                      ? null
+                      : publish,
                   child: const Text('Publish'),
                 ),
               if (stored != null && stored != ExerciseStatus.retired)
                 OutlinedButton(
-                  onPressed: saving ? null : retire,
+                  onPressed: saving || !state.canSave(ExerciseStatus.retired)
+                      ? null
+                      : retire,
                   child: const Text('Retire'),
                 ),
             ],
@@ -249,323 +264,310 @@ class _Form extends StatelessWidget {
       for (final record in state.library) record.id: record.draft.name,
     };
 
-    return ListView(
-      padding: const EdgeInsets.all(Gap.md),
-      children: [
-        if (state.problems.isNotEmpty)
-          _ProblemList(
-            title: '${state.problems.length} problem(s) block saving',
-            messages: [for (final p in state.problems) p.message],
-          ),
-        _Section(
-          title: 'Identity',
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: _maxContentWidth),
+        child: ListView(
+          padding: const EdgeInsets.all(Gap.md),
           children: [
-            _TextInput(
-              label: 'Id (ex_ + snake_case; cannot change once saved)',
-              value: draft.id,
-              enabled: state.isNew,
-              problems: problems('id'),
-              onChanged: (id) => edit((d) => d.copyWith(id: id)),
+            if (state.problems.isNotEmpty)
+              _ProblemList(
+                title: '${state.problems.length} problem(s) block saving',
+                messages: [for (final p in state.problems) p.message],
+              ),
+            _Section(
+              title: 'Identity',
+              children: [
+                _TextInput(
+                  label: 'Id (ex_ + snake_case; cannot change once saved)',
+                  value: draft.id,
+                  enabled: state.isNew,
+                  problems: problems('id'),
+                  onChanged: (id) => edit((d) => d.copyWith(id: id)),
+                ),
+                _TextInput(
+                  label: 'Name (English)',
+                  value: draft.name,
+                  problems: problems('l10n.en.name'),
+                  onChanged: (name) => edit((d) => d.copyWith(name: name)),
+                ),
+                _Row([
+                  _TextInput(
+                    label: 'Family (snake_case)',
+                    value: draft.family,
+                    problems: problems('family'),
+                    onChanged: (family) =>
+                        edit((d) => d.copyWith(family: family)),
+                  ),
+                  _NumberInput(
+                    label: 'Family rank (1 = easiest)',
+                    value: draft.familyRank,
+                    problems: problems('familyRank'),
+                    onChanged: (rank) =>
+                        edit((d) => d.copyWith(familyRank: rank)),
+                  ),
+                  _NumberInput(
+                    label: 'Popularity (1 sorts first)',
+                    value: draft.popularity,
+                    problems: problems('popularity'),
+                    onChanged: (value) =>
+                        edit((d) => d.copyWith(popularity: value)),
+                  ),
+                ]),
+              ],
             ),
-            _TextInput(
-              label: 'Name (English)',
-              value: draft.name,
-              problems: problems('l10n.en.name'),
-              onChanged: (name) => edit((d) => d.copyWith(name: name)),
+            _Section(
+              title: 'Classification',
+              children: [
+                _Row([
+                  _CodePicker<LoggingType>(
+                    label: 'Logging type',
+                    values: LoggingType.values,
+                    value: draft.loggingType,
+                    problems: problems('loggingType'),
+                    onChanged: (v) => edit((d) => d.copyWith(loggingType: v)),
+                  ),
+                  _CodePicker<Mechanic>(
+                    label: 'Mechanic',
+                    values: Mechanic.values,
+                    value: draft.mechanic,
+                    problems: problems('mechanic'),
+                    onChanged: (v) => edit((d) => d.copyWith(mechanic: v)),
+                  ),
+                  _CodePicker<Laterality>(
+                    label: 'Laterality',
+                    values: Laterality.values,
+                    value: draft.laterality,
+                    problems: problems('laterality'),
+                    onChanged: (v) => edit((d) => d.copyWith(laterality: v)),
+                  ),
+                ]),
+                _Row([
+                  _CodePicker<Level>(
+                    label: 'Level',
+                    values: Level.values,
+                    value: draft.level,
+                    problems: problems('level'),
+                    onChanged: (v) => edit((d) => d.copyWith(level: v)),
+                  ),
+                  _CodePicker<Force>(
+                    label: 'Force',
+                    values: Force.values,
+                    value: draft.force,
+                    problems: problems('force'),
+                    onChanged: (v) => edit((d) => d.copyWith(force: v)),
+                  ),
+                  _CodePicker<MovementPattern>(
+                    label: 'Movement pattern',
+                    values: MovementPattern.values,
+                    value: draft.movementPattern,
+                    problems: problems('movementPattern'),
+                    onChanged: (v) =>
+                        edit((d) => d.copyWith(movementPattern: v)),
+                  ),
+                ]),
+                _Row([
+                  _CodePicker<Position>(
+                    label: 'Position',
+                    values: Position.values,
+                    value: draft.position,
+                    problems: problems('position'),
+                    onChanged: (v) => edit((d) => d.copyWith(position: v)),
+                  ),
+                  _CodePicker<Grip>(
+                    label: 'Grip (optional)',
+                    values: Grip.values,
+                    value: draft.grip,
+                    optional: true,
+                    problems: problems('grip'),
+                    onChanged: (v) => edit((d) => d.copyWith(grip: v)),
+                  ),
+                  _CodePicker<GripWidth>(
+                    label: 'Grip width (optional)',
+                    values: GripWidth.values,
+                    value: draft.gripWidth,
+                    optional: true,
+                    problems: problems('gripWidth'),
+                    onChanged: (v) => edit((d) => d.copyWith(gripWidth: v)),
+                  ),
+                ]),
+                _Row([
+                  _NumberInput(
+                    label: 'Default rest (s, $minRestS-$maxRestS)',
+                    value: draft.defaultRestS,
+                    problems: problems('defaultRestS'),
+                    onChanged: (v) => edit((d) => d.copyWith(defaultRestS: v)),
+                  ),
+                  if (draft.takesIncrement)
+                    _DecimalInput(
+                      label: 'Weight increment (kg)',
+                      value: draft.incrementKg,
+                      problems: problems('incrementKg'),
+                      onChanged: (v) => edit((d) => d.copyWith(incrementKg: v)),
+                    )
+                  else
+                    const Text('No weight increment for this logging type.'),
+                ]),
+              ],
             ),
-            _Row([
-              _TextInput(
-                label: 'Family (snake_case)',
-                value: draft.family,
-                problems: problems('family'),
-                onChanged: (family) => edit((d) => d.copyWith(family: family)),
-              ),
-              _NumberInput(
-                label: 'Family rank (1 = easiest)',
-                value: draft.familyRank,
-                problems: problems('familyRank'),
-                onChanged: (rank) => edit((d) => d.copyWith(familyRank: rank)),
-              ),
-              _NumberInput(
-                label: 'Popularity (1 sorts first)',
-                value: draft.popularity,
-                problems: problems('popularity'),
-                onChanged: (value) =>
-                    edit((d) => d.copyWith(popularity: value)),
-              ),
-            ]),
-          ],
-        ),
-        _Section(
-          title: 'Classification',
-          children: [
-            _Row([
-              _CodePicker<LoggingType>(
-                label: 'Logging type',
-                values: LoggingType.values,
-                value: draft.loggingType,
-                problems: problems('loggingType'),
-                onChanged: (v) => edit((d) => d.copyWith(loggingType: v)),
-              ),
-              _CodePicker<Mechanic>(
-                label: 'Mechanic',
-                values: Mechanic.values,
-                value: draft.mechanic,
-                problems: problems('mechanic'),
-                onChanged: (v) => edit((d) => d.copyWith(mechanic: v)),
-              ),
-              _CodePicker<Laterality>(
-                label: 'Laterality',
-                values: Laterality.values,
-                value: draft.laterality,
-                problems: problems('laterality'),
-                onChanged: (v) => edit((d) => d.copyWith(laterality: v)),
-              ),
-            ]),
-            _Row([
-              _CodePicker<Level>(
-                label: 'Level',
-                values: Level.values,
-                value: draft.level,
-                problems: problems('level'),
-                onChanged: (v) => edit((d) => d.copyWith(level: v)),
-              ),
-              _CodePicker<Force>(
-                label: 'Force',
-                values: Force.values,
-                value: draft.force,
-                problems: problems('force'),
-                onChanged: (v) => edit((d) => d.copyWith(force: v)),
-              ),
-              _CodePicker<MovementPattern>(
-                label: 'Movement pattern',
-                values: MovementPattern.values,
-                value: draft.movementPattern,
-                problems: problems('movementPattern'),
-                onChanged: (v) => edit((d) => d.copyWith(movementPattern: v)),
-              ),
-            ]),
-            _Row([
-              _CodePicker<Position>(
-                label: 'Position',
-                values: Position.values,
-                value: draft.position,
-                problems: problems('position'),
-                onChanged: (v) => edit((d) => d.copyWith(position: v)),
-              ),
-              _CodePicker<Grip>(
-                label: 'Grip (optional)',
-                values: Grip.values,
-                value: draft.grip,
-                optional: true,
-                problems: problems('grip'),
-                onChanged: (v) => edit((d) => d.copyWith(grip: v)),
-              ),
-              _CodePicker<GripWidth>(
-                label: 'Grip width (optional)',
-                values: GripWidth.values,
-                value: draft.gripWidth,
-                optional: true,
-                problems: problems('gripWidth'),
-                onChanged: (v) => edit((d) => d.copyWith(gripWidth: v)),
-              ),
-            ]),
-            _Row([
-              _NumberInput(
-                label: 'Default rest (s, $minRestS-$maxRestS)',
-                value: draft.defaultRestS,
-                problems: problems('defaultRestS'),
-                onChanged: (v) => edit((d) => d.copyWith(defaultRestS: v)),
-              ),
-              if (draft.takesIncrement)
-                _DecimalInput(
-                  label: 'Weight increment (kg)',
-                  value: draft.incrementKg,
-                  problems: problems('incrementKg'),
-                  onChanged: (v) => edit((d) => d.copyWith(incrementKg: v)),
-                )
-              else
-                const Text('No weight increment for this logging type.'),
-            ]),
-          ],
-        ),
-        _Section(
-          title: 'Equipment',
-          children: [
-            _CodeChips<Equipment>(
-              label: 'Equipment (all needed together)',
-              values: Equipment.values,
-              selected: draft.equipment,
-              problems: problems('equipment'),
-              onChanged: (v) => edit((d) => d.copyWith(equipment: v)),
-            ),
-            for (final (index, set) in draft.equipmentAlternatives.indexed)
-              _CodeChips<Equipment>(
-                label: 'Alternative set ${index + 1}',
-                values: Equipment.values,
-                selected: set,
-                onChanged: (v) => edit(
-                  (d) => d.copyWith(
-                    equipmentAlternatives: [...d.equipmentAlternatives]
-                      ..[index] = v,
+            _Section(
+              title: 'Equipment',
+              children: [
+                _CodeChips<Equipment>(
+                  label: 'Equipment (all needed together)',
+                  values: Equipment.values,
+                  selected: draft.equipment,
+                  problems: problems('equipment'),
+                  onChanged: (v) => edit((d) => d.copyWith(equipment: v)),
+                ),
+                for (final (index, set) in draft.equipmentAlternatives.indexed)
+                  _CodeChips<Equipment>(
+                    label: 'Alternative set ${index + 1}',
+                    values: Equipment.values,
+                    selected: set,
+                    onChanged: (v) => edit(
+                      (d) => d.copyWith(
+                        equipmentAlternatives: [...d.equipmentAlternatives]
+                          ..[index] = v,
+                      ),
+                    ),
+                    onRemove: () => edit(
+                      (d) => d.copyWith(
+                        equipmentAlternatives: [...d.equipmentAlternatives]
+                          ..removeAt(index),
+                      ),
+                    ),
+                  ),
+                _Problems(problems('equipmentAlternatives')),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed:
+                        draft.equipmentAlternatives.length <
+                            maxEquipmentAlternatives
+                        ? () => edit(
+                            (d) => d.copyWith(
+                              equipmentAlternatives: [
+                                ...d.equipmentAlternatives,
+                                const [],
+                              ],
+                            ),
+                          )
+                        : null,
+                    icon: const Icon(Icons.add),
+                    label: const Text(
+                      'Add alternative set (max $maxEquipmentAlternatives)',
+                    ),
                   ),
                 ),
-                onRemove: () => edit(
-                  (d) => d.copyWith(
-                    equipmentAlternatives: [...d.equipmentAlternatives]
-                      ..removeAt(index),
-                  ),
+              ],
+            ),
+            _Section(
+              title: 'Muscles',
+              children: [
+                _CodeChips<Muscle>(
+                  label: 'Main muscles (1-$maxMainMuscles)',
+                  values: Muscle.values,
+                  selected: draft.mainMuscles,
+                  problems: problems('mainMuscles'),
+                  onChanged: (v) => edit((d) => d.copyWith(mainMuscles: v)),
                 ),
-              ),
-            _Problems(problems('equipmentAlternatives')),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed:
-                    draft.equipmentAlternatives.length <
-                        maxEquipmentAlternatives
-                    ? () => edit(
-                        (d) => d.copyWith(
-                          equipmentAlternatives: [
-                            ...d.equipmentAlternatives,
-                            const [],
-                          ],
-                        ),
-                      )
-                    : null,
-                icon: const Icon(Icons.add),
-                label: const Text(
-                  'Add alternative set (max $maxEquipmentAlternatives)',
+                _CodeChips<Muscle>(
+                  label: 'Secondary muscles (0-$maxSecondaryMuscles)',
+                  values: Muscle.values,
+                  selected: draft.secondaryMuscles,
+                  problems: problems('secondaryMuscles'),
+                  onChanged: (v) =>
+                      edit((d) => d.copyWith(secondaryMuscles: v)),
                 ),
-              ),
+              ],
             ),
+            _Section(
+              title: 'Alternatives (overrides of the computed list)',
+              children: [
+                _IdList(
+                  label: 'Pinned (shown first)',
+                  ids: draft.pinnedAlternatives,
+                  choices: otherIds,
+                  names: names,
+                  problems: problems('pinnedAlternatives'),
+                  onChanged: (v) =>
+                      edit((d) => d.copyWith(pinnedAlternatives: v)),
+                ),
+                _IdList(
+                  label: 'Excluded (never shown)',
+                  ids: draft.excludedAlternatives,
+                  choices: otherIds,
+                  names: names,
+                  problems: problems('excludedAlternatives'),
+                  onChanged: (v) =>
+                      edit((d) => d.copyWith(excludedAlternatives: v)),
+                ),
+              ],
+            ),
+            _Section(
+              title: 'Text (English)',
+              children: [
+                _StringList(
+                  label: 'Aliases (0-$maxAliases)',
+                  values: draft.aliases,
+                  problems: problems('l10n.en.aliases'),
+                  onChanged: (v) => edit((d) => d.copyWith(aliases: v)),
+                ),
+                _StringList(
+                  label: 'Setup (${setupLines.min}-${setupLines.max})',
+                  values: draft.setup,
+                  problems: problems('l10n.en.setup'),
+                  onChanged: (v) => edit((d) => d.copyWith(setup: v)),
+                ),
+                _StringList(
+                  label:
+                      'Execution (${executionLines.min}-${executionLines.max})',
+                  values: draft.execution,
+                  problems: problems('l10n.en.execution'),
+                  onChanged: (v) => edit((d) => d.copyWith(execution: v)),
+                ),
+                _StringList(
+                  label: 'Mistakes (${mistakeLines.min}-${mistakeLines.max})',
+                  values: draft.mistakes,
+                  problems: problems('l10n.en.mistakes'),
+                  onChanged: (v) => edit((d) => d.copyWith(mistakes: v)),
+                ),
+                _TextInput(
+                  label: 'Safety (optional)',
+                  value: draft.safety ?? '',
+                  problems: problems('l10n.en.safety'),
+                  onChanged: (v) =>
+                      edit((d) => d.copyWith(safety: v.isEmpty ? null : v)),
+                ),
+                _StringList(
+                  label: 'Cues (${cueLines.min}-${cueLines.max})',
+                  values: draft.cues,
+                  problems: problems('l10n.en.cues'),
+                  onChanged: (v) => edit((d) => d.copyWith(cues: v)),
+                ),
+              ],
+            ),
+            // Problems about fields the form has no input for, e.g. an unknown
+            // field written in the console.
+            _Problems([
+              for (final problem in state.problems)
+                if (!_formFields.contains(problem.field)) problem.message,
+            ]),
+            const SizedBox(height: Gap.xl),
           ],
         ),
-        _Section(
-          title: 'Muscles',
-          children: [
-            _CodeChips<Muscle>(
-              label: 'Main muscles (1-$maxMainMuscles)',
-              values: Muscle.values,
-              selected: draft.mainMuscles,
-              problems: problems('mainMuscles'),
-              onChanged: (v) => edit((d) => d.copyWith(mainMuscles: v)),
-            ),
-            _CodeChips<Muscle>(
-              label: 'Secondary muscles (0-$maxSecondaryMuscles)',
-              values: Muscle.values,
-              selected: draft.secondaryMuscles,
-              problems: problems('secondaryMuscles'),
-              onChanged: (v) => edit((d) => d.copyWith(secondaryMuscles: v)),
-            ),
-          ],
-        ),
-        _Section(
-          title: 'Alternatives (overrides of the computed list)',
-          children: [
-            _IdList(
-              label: 'Pinned (shown first)',
-              ids: draft.pinnedAlternatives,
-              choices: otherIds,
-              names: names,
-              problems: problems('pinnedAlternatives'),
-              onChanged: (v) => edit((d) => d.copyWith(pinnedAlternatives: v)),
-            ),
-            _IdList(
-              label: 'Excluded (never shown)',
-              ids: draft.excludedAlternatives,
-              choices: otherIds,
-              names: names,
-              problems: problems('excludedAlternatives'),
-              onChanged: (v) =>
-                  edit((d) => d.copyWith(excludedAlternatives: v)),
-            ),
-          ],
-        ),
-        _Section(
-          title: 'Text (English)',
-          children: [
-            _StringList(
-              label: 'Aliases (0-$maxAliases)',
-              values: draft.aliases,
-              problems: problems('l10n.en.aliases'),
-              onChanged: (v) => edit((d) => d.copyWith(aliases: v)),
-            ),
-            _StringList(
-              label: 'Setup (${setupLines.min}-${setupLines.max})',
-              values: draft.setup,
-              problems: problems('l10n.en.setup'),
-              onChanged: (v) => edit((d) => d.copyWith(setup: v)),
-            ),
-            _StringList(
-              label: 'Execution (${executionLines.min}-${executionLines.max})',
-              values: draft.execution,
-              problems: problems('l10n.en.execution'),
-              onChanged: (v) => edit((d) => d.copyWith(execution: v)),
-            ),
-            _StringList(
-              label: 'Mistakes (${mistakeLines.min}-${mistakeLines.max})',
-              values: draft.mistakes,
-              problems: problems('l10n.en.mistakes'),
-              onChanged: (v) => edit((d) => d.copyWith(mistakes: v)),
-            ),
-            _TextInput(
-              label: 'Safety (optional)',
-              value: draft.safety ?? '',
-              problems: problems('l10n.en.safety'),
-              onChanged: (v) =>
-                  edit((d) => d.copyWith(safety: v.isEmpty ? null : v)),
-            ),
-            _StringList(
-              label: 'Cues (${cueLines.min}-${cueLines.max})',
-              values: draft.cues,
-              problems: problems('l10n.en.cues'),
-              onChanged: (v) => edit((d) => d.copyWith(cues: v)),
-            ),
-          ],
-        ),
-        // Problems about fields the form has no input for, e.g. an unknown
-        // field written in the console.
-        _Problems([
-          for (final problem in state.problems)
-            if (!_formFields.contains(problem.field)) problem.message,
-        ]),
-        const SizedBox(height: Gap.xl),
-      ],
+      ),
     );
   }
 }
 
-const _formFields = {
-  'id',
-  'status',
-  'loggingType',
-  'mechanic',
-  'laterality',
-  'level',
-  'force',
-  'movementPattern',
-  'position',
-  'grip',
-  'gripWidth',
-  'equipment',
-  'equipmentAlternatives',
-  'mainMuscles',
-  'secondaryMuscles',
-  'family',
-  'familyRank',
-  'pinnedAlternatives',
-  'excludedAlternatives',
-  'defaultRestS',
-  'incrementKg',
-  'popularity',
-  'l10n.en.name',
-  'l10n.en.aliases',
-  'l10n.en.setup',
-  'l10n.en.execution',
-  'l10n.en.mistakes',
-  'l10n.en.safety',
-  'l10n.en.cues',
+/// The fields the form has inputs for: every known field but `l10n` itself,
+/// whose English text fields have their own inputs.
+final _formFields = {
+  ...allowedKeys.difference({'l10n'}),
+  for (final key in allowedTextKeys) 'l10n.en.$key',
 };
 
 class _Section extends StatelessWidget {
@@ -937,8 +939,8 @@ class _ExercisePickerState extends State<_ExercisePicker> {
     return AlertDialog(
       title: const Text('Pick an exercise'),
       content: SizedBox(
-        width: 480,
-        height: 480,
+        width: _maxContentWidth / 2,
+        height: MediaQuery.sizeOf(context).height / 2,
         child: Column(
           children: [
             TextField(

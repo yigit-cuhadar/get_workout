@@ -117,9 +117,9 @@ void main() {
       expect(stored['updatedAt'], isNot(importedAt));
 
       final saved = result.valueOrNull! as Saved;
-      expect(saved.record.draft, edited);
+      expect(saved.record!.draft, edited);
       expect(
-        saved.record.updatedAt,
+        saved.record!.updatedAt,
         (stored['updatedAt'] as Timestamp).toDate(),
       );
     });
@@ -167,7 +167,79 @@ void main() {
       expect(result.valueOrNull, const ChangedSinceLoaded());
       expect((await doc('ex_dumbbell_press').get()).data()!['popularity'], 7);
     });
+
+    test('refuses when the document was deleted since it was loaded', () async {
+      await seedImported();
+      final loaded = (await repository.load('ex_dumbbell_press')).valueOrNull!;
+      await doc('ex_dumbbell_press').delete();
+
+      final result = await repository.update(
+        loaded.draft,
+        loadedUpdatedAt: loaded.updatedAt,
+      );
+
+      expect(result.valueOrNull, const ChangedSinceLoaded());
+      expect((await doc('ex_dumbbell_press').get()).exists, isFalse);
+    });
+
+    test('writes when neither the loaded nor the stored document has an '
+        'updatedAt', () async {
+      await seedImported();
+      await doc('ex_dumbbell_press').update({'updatedAt': FieldValue.delete()});
+      final loaded = (await repository.load('ex_dumbbell_press')).valueOrNull!;
+      expect(loaded.updatedAt, isNull);
+
+      final result = await repository.update(
+        loaded.draft.copyWith(popularity: 3),
+        loadedUpdatedAt: null,
+      );
+
+      expect(result.valueOrNull, isA<Saved>());
+      final stored = (await doc('ex_dumbbell_press').get()).data()!;
+      expect(stored['popularity'], 3);
+      expect(stored['updatedAt'], isA<Timestamp>());
+    });
+
+    test(
+      'keeps unknown fields of the English text, and drops cleared ones',
+      () async {
+        await seedImported();
+        await doc('ex_dumbbell_press').update({'l10n.en.videoUrl': 'kept'});
+        final loaded = (await repository.load('ex_dumbbell_press'))
+            .valueOrNull!;
+
+        await repository.update(
+          loaded.draft.copyWith(safety: null, cues: ['Elbows tucked']),
+          loadedUpdatedAt: loaded.updatedAt,
+        );
+
+        final en =
+            (await doc('ex_dumbbell_press').get()).data()!['l10n']['en']
+                as Map<String, Object?>;
+        expect(en['videoUrl'], 'kept');
+        expect(en, isNot(contains('safety')));
+        expect(en['cues'], ['Elbows tucked']);
+      },
+    );
   });
+
+  test(
+    'a write that committed is saved even when reading it back fails',
+    () async {
+      final firestore = MockFirestore();
+      // The read after the write finds nothing in this empty store, which
+      // stands for any failed read.
+      when(() => firestore.collection('exercises'))
+          .thenReturn(FakeFirebaseFirestore().collection('exercises'));
+      when(() => firestore.runTransaction<SaveOutcome?>(any()))
+          .thenAnswer((_) async => null);
+
+      final result = await FirestoreAdminExerciseRepository(firestore)
+          .create(ExerciseDraft.fromJson(validJson()));
+
+      expect(result.valueOrNull, const Saved(null));
+    },
+  );
 
   test('a write the rules deny is a PermissionFailure', () async {
     final denying = MockFirestore();
@@ -198,7 +270,7 @@ void main() {
           'items': ['kettlebell', 'bench'],
         },
       ]);
-      expect((result.valueOrNull! as Saved).record.draft, draft);
+      expect((result.valueOrNull! as Saved).record!.draft, draft);
     });
 
     test('refuses an id that is taken', () async {

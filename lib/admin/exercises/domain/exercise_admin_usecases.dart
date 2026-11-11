@@ -42,56 +42,28 @@ class UpdateExercise implements UseCase<SaveOutcome, ExerciseUpdate> {
 
 /// Every rule [draft] breaks: the content rules of a single exercise, plus
 /// the ones across the library that can be checked against [library] (the
-/// loaded documents): a new id is unused, the name is no other exercise's
-/// name or alias target, and pinned and excluded ids exist. Rules about the
-/// live library as a whole are [LibraryHealth]'s and never block a save.
+/// loaded documents): a new id is unused, [nameProblems] and
+/// [referenceProblems]. Rules about the live library as a whole are
+/// [LibraryHealth]'s and never block a save.
 List<ContentProblem> validateExercise(
   ExerciseDraft draft, {
   required List<ExerciseRecord> library,
   required bool isNew,
 }) {
-  final problems = exerciseProblems(draft.toJson());
+  final entry = ExerciseEntry(draft.toJson());
+  final problems = exerciseProblems(entry.data);
   final ids = {for (final record in library) record.id};
   if (isNew && ids.contains(draft.id)) {
     problems.add(ContentProblem('id', 'id "${draft.id}" is already used'));
   }
-  final others = [
-    for (final record in library)
-      if (record.id != draft.id) record.draft,
-  ];
-  final name = draft.name.toLowerCase();
-  for (final other in others) {
-    if (name.isNotEmpty && other.name.toLowerCase() == name) {
-      problems.add(
-        ContentProblem(
-          'l10n.en.name',
-          'name "${draft.name}" also used by ${other.id}',
-        ),
-      );
-    }
-  }
-  for (final alias in draft.aliases) {
-    for (final other in others) {
-      if (other.name.toLowerCase() == alias.toLowerCase()) {
-        problems.add(
-          ContentProblem(
-            'l10n.en.aliases',
-            'alias "$alias" is the name of ${other.id}',
-          ),
-        );
-      }
-    }
-  }
-  for (final (key, refs) in [
-    ('pinnedAlternatives', draft.pinnedAlternatives),
-    ('excludedAlternatives', draft.excludedAlternatives),
-  ]) {
-    for (final ref in refs) {
-      if (ref == draft.id || !ids.contains(ref)) {
-        problems.add(ContentProblem(key, '$key has invalid id "$ref"'));
-      }
-    }
-  }
+  problems
+    ..addAll(
+      nameProblems(entry, [
+        for (final record in library)
+          if (record.id != draft.id) ExerciseEntry(record.json),
+      ]),
+    )
+    ..addAll(referenceProblems(entry, ids));
   return problems;
 }
 

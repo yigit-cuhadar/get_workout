@@ -1,3 +1,4 @@
+import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
 import 'admin_access_repository.dart';
@@ -15,4 +16,12 @@ class CheckAdminAccess implements UseCase<bool, bool> {
 
   /// Only a boolean `true` counts, as in the rules.
   static bool isAdmin(Map<String, Object?> claims) => claims['admin'] == true;
+}
+
+/// The signed-in user, again at every ID token change.
+class WatchAccessChanges {
+  const WatchAccessChanges(this._repository);
+  final AdminAccessRepository _repository;
+
+  Stream<AuthUser?> call() => _repository.watchToken();
 }

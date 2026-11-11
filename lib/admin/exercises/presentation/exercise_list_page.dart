@@ -11,6 +11,9 @@ import '../domain/exercise_admin_usecases.dart';
 import '../domain/exercise_draft.dart';
 import 'exercise_list_cubit.dart';
 
+/// The width of a search or filter field.
+const _fieldWidth = 240.0;
+
 /// Every exercise of every status, with search, filters and the library's
 /// health. Needs `ExerciseListCubit` above it.
 class ExerciseListPage extends StatelessWidget {
@@ -44,21 +47,27 @@ class ExerciseListPage extends StatelessWidget {
           if (records == null) {
             return failure == null
                 ? const LoadingView()
-                : ErrorView(message: failureMessage(failure));
+                : ErrorView(
+                    message: failureMessage(failure),
+                    onRetry: context.read<ExerciseListCubit>().retry,
+                  );
           }
           final visible = state.visible;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (failure != null)
-                Padding(
-                  padding: const EdgeInsets.all(Gap.sm),
-                  child: Text(
-                    'Live updates stopped: ${failureMessage(failure)}',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
+                MaterialBanner(
+                  content: Text(
+                    'Live updates stopped: ${failureMessage(failure)} '
+                    'Retrying automatically.',
                   ),
+                  actions: [
+                    TextButton(
+                      onPressed: context.read<ExerciseListCubit>().retry,
+                      child: const Text('Retry now'),
+                    ),
+                  ],
                 ),
               _Filters(state: state),
               if (state.health case final health?) _HealthPanel(health),
@@ -110,8 +119,9 @@ class _Filters extends StatelessWidget {
               onSelected: (_) => cubit.filterStatus(status),
             ),
           SizedBox(
-            width: 280,
-            child: TextField(
+            width: _fieldWidth,
+            child: TextFormField(
+              initialValue: state.query,
               decoration: const InputDecoration(
                 labelText: 'Search name, alias or id',
                 prefixIcon: Icon(Icons.search),
@@ -164,7 +174,7 @@ class _Picker<T extends Coded> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 220,
+      width: _fieldWidth,
       child: DropdownButtonFormField<T?>(
         initialValue: value,
         decoration: InputDecoration(labelText: label),
@@ -191,7 +201,7 @@ class _HealthPanel extends StatelessWidget {
         ? 'Library health: all library rules pass'
         : 'Library health: ${health.errors.length} problem(s), '
               '${health.invalidIds.length} invalid document(s)';
-    return ExpansionTile(
+    return ListTile(
       leading: Icon(
         health.isHealthy ? Icons.check_circle_outline : Icons.info_outline,
         color: health.isHealthy ? scheme.primary : scheme.tertiary,
@@ -201,22 +211,33 @@ class _HealthPanel extends StatelessWidget {
         '${health.warnings.length} warning(s). Not enforced on save: '
         'fix these across exercises, then they clear.',
       ),
-      childrenPadding: const EdgeInsets.symmetric(horizontal: Gap.md),
-      children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 240),
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              for (final id in health.invalidIds)
-                Text('$id breaks the rules of a single exercise; open it.'),
-              for (final error in health.errors) Text(error),
-              for (final warning in health.warnings) Text('Warning: $warning'),
+      trailing: TextButton(
+        onPressed: () => showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Library health'),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final id in health.invalidIds)
+                    Text('$id breaks the rules of a single exercise; open it.'),
+                  for (final error in health.errors) Text(error),
+                  for (final warning in health.warnings)
+                    Text('Warning: $warning'),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
             ],
           ),
         ),
-        const SizedBox(height: Gap.sm),
-      ],
+        child: const Text('Details'),
+      ),
     );
   }
 }

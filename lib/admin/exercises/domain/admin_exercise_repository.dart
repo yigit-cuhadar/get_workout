@@ -11,7 +11,8 @@ abstract interface class AdminExerciseRepository {
   /// The document as the server holds it now; [NotFoundFailure] when absent.
   Future<Result<ExerciseRecord>> load(String id);
 
-  /// Writes a new document, unless the id is taken ([IdTaken]).
+  /// Writes a new document, unless the id is taken ([IdTaken]). A save that
+  /// was written is always [Saved], even when reading it back failed.
   Future<Result<SaveOutcome>> create(ExerciseDraft draft);
 
   /// Replaces the managed fields of an existing document, unless its

@@ -126,6 +126,10 @@ class RemoteExercise {
     final content = Map<String, Object?>.of(fields)
       ..remove('contentHash')
       ..remove('updatedAt');
+    // A whole number written from the web (the admin panel) is stored as an
+    // integer; the file's 2 and 2.0 are the same increment.
+    final increment = content['incrementKg'];
+    if (increment is int) content['incrementKg'] = increment.toDouble();
     final stored = fields['contentHash'];
     return RemoteExercise(
       storedHash: stored is String ? stored : null,
