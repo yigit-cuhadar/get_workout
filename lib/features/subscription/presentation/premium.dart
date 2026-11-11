@@ -39,8 +39,9 @@ extension PremiumGate on BuildContext {
         );
         return false;
       case PremiumStatus.free:
-        await push<void>(Routes.paywall);
-        return entitlement.isActive;
+        // The paywall pops with true before the cubit may have caught up.
+        final unlocked = await push<bool>(Routes.paywall);
+        return unlocked == true || entitlement.isActive;
     }
   }
 }
