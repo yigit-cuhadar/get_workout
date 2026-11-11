@@ -204,6 +204,21 @@ void main() {
     );
 
     blocTest<ProgramDetailCubit, ProgramDetailState>(
+      'opens on the page as soon as premium is granted',
+      setUp: () => premiumIs(false),
+      build: () => build('p3'),
+      act: (cubit) async {
+        expect(cubit.access, ProgramAccess.locked);
+        premium.controller.add(true);
+        await pumpEventQueue();
+        expect(cubit.access, ProgramAccess.open);
+        await cubit.start(const [1, 3]);
+      },
+      verify: (_) =>
+          verify(() => repository.startProgram('u1', any())).called(1),
+    );
+
+    blocTest<ProgramDetailCubit, ProgramDetailState>(
       'a duplicate keeps the premium mark',
       setUp: () => premiumIs(false),
       build: () => build('p3'),

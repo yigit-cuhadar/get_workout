@@ -145,20 +145,24 @@ from the earlier FitLab app.
   free recommendation is offered (use it, browse, or Today); with none, or
   the catalogue offline, onboarding lands on Today, and so does signing in
   from onboarding to an account already onboarded.
-  Until the subscription feature exists, `ProgramsModule` takes the premium
-  status and the premium action as parameters; bootstrap passes "no
-  premium" and a "coming soon" message. The subscription feature wires
-  them from its app-level `EntitlementCubit` (provided above the router,
-  registered through its module); pages get the premium action from their
-  page widget, never from `sl`.
+  `ProgramsModule` takes the premium status and the premium action as
+  parameters, so programs never import the subscription feature; bootstrap
+  passes `SubscriptionModule.premiumStatus` (the app-level
+  `EntitlementCubit` as unknown / free / premium) and
+  `SubscriptionModule.showPaywall`. The program cubits follow that status,
+  so a page updates by itself once the paywall grants premium; pages get
+  the premium action from their page widget, never from `sl`.
 - **Copies of premium programs** (decided by the user, 2026-11-11): a copy
   of a premium ready-made program is marked `premium: true` and keeps the
   mark through edits and duplicates. Without premium it stays visible and
   readable but cannot be started, rescheduled or trained; an active one
   shows as locked on the Programs tab and is not stopped, so it resumes
   when premium returns. While the premium status is unknown these actions
-  wait. `programAccess` is the one check, also for the workout feature's
-  "Start day". The gate is client-side only: the copy lives in the user's
+  wait. `programAccess` is the one check, also for starting a workout
+  from such a program (Start <day> on the Programs tab, ▶ per day on the
+  program page): locked opens the paywall and starts only if premium was
+  bought; `ActiveWorkoutCubit` refuses it too. A workout in progress from
+  it can always be finished; free workouts are never gated. The gate is client-side only: the copy lives in the user's
   own collection, and the rules only check that `premium` is a boolean.
 - **Steps**: read-only from Apple Health / Health Connect; not stored.
 - **Photos**: private app storage plus Cloud Storage backup. Never the gallery.

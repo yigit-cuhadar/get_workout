@@ -459,6 +459,19 @@ void main() {
       expect(cubit.state.status, CatalogueDetailStatus.ready);
     });
 
+    test('getting premium, e.g. on the paywall, unlocks the days on '
+        'the open page', () async {
+      final cubit = await open(paid.id);
+      expect(cubit.state.status, CatalogueDetailStatus.locked);
+
+      premiumStatus.controller.add(true);
+      await pumpEventQueue();
+
+      expect(cubit.state.status, CatalogueDetailStatus.ready);
+      expect(cubit.state.days, days);
+      expect(cubit.state.useStatus, UseStatus.ready);
+    });
+
     test('losing premium locks the days again', () async {
       final cubit = await open(paid.id, premium: true);
       expect(cubit.state.status, CatalogueDetailStatus.ready);
