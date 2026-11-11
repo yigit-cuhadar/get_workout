@@ -3,14 +3,16 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/completed_days.dart';
-import 'package:get_workout/features/workout/data/file_active_workout_store.dart';
+import 'package:get_workout/features/workout/data/file_local_workout_store.dart';
 import 'package:get_workout/features/workout/data/firestore_workout_repository.dart';
 import 'package:get_workout/features/workout/data/workout_completed_days.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
+import 'package:get_workout/features/workout/domain/workout_repository.dart';
 
 import 'fixtures.dart';
 
@@ -63,7 +65,10 @@ void main() {
 
     setUp(() {
       firestore = FakeFirebaseFirestore();
-      repository = FirestoreWorkoutRepository(firestore);
+      repository = FirestoreWorkoutRepository(
+        firestore,
+        waitForPendingWrites: () async {},
+      );
     });
 
     DocumentReference<Map<String, dynamic>> stats(String id) =>
@@ -148,9 +153,39 @@ void main() {
       );
       final result = await repository.getStats('u1', ['squat', 'plank']);
       expect(result.valueOrNull, {
-        'squat': applyWorkout(null, full, 'squat'),
-        'plank': null,
+        'squat': (stats: applyWorkout(null, full, 'squat'), current: true),
+        'plank': (stats: null, current: true),
       });
+    });
+
+    test('isStored says whether the server has the workout', () async {
+      await repository.saveWorkout('u1', full, const {});
+      await pumpEventQueue();
+      expect((await repository.isStored('u1', 'w1')).valueOrNull, isTrue);
+      expect((await repository.isStored('u1', 'w9')).valueOrNull, isFalse);
+    });
+
+    test('rebuild reads the exercise\'s workouts and replaces stats', () async {
+      await repository.saveWorkout('u1', full, const {});
+      await repository.saveWorkout(
+        'u1',
+        workout('w2', [
+          exercise('bench', [lift(80, 5)]),
+        ], finishedAt: end),
+        const {},
+      );
+      await pumpEventQueue();
+      final read = (await repository.workoutsWith('u1', 'squat')).valueOrNull!;
+      expect(read.complete, isTrue);
+      expect(read.workouts, [full]);
+
+      final rebuilt = rebuildStats('squat', read.workouts);
+      await repository.saveStats('u1', 'squat', rebuilt);
+      await pumpEventQueue();
+      expect(await repository.watchStats('u1', 'squat').first, rebuilt);
+      await repository.saveStats('u1', 'squat', null);
+      await pumpEventQueue();
+      expect((await stats('squat').get()).exists, isFalse);
     });
 
     test('new workout ids differ', () {
@@ -202,10 +237,16 @@ void main() {
     });
   });
 
-  group('FileActiveWorkoutStore', () {
+  group('FileLocalWorkoutStore', () {
     late Directory directory;
-    late FileActiveWorkoutStore store;
-    final draft = full.copyWith(
+    late FileLocalWorkoutStore store;
+    final inProgress = Workout(
+      id: 'w2',
+      startedAt: start,
+      programId: 'p1',
+      dayIndex: 1,
+      name: 'Legs',
+      note: 'Felt strong',
       exercises: [
         full.exercises.first.copyWith(
           goal: () => item('squat', sets: 2, targetKg: 100),
@@ -214,55 +255,80 @@ void main() {
         full.exercises.last,
       ],
     );
-    final inProgress = Workout(
-      id: draft.id,
-      startedAt: draft.startedAt,
-      programId: draft.programId,
-      dayIndex: draft.dayIndex,
-      name: draft.name,
-      note: draft.note,
-      exercises: draft.exercises,
+    final kept = LocalWorkouts(
+      draft: inProgress,
+      finished: [full],
+      staleStats: const {'squat'},
     );
+
+    File file(String name) => File('${directory.path}/$name');
 
     setUp(() {
       directory = Directory.systemTemp.createTempSync('workout_store');
-      store = FileActiveWorkoutStore(() async => directory);
+      store = FileLocalWorkoutStore(
+        () async => directory,
+        clock: () => DateTime.fromMillisecondsSinceEpoch(42),
+      );
     });
 
     tearDown(() => directory.deleteSync(recursive: true));
 
-    test('keeps the workout in progress with its goals', () async {
-      expect((await store.save('u1', inProgress)).isOk, isTrue);
-      expect((await store.load('u1')).valueOrNull, inProgress);
+    test('keeps drafts with goals, finished workouts and stale ids', () async {
+      expect((await store.save('u1', kept)).isOk, isTrue);
+      expect((await store.load('u1')).valueOrNull, kept);
+    });
+
+    test('nothing kept reads as empty', () async {
+      expect((await store.load('u1')).valueOrNull, const LocalWorkouts());
     });
 
     test('each user only ever gets their own', () async {
-      await store.save('u1', inProgress);
-      expect((await store.load('u2')).valueOrNull, isNull);
-      // A file renamed to another user's still belongs to its writer.
-      File('${directory.path}/active_workout_u1.json')
-          .renameSync('${directory.path}/active_workout_u2.json');
-      expect((await store.load('u2')).valueOrNull, isNull);
+      await store.save('u1', kept);
+      expect((await store.load('u2')).valueOrNull, const LocalWorkouts());
+      // A file renamed to another user's still belongs to its writer: it is
+      // set aside, not shown.
+      file('workouts_u1.json').renameSync('${directory.path}/workouts_u2.json');
+      expect((await store.load('u2')).failureOrNull, isA<UnknownFailure>());
+      expect(file('workouts_u2.json.unreadable-42').existsSync(), isTrue);
     });
 
-    test('the latest of quick saves wins, then clear removes it', () async {
-      final renamed = Workout(
-        id: inProgress.id,
-        startedAt: inProgress.startedAt,
-        name: 'Renamed',
+    test('the latest of quick saves wins', () async {
+      final later = kept.copyWith(draft: () => null);
+      await Future.wait([store.save('u1', kept), store.save('u1', later)]);
+      expect((await store.load('u1')).valueOrNull, later);
+      expect(directory.listSync().map((e) => e.uri.pathSegments.last), [
+        'workouts_u1.json',
+      ]);
+    });
+
+    test('a damaged file is set aside, never overwritten', () async {
+      file('workouts_u1.json').writeAsStringSync('{"uid": "u1", "id"');
+      expect((await store.load('u1')).failureOrNull, isA<UnknownFailure>());
+      expect(
+        file('workouts_u1.json.unreadable-42').readAsStringSync(),
+        '{"uid": "u1", "id"',
       );
-      final saves = [store.save('u1', inProgress), store.save('u1', renamed)];
-      await Future.wait(saves);
-      expect((await store.load('u1')).valueOrNull, renamed);
-      await store.clear('u1');
-      expect((await store.load('u1')).valueOrNull, isNull);
-      expect(directory.listSync(), isEmpty);
+      await store.save('u1', const LocalWorkouts());
+      expect((await store.load('u1')).valueOrNull, const LocalWorkouts());
     });
 
-    test('a damaged file reads as none', () async {
-      File('${directory.path}/active_workout_u1.json')
-          .writeAsStringSync('{"uid": "u1", "id"');
-      expect((await store.load('u1')).valueOrNull, isNull);
+    test('an unknown version is set aside too', () async {
+      file('workouts_u1.json').writeAsStringSync(
+        '{"version": 99, "uid": "u1", "finished": [], "staleStats": []}',
+      );
+      expect((await store.load('u1')).failureOrNull, isA<UnknownFailure>());
+      expect(file('workouts_u1.json.unreadable-42').existsSync(), isTrue);
+    });
+
+    test('a read that fails otherwise is set aside as well', () async {
+      final unreadable = file('workouts_u1.json')..writeAsStringSync('{}');
+      // Not a format problem: the file cannot be opened at all.
+      Process.runSync('chmod', ['000', unreadable.path]);
+      final result = await store.load('u1');
+      expect(result.failureOrNull, isA<UnknownFailure>());
+      expect(file('workouts_u1.json.unreadable-42').existsSync(), isTrue);
+      expect((await store.save('u1', kept)).isOk, isTrue);
+      expect((await store.load('u1')).valueOrNull, kept);
     });
   });
 }

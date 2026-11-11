@@ -37,7 +37,9 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
   Future<Result<LocalWorkouts>> load(String uid) => guard(() async {
     await _tail;
     final file = await _file(uid);
-    if (!file.existsSync()) return const LocalWorkouts();
+    if (FileSystemEntity.typeSync(file.path) == FileSystemEntityType.notFound) {
+      return const LocalWorkouts();
+    }
     try {
       final json = jsonDecode(await file.readAsString());
       final workouts = json is Map && json['uid'] == uid

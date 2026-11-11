@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
@@ -24,7 +25,7 @@ import 'fixtures.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
-class MockStore extends Mock implements ActiveWorkoutStore {}
+class MockStore extends Mock implements LocalWorkoutStore {}
 
 class MockWorkoutRepository extends Mock implements WorkoutRepository {}
 
@@ -71,6 +72,8 @@ void main() {
   late MockProgramRepository programRepository;
   late MockProgramListCubit programs;
   late Map<String, StreamController<ExerciseStats?>> stats;
+  late StreamController<ExerciseCatalogueState> catalogueStates;
+  late ExerciseCatalogueState catalogueState;
   var clock = now;
 
   setUpAll(() {
@@ -78,6 +81,7 @@ void main() {
     registerFallbackValue(<String, ExerciseStats>{});
     registerFallbackValue(active);
     registerFallbackValue(const Program(name: 'x', days: []));
+    registerFallbackValue(const LocalWorkouts());
   });
 
   setUp(() {
@@ -88,13 +92,19 @@ void main() {
     programRepository = MockProgramRepository();
     programs = MockProgramListCubit();
     stats = {};
-    when(() => store.load(any())).thenAnswer((_) async => const Ok(null));
+    catalogueStates = StreamController<ExerciseCatalogueState>.broadcast();
+    catalogueState = CatalogueReady([squat, bench, plank]);
+    when(() => store.load(any()))
+        .thenAnswer((_) async => const Ok(LocalWorkouts()));
     when(() => store.save(any(), any()))
         .thenAnswer((_) async => const Ok(null));
-    when(() => store.clear(any())).thenAnswer((_) async => const Ok(null));
     when(() => repository.newWorkoutId(any())).thenReturn('w1');
-    when(() => repository.rejectedWrites)
-        .thenAnswer((_) => const Stream.empty());
+    when(() => repository.isStored(any(), any()))
+        .thenAnswer((_) async => const Ok(true));
+    when(() => repository.workoutsWith(any(), any()))
+        .thenAnswer((_) async => const Ok((workouts: [], complete: true)));
+    when(() => repository.saveStats(any(), any(), any()))
+        .thenAnswer((_) async => const Ok(null));
     when(() => repository.watchStats(any(), any())).thenAnswer(
       (call) => stats
           .putIfAbsent(
@@ -105,10 +115,14 @@ void main() {
     );
     when(() => repository.getStats(any(), any()))
         .thenAnswer((_) async => const Ok({}));
-    when(() => repository.saveWorkout(any(), any(), any()))
-        .thenAnswer((_) async => const Ok(null));
-    when(() => programRepository.updateActiveProgram(any(), any()))
-        .thenAnswer((_) async => const Ok(null));
+    when(
+      () => repository.saveWorkout(
+        any(),
+        any(),
+        any(),
+        advance: any(named: 'advance'),
+      ),
+    ).thenAnswer((_) async => const Ok(null));
     when(() => programs.state).thenReturn(
       ProgramListState(
         status: ProgramListStatus.ready,
@@ -118,45 +132,53 @@ void main() {
     );
   });
 
-  tearDown(() => users.close());
+  tearDown(() async {
+    await users.close();
+    await catalogueStates.close();
+  });
 
   ActiveWorkoutCubit build() {
     final auth = MockAuthRepository();
     when(auth.watchUser).thenAnswer((_) => users.stream);
     final catalogue = MockCatalogueCubit();
-    when(() => catalogue.state)
-        .thenReturn(CatalogueReady([squat, bench, plank]));
+    when(() => catalogue.state).thenAnswer((_) => catalogueState);
+    when(() => catalogue.stream).thenAnswer((_) => catalogueStates.stream);
     return ActiveWorkoutCubit(
       watchAuthUser: WatchAuthUser(auth),
-      loadActiveWorkout: LoadActiveWorkout(store),
-      keepActiveWorkout: KeepActiveWorkout(store),
-      clearActiveWorkout: ClearActiveWorkout(store),
+      loadLocal: LoadLocalWorkouts(store),
+      keepLocal: KeepLocalWorkouts(store),
       newWorkoutId: NewWorkoutId(repository),
       watchStats: WatchExerciseStats(repository),
       finishWorkout: FinishWorkout(repository, clock: () => clock),
+      confirmStored: ConfirmStoredWorkout(repository),
+      rebuildStats: RebuildExerciseStats(repository),
       saveAsProgram: SaveWorkoutAsProgram(SaveProgram(programRepository)),
-      completeProgramDay: CompleteProgramDay(programRepository),
-      watchRejectedWrites: WatchRejectedWorkoutWrites(repository),
       programs: programs,
       catalogue: catalogue,
       clock: () => clock,
+      retryDelay: const Duration(milliseconds: 10),
     );
   }
 
-  /// A cubit signed in as [user] with [draft] in progress, settled.
+  /// A cubit signed in as [user] with [local] kept, settled.
   Future<ActiveWorkoutCubit> signedIn({
     AuthUser user = alice,
     Workout? draft,
+    LocalWorkouts? local,
   }) async {
-    when(() => store.load(user.id)).thenAnswer((_) async => Ok(draft));
+    when(() => store.load(user.id))
+        .thenAnswer((_) async => Ok(local ?? LocalWorkouts(draft: draft)));
     final cubit = build();
     users.add(user);
     await pumpEventQueue();
     return cubit;
   }
 
-  Workout kept() =>
-      verify(() => store.save('u1', captureAny())).captured.last as Workout;
+  LocalWorkouts keptLocal() =>
+      verify(() => store.save('u1', captureAny())).captured.last
+          as LocalWorkouts;
+
+  Workout? kept() => keptLocal().draft;
 
   group('recovery and users', () {
     test('restores the user\'s workout in progress', () async {
@@ -174,12 +196,12 @@ void main() {
 
     test('another user never sees the previous one\'s workout', () async {
       final cubit = await signedIn(draft: saved);
-      final load = Completer<Result<Workout?>>();
+      final load = Completer<Result<LocalWorkouts>>();
       when(() => store.load('u2')).thenAnswer((_) => load.future);
       users.add(bob);
       await pumpEventQueue();
       expect(cubit.state, const ActiveWorkoutState());
-      load.complete(const Ok(null));
+      load.complete(const Ok(LocalWorkouts()));
       await pumpEventQueue();
       expect(cubit.state.status, WorkoutStatus.none);
       expect(cubit.state.workout, isNull);
@@ -187,17 +209,33 @@ void main() {
     });
 
     test('a load finishing after a user change is ignored', () async {
-      final slow = Completer<Result<Workout?>>();
+      final slow = Completer<Result<LocalWorkouts>>();
       when(() => store.load('u1')).thenAnswer((_) => slow.future);
       final cubit = build();
       users.add(alice);
       await pumpEventQueue();
       users.add(bob);
       await pumpEventQueue();
-      slow.complete(Ok(saved));
+      slow.complete(Ok(LocalWorkouts(draft: saved)));
       await pumpEventQueue();
       expect(cubit.state.workout, isNull);
       expect(cubit.state.status, WorkoutStatus.none);
+      await cubit.close();
+    });
+
+    test('unreadable kept workouts are reported, then kept anew', () async {
+      when(() => store.load('u1'))
+          .thenAnswer((_) async => const Err(UnknownFailure('set aside')));
+      final cubit = build();
+      users.add(alice);
+      await pumpEventQueue();
+      expect(cubit.state.status, WorkoutStatus.none);
+      expect(cubit.state.localUnreadable, isTrue);
+      cubit.localUnreadableShown();
+      expect(cubit.state.localUnreadable, isFalse);
+      expect(cubit.startFree('Workout'), isTrue);
+      await pumpEventQueue();
+      expect(kept()!.name, 'Workout');
       await cubit.close();
     });
 
@@ -225,8 +263,13 @@ void main() {
     test('a program day takes its available exercises as goals', () async {
       final cubit = await signedIn();
       expect(
-        cubit.startProgramDay(legs, 0, name: 'Legs · Day 1', language: 'en'),
-        isTrue,
+        await cubit.startProgramDay(
+          legs,
+          0,
+          name: 'Legs · Day 1',
+          language: 'en',
+        ),
+        (started: true, skipped: 1),
       );
       final workout = cubit.state.workout!;
       expect(workout.programId, 'p1');
@@ -253,10 +296,48 @@ void main() {
         ],
       );
       expect(
-        cubit.startProgramDay(gone, 0, name: 'Gone', language: 'en'),
-        isFalse,
+        await cubit.startProgramDay(gone, 0, name: 'Gone', language: 'en'),
+        (started: false, skipped: 0),
       );
       expect(cubit.state.status, WorkoutStatus.none);
+      await cubit.close();
+    });
+
+    test('a custom exercise is waited for, not dropped', () async {
+      final mine = Exercise.custom(
+        id: '${Exercise.customIdPrefix}1',
+        name: 'My Row',
+        loggingType: LoggingType.weightReps,
+        mainMuscles: const [Muscle.lat],
+      );
+      final day = Program(
+        id: 'p3',
+        name: 'Mine',
+        days: [
+          ProgramDay(items: [item('squat'), item(mine.id)]),
+        ],
+      );
+      catalogueState = CatalogueReady([squat], customLoaded: false);
+      final cubit = await signedIn();
+      final start = cubit.startProgramDay(day, 0, name: 'Mine', language: 'en');
+      await pumpEventQueue();
+      expect(cubit.state.status, WorkoutStatus.none);
+      catalogueState = CatalogueReady([squat, mine]);
+      catalogueStates.add(catalogueState);
+      expect(await start, (started: true, skipped: 0));
+      expect(cubit.state.workout!.exercises.map((e) => e.name), [
+        'Back Squat',
+        'My Row',
+      ]);
+      await cubit.close();
+    });
+
+    test('an exercise starts a workout or joins the one going', () async {
+      final cubit = await signedIn();
+      expect(cubit.startWith(bench, 'Workout', 'en'), isTrue);
+      expect(cubit.state.workout!.exercises.single.exerciseId, 'bench');
+      expect(cubit.addExercises([squat], 'en'), isTrue);
+      expect(cubit.state.workout!.exercises, hasLength(2));
       await cubit.close();
     });
   });
@@ -266,7 +347,7 @@ void main() {
 
     Future<ActiveWorkoutCubit> withSquat() async {
       final cubit = await signedIn();
-      cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
       return cubit;
     }
 
@@ -278,7 +359,7 @@ void main() {
       expect(set.weightKg, closeTo(102.06, 0.01));
       expect(set.reps, 5);
       await pumpEventQueue();
-      expect(kept().exercises.first.sets.first, set);
+      expect(kept()!.exercises.first.sets.first, set);
       await cubit.close();
     });
 
@@ -319,7 +400,26 @@ void main() {
       await cubit.close();
     });
 
-    test('set types, drops, failure and effort', () async {
+    test('a first-time exercise carries the weight to its next set', () async {
+      final cubit = await signedIn();
+      cubit
+        ..startFree('Workout')
+        ..addExercises([bench], 'en')
+        ..addSet(0)
+        ..setWeight(first, '60', WeightUnit.kg)
+        ..setReps(first, '8')
+        ..toggleDone(first);
+      const second = (exercise: 0, set: 1);
+      expect(cubit.state.suggestion(second).weightKg, 60);
+      cubit.toggleDone(second);
+      expect(
+        cubit.state.workout!.exercises.first.sets[1],
+        const WorkoutSet(weightKg: 60, reps: 8, done: true),
+      );
+      await cubit.close();
+    });
+
+    test('set types, drops, failure, effort and notes', () async {
       final cubit = await withSquat();
       cubit
         ..setType(first, SetType.drop)
@@ -327,13 +427,15 @@ void main() {
         ..setDropWeight(first, 0, '80', WeightUnit.kg)
         ..setDropReps(first, 0, '6')
         ..setToFailure(first, true)
-        ..setRir(first, 1);
+        ..setRir(first, 1)
+        ..setSetNote(first, 'Grip slipped');
       expect(
         cubit.state.workout!.exercises.first.sets.first,
         const WorkoutSet(
           type: SetType.drop,
           toFailure: true,
           rir: 1,
+          note: 'Grip slipped',
           drops: [Drop(weightKg: 80, reps: 6)],
         ),
       );
@@ -427,46 +529,137 @@ void main() {
       ],
     );
 
-    test('stores it, clears the draft and moves the program on', () async {
+    test(
+      'stores it with the program advance and keeps it until confirmed',
+      () async {
+        final confirmed = Completer<Result<bool>>();
+        when(() => repository.isStored('u1', 'w1'))
+            .thenAnswer((_) => confirmed.future);
+        final cubit = await signedIn(draft: draft);
+        clock = end;
+        await cubit.finish();
+
+        expect(cubit.state.status, WorkoutStatus.finished);
+        final finished = cubit.state.workout!;
+        expect(finished.finishedAt, end);
+        expect(finished.exercises.single.sets, [lift(100, 5)]);
+        expect(cubit.state.summary!.setCount, 1);
+        final advance =
+            verify(
+                  () => repository.saveWorkout(
+                    'u1',
+                    finished,
+                    any(),
+                    advance: captureAny(named: 'advance'),
+                  ),
+                ).captured.single
+                as ActiveProgram;
+        expect(advance.nextDayIndex, 1);
+        expect(advance.nextDate, CalendarDate(2026, 11, 16));
+        await pumpEventQueue();
+        // Read offline (no stats at all): squat's stats are rebuilt later.
+        expect(
+          keptLocal(),
+          LocalWorkouts(finished: [finished], staleStats: const {'squat'}),
+        );
+
+        confirmed.complete(const Ok(true));
+        await pumpEventQueue();
+        expect(keptLocal(), const LocalWorkouts());
+        verify(() => repository.workoutsWith('u1', 'squat')).called(1);
+        verify(() => repository.saveStats('u1', 'squat', null)).called(1);
+
+        cubit.summaryShown();
+        expect(cubit.state.status, WorkoutStatus.none);
+        expect(cubit.state.workout, isNull);
+        await cubit.close();
+      },
+    );
+
+    test(
+      'programs not yet loaded leave the program, said in the summary',
+      () async {
+        when(() => programs.state).thenReturn(const ProgramListState());
+        final cubit = await signedIn(draft: draft);
+        await cubit.finish();
+        expect(cubit.state.summary!.programUnknown, isTrue);
+        verify(() => repository.saveWorkout('u1', any(), any(), advance: null))
+            .called(1);
+        await cubit.close();
+      },
+    );
+
+    test('a refused workout comes back in progress', () async {
+      when(() => repository.isStored('u1', 'w1'))
+          .thenAnswer((_) async => const Ok(false));
       final cubit = await signedIn(draft: draft);
-      clock = end;
       await cubit.finish();
-
+      // Its summary is open; it comes back once that is put away.
       expect(cubit.state.status, WorkoutStatus.finished);
-      expect(cubit.state.workout!.finishedAt, end);
-      expect(cubit.state.workout!.exercises.single.sets, [lift(100, 5)]);
-      expect(cubit.state.summary!.setCount, 1);
-      verify(() => repository.saveWorkout('u1', cubit.state.workout!, any()))
-          .called(1);
-      verify(() => store.clear('u1')).called(1);
-      final moved =
-          verify(
-                () => programRepository.updateActiveProgram('u1', captureAny()),
-              ).captured.single
-              as ActiveProgram;
-      expect(moved.nextDayIndex, 1);
-      expect(moved.nextDate, CalendarDate(2026, 11, 16));
-
       cubit.summaryShown();
-      expect(cubit.state.status, WorkoutStatus.none);
-      expect(cubit.state.workout, isNull);
+      await pumpEventQueue();
+      expect(cubit.state.status, WorkoutStatus.active);
+      expect(cubit.state.restored, 'Legs');
+      final back = cubit.state.workout!;
+      expect(back.id, 'w1');
+      expect(back.finishedAt, isNull);
+      expect(back.exercises.single.sets, [lift(100, 5)]);
+      expect(keptLocal(), LocalWorkouts(draft: back));
+      cubit.restoredShown();
+      expect(cubit.state.restored, isNull);
       await cubit.close();
     });
 
-    test('a day other than the next one leaves the program', () async {
+    test('a refused workout kept from before comes back on launch', () async {
+      final refused = workout('w0', [
+        exercise('squat', [lift(100, 5)]),
+      ], finishedAt: end);
+      when(() => repository.isStored('u1', 'w0'))
+          .thenAnswer((_) async => const Ok(false));
+      final cubit = await signedIn(local: LocalWorkouts(finished: [refused]));
+      expect(cubit.state.status, WorkoutStatus.active);
+      expect(cubit.state.workout!.id, 'w0');
+      expect(cubit.state.restored, refused.name);
+      await cubit.close();
+    });
+
+    test('while one is in progress a refused one waits its turn', () async {
+      final refused = workout('w0', [
+        exercise('squat', [lift(100, 5)]),
+      ], finishedAt: end);
+      when(() => repository.isStored('u1', 'w0'))
+          .thenAnswer((_) async => const Ok(false));
       final cubit = await signedIn(
-        draft: Workout(
-          id: 'w1',
-          startedAt: now,
-          programId: 'p1',
-          dayIndex: 1,
-          name: 'Legs',
-          exercises: draft.exercises,
+        local: LocalWorkouts(draft: draft, finished: [refused]),
+      );
+      expect(cubit.state.workout, draft);
+      await cubit.discard();
+      await pumpEventQueue();
+      expect(cubit.state.workout!.id, 'w0');
+      await cubit.close();
+    });
+
+    test('stale stats wait while the server cannot be asked', () async {
+      var answers = [const Err<bool>(NetworkFailure()), const Ok<bool>(true)];
+      when(() => repository.isStored('u1', 'w0'))
+          .thenAnswer((_) async => answers.removeAt(0));
+      final cubit = await signedIn(
+        local: LocalWorkouts(
+          finished: [workout('w0', const [], finishedAt: end)],
+          staleStats: const {'bench'},
         ),
       );
-      await cubit.finish();
-      expect(cubit.state.status, WorkoutStatus.finished);
-      verifyNever(() => programRepository.updateActiveProgram(any(), any()));
+      verifyNever(() => repository.workoutsWith(any(), any()));
+      final rebuilt = Completer<void>();
+      when(() => repository.workoutsWith('u1', 'bench')).thenAnswer((_) async {
+        rebuilt.complete();
+        return const Ok((workouts: [], complete: true));
+      });
+      // After the retry delay.
+      await rebuilt.future.timeout(const Duration(seconds: 5));
+      await pumpEventQueue();
+      expect(keptLocal(), const LocalWorkouts());
+      answers = [];
       await cubit.close();
     });
 
@@ -478,7 +671,6 @@ void main() {
       expect(cubit.state.status, WorkoutStatus.active);
       expect(cubit.state.workout, draft);
       expect(cubit.state.failure, isA<NetworkFailure>());
-      verifyNever(() => store.clear(any()));
       cubit.failureShown();
       expect(cubit.state.failure, isNull);
       await cubit.close();
@@ -504,12 +696,13 @@ void main() {
     });
   });
 
-  test('discarding clears the draft', () async {
+  test('discarding drops the kept draft', () async {
     final cubit = await signedIn(draft: saved);
     await cubit.discard();
+    await pumpEventQueue();
     expect(cubit.state.status, WorkoutStatus.none);
     expect(cubit.state.workout, isNull);
-    verify(() => store.clear('u1')).called(1);
+    expect(keptLocal(), const LocalWorkouts());
     await cubit.close();
   });
 }
