@@ -428,6 +428,10 @@ class ProgramSummary {
   final Map<Muscle, double> weeklySets;
 }
 
+/// [sets] as printed: `12` or `12.5`.
+String formatSets(double sets) =>
+    sets == sets.roundToDouble() ? '${sets.round()}' : '$sets';
+
 /// [program]'s [ProgramSummary]. A set takes [workSecondsPerSet] plus its
 /// rest; every day is done once a week. Unknown exercises count nothing.
 ProgramSummary summarizeProgram(
@@ -511,7 +515,7 @@ CatalogueCheck checkCatalogue(
       final count = sets[muscle] ?? 0;
       if (count < band.min || count > band.max) {
         warnings.add(
-          '${p.where}: ${muscle.code} gets $count weekly sets, '
+          '${p.where}: ${muscle.code} gets ${formatSets(count)} weekly sets, '
           '${p.level!.code} band is ${band.min}-${band.max}',
         );
       }

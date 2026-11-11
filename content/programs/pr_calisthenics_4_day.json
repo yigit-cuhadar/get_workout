@@ -1,0 +1,215 @@
+{
+  "id": "pr_calisthenics_4_day",
+  "status": "live",
+  "premium": true,
+  "order": 22,
+  "level": "advanced",
+  "goal": "get_stronger",
+  "equipmentProfile": "bodyweight",
+  "daysPerWeek": 4,
+  "lengthWeeks": 12,
+  "equipment": [
+    "pull_up_bar",
+    "dip_station",
+    "bodyweight"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Advanced Calisthenics 4-Day",
+      "summary": "Hard bodyweight strength with a pull-up bar and a dip station: handstand push-ups, archer pull-ups, muscle-ups and pistol squats. If you have rings, they work as alternatives for the dips and muscle-ups."
+    }
+  },
+  "days": [
+    {
+      "name": "Pull and Skills",
+      "items": [
+        {
+          "exerciseId": "ex_pull_up",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_bar_muscle_up",
+          "sets": 3,
+          "repMin": 2,
+          "repMax": 4,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_archer_pull_up",
+          "sets": 3,
+          "repMin": 3,
+          "repMax": 5,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_flexed_arm_hang",
+          "sets": 3,
+          "durationS": 30,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_prone_y_raise",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_toes_to_bar",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 90
+        }
+      ]
+    },
+    {
+      "name": "Push and Skills",
+      "items": [
+        {
+          "exerciseId": "ex_freestanding_handstand",
+          "sets": 4,
+          "durationS": 30,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_handstand_push_up",
+          "sets": 4,
+          "repMin": 3,
+          "repMax": 6,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_chest_dip",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_pseudo_planche_push_up",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_archer_push_up",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_l_sit",
+          "sets": 3,
+          "durationS": 20,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Legs and Core",
+      "items": [
+        {
+          "exerciseId": "ex_pistol_squat",
+          "sets": 4,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_skater_squat",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_bodyweight_single_leg_romanian_deadlift",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_sissy_squat",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_hamstring_walkout",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_single_leg_calf_raise",
+          "sets": 4,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_hollow_body_hold",
+          "sets": 3,
+          "durationS": 30,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Full Body Strength",
+      "items": [
+        {
+          "exerciseId": "ex_close_grip_chin_up",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_bodyweight_good_morning",
+          "sets": 4,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_one_arm_push_up",
+          "sets": 3,
+          "repMin": 3,
+          "repMax": 6,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_prone_y_raise",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_split_jump",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_hanging_windshield_wiper",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 90
+        }
+      ]
+    }
+  ]
+}

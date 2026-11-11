@@ -1,0 +1,164 @@
+{
+  "id": "pr_kettlebell_full_body",
+  "status": "live",
+  "premium": true,
+  "order": 23,
+  "level": "intermediate",
+  "goal": "general_fitness",
+  "equipmentProfile": "dumbbells",
+  "daysPerWeek": 3,
+  "lengthWeeks": 8,
+  "equipment": [
+    "dumbbell",
+    "kettlebell",
+    "bodyweight"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Kettlebell Full Body 3-Day",
+      "summary": "Swings, squats, presses and rows with one or two kettlebells, three times a week. Every movement also works with a dumbbell if that is what you have."
+    }
+  },
+  "days": [
+    {
+      "name": "Swing and Press",
+      "items": [
+        {
+          "exerciseId": "ex_kettlebell_swing",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_kettlebell_front_squat",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_kettlebell_overhead_press",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_kettlebell_row",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_push_up",
+          "sets": 4,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_turkish_get_up",
+          "sets": 2,
+          "repMin": 2,
+          "repMax": 3,
+          "restS": 90
+        }
+      ]
+    },
+    {
+      "name": "Hinge and Pull",
+      "items": [
+        {
+          "exerciseId": "ex_kettlebell_deadlift",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_goblet_cossack_squat",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_kettlebell_row",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_kettlebell_overhead_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_push_up",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_kettlebell_waiter_s_walk",
+          "sets": 3,
+          "durationS": 30,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Full Body Flow",
+      "items": [
+        {
+          "exerciseId": "ex_kettlebell_front_squat",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_single_arm_kettlebell_swing",
+          "sets": 4,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_close_grip_push_up",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_kettlebell_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_turkish_get_up",
+          "sets": 2,
+          "repMin": 2,
+          "repMax": 3,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_side_bend",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 45
+        }
+      ]
+    }
+  ]
+}

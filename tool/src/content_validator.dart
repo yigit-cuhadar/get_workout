@@ -133,8 +133,6 @@ void _printPrograms(ContentReport report) {
     'Programs: ${report.programs.length} (live: ${live.length}, '
     'free: ${live.length - premium}, premium: $premium)',
   );
-  String number(double n) =>
-      n == n.roundToDouble() ? '${n.round()}' : n.toStringAsFixed(1);
   for (final program in report.programs) {
     final d = program.data;
     final summary = summarizeProgram(program, report.library);
@@ -148,7 +146,7 @@ void _printPrograms(ContentReport report) {
       ..writeln('    minutes per day: ${summary.minutesPerDay.join(', ')}')
       ..writeln(
         '    weekly sets: ${[for (final m in Muscle.values)
-          if (summary.weeklySets[m] case final sets?) '${m.code} ${number(sets)}'].join(', ')}',
+          if (summary.weeklySets[m] case final sets?) '${m.code} ${formatSets(sets)}'].join(', ')}',
       );
   }
   stdout.writeln();

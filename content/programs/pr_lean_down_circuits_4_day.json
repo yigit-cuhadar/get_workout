@@ -1,0 +1,350 @@
+{
+  "id": "pr_lean_down_circuits_4_day",
+  "status": "live",
+  "premium": true,
+  "order": 19,
+  "level": "intermediate",
+  "goal": "lose_fat",
+  "equipmentProfile": "full_gym",
+  "daysPerWeek": 4,
+  "lengthWeeks": 8,
+  "equipment": [
+    "trap_bar",
+    "dumbbell",
+    "cable",
+    "machine",
+    "bench",
+    "back_extension_bench",
+    "pull_up_bar",
+    "medicine_ball",
+    "jump_rope",
+    "bodyweight",
+    "other"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Lean-Down Circuits 4-Day",
+      "summary": "Four gym sessions of supersets and circuits with short rests, alternating lower-body, upper-body and full-body days. Built to keep your heart rate up while you keep training for strength and muscle."
+    }
+  },
+  "days": [
+    {
+      "name": "Lower Circuits",
+      "items": [
+        {
+          "exerciseId": "ex_goblet_squat",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_lying_leg_curl",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_leg_extension",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_cable_crunch",
+          "sets": 3,
+          "repMin": 15,
+          "repMax": 20,
+          "restS": 90,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_back_extension",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_cable_woodchop",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_seated_calf_raise",
+          "sets": 3,
+          "repMin": 15,
+          "repMax": 20,
+          "restS": 75,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_jump_rope",
+          "sets": 3,
+          "durationS": 60,
+          "restS": 0,
+          "group": "C"
+        },
+        {
+          "exerciseId": "ex_hanging_knee_raise",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 0,
+          "group": "C"
+        },
+        {
+          "exerciseId": "ex_dead_bug",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60,
+          "group": "C"
+        }
+      ]
+    },
+    {
+      "name": "Upper Circuits",
+      "items": [
+        {
+          "exerciseId": "ex_dumbbell_bench_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_lat_pulldown",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_seated_cable_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 75,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_cable_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_triceps_pushdown",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_cable_curl",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_face_pull",
+          "sets": 3,
+          "repMin": 15,
+          "repMax": 20,
+          "restS": 60,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_medicine_ball_chest_pass",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "C"
+        },
+        {
+          "exerciseId": "ex_battle_rope_waves",
+          "sets": 3,
+          "durationS": 30,
+          "restS": 60,
+          "group": "C"
+        }
+      ]
+    },
+    {
+      "name": "Full Body Circuits A",
+      "items": [
+        {
+          "exerciseId": "ex_trap_bar_deadlift",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_dumbbell_thruster",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_renegade_row",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_push_up",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_medicine_ball_slam",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_farmer_s_carry",
+          "sets": 3,
+          "durationS": 40,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_mountain_climber",
+          "sets": 3,
+          "repMin": 20,
+          "repMax": 30,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_plank",
+          "sets": 3,
+          "durationS": 40,
+          "restS": 60,
+          "group": "B"
+        }
+      ]
+    },
+    {
+      "name": "Full Body Circuits B",
+      "items": [
+        {
+          "exerciseId": "ex_dumbbell_reverse_lunge",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_incline_dumbbell_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_single_arm_cable_row",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_romanian_deadlift",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 75,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_cable_overhead_triceps_extension",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_dumbbell_hammer_curl",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 75,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_battle_rope_waves",
+          "sets": 3,
+          "durationS": 30,
+          "restS": 0,
+          "group": "C"
+        },
+        {
+          "exerciseId": "ex_bicycle_crunch",
+          "sets": 3,
+          "repMin": 16,
+          "repMax": 20,
+          "restS": 0,
+          "group": "C"
+        },
+        {
+          "exerciseId": "ex_plank_shoulder_tap",
+          "sets": 3,
+          "repMin": 16,
+          "repMax": 20,
+          "restS": 60,
+          "group": "C"
+        }
+      ]
+    }
+  ]
+}

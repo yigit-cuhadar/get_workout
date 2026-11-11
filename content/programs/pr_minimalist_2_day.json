@@ -1,0 +1,137 @@
+{
+  "id": "pr_minimalist_2_day",
+  "status": "live",
+  "premium": true,
+  "order": 24,
+  "level": "beginner",
+  "goal": "general_fitness",
+  "equipmentProfile": "full_gym",
+  "daysPerWeek": 2,
+  "lengthWeeks": 8,
+  "equipment": [
+    "barbell",
+    "trap_bar",
+    "dumbbell",
+    "cable",
+    "machine",
+    "bench"
+  ],
+  "l10n": {
+    "en": {
+      "name": "Minimalist Full Body 2-Day",
+      "summary": "Two full-body gym sessions a week that cover every major muscle with a handful of compound lifts. For weeks when time is short, volume sits at the low end of what keeps you progressing."
+    }
+  },
+  "days": [
+    {
+      "name": "Full Body A",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_back_squat",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_dumbbell_bench_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_lat_pulldown",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_romanian_deadlift",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_triceps_pushdown",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60,
+          "group": "A"
+        }
+      ]
+    },
+    {
+      "name": "Full Body B",
+      "items": [
+        {
+          "exerciseId": "ex_trap_bar_deadlift",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_seated_cable_row",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_leg_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_incline_dumbbell_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_lying_leg_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_lateral_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    }
+  ]
+}
