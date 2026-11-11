@@ -1,4 +1,3 @@
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/core/max_length_formatter.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise.dart';
