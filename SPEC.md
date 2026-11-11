@@ -69,6 +69,20 @@ from the earlier FitLab app.
   "Skip for now" still ends onboarding with whatever was answered.
 - **Birth year**: a plausibility range (age 13-100), not an age gate. An
   implausible year is only not accepted as an answer; nothing is blocked.
+- **Custom exercises**: ordinary exercises everywhere the catalogue is
+  listed (the catalogue cubit merges the signed-in user's in), marked
+  "Custom". Ids are `custom_` plus a Firestore auto id, so they never
+  collide with catalogue ids (`ex_...`) and an id alone tells which kind it
+  is. They have no level, movement pattern or family: level and pattern
+  filters never match them, and they have no alternatives or variations
+  and are no one's. They sort first, by name, in popularity order. A name
+  may repeat a catalogue name; the label tells them apart. Equipment left
+  empty means unspecified and counts as doable with any. Deleting one also
+  removes it from favourites in the same write; programs then show it as
+  unavailable, like a retired exercise, and workouts keep their copy. The
+  500 limit is checked by the app on create, counting what Firestore's
+  cache holds (kept current by the catalogue's listener); rules cannot
+  count.
 - **Notifications**: local for rest end, workout reminders and measurement
   reminders; FCM topic push for announcements.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
