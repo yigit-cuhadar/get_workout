@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
+import '../features/cardio/presentation/cardio_form_page.dart';
+import '../features/cardio/presentation/cardio_list_page.dart';
 import '../features/exercises/presentation/exercises_page.dart';
 import '../features/profile/presentation/profile_page.dart';
 import '../features/programs/presentation/programs_page.dart';
@@ -24,6 +26,9 @@ abstract final class Routes {
   static const programs = '/programs';
   static const exercises = '/exercises';
   static const progress = '/progress';
+  static const cardio = '$progress/cardio';
+  static const cardioNew = '$cardio/new';
+  static String cardioSession(String id) => '$cardio/$id';
   static const profile = '/profile';
   static const account = '$profile/account';
 
@@ -79,7 +84,28 @@ GoRouter buildRouter(AuthCubit auth) {
           _tab(Routes.today, const TodayPage()),
           _tab(Routes.programs, const ProgramsPage()),
           _tab(Routes.exercises, const ExercisesPage()),
-          _tab(Routes.progress, const ProgressPage()),
+          _tab(
+            Routes.progress,
+            const ProgressPage(),
+            routes: [
+              GoRoute(
+                path: 'cardio',
+                builder: (_, _) => const CardioListPage(),
+                routes: [
+                  // Before ':id', which would match 'new' too.
+                  GoRoute(
+                    path: 'new',
+                    builder: (_, _) => const CardioNewPage(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) =>
+                        CardioSessionPage(id: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
+            ],
+          ),
           _tab(
             Routes.profile,
             const ProfilePage(),

@@ -1,0 +1,164 @@
+import 'dart:async';
+
+import 'package:bloc_test/bloc_test.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_auth/forge_auth.dart';
+import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/cardio/domain/cardio_repository.dart';
+import 'package:get_workout/features/cardio/domain/cardio_session.dart';
+import 'package:get_workout/features/cardio/domain/cardio_type.dart';
+import 'package:get_workout/features/cardio/domain/cardio_usecases.dart';
+import 'package:get_workout/features/cardio/domain/cardio_week.dart';
+import 'package:get_workout/features/cardio/presentation/cardio_list_cubit.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockAuthRepository extends Mock implements AuthRepository {}
+
+class MockCardioRepository extends Mock implements CardioRepository {}
+
+void main() {
+  const guest = AuthUser(id: 'g1', isAnonymous: true);
+  const member = AuthUser(id: 'u1', email: 'a@b.co');
+  final now = DateTime(2026, 11, 11, 12);
+  final guestRun = CardioSession(
+    id: 'a',
+    type: CardioType.outdoorRun,
+    date: DateTime(2026, 11, 10, 7),
+    duration: const Duration(minutes: 30),
+  );
+  final memberRide = CardioSession(
+    id: 'b',
+    type: CardioType.outdoorCycle,
+    date: DateTime(2026, 11, 2, 9),
+    duration: const Duration(minutes: 60),
+  );
+
+  late MockAuthRepository auth;
+  late MockCardioRepository cardio;
+  late StreamController<AuthUser?> users;
+  late Map<String, StreamController<List<CardioSession>>> stored;
+
+  setUp(() {
+    auth = MockAuthRepository();
+    cardio = MockCardioRepository();
+    users = StreamController<AuthUser?>();
+    stored = {};
+    when(() => auth.watchUser()).thenAnswer((_) => users.stream);
+    when(() => cardio.watchSessions(any())).thenAnswer(
+      (call) => stored
+          .putIfAbsent(
+            call.positionalArguments.first as String,
+            StreamController<List<CardioSession>>.new,
+          )
+          .stream,
+    );
+  });
+
+  CardioListCubit build() => CardioListCubit(
+    watchAuthUser: WatchAuthUser(auth),
+    watchSessions: WatchCardioSessions(cardio),
+    clock: () => now,
+  );
+
+  CardioListState ready(List<CardioSession> sessions) => CardioListState(
+    status: CardioListStatus.ready,
+    sessions: sessions,
+    weeks: groupByWeek(sessions),
+    chart: lastWeeks(sessions, now: now),
+  );
+
+  test('starts loading', () {
+    expect(build().state, const CardioListState());
+  });
+
+  blocTest<CardioListCubit, CardioListState>(
+    'shows the sessions with their weeks and the 12-week chart',
+    build: build,
+    act: (_) async {
+      users.add(member);
+      await pumpEventQueue();
+      stored['u1']!.add([guestRun, memberRide]);
+    },
+    expect: () => [
+      ready([guestRun, memberRide]),
+    ],
+    verify: (cubit) {
+      expect(cubit.state.weeks, hasLength(2));
+      expect(cubit.state.chart, hasLength(12));
+      expect(cubit.state.chart.last.duration, const Duration(minutes: 30));
+    },
+  );
+
+  blocTest<CardioListCubit, CardioListState>(
+    'follows whoever is signed in and resets at once on a user change',
+    build: build,
+    act: (_) async {
+      users.add(guest);
+      await pumpEventQueue();
+      stored['g1']!.add([guestRun]);
+      await pumpEventQueue();
+      users.add(member);
+      await pumpEventQueue();
+      stored['u1']!.add([memberRide]);
+      await pumpEventQueue();
+      // The previous user's stream is no longer followed.
+      stored['g1']!.add([guestRun, guestRun]);
+    },
+    expect: () => [
+      ready([guestRun]),
+      const CardioListState(),
+      ready([memberRide]),
+    ],
+    verify: (_) => expect(stored['g1']!.hasListener, isFalse),
+  );
+
+  blocTest<CardioListCubit, CardioListState>(
+    'signing out clears the list',
+    build: build,
+    act: (_) async {
+      users.add(member);
+      await pumpEventQueue();
+      stored['u1']!.add([memberRide]);
+      await pumpEventQueue();
+      users.add(null);
+    },
+    expect: () => [
+      ready([memberRide]),
+      const CardioListState(),
+    ],
+  );
+
+  blocTest<CardioListCubit, CardioListState>(
+    'a profile change of the same user keeps the subscription',
+    build: build,
+    act: (_) async {
+      users.add(member);
+      await pumpEventQueue();
+      users.add(const AuthUser(id: 'u1', email: 'a@b.co', displayName: 'A'));
+    },
+    verify: (_) => verify(() => cardio.watchSessions('u1')).called(1),
+  );
+
+  const failure = PermissionFailure();
+
+  blocTest<CardioListCubit, CardioListState>(
+    'a stream error shows a failure, and retry subscribes again',
+    build: build,
+    act: (cubit) async {
+      users.add(member);
+      await pumpEventQueue();
+      stored['u1']!.addError(failure);
+      await pumpEventQueue();
+      stored.remove('u1');
+      cubit.retry();
+      await pumpEventQueue();
+      stored['u1']!.add([memberRide]);
+    },
+    expect: () => [
+      const CardioListState(status: CardioListStatus.failure, failure: failure),
+      const CardioListState(),
+      ready([memberRide]),
+    ],
+    verify: (_) => verify(() => cardio.watchSessions('u1')).called(2),
+  );
+}
