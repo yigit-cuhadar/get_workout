@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "451944630151",
+    "project_id": "getworkout-prod",
+    "storage_bucket": "getworkout-prod.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:451944630151:android:2c78b553d8157ec1ca7522",
+        "android_client_info": {
+          "package_name": "com.getworkout.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAs60hthwj61C82fCXqR1Hv2ZvQbIY8eFw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -14,6 +14,12 @@ from the earlier FitLab app.
 
 - **Identity**: display name GetWorkout, bundle id `com.getworkout.app`
   (permanent), repo `yigit-cuhadar/get_workout`.
+- **Environments**: Firebase projects `getworkout-dev` and `getworkout-prod`,
+  Firestore in `eur3`. Debug and profile builds use dev, release builds use
+  prod; there are no flavors and one bundle id.
+- **Repository**: public by the user's choice, so no secrets and no service
+  account files are ever committed. Firebase client config files are not
+  secrets; security rests on Firestore and Storage rules.
 - **Platforms**: iOS + Android. Admin panel is Flutter web from this repo.
 - **Language**: English only in v1. Every UI string goes through `gen_l10n`
   ARB files; exercise and program text is stored per language (`l10n.en`), so
@@ -196,7 +202,7 @@ Admin access is a custom claim set by a script run with a service account.
 Ordered. Tick when merged to main. Each: name — screens — acceptance.
 
 Group 1, foundation
-- [ ] Scaffold and Firebase — dev and prod projects, rules deployed — app runs on the simulator against dev
+- [x] Scaffold and Firebase — dev and prod projects, rules deployed — app runs on the simulator against dev
 - [ ] Guest start and account linking — account sheet, sign-in — a guest's data survives linking; existing-account sign-in warns and replaces
 - [ ] App shell — five tabs, l10n, settings skeleton — tabs switch and keep state
 
@@ -252,5 +258,5 @@ Group 9, launch readiness
 
 ## Open questions
 
-- Firebase project id base (`getworkout` → `getworkout-dev`, `getworkout-prod`) and Firestore region need the user's confirmation before the projects are created; both are permanent.
+- The projects are not linked to a billing account yet; needed before photo backup and Cloud Functions.
 - Female body model with the same mesh names: the user supplies it before release.
