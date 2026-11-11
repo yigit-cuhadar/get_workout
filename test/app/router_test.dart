@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/router.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise.dart';
@@ -50,6 +51,9 @@ import 'package:get_workout/features/settings/domain/settings_repository.dart';
 import 'package:get_workout/features/settings/domain/settings_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
+import 'package:get_workout/features/subscription/presentation/paywall_page.dart';
+import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
+import 'package:get_workout/features/subscription/subscription_module.dart';
 import 'package:get_workout/features/today/presentation/today_page.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -104,6 +108,8 @@ void main() {
   late EquipmentCubit equipment;
   late BodyModelCubit bodyModel;
   late StreamController<List<Exercise>> exerciseFeed;
+  late FakePurchasesRepository store;
+  late EntitlementCubit entitlement;
 
   /// Keeps the catalogue loading until a test feeds [exerciseFeed].
   var holdCatalogue = false;
@@ -265,12 +271,35 @@ void main() {
       watchProfile: WatchProfile(profiles),
       updateProfile: UpdateProfile(profiles, SaveOwnedEquipment(userLibrary)),
     );
+    // Purchases run on the fake store; tests identify the user themselves.
+    store = FakePurchasesRepository(
+      plans: fakePlans,
+      purchaseDelay: Duration.zero,
+    );
+    entitlement = EntitlementCubit(
+      configure: ConfigurePurchases(store),
+      watchEntitlement: WatchEntitlement(store),
+      identify: IdentifyPurchaser(store),
+      reset: ResetPurchaser(store),
+      refresh: RefreshEntitlement(store),
+      getManagementUrl: GetManagementUrl(store),
+      // Past every expiry, so no expiry timer outlives a test.
+      clock: () => DateTime(9999),
+    );
+    sl.registerFactory(
+      () => PremiumPaywallCubit(
+        getOffering: GetOffering(store),
+        purchasePlan: PurchasePlan(store),
+        restorePurchases: RestorePurchases(store),
+      ),
+    );
   }
 
   tearDown(() async {
     await auth.close();
     await settings.close();
     await profile.close();
+    await entitlement.close();
     await sl.reset();
     await catalogue.close();
     await favorites.close();
@@ -291,6 +320,7 @@ void main() {
         BlocProvider.value(value: favorites),
         BlocProvider.value(value: equipment),
         BlocProvider.value(value: bodyModel),
+        BlocProvider.value(value: entitlement),
       ],
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -1011,5 +1041,100 @@ void main() {
 
     expect(find.text('Back Squat'), findsOneWidget);
     expect(find.text('This exercise is no longer available.'), findsNothing);
+  });
+
+  group('Premium', () {
+    Future<void> openProfileAsFreeGuest(WidgetTester tester) async {
+      await startAsGuest(tester);
+      await entitlement.identify(guest.id);
+      await tapTab(tester, 'Profile');
+    }
+
+    Future<void> tapVisible(WidgetTester tester, String text) async {
+      await tester.ensureVisible(find.text(text));
+      await tester.tap(find.text(text));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('the row does nothing while the status is unknown', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      await tapTab(tester, 'Profile');
+      expect(find.text('Checking…'), findsOneWidget);
+
+      await tester.tap(find.text('GetWorkout Premium'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PaywallPage), findsNothing);
+    });
+
+    testWidgets('a free user starts the yearly trial', (tester) async {
+      await openProfileAsFreeGuest(tester);
+      expect(find.text('Free'), findsOneWidget);
+
+      await tapVisible(tester, 'GetWorkout Premium');
+      expect(find.byType(PaywallPage), findsOneWidget);
+      expect(find.text(r'$4.99 per month'), findsOneWidget);
+      expect(find.text(r'7 days free, then $39.99 per year'), findsOneWidget);
+      expect(find.text('Restore purchases'), findsOneWidget);
+      expect(find.text('Terms of Use'), findsOneWidget);
+      expect(find.text('Privacy Policy'), findsOneWidget);
+
+      await tapVisible(tester, 'Start free trial');
+
+      expect(find.byType(PaywallPage), findsNothing);
+      expect(find.text('Welcome to Premium!'), findsOneWidget);
+      expect(find.textContaining('Free trial until'), findsOneWidget);
+    });
+
+    testWidgets('a restore after a failed load keeps the load message', (
+      tester,
+    ) async {
+      await openProfileAsFreeGuest(tester);
+      store.failure = const NetworkFailure();
+      await tapVisible(tester, 'GetWorkout Premium');
+      expect(find.text('No internet connection'), findsOneWidget);
+
+      store.failure = null;
+      await tapVisible(tester, 'Restore purchases');
+
+      expect(find.textContaining('No purchases to restore'), findsOneWidget);
+      expect(find.text('Retry'), findsOneWidget);
+      expect(find.text('Start free trial'), findsNothing);
+    });
+
+    testWidgets('a pending purchase closes the paywall once approved', (
+      tester,
+    ) async {
+      await openProfileAsFreeGuest(tester);
+      await tapVisible(tester, 'GetWorkout Premium');
+      store.failure = const PurchaseFailure(PurchaseFailureReason.pending);
+
+      await tapVisible(tester, 'Start free trial');
+      expect(find.byType(PaywallPage), findsOneWidget);
+      expect(find.textContaining('waiting for approval'), findsOneWidget);
+
+      store
+        ..failure = null
+        ..approvePending();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PaywallPage), findsNothing);
+      expect(find.text('You have Premium.'), findsOneWidget);
+    });
+
+    testWidgets('the paywall closes at once for a subscriber', (tester) async {
+      await openProfileAsFreeGuest(tester);
+      unawaited(store.purchase(fakePlans.first));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Premium, renews'), findsOneWidget);
+
+      unawaited(router.push(Routes.paywall));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PaywallPage), findsNothing);
+      expect(find.text('You have Premium.'), findsOneWidget);
+    });
   });
 }

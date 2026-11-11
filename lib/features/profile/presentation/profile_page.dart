@@ -6,12 +6,16 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_section.dart';
+import '../../subscription/presentation/premium_tile.dart';
 import 'profile_cubit.dart';
 
-/// The Profile tab: the account, profile and calculators rows, then the
-/// settings.
+/// The Profile tab: the account, Premium, profile and calculators rows, then
+/// the settings and any [debugSection].
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({super.key, this.debugSection});
+
+  /// Developer tools, only ever given in debug builds.
+  final Widget? debugSection;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +42,7 @@ class ProfilePage extends StatelessWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.go(Routes.account),
             ),
+            const PremiumTile(),
             ListTile(
               leading: const Icon(Icons.person_outline),
               title: Text(l10n.profileDetails),
@@ -51,6 +56,7 @@ class ProfilePage extends StatelessWidget {
               onTap: () => context.go(Routes.calculators),
             ),
             const SettingsSection(),
+            ?debugSection,
           ],
         ),
       ),
