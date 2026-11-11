@@ -171,6 +171,24 @@ void main() {
   );
 
   blocTest<CustomExerciseFormCubit, CustomExerciseFormState>(
+    'once saved, saving again or editing writes and changes nothing',
+    build: build,
+    act: (cubit) async {
+      cubit
+        ..setName('Press')
+        ..toggleMainMuscle(Muscle.pec);
+      await cubit.save();
+      await cubit.save();
+      cubit.setName('Other');
+    },
+    verify: (cubit) {
+      expect(cubit.state.status, CustomExerciseFormStatus.saved);
+      expect(cubit.state.name, 'Press');
+      verify(() => repository.createCustomExercise('u1', any())).called(1);
+    },
+  );
+
+  blocTest<CustomExerciseFormCubit, CustomExerciseFormState>(
     'an edit updates the stored one',
     build: () => build(stored),
     act: (cubit) => (cubit..setNote('')).save(),

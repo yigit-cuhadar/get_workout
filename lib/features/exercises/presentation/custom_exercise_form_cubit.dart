@@ -11,6 +11,8 @@ import '../domain/vocabulary.dart';
 enum CustomExerciseFormStatus {
   editing,
   saving,
+
+  /// Final, like [closed]: the form closes and writes nothing more.
   saved,
   saveFailed,
 
@@ -49,6 +51,11 @@ class CustomExerciseFormState extends Equatable {
   final Failure? failure;
 
   bool get isSaving => status == CustomExerciseFormStatus.saving;
+
+  /// Saved or closed: nothing changes any more.
+  bool get isDone =>
+      status == CustomExerciseFormStatus.saved ||
+      status == CustomExerciseFormStatus.closed;
 
   CustomExerciseFormState copyWith({
     String? name,
@@ -101,7 +108,7 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
         .map((user) => user?.id)
         .distinct()
         .listen((uid) {
-          if (uid != _uid && state.status != CustomExerciseFormStatus.closed) {
+          if (uid != _uid && !state.isDone) {
             emit(state.copyWith(status: CustomExerciseFormStatus.closed));
           }
         });
@@ -168,7 +175,7 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
   void setNote(String note) => _change(state.copyWith(note: note));
 
   void _change(CustomExerciseFormState next) {
-    if (state.status == CustomExerciseFormStatus.closed) return;
+    if (state.isDone) return;
     final editing = next.copyWith(status: CustomExerciseFormStatus.editing);
     emit(
       _submitted
@@ -178,9 +185,7 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
   }
 
   Future<void> save() async {
-    if (state.isSaving || state.status == CustomExerciseFormStatus.closed) {
-      return;
-    }
+    if (state.isSaving || state.isDone) return;
     _submitted = true;
     final exercise = _exercise(state);
     final issues = validateCustomExercise(exercise);
@@ -203,7 +208,7 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
     );
     final failure = (await _saveExercise((uid: uid, exercise: exercise)))
         .failureOrNull;
-    if (isClosed || state.status == CustomExerciseFormStatus.closed) return;
+    if (isClosed || state.isDone) return;
     emit(
       failure == null
           ? state.copyWith(status: CustomExerciseFormStatus.saved)
