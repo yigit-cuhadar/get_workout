@@ -705,4 +705,57 @@ void main() {
     expect(keptLocal(), const LocalWorkouts());
     await cubit.close();
   });
+
+  group('stored workout changes', () {
+    test('stats from the cache are rebuilt from the server', () async {
+      final cubit = await signedIn();
+      cubit.storedWorkoutChanged(
+        'u1',
+        'w0',
+        deleted: false,
+        staleStats: const {'squat'},
+      );
+      await pumpEventQueue();
+      verify(() => repository.workoutsWith('u1', 'squat')).called(1);
+      verify(() => repository.saveStats('u1', 'squat', null)).called(1);
+      expect(keptLocal(), const LocalWorkouts());
+      await cubit.close();
+    });
+
+    test('a deleted workout awaiting confirmation never comes back', () async {
+      final finished = workout('w0', [
+        exercise('squat', [lift(100, 5)]),
+      ], finishedAt: end);
+      final stored = Completer<Result<bool>>();
+      when(() => repository.isStored('u1', 'w0'))
+          .thenAnswer((_) => stored.future);
+      final cubit = await signedIn(local: LocalWorkouts(finished: [finished]));
+      cubit.storedWorkoutChanged(
+        'u1',
+        'w0',
+        deleted: true,
+        staleStats: const {},
+      );
+      expect(keptLocal().finished, isEmpty);
+      // The confirmation in flight then finds it gone.
+      stored.complete(const Ok(false));
+      await pumpEventQueue();
+      expect(cubit.state.status, WorkoutStatus.none);
+      expect(cubit.state.restored, isNull);
+      await cubit.close();
+    });
+
+    test('another user\'s change is ignored', () async {
+      final cubit = await signedIn();
+      cubit.storedWorkoutChanged(
+        'u2',
+        'w0',
+        deleted: false,
+        staleStats: const {'squat'},
+      );
+      await pumpEventQueue();
+      verifyNever(() => repository.workoutsWith(any(), any()));
+      await cubit.close();
+    });
+  });
 }

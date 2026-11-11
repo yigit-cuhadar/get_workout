@@ -438,6 +438,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     for (final workout in [...?_local?.finished]) {
       final stored = await _confirmStored((uid: uid, id: workout.id));
       if (isClosed || _uid != uid) return true;
+      // Deleted by the user meanwhile.
+      if (!_local!.finished.any((w) => w.id == workout.id)) continue;
       switch (stored) {
         case Err(:final failure):
           Log.e('workout', 'workout not confirmed: ${failure.message}');
