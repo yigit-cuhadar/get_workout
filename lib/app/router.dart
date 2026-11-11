@@ -16,6 +16,7 @@ import '../features/calculators/presentation/calories_page.dart';
 import '../features/calculators/presentation/macros_page.dart';
 import '../features/calculators/presentation/one_rep_max_page.dart';
 import '../features/calculators/presentation/plates_page.dart';
+import '../features/exercises/presentation/custom_exercise_form_page.dart';
 import '../features/exercises/presentation/exercise_detail_page.dart';
 import '../features/exercises/presentation/exercises_page.dart';
 import '../features/profile/domain/user_profile.dart';
@@ -72,6 +73,11 @@ abstract final class Routes {
       '$programs/pick?max=$max&multiple=$multiple';
   static const exercises = '/exercises';
   static String exercise(String id) => '$exercises/${Uri.encodeComponent(id)}';
+
+  /// No exercise id is `new`: catalogue ids start with `ex_`, custom ones
+  /// with `custom_`.
+  static const customExerciseNew = '$exercises/new';
+  static String customExerciseEdit(String id) => '${exercise(id)}/edit';
   static const progress = '/progress';
   static const cardio = '$progress/cardio';
   static const cardioNew = '$cardio/new';
@@ -246,10 +252,23 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
             Routes.exercises,
             const ExercisesPage(),
             routes: [
+              // Before ':id', which would match 'new' too.
+              GoRoute(
+                path: 'new',
+                builder: (_, _) => const CustomExerciseNewPage(),
+              ),
               GoRoute(
                 path: ':id',
                 builder: (_, state) =>
                     ExerciseDetailPage(exerciseId: state.pathParameters['id']!),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (_, state) => CustomExerciseEditPage(
+                      exerciseId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

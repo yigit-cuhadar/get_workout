@@ -6,8 +6,11 @@ const _defaultRepMin = 8;
 const _defaultRepMax = 12;
 const _defaultDurationS = 30;
 
+/// For a custom exercise, which has no default rest of its own.
+const _defaultRestS = 90;
+
 /// A new item for [exercise]: 3 sets of 8-12 reps, or of 30 s for duration
-/// exercises, resting the exercise's default rest.
+/// exercises, resting the exercise's default rest, or 90 s for a custom one.
 ProgramItem defaultItem(Exercise exercise) {
   final timed = exercise.loggingType.isDurationBased;
   return ProgramItem(
@@ -16,7 +19,10 @@ ProgramItem defaultItem(Exercise exercise) {
     repMin: timed ? null : _defaultRepMin,
     repMax: timed ? null : _defaultRepMax,
     durationS: timed ? _defaultDurationS : null,
-    restS: exercise.defaultRestS.clamp(0, ProgramLimits.maxRestS),
+    restS: (exercise.defaultRestS ?? _defaultRestS).clamp(
+      0,
+      ProgramLimits.maxRestS,
+    ),
   );
 }
 
