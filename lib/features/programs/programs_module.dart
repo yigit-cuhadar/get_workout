@@ -16,7 +16,14 @@ import 'presentation/program_list_cubit.dart';
 
 /// Registers the programs feature. Needs `AuthModule` and `ExercisesModule`.
 class ProgramsModule implements FeatureModule {
-  const ProgramsModule();
+  const ProgramsModule({this.completedDays = nothingDone});
+
+  /// Builds what reports the program days done; the workout feature passes
+  /// its own in bootstrap.
+  final CompletedDays Function(GetIt sl) completedDays;
+
+  /// Reports nothing done.
+  static CompletedDays nothingDone(GetIt _) => const NoCompletedDays();
 
   /// The exercise picker's own [LibraryCubit], so picking never changes the
   /// Exercises tab's search and filters.
@@ -24,12 +31,8 @@ class ProgramsModule implements FeatureModule {
 
   @override
   void register(GetIt sl) {
-    // A module registered earlier (the workout feature) may provide the real
-    // one.
-    if (!sl.isRegistered<CompletedDays>()) {
-      sl.registerLazySingleton<CompletedDays>(() => const NoCompletedDays());
-    }
     sl
+      ..registerLazySingleton<CompletedDays>(() => completedDays(sl))
       ..registerLazySingleton<ProgramRepository>(
         () => FirestoreProgramRepository(FirebaseFirestore.instance),
       )
@@ -44,6 +47,8 @@ class ProgramsModule implements FeatureModule {
       ..registerFactory(() => StartProgram(sl()))
       ..registerFactory(() => ChangeWeekdays(sl()))
       ..registerFactory(() => StopProgram(sl()))
+      ..registerFactory(() => ResolveMissedDay(sl()))
+      ..registerFactory(() => CompleteProgramDay(sl()))
       // One list for the whole app: the tab and the program pages share it.
       ..registerLazySingleton(
         () => ProgramListCubit(
@@ -52,6 +57,7 @@ class ProgramsModule implements FeatureModule {
           watchActiveProgram: sl(),
           watchCompletedDays: sl(),
           watchRejectedWrites: sl(),
+          resolveMissedDay: sl(),
         ),
       )
       ..registerFactoryParam<ProgramDetailCubit, String, void>(

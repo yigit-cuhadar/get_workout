@@ -694,6 +694,103 @@ void main() {
       verifyNever(() => repository.startProgram(any(), any()));
     });
 
+    group('a missed day', () {
+      // Mon/Thu; Monday's day 0 missed; today is Wednesday 11 November.
+      final missed = ActiveProgram(
+        programId: 'p1',
+        weekdays: const [1, 4],
+        nextDayIndex: 0,
+        nextDate: CalendarDate(2026, 11, 9),
+        startedAt: DateTime(2026, 11, 2),
+      );
+      ResolveMissedDay resolver() =>
+          ResolveMissedDay(repository, clock: () => DateTime(2026, 11, 11, 9));
+
+      test('is resolved by the chosen option', () async {
+        for (final (choice, expected) in [
+          (
+            MissedDayChoice.doToday,
+            missed.copyWith(nextDate: CalendarDate(2026, 11, 11)),
+          ),
+          (
+            MissedDayChoice.moveToNextWeekday,
+            missed.copyWith(nextDate: CalendarDate(2026, 11, 12)),
+          ),
+          (
+            MissedDayChoice.skip,
+            missed.copyWith(
+              nextDayIndex: 1,
+              nextDate: CalendarDate(2026, 11, 12),
+            ),
+          ),
+        ]) {
+          final result = await resolver()((
+            uid: 'u1',
+            active: missed,
+            program: program(id: 'p1'),
+            choice: choice,
+          ));
+          expect(result.isOk, isTrue);
+          verify(() => repository.updateActiveProgram('u1', expected))
+              .called(1);
+        }
+      });
+
+      test('nothing is written when no day is missed', () async {
+        final onTime = missed.copyWith(nextDate: CalendarDate(2026, 11, 12));
+        for (final (active, current) in [
+          (onTime, program(id: 'p1')),
+          (missed, program(id: 'p2')),
+          // Finished: a one-week program started on 2 November.
+          (missed, program(id: 'p1', lengthWeeks: 1)),
+        ]) {
+          final result = await resolver()((
+            uid: 'u1',
+            active: active,
+            program: current,
+            choice: MissedDayChoice.doToday,
+          ));
+          expect(result.failureOrNull, isA<ValidationFailure>());
+        }
+        verifyNever(() => repository.updateActiveProgram(any(), any()));
+      });
+    });
+
+    test('completing a day moves the program on', () async {
+      final active = ActiveProgram(
+        programId: 'p1',
+        weekdays: const [1, 4],
+        nextDayIndex: 1,
+        nextDate: CalendarDate(2026, 11, 12),
+        startedAt: DateTime(2026, 11, 2),
+      );
+      final complete = CompleteProgramDay(repository);
+      await complete((
+        uid: 'u1',
+        active: active,
+        dayCount: 2,
+        dayIndex: 1,
+        on: CalendarDate(2026, 11, 12),
+      ));
+      verify(
+        () => repository.updateActiveProgram(
+          'u1',
+          active.copyWith(
+            nextDayIndex: 0,
+            nextDate: CalendarDate(2026, 11, 16),
+          ),
+        ),
+      ).called(1);
+      final refused = await complete((
+        uid: 'u1',
+        active: active,
+        dayCount: 2,
+        dayIndex: 2,
+        on: CalendarDate(2026, 11, 12),
+      ));
+      expect(refused.failureOrNull, isA<ValidationFailure>());
+    });
+
     test('changing weekdays replans the next day from today', () async {
       final active = ActiveProgram(
         programId: 'p1',

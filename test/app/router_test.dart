@@ -184,6 +184,7 @@ void main() {
         watchActiveProgram: WatchActiveProgram(programs),
         watchCompletedDays: const WatchCompletedDays(NoCompletedDays()),
         watchRejectedWrites: WatchRejectedProgramWrites(programs),
+        resolveMissedDay: ResolveMissedDay(programs),
       ),
       dispose: (cubit) => cubit.close(),
     );

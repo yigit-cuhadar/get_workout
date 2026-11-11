@@ -24,7 +24,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     CardioModule(),
     CalculatorsModule(),
     ExercisesModule(),
-    ProgramsModule(),
+    ProgramsModule(completedDays: ProgramsModule.nothingDone),
   ]);
   runApp(const App());
 }

@@ -29,9 +29,6 @@ class CalendarDate extends Equatable implements Comparable<CalendarDate> {
   /// The Monday of this date's week.
   CalendarDate get weekStart => addDays(1 - weekday);
 
-  /// Whole days from this date to [other]; negative when [other] is earlier.
-  int daysUntil(CalendarDate other) => other._utc.difference(_utc).inDays;
-
   bool isBefore(CalendarDate other) => compareTo(other) < 0;
   bool isAfter(CalendarDate other) => compareTo(other) > 0;
 

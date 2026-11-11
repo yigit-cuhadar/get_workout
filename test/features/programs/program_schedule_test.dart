@@ -38,8 +38,16 @@ PlannedDay missed(CalendarDate date, int dayIndex) =>
 PlannedDay done(CalendarDate date, int dayIndex) =>
     PlannedDay(date: date, dayIndex: dayIndex, status: PlannedStatus.done);
 
-List<(int, CalendarDate)> take(ProgramSchedule schedule, int count) => [
-  for (final day in schedule.upcoming().take(count)) (day.dayIndex, day.date),
+/// The first [count] upcoming days as planned on [today], by default the
+/// next day's date.
+List<(int, CalendarDate)> take(
+  ProgramSchedule schedule,
+  int count, {
+  CalendarDate? today,
+}) => [
+  for (final day
+      in schedule.upcoming(today ?? schedule.active.nextDate).take(count))
+    (day.dayIndex, day.date),
 ];
 
 void main() {
@@ -63,7 +71,6 @@ void main() {
       var date = d(2026, 1, 1);
       for (var i = 0; i < 366; i++) {
         final next = date.addDays(1);
-        expect(date.daysUntil(next), 1, reason: '$date');
         expect(next.toLocalDateTime().hour, 0, reason: '$next');
         expect(
           next.toLocalDateTime(),
@@ -74,11 +81,11 @@ void main() {
       }
     });
 
-    test('counts days across DST changes', () {
-      expect(d(2026, 10, 24).daysUntil(d(2026, 10, 26)), 2);
-      expect(d(2026, 10, 31).daysUntil(d(2026, 11, 2)), 2);
-      expect(d(2026, 3, 28).daysUntil(d(2026, 3, 30)), 2);
-      expect(d(2026, 11, 2).daysUntil(d(2026, 10, 31)), -2);
+    test('adds days across DST changes', () {
+      expect(d(2026, 10, 24).addDays(2), d(2026, 10, 26));
+      expect(d(2026, 10, 31).addDays(2), d(2026, 11, 2));
+      expect(d(2026, 3, 28).addDays(2), d(2026, 3, 30));
+      expect(d(2026, 11, 2).addDays(-2), d(2026, 10, 31));
     });
 
     test('takes the date a local time shows, late at night too', () {
@@ -242,6 +249,16 @@ void main() {
       expect(take(plan, 1), [(1, d(2026, 11, 11))]);
     });
 
+    test('a missed next day comes first again, from today on', () {
+      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 9)));
+      expect(take(plan, 3, today: d(2026, 11, 12)), [
+        (1, d(2026, 11, 13)),
+        (2, d(2026, 11, 16)),
+        (0, d(2026, 11, 18)),
+      ]);
+      expect(take(plan, 1, today: d(2026, 11, 13)), [(1, d(2026, 11, 13))]);
+    });
+
     test('more days than weekdays cycle over the weeks', () {
       final plan = schedule(
         active(weekdays: const [2, 4], nextDate: d(2026, 11, 10)),
@@ -272,11 +289,25 @@ void main() {
       );
     });
 
-    test('a passed day that was not done is missed', () {
+    test('a missed day shows once; the same day is planned from today', () {
       final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
       expect(plan.weekPlan(d(2026, 11, 12)), [
         missed(d(2026, 11, 11), 1),
-        planned(d(2026, 11, 13), 2),
+        planned(d(2026, 11, 13), 1),
+      ]);
+    });
+
+    test('no later day is planned before the missed one', () {
+      // Mon/Wed/Fri, day 0 missed on Monday, looked at on Friday.
+      final plan = schedule(active(nextDate: d(2026, 11, 9)));
+      expect(plan.weekPlan(d(2026, 11, 13)), [
+        missed(d(2026, 11, 9), 0),
+        planned(d(2026, 11, 13), 0),
+      ]);
+      // On Thursday, a rest day, the missed day waits for Friday.
+      expect(plan.weekPlan(d(2026, 11, 12)), [
+        missed(d(2026, 11, 9), 0),
+        planned(d(2026, 11, 13), 0),
       ]);
     });
 
@@ -285,12 +316,11 @@ void main() {
       expect(plan.weekPlan(d(2026, 11, 13)), [planned(d(2026, 11, 13), 0)]);
     });
 
-    test('a day missed last week pushes this week on by one', () {
+    test('a day missed last week is planned again this week', () {
       final plan = schedule(active(nextDayIndex: 2, nextDate: d(2026, 11, 6)));
       expect(plan.weekPlan(d(2026, 11, 11)), [
-        missed(d(2026, 11, 9), 0),
-        planned(d(2026, 11, 11), 1),
-        planned(d(2026, 11, 13), 2),
+        planned(d(2026, 11, 11), 2),
+        planned(d(2026, 11, 13), 0),
       ]);
     });
 
@@ -323,7 +353,7 @@ void main() {
       );
       expect(plan.weekPlan(d(2026, 12, 1)), [
         missed(d(2026, 11, 30), 0),
-        planned(d(2026, 12, 3), 1),
+        planned(d(2026, 12, 3), 0),
       ]);
     });
 
@@ -355,7 +385,7 @@ void main() {
       );
       expect(plan.weekPlan(d(2026, 10, 25)), [
         missed(d(2026, 10, 24), 0),
-        planned(d(2026, 10, 25), 1),
+        planned(d(2026, 10, 25), 0),
       ]);
     });
   });
@@ -516,7 +546,7 @@ void main() {
     });
 
     test('has one day per selected weekday and week', () {
-      final days = twoWeeks(d(2026, 11, 11)).upcoming().toList();
+      final days = twoWeeks(d(2026, 11, 11)).upcoming(d(2026, 11, 11)).toList();
       expect(days, hasLength(6));
       expect(days.last.date, d(2026, 11, 23));
     });

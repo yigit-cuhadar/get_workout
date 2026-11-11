@@ -20,8 +20,12 @@ class ProgramListState extends Equatable {
     this.active,
     this.weekPlan = const [],
     this.finished = false,
+    this.missed,
+    this.moveDate,
     this.failure,
     this.writeRejected = false,
+    this.resolving = false,
+    this.resolveFailure,
   });
 
   final ProgramListStatus status;
@@ -37,11 +41,24 @@ class ProgramListState extends Equatable {
 
   /// The active program has run its length.
   final bool finished;
+
+  /// The active program's next day, when its date has passed undone.
+  final PlannedDay? missed;
+
+  /// Where [MissedDayChoice.moveToNextWeekday] would move [missed].
+  final CalendarDate? moveDate;
   final Failure? failure;
 
   /// The server refused a write that already looked done; tell the user,
   /// then call [ProgramListCubit.rejectionShown].
   final bool writeRejected;
+
+  /// A missed-day choice is being saved.
+  final bool resolving;
+
+  /// Saving a missed-day choice failed; tell the user, then call
+  /// [ProgramListCubit.resolveFailureShown].
+  final Failure? resolveFailure;
 
   Program? program(String id) =>
       programs.where((program) => program.id == id).firstOrNull;
@@ -57,14 +74,24 @@ class ProgramListState extends Equatable {
       if (program.id != active?.programId) program,
   ];
 
-  ProgramListState copyWith({bool? writeRejected}) => ProgramListState(
+  ProgramListState copyWith({
+    bool? writeRejected,
+    bool? resolving,
+    Failure? Function()? resolveFailure,
+  }) => ProgramListState(
     status: status,
     programs: programs,
     active: active,
     weekPlan: weekPlan,
     finished: finished,
+    missed: missed,
+    moveDate: moveDate,
     failure: failure,
     writeRejected: writeRejected ?? this.writeRejected,
+    resolving: resolving ?? this.resolving,
+    resolveFailure: resolveFailure != null
+        ? resolveFailure()
+        : this.resolveFailure,
   );
 
   @override
@@ -74,8 +101,12 @@ class ProgramListState extends Equatable {
     active,
     weekPlan,
     finished,
+    missed,
+    moveDate,
     failure,
     writeRejected,
+    resolving,
+    resolveFailure,
   ];
 }
 
@@ -89,6 +120,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     required this._watchActiveProgram,
     required this._watchCompletedDays,
     required WatchRejectedProgramWrites watchRejectedWrites,
+    required this._resolveMissedDay,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now,
        super(const ProgramListState()) {
@@ -104,6 +136,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
   final WatchPrograms _watchPrograms;
   final WatchActiveProgram _watchActiveProgram;
   final WatchCompletedDays _watchCompletedDays;
+  final ResolveMissedDay _resolveMissedDay;
   final DateTime Function() _clock;
   late final StreamSubscription<String?> _userSubscription;
   late final StreamSubscription<Failure> _rejectedSubscription;
@@ -125,13 +158,41 @@ class ProgramListCubit extends Cubit<ProgramListState> {
 
   void _onUser(String? uid) {
     _uid = uid;
-    _follow();
+    // Nothing of the previous user's, transient notices included.
+    _follow(keepNotices: false);
   }
 
   /// Subscribes again after a failure.
   void retry() => _follow();
 
   void rejectionShown() => emit(state.copyWith(writeRejected: false));
+
+  void resolveFailureShown() =>
+      emit(state.copyWith(resolveFailure: () => null));
+
+  /// Resolves the missed day of the active program as the user chose.
+  Future<void> resolveMissed(MissedDayChoice choice) async {
+    final uid = _uid;
+    final active = state.active;
+    final program = state.activeProgram;
+    if (uid == null ||
+        active == null ||
+        program == null ||
+        state.missed == null ||
+        state.resolving) {
+      return;
+    }
+    emit(state.copyWith(resolving: true));
+    final failure = (await _resolveMissedDay((
+      uid: uid,
+      active: active,
+      program: program,
+      choice: choice,
+    ))).failureOrNull;
+    // A result for a previous user says nothing about the current one.
+    if (isClosed || _uid != uid) return;
+    emit(state.copyWith(resolving: false, resolveFailure: () => failure));
+  }
 
   /// Moves the plan to the current day and week, e.g. after the app slept
   /// over midnight.
@@ -141,12 +202,14 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     _emitReady();
   }
 
-  void _follow() {
+  void _follow({bool keepNotices = true}) {
     _cancel();
     _programs = null;
     _active = null;
     _activeKnown = false;
-    final loading = ProgramListState(writeRejected: state.writeRejected);
+    final loading = ProgramListState(
+      writeRejected: keepNotices && state.writeRejected,
+    );
     if (state != loading) emit(loading);
     final uid = _uid;
     if (uid == null) return;
@@ -206,6 +269,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
             dayCount: program.days.length,
             lengthWeeks: program.lengthWeeks,
           );
+    final missed = schedule != null && schedule.isMissed(today);
     emit(
       ProgramListState(
         status: ProgramListStatus.ready,
@@ -213,7 +277,17 @@ class ProgramListCubit extends Cubit<ProgramListState> {
         active: active,
         weekPlan: schedule?.weekPlan(today, completed: _completed) ?? const [],
         finished: schedule?.isFinished(today) ?? false,
+        missed: missed
+            ? PlannedDay(
+                date: active!.nextDate,
+                dayIndex: schedule.nextDayIndex,
+                status: PlannedStatus.missed,
+              )
+            : null,
+        moveDate: missed ? schedule.moveToNextWeekday(today).nextDate : null,
         writeRejected: state.writeRejected,
+        resolving: state.resolving,
+        resolveFailure: state.resolveFailure,
       ),
     );
   }

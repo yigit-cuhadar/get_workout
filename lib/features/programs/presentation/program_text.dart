@@ -58,6 +58,10 @@ extension ProgramText on AppLocalizations {
       // 1 January 2024 was a Monday.
       DateFormat.E(localeName).format(DateTime(2024, 1, weekday));
 
+  /// Full weekday name of ISO weekday [weekday].
+  String weekdayLong(int weekday) =>
+      DateFormat.EEEE(localeName).format(DateTime(2024, 1, weekday));
+
   String weekdayList(List<int> weekdays) =>
       weekdays.map(weekdayShort).join(listSeparator);
 

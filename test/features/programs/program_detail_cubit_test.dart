@@ -88,6 +88,7 @@ void main() {
       watchActiveProgram: WatchActiveProgram(repository),
       watchCompletedDays: const WatchCompletedDays(NoCompletedDays()),
       watchRejectedWrites: WatchRejectedProgramWrites(repository),
+      resolveMissedDay: ResolveMissedDay(repository),
       clock: () => now,
     );
   });

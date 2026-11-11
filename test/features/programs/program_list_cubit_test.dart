@@ -46,7 +46,10 @@ void main() {
   late StreamController<List<CompletedDay>> completed;
   late StreamController<Failure> rejected;
 
-  setUpAll(() => registerFallbackValue(CalendarDate(2026, 1, 1)));
+  setUpAll(() {
+    registerFallbackValue(CalendarDate(2026, 1, 1));
+    registerFallbackValue(active);
+  });
 
   setUp(() {
     auth = MockAuthRepository();
@@ -60,6 +63,8 @@ void main() {
     now = DateTime(2026, 11, 11, 12);
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
     when(() => repository.rejectedWrites).thenAnswer((_) => rejected.stream);
+    when(() => repository.updateActiveProgram(any(), any()))
+        .thenAnswer((_) async => const Ok(null));
     when(() => repository.watchPrograms(any())).thenAnswer(
       (call) => programs
           .putIfAbsent(
@@ -92,6 +97,7 @@ void main() {
     watchActiveProgram: WatchActiveProgram(repository),
     watchCompletedDays: WatchCompletedDays(completedDays),
     watchRejectedWrites: WatchRejectedProgramWrites(repository),
+    resolveMissedDay: ResolveMissedDay(repository, clock: () => now),
     clock: () => now,
   );
 
@@ -306,15 +312,16 @@ void main() {
           status: PlannedStatus.missed,
         ),
       ]),
+      // Still missed: the missed day comes first again, from Monday on.
       isA<ProgramListState>().having((s) => s.weekPlan, 'weekPlan', [
         PlannedDay(
           date: CalendarDate(2026, 11, 16),
-          dayIndex: 0,
+          dayIndex: 1,
           status: PlannedStatus.planned,
         ),
         PlannedDay(
           date: CalendarDate(2026, 11, 19),
-          dayIndex: 1,
+          dayIndex: 0,
           status: PlannedStatus.planned,
         ),
       ]),
@@ -327,5 +334,109 @@ void main() {
         to: CalendarDate(2026, 11, 22),
       ),
     ).called(1),
+  );
+
+  group('a missed day', () {
+    // Thursday's day 1 was missed; today is Friday 13 November.
+    setUp(() => now = DateTime(2026, 11, 13, 8));
+
+    Future<void> ready() async {
+      await signIn(member);
+      programs['u1']!.add([upperLower]);
+      actives['u1']!.add(active);
+      await pumpEventQueue();
+    }
+
+    blocTest<ProgramListCubit, ProgramListState>(
+      'is offered with the date it would move to',
+      build: build,
+      act: (_) => ready(),
+      verify: (cubit) {
+        expect(
+          cubit.state.missed,
+          PlannedDay(
+            date: CalendarDate(2026, 11, 12),
+            dayIndex: 1,
+            status: PlannedStatus.missed,
+          ),
+        );
+        expect(cubit.state.moveDate, CalendarDate(2026, 11, 16));
+      },
+    );
+
+    blocTest<ProgramListCubit, ProgramListState>(
+      'is not offered while nothing was missed',
+      build: () {
+        now = DateTime(2026, 11, 12, 8);
+        return build();
+      },
+      act: (_) => ready(),
+      verify: (cubit) {
+        expect(cubit.state.missed, isNull);
+        expect(cubit.state.moveDate, isNull);
+      },
+    );
+
+    for (final (choice, expected) in [
+      (
+        MissedDayChoice.doToday,
+        active.copyWith(nextDate: CalendarDate(2026, 11, 13)),
+      ),
+      (
+        MissedDayChoice.moveToNextWeekday,
+        active.copyWith(nextDate: CalendarDate(2026, 11, 16)),
+      ),
+      (
+        MissedDayChoice.skip,
+        active.copyWith(nextDayIndex: 0, nextDate: CalendarDate(2026, 11, 16)),
+      ),
+    ]) {
+      blocTest<ProgramListCubit, ProgramListState>(
+        'resolves it: ${choice.name}',
+        build: build,
+        act: (cubit) async {
+          await ready();
+          await cubit.resolveMissed(choice);
+        },
+        verify: (cubit) {
+          verify(() => repository.updateActiveProgram('u1', expected))
+              .called(1);
+          expect(cubit.state.resolving, isFalse);
+          expect(cubit.state.resolveFailure, isNull);
+        },
+      );
+    }
+
+    blocTest<ProgramListCubit, ProgramListState>(
+      'a failed resolution is reported once',
+      setUp: () =>
+          when(() => repository.updateActiveProgram(any(), any()))
+              .thenAnswer((_) async => const Err(NetworkFailure())),
+      build: build,
+      act: (cubit) async {
+        await ready();
+        final resolving = cubit.resolveMissed(MissedDayChoice.skip);
+        expect(cubit.state.resolving, isTrue);
+        await resolving;
+        expect(cubit.state.resolveFailure, const NetworkFailure());
+        cubit.resolveFailureShown();
+      },
+      verify: (cubit) {
+        expect(cubit.state.resolving, isFalse);
+        expect(cubit.state.resolveFailure, isNull);
+      },
+    );
+  });
+
+  blocTest<ProgramListCubit, ProgramListState>(
+    'a user change clears the previous user\'s notices',
+    build: build,
+    act: (_) async {
+      await signIn(member);
+      rejected.add(const PermissionFailure());
+      await pumpEventQueue();
+      await signIn(guest);
+    },
+    verify: (cubit) => expect(cubit.state, const ProgramListState()),
   );
 }

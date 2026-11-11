@@ -27,6 +27,27 @@ typedef WeekdaysChange = ({
   int dayCount,
   List<int> weekdays,
 });
+
+/// The three ways to resolve a missed day; see [ProgramSchedule.doToday],
+/// [ProgramSchedule.moveToNextWeekday] and [ProgramSchedule.skip].
+enum MissedDayChoice { doToday, moveToNextWeekday, skip }
+
+/// [program] is the active program as it is now.
+typedef MissedDayResolution = ({
+  String uid,
+  ActiveProgram active,
+  Program program,
+  MissedDayChoice choice,
+});
+
+/// Program day [dayIndex] of the active program was done [on] that date.
+typedef DayCompletion = ({
+  String uid,
+  ActiveProgram active,
+  int dayCount,
+  int dayIndex,
+  CalendarDate on,
+});
 typedef CompletedDaysQuery = ({
   String uid,
   String programId,
@@ -168,6 +189,59 @@ class ChangeWeekdays implements UseCase<void, WeekdaysChange> {
     return _repository.updateActiveProgram(
       params.uid,
       schedule.withWeekdays(params.weekdays, CalendarDate.of(_clock())),
+    );
+  }
+}
+
+/// Resolves the active program's missed day as the user chose. Refused with
+/// a [ValidationFailure] when no day is missed (any more), e.g. because
+/// another device resolved it first.
+class ResolveMissedDay implements UseCase<void, MissedDayResolution> {
+  ResolveMissedDay(this._repository, {DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
+  final ProgramRepository _repository;
+  final DateTime Function() _clock;
+
+  @override
+  Future<Result<void>> call(MissedDayResolution params) async {
+    final program = params.program;
+    final today = CalendarDate.of(_clock());
+    if (program.days.isEmpty || program.id != params.active.programId) {
+      return const Err(ValidationFailure('not the active program'));
+    }
+    final schedule = ProgramSchedule(
+      params.active,
+      dayCount: program.days.length,
+      lengthWeeks: program.lengthWeeks,
+    );
+    if (!schedule.isMissed(today)) {
+      return const Err(ValidationFailure('no missed day'));
+    }
+    return _repository.updateActiveProgram(params.uid, switch (params.choice) {
+      MissedDayChoice.doToday => schedule.doToday(today),
+      MissedDayChoice.moveToNextWeekday => schedule.moveToNextWeekday(today),
+      MissedDayChoice.skip => schedule.skip(today),
+    });
+  }
+}
+
+/// Moves the active program on after a program day was done; see
+/// [ProgramSchedule.complete]. Called by the workout feature.
+class CompleteProgramDay implements UseCase<void, DayCompletion> {
+  const CompleteProgramDay(this._repository);
+  final ProgramRepository _repository;
+
+  @override
+  Future<Result<void>> call(DayCompletion params) async {
+    if (params.dayCount < 1 ||
+        params.dayIndex < 0 ||
+        params.dayIndex >= params.dayCount) {
+      return const Err(ValidationFailure('no such program day'));
+    }
+    final schedule = ProgramSchedule(params.active, dayCount: params.dayCount);
+    return _repository.updateActiveProgram(
+      params.uid,
+      schedule.complete(dayIndex: params.dayIndex, on: params.on),
     );
   }
 }
