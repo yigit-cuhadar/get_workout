@@ -464,7 +464,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 295,
+    "popularity": 296,
     "l10n": {
       "en": {
         "name": "Pogo Hop",
@@ -512,7 +512,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 326,
+    "popularity": 327,
     "l10n": {
       "en": {
         "name": "Band Calf Press",
@@ -548,7 +548,7 @@
     "movementPattern": "explosive",
     "position": "standing",
     "equipment": [
-      "other"
+      "jump_rope"
     ],
     "mainMuscles": [
       "calf"
@@ -562,7 +562,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 344,
+    "popularity": 345,
     "l10n": {
       "en": {
         "name": "Jump Rope",

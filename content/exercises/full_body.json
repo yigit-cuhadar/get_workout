@@ -13,6 +13,11 @@
     "equipment": [
       "kettlebell"
     ],
+    "equipmentAlternatives": [
+      [
+        "dumbbell"
+      ]
+    ],
     "mainMuscles": [
       "glute",
       "hamstring"
@@ -71,6 +76,11 @@
     "grip": "neutral",
     "equipment": [
       "dumbbell"
+    ],
+    "equipmentAlternatives": [
+      [
+        "kettlebell"
+      ]
     ],
     "mainMuscles": [
       "forearm",
@@ -178,7 +188,7 @@
     "movementPattern": "explosive",
     "position": "standing",
     "equipment": [
-      "other"
+      "box"
     ],
     "mainMuscles": [
       "quads",
@@ -343,6 +353,11 @@
     "position": "standing",
     "equipment": [
       "dumbbell"
+    ],
+    "equipmentAlternatives": [
+      [
+        "kettlebell"
+      ]
     ],
     "mainMuscles": [
       "quads",
@@ -562,6 +577,11 @@
     "position": "supine",
     "equipment": [
       "kettlebell"
+    ],
+    "equipmentAlternatives": [
+      [
+        "dumbbell"
+      ]
     ],
     "mainMuscles": [
       "abdominal",
@@ -828,6 +848,11 @@
     "position": "standing",
     "equipment": [
       "dumbbell"
+    ],
+    "equipmentAlternatives": [
+      [
+        "kettlebell"
+      ]
     ],
     "mainMuscles": [
       "oblique",
@@ -1098,7 +1123,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 282,
+    "popularity": 283,
     "l10n": {
       "en": {
         "name": "Dumbbell Snatch",
@@ -1150,7 +1175,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 296,
+    "popularity": 297,
     "l10n": {
       "en": {
         "name": "Split Jump",
@@ -1203,7 +1228,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 312,
+    "popularity": 313,
     "l10n": {
       "en": {
         "name": "Lateral Bound",
@@ -1242,6 +1267,11 @@
     "equipment": [
       "dumbbell"
     ],
+    "equipmentAlternatives": [
+      [
+        "kettlebell"
+      ]
+    ],
     "mainMuscles": [
       "trap",
       "front_delt"
@@ -1257,7 +1287,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 328,
+    "popularity": 329,
     "l10n": {
       "en": {
         "name": "Dumbbell Overhead Carry",
@@ -1311,7 +1341,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 5,
-    "popularity": 346,
+    "popularity": 347,
     "l10n": {
       "en": {
         "name": "Trap Bar Carry",
@@ -1361,7 +1391,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 355,
+    "popularity": 356,
     "l10n": {
       "en": {
         "name": "Medicine Ball Chest Pass",
@@ -1410,7 +1440,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 362,
+    "popularity": 364,
     "l10n": {
       "en": {
         "name": "Medicine Ball Rotational Throw",
@@ -1467,7 +1497,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 180,
     "incrementKg": 2.5,
-    "popularity": 370,
+    "popularity": 372,
     "l10n": {
       "en": {
         "name": "Power Snatch",
@@ -1522,7 +1552,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 377,
+    "popularity": 379,
     "l10n": {
       "en": {
         "name": "Kettlebell Clean",
@@ -1573,7 +1603,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 385,
+    "popularity": 387,
     "l10n": {
       "en": {
         "name": "Kettlebell Front Rack Carry",
@@ -1611,6 +1641,11 @@
     "equipment": [
       "kettlebell"
     ],
+    "equipmentAlternatives": [
+      [
+        "dumbbell"
+      ]
+    ],
     "mainMuscles": [
       "trap",
       "front_delt"
@@ -1626,7 +1661,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 4,
-    "popularity": 393,
+    "popularity": 395,
     "l10n": {
       "en": {
         "name": "Kettlebell Waiter's Walk",
@@ -1677,7 +1712,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 395,
+    "popularity": 397,
     "l10n": {
       "en": {
         "name": "Backward Sled Drag",
@@ -1729,7 +1764,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 396,
+    "popularity": 398,
     "l10n": {
       "en": {
         "name": "Forward Sled Drag",
@@ -1782,7 +1817,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 397,
+    "popularity": 399,
     "l10n": {
       "en": {
         "name": "Sled Rope Pull",
@@ -1820,6 +1855,11 @@
     "equipment": [
       "kettlebell"
     ],
+    "equipmentAlternatives": [
+      [
+        "dumbbell"
+      ]
+    ],
     "mainMuscles": [
       "glute",
       "hamstring"
@@ -1834,7 +1874,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 300,
+    "popularity": 301,
     "l10n": {
       "en": {
         "name": "Single-Arm Kettlebell Swing",
@@ -1888,7 +1928,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 399,
+    "popularity": 401,
     "l10n": {
       "en": {
         "name": "Zercher Carry",
@@ -1937,7 +1977,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 400,
+    "popularity": 402,
     "l10n": {
       "en": {
         "name": "Plate Pinch Carry",
@@ -1988,7 +2028,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 5,
-    "popularity": 401,
+    "popularity": 403,
     "l10n": {
       "en": {
         "name": "Trap Bar Jump",

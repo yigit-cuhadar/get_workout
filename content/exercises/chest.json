@@ -520,7 +520,7 @@
     "level": "intermediate",
     "force": "push",
     "movementPattern": "vertical_push",
-    "position": "hanging",
+    "position": "supported",
     "grip": "neutral",
     "gripWidth": "shoulder",
     "equipment": [
@@ -634,7 +634,12 @@
     "movementPattern": "horizontal_push",
     "position": "prone",
     "equipment": [
-      "bodyweight"
+      "box"
+    ],
+    "equipmentAlternatives": [
+      [
+        "bench"
+      ]
     ],
     "mainMuscles": [
       "pec"
@@ -793,7 +798,12 @@
     "movementPattern": "horizontal_push",
     "position": "prone",
     "equipment": [
-      "bodyweight"
+      "box"
+    ],
+    "equipmentAlternatives": [
+      [
+        "bench"
+      ]
     ],
     "mainMuscles": [
       "pec"
@@ -1389,7 +1399,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 411,
+    "popularity": 413,
     "l10n": {
       "en": {
         "name": "Weighted Push-Up",
@@ -1789,7 +1799,7 @@
     "level": "advanced",
     "force": "push",
     "movementPattern": "vertical_push",
-    "position": "hanging",
+    "position": "supported",
     "grip": "neutral",
     "equipment": [
       "rings"
@@ -1856,7 +1866,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 283,
+    "popularity": 284,
     "l10n": {
       "en": {
         "name": "Scapular Push-Up",
@@ -1909,7 +1919,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 291,
+    "popularity": 292,
     "l10n": {
       "en": {
         "name": "Ring Push-Up",
@@ -1957,7 +1967,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1.25,
-    "popularity": 297,
+    "popularity": 298,
     "l10n": {
       "en": {
         "name": "Svend Press",
@@ -2010,7 +2020,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 313,
+    "popularity": 314,
     "l10n": {
       "en": {
         "name": "One-Arm Push-Up",
@@ -2060,7 +2070,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 329,
+    "popularity": 330,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Fly",
@@ -2112,7 +2122,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 347,
+    "popularity": 348,
     "l10n": {
       "en": {
         "name": "Pseudo Planche Push-Up",

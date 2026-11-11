@@ -469,7 +469,7 @@
     "movementPattern": "hinge",
     "position": "prone",
     "equipment": [
-      "machine"
+      "back_extension_bench"
     ],
     "mainMuscles": [
       "erector"
@@ -915,6 +915,11 @@
     "gripWidth": "shoulder",
     "equipment": [
       "barbell"
+    ],
+    "equipmentAlternatives": [
+      [
+        "smith_machine"
+      ]
     ],
     "mainMuscles": [
       "lat",
@@ -1994,6 +1999,11 @@
     "equipment": [
       "kettlebell"
     ],
+    "equipmentAlternatives": [
+      [
+        "dumbbell"
+      ]
+    ],
     "mainMuscles": [
       "lat"
     ],
@@ -2110,7 +2120,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2.5,
-    "popularity": 280,
+    "popularity": 281,
     "l10n": {
       "en": {
         "name": "Single-Arm Kneeling Lat Pulldown",
@@ -2160,7 +2170,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 287,
+    "popularity": 288,
     "l10n": {
       "en": {
         "name": "Stability Ball Back Extension",
@@ -2213,7 +2223,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 309,
+    "popularity": 310,
     "l10n": {
       "en": {
         "name": "Flexed-Arm Hang",
@@ -2265,7 +2275,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 306,
+    "popularity": 307,
     "l10n": {
       "en": {
         "name": "Trap Bar Shrug",
@@ -2317,7 +2327,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 321,
+    "popularity": 322,
     "l10n": {
       "en": {
         "name": "Cable Shrug",
@@ -2365,7 +2375,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 334,
+    "popularity": 335,
     "l10n": {
       "en": {
         "name": "Swimmer",
@@ -2418,7 +2428,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 339,
+    "popularity": 340,
     "l10n": {
       "en": {
         "name": "Band Single-Arm Row",
@@ -2465,7 +2475,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 356,
+    "popularity": 357,
     "l10n": {
       "en": {
         "name": "Band Shrug",
@@ -2513,7 +2523,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 363,
+    "popularity": 365,
     "l10n": {
       "en": {
         "name": "Band Straight-Arm Pulldown",
@@ -2566,7 +2576,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 371,
+    "popularity": 373,
     "l10n": {
       "en": {
         "name": "Archer Pull-Up",
@@ -2618,7 +2628,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
-    "popularity": 378,
+    "popularity": 380,
     "l10n": {
       "en": {
         "name": "Ring Muscle-Up",
@@ -2653,7 +2663,7 @@
     "level": "beginner",
     "force": "push",
     "movementPattern": "isolation",
-    "position": "hanging",
+    "position": "supported",
     "grip": "neutral",
     "gripWidth": "shoulder",
     "equipment": [
@@ -2671,7 +2681,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 386,
+    "popularity": 388,
     "l10n": {
       "en": {
         "name": "Dip Shrug",
