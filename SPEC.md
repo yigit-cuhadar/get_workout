@@ -34,6 +34,10 @@ from the earlier FitLab app.
 - **Backend**: Blaze plan. Cloud Functions are used only where a client cannot
   be trusted or cannot do the job: RevenueCat webhook, account deletion,
   sending push announcements. The program generator runs on device.
+- **Exercise sync**: clients read `exercises` of every status, so a
+  retirement or a return to draft is noticed by the incremental sync on
+  `updatedAt`, and filter to `live` on device. A cache whose document count
+  differs from the server's `count()` is rebuilt with a full fetch.
 - **Content ownership**: Firestore is the source of truth for content once
   it is seeded. `content/*.json` is the seed and the bulk-edit path;
   the admin panel edits Firestore directly and leaves `contentHash` alone, so
@@ -116,7 +120,7 @@ Firestore. Timestamps are server timestamps; ids are generated on the client.
 
 | Field | Type | Notes |
 |---|---|---|
-| `status` | `draft` \| `live` \| `retired` | Clients query `live`; never hard-deleted |
+| `status` | `draft` \| `live` \| `retired` | Clients read every status and show only `live`; never hard-deleted |
 | `loggingType`, `mechanic`, `laterality`, `level`, `force`, `movementPattern`, `position` | code | |
 | `grip`, `gripWidth` | code? | |
 | `equipment` | code[] | 1+ |
