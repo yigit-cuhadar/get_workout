@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,6 +12,7 @@ import 'package:get_workout/features/workout/data/file_local_workout_store.dart'
 import 'package:get_workout/features/workout/data/firestore_workout_repository.dart';
 import 'package:get_workout/features/workout/data/workout_completed_days.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
+import 'package:get_workout/features/workout/domain/rest.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 
@@ -276,6 +278,55 @@ void main() {
     test('keeps drafts with goals, finished workouts and stale ids', () async {
       expect((await store.save('u1', kept)).isOk, isTrue);
       expect((await store.load('u1')).valueOrNull, kept);
+    });
+
+    group('the rest', () {
+      final endsAt = DateTime.fromMillisecondsSinceEpoch(1700000000000);
+
+      test('is kept with the draft, with or without its set', () async {
+        for (final rest in [
+          Rest(endsAt: endsAt, after: (exercise: 1, set: 0)),
+          Rest(endsAt: endsAt),
+        ]) {
+          final withRest = kept.copyWith(rest: () => rest);
+          await store.save('u1', withRest);
+          expect((await store.load('u1')).valueOrNull, withRest);
+        }
+      });
+
+      test('is never kept without a draft', () async {
+        await store.save(
+          'u1',
+          LocalWorkouts(
+            rest: Rest(endsAt: endsAt),
+            finished: [full],
+          ),
+        );
+        expect(
+          (await store.load('u1')).valueOrNull,
+          LocalWorkouts(finished: [full]),
+        );
+      });
+
+      test('a file without one, as older versions wrote it, reads', () async {
+        await store.save('u1', kept);
+        final json = jsonDecode(file('workouts_u1.json').readAsStringSync());
+        expect((json as Map).containsKey('rest'), isFalse);
+        expect((await store.load('u1')).valueOrNull?.rest, isNull);
+      });
+
+      test('a malformed one is dropped, the workout kept', () async {
+        await store.save('u1', kept);
+        final path = file('workouts_u1.json');
+        final json = jsonDecode(path.readAsStringSync()) as Map;
+        path.writeAsStringSync(
+          jsonEncode({
+            ...json,
+            'rest': {'endsAt': 'soon'},
+          }),
+        );
+        expect((await store.load('u1')).valueOrNull, kept);
+      });
     });
 
     test('nothing kept reads as empty', () async {

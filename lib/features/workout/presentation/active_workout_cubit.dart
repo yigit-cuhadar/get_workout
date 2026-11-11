@@ -13,6 +13,7 @@ import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_list_cubit.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/exercise_stats.dart';
+import '../domain/rest.dart';
 import '../domain/set_logging.dart';
 import '../domain/workout.dart';
 import '../domain/workout_editing.dart' as editing;
@@ -40,6 +41,7 @@ class ActiveWorkoutState extends Equatable {
   const ActiveWorkoutState({
     this.status = WorkoutStatus.loading,
     this.workout,
+    this.rest,
     this.stats = const {},
     this.invalidSet,
     this.summary,
@@ -54,6 +56,10 @@ class ActiveWorkoutState extends Equatable {
 
   /// In progress, or once [WorkoutStatus.finished] as stored.
   final Workout? workout;
+
+  /// The rest of the workout in progress, also once it is over (until the
+  /// next one replaces it).
+  final Rest? rest;
 
   /// The stats of the workout's exercises that have arrived; null when an
   /// exercise has none yet.
@@ -106,6 +112,7 @@ class ActiveWorkoutState extends Equatable {
   ActiveWorkoutState copyWith({
     WorkoutStatus? status,
     Workout? Function()? workout,
+    Rest? Function()? rest,
     Map<String, ExerciseStats?>? stats,
     SetRef? Function()? invalidSet,
     WorkoutSummary? Function()? summary,
@@ -117,6 +124,7 @@ class ActiveWorkoutState extends Equatable {
   }) => ActiveWorkoutState(
     status: status ?? this.status,
     workout: workout != null ? workout() : this.workout,
+    rest: rest != null ? rest() : this.rest,
     stats: stats ?? this.stats,
     invalidSet: invalidSet != null ? invalidSet() : this.invalidSet,
     summary: summary != null ? summary() : this.summary,
@@ -133,6 +141,7 @@ class ActiveWorkoutState extends Equatable {
   List<Object?> get props => [
     status,
     workout,
+    rest,
     stats,
     invalidSet,
     summary,
@@ -236,6 +245,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     _emitWorkout(
       local.draft,
       status: local.draft == null ? WorkoutStatus.none : WorkoutStatus.active,
+      rest: () => local.rest,
     );
     unawaited(_sync(uid));
   }
@@ -325,7 +335,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   Future<void> discard() async {
     final uid = _uid;
     if (uid == null || state.status != WorkoutStatus.active) return;
-    _emitWorkout(null, status: WorkoutStatus.none);
+    _emitWorkout(null, status: WorkoutStatus.none, rest: () => null);
     _keep();
     unawaited(_sync(uid));
   }
@@ -350,18 +360,26 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         state.workout?.exercises.length != count;
   }
 
-  void removeExercise(int index) => _editExercises(
-    (list) => _has(list, index) ? grouping.removeItem(list, index) : list,
+  void removeExercise(int index) => _edit(
+    (workout) => _withExercises(
+      workout,
+      (list) => _has(list, index) ? grouping.removeItem(list, index) : list,
+    ),
+    movesSets: true,
   );
 
   void swapExercise(int index, Exercise exercise, String language) =>
       _editExercise(index, (e) => editing.swapExercise(e, exercise, language));
 
   /// [to] is where the exercise lands; see [grouping.moveItem].
-  void moveExercise(int from, int to) => _editExercises(
-    (list) => _has(list, from) && _has(list, to)
-        ? grouping.moveItem(list, from, to)
-        : list,
+  void moveExercise(int from, int to) => _edit(
+    (workout) => _withExercises(
+      workout,
+      (list) => _has(list, from) && _has(list, to)
+          ? grouping.moveItem(list, from, to)
+          : list,
+    ),
+    movesSets: true,
   );
 
   void linkWithNext(int index) => _editExercises(
@@ -396,11 +414,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         : e.copyWith(sets: [...e.sets, const WorkoutSet()]),
   );
 
-  void removeSet(SetRef ref) => _editExercise(
-    ref.exercise,
-    (e) => _has(e.sets, ref.set)
-        ? e.copyWith(sets: [...e.sets]..removeAt(ref.set))
-        : e,
+  void removeSet(SetRef ref) => _edit(
+    (workout) => _withExercise(
+      workout,
+      ref.exercise,
+      (e) => _has(e.sets, ref.set)
+          ? e.copyWith(sets: [...e.sets]..removeAt(ref.set))
+          : e,
+    ),
+    movesSets: true,
   );
 
   /// [text] is in [unit]; blank clears it.
@@ -462,8 +484,11 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   /// Ticks the set done, its empty values taken from
   /// [ActiveWorkoutState.suggestion]; one that still lacks values stays
   /// undone and is marked as [ActiveWorkoutState.invalidSet]. A done set is
-  /// unticked.
-  void toggleDone(SetRef ref) {
+  /// unticked, which ends the rest its tick started.
+  ///
+  /// A tick starts the rest [restAfterTick] gives under [restTimer],
+  /// replacing the one running; otherwise the running one goes on.
+  void toggleDone(SetRef ref, {required RestTimerSettings restTimer}) {
     final workout = state.workout;
     if (state.status != WorkoutStatus.active ||
         workout == null ||
@@ -480,7 +505,43 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       emit(state.copyWith(invalidSet: () => ref));
       return;
     }
-    _replaceSet(ref, toggled);
+    final catalogue = _exercises;
+    _edit(
+      (workout) => _withSet(workout, ref, toggled),
+      startRest: toggled.done
+          ? (changed) => switch (restAfterTick(
+              changed,
+              ref,
+              settings: restTimer,
+              exerciseRestS: (id) => catalogue[id]?.defaultRestS,
+            )) {
+              final duration? => Rest(
+                endsAt: _clock().add(duration),
+                after: ref,
+              ),
+              null => null,
+            }
+          : null,
+    );
+  }
+
+  /// Adds [restExtension] to the running rest.
+  void extendRest() {
+    final rest = state.rest;
+    if (state.status != WorkoutStatus.active ||
+        rest == null ||
+        !rest.runsAt(_clock())) {
+      return;
+    }
+    emit(state.copyWith(rest: () => rest.extendedBy(restExtension)));
+    _keep();
+  }
+
+  /// Ends the rest now.
+  void skipRest() {
+    if (state.status != WorkoutStatus.active || state.rest == null) return;
+    emit(state.copyWith(rest: () => null));
+    _keep();
   }
 
   /// Finishes and stores the workout; its unticked sets are left out. The
@@ -525,6 +586,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
           state.copyWith(
             status: WorkoutStatus.finished,
             workout: () => value.workout,
+            rest: () => null,
             summary: () => value.summary,
             invalidSet: () => null,
           ),
@@ -706,41 +768,88 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     _replaceSet(ref, changed);
   }
 
-  void _replaceSet(SetRef ref, WorkoutSet set) => _editExercise(
-    ref.exercise,
-    (e) => e.copyWith(
-      sets: [for (final (i, s) in e.sets.indexed) i == ref.set ? set : s],
-    ),
-  );
+  void _replaceSet(SetRef ref, WorkoutSet set) =>
+      _edit((workout) => _withSet(workout, ref, set));
 
   void _editExercise(
     int index,
     WorkoutExercise Function(WorkoutExercise exercise) change,
-  ) => _editExercises(
-    (list) => [for (final (i, e) in list.indexed) i == index ? change(e) : e],
-  );
+  ) => _edit((workout) => _withExercise(workout, index, change));
 
   void _editExercises(
     List<WorkoutExercise> Function(List<WorkoutExercise> list) change,
-  ) => _edit(
-    (workout) => workout.copyWith(exercises: change(workout.exercises)),
-  );
+  ) => _edit((workout) => _withExercises(workout, change));
 
   /// Applies [change] to the workout in progress and keeps the result.
-  void _edit(Workout Function(Workout workout) change) {
+  ///
+  /// The rest becomes what [startRest] gives for the changed workout, if
+  /// anything; otherwise it ends when the set that started it is no longer
+  /// done, and forgets that set when [movesSets] (the change moves sets to
+  /// other positions).
+  void _edit(
+    Workout Function(Workout workout) change, {
+    bool movesSets = false,
+    Rest? Function(Workout changed)? startRest,
+  }) {
     final workout = state.workout;
     if (state.status != WorkoutStatus.active || workout == null) return;
     final changed = change(workout);
     if (changed == workout) return;
-    _emitWorkout(changed, status: WorkoutStatus.active);
+    final rest = startRest?.call(changed) ?? state.rest;
+    final after = rest?.after;
+    _emitWorkout(
+      changed,
+      status: WorkoutStatus.active,
+      rest: () => switch (after) {
+        null => rest,
+        _ when movesSets => rest!.detached(),
+        _ =>
+          changed.exercises
+                      .elementAtOrNull(after.exercise)
+                      ?.sets
+                      .elementAtOrNull(after.set)
+                      ?.done ??
+                  false
+              ? rest
+              : null,
+      },
+    );
     _keep();
   }
 
-  void _emitWorkout(Workout? workout, {required WorkoutStatus status}) {
+  static Workout _withSet(Workout workout, SetRef ref, WorkoutSet set) =>
+      _withExercise(
+        workout,
+        ref.exercise,
+        (e) => e.copyWith(
+          sets: [for (final (i, s) in e.sets.indexed) i == ref.set ? set : s],
+        ),
+      );
+
+  static Workout _withExercise(
+    Workout workout,
+    int index,
+    WorkoutExercise Function(WorkoutExercise exercise) change,
+  ) => _withExercises(
+    workout,
+    (list) => [for (final (i, e) in list.indexed) i == index ? change(e) : e],
+  );
+
+  static Workout _withExercises(
+    Workout workout,
+    List<WorkoutExercise> Function(List<WorkoutExercise> list) change,
+  ) => workout.copyWith(exercises: change(workout.exercises));
+
+  void _emitWorkout(
+    Workout? workout, {
+    required WorkoutStatus status,
+    Rest? Function()? rest,
+  }) {
     emit(
       state.copyWith(
         status: status,
         workout: () => workout,
+        rest: rest,
         invalidSet: () => null,
       ),
     );
@@ -754,7 +863,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     final local = _local;
     if (uid == null || local == null) return;
     final draft = state.inProgress ? state.workout : null;
-    final kept = local.copyWith(draft: () => draft);
+    final kept = local.copyWith(
+      draft: () => draft,
+      rest: () => draft == null ? null : state.rest,
+    );
     _local = kept;
     unawaited(
       _keepLocal((uid: uid, workouts: kept)).then((result) {

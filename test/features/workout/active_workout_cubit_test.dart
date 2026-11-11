@@ -15,6 +15,7 @@ import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
+import 'package:get_workout/features/workout/domain/rest.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
@@ -62,6 +63,7 @@ void main() {
     nextDate: CalendarDate(2026, 11, 11),
     startedAt: DateTime(2026, 11, 1),
   );
+  const restTimer = RestTimerSettings(defaultS: 75);
   final saved = workout('w0', [
     exercise('squat', [lift(100, 5)]),
   ]);
@@ -368,12 +370,12 @@ void main() {
       stats['squat']!.add(applyWorkout(null, saved, 'squat'));
       await pumpEventQueue();
       expect(cubit.state.suggestion(first).weightKg, 100);
-      cubit.toggleDone(first);
+      cubit.toggleDone(first, restTimer: restTimer);
       expect(
         cubit.state.workout!.exercises.first.sets.first,
         const WorkoutSet(weightKg: 100, reps: 5, done: true),
       );
-      cubit.toggleDone(first);
+      cubit.toggleDone(first, restTimer: restTimer);
       expect(cubit.state.workout!.exercises.first.sets.first.done, isFalse);
       await cubit.close();
     });
@@ -383,7 +385,7 @@ void main() {
       cubit
         ..startFree('Workout')
         ..addExercises([bench], 'en')
-        ..toggleDone(first);
+        ..toggleDone(first, restTimer: restTimer);
       expect(cubit.state.invalidSet, first);
       expect(cubit.state.workout!.exercises.first.sets.first.done, isFalse);
       cubit.setWeight(first, '60', WeightUnit.kg);
@@ -393,7 +395,7 @@ void main() {
 
     test('clearing a value of a done set unticks it', () async {
       final cubit = await withSquat();
-      cubit.toggleDone(first);
+      cubit.toggleDone(first, restTimer: restTimer);
       expect(cubit.state.workout!.exercises.first.sets.first.done, isTrue);
       cubit.setReps(first, '');
       expect(cubit.state.workout!.exercises.first.sets.first.done, isFalse);
@@ -408,10 +410,10 @@ void main() {
         ..addSet(0)
         ..setWeight(first, '60', WeightUnit.kg)
         ..setReps(first, '8')
-        ..toggleDone(first);
+        ..toggleDone(first, restTimer: restTimer);
       const second = (exercise: 0, set: 1);
       expect(cubit.state.suggestion(second).weightKg, 60);
-      cubit.toggleDone(second);
+      cubit.toggleDone(second, restTimer: restTimer);
       expect(
         cubit.state.workout!.exercises.first.sets[1],
         const WorkoutSet(weightKg: 60, reps: 8, done: true),
@@ -704,5 +706,171 @@ void main() {
     expect(cubit.state.workout, isNull);
     expect(keptLocal(), const LocalWorkouts());
     await cubit.close();
+  });
+
+  group('rest', () {
+    const first = (exercise: 0, set: 0);
+    const second = (exercise: 0, set: 1);
+    final restEnd = now.add(const Duration(seconds: 90));
+
+    /// Squat, two sets, a program rest of 90 s.
+    Future<ActiveWorkoutCubit> withSquat() async {
+      final cubit = await signedIn();
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      return cubit;
+    }
+
+    test('a tick starts the rest and keeps it with the workout', () async {
+      final cubit = await withSquat();
+      cubit.toggleDone(first, restTimer: restTimer);
+      expect(cubit.state.rest, Rest(endsAt: restEnd, after: first));
+      await pumpEventQueue();
+      expect(keptLocal().rest, cubit.state.rest);
+      await cubit.close();
+    });
+
+    test('a free workout rests the exercise\'s default', () async {
+      final cubit = await signedIn();
+      cubit
+        ..startWith(squat, 'Workout', 'en')
+        ..setWeight(first, '100', WeightUnit.kg)
+        ..setReps(first, '5')
+        ..toggleDone(first, restTimer: restTimer);
+      expect(cubit.state.rest!.endsAt, now.add(const Duration(seconds: 90)));
+      await cubit.close();
+    });
+
+    test('nothing starts while the timer is off', () async {
+      final cubit = await withSquat();
+      cubit.toggleDone(first, restTimer: restTimer.copyWith(enabled: false));
+      expect(cubit.state.rest, isNull);
+      await cubit.close();
+    });
+
+    test('unticking the set ends its rest, another set\'s does not', () async {
+      final cubit = await withSquat();
+      cubit
+        ..toggleDone(first, restTimer: restTimer)
+        ..toggleDone(second, restTimer: restTimer);
+      expect(cubit.state.rest!.after, second);
+      cubit.toggleDone(first, restTimer: restTimer);
+      expect(cubit.state.rest!.after, second);
+      cubit.toggleDone(second, restTimer: restTimer);
+      expect(cubit.state.rest, isNull);
+      await pumpEventQueue();
+      expect(keptLocal().rest, isNull);
+      await cubit.close();
+    });
+
+    test('an edit that unticks the set ends its rest too', () async {
+      final cubit = await withSquat();
+      cubit
+        ..toggleDone(first, restTimer: restTimer)
+        ..setReps(first, '');
+      expect(cubit.state.rest, isNull);
+      await cubit.close();
+    });
+
+    test('a new tick starts the rest again', () async {
+      final cubit = await withSquat();
+      cubit.toggleDone(first, restTimer: restTimer);
+      clock = now.add(const Duration(seconds: 30));
+      cubit.toggleDone(second, restTimer: restTimer);
+      expect(
+        cubit.state.rest,
+        Rest(endsAt: clock.add(const Duration(seconds: 90)), after: second),
+      );
+      await cubit.close();
+    });
+
+    test('a warm-up leaves the running rest alone', () async {
+      final cubit = await withSquat();
+      cubit
+        ..toggleDone(first, restTimer: restTimer)
+        ..setType(second, SetType.warmup)
+        ..toggleDone(second, restTimer: restTimer);
+      expect(cubit.state.rest, Rest(endsAt: restEnd, after: first));
+      await cubit.close();
+    });
+
+    test('+15 s and skip', () async {
+      final cubit = await withSquat();
+      cubit
+        ..toggleDone(first, restTimer: restTimer)
+        ..extendRest();
+      expect(cubit.state.rest!.endsAt, restEnd.add(restExtension));
+      await pumpEventQueue();
+      expect(keptLocal().rest!.endsAt, restEnd.add(restExtension));
+      cubit.skipRest();
+      expect(cubit.state.rest, isNull);
+      await pumpEventQueue();
+      expect(keptLocal().rest, isNull);
+      await cubit.close();
+    });
+
+    test('+15 s does nothing once the rest is over', () async {
+      final cubit = await withSquat();
+      cubit.toggleDone(first, restTimer: restTimer);
+      clock = restEnd;
+      cubit.extendRest();
+      expect(cubit.state.rest!.endsAt, restEnd);
+      await cubit.close();
+    });
+
+    test('moving sets keeps the rest but forgets its set', () async {
+      final cubit = await signedIn();
+      cubit
+        ..startWith(squat, 'Workout', 'en')
+        ..addExercises([bench], 'en')
+        ..setWeight(first, '100', WeightUnit.kg)
+        ..setReps(first, '5')
+        ..toggleDone(first, restTimer: restTimer)
+        ..moveExercise(0, 1);
+      expect(cubit.state.rest, Rest(endsAt: restEnd));
+      // The squat set, now the second exercise's, no longer ends it.
+      cubit.toggleDone((exercise: 1, set: 0), restTimer: restTimer);
+      expect(cubit.state.rest, Rest(endsAt: restEnd));
+      await cubit.close();
+    });
+
+    test('discarding ends the rest', () async {
+      final cubit = await withSquat();
+      cubit.toggleDone(first, restTimer: restTimer);
+      await cubit.discard();
+      expect(cubit.state.rest, isNull);
+      await cubit.close();
+    });
+
+    test('finishing ends the rest', () async {
+      final cubit = await withSquat();
+      cubit.toggleDone(first, restTimer: restTimer);
+      await cubit.finish();
+      expect(cubit.state.status, WorkoutStatus.finished);
+      expect(cubit.state.rest, isNull);
+      expect(keptLocal().rest, isNull);
+      await cubit.close();
+    });
+
+    test('a kept rest comes back with its workout', () async {
+      final rest = Rest(endsAt: restEnd, after: first);
+      final cubit = await signedIn(
+        local: LocalWorkouts(draft: saved, rest: rest),
+      );
+      expect(cubit.state.rest, rest);
+      await cubit.close();
+    });
+
+    test('another user never gets the previous one\'s rest', () async {
+      final cubit = await signedIn(
+        local: LocalWorkouts(
+          draft: saved,
+          rest: Rest(endsAt: restEnd),
+        ),
+      );
+      users.add(bob);
+      await pumpEventQueue();
+      expect(cubit.state.rest, isNull);
+      await cubit.close();
+    });
   });
 }

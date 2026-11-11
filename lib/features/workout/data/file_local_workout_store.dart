@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:forge_core/forge_core.dart';
 
+import '../domain/rest.dart';
 import '../domain/workout.dart';
 import '../domain/workout_repository.dart';
 import 'workout_maps.dart';
@@ -31,6 +32,8 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
   final _blocked = <String>{};
   Future<void> _tail = Future.value();
 
+  /// Fields added later are optional, so a newer file of this version
+  /// still reads in an older app, which leaves them out.
   static const version = 2;
 
   @override
@@ -97,6 +100,10 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
       final draft? => _workoutToJson(draft),
       null => null,
     },
+    'rest': ?switch (workouts.rest) {
+      final rest? when workouts.draft != null => _restToJson(rest),
+      _ => null,
+    },
     'finished': [for (final w in workouts.finished) _workoutToJson(w)],
     'staleStats': [...workouts.staleStats],
   };
@@ -116,11 +123,34 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
     }
     return LocalWorkouts(
       draft: parsedDraft,
+      rest: parsedDraft == null ? null : _restFromJson(json['rest']),
       finished: [for (final w in parsedFinished) w!],
       staleStats: {
         for (final id in stale)
           if (id is String) id,
       },
+    );
+  }
+
+  static Map<String, Object?> _restToJson(Rest rest) => {
+    'endsAt': rest.endsAt.millisecondsSinceEpoch,
+    if (rest.after case final after?) ...{
+      'exercise': after.exercise,
+      'set': after.set,
+    },
+  };
+
+  /// Null for anything without an end; a rest is never worth losing a
+  /// workout over.
+  static Rest? _restFromJson(Object? json) {
+    if (json is! Map || json['endsAt'] is! int) return null;
+    final exercise = WorkoutMaps.whole(json['exercise']);
+    final set = WorkoutMaps.whole(json['set']);
+    return Rest(
+      endsAt: DateTime.fromMillisecondsSinceEpoch(json['endsAt'] as int),
+      after: exercise == null || set == null
+          ? null
+          : (exercise: exercise, set: set),
     );
   }
 

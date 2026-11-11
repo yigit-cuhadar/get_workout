@@ -8,6 +8,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../programs/domain/program.dart';
 import '../../settings/domain/user_settings.dart';
+import '../../settings/presentation/settings_cubit.dart';
 import '../domain/set_logging.dart';
 import '../domain/workout.dart';
 import 'active_workout_cubit.dart';
@@ -155,7 +156,14 @@ class SetRow extends StatelessWidget {
                 color: set.done ? theme.colorScheme.primary : null,
                 icon: const Icon(Icons.check_circle_outline),
                 selectedIcon: const Icon(Icons.check_circle),
-                onPressed: () => cubit.toggleDone(ref),
+                onPressed: () => cubit.toggleDone(
+                  ref,
+                  restTimer: context
+                      .read<SettingsCubit>()
+                      .state
+                      .settings
+                      .restTimer,
+                ),
               ),
             ],
           ),
