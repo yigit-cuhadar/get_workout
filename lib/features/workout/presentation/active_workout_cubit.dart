@@ -543,6 +543,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   /// while offline; tries again after [retryDelay] when the server could
   /// not be asked.
   Future<void> _sync(String uid) async {
+    if (_uid != uid || isClosed) return;
     if (_syncing == uid) {
       _syncAgain = true;
       return;

@@ -324,6 +324,10 @@ void main() {
       final unreadable = file('workouts_u1.json')..writeAsStringSync('{}');
       // Not a format problem: the file cannot be opened at all.
       Process.runSync('chmod', ['000', unreadable.path]);
+      if (_isRoot) {
+        markTestSkipped('root reads files without permission');
+        return;
+      }
       final result = await store.load('u1');
       expect(result.failureOrNull, isA<UnknownFailure>());
       expect(file('workouts_u1.json.unreadable-42').existsSync(), isTrue);
@@ -332,3 +336,6 @@ void main() {
     });
   });
 }
+
+/// Root ignores file permissions, so a permission test cannot fail a read.
+final _isRoot = (Process.runSync('id', ['-u']).stdout as String).trim() == '0';

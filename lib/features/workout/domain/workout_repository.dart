@@ -27,8 +27,8 @@ abstract interface class WorkoutRepository {
   /// every change.
   Stream<ExerciseStats?> watchStats(String uid, String exerciseId);
 
-  /// The stats of [exerciseIds]: from the server when it answers quickly,
-  /// else from the device's cache. Ids whose stats cannot be read at all
+  /// The stats of [exerciseIds], read together: from the server when it
+  /// answers for all of them quickly, else from the device's cache. Ids whose stats cannot be read at all
   /// (offline and never loaded on this device) are missing from the map.
   Future<Result<Map<String, StatsRead>>> getStats(
     String uid,

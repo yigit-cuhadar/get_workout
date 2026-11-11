@@ -173,7 +173,8 @@ from the earlier FitLab app.
   reps of the working sets of `weight_reps` and `weighted_bodyweight`;
   assistance is no load), working sets and exercises.
 - **Stats update**: stats are computed from what the device knows at
-  finishing, the server's when it answers within 3 s, else the cache's
+  finishing, the server's when it answers for all of them within 2 s, else
+  the cache's
   (transactions do not work offline). Stats from the cache, and those that
   cannot be read at all (offline, never loaded here; left alone rather than
   overwritten), are listed on the device and, once the finished workouts

@@ -26,9 +26,9 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
   final FirebaseFirestore _firestore;
   final Future<void> Function() _waitForPendingWrites;
 
-  /// How long finishing waits for the server's stats before taking the
-  /// cache's.
-  static const serverWait = Duration(seconds: 3);
+  /// How long finishing waits for the server's stats, all of them
+  /// together, before taking the cache's.
+  static const serverWait = Duration(seconds: 2);
 
   /// The most workouts of one exercise a rebuild reads, years of training;
   /// beyond it the stats are left as they are.
@@ -59,33 +59,43 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
     String uid,
     List<String> exerciseIds,
   ) => guard(() async {
+    final docs = [for (final id in exerciseIds) _stats(uid).doc(id)];
+    final server = await _fromServer(docs);
     final stats = <String, StatsRead>{};
-    for (final id in exerciseIds) {
-      final doc = await _read(_stats(uid).doc(id));
-      if (doc != null) {
-        stats[id] = (
-          stats: statsFromMap(doc.data()),
-          current: !doc.metadata.isFromCache,
+    for (final (i, doc) in docs.indexed) {
+      final snap = server?[i] ?? await _fromCache(doc);
+      if (snap != null) {
+        stats[doc.id] = (
+          stats: statsFromMap(snap.data()),
+          current: !snap.metadata.isFromCache,
         );
       }
     }
     return stats;
   }, mapper: mapFirebaseError);
 
-  /// From the server when it answers within [serverWait], else from the
-  /// cache. Null when neither can be read.
-  static Future<DocumentSnapshot<Map<String, dynamic>>?> _read(
+  /// All of [docs] read together, when they all arrive within [serverWait];
+  /// null otherwise, e.g. offline.
+  static Future<List<DocumentSnapshot<Map<String, dynamic>>>?> _fromServer(
+    List<DocumentReference<Map<String, dynamic>>> docs,
+  ) async {
+    try {
+      return await Future.wait([for (final doc in docs) doc.get()])
+          .timeout(serverWait);
+    } on Object {
+      return null;
+    }
+  }
+
+  /// Null when [doc] was never loaded on this device.
+  static Future<DocumentSnapshot<Map<String, dynamic>>?> _fromCache(
     DocumentReference<Map<String, dynamic>> doc,
   ) async {
     try {
-      return await doc.get().timeout(serverWait);
-    } on Object {
-      try {
-        return await doc.get(const GetOptions(source: Source.cache));
-      } on FirebaseException catch (error, stack) {
-        Log.e('workout', 'stats ${doc.id} unreadable', error, stack);
-        return null;
-      }
+      return await doc.get(const GetOptions(source: Source.cache));
+    } on FirebaseException catch (error, stack) {
+      Log.e('workout', 'stats ${doc.id} unreadable', error, stack);
+      return null;
     }
   }
 
