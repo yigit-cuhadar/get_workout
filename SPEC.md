@@ -272,7 +272,7 @@ Group 8, body and extras
 - [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
 
 Group 9, launch readiness
-- [ ] Onboarding — nine questions, suggested free program
+- [x] Onboarding — nine questions, suggested free program
 - [ ] Notifications — workout and measurement reminders, FCM announcements
 - [ ] Subscription — paywall, RevenueCat, entitlement checks, restore
 - [ ] Account — delete account, privacy policy link, analytics consent
