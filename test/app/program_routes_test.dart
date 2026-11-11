@@ -9,6 +9,10 @@ import 'package:get_workout/app/router.dart';
 import 'package:get_workout/features/exercises/domain/exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
 import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
+import 'package:get_workout/features/profile/domain/profile_repository.dart';
+import 'package:get_workout/features/profile/domain/profile_usecases.dart';
+import 'package:get_workout/features/profile/domain/user_profile.dart';
+import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
@@ -46,6 +50,8 @@ class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
 
 class MockProgramRepository extends Mock implements ProgramRepository {}
 
+class MockProfileRepository extends Mock implements ProfileRepository {}
+
 void main() {
   const guest = AuthUser(id: 'u1', isAnonymous: true);
   final squat = move('squat', name: 'Back Squat');
@@ -82,6 +88,19 @@ void main() {
     when(() => sessionAuth.currentUser).thenReturn(guest);
     final idle = MockAuthRepository();
     when(idle.watchUser).thenAnswer((_) => const Stream.empty());
+    // Onboarding is covered by the router tests; this user has done it.
+    final profiles = MockProfileRepository();
+    when(() => profiles.watchProfile('u1')).thenAnswer(
+      (_) => Stream.value(UserProfile(onboardingCompletedAt: DateTime(2026))),
+    );
+    final profile = ProfileCubit(
+      watchAuthUser: WatchAuthUser(sessionAuth),
+      watchProfile: WatchProfile(profiles),
+      updateProfile: UpdateProfile(
+        profiles,
+        SaveOwnedEquipment(MockUserLibraryRepository()),
+      ),
+    );
     final settingsRepository = MockSettingsRepository();
     final settings = SettingsCubit(
       watchAuthUser: WatchAuthUser(idle),
@@ -107,7 +126,7 @@ void main() {
       watchEquipment: WatchOwnedEquipment(userLibrary),
       saveEquipment: SaveOwnedEquipment(userLibrary),
     );
-    appCubits = [settings, catalogue, favorites, equipment];
+    appCubits = [settings, catalogue, favorites, equipment, profile];
 
     repository = MockProgramRepository();
     programs = StreamController<List<Program>>();
@@ -179,7 +198,7 @@ void main() {
         child: MaterialApp.router(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          routerConfig: router = buildRouter(auth),
+          routerConfig: router = buildRouter(auth, profile),
         ),
       ),
     );

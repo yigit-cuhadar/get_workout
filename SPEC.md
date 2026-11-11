@@ -63,6 +63,12 @@ from the earlier FitLab app.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk).
+- **Onboarding questions**: goal, level, days per week and equipment need
+  an answer to continue. The personal questions (sex, birth year, height,
+  weight, target weight) can each be skipped with "Skip this question";
+  "Skip for now" still ends onboarding with whatever was answered.
+- **Birth year**: a plausibility range (age 13-100), not an age gate. An
+  implausible year is only not accepted as an answer; nothing is blocked.
 - **Notifications**: local for rest end, workout reminders and measurement
   reminders; FCM topic push for announcements.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
@@ -131,7 +137,7 @@ Firestore. Timestamps are server timestamps; ids are generated on the client.
 | `familyRank` | int | Easier → harder within the family |
 | `pinnedAlternatives`, `excludedAlternatives` | id[] | Admin overrides of the computed list |
 | `defaultRestS` | int | |
-| `incrementKg` | double? | Step for "add weight"; stored as a double even when the file says `1` |
+| `incrementKg` | number? | Step for "add weight"; the import stores a double, but a web client (the admin panel) stores a whole number as an integer, so readers accept int or double and hashing treats `2` and `2.0` alike |
 | `popularity` | int | Lower sorts first |
 | `l10n.<lang>` | map | `name`, `aliases[]`, `setup[]`, `execution[]`, `mistakes[]`, `safety?`, `cues[]` |
 | `updatedAt` | timestamp | Clients sync incrementally on this |
@@ -231,7 +237,7 @@ Group 2, the model
 
 Group 3, exercises
 - [x] Exercise domain and sync — incremental sync by `updatedAt` — library works offline after first sync
-- [ ] Admin panel — sign-in, exercise list, exercise editor with validation, draft/live/retire — an edit appears in the app after sync
+- [x] Admin panel — sign-in, exercise list, exercise editor with validation, draft/live/retire — an edit appears in the app after sync
 - [ ] Exercise content — 400+ exercises in English, loaded through the admin import — every muscle and equipment profile is covered
 - [x] Library — model tab with muscle sheet (main vs secondary), list, search, filters, sort — find any exercise in a few taps
 - [x] Exercise detail — text sections, model with worked muscles, alternatives, variations, favorite, add to workout or program
@@ -266,7 +272,7 @@ Group 8, body and extras
 - [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
 
 Group 9, launch readiness
-- [ ] Onboarding — nine questions, suggested free program
+- [x] Onboarding — nine questions, suggested free program
 - [ ] Notifications — workout and measurement reminders, FCM announcements
 - [ ] Subscription — paywall, RevenueCat, entitlement checks, restore
 - [ ] Account — delete account, privacy policy link, analytics consent

@@ -275,6 +275,22 @@ void main() {
     test('is edited when it has no contentHash', () {
       expect(stored(doc.content).editedElsewhere, isTrue);
     });
+
+    test('a whole increment stored as an integer hashes like the file', () {
+      // The admin panel writes from the web, where 2.0 becomes an integer.
+      final file = ExerciseDoc.fromJson({
+        'id': 'ex_a',
+        'loggingType': 'weight_reps',
+        'incrementKg': 2.0,
+      });
+      final fields = {
+        ...file.fields,
+        'incrementKg': {'integerValue': '2'},
+      };
+      final remote = RemoteExercise.fromFields(decodeFields(fields), 't');
+      expect(remote.actualHash, file.hash);
+      expect(remote.editedElsewhere, isFalse);
+    });
   });
 
   group('planImport', () {

@@ -7,7 +7,8 @@ import 'package:forge_core/forge_core.dart';
 ///
 /// A stream that fails is followed again after [retryDelay], doubling up to
 /// [maxRetryDelay] while it keeps failing, or at once on [resume], so the
-/// values never stay stale after a dropped listener.
+/// values never stay stale after a dropped listener. [onError] hears of
+/// each failure.
 class UserStreamFollower<T> {
   UserStreamFollower({
     required Stream<String?> userIds,
@@ -15,6 +16,7 @@ class UserStreamFollower<T> {
     required this._onUser,
     required this._onData,
     required this._logTag,
+    this._onError,
     this.retryDelay = const Duration(seconds: 1),
     this.maxRetryDelay = const Duration(seconds: 30),
   }) : _nextDelay = retryDelay {
@@ -27,6 +29,7 @@ class UserStreamFollower<T> {
   final void Function(String? uid) _onUser;
   final void Function(T value) _onData;
   final String _logTag;
+  final void Function(Object error)? _onError;
   late final StreamSubscription<String?> _users;
   StreamSubscription<T>? _values;
   Timer? _retry;
@@ -56,6 +59,7 @@ class UserStreamFollower<T> {
         _retry = Timer(_nextDelay, resume);
         final doubled = _nextDelay * 2;
         _nextDelay = doubled > maxRetryDelay ? maxRetryDelay : doubled;
+        _onError?.call(error);
       },
       cancelOnError: true,
     );

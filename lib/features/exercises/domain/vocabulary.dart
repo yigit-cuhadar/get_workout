@@ -193,3 +193,14 @@ enum GripWidth implements Coded {
   @override
   final String code;
 }
+
+/// Whether users see an exercise. Exercises are never deleted, only retired.
+enum ExerciseStatus implements Coded {
+  draft('draft'),
+  live('live'),
+  retired('retired');
+
+  const ExerciseStatus(this.code);
+  @override
+  final String code;
+}

@@ -62,6 +62,7 @@ dependencies:
       ref: 6b9b0011273bd2138a3a81fec61406944df723a6
       path: packages/forge_auth
   cloud_firestore: ^7.1.0
+  firebase_auth: ^7.0.1
   firebase_core: ^5.1.0
   flutter_bloc: ^9.1.1
   get_it: ^9.3.0
@@ -79,6 +80,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   bloc_test: ^10.0.0
+  fake_async: ^1.3.3
   fake_cloud_firestore: ^4.5.0
   mocktail: ^1.0.5
   crypto: ^3.0.8
