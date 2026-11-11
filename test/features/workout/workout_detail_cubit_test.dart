@@ -43,7 +43,7 @@ void main() {
         workouts: {
           'squat': (workouts: [legs], complete: true),
         },
-        current: false,
+        current: true,
       )),
     );
     when(() => repository.deleteWorkout(any(), any(), any()))

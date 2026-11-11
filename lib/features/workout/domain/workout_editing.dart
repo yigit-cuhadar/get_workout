@@ -135,6 +135,38 @@ bool isStorable(Workout workout) =>
     fitsLimits(workout) &&
     !(workout.finishedAt?.isBefore(workout.startedAt) ?? false);
 
+/// Why a change to the stored workouts is refused.
+enum WorkoutChangeIssue {
+  noDoneSet,
+  startInFuture,
+  endInFuture,
+
+  /// Over [WorkoutLimits.maxWorkoutDuration], or ending before it starts.
+  badDuration,
+
+  /// Not [isStorable] once its unticked sets are left out.
+  invalid,
+}
+
+/// What keeps edited [workout] from being stored [now], null when nothing
+/// does. Its unticked sets do not count; they are left out.
+WorkoutChangeIssue? changeIssue(Workout workout, DateTime now) {
+  final start = workout.startedAt;
+  final end = workout.finishedAt ?? start;
+  final length = end.difference(start);
+  return workout.doneSetCount == 0
+      ? WorkoutChangeIssue.noDoneSet
+      : start.isAfter(now)
+      ? WorkoutChangeIssue.startInFuture
+      : end.isAfter(now)
+      ? WorkoutChangeIssue.endInFuture
+      : length.isNegative || length > WorkoutLimits.maxWorkoutDuration
+      ? WorkoutChangeIssue.badDuration
+      : isStorable(finishWorkout(workout, end))
+      ? null
+      : WorkoutChangeIssue.invalid;
+}
+
 /// Whether [workout] did the next day of the [active] program, which then
 /// moves on. [program] is the active program as it is now.
 bool advancesProgram(Workout workout, ActiveProgram? active, Program? program) {

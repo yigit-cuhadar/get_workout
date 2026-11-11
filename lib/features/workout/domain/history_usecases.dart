@@ -42,36 +42,40 @@ class WatchRejectedWorkoutEdits {
   Stream<Failure> call() => _repository.rejectedEdits;
 }
 
-/// Stores a [WorkoutChange] with the stats of every exercise it touches,
-/// before and after, rebuilt from that exercise's workouts (see
-/// [rebuildStats]), in one batch that also works offline. The active
-/// program is never changed. Returns the exercises whose stats need
-/// rebuilding later because their workouts came from the device's cache.
+/// Stores a [WorkoutChange] in one batch that also works offline, never
+/// changing the active program. Returns the exercises it touched, before
+/// and after: their stats must then be rebuilt from the server's workouts,
+/// which also repairs a rebuild that read before this change and wrote
+/// after it.
+///
+/// The batch carries those stats rebuilt (see [rebuildStats]) only for the
+/// exercises whose workouts the server returned in full; stats read from
+/// the cache, which may lack workouts, or of an exercise with more workouts
+/// than can be read, are left as they are until then. The rebuild leaves
+/// the latter too, so they may stay stale.
 ///
 /// The new version keeps only its done sets, like a finished workout, and
-/// is refused with a [ValidationFailure] when none is left, a set is
-/// invalid or it exceeds its limits. Stats of an exercise with more
-/// workouts than can be read are left as they are, as a rebuild leaves
-/// them.
+/// is refused with a [ValidationFailure] for any [changeIssue].
 class SaveWorkoutChange implements UseCase<Set<String>, WorkoutChange> {
-  const SaveWorkoutChange(this._repository);
+  SaveWorkoutChange(this._repository, {DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
   final WorkoutRepository _repository;
+  final DateTime Function() _clock;
 
   @override
   Future<Result<Set<String>>> call(WorkoutChange params) async {
     final before = params.before;
     final changed = params.after;
+    if (changed != null) {
+      if (changeIssue(changed, _clock()) case final issue?) {
+        return Err(ValidationFailure(issue.name));
+      }
+    }
     final after = changed == null
         ? null
         : finishWorkout(changed, changed.finishedAt ?? changed.startedAt);
     final id = after?.id ?? before?.id;
     if (id == null) return const Ok({});
-    if (after != null && after.exercises.isEmpty) {
-      return const Err(ValidationFailure('no done set'));
-    }
-    if (after != null && !isStorable(after)) {
-      return const Err(ValidationFailure('invalid workout'));
-    }
     final exerciseIds = [
       ...{...?before?.exerciseIds, ...?after?.exerciseIds},
     ];
@@ -81,10 +85,7 @@ class SaveWorkoutChange implements UseCase<Set<String>, WorkoutChange> {
     final stats = <String, ExerciseStats?>{};
     for (final exerciseId in exerciseIds) {
       final known = workouts[exerciseId]!;
-      if (!known.complete) {
-        Log.e('workout', 'too many workouts to rebuild $exerciseId');
-        continue;
-      }
+      if (!current || !known.complete) continue;
       stats[exerciseId] = rebuildStats(exerciseId, [
         for (final workout in known.workouts)
           if (workout.id != id) workout,
@@ -94,6 +95,6 @@ class SaveWorkoutChange implements UseCase<Set<String>, WorkoutChange> {
     final saved = after == null
         ? await _repository.deleteWorkout(params.uid, id, stats)
         : await _repository.updateWorkout(params.uid, after, stats);
-    return saved.map((_) => current ? <String>{} : stats.keys.toSet());
+    return saved.map((_) => exerciseIds.toSet());
   }
 }

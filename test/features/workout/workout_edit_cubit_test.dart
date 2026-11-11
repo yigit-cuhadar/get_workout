@@ -9,6 +9,7 @@ import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/history_usecases.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
+import 'package:get_workout/features/workout/domain/workout_editing.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:get_workout/features/workout/presentation/workout_edit_cubit.dart';
@@ -86,7 +87,7 @@ void main() {
       watchAuthUser: WatchAuthUser(auth),
       watchWorkout: WatchStoredWorkout(repository),
       newWorkoutId: NewWorkoutId(repository),
-      saveChange: SaveWorkoutChange(repository),
+      saveChange: SaveWorkoutChange(repository, clock: () => now),
       changed: (_, id, {required deleted, required staleStats}) =>
           changes.add((id: id, deleted: deleted, stale: staleStats)),
       catalogue: catalogue,
@@ -175,7 +176,7 @@ void main() {
       cubit.setTotalDuration(const Duration(hours: 30));
       expect(
         cubit.state.workout!.finishedAt,
-        later.add(WorkoutEditCubit.maxDuration),
+        later.add(WorkoutLimits.maxWorkoutDuration),
       );
       cubit.setTotalDuration(const Duration(minutes: -5));
       expect(cubit.state.workout!.finishedAt, later);
@@ -222,7 +223,7 @@ void main() {
       verify(() => repository.workoutsDoing('u1', ['squat', 'row'])).called(1);
       expect(changes.single.id, 'w1');
       expect(changes.single.deleted, isFalse);
-      expect(changes.single.stale, isEmpty);
+      expect(changes.single.stale, {'squat', 'row'});
       expect(cubit.state.status, WorkoutEditStatus.saved);
       expect(cubit.hasChanges, isFalse);
       await cubit.close();
@@ -259,12 +260,12 @@ void main() {
       final cubit = await editing();
       cubit.toggleDone((exercise: 0, set: 0));
       await cubit.save();
-      expect(cubit.state.issue, WorkoutEditIssue.noDoneSet);
+      expect(cubit.state.issue, WorkoutChangeIssue.noDoneSet);
       cubit.problemShown();
       cubit.toggleDone((exercise: 0, set: 0));
       cubit.setStart(now.add(const Duration(minutes: 5)));
       await cubit.save();
-      expect(cubit.state.issue, WorkoutEditIssue.startInFuture);
+      expect(cubit.state.issue, WorkoutChangeIssue.startInFuture);
       verifyNever(() => repository.updateWorkout(any(), any(), any()));
       expect(cubit.state.status, WorkoutEditStatus.editing);
       await cubit.close();
@@ -274,7 +275,7 @@ void main() {
       final cubit = await editing();
       cubit.setName('   ');
       await cubit.save();
-      expect(cubit.state.issue, WorkoutEditIssue.invalid);
+      expect(cubit.state.issue, WorkoutChangeIssue.invalid);
       expect(cubit.state.status, WorkoutEditStatus.editing);
       verifyNever(() => repository.updateWorkout(any(), any(), any()));
       await cubit.close();
@@ -294,5 +295,83 @@ void main() {
       expect(cubit.state.failure, isNull);
       await cubit.close();
     });
+  });
+
+  group('changes elsewhere', () {
+    test('a newer version blocks the save until reloaded', () async {
+      final cubit = await editing();
+      cubit.setName('Mine');
+      final theirs = legs.copyWith(
+        name: 'Theirs',
+        exercises: [
+          exercise('bench', [lift(60, 8)]),
+        ],
+      );
+      stored.add((workout: theirs, pending: false));
+      await pumpEventQueue();
+      expect(cubit.state.conflict, WorkoutEditConflict.changed);
+      expect(cubit.hasChanges, isFalse);
+      await cubit.save();
+      verifyNever(() => repository.updateWorkout(any(), any(), any()));
+
+      cubit.reload();
+      expect(cubit.state.conflict, isNull);
+      expect(cubit.state.workout, theirs);
+      cubit.setName('Mine again');
+      cubit.addExercises([move('row')], 'en');
+      cubit.setWeight((exercise: 1, set: 0), '70', WeightUnit.kg);
+      cubit.setReps((exercise: 1, set: 0), '8');
+      cubit.toggleDone((exercise: 1, set: 0));
+      await cubit.save();
+      // The latest version is what the change replaces: squat, only in the
+      // version first opened, is not touched.
+      verify(() => repository.workoutsDoing('u1', ['bench', 'row'])).called(1);
+      expect(saved().name, 'Mine again');
+      await cubit.close();
+    });
+
+    test('a deletion elsewhere is never saved over', () async {
+      final cubit = await editing();
+      stored.add(null);
+      await pumpEventQueue();
+      expect(cubit.state.conflict, WorkoutEditConflict.deleted);
+      cubit.reload();
+      expect(cubit.state.conflict, WorkoutEditConflict.deleted);
+      await cubit.save();
+      verifyNever(() => repository.updateWorkout(any(), any(), any()));
+      await cubit.close();
+    });
+
+    test('only metadata changing is no conflict', () async {
+      final cubit = await editing();
+      stored.add((workout: legs, pending: true));
+      await pumpEventQueue();
+      expect(cubit.state.conflict, isNull);
+      await cubit.close();
+    });
+
+    test('the save\'s own write is no conflict', () async {
+      final cubit = await editing();
+      cubit.setName('Mine');
+      await cubit.save();
+      stored.add((workout: legs.copyWith(name: 'Mine'), pending: true));
+      await pumpEventQueue();
+      expect(cubit.state.status, WorkoutEditStatus.saved);
+      expect(cubit.state.conflict, isNull);
+      await cubit.close();
+    });
+  });
+
+  test('an end in the future or a day too long is refused', () async {
+    final cubit = build(id: null);
+    cubit.addExercises([move('row')], 'en');
+    cubit.setWeight((exercise: 0, set: 0), '70', WeightUnit.kg);
+    cubit.setReps((exercise: 0, set: 0), '8');
+    cubit.toggleDone((exercise: 0, set: 0));
+    cubit.setTotalDuration(const Duration(hours: 3));
+    await cubit.save();
+    expect(cubit.state.issue, WorkoutChangeIssue.endInFuture);
+    verifyNever(() => repository.updateWorkout(any(), any(), any()));
+    await cubit.close();
   });
 }

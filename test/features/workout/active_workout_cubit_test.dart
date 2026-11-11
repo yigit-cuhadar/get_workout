@@ -745,6 +745,59 @@ void main() {
       await cubit.close();
     });
 
+    test('a rebuild crossed by an edit is done again', () async {
+      final firstRead = Completer<Result<ExerciseWorkouts>>();
+      var reads = 0;
+      when(() => repository.workoutsWith('u1', 'squat')).thenAnswer((_) {
+        reads++;
+        return reads == 1
+            ? firstRead.future
+            : Future.value(const Ok((workouts: [], complete: true)));
+      });
+      final cubit = await signedIn(
+        local: const LocalWorkouts(staleStats: {'squat'}),
+      );
+      expect(reads, 1);
+      // The edit's batch starts while the first rebuild has read.
+      cubit.storedWorkoutChanged(
+        'u1',
+        'w0',
+        deleted: false,
+        staleStats: const {'squat'},
+      );
+      firstRead.complete(const Ok((workouts: [], complete: true)));
+      await pumpEventQueue();
+      // Its write may land after the edit's: a second rebuild follows.
+      expect(reads, 2);
+      verify(() => repository.saveStats('u1', 'squat', null)).called(2);
+      expect(keptLocal().staleStats, isEmpty);
+      await cubit.close();
+    });
+
+    test('a rebuild crossed by a finish is done again after it', () async {
+      final firstRead = Completer<Result<ExerciseWorkouts>>();
+      var reads = 0;
+      when(() => repository.workoutsWith('u1', 'squat')).thenAnswer((_) {
+        reads++;
+        return reads == 1
+            ? firstRead.future
+            : Future.value(const Ok((workouts: [], complete: true)));
+      });
+      when(() => repository.getStats('u1', ['squat'])).thenAnswer(
+        (_) async => const Ok({'squat': (stats: null, current: true)}),
+      );
+      final cubit = await signedIn(
+        draft: saved,
+        local: LocalWorkouts(draft: saved, staleStats: const {'squat'}),
+      );
+      await cubit.finish();
+      firstRead.complete(const Ok((workouts: [], complete: true)));
+      await pumpEventQueue();
+      expect(reads, 2);
+      expect(keptLocal().staleStats, isEmpty);
+      await cubit.close();
+    });
+
     test('another user\'s change is ignored', () async {
       final cubit = await signedIn();
       cubit.storedWorkoutChanged(

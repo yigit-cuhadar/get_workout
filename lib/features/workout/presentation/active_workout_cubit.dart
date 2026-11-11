@@ -203,6 +203,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   bool _syncAgain = false;
   Timer? _retry;
 
+  /// The exercise whose stats a sync is rebuilding, and whether a write to
+  /// them started meanwhile: the rebuild may have read before it and
+  /// written after it, so it is done again.
+  String? _rebuilding;
+  bool _rebuildOutdated = false;
+
+  /// Counts finishes, whose stats writes a rebuild may have crossed.
+  int _finishes = 0;
+
   /// How long starting a program day waits for the catalogue.
   static const catalogueWait = Duration(seconds: 10);
 
@@ -360,6 +369,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       return;
     }
     emit(state.copyWith(status: WorkoutStatus.finishing));
+    _finishes++;
     final programs = _programs.state;
     final result = await _finishWorkout((
       uid: uid,
@@ -442,11 +452,20 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     }
     if (_local?.finished.isNotEmpty ?? true) return true;
     for (final id in [..._local!.staleStats]) {
+      final finishes = _finishes;
+      _rebuilding = id;
+      _rebuildOutdated = false;
       final rebuilt = await _rebuildStats((uid: uid, exerciseId: id));
+      _rebuilding = null;
       if (isClosed || _uid != uid) return true;
       if (rebuilt.failureOrNull case final failure?) {
         Log.e('workout', 'stats of $id not rebuilt: ${failure.message}');
         return false;
+      }
+      if (_rebuildOutdated || _finishes != finishes) {
+        // Still stale; the next round rebuilds it after that write.
+        _syncAgain = true;
+        continue;
       }
       final local = _local!;
       _local = local.copyWith(staleStats: {...local.staleStats}..remove(id));
@@ -539,7 +558,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   /// Takes note of a change user [uid] made to stored workout [id]: the
   /// stats of [staleStats] are rebuilt from the server's workouts once the
   /// finished workouts are confirmed, like those finishing computed from
-  /// the cache. A deleted workout is no longer awaited, so a confirmation
+  /// the cache; a rebuild of one already running is done again, as it may
+  /// have read before the change and write after it. A deleted workout is no longer awaited, so a confirmation
   /// that finds it gone never brings it back.
   void storedWorkoutChanged(
     String uid,
@@ -549,6 +569,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   }) {
     final local = _local;
     if (uid != _uid || local == null) return;
+    if (staleStats.contains(_rebuilding)) _rebuildOutdated = true;
     _local = local.copyWith(
       finished: [
         for (final w in local.finished)

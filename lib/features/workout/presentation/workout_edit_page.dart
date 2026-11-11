@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -11,8 +10,10 @@ import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/workout.dart';
+import '../domain/workout_editing.dart';
 import 'workout_edit_cubit.dart';
 import 'workout_editor_view.dart';
+import 'workout_set_row.dart';
 
 /// Edits stored workout [id], or, without one, adds a past workout.
 class WorkoutEditPage extends StatelessWidget {
@@ -50,9 +51,11 @@ class _EditView extends StatelessWidget {
         }
         if (state.status != WorkoutEditStatus.editing) return;
         final message = switch ((state.issue, state.failure)) {
-          (WorkoutEditIssue.noDoneSet, _) => l10n.historyNoDoneSet,
-          (WorkoutEditIssue.startInFuture, _) => l10n.historyStartInFuture,
-          (WorkoutEditIssue.invalid, _) => l10n.historyInvalid,
+          (WorkoutChangeIssue.noDoneSet, _) => l10n.historyNoDoneSet,
+          (WorkoutChangeIssue.startInFuture, _) => l10n.historyStartInFuture,
+          (WorkoutChangeIssue.endInFuture, _) => l10n.historyEndInFuture,
+          (WorkoutChangeIssue.badDuration, _) => l10n.historyBadDuration,
+          (WorkoutChangeIssue.invalid, _) => l10n.historyInvalid,
           (_, NetworkFailure()) => l10n.errorNetwork,
           (_, _?) => l10n.historySaveFailed,
           _ => null,
@@ -139,10 +142,30 @@ class _Form extends StatelessWidget {
     final start = workout.startedAt;
     final duration = (workout.finishedAt ?? start).difference(start);
     final saving = state.status == WorkoutEditStatus.saving;
+    final conflict = state.conflict;
     return ListView(
       padding: const EdgeInsets.only(bottom: Gap.xl),
       children: [
         if (saving) const LinearProgressIndicator(),
+        if (conflict != null)
+          MaterialBanner(
+            content: Text(
+              conflict == WorkoutEditConflict.changed
+                  ? l10n.historyChangedElsewhere
+                  : l10n.historyDeletedElsewhere,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => context.pop(),
+                child: Text(l10n.historyDiscardChanges),
+              ),
+              if (conflict == WorkoutEditConflict.changed)
+                TextButton(
+                  onPressed: cubit.reload,
+                  child: Text(l10n.historyReload),
+                ),
+            ],
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: Gap.md),
           child: TextFormField(
@@ -163,42 +186,39 @@ class _Form extends StatelessWidget {
           trailing: Text(TimeOfDay.fromDateTime(start).format(context)),
           onTap: () => _pickTime(context, start),
         ),
+        // Show the duration as stored: minutes past 59 carry into hours,
+        // and more than 24 hours is cut.
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: Gap.md),
           child: Row(
             children: [
               Expanded(child: Text(l10n.workoutDuration)),
-              for (final (label, value, change) in [
-                (
-                  l10n.historyHours,
-                  duration.inHours,
-                  (int hours) =>
-                      Duration(hours: hours, minutes: duration.inMinutes % 60),
-                ),
-                (
-                  l10n.historyMinutes,
-                  duration.inMinutes % 60,
-                  (int minutes) =>
-                      Duration(hours: duration.inHours, minutes: minutes),
-                ),
-              ])
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
-                    child: TextFormField(
-                      initialValue: '$value',
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(2),
-                      ],
-                      decoration: InputDecoration(labelText: label),
-                      onChanged: (text) => cubit.setTotalDuration(
-                        change(int.tryParse(text) ?? 0),
-                      ),
+              Expanded(
+                child: NumberCell(
+                  value: duration.inHours.toDouble(),
+                  hint: l10n.historyHours,
+                  onChanged: (text) => cubit.setTotalDuration(
+                    Duration(
+                      hours: int.tryParse(text) ?? 0,
+                      minutes: duration.inMinutes % 60,
                     ),
                   ),
                 ),
+              ),
+              Text(l10n.historyHours),
+              Expanded(
+                child: NumberCell(
+                  value: (duration.inMinutes % 60).toDouble(),
+                  hint: l10n.historyMinutes,
+                  onChanged: (text) => cubit.setTotalDuration(
+                    Duration(
+                      hours: duration.inHours,
+                      minutes: int.tryParse(text) ?? 0,
+                    ),
+                  ),
+                ),
+              ),
+              Text(l10n.historyMinutes),
             ],
           ),
         ),
@@ -240,7 +260,9 @@ class _Form extends StatelessWidget {
           child: ForgeButton(
             label: l10n.historySave,
             loading: saving,
-            onPressed: saving ? null : () => _save(context, workout),
+            onPressed: saving || conflict != null
+                ? null
+                : () => _save(context, workout),
           ),
         ),
       ],

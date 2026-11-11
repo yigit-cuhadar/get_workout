@@ -10,6 +10,7 @@ import '../domain/exercise_stats.dart';
 import '../domain/history_usecases.dart';
 import '../domain/set_logging.dart';
 import '../domain/workout.dart';
+import '../domain/workout_editing.dart';
 import '../domain/workout_repository.dart';
 import '../domain/workout_usecases.dart';
 import 'workout_detail_cubit.dart';
@@ -33,14 +34,16 @@ enum WorkoutEditStatus {
   closed,
 }
 
-/// Why a save was refused before it started.
-enum WorkoutEditIssue { noDoneSet, startInFuture, invalid }
+/// The stored workout changed while it was being edited, e.g. on another
+/// device; the edits can no longer be saved over it.
+enum WorkoutEditConflict { changed, deleted }
 
 class WorkoutEditState extends Equatable implements EditedWorkout {
   const WorkoutEditState({
     this.status = WorkoutEditStatus.loading,
     this.workout,
     this.invalidSet,
+    this.conflict,
     this.issue,
     this.failure,
   });
@@ -53,8 +56,13 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
   @override
   final SetRef? invalidSet;
 
-  /// Tell the user, then call [WorkoutEditCubit.problemShown].
-  final WorkoutEditIssue? issue;
+  /// While set, saving is blocked: the user reloads (when changed) or
+  /// discards.
+  final WorkoutEditConflict? conflict;
+
+  /// Saving was refused; tell the user, then call
+  /// [WorkoutEditCubit.problemShown].
+  final WorkoutChangeIssue? issue;
 
   /// Loading or saving failed; after a save, tell the user, then call
   /// [WorkoutEditCubit.problemShown].
@@ -75,26 +83,36 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     WorkoutEditStatus? status,
     Workout? workout,
     SetRef? Function()? invalidSet,
-    WorkoutEditIssue? Function()? issue,
+    WorkoutEditConflict? Function()? conflict,
+    WorkoutChangeIssue? Function()? issue,
     Failure? Function()? failure,
   }) => WorkoutEditState(
     status: status ?? this.status,
     workout: workout ?? this.workout,
     invalidSet: invalidSet != null ? invalidSet() : this.invalidSet,
+    conflict: conflict != null ? conflict() : this.conflict,
     issue: issue != null ? issue() : this.issue,
     failure: failure != null ? failure() : this.failure,
   );
 
   @override
-  List<Object?> get props => [status, workout, invalidSet, issue, failure];
+  List<Object?> get props => [
+    status,
+    workout,
+    invalidSet,
+    conflict,
+    issue,
+    failure,
+  ];
 }
 
 /// Edits stored workout [id] of the user signed in when it opens, or, with
 /// no [id], a new past workout named [name]. Saving stores it with its
 /// exercises' stats rebuilt and leaves the active program alone; a past
 /// workout is never from a program. A stored workout can be edited once the
-/// server has confirmed its latest change. Closes when the signed-in user
-/// changes.
+/// server has confirmed its latest change, and is followed while edited:
+/// changed or deleted elsewhere, it is never saved over. Closes when the
+/// signed-in user changes.
 class WorkoutEditCubit extends Cubit<WorkoutEditState>
     with WorkoutEditor<WorkoutEditState> {
   WorkoutEditCubit({
@@ -155,8 +173,11 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
   late final StreamSubscription<String?> _userSubscription;
   StreamSubscription<StoredWorkout?>? _workoutSubscription;
 
-  /// The stored workout as it was when editing started.
+  /// The stored workout as editing started from it; what a save replaces.
   Workout? _original;
+
+  /// The latest stored version, while it differs from [_original].
+  Workout? _latest;
 
   /// What editing started with, to tell whether anything changed.
   Workout? _start;
@@ -164,14 +185,13 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
   /// How long a new past workout lasts until changed.
   static const newDuration = Duration(hours: 1);
 
-  /// The longest a workout can be set to last.
-  static const maxDuration = Duration(hours: 24);
-
   bool get isNew => id == null;
 
-  /// Something was edited and not saved yet.
+  /// Something was edited and could still be saved.
   bool get hasChanges =>
-      state.status == WorkoutEditStatus.editing && state.workout != _start;
+      state.status == WorkoutEditStatus.editing &&
+      state.conflict == null &&
+      state.workout != _start;
 
   @override
   Map<String, Exercise> get knownExercises => switch (_catalogue.state) {
@@ -179,34 +199,78 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     _ => const {},
   };
 
-  /// Waits for the workout to have no unconfirmed change, then edits it.
+  /// Waits for the workout to have no unconfirmed change, edits it, and
+  /// keeps following it for changes made elsewhere.
   void _follow(String uid) {
     emit(const WorkoutEditState());
+    unawaited(_workoutSubscription?.cancel());
     _workoutSubscription = _watchWorkout((uid: uid, id: id!)).listen(
       (stored) {
-        if (stored == null) {
-          emit(const WorkoutEditState(status: WorkoutEditStatus.missing));
-        } else if (stored.pending) {
-          emit(const WorkoutEditState(status: WorkoutEditStatus.syncing));
-        } else {
-          unawaited(_workoutSubscription?.cancel());
-          _original = stored.workout;
-          _start = stored.workout;
-          emit(
-            WorkoutEditState(
-              status: WorkoutEditStatus.editing,
-              workout: stored.workout,
-            ),
-          );
+        switch (state.status) {
+          case WorkoutEditStatus.loading ||
+              WorkoutEditStatus.syncing ||
+              WorkoutEditStatus.missing:
+            _open(stored);
+          case WorkoutEditStatus.editing:
+            _storedChanged(stored);
+          // The save's own write, or the page is going.
+          default:
         }
       },
-      onError: (Object error) => emit(
+      onError: (Object error) {
+        if (state.status == WorkoutEditStatus.editing) return;
+        emit(
+          WorkoutEditState(
+            status: WorkoutEditStatus.failure,
+            failure: error is Failure ? error : UnknownFailure('$error', error),
+          ),
+        );
+      },
+    );
+  }
+
+  void _open(StoredWorkout? stored) {
+    if (stored == null) {
+      emit(const WorkoutEditState(status: WorkoutEditStatus.missing));
+    } else if (stored.pending) {
+      emit(const WorkoutEditState(status: WorkoutEditStatus.syncing));
+    } else {
+      _original = _start = stored.workout;
+      _latest = null;
+      emit(
         WorkoutEditState(
-          status: WorkoutEditStatus.failure,
-          failure: error is Failure ? error : UnknownFailure('$error', error),
+          status: WorkoutEditStatus.editing,
+          workout: stored.workout,
         ),
+      );
+    }
+  }
+
+  void _storedChanged(StoredWorkout? stored) {
+    final latest = stored?.workout;
+    if (latest == _original && state.conflict == null) return;
+    _latest = latest;
+    emit(
+      state.copyWith(
+        conflict: () => latest == null
+            ? WorkoutEditConflict.deleted
+            : latest == _original
+            ? null
+            : WorkoutEditConflict.changed,
       ),
     );
+  }
+
+  /// After a [WorkoutEditConflict.changed], drops the edits and edits the
+  /// latest stored version instead.
+  void reload() {
+    final latest = _latest;
+    if (state.conflict != WorkoutEditConflict.changed || latest == null) {
+      return;
+    }
+    _original = _start = latest;
+    _latest = null;
+    emit(WorkoutEditState(status: WorkoutEditStatus.editing, workout: latest));
   }
 
   /// Starts over after loading failed.
@@ -251,43 +315,40 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
   void setStart(DateTime start) => edit(
     (workout) => workout.copyWith(
       startedAt: start,
-      finishedAt: start.add(_duration(workout)),
+      finishedAt: start.add(duration(workout)),
     ),
   );
 
-  /// Cut to [maxDuration]; negative counts as none.
+  /// Cut to [WorkoutLimits.maxWorkoutDuration]; negative counts as none.
   void setTotalDuration(Duration duration) => edit(
     (workout) => workout.copyWith(
       finishedAt: workout.startedAt.add(
         duration.isNegative
             ? Duration.zero
-            : duration > maxDuration
-            ? maxDuration
+            : duration > WorkoutLimits.maxWorkoutDuration
+            ? WorkoutLimits.maxWorkoutDuration
             : duration,
       ),
     ),
   );
 
-  static Duration _duration(Workout workout) =>
+  /// How long [workout] lasts.
+  static Duration duration(Workout workout) =>
       (workout.finishedAt ?? workout.startedAt).difference(workout.startedAt);
 
   /// Stores the workout, its unticked sets left out, with the stats of its
-  /// exercises, before and after, rebuilt.
+  /// exercises, before and after, rebuilt; refused while in conflict.
   Future<void> save() async {
     final uid = _uid;
     final edited = state.workout;
     if (uid == null ||
         edited == null ||
-        state.status != WorkoutEditStatus.editing) {
+        state.status != WorkoutEditStatus.editing ||
+        state.conflict != null) {
       return;
     }
     final workout = edited.copyWith(name: edited.name.trim());
-    final issue = workout.doneSetCount == 0
-        ? WorkoutEditIssue.noDoneSet
-        : workout.startedAt.isAfter(_clock())
-        ? WorkoutEditIssue.startInFuture
-        : null;
-    if (issue != null) {
+    if (changeIssue(workout, _clock()) case final issue?) {
       emit(state.copyWith(issue: () => issue));
       return;
     }
@@ -300,10 +361,11 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     if (isClosed || state.status != WorkoutEditStatus.saving) return;
     switch (result) {
       case Err(failure: ValidationFailure()):
+        // The clock moved on since the check above.
         emit(
           state.copyWith(
             status: WorkoutEditStatus.editing,
-            issue: () => WorkoutEditIssue.invalid,
+            issue: () => WorkoutChangeIssue.invalid,
           ),
         );
       case Err(:final failure):
@@ -314,6 +376,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
           ),
         );
       case Ok(value: final stale):
+        unawaited(_workoutSubscription?.cancel());
         _changed(uid, workout.id, deleted: false, staleStats: stale);
         emit(state.copyWith(status: WorkoutEditStatus.saved));
     }

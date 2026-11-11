@@ -34,6 +34,9 @@ abstract final class WorkoutLimits {
   static const maxWeightKg = 1000.0;
   static const maxDurationS = 86400;
 
+  /// The longest a stored workout can be set to last.
+  static const maxWorkoutDuration = Duration(hours: 24);
+
   /// 5 stands for "5 or more".
   static const maxRir = 5;
 }
