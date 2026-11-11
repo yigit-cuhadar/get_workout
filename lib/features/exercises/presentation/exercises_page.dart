@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import 'equipment_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
@@ -44,15 +46,34 @@ class _ExercisesViewState extends State<_ExercisesView> {
     final l10n = AppLocalizations.of(context);
     final view = context.select((LibraryCubit library) => library.state.view);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.tabExercises)),
-      // Favourites and equipment change only on this tab's pages, which all
-      // sit above this one, so their failures are reported once, here.
+      appBar: AppBar(
+        title: Text(l10n.tabExercises),
+        actions: [
+          if (view == LibraryView.list)
+            IconButton(
+              tooltip: l10n.customNew,
+              icon: const Icon(Icons.add),
+              onPressed: () => context.push(Routes.customExerciseNew),
+            ),
+        ],
+      ),
+      // Favourites, equipment and custom exercises change only on this tab's
+      // pages, which all sit above this one, so their failures are reported
+      // once, here.
       body: MultiBlocListener(
         listeners: [
           BlocListener<FavoritesCubit, FavoritesState>(
             listenWhen: (previous, current) =>
                 current.failure != null && current.failure != previous.failure,
             listener: (context, _) => _report(context, l10n.favoriteSaveFailed),
+          ),
+          BlocListener<LibraryCubit, LibraryState>(
+            listenWhen: (previous, current) =>
+                current.customWriteRejected && !previous.customWriteRejected,
+            listener: (context, _) {
+              _report(context, l10n.customWriteRejected);
+              context.read<LibraryCubit>().rejectionShown();
+            },
           ),
           BlocListener<EquipmentCubit, EquipmentState>(
             listenWhen: (previous, current) =>

@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../../core/user_stream_follower.dart';
 import '../domain/exercise.dart';
+import '../domain/exercise_queries.dart';
 import '../domain/exercise_usecases.dart';
 
 sealed class ExerciseCatalogueState extends Equatable {
@@ -22,7 +24,8 @@ final class CatalogueLoading extends ExerciseCatalogueState {
 final class CatalogueReady extends ExerciseCatalogueState {
   const CatalogueReady(this.exercises);
 
-  /// Live exercises by popularity. Stays after a later sync fails.
+  /// Live exercises and the signed-in user's custom ones, by popularity.
+  /// Stays after a later sync fails.
   final List<Exercise> exercises;
 
   @override
@@ -39,19 +42,41 @@ final class CatalogueFailed extends ExerciseCatalogueState {
   List<Object?> get props => [failure];
 }
 
-/// The exercise catalogue for the whole app. Syncs once a user is signed in
-/// (the rules require a session, guests included), on [retry], and when the
-/// app returns to the foreground at most once per [resyncInterval].
+/// The exercise catalogue for the whole app, with the custom exercises of
+/// whoever is signed in merged in, so everything listing exercises lists
+/// those too. A change of user drops the previous user's at once.
+///
+/// Syncs once a user is signed in (the rules require a session, guests
+/// included), on [retry], and when the app returns to the foreground at most
+/// once per [resyncInterval].
 class ExerciseCatalogueCubit extends Cubit<ExerciseCatalogueState> {
   ExerciseCatalogueCubit({
     required WatchAuthUser watchAuthUser,
     required WatchExercises watchExercises,
+    required WatchCustomExercises watchCustomExercises,
     required this._syncExercises,
     this.resyncInterval = const Duration(minutes: 5),
     this._now = DateTime.now,
+    Duration retryDelay = const Duration(seconds: 1),
   }) : super(const CatalogueLoading()) {
-    _exercisesSubscription = watchExercises().listen(
-      (exercises) => emit(CatalogueReady(exercises)),
+    _exercisesSubscription = watchExercises().listen((exercises) {
+      _catalogue = exercises;
+      _publish();
+    });
+    _customFollower = UserStreamFollower(
+      userIds: watchAuthUser().map((user) => user?.id),
+      watch: watchCustomExercises.call,
+      onUser: (_) {
+        if (_custom.isEmpty) return;
+        _custom = const [];
+        _publish();
+      },
+      onData: (custom) {
+        _custom = custom;
+        _publish();
+      },
+      logTag: 'customExercises',
+      retryDelay: retryDelay,
     );
     _userSubscription = watchAuthUser()
         .where((user) => user != null)
@@ -66,11 +91,24 @@ class ExerciseCatalogueCubit extends Cubit<ExerciseCatalogueState> {
   final Duration resyncInterval;
   final DateTime Function() _now;
   late final StreamSubscription<List<Exercise>> _exercisesSubscription;
+  late final UserStreamFollower<List<Exercise>> _customFollower;
   late final StreamSubscription<Object?> _userSubscription;
+  List<Exercise>? _catalogue;
+  List<Exercise> _custom = const [];
   bool _signedIn = false;
   DateTime? _lastSync;
 
-  Future<void> retry() => _signedIn ? _sync() : Future.value();
+  /// Custom exercises alone are no catalogue: they wait for it.
+  void _publish() {
+    final catalogue = _catalogue;
+    if (catalogue == null || isClosed) return;
+    emit(CatalogueReady(withCustomExercises(catalogue, _custom)));
+  }
+
+  Future<void> retry() {
+    _customFollower.resume();
+    return _signedIn ? _sync() : Future.value();
+  }
 
   /// Call when the app returns to the foreground.
   Future<void> appResumed() {
@@ -96,6 +134,7 @@ class ExerciseCatalogueCubit extends Cubit<ExerciseCatalogueState> {
   @override
   Future<void> close() async {
     await _userSubscription.cancel();
+    await _customFollower.cancel();
     await _exercisesSubscription.cancel();
     return super.close();
   }
