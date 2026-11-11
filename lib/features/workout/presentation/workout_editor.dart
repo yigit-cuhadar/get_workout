@@ -10,9 +10,6 @@ import '../domain/set_logging.dart';
 import '../domain/workout.dart';
 import '../domain/workout_editing.dart' as editing;
 
-/// A set of the workout: its exercise's index and its own.
-typedef SetRef = ({int exercise, int set});
-
 /// What the exercise sections and set rows show of a workout being edited.
 abstract interface class EditedWorkout {
   Workout? get workout;
@@ -35,7 +32,9 @@ abstract interface class EditedWorkout {
 /// [edit], which decides whether the workout can be changed now.
 mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   /// Applies [change] to the workout, when it can be edited now.
-  void edit(Workout Function(Workout workout) change);
+  /// [movesSets] tells that sets may have moved or gone, so a reference
+  /// to one held elsewhere may no longer point at it.
+  void edit(Workout Function(Workout workout) change, {bool movesSets = false});
 
   /// Ticks the set done, or unticks it.
   void toggleDone(SetRef ref);
@@ -64,6 +63,7 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
 
   void removeExercise(int index) => _editExercises(
     (list) => _has(list, index) ? grouping.removeItem(list, index) : list,
+    movesSets: true,
   );
 
   void swapExercise(int index, Exercise exercise, String language) =>
@@ -74,6 +74,7 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     (list) => _has(list, from) && _has(list, to)
         ? grouping.moveItem(list, from, to)
         : list,
+    movesSets: true,
   );
 
   void linkWithNext(int index) => _editExercises(
@@ -113,6 +114,7 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     (e) => _has(e.sets, ref.set)
         ? e.copyWith(sets: [...e.sets]..removeAt(ref.set))
         : e,
+    movesSets: true,
   );
 
   /// [text] is in [unit]; blank clears it.
@@ -171,13 +173,20 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   void setDropReps(SetRef ref, int drop, String text) =>
       _editDrop(ref, drop, (d) => d.copyWith(reps: () => _whole(text)));
 
-  /// The set ticked done with its empty values taken from
-  /// [EditedWorkout.suggestion], or unticked; null when it is missing, or
-  /// still lacks values and cannot be ticked.
+  /// Whether the workout has the set [ref].
+  bool hasSet(SetRef ref) =>
+      state.workout?.exercises
+          .elementAtOrNull(ref.exercise)
+          ?.sets
+          .elementAtOrNull(ref.set) !=
+      null;
+
+  /// Existing set [ref] ticked done with its empty values taken from
+  /// [EditedWorkout.suggestion], or unticked; null when it still lacks
+  /// values and cannot be ticked.
   WorkoutSet? toggledSet(SetRef ref) {
-    final exercise = state.workout?.exercises.elementAtOrNull(ref.exercise);
-    final set = exercise?.sets.elementAtOrNull(ref.set);
-    if (exercise == null || set == null) return null;
+    final exercise = state.workout!.exercises[ref.exercise];
+    final set = exercise.sets[ref.set];
     return set.done
         ? set.copyWith(done: false)
         : completeSet(set, exercise.loggingType, state.suggestion(ref));
@@ -222,15 +231,20 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
 
   void _editExercise(
     int index,
-    WorkoutExercise Function(WorkoutExercise exercise) change,
-  ) => _editExercises(
+    WorkoutExercise Function(WorkoutExercise exercise) change, {
+    bool movesSets = false,
+  }) => _editExercises(
     (list) => [for (final (i, e) in list.indexed) i == index ? change(e) : e],
+    movesSets: movesSets,
   );
 
   void _editExercises(
-    List<WorkoutExercise> Function(List<WorkoutExercise> list) change,
-  ) =>
-      edit((workout) => workout.copyWith(exercises: change(workout.exercises)));
+    List<WorkoutExercise> Function(List<WorkoutExercise> list) change, {
+    bool movesSets = false,
+  }) => edit(
+    (workout) => workout.copyWith(exercises: change(workout.exercises)),
+    movesSets: movesSets,
+  );
 
   static bool _has(List<Object?> list, int index) =>
       index >= 0 && index < list.length;

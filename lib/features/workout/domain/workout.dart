@@ -17,6 +17,9 @@ enum SetType implements Coded {
   final String code;
 }
 
+/// A set of a workout: its exercise's index and its own.
+typedef SetRef = ({int exercise, int set});
+
 /// Limits of what a workout holds. Lengths count UTF-16 code units, as the
 /// rules do.
 abstract final class WorkoutLimits {

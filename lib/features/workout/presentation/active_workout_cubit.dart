@@ -337,18 +337,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   /// unticked.
   @override
   void toggleDone(SetRef ref) {
-    final workout = state.workout;
-    if (state.status != WorkoutStatus.active ||
-        workout == null ||
-        !_has(workout.exercises, ref.exercise) ||
-        !_has(workout.exercises[ref.exercise].sets, ref.set)) {
-      return;
-    }
-    final exercise = workout.exercises[ref.exercise];
-    final set = exercise.sets[ref.set];
-    final toggled = set.done
-        ? set.copyWith(done: false)
-        : completeSet(set, exercise.loggingType, state.suggestion(ref));
+    if (state.status != WorkoutStatus.active || !hasSet(ref)) return;
+    final toggled = toggledSet(ref);
     if (toggled == null) {
       emit(state.copyWith(invalidSet: () => ref));
       return;
@@ -578,7 +568,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   /// Applies [change] to the workout in progress and keeps the result.
   @override
-  void edit(Workout Function(Workout workout) change) {
+  void edit(
+    Workout Function(Workout workout) change, {
+    bool movesSets = false,
+  }) {
     final workout = state.workout;
     if (state.status != WorkoutStatus.active || workout == null) return;
     final changed = change(workout);
@@ -649,9 +642,6 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     _statsSubscriptions.clear();
     if (state.stats.isNotEmpty) emit(state.copyWith(stats: const {}));
   }
-
-  static bool _has(List<Object?> list, int index) =>
-      index >= 0 && index < list.length;
 
   @override
   Future<void> close() async {

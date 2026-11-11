@@ -217,9 +217,13 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     }
   }
 
-  /// Applies [change] while editing.
+  /// Applies [change] while editing; no reference to a set is kept here,
+  /// so [movesSets] does not matter.
   @override
-  void edit(Workout Function(Workout workout) change) {
+  void edit(
+    Workout Function(Workout workout) change, {
+    bool movesSets = false,
+  }) {
     final workout = state.workout;
     if (state.status != WorkoutEditStatus.editing || workout == null) return;
     final changed = change(workout);
@@ -232,7 +236,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
   /// [WorkoutEditState.invalidSet].
   @override
   void toggleDone(SetRef ref) {
-    if (state.status != WorkoutEditStatus.editing) return;
+    if (state.status != WorkoutEditStatus.editing || !hasSet(ref)) return;
     final toggled = toggledSet(ref);
     if (toggled == null) {
       emit(state.copyWith(invalidSet: () => ref));
