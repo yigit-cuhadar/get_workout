@@ -29,6 +29,10 @@ import 'package:get_workout/features/calculators/presentation/macros_page.dart';
 import 'package:get_workout/features/calculators/presentation/one_rep_max_page.dart';
 import 'package:get_workout/features/calculators/presentation/plates_page.dart';
 import 'package:get_workout/features/profile/presentation/profile_page.dart';
+import 'package:get_workout/features/programs/domain/program_repository.dart';
+import 'package:get_workout/features/programs/domain/program_usecases.dart';
+import 'package:get_workout/features/programs/data/no_completed_days.dart';
+import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/features/programs/presentation/programs_page.dart';
 import 'package:get_workout/features/settings/domain/settings_repository.dart';
 import 'package:get_workout/features/settings/domain/settings_usecases.dart';
@@ -46,6 +50,8 @@ class MockSettingsRepository extends Mock implements SettingsRepository {}
 class MockExerciseRepository extends Mock implements ExerciseRepository {}
 
 class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
+
+class MockProgramRepository extends Mock implements ProgramRepository {}
 
 const _squat = Exercise(
   id: 'squat',
@@ -137,6 +143,25 @@ void main() {
       saveEquipment: SaveOwnedEquipment(userLibrary),
     );
     bodyModel = BodyModelCubit(() async => throw const FormatException());
+    // Programs are covered by their own tests; here the user has none.
+    final programAuth = MockAuthRepository();
+    when(programAuth.watchUser).thenAnswer((_) => Stream.value(guest));
+    final programs = MockProgramRepository();
+    when(() => programs.watchPrograms(any()))
+        .thenAnswer((_) => Stream.value(const []));
+    when(() => programs.watchActiveProgram(any()))
+        .thenAnswer((_) => Stream.value(null));
+    when(() => programs.rejectedWrites).thenAnswer((_) => const Stream.empty());
+    sl.registerLazySingleton(
+      () => ProgramListCubit(
+        watchAuthUser: WatchAuthUser(programAuth),
+        watchPrograms: WatchPrograms(programs),
+        watchActiveProgram: WatchActiveProgram(programs),
+        watchCompletedDays: const WatchCompletedDays(NoCompletedDays()),
+        watchRejectedWrites: WatchRejectedProgramWrites(programs),
+      ),
+      dispose: (cubit) => cubit.close(),
+    );
     sl
       ..registerLazySingleton(
         () => LibraryCubit(

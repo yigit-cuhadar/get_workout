@@ -19,6 +19,9 @@ import '../features/calculators/presentation/plates_page.dart';
 import '../features/exercises/presentation/exercise_detail_page.dart';
 import '../features/exercises/presentation/exercises_page.dart';
 import '../features/profile/presentation/profile_page.dart';
+import '../features/programs/presentation/exercise_picker_page.dart';
+import '../features/programs/presentation/program_builder_page.dart';
+import '../features/programs/presentation/program_detail_page.dart';
 import '../features/programs/presentation/programs_page.dart';
 import '../features/progress/presentation/progress_page.dart';
 import '../features/today/presentation/today_page.dart';
@@ -32,6 +35,14 @@ abstract final class Routes {
 
   static const today = '/today';
   static const programs = '/programs';
+  static const programNew = '$programs/new';
+  static String program(String id) => '$programs/${Uri.encodeComponent(id)}';
+  static String programEdit(String id) => '${program(id)}/edit';
+
+  /// Pops with the chosen exercises: up to [max], or with [multiple] off
+  /// the one tapped.
+  static String exercisePicker({required int max, required bool multiple}) =>
+      '$programs/pick?max=$max&multiple=$multiple';
   static const exercises = '/exercises';
   static String exercise(String id) => '$exercises/${Uri.encodeComponent(id)}';
   static const progress = '/progress';
@@ -99,7 +110,41 @@ GoRouter buildRouter(AuthCubit auth) {
         builder: (_, _, shell) => AppShell(shell: shell),
         branches: [
           _tab(Routes.today, const TodayPage()),
-          _tab(Routes.programs, const ProgramsPage()),
+          _tab(
+            Routes.programs,
+            const ProgramsPage(),
+            routes: [
+              // Before ':id', which would match these too.
+              GoRoute(
+                path: 'new',
+                builder: (_, _) => const ProgramBuilderPage(),
+              ),
+              GoRoute(
+                path: 'pick',
+                builder: (_, state) {
+                  final query = state.uri.queryParameters;
+                  final max = int.tryParse(query['max'] ?? '') ?? 1;
+                  return ExercisePickerPage(
+                    max: max < 1 ? 1 : max,
+                    multiple: query['multiple'] == 'true',
+                  );
+                },
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (_, state) =>
+                    ProgramDetailPage(id: state.pathParameters['id']!),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (_, state) => ProgramBuilderPage(
+                      programId: state.pathParameters['id'],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
           _tab(
             Routes.exercises,
             const ExercisesPage(),

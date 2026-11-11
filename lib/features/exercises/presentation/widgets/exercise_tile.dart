@@ -9,17 +9,31 @@ import '../favorites_cubit.dart';
 import '../vocabulary_labels.dart';
 
 /// A row opening the exercise's detail page: name, main muscles and
-/// equipment, with a favourite star when [showFavorite].
+/// equipment, with a favourite star when [showFavorite]. With [onSelect] it
+/// shows a checkbox for [selected] and selects instead.
 class ExerciseTile extends StatelessWidget {
-  const ExerciseTile(this.exercise, {super.key, this.showFavorite = false});
+  const ExerciseTile(
+    this.exercise, {
+    super.key,
+    this.showFavorite = false,
+    this.selected = false,
+    this.onSelect,
+  });
 
   final Exercise exercise;
   final bool showFavorite;
+  final bool selected;
+  final VoidCallback? onSelect;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final onSelect = this.onSelect;
     return ListTile(
+      leading: onSelect == null
+          ? null
+          : Checkbox(value: selected, onChanged: (_) => onSelect()),
+      selected: selected,
       title: Text(exercise.localized(context).name),
       subtitle: Text(
         l10n.exerciseSummary(
@@ -28,7 +42,7 @@ class ExerciseTile extends StatelessWidget {
         ),
       ),
       trailing: showFavorite ? FavoriteButton(exercise.id) : null,
-      onTap: () => context.push(Routes.exercise(exercise.id)),
+      onTap: onSelect ?? () => context.push(Routes.exercise(exercise.id)),
     );
   }
 }

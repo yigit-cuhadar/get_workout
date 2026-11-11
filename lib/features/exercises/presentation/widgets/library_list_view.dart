@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/exercise.dart';
 import '../../domain/exercise_queries.dart';
 import '../library_cubit.dart';
 import '../vocabulary_labels.dart';
@@ -11,8 +12,13 @@ import 'filter_sheet.dart';
 
 /// Search, filters, sort and the resulting exercises. Everything the model
 /// offers is reachable here too, which makes it the screen reader's path.
+///
+/// Each result is an [ExerciseTile] opening its detail, or what [tileBuilder]
+/// builds, e.g. to select exercises instead.
 class LibraryListView extends StatefulWidget {
-  const LibraryListView({super.key});
+  const LibraryListView({super.key, this.tileBuilder});
+
+  final Widget Function(BuildContext context, Exercise exercise)? tileBuilder;
 
   @override
   State<LibraryListView> createState() => _LibraryListViewState();
@@ -114,7 +120,8 @@ class _LibraryListViewState extends State<LibraryListView> {
                       keyboardDismissBehavior:
                           ScrollViewKeyboardDismissBehavior.onDrag,
                       itemCount: results.length,
-                      itemBuilder: (_, index) =>
+                      itemBuilder: (context, index) =>
+                          widget.tileBuilder?.call(context, results[index]) ??
                           ExerciseTile(results[index], showFavorite: true),
                     ),
             ),
