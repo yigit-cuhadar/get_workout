@@ -35,6 +35,7 @@ class ProgramBuilderState extends Equatable {
     this.selectedDay = 0,
     this.exercises = const {},
     this.catalogueReady = false,
+    this.customExercisesReady = false,
     this.validation = const ProgramValidation(),
     this.dirty = false,
     this.failure,
@@ -56,6 +57,10 @@ class ProgramBuilderState extends Equatable {
 
   /// Until the catalogue is known no item counts as unavailable.
   final bool catalogueReady;
+
+  /// Until the user's custom exercises are known in [exercises] no item of
+  /// a custom exercise counts as unavailable.
+  final bool customExercisesReady;
 
   /// Shown once a save was attempted, then kept up to date.
   final ProgramValidation validation;
@@ -79,7 +84,19 @@ class ProgramBuilderState extends Equatable {
   bool get canAddDay => program.days.length < ProgramLimits.maxDays;
 
   bool isUnavailable(ProgramItem item) =>
-      catalogueReady && !exercises.containsKey(item.exerciseId);
+      _knows(item.exerciseId) && !exercises.containsKey(item.exerciseId);
+
+  bool _knows(String exerciseId) =>
+      catalogueReady &&
+      (customExercisesReady || !Exercise.isCustomId(exerciseId));
+
+  /// Whether every item's exercise is known to exist or not, so the program
+  /// can be validated.
+  bool get canResolve =>
+      catalogueReady &&
+      program.days.every(
+        (day) => day.items.every((item) => _knows(item.exerciseId)),
+      );
 
   /// What is wrong with item [index] of the selected day right now, for the
   /// item editor, whether or not a save was attempted.
@@ -97,6 +114,7 @@ class ProgramBuilderState extends Equatable {
     int? selectedDay,
     Map<String, Exercise>? exercises,
     bool? catalogueReady,
+    bool? customExercisesReady,
     ProgramValidation? validation,
     bool? dirty,
     Failure? failure,
@@ -108,6 +126,7 @@ class ProgramBuilderState extends Equatable {
     selectedDay: selectedDay ?? this.selectedDay,
     exercises: exercises ?? this.exercises,
     catalogueReady: catalogueReady ?? this.catalogueReady,
+    customExercisesReady: customExercisesReady ?? this.customExercisesReady,
     validation: validation ?? this.validation,
     dirty: dirty ?? this.dirty,
     failure: failure,
@@ -122,6 +141,7 @@ class ProgramBuilderState extends Equatable {
     selectedDay,
     exercises,
     catalogueReady,
+    customExercisesReady,
     validation,
     dirty,
     failure,
@@ -177,7 +197,8 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
   /// What [ProgramBuilderState.dirty] compares against.
   Program _initial = _empty;
   bool _submitted = false;
-  bool _fitted = false;
+  bool _fittedCatalogue = false;
+  bool _fittedCustom = false;
 
   static const _empty = Program(name: '', days: [ProgramDay()]);
 
@@ -227,6 +248,7 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
       state.copyWith(
         exercises: exercises,
         catalogueReady: true,
+        customExercisesReady: catalogue.customLoaded,
         validation: _submitted ? _validate(state.program, exercises) : null,
       ),
     );
@@ -236,23 +258,30 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
   void adjustedShown() => emit(state.copyWith(adjusted: const []));
 
   /// Once a stored program and the catalogue are both known, fits every item
-  /// to its exercise's logging type, which an admin may have changed since
-  /// the program was saved. The program is then unsaved.
+  /// to its exercise's logging type, which an admin (or the user, for a
+  /// custom exercise) may have changed since the program was saved. Items
+  /// of custom exercises are fitted once those arrive, which can be later.
+  /// The program is then unsaved.
   void _fitToExercises() {
-    if (_fitted ||
-        !isEditing ||
+    if (!isEditing ||
         !state.catalogueReady ||
         state.status != ProgramBuilderStatus.editing) {
       return;
     }
-    _fitted = true;
+    final fitCatalogue = !_fittedCatalogue;
+    final fitCustom = !_fittedCustom && state.customExercisesReady;
+    if (!fitCatalogue && !fitCustom) return;
+    _fittedCatalogue = true;
+    if (fitCustom) _fittedCustom = true;
+    bool due(ProgramItem item) =>
+        Exercise.isCustomId(item.exerciseId) ? fitCustom : fitCatalogue;
     final adjusted = <String>{};
     final days = [
       for (final day in state.program.days)
         day.copyWith(
           items: [
             for (final item in day.items)
-              switch (state.exercises[item.exerciseId]) {
+              switch (due(item) ? state.exercises[item.exerciseId] : null) {
                 null => item,
                 final exercise => () {
                   final fitted = editing.fitToLoggingType(
@@ -268,7 +297,7 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
     ];
     if (adjusted.isEmpty) return;
     _edit(state.program.copyWith(days: days));
-    emit(state.copyWith(adjusted: adjusted.toList()));
+    emit(state.copyWith(adjusted: {...state.adjusted, ...adjusted}.toList()));
   }
 
   void setName(String name) => _edit(state.program.copyWith(name: name));
@@ -386,7 +415,7 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
   }
 
   Future<void> save() async {
-    if (!state.catalogueReady ||
+    if (!state.canResolve ||
         (state.status != ProgramBuilderStatus.editing &&
             state.status != ProgramBuilderStatus.saveFailed)) {
       return;

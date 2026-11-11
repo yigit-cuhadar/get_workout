@@ -18,7 +18,8 @@ sealed class ExerciseDetailState extends Equatable {
   List<Object?> get props => [];
 }
 
-/// The catalogue has not arrived yet.
+/// The catalogue has not arrived yet, or, for a custom exercise, the
+/// user's custom exercises have not.
 final class DetailLoading extends ExerciseDetailState {
   const DetailLoading();
 }
@@ -124,7 +125,7 @@ class ExerciseDetailCubit extends Cubit<ExerciseDetailState> {
   ExerciseDetailState _current() => switch (_catalogue) {
     CatalogueLoading() => const DetailLoading(),
     CatalogueFailed() => const DetailFailed(),
-    CatalogueReady(:final exercises) => _detail(exercises),
+    CatalogueReady() && final ready => _detail(ready),
   };
 
   /// Deletes the shown custom exercise; does nothing for a catalogue one.
@@ -153,9 +154,14 @@ class ExerciseDetailCubit extends Cubit<ExerciseDetailState> {
     }
   }
 
-  ExerciseDetailState _detail(List<Exercise> catalogue) {
+  ExerciseDetailState _detail(CatalogueReady ready) {
+    final catalogue = ready.exercises;
     final exercise = catalogue.where((e) => e.id == exerciseId).firstOrNull;
-    if (exercise == null) return const DetailNotFound();
+    if (exercise == null) {
+      return ready.knows(exerciseId)
+          ? const DetailNotFound()
+          : const DetailLoading();
+    }
     return DetailReady(
       exercise,
       // Unknown equipment counts as bodyweight only.

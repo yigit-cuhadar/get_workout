@@ -143,7 +143,10 @@ class Exercise extends Equatable {
   /// The user's own note; only a custom exercise has one.
   final String? note;
 
-  bool get isCustom => id.startsWith(customIdPrefix);
+  bool get isCustom => isCustomId(id);
+
+  /// Whether [id] names a custom exercise, known or not.
+  static bool isCustomId(String id) => id.startsWith(customIdPrefix);
 
   /// The text in [language], or in [fallbackLanguage] when there is none.
   ExerciseText text(String language) =>

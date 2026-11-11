@@ -51,13 +51,16 @@ class CustomExerciseEditPage extends StatelessWidget {
           return Scaffold(
             appBar: AppBar(title: Text(l10n.customEditTitle)),
             body: switch (state) {
-              CatalogueLoading() => const LoadingView(),
               CatalogueFailed() => ErrorView(
                 message: l10n.libraryLoadFailed,
                 retryLabel: l10n.retry,
                 onRetry: context.read<ExerciseCatalogueCubit>().retry,
               ),
-              CatalogueReady() => EmptyView(message: l10n.detailNotFound),
+              CatalogueReady() when state.knows(exerciseId) => EmptyView(
+                message: l10n.detailNotFound,
+              ),
+              // Still waiting for the user's custom exercises.
+              CatalogueLoading() || CatalogueReady() => const LoadingView(),
             },
           );
         },

@@ -215,6 +215,38 @@ void main() {
   });
 
   blocTest<ExerciseDetailCubit, ExerciseDetailState>(
+    "a custom exercise waits for the user's custom exercises, never not found",
+    setUp: () => whenListen(
+      catalogue,
+      catalogueChanges.stream,
+      initialState: CatalogueReady(_all, customLoaded: false),
+    ),
+    build: () => build('custom_press'),
+    act: (_) async {
+      catalogueChanges.add(CatalogueReady([_custom, ..._all]));
+      await pumpEventQueue();
+      catalogueChanges.add(CatalogueReady(_all));
+    },
+    expect: () => [DetailReady(_custom), const DetailNotFound()],
+    verify: (_) => expect(
+      build('custom_gone').state,
+      const DetailNotFound(),
+      reason: 'a catalogue that knows its custom exercises',
+    ),
+  );
+
+  test('a catalogue id is resolved without custom exercises', () {
+    whenListen(
+      catalogue,
+      catalogueChanges.stream,
+      initialState: CatalogueReady(_all, customLoaded: false),
+    );
+    expect(build('bench').state, isA<DetailReady>());
+    expect(build('retired').state, const DetailNotFound());
+    expect(build('custom_press').state, const DetailLoading());
+  });
+
+  blocTest<ExerciseDetailCubit, ExerciseDetailState>(
     'a catalogue exercise cannot be deleted',
     build: () => build('bench'),
     act: (cubit) => cubit.delete(),

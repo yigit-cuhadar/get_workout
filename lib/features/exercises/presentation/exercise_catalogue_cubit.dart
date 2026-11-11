@@ -22,14 +22,22 @@ final class CatalogueLoading extends ExerciseCatalogueState {
 }
 
 final class CatalogueReady extends ExerciseCatalogueState {
-  const CatalogueReady(this.exercises);
+  const CatalogueReady(this.exercises, {this.customLoaded = true});
 
   /// Live exercises and the signed-in user's custom ones, by popularity.
   /// Stays after a later sync fails.
   final List<Exercise> exercises;
 
+  /// Whether [exercises] hold the signed-in user's custom exercises. False
+  /// right after a user change and while their stream fails; until it turns
+  /// true, a missing custom id is not known to be gone.
+  final bool customLoaded;
+
+  /// Whether [exercises] knows if exercise [id] exists.
+  bool knows(String id) => customLoaded || !Exercise.isCustomId(id);
+
   @override
-  List<Object?> get props => [exercises];
+  List<Object?> get props => [exercises, customLoaded];
 }
 
 /// The first sync failed and nothing is cached: there is nothing to show.
@@ -45,6 +53,11 @@ final class CatalogueFailed extends ExerciseCatalogueState {
 /// The exercise catalogue for the whole app, with the custom exercises of
 /// whoever is signed in merged in, so everything listing exercises lists
 /// those too. A change of user drops the previous user's at once.
+///
+/// The first list waits for the user's custom exercises (they come from
+/// the local cache, so this is quick), or for their stream to fail; it is
+/// then published without them, [CatalogueReady.customLoaded] false, while
+/// the stream is retried.
 ///
 /// Syncs once a user is signed in (the rules require a session, guests
 /// included), on [retry], and when the app returns to the foreground at most
@@ -66,13 +79,20 @@ class ExerciseCatalogueCubit extends Cubit<ExerciseCatalogueState> {
     _customFollower = UserStreamFollower(
       userIds: watchAuthUser().map((user) => user?.id),
       watch: watchCustomExercises.call,
-      onUser: (_) {
-        if (_custom.isEmpty) return;
+      onUser: (uid) {
         _custom = const [];
+        // Nobody signed in has none.
+        _customLoaded = uid == null;
+        _customFailed = false;
         _publish();
       },
       onData: (custom) {
         _custom = custom;
+        _customLoaded = true;
+        _publish();
+      },
+      onError: (_) {
+        _customFailed = true;
         _publish();
       },
       logTag: 'customExercises',
@@ -95,14 +115,23 @@ class ExerciseCatalogueCubit extends Cubit<ExerciseCatalogueState> {
   late final StreamSubscription<Object?> _userSubscription;
   List<Exercise>? _catalogue;
   List<Exercise> _custom = const [];
+  bool _customLoaded = true;
+  bool _customFailed = false;
   bool _signedIn = false;
   DateTime? _lastSync;
 
-  /// Custom exercises alone are no catalogue: they wait for it.
+  /// Custom exercises alone are no catalogue: they wait for it. A first
+  /// list waits for them too, unless their stream failed.
   void _publish() {
     final catalogue = _catalogue;
     if (catalogue == null || isClosed) return;
-    emit(CatalogueReady(withCustomExercises(catalogue, _custom)));
+    if (!_customLoaded && !_customFailed && state is! CatalogueReady) return;
+    emit(
+      CatalogueReady(
+        withCustomExercises(catalogue, _custom),
+        customLoaded: _customLoaded,
+      ),
+    );
   }
 
   Future<void> retry() {

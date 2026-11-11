@@ -54,6 +54,10 @@ void main() {
   late StreamController<AuthUser?> users;
   late StreamController<List<Exercise>> exercises;
   late Map<String, StreamController<List<CustomExercise>>> custom;
+
+  /// What a user's custom stream emits first, as Firestore's cache does;
+  /// a user missing here gets nothing until the test adds it.
+  late Map<String, List<CustomExercise>> cached;
   late DateTime now;
 
   setUp(() {
@@ -64,22 +68,26 @@ void main() {
     users = StreamController<AuthUser?>.broadcast();
     exercises = StreamController<List<Exercise>>();
     custom = {};
+    cached = {'g1': [], 'u1': [], 'u2': []};
     now = DateTime(2026, 11, 11, 9);
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
     when(() => repository.watchExercises()).thenAnswer((_) => exercises.stream);
-    when(() => customRepository.watchCustomExercises(any())).thenAnswer(
-      (call) => custom
-          .putIfAbsent(
-            call.positionalArguments.single as String,
+    when(() => customRepository.watchCustomExercises(any()))
+        .thenAnswer((call) async* {
+          final uid = call.positionalArguments.single as String;
+          final controller = custom.putIfAbsent(
+            uid,
             StreamController<List<CustomExercise>>.broadcast,
-          )
-          .stream,
-    );
+          );
+          if (cached.remove(uid) case final first?) yield first;
+          yield* controller.stream;
+        });
   });
 
   tearDown(() async {
     await users.close();
-    await exercises.close();
+    // Never completes when no cubit listened.
+    unawaited(exercises.close());
     for (final controller in custom.values) {
       await controller.close();
     }
@@ -229,16 +237,17 @@ void main() {
     final press = _press.toExercise();
 
     blocTest<ExerciseCatalogueCubit, ExerciseCatalogueState>(
-      'wait for the catalogue, then come first in it',
-      setUp: () => syncPublishes([_squat]),
+      'on a cold start, the first list waits for them',
+      setUp: () {
+        cached.remove('g1');
+        syncPublishes([_squat]);
+      },
       build: build,
       act: (cubit) async {
-        when(() => repository.sync()).thenAnswer((_) async => const Ok(null));
         users.add(_guest);
         await pumpEventQueue();
+        expect(cubit.state, const CatalogueLoading());
         customOf('g1', [_press]);
-        await pumpEventQueue();
-        exercises.add([_squat]);
       },
       expect: () => [
         CatalogueReady([press, _squat]),
@@ -247,12 +256,13 @@ void main() {
 
     blocTest<ExerciseCatalogueCubit, ExerciseCatalogueState>(
       'follow edits and deletes',
-      setUp: () => syncPublishes([_squat]),
+      setUp: () {
+        cached['g1'] = [_press];
+        syncPublishes([_squat]);
+      },
       build: build,
       act: (cubit) async {
         users.add(_guest);
-        await pumpEventQueue();
-        customOf('g1', [_press]);
         await pumpEventQueue();
         customOf('g1', [
           const CustomExercise(
@@ -265,7 +275,6 @@ void main() {
         customOf('g1', []);
       },
       expect: () => [
-        const CatalogueReady([_squat]),
         CatalogueReady([press, _squat]),
         CatalogueReady([
           Exercise.custom(
@@ -281,13 +290,16 @@ void main() {
     );
 
     blocTest<ExerciseCatalogueCubit, ExerciseCatalogueState>(
-      "a change of user drops the previous user's at once",
-      setUp: () => syncPublishes([_squat]),
+      "a change of user drops the previous user's at once and says the new "
+      "user's are not loaded until they arrive",
+      setUp: () {
+        cached['g1'] = [_press];
+        cached.remove('u2');
+        syncPublishes([_squat]);
+      },
       build: build,
       act: (cubit) async {
         users.add(_guest);
-        await pumpEventQueue();
-        customOf('g1', [_press]);
         await pumpEventQueue();
         users.add(const AuthUser(id: 'u2', email: 'a@b.co'));
         await pumpEventQueue();
@@ -297,15 +309,18 @@ void main() {
         customOf('u2', []);
       },
       expect: () => [
-        const CatalogueReady([_squat]),
         CatalogueReady([press, _squat]),
+        const CatalogueReady([_squat], customLoaded: false),
         const CatalogueReady([_squat]),
       ],
     );
 
     blocTest<ExerciseCatalogueCubit, ExerciseCatalogueState>(
-      'keep the last list when their stream fails, and follow it again',
-      setUp: () => syncPublishes([_squat]),
+      'a failing stream does not hold the first list back, and is retried',
+      setUp: () {
+        cached.remove('g1');
+        syncPublishes([_squat]);
+      },
       build: () => ExerciseCatalogueCubit(
         watchAuthUser: WatchAuthUser(auth),
         watchExercises: WatchExercises(repository),
@@ -317,20 +332,42 @@ void main() {
       act: (cubit) async {
         users.add(_guest);
         await pumpEventQueue();
-        customOf('g1', [_press]);
-        await pumpEventQueue();
         custom['g1']!.addError(_offline);
         await pumpEventQueue();
-        customOf('g1', []);
+        customOf('g1', [_press]);
         await pumpEventQueue();
       },
       expect: () => [
-        const CatalogueReady([_squat]),
+        const CatalogueReady([_squat], customLoaded: false),
         CatalogueReady([press, _squat]),
-        const CatalogueReady([_squat]),
       ],
       verify: (_) =>
           verify(() => customRepository.watchCustomExercises('g1')).called(2),
     );
+
+    blocTest<ExerciseCatalogueCubit, ExerciseCatalogueState>(
+      'a failure later keeps the last list',
+      setUp: () {
+        cached['g1'] = [_press];
+        syncPublishes([_squat]);
+      },
+      build: build,
+      act: (cubit) async {
+        users.add(_guest);
+        await pumpEventQueue();
+        custom['g1']!.addError(_offline);
+        await pumpEventQueue();
+      },
+      expect: () => [
+        CatalogueReady([press, _squat]),
+      ],
+    );
+
+    test('a list without them knows only catalogue ids', () {
+      const ready = CatalogueReady([_squat], customLoaded: false);
+      expect(ready.knows('squat'), isTrue);
+      expect(ready.knows('custom_a'), isFalse);
+      expect(const CatalogueReady([_squat]).knows('custom_a'), isTrue);
+    });
   });
 }
