@@ -150,11 +150,17 @@ removed.
 Variations are the other exercises of the same `family`, ordered by rank.
 
 **`programs/{id}`** (catalog card): `status`, `premium`, `level`, `goal`,
-`daysPerWeek`, `lengthWeeks?`, `equipment[]`, `l10n.<lang>.{name, summary}`,
-`updatedAt`.
+`daysPerWeek`, `lengthWeeks?`, `equipment[]` (the primary `equipment` of
+every exercise used, computed by the validator), `equipmentProfile`
+(`full_gym` \| `home_gym` \| `dumbbells` \| `bodyweight` \| `bands`, for
+filtering; every exercise fits it through `equipment` or an alternative set),
+`order` (unique int, the catalogue's default sort),
+`l10n.<lang>.{name, summary}`, `updatedAt`, `contentHash`. Seeded from
+`content/programs/<id>.json`, which holds the card and `days` together.
 
-**`programs/{id}/detail/main`**: `days[]` (shape below). Readable when the
-program is not premium or the reader has an active entitlement.
+**`programs/{id}/detail/main`**: `days[]` (shape below, without `targetKg`),
+`updatedAt`, `contentHash`. Readable when the program is not premium or the
+reader has an active entitlement.
 
 ### Per user (read/write: owner only)
 

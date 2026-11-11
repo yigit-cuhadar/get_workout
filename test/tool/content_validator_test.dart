@@ -24,4 +24,47 @@ void main() {
       'ex_dumbbell_curl',
     ]);
   });
+
+  test('every program file passes validation against the real exercises', () {
+    final report = validateContent(
+      Directory('content/exercises'),
+      programs: Directory('content/programs'),
+    );
+
+    expect(report.errors, isEmpty);
+    expect(report.programs, hasLength(25));
+    final live = report.programs.where((p) => p.isLive);
+    expect(live.where((p) => p.isPremium), hasLength(19));
+    expect(live.where((p) => !p.isPremium), hasLength(6));
+  });
+
+  group('program files', () {
+    late Directory dir;
+    setUp(() => dir = Directory.systemTemp.createTempSync('programs'));
+    tearDown(() => dir.deleteSync(recursive: true));
+
+    List<String> errors() => validateContent(
+      Directory('test/tool/fixtures/broken'),
+      programs: dir,
+    ).errors.where((e) => e.startsWith('pr_')).toList();
+
+    test('are one JSON object each, named after the id', () {
+      File('${dir.path}/pr_list.json').writeAsStringSync('[]');
+      File('${dir.path}/pr_other.json').writeAsStringSync('{"id": "pr_a"}');
+      File('${dir.path}/pr_bad.json').writeAsStringSync('{');
+
+      final found = errors();
+      expect(found, contains(startsWith('pr_bad.json: invalid JSON')));
+      expect(found, contains('pr_list.json: top level must be a JSON object'));
+      expect(
+        found,
+        contains('pr_other.json [pr_a]: file must be named pr_a.json'),
+      );
+      // The rules run on a misnamed file too.
+      expect(
+        found,
+        contains('pr_other.json [pr_a]: premium must be true or false'),
+      );
+    });
+  });
 }
