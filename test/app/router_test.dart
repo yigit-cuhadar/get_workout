@@ -59,6 +59,8 @@ import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'no_workout.dart';
+
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
@@ -312,6 +314,7 @@ void main() {
       providers: [
         BlocProvider.value(value: auth),
         BlocProvider.value(value: settings),
+        noWorkout(),
         BlocProvider.value(value: profile),
         BlocProvider.value(value: catalogue),
         BlocProvider.value(value: favorites),

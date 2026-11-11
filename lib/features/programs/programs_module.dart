@@ -9,6 +9,7 @@ import 'data/no_completed_days.dart';
 import 'domain/completed_days.dart';
 import 'domain/program_repository.dart';
 import 'domain/program_usecases.dart';
+import 'presentation/add_to_program_cubit.dart';
 import 'presentation/exercise_picker_cubit.dart';
 import 'presentation/program_builder_cubit.dart';
 import 'presentation/program_detail_cubit.dart';
@@ -48,7 +49,6 @@ class ProgramsModule implements FeatureModule {
       ..registerFactory(() => ChangeWeekdays(sl()))
       ..registerFactory(() => StopProgram(sl()))
       ..registerFactory(() => ResolveMissedDay(sl()))
-      ..registerFactory(() => CompleteProgramDay(sl()))
       // One list for the whole app: the tab and the program pages share it.
       ..registerLazySingleton(
         () => ProgramListCubit(
@@ -82,6 +82,15 @@ class ProgramsModule implements FeatureModule {
           watchAuthUser: sl(),
           catalogue: sl(),
           weightUnit: unit,
+        ),
+      )
+      ..registerFactory(() => AddExerciseToProgram(sl()))
+      ..registerFactory(
+        () => AddToProgramCubit(
+          list: sl(),
+          addExercise: sl(),
+          catalogue: sl(),
+          getCurrentUser: sl(),
         ),
       )
       ..registerFactoryParam<ExercisePickerCubit, int, bool>(

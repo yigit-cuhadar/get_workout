@@ -31,6 +31,7 @@ import '../features/programs/presentation/programs_page.dart';
 import '../features/progress/presentation/progress_page.dart';
 import '../features/subscription/presentation/paywall_page.dart';
 import '../features/today/presentation/today_page.dart';
+import '../features/workout/presentation/workout_page.dart';
 import '../l10n/app_localizations.dart';
 import 'app_shell.dart';
 
@@ -74,6 +75,14 @@ abstract final class Routes {
   static const cardioNew = '$cardio/new';
   static String cardioSession(String id) => '$cardio/$id';
   static const profile = '/profile';
+
+  /// The workout in progress, full screen above the tabs; push it so going
+  /// back minimizes it.
+  static const workout = '/workout';
+
+  /// [exercisePicker] above the workout.
+  static String workoutPicker({required int max, required bool multiple}) =>
+      '$workout/pick?max=$max&multiple=$multiple';
   static const account = '$profile/account';
 
   /// Opens in sign-up mode; [accountSignIn] opens it in sign-in mode.
@@ -189,6 +198,11 @@ GoRouter buildRouter(
         ],
       ),
       GoRoute(
+        path: Routes.workout,
+        builder: (_, _) => const WorkoutPage(),
+        routes: [GoRoute(path: 'pick', builder: (_, state) => _picker(state))],
+      ),
+      GoRoute(
         path: Routes.paywall,
         pageBuilder: (_, _) =>
             const MaterialPage(fullscreenDialog: true, child: PaywallPage()),
@@ -206,17 +220,7 @@ GoRouter buildRouter(
                 path: 'new',
                 builder: (_, _) => const ProgramBuilderPage(),
               ),
-              GoRoute(
-                path: 'pick',
-                builder: (_, state) {
-                  final query = state.uri.queryParameters;
-                  final max = int.tryParse(query['max'] ?? '') ?? 1;
-                  return ExercisePickerPage(
-                    max: max < 1 ? 1 : max,
-                    multiple: query['multiple'] == 'true',
-                  );
-                },
-              ),
+              GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
               GoRoute(
                 path: ':id',
                 builder: (_, state) => ProgramDetailPage(
@@ -351,6 +355,15 @@ _ProfileGate _profileGate(ProfileState state, {String? uid}) {
 
 ProfileField? _field(GoRouterState state) =>
     ProfileField.values.asNameMap()[state.pathParameters['field']];
+
+ExercisePickerPage _picker(GoRouterState state) {
+  final query = state.uri.queryParameters;
+  final max = int.tryParse(query['max'] ?? '') ?? 1;
+  return ExercisePickerPage(
+    max: max < 1 ? 1 : max,
+    multiple: query['multiple'] == 'true',
+  );
+}
 
 GoRoute _page(String path, Widget page) =>
     GoRoute(path: path, builder: (_, _) => page);

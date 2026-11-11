@@ -12,7 +12,9 @@ import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../settings/presentation/settings_cubit.dart';
+import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
+import '../../../core/grouping.dart';
 import '../domain/program_editing.dart';
 import '../domain/program_schedule.dart';
 import 'program_detail_cubit.dart';
@@ -210,7 +212,7 @@ class _ProgramDetailView extends StatelessWidget {
               if (program.lengthWeeks case final weeks?)
                 ListTile(title: Text(l10n.programWeekCount(weeks))),
               for (final (index, day) in program.days.indexed)
-                _DaySection(day: day, index: index),
+                _DaySection(program: program, day: day, index: index),
             ],
           ),
         );
@@ -292,8 +294,13 @@ class _ProgramDetailView extends StatelessWidget {
 }
 
 class _DaySection extends StatelessWidget {
-  const _DaySection({required this.day, required this.index});
+  const _DaySection({
+    required this.program,
+    required this.day,
+    required this.index,
+  });
 
+  final Program program;
   final ProgramDay day;
   final int index;
 
@@ -319,9 +326,16 @@ class _DaySection extends StatelessWidget {
             l10n.dayName(day, index),
             style: theme.textTheme.titleMedium,
           ),
-          trailing: day.items.isEmpty
+          subtitle: day.items.isEmpty
               ? null
               : Text(l10n.estimateText(estimateDay(day))),
+          trailing: day.items.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: l10n.workoutStartThisDay,
+                  icon: const Icon(Icons.play_arrow),
+                  onPressed: () => startProgramDay(context, program, index),
+                ),
         ),
         for (final (i, item) in day.items.indexed)
           ListTile(

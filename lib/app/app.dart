@@ -14,6 +14,7 @@ import '../features/profile/presentation/profile_cubit.dart';
 import '../features/exercises/presentation/favorites_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/settings_cubit.dart';
+import '../features/workout/presentation/active_workout_cubit.dart';
 import '../features/subscription/presentation/purchaser_session.dart';
 import '../features/subscription/subscription_module.dart';
 import '../l10n/app_localizations.dart';
@@ -65,6 +66,7 @@ class _AppState extends State<App> {
         BlocProvider.value(value: sl<FavoritesCubit>()),
         BlocProvider.value(value: sl<EquipmentCubit>()),
         BlocProvider.value(value: sl<BodyModelCubit>()),
+        BlocProvider.value(value: sl<ActiveWorkoutCubit>()),
         BlocProvider.value(value: sl<EntitlementCubit>()),
       ],
       child: BlocSelector<SettingsCubit, SettingsState, ThemePreference>(

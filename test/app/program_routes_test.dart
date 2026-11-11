@@ -41,6 +41,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../features/programs/fixtures.dart';
+import 'no_workout.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -201,6 +202,8 @@ void main() {
         providers: [
           BlocProvider.value(value: auth),
           BlocProvider.value(value: settings),
+          noWorkout(),
+          noWorkout(),
           BlocProvider.value(value: catalogue),
           BlocProvider.value(value: favorites),
           BlocProvider.value(value: equipment),

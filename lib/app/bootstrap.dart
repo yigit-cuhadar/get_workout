@@ -11,6 +11,7 @@ import '../features/exercises/exercises_module.dart';
 import '../features/profile/profile_module.dart';
 import '../features/programs/programs_module.dart';
 import '../features/settings/settings_module.dart';
+import '../features/workout/workout_module.dart';
 import '../features/subscription/subscription_module.dart';
 import 'app.dart';
 
@@ -26,7 +27,8 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     const CardioModule(),
     const CalculatorsModule(),
     const ExercisesModule(),
-    const ProgramsModule(completedDays: ProgramsModule.nothingDone),
+    const ProgramsModule(completedDays: WorkoutModule.completedDays),
+    const WorkoutModule(),
     SubscriptionModule(
       backend: purchasesBackend(
         platform: defaultTargetPlatform,
