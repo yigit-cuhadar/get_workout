@@ -1,5 +1,6 @@
 import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
+import 'package:get_workout/features/programs/domain/catalogue_program.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 
 /// An exercise with defaults for everything a program test does not care
@@ -67,3 +68,28 @@ const loggingTypes = {
   'plank': LoggingType.duration,
   'pushup': LoggingType.reps,
 };
+
+/// A ready-made program's card; free, beginner, three days of dumbbell work
+/// unless told otherwise.
+CatalogueProgram card(
+  String id, {
+  bool premium = false,
+  Level level = Level.beginner,
+  Goal goal = Goal.buildMuscle,
+  int daysPerWeek = 3,
+  int? lengthWeeks,
+  List<Equipment> equipment = const [Equipment.dumbbell, Equipment.bench],
+  EquipmentProfile profile = EquipmentProfile.dumbbells,
+  int order = 1,
+}) => CatalogueProgram(
+  id: id,
+  premium: premium,
+  level: level,
+  goal: goal,
+  daysPerWeek: daysPerWeek,
+  lengthWeeks: lengthWeeks,
+  equipment: equipment,
+  equipmentProfile: profile,
+  order: order,
+  l10n: {'en': CatalogueText(name: 'Program $id', summary: 'For $id.')},
+);
