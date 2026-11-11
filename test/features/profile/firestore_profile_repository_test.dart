@@ -55,8 +55,6 @@ void main() {
         'goal': 'build_muscle',
         'level': 'intermediate',
         'daysPerWeek': 4,
-        // In vocabulary order, as the exercise library writes it.
-        'equipment': ['barbell', 'dumbbell'],
         'sex': 'female',
         'birthYear': 1990,
         'heightCm': 170.0,
@@ -64,7 +62,24 @@ void main() {
         'targetWeightKg': 60.0,
       },
     });
-    expect(await repository.watchProfile('u1').first, answers);
+    expect(
+      await repository.watchProfile('u1').first,
+      answers.without(ProfileField.equipment),
+    );
+  });
+
+  test('never writes the equipment, which the library owns', () async {
+    await user().set({
+      'profile': {
+        'equipment': ['kettlebell', 'hoverboard'],
+      },
+    });
+
+    await repository.saveFields('u1', answers, ProfileField.values.toSet());
+    await repository.completeOnboarding('u1', answers);
+
+    final profile = (await stored())!['profile'] as Map;
+    expect(profile['equipment'], ['kettlebell', 'hoverboard']);
   });
 
   test('saving a field keeps every other field of the document', () async {
@@ -104,12 +119,24 @@ void main() {
     expect(profile['weightKg'], 65.5);
   });
 
-  test('bodyweight only is stored as no equipment', () async {
-    await repository.saveFields('u1', const UserProfile(equipment: {}), {
-      ProfileField.equipment,
-    });
+  test(
+    'stored equipment is read without bodyweight or unknown codes',
+    () async {
+      await user().set({
+        'profile': {
+          'equipment': ['bodyweight', 'hoverboard', 'dumbbell'],
+        },
+      });
+      expect((await repository.watchProfile('u1').first).equipment, {
+        Equipment.dumbbell,
+      });
+    },
+  );
 
-    expect((await stored())!['profile'], {'equipment': <String>[]});
+  test('an empty equipment list is bodyweight only', () async {
+    await user().set({
+      'profile': {'equipment': <String>[]},
+    });
     expect((await repository.watchProfile('u1').first).equipment, isEmpty);
   });
 

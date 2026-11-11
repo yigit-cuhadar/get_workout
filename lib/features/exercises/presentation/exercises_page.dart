@@ -1,56 +1,113 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:forge_model_viewer/forge_model_viewer.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
+import 'equipment_cubit.dart';
+import 'exercise_catalogue_cubit.dart';
+import 'favorites_cubit.dart';
+import 'library_cubit.dart';
+import 'widgets/body_view.dart';
+import 'widgets/library_list_view.dart';
 
-/// The Exercises tab: the body model. Tapping or scrubbing a muscle shows its
-/// mesh name for now; the muscle sheet arrives with the Library feature.
-class ExercisesPage extends StatefulWidget {
+/// The Exercises tab: the catalogue on the body model or as a list.
+class ExercisesPage extends StatelessWidget {
   const ExercisesPage({super.key});
 
   @override
-  State<ExercisesPage> createState() => _ExercisesPageState();
+  Widget build(BuildContext context) => BlocProvider.value(
+    // App-wide, so the view, search and filters last while the app runs.
+    value: sl<LibraryCubit>(),
+    child: const _ExercisesView(),
+  );
 }
 
-class _ExercisesPageState extends State<ExercisesPage> {
-  static const _bodyPart = 'none';
+class _ExercisesView extends StatefulWidget {
+  const _ExercisesView();
 
-  late final Future<Model3D> _model = rootBundle
-      .load('assets/models/body_male.glb')
-      .then((data) => Model3D.fromGlb(data.buffer.asUint8List()));
-  String? _part;
+  @override
+  State<_ExercisesView> createState() => _ExercisesViewState();
+}
 
-  void _select(String? part) {
-    if (part == _part) return;
-    HapticFeedback.selectionClick();
-    setState(() => _part = part);
+class _ExercisesViewState extends State<_ExercisesView> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    context.read<LibraryCubit>().setLanguage(
+      Localizations.localeOf(context).languageCode,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final view = context.select((LibraryCubit library) => library.state.view);
     return Scaffold(
-      appBar: AppBar(title: Text(_part ?? l10n.tabExercises)),
-      body: FutureBuilder<Model3D>(
-        future: _model,
-        builder: (context, snapshot) {
-          final model = snapshot.data;
-          if (snapshot.hasError) {
-            return ErrorView(message: l10n.modelLoadFailed);
-          }
-          if (model == null) return const LoadingView();
-          return ModelViewer(
-            model: model,
-            highlightedPart: _part,
-            selectable: (part) => part != _bodyPart,
-            onPartTap: _select,
-            onScrub: _select,
-            semanticLabel: l10n.tabExercises,
-          );
-        },
+      appBar: AppBar(title: Text(l10n.tabExercises)),
+      // Favourites and equipment change only on this tab's pages, which all
+      // sit above this one, so their failures are reported once, here.
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<FavoritesCubit, FavoritesState>(
+            listenWhen: (previous, current) =>
+                current.failure != null && current.failure != previous.failure,
+            listener: (context, _) => _report(context, l10n.favoriteSaveFailed),
+          ),
+          BlocListener<EquipmentCubit, EquipmentState>(
+            listenWhen: (previous, current) =>
+                current.failure != null && current.failure != previous.failure,
+            listener: (context, _) =>
+                _report(context, l10n.equipmentSaveFailed),
+          ),
+        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(Gap.md),
+              child: SegmentedButton<LibraryView>(
+                segments: [
+                  ButtonSegment(
+                    value: LibraryView.body,
+                    label: Text(l10n.libraryBody),
+                    icon: const Icon(Icons.accessibility_new),
+                  ),
+                  ButtonSegment(
+                    value: LibraryView.list,
+                    label: Text(l10n.libraryList),
+                    icon: const Icon(Icons.list),
+                  ),
+                ],
+                selected: {view},
+                onSelectionChanged: (selection) =>
+                    context.read<LibraryCubit>().setView(selection.single),
+              ),
+            ),
+            Expanded(
+              child:
+                  BlocBuilder<ExerciseCatalogueCubit, ExerciseCatalogueState>(
+                    builder: (context, catalogue) => switch (catalogue) {
+                      CatalogueLoading() => const LoadingView(),
+                      CatalogueFailed() => ErrorView(
+                        message: l10n.libraryLoadFailed,
+                        retryLabel: l10n.retry,
+                        onRetry: context.read<ExerciseCatalogueCubit>().retry,
+                      ),
+                      CatalogueReady() => switch (view) {
+                        LibraryView.body => const BodyView(),
+                        LibraryView.list => const LibraryListView(),
+                      },
+                    },
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  static void _report(BuildContext context, String message) =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
 }

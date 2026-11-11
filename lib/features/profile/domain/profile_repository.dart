@@ -8,14 +8,15 @@ abstract interface class ProfileRepository {
   Stream<UserProfile> watchProfile(String uid);
 
   /// Stores only [fields] of [profile]; a field [profile] leaves unanswered
-  /// is removed. Every other stored value is kept.
+  /// is removed. Every other stored value is kept. Never writes
+  /// [ProfileField.equipment], which the exercise library stores.
   Future<Result<void>> saveFields(
     String uid,
     UserProfile profile,
     Set<ProfileField> fields,
   );
 
-  /// Stores every answer [answers] gives and marks onboarding completed.
-  /// Stored answers it leaves unanswered are kept.
+  /// Stores every answer [answers] gives but the equipment and marks
+  /// onboarding completed. Stored answers it leaves unanswered are kept.
   Future<Result<void>> completeOnboarding(String uid, UserProfile answers);
 }

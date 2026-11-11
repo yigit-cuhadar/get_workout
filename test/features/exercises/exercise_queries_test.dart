@@ -3,48 +3,7 @@ import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/exercise_queries.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 
-Exercise exercise(
-  String id, {
-  String? name,
-  List<String> aliases = const [],
-  int popularity = 50,
-  List<Muscle> main = const [Muscle.pec],
-  List<Muscle> secondary = const [],
-  List<Equipment> equipment = const [Equipment.bodyweight],
-  List<List<Equipment>> equipmentAlternatives = const [],
-  Level level = Level.beginner,
-  MovementPattern pattern = MovementPattern.horizontalPush,
-  String family = 'family',
-  int familyRank = 1,
-  List<String> pinned = const [],
-  List<String> excluded = const [],
-  Map<String, ExerciseText> translations = const {},
-}) => Exercise(
-  id: id,
-  loggingType: LoggingType.reps,
-  mechanic: Mechanic.compound,
-  laterality: Laterality.bilateral,
-  level: level,
-  force: Force.push,
-  movementPattern: pattern,
-  position: Position.standing,
-  equipment: equipment,
-  equipmentAlternatives: equipmentAlternatives,
-  mainMuscles: main,
-  secondaryMuscles: secondary,
-  family: family,
-  familyRank: familyRank,
-  pinnedAlternatives: pinned,
-  excludedAlternatives: excluded,
-  defaultRestS: 60,
-  popularity: popularity,
-  l10n: {
-    'en': ExerciseText(name: name ?? id, aliases: aliases),
-    ...translations,
-  },
-);
-
-List<String> ids(List<Exercise> exercises) => [for (final e in exercises) e.id];
+import 'fixtures.dart';
 
 void main() {
   group('isDoableWith', () {
@@ -501,6 +460,60 @@ void main() {
     test('an exercise alone in its family has none', () {
       final dip = exercise('dip', family: 'dip');
       expect(variationsOf(dip, [dip]), isEmpty);
+    });
+  });
+
+  group('exercisesWorking', () {
+    final bench = exercise(
+      'bench',
+      popularity: 1,
+      main: [Muscle.pec],
+      secondary: [Muscle.triceps, Muscle.frontDelt],
+    );
+    final dip = exercise(
+      'dip',
+      popularity: 5,
+      main: [Muscle.triceps, Muscle.pec],
+    );
+    final pushdown = exercise(
+      'pushdown',
+      popularity: 3,
+      main: [Muscle.triceps],
+    );
+    final closeGrip = exercise(
+      'close_grip',
+      popularity: 2,
+      main: [Muscle.triceps],
+      secondary: [Muscle.pec],
+    );
+    final squat = exercise('squat', main: [Muscle.quads]);
+    final catalogue = [dip, squat, pushdown, bench, closeGrip];
+
+    test('splits main from also-works, each by popularity', () {
+      final triceps = exercisesWorking(Muscle.triceps, catalogue);
+      expect(ids(triceps.main), ['close_grip', 'pushdown', 'dip']);
+      expect(ids(triceps.alsoWorks), ['bench']);
+
+      final pec = exercisesWorking(Muscle.pec, catalogue);
+      expect(ids(pec.main), ['bench', 'dip']);
+      expect(ids(pec.alsoWorks), ['close_grip']);
+    });
+
+    test('lists an exercise once, under main, when it is both', () {
+      final both = exercise(
+        'both',
+        main: [Muscle.pec],
+        secondary: [Muscle.pec],
+      );
+      final pec = exercisesWorking(Muscle.pec, [both]);
+      expect(ids(pec.main), ['both']);
+      expect(pec.alsoWorks, isEmpty);
+    });
+
+    test('a muscle nothing works gives two empty lists', () {
+      final calf = exercisesWorking(Muscle.calf, catalogue);
+      expect(calf.main, isEmpty);
+      expect(calf.alsoWorks, isEmpty);
     });
   });
 }

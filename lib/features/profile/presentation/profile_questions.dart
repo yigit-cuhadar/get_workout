@@ -5,24 +5,20 @@ import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/vocabulary.dart';
+import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/user_profile.dart';
 import 'profile_form_cubit.dart';
 
-/// Display names of the profile answers.
+/// Display names of the profile answers. Level and equipment names come
+/// from [VocabularyLabels].
 extension ProfileLabels on AppLocalizations {
   String goalName(Goal goal) => switch (goal) {
     Goal.buildMuscle => goalBuildMuscle,
     Goal.getStronger => goalGetStronger,
     Goal.loseFat => goalLoseFat,
     Goal.generalFitness => goalGeneralFitness,
-  };
-
-  String levelName(Level level) => switch (level) {
-    Level.beginner => levelBeginner,
-    Level.intermediate => levelIntermediate,
-    Level.advanced => levelAdvanced,
   };
 
   String levelInfo(Level level) => switch (level) {
@@ -41,35 +37,6 @@ extension ProfileLabels on AppLocalizations {
     EquipmentPreset.homeGym => presetHomeGym,
     EquipmentPreset.dumbbellsOnly => presetDumbbellsOnly,
     EquipmentPreset.bodyweight => presetBodyweight,
-  };
-
-  /// Every item but [Equipment.bodyweight], which is never picked.
-  String equipmentName(Equipment equipment) => switch (equipment) {
-    Equipment.barbell => equipmentBarbell,
-    Equipment.ezBar => equipmentEzBar,
-    Equipment.trapBar => equipmentTrapBar,
-    Equipment.dumbbell => equipmentDumbbell,
-    Equipment.kettlebell => equipmentKettlebell,
-    Equipment.plate => equipmentPlate,
-    Equipment.cable => equipmentCable,
-    Equipment.machine => equipmentMachine,
-    Equipment.smithMachine => equipmentSmithMachine,
-    Equipment.bench => equipmentBench,
-    Equipment.box => equipmentBox,
-    Equipment.backExtensionBench => equipmentBackExtensionBench,
-    Equipment.pullUpBar => equipmentPullUpBar,
-    Equipment.dipStation => equipmentDipStation,
-    Equipment.resistanceBand => equipmentResistanceBand,
-    Equipment.suspensionTrainer => equipmentSuspensionTrainer,
-    Equipment.rings => equipmentRings,
-    Equipment.medicineBall => equipmentMedicineBall,
-    Equipment.stabilityBall => equipmentStabilityBall,
-    Equipment.abWheel => equipmentAbWheel,
-    Equipment.landmine => equipmentLandmine,
-    Equipment.sled => equipmentSled,
-    Equipment.jumpRope => equipmentJumpRope,
-    Equipment.bodyweight => presetBodyweight,
-    Equipment.other => equipmentOther,
   };
 
   String fieldName(ProfileField field) => switch (field) {

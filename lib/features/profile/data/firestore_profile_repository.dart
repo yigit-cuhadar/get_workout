@@ -9,8 +9,9 @@ import '../domain/profile_repository.dart';
 import '../domain/user_profile.dart';
 
 /// The profile is the `profile` map of `users/{uid}`, a document shared with
-/// other features; `profile.equipment` is also written by the exercise
-/// library. Writes therefore merge and name only the fields they change.
+/// other features. `profile.equipment` is read here but written only by the
+/// exercise library's repository (it keeps codes of newer app versions).
+/// Writes therefore merge and name only the fields they change.
 /// `FirestoreCollection` only offers whole-document writes, hence the direct
 /// Firestore access.
 class FirestoreProfileRepository implements ProfileRepository {
@@ -43,7 +44,8 @@ class FirestoreProfileRepository implements ProfileRepository {
     Set<ProfileField> fields,
   ) => _merge(uid, {
     for (final field in fields)
-      _key(field): _value(profile, field) ?? FieldValue.delete(),
+      if (field != ProfileField.equipment)
+        _key(field): _value(profile, field) ?? FieldValue.delete(),
   });
 
   @override
@@ -76,20 +78,14 @@ class FirestoreProfileRepository implements ProfileRepository {
     ProfileField.targetWeight => 'targetWeightKg',
   };
 
+  /// Null for an unanswered field and for the equipment, which only the
+  /// exercise library's repository writes.
   static Object? _value(UserProfile profile, ProfileField field) =>
       switch (field) {
         ProfileField.goal => profile.goal?.code,
         ProfileField.level => profile.level?.code,
         ProfileField.daysPerWeek => profile.daysPerWeek,
-        // In vocabulary order, like the exercise library writes it.
-        ProfileField.equipment => switch (profile.equipment) {
-          final owned? => [
-            for (final item in Equipment.values)
-              if (owned.contains(item) && item != Equipment.bodyweight)
-                item.code,
-          ],
-          null => null,
-        },
+        ProfileField.equipment => null,
         ProfileField.sex => profile.sex?.name,
         ProfileField.birthYear => profile.birthYear,
         ProfileField.height => profile.heightCm,
@@ -105,6 +101,7 @@ class FirestoreProfileRepository implements ProfileRepository {
       goal: Goal.values.byCode(map['goal']),
       level: Level.values.byCode(map['level']),
       daysPerWeek: _int(map['daysPerWeek']),
+      // Read as the library reads it: unknown codes skipped.
       equipment: equipment is List
           ? {for (final code in equipment) ?Equipment.values.byCode(code)}
                 .difference(const {Equipment.bodyweight})

@@ -1,6 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
+import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/profile/domain/profile_repository.dart';
 import 'package:get_workout/features/profile/domain/profile_usecases.dart';
@@ -11,16 +13,23 @@ import 'package:mocktail/mocktail.dart';
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
 
+class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
+
 void main() {
   late MockProfileRepository profiles;
+  late MockUserLibraryRepository library;
 
   setUpAll(() {
     registerFallbackValue(const UserProfile());
     registerFallbackValue(<ProfileField>{});
+    registerFallbackValue(<Equipment>{});
   });
 
   setUp(() {
     profiles = MockProfileRepository();
+    library = MockUserLibraryRepository();
+    when(() => library.saveEquipment(any(), any()))
+        .thenAnswer((_) async => const Ok(null));
     when(() => profiles.completeOnboarding(any(), any()))
         .thenAnswer((_) async => const Ok(null));
     when(() => profiles.saveFields(any(), any(), any()))
@@ -31,7 +40,10 @@ void main() {
       ProfileFormCubit.onboarding(
         uid: 'u1',
         initial: initial,
-        completeOnboarding: CompleteOnboarding(profiles),
+        completeOnboarding: CompleteOnboarding(
+          profiles,
+          SaveOwnedEquipment(library),
+        ),
         now: () => DateTime(2026, 11, 11),
       );
 
@@ -40,7 +52,7 @@ void main() {
         uid: 'u1',
         field: field,
         initial: initial,
-        updateProfile: UpdateProfile(profiles),
+        updateProfile: UpdateProfile(profiles, SaveOwnedEquipment(library)),
         now: () => DateTime(2026, 11, 11),
       );
 
@@ -136,6 +148,36 @@ void main() {
       verify: (_) =>
           verify(() => profiles.completeOnboarding('u1', complete)).called(1),
     );
+
+    test('the equipment is saved through the library', () async {
+      final cubit = onboarding()..applyPreset(EquipmentPreset.dumbbellsOnly);
+
+      await cubit.skip();
+
+      verify(() => library.saveEquipment('u1', {Equipment.dumbbell})).called(1);
+      verify(
+        () => profiles.completeOnboarding(
+          'u1',
+          const UserProfile(equipment: {Equipment.dumbbell}),
+        ),
+      ).called(1);
+    });
+
+    test('without an equipment answer the library is not written', () async {
+      await onboarding().skip();
+      verifyNever(() => library.saveEquipment(any(), any()));
+    });
+
+    test('a failed equipment save fails the completion', () async {
+      when(() => library.saveEquipment(any(), any()))
+          .thenAnswer((_) async => const Err(NetworkFailure()));
+      final cubit = onboarding()..applyPreset(EquipmentPreset.bodyweight);
+
+      await cubit.skip();
+
+      expect(cubit.state.status, ProfileFormStatus.editing);
+      expect(cubit.state.failure, isA<NetworkFailure>());
+    });
 
     test('skipping completes onboarding with what was answered', () async {
       final cubit = onboarding()..setGoal(Goal.loseFat);
@@ -316,6 +358,16 @@ void main() {
       await cubit.next();
 
       expect(cubit.state.status, ProfileFormStatus.editing);
+      verifyNever(() => profiles.saveFields(any(), any(), any()));
+    });
+
+    test('editing the equipment saves only through the library', () async {
+      final cubit = edit(ProfileField.equipment, stored)
+        ..applyPreset(EquipmentPreset.bodyweight);
+
+      await cubit.next();
+
+      verify(() => library.saveEquipment('u1', <Equipment>{})).called(1);
       verifyNever(() => profiles.saveFields(any(), any(), any()));
     });
 

@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
+import '../features/cardio/presentation/cardio_form_page.dart';
+import '../features/cardio/presentation/cardio_list_page.dart';
 import '../features/calculators/presentation/body_fat_page.dart';
 import '../features/calculators/presentation/body_indices_page.dart';
 import '../features/calculators/presentation/calculators_page.dart';
@@ -14,6 +16,7 @@ import '../features/calculators/presentation/calories_page.dart';
 import '../features/calculators/presentation/macros_page.dart';
 import '../features/calculators/presentation/one_rep_max_page.dart';
 import '../features/calculators/presentation/plates_page.dart';
+import '../features/exercises/presentation/exercise_detail_page.dart';
 import '../features/exercises/presentation/exercises_page.dart';
 import '../features/profile/domain/user_profile.dart';
 import '../features/profile/presentation/onboarding_page.dart';
@@ -39,7 +42,11 @@ abstract final class Routes {
   static const today = '/today';
   static const programs = '/programs';
   static const exercises = '/exercises';
+  static String exercise(String id) => '$exercises/${Uri.encodeComponent(id)}';
   static const progress = '/progress';
+  static const cardio = '$progress/cardio';
+  static const cardioNew = '$cardio/new';
+  static String cardioSession(String id) => '$cardio/$id';
   static const profile = '/profile';
   static const account = '$profile/account';
 
@@ -139,8 +146,39 @@ GoRouter buildRouter(AuthCubit auth, ProfileCubit profile) {
         branches: [
           _tab(Routes.today, const TodayPage()),
           _tab(Routes.programs, const ProgramsPage()),
-          _tab(Routes.exercises, const ExercisesPage()),
-          _tab(Routes.progress, const ProgressPage()),
+          _tab(
+            Routes.exercises,
+            const ExercisesPage(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (_, state) =>
+                    ExerciseDetailPage(exerciseId: state.pathParameters['id']!),
+              ),
+            ],
+          ),
+          _tab(
+            Routes.progress,
+            const ProgressPage(),
+            routes: [
+              GoRoute(
+                path: 'cardio',
+                builder: (_, _) => const CardioListPage(),
+                routes: [
+                  // Before ':id', which would match 'new' too.
+                  GoRoute(
+                    path: 'new',
+                    builder: (_, _) => const CardioNewPage(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) =>
+                        CardioSessionPage(id: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
+            ],
+          ),
           _tab(
             Routes.profile,
             const ProfilePage(),
