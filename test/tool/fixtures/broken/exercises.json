@@ -1,0 +1,175 @@
+[
+  {
+    "id": "ex_dumbbell_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "biceps_curl",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 8,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Curl",
+        "aliases": [
+          "Dumbbell Biceps Curl",
+          "DB Curl"
+        ],
+        "setup": [
+          "Stand tall with a dumbbell in each hand, palms facing forward.",
+          "Keep your elbows close to your sides."
+        ],
+        "execution": [
+          "Curl the dumbbells up toward your shoulders without moving your elbows forward much.",
+          "Squeeze at the top, then lower slowly to straight arms."
+        ],
+        "mistakes": [
+          "Swinging the weights with the hips.",
+          "Cutting the lowering short."
+        ],
+        "cues": [
+          "Elbows still",
+          "Slow down"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_Bad",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "gripWidth": "shoulder",
+    "equipment": [
+      "barbell",
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "biceps",
+      "forearm"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "biceps_curl",
+    "familyRank": 5,
+    "pinnedAlternatives": [
+      "ex_missing"
+    ],
+    "excludedAlternatives": [],
+    "defaultRestS": 75,
+    "incrementKg": 2.5,
+    "popularity": 23,
+    "l10n": {
+      "en": {
+        "name": "Barbell Curl",
+        "aliases": [
+          "Dumbbell Curl"
+        ],
+        "setup": [
+          "Hold the bar with palms facing forward, hands shoulder width.",
+          "Stand tall with the bar against your thighs."
+        ],
+        "execution": [
+          "Curl the bar up to chest height, keeping your elbows at your sides.",
+          "Lower it slowly until your arms are straight."
+        ],
+        "mistakes": [
+          "Leaning back to swing the bar up.",
+          "Letting the elbows drift forward."
+        ],
+        "cues": [
+          "Elbows pinned",
+          "Full stretch at the bottom"
+        ]
+      }
+    },
+    "equipmentAlternatives": [
+      [
+        "barbell",
+        "bodyweight"
+      ],
+      [
+        "laser"
+      ]
+    ],
+    "color": "red"
+  },
+  {
+    "id": "ex_dumbbell_curl",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "standing",
+    "grip": "underhand",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "family": "biceps_curl",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 1,
+    "popularity": 8,
+    "l10n": {
+      "en": {
+        "name": "Another Curl",
+        "aliases": [
+          "Dumbbell Biceps Curl",
+          "DB Curl"
+        ],
+        "setup": [
+          "Stand tall with a dumbbell in each hand, palms facing forward.",
+          "Keep your elbows close to your sides."
+        ],
+        "execution": [
+          "Curl the dumbbells up toward your shoulders without moving your elbows forward much.",
+          "Squeeze at the top, then lower slowly to straight arms."
+        ],
+        "mistakes": [
+          "Swinging the weights with the hips.",
+          "Cutting the lowering short."
+        ],
+        "cues": [
+          "Elbows still",
+          "Slow down"
+        ]
+      }
+    }
+  }
+]
