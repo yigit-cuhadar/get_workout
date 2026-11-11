@@ -6,7 +6,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/app/router.dart';
+import 'package:get_workout/features/exercises/domain/exercise.dart';
+import 'package:get_workout/features/exercises/domain/exercise_repository.dart';
+import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
+import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
+import 'package:get_workout/features/exercises/domain/vocabulary.dart';
+import 'package:get_workout/features/exercises/presentation/body_model_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/exercise_detail_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/exercise_detail_page.dart';
+import 'package:get_workout/features/exercises/presentation/exercises_page.dart';
+import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:get_workout/features/account/presentation/account_page.dart';
+import 'package:get_workout/features/calculators/calculators_module.dart';
+import 'package:get_workout/features/calculators/presentation/body_fat_page.dart';
+import 'package:get_workout/features/calculators/presentation/body_indices_page.dart';
+import 'package:get_workout/features/calculators/presentation/calculators_page.dart';
+import 'package:get_workout/features/calculators/presentation/calories_page.dart';
+import 'package:get_workout/features/calculators/presentation/macros_page.dart';
+import 'package:get_workout/features/calculators/presentation/one_rep_max_page.dart';
+import 'package:get_workout/features/calculators/presentation/plates_page.dart';
 import 'package:get_workout/features/profile/presentation/profile_page.dart';
 import 'package:get_workout/features/programs/presentation/programs_page.dart';
 import 'package:get_workout/features/settings/domain/settings_repository.dart';
@@ -22,6 +43,28 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
 
+class MockExerciseRepository extends Mock implements ExerciseRepository {}
+
+class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
+
+const _squat = Exercise(
+  id: 'squat',
+  loggingType: LoggingType.weightReps,
+  mechanic: Mechanic.compound,
+  laterality: Laterality.bilateral,
+  level: Level.beginner,
+  force: Force.push,
+  movementPattern: MovementPattern.squat,
+  position: Position.standing,
+  equipment: [Equipment.barbell],
+  mainMuscles: [Muscle.quads],
+  family: 'squat',
+  familyRank: 1,
+  defaultRestS: 120,
+  popularity: 1,
+  l10n: {'en': ExerciseText(name: 'Back Squat')},
+);
+
 void main() {
   const guest = AuthUser(id: 'u1', isAnonymous: true);
   const member = AuthUser(id: 'u1', email: 'a@b.co');
@@ -29,6 +72,14 @@ void main() {
   late StreamController<AuthUser?> users;
   late AuthCubit auth;
   late SettingsCubit settings;
+  late ExerciseCatalogueCubit catalogue;
+  late FavoritesCubit favorites;
+  late EquipmentCubit equipment;
+  late BodyModelCubit bodyModel;
+  late StreamController<List<Exercise>> exerciseFeed;
+
+  /// Keeps the catalogue loading until a test feeds [exerciseFeed].
+  var holdCatalogue = false;
   late GoRouter router;
 
   // Created inside each test so stream events run in the test's fake zone.
@@ -52,6 +103,7 @@ void main() {
         getCurrentUser: GetCurrentUser(repository),
       ),
     );
+    const CalculatorsModule().register(sl);
     // Settings are covered by their own tests; here they stay at defaults.
     final settingsAuth = MockAuthRepository();
     when(settingsAuth.watchUser).thenAnswer((_) => const Stream.empty());
@@ -62,12 +114,55 @@ void main() {
       updateSettings: UpdateSettings(settingsRepository),
       defaults: UserSettings.defaultsFor(null),
     );
+    // The library runs on a fixed catalogue with no user data and a model
+    // that fails to load (rendering it is the viewer package's business).
+    final exercises = MockExerciseRepository();
+    exerciseFeed = StreamController<List<Exercise>>();
+    if (!holdCatalogue) exerciseFeed.add([_squat]);
+    when(exercises.watchExercises).thenAnswer((_) => exerciseFeed.stream);
+    final userLibrary = MockUserLibraryRepository();
+    catalogue = ExerciseCatalogueCubit(
+      watchAuthUser: WatchAuthUser(settingsAuth),
+      watchExercises: WatchExercises(exercises),
+      syncExercises: SyncExercises(exercises),
+    );
+    favorites = FavoritesCubit(
+      watchAuthUser: WatchAuthUser(settingsAuth),
+      watchFavorites: WatchFavorites(userLibrary),
+      setFavorite: SetFavorite(userLibrary),
+    );
+    equipment = EquipmentCubit(
+      watchAuthUser: WatchAuthUser(settingsAuth),
+      watchEquipment: WatchOwnedEquipment(userLibrary),
+      saveEquipment: SaveOwnedEquipment(userLibrary),
+    );
+    bodyModel = BodyModelCubit(() async => throw const FormatException());
+    sl
+      ..registerLazySingleton(
+        () => LibraryCubit(
+          watchAuthUser: WatchAuthUser(settingsAuth),
+          catalogue: catalogue,
+          favorites: favorites,
+          equipment: equipment,
+        ),
+        dispose: (cubit) => cubit.close(),
+      )
+      ..registerFactoryParam<ExerciseDetailCubit, String, void>(
+        (id, _) =>
+            ExerciseDetailCubit(id, catalogue: catalogue, equipment: equipment),
+      );
   }
 
   tearDown(() async {
     await auth.close();
     await settings.close();
     await sl.reset();
+    await catalogue.close();
+    await favorites.close();
+    await equipment.close();
+    await bodyModel.close();
+    await exerciseFeed.close();
+    holdCatalogue = false;
   });
 
   Future<void> pumpApp(WidgetTester tester) => tester.pumpWidget(
@@ -75,6 +170,10 @@ void main() {
       providers: [
         BlocProvider.value(value: auth),
         BlocProvider.value(value: settings),
+        BlocProvider.value(value: catalogue),
+        BlocProvider.value(value: favorites),
+        BlocProvider.value(value: equipment),
+        BlocProvider.value(value: bodyModel),
       ],
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -209,5 +308,123 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(TodayPage), findsOneWidget);
+  });
+
+  testWidgets('an exercise opens its detail inside the Exercises tab', (
+    tester,
+  ) async {
+    await startAsGuest(tester);
+    await tapTab(tester, 'Exercises');
+    expect(find.byType(ExercisesPage), findsOneWidget);
+
+    await tester.tap(find.text('List'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Back Squat'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ExerciseDetailPage), findsOneWidget);
+    expect(find.text('Back Squat'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsOneWidget);
+  });
+
+  testWidgets('the Exercises tab remembers the list view and returns to it', (
+    tester,
+  ) async {
+    await startAsGuest(tester);
+    await tapTab(tester, 'Exercises');
+    await tester.tap(find.text('List'));
+    await tester.pumpAndSettle();
+    router.go(Routes.exercise('squat'));
+    await tester.pumpAndSettle();
+
+    await tapTab(tester, 'Exercises');
+
+    expect(find.byType(ExerciseDetailPage), findsNothing);
+    expect(find.text('1 exercise'), findsOneWidget);
+  });
+
+  testWidgets('an unknown exercise id shows not found', (tester) async {
+    await startAsGuest(tester);
+
+    router.go(Routes.exercise('retired_since'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ExerciseDetailPage), findsOneWidget);
+    expect(find.text('This exercise is no longer available.'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsOneWidget);
+  });
+
+  testWidgets('Profile opens the calculators inside the tab', (tester) async {
+    await startAsGuest(tester);
+    await tapTab(tester, 'Profile');
+
+    await tester.tap(find.text('Calculators'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CalculatorsPage), findsOneWidget);
+
+    await tester.tap(find.text('Calories'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CaloriesPage), findsOneWidget);
+    expect(find.byType(NavigationBar), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(CalculatorsPage), findsOneWidget);
+  });
+
+  testWidgets('every calculator has a route under Profile', (tester) async {
+    await startAsGuest(tester);
+    final pages = {
+      Routes.calories: CaloriesPage,
+      Routes.bodyFat: BodyFatPage,
+      Routes.oneRepMax: OneRepMaxPage,
+      Routes.plates: PlatesPage,
+      Routes.macros: MacrosPage,
+      Routes.bodyIndices: BodyIndicesPage,
+    };
+
+    for (final MapEntry(key: route, value: page) in pages.entries) {
+      router.go(route);
+      await tester.pumpAndSettle();
+      expect(find.byType(page), findsOneWidget, reason: route);
+      expect(find.byType(NavigationBar), findsOneWidget, reason: route);
+      expect(route, startsWith('${Routes.calculators}/'));
+    }
+  });
+
+  testWidgets('a calculator keeps its place when switching tabs', (
+    tester,
+  ) async {
+    await startAsGuest(tester);
+    await tapTab(tester, 'Profile');
+    router.go(Routes.plates);
+    await tester.pumpAndSettle();
+
+    await tapTab(tester, 'Today');
+    await tapTab(tester, 'Profile');
+
+    expect(find.byType(PlatesPage), findsOneWidget);
+  });
+
+  testWidgets('a detail link opened while the catalogue loads waits for it', (
+    tester,
+  ) async {
+    holdCatalogue = true;
+    await startAsGuest(tester);
+
+    router.go(Routes.exercise('squat'));
+    // A spinner never settles, so pump frames by hand.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.byType(ExerciseDetailPage), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('This exercise is no longer available.'), findsNothing);
+
+    exerciseFeed.add([_squat]);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Back Squat'), findsOneWidget);
+    expect(find.text('This exercise is no longer available.'), findsNothing);
   });
 }

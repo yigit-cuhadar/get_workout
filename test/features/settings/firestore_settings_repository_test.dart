@@ -86,4 +86,106 @@ void main() {
 
     await expectation;
   });
+
+  group('bar and plates', () {
+    const plates = [
+      Plate(weightKg: 20, pairs: 2),
+      Plate(weightKg: 1.25, pairs: 1),
+    ];
+    final custom = defaults.copyWith(
+      customBarWeightKg: 15,
+      customPlates: plates,
+    );
+
+    test('custom equipment is stored and read back', () async {
+      await repository.saveSettings('u1', custom);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored['barWeightKg'], 15);
+      expect(stored['plates'], [
+        {'weightKg': 20, 'pairs': 2},
+        {'weightKg': 1.25, 'pairs': 1},
+      ]);
+      expect(await repository.watchSettings('u1').first, custom);
+    });
+
+    test(
+      'standard equipment is not stored, and clears custom equipment',
+      () async {
+        await repository.saveSettings('u1', custom);
+
+        await repository.saveSettings('u1', custom.withStandardEquipment());
+
+        final stored = (await user().get()).data()!['settings'] as Map;
+        expect(stored.containsKey('barWeightKg'), isFalse);
+        expect(stored.containsKey('plates'), isFalse);
+        expect(
+          await repository.watchSettings('u1').first,
+          custom.withStandardEquipment(),
+        );
+      },
+    );
+
+    test('saving equipment keeps the other fields', () async {
+      await user().set({
+        'profile': {'goal': 'get_stronger'},
+        'settings': {'effortScale': 'rir', 'weightUnit': 'kg'},
+      });
+
+      await repository.saveSettings('u1', custom);
+
+      final data = (await user().get()).data()!;
+      expect(data['profile'], {'goal': 'get_stronger'});
+      expect((data['settings'] as Map)['effortScale'], 'rir');
+      expect((data['settings'] as Map)['barWeightKg'], 15);
+    });
+
+    test('malformed equipment falls back or is skipped', () async {
+      await user().set({
+        'settings': {
+          'barWeightKg': 'heavy',
+          'plates': [
+            {'weightKg': 10, 'pairs': 2},
+            {'weightKg': -5, 'pairs': 1},
+            {'weightKg': 5, 'pairs': 1.5},
+            'plate',
+          ],
+        },
+      });
+
+      final settings = await repository.watchSettings('u1').first;
+
+      expect(settings.customBarWeightKg, isNull);
+      expect(
+        settings.barWeightKg,
+        UserSettings.defaultBarWeightKg(WeightUnit.lb),
+      );
+      expect(settings.plates, const [Plate(weightKg: 10, pairs: 2)]);
+    });
+
+    test('stored equipment beyond the limits is clamped', () async {
+      await user().set({
+        'settings': {
+          'barWeightKg': 250,
+          'plates': [
+            {'weightKg': 0.05, 'pairs': 1},
+            {'weightKg': 150, 'pairs': 30},
+            {'weightKg': 10, 'pairs': -2},
+            for (var i = 1; i <= 12; i++) {'weightKg': 20 + i, 'pairs': 1},
+          ],
+        },
+      });
+
+      final settings = await repository.watchSettings('u1').first;
+
+      expect(settings.barWeightKg, maxBarWeightKg);
+      expect(settings.plates, hasLength(maxPlateSizes));
+      expect(
+        settings.plates.first,
+        const Plate(weightKg: maxPlateWeightKg, pairs: maxPlatePairs),
+      );
+      // The 12 largest win; 21 kg, 10 kg and the clamped 0.1 kg are dropped.
+      expect(settings.plates.last, const Plate(weightKg: 22, pairs: 1));
+    });
+  });
 }
