@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:get_workout/features/programs/domain/catalogue_rules.dart';
+import 'package:get_workout/features/programs/domain/program_validation.dart';
+
 import '../../tool/src/content_validator.dart';
 
 void main() {
@@ -36,6 +39,20 @@ void main() {
     final live = report.programs.where((p) => p.isLive);
     expect(live.where((p) => p.isPremium), hasLength(19));
     expect(live.where((p) => !p.isPremium), hasLength(6));
+  });
+
+  test('every program file passes the app\'s validateProgram', () {
+    final report = validateContent(
+      Directory('content/exercises'),
+      programs: Directory('content/programs'),
+    );
+    final loggingTypes = liveLoggingTypes(report.library);
+
+    expect(report.programs, hasLength(25));
+    for (final p in report.programs) {
+      final result = validateProgram(p.program, loggingTypes);
+      expect(result.isValid, isTrue, reason: '${p.id}: $result');
+    }
   });
 
   group('program files', () {

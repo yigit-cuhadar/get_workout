@@ -2,8 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/features/exercises/domain/content_rules.dart';
-import 'package:get_workout/features/exercises/domain/program_rules.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
+import 'package:get_workout/features/programs/domain/catalogue_rules.dart';
+import 'package:get_workout/features/programs/domain/program_validation.dart';
 
 import '../../admin/fixtures.dart';
 
@@ -275,28 +276,28 @@ void main() {
       (p) => firstItem(p)['sets'] = 11,
       const ContentProblem(
         'days[0].items[0].sets',
-        'days[0].items[0].sets must be an integer in 1..10',
+        'days[0].items[0] sets must be an integer in 1..10',
       ),
     ),
     'rest range': (
       (p) => firstItem(p)['restS'] = 601,
       const ContentProblem(
         'days[0].items[0].restS',
-        'days[0].items[0].restS must be an integer in 0..600',
+        'days[0].items[0] restS must be an integer in 0..600',
       ),
     ),
     'reps range': (
       (p) => firstItem(p)['repMin'] = 0,
       const ContentProblem(
         'days[0].items[0].repMin',
-        'days[0].items[0].repMin must be an integer in 1..100',
+        'days[0].items[0] reps must be integers in 1..100',
       ),
     ),
     'reps needed for a rep-logged exercise': (
       (p) => firstItem(p).remove('repMax'),
       const ContentProblem(
-        'days[0].items[0].repMax',
-        'days[0].items[0].repMax must be an integer in 1..100',
+        'days[0].items[0].repMin',
+        'days[0].items[0] needs repMin and repMax',
       ),
     ),
     'repMin not above repMax': (
@@ -309,37 +310,38 @@ void main() {
     'no duration for a rep-logged exercise': (
       (p) => firstItem(p)['durationS'] = 30,
       const ContentProblem(
-        'days[0].items[0].durationS',
-        'days[0].items[0] has durationS, but ex_dumbbell_press is logged by '
-            'reps',
+        'days[0].items[0].exerciseId',
+        'days[0].items[0] does not match how ex_dumbbell_press is logged '
+            '(weight_reps)',
       ),
     ),
     'duration range': (
       (p) => (items(p)[1]! as Map)['durationS'] = 4,
       const ContentProblem(
         'days[0].items[1].durationS',
-        'days[0].items[1].durationS must be an integer in 5..3600',
+        'days[0].items[1] durationS must be an integer in 5..3600',
       ),
     ),
     'no reps for a duration-logged exercise': (
       (p) => (items(p)[1]! as Map)['repMin'] = 5,
       const ContentProblem(
-        'days[0].items[1].repMin',
-        'days[0].items[1] has repMin, but ex_plank is logged by duration',
+        'days[0].items[1].exerciseId',
+        'days[0].items[1] does not match how ex_plank is logged (duration)',
       ),
     ),
     'unknown exercise': (
       (p) => firstItem(p)['exerciseId'] = 'ex_missing',
       const ContentProblem(
         'days[0].items[0].exerciseId',
-        'days[0].items[0] uses unknown exercise "ex_missing"',
+        'days[0].items[0] uses "ex_missing", which is not a live exercise',
       ),
     ),
     'retired exercise': (
       (p) => firstItem(p)['exerciseId'] = 'ex_retired_press',
       const ContentProblem(
         'days[0].items[0].exerciseId',
-        'days[0].items[0] uses ex_retired_press, which is retired',
+        'days[0].items[0] uses "ex_retired_press", which is not a live '
+            'exercise',
       ),
     ),
     'exercise outside the equipment profile': (
@@ -383,13 +385,16 @@ void main() {
     ),
     'group of one item': (
       (p) => (items(p)[1]! as Map).remove('group'),
-      const ContentProblem('days[0].items', 'days[0]: group A has one item'),
+      const ContentProblem(
+        'days[0].items[0].group',
+        'days[0].items[0] group A needs two or more adjacent items',
+      ),
     ),
     'group split by another item': (
       (p) => items(p).insert(1, item('ex_dumbbell_press')),
       const ContentProblem(
-        'days[0].items',
-        'days[0]: group A is split by others',
+        'days[0].items[0].group',
+        'days[0].items[0] group A needs two or more adjacent items',
       ),
     ),
   };
@@ -418,6 +423,36 @@ void main() {
     expect(programProblems(program, library), isEmpty);
   });
 
+  test('a valid program is one the app accepts', () {
+    final program = ProgramEntry(validProgram()).program;
+    expect(program.name, 'Test Program');
+    expect(program.days.single.items.first.group, 'A');
+    expect(validateProgram(program, liveLoggingTypes(library)).isValid, isTrue);
+  });
+
+  test('values of the wrong type become ones the app rejects', () {
+    final program = ProgramEntry(
+      changed((p) {
+        p['lengthWeeks'] = '8';
+        firstItem(p)
+          ..['sets'] = '3'
+          ..['repMin'] = 8.5;
+      }),
+    ).program;
+    final result = validateProgram(program, liveLoggingTypes(library));
+
+    expect(result.program, {ProgramIssue.lengthWeeksOutOfRange});
+    expect(result.itemIssues(0, 0), {
+      ItemIssue.setsOutOfRange,
+      ItemIssue.repsOutOfRange,
+    });
+  });
+
+  test('liveLoggingTypes leaves out exercises that are not live', () {
+    expect(liveLoggingTypes(library).keys, isNot(contains('ex_retired_press')));
+    expect(liveLoggingTypes(library)['ex_plank'], LoggingType.duration);
+  });
+
   test('programEquipment is the primary equipment in vocabulary order', () {
     expect(programEquipment(ProgramEntry(validProgram()), library), [
       'dumbbell',
@@ -438,8 +473,9 @@ void main() {
     );
     final summary = summarizeProgram(ProgramEntry(program), library);
 
-    // Day 1: 3 x (40 + 0) + 3 x (40 + 60) = 420 s; day 2: 4 x 160 = 640 s.
-    expect(summary.minutesPerDay, [7, 11]);
+    // The app's estimate. Day 1, a superset: 3 x 30 s of reps and 3 x 30 s
+    // of plank, then 3 rounds of 60 s rest = 360 s; day 2: 4 x (30 + 120).
+    expect(summary.minutesPerDay, [6, 10]);
     expect(summary.weeklySets, {
       Muscle.pec: 3.0,
       Muscle.triceps: 1.5,
@@ -516,9 +552,25 @@ void main() {
     });
   });
 
-  test('EquipmentProfile.has checks every code of a set', () {
-    expect(EquipmentProfile.dumbbells.has(['dumbbell', 'bench']), isTrue);
-    expect(EquipmentProfile.dumbbells.has(['dumbbell', 'box']), isFalse);
-    expect(EquipmentProfile.fullGym.has(['sled', 'other']), isTrue);
+  group('EquipmentProfile', () {
+    test('a full gym has everything but bodyweight', () {
+      expect(
+        EquipmentProfile.fullGym.equipment,
+        Equipment.values.toSet()..remove(Equipment.bodyweight),
+      );
+    });
+
+    test('no profile lists bodyweight, which every profile has', () {
+      for (final profile in EquipmentProfile.values) {
+        expect(profile.equipment, isNot(contains(Equipment.bodyweight)));
+        expect(profile.has(['bodyweight']), isTrue);
+      }
+    });
+
+    test('has checks every code of a set', () {
+      expect(EquipmentProfile.dumbbells.has(['dumbbell', 'bench']), isTrue);
+      expect(EquipmentProfile.dumbbells.has(['dumbbell', 'box']), isFalse);
+      expect(EquipmentProfile.fullGym.has(['sled', 'other']), isTrue);
+    });
   });
 }

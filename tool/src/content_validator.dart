@@ -1,14 +1,15 @@
 // Validates the exercise library in content/exercises/*.json and the
 // programs in content/programs/*.json against the content rules shared with
 // the app (lib/features/exercises/domain/content_rules.dart and
-// program_rules.dart), then checks the library and the catalogue as wholes.
+// lib/features/programs/domain/catalogue_rules.dart), then checks the
+// library and the catalogue as wholes.
 //
 // Used by tool/validate_content.dart and tool/import_content.dart.
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:get_workout/features/exercises/domain/content_rules.dart';
-import 'package:get_workout/features/exercises/domain/program_rules.dart';
+import 'package:get_workout/features/programs/domain/catalogue_rules.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 
 /// What [validateContent] found in a content directory.
@@ -141,7 +142,7 @@ void _printPrograms(ContentReport report) {
         '  ${program.id}: ${program.name} '
         '[${d['status']}, ${program.isPremium ? 'premium' : 'free'}, '
         '${d['level']}, ${d['goal']}, ${d['equipmentProfile']}, '
-        '${program.days.length} days]',
+        '${program.program.days.length} days]',
       )
       ..writeln('    minutes per day: ${summary.minutesPerDay.join(', ')}')
       ..writeln(

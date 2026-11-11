@@ -1,38 +1,29 @@
-// The content rules of the ready-made programs (SPEC.md, `programs/{id}` and
+// The rules of the ready-made programs (SPEC.md, `programs/{id}` and
 // `programs/{id}/detail/main`), checked on the content-file shape: the map
 // of one `content/programs/<id>.json`, with its `id`, the card fields and
 // `days` together.
 //
-// Shared by tool/validate_content.dart and the importer, so it is pure Dart
-// and its messages are the validator's output. Programs are checked against
-// the exercise library in its content-file shape ([ExerciseEntry]).
-import 'content_rules.dart';
-import 'vocabulary.dart';
+// The days are checked by the app's own [validateProgram], so a catalogue
+// program is always one the builder accepts; this file adds only what the
+// catalogue asks beyond that: the card, the equipment profile and level of
+// each exercise, and the catalogue as a whole. Shared by
+// tool/validate_content.dart and the importer, so it is pure Dart and its
+// messages are the validator's output.
+import '../../exercises/domain/content_rules.dart';
+import '../../exercises/domain/vocabulary.dart';
+import 'program.dart';
+import 'program_editing.dart';
+import 'program_validation.dart';
 
 final goals = [for (final goal in Goal.values) goal.code];
 final equipmentProfiles = [
   for (final profile in EquipmentProfile.values) profile.code,
 ];
-const durationLoggingTypes = {LoggingType.duration, LoggingType.weightDuration};
-
-// Card and detail limits.
-const programDays = (min: 1, max: 7);
-const programWeeks = (min: 1, max: 52);
-const maxProgramNameLength = 60;
 const summarySentences = (min: 1, max: 2);
-const maxDayNameLength = 40;
-const dayItems = (min: 1, max: 20);
-const itemSets = (min: 1, max: 10);
-const itemReps = (min: 1, max: 100);
-const itemDurationS = (min: 5, max: 3600);
-const itemRestS = (min: 0, max: 600);
 
 // The catalogue's split of live programs (SPEC.md, "Monetization").
 const freePrograms = 6;
 const premiumPrograms = 19;
-
-/// Seconds one set takes, without its rest, in the session estimate.
-const workSecondsPerSet = 40;
 
 /// The muscles whose weekly sets are held against [weeklySetBands].
 const majorMuscles = {
@@ -71,6 +62,9 @@ const programKeys = {
 };
 const programTextKeys = {'name', 'summary'};
 const dayKeys = {'name', 'items'};
+
+/// The fields of a stored program item, but `targetKg`: a catalogue
+/// program sets no weights.
 const itemKeys = {
   'exerciseId',
   'sets',
@@ -98,34 +92,79 @@ class ProgramEntry {
   String get where => file == null ? id : '$file [$id]';
   bool get isLive => data['status'] == ExerciseStatus.live.code;
   bool get isPremium => data['premium'] == true;
-
-  /// The English name, when there is one.
-  String? get name {
-    final l10n = data['l10n'];
-    final en = l10n is Map ? l10n['en'] : null;
-    final name = en is Map ? en['name'] : null;
-    return name is String && name.isNotEmpty ? name : null;
-  }
-
   Level? get level => Level.values.byCode(data['level']);
 
-  /// The days that are maps, with the items of each that are maps.
-  List<({String name, List<Map<String, Object?>> items})> get days {
+  /// The English text, or an empty map.
+  Map<Object?, Object?> get text {
+    final l10n = data['l10n'];
+    final en = l10n is Map ? l10n['en'] : null;
+    return en is Map ? en : const {};
+  }
+
+  /// The English name, when there is one.
+  String? get name => switch (text['name']) {
+    final String name when name.isNotEmpty => name,
+    _ => null,
+  };
+
+  /// The program as the app holds it. A value of the wrong type becomes one
+  /// that [validateProgram] rejects (or null, for an optional one), so it is
+  /// reported there.
+  Program get program {
+    final weeks = data['lengthWeeks'];
     final days = data['days'];
-    if (days is! List) return const [];
-    return [
-      for (final day in days.whereType<Map<String, Object?>>())
-        (
-          name: day['name'] is String ? day['name']! as String : '',
-          items: switch (day['items']) {
-            final List<Object?> items =>
-              items.whereType<Map<String, Object?>>().toList(),
-            _ => const [],
-          },
-        ),
-    ];
+    return Program(
+      name: name ?? '',
+      origin: ProgramOrigin.catalog,
+      sourceId: id,
+      lengthWeeks: weeks == null ? null : (weeks is int ? weeks : 0),
+      days: [
+        if (days is List)
+          // A day or item that is not an object stays in place, empty, so
+          // the app's issues keep their indexes.
+          for (final day in days) day is Map ? _day(day) : const ProgramDay(),
+      ],
+    );
+  }
+
+  static ProgramDay _day(Map<Object?, Object?> day) {
+    final items = day['items'];
+    return ProgramDay(
+      name: day['name'] is String ? day['name']! as String : '',
+      items: [
+        if (items is List)
+          for (final item in items) _item(item is Map ? item : const {}),
+      ],
+    );
+  }
+
+  static ProgramItem _item(Map<Object?, Object?> item) {
+    int? optional(String key) => switch (item[key]) {
+      null => null,
+      final int value => value,
+      _ => -1,
+    };
+    return ProgramItem(
+      exerciseId: item['exerciseId'] is String
+          ? item['exerciseId']! as String
+          : '',
+      sets: optional('sets') ?? -1,
+      repMin: optional('repMin'),
+      repMax: optional('repMax'),
+      durationS: optional('durationS'),
+      restS: optional('restS') ?? -1,
+      group: item['group'] is String ? item['group']! as String : null,
+    );
   }
 }
+
+/// The logging type of every live exercise of [library], by id: what the
+/// app's [validateProgram] takes as the available exercises.
+Map<String, LoggingType> liveLoggingTypes(Map<String, ExerciseEntry> library) =>
+    {
+      for (final MapEntry(key: id, value: e) in library.entries)
+        if (e.isLive) id: ?LoggingType.values.byCode(e.data['loggingType']),
+    };
 
 /// The `equipment` of a program: the primary `equipment` of every exercise
 /// it uses, in vocabulary order. Unknown exercise ids are left out.
@@ -134,9 +173,9 @@ List<String> programEquipment(
   Map<String, ExerciseEntry> library,
 ) {
   final used = {
-    for (final day in program.days)
+    for (final day in program.program.days)
       for (final item in day.items)
-        ...?library[item['exerciseId']]?.strings('equipment'),
+        ...?library[item.exerciseId]?.strings('equipment'),
   };
   return [
     for (final e in Equipment.values)
@@ -151,6 +190,7 @@ List<ContentProblem> programProblems(
   Map<String, ExerciseEntry> library,
 ) {
   final check = _Problems();
+  final entry = ProgramEntry(d);
 
   for (final key in d.keys) {
     if (!programKeys.contains(key)) check.err(key, 'unknown field "$key"');
@@ -171,36 +211,28 @@ List<ContentProblem> programProblems(
   if (order is! int || order < 1) {
     check.err('order', 'order must be an integer ≥ 1');
   }
-  if (d['lengthWeeks'] != null) {
-    check.intIn('lengthWeeks', d['lengthWeeks'], programWeeks);
-  }
   _checkText(d['l10n'], check);
 
   final days = d['days'];
-  if (days is! List || days.isEmpty || days.length > programDays.max) {
-    check.err(
-      'days',
-      'days must be a list of ${programDays.min}-${programDays.max}',
-    );
-  }
-  check.intIn('daysPerWeek', d['daysPerWeek'], programDays);
-  if (days is List && d['daysPerWeek'] != days.length) {
+  if (days is! List) {
+    check.err('days', 'days must be a list');
+  } else if (d['daysPerWeek'] != days.length) {
     check.err(
       'daysPerWeek',
       'daysPerWeek is ${d['daysPerWeek']} but there are ${days.length} days',
     );
   }
 
-  final program = ProgramEntry(d);
   final profile = EquipmentProfile.values.byCode(d['equipmentProfile']);
   if (days is List) {
     for (final (i, day) in days.indexed) {
-      _checkDay('days[$i]', day, library, profile, program.level, check);
+      _checkDay('days[$i]', day, library, profile, entry.level, check);
     }
   }
+  _checkWithApp(entry.program, library, check);
 
   final equipment = d['equipment'];
-  final expected = programEquipment(program, library);
+  final expected = programEquipment(entry, library);
   if (equipment is! List ||
       equipment.length != expected.length ||
       !expected.indexed.every((e) => equipment[e.$1] == e.$2)) {
@@ -221,19 +253,13 @@ class _Problems {
     }
   }
 
-  void intIn(String field, Object? value, ({int min, int max}) range) {
-    if (value is! int || value < range.min || value > range.max) {
-      err(field, '$field must be an integer in ${range.min}..${range.max}');
-    }
-  }
-
-  void string(String field, Object? value, {int? maxLength}) {
+  /// A catalogue text is never blank and has no stray spaces; its length is
+  /// the app's rule.
+  void string(String field, Object? value) {
     if (value is! String || value.isEmpty) {
       err(field, '$field must be a non-empty string');
     } else if (value.trim() != value || value.contains('  ')) {
       err(field, '$field has stray spaces: "$value"');
-    } else if (maxLength != null && value.length > maxLength) {
-      err(field, '$field is longer than $maxLength characters');
     }
   }
 }
@@ -258,7 +284,7 @@ void _checkText(Object? l10n, _Problems check) {
       check.err('l10n.en.$key', 'l10n.en has unknown field "$key"');
     }
   }
-  check.string('l10n.en.name', text['name'], maxLength: maxProgramNameLength);
+  check.string('l10n.en.name', text['name']);
   const field = 'l10n.en.summary';
   final summary = text['summary'];
   check.string(field, summary);
@@ -293,16 +319,8 @@ void _checkDay(
       check.err('$field.$key', '$field has unknown field "$key"');
     }
   }
-  check.string('$field.name', day['name'], maxLength: maxDayNameLength);
+  check.string('$field.name', day['name']);
   final items = day['items'];
-  if (items is! List ||
-      items.length < dayItems.min ||
-      items.length > dayItems.max) {
-    check.err(
-      '$field.items',
-      '$field.items must be a list of ${dayItems.min}-${dayItems.max}',
-    );
-  }
   if (items is! List) return;
   for (final (j, item) in items.indexed) {
     final itemField = '$field.items[$j]';
@@ -310,117 +328,133 @@ void _checkDay(
       check.err(itemField, '$itemField must be an object');
       continue;
     }
-    _checkItem(itemField, item, library, profile, level, check);
+    for (final key in item.keys) {
+      if (!itemKeys.contains(key)) {
+        check.err('$itemField.$key', '$itemField has unknown field "$key"');
+      }
+    }
+    final group = item['group'];
+    if (group != null && (group is! String || !groupPattern.hasMatch(group))) {
+      check.err('$itemField.group', '$itemField.group must be one letter A-Z');
+    }
+    final exerciseId = item['exerciseId'];
+    final exercise = library[exerciseId];
+    if (exercise == null) continue;
+    if (profile != null && !exercise.fitsProfile(profile)) {
+      check.err(
+        '$itemField.exerciseId',
+        '$exerciseId cannot be done with the ${profile.code} equipment',
+      );
+    }
+    // An exercise may be one level above its program, not two: no advanced
+    // exercise in a beginner program.
+    final exerciseLevel = Level.values.byCode(exercise.data['level']);
+    if (level != null &&
+        exerciseLevel != null &&
+        exerciseLevel.index > level.index + 1) {
+      check.err(
+        '$itemField.exerciseId',
+        '$exerciseId is ${exerciseLevel.code}, too hard for a '
+            '${level.code} program',
+      );
+    }
   }
-  _checkGroups(field, items, check);
 }
 
-void _checkItem(
-  String field,
-  Map<String, Object?> item,
+/// Reports what the app's [validateProgram] finds in [program], in the
+/// content file's field names.
+void _checkWithApp(
+  Program program,
   Map<String, ExerciseEntry> library,
-  EquipmentProfile? profile,
-  Level? level,
   _Problems check,
 ) {
-  for (final key in item.keys) {
-    if (!itemKeys.contains(key)) {
-      check.err('$field.$key', '$field has unknown field "$key"');
-    }
-  }
-  check
-    ..intIn('$field.sets', item['sets'], itemSets)
-    ..intIn('$field.restS', item['restS'], itemRestS);
-  final group = item['group'];
-  if (group != null && (group is! String || !groupPattern.hasMatch(group))) {
-    check.err('$field.group', '$field.group must be one letter A-Z');
-  }
-
-  final exerciseId = item['exerciseId'];
-  final exercise = library[exerciseId];
-  if (exercise == null) {
-    check.err(
-      '$field.exerciseId',
-      '$field uses unknown exercise "$exerciseId"',
-    );
-    return;
-  }
-  if (!exercise.isLive) {
-    check.err(
-      '$field.exerciseId',
-      '$field uses $exerciseId, which is ${exercise.data['status']}',
-    );
-  }
-
-  final loggingType = LoggingType.values.byCode(exercise.data['loggingType']);
-  if (loggingType != null) {
-    final byDuration = durationLoggingTypes.contains(loggingType);
-    if (byDuration) {
-      check.intIn('$field.durationS', item['durationS'], itemDurationS);
-    } else {
-      final repMin = item['repMin'], repMax = item['repMax'];
-      check
-        ..intIn('$field.repMin', repMin, itemReps)
-        ..intIn('$field.repMax', repMax, itemReps);
-      if (repMin is int && repMax is int && repMin > repMax) {
-        check.err('$field.repMin', '$field has repMin above repMax');
-      }
-    }
-    for (final key in byDuration ? ['repMin', 'repMax'] : ['durationS']) {
-      if (item.containsKey(key)) {
+  final result = validateProgram(program, liveLoggingTypes(library));
+  for (final issue in result.program) {
+    switch (issue) {
+      case ProgramIssue.nameMissing:
+        break; // Reported by the text check.
+      case ProgramIssue.nameTooLong:
         check.err(
-          '$field.$key',
-          '$field has $key, but $exerciseId is logged by '
-              '${byDuration ? 'duration' : 'reps'}',
+          'l10n.en.name',
+          'l10n.en.name is longer than ${ProgramLimits.maxNameLength} '
+              'characters',
         );
-      }
+      case ProgramIssue.lengthWeeksOutOfRange:
+        check.err(
+          'lengthWeeks',
+          'lengthWeeks must be an integer in '
+              '${ProgramLimits.minLengthWeeks}..${ProgramLimits.maxLengthWeeks}',
+        );
+      case ProgramIssue.noDays || ProgramIssue.tooManyDays:
+        check.err('days', 'days must be a list of 1-${ProgramLimits.maxDays}');
     }
   }
-
-  if (profile != null && !exercise.fitsProfile(profile)) {
-    check.err(
-      '$field.exerciseId',
-      '$exerciseId cannot be done with the ${profile.code} equipment',
-    );
-  }
-  // An exercise may be one level above its program, not two: no advanced
-  // exercise in a beginner program.
-  final exerciseLevel = Level.values.byCode(exercise.data['level']);
-  if (level != null &&
-      exerciseLevel != null &&
-      exerciseLevel.index > level.index + 1) {
-    check.err(
-      '$field.exerciseId',
-      '$exerciseId is ${exerciseLevel.code}, too hard for a '
-          '${level.code} program',
-    );
-  }
-}
-
-/// Items sharing a group letter sit next to each other, and a group has at
-/// least two of them (a superset, or a circuit from three).
-void _checkGroups(String field, List<Object?> items, _Problems check) {
-  final sizes = <String, int>{};
-  String? previous;
-  for (final item in items) {
-    final group = item is Map ? item['group'] : null;
-    if (group is String) {
-      if (group != previous && sizes.containsKey(group)) {
-        check.err('$field.items', '$field: group $group is split by others');
+  result.days.forEach((d, issues) {
+    final field = 'days[$d]';
+    for (final issue in issues) {
+      switch (issue) {
+        case DayIssue.nameTooLong:
+          check.err(
+            '$field.name',
+            '$field.name is longer than ${ProgramLimits.maxDayNameLength} '
+                'characters',
+          );
+        case DayIssue.noItems || DayIssue.tooManyItems:
+          check.err(
+            '$field.items',
+            '$field.items must be a list of 1-${ProgramLimits.maxItemsPerDay}',
+          );
       }
-      sizes[group] = (sizes[group] ?? 0) + 1;
     }
-    previous = group is String ? group : null;
-  }
-  sizes.forEach((group, size) {
-    if (size < 2) {
-      check.err('$field.items', '$field: group $group has one item');
+  });
+  result.items.forEach((ref, issues) {
+    final field = 'days[${ref.day}].items[${ref.item}]';
+    final item = program.days[ref.day].items[ref.item];
+    for (final issue in issues) {
+      final (key, message) = switch (issue) {
+        ItemIssue.exerciseUnavailable => (
+          'exerciseId',
+          'uses "${item.exerciseId}", which is not a live exercise',
+        ),
+        ItemIssue.setsOutOfRange => (
+          'sets',
+          'sets must be an integer in '
+              '${ProgramLimits.minSets}..${ProgramLimits.maxSets}',
+        ),
+        ItemIssue.repsMissing => ('repMin', 'needs repMin and repMax'),
+        ItemIssue.repsOutOfRange => (
+          'repMin',
+          'reps must be integers in '
+              '${ProgramLimits.minReps}..${ProgramLimits.maxReps}',
+        ),
+        ItemIssue.repRangeInverted => ('repMin', 'has repMin above repMax'),
+        ItemIssue.durationMissing => ('durationS', 'needs durationS'),
+        ItemIssue.durationOutOfRange => (
+          'durationS',
+          'durationS must be an integer in '
+              '${ProgramLimits.minDurationS}..${ProgramLimits.maxDurationS}',
+        ),
+        ItemIssue.restOutOfRange => (
+          'restS',
+          'restS must be an integer in 0..${ProgramLimits.maxRestS}',
+        ),
+        ItemIssue.targetOutOfRange || ItemIssue.wrongTarget => (
+          'exerciseId',
+          'does not match how ${item.exerciseId} is logged '
+              '(${library[item.exerciseId]?.data['loggingType']})',
+        ),
+        ItemIssue.groupInvalid => (
+          'group',
+          'group ${item.group} needs two or more adjacent items',
+        ),
+      };
+      check.err('$field.$key', '$field $message');
     }
   });
 }
 
-/// The weekly numbers of a program: an estimate of each day's minutes and
-/// the sets each muscle gets in a week (SPEC.md, "Volume").
+/// The weekly numbers of a program: the app's estimate of each day's
+/// minutes and the sets each muscle gets in a week (SPEC.md, "Volume").
 class ProgramSummary {
   const ProgramSummary({required this.minutesPerDay, required this.weeklySets});
 
@@ -432,35 +466,35 @@ class ProgramSummary {
 String formatSets(double sets) =>
     sets == sets.roundToDouble() ? '${sets.round()}' : '$sets';
 
-/// [program]'s [ProgramSummary]. A set takes [workSecondsPerSet] plus its
-/// rest; every day is done once a week. Unknown exercises count nothing.
+/// [program]'s [ProgramSummary]: minutes from the app's [estimateDay];
+/// every day is done once a week. Unknown exercises count no sets.
 ProgramSummary summarizeProgram(
   ProgramEntry program,
   Map<String, ExerciseEntry> library,
 ) {
-  final minutes = <int>[];
+  final days = program.program.days;
   final sets = <Muscle, double>{};
-  for (final day in program.days) {
-    var seconds = 0;
+  for (final day in days) {
     for (final item in day.items) {
-      final count = item['sets'] is int ? item['sets']! as int : 0;
-      final rest = item['restS'] is int ? item['restS']! as int : 0;
-      seconds += count * (workSecondsPerSet + rest);
-      final exercise = library[item['exerciseId']];
-      if (exercise == null) continue;
+      final exercise = library[item.exerciseId];
+      if (exercise == null || item.sets < 0) continue;
       for (final (key, weight) in [
         ('mainMuscles', 1.0),
         ('secondaryMuscles', 0.5),
       ]) {
         for (final muscle in exercise.strings(key)) {
           final m = Muscle.values.byCode(muscle);
-          if (m != null) sets[m] = (sets[m] ?? 0) + count * weight;
+          if (m != null) sets[m] = (sets[m] ?? 0) + item.sets * weight;
         }
       }
     }
-    minutes.add((seconds / 60).round());
   }
-  return ProgramSummary(minutesPerDay: minutes, weeklySets: sets);
+  return ProgramSummary(
+    minutesPerDay: [
+      for (final day in days) (estimateDay(day).inSeconds / 60).round(),
+    ],
+    weeklySets: sets,
+  );
 }
 
 /// What [checkCatalogue] found across the programs.
