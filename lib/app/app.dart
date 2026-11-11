@@ -5,6 +5,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../features/exercises/presentation/exercise_catalogue_cubit.dart';
+import '../features/profile/presentation/profile_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/settings_cubit.dart';
 import '../l10n/app_localizations.dart';
@@ -18,7 +19,7 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  late final _router = buildRouter(sl<AuthCubit>());
+  late final _router = buildRouter(sl<AuthCubit>(), sl<ProfileCubit>());
   late final AppLifecycleListener _lifecycle;
 
   @override
@@ -42,6 +43,7 @@ class _AppState extends State<App> {
       providers: [
         BlocProvider.value(value: sl<AuthCubit>()),
         BlocProvider.value(value: sl<SettingsCubit>()),
+        BlocProvider.value(value: sl<ProfileCubit>()),
         BlocProvider.value(value: sl<ExerciseCatalogueCubit>()),
       ],
       child: BlocSelector<SettingsCubit, SettingsState, ThemePreference>(

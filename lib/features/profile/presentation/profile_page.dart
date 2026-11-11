@@ -7,7 +7,8 @@ import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_section.dart';
 
-/// The Profile tab: the account and calculators rows, then the settings.
+/// The Profile tab: the account, profile and calculators rows, then the
+/// settings.
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
@@ -28,6 +29,12 @@ class ProfilePage extends StatelessWidget {
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.go(Routes.account),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person_outline),
+            title: Text(l10n.profileDetails),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go(Routes.profileDetails),
           ),
           ListTile(
             leading: const Icon(Icons.calculate_outlined),

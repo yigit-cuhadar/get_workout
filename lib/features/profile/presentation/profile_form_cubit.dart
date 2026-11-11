@@ -1,0 +1,238 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_core/forge_core.dart';
+
+import '../../exercises/domain/vocabulary.dart';
+import '../../settings/domain/user_settings.dart';
+import '../domain/profile_usecases.dart';
+import '../domain/user_profile.dart';
+
+enum ProfileFormStatus {
+  editing,
+
+  /// The answers were handed to the repository. Firestore applies them to
+  /// its local cache at once, so the page moves on without waiting for the
+  /// server, which never answers while offline.
+  submitted,
+}
+
+class ProfileFormState extends Equatable {
+  const ProfileFormState({
+    required this.questions,
+    required this.answers,
+    this.step = 0,
+    this.invalid = const {},
+    this.status = ProfileFormStatus.editing,
+    this.failure,
+  });
+
+  /// Asked one per step, in this order.
+  final List<ProfileField> questions;
+
+  /// Index into [questions]; [questions].length is the closing summary.
+  final int step;
+
+  /// Only valid answers, always metric.
+  final UserProfile answers;
+
+  /// Questions whose entry is not a valid answer; they have none in
+  /// [answers] and block moving on.
+  final Set<ProfileField> invalid;
+  final ProfileFormStatus status;
+
+  /// Set when saving failed; the answers stay for another try.
+  final Failure? failure;
+
+  /// Null on the summary.
+  ProfileField? get question =>
+      step < questions.length ? questions[step] : null;
+
+  bool get canContinue {
+    final question = this.question;
+    if (question == null) return true;
+    if (invalid.contains(question)) return false;
+    return question.optional || answers.answered(question);
+  }
+
+  ProfileFormState copyWith({
+    int? step,
+    UserProfile? answers,
+    Set<ProfileField>? invalid,
+    ProfileFormStatus? status,
+    Failure? failure,
+  }) => ProfileFormState(
+    questions: questions,
+    step: step ?? this.step,
+    answers: answers ?? this.answers,
+    invalid: invalid ?? this.invalid,
+    status: status ?? this.status,
+    failure: failure,
+  );
+
+  @override
+  List<Object?> get props => [
+    questions,
+    step,
+    answers,
+    invalid,
+    status,
+    failure,
+  ];
+}
+
+/// The profile questions as a form, in the user's units. Onboarding asks all
+/// of them and closes with a summary; editing asks one and saves it alone.
+class ProfileFormCubit extends Cubit<ProfileFormState> {
+  /// Every question, then the summary. Finishing or skipping completes
+  /// onboarding with whatever was answered.
+  ProfileFormCubit.onboarding({
+    required String uid,
+    required UserProfile initial,
+    required CompleteOnboarding completeOnboarding,
+    this._now = DateTime.now,
+  }) : _summary = true,
+       _save = ((answers) => completeOnboarding((uid: uid, answers: answers))),
+       super(
+         ProfileFormState(questions: ProfileField.values, answers: initial),
+       );
+
+  /// The one question [field]; finishing saves only that answer.
+  ProfileFormCubit.edit({
+    required String uid,
+    required ProfileField field,
+    required UserProfile initial,
+    required UpdateProfile updateProfile,
+    this._now = DateTime.now,
+  }) : _summary = false,
+       _save = ((answers) =>
+           updateProfile((uid: uid, profile: answers, fields: {field}))),
+       super(ProfileFormState(questions: [field], answers: initial));
+
+  final DateTime Function() _now;
+  final bool _summary;
+  final Future<Result<void>> Function(UserProfile answers) _save;
+
+  /// The birth years [enterBirthYear] accepts this year.
+  ({int min, int max}) get birthYearRange {
+    final year = _now().year;
+    return (min: year - ProfileLimits.maxAge, max: year - ProfileLimits.minAge);
+  }
+
+  void setGoal(Goal goal) => _answer(state.answers.copyWith(goal: goal));
+
+  void setLevel(Level level) => _answer(state.answers.copyWith(level: level));
+
+  void setDaysPerWeek(int days) {
+    if (ProfileLimits.daysPerWeek(days)) {
+      _answer(state.answers.copyWith(daysPerWeek: days));
+    }
+  }
+
+  void setSex(Sex sex) => _answer(state.answers.copyWith(sex: sex));
+
+  void applyPreset(EquipmentPreset preset) =>
+      _answer(state.answers.copyWith(equipment: preset.equipment));
+
+  void toggleEquipment(Equipment item) {
+    final owned = {...?state.answers.equipment};
+    if (!owned.remove(item)) owned.add(item);
+    _answer(state.answers.copyWith(equipment: owned));
+  }
+
+  void enterBirthYear(String text) => _enter(
+    ProfileField.birthYear,
+    _parse(text),
+    (year) =>
+        year == year.roundToDouble() &&
+            ProfileLimits.birthYear(year.toInt(), currentYear: _now().year)
+        ? state.answers.copyWith(birthYear: year.toInt())
+        : null,
+  );
+
+  void enterHeight(String text, LengthUnit unit) =>
+      _enter(ProfileField.height, _parse(text), (value) {
+        final cm = unit.toCm(value);
+        return ProfileLimits.heightCm(cm)
+            ? state.answers.copyWith(heightCm: cm)
+            : null;
+      });
+
+  void enterWeight(String text, WeightUnit unit) =>
+      _enter(ProfileField.weight, _parse(text), (value) {
+        final kg = unit.toKg(value);
+        return ProfileLimits.weightKg(kg)
+            ? state.answers.copyWith(weightKg: kg)
+            : null;
+      });
+
+  void enterTargetWeight(String text, WeightUnit unit) =>
+      _enter(ProfileField.targetWeight, _parse(text), (value) {
+        final kg = unit.toKg(value);
+        return ProfileLimits.weightKg(kg)
+            ? state.answers.copyWith(targetWeightKg: kg)
+            : null;
+      });
+
+  /// The unit of [field] changed and its entry restarts from the answer,
+  /// shown in the new unit; an invalid entry is dropped.
+  void unitChanged(ProfileField field) {
+    if (state.invalid.contains(field)) {
+      emit(state.copyWith(invalid: {...state.invalid}..remove(field)));
+    }
+  }
+
+  /// To the next question, to the summary after the last one, or, without
+  /// a summary, saves.
+  Future<void> next() async {
+    if (state.status != ProfileFormStatus.editing || !state.canContinue) {
+      return;
+    }
+    final last = _summary ? state.questions.length : state.questions.length - 1;
+    if (state.step < last) return emit(state.copyWith(step: state.step + 1));
+    await _submit();
+  }
+
+  void back() {
+    if (state.step > 0 && state.status == ProfileFormStatus.editing) {
+      emit(state.copyWith(step: state.step - 1));
+    }
+  }
+
+  /// Ends onboarding now with the answers given so far.
+  Future<void> skip() async {
+    if (_summary && state.status == ProfileFormStatus.editing) await _submit();
+  }
+
+  Future<void> _submit() async {
+    emit(state.copyWith(status: ProfileFormStatus.submitted));
+    final failure = (await _save(state.answers)).failureOrNull;
+    if (failure != null && !isClosed) {
+      emit(state.copyWith(status: ProfileFormStatus.editing, failure: failure));
+    }
+  }
+
+  void _answer(UserProfile answers) => emit(state.copyWith(answers: answers));
+
+  /// [value] is null for an empty entry, NaN for one that is not a number.
+  /// [accept] gives the answers with a valid value, or null.
+  void _enter(
+    ProfileField field,
+    double? value,
+    UserProfile? Function(double value) accept,
+  ) {
+    final accepted = value == null || value.isNaN ? null : accept(value);
+    final invalid = {...state.invalid}..remove(field);
+    if (value != null && accepted == null) invalid.add(field);
+    emit(
+      state.copyWith(
+        answers: accepted ?? state.answers.without(field),
+        invalid: invalid,
+      ),
+    );
+  }
+
+  static double? _parse(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+    return double.tryParse(trimmed.replaceAll(',', '.')) ?? double.nan;
+  }
+}
