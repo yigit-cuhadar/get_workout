@@ -28,19 +28,41 @@ class FirestoreUserLibraryRepository implements UserLibraryRepository {
       ..remove(Equipment.bodyweight);
   });
 
+  /// Changes only the codes this version knows: codes stored by a newer
+  /// version stay as they are. Two array operations in one batch need no
+  /// read, so this also works offline. Removing first also creates the list
+  /// when there is none, so an empty choice is still stored as a choice.
   @override
   Future<Result<void>> saveEquipment(String uid, Set<Equipment> equipment) =>
-      guard(
-        () => _user(uid).set({
-          'profile': {
-            'equipment': [
-              for (final item in Equipment.values)
-                if (equipment.contains(item)) item.code,
-            ],
-          },
-        }, SetOptions(merge: true)),
-        mapper: mapFirebaseError,
-      );
+      guard(() {
+        final owned = {...equipment}..remove(Equipment.bodyweight);
+        Map<String, Object?> update(FieldValue value) => {
+          'profile': {'equipment': value},
+        };
+        final user = _user(uid);
+        return (_firestore.batch()
+              ..set(
+                user,
+                update(
+                  FieldValue.arrayRemove([
+                    for (final item in Equipment.values)
+                      if (!owned.contains(item)) item.code,
+                  ]),
+                ),
+                SetOptions(merge: true),
+              )
+              ..set(
+                user,
+                update(
+                  FieldValue.arrayUnion([
+                    for (final item in Equipment.values)
+                      if (owned.contains(item)) item.code,
+                  ]),
+                ),
+                SetOptions(merge: true),
+              ))
+            .commit();
+      }, mapper: mapFirebaseError);
 
   @override
   Stream<Set<String>> watchFavorites(String uid) => _watch(uid, (data) {

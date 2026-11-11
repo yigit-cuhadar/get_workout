@@ -70,7 +70,12 @@ class ExercisesModule implements FeatureModule {
         ),
       )
       ..registerLazySingleton(
-        () => LibraryCubit(catalogue: sl(), favorites: sl(), equipment: sl()),
+        () => LibraryCubit(
+          watchAuthUser: sl(),
+          catalogue: sl(),
+          favorites: sl(),
+          equipment: sl(),
+        ),
       )
       ..registerFactoryParam<ExerciseDetailCubit, String, void>(
         (exerciseId, _) =>

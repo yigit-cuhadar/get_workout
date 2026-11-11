@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../domain/exercise.dart';
@@ -133,9 +134,11 @@ class LibraryState extends Equatable {
 
 /// Browsing the catalogue: the view, search, filters and sort of the list,
 /// and the muscle picked on the model. Follows the app-wide catalogue,
-/// favourites and equipment, so results stay current as they change.
+/// favourites and equipment, so results stay current as they change. A
+/// change of user starts browsing afresh; only the view is kept.
 class LibraryCubit extends Cubit<LibraryState> {
   LibraryCubit({
+    required WatchAuthUser watchAuthUser,
     required ExerciseCatalogueCubit catalogue,
     required FavoritesCubit favorites,
     required EquipmentCubit equipment,
@@ -157,13 +160,15 @@ class LibraryCubit extends Cubit<LibraryState> {
         _recompute();
       }),
       equipment.stream.map((state) => state.owned).distinct().listen((owned) {
-        final lost = _owned != null && owned == null;
         _owned = owned;
-        // Equipment turns unknown when the user changes; their filter goes.
-        _recompute(
-          filter: lost ? state.filter.copyWith(onlyDoable: false) : null,
-        );
+        _recompute();
       }),
+      // The first id is whoever was signed in when browsing started.
+      watchAuthUser()
+          .map((user) => user?.id)
+          .distinct()
+          .skip(1)
+          .listen((_) => _reset()),
     ];
   }
 
@@ -219,6 +224,12 @@ class LibraryCubit extends Cubit<LibraryState> {
       _recompute(filter: state.filter.copyWith(onlyFavorites: value));
 
   void clearFilters() => _recompute(filter: const LibraryFilter());
+
+  void _reset() => _recompute(
+    query: '',
+    filter: const LibraryFilter(),
+    sort: ExerciseSort.popularity,
+  );
 
   /// Opens (or with null, closes) the sheet of [muscle].
   void selectMuscle(Muscle? muscle) => emit(

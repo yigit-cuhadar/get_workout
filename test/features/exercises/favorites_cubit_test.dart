@@ -17,37 +17,49 @@ void main() {
   const guest = AuthUser(id: 'g1', isAnonymous: true);
   const member = AuthUser(id: 'u1', email: 'a@b.co');
   const failure = NetworkFailure();
+  const retryDelay = Duration(milliseconds: 20);
 
   late MockAuthRepository auth;
   late MockUserLibraryRepository library;
   late StreamController<AuthUser?> users;
-  late Map<String, StreamController<Set<String>>> stored;
+
+  /// Every subscription to a user's favourites, oldest first.
+  late Map<String, List<StreamController<Set<String>>>> watched;
+
+  StreamController<Set<String>> latest(String uid) => watched[uid]!.last;
 
   setUp(() {
     auth = MockAuthRepository();
     library = MockUserLibraryRepository();
     users = StreamController<AuthUser?>();
-    stored = {};
+    watched = {};
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
-    when(() => library.watchFavorites(any())).thenAnswer(
-      (call) => stored
-          .putIfAbsent(
-            call.positionalArguments.first as String,
-            StreamController<Set<String>>.new,
-          )
-          .stream,
-    );
+    when(() => library.watchFavorites(any())).thenAnswer((call) {
+      final controller = StreamController<Set<String>>();
+      watched
+          .putIfAbsent(call.positionalArguments.first as String, () => [])
+          .add(controller);
+      return controller.stream;
+    });
   });
 
-  FavoritesCubit build() => FavoritesCubit(
+  FavoritesCubit build({Duration delay = retryDelay}) => FavoritesCubit(
     watchAuthUser: WatchAuthUser(auth),
     watchFavorites: WatchFavorites(library),
     setFavorite: SetFavorite(library),
+    retryDelay: delay,
   );
 
-  void writesReturn(Result<void> result) => when(
+  void writesReturn(Future<Result<void>> Function() result) => when(
     () => library.setFavorite(any(), any(), favorite: any(named: 'favorite')),
-  ).thenAnswer((_) async => result);
+  ).thenAnswer((_) => result());
+
+  Future<void> signIn(AuthUser user, Set<String> favorites) async {
+    users.add(user);
+    await pumpEventQueue();
+    latest(user.id).add(favorites);
+    await pumpEventQueue();
+  }
 
   test('starts empty', () {
     expect(build().state, const FavoritesState({}));
@@ -57,33 +69,27 @@ void main() {
     'follows whoever is signed in and resets at once on a user change',
     build: build,
     act: (_) async {
-      users.add(guest);
-      await pumpEventQueue();
-      stored['g1']!.add({'squat'});
-      await pumpEventQueue();
+      await signIn(guest, {'squat'});
       users.add(member);
       await pumpEventQueue();
-      stored['u1']!.add({'bench'});
+      latest('u1').add({'bench'});
       await pumpEventQueue();
       // The previous user's stream is no longer followed.
-      stored['g1']!.add({'deadlift'});
+      latest('g1').add({'deadlift'});
     },
     expect: () => [
       const FavoritesState({'squat'}),
       const FavoritesState({}),
       const FavoritesState({'bench'}),
     ],
-    verify: (_) => expect(stored['g1']!.hasListener, isFalse),
+    verify: (_) => expect(latest('g1').hasListener, isFalse),
   );
 
   blocTest<FavoritesCubit, FavoritesState>(
     'signing out empties them',
     build: build,
     act: (_) async {
-      users.add(member);
-      await pumpEventQueue();
-      stored['u1']!.add({'squat'});
-      await pumpEventQueue();
+      await signIn(member, {'squat'});
       users.add(null);
     },
     expect: () => [
@@ -94,13 +100,10 @@ void main() {
 
   blocTest<FavoritesCubit, FavoritesState>(
     'toggle adds a missing one and removes a present one, for the current user',
-    setUp: () => writesReturn(const Ok(null)),
+    setUp: () => writesReturn(() async => const Ok(null)),
     build: build,
     act: (cubit) async {
-      users.add(member);
-      await pumpEventQueue();
-      stored['u1']!.add({'squat'});
-      await pumpEventQueue();
+      await signIn(member, {'squat'});
       await cubit.toggle('bench');
       await cubit.toggle('squat');
     },
@@ -117,13 +120,10 @@ void main() {
 
   blocTest<FavoritesCubit, FavoritesState>(
     'a failed toggle keeps the favourites and reports the failure',
-    setUp: () => writesReturn(const Err(failure)),
+    setUp: () => writesReturn(() async => const Err(failure)),
     build: build,
     act: (cubit) async {
-      users.add(member);
-      await pumpEventQueue();
-      stored['u1']!.add({'squat'});
-      await pumpEventQueue();
+      await signIn(member, {'squat'});
       await cubit.toggle('bench');
     },
     expect: () => [
@@ -133,17 +133,84 @@ void main() {
   );
 
   blocTest<FavoritesCubit, FavoritesState>(
-    'a stream error keeps the last favourites',
+    'a failed stream is followed again after a backoff',
     build: build,
     act: (_) async {
-      users.add(member);
+      await signIn(member, {'squat'});
+      latest('u1').addError(const PermissionFailure());
       await pumpEventQueue();
-      stored['u1']!
-        ..add({'squat'})
-        ..addError(const PermissionFailure());
+      expect(watched['u1'], hasLength(1));
+
+      await Future<void>.delayed(retryDelay * 2);
+      expect(watched['u1'], hasLength(2));
+      latest('u1').add({'squat', 'bench'});
     },
     expect: () => [
       const FavoritesState({'squat'}),
+      const FavoritesState({'squat', 'bench'}),
+    ],
+  );
+
+  blocTest<FavoritesCubit, FavoritesState>(
+    'a stream that keeps failing waits longer each time',
+    build: build,
+    act: (_) async {
+      await signIn(member, {'squat'});
+      latest('u1').addError(const PermissionFailure());
+      await Future<void>.delayed(retryDelay * 1.5);
+      expect(watched['u1'], hasLength(2));
+
+      latest('u1').addError(const PermissionFailure());
+      await Future<void>.delayed(retryDelay * 1.5);
+      // The second retry waits twice as long.
+      expect(watched['u1'], hasLength(2));
+      await Future<void>.delayed(retryDelay * 1.5);
+      expect(watched['u1'], hasLength(3));
+    },
+    expect: () => [
+      const FavoritesState({'squat'}),
+    ],
+  );
+
+  blocTest<FavoritesCubit, FavoritesState>(
+    'a tap while the stream is down writes from the last known favourites '
+    'and follows the stream again at once',
+    setUp: () => writesReturn(() async => const Ok(null)),
+    build: () => build(delay: const Duration(hours: 1)),
+    act: (cubit) async {
+      await signIn(member, {'squat'});
+      latest('u1').addError(const NetworkFailure());
+      await pumpEventQueue();
+
+      await cubit.toggle('squat');
+      expect(watched['u1'], hasLength(2));
+      latest('u1').add({});
+    },
+    expect: () => [
+      const FavoritesState({'squat'}),
+      const FavoritesState({}),
+    ],
+    verify: (_) =>
+        verify(() => library.setFavorite('u1', 'squat', favorite: false))
+            .called(1),
+  );
+
+  final write = Completer<Result<void>>();
+  blocTest<FavoritesCubit, FavoritesState>(
+    "a write's outcome is ignored once another user is signed in",
+    setUp: () => writesReturn(() => write.future),
+    build: build,
+    act: (cubit) async {
+      await signIn(guest, {'squat'});
+      final toggled = cubit.toggle('bench');
+      await signIn(member, {'row'});
+      write.complete(const Err(failure));
+      await toggled;
+    },
+    expect: () => [
+      const FavoritesState({'squat'}),
+      const FavoritesState({}),
+      const FavoritesState({'row'}),
     ],
   );
 

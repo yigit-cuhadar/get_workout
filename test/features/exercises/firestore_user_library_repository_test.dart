@@ -71,6 +71,35 @@ void main() {
       });
     });
 
+    test('save keeps codes this version does not know', () async {
+      await user().set({
+        'profile': {
+          'equipment': ['hoverboard', 'barbell', 'bodyweight', 'bench'],
+        },
+      });
+
+      await repository.saveEquipment('u1', {
+        Equipment.bench,
+        Equipment.dumbbell,
+        Equipment.bodyweight,
+      });
+
+      expect((await user().get()).data(), {
+        'profile': {
+          'equipment': ['hoverboard', 'bench', 'dumbbell'],
+        },
+      });
+    });
+
+    test('saving nothing is still a choice', () async {
+      await repository.saveEquipment('u1', {});
+
+      expect((await user().get()).data(), {
+        'profile': {'equipment': <String>[]},
+      });
+      expect(await repository.watchEquipment('u1').first, <Equipment>{});
+    });
+
     test('save creates the document when it is missing', () async {
       await repository.saveEquipment('u1', {Equipment.kettlebell});
       expect(await repository.watchEquipment('u1').first, {

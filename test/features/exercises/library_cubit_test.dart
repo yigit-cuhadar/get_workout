@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/exercise_queries.dart';
@@ -11,7 +12,11 @@ import 'package:get_workout/features/exercises/presentation/exercise_catalogue_c
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 
+import 'package:mocktail/mocktail.dart';
+
 import 'fixtures.dart';
+
+class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockCatalogueCubit extends MockCubit<ExerciseCatalogueState>
     implements ExerciseCatalogueCubit {}
@@ -64,6 +69,8 @@ void main() {
   late MockCatalogueCubit catalogue;
   late MockFavoritesCubit favorites;
   late MockEquipmentCubit equipment;
+  late MockAuthRepository auth;
+  late StreamController<AuthUser?> users;
   late StreamController<ExerciseCatalogueState> catalogueChanges;
   late StreamController<FavoritesState> favoriteChanges;
   late StreamController<EquipmentState> equipmentChanges;
@@ -72,6 +79,9 @@ void main() {
     catalogue = MockCatalogueCubit();
     favorites = MockFavoritesCubit();
     equipment = MockEquipmentCubit();
+    users = StreamController();
+    auth = MockAuthRepository();
+    when(auth.watchUser).thenAnswer((_) => users.stream);
     catalogueChanges = StreamController.broadcast();
     favoriteChanges = StreamController.broadcast();
     equipmentChanges = StreamController.broadcast();
@@ -96,9 +106,11 @@ void main() {
     await catalogueChanges.close();
     await favoriteChanges.close();
     await equipmentChanges.close();
+    await users.close();
   });
 
   LibraryCubit build() => LibraryCubit(
+    watchAuthUser: WatchAuthUser(auth),
     catalogue: catalogue,
     favorites: favorites,
     equipment: equipment,
@@ -255,19 +267,81 @@ void main() {
       expect(cubit.state.filter.onlyDoable, isTrue);
       expect(results(cubit), ['push_up']);
     });
+  });
 
-    test('a user change turns the filter off', () async {
+  group('a user change', () {
+    const guest = AuthUser(id: 'g1', isAnonymous: true);
+    const member = AuthUser(id: 'u1', email: 'a@b.co');
+
+    LibraryCubit browsing() => build()
+      ..setView(LibraryView.list)
+      ..setQuery('b')
+      ..setSort(ExerciseSort.alphabetical)
+      ..toggleMuscle(Muscle.pec)
+      ..toggleEquipment(Equipment.barbell)
+      ..toggleLevel(Level.intermediate)
+      ..toggleMovementPattern(MovementPattern.horizontalPush)
+      ..setOnlyFavorites(true)
+      ..setOnlyDoable(true);
+
+    void expectFresh(LibraryCubit cubit) {
+      expect(cubit.state.query, '');
+      expect(cubit.state.sort, ExerciseSort.popularity);
+      expect(cubit.state.filter, const LibraryFilter());
+      expect(results(cubit), ['bench_press', 'push_up', 'squat', 'curl']);
+      // The view is a preference of the device, not of the user.
+      expect(cubit.state.view, LibraryView.list);
+    }
+
+    test('resets search, sort and every filter', () async {
+      final cubit = browsing();
+      users.add(guest);
+      await pumpEventQueue();
+      expect(cubit.state.query, 'b', reason: 'the first user is no change');
+
+      users.add(member);
+      await pumpEventQueue();
+
+      expectFresh(cubit);
+    });
+
+    test('resets also when the previous user had chosen equipment', () async {
       final cubit = build();
+      users.add(guest);
       equipmentChanges.add(const EquipmentState({Equipment.barbell}));
       await pumpEventQueue();
-      cubit.setOnlyDoable(true);
+      cubit
+        ..setView(LibraryView.list)
+        ..setQuery('b')
+        ..setOnlyDoable(true);
 
+      users.add(member);
       equipmentChanges.add(const EquipmentState(null));
       await pumpEventQueue();
 
-      expect(cubit.state.filter.onlyDoable, isFalse);
+      expectFresh(cubit);
       expect(cubit.state.equipmentChosen, isFalse);
-      expect(results(cubit), hasLength(4));
+    });
+
+    test('resets when signing out', () async {
+      final cubit = browsing();
+      users.add(member);
+      await pumpEventQueue();
+
+      users.add(null);
+      await pumpEventQueue();
+
+      expectFresh(cubit);
+    });
+
+    test('an update of the same user keeps everything', () async {
+      final cubit = browsing();
+      users
+        ..add(guest)
+        ..add(const AuthUser(id: 'g1', isAnonymous: true, displayName: 'G'));
+      await pumpEventQueue();
+      expect(cubit.state.query, 'b');
+      expect(cubit.state.filter.onlyFavorites, isTrue);
     });
   });
 

@@ -69,12 +69,15 @@ class _DetailBody extends StatelessWidget {
     final exercise = detail.exercise;
     final text = exercise.localized(context);
     final colors = _MuscleColors.of(context);
+    String numbered(int index, String line) =>
+        l10n.stepNumbered(index + 1, line);
+    String bulleted(int _, String line) => l10n.stepBullet(line);
     return ListView(
       children: [
         if (text.aliases.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-            child: Text(l10n.detailAliases(text.aliases.join(', '))),
+            child: Text(l10n.detailAliases(l10n.inlineList(text.aliases))),
           ),
         _MusclePreview(exercise),
         ListTile(
@@ -109,12 +112,12 @@ class _DetailBody extends StatelessWidget {
           l10n.detailLoggingType,
           l10n.loggingTypeName(exercise.loggingType),
         ),
-        ..._steps(l10n.detailSetup, text.setup, numbered: true),
-        ..._steps(l10n.detailExecution, text.execution, numbered: true),
-        ..._steps(l10n.detailMistakes, text.mistakes),
+        ..._lines(l10n.detailSetup, text.setup, numbered),
+        ..._lines(l10n.detailExecution, text.execution, numbered),
+        ..._lines(l10n.detailMistakes, text.mistakes, bulleted),
         if (text.safety case final safety?)
-          ..._steps(l10n.detailSafety, [safety]),
-        ..._steps(l10n.detailCues, text.cues),
+          ..._lines(l10n.detailSafety, [safety], (_, line) => line),
+        ..._lines(l10n.detailCues, text.cues, bulleted),
         ..._exercises(l10n.detailAlternatives, detail.alternatives),
         ..._exercises(l10n.detailVariations, detail.variations),
         const SizedBox(height: Gap.lg),
@@ -122,23 +125,18 @@ class _DetailBody extends StatelessWidget {
     );
   }
 
-  static List<Widget> _steps(
+  /// A titled text section, each line written by [format].
+  static List<Widget> _lines(
     String title,
-    List<String> lines, {
-    bool numbered = false,
-  }) => [
+    List<String> lines,
+    String Function(int index, String line) format,
+  ) => [
     if (lines.isNotEmpty) ...[
       _Header(title),
       for (final (index, line) in lines.indexed)
         Padding(
           padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.sm),
-          child: Text(
-            numbered
-                ? '${index + 1}. $line'
-                : lines.length > 1
-                ? '• $line'
-                : line,
-          ),
+          child: Text(format(index, line)),
         ),
     ],
   ];
@@ -165,6 +163,10 @@ class _MusclePreview extends StatefulWidget {
 enum _Side { front, back }
 
 class _MusclePreviewState extends State<_MusclePreview> {
+  /// Share of the screen height the model takes, leaving the muscles and the
+  /// first facts in view below it.
+  static const _heightRatio = 1 / 3;
+
   final _camera = ModelViewerController();
   var _side = _Side.front;
 
@@ -193,8 +195,8 @@ class _MusclePreviewState extends State<_MusclePreview> {
     final state = context.watch<BodyModelCubit>().state;
     return Column(
       children: [
-        AspectRatio(
-          aspectRatio: 1,
+        SizedBox(
+          height: MediaQuery.sizeOf(context).height * _heightRatio,
           child: switch (state) {
             BodyModelLoading() => const LoadingView(),
             BodyModelFailed() => Center(child: Text(l10n.modelLoadFailed)),

@@ -118,4 +118,23 @@ void main() {
     );
     expect(build('bench').state, const DetailFailed());
   });
+
+  blocTest<ExerciseDetailCubit, ExerciseDetailState>(
+    'waits for the catalogue, then shows the exercise, never not found',
+    setUp: () => whenListen(
+      catalogue,
+      catalogueChanges.stream,
+      initialState: const CatalogueLoading(),
+    ),
+    build: () => build('bench'),
+    act: (_) => catalogueChanges.add(CatalogueReady(_all)),
+    expect: () => [
+      DetailReady(
+        _bench,
+        alternatives: [_machinePress, _dumbbellBench],
+        variations: [_dumbbellBench],
+      ),
+    ],
+    verify: (cubit) => expect(cubit.state, isA<DetailReady>()),
+  );
 }

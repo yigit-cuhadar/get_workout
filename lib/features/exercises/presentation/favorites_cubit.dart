@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../domain/exercise_usecases.dart';
+import 'user_stream_follower.dart';
 
 class FavoritesState extends Equatable {
   const FavoritesState(this.ids, {this.failure});
@@ -26,56 +25,49 @@ class FavoritesState extends Equatable {
 class FavoritesCubit extends Cubit<FavoritesState> {
   FavoritesCubit({
     required WatchAuthUser watchAuthUser,
-    required this._watchFavorites,
+    required WatchFavorites watchFavorites,
     required this._setFavorite,
+    Duration retryDelay = const Duration(seconds: 1),
   }) : super(const FavoritesState({})) {
-    _userSubscription = watchAuthUser()
-        .map((user) => user?.id)
-        .distinct()
-        .listen(_onUser);
+    _follower = UserStreamFollower(
+      userIds: watchAuthUser().map((user) => user?.id),
+      watch: watchFavorites.call,
+      // Never show the previous user's favourites.
+      onUser: (_) {
+        const reset = FavoritesState({});
+        if (state != reset) emit(reset);
+      },
+      onData: (ids) => emit(FavoritesState(ids)),
+      logTag: 'favorites',
+      retryDelay: retryDelay,
+    );
   }
 
-  final WatchFavorites _watchFavorites;
   final SetFavorite _setFavorite;
-  late final StreamSubscription<String?> _userSubscription;
-  StreamSubscription<Set<String>>? _favoritesSubscription;
-  String? _uid;
+  late final UserStreamFollower<Set<String>> _follower;
 
-  void _onUser(String? uid) {
-    _uid = uid;
-    unawaited(_favoritesSubscription?.cancel());
-    // Never show the previous user's favourites.
-    const reset = FavoritesState({});
-    if (state != reset) emit(reset);
-    _favoritesSubscription = uid == null
-        ? null
-        : _watchFavorites(uid).listen(
-            (ids) => emit(FavoritesState(ids)),
-            // The repository logs it; the last known favourites stay.
-            onError: (Object _) {},
-          );
-  }
-
-  /// The change shows up through the favourites stream (immediately, from
+  /// Adds or removes [exerciseId] based on the last known favourites. The
+  /// change shows up through the favourites stream (immediately, from
   /// Firestore's local cache); only a failure is emitted here.
   Future<void> toggle(String exerciseId) async {
-    final uid = _uid;
+    final uid = _follower.uid;
     if (uid == null) return;
+    _follower.resume();
     final result = await _setFavorite((
       uid: uid,
       exerciseId: exerciseId,
       favorite: !state.contains(exerciseId),
     ));
-    final failure = result.failureOrNull;
-    if (failure != null && !isClosed) {
+    // A write for a previous user says nothing about the current one.
+    if (isClosed || _follower.uid != uid) return;
+    if (result.failureOrNull case final failure?) {
       emit(FavoritesState(state.ids, failure: failure));
     }
   }
 
   @override
   Future<void> close() async {
-    await _userSubscription.cancel();
-    await _favoritesSubscription?.cancel();
+    await _follower.cancel();
     return super.close();
   }
 }

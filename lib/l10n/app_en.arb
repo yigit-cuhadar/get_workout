@@ -298,5 +298,13 @@
   "calcCheckMeasurements": "These measurements give an impossible result. Check your measurements.",
   "calcTooManyReps": "Use a set of 12 reps or fewer; estimates from longer sets are unreliable.",
   "calcTargetBelowBar": "The target is lighter than the bar",
-  "calcNegativeCarbs": "Protein and fat alone exceed this calorie target. Lower them or raise the calories."
+  "calcNegativeCarbs": "Protein and fat alone exceed this calorie target. Lower them or raise the calories.",
+  "exerciseSummary": "{muscles} · {equipment}",
+  "@exerciseSummary": {"placeholders": {"muscles": {"type": "String"}, "equipment": {"type": "String"}}},
+  "listSeparator": ", ",
+  "@listSeparator": {"description": "Between the items of a list written inline, e.g. muscle or equipment names."},
+  "stepNumbered": "{number}. {step}",
+  "@stepNumbered": {"placeholders": {"number": {"type": "int"}, "step": {"type": "String"}}},
+  "stepBullet": "• {step}",
+  "@stepBullet": {"placeholders": {"step": {"type": "String"}}}
 }

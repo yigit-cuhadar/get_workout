@@ -76,6 +76,10 @@ void main() {
   late FavoritesCubit favorites;
   late EquipmentCubit equipment;
   late BodyModelCubit bodyModel;
+  late StreamController<List<Exercise>> exerciseFeed;
+
+  /// Keeps the catalogue loading until a test feeds [exerciseFeed].
+  var holdCatalogue = false;
   late GoRouter router;
 
   // Created inside each test so stream events run in the test's fake zone.
@@ -113,7 +117,9 @@ void main() {
     // The library runs on a fixed catalogue with no user data and a model
     // that fails to load (rendering it is the viewer package's business).
     final exercises = MockExerciseRepository();
-    when(exercises.watchExercises).thenAnswer((_) => Stream.value([_squat]));
+    exerciseFeed = StreamController<List<Exercise>>();
+    if (!holdCatalogue) exerciseFeed.add([_squat]);
+    when(exercises.watchExercises).thenAnswer((_) => exerciseFeed.stream);
     final userLibrary = MockUserLibraryRepository();
     catalogue = ExerciseCatalogueCubit(
       watchAuthUser: WatchAuthUser(settingsAuth),
@@ -134,6 +140,7 @@ void main() {
     sl
       ..registerLazySingleton(
         () => LibraryCubit(
+          watchAuthUser: WatchAuthUser(settingsAuth),
           catalogue: catalogue,
           favorites: favorites,
           equipment: equipment,
@@ -154,6 +161,8 @@ void main() {
     await favorites.close();
     await equipment.close();
     await bodyModel.close();
+    await exerciseFeed.close();
+    holdCatalogue = false;
   });
 
   Future<void> pumpApp(WidgetTester tester) => tester.pumpWidget(
@@ -395,5 +404,27 @@ void main() {
     await tapTab(tester, 'Profile');
 
     expect(find.byType(PlatesPage), findsOneWidget);
+  });
+
+  testWidgets('a detail link opened while the catalogue loads waits for it', (
+    tester,
+  ) async {
+    holdCatalogue = true;
+    await startAsGuest(tester);
+
+    router.go(Routes.exercise('squat'));
+    // A spinner never settles, so pump frames by hand.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.byType(ExerciseDetailPage), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('This exercise is no longer available.'), findsNothing);
+
+    exerciseFeed.add([_squat]);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Back Squat'), findsOneWidget);
+    expect(find.text('This exercise is no longer available.'), findsNothing);
   });
 }

@@ -1,11 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../domain/exercise_usecases.dart';
 import '../domain/vocabulary.dart';
+import 'user_stream_follower.dart';
 
 class EquipmentState extends Equatable {
   const EquipmentState(this.owned, {this.failure});
@@ -27,52 +26,44 @@ class EquipmentState extends Equatable {
 class EquipmentCubit extends Cubit<EquipmentState> {
   EquipmentCubit({
     required WatchAuthUser watchAuthUser,
-    required this._watchEquipment,
+    required WatchOwnedEquipment watchEquipment,
     required this._saveEquipment,
+    Duration retryDelay = const Duration(seconds: 1),
   }) : super(const EquipmentState(null)) {
-    _userSubscription = watchAuthUser()
-        .map((user) => user?.id)
-        .distinct()
-        .listen(_onUser);
+    _follower = UserStreamFollower(
+      userIds: watchAuthUser().map((user) => user?.id),
+      watch: watchEquipment.call,
+      // Never show the previous user's equipment.
+      onUser: (_) {
+        const reset = EquipmentState(null);
+        if (state != reset) emit(reset);
+      },
+      onData: (owned) => emit(EquipmentState(owned)),
+      logTag: 'equipment',
+      retryDelay: retryDelay,
+    );
   }
 
-  final WatchOwnedEquipment _watchEquipment;
   final SaveOwnedEquipment _saveEquipment;
-  late final StreamSubscription<String?> _userSubscription;
-  StreamSubscription<Set<Equipment>?>? _equipmentSubscription;
-  String? _uid;
-
-  void _onUser(String? uid) {
-    _uid = uid;
-    unawaited(_equipmentSubscription?.cancel());
-    // Never show the previous user's equipment.
-    const reset = EquipmentState(null);
-    if (state != reset) emit(reset);
-    _equipmentSubscription = uid == null
-        ? null
-        : _watchEquipment(uid).listen(
-            (owned) => emit(EquipmentState(owned)),
-            // The repository logs it; the last known equipment stays.
-            onError: (Object _) {},
-          );
-  }
+  late final UserStreamFollower<Set<Equipment>?> _follower;
 
   /// The change shows up through the equipment stream (immediately, from
   /// Firestore's local cache); only a failure is emitted here.
   Future<void> save(Set<Equipment> owned) async {
-    final uid = _uid;
+    final uid = _follower.uid;
     if (uid == null) return;
+    _follower.resume();
     final result = await _saveEquipment((uid: uid, equipment: owned));
-    final failure = result.failureOrNull;
-    if (failure != null && !isClosed) {
+    // A write for a previous user says nothing about the current one.
+    if (isClosed || _follower.uid != uid) return;
+    if (result.failureOrNull case final failure?) {
       emit(EquipmentState(state.owned, failure: failure));
     }
   }
 
   @override
   Future<void> close() async {
-    await _userSubscription.cancel();
-    await _equipmentSubscription?.cancel();
+    await _follower.cancel();
     return super.close();
   }
 }

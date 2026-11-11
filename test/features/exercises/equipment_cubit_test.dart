@@ -20,11 +20,16 @@ void main() {
   const failure = NetworkFailure();
   const dumbbells = {Equipment.dumbbell, Equipment.bench};
   const barbell = {Equipment.barbell};
+  const retryDelay = Duration(milliseconds: 20);
 
   late MockAuthRepository auth;
   late MockUserLibraryRepository library;
   late StreamController<AuthUser?> users;
-  late Map<String, StreamController<Set<Equipment>?>> stored;
+
+  /// Every subscription to a user's equipment, oldest first.
+  late Map<String, List<StreamController<Set<Equipment>?>>> watched;
+
+  StreamController<Set<Equipment>?> latest(String uid) => watched[uid]!.last;
 
   setUpAll(() => registerFallbackValue(<Equipment>{}));
 
@@ -32,23 +37,34 @@ void main() {
     auth = MockAuthRepository();
     library = MockUserLibraryRepository();
     users = StreamController<AuthUser?>();
-    stored = {};
+    watched = {};
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
-    when(() => library.watchEquipment(any())).thenAnswer(
-      (call) => stored
-          .putIfAbsent(
-            call.positionalArguments.first as String,
-            StreamController<Set<Equipment>?>.new,
-          )
-          .stream,
-    );
+    when(() => library.watchEquipment(any())).thenAnswer((call) {
+      final controller = StreamController<Set<Equipment>?>();
+      watched
+          .putIfAbsent(call.positionalArguments.first as String, () => [])
+          .add(controller);
+      return controller.stream;
+    });
   });
 
-  EquipmentCubit build() => EquipmentCubit(
+  EquipmentCubit build({Duration delay = retryDelay}) => EquipmentCubit(
     watchAuthUser: WatchAuthUser(auth),
     watchEquipment: WatchOwnedEquipment(library),
     saveEquipment: SaveOwnedEquipment(library),
+    retryDelay: delay,
   );
+
+  void savesReturn(Future<Result<void>> Function() result) =>
+      when(() => library.saveEquipment(any(), any()))
+          .thenAnswer((_) => result());
+
+  Future<void> signIn(AuthUser user, Set<Equipment>? owned) async {
+    users.add(user);
+    await pumpEventQueue();
+    latest(user.id).add(owned);
+    await pumpEventQueue();
+  }
 
   test('starts unknown', () {
     expect(build().state, const EquipmentState(null));
@@ -58,29 +74,24 @@ void main() {
     'follows whoever is signed in and resets at once on a user change',
     build: build,
     act: (_) async {
-      users.add(guest);
-      await pumpEventQueue();
-      stored['g1']!.add(dumbbells);
-      await pumpEventQueue();
+      await signIn(guest, dumbbells);
       users.add(member);
       await pumpEventQueue();
-      stored['u1']!.add(barbell);
+      latest('u1').add(barbell);
       await pumpEventQueue();
-      stored['g1']!.add({});
+      latest('g1').add({});
     },
     expect: () => [
       const EquipmentState(dumbbells),
       const EquipmentState(null),
       const EquipmentState(barbell),
     ],
-    verify: (_) => expect(stored['g1']!.hasListener, isFalse),
+    verify: (_) => expect(latest('g1').hasListener, isFalse),
   );
 
   blocTest<EquipmentCubit, EquipmentState>(
     'save stores the choice for the current user, without bodyweight',
-    setUp: () =>
-        when(() => library.saveEquipment(any(), any()))
-            .thenAnswer((_) async => const Ok(null)),
+    setUp: () => savesReturn(() async => const Ok(null)),
     build: build,
     act: (cubit) async {
       users.add(member);
@@ -94,15 +105,10 @@ void main() {
 
   blocTest<EquipmentCubit, EquipmentState>(
     'a failed save keeps the equipment and reports the failure',
-    setUp: () =>
-        when(() => library.saveEquipment(any(), any()))
-            .thenAnswer((_) async => const Err(failure)),
+    setUp: () => savesReturn(() async => const Err(failure)),
     build: build,
     act: (cubit) async {
-      users.add(member);
-      await pumpEventQueue();
-      stored['u1']!.add(barbell);
-      await pumpEventQueue();
+      await signIn(member, barbell);
       await cubit.save(dumbbells);
     },
     expect: () => [
@@ -112,16 +118,56 @@ void main() {
   );
 
   blocTest<EquipmentCubit, EquipmentState>(
-    'a stream error keeps the last equipment',
+    'a failed stream is followed again after a backoff',
     build: build,
     act: (_) async {
-      users.add(member);
+      await signIn(member, barbell);
+      latest('u1').addError(const PermissionFailure());
       await pumpEventQueue();
-      stored['u1']!
-        ..add(barbell)
-        ..addError(const PermissionFailure());
+      expect(watched['u1'], hasLength(1));
+
+      await Future<void>.delayed(retryDelay * 2);
+      expect(watched['u1'], hasLength(2));
+      latest('u1').add(dumbbells);
     },
-    expect: () => [const EquipmentState(barbell)],
+    expect: () => [
+      const EquipmentState(barbell),
+      const EquipmentState(dumbbells),
+    ],
+  );
+
+  blocTest<EquipmentCubit, EquipmentState>(
+    'a save while the stream is down follows the stream again at once',
+    setUp: () => savesReturn(() async => const Ok(null)),
+    build: () => build(delay: const Duration(hours: 1)),
+    act: (cubit) async {
+      await signIn(member, barbell);
+      latest('u1').addError(const NetworkFailure());
+      await pumpEventQueue();
+
+      await cubit.save(dumbbells);
+      expect(watched['u1'], hasLength(2));
+      latest('u1').add(dumbbells);
+    },
+    expect: () => [
+      const EquipmentState(barbell),
+      const EquipmentState(dumbbells),
+    ],
+  );
+
+  final write = Completer<Result<void>>();
+  blocTest<EquipmentCubit, EquipmentState>(
+    "a save's outcome is ignored once another user is signed in",
+    setUp: () => savesReturn(() => write.future),
+    build: build,
+    act: (cubit) async {
+      await signIn(guest, barbell);
+      final saved = cubit.save(dumbbells);
+      await signIn(member, null);
+      write.complete(const Err(failure));
+      await saved;
+    },
+    expect: () => [const EquipmentState(barbell), const EquipmentState(null)],
   );
 
   blocTest<EquipmentCubit, EquipmentState>(

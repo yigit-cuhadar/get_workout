@@ -22,8 +22,10 @@ class ExerciseTile extends StatelessWidget {
     return ListTile(
       title: Text(exercise.localized(context).name),
       subtitle: Text(
-        '${l10n.muscleNames(exercise.mainMuscles)} · '
-        '${l10n.equipmentNames(exercise.equipment)}',
+        l10n.exerciseSummary(
+          l10n.muscleNames(exercise.mainMuscles),
+          l10n.equipmentNames(exercise.equipment),
+        ),
       ),
       trailing: showFavorite ? FavoriteButton(exercise.id) : null,
       onTap: () => context.push(Routes.exercise(exercise.id)),

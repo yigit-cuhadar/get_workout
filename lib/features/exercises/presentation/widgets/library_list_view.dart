@@ -33,7 +33,10 @@ class _LibraryListViewState extends State<LibraryListView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final library = context.read<LibraryCubit>();
-    return BlocBuilder<LibraryCubit, LibraryState>(
+    return BlocConsumer<LibraryCubit, LibraryState>(
+      // The query also changes without typing: a user change clears it.
+      listenWhen: (_, current) => current.query != _search.text,
+      listener: (_, state) => _search.text = state.query,
       builder: (context, state) {
         final results = state.results;
         return Column(

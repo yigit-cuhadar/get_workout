@@ -100,10 +100,13 @@ extension VocabularyLabels on AppLocalizations {
   };
 
   String muscleNames(Iterable<Muscle> muscles) =>
-      muscles.map(muscleName).join(', ');
+      inlineList(muscles.map(muscleName));
 
   String equipmentNames(Iterable<Equipment> equipment) =>
-      equipment.map(equipmentName).join(', ');
+      inlineList(equipment.map(equipmentName));
+
+  /// [items] written inline, separated as the language does.
+  String inlineList(Iterable<String> items) => items.join(listSeparator);
 }
 
 extension LocalizedExercise on Exercise {
