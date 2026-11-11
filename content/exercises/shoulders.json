@@ -24,12 +24,15 @@
       "abdominal"
     ],
     "family": "overhead_press",
-    "familyRank": 8,
+    "familyRank": 9,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_wall_handstand_hold",
+      "ex_freestanding_handstand"
+    ],
     "defaultRestS": 180,
     "incrementKg": 2.5,
-    "popularity": 6,
+    "popularity": 5,
     "l10n": {
       "en": {
         "name": "Overhead Press",
@@ -88,7 +91,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 10,
+    "popularity": 9,
     "l10n": {
       "en": {
         "name": "Dumbbell Lateral Raise",
@@ -112,7 +115,7 @@
         ],
         "cues": [
           "Lead with the elbows",
-          "Pour out a jug at the top"
+          "Pinkies no higher than thumbs"
         ]
       }
     }
@@ -141,9 +144,12 @@
       "triceps"
     ],
     "family": "overhead_press",
-    "familyRank": 3,
+    "familyRank": 4,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_wall_handstand_hold",
+      "ex_freestanding_handstand"
+    ],
     "defaultRestS": 120,
     "incrementKg": 2,
     "popularity": 21,
@@ -306,9 +312,12 @@
       "triceps"
     ],
     "family": "overhead_press",
-    "familyRank": 5,
+    "familyRank": 7,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_wall_handstand_hold",
+      "ex_freestanding_handstand"
+    ],
     "defaultRestS": 120,
     "incrementKg": 2,
     "popularity": 52,
@@ -360,7 +369,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "incrementKg": 5,
+    "incrementKg": 2.5,
     "popularity": 56,
     "l10n": {
       "en": {
@@ -412,7 +421,10 @@
     "family": "overhead_press",
     "familyRank": 2,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_wall_handstand_hold",
+      "ex_freestanding_handstand"
+    ],
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 72,
@@ -516,7 +528,7 @@
       "biceps"
     ],
     "family": "upright_row",
-    "familyRank": 3,
+    "familyRank": 4,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
@@ -725,9 +737,12 @@
       "glute"
     ],
     "family": "overhead_press",
-    "familyRank": 9,
+    "familyRank": 10,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_wall_handstand_hold",
+      "ex_freestanding_handstand"
+    ],
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 132,
@@ -778,9 +793,12 @@
       "abdominal"
     ],
     "family": "overhead_press",
-    "familyRank": 4,
+    "familyRank": 5,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_wall_handstand_hold",
+      "ex_freestanding_handstand"
+    ],
     "defaultRestS": 120,
     "incrementKg": 2,
     "popularity": 140,
@@ -885,9 +903,12 @@
       "triceps"
     ],
     "family": "overhead_press",
-    "familyRank": 6,
+    "familyRank": 3,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_wall_handstand_hold",
+      "ex_freestanding_handstand"
+    ],
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 165,
@@ -1090,7 +1111,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "incrementKg": 5,
+    "incrementKg": 2.5,
     "popularity": 221,
     "l10n": {
       "en": {
@@ -1138,9 +1159,12 @@
       "triceps"
     ],
     "family": "overhead_press",
-    "familyRank": 7,
+    "familyRank": 8,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_wall_handstand_hold",
+      "ex_freestanding_handstand"
+    ],
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 237,
@@ -1192,7 +1216,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1.25,
-    "popularity": 255,
+    "popularity": 256,
     "l10n": {
       "en": {
         "name": "Cable External Rotation",
@@ -1240,12 +1264,15 @@
       "abdominal"
     ],
     "family": "overhead_press",
-    "familyRank": 10,
+    "familyRank": 6,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_wall_handstand_hold",
+      "ex_freestanding_handstand"
+    ],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 261,
+    "popularity": 262,
     "l10n": {
       "en": {
         "name": "Kettlebell Overhead Press",
@@ -1296,7 +1323,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 267,
+    "popularity": 268,
     "l10n": {
       "en": {
         "name": "Cable Reverse Fly",
@@ -1344,7 +1371,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 280,
+    "popularity": 281,
     "l10n": {
       "en": {
         "name": "Band External Rotation",
@@ -1392,9 +1419,12 @@
     "family": "overhead_press",
     "familyRank": 1,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_wall_handstand_hold",
+      "ex_freestanding_handstand"
+    ],
     "defaultRestS": 75,
-    "popularity": 292,
+    "popularity": 293,
     "l10n": {
       "en": {
         "name": "Band Overhead Press",
@@ -1445,7 +1475,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 300,
+    "popularity": 302,
     "l10n": {
       "en": {
         "name": "Band Face Pull",
@@ -1493,7 +1523,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 308,
+    "popularity": 310,
     "l10n": {
       "en": {
         "name": "Elevated Pike Push-Up",
@@ -1543,7 +1573,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 315,
+    "popularity": 317,
     "l10n": {
       "en": {
         "name": "Band Lateral Raise",
@@ -1589,7 +1619,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1,
-    "popularity": 322,
+    "popularity": 324,
     "l10n": {
       "en": {
         "name": "Side-Lying Dumbbell External Rotation",
@@ -1638,12 +1668,12 @@
       "biceps"
     ],
     "family": "upright_row",
-    "familyRank": 2,
+    "familyRank": 3,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2.5,
-    "popularity": 332,
+    "popularity": 335,
     "l10n": {
       "en": {
         "name": "Cable Upright Row",
@@ -1691,7 +1721,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 339,
+    "popularity": 342,
     "l10n": {
       "en": {
         "name": "Prone Y Raise",
@@ -1744,7 +1774,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 348,
+    "popularity": 351,
     "l10n": {
       "en": {
         "name": "Wall Handstand Hold",
@@ -1753,8 +1783,8 @@
           "Chest-to-Wall Handstand"
         ],
         "setup": [
-          "Place your hands about a hand's length from a wall.",
-          "Walk your feet up the wall until your body is nearly vertical, chest facing the wall."
+          "Start in a push-up position with your feet against the wall.",
+          "Walk your feet up the wall and your hands toward it until your body is nearly vertical, chest facing the wall."
         ],
         "execution": [
           "Push the floor away and hold your body in a straight line.",
@@ -1794,12 +1824,12 @@
       "front_delt"
     ],
     "family": "upright_row",
-    "familyRank": 1,
+    "familyRank": 2,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 1,
-    "popularity": 349,
+    "popularity": 352,
     "l10n": {
       "en": {
         "name": "Dumbbell Upright Row",
@@ -1845,7 +1875,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 356,
+    "popularity": 359,
     "l10n": {
       "en": {
         "name": "Prone T Raise",
@@ -1896,10 +1926,13 @@
     "family": "overhead_press",
     "familyRank": 11,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_wall_handstand_hold",
+      "ex_freestanding_handstand"
+    ],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 363,
+    "popularity": 366,
     "l10n": {
       "en": {
         "name": "Z Press",
@@ -1947,7 +1980,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 371,
+    "popularity": 374,
     "l10n": {
       "en": {
         "name": "Prone W Raise",
@@ -1997,7 +2030,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 379,
+    "popularity": 382,
     "l10n": {
       "en": {
         "name": "Band Front Raise",
@@ -2048,7 +2081,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1,
-    "popularity": 378,
+    "popularity": 381,
     "l10n": {
       "en": {
         "name": "Incline Dumbbell Y Raise",
@@ -2096,11 +2129,11 @@
       "front_delt"
     ],
     "family": "upright_row",
-    "familyRank": 4,
+    "familyRank": 1,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 388,
+    "popularity": 390,
     "l10n": {
       "en": {
         "name": "Band Upright Row",
@@ -2148,7 +2181,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 387,
+    "popularity": 389,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Y Raise",
@@ -2170,7 +2203,7 @@
         ],
         "cues": [
           "Arms long",
-          "Steeper lean, harder rep"
+          "Body straight"
         ]
       }
     }
@@ -2199,7 +2232,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 397,
+    "popularity": 398,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Reverse Fly",
@@ -2248,7 +2281,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 403,
+    "popularity": 404,
     "l10n": {
       "en": {
         "name": "Reverse Snow Angel",
@@ -2295,7 +2328,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 408,
+    "popularity": 409,
     "l10n": {
       "en": {
         "name": "Wall Isometric Shoulder Abduction",
@@ -2348,7 +2381,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 392,
+    "popularity": 394,
     "l10n": {
       "en": {
         "name": "Freestanding Handstand",
@@ -2366,7 +2399,7 @@
         ],
         "mistakes": [
           "Arching the back into a banana shape.",
-          "Locking the elbows softly."
+          "Bending the elbows."
         ],
         "safety": "Learn to bail out by turning sideways before practising away from a wall.",
         "cues": [

@@ -38,11 +38,11 @@
           "KB Swing"
         ],
         "setup": [
-          "Stand with feet a little wider than hips and the kettlebell a foot in front of you.",
+          "Stand with feet a little wider than hips and the kettlebell about 30 cm in front of you.",
           "Hinge and grip the handle with both hands, back flat."
         ],
         "execution": [
-          "Hike the bell back between your legs like a football snap.",
+          "Hike the bell back like passing a ball back between your legs.",
           "Snap your hips forward to stand tall, letting the bell float to chest height.",
           "Let it fall back and hinge again as it passes your hips."
         ],
@@ -199,7 +199,7 @@
         "name": "Box Jump",
         "aliases": [],
         "setup": [
-          "Stand about a foot in front of a sturdy box.",
+          "Stand about 30 cm in front of a sturdy box.",
           "Set your feet hip-width apart."
         ],
         "execution": [
@@ -997,7 +997,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 257,
+    "popularity": 258,
     "l10n": {
       "en": {
         "name": "Renegade Row",
@@ -1046,7 +1046,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 270,
+    "popularity": 271,
     "l10n": {
       "en": {
         "name": "Bear Crawl",
@@ -1098,7 +1098,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 281,
+    "popularity": 282,
     "l10n": {
       "en": {
         "name": "Dumbbell Snatch",
@@ -1150,7 +1150,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 295,
+    "popularity": 296,
     "l10n": {
       "en": {
         "name": "Split Jump",
@@ -1203,7 +1203,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 310,
+    "popularity": 312,
     "l10n": {
       "en": {
         "name": "Lateral Bound",
@@ -1257,7 +1257,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 326,
+    "popularity": 328,
     "l10n": {
       "en": {
         "name": "Dumbbell Overhead Carry",
@@ -1311,7 +1311,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 5,
-    "popularity": 343,
+    "popularity": 346,
     "l10n": {
       "en": {
         "name": "Trap Bar Carry",
@@ -1361,7 +1361,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 352,
+    "popularity": 355,
     "l10n": {
       "en": {
         "name": "Medicine Ball Chest Pass",
@@ -1410,7 +1410,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 359,
+    "popularity": 362,
     "l10n": {
       "en": {
         "name": "Medicine Ball Rotational Throw",
@@ -1467,7 +1467,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 180,
     "incrementKg": 2.5,
-    "popularity": 367,
+    "popularity": 370,
     "l10n": {
       "en": {
         "name": "Power Snatch",
@@ -1522,7 +1522,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 374,
+    "popularity": 377,
     "l10n": {
       "en": {
         "name": "Kettlebell Clean",
@@ -1573,7 +1573,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 383,
+    "popularity": 385,
     "l10n": {
       "en": {
         "name": "Kettlebell Front Rack Carry",
@@ -1626,7 +1626,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 4,
-    "popularity": 391,
+    "popularity": 393,
     "l10n": {
       "en": {
         "name": "Kettlebell Waiter's Walk",
@@ -1677,7 +1677,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 393,
+    "popularity": 395,
     "l10n": {
       "en": {
         "name": "Backward Sled Drag",
@@ -1710,7 +1710,7 @@
     "laterality": "alternating",
     "level": "beginner",
     "force": "pull",
-    "movementPattern": "carry",
+    "movementPattern": "lunge",
     "position": "standing",
     "equipment": [
       "sled"
@@ -1729,7 +1729,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 394,
+    "popularity": 396,
     "l10n": {
       "en": {
         "name": "Forward Sled Drag",
@@ -1782,7 +1782,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 395,
+    "popularity": 397,
     "l10n": {
       "en": {
         "name": "Sled Rope Pull",
@@ -1834,7 +1834,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 396,
+    "popularity": 300,
     "l10n": {
       "en": {
         "name": "Single-Arm Kettlebell Swing",
@@ -1888,7 +1888,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 398,
+    "popularity": 399,
     "l10n": {
       "en": {
         "name": "Zercher Carry",
@@ -1905,7 +1905,7 @@
           "Rounding the back.",
           "Letting the bar slide."
         ],
-        "safety": "Use a pad on the bar if the elbows hurt.",
+        "safety": "Set the bar down as soon as your upper back starts to round.",
         "cues": [
           "Chest up"
         ]
@@ -1937,7 +1937,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 399,
+    "popularity": 400,
     "l10n": {
       "en": {
         "name": "Plate Pinch Carry",
@@ -1988,7 +1988,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 5,
-    "popularity": 400,
+    "popularity": 401,
     "l10n": {
       "en": {
         "name": "Trap Bar Jump",

@@ -101,6 +101,7 @@ const positions = {
 const grips = {'overhand', 'underhand', 'neutral', 'mixed'};
 const gripWidths = {'narrow', 'shoulder', 'wide'};
 const languages = {'en'};
+const statuses = {'draft', 'live', 'retired'};
 
 // Coverage minimums.
 const minTotal = 400;
@@ -216,12 +217,15 @@ void main(List<String> args) {
     }
   }
 
-  checkLibrary(exercises);
-  final coverage = checkCoverage(exercises);
+  // Draft and retired exercises are not shown to users, so popularity,
+  // family ranks and coverage only count live ones.
+  final live = exercises.where((e) => e.data['status'] == 'live').toList();
+  checkLibrary(exercises, live);
+  final coverage = checkCoverage(live);
 
   stdout.writeln('Files:');
   perFile.forEach((file, count) => stdout.writeln('  $file: $count'));
-  stdout.writeln('Total: ${exercises.length}');
+  stdout.writeln('Total: ${exercises.length} (live: ${live.length})');
   stdout.writeln(coverage);
   for (final warning in warnings) {
     stdout.writeln('WARNING $warning');
@@ -248,8 +252,6 @@ void checkExercise(Exercise e) {
   if (id is! String || !idPattern.hasMatch(id)) {
     err('id must match ${idPattern.pattern}');
   }
-  if (d['status'] != 'live') err('status must be "live"');
-
   void code(String key, Iterable<String> allowed, {bool optional = false}) {
     final value = d[key];
     if (value == null && optional) return;
@@ -258,6 +260,7 @@ void checkExercise(Exercise e) {
     }
   }
 
+  code('status', statuses);
   code('loggingType', loggingTypes);
   code('mechanic', mechanics);
   code('laterality', lateralities);
@@ -387,7 +390,7 @@ void checkExercise(Exercise e) {
   }
 }
 
-void checkLibrary(List<Exercise> exercises) {
+void checkLibrary(List<Exercise> exercises, List<Exercise> live) {
   final byId = <String, Exercise>{};
   for (final e in exercises) {
     if (byId.containsKey(e.id)) {
@@ -408,7 +411,7 @@ void checkLibrary(List<Exercise> exercises) {
   }
 
   final byRank = <int, Exercise>{};
-  for (final e in exercises) {
+  for (final e in live) {
     final rank = e.data['popularity'];
     if (rank is! int) continue;
     if (byRank.containsKey(rank)) {
@@ -418,7 +421,7 @@ void checkLibrary(List<Exercise> exercises) {
     }
     byRank[rank] = e;
   }
-  for (var rank = 1; rank <= exercises.length; rank++) {
+  for (var rank = 1; rank <= live.length; rank++) {
     if (!byRank.containsKey(rank)) errors.add('popularity $rank is unused');
   }
 
@@ -452,19 +455,30 @@ void checkLibrary(List<Exercise> exercises) {
   });
 
   final families = <String, List<Exercise>>{};
-  for (final e in exercises) {
+  for (final e in live) {
     final family = e.data['family'];
     if (family is String) (families[family] ??= []).add(e);
   }
   families.forEach((family, members) {
     final ranks = members.map((e) => e.data['familyRank']).toList();
+    final listing = members
+        .map((e) => '${e.id}=${e.data['familyRank']}')
+        .join(', ');
     if (!ranks.contains(1)) {
       errors.add('family $family has no exercise with rank 1');
     }
     if (ranks.toSet().length != ranks.length) {
-      errors.add(
-        'family $family has repeated ranks: '
-        '${members.map((e) => '${e.id}=${e.data['familyRank']}').join(', ')}',
+      errors.add('family $family has repeated ranks: $listing');
+    }
+    final expected = {for (var r = 1; r <= ranks.length; r++) r};
+    if (!ranks.toSet().containsAll(expected)) {
+      errors.add('family $family ranks are not 1..${ranks.length}: $listing');
+    }
+    final patterns = members.map((e) => e.data['movementPattern']).toSet();
+    if (patterns.length > 1) {
+      warnings.add(
+        'family $family mixes movement patterns ${patterns.join(', ')}: '
+        '${members.map((e) => '${e.id}=${e.data['movementPattern']}').join(', ')}',
       );
     }
   });

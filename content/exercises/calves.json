@@ -19,7 +19,9 @@
     "family": "calf_raise",
     "familyRank": 4,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_tibialis_raise"
+    ],
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 29,
@@ -68,7 +70,9 @@
     "family": "seated_calf_raise",
     "familyRank": 2,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_tibialis_raise"
+    ],
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 67,
@@ -116,7 +120,9 @@
     "family": "calf_raise",
     "familyRank": 1,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_tibialis_raise"
+    ],
     "defaultRestS": 45,
     "popularity": 126,
     "l10n": {
@@ -164,7 +170,9 @@
     "family": "calf_raise",
     "familyRank": 2,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_tibialis_raise"
+    ],
     "defaultRestS": 45,
     "popularity": 141,
     "l10n": {
@@ -209,7 +217,9 @@
     "family": "calf_raise",
     "familyRank": 6,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_tibialis_raise"
+    ],
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 158,
@@ -258,7 +268,9 @@
     "family": "calf_raise",
     "familyRank": 3,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_tibialis_raise"
+    ],
     "defaultRestS": 45,
     "incrementKg": 2,
     "popularity": 166,
@@ -304,7 +316,9 @@
     "family": "calf_raise",
     "familyRank": 5,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_tibialis_raise"
+    ],
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 198,
@@ -357,11 +371,10 @@
       "en": {
         "name": "Tibialis Raise",
         "aliases": [
-          "Tib Raise",
-          "Toe Raise"
+          "Tib Raise"
         ],
         "setup": [
-          "Lean your back against a wall with your feet about a foot in front.",
+          "Lean your back against a wall with your feet about 30 cm in front.",
           "Keep your legs straight."
         ],
         "execution": [
@@ -399,10 +412,12 @@
     "family": "seated_calf_raise",
     "familyRank": 1,
     "pinnedAlternatives": [],
-    "excludedAlternatives": [],
+    "excludedAlternatives": [
+      "ex_tibialis_raise"
+    ],
     "defaultRestS": 45,
     "incrementKg": 2,
-    "popularity": 269,
+    "popularity": 270,
     "l10n": {
       "en": {
         "name": "Seated Dumbbell Calf Raise",
@@ -449,7 +464,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 294,
+    "popularity": 295,
     "l10n": {
       "en": {
         "name": "Pogo Hop",
@@ -497,7 +512,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 324,
+    "popularity": 326,
     "l10n": {
       "en": {
         "name": "Band Calf Press",
@@ -540,14 +555,14 @@
     ],
     "secondaryMuscles": [
       "quads",
-      "front_delt"
+      "forearm"
     ],
     "family": "jump_rope",
     "familyRank": 1,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 341,
+    "popularity": 344,
     "l10n": {
       "en": {
         "name": "Jump Rope",

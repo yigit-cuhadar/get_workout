@@ -574,7 +574,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "incrementKg": 5,
+    "incrementKg": 2.5,
     "popularity": 139,
     "l10n": {
       "en": {
@@ -754,7 +754,7 @@
     "loggingType": "duration",
     "mechanic": "compound",
     "laterality": "unilateral",
-    "level": "advanced",
+    "level": "intermediate",
     "force": "static",
     "movementPattern": "core_stability",
     "position": "side_lying",
@@ -1168,7 +1168,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 5,
-    "popularity": 254,
+    "popularity": 255,
     "l10n": {
       "en": {
         "name": "Reverse Hyperextension Machine",
@@ -1180,7 +1180,7 @@
           "Hook your ankles into the strap and hold the handles."
         ],
         "execution": [
-          "Swing your legs up until they are level with your body.",
+          "Raise your legs until they are level with your body.",
           "Lower them under control."
         ],
         "mistakes": [
@@ -1217,7 +1217,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 266,
+    "popularity": 267,
     "l10n": {
       "en": {
         "name": "Band Glute Kickback",
@@ -1251,8 +1251,7 @@
     "movementPattern": "hinge",
     "position": "supine",
     "equipment": [
-      "bench",
-      "bodyweight"
+      "bench"
     ],
     "mainMuscles": [
       "glute"
@@ -1266,7 +1265,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 273,
+    "popularity": 274,
     "l10n": {
       "en": {
         "name": "Single-Leg Hip Thrust",
@@ -1315,7 +1314,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 4,
-    "popularity": 283,
+    "popularity": 284,
     "l10n": {
       "en": {
         "name": "Goblet Cossack Squat",
@@ -1362,7 +1361,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 291,
+    "popularity": 292,
     "l10n": {
       "en": {
         "name": "Short-Lever Copenhagen Plank",
@@ -1409,7 +1408,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 297,
+    "popularity": 298,
     "l10n": {
       "en": {
         "name": "Side-Lying Hip Adduction",
@@ -1458,7 +1457,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 305,
+    "popularity": 307,
     "l10n": {
       "en": {
         "name": "Standing Band Hip Abduction",
@@ -1505,7 +1504,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 312,
+    "popularity": 314,
     "l10n": {
       "en": {
         "name": "Seated Band Abduction",
@@ -1552,7 +1551,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 320,
+    "popularity": 322,
     "l10n": {
       "en": {
         "name": "Banded Clamshell",
@@ -1600,7 +1599,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 328,
+    "popularity": 331,
     "l10n": {
       "en": {
         "name": "Side Plank Leg Raise",
@@ -1650,7 +1649,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 337,
+    "popularity": 340,
     "l10n": {
       "en": {
         "name": "Bench Reverse Hyperextension",
@@ -1698,7 +1697,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 345,
+    "popularity": 348,
     "l10n": {
       "en": {
         "name": "Band Pull-Through",
@@ -1743,7 +1742,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 354,
+    "popularity": 357,
     "l10n": {
       "en": {
         "name": "Band Hip Adduction",
@@ -1788,7 +1787,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 361,
+    "popularity": 364,
     "l10n": {
       "en": {
         "name": "Medicine Ball Adductor Squeeze",
@@ -1838,7 +1837,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 369,
+    "popularity": 372,
     "l10n": {
       "en": {
         "name": "Cable Hip Flexion",
@@ -1887,7 +1886,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 376,
+    "popularity": 379,
     "l10n": {
       "en": {
         "name": "Band Supine March",
@@ -1936,7 +1935,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 385,
+    "popularity": 387,
     "l10n": {
       "en": {
         "name": "Glute Medius Wall Press",

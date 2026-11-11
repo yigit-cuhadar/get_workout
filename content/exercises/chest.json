@@ -23,7 +23,7 @@
       "triceps"
     ],
     "family": "bench_press",
-    "familyRank": 14,
+    "familyRank": 9,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 180,
@@ -63,7 +63,7 @@
   {
     "id": "ex_push_up",
     "status": "live",
-    "loggingType": "reps",
+    "loggingType": "weighted_bodyweight",
     "mechanic": "compound",
     "laterality": "bilateral",
     "level": "beginner",
@@ -81,12 +81,12 @@
       "front_delt",
       "abdominal"
     ],
-    "family": "bench_press",
-    "familyRank": 5,
+    "family": "push_up",
+    "familyRank": 3,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 7,
+    "popularity": 6,
     "l10n": {
       "en": {
         "name": "Push-Up",
@@ -113,7 +113,8 @@
           "Chest to the floor"
         ]
       }
-    }
+    },
+    "incrementKg": 2.5
   },
   {
     "id": "ex_dumbbell_bench_press",
@@ -139,12 +140,12 @@
       "triceps"
     ],
     "family": "bench_press",
-    "familyRank": 10,
+    "familyRank": 6,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2,
-    "popularity": 15,
+    "popularity": 14,
     "l10n": {
       "en": {
         "name": "Dumbbell Bench Press",
@@ -313,7 +314,7 @@
       "triceps"
     ],
     "family": "bench_press",
-    "familyRank": 4,
+    "familyRank": 2,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
@@ -518,7 +519,7 @@
     "laterality": "bilateral",
     "level": "intermediate",
     "force": "push",
-    "movementPattern": "horizontal_push",
+    "movementPattern": "vertical_push",
     "position": "hanging",
     "grip": "neutral",
     "gripWidth": "shoulder",
@@ -642,7 +643,7 @@
       "triceps",
       "front_delt"
     ],
-    "family": "bench_press",
+    "family": "push_up",
     "familyRank": 1,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
@@ -652,8 +653,7 @@
       "en": {
         "name": "Incline Push-Up",
         "aliases": [
-          "Hands-Elevated Push-Up",
-          "Wall Push-Up"
+          "Hands-Elevated Push-Up"
         ],
         "setup": [
           "Place your hands on a bench, box or sturdy counter, slightly wider than your shoulders.",
@@ -669,7 +669,7 @@
         ],
         "cues": [
           "Straight line",
-          "Higher surface, easier rep"
+          "Chest to the edge"
         ]
       }
     }
@@ -694,7 +694,7 @@
       "triceps",
       "front_delt"
     ],
-    "family": "bench_press",
+    "family": "push_up",
     "familyRank": 2,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
@@ -749,7 +749,7 @@
       "triceps"
     ],
     "family": "bench_press",
-    "familyRank": 11,
+    "familyRank": 4,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
@@ -764,6 +764,7 @@
         "setup": [
           "Place a flat bench under the bar so it lines up with your mid chest.",
           "Lie down, grip slightly wider than your shoulders and set your shoulder blades.",
+          "Set the safety stops just below the bar's lowest point.",
           "Unhook the bar by rotating it."
         ],
         "execution": [
@@ -801,8 +802,8 @@
       "front_delt",
       "triceps"
     ],
-    "family": "bench_press",
-    "familyRank": 15,
+    "family": "push_up",
+    "familyRank": 6,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
@@ -853,8 +854,8 @@
       "front_delt",
       "triceps"
     ],
-    "family": "bench_press",
-    "familyRank": 6,
+    "family": "push_up",
+    "familyRank": 4,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
@@ -1082,6 +1083,7 @@
         ],
         "setup": [
           "Place an incline bench under the bar so it lines up with your upper chest.",
+          "Set the safety stops just below the bar's lowest point.",
           "Lie back, grip slightly wider than your shoulders and unhook the bar."
         ],
         "execution": [
@@ -1226,7 +1228,7 @@
       "front_delt"
     ],
     "family": "bench_press",
-    "familyRank": 3,
+    "familyRank": 1,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
@@ -1331,7 +1333,7 @@
       "front_delt"
     ],
     "family": "bench_press",
-    "familyRank": 8,
+    "familyRank": 3,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
@@ -1363,7 +1365,7 @@
   },
   {
     "id": "ex_weighted_push_up",
-    "status": "live",
+    "status": "retired",
     "loggingType": "weighted_bodyweight",
     "mechanic": "compound",
     "laterality": "bilateral",
@@ -1372,7 +1374,6 @@
     "movementPattern": "horizontal_push",
     "position": "prone",
     "equipment": [
-      "bodyweight",
       "plate"
     ],
     "mainMuscles": [
@@ -1382,13 +1383,13 @@
       "triceps",
       "front_delt"
     ],
-    "family": "bench_press",
-    "familyRank": 16,
+    "family": "push_up",
+    "familyRank": 11,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 200,
+    "popularity": 411,
     "l10n": {
       "en": {
         "name": "Weighted Push-Up",
@@ -1490,7 +1491,7 @@
       "front_delt"
     ],
     "family": "bench_press",
-    "familyRank": 9,
+    "familyRank": 5,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
@@ -1543,7 +1544,7 @@
       "front_delt"
     ],
     "family": "bench_press",
-    "familyRank": 12,
+    "familyRank": 7,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
@@ -1597,7 +1598,7 @@
       "front_delt"
     ],
     "family": "bench_press",
-    "familyRank": 13,
+    "familyRank": 8,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
@@ -1699,8 +1700,8 @@
       "front_delt",
       "abdominal"
     ],
-    "family": "bench_press",
-    "familyRank": 7,
+    "family": "push_up",
+    "familyRank": 5,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
@@ -1725,7 +1726,7 @@
         ],
         "cues": [
           "Plank the whole time",
-          "Steeper lean, harder rep"
+          "Elbows back"
         ]
       }
     }
@@ -1735,7 +1736,7 @@
     "status": "live",
     "loggingType": "reps",
     "mechanic": "compound",
-    "laterality": "unilateral",
+    "laterality": "alternating",
     "level": "advanced",
     "force": "push",
     "movementPattern": "horizontal_push",
@@ -1751,12 +1752,12 @@
       "triceps",
       "front_delt"
     ],
-    "family": "bench_press",
-    "familyRank": 18,
+    "family": "push_up",
+    "familyRank": 8,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 258,
+    "popularity": 259,
     "l10n": {
       "en": {
         "name": "Archer Push-Up",
@@ -1787,7 +1788,7 @@
     "laterality": "bilateral",
     "level": "advanced",
     "force": "push",
-    "movementPattern": "horizontal_push",
+    "movementPattern": "vertical_push",
     "position": "hanging",
     "grip": "neutral",
     "equipment": [
@@ -1807,7 +1808,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 271,
+    "popularity": 272,
     "l10n": {
       "en": {
         "name": "Ring Dip",
@@ -1855,7 +1856,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 282,
+    "popularity": 283,
     "l10n": {
       "en": {
         "name": "Scapular Push-Up",
@@ -1888,7 +1889,7 @@
     "loggingType": "reps",
     "mechanic": "compound",
     "laterality": "bilateral",
-    "level": "advanced",
+    "level": "intermediate",
     "force": "push",
     "movementPattern": "horizontal_push",
     "position": "prone",
@@ -1903,12 +1904,12 @@
       "front_delt",
       "abdominal"
     ],
-    "family": "bench_press",
-    "familyRank": 17,
+    "family": "push_up",
+    "familyRank": 7,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 290,
+    "popularity": 291,
     "l10n": {
       "en": {
         "name": "Ring Push-Up",
@@ -1956,7 +1957,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1.25,
-    "popularity": 296,
+    "popularity": 297,
     "l10n": {
       "en": {
         "name": "Svend Press",
@@ -2004,12 +2005,12 @@
       "oblique",
       "abdominal"
     ],
-    "family": "bench_press",
-    "familyRank": 20,
+    "family": "push_up",
+    "familyRank": 10,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 311,
+    "popularity": 313,
     "l10n": {
       "en": {
         "name": "One-Arm Push-Up",
@@ -2059,7 +2060,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 327,
+    "popularity": 329,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Fly",
@@ -2106,12 +2107,12 @@
       "triceps",
       "abdominal"
     ],
-    "family": "bench_press",
-    "familyRank": 19,
+    "family": "push_up",
+    "familyRank": 9,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 344,
+    "popularity": 347,
     "l10n": {
       "en": {
         "name": "Pseudo Planche Push-Up",

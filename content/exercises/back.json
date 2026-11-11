@@ -29,7 +29,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 5,
+    "popularity": 4,
     "l10n": {
       "en": {
         "name": "Pull-Up",
@@ -85,12 +85,12 @@
       "forearm"
     ],
     "family": "bent_over_row",
-    "familyRank": 5,
+    "familyRank": 7,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 8,
+    "popularity": 7,
     "l10n": {
       "en": {
         "name": "Barbell Row",
@@ -150,7 +150,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 5,
-    "popularity": 11,
+    "popularity": 10,
     "l10n": {
       "en": {
         "name": "Lat Pulldown",
@@ -210,7 +210,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 5,
-    "popularity": 13,
+    "popularity": 12,
     "l10n": {
       "en": {
         "name": "Seated Cable Row",
@@ -269,7 +269,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 14,
+    "popularity": 13,
     "l10n": {
       "en": {
         "name": "Chin-Up",
@@ -479,7 +479,7 @@
       "hamstring"
     ],
     "family": "back_extension",
-    "familyRank": 2,
+    "familyRank": 3,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
@@ -525,8 +525,7 @@
     "grip": "neutral",
     "gripWidth": "narrow",
     "equipment": [
-      "landmine",
-      "plate"
+      "landmine"
     ],
     "mainMuscles": [
       "lat",
@@ -538,7 +537,7 @@
       "erector"
     ],
     "family": "bent_over_row",
-    "familyRank": 8,
+    "familyRank": 6,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
@@ -676,7 +675,7 @@
           "Using so much help that the reps are effortless."
         ],
         "cues": [
-          "Full range, less help over time"
+          "Full range, chest up"
         ]
       }
     }
@@ -705,7 +704,7 @@
       "erector"
     ],
     "family": "bent_over_row",
-    "familyRank": 4,
+    "familyRank": 5,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
@@ -1073,7 +1072,7 @@
     "loggingType": "weight_reps",
     "mechanic": "compound",
     "laterality": "bilateral",
-    "level": "advanced",
+    "level": "intermediate",
     "force": "pull",
     "movementPattern": "horizontal_pull",
     "position": "standing",
@@ -1092,7 +1091,7 @@
       "erector"
     ],
     "family": "bent_over_row",
-    "familyRank": 7,
+    "familyRank": 10,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
@@ -1158,7 +1157,7 @@
         ],
         "setup": [
           "Lie face down with your arms stretched overhead and legs straight.",
-          "Rest your forehead just above the floor."
+          "Keep your forehead just above the floor."
         ],
         "execution": [
           "Lift your arms, chest and legs a few centimetres off the floor together.",
@@ -1308,7 +1307,7 @@
       "erector"
     ],
     "family": "bent_over_row",
-    "familyRank": 6,
+    "familyRank": 8,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
@@ -1389,7 +1388,7 @@
         ],
         "cues": [
           "Control the bottom",
-          "Thinner band over time"
+          "Chest to the bar"
         ]
       }
     }
@@ -1442,7 +1441,7 @@
           "Shrugging the shoulders."
         ],
         "cues": [
-          "Walk feet forward for more difficulty"
+          "Body straight"
         ]
       }
     }
@@ -1455,7 +1454,7 @@
     "laterality": "bilateral",
     "level": "beginner",
     "force": "pull",
-    "movementPattern": "vertical_pull",
+    "movementPattern": "isolation",
     "position": "hanging",
     "grip": "overhand",
     "gripWidth": "shoulder",
@@ -1477,8 +1476,7 @@
       "en": {
         "name": "Scapular Pull-Up",
         "aliases": [
-          "Scap Pull-Up",
-          "Scapular Depression"
+          "Scap Pull-Up"
         ],
         "setup": [
           "Hang from the bar with straight arms.",
@@ -1846,7 +1844,7 @@
       "biceps"
     ],
     "family": "bent_over_row",
-    "familyRank": 3,
+    "familyRank": 4,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
@@ -1937,14 +1935,13 @@
     "loggingType": "weight_reps",
     "mechanic": "compound",
     "laterality": "unilateral",
-    "level": "advanced",
+    "level": "intermediate",
     "force": "pull",
     "movementPattern": "horizontal_pull",
     "position": "standing",
     "grip": "overhand",
     "equipment": [
-      "landmine",
-      "plate"
+      "landmine"
     ],
     "mainMuscles": [
       "lat",
@@ -1960,7 +1957,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2.5,
-    "popularity": 253,
+    "popularity": 254,
     "l10n": {
       "en": {
         "name": "Meadows Row",
@@ -2006,12 +2003,12 @@
       "biceps"
     ],
     "family": "bent_over_row",
-    "familyRank": 10,
+    "familyRank": 3,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 265,
+    "popularity": 266,
     "l10n": {
       "en": {
         "name": "Kettlebell Row",
@@ -2053,7 +2050,8 @@
       "erector"
     ],
     "secondaryMuscles": [
-      "glute"
+      "glute",
+      "hamstring"
     ],
     "family": "back_extension",
     "familyRank": 1,
@@ -2061,7 +2059,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 5,
-    "popularity": 272,
+    "popularity": 273,
     "l10n": {
       "en": {
         "name": "Back Extension Machine",
@@ -2112,7 +2110,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2.5,
-    "popularity": 279,
+    "popularity": 280,
     "l10n": {
       "en": {
         "name": "Single-Arm Kneeling Lat Pulldown",
@@ -2158,11 +2156,11 @@
       "hamstring"
     ],
     "family": "back_extension",
-    "familyRank": 3,
+    "familyRank": 2,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 286,
+    "popularity": 287,
     "l10n": {
       "en": {
         "name": "Stability Ball Back Extension",
@@ -2215,7 +2213,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 307,
+    "popularity": 309,
     "l10n": {
       "en": {
         "name": "Flexed-Arm Hang",
@@ -2267,7 +2265,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 304,
+    "popularity": 306,
     "l10n": {
       "en": {
         "name": "Trap Bar Shrug",
@@ -2319,7 +2317,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 319,
+    "popularity": 321,
     "l10n": {
       "en": {
         "name": "Cable Shrug",
@@ -2367,7 +2365,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 331,
+    "popularity": 334,
     "l10n": {
       "en": {
         "name": "Swimmer",
@@ -2420,7 +2418,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 336,
+    "popularity": 339,
     "l10n": {
       "en": {
         "name": "Band Single-Arm Row",
@@ -2467,7 +2465,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 353,
+    "popularity": 356,
     "l10n": {
       "en": {
         "name": "Band Shrug",
@@ -2515,7 +2513,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 360,
+    "popularity": 363,
     "l10n": {
       "en": {
         "name": "Band Straight-Arm Pulldown",
@@ -2545,7 +2543,7 @@
     "status": "live",
     "loggingType": "reps",
     "mechanic": "compound",
-    "laterality": "unilateral",
+    "laterality": "alternating",
     "level": "advanced",
     "force": "pull",
     "movementPattern": "vertical_pull",
@@ -2568,7 +2566,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 368,
+    "popularity": 371,
     "l10n": {
       "en": {
         "name": "Archer Pull-Up",
@@ -2620,7 +2618,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
-    "popularity": 375,
+    "popularity": 378,
     "l10n": {
       "en": {
         "name": "Ring Muscle-Up",
@@ -2665,14 +2663,15 @@
       "trap"
     ],
     "secondaryMuscles": [
-      "pec"
+      "pec",
+      "lat"
     ],
     "family": "scapular_dip",
     "familyRank": 1,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 384,
+    "popularity": 386,
     "l10n": {
       "en": {
         "name": "Dip Shrug",

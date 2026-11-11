@@ -415,7 +415,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 259,
+    "popularity": 260,
     "l10n": {
       "en": {
         "name": "Couch Stretch",
@@ -460,7 +460,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 274,
+    "popularity": 275,
     "l10n": {
       "en": {
         "name": "Wall Calf Stretch",
@@ -510,7 +510,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 284,
+    "popularity": 285,
     "l10n": {
       "en": {
         "name": "90/90 Hip Switch",
@@ -560,7 +560,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 298,
+    "popularity": 299,
     "l10n": {
       "en": {
         "name": "Thoracic Open Book",
@@ -607,7 +607,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 306,
+    "popularity": 308,
     "l10n": {
       "en": {
         "name": "Wrist Flexor Stretch",
@@ -654,7 +654,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 313,
+    "popularity": 315,
     "l10n": {
       "en": {
         "name": "Wrist Extensor Stretch",
@@ -704,7 +704,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 321,
+    "popularity": 323,
     "l10n": {
       "en": {
         "name": "Arm Circles",
@@ -752,7 +752,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 329,
+    "popularity": 332,
     "l10n": {
       "en": {
         "name": "Band Shoulder Pass-Through",
@@ -800,7 +800,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 338,
+    "popularity": 341,
     "l10n": {
       "en": {
         "name": "Frog Stretch",
@@ -847,7 +847,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 346,
+    "popularity": 349,
     "l10n": {
       "en": {
         "name": "Cross-Body Shoulder Stretch",
@@ -894,7 +894,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 355,
+    "popularity": 358,
     "l10n": {
       "en": {
         "name": "Overhead Triceps Stretch",
@@ -941,7 +941,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 362,
+    "popularity": 365,
     "l10n": {
       "en": {
         "name": "Jefferson Curl",
@@ -958,7 +958,7 @@
           "Using a heavy load.",
           "Rushing."
         ],
-        "safety": "Start with no weight or a very light one and build up gradually.",
+        "safety": "Start with no weight or a very light one, skip it if you have back pain or a disc injury, and never take it to failure.",
         "cues": [
           "Slow roll"
         ]
@@ -991,13 +991,12 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 370,
+    "popularity": 373,
     "l10n": {
       "en": {
         "name": "Deep Squat Hold",
         "aliases": [
-          "Squat Hold",
-          "Asian Squat"
+          "Squat Hold"
         ],
         "setup": [
           "Stand with feet shoulder width and toes slightly out.",
@@ -1039,7 +1038,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 377,
+    "popularity": 380,
     "l10n": {
       "en": {
         "name": "Knee-to-Wall Ankle Mobilization",
@@ -1088,7 +1087,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 386,
+    "popularity": 388,
     "l10n": {
       "en": {
         "name": "Cobra Stretch",
@@ -1137,7 +1136,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 401,
+    "popularity": 402,
     "l10n": {
       "en": {
         "name": "Supine Hamstring Band Stretch",
@@ -1185,7 +1184,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 410,
+    "popularity": 330,
     "l10n": {
       "en": {
         "name": "Lying Spinal Twist",
@@ -1235,7 +1234,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 30,
-    "popularity": 411,
+    "popularity": 250,
     "l10n": {
       "en": {
         "name": "Inchworm",

@@ -24,7 +24,7 @@
       "erector"
     ],
     "family": "squat",
-    "familyRank": 6,
+    "familyRank": 7,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 180,
@@ -89,7 +89,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 5,
-    "popularity": 12,
+    "popularity": 11,
     "l10n": {
       "en": {
         "name": "Leg Press",
@@ -261,7 +261,7 @@
           "RFESS"
         ],
         "setup": [
-          "Stand about two steps in front of a bench and rest the top of one foot on it.",
+          "Stand about one long stride in front of a bench and rest the top of one foot on it.",
           "Hold a dumbbell in each hand."
         ],
         "execution": [
@@ -285,7 +285,7 @@
     "loggingType": "weight_reps",
     "mechanic": "compound",
     "laterality": "bilateral",
-    "level": "advanced",
+    "level": "intermediate",
     "force": "push",
     "movementPattern": "squat",
     "position": "standing",
@@ -303,7 +303,7 @@
       "erector"
     ],
     "family": "squat",
-    "familyRank": 7,
+    "familyRank": 8,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 180,
@@ -577,6 +577,7 @@
         ],
         "setup": [
           "Set the bar at upper chest height and step under it, resting it on your upper back.",
+          "Set the safety stops just below the bar's lowest point.",
           "Place your feet slightly in front of the bar, about shoulder width."
         ],
         "execution": [
@@ -875,7 +876,7 @@
       "erector"
     ],
     "family": "squat",
-    "familyRank": 4,
+    "familyRank": 6,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
@@ -897,6 +898,7 @@
           "Dropping onto the box.",
           "Rocking back and losing tension."
         ],
+        "safety": "Squat inside a rack with safety bars set just below your bottom position.",
         "cues": [
           "Sit, pause, drive"
         ]
@@ -1073,7 +1075,7 @@
       "abdominal"
     ],
     "family": "squat",
-    "familyRank": 3,
+    "familyRank": 4,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
@@ -1196,6 +1198,7 @@
           "Losing balance from short steps.",
           "Leaning forward."
         ],
+        "safety": "Start well below your squat weight; with a bar on your back, balance is the limit.",
         "cues": [
           "Tall and steady"
         ]
@@ -1472,7 +1475,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 260,
+    "popularity": 261,
     "l10n": {
       "en": {
         "name": "Reverse Nordic",
@@ -1491,6 +1494,7 @@
           "Bending at the hips.",
           "Leaning too far."
         ],
+        "safety": "Start with a small range; this exercise loads the knees heavily.",
         "cues": [
           "Straight from knees to head"
         ]
@@ -1519,7 +1523,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 275,
+    "popularity": 276,
     "l10n": {
       "en": {
         "name": "Band Leg Extension",
@@ -1566,7 +1570,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 285,
+    "popularity": 286,
     "l10n": {
       "en": {
         "name": "Spanish Squat",
@@ -1614,7 +1618,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 299,
+    "popularity": 301,
     "l10n": {
       "en": {
         "name": "Skater Squat",
@@ -1662,7 +1666,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 314,
+    "popularity": 316,
     "l10n": {
       "en": {
         "name": "Assisted Pistol Squat",
@@ -1712,12 +1716,12 @@
       "trap"
     ],
     "family": "squat",
-    "familyRank": 8,
+    "familyRank": 9,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 330,
+    "popularity": 333,
     "l10n": {
       "en": {
         "name": "Overhead Squat",
@@ -1762,12 +1766,12 @@
       "abdominal"
     ],
     "family": "squat",
-    "familyRank": 9,
+    "familyRank": 3,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 4,
-    "popularity": 347,
+    "popularity": 350,
     "l10n": {
       "en": {
         "name": "Kettlebell Front Squat",
