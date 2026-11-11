@@ -44,6 +44,11 @@ from the earlier FitLab app.
   (`lib/features/subscription/presentation/premium.dart`). Unknown never shows
   a paywall or a lock. The client value is for UI only; paid data is
   enforced by `entitlements/{uid}` in the rules.
+- **Client vs server Premium**: until the RevenueCat webhook exists nothing
+  writes `entitlements/{uid}`, so client Premium (fake or RevenueCat) and
+  server access can disagree. Features treat a server refusal of premium
+  content as locked, whatever the client says. On dev,
+  `tool/set_premium.sh` writes the entitlement for demos.
 - **Paywall**: full-screen `/paywall`, yearly selected by default, prices as
   the store gives them, trial shown only when the plan carries one, restore
   and legal links always visible. Terms and privacy URLs live in
@@ -377,8 +382,12 @@ Group 9, launch readiness
   `com.android.vending.BILLING` is in the merged Android manifest on the
   first build. Android launchMode (`singleTop`), Kotlin 2.4 and compileSdk 36
   already meet the SDK's needs; iOS uses Swift Package Manager.
-- Terms of Use and Privacy Policy pages: publish them and replace the
-  placeholders in `lib/app/legal_links.dart` before release.
+- Release blocker: the Terms of Use and Privacy Policy links in
+  `lib/app/legal_links.dart` are placeholders; publish the pages and
+  replace them.
+- The admin web build now bundles and loads the RevenueCat web script,
+  because `purchases_flutter` registers a web plugin. Harmless; revisit if
+  the admin build is split from the app.
 - `forge_purchases` has no "unavailable" backend; the app swaps in its own
   repository for release builds without keys. Move it into the package when
   it is next changed.
