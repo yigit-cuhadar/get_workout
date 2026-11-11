@@ -40,6 +40,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../features/programs/fixtures.dart';
+import 'no_workout.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -139,6 +140,7 @@ void main() {
         .thenAnswer((_) => const Stream.empty());
     when(() => repository.getProgram('u1', 'p1'))
         .thenAnswer((_) async => Ok(stored));
+    registerNoWorkout();
     sl
       ..registerLazySingleton(
         () => ProgramListCubit(

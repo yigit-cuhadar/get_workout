@@ -29,6 +29,8 @@ import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'no_workout.dart';
+
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
@@ -98,6 +100,7 @@ void main() {
     sessions = StreamController<List<CardioSession>>();
     when(() => cardio.watchSessions('u1')).thenAnswer((_) => sessions.stream);
     when(() => cardio.rejectedWrites).thenAnswer((_) => const Stream.empty());
+    registerNoWorkout();
     sl
       ..registerLazySingleton(
         () => CardioListCubit(

@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../programs/domain/program.dart';
+import '../../programs/presentation/program_text.dart';
+import '../domain/workout.dart';
 import 'active_workout_cubit.dart';
 
 enum _InProgressChoice { resume, discard }
@@ -55,4 +58,33 @@ Future<void> startWorkout(
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(l10n.workoutStartFailed)));
   }
+}
+
+/// Starts day [dayIndex] of [program]; see [startWorkout].
+Future<void> startProgramDay(
+  BuildContext context,
+  Program program,
+  int dayIndex,
+) {
+  final l10n = AppLocalizations.of(context);
+  final language = Localizations.localeOf(context).languageCode;
+  final name = l10n.workoutProgramDayName(
+    program.name,
+    l10n.dayName(program.days[dayIndex], dayIndex),
+  );
+  return startWorkout(
+    context,
+    (cubit) => cubit.startProgramDay(
+      program,
+      dayIndex,
+      name: cutToLength(name, WorkoutLimits.maxNameLength),
+      language: language,
+    ),
+  );
+}
+
+/// Starts an empty workout; see [startWorkout].
+Future<void> startFreeWorkout(BuildContext context) {
+  final name = AppLocalizations.of(context).workoutFreeName;
+  return startWorkout(context, (cubit) => cubit.startFree(name));
 }

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
 import '../domain/calendar_date.dart';
 import '../domain/program_schedule.dart';
@@ -135,6 +136,19 @@ class _Programs extends StatelessWidget {
               missed: missed,
               moveDate: state.moveDate!,
               busy: state.resolving,
+            ),
+          if (state.nextDayIndex case final day?)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Gap.md,
+                vertical: Gap.sm,
+              ),
+              child: ForgeButton(
+                label: l10n.workoutStartDay(
+                  l10n.dayName(active.days[day], day),
+                ),
+                onPressed: () => startProgramDay(context, active, day),
+              ),
             ),
           if (!state.finished) _WeekPlan(program: active, plan: state.weekPlan),
         ],
