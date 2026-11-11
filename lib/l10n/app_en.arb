@@ -53,7 +53,6 @@
   "settingsLength": "Length",
   "settingsAppearance": "Appearance",
   "settingsTheme": "Theme",
-  "settingsLanguage": "Language",
   "settingsSaveFailed": "Couldn't save settings. Try again",
   "unitKg": "kg",
   "unitLb": "lb",
@@ -61,10 +60,5 @@
   "unitIn": "in",
   "themeSystem": "System",
   "themeLight": "Light",
-  "themeDark": "Dark",
-
-  "languageName": "English",
-  "@languageName": {
-    "description": "Name of this file's language, written in that language."
-  }
+  "themeDark": "Dark"
 }

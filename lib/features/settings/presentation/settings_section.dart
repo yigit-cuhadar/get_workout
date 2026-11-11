@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../domain/user_settings.dart';
 import 'settings_cubit.dart';
 
-/// Units, appearance and language rows. Needs [SettingsCubit] above it.
+/// Units and appearance rows. Needs [SettingsCubit] above it.
 class SettingsSection extends StatelessWidget {
   const SettingsSection({super.key});
 
@@ -61,10 +60,6 @@ class SettingsSection extends StatelessWidget {
               onChanged: (theme) =>
                   cubit.update(settings.copyWith(themePreference: theme)),
             ),
-            ListTile(
-              title: Text(l10n.settingsLanguage),
-              trailing: Text(l10n.languageName),
-            ),
           ],
         );
       },
@@ -72,23 +67,14 @@ class SettingsSection extends StatelessWidget {
   }
 }
 
+/// A section title: a dense list tile with the theme's default styling.
 class _Header extends StatelessWidget {
   const _Header(this.text);
   final String text;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(Gap.md, Gap.lg, Gap.md, Gap.sm),
-      child: Text(
-        text,
-        style: theme.textTheme.titleSmall?.copyWith(
-          color: theme.colorScheme.primary,
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      ListTile(dense: true, title: Text(text));
 }
 
 /// A row showing the current choice; tapping it opens a single-choice dialog.

@@ -55,6 +55,7 @@ GoRouter buildRouter(AuthCubit auth) {
       };
     },
     routes: [
+      GoRoute(path: '/', redirect: (_, _) => Routes.home),
       GoRoute(
         path: Routes.splash,
         builder: (_, _) => const Scaffold(body: LoadingView()),

@@ -15,6 +15,7 @@ import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_page.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
@@ -28,6 +29,7 @@ void main() {
   late StreamController<AuthUser?> users;
   late AuthCubit auth;
   late SettingsCubit settings;
+  late GoRouter router;
 
   // Created inside each test so stream events run in the test's fake zone.
   void setUpAuth() {
@@ -77,7 +79,7 @@ void main() {
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: buildRouter(auth),
+        routerConfig: router = buildRouter(auth),
       ),
     ),
   );
@@ -197,5 +199,15 @@ void main() {
 
     expect(find.text('Create account or sign in'), findsNothing);
     expect(find.text('a@b.co'), findsOneWidget);
+  });
+
+  testWidgets('the root location opens Today', (tester) async {
+    await startAsGuest(tester);
+    await tapTab(tester, 'Programs');
+
+    router.go('/');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TodayPage), findsOneWidget);
   });
 }

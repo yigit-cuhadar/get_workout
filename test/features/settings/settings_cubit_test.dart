@@ -73,8 +73,48 @@ void main() {
       // The previous user's stream is no longer followed.
       stored['g1']!.add(defaults);
     },
-    expect: () => [SettingsState(pounds), SettingsState(dark)],
+    expect: () => [
+      SettingsState(pounds),
+      const SettingsState(defaults),
+      SettingsState(dark),
+    ],
     verify: (_) => expect(stored['g1']!.hasListener, isFalse),
+  );
+
+  blocTest<SettingsCubit, SettingsState>(
+    "after a user change, the previous user's settings are never used",
+    setUp: () =>
+        when(() => settings.saveSettings(any(), any()))
+            .thenAnswer((_) async => const Ok(null)),
+    build: build,
+    act: (cubit) async {
+      users.add(guest);
+      await pumpEventQueue();
+      stored['g1']!.add(pounds);
+      await pumpEventQueue();
+      users.add(member);
+      await pumpEventQueue();
+      // The member's first snapshot has not arrived yet.
+      expect(cubit.state, const SettingsState(defaults));
+      await cubit.update(
+        cubit.state.settings.copyWith(themePreference: ThemePreference.dark),
+      );
+    },
+    expect: () => [SettingsState(pounds), const SettingsState(defaults)],
+    verify: (_) => verify(() => settings.saveSettings('u1', dark)).called(1),
+  );
+
+  blocTest<SettingsCubit, SettingsState>(
+    'signing out shows the defaults',
+    build: build,
+    act: (_) async {
+      users.add(member);
+      await pumpEventQueue();
+      stored['u1']!.add(pounds);
+      await pumpEventQueue();
+      users.add(null);
+    },
+    expect: () => [SettingsState(pounds), const SettingsState(defaults)],
   );
 
   blocTest<SettingsCubit, SettingsState>(
