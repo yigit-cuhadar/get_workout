@@ -5,6 +5,9 @@ import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  /// Kept here: the registrar does not keep scene delegates alive.
+  private var workoutActivityTaps: WorkoutActivityTaps?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -18,20 +21,28 @@ import UserNotifications
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     registerBackupExclusion(engineBridge.pluginRegistry)
-    registerRestActivity(engineBridge.pluginRegistry)
+    registerWorkoutActivity(engineBridge.pluginRegistry)
   }
 
-  /// The running rest as a Live Activity
-  /// (lib/features/workout/data/ios_rest_lock_screen.dart): "show" starts
-  /// or updates it and answers whether it shows (false with Live
-  /// Activities off), "end" removes it. Below iOS 16.2 both do nothing.
-  private func registerRestActivity(_ registry: FlutterPluginRegistry) {
-    guard let registrar = registry.registrar(forPlugin: "RestActivity") else { return }
+  /// The workout in progress as a Live Activity
+  /// (lib/features/workout/data/ios_workout_lock_screen.dart): "show"
+  /// starts or updates it and answers whether it shows (false with Live
+  /// Activities off), "end" removes it, "takeTap" answers whether it was
+  /// tapped since last asked. Below iOS 16.2 none shows.
+  private func registerWorkoutActivity(_ registry: FlutterPluginRegistry) {
+    guard let registrar = registry.registrar(forPlugin: "WorkoutActivity") else { return }
     let channel = FlutterMethodChannel(
-      name: "getworkout/rest_activity",
+      name: "getworkout/workout_activity",
       binaryMessenger: registrar.messenger()
     )
+    let taps = WorkoutActivityTaps(channel: channel)
+    workoutActivityTaps = taps
+    registrar.addSceneDelegate(taps)
     channel.setMethodCallHandler { call, result in
+      if call.method == "takeTap" {
+        result(taps.take())
+        return
+      }
       guard #available(iOS 16.2, *) else {
         result(nil)
         return
@@ -39,29 +50,32 @@ import UserNotifications
       switch call.method {
       case "show":
         guard let args = call.arguments as? [String: Any],
-          let endsAt = args["endsAt"] as? NSNumber,
-          let title = args["title"] as? String,
-          let over = args["over"] as? String
+          let name = args["name"] as? String,
+          let startedAt = args["startedAt"] as? NSNumber
         else {
-          result(FlutterError(code: "bad-args", message: "show needs endsAt, title and over", details: nil))
+          result(FlutterError(code: "bad-args", message: "show needs name and startedAt", details: nil))
           return
         }
-        let state = RestActivityAttributes.ContentState(
-          endsAt: Date(timeIntervalSince1970: endsAt.doubleValue / 1000),
-          title: title,
-          detail: args["detail"] as? String,
-          over: over
+        var rest: WorkoutActivityAttributes.ContentState.Rest?
+        if let endsAt = args["restEndsAt"] as? NSNumber, let title = args["restTitle"] as? String {
+          rest = .init(endsAt: date(endsAt), title: title, detail: args["restDetail"] as? String)
+        }
+        let state = WorkoutActivityAttributes.ContentState(
+          name: name,
+          startedAt: date(startedAt),
+          current: args["current"] as? String,
+          rest: rest
         )
         Task { @MainActor in
           do {
-            result(try await RestActivity.show(state))
+            result(try await WorkoutActivity.show(state))
           } catch {
             result(FlutterError(code: "show-failed", message: error.localizedDescription, details: nil))
           }
         }
       case "end":
         Task { @MainActor in
-          await RestActivity.end()
+          await WorkoutActivity.end()
           result(nil)
         }
       default:
@@ -97,16 +111,23 @@ import UserNotifications
   }
 }
 
-/// One Live Activity for the running rest. Its stale date is the rest's
-/// end, so it shows the rest as over by itself when the app is suspended
-/// then; without push updates the app ends it only when it runs again.
+/// Milliseconds since the epoch from Dart.
+private func date(_ milliseconds: NSNumber) -> Date {
+  Date(timeIntervalSince1970: milliseconds.doubleValue / 1000)
+}
+
+/// One Live Activity for the workout in progress. During a rest its stale
+/// date is the rest's end, so it shows the workout again by itself when the
+/// app is suspended then. Without push updates the app updates and ends it
+/// only while it runs. iOS ends it after 8 hours; the next show then starts
+/// a new one.
 @available(iOS 16.2, *)
-enum RestActivity {
+enum WorkoutActivity {
   /// Whether it shows; false with Live Activities turned off. Throws when
   /// the app may not start one (not in front).
-  static func show(_ state: RestActivityAttributes.ContentState) async throws -> Bool {
-    let content = ActivityContent(state: state, staleDate: state.endsAt)
-    let running = Activity<RestActivityAttributes>.activities.filter {
+  static func show(_ state: WorkoutActivityAttributes.ContentState) async throws -> Bool {
+    let content = ActivityContent(state: state, staleDate: state.rest?.endsAt)
+    let running = Activity<WorkoutActivityAttributes>.activities.filter {
       $0.activityState == .active || $0.activityState == .stale
     }
     if let current = running.first {
@@ -117,8 +138,13 @@ enum RestActivity {
       return true
     }
     guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
-    _ = try Activity<RestActivityAttributes>.request(
-      attributes: RestActivityAttributes(),
+    // One iOS ended (8 hours) stays on the lock screen up to 4 hours more:
+    // removed, so it is not shown next to the new one.
+    for ended in Activity<WorkoutActivityAttributes>.activities where ended.activityState == .ended {
+      await ended.end(nil, dismissalPolicy: .immediate)
+    }
+    _ = try Activity<WorkoutActivityAttributes>.request(
+      attributes: WorkoutActivityAttributes(),
       content: content,
       pushType: nil
     )
@@ -126,8 +152,53 @@ enum RestActivity {
   }
 
   static func end() async {
-    for activity in Activity<RestActivityAttributes>.activities {
+    for activity in Activity<WorkoutActivityAttributes>.activities {
       await activity.end(nil, dismissalPolicy: .immediate)
     }
+  }
+}
+
+/// Taps on the activity: its widgetURL opens the app with
+/// WorkoutActivityLink.url, here, not through Flutter's deep linking
+/// (FlutterDeepLinkingEnabled is off). A tap is kept until Dart takes it,
+/// so one that launched the app before Dart listened is not lost; Dart is
+/// told to take it now too.
+final class WorkoutActivityTaps: NSObject, FlutterSceneLifeCycleDelegate {
+  private let channel: FlutterMethodChannel
+  private var tapped = false
+
+  init(channel: FlutterMethodChannel) {
+    self.channel = channel
+  }
+
+  /// Whether it was tapped since last asked.
+  func take() -> Bool {
+    defer { tapped = false }
+    return tapped
+  }
+
+  // Selectors pinned, so a renamed Swift signature cannot silently stop
+  // matching the optional protocol methods.
+  @objc(scene:willConnectToSession:options:)
+  func scene(
+    _ scene: UIScene,
+    willConnectTo session: UISceneSession,
+    options connectionOptions: UIScene.ConnectionOptions?
+  ) -> Bool {
+    // Only noted: the launch is left to the others.
+    _ = open(connectionOptions?.urlContexts ?? [])
+    return false
+  }
+
+  @objc(scene:openURLContexts:)
+  func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) -> Bool {
+    open(URLContexts)
+  }
+
+  private func open(_ contexts: Set<UIOpenURLContext>) -> Bool {
+    guard contexts.contains(where: { $0.url == WorkoutActivityLink.url }) else { return false }
+    tapped = true
+    channel.invokeMethod("tapped", arguments: nil)
+    return true
   }
 }

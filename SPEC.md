@@ -212,7 +212,11 @@ from the earlier FitLab app.
   Firestore rules validate the top-level fields only (`name`, `days` count,
   `origin`); the app validates days and items. Items whose exercise's
   logging type changed are fitted to the new type when the builder loads
-  them, and the user is told.
+  them, and the user is told. The Programs tab opens with three rows, the
+  same with or without programs: ready-made programs, the generator and
+  "New program" (the builder); no floating button. In the builder, Add
+  day selects the new day and focuses its name; opening the builder or
+  switching days never takes the focus.
 - **Schedule**: `activeProgram.nextDate` is a calendar date stored as a
   `YYYY-MM-DD` string, so it is the same date in every time zone, and
   `startedAt` is a device-clock timestamp because starting a program must
@@ -645,8 +649,8 @@ from the earlier FitLab app.
   against what is pending (by a signature of time, text and alarm mode),
   so equal ones stay. While the user's settings or programs load nothing is
   touched, so a start never drops reminders; a change of user or signing
-  out drops them at once. Ids: rest 1, rest countdown 2 (Android, lock
-  screen), workout 100-127 (by date), measurement 200-203 (by
+  out drops them at once. Ids: rest 1, and on the lock screen (Android)
+  rest countdown 2 and workout in progress 3, workout 100-127 (by date), measurement 200-203 (by
   occurrence), announcement in front 300. Reminders do not ask
   for exact alarms on Android (they may fire up to an hour late). Taps:
   a workout reminder opens Today, a measurement reminder a new measurement
@@ -765,8 +769,8 @@ from the earlier FitLab app.
   warm-up dashed with "W", a drop set "2D", done ones ticked, the selected
   one in the theme's selected colours, a "+" bubble; a group stacks one row
   per exercise, labelled A1, A2, warm-ups first, then one column per round
-  with the round's bubbles joined) and **selected set** ("Set 2 / 3",
-  warm-ups "Warm-up 1 / 2", last time's set, arrows within the exercise,
+  with the round's bubbles joined) and **selected set** ("Squat · set 2 of
+  3", a warm-up "Squat · set W", last time's set, arrows within the exercise,
   "Add set"). Adding a set asks Normal / Warm-up / Drop set (a drop set
   only for rep-based exercises); a warm-up goes after the existing
   warm-ups, other sets at the end, all empty with the usual suggestions as
@@ -774,12 +778,14 @@ from the earlier FitLab app.
   strip and the safe area; while the keyboard is up the rest strip steps
   aside (still mounted) so the bar sits right on the keyboard, the list
   above shrinks and stays scrollable, and the selected bubble or set is
-  scrolled into view. It shows the selected set ("Squat · Set 2 / 3", last
+  scrolled into view. It shows the selected set ("Squat · set 2 of 3", last
   time in the bubbles view, the set note), its fields by logging type with
   the suggestion as hint, a drop set's drops (edit, remove, add) right
   under them, the effort steps, the tick (which needs no keyboard and starts
   the rest as before) and a "more" sheet for the set type, note and
-  removal; an invalid tick's message shows in it. The exercise detail page
+  removal; an invalid tick's message shows in it. Sets are named
+  everywhere by `setLabel` and `setToDo` (W, 1, 2D; "of N" counts working
+  sets), the same as the lock screen and the rest notification. The exercise detail page
   opens above the workout (`/workout/exercises/:id`, and
   `/progress/history/exercises/:id` above the edit page), so back returns
   to the workout as it was.
@@ -974,48 +980,100 @@ from the earlier FitLab app.
   Android, for exact alarms (without them the notification falls back to
   an inexact alarm, possibly late). The rest notification has id 1 on one
   Android channel, `workout` ("Workout", high importance).
-- **Rest on the lock screen**: while a rest runs and `settings.restTimer`
-  is enabled, the lock screen shows it counting down, drawn by the system
-  so it ticks without the app (`RestTimerCubit` through
-  `ShowRestOnLockScreen` / `ClearRestFromLockScreen`; `RestLockScreen`
-  with an iOS and an Android adapter). Title "Rest", the next set as in
-  the rest notification (none when nothing is left). Shown when a rest
-  starts (also one restored at app start), replaced on +15 s or a new
-  rest, removed when it is over in front, skipped, unticked, the workout
-  finished or discarded, the user changes or signs out, or the rest timer
-  is turned off; one left from an earlier run is removed at start. It is
-  silent whatever `notify` says: the end is announced by the rest
-  notification (id 1) alone, so nothing alerts twice.
-  Android: an ongoing notification, id 2, on its own channel `rest`
-  ("Rest timer", default importance, no sound or vibration; lower
-  importances count as silent and may be hidden on the lock screen), with
-  a system chronometer counting down to the end and a timeout at the end,
-  so the system removes it even with the app killed; replaced in place,
-  never updated per second; asks for promotion to a Live Update (Android
-  16 status bar chip, `POST_PROMOTED_NOTIFICATIONS`). A separate id from
-  the end alert because that one is scheduled only while the app hides
-  and cancelled when it shows, and the countdown stays across both. It
-  needs the notification permission and never asks for it: without it
-  nothing shows, and it shows at once when the user allows notifications
-  mid-rest. A show or removal that fails (also iOS with Live Activities
-  off, or before the app may start one) does not count as done: the next
-  second of the countdown tries again. No foreground service: nothing has to run until the end
-  (the chronometer and timeout are the system's), and a service would
-  need a declared type and Play review; the cost is that from Android 14
-  the user can swipe it away while unlocked, until the next change.
-  iOS (16.2+, below that nothing shows): a Live Activity from the
-  `RestTimer` widget extension (lock screen, Dynamic Island), started by
-  the app in front through `AppDelegate.swift`
-  (`getworkout/rest_activity`), updated and ended while the app runs; its
-  texts come from the app. No push updates (no APNs yet), so the app
-  cannot end it while suspended: its stale date is the rest's end, after
-  which it shows "Rest over" until the app runs again (then removed) or
-  iOS removes it (ended after 8 h, kept on the lock screen up to 4 h
-  more: 12 h at most). Users can turn Live Activities off per app; then
-  nothing shows. No App Group: the app's own ActivityKit bridge passes
-  the content, so the `live_activities` plugin (App Group, iOS 16.1
-  minimum for the whole app) is not used, and the app keeps iOS 15
-  (ActivityKit weak-linked).
+- **Workout on the lock screen**: the workout in progress is on the lock
+  screen, drawn by the system so its times run without the app
+  (`RestTimerCubit` through `ShowWorkoutOnLockScreen` /
+  `ClearWorkoutFromLockScreen`; `WorkoutLockScreen` with an iOS and an
+  Android adapter). It follows `ActiveWorkoutState.inProgress`: shown from
+  the first exercise (an empty workout shows nothing) until the workout is
+  finished or discarded, or the user changes or signs out; kept while
+  finishing. Nothing is shown or removed until the workout is loaded at
+  start, then one left from an earlier run is updated to the workout in
+  progress or removed. A running rest is shown instead of the workout while
+  `settings.restTimer` is enabled (the workout itself shows whatever that
+  setting says). Rest: title "Rest" and the next set as in the rest
+  notification (none when nothing is left); workout: its name, the elapsed
+  time since `startedAt`, and the set to do now ("Bench Press · set 2 of
+  3", "Bench Press · set W" for a warm-up; none when every set is done).
+  Sets are named as the workout page's set column names them (`setLabel`:
+  W for a warm-up, else the number among the working sets, 2D for a drop
+  set; "of N" counts working sets), in the rest notification too. The set
+  to do now is the next one (`nextSet`) after the set ticked last in this
+  run of the app, whatever became of its rest (skipped, or none with the
+  rest timer off), forgotten when that set is unticked or no longer done
+  after an edit; after a restart, after the kept rest's set. The rest is
+  replaced on +15 s or a new rest and turns back into the workout when it
+  is over, skipped or unticked. It is silent whatever `notify` says: the
+  end is announced by the rest notification (id 1) alone, so nothing
+  alerts twice. A show or removal that fails (also iOS with Live
+  Activities off, or before the app may start one) is logged once and the
+  same content is not tried again until the app shows again; content that
+  changes is tried at once.
+  Android: ongoing, silent notifications on their own channel `rest`
+  ("Workout in progress"; the id is from when it showed rests only;
+  default importance, no sound or vibration; lower importances count as
+  silent and may be hidden on the lock screen), whose system chronometers
+  run without the app, one at a time: the workout, id 3 (title its name,
+  text the set to do now, counting up from `startedAt`;
+  `Notifications.showStopwatch`), or during a rest the rest, id 2 (title
+  "Rest", the next set, counting down, with a timeout at the end so the
+  system removes it even with the app killed; `showCountdown`). When a
+  rest starts the workout is taken off and scheduled back for the rest's
+  end (`scheduleStopwatch`, exact when the device allows exact alarms,
+  else possibly late, with nothing shown meanwhile but never a stale
+  countdown), so it returns while the app is suspended or killed; under
+  its own id because a notification replaced as the countdown times out
+  could be removed with it, so the two never race. +15 s replaces both;
+  a rest cut short (skip, untick, rest timer off) drops the scheduled one
+  and shows the workout at once; once the rest is over in front the app
+  does the same. Both are replaced in place, never updated per second
+  (posted again only when what they show changes), and ask for promotion
+  to a Live Update (Android 16 status bar chip,
+  `POST_PROMOTED_NOTIFICATIONS`). A tap opens the app with payload
+  `active-workout`, handled like the iOS Live Activity's tap (below). A
+  separate id from the end alert (1) because that one is scheduled only
+  while the app hides and cancelled when it shows, and these stay across
+  both. They need the notification permission and never ask for it:
+  without it nothing shows, and they show at once when the user allows
+  notifications mid-rest. They are ongoing, so they cannot be dismissed on
+  the lock screen; no foreground service (nothing has to run: the
+  chronometers, timeout and alarm are the system's, and a service would
+  need a declared type and Play review), so from Android 14 the user can
+  swipe them away while unlocked, until the next change.
+  iOS (16.2+, below that nothing shows): one Live Activity for the whole
+  workout from the `RestTimer` widget extension (target and bundle id kept
+  from when it showed rests only; `WorkoutActivityAttributes`,
+  `WorkoutLiveActivity`), started by the app in front through
+  `AppDelegate.swift` (`getworkout/workout_activity`), updated and ended
+  while the app runs; its texts come from the app. Lock screen and Dynamic
+  Island (compact, minimal, expanded) show the same two modes: the
+  workout (dumbbell, name, elapsed time counted up by the system, the set
+  to do now) or the rest (timer, "Rest", countdown, the next set). No push
+  updates (no APNs yet), so the app cannot change it while suspended: the
+  content state carries the rest with its end, the activity's stale date
+  is that end, and the widget draws the rest only while it is not stale
+  and its end is ahead, so at the end the system redraws it as the workout
+  by itself; the app replaces it with the workout once it runs again.
+  Outside a rest it has no stale date. iOS ends an activity after 8 h
+  (kept on the lock screen up to 4 h more); the next update the app makes
+  in front then starts a new one, as it does after the user swiped it
+  away. Users can turn Live Activities off per app; then nothing shows.
+  A tap on it (lock screen and every Dynamic Island presentation, in both
+  modes) opens the app with `getworkout://workout` (its widgetURL; the
+  `getworkout` scheme next to Google sign-in's in `CFBundleURLTypes`).
+  The Runner takes that URL itself as a scene delegate
+  (`WorkoutActivityTaps`) and keeps it until Dart takes it, so a tap that
+  launched the app is not lost; Flutter's own deep linking is off
+  (`FlutterDeepLinkingEnabled` false; the app has no other deep links).
+  The tap joins the notification taps' path in `App`: kept until the app
+  is past its start and the workout is loaded, then the workout page is
+  pushed through the router as from the minimized workout bar (so the
+  unsaved-changes guard sees it), unless it is open already or no workout
+  is in progress (an activity left behind), where the tap only opens the
+  app. No App Group: the app's own ActivityKit bridge passes the content,
+  so the `live_activities` plugin (App Group, iOS 16.1 minimum for the
+  whole app) is not used, and the app keeps iOS 15 (ActivityKit
+  weak-linked).
 - **Weekly volume**: Progress → Weekly volume shows one week, the current
   one first; earlier weeks are free to browse, later than the current one
   never. A week starts on the locale's first weekday
@@ -1059,15 +1117,33 @@ from the earlier FitLab app.
   moderate, 6 active, by the levels' wording). Units, bar and plates come
   from settings as before. 1RM and the macros' calories stay empty (no
   single source); the goal and target weight map onto no calculator
-  input. Values are shown to one decimal in the user's unit, with no hint
-  of their source (the calculators have no helper-text pattern). They are
+  input. A known number shows as a tile (`KnownNumberField`), not a field:
+  its name, the value to one decimal in the user's unit and, for a value
+  from the body log, "Measured <date>" (the entry's date; body fat takes
+  the oldest of its circumferences'; the year only when not this one).
+  Profile values (height, age, a profile-only weight) have no date.
+  The tile has an edit icon; tapping it turns it into the normal field,
+  focused, holding the value; it stays a field (the cubit's `known` map
+  drops it). Focusing a field before the values arrive counts as editing
+  it, so a late value never replaces it. Both the waist and the abdomen
+  are known; the body fat calculator shows the one for the selected sex
+  (abdomen for men, waist for women), or an empty field, unless the user
+  typed or started editing it. Sex and activity stay selectors: they
+  already show the known choice. They are
   starting values only: nothing is written back. They load once when a
   calculator opens; a value arriving late fills only inputs the user has
   not changed (even one they cleared stays empty). A source that cannot
   be read adds nothing.
 - **Today tab** (`lib/features/today`): a scrolling list of independent
   cards, each on its own data, so one failing leaves the others. Next
-  workout: with an active program the card's headline is that program,
+  workout: while a workout is in progress (`ActiveWorkoutState.inProgress`,
+  so not an empty one) the card is that workout, labelled "Workout in
+  progress", with "Resume workout", which opens it like the workout bar
+  and never starts another. A workout stores no day name, so its program
+  day shows only while that day would still give it its name (not since
+  renamed, moved or deleted). While the workout in progress is still
+  looked for, the card shows only its title, never Start.
+  Otherwise, with an active program the card's headline is that program,
   labelled "Active program" and opening its page, its next day below;
   without one it is titled "Next workout". It uses the Programs tab's own
   `ProgramListCubit` (one instance), so
@@ -1344,6 +1420,7 @@ Group 5, workout
 - [x] Free workout — start empty (not in progress until an exercise is added), save as program at the end
 - [x] Rest timer — auto start, +15 s, skip, notification
 - [x] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification
+- [ ] Workout on the lock screen — iOS Live Activity and Android ongoing notifications for the whole workout (workout and rest modes, tap opens it)
 - [x] Finish and summary — records with a short celebration, `exerciseStats` update
 - [x] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
 
@@ -1456,6 +1533,43 @@ Group 9, launch readiness
   extension's App ID under the team (automatic signing); untestable until
   the Apple Developer account: behaviour on a real device while
   suspended.
+- Workout on the lock screen (iOS), not built yet: the two widget files
+  were renamed (`WorkoutActivityAttributes.swift`,
+  `WorkoutLiveActivity.swift`, same entries in `project.pbxproj`), and the
+  Swift was only type-checked with `swiftc` against the simulator SDK and
+  Flutter.framework. Check on the simulator: it starts with the first
+  exercise (not for an empty workout) and ends on finish and discard; the
+  elapsed time runs on the lock screen and in the Dynamic Island; a rest
+  shows its countdown and turns back into the workout at its end with the
+  app in the background (the stale-date redraw) and in front, on skip and
+  on +15 s; relaunching with a workout in progress keeps one activity
+  (none duplicated) and without one removes the old; a tap in each
+  presentation and mode opens the workout page, also from its minimized
+  bar, from another tab with unsaved changes (no prompt: it is pushed),
+  and from a killed app (the launch URL reaches `WorkoutActivityTaps`
+  through the late-registered scene delegate); with no workout in
+  progress a tap only opens the app, and with the workout page open (also
+  under the exercise picker or the paywall) it stays as it is; Google
+  sign-in still returns to the app; the clocks fit at 1:00:00 in every
+  presentation without squeezing the labels. An activity started by an older build (`RestActivityAttributes`)
+  is no longer seen by the app and stays until iOS ends it; only matters
+  for a device that had one running across the update.
+- Workout on the lock screen (Android), not built yet; it needs
+  `forge_notifications`' `showStopwatch` / `scheduleStopwatch` (forge
+  branch `feat/ongoing-stopwatch-notification`, to be tagged and pinned).
+  Check on the emulator: the notification appears with the first exercise
+  and counts up from the start; a rest replaces it with the countdown and
+  the next set, and the workout comes back at the end with the app in
+  front, in the background and killed (with and without exact alarms
+  allowed), and at once on skip; +15 s moves both; finish, discard and
+  sign-out remove it and nothing comes back later; relaunching with a
+  workout in progress shows it once (no duplicate) and without one
+  removes it; it makes no sound, cannot be swiped away on the lock
+  screen, and is promoted to a status bar chip on Android 16; a tap in
+  both modes opens the workout page (also from a killed app), and with
+  no workout in progress only opens the app; the channel shows as
+  "Workout in progress" in the system settings (renamed from "Rest
+  timer").
 - Release blocker: the Terms of Use and Privacy Policy links in
   `lib/app/legal_links.dart` are placeholders; publish the pages and
   replace them (Android picks up `privacyUrl` by itself).
@@ -1505,8 +1619,8 @@ Group 9, launch readiness
   - `forge_auth`: the user's sign-in methods on `AuthUser`, so account
     deletion asks only a user with a password for it and tells a Google
     or Apple only user to sign in again straight away.
-  - The Live Activity bridge (`AppDelegate.swift`'s `RestActivity` and a
-    generic attributes type) could move to a package with a native iOS
+  - The Live Activity bridge (`AppDelegate.swift`'s `WorkoutActivity`,
+    `WorkoutActivityTaps` and a generic attributes type) could move to a package with a native iOS
     plugin once a second app needs one; the widget views stay in the app.
   - A messaging addition (to `forge_notifications` or a new package):
     following a topic per language with leaving the others, foreground

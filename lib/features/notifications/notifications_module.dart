@@ -36,12 +36,13 @@ class NotificationsModule implements FeatureModule {
             description: l10n.notificationChannelDescription,
             importance: Importance.high,
           ),
-          // The running rest on the lock screen. Default importance: lower
+          // The workout in progress and its rests on the lock screen; its
+          // id is from when it showed rests only. Default importance: lower
           // ones may be hidden there. Silent, unlike `workout`.
           countdownChannel: NotificationChannel(
             id: 'rest',
-            name: l10n.restChannelName,
-            description: l10n.restChannelDescription,
+            name: l10n.lockScreenChannelName,
+            description: l10n.lockScreenChannelDescription,
             importance: Importance.defaultImportance,
           ),
           androidIcon: 'ic_notification',

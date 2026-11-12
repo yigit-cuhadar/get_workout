@@ -12,6 +12,28 @@ import '../domain/exercise_stats.dart';
 import '../domain/workout.dart';
 
 extension WorkoutText on AppLocalizations {
+  /// Set [set] of [exercise] as the set column labels it: a warm-up as
+  /// such, else its number among the working sets, marked for a drop set.
+  String setLabel(WorkoutExercise exercise, int set) {
+    final number = exercise.sets.take(set + 1).where((s) => !s.isWarmup).length;
+    return switch (exercise.sets[set].type) {
+      SetType.warmup => workoutWarmupShort,
+      SetType.drop => '$number$workoutDropShort',
+      SetType.normal => '$number',
+    };
+  }
+
+  /// Set [set] of [exercise] as the one to do now, e.g. `Bench Press · set
+  /// 2 of 3`, out of the working sets; a warm-up without the count.
+  String setToDo(WorkoutExercise exercise, int set) {
+    final label = setLabel(exercise, set);
+    if (exercise.sets[set].isWarmup) {
+      return workoutLockScreenWarmup(exercise.name, label);
+    }
+    final working = exercise.sets.where((s) => !s.isWarmup).length;
+    return workoutLockScreenCurrent(exercise.name, label, working);
+  }
+
   /// A lifted weight in [unit] for a text field, as
   /// [WeightUnitConversion.shown] shows it: up to two decimals, no trailing
   /// zeros, no grouping.
@@ -59,22 +81,14 @@ extension WorkoutText on AppLocalizations {
     return goal == null ? null : workoutGoal(itemSummary(goal, unit));
   }
 
-  /// Set [index] of [exercise] in short: `W` for a warm-up, else its
-  /// number among the working sets, e.g. `2`, or `2D` for a drop set.
-  String setShortLabel(WorkoutExercise exercise, int index) {
-    final number = _workingNumber(exercise, index);
-    return switch (exercise.sets[index].type) {
-      SetType.warmup => workoutWarmupShort,
-      SetType.drop => '$number$workoutDropShort',
-      SetType.normal => '$number',
-    };
-  }
-
   /// Set [index] of [exercise] for a screen reader, e.g. `Set 2, done`,
   /// `Warm-up set` or `Set 2, drop set`.
   String setBubbleLabel(WorkoutExercise exercise, int index) {
     final set = exercise.sets[index];
-    final number = _workingNumber(exercise, index);
+    final number = exercise.sets
+        .take(index + 1)
+        .where((s) => !s.isWarmup)
+        .length;
     final label = switch (set.type) {
       SetType.warmup => workoutWarmupBubble,
       SetType.drop => workoutDropBubble(number),
@@ -82,27 +96,6 @@ extension WorkoutText on AppLocalizations {
     };
     return set.done ? workoutBubbleDone(label) : label;
   }
-
-  /// Where set [index] is among its kind, e.g. `Set 2 / 3`, `Warm-up 1 / 2`
-  /// or `Set 2 / 3 · Drop set`.
-  String setPositionText(WorkoutExercise exercise, int index) {
-    final set = exercise.sets[index];
-    final warmups = exercise.sets.where((s) => s.isWarmup).length;
-    if (set.isWarmup) {
-      final number = exercise.sets.take(index + 1).where((s) => s.isWarmup);
-      return workoutWarmupOf(number.length, warmups);
-    }
-    final position = workoutSetOf(
-      _workingNumber(exercise, index),
-      exercise.sets.length - warmups,
-    );
-    return set.type == SetType.drop
-        ? '$position · ${setTypeLabel(SetType.drop)}'
-        : position;
-  }
-
-  int _workingNumber(WorkoutExercise exercise, int index) =>
-      exercise.sets.take(index + 1).where((s) => !s.isWarmup).length;
 
   String setTypeLabel(SetType type) => switch (type) {
     SetType.normal => workoutSetNormal,

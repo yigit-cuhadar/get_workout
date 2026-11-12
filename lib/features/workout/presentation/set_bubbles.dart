@@ -152,7 +152,7 @@ class _SetBubble extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(l10n.setShortLabel(exercise, ref.set), style: style),
+          Text(l10n.setLabel(exercise, ref.set), style: style),
           if (set.done) Icon(Icons.check, size: style?.fontSize),
         ],
       ),

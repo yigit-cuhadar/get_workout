@@ -92,10 +92,7 @@ class SetBar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n.workoutBarTitle(
-                        exercise.name,
-                        l10n.setPositionText(exercise, ref.set),
-                      ),
+                      l10n.setToDo(exercise, ref.set),
                       style: theme.textTheme.titleSmall,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

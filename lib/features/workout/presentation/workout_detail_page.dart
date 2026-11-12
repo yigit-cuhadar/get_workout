@@ -253,7 +253,7 @@ class _SetLine extends StatelessWidget {
     ];
     return ListTile(
       dense: true,
-      leading: Text(l10n.setShortLabel(exercise, index)),
+      leading: Text(l10n.setLabel(exercise, index)),
       title: Text(details.join(' · ')),
       subtitle: set.drops.isEmpty
           ? null

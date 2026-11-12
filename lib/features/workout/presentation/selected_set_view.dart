@@ -77,14 +77,7 @@ class SelectedSetView extends StatelessWidget {
                           children: [
                             Flexible(
                               child: _Position(
-                                text: [
-                                  if (end - start > 1)
-                                    groupItemLabel(
-                                      state.workout!.exercises,
-                                      index,
-                                    ),
-                                  l10n.setPositionText(exercise, set),
-                                ].join(' · '),
+                                text: l10n.setToDo(exercise, set),
                                 done: done,
                               ),
                             ),
