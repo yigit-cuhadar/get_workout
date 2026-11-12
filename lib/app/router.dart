@@ -187,30 +187,51 @@ bool isPastStart(String location) =>
     location != Routes.onboarding &&
     !location.startsWith('${Routes.onboarding}/');
 
-/// Where a tap on a notification about [target] leads from [location], or
-/// null to stay: a workout reminder leaves the workout in progress in front.
-String? notificationDestination(NotificationTarget target, String location) =>
+/// The locations of the pages open in [stack], bottom first: those gone to
+/// and those pushed above them, so the one in front is last. The stack's
+/// own `uri` misses the pushed ones.
+List<String> openLocations(RouteMatchList stack) {
+  final open = <String>[];
+  void visit(List<RouteMatchBase> matches) {
+    for (final match in matches) {
+      switch (match) {
+        case ShellRouteMatch():
+          visit(match.matches);
+        case RouteMatch():
+          open.add(match.matchedLocation);
+      }
+    }
+  }
+
+  visit(stack.matches);
+  return open;
+}
+
+/// Whether the workout page, or one above it, is among the [open] pages.
+bool _workoutOpen(List<String> open) => open.any(
+  (location) =>
+      location == Routes.workout || location.startsWith('${Routes.workout}/'),
+);
+
+/// Where a tap on a notification about [target] leads with the [open]
+/// pages (see [openLocations]), or null to stay: a workout reminder leaves
+/// the workout in progress open, wherever it is in the stack.
+String? notificationDestination(NotificationTarget target, List<String> open) =>
     switch (target) {
-      NotificationTarget.workout =>
-        location == Routes.workout || location.startsWith('${Routes.workout}/')
-            ? null
-            : Routes.today,
+      NotificationTarget.workout => _workoutOpen(open) ? null : Routes.today,
       NotificationTarget.announcement => Routes.today,
       // A new measurement day, unless one is already open.
       NotificationTarget.measurement =>
-        location == Routes.bodyMeasureNew ? null : Routes.bodyMeasureNew,
+        open.contains(Routes.bodyMeasureNew) ? null : Routes.bodyMeasureNew,
     };
 
-/// Where a tap on the workout's lock-screen activity leads from [location]:
-/// the workout, pushed like from its bar so going back minimizes it, or
-/// null to stay: it is open already, or no workout is in progress any more
-/// (an activity left behind), where the tap only opens the app.
-String? lockScreenDestination(String location, {required bool inProgress}) =>
-    !inProgress ||
-        location == Routes.workout ||
-        location.startsWith('${Routes.workout}/')
-    ? null
-    : Routes.workout;
+/// Where a tap on the workout's lock-screen activity or notification leads
+/// with the [open] pages: the workout, pushed like from its bar so going
+/// back minimizes it, or null to stay: it is open already (also under a
+/// page pushed above it), or no workout is in progress any more (one left
+/// behind), where the tap only opens the app.
+String? lockScreenDestination(List<String> open, {required bool inProgress}) =>
+    !inProgress || _workoutOpen(open) ? null : Routes.workout;
 
 /// The sign-in providers offered next to email. Apple joins once the app is
 /// signed by a paid Apple Developer team (the Sign in with Apple

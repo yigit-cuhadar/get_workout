@@ -1,6 +1,10 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/app/router.dart';
 import 'package:get_workout/features/notifications/data/notification_payloads.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   test('the start is the splash, retry, onboarding and its suggestion', () {
@@ -24,63 +28,117 @@ void main() {
     }
   });
 
-  test('reminders and announcements lead to their tabs', () {
-    expect(
-      notificationDestination(NotificationTarget.workout, Routes.profile),
-      Routes.today,
+  /// A router shaped like the app's: tabs in a shell, the workout pushed
+  /// above them with its picker above it.
+  Future<GoRouter> pumpRouter(WidgetTester tester) async {
+    Widget page(GoRouterState state) => Text(state.uri.path);
+    GoRoute route(String path, {List<RouteBase> routes = const []}) =>
+        GoRoute(path: path, builder: (_, state) => page(state), routes: routes);
+    final router = GoRouter(
+      initialLocation: Routes.today,
+      routes: [
+        route(Routes.workout, routes: [route('pick')]),
+        route(Routes.paywall),
+        StatefulShellRoute.indexedStack(
+          builder: (_, _, shell) => shell,
+          branches: [
+            StatefulShellBranch(routes: [route(Routes.today)]),
+            StatefulShellBranch(
+              routes: [
+                route(
+                  Routes.progress,
+                  routes: [
+                    route('body', routes: [route('measure')]),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
     );
-    expect(
-      notificationDestination(NotificationTarget.announcement, Routes.steps),
-      Routes.today,
-    );
-    expect(
-      notificationDestination(NotificationTarget.measurement, Routes.today),
-      Routes.bodyMeasureNew,
-    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    return router;
+  }
+
+  List<String> open(GoRouter router) =>
+      openLocations(router.routerDelegate.currentConfiguration);
+
+  testWidgets('open pages include those pushed, the one in front last', (
+    tester,
+  ) async {
+    final router = await pumpRouter(tester);
+    expect(open(router).last, Routes.today);
+
+    unawaited(router.push(Routes.workout));
+    await tester.pumpAndSettle();
+    expect(open(router), [Routes.today, Routes.workout]);
+    // What the stack's uri says: the tab under the pushed page.
+    expect(router.routerDelegate.currentConfiguration.uri.path, Routes.today);
+
+    unawaited(router.push('${Routes.workout}/pick'));
+    await tester.pumpAndSettle();
+    expect(open(router).last, '${Routes.workout}/pick');
   });
 
-  test('a measurement reminder opens a new measurement day, unless one is '
-      'open', () {
-    expect(
-      notificationDestination(NotificationTarget.measurement, Routes.body),
-      Routes.bodyMeasureNew,
-    );
-    expect(
-      notificationDestination(
-        NotificationTarget.measurement,
-        Routes.bodyMeasureNew,
-      ),
-      isNull,
-    );
+  group('with the workout open', () {
+    for (final above in [null, '${Routes.workout}/pick', Routes.paywall]) {
+      testWidgets('${above ?? 'in front'}: taps keep it', (tester) async {
+        final router = await pumpRouter(tester);
+        unawaited(router.push(Routes.workout));
+        await tester.pumpAndSettle();
+        if (above != null) {
+          unawaited(router.push(above));
+          await tester.pumpAndSettle();
+        }
+
+        expect(lockScreenDestination(open(router), inProgress: true), isNull);
+        expect(
+          notificationDestination(NotificationTarget.workout, open(router)),
+          isNull,
+        );
+      });
+    }
   });
 
-  test('a workout reminder leaves the workout in progress in front', () {
-    expect(
-      notificationDestination(NotificationTarget.workout, Routes.workout),
-      isNull,
-    );
-    expect(
-      notificationDestination(
-        NotificationTarget.workout,
-        Routes.workoutPicker(max: 1, multiple: false).split('?').first,
-      ),
-      isNull,
-    );
-  });
+  testWidgets('without it, a lock-screen tap pushes it, a reminder goes to '
+      'Today', (tester) async {
+    final router = await pumpRouter(tester);
+    router.go('${Routes.progress}/body');
+    await tester.pumpAndSettle();
 
-  test('a tap on the lock-screen activity opens the workout in progress', () {
     expect(
-      lockScreenDestination(Routes.today, inProgress: true),
+      lockScreenDestination(open(router), inProgress: true),
       Routes.workout,
     );
-    for (final location in [Routes.workout, '${Routes.workout}/pick']) {
-      expect(
-        lockScreenDestination(location, inProgress: true),
-        isNull,
-        reason: location,
-      );
-    }
-    // An activity left behind only opens the app.
-    expect(lockScreenDestination(Routes.today, inProgress: false), isNull);
+    expect(
+      notificationDestination(NotificationTarget.workout, open(router)),
+      Routes.today,
+    );
+    // One left behind with no workout in progress only opens the app.
+    expect(lockScreenDestination(open(router), inProgress: false), isNull);
+  });
+
+  testWidgets('a measurement reminder opens a new measurement day, unless '
+      'one is open', (tester) async {
+    final router = await pumpRouter(tester);
+    expect(
+      notificationDestination(NotificationTarget.measurement, open(router)),
+      Routes.bodyMeasureNew,
+    );
+    router.go(Routes.bodyMeasureNew);
+    await tester.pumpAndSettle();
+    expect(
+      notificationDestination(NotificationTarget.measurement, open(router)),
+      isNull,
+    );
+  });
+
+  test('announcements lead to Today', () {
+    expect(
+      notificationDestination(NotificationTarget.announcement, [Routes.steps]),
+      Routes.today,
+    );
   });
 }

@@ -22,6 +22,7 @@ import 'domain/workout_usecases.dart';
 import 'presentation/active_workout_cubit.dart';
 import 'presentation/history_list_cubit.dart';
 import 'presentation/rest_timer_cubit.dart';
+import 'presentation/workout_text.dart';
 import 'presentation/workout_detail_cubit.dart';
 import 'presentation/workout_edit_cubit.dart';
 
@@ -106,7 +107,7 @@ class WorkoutModule implements FeatureModule {
                   ? l10n.restNotificationBack
                   : l10n.restNotificationNext(
                       workout.exercises[next.exercise].name,
-                      next.set + 1,
+                      l10n.setLabel(workout.exercises[next.exercise], next.set),
                     ),
             );
           },
@@ -120,13 +121,12 @@ class WorkoutModule implements FeatureModule {
             }
             final exercise = workout.exercises[next.exercise];
             return (
-              current: l10n.workoutLockScreenCurrent(
-                exercise.name,
-                next.set + 1,
-                exercise.sets.length,
-              ),
+              current: l10n.setToDo(exercise, next.set),
               rest: rest,
-              afterRest: l10n.restNotificationNext(exercise.name, next.set + 1),
+              afterRest: l10n.restNotificationNext(
+                exercise.name,
+                l10n.setLabel(exercise, next.set),
+              ),
             );
           },
         ),

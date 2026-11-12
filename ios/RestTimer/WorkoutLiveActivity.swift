@@ -27,10 +27,10 @@ struct WorkoutLiveActivity: Widget {
             Text(line).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
           }
         }
-        Spacer()
-        WorkoutClock(state: state, rest: rest)
+        .layoutPriority(1)
+        Spacer(minLength: 8)
+        WorkoutClock(state: state, rest: rest, width: 120)
           .font(.title.monospacedDigit())
-          .multilineTextAlignment(.trailing)
       }
       .padding()
       .widgetURL(WorkoutActivityLink.url)
@@ -43,9 +43,7 @@ struct WorkoutLiveActivity: Widget {
           Label(rest?.title ?? state.name, systemImage: symbol).lineLimit(1)
         }
         DynamicIslandExpandedRegion(.trailing) {
-          WorkoutClock(state: state, rest: rest)
-            .monospacedDigit()
-            .multilineTextAlignment(.trailing)
+          WorkoutClock(state: state, rest: rest, width: 80).monospacedDigit()
         }
         DynamicIslandExpandedRegion(.bottom) {
           if let line = detail(state, rest) {
@@ -55,13 +53,7 @@ struct WorkoutLiveActivity: Widget {
       } compactLeading: {
         Image(systemName: symbol)
       } compactTrailing: {
-        // Wide enough for 30:00 and 1:00:00; scales down beyond.
-        WorkoutClock(state: state, rest: rest)
-          .monospacedDigit()
-          .multilineTextAlignment(.trailing)
-          .lineLimit(1)
-          .minimumScaleFactor(0.5)
-          .frame(width: 56)
+        WorkoutClock(state: state, rest: rest, width: 64).monospacedDigit()
       } minimal: {
         Image(systemName: symbol)
       }
@@ -79,12 +71,23 @@ struct WorkoutLiveActivity: Widget {
 }
 
 /// The rest's time left, counted down, or else the workout's elapsed time,
-/// counted up; both by the system.
+/// counted up; both by the system. A timer text takes all the width it is
+/// offered, so it gets a fixed `width`, wide enough for 1:00:00, and scales
+/// down beyond.
 struct WorkoutClock: View {
   let state: WorkoutActivityAttributes.ContentState
   let rest: WorkoutActivityAttributes.ContentState.Rest?
+  let width: CGFloat
 
   var body: some View {
+    time
+      .multilineTextAlignment(.trailing)
+      .lineLimit(1)
+      .minimumScaleFactor(0.5)
+      .frame(width: width, alignment: .trailing)
+  }
+
+  @ViewBuilder private var time: some View {
     if let rest {
       let now = Date()
       // Never an hours part: a rest ends within 30 min. The range never

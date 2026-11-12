@@ -64,7 +64,7 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>NSCameraUsageDescription</key>
 	<string>GetWorkout uses the camera for your progress photos. They stay private in the app and are never saved to your photo library.</string>
-	<!-- The running rest on the lock screen (RestTimer extension). -->
+	<!-- The workout in progress on the lock screen (RestTimer extension). -->
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSHealthShareUsageDescription</key>

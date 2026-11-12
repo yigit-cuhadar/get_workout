@@ -138,6 +138,11 @@ enum WorkoutActivity {
       return true
     }
     guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
+    // One iOS ended (8 hours) stays on the lock screen up to 4 hours more:
+    // removed, so it is not shown next to the new one.
+    for ended in Activity<WorkoutActivityAttributes>.activities where ended.activityState == .ended {
+      await ended.end(nil, dismissalPolicy: .immediate)
+    }
     _ = try Activity<WorkoutActivityAttributes>.request(
       attributes: WorkoutActivityAttributes(),
       content: content,
@@ -172,6 +177,9 @@ final class WorkoutActivityTaps: NSObject, FlutterSceneLifeCycleDelegate {
     return tapped
   }
 
+  // Selectors pinned, so a renamed Swift signature cannot silently stop
+  // matching the optional protocol methods.
+  @objc(scene:willConnectToSession:options:)
   func scene(
     _ scene: UIScene,
     willConnectTo session: UISceneSession,
@@ -182,6 +190,7 @@ final class WorkoutActivityTaps: NSObject, FlutterSceneLifeCycleDelegate {
     return false
   }
 
+  @objc(scene:openURLContexts:)
   func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) -> Bool {
     open(URLContexts)
   }

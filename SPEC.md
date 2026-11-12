@@ -918,15 +918,21 @@ from the earlier FitLab app.
   setting says). Rest: title "Rest" and the next set as in the rest
   notification (none when nothing is left); workout: its name, the elapsed
   time since `startedAt`, and the set to do now ("Bench Press · set 2 of
-  3", the next set after the latest rest's set as the rest notification
-  picks it, counting warm-ups like it; none when every set is done). The
-  rest is replaced on +15 s or a new rest and turns back into the workout
-  when it is over, skipped or unticked. It is silent whatever `notify`
-  says: the end is announced by the rest notification (id 1) alone, so
-  nothing alerts twice. A show or removal that fails (also iOS with Live
-  Activities off, or before the app may start one) does not count as done:
-  the next second of a rest's countdown, or else the next change or the
-  app showing again, tries again.
+  3", "Bench Press · set W" for a warm-up; none when every set is done).
+  Sets are named as the workout page's set column names them (`setLabel`:
+  W for a warm-up, else the number among the working sets, 2D for a drop
+  set; "of N" counts working sets), in the rest notification too. The set
+  to do now is the next one (`nextSet`) after the set ticked last in this
+  run of the app, whatever became of its rest (skipped, or none with the
+  rest timer off), forgotten when that set is unticked or no longer done
+  after an edit; after a restart, after the kept rest's set. The rest is
+  replaced on +15 s or a new rest and turns back into the workout when it
+  is over, skipped or unticked. It is silent whatever `notify` says: the
+  end is announced by the rest notification (id 1) alone, so nothing
+  alerts twice. A show or removal that fails (also iOS with Live
+  Activities off, or before the app may start one) is logged once and the
+  same content is not tried again until the app shows again; content that
+  changes is tried at once.
   Android shows the rest only, nothing outside a rest (an ongoing workout
   notification is not built): an ongoing notification, id 2, on its own
   channel `rest` ("Rest timer", default importance, no sound or vibration;
@@ -1434,8 +1440,10 @@ Group 9, launch readiness
   bar, from another tab with unsaved changes (no prompt: it is pushed),
   and from a killed app (the launch URL reaches `WorkoutActivityTaps`
   through the late-registered scene delegate); with no workout in
-  progress a tap only opens the app; Google sign-in still returns to the
-  app. An activity started by an older build (`RestActivityAttributes`)
+  progress a tap only opens the app, and with the workout page open (also
+  under the exercise picker or the paywall) it stays as it is; Google
+  sign-in still returns to the app; the clocks fit at 1:00:00 in every
+  presentation without squeezing the labels. An activity started by an older build (`RestActivityAttributes`)
   is no longer seen by the app and stays until iOS ends it; only matters
   for a device that had one running across the update.
 - Release blocker: the Terms of Use and Privacy Policy links in

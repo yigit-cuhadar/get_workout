@@ -104,6 +104,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
        super(const RestTimerState()) {
     _status = workout.state.status;
     _rest = workout.state.rest;
+    _seen = workout.state.workout;
     _subscription = workout.stream.listen(_onWorkout);
     _settingsSubscription = _settings.stream.listen((_) => _syncLockScreen());
     unawaited(_cancelNotification());
@@ -126,6 +127,14 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   late final StreamSubscription<SettingsState> _settingsSubscription;
   late WorkoutStatus _status;
   Rest? _rest;
+
+  /// The workout as last seen, to tell which set was ticked.
+  Workout? _seen;
+
+  /// The set ticked last in this run of the app, so the set to do now
+  /// follows on from it whatever became of its rest (skipped, or none with
+  /// the rest timer off). Null when unknown; then the rest's set is used.
+  SetRef? _lastTicked;
   Timer? _timer;
   bool _hidden = false;
 
@@ -136,9 +145,9 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   /// Whether asking was considered in this run of the app.
   bool _considered = false;
 
-  /// What the lock screen shows, null for nothing. Unknown until the first
-  /// sync, which so also replaces or removes one left from an earlier run,
-  /// and again after a call failed, so the next change or tick tries again.
+  /// What the lock screen shows (or was last asked to), null for nothing.
+  /// Unknown until the first sync, which so also replaces or removes one
+  /// left from an earlier run, and again when it is to be tried again.
   LockScreenWorkout? _onLockScreen;
   bool _lockScreenKnown = false;
 
@@ -146,8 +155,13 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   /// screen waits, so one left from an earlier run does not flicker.
   bool _workoutLoaded = false;
 
-  /// Counts lock screen syncs, so a failure only unsettles the latest.
+  /// Counts lock screen syncs, so only the latest one's outcome counts.
   int _lockScreenSync = 0;
+
+  /// Whether the latest lock screen call failed (e.g. Live Activities off).
+  /// The same content is not tried again until the app shows again, and the
+  /// failure is logged once until a call succeeds.
+  bool _lockScreenFailing = false;
 
   /// Lock screen calls run one after another, so the last one wins.
   Future<void> _lockScreenCalls = Future.value();
@@ -162,6 +176,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   void _onWorkout(ActiveWorkoutState workout) {
     final wasActive = _status == WorkoutStatus.active;
     _status = workout.status;
+    _followTicks(workout.workout);
     if (workout.rest == _rest) {
       _syncLockScreen();
       return;
@@ -233,10 +248,12 @@ class RestTimerCubit extends Cubit<RestTimerState> {
       } catch (error) {
         result = Err(UnknownFailure('$error', error));
       }
-      if (result.failureOrNull case final failure?) {
+      if (sync != _lockScreenSync) return;
+      final failure = result.failureOrNull;
+      if (failure != null && !_lockScreenFailing) {
         Log.e('workout', 'lock screen not updated: ${failure.message}');
-        if (sync == _lockScreenSync) _lockScreenKnown = false;
       }
+      _lockScreenFailing = failure != null;
     });
   }
 
@@ -244,7 +261,10 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     final workout = active.workout;
     if (!active.inProgress || workout == null) return null;
     final rest = _rest;
-    final text = _lockScreenText(workout, nextSet(workout, rest?.after));
+    final text = _lockScreenText(
+      workout,
+      nextSet(workout, _lastTicked ?? rest?.after),
+    );
     final resting =
         rest != null &&
         rest.runsAt(_clock()) &&
@@ -263,6 +283,30 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     );
   }
 
+  void _followTicks(Workout? now) {
+    final before = _seen;
+    _seen = now;
+    if (now == null || before == null || before.id != now.id) {
+      _lastTicked = null;
+      return;
+    }
+    final ticked = newlyDone(before, now);
+    if (ticked != null) {
+      _lastTicked = ticked;
+      return;
+    }
+    // An edit may have moved sets or unticked it: keep it only while it
+    // still names a done set.
+    final last = _lastTicked;
+    final set = last == null
+        ? null
+        : now.exercises
+              .elementAtOrNull(last.exercise)
+              ?.sets
+              .elementAtOrNull(last.set);
+    if (set == null || !set.done) _lastTicked = null;
+  }
+
   /// The app went to the background: notify at the end of a running rest.
   void hidden() {
     _hidden = true;
@@ -274,6 +318,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     _hidden = false;
     _generation++;
     unawaited(_cancelNotification());
+    if (_lockScreenFailing) _lockScreenKnown = false;
     _tick();
   }
 

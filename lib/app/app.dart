@@ -50,9 +50,9 @@ class _AppState extends State<App> {
   late final StreamSubscription<void> _lockScreenTaps;
 
   /// A tapped notification or lock-screen activity, until the app is past
-  /// its start: where it leads from a location (null: stay), and whether it
-  /// is pushed onto the page shown rather than gone to.
-  ({String? Function(String location) to, bool push})? _tapped;
+  /// its start: where it leads with the open pages ([openLocations]; null:
+  /// stay), and whether it is pushed onto them rather than gone to.
+  ({String? Function(List<String> open) to, bool push})? _tapped;
 
   @override
   void initState() {
@@ -83,7 +83,7 @@ class _AppState extends State<App> {
 
   void _openNotification(NotificationTarget target) {
     _tapped = (
-      to: (location) => notificationDestination(target, location),
+      to: (open) => notificationDestination(target, open),
       push: false,
     );
     _openTapped();
@@ -100,8 +100,8 @@ class _AppState extends State<App> {
     }
     if (!mounted) return;
     _tapped = (
-      to: (location) =>
-          lockScreenDestination(location, inProgress: workout.state.inProgress),
+      to: (open) =>
+          lockScreenDestination(open, inProgress: workout.state.inProgress),
       push: true,
     );
     _openTapped();
@@ -109,10 +109,10 @@ class _AppState extends State<App> {
 
   void _openTapped() {
     final tapped = _tapped;
-    final location = _router.routerDelegate.currentConfiguration.uri.path;
-    if (tapped == null || !isPastStart(location)) return;
+    final open = openLocations(_router.routerDelegate.currentConfiguration);
+    if (tapped == null || open.isEmpty || !isPastStart(open.last)) return;
     _tapped = null;
-    final destination = tapped.to(location);
+    final destination = tapped.to(open);
     if (destination == null) return;
     // Never from inside the router delegate's own notification.
     SchedulerBinding.instance

@@ -785,7 +785,7 @@ void main() {
       });
     });
 
-    test('a failed show is tried again on the next tick of a rest', () {
+    test('a failed show is not tried again until the app shows again', () {
       var failing = true;
       when(() => lockScreen.show(any())).thenAnswer(
         (_) async =>
@@ -796,12 +796,43 @@ void main() {
         async.flushMicrotasks();
         verifyShown(resting(end));
 
+        // Neither every second nor on a change that shows the same.
+        async.elapse(const Duration(seconds: 5));
+        emitWorkout(
+          ActiveWorkoutState(
+            status: WorkoutStatus.active,
+            workout: squats,
+            rest: Rest(endsAt: end, after: first),
+            stats: const {'squat': null},
+          ),
+        );
+        async.flushMicrotasks();
+        verifyNotShown();
+
         failing = false;
-        async.elapse(const Duration(seconds: 1));
+        cubit.hidden();
+        cubit.shown();
+        async.flushMicrotasks();
         verifyShown(resting(end));
 
-        async.elapse(const Duration(seconds: 5));
+        // Settled: showing again changes nothing.
+        cubit.hidden();
+        cubit.shown();
+        async.flushMicrotasks();
         verifyNotShown();
+      });
+    });
+
+    test('but at once when what it shows changes', () {
+      when(() => lockScreen.show(any()))
+          .thenAnswer((_) async => const Err(UnknownFailure('off')));
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.flushMicrotasks();
+        verifyShown(resting(end));
+        emitRest(null);
+        async.flushMicrotasks();
+        verifyShown(training);
       });
     });
 
@@ -821,6 +852,87 @@ void main() {
         cubit.shown();
         async.flushMicrotasks();
         verifyShown(training);
+      });
+    });
+
+    group('the set to do now follows the set ticked last', () {
+      // A set of the first exercise left undone, then the second one's.
+      Workout state({bool second = false}) => workout('w1', [
+        exercise('squat', [const WorkoutSet()]),
+        exercise('lunge', [lift(20, 10, done: second), const WorkoutSet()]),
+      ]);
+      const ticked = (exercise: 1, set: 0);
+      final onLunge = LockScreenWorkout(
+        name: 'Workout w1',
+        startedAt: start,
+        current: 'lunge now 2',
+      );
+
+      setUp(
+        () => workoutState = ActiveWorkoutState(
+          status: WorkoutStatus.active,
+          workout: state(),
+        ),
+      );
+
+      test('after a skipped rest', () {
+        runStarted((async, cubit) {
+          emitWorkout(
+            ActiveWorkoutState(
+              status: WorkoutStatus.active,
+              workout: state(second: true),
+              rest: Rest(endsAt: end, after: ticked),
+            ),
+          );
+          async.flushMicrotasks();
+          clearInteractions(lockScreen);
+          emitWorkout(
+            ActiveWorkoutState(
+              status: WorkoutStatus.active,
+              workout: state(second: true),
+            ),
+          );
+          async.flushMicrotasks();
+          verifyShown(onLunge);
+        });
+      });
+
+      test('with the rest timer off', () {
+        runStarted((async, cubit) {
+          emitWorkout(
+            ActiveWorkoutState(
+              status: WorkoutStatus.active,
+              workout: state(second: true),
+            ),
+          );
+          async.flushMicrotasks();
+          verifyShown(onLunge);
+        });
+      });
+
+      test('until it is unticked', () {
+        runStarted((async, cubit) {
+          emitWorkout(
+            ActiveWorkoutState(
+              status: WorkoutStatus.active,
+              workout: state(second: true),
+            ),
+          );
+          emitWorkout(
+            ActiveWorkoutState(status: WorkoutStatus.active, workout: state()),
+          );
+          async.flushMicrotasks();
+          verifyInOrder([
+            () => lockScreen.show(onLunge),
+            () => lockScreen.show(
+              LockScreenWorkout(
+                name: 'Workout w1',
+                startedAt: start,
+                current: 'squat now 1',
+              ),
+            ),
+          ]);
+        });
       });
     });
 
