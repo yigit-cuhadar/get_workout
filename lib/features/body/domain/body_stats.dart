@@ -1,6 +1,8 @@
 import '../../programs/domain/calendar_date.dart';
 import '../../strength/domain/strength.dart';
+import '../../profile/domain/user_profile.dart';
 import 'body_entry.dart';
+import 'entry_body_fat.dart';
 
 /// One logged weight.
 typedef WeightPoint = ({DateTime date, double kg});
@@ -32,6 +34,56 @@ bool hasWeightBefore(
   return start != null &&
       entries.any(
         (entry) => entry.weightKg != null && entry.date.isBefore(start),
+      );
+}
+
+/// One entry's body fat.
+typedef BodyFatPoint = ({DateTime date, double percent});
+
+/// The body fat of each of [entries] it can be estimated for, by entry id;
+/// see [entryBodyFat].
+Map<String, double> bodyFatByEntry(
+  List<BodyEntry> entries, {
+  required Sex? sex,
+  required double? heightCm,
+}) => {
+  for (final entry in entries)
+    entry.id: ?entryBodyFat(
+      entry.measurements,
+      sex: sex,
+      heightCm: heightCm,
+    ).percent,
+};
+
+/// The body fat [percents] (see [bodyFatByEntry]) of [entries] (newest
+/// first) in [range], oldest first.
+List<BodyFatPoint> bodyFatSeries(
+  List<BodyEntry> entries,
+  Map<String, double> percents, {
+  required StrengthRange range,
+  required DateTime now,
+}) {
+  final start = range.start(now);
+  return [
+    for (final entry in entries.reversed)
+      if (percents[entry.id] case final percent?)
+        if (start == null || !entry.date.isBefore(start))
+          (date: entry.date, percent: percent),
+  ];
+}
+
+/// Whether any of [entries] with a body fat in [percents] is from before
+/// [range] starts; see [hasWeightBefore].
+bool hasBodyFatBefore(
+  List<BodyEntry> entries,
+  Map<String, double> percents, {
+  required StrengthRange range,
+  required DateTime now,
+}) {
+  final start = range.start(now);
+  return start != null &&
+      entries.any(
+        (entry) => percents.containsKey(entry.id) && entry.date.isBefore(start),
       );
 }
 
@@ -94,6 +146,10 @@ class BodyComparison {
 
   ValuePair get weightKg => (before: before.weightKg, after: after.weightKg);
 
+  /// The body fat of each entry, from [percents] (see [bodyFatByEntry]).
+  ValuePair bodyFat(Map<String, double> percents) =>
+      (before: percents[before.id], after: percents[after.id]);
+
   /// The measurements either entry has, in their usual order, in cm.
   Map<BodyMeasurement, ValuePair> get measurements => {
     for (final measurement in BodyMeasurement.values)
@@ -104,6 +160,11 @@ class BodyComparison {
           after: after.measurements[measurement],
         ),
   };
+
+  /// The keys of [measurements], both sides of a pair in one group; see
+  /// [pairedMeasurements].
+  List<List<BodyMeasurement>> get measurementGroups =>
+      pairedMeasurements(measurements.keys.toSet());
 
   /// The poses either entry has a photo of, in their usual order.
   List<PhotoPose> get poses => [

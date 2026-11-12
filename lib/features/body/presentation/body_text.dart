@@ -57,6 +57,37 @@ extension BodyText on AppLocalizations {
     BodyMeasurement.rightCalf => bodyRightCalf,
   };
 
+  /// The name of the pair whose left side is [left], e.g. "Thigh".
+  String measurementPairName(BodyMeasurement left) => switch (left) {
+    BodyMeasurement.leftUpperArm => bodyUpperArm,
+    BodyMeasurement.leftForearm => bodyForearm,
+    BodyMeasurement.leftThigh => bodyThigh,
+    BodyMeasurement.leftCalf => bodyCalf,
+    _ => measurementName(left),
+  };
+
+  /// The name of a group of [pairedMeasurements]: one measurement, or both
+  /// sides of a pair, e.g. "Thigh (L / R)".
+  String measurementGroupName(List<BodyMeasurement> group) => group.length == 1
+      ? measurementName(group.single)
+      : bodyPairName(measurementPairName(group.first));
+
+  /// A body fat percentage, always with one decimal.
+  String bodyFat(double percent) => bodyFatValue(_oneDecimal(percent));
+
+  /// Signed; "0.0 %" for no change.
+  String bodyFatChange(double points) {
+    final text = bodyFatValue(_oneDecimal(points.abs()));
+    if (_oneDecimal(points.abs()) == _oneDecimal(0)) return text;
+    return points > 0 ? bodyIncrease(text) : bodyDecrease(text);
+  }
+
+  String _oneDecimal(double value) =>
+      (NumberFormat.decimalPattern(localeName)
+            ..minimumFractionDigits = 1
+            ..maximumFractionDigits = 1)
+          .format(value);
+
   String poseName(PhotoPose pose) => switch (pose) {
     PhotoPose.front => bodyPoseFront,
     PhotoPose.right => bodyPoseRight,

@@ -9,6 +9,9 @@ import 'package:get_workout/features/body/domain/body_photos.dart';
 import 'package:get_workout/features/body/domain/body_repository.dart';
 import 'package:get_workout/features/body/domain/body_usecases.dart';
 import 'package:get_workout/features/body/presentation/body_list_cubit.dart';
+import 'package:get_workout/features/profile/domain/profile_repository.dart';
+import 'package:get_workout/features/profile/domain/profile_usecases.dart';
+import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:get_workout/features/programs/domain/premium_status.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/strength/domain/strength.dart';
@@ -19,6 +22,8 @@ import 'body_fakes.dart';
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockBodyRepository extends Mock implements BodyRepository {}
+
+class MockProfileRepository extends Mock implements ProfileRepository {}
 
 class FakePremium implements PremiumStatus {
   final controller = StreamController<bool?>.broadcast();
@@ -48,6 +53,7 @@ void main() {
   late StreamController<AuthUser?> users;
   late StreamController<List<BodyEntry>> entries;
   late StreamController<Failure> rejected;
+  late StreamController<UserProfile> profiles;
   late BodyPhotoSync sync;
   late BodyPhotoWorld deletes;
   late BodyListCubit cubit;
@@ -65,6 +71,10 @@ void main() {
     users = StreamController<AuthUser?>.broadcast();
     entries = StreamController<List<BodyEntry>>.broadcast();
     rejected = StreamController<Failure>.broadcast();
+    profiles = StreamController<UserProfile>.broadcast();
+    final profileRepository = MockProfileRepository();
+    when(() => profileRepository.watchProfile(any()))
+        .thenAnswer((_) => profiles.stream);
     deletes = BodyPhotoWorld();
     queue = FakeBackupQueue();
     sync = BodyPhotoSync(queue, store, backup, deletes.repository)
@@ -83,6 +93,7 @@ void main() {
       watchEntries: WatchBodyEntries(repository),
       watchRejectedWrites: WatchRejectedBodyWrites(repository),
       watchPremium: WatchPremium(premium),
+      watchProfile: WatchProfile(profileRepository),
       findPhotos: FindBodyPhotos(store),
       restorePhoto: RestoreBodyPhoto(sync),
       reconcilePhotos: ReconcileBodyPhotos(sync),
@@ -138,6 +149,72 @@ void main() {
       expect(cubit.state.olderLocked, isFalse);
     },
   );
+
+  group('body fat', () {
+    BodyEntry measured(String id, DateTime date, double abdomen) => BodyEntry(
+      id: id,
+      date: date,
+      measurements: {
+        BodyMeasurement.neck: 38,
+        BodyMeasurement.abdomen: abdomen,
+      },
+    );
+    final newer = measured('n', DateTime(2026, 11, 1), 85);
+    final older = measured('o', DateTime(2026, 2, 1), 95);
+    const man = UserProfile(sex: Sex.male, heightCm: 180);
+
+    Future<void> profile(UserProfile profile) async {
+      profiles.add(profile);
+      await pumpEventQueue();
+    }
+
+    test('follows the profile; entries without one are left out', () async {
+      await signIn();
+      await receive([newer, recent, older]);
+      expect(cubit.state.bodyFat, isEmpty);
+      expect(cubit.state.bodyFatPoints, isEmpty);
+
+      await profile(man);
+
+      expect(cubit.state.bodyFat.keys, {'n', 'o'});
+      expect(cubit.state.bodyFat['n']!, lessThan(cubit.state.bodyFat['o']!));
+      expect(cubit.state.bodyFatPoints, [
+        (date: newer.date, percent: cubit.state.bodyFat['n']!),
+      ]);
+
+      await profile(const UserProfile(sex: Sex.male));
+      expect(cubit.state.bodyFat, isEmpty);
+    });
+
+    test('older body fat is behind Premium like weights', () async {
+      await signIn();
+      await profile(man);
+      await receive([newer, older]);
+      premium.controller.add(false);
+      await pumpEventQueue();
+      expect(cubit.state.bodyFatOlderLocked, isTrue);
+
+      premium.controller.add(true);
+      cubit.selectRange(StrengthRange.all);
+      await pumpEventQueue();
+      expect(cubit.state.bodyFatOlderLocked, isFalse);
+      expect(cubit.state.bodyFatPoints.map((point) => point.date), [
+        older.date,
+        newer.date,
+      ]);
+    });
+
+    test('another user starts without the previous profile', () async {
+      await signIn();
+      await profile(man);
+      users.add(const AuthUser(id: 'u2', isAnonymous: true));
+      await pumpEventQueue();
+
+      await receive([newer]);
+
+      expect(cubit.state.bodyFat, isEmpty);
+    });
+  });
 
   test('photo files on the device follow the entries', () async {
     store.files[frontPath] = 'local/front';

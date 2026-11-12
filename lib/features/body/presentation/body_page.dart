@@ -105,6 +105,8 @@ class _Entries extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final rows = <WidgetBuilder>[
       (_) => _WeightCard(state),
+      // Only once some entry has a body fat to show.
+      if (state.bodyFat.isNotEmpty) (_) => _BodyFatCard(state),
       (_) =>
           const Padding(padding: EdgeInsets.all(Gap.md), child: _LogButtons()),
       (context) => ListTile(
@@ -114,7 +116,8 @@ class _Entries extends StatelessWidget {
           style: Theme.of(context).textTheme.titleSmall,
         ),
       ),
-      for (final entry in state.entries) (_) => _EntryTile(entry),
+      for (final entry in state.entries)
+        (_) => _EntryTile(entry, bodyFat: state.bodyFat[entry.id]),
     ];
     return ListView.builder(
       itemCount: rows.length,
@@ -161,7 +164,10 @@ class _WeightCard extends StatelessWidget {
           if (points.isEmpty)
             Text(l10n.bodyNoWeights, style: theme.textTheme.bodyMedium)
           else
-            _WeightChart(points, unit),
+            _TrendChart([
+              for (final point in points)
+                (date: point.date, value: unit.fromKg(point.kg)),
+            ], label: (value) => l10n.bodyWeight(unit.toKg(value), unit)),
           if (state.olderLocked) ...[
             const SizedBox(height: Gap.sm),
             Text(l10n.bodyOlderLocked, style: theme.textTheme.bodySmall),
@@ -183,6 +189,51 @@ class _WeightCard extends StatelessWidget {
     return toGo == l10n.bodyWeight(0, unit)
         ? l10n.bodyTargetReached(weight)
         : l10n.bodyTargetToGo(weight, toGo);
+  }
+}
+
+/// The body-fat trend over the weight chart's range, which it also picks.
+class _BodyFatCard extends StatelessWidget {
+  const _BodyFatCard(this.state);
+  final BodyListState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final points = state.bodyFatPoints;
+    // Shown only when some entry has one; entries are newest first.
+    final latest = state.entries
+        .map((entry) => state.bodyFat[entry.id])
+        .nonNulls
+        .first;
+    return Padding(
+      padding: const EdgeInsets.all(Gap.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.bodyFatTitle, style: theme.textTheme.titleMedium),
+          Text(
+            l10n.bodyLatest(l10n.bodyFat(latest)),
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: Gap.sm),
+          _RangePicker(state.range),
+          const SizedBox(height: Gap.sm),
+          if (points.isEmpty)
+            Text(l10n.bodyNoBodyFat, style: theme.textTheme.bodyMedium)
+          else
+            _TrendChart([
+              for (final point in points)
+                (date: point.date, value: point.percent),
+            ], label: l10n.bodyFat),
+          if (state.bodyFatOlderLocked) ...[
+            const SizedBox(height: Gap.sm),
+            Text(l10n.bodyFatOlderLocked, style: theme.textTheme.bodySmall),
+          ],
+        ],
+      ),
+    );
   }
 }
 
@@ -220,10 +271,13 @@ class _RangePicker extends StatelessWidget {
   }
 }
 
-class _WeightChart extends StatelessWidget {
-  const _WeightChart(this.points, this.unit);
-  final List<WeightPoint> points;
-  final WeightUnit unit;
+/// Values over time, in the unit [label] writes them in.
+class _TrendChart extends StatelessWidget {
+  const _TrendChart(this.points, {required this.label});
+
+  /// Oldest first.
+  final List<({DateTime date, double value})> points;
+  final String Function(double value) label;
 
   /// Beyond this span the bottom labels name months and years.
   static const _daysOfShortDates = 300;
@@ -242,19 +296,16 @@ class _WeightChart extends StatelessWidget {
     return LineChart(
       points: [
         for (final point in points)
-          (
-            x: point.date.millisecondsSinceEpoch.toDouble(),
-            y: unit.fromKg(point.kg),
-          ),
+          (x: point.date.millisecondsSinceEpoch.toDouble(), y: point.value),
       ],
       xLabel: (x) => axisDates.format(date(x)),
       yLabel: numbers.format,
-      // Body weight moves in tenths.
+      // Body weight and fat move in tenths.
       yPrecision: 0.1,
       pointLabel: (index) {
         final point = points[index];
         return l10n.bodyPoint(
-          l10n.bodyWeight(point.kg, unit),
+          label(point.value),
           DateFormat.yMMMd(locale).format(point.date),
         );
       },
@@ -263,8 +314,9 @@ class _WeightChart extends StatelessWidget {
 }
 
 class _EntryTile extends StatelessWidget {
-  const _EntryTile(this.entry);
+  const _EntryTile(this.entry, {required this.bodyFat});
   final BodyEntry entry;
+  final double? bodyFat;
 
   @override
   Widget build(BuildContext context) {
@@ -273,7 +325,11 @@ class _EntryTile extends StatelessWidget {
       (SettingsCubit cubit) => cubit.state.settings.weightUnit,
     );
     final weight = entry.weightKg;
-    final contents = l10n.entryContents(entry);
+    final fat = bodyFat;
+    final contents = [
+      ?l10n.entryContents(entry),
+      if (fat != null) l10n.bodyFatOn(l10n.bodyFat(fat)),
+    ].join(' · ');
     return ListTile(
       leading: Icon(
         entry.isWeightOnly ? Icons.monitor_weight_outlined : Icons.straighten,
@@ -281,7 +337,7 @@ class _EntryTile extends StatelessWidget {
       title: Text(
         MaterialLocalizations.of(context).formatMediumDate(entry.date),
       ),
-      subtitle: contents == null ? null : Text(contents),
+      subtitle: contents.isEmpty ? null : Text(contents),
       trailing: weight == null ? null : Text(l10n.bodyWeight(weight, unit)),
       onTap: () => context.go(Routes.bodyEntry(entry.id)),
     );

@@ -106,7 +106,12 @@ class _EntryViewState extends State<_EntryView> {
     final files = context.select(
       (BodyListCubit cubit) => cubit.state.photoFiles,
     );
+    final bodyFat = context.select(
+      (BodyListCubit cubit) => cubit.state.bodyFat[entry.id],
+    );
     final weight = entry.weightKg;
+    String length(BodyMeasurement measurement) =>
+        l10n.bodyLength(entry.measurements[measurement]!, settings.lengthUnit);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -143,13 +148,25 @@ class _EntryViewState extends State<_EntryView> {
                   : l10n.bodyWeight(weight, settings.weightUnit),
             ),
           ),
-          for (final MapEntry(key: measurement, value: cm)
-              in entry.measurements.entries.toList()
-                ..sort((a, b) => a.key.index.compareTo(b.key.index)))
+          if (bodyFat != null)
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(l10n.measurementName(measurement)),
-              trailing: Text(l10n.bodyLength(cm, settings.lengthUnit)),
+              title: Text(l10n.bodyFatTitle),
+              trailing: Text(l10n.bodyFat(bodyFat)),
+            ),
+          for (final group in pairedMeasurements(
+            entry.measurements.keys.toSet(),
+          ))
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.measurementGroupName(group)),
+              trailing: Text(switch (group) {
+                [final left, final right] => l10n.bodyPair(
+                  length(left),
+                  length(right),
+                ),
+                _ => length(group.single),
+              }),
             ),
           if (entry.photos.isNotEmpty) ...[
             const SizedBox(height: Gap.md),
