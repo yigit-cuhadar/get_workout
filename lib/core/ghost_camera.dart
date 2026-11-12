@@ -1,0 +1,189 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
+import 'package:forge_ui/forge_ui.dart';
+
+/// A live camera preview with [ghostFile], an earlier picture, laid faintly
+/// over it, so a new picture can be lined up with the old one. The shutter
+/// hands the new picture to [onCaptured] as a temporary file; nothing is
+/// written to the gallery. Starts on the back camera; a button switches
+/// cameras when the device has more than one. Knows nothing of what it
+/// takes; the caller writes every label.
+// Belongs in a forge package; move it there when one next changes.
+class GhostCamera extends StatefulWidget {
+  const GhostCamera({
+    super.key,
+    required this.onCaptured,
+    required this.captureLabel,
+    required this.switchLabel,
+    required this.unavailableText,
+    this.ghostFile,
+  });
+
+  final ValueChanged<String> onCaptured;
+  final String? ghostFile;
+  final String captureLabel;
+  final String switchLabel;
+
+  /// Shown when there is no camera or access to it was refused.
+  final String unavailableText;
+
+  @override
+  State<GhostCamera> createState() => _GhostCameraState();
+}
+
+class _GhostCameraState extends State<GhostCamera> {
+  static const _ghostOpacity = 0.35;
+
+  late final AppLifecycleListener _lifecycle;
+  List<CameraDescription> _cameras = const [];
+  CameraDescription? _camera;
+  CameraController? _controller;
+  bool _unavailable = false;
+  bool _capturing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // The camera is released while the app is away, as the platforms
+    // require, and opened again on return.
+    _lifecycle = AppLifecycleListener(
+      onInactive: _release,
+      onResume: () => unawaited(_open()),
+    );
+    unawaited(_start());
+  }
+
+  Future<void> _start() async {
+    try {
+      _cameras = await availableCameras();
+    } on CameraException {
+      _cameras = const [];
+    }
+    if (!mounted) return;
+    _camera = _cameras
+        .where((camera) => camera.lensDirection == CameraLensDirection.back)
+        .followedBy(_cameras)
+        .firstOrNull;
+    await _open();
+  }
+
+  Future<void> _open() async {
+    final camera = _camera;
+    if (camera == null) {
+      setState(() => _unavailable = true);
+      return;
+    }
+    if (_controller != null) return;
+    final controller = CameraController(
+      camera,
+      ResolutionPreset.high,
+      enableAudio: false,
+      imageFormatGroup: ImageFormatGroup.jpeg,
+    );
+    _controller = controller;
+    try {
+      await controller.initialize();
+      if (mounted) setState(() => _unavailable = false);
+    } on Object {
+      // Released again while starting: [_release] disposed it.
+      if (_controller != controller) return;
+      // Refused access, or no working camera.
+      _controller = null;
+      await controller.dispose();
+      if (mounted) setState(() => _unavailable = true);
+    }
+  }
+
+  void _release() {
+    final controller = _controller;
+    _controller = null;
+    unawaited(controller?.dispose());
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _switch() async {
+    final current = _camera;
+    if (current == null || _cameras.length < 2) return;
+    _camera = _cameras[(_cameras.indexOf(current) + 1) % _cameras.length];
+    _release();
+    await _open();
+  }
+
+  Future<void> _capture() async {
+    final controller = _controller;
+    if (controller == null || _capturing) return;
+    setState(() => _capturing = true);
+    try {
+      final picture = await controller.takePicture();
+      widget.onCaptured(picture.path);
+    } on CameraException {
+      // The preview stays; the user can try again.
+    } finally {
+      if (mounted) setState(() => _capturing = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    unawaited(_controller?.dispose());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_unavailable) return EmptyView(message: widget.unavailableText);
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) {
+      return const LoadingView();
+    }
+    final ghost = widget.ghostFile;
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: CameraPreview(
+              controller,
+              child: ghost == null
+                  ? null
+                  : IgnorePointer(
+                      child: Opacity(
+                        opacity: _ghostOpacity,
+                        child: Image.file(
+                          File(ghost),
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+        ),
+        const SizedBox(height: Gap.sm),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton.filled(
+              tooltip: widget.captureLabel,
+              iconSize: Gap.xl,
+              onPressed: _capturing ? null : _capture,
+              icon: const Icon(Icons.camera_alt),
+            ),
+            if (_cameras.length > 1) ...[
+              const SizedBox(width: Gap.md),
+              IconButton(
+                tooltip: widget.switchLabel,
+                onPressed: _capturing ? null : _switch,
+                icon: const Icon(Icons.cameraswitch),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}

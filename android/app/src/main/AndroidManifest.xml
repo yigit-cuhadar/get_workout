@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Local notifications (rest timer): reschedule after a reboot, and
          ring on time. flutter_local_notifications declares POST_NOTIFICATIONS
          and VIBRATE itself. -->
@@ -6,6 +7,13 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <!-- Steps, read from Health Connect. -->
     <uses-permission android:name="android.permission.health.READ_STEPS"/>
+    <!-- Progress photos, taken with the camera plugin. It also declares
+         audio and storage, which the app never uses (no video, never the
+         gallery), and requires a camera, which only the photos need. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
+    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
     <application
         android:label="get_workout"
         android:name="${applicationName}"

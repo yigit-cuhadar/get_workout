@@ -1,5 +1,7 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../body/domain/body_entry.dart';
+
 enum WeightUnit { kg, lb }
 
 enum LengthUnit { cm, inch }
@@ -113,6 +115,7 @@ class UserSettings extends Equatable {
     this.stepGoal = StepGoal.standard,
     this.customBarWeightKg,
     this.customPlates,
+    this.trackedMeasurements = BodyMeasurement.standard,
   });
 
   /// Imperial for the countries that use it day to day, metric elsewhere.
@@ -141,6 +144,9 @@ class UserSettings extends Equatable {
 
   /// Set once the user edits their plates; see [customBarWeightKg].
   final List<Plate>? customPlates;
+
+  /// What a measurement day asks for.
+  final Set<BodyMeasurement> trackedMeasurements;
 
   double get barWeightKg => customBarWeightKg ?? defaultBarWeightKg(weightUnit);
 
@@ -184,6 +190,7 @@ class UserSettings extends Equatable {
     int? stepGoal,
     double? customBarWeightKg,
     List<Plate>? customPlates,
+    Set<BodyMeasurement>? trackedMeasurements,
   }) => UserSettings(
     weightUnit: weightUnit ?? this.weightUnit,
     lengthUnit: lengthUnit ?? this.lengthUnit,
@@ -193,6 +200,7 @@ class UserSettings extends Equatable {
     stepGoal: stepGoal ?? this.stepGoal,
     customBarWeightKg: customBarWeightKg ?? this.customBarWeightKg,
     customPlates: customPlates ?? this.customPlates,
+    trackedMeasurements: trackedMeasurements ?? this.trackedMeasurements,
   );
 
   /// Drops the custom bar and plates, back to the standard set of the unit.
@@ -203,6 +211,7 @@ class UserSettings extends Equatable {
     effortScale: effortScale,
     restTimer: restTimer,
     stepGoal: stepGoal,
+    trackedMeasurements: trackedMeasurements,
   );
 
   @override
@@ -215,5 +224,6 @@ class UserSettings extends Equatable {
     stepGoal,
     customBarWeightKg,
     customPlates,
+    trackedMeasurements,
   ];
 }

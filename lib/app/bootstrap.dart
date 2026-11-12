@@ -5,6 +5,7 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 
+import '../features/body/body_module.dart';
 import '../features/calculators/calculators_module.dart';
 import '../features/calendar/calendar_module.dart';
 import '../features/cardio/cardio_module.dart';
@@ -48,6 +49,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     const TodayModule(),
     healthModule(platform: defaultTargetPlatform, release: kReleaseMode),
     const StepsModule(),
+    const BodyModule(),
     SubscriptionModule(
       backend: purchasesBackend(
         platform: defaultTargetPlatform,

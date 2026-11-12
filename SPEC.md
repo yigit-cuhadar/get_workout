@@ -240,6 +240,45 @@ from the earlier FitLab app.
   the package exposes a domain-only library (next forge tag), import that
   instead.
 - **Photos**: private app storage plus Cloud Storage backup. Never the gallery.
+  Taken with the `camera` plugin (`GhostCamera` in `lib/core`, the previous
+  photo of the pose at 35% over the live preview; back camera first, a
+  switch button), then stored shrunk (longest side 1600 px, JPEG 85,
+  turned upright) in the app support directory at the storage path
+  (`users/{uid}/photos/{entryId}/{pose}.jpg`), the same string the entry's
+  `photos` map holds. Backup runs in the background after the local save
+  (`BodyPhotoSync`): uploads and deletions are queued per photo in
+  `body_photo_backup.json` on the device and done for the signed-in user;
+  failures stay queued and are retried at start, sign-in, app resume and
+  the next queued change (a newer task for a path replaces an older one).
+  A photo missing on the device (a new phone) is fetched from the backup
+  when a page shows it (entry, compare, the measurement day's ghosts and
+  kept photos). Guests are backed up like accounts: their uid is the one
+  linking keeps; a guest who signs in to an existing account leaves the
+  photos behind like the rest of their data (see Open questions). A photo
+  can be retaken, not removed alone; deleting an entry removes its photos
+  and queues their remote deletion. `storage.rules`: owner only,
+  `image/jpeg`, under 5 MB, the four pose file names.
+- **Weight log and measurement days** (`lib/features/body`): Progress →
+  Weight and measurements. A quick log is an entry with only `weightKg`
+  (date picker; today keeps the current time, another day is noon); a
+  measurement day is a step flow, weight → each tracked measurement → front,
+  right, left, back photos, every step skippable, the last one saves;
+  nothing entered saves nothing. Edit re-runs the same form or flow,
+  prefilled; an entry's own measurements stay steps even if no longer
+  tracked; a value left as shown keeps its stored metric value exactly.
+  `settings.trackedMeasurements` is a list of codes (`neck`, `shoulders`,
+  `chest`, `waist`, `abdomen`, `hips`, `leftUpperArm`, `rightUpperArm`,
+  `leftForearm`, `rightForearm`, `leftThigh`, `rightThigh`, `leftCalf`,
+  `rightCalf`, also the `measurements` keys), default chest, waist, hips,
+  both upper arms and thighs, edited from the flow's app bar. Limits:
+  weight as the profile (30-300 kg), measurements 10-250 cm. The weight
+  chart is a `LineChart` with the strength ranges: 12 weeks free, longer
+  Premium (per Monetization, "charts beyond 12 weeks"); the profile's
+  target weight shows with the distance to go. Compare: any two entries,
+  the oldest and newest first, values with the change and photos per pose
+  side by side. Logging a weight does not update `profile.weightKg`.
+  Firestore rules validate `bodyEntries` (date timestamp, numeric
+  `weightKg`, `measurements` and `photos` maps).
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk).
@@ -779,7 +818,18 @@ Group 9, launch readiness
 
 - Google and Apple sign-in are implemented in `forge_auth` but not enabled: Google needs a support email for the OAuth consent screen, Apple needs the Developer account. Until then the app offers email only.
 - A guest who signs in to an existing account leaves an orphaned anonymous user and its data behind; clean these up with a scheduled function when Cloud Functions arrive.
-- The projects are not linked to a billing account yet; needed before photo backup and Cloud Functions.
+- Photo backup: `storage.rules` and the `storage` entry in `firebase.json`
+  are written but not deployed, and the default bucket is not created yet
+  (both projects). `deleteAccount` must also delete
+  `users/{uid}/photos/**`; the orphaned-guest cleanup likewise.
+- Body feature, not yet run on a device: the camera permission prompt and
+  denial text, the ghost's alignment (front-camera previews are mirrored,
+  saved photos are not), retake and photo eviction, background upload and
+  restore against the dev bucket. Android manifest drops the camera
+  plugin's RECORD_AUDIO and WRITE_EXTERNAL_STORAGE and makes the camera
+  optional; not built yet.
+- `GhostCamera` (`lib/core/ghost_camera.dart`) is generic; move it into a
+  forge package with the next forge release.
 - Female body model with the same mesh names: the user supplies it before release.
 - RevenueCat webhook (`revenueCatWebhook`, needs the Blaze plan): verify the
   Authorization header secret, write `entitlements/{app_user_id}` with

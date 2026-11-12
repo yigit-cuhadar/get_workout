@@ -8,6 +8,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../features/body/body_module.dart';
 import '../features/exercises/presentation/body_model_cubit.dart';
 import '../features/exercises/presentation/equipment_cubit.dart';
 import '../features/exercises/presentation/exercise_catalogue_cubit.dart';
@@ -44,10 +45,12 @@ class _AppState extends State<App> {
     // Created now so the store follows the user from the first auth event.
     final purchaser = sl<PurchaserSession>();
     final rest = sl<RestTimerCubit>();
+    BodyModule.startPhotoBackup(sl);
     _lifecycle = AppLifecycleListener(
       onResume: () {
         unawaited(sl<ExerciseCatalogueCubit>().appResumed());
         purchaser.resume();
+        BodyModule.resumed(sl);
       },
       onHide: rest.hidden,
       onShow: rest.shown,
