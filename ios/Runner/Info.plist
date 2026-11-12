@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<!-- Analytics and Crashlytics collect nothing until the user agrees;
-	     the app turns them on (FirebaseTelemetry). -->
+	     the app turns them on (forge_firebase's FirebaseTelemetry). -->
 	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
 	<false/>
 	<key>FirebaseCrashlyticsCollectionEnabled</key>

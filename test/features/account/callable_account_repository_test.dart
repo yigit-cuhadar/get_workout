@@ -19,10 +19,6 @@ class MockAuth extends Mock implements FirebaseAuth {}
 
 class MockFirestore extends Mock implements FirebaseFirestore {}
 
-class MockUser extends Mock implements User {}
-
-class MockUserCredential extends Mock implements UserCredential {}
-
 class FunctionsError extends FirebaseFunctionsException {
   FunctionsError(String code, {String? reason})
     : super(
@@ -36,21 +32,13 @@ void main() {
   late MockFunctions functions;
   late MockCallable callable;
   late MockAuth auth;
-  late MockUser user;
   late MockFirestore firestore;
   late CallableAccountRepository repository;
-
-  setUpAll(
-    () => registerFallbackValue(
-      EmailAuthProvider.credential(email: 'x', password: 'y'),
-    ),
-  );
 
   setUp(() {
     functions = MockFunctions();
     callable = MockCallable();
     auth = MockAuth();
-    user = MockUser();
     firestore = MockFirestore();
     repository = CallableAccountRepository(
       functions,
@@ -63,10 +51,6 @@ void main() {
     when(() => callable.call<void>())
         .thenAnswer((_) async => MockCallableResult());
     when(() => auth.signOut()).thenAnswer((_) async {});
-    when(() => auth.currentUser).thenReturn(user);
-    when(() => user.email).thenReturn('a@b.co');
-    when(() => user.reauthenticateWithCredential(any()))
-        .thenAnswer((_) async => MockUserCredential());
   });
 
   group('deleteAccount', () {
@@ -138,35 +122,5 @@ void main() {
   test('signs out', () async {
     expect((await repository.signOut()).isOk, isTrue);
     verify(() => auth.signOut()).called(1);
-  });
-
-  group('reauthenticate', () {
-    test('signs in again with the email and password', () async {
-      expect((await repository.reauthenticate('secret')).isOk, isTrue);
-      final credential =
-          verify(() => user.reauthenticateWithCredential(captureAny()))
-                  .captured
-                  .single
-              as AuthCredential;
-      expect(credential.providerId, 'password');
-    });
-
-    test('fails without an email user', () async {
-      when(() => user.email).thenReturn(null);
-      expect(
-        (await repository.reauthenticate('secret')).failureOrNull,
-        isA<AuthFailure>(),
-      );
-      verifyNever(() => user.reauthenticateWithCredential(any()));
-    });
-
-    test('a wrong password is an auth failure', () async {
-      when(() => user.reauthenticateWithCredential(any()))
-          .thenThrow(FirebaseAuthException(code: 'invalid-credential'));
-      expect(
-        (await repository.reauthenticate('nope')).failureOrNull,
-        isA<AuthFailure>().having((f) => f.code, 'code', 'invalid-credential'),
-      );
-    });
   });
 }

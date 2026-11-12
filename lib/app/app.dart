@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_notifications/forge_notifications.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 
@@ -18,7 +19,7 @@ import '../features/exercises/presentation/exercise_catalogue_cubit.dart';
 import '../features/profile/presentation/profile_cubit.dart';
 import '../features/programs/presentation/program_list_cubit.dart';
 import '../features/exercises/presentation/favorites_cubit.dart';
-import '../features/notifications/data/notification_taps.dart';
+import '../features/notifications/data/notification_payloads.dart';
 import '../features/notifications/presentation/notifications_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/settings_cubit.dart';
@@ -44,6 +45,7 @@ class _AppState extends State<App> {
     profileDebugSection: SubscriptionModule.debugControls(sl),
   );
   late final AppLifecycleListener _lifecycle;
+  late final StreamSubscription<NotificationTarget> _taps;
 
   /// A tapped notification, until the app is past its start.
   NotificationTarget? _tapped;
@@ -58,7 +60,8 @@ class _AppState extends State<App> {
     // Created now so reminders follow the user from the first auth event.
     final notifications = sl<NotificationsCubit>();
     _router.routerDelegate.addListener(_openTapped);
-    sl<NotificationTaps>().listen(_openNotification);
+    _taps = NotificationPayloads.targetsOf(sl<NotificationTaps>().stream)
+        .listen(_openNotification);
     _lifecycle = AppLifecycleListener(
       onResume: () {
         unawaited(sl<ExerciseCatalogueCubit>().appResumed());
@@ -93,6 +96,7 @@ class _AppState extends State<App> {
 
   @override
   void dispose() {
+    unawaited(_taps.cancel());
     _router.routerDelegate.removeListener(_openTapped);
     _lifecycle.dispose();
     _router.dispose();

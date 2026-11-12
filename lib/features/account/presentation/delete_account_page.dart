@@ -149,6 +149,7 @@ class _DeleteAccountView extends StatelessWidget {
         ) =>
           l10n.authErrorWrongCredentials,
         AuthFailure(code: 'too-many-requests') => l10n.authErrorTooManyRequests,
+        AuthFailure(code: noPasswordCode) => l10n.authErrorRecentLogin,
         _ => l10n.deleteFailed,
       };
 }

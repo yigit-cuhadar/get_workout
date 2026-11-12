@@ -30,7 +30,7 @@ import '../features/exercises/presentation/custom_exercise_form_page.dart';
 import '../features/exercises/presentation/exercise_detail_page.dart';
 import '../features/exercises/presentation/exercises_page.dart';
 import '../features/generator/domain/generator_answers.dart';
-import '../features/notifications/data/notification_taps.dart';
+import '../features/notifications/data/notification_payloads.dart';
 import '../features/generator/presentation/generator_page.dart';
 import '../features/generator/presentation/generator_preview_page.dart';
 import '../features/profile/domain/user_profile.dart';

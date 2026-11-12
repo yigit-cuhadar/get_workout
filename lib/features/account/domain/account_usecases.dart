@@ -40,15 +40,6 @@ class ApplyAnalyticsConsent implements UseCase<void, ConsentAnswer> {
       _telemetry.apply(params.uid, params.consent);
 }
 
-class Reauthenticate implements UseCase<void, String> {
-  const Reauthenticate(this._repository);
-  final AccountRepository _repository;
-
-  @override
-  Future<Result<void>> call(String params) =>
-      _repository.reauthenticate(params);
-}
-
 /// Holds this device's writes for user [String] (their photo backup), so
 /// none lands after the server deleted their files, and releases them if
 /// the deletion did not happen. Then deletes the account on the server,

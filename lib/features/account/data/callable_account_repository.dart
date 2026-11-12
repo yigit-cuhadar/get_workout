@@ -50,18 +50,6 @@ class CallableAccountRepository implements AccountRepository {
   }, mapper: _mapError);
 
   @override
-  Future<Result<void>> reauthenticate(String password) => guard(() async {
-    final user = _auth.currentUser;
-    final email = user?.email;
-    if (user == null || email == null) {
-      throw const AuthFailure('no email user signed in');
-    }
-    await user.reauthenticateWithCredential(
-      EmailAuthProvider.credential(email: email, password: password),
-    );
-  }, mapper: mapFirebaseError);
-
-  @override
   Future<Result<void>> signOut() =>
       guard(_auth.signOut, mapper: mapFirebaseError);
 

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/app/router.dart';
-import 'package:get_workout/features/notifications/data/notification_taps.dart';
+import 'package:get_workout/features/notifications/data/notification_payloads.dart';
 
 void main() {
   test('the start is the splash, retry, onboarding and its suggestion', () {

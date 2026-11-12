@@ -7,7 +7,7 @@ import 'package:forge_firebase/forge_firebase.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 
 import '../domain/notification_repository.dart';
-import 'notification_taps.dart';
+import 'notification_payloads.dart';
 
 /// [AnnouncementRepository] over FCM topics `announcements_<language>`.
 /// Announcements arrive as notification messages: the system shows them

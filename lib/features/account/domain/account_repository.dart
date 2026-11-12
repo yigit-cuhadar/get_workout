@@ -1,8 +1,8 @@
 import 'package:forge_core/forge_core.dart';
 
 /// [AuthFailure.code] when the server wants a recent sign-in before it
-/// deletes an account; the user enters their password ([reauthenticate])
-/// and tries again. Firebase's own code for the same rule.
+/// deletes an account; the user enters their password (`forge_auth`'s
+/// `Reauthenticate`) and tries again. Firebase's own code for the same rule.
 const recentLoginRequiredCode = 'requires-recent-login';
 
 /// The server cannot delete accounts: the `deleteAccount` function is not
@@ -32,10 +32,6 @@ abstract interface class AccountRepository {
   /// server cannot, [recentLoginRequiredCode] when the sign-in is too old
   /// and [PartlyDeletedFailure] when only the sign-in is left.
   Future<Result<void>> deleteAccount();
-
-  /// Signs the email user in again with [password], so the sign-in is
-  /// recent.
-  Future<Result<void>> reauthenticate(String password);
 
   /// Ends the session on this device.
   Future<Result<void>> signOut();

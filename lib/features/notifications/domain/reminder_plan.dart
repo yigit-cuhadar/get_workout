@@ -55,14 +55,12 @@ abstract final class ReminderIds {
   /// own.
   static const measurementCount = 4;
 
-  static Iterable<int> of(ReminderKind kind) => switch (kind) {
-    ReminderKind.workout => Iterable.generate(
-      workoutDays,
-      (i) => workoutBase + i,
-    ),
-    ReminderKind.measurement => Iterable.generate(
-      measurementCount,
-      (i) => measurementBase + i,
+  /// The [count] ids from [base] that [kind] owns.
+  static ({int base, int count}) of(ReminderKind kind) => switch (kind) {
+    ReminderKind.workout => (base: workoutBase, count: workoutDays),
+    ReminderKind.measurement => (
+      base: measurementBase,
+      count: measurementCount,
     ),
   };
 }
@@ -141,10 +139,12 @@ typedef MeasurementReminderInput = ({
   DateTime now,
 });
 
-/// The next [ReminderIds.measurementCount] measurement reminders: every
-/// `everyWeeks` weeks from `from` at the chosen time, but none on a date
-/// already measured. Occurrence `k` of the series keeps id
-/// `measurementBase + k % measurementCount`.
+/// A reminder for each of the next [ReminderIds.measurementCount]
+/// occurrences of the series (every `everyWeeks` weeks from `from` at the
+/// chosen time) whose date is not measured yet, so a measured one leaves
+/// one fewer. Occurrence `k` of the series keeps id
+/// `measurementBase + k % measurementCount`, unique among consecutive
+/// occurrences.
 class PlanMeasurementReminders {
   const PlanMeasurementReminders();
 
@@ -155,22 +155,19 @@ class PlanMeasurementReminders {
     final period = 7 * settings.everyWeeks;
     final today = CalendarDate.of(input.now);
     final elapsed = _dayNumber(today) - _dayNumber(from);
-    var k = elapsed <= 0 ? 0 : elapsed ~/ period;
-    final reminders = <MeasurementReminder>[];
-    while (reminders.length < ReminderIds.measurementCount) {
-      final date = from.addDays(period * k);
-      final at = _at(date, settings.minute);
-      if (at.isAfter(input.now) && !input.measured.contains(date)) {
-        reminders.add(
+    var first = elapsed <= 0 ? 0 : elapsed ~/ period;
+    DateTime at(int k) => _at(from.addDays(period * k), settings.minute);
+    while (!at(first).isAfter(input.now)) {
+      first++;
+    }
+    return [
+      for (var k = first; k < first + ReminderIds.measurementCount; k++)
+        if (!input.measured.contains(from.addDays(period * k)))
           MeasurementReminder(
             id: ReminderIds.measurementBase + k % ReminderIds.measurementCount,
-            at: at,
+            at: at(k),
           ),
-        );
-      }
-      k++;
-    }
-    return reminders;
+    ];
   }
 }
 

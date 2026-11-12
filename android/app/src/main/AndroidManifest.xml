@@ -90,7 +90,7 @@
             </intent-filter>
         </receiver>
         <!-- Analytics and Crashlytics collect nothing until the user agrees;
-             the app turns them on (FirebaseTelemetry). -->
+             the app turns them on (forge_firebase's FirebaseTelemetry). -->
         <meta-data
             android:name="firebase_analytics_collection_enabled"
             android:value="false" />

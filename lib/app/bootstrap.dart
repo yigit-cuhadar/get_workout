@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_firebase/forge_firebase.dart';
 
 import '../features/body/body_module.dart';
 import '../features/account/account_module.dart';
@@ -26,12 +28,9 @@ import 'app.dart';
 /// Composition root: every feature module is registered here.
 Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: options);
+  final telemetry = await initFirebase(options: options, env: env);
   await AccountModule.clearDeletedAccountCache();
-  // Never forge_firebase's initFirebase, here or in any other entry point
-  // (e.g. a future FCM background handler): it turns Analytics and
-  // Crashlytics on before the user agreed. See SPEC's open questions.
-  final telemetry = await AccountModule.startTelemetry(env);
+  await telemetry.restore(FirebaseAuth.instance.currentUser?.uid);
   sl.registerSingleton<AppEnv>(env);
   registerModules([
     const AuthModule(guestStart: true),

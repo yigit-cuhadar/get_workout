@@ -8,7 +8,6 @@ import '../../l10n/app_localizations.dart';
 import '../programs/presentation/program_text.dart';
 import 'data/device_notification_repository.dart';
 import 'data/fcm_announcement_repository.dart';
-import 'data/notification_taps.dart';
 import 'domain/notification_repository.dart';
 import 'domain/notifications_usecases.dart';
 import 'domain/reminder_plan.dart';
