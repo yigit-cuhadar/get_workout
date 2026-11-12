@@ -242,4 +242,60 @@ void main() {
       expect(nearestIndex([], 3), isNull);
     });
   });
+
+  group('barRects', () {
+    const plot = Rect.fromLTRB(10, 0, 110, 50);
+
+    test('equal slots, each bar centred and barShare of it wide', () {
+      final bars = barRects(plot, const [10, 20], top: 20);
+      expect(bars, hasLength(2));
+      expect(bars[0].width, closeTo(50 * barShare, 1e-9));
+      expect(bars[0].center.dx, closeTo(35, 1e-9));
+      expect(bars[1].center.dx, closeTo(85, 1e-9));
+    });
+
+    test('rise from the bottom to the value', () {
+      final bars = barRects(plot, const [10, 20], top: 20);
+      expect(bars[0].bottom, 50);
+      expect(bars[0].top, closeTo(25, 1e-9));
+      expect(bars[1].top, closeTo(0, 1e-9));
+    });
+
+    test('zero, negative and beyond the top stay inside the plot', () {
+      final bars = barRects(plot, const [0, -5, 40], top: 20);
+      expect(bars[0].height, 0);
+      expect(bars[1].height, 0);
+      expect(bars[2].top, plot.top);
+    });
+
+    test('an axis up to zero draws no height', () {
+      expect(barRects(plot, const [0, 0], top: 0).map((bar) => bar.height), [
+        0,
+        0,
+      ]);
+    });
+
+    test('none without values', () {
+      expect(barRects(plot, const [], top: 10), isEmpty);
+    });
+  });
+
+  group('labelledBars', () {
+    test('all when they fit', () {
+      expect(labelledBars(7, 7), [0, 1, 2, 3, 4, 5, 6]);
+    });
+
+    test('every k-th counted back from the last, oldest first', () {
+      expect(labelledBars(30, 6), [5, 11, 17, 23, 29]);
+      expect(labelledBars(7, 3), [0, 3, 6]);
+    });
+
+    test('the last alone when fewer than two fit', () {
+      expect(labelledBars(30, 1), [29]);
+    });
+
+    test('none without bars', () {
+      expect(labelledBars(0, 5), isEmpty);
+    });
+  });
 }
