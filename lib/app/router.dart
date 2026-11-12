@@ -192,9 +192,9 @@ String? notificationDestination(NotificationTarget target, String location) =>
             ? null
             : Routes.today,
       NotificationTarget.announcement => Routes.today,
-      // The measurement flow is being built elsewhere; until it is merged, its
-      // reminder opens the Progress tab.
-      NotificationTarget.measurement => Routes.progress,
+      // A new measurement day, unless one is already open.
+      NotificationTarget.measurement =>
+        location == Routes.bodyMeasureNew ? null : Routes.bodyMeasureNew,
     };
 
 /// All routes live here. There is always a user (a guest until they create

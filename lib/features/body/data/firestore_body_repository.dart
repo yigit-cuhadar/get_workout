@@ -41,6 +41,16 @@ class FirestoreBodyRepository implements BodyRepository {
         ),
       );
 
+  /// Unlimited, unlike [watchEntries]: a photo of an old entry must still
+  /// count as named.
+  @override
+  Future<List<BodyEntry>> confirmedEntries(String uid) async {
+    final snap = await _entries(uid)
+        .snapshots(includeMetadataChanges: true)
+        .firstWhere((snap) => !snap.metadata.isFromCache);
+    return [for (final doc in snap.docs) ?fromMap(doc.id, doc.data())];
+  }
+
   @override
   String newEntryId(String uid) => _entries(uid).doc().id;
 

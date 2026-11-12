@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:forge_core/forge_core.dart';
 
 import '../../profile/domain/profile_usecases.dart';
+import '../../programs/domain/calendar_date.dart';
 import '../../profile/domain/user_profile.dart';
 import 'body_entry.dart';
 import 'body_photo_sync.dart';
@@ -28,6 +29,16 @@ class WatchBodyEntries {
   final BodyRepository _repository;
 
   Stream<List<BodyEntry>> call(String uid) => _repository.watchEntries(uid);
+}
+
+/// The dates user [String] already had a measurement day on, again on
+/// every change.
+class WatchMeasuredDates {
+  const WatchMeasuredDates(this._repository);
+  final BodyRepository _repository;
+
+  Stream<Set<CalendarDate>> call(String uid) =>
+      _repository.watchEntries(uid).map(measuredDates);
 }
 
 class WatchRejectedBodyWrites {
@@ -80,9 +91,25 @@ class DiscardCapture {
   Future<void> call(String file) => _store.deleteCapture(file);
 }
 
-/// Drops a user's photo backup work and their photos on this device; for
-/// the account feature, before or after deleting an account and when a
-/// guest's data is discarded.
+/// Stops a user's photo backup and drops what was queued; for the account
+/// feature, before the server deletes the account.
+class StopBodyPhotoBackup {
+  const StopBodyPhotoBackup(this._sync);
+  final BodyPhotoSync _sync;
+
+  Future<void> call(String uid) => _sync.stop(uid);
+}
+
+/// Lets a user's photo backup go on: their account was not deleted.
+class ResumeBodyPhotoBackup {
+  const ResumeBodyPhotoBackup(this._sync);
+  final BodyPhotoSync _sync;
+
+  Future<void> call(String uid) => _sync.resume(uid);
+}
+
+/// Stops a user's photo backup for good and removes their photos from this
+/// device; for the account feature, once the account is deleted.
 class ForgetBodyPhotos {
   const ForgetBodyPhotos(this._sync);
   final BodyPhotoSync _sync;

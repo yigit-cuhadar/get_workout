@@ -4,6 +4,7 @@ import 'package:forge_core/forge_core.dart';
 
 import 'body_entry.dart';
 import 'body_photos.dart';
+import 'body_repository.dart';
 
 /// Keeps the backup in step with the photos on the device, without ever
 /// making the user wait for the network. Every photo's backup state is kept
@@ -12,12 +13,27 @@ import 'body_photos.dart';
 /// Work that fails, e.g. offline, stays queued and is tried again on the
 /// next [run]: at start, on every sign-in, when the app resumes and when
 /// more work is queued.
+/// A signed-in user as the backup needs to know them.
+typedef BodyPhotoUser = ({String id, bool guest});
+
 class BodyPhotoSync {
-  BodyPhotoSync(this._queue, this._store, this._backup);
+  BodyPhotoSync(
+    this._queue,
+    this._store,
+    this._backup,
+    this._repository, {
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now;
 
   final BackupQueue _queue;
   final BodyPhotoStore _store;
   final BodyPhotoBackup _backup;
+  final BodyRepository _repository;
+  final DateTime Function() _clock;
+
+  /// A photo written more recently is never taken for an orphan: its save
+  /// may still be under way.
+  static const orphanAge = Duration(minutes: 10);
 
   /// A queue that cannot be read starts empty; [reconcile] then queues
   /// again what the backup may be missing.
@@ -35,18 +51,32 @@ class BodyPhotoSync {
   /// ran does not record its outcome.
   final _versions = <String, int>{};
   final _restoring = <String, Future<String?>>{};
-  StreamSubscription<String?>? _users;
+  StreamSubscription<BodyPhotoUser?>? _users;
   String? _uid;
   bool _running = false;
+
+  /// Users whose account is being deleted: nothing of theirs is queued or
+  /// sent until [resume].
+  final _stopped = <String>{};
 
   /// The task in progress, if any.
   Future<bool>? _current;
 
-  /// Follows [userIds], running the queue for each user signed in.
-  void start(Stream<String?> userIds) {
+  /// Follows [users], running the queue for each user signed in and
+  /// clearing their orphaned photos once. A guest who is left (signed out,
+  /// or replaced by signing in to an existing account) can never come
+  /// back, so their photos on this device are forgotten.
+  void start(Stream<BodyPhotoUser?> users) {
     unawaited(_users?.cancel());
-    _users = userIds.distinct().listen((uid) {
-      _uid = uid;
+    BodyPhotoUser? previous;
+    _users = users.distinct().listen((user) {
+      final left = previous;
+      previous = user;
+      _uid = user?.id;
+      if (left != null && left.guest && left.id != user?.id) {
+        unawaited(forget(left.id));
+      }
+      if (user != null) unawaited(_removeOrphans(user.id));
       unawaited(run());
     });
   }
@@ -60,9 +90,13 @@ class BodyPhotoSync {
       _set(paths, BackupState.delete);
 
   Future<void> _set(Iterable<String> paths, BackupState state) async {
-    if (paths.isEmpty) return;
+    final allowed = [
+      for (final path in paths)
+        if (!_isStopped(path)) path,
+    ];
+    if (allowed.isEmpty) return;
     final states = await _states;
-    for (final path in paths) {
+    for (final path in allowed) {
       states[path] = state;
       _bump(path);
     }
@@ -99,7 +133,7 @@ class BodyPhotoSync {
     try {
       while (true) {
         final uid = _uid;
-        if (uid == null) return;
+        if (uid == null || _stopped.contains(uid)) return;
         final states = await _states;
         final next = states.entries
             .where(
@@ -160,7 +194,9 @@ class BodyPhotoSync {
     final present = (await _store.find([path]))[path];
     if (present != null) return present;
     final uid = _uid;
-    if (uid == null || !isPhotoOf(path, uid)) return null;
+    if (uid == null || !isPhotoOf(path, uid) || _stopped.contains(uid)) {
+      return null;
+    }
     final states = await _states;
     // A copy queued for removal is not brought back.
     if (states[path] == BackupState.delete) return null;
@@ -175,11 +211,11 @@ class BodyPhotoSync {
     return file;
   }
 
-  /// Drops [uid]'s backup work, waits for the task in progress, then
-  /// removes their photos from this device: before or after their account
-  /// is deleted, or when a guest's data is discarded. Their copies in the
-  /// backup are left to the account deletion.
-  Future<Result<void>> forget(String uid) async {
+  /// Stops all backup work for [uid] and drops what was queued, then waits
+  /// for the task in progress: before their account is deleted, so nothing
+  /// reaches the server after it deleted their files.
+  Future<void> stop(String uid) async {
+    _stopped.add(uid);
     final states = await _states;
     final theirs = [
       for (final path in states.keys)
@@ -189,7 +225,55 @@ class BodyPhotoSync {
     theirs.forEach(_bump);
     await _persist(states);
     await _current;
+  }
+
+  /// Lets [uid]'s backup go on after [stop]: their account was not
+  /// deleted. What was dropped is queued again by the next [reconcile].
+  Future<void> resume(String uid) async {
+    if (_stopped.remove(uid)) unawaited(run());
+  }
+
+  /// [stop]s [uid]'s backup for good and removes their photos from this
+  /// device: after their account is deleted, or when a guest is left.
+  /// Their copies in the backup are left to the account deletion.
+  Future<Result<void>> forget(String uid) async {
+    await stop(uid);
     return _store.deleteUser(uid);
+  }
+
+  bool _isStopped(String path) => _stopped.any((uid) => isPhotoOf(path, uid));
+
+  /// Removes [uid]'s photos on this device that no entry names and the
+  /// queue does not know, once the server has answered: those of a save
+  /// that never reached it (stored, then the app was killed before the
+  /// entry was written, or the write was refused while it was closed).
+  /// Photos written in the last [orphanAge] are kept.
+  Future<void> _removeOrphans(String uid) async {
+    final List<BodyEntry> entries;
+    try {
+      entries = await _repository.confirmedEntries(uid);
+    } on Object catch (error, stack) {
+      Log.e('body', 'orphaned photos left: no confirmed entries', error, stack);
+      return;
+    }
+    if (_uid != uid || _stopped.contains(uid)) return;
+    final named = {for (final entry in entries) ...entry.photos.values};
+    final states = await _states;
+    final recent = _clock().subtract(orphanAge);
+    final orphans = [
+      for (final MapEntry(key: path, value: written) in (await _store.stored(
+        uid,
+      )).entries)
+        if (!named.contains(path) &&
+            !states.containsKey(path) &&
+            written.isBefore(recent))
+          path,
+    ];
+    if (orphans.isEmpty) return;
+    Log.d('body', 'removing ${orphans.length} orphaned photos');
+    if ((await _store.delete(orphans)).failureOrNull case final failure?) {
+      Log.e('body', 'orphaned photos left: ${failure.message}');
+    }
   }
 
   Future<void> _persist(Map<String, BackupState> states) async {

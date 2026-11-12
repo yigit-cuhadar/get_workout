@@ -16,18 +16,22 @@ void main() {
   late FakeBackupQueue queue;
   late FakePhotoStore store;
   late FakeBackup backup;
-  late StreamController<String?> users;
+  late StreamController<BodyPhotoUser?> users;
+  late FakeBodyRepository repository;
+  late DateTime now;
   late BodyPhotoSync sync;
 
   void build([Map<String, BackupState> stored = const {}]) {
     queue = FakeBackupQueue(stored);
-    sync = BodyPhotoSync(queue, store, backup);
+    sync = BodyPhotoSync(queue, store, backup, repository, clock: () => now);
   }
 
   setUp(() {
     store = FakePhotoStore();
     backup = FakeBackup();
-    users = StreamController<String?>();
+    users = StreamController<BodyPhotoUser?>();
+    repository = FakeBodyRepository();
+    now = DateTime(2026, 11, 12, 9);
     build();
   });
 
@@ -36,8 +40,8 @@ void main() {
     await users.close();
   });
 
-  Future<void> signIn(String? uid) async {
-    users.add(uid);
+  Future<void> signIn(String? uid, {bool guest = false}) async {
+    users.add(uid == null ? null : (id: uid, guest: guest));
     await pumpEventQueue();
   }
 
@@ -216,6 +220,114 @@ void main() {
         expect(queue.saved, {othersPhoto: BackupState.delete});
       },
     );
+  });
+
+  group('stop and resume', () {
+    test(
+      'a stopped user\'s queue is dropped and nothing new is sent',
+      () async {
+        store.files[front] = 'local/front';
+        build({front: BackupState.upload});
+        backup.online = false;
+        sync.start(users.stream);
+        await signIn('u1');
+
+        await sync.stop('u1');
+        expect(queue.saved, isEmpty);
+
+        backup.online = true;
+        await sync.upload([front]);
+        await sync.run();
+        expect(backup.remote, isEmpty);
+        expect(await sync.restore(back), isNull);
+
+        await sync.resume('u1');
+        await sync.upload([front]);
+        await pumpEventQueue();
+        expect(backup.remote.keys, [front]);
+      },
+    );
+
+    test('stop waits for the upload in progress', () async {
+      store.files[front] = 'local/front';
+      sync.start(users.stream);
+      await signIn('u1');
+      final gate = backup.gate = Completer<void>();
+      await sync.upload([front]);
+      await pumpEventQueue();
+
+      var stopped = false;
+      final stopping = sync.stop('u1').then((_) => stopped = true);
+      await pumpEventQueue();
+      expect(stopped, isFalse);
+
+      gate.complete();
+      await stopping;
+      expect(queue.saved, isEmpty);
+    });
+  });
+
+  test(
+    "a guest who is left has their photos forgotten; an account's stay",
+    () async {
+      const guestPhoto = 'users/g1/photos/e1/front-1.jpg';
+      store.files
+        ..[guestPhoto] = 'local/guest'
+        ..[front] = 'local/front';
+      sync.start(users.stream);
+
+      await signIn('g1', guest: true);
+      await signIn('u1');
+      await pumpEventQueue();
+      expect(store.forgotten, ['g1']);
+
+      await signIn(null);
+      await pumpEventQueue();
+      expect(store.forgotten, ['g1']);
+      expect(store.files.keys, [front]);
+    },
+  );
+
+  group('orphaned photos', () {
+    const named = 'users/u1/photos/e1/front-1.jpg';
+    const orphan = 'users/u1/photos/gone/front-1.jpg';
+    const queued = 'users/u1/photos/gone/back-1.jpg';
+    const fresh = 'users/u1/photos/new/front-1.jpg';
+    const theirs = 'users/u2/photos/x/front-1.jpg';
+
+    setUp(() {
+      repository.entries['e1'] = BodyEntry(
+        id: 'e1',
+        date: DateTime(2026, 11, 1),
+        photos: const {PhotoPose.front: named},
+      );
+      for (final path in [named, orphan, queued, fresh, theirs]) {
+        store.files[path] = 'local/$path';
+      }
+      store.written[fresh] = now.subtract(const Duration(minutes: 2));
+      backup.online = false;
+      build({queued: BackupState.upload});
+    });
+
+    test('are removed once the server answered: not named, not queued, '
+        'not recent, only the user\'s', () async {
+      sync.start(users.stream);
+      await signIn('u1');
+      expect(store.files.keys, contains(orphan));
+
+      repository.server.complete();
+      await pumpEventQueue();
+
+      expect(store.files.keys, unorderedEquals([named, queued, fresh, theirs]));
+    });
+
+    test('are left while the server has not answered', () async {
+      sync.start(users.stream);
+      await signIn('u1');
+      await pumpEventQueue();
+
+      expect(store.files.keys, contains(orphan));
+    });
   });
 
   group('restore', () {

@@ -272,11 +272,24 @@ from the earlier FitLab app.
   not know are queued for upload (a lost queue, or photos from before the
   backup). A photo missing on the device (a new phone, or a retake made on
   another one) is fetched when a page shows it (entry, compare, the
-  measurement day's ghosts and kept photos). `ForgetBodyPhotos(uid)`
-  drops a user's backup work, waits for the running task and deletes
-  their photos on the device; the account feature calls it before or
-  after deleting an account and when a guest's data is discarded. Guests
+  measurement day's ghosts and kept photos). Account deletion
+  (`DeleteUserAccount` through `LocalAccountData`) stops the user's backup
+  and drops their queue before the `deleteAccount` callable runs, so no
+  upload lands after the server deleted `users/{uid}/`, resumes it if the
+  deletion did not happen, and `DeviceAccountData.clear` removes their
+  photos with the rest of the device data (`ForgetBodyPhotos`). Guests
   are backed up like accounts: their uid is the one linking keeps. A
+  guest who is left (signed out, or replaced by signing in to an existing
+  account) can never come back, so their photos and queue on the device
+  are removed at that moment. Orphans: on every sign-in, once the server
+  has answered (a snapshot not from the cache; unlimited, so old entries
+  count, and including writes not sent yet), the user's photos on the
+  device that no entry names, the queue does not know and are older than
+  ten minutes are removed: those of a save stored but never written, or
+  refused while the app was closed. Nothing in the feature reports to
+  analytics or crash reporting itself: `Log.e` goes to
+  `FirebaseTelemetry`'s hook, which follows the consent; nothing is
+  uploaded or fetched while signed out. A
   photo can be retaken, not removed alone. `storage.rules`: owner only,
   `image/jpeg`, under 5 MB, file names `(front|right|left|back)-<digits>.jpg`.
 - **Weight log and measurement days** (`lib/features/body`): Progress →
@@ -413,24 +426,27 @@ from the earlier FitLab app.
   left as they are, except that a reminder turned off is always cleared. Only the next
   day is named ("Upper · Push Pull"); later ones name the program, as they
   are due only if the user keeps to the plan. Measurement: the next four
-  of the series, skipping dates already measured (the planner takes them;
-  empty until the body feature is wired in). Horizon: reminders are only
+  of the series, skipping dates that already have a measurement day (a
+  body entry with measurements or photos; quick weight logs do not count),
+  followed live through `WatchMeasuredDates`; while they load the
+  measurement reminders are left as they are. Horizon: reminders are only
   planned while the app runs, so a user who does not open the app for
   four weeks gets no more workout reminders, and the measurement reminder
   stops after its four planned occurrences. Settings changes apply to
   the settings current when the choice arrives; picking the series' own
   weekday or cadence changes nothing, another weekday restarts the series
   on that day's next date (`reminder_settings_changes.dart`). Both are pure planners (`reminder_plan.dart`);
-  `NotificationsCubit` plans again on every program list or settings
-  change, on every user change and on resume, and a repository diffs
+  `NotificationsCubit` plans again on every program list, settings or
+  measurement-day change, on every user change and on resume, and a repository diffs
   against what is pending by payload (time and a hash of the text), so
   equal ones stay. While the user's settings or programs load nothing is
   touched, so a start never drops reminders; a change of user or signing
   out drops them at once. Ids: rest 1, workout 100-127 (by date), measurement
   200-203 (by occurrence), announcement in front 300. Reminders do not ask
   for exact alarms on Android (they may fire up to an hour late). Taps:
-  a workout reminder opens Today, a measurement reminder the Progress tab
-  (until the measurement flow's route exists), an announcement Today; a
+  a workout reminder opens Today, a measurement reminder a new measurement
+  day (`Routes.bodyMeasureNew`, unless one is already open), an
+  announcement Today; a
   workout reminder tapped while the workout in progress is in front stays
   there. A tap at launch waits until the app is past splash and
   onboarding; navigation runs after the next frame.
@@ -1062,14 +1078,6 @@ Group 9, launch readiness
   its own default channel. Check foreground display and taps on both
   platforms, and that the admin web build still loads (the plugin
   registers a web part).
-- The measurement reminder opens the Progress tab; point it at the
-  measurement flow's route once that feature is merged (`App`,
-  `_openNotification`).
-- The measurement reminder should skip dates that already have a
-  measurement: once the body feature is merged, pass the dates of body
-  entries with measurements as `measured` to `PlanMeasurementReminders`
-  (`NotificationsCubit._syncNow`, empty now) and plan again when they
-  change.
 - Forge tasks; the app's own versions are an accepted deviation for the
   notifications PR, to be replaced once these exist:
   - `forge_notifications`: a diff sync of an id range against the pending

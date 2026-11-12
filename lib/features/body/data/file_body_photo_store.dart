@@ -104,6 +104,25 @@ class FileBodyPhotoStore implements BodyPhotoStore {
   });
 
   @override
+  Future<Map<String, DateTime>> stored(String uid) async {
+    final found = <String, DateTime>{};
+    try {
+      if (!_uid.hasMatch(uid)) return found;
+      final root = (await _directory()).path;
+      final folder = Directory('$root/${photoFolder(uid)}');
+      if (!await folder.exists()) return found;
+      await for (final file in folder.list(recursive: true)) {
+        if (file is! File) continue;
+        final path = file.path.substring(root.length + 1);
+        if (_photoPath.hasMatch(path)) found[path] = await file.lastModified();
+      }
+    } on Object catch (error, stack) {
+      Log.e('body', 'could not list photos', error, stack);
+    }
+    return found;
+  }
+
+  @override
   Future<Result<void>> deleteUser(String uid) => guard(() async {
     if (!_uid.hasMatch(uid)) throw ValidationFailure('not a uid: $uid');
     final folder = Directory(

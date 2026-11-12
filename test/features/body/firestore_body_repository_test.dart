@@ -122,6 +122,23 @@ void main() {
     expect(await started.valueOrNull, isNull);
   });
 
+  test('confirmed entries are every entry, also past the list limit', () async {
+    for (var i = 0; i <= FirestoreBodyRepository.maxEntries; i++) {
+      await doc('e$i').set({
+        'date': Timestamp.fromDate(DateTime(2020).add(Duration(days: i))),
+      });
+    }
+
+    expect(
+      await repository.confirmedEntries('u1'),
+      hasLength(FirestoreBodyRepository.maxEntries + 1),
+    );
+    expect(
+      await repository.watchEntries('u1').first,
+      hasLength(FirestoreBodyRepository.maxEntries),
+    );
+  });
+
   test('new ids are unique', () {
     expect(repository.newEntryId('u1'), isNot(repository.newEntryId('u1')));
   });

@@ -5,6 +5,8 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../../../core/user_stream_follower.dart';
+import '../../body/domain/body_usecases.dart';
+import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/completed_days.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/domain/program_schedule.dart';
@@ -32,16 +34,20 @@ typedef NotificationText = ({String title, String body});
 /// device's language once the device lets the app notify.
 ///
 /// Reminders are planned again whenever the program list (program, its
-/// weekdays, the schedule, done days) or the user's settings change, on
+/// weekdays, the schedule, done days), the user's settings or their
+/// measurement days (a reminder is skipped on a day already measured)
+/// change, on
 /// every user change and on [resumed]. What is not known yet is left as it
 /// is: the workout reminders while the programs load or the premium status
-/// of a premium copy is unknown, all reminders while the user's settings
+/// of a premium copy is unknown, the measurement reminders while the
+/// measurement days load, all reminders while the user's settings
 /// load, so an app start never drops them. A change of user drops the
 /// previous user's at once.
 class NotificationsCubit extends Cubit<NotificationsState> {
   NotificationsCubit({
     required WatchAuthUser watchAuthUser,
     required WatchSettings watchSettings,
+    required WatchMeasuredDates watchMeasured,
     required ProgramListCubit programs,
     required this._planWorkout,
     required this._planMeasurement,
@@ -72,6 +78,16 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       },
       logTag: 'notifications',
     );
+    _measuredDates = UserStreamFollower(
+      userIds: watchAuthUser().map((user) => user?.id),
+      watch: watchMeasured.call,
+      onUser: (_) => _measured = null,
+      onData: (measured) {
+        _measured = measured;
+        _resync();
+      },
+      logTag: 'notifications',
+    );
     unawaited(_checkAccess());
   }
 
@@ -91,6 +107,10 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   final DateTime Function() _clock;
   late final StreamSubscription<ProgramListState> _programSubscription;
   late final UserStreamFollower<UserSettings> _settings;
+  late final UserStreamFollower<Set<CalendarDate>> _measuredDates;
+
+  /// The dates the current user already measured on; null until known.
+  Set<CalendarDate>? _measured;
   ProgramListState _programs;
 
   /// The current user's settings; null until they arrive.
@@ -194,16 +214,18 @@ class NotificationsCubit extends Cubit<NotificationsState> {
           _notice(reminder.id, reminder.at, _workoutText(reminder)),
       ]);
     }
-    await _syncKind(ReminderKind.measurement, [
-      for (final reminder in _planMeasurement((
-        settings: settings.measurementReminder,
-        // Until the body feature is merged nothing is known measured; see
-        // SPEC Open questions.
-        measured: const {},
-        now: now,
-      )))
-        _notice(reminder.id, reminder.at, _measurementText()),
-    ]);
+    if (!settings.measurementReminder.enabled) {
+      await _syncKind(ReminderKind.measurement, const []);
+    } else if (_measured case final measured?) {
+      await _syncKind(ReminderKind.measurement, [
+        for (final reminder in _planMeasurement((
+          settings: settings.measurementReminder,
+          measured: measured,
+          now: now,
+        )))
+          _notice(reminder.id, reminder.at, _measurementText()),
+      ]);
+    }
   }
 
   /// Null while the workout reminders cannot be known.
@@ -247,6 +269,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   Future<void> close() async {
     await _programSubscription.cancel();
     await _settings.cancel();
+    await _measuredDates.cancel();
     return super.close();
   }
 }

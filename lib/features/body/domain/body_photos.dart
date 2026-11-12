@@ -17,6 +17,9 @@ abstract interface class BodyPhotoStore {
   /// Removes the photos at [paths]; missing ones are fine.
   Future<Result<void>> delete(Iterable<String> paths);
 
+  /// [uid]'s photos on this device, by path, with when each was written.
+  Future<Map<String, DateTime>> stored(String uid);
+
   /// Removes every photo of [uid] from this device.
   Future<Result<void>> deleteUser(String uid);
 

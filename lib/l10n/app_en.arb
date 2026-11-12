@@ -31,7 +31,7 @@
   "deleteItemSignIn": "Your sign-in ({email})",
   "@deleteItemSignIn": {"placeholders": {"email": {"type": "String"}}},
   "deleteSubscriptionNote": "A subscription is not cancelled by this. Cancel it in your App Store or Google Play settings.",
-  "deleteDeviceNote": "On this device, the workout in progress, workouts waiting to sync and scheduled notifications are cleared at once. The offline copy of your data is removed the next time the app starts.",
+  "deleteDeviceNote": "On this device, the workout in progress, workouts waiting to sync, progress photos and scheduled notifications are cleared at once. The offline copy of your data is removed the next time the app starts.",
   "deleteOffline": "You're offline, so nothing was deleted. Connect to the internet and try again.",
   "deleteAlmostDone": "Almost done: your data is deleted, but your sign-in is not yet. Try again to finish.",
   "deleteFinish": "Try again",

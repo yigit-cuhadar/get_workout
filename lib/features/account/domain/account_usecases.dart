@@ -49,7 +49,10 @@ class Reauthenticate implements UseCase<void, String> {
       _repository.reauthenticate(params);
 }
 
-/// Deletes user [String]'s account on the server, then, still signed in so
+/// Holds this device's writes for user [String] (their photo backup), so
+/// none lands after the server deleted their files, and releases them if
+/// the deletion did not happen. Then deletes the account on the server,
+/// then, still signed in so
 /// nothing of the next user is touched, what this device keeps of them,
 /// and only then signs out.
 ///
@@ -65,9 +68,13 @@ class DeleteUserAccount implements UseCase<void, String> {
 
   @override
   Future<Result<void>> call(String params) async {
+    await _local.holdWrites(params);
     final deleted = await _repository.deleteAccount();
     final failure = deleted.failureOrNull;
-    if (failure != null && failure is! PartlyDeletedFailure) return deleted;
+    if (failure != null && failure is! PartlyDeletedFailure) {
+      await _local.releaseWrites(params);
+      return deleted;
+    }
     for (final cleanup in [_local.clear(params), _telemetry.forget(params)]) {
       _logLeftover(await cleanup);
     }

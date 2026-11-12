@@ -67,8 +67,13 @@ void main() {
     rejected = StreamController<Failure>.broadcast();
     deletes = BodyPhotoWorld();
     queue = FakeBackupQueue();
-    sync = BodyPhotoSync(queue, store, backup)
-      ..start(users.stream.map((user) => user?.id));
+    sync = BodyPhotoSync(queue, store, backup, deletes.repository)
+      ..start(
+        users.stream.map(
+          (user) =>
+              user == null ? null : (id: user.id, guest: user.isAnonymous),
+        ),
+      );
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
     when(() => repository.watchEntries(any()))
         .thenAnswer((_) => entries.stream);

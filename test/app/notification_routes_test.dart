@@ -35,7 +35,22 @@ void main() {
     );
     expect(
       notificationDestination(NotificationTarget.measurement, Routes.today),
-      Routes.progress,
+      Routes.bodyMeasureNew,
+    );
+  });
+
+  test('a measurement reminder opens a new measurement day, unless one is '
+      'open', () {
+    expect(
+      notificationDestination(NotificationTarget.measurement, Routes.body),
+      Routes.bodyMeasureNew,
+    );
+    expect(
+      notificationDestination(
+        NotificationTarget.measurement,
+        Routes.bodyMeasureNew,
+      ),
+      isNull,
     );
   });
 

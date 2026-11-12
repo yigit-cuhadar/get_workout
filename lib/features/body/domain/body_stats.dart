@@ -1,3 +1,4 @@
+import '../../programs/domain/calendar_date.dart';
 import '../../strength/domain/strength.dart';
 import 'body_entry.dart';
 
@@ -33,6 +34,13 @@ bool hasWeightBefore(
         (entry) => entry.weightKg != null && entry.date.isBefore(start),
       );
 }
+
+/// The local dates of [entries] that are measurement days, not quick
+/// weight logs; for the measurement reminders.
+Set<CalendarDate> measuredDates(List<BodyEntry> entries) => {
+  for (final entry in entries)
+    if (!entry.isWeightOnly) CalendarDate.of(entry.date.toLocal()),
+};
 
 /// The newest weight of [entries] (newest first).
 double? latestWeightKg(List<BodyEntry> entries) {

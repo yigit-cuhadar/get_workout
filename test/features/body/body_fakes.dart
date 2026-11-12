@@ -41,6 +41,9 @@ class FakePhotoStore implements BodyPhotoStore {
   final discarded = <String>[];
   final forgotten = <String>[];
 
+  /// When each photo was written; unset ones are old.
+  final written = <String, DateTime>{};
+
   /// Paths whose save fails.
   final failing = <String>{};
 
@@ -76,6 +79,12 @@ class FakePhotoStore implements BodyPhotoStore {
     paths.forEach(files.remove);
     return const Ok(null);
   }
+
+  @override
+  Future<Map<String, DateTime>> stored(String uid) async => {
+    for (final path in files.keys)
+      if (isPhotoOf(path, uid)) path: written[path] ?? DateTime(2000),
+  };
 
   @override
   Future<Result<void>> deleteUser(String uid) async {
@@ -141,6 +150,15 @@ class FakeBodyRepository implements BodyRepository {
   Stream<List<BodyEntry>> watchEntries(String uid) => Stream.value(
     entries.values.toList()..sort((a, b) => b.date.compareTo(a.date)),
   );
+
+  /// Completes when the server has answered; never, until a test says so.
+  final server = Completer<void>();
+
+  @override
+  Future<List<BodyEntry>> confirmedEntries(String uid) async {
+    await server.future;
+    return entries.values.toList();
+  }
 
   @override
   String newEntryId(String uid) => 'id${++_ids}';
@@ -220,7 +238,7 @@ class BodyPhotoWorld {
   final queue = FakeBackupQueue();
   final backup = FakeBackup();
   final profiles = FakeProfileRepository();
-  late final sync = BodyPhotoSync(queue, store, backup);
+  late final sync = BodyPhotoSync(queue, store, backup, repository);
 
   SaveBodyEntry save(DateTime Function() clock) => SaveBodyEntry(
     repository,

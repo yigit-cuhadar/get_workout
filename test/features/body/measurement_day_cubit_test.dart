@@ -80,7 +80,7 @@ void main() {
   test(
     'loads the ghosts itself, from the backup when not on the device',
     () async {
-      world.sync.start(Stream.value('u1'));
+      world.sync.start(Stream.value((id: 'u1', guest: false)));
       world.backup.remote[oldFront] = 'cloud';
       final cubit = build();
       await pumpEventQueue();

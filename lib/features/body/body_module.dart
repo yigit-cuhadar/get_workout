@@ -33,8 +33,11 @@ class BodyModule implements FeatureModule {
 
   /// Starts backing up photos for whoever signs in; call once the app is
   /// up, and [resumed] whenever it returns to the foreground.
-  static void startPhotoBackup(GetIt sl) =>
-      sl<BodyPhotoSync>().start(sl<WatchAuthUser>()().map((user) => user?.id));
+  static void startPhotoBackup(GetIt sl) => sl<BodyPhotoSync>().start(
+    sl<WatchAuthUser>()().map(
+      (user) => user == null ? null : (id: user.id, guest: user.isAnonymous),
+    ),
+  );
 
   static void resumed(GetIt sl) => unawaited(sl<BodyPhotoSync>().run());
 
@@ -61,16 +64,19 @@ class BodyModule implements FeatureModule {
       ..registerLazySingleton<BackupQueue>(
         () => FileBackupQueue(getApplicationSupportDirectory),
       )
-      ..registerLazySingleton(() => BodyPhotoSync(sl(), sl(), sl()))
+      ..registerLazySingleton(() => BodyPhotoSync(sl(), sl(), sl(), sl()))
       ..registerFactory(() => WatchBodyEntries(sl()))
+      // For the measurement reminders.
+      ..registerFactory(() => WatchMeasuredDates(sl()))
       ..registerFactory(() => WatchRejectedBodyWrites(sl()))
       ..registerFactory(() => NewBodyEntryId(sl()))
       ..registerFactory(() => FindBodyPhotos(sl()))
       ..registerFactory(() => RestoreBodyPhoto(sl()))
       ..registerFactory(() => ReconcileBodyPhotos(sl()))
       ..registerFactory(() => DiscardCapture(sl()))
-      // For the account feature: before or after deleting an account, and
-      // when a guest's data is discarded.
+      // For the account feature's deletion.
+      ..registerFactory(() => StopBodyPhotoBackup(sl()))
+      ..registerFactory(() => ResumeBodyPhotoBackup(sl()))
       ..registerFactory(() => ForgetBodyPhotos(sl()))
       ..registerFactory(() => SyncProfileWeight(sl(), sl(), sl()))
       ..registerFactory(() => SaveBodyEntry(sl(), sl(), sl(), sl()))

@@ -43,6 +43,13 @@ abstract interface class AccountRepository {
 
 /// What this device keeps for a user outside the server.
 abstract interface class LocalAccountData {
+  /// Stops sending [uid]'s data from this device (their photo backup), so
+  /// nothing reaches the server after it deleted their account.
+  Future<void> holdWrites(String uid);
+
+  /// Undoes [holdWrites]: the account was not deleted.
+  Future<void> releaseWrites(String uid);
+
   /// Removes it now, and the offline copy of the server data at the next
   /// start, before it is used.
   Future<Result<void>> clear(String uid);

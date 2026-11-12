@@ -12,6 +12,10 @@ abstract interface class BodyRepository {
   /// [Failure]s.
   Stream<List<BodyEntry>> watchEntries(String uid);
 
+  /// Every entry of user [uid], as the server has them plus this device's
+  /// writes not sent yet, once the server has answered; for housekeeping.
+  Future<List<BodyEntry>> confirmedEntries(String uid);
+
   /// A new, unused entry id.
   String newEntryId(String uid);
 
