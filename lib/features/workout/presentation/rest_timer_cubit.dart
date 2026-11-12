@@ -5,9 +5,10 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/rest.dart';
-import '../domain/rest_lock_screen.dart';
 import '../domain/rest_usecases.dart';
 import '../domain/workout.dart';
+import '../domain/workout_lock_screen.dart';
+import '../domain/workout_usecases.dart';
 import 'active_workout_cubit.dart';
 
 enum RestPhase {
@@ -56,10 +57,11 @@ typedef RestNotificationText = ({String title, String body}) Function(
   SetRef? next,
 );
 
-/// The lock screen's text for a rest of [workout] after which [next] (null:
-/// none left) is due.
-typedef RestLockScreenText =
-    ({String title, String? detail, String over}) Function(
+/// The lock screen's texts for [workout] whose set to do now is [next]
+/// (null: none left): that set as the workout shows it ([current]), a rest's
+/// title, and that set as what follows the rest ([afterRest]).
+typedef LockScreenText =
+    ({String? current, String rest, String? afterRest}) Function(
       Workout workout,
       SetRef? next,
     );
@@ -75,11 +77,14 @@ typedef RestLockScreenText =
 /// permission is asked only after they say yes in the app, at most once
 /// per device.
 ///
-/// A running rest is also on the lock screen, counted down by the system
-/// (iOS Live Activity, Android ongoing notification), while the rest timer
-/// is on in the settings, from its start until it is over, skipped or
-/// dropped (finish, discard, user change); one left from an earlier run is
-/// removed at start. It never alerts: the end is the notification's.
+/// It also keeps the workout in progress on the lock screen
+/// ([WorkoutLockScreen]): from the moment it is in progress
+/// ([ActiveWorkoutState.inProgress]) until it is finished, discarded or
+/// dropped with its user, showing a running rest instead of the workout
+/// while the rest timer is on in the settings. What is shown is settled
+/// once the workout is loaded, so one left from an earlier run is shown
+/// again or removed at start. It never alerts: a rest's end is the
+/// notification's.
 class RestTimerCubit extends Cubit<RestTimerState> {
   RestTimerCubit({
     required ActiveWorkoutCubit workout,
@@ -113,9 +118,9 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   final ScheduleRestNotification _schedule;
   final CancelRestNotification _cancel;
   final RestNotificationText _text;
-  final ShowRestOnLockScreen _showOnLockScreen;
-  final ClearRestFromLockScreen _clearLockScreen;
-  final RestLockScreenText _lockScreenText;
+  final ShowWorkoutOnLockScreen _showOnLockScreen;
+  final ClearWorkoutFromLockScreen _clearLockScreen;
+  final LockScreenText _lockScreenText;
   final DateTime Function() _clock;
   late final StreamSubscription<ActiveWorkoutState> _subscription;
   late final StreamSubscription<SettingsState> _settingsSubscription;
@@ -131,11 +136,15 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   /// Whether asking was considered in this run of the app.
   bool _considered = false;
 
-  /// The rest on the lock screen, null for none. Unknown until the first
-  /// sync, which so also removes one left from an earlier run, and again
-  /// after a call failed, so the next tick tries again.
-  Rest? _onLockScreen;
+  /// What the lock screen shows, null for nothing. Unknown until the first
+  /// sync, which so also replaces or removes one left from an earlier run,
+  /// and again after a call failed, so the next change or tick tries again.
+  LockScreenWorkout? _onLockScreen;
   bool _lockScreenKnown = false;
+
+  /// Whether the workout was loaded since the start; until then the lock
+  /// screen waits, so one left from an earlier run does not flicker.
+  bool _workoutLoaded = false;
 
   /// Counts lock screen syncs, so a failure only unsettles the latest.
   int _lockScreenSync = 0;
@@ -153,7 +162,10 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   void _onWorkout(ActiveWorkoutState workout) {
     final wasActive = _status == WorkoutStatus.active;
     _status = workout.status;
-    if (workout.rest == _rest) return;
+    if (workout.rest == _rest) {
+      _syncLockScreen();
+      return;
+    }
     _rest = workout.rest;
     _generation++;
     unawaited(_cancelNotification());
@@ -200,35 +212,20 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     _syncLockScreen();
   }
 
-  /// Puts the running rest on the lock screen, or takes it off, when that
-  /// changes.
+  /// Puts the workout in progress, or its running rest, on the lock
+  /// screen, or takes it off, when that changes.
   void _syncLockScreen() {
-    final rest = _rest;
-    final workout = _workout.state.workout;
-    final shown =
-        rest != null &&
-            workout != null &&
-            rest.runsAt(_clock()) &&
-            _settings.state.settings.restTimer.enabled
-        ? rest
-        : null;
+    final active = _workout.state;
+    if (active.status == WorkoutStatus.loading && !_workoutLoaded) return;
+    _workoutLoaded = true;
+    final shown = _lockScreenWorkout(active);
     if (_lockScreenKnown && shown == _onLockScreen) return;
     _lockScreenKnown = true;
     _onLockScreen = shown;
     final sync = ++_lockScreenSync;
-    final Future<Result<void>> Function() call;
-    if (shown == null || workout == null) {
-      call = () => _clearLockScreen(const NoParams());
-    } else {
-      final text = _lockScreenText(workout, nextSet(workout, shown.after));
-      final countdown = RestCountdown(
-        endsAt: shown.endsAt,
-        title: text.title,
-        detail: text.detail,
-        over: text.over,
-      );
-      call = () => _showOnLockScreen(countdown);
-    }
+    final call = shown == null
+        ? () => _clearLockScreen(const NoParams())
+        : () => _showOnLockScreen(shown);
     _lockScreenCalls = _lockScreenCalls.then((_) async {
       Result<void> result;
       try {
@@ -237,10 +234,33 @@ class RestTimerCubit extends Cubit<RestTimerState> {
         result = Err(UnknownFailure('$error', error));
       }
       if (result.failureOrNull case final failure?) {
-        Log.e('rest', 'lock screen not updated: ${failure.message}');
+        Log.e('workout', 'lock screen not updated: ${failure.message}');
         if (sync == _lockScreenSync) _lockScreenKnown = false;
       }
     });
+  }
+
+  LockScreenWorkout? _lockScreenWorkout(ActiveWorkoutState active) {
+    final workout = active.workout;
+    if (!active.inProgress || workout == null) return null;
+    final rest = _rest;
+    final text = _lockScreenText(workout, nextSet(workout, rest?.after));
+    final resting =
+        rest != null &&
+        rest.runsAt(_clock()) &&
+        _settings.state.settings.restTimer.enabled;
+    return LockScreenWorkout(
+      name: workout.name,
+      startedAt: workout.startedAt,
+      current: text.current,
+      rest: resting
+          ? RestCountdown(
+              endsAt: rest.endsAt,
+              title: text.rest,
+              detail: text.afterRest,
+            )
+          : null,
+    );
   }
 
   /// The app went to the background: notify at the end of a running rest.

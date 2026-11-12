@@ -7,10 +7,11 @@ import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/workout/domain/rest.dart';
-import 'package:get_workout/features/workout/domain/rest_lock_screen.dart';
 import 'package:get_workout/features/workout/domain/rest_notifications.dart';
 import 'package:get_workout/features/workout/domain/rest_usecases.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
+import 'package:get_workout/features/workout/domain/workout_lock_screen.dart';
+import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
 import 'package:get_workout/features/workout/presentation/rest_timer_cubit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -25,7 +26,7 @@ class MockSettingsCubit extends MockCubit<SettingsState>
 
 class MockRestNotifications extends Mock implements RestNotifications {}
 
-class MockRestLockScreen extends Mock implements RestLockScreen {}
+class MockWorkoutLockScreen extends Mock implements WorkoutLockScreen {}
 
 void main() {
   final start = DateTime(2026, 11, 11, 18);
@@ -45,7 +46,7 @@ void main() {
   late SettingsState settingsState;
   late StreamController<SettingsState> settingsStates;
   late MockRestNotifications notifications;
-  late MockRestLockScreen lockScreen;
+  late MockWorkoutLockScreen lockScreen;
 
   /// What this device says: whether it lets the app notify, what a request
   /// answers, and whether the user was asked here.
@@ -57,7 +58,7 @@ void main() {
     registerFallbackValue(base);
     registerFallbackValue(DateTime(2000));
     registerFallbackValue(
-      RestCountdown(endsAt: DateTime(2000), title: '', over: ''),
+      LockScreenWorkout(name: '', startedAt: DateTime(2000)),
     );
   });
 
@@ -84,7 +85,7 @@ void main() {
       );
     });
 
-    lockScreen = MockRestLockScreen();
+    lockScreen = MockWorkoutLockScreen();
     when(() => lockScreen.show(any())).thenAnswer((_) async => const Ok(null));
     when(lockScreen.clear).thenAnswer((_) async => const Ok(null));
 
@@ -153,14 +154,17 @@ void main() {
                 ? 'Done'
                 : '${workout.exercises[next.exercise].name} ${next.set + 1}',
           ),
-          showOnLockScreen: ShowRestOnLockScreen(lockScreen),
-          clearLockScreen: ClearRestFromLockScreen(lockScreen),
+          showOnLockScreen: ShowWorkoutOnLockScreen(lockScreen),
+          clearLockScreen: ClearWorkoutFromLockScreen(lockScreen),
           lockScreenText: (workout, next) => (
-            title: 'Rest',
-            detail: next == null
+            current: next == null
+                ? null
+                : '${workout.exercises[next.exercise].name} now '
+                      '${next.set + 1}',
+            rest: 'Rest',
+            afterRest: next == null
                 ? null
                 : '${workout.exercises[next.exercise].name} ${next.set + 1}',
-            over: 'Over',
           ),
           clock: async.getClock(start).now,
         );
@@ -499,22 +503,30 @@ void main() {
 
   group('lock screen', () {
     final end = start.add(const Duration(seconds: 90));
+    final allDone = workout('w1', [
+      exercise('squat', [lift(100, 5), lift(100, 5)]),
+    ]);
 
-    RestCountdown countdown(DateTime endsAt, {String? detail = 'squat 2'}) =>
-        RestCountdown(
-          endsAt: endsAt,
-          title: 'Rest',
-          detail: detail,
-          over: 'Over',
-        );
+    /// The workout without a rest, its second set to do.
+    final training = LockScreenWorkout(
+      name: 'Workout w1',
+      startedAt: start,
+      current: 'squat now 2',
+    );
 
-    void verifyShown(DateTime endsAt, {String? detail = 'squat 2'}) =>
-        verify(() => lockScreen.show(countdown(endsAt, detail: detail)))
-            .called(1);
+    LockScreenWorkout resting(DateTime endsAt) => LockScreenWorkout(
+      name: 'Workout w1',
+      startedAt: start,
+      current: 'squat now 2',
+      rest: RestCountdown(endsAt: endsAt, title: 'Rest', detail: 'squat 2'),
+    );
+
+    void verifyShown(LockScreenWorkout shown) =>
+        verify(() => lockScreen.show(shown)).called(1);
 
     void verifyNotShown() => verifyNever(() => lockScreen.show(any()));
 
-    /// Runs [body] once the start has cleared the lock screen.
+    /// Runs [body] once the start has shown the workout.
     void runStarted(
       void Function(FakeAsync async, RestTimerCubit cubit) body,
     ) => run((async, cubit) {
@@ -522,21 +534,79 @@ void main() {
       body(async, cubit);
     });
 
-    test('one left from an earlier run is cleared at start', () {
-      run((async, cubit) {
-        verify(lockScreen.clear).called(1);
-        verifyNotShown();
+    group('at start', () {
+      test('a workout in progress is shown, replacing one left from an '
+          'earlier run', () {
+        run((async, cubit) {
+          verifyShown(training);
+          verifyNever(lockScreen.clear);
+        });
+      });
+
+      test('with none in progress, one left from an earlier run is '
+          'removed', () {
+        workoutState = const ActiveWorkoutState(status: WorkoutStatus.none);
+        run((async, cubit) {
+          verify(lockScreen.clear).called(1);
+          verifyNotShown();
+        });
+      });
+
+      test('it waits while the workout loads', () {
+        workoutState = const ActiveWorkoutState();
+        run((async, cubit) {
+          verifyNotShown();
+          verifyNever(lockScreen.clear);
+
+          emitRest(null);
+          async.flushMicrotasks();
+          verifyShown(training);
+          verifyNever(lockScreen.clear);
+        });
+      });
+
+      test('a rest kept from before a restart is shown', () {
+        workoutState = ActiveWorkoutState(
+          status: WorkoutStatus.active,
+          workout: squats,
+          rest: Rest(endsAt: end, after: first),
+        );
+        run((async, cubit) {
+          verifyShown(resting(end));
+          verifyNever(lockScreen.clear);
+        });
       });
     });
 
-    test('a rest kept from before a restart is shown at start', () {
+    test('an empty workout is not in progress until an exercise is in it', () {
       workoutState = ActiveWorkoutState(
         status: WorkoutStatus.active,
-        workout: squats,
-        rest: Rest(endsAt: end, after: first),
+        workout: workout('w1', const []),
       );
       run((async, cubit) {
-        verifyShown(end);
+        verify(lockScreen.clear).called(1);
+        verifyNotShown();
+
+        emitRest(null);
+        async.flushMicrotasks();
+        verifyShown(training);
+      });
+    });
+
+    test('a change to the workout updates it, an unseen one does not', () {
+      runStarted((async, cubit) {
+        emitWorkout(
+          ActiveWorkoutState(status: WorkoutStatus.active, workout: allDone),
+        );
+        async.flushMicrotasks();
+        verifyShown(LockScreenWorkout(name: 'Workout w1', startedAt: start));
+
+        // Finishing keeps it until the workout is stored.
+        emitWorkout(
+          ActiveWorkoutState(status: WorkoutStatus.finishing, workout: allDone),
+        );
+        async.flushMicrotasks();
+        verifyNotShown();
         verifyNever(lockScreen.clear);
       });
     });
@@ -545,7 +615,7 @@ void main() {
       runStarted((async, cubit) {
         emitRest(Rest(endsAt: end, after: first));
         async.flushMicrotasks();
-        verifyShown(end);
+        verifyShown(resting(end));
 
         async.elapse(const Duration(seconds: 30));
         verifyNotShown();
@@ -553,20 +623,23 @@ void main() {
       });
     });
 
-    test('without a next set it shows no detail', () {
-      final done = workout('w1', [
-        exercise('squat', [lift(100, 5)]),
-      ]);
+    test('without a set left neither the rest nor the workout names one', () {
       runStarted((async, cubit) {
         emitWorkout(
           ActiveWorkoutState(
             status: WorkoutStatus.active,
-            workout: done,
-            rest: Rest(endsAt: end, after: first),
+            workout: allDone,
+            rest: Rest(endsAt: end, after: (exercise: 0, set: 1)),
           ),
         );
         async.flushMicrotasks();
-        verifyShown(end, detail: null);
+        verifyShown(
+          LockScreenWorkout(
+            name: 'Workout w1',
+            startedAt: start,
+            rest: RestCountdown(endsAt: end, title: 'Rest'),
+          ),
+        );
       });
     });
 
@@ -582,34 +655,51 @@ void main() {
         async.flushMicrotasks();
 
         verifyInOrder([
-          () => lockScreen.show(countdown(end)),
-          () => lockScreen.show(countdown(extended)),
-          () => lockScreen.show(countdown(restarted)),
+          () => lockScreen.show(resting(end)),
+          () => lockScreen.show(resting(extended)),
+          () => lockScreen.show(resting(restarted)),
         ]);
         verifyNever(lockScreen.clear);
       });
     });
 
-    test('skip clears it', () {
+    test('skip turns it back into the workout', () {
       runStarted((async, cubit) {
         emitRest(Rest(endsAt: end, after: first));
         async.flushMicrotasks();
+        verifyShown(resting(end));
         emitRest(null);
         async.flushMicrotasks();
-        verify(lockScreen.clear).called(1);
+        verifyShown(training);
+        verifyNever(lockScreen.clear);
       });
     });
 
-    test('the end in front clears it, once', () {
+    test('the end in front turns it back into the workout, once', () {
       runStarted((async, cubit) {
         emitRest(Rest(endsAt: end, after: first));
         async.elapse(const Duration(seconds: 89));
-        verifyNever(lockScreen.clear);
+        verifyShown(resting(end));
         async.elapse(const Duration(seconds: 1));
         expect(cubit.state.phase, RestPhase.over);
-        verify(lockScreen.clear).called(1);
+        verifyShown(training);
         async.elapse(RestTimerCubit.overFor);
+        verifyNotShown();
         verifyNever(lockScreen.clear);
+      });
+    });
+
+    test('a rest that ended while the app was away shows the workout when '
+        'it is back', () {
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.flushMicrotasks();
+        verifyShown(resting(end));
+        cubit.hidden();
+        async.elapse(const Duration(minutes: 5));
+        cubit.shown();
+        async.flushMicrotasks();
+        verifyShown(training);
       });
     });
 
@@ -618,7 +708,7 @@ void main() {
         for (final ended in [
           ActiveWorkoutState(status: WorkoutStatus.finished, workout: squats),
           const ActiveWorkoutState(status: WorkoutStatus.none),
-          // Signed out: the user's workout is dropped.
+          // Signed out or another user: the user's workout is dropped.
           const ActiveWorkoutState(),
         ]) {
           emitRest(Rest(endsAt: end, after: first));
@@ -632,7 +722,8 @@ void main() {
       });
     });
 
-    test('shows nothing while the rest timer is off in the settings', () {
+    test('with the rest timer off in the settings it shows the workout '
+        'only', () {
       settingsState = SettingsState(
         base.copyWith(restTimer: const RestTimerSettings(enabled: false)),
       );
@@ -640,10 +731,12 @@ void main() {
         emitRest(Rest(endsAt: end, after: first));
         async.elapse(const Duration(seconds: 10));
         verifyNotShown();
+        verifyNever(lockScreen.clear);
       });
     });
 
-    test('turning the rest timer off clears it, on shows it again', () {
+    test('turning the rest timer off shows the workout, on the rest '
+        'again', () {
       void setEnabled(bool enabled) {
         settingsState = SettingsState(
           base.copyWith(restTimer: RestTimerSettings(enabled: enabled)),
@@ -654,15 +747,15 @@ void main() {
       runStarted((async, cubit) {
         emitRest(Rest(endsAt: end, after: first));
         async.flushMicrotasks();
-        verifyShown(end);
+        verifyShown(resting(end));
 
         setEnabled(false);
         async.flushMicrotasks();
-        verify(lockScreen.clear).called(1);
+        verifyShown(training);
 
         setEnabled(true);
         async.flushMicrotasks();
-        verifyShown(end);
+        verifyShown(resting(end));
       });
     });
 
@@ -671,7 +764,7 @@ void main() {
       runStarted((async, cubit) {
         emitRest(Rest(endsAt: end, after: first));
         async.flushMicrotasks();
-        verifyShown(end);
+        verifyShown(resting(end));
       });
     });
 
@@ -681,7 +774,7 @@ void main() {
         final showing = Completer<Result<void>>();
         when(() => lockScreen.show(any())).thenAnswer((_) => showing.future);
         emitRest(Rest(endsAt: end, after: first));
-        emitRest(null);
+        emitWorkout(const ActiveWorkoutState(status: WorkoutStatus.none));
         async.flushMicrotasks();
         verify(() => lockScreen.show(any())).called(1);
         verifyNever(lockScreen.clear);
@@ -692,7 +785,7 @@ void main() {
       });
     });
 
-    test('a failed show is tried again on the next tick', () {
+    test('a failed show is tried again on the next tick of a rest', () {
       var failing = true;
       when(() => lockScreen.show(any())).thenAnswer(
         (_) async =>
@@ -701,14 +794,33 @@ void main() {
       runStarted((async, cubit) {
         emitRest(Rest(endsAt: end, after: first));
         async.flushMicrotasks();
-        verifyShown(end);
+        verifyShown(resting(end));
 
         failing = false;
         async.elapse(const Duration(seconds: 1));
-        verifyShown(end);
+        verifyShown(resting(end));
 
         async.elapse(const Duration(seconds: 5));
         verifyNotShown();
+      });
+    });
+
+    test('outside a rest, when the app shows again', () {
+      var failing = true;
+      when(() => lockScreen.show(any())).thenAnswer(
+        (_) async =>
+            failing ? const Err(UnknownFailure('off')) : const Ok(null),
+      );
+      run((async, cubit) {
+        verifyShown(training);
+
+        failing = false;
+        async.elapse(const Duration(minutes: 1));
+        verifyNotShown();
+
+        cubit.shown();
+        async.flushMicrotasks();
+        verifyShown(training);
       });
     });
 
@@ -717,7 +829,7 @@ void main() {
         when(() => lockScreen.show(any())).thenThrow(StateError('bug'));
         emitRest(Rest(endsAt: end, after: first));
         async.flushMicrotasks();
-        emitRest(null);
+        emitWorkout(const ActiveWorkoutState(status: WorkoutStatus.none));
         async.flushMicrotasks();
         verify(() => lockScreen.show(any())).called(1);
         verify(lockScreen.clear).called(1);
@@ -728,11 +840,11 @@ void main() {
       runStarted((async, cubit) {
         emitRest(Rest(endsAt: end, after: first));
         async.flushMicrotasks();
-        verifyShown(end);
+        verifyShown(resting(end));
 
         unawaited(cubit.setNotify(true));
         async.flushMicrotasks();
-        verifyShown(end);
+        verifyShown(resting(end));
       });
     });
 
@@ -741,24 +853,11 @@ void main() {
       runStarted((async, cubit) {
         emitRest(Rest(endsAt: end, after: first));
         async.flushMicrotasks();
-        verifyShown(end);
+        verifyShown(resting(end));
 
         unawaited(cubit.setNotify(true));
         async.flushMicrotasks();
         verifyNotShown();
-      });
-    });
-
-    test('a failure is only logged, and later changes still apply', () {
-      when(() => lockScreen.show(any()))
-          .thenAnswer((_) async => const Err(UnknownFailure('disabled')));
-      runStarted((async, cubit) {
-        emitRest(Rest(endsAt: end, after: first));
-        async.flushMicrotasks();
-        emitRest(null);
-        async.flushMicrotasks();
-        verify(() => lockScreen.show(any())).called(1);
-        verify(lockScreen.clear).called(1);
       });
     });
   });

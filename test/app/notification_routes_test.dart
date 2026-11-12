@@ -67,4 +67,20 @@ void main() {
       isNull,
     );
   });
+
+  test('a tap on the lock-screen activity opens the workout in progress', () {
+    expect(
+      lockScreenDestination(Routes.today, inProgress: true),
+      Routes.workout,
+    );
+    for (final location in [Routes.workout, '${Routes.workout}/pick']) {
+      expect(
+        lockScreenDestination(location, inProgress: true),
+        isNull,
+        reason: location,
+      );
+    }
+    // An activity left behind only opens the app.
+    expect(lockScreenDestination(Routes.today, inProgress: false), isNull);
+  });
 }

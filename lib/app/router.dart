@@ -201,6 +201,17 @@ String? notificationDestination(NotificationTarget target, String location) =>
         location == Routes.bodyMeasureNew ? null : Routes.bodyMeasureNew,
     };
 
+/// Where a tap on the workout's lock-screen activity leads from [location]:
+/// the workout, pushed like from its bar so going back minimizes it, or
+/// null to stay: it is open already, or no workout is in progress any more
+/// (an activity left behind), where the tap only opens the app.
+String? lockScreenDestination(String location, {required bool inProgress}) =>
+    !inProgress ||
+        location == Routes.workout ||
+        location.startsWith('${Routes.workout}/')
+    ? null
+    : Routes.workout;
+
 /// The sign-in providers offered next to email. Apple joins once the app is
 /// signed by a paid Apple Developer team (the Sign in with Apple
 /// entitlement); the App Store requires it wherever Google is offered.

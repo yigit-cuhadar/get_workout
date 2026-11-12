@@ -23,6 +23,7 @@ import '../features/notifications/data/notification_payloads.dart';
 import '../features/notifications/presentation/notifications_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/settings_cubit.dart';
+import '../features/workout/domain/workout_usecases.dart';
 import '../features/workout/presentation/active_workout_cubit.dart';
 import '../features/workout/presentation/rest_timer_cubit.dart';
 import '../features/subscription/presentation/purchaser_session.dart';
@@ -46,9 +47,12 @@ class _AppState extends State<App> {
   );
   late final AppLifecycleListener _lifecycle;
   late final StreamSubscription<NotificationTarget> _taps;
+  late final StreamSubscription<void> _lockScreenTaps;
 
-  /// A tapped notification, until the app is past its start.
-  NotificationTarget? _tapped;
+  /// A tapped notification or lock-screen activity, until the app is past
+  /// its start: where it leads from a location (null: stay), and whether it
+  /// is pushed onto the page shown rather than gone to.
+  ({String? Function(String location) to, bool push})? _tapped;
 
   @override
   void initState() {
@@ -62,6 +66,9 @@ class _AppState extends State<App> {
     _router.routerDelegate.addListener(_openTapped);
     _taps = NotificationPayloads.targetsOf(sl<NotificationTaps>().stream)
         .listen(_openNotification);
+    _lockScreenTaps = sl<WatchLockScreenTaps>()().listen(
+      (_) => unawaited(_openLockScreenTap()),
+    );
     _lifecycle = AppLifecycleListener(
       onResume: () {
         unawaited(sl<ExerciseCatalogueCubit>().appResumed());
@@ -75,21 +82,47 @@ class _AppState extends State<App> {
   }
 
   void _openNotification(NotificationTarget target) {
-    _tapped = target;
+    _tapped = (
+      to: (location) => notificationDestination(target, location),
+      push: false,
+    );
+    _openTapped();
+  }
+
+  /// Waits for the workout to be loaded, so a tap that launched the app
+  /// opens the workout in progress too.
+  Future<void> _openLockScreenTap() async {
+    final workout = sl<ActiveWorkoutCubit>();
+    if (workout.state.status == WorkoutStatus.loading) {
+      await workout.stream.firstWhere(
+        (state) => state.status != WorkoutStatus.loading,
+      );
+    }
+    if (!mounted) return;
+    _tapped = (
+      to: (location) =>
+          lockScreenDestination(location, inProgress: workout.state.inProgress),
+      push: true,
+    );
     _openTapped();
   }
 
   void _openTapped() {
-    final target = _tapped;
+    final tapped = _tapped;
     final location = _router.routerDelegate.currentConfiguration.uri.path;
-    if (target == null || !isPastStart(location)) return;
+    if (tapped == null || !isPastStart(location)) return;
     _tapped = null;
-    final destination = notificationDestination(target, location);
+    final destination = tapped.to(location);
     if (destination == null) return;
     // Never from inside the router delegate's own notification.
     SchedulerBinding.instance
       ..addPostFrameCallback((_) {
-        if (mounted) _router.go(destination);
+        if (!mounted) return;
+        if (tapped.push) {
+          unawaited(_router.push(destination));
+        } else {
+          _router.go(destination);
+        }
       })
       ..ensureVisualUpdate();
   }
@@ -97,6 +130,7 @@ class _AppState extends State<App> {
   @override
   void dispose() {
     unawaited(_taps.cancel());
+    unawaited(_lockScreenTaps.cancel());
     _router.routerDelegate.removeListener(_openTapped);
     _lifecycle.dispose();
     _router.dispose();

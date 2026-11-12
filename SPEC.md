@@ -904,48 +904,81 @@ from the earlier FitLab app.
   Android, for exact alarms (without them the notification falls back to
   an inexact alarm, possibly late). The rest notification has id 1 on one
   Android channel, `workout` ("Workout", high importance).
-- **Rest on the lock screen**: while a rest runs and `settings.restTimer`
-  is enabled, the lock screen shows it counting down, drawn by the system
-  so it ticks without the app (`RestTimerCubit` through
-  `ShowRestOnLockScreen` / `ClearRestFromLockScreen`; `RestLockScreen`
-  with an iOS and an Android adapter). Title "Rest", the next set as in
-  the rest notification (none when nothing is left). Shown when a rest
-  starts (also one restored at app start), replaced on +15 s or a new
-  rest, removed when it is over in front, skipped, unticked, the workout
-  finished or discarded, the user changes or signs out, or the rest timer
-  is turned off; one left from an earlier run is removed at start. It is
-  silent whatever `notify` says: the end is announced by the rest
-  notification (id 1) alone, so nothing alerts twice.
-  Android: an ongoing notification, id 2, on its own channel `rest`
-  ("Rest timer", default importance, no sound or vibration; lower
-  importances count as silent and may be hidden on the lock screen), with
-  a system chronometer counting down to the end and a timeout at the end,
-  so the system removes it even with the app killed; replaced in place,
-  never updated per second; asks for promotion to a Live Update (Android
-  16 status bar chip, `POST_PROMOTED_NOTIFICATIONS`). A separate id from
-  the end alert because that one is scheduled only while the app hides
-  and cancelled when it shows, and the countdown stays across both. It
-  needs the notification permission and never asks for it: without it
-  nothing shows, and it shows at once when the user allows notifications
-  mid-rest. A show or removal that fails (also iOS with Live Activities
-  off, or before the app may start one) does not count as done: the next
-  second of the countdown tries again. No foreground service: nothing has to run until the end
-  (the chronometer and timeout are the system's), and a service would
-  need a declared type and Play review; the cost is that from Android 14
-  the user can swipe it away while unlocked, until the next change.
-  iOS (16.2+, below that nothing shows): a Live Activity from the
-  `RestTimer` widget extension (lock screen, Dynamic Island), started by
-  the app in front through `AppDelegate.swift`
-  (`getworkout/rest_activity`), updated and ended while the app runs; its
-  texts come from the app. No push updates (no APNs yet), so the app
-  cannot end it while suspended: its stale date is the rest's end, after
-  which it shows "Rest over" until the app runs again (then removed) or
-  iOS removes it (ended after 8 h, kept on the lock screen up to 4 h
-  more: 12 h at most). Users can turn Live Activities off per app; then
-  nothing shows. No App Group: the app's own ActivityKit bridge passes
-  the content, so the `live_activities` plugin (App Group, iOS 16.1
-  minimum for the whole app) is not used, and the app keeps iOS 15
-  (ActivityKit weak-linked).
+- **Workout on the lock screen**: the workout in progress is on the lock
+  screen, drawn by the system so its times run without the app
+  (`RestTimerCubit` through `ShowWorkoutOnLockScreen` /
+  `ClearWorkoutFromLockScreen`; `WorkoutLockScreen` with an iOS and an
+  Android adapter). It follows `ActiveWorkoutState.inProgress`: shown from
+  the first exercise (an empty workout shows nothing) until the workout is
+  finished or discarded, or the user changes or signs out; kept while
+  finishing. Nothing is shown or removed until the workout is loaded at
+  start, then one left from an earlier run is updated to the workout in
+  progress or removed. A running rest is shown instead of the workout while
+  `settings.restTimer` is enabled (the workout itself shows whatever that
+  setting says). Rest: title "Rest" and the next set as in the rest
+  notification (none when nothing is left); workout: its name, the elapsed
+  time since `startedAt`, and the set to do now ("Bench Press · set 2 of
+  3", the next set after the latest rest's set as the rest notification
+  picks it, counting warm-ups like it; none when every set is done). The
+  rest is replaced on +15 s or a new rest and turns back into the workout
+  when it is over, skipped or unticked. It is silent whatever `notify`
+  says: the end is announced by the rest notification (id 1) alone, so
+  nothing alerts twice. A show or removal that fails (also iOS with Live
+  Activities off, or before the app may start one) does not count as done:
+  the next second of a rest's countdown, or else the next change or the
+  app showing again, tries again.
+  Android shows the rest only, nothing outside a rest (an ongoing workout
+  notification is not built): an ongoing notification, id 2, on its own
+  channel `rest` ("Rest timer", default importance, no sound or vibration;
+  lower importances count as silent and may be hidden on the lock screen),
+  with a system chronometer counting down to the end and a timeout at the
+  end, so the system removes it even with the app killed; replaced in
+  place, never updated per second (it is posted again only when what the
+  lock screen shows changes, e.g. the next set); asks for promotion to a
+  Live Update (Android 16 status bar chip, `POST_PROMOTED_NOTIFICATIONS`).
+  A separate id from the end alert because that one is scheduled only
+  while the app hides and cancelled when it shows, and the countdown stays
+  across both. It needs the notification permission and never asks for
+  it: without it nothing shows, and it shows at once when the user allows
+  notifications mid-rest. No foreground service: nothing has to run until
+  the end (the chronometer and timeout are the system's), and a service
+  would need a declared type and Play review; the cost is that from
+  Android 14 the user can swipe it away while unlocked, until the next
+  change.
+  iOS (16.2+, below that nothing shows): one Live Activity for the whole
+  workout from the `RestTimer` widget extension (target and bundle id kept
+  from when it showed rests only; `WorkoutActivityAttributes`,
+  `WorkoutLiveActivity`), started by the app in front through
+  `AppDelegate.swift` (`getworkout/workout_activity`), updated and ended
+  while the app runs; its texts come from the app. Lock screen and Dynamic
+  Island (compact, minimal, expanded) show the same two modes: the
+  workout (dumbbell, name, elapsed time counted up by the system, the set
+  to do now) or the rest (timer, "Rest", countdown, the next set). No push
+  updates (no APNs yet), so the app cannot change it while suspended: the
+  content state carries the rest with its end, the activity's stale date
+  is that end, and the widget draws the rest only while it is not stale
+  and its end is ahead, so at the end the system redraws it as the workout
+  by itself; the app replaces it with the workout once it runs again.
+  Outside a rest it has no stale date. iOS ends an activity after 8 h
+  (kept on the lock screen up to 4 h more); the next update the app makes
+  in front then starts a new one, as it does after the user swiped it
+  away. Users can turn Live Activities off per app; then nothing shows.
+  A tap on it (lock screen and every Dynamic Island presentation, in both
+  modes) opens the app with `getworkout://workout` (its widgetURL; the
+  `getworkout` scheme next to Google sign-in's in `CFBundleURLTypes`).
+  The Runner takes that URL itself as a scene delegate
+  (`WorkoutActivityTaps`) and keeps it until Dart takes it, so a tap that
+  launched the app is not lost; Flutter's own deep linking is off
+  (`FlutterDeepLinkingEnabled` false; the app has no other deep links).
+  The tap joins the notification taps' path in `App`: kept until the app
+  is past its start and the workout is loaded, then the workout page is
+  pushed through the router as from the minimized workout bar (so the
+  unsaved-changes guard sees it), unless it is open already or no workout
+  is in progress (an activity left behind), where the tap only opens the
+  app. No App Group: the app's own ActivityKit bridge passes the content,
+  so the `live_activities` plugin (App Group, iOS 16.1 minimum for the
+  whole app) is not used, and the app keeps iOS 15 (ActivityKit
+  weak-linked).
 - **Weekly volume**: Progress → Weekly volume shows one week, the current
   one first; earlier weeks are free to browse, later than the current one
   never. A week starts on the locale's first weekday
@@ -1273,6 +1306,7 @@ Group 5, workout
 - [x] Free workout — start empty (not in progress until an exercise is added), save as program at the end
 - [x] Rest timer — auto start, +15 s, skip, notification
 - [x] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification
+- [ ] Workout on the lock screen — iOS Live Activity for the whole workout (workout and rest modes, tap opens it); Android unchanged (rest only)
 - [x] Finish and summary — records with a short celebration, `exerciseStats` update
 - [x] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
 
@@ -1385,6 +1419,25 @@ Group 9, launch readiness
   extension's App ID under the team (automatic signing); untestable until
   the Apple Developer account: behaviour on a real device while
   suspended.
+- Workout on the lock screen (iOS), not built yet: the two widget files
+  were renamed (`WorkoutActivityAttributes.swift`,
+  `WorkoutLiveActivity.swift`, same entries in `project.pbxproj`), and the
+  Swift was only type-checked with `swiftc` against the simulator SDK and
+  Flutter.framework. Check on the simulator: it starts with the first
+  exercise (not for an empty workout) and ends on finish and discard; the
+  elapsed time runs on the lock screen and in the Dynamic Island; a rest
+  shows its countdown and turns back into the workout at its end with the
+  app in the background (the stale-date redraw) and in front, on skip and
+  on +15 s; relaunching with a workout in progress keeps one activity
+  (none duplicated) and without one removes the old; a tap in each
+  presentation and mode opens the workout page, also from its minimized
+  bar, from another tab with unsaved changes (no prompt: it is pushed),
+  and from a killed app (the launch URL reaches `WorkoutActivityTaps`
+  through the late-registered scene delegate); with no workout in
+  progress a tap only opens the app; Google sign-in still returns to the
+  app. An activity started by an older build (`RestActivityAttributes`)
+  is no longer seen by the app and stays until iOS ends it; only matters
+  for a device that had one running across the update.
 - Release blocker: the Terms of Use and Privacy Policy links in
   `lib/app/legal_links.dart` are placeholders; publish the pages and
   replace them (Android picks up `privacyUrl` by itself).
@@ -1434,8 +1487,8 @@ Group 9, launch readiness
   - `forge_auth`: the user's sign-in methods on `AuthUser`, so account
     deletion asks only a user with a password for it and tells a Google
     or Apple only user to sign in again straight away.
-  - The Live Activity bridge (`AppDelegate.swift`'s `RestActivity` and a
-    generic attributes type) could move to a package with a native iOS
+  - The Live Activity bridge (`AppDelegate.swift`'s `WorkoutActivity`,
+    `WorkoutActivityTaps` and a generic attributes type) could move to a package with a native iOS
     plugin once a second app needs one; the widget views stay in the app.
   - A messaging addition (to `forge_notifications` or a new package):
     following a topic per language with leaving the others, foreground
