@@ -22,13 +22,14 @@ class WorkoutEditPage extends StatelessWidget {
   final String? id;
 
   @override
-  Widget build(BuildContext context) => BlocProvider(
-    create: (context) => sl<WorkoutEditCubit>(
-      param1: id,
-      param2: AppLocalizations.of(context).workoutFreeName,
-    ),
-    child: const _EditView(),
-  );
+  Widget build(BuildContext context) {
+    // Read here: a provider's create callback may not listen to the locale.
+    final freeName = AppLocalizations.of(context).workoutFreeName;
+    return BlocProvider(
+      create: (_) => sl<WorkoutEditCubit>(param1: id, param2: freeName),
+      child: const _EditView(),
+    );
+  }
 }
 
 class _EditView extends StatelessWidget {
