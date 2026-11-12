@@ -1177,7 +1177,7 @@ Group 8, body and extras
 
 Group 9, launch readiness
 - [x] Onboarding — nine questions, suggested free program
-- [ ] Notifications — workout and measurement reminders, FCM announcements
+- [x] Notifications — workout and measurement reminders, FCM announcements
 - [ ] Subscription — paywall, RevenueCat, entitlement checks, restore
 - [x] Account — delete account, privacy policy link, analytics consent
 
@@ -1281,16 +1281,22 @@ Group 9, launch readiness
 - The admin web build now bundles and loads the RevenueCat web script,
   because `purchases_flutter` registers a web plugin. Harmless; revisit if
   the admin build is split from the app.
-- `sendAnnouncement` and the panel's Announcements page are written but
-  the function is not deployed: the Architect deploys `functions/` and
-  `firestore.rules` to dev, checks the page before the deploy ("not
-  deployed" message), then sends one to an Android device following
-  `announcements_en` (shown on channel `workout`, tap opens Today), checks
-  the history and that a non-admin is refused, then prod. iOS push still
-  needs the Apple Developer account: the Push Notifications capability
-  (`aps-environment` in `Runner.entitlements`, not added yet, as it breaks
-  device signing without it) and an APNs key uploaded to both Firebase
-  projects. Until then iOS follows no topic.
+- `sendAnnouncement` is deployed on dev (with `deleteAccount`,
+  `revenueCatWebhook` under a placeholder secret, and the rules) and was
+  run end to end on the Android emulator: a non-admin is refused, an admin
+  send arrives on channel `workout`, the same request id is not sent twice,
+  the record reads `sent`, and tapping it from the background opens Today.
+  Still open: the admin panel's Announcements page has not been opened in a
+  browser (the function was called directly), and prod has none of the
+  functions or the newer Firestore rules. iOS push still needs the Apple
+  Developer account: the Push Notifications capability (`aps-environment`
+  in `Runner.entitlements`, not added yet, as it breaks device signing
+  without it) and an APNs key uploaded to both Firebase projects. Until
+  then iOS follows no topic.
+- On a fresh Android install the first topic subscription failed twice on
+  the emulator with "FCM Registration failed" and succeeded when the app
+  next resumed (the existing retry). If real devices show it too, retry
+  shortly after the failure instead of waiting for a resume.
 - Notifications, not built yet on a device: `firebase_messaging` 17, the
   Android manifest's FCM default channel, icon and auto-init flag, and the
   iOS `FirebaseMessagingAutoInitEnabled` key. The `workout` channel
