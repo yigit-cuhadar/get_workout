@@ -490,6 +490,27 @@ service cloud.firestore {
       expect((await store.save('u1', kept)).isOk, isTrue);
       expect((await store.load('u1')).valueOrNull, kept);
     });
+
+    test('removing a user deletes their files only', () async {
+      await store.save('u1', kept);
+      await store.save('u12', kept);
+      file('workouts_u1.json.unreadable-7').writeAsStringSync('{}');
+      // A save still waiting is dropped, not written after the removal.
+      unawaited(store.save('u1', kept));
+
+      expect((await store.remove('u1')).isOk, isTrue);
+
+      expect(directory.listSync().map((e) => e.uri.pathSegments.last), [
+        'workouts_u12.json',
+      ]);
+      expect((await store.load('u1')).valueOrNull, const LocalWorkouts());
+    });
+
+    test('removing a user with nothing kept succeeds', () async {
+      directory.deleteSync(recursive: true);
+      expect((await store.remove('u1')).isOk, isTrue);
+      directory.createSync();
+    });
   });
 }
 

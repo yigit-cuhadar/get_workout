@@ -8,7 +8,8 @@ import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Account status: offers a guest to create an account or sign in, and a
-/// signed-in user to sign out.
+/// signed-in user to sign out; below, apart, deleting the account (a
+/// guest's data).
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
 
@@ -21,9 +22,14 @@ class AccountPage extends StatelessWidget {
         builder: (context, state) => switch (state) {
           Authenticated(:final user) => ListView(
             padding: const EdgeInsets.all(Gap.lg),
-            children: user.isAnonymous
-                ? _guest(context, l10n)
-                : _member(context, l10n, user),
+            children: [
+              ...user.isAnonymous
+                  ? _guest(context, l10n)
+                  : _member(context, l10n, user),
+              const SizedBox(height: Gap.xl),
+              const Divider(),
+              _DeleteTile(guest: user.isAnonymous),
+            ],
           ),
           _ => const LoadingView(),
         },
@@ -84,5 +90,25 @@ class AccountPage extends StatelessWidget {
         SnackBar(content: Text(l10n.accountSignOutFailed)),
       );
     }
+  }
+}
+
+/// Destructive, so set apart and in the theme's error colour.
+class _DeleteTile extends StatelessWidget {
+  const _DeleteTile({required this.guest});
+
+  final bool guest;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final error = Theme.of(context).colorScheme.error;
+    return ListTile(
+      iconColor: error,
+      textColor: error,
+      leading: const Icon(Icons.delete_forever_outlined),
+      title: Text(guest ? l10n.accountDeleteGuest : l10n.accountDelete),
+      onTap: () => context.push(Routes.accountDelete),
+    );
   }
 }

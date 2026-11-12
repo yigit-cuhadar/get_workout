@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Local notifications (rest timer): reschedule after a reboot, and
          ring on time. flutter_local_notifications declares POST_NOTIFICATIONS
          and VIBRATE itself. -->
@@ -6,6 +7,10 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <!-- Steps, read from Health Connect. -->
     <uses-permission android:name="android.permission.health.READ_STEPS"/>
+    <!-- Analytics never reads the advertising ID: firebase_analytics adds
+         this permission, removed here. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove"/>
     <application
         android:label="Get Workout"
         android:name="${applicationName}"
@@ -66,6 +71,25 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
         </receiver>
+        <!-- Analytics and Crashlytics collect nothing until the user agrees;
+             the app turns them on (FirebaseTelemetry). -->
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="false" />
+        <!-- With consent, still no advertising ID, Android ID or ad
+             personalisation signals. -->
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_ssaid_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_personalization_signals"
+            android:value="false" />
         <!-- Announcements (FCM): no push token until the app allows
              notifications and turns this on; shown by the system while the
              app is in the background on the local notifications' channel

@@ -9,6 +9,8 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../features/account/presentation/consent_cubit.dart';
+import '../features/account/presentation/delete_account_cubit.dart';
 import '../features/exercises/presentation/body_model_cubit.dart';
 import '../features/exercises/presentation/equipment_cubit.dart';
 import '../features/exercises/presentation/exercise_catalogue_cubit.dart';
@@ -37,6 +39,7 @@ class _AppState extends State<App> {
   late final _router = buildRouter(
     sl<AuthCubit>(),
     sl<ProfileCubit>(),
+    deletionUnderway: sl<DeletionUnderway>(),
     profileDebugSection: SubscriptionModule.debugControls(sl),
   );
   late final AppLifecycleListener _lifecycle;
@@ -99,6 +102,8 @@ class _AppState extends State<App> {
       providers: [
         BlocProvider.value(value: sl<AuthCubit>()),
         BlocProvider.value(value: sl<SettingsCubit>()),
+        // Created at start, so consent is applied whatever the tab.
+        BlocProvider.value(value: sl<ConsentCubit>()),
         BlocProvider.value(value: sl<ProfileCubit>()),
         BlocProvider.value(value: sl<ExerciseCatalogueCubit>()),
         BlocProvider.value(value: sl<FavoritesCubit>()),

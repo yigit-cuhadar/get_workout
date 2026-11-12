@@ -32,3 +32,18 @@ jobs:
           for tz in Europe/Berlin America/New_York; do
             TZ=$tz flutter test test/features/cardio/cardio_domain_test.dart test/features/programs/program_schedule_test.dart test/features/steps
           done
+  functions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+      - run: npm ci
+      - run: npm test

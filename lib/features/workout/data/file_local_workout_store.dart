@@ -75,6 +75,23 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
     return guard(() => run);
   }
 
+  @override
+  Future<Result<void>> remove(String uid) {
+    _next.remove(uid);
+    final run = _tail.then((_) async {
+      final file = await _file(uid);
+      final directory = file.parent;
+      if (!directory.existsSync()) return;
+      final name = file.uri.pathSegments.last;
+      await for (final entity in directory.list()) {
+        final entry = entity.uri.pathSegments.last;
+        if (entry == name || entry.startsWith('$name.')) await entity.delete();
+      }
+    });
+    _tail = run.catchError((Object _) {});
+    return guard(() => run);
+  }
+
   /// Writes what is waiting for [uid], unless an earlier flush already did.
   Future<void> _flush(String uid) async {
     final content = _next.remove(uid);

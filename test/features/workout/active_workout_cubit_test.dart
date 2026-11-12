@@ -266,6 +266,30 @@ void main() {
       expect(cubit.state.workout, isNull);
       await cubit.close();
     });
+
+    test('a user let go of keeps nothing more, until resumed', () async {
+      final cubit = await signedIn(draft: saved);
+      await cubit.releaseUser('u1');
+      expect(cubit.state.status, WorkoutStatus.none);
+      // No user is followed, so nothing can start or be kept.
+      expect(cubit.startFree('Workout'), isFalse);
+      await pumpEventQueue();
+      verifyNever(() => store.save('u1', any()));
+
+      await cubit.resumeUser();
+      expect(cubit.state.workout, saved);
+      await cubit.close();
+    });
+
+    test(
+      'letting go of another user than the one followed does nothing',
+      () async {
+        final cubit = await signedIn(draft: saved);
+        await cubit.releaseUser('u2');
+        expect(cubit.state.workout, saved);
+        await cubit.close();
+      },
+    );
   });
 
   group('start', () {

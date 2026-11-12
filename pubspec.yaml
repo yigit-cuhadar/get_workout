@@ -85,6 +85,9 @@ dependencies:
   intl: any
   path_provider: ^2.1.5
   url_launcher: ^6.3.2
+  cloud_functions: ^7.0.1
+  firebase_analytics: ^13.0.1
+  firebase_crashlytics: ^6.0.1
   firebase_messaging: ^17.0.1
   flutter_local_notifications: ^23.0.1
 
