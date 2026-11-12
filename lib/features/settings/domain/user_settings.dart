@@ -56,6 +56,41 @@ class Plate extends Equatable {
   List<Object?> get props => [weightKg, pairs];
 }
 
+/// The rest timer (`settings.restTimer`).
+class RestTimerSettings extends Equatable {
+  const RestTimerSettings({
+    this.enabled = true,
+    this.defaultS = 90,
+    this.notify,
+  });
+
+  /// Whether ticking a set starts a rest.
+  final bool enabled;
+
+  /// The rest when neither the program nor the exercise gives one.
+  final int defaultS;
+
+  /// Whether a notification says when a rest is over while the app is in
+  /// the background; null until the user has been asked.
+  final bool? notify;
+
+  static const minS = 15;
+  static const maxS = 600;
+
+  /// What the settings page offers for [defaultS].
+  static const choicesS = [30, 45, 60, 90, 120, 150, 180, 240, 300];
+
+  RestTimerSettings copyWith({bool? enabled, int? defaultS, bool? notify}) =>
+      RestTimerSettings(
+        enabled: enabled ?? this.enabled,
+        defaultS: defaultS ?? this.defaultS,
+        notify: notify ?? this.notify,
+      );
+
+  @override
+  List<Object?> get props => [enabled, defaultS, notify];
+}
+
 /// The user's app preferences. Values are always stored metric; these only
 /// choose how they are shown.
 class UserSettings extends Equatable {
@@ -64,6 +99,7 @@ class UserSettings extends Equatable {
     required this.lengthUnit,
     this.themePreference = ThemePreference.system,
     this.effortScale = EffortScale.off,
+    this.restTimer = const RestTimerSettings(),
     this.customBarWeightKg,
     this.customPlates,
   });
@@ -83,6 +119,7 @@ class UserSettings extends Equatable {
   final LengthUnit lengthUnit;
   final ThemePreference themePreference;
   final EffortScale effortScale;
+  final RestTimerSettings restTimer;
 
   /// Set once the user edits their bar; until then [barWeightKg] follows
   /// [weightUnit], so switching units also switches the standard bar.
@@ -129,6 +166,7 @@ class UserSettings extends Equatable {
     LengthUnit? lengthUnit,
     ThemePreference? themePreference,
     EffortScale? effortScale,
+    RestTimerSettings? restTimer,
     double? customBarWeightKg,
     List<Plate>? customPlates,
   }) => UserSettings(
@@ -136,6 +174,7 @@ class UserSettings extends Equatable {
     lengthUnit: lengthUnit ?? this.lengthUnit,
     themePreference: themePreference ?? this.themePreference,
     effortScale: effortScale ?? this.effortScale,
+    restTimer: restTimer ?? this.restTimer,
     customBarWeightKg: customBarWeightKg ?? this.customBarWeightKg,
     customPlates: customPlates ?? this.customPlates,
   );
@@ -146,6 +185,7 @@ class UserSettings extends Equatable {
     lengthUnit: lengthUnit,
     themePreference: themePreference,
     effortScale: effortScale,
+    restTimer: restTimer,
   );
 
   @override
@@ -154,6 +194,7 @@ class UserSettings extends Equatable {
     lengthUnit,
     themePreference,
     effortScale,
+    restTimer,
     customBarWeightKg,
     customPlates,
   ];

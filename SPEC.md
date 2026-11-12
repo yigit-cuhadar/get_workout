@@ -320,6 +320,48 @@ from the earlier FitLab app.
   set note 200, 40 exercises, 30 sets each, 5 drops per set. The rules
   validate the top-level fields of `workouts` and `exerciseStats` (allowed
   keys, types, sizes); the app checks sets before storing.
+- **Rest timer**: ticking a set starts a rest of its program item's
+  `restS`, else the exercise's `defaultRestS`, else the user's default
+  (`settings.restTimer`: `enabled`, default on; `defaultS`, 90 s, 15-600;
+  `notify`), which the workout cubit follows itself. A rest of 0 is none.
+  In a superset or circuit rounds count working sets (warm-ups belong to
+  no round, so a warm-up on one exercise shifts nothing), and only the
+  group's last exercise with a working set in that round starts the rest,
+  for the rest of the group's last exercise (as the program estimate
+  counts it); the next set follows the same rounds, the group's warm-ups
+  first. Warm-ups start none and leave a running one alone; a drop set
+  rests like any set. Rest start and end are decided in one place, from
+  the workout before and after each edit: a new tick replaces the running
+  rest; the set that started it no longer done (unticked, or edited
+  invalid) ends it; an edit that moves sets (remove or move an exercise,
+  remove a set) keeps it running unlinked. Finishing, discarding and a
+  user change end it. The rest is its end time on the device clock, kept
+  with the workout in progress in the local file (optional `rest` field,
+  still version 2), so it survives minimizing, backgrounding and
+  restarts. A rest ending more than 30 min ahead (600 s plus "+15 s"
+  room; "+15 s" never goes past it) is not believed: dropped on load, and
+  not run when the clock was set back. A damaged `rest` in the file is
+  dropped, a set position not in the workout forgotten; the workout is
+  never set aside for it. One that ended while the app was away ends
+  quietly; one that reaches zero in front of the user buzzes and shows
+  "Rest over" for 3 s. +15 s moves the end; there is no −15 s.
+- **Rest notification**: local, scheduled only when the app hides and
+  cancelled when it shows or the rest changes, since the notifications
+  package cannot hide one over the app in front; a schedule that lands
+  after such a change is cancelled again. A rest left running when the
+  app is killed in front gets none. The wish is the user's
+  (`settings.restTimer.notify`, written only by their answer or the
+  settings switch); the permission is the device's and is never written
+  to Firestore. On a device not asked yet, the first rest the user starts
+  asks in the app with one line, unless they said no or said yes and the
+  device already allows it; the system is asked only after "Allow", never
+  on its own. "Not now" is remembered on that device only (a marker file
+  in app support), so other devices still ask; a device refusal leaves
+  the wish, so devices that allow it still notify. "Allow" then asks, on
+  Android, for exact alarms (without them the notification falls back to
+  an inexact alarm, possibly late). The rest notification has id 1 on one
+  Android channel, `workout` ("Workout", high importance).
+
 - **Blocked on accounts the user will open when needed**: Apple Developer
   (Apple sign-in, HealthKit, iOS push, Live Activity on a real device), Google
   Play Console, RevenueCat. Development continues without them.
@@ -509,10 +551,10 @@ Group 4, programs
 Group 5, workout
 - [x] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery
 - [x] Free workout — start empty, save as program at the end
-- [ ] Rest timer — auto start, +15 s, skip, notification
+- [x] Rest timer — auto start, +15 s, skip, notification
 - [ ] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification
 - [x] Finish and summary — records with a short celebration, `exerciseStats` update
-- [ ] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
+- [x] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
 
 Group 6, progress
 - [ ] Calendar — month view of planned and done workouts and cardio
@@ -560,6 +602,10 @@ Group 9, launch readiness
   `com.android.vending.BILLING` is in the merged Android manifest on the
   first build. Android launchMode (`singleTop`), Kotlin 2.4 and compileSdk 36
   already meet the SDK's needs; iOS uses Swift Package Manager.
+- The first Android build after the rest timer needs Android platform 37
+  (compileSdk, for flutter_local_notifications 23) and AGP 9.1.1
+  downloaded; the disk is nearly full, so free space first. CI does not
+  build Android, so nothing has compiled the Android changes yet.
 - Release blocker: the Terms of Use and Privacy Policy links in
   `lib/app/legal_links.dart` are placeholders; publish the pages and
   replace them.

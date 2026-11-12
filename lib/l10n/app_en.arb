@@ -58,6 +58,11 @@
   "effortOff": "Off",
   "effortRir": "Reps in reserve (RIR)",
   "effortRpe": "RPE (1-10)",
+  "settingsRestTimer": "Rest timer",
+  "settingsRestTimerOn": "Starts when you tick a set",
+  "settingsRestDefault": "Default rest",
+  "settingsRestNotify": "Notify when rest is over",
+  "settingsRestNotifyDenied": "Notifications are off for GetWorkout. Turn them on in the system settings.",
   "settingsTheme": "Theme",
   "settingsSaveFailed": "Couldn't save settings. Try again",
   "unitKg": "kg",
@@ -919,5 +924,20 @@
   "paywallNotEntitled": "Your payment went through, but Premium didn't unlock. Tap Restore purchases, or contact support.",
   "paywallUnavailable": "Purchases are not available yet. Try again later.",
   "paywallProductUnavailable": "This plan isn't available right now. Try again later.",
-  "paywallAlreadyOwned": "You already own this plan. Tap Restore purchases to unlock it."
+  "paywallAlreadyOwned": "You already own this plan. Tap Restore purchases to unlock it.",
+
+  "restRemaining": "Rest {time}",
+  "@restRemaining": {"placeholders": {"time": {"type": "String"}}},
+  "restOver": "Rest over",
+  "restAdd": "+{seconds} s",
+  "@restAdd": {"placeholders": {"seconds": {"type": "int"}}},
+  "restSkip": "Skip",
+  "restNotifyQuestion": "Get a notification when a rest is over while GetWorkout is in the background?",
+  "restNotifyAllow": "Allow",
+  "restNotifyLater": "Not now",
+  "restNotificationNext": "Next: {exercise}, set {set}",
+  "@restNotificationNext": {"placeholders": {"exercise": {"type": "String"}, "set": {"type": "int"}}},
+  "restNotificationBack": "Back to your workout",
+  "notificationChannelName": "Workout",
+  "notificationChannelDescription": "Tells you when a rest is over"
 }

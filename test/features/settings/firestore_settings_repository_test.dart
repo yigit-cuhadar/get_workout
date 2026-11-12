@@ -73,15 +73,78 @@ void main() {
         'lengthUnit': 'in',
         'themeMode': 'dark',
         'effortScale': 'rpe',
+        'restTimer': {'enabled': true, 'defaultS': 90},
       },
     });
     expect(await repository.watchSettings('u1').first, settings);
   });
 
+  group('rest timer', () {
+    test('is stored and read back', () async {
+      final settings = defaults.copyWith(
+        restTimer: const RestTimerSettings(
+          enabled: false,
+          defaultS: 120,
+          notify: true,
+        ),
+      );
+
+      await repository.saveSettings('u1', settings);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored['restTimer'], {
+        'enabled': false,
+        'defaultS': 120,
+        'notify': true,
+      });
+      expect(await repository.watchSettings('u1').first, settings);
+    });
+
+    test('missing or malformed values read as the defaults', () async {
+      await user().set({
+        'settings': {
+          'restTimer': {'enabled': 'yes', 'defaultS': 'long', 'notify': 1},
+        },
+      });
+      expect(
+        (await repository.watchSettings('u1').first).restTimer,
+        const RestTimerSettings(),
+      );
+      await user().set({
+        'settings': {'restTimer': true},
+      });
+      expect(
+        (await repository.watchSettings('u1').first).restTimer,
+        const RestTimerSettings(),
+      );
+    });
+
+    test('a duration outside the limits is clamped', () async {
+      await user().set({
+        'settings': {
+          'restTimer': {'defaultS': 5000},
+        },
+      });
+      expect(
+        (await repository.watchSettings('u1').first).restTimer.defaultS,
+        RestTimerSettings.maxS,
+      );
+      await user().set({
+        'settings': {
+          'restTimer': {'defaultS': 2.4},
+        },
+      });
+      expect(
+        (await repository.watchSettings('u1').first).restTimer.defaultS,
+        RestTimerSettings.minS,
+      );
+    });
+  });
+
   test('save keeps the other fields of the user document', () async {
     await user().set({
       'profile': {'goal': 'get_stronger'},
-      'settings': {'restTimer': true, 'weightUnit': 'lb'},
+      'settings': {'reminderTimes': true, 'weightUnit': 'lb'},
     });
 
     await repository.saveSettings(
@@ -92,11 +155,12 @@ void main() {
     expect((await user().get()).data(), {
       'profile': {'goal': 'get_stronger'},
       'settings': {
-        'restTimer': true,
+        'reminderTimes': true,
         'weightUnit': 'kg',
         'lengthUnit': 'in',
         'themeMode': 'system',
         'effortScale': 'off',
+        'restTimer': {'enabled': true, 'defaultS': 90},
       },
     });
   });
@@ -153,14 +217,14 @@ void main() {
     test('saving equipment keeps the other fields', () async {
       await user().set({
         'profile': {'goal': 'get_stronger'},
-        'settings': {'restTimer': true, 'weightUnit': 'kg'},
+        'settings': {'reminderTimes': true, 'weightUnit': 'kg'},
       });
 
       await repository.saveSettings('u1', custom);
 
       final data = (await user().get()).data()!;
       expect(data['profile'], {'goal': 'get_stronger'});
-      expect((data['settings'] as Map)['restTimer'], true);
+      expect((data['settings'] as Map)['reminderTimes'], true);
       expect((data['settings'] as Map)['barWeightKg'], 15);
     });
 

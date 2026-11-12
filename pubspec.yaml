@@ -66,6 +66,11 @@ dependencies:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
       ref: 186f61ac9e3303e8042f6e59a26bf21db6ceb21a
       path: packages/forge_purchases
+  forge_notifications:
+    git:
+      url: https://github.com/yigit-cuhadar/MobileAppForge.git
+      ref: 186f61ac9e3303e8042f6e59a26bf21db6ceb21a
+      path: packages/forge_notifications
   cloud_firestore: ^7.1.0
   firebase_auth: ^7.0.1
   firebase_core: ^5.1.0

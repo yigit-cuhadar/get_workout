@@ -15,6 +15,7 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/workout.dart';
 import 'active_workout_cubit.dart';
 import 'elapsed_text.dart';
+import 'rest_strip.dart';
 import 'workout_editor_view.dart';
 import 'workout_text.dart';
 
@@ -135,6 +136,7 @@ class _ActiveWorkout extends StatelessWidget {
           ),
         ],
       ),
+      bottomNavigationBar: const RestStrip(),
       body: ListView(
         padding: const EdgeInsets.only(bottom: Gap.xl),
         children: [
