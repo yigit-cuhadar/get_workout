@@ -71,7 +71,10 @@ void main() {
         .thenAnswer(saved);
   });
 
-  Future<ProgramEditorCubit> open(String? programId) async {
+  Future<ProgramEditorCubit> open(
+    String? programId, {
+    bool catalogueLoads = true,
+  }) async {
     final cubit = ProgramEditorCubit(
       id: programId,
       loadProgramRecord: LoadProgramRecord(repository),
@@ -82,7 +85,9 @@ void main() {
       checkAdminAccess: CheckAdminAccess(access),
     );
     addTearDown(cubit.close);
-    cards.add([programRecord(cardOf(programJson())), other]);
+    if (catalogueLoads) {
+      cards.add([programRecord(cardOf(programJson())), other]);
+    }
     library.add(exerciseRecords);
     await pumpEventQueue();
     return cubit;
@@ -283,6 +288,55 @@ void main() {
       expect(groups(0), [null]);
     });
   });
+
+  test('nothing is saved until the other programs have loaded', () async {
+    final cubit = await open(null, catalogueLoads: false);
+    cubit.change(
+      (_) => ProgramDraft.fromJson(
+        programJson(id: 'pr_new', name: 'New', order: 2),
+      ),
+    );
+
+    await cubit.save();
+
+    expect(cubit.state.problems, [ProgramEditorCubit.catalogueNotLoaded]);
+    verifyNever(() => repository.create(any()));
+    // Once they arrive, the clash they reveal replaces the wait.
+    cards.add([other]);
+    await pumpEventQueue();
+    expect(cubit.state.problemsFor('catalogue'), [
+      'order "2" also used by pr_other',
+    ]);
+  });
+
+  test(
+    'a save overtaken by another before it was read back is not adopted',
+    () async {
+      final overtaking = programRecord(
+        programJson(order: 9),
+        card: savedAt,
+        detail: savedAt,
+      );
+      when(() => repository.update(any(), loaded: any(named: 'loaded')))
+          .thenAnswer((_) async => Ok(ProgramSaved(overtaking)));
+      final cubit = await open(id);
+      cubit.change((d) => d.copyWith(premium: true));
+
+      await cubit.save();
+
+      expect(cubit.state.status, EditorStatus.changedSinceLoaded);
+      expect(cubit.state.draft.premium, isTrue);
+      expect(cubit.state.loaded, isNot(overtaking));
+
+      // Saving again checks the stored program first, and is refused.
+      when(() => repository.load(id)).thenAnswer((_) async => Ok(overtaking));
+      cubit.change((d) => d.copyWith(lengthWeeks: 12));
+      await cubit.save();
+      expect(cubit.state.status, EditorStatus.changedSinceLoaded);
+      verify(() => repository.update(any(), loaded: any(named: 'loaded')))
+          .called(1);
+    },
+  );
 
   test('a program changed since loading is refused, then reloaded', () async {
     when(() => repository.update(any(), loaded: any(named: 'loaded')))

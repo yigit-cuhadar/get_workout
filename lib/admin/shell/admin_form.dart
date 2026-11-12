@@ -48,7 +48,9 @@ class FormRow extends StatelessWidget {
       children: [
         for (final (index, child) in children.indexed) ...[
           if (index > 0) const SizedBox(width: Gap.md),
-          Expanded(child: child),
+          // The child's key, so a keyed field keeps its state when the
+          // fields before it come and go.
+          Expanded(key: child.key, child: child),
         ],
       ],
     );

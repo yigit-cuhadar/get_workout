@@ -20,15 +20,16 @@ final exerciseRecords = [
 
 final exercises = exerciseEntries(exerciseRecords);
 
-/// A valid program in the content-file shape, its computed fields
-/// included.
+/// A valid program in the content-file shape, as a content file holds it,
+/// its computed fields included (worked out by hand: day A is 654 s, day
+/// B, a superset, 450 s).
 Map<String, Object?> programJson({
   String id = 'pr_dumbbell_basics',
   String name = 'Dumbbell Basics',
   String status = 'live',
   bool premium = false,
   int order = 1,
-}) => ProgramDraft.fromJson({
+}) => {
   'id': id,
   'status': status,
   'premium': premium,
@@ -36,7 +37,10 @@ Map<String, Object?> programJson({
   'level': 'beginner',
   'goal': 'build_muscle',
   'equipmentProfile': 'dumbbells',
+  'daysPerWeek': 2,
   'lengthWeeks': 8,
+  'equipment': ['dumbbell', 'bench'],
+  'minutes': {'min': 8, 'max': 11},
   'l10n': {
     'en': {'name': name, 'summary': 'A press and a curl. Twice a week.'},
   },
@@ -82,7 +86,7 @@ Map<String, Object?> programJson({
       ],
     },
   ],
-}).content(exercises);
+};
 
 ProgramRecord programRecord(
   Map<String, Object?> json, {

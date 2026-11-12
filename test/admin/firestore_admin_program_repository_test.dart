@@ -6,7 +6,10 @@ import 'package:get_workout/admin/programs/data/firestore_admin_program_reposito
 import 'package:get_workout/admin/programs/domain/program_draft.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/catalogue_program.dart';
+import 'package:get_workout/features/programs/data/firestore_catalogue_repository.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../tool/src/content_import.dart';
 
 import 'program_fixtures.dart';
 
@@ -115,21 +118,32 @@ void main() {
   });
 
   group('create', () {
-    test('writes the card and the detail without contentHash', () async {
+    test('writes the card and the detail as the import does', () async {
       final json = programJson();
 
-      final result = await repository.create(json);
+      // As the editor saves the program of this file.
+      final result = await repository.create(
+        ProgramDraft.fromJson(json).content(exercises),
+      );
 
       final stored = (await card().get()).data()!;
-      expect(stored, isNot(contains('contentHash')));
-      expect(stored, isNot(contains('id')));
-      expect(stored, isNot(contains('days')));
-      expect(stored['minutes'], json['minutes']);
-      expect(stored['updatedAt'], isA<Timestamp>());
       final storedDetail = (await detail().get()).data()!;
-      expect(storedDetail['days'], json['days']);
-      expect(storedDetail, isNot(contains('contentHash')));
+      expect(stored['updatedAt'], isA<Timestamp>());
       expect(storedDetail['updatedAt'], isA<Timestamp>());
+      // The import's documents of the same file, without contentHash.
+      final docs = programDocs(json);
+      expect(Map.of(stored)..remove('updatedAt'), docs.card.content);
+      expect(Map.of(storedDetail)..remove('updatedAt'), docs.detail.content);
+      // The app reads the card.
+      final read = FirestoreCatalogueRepository.catalogueProgramFromMap(
+        id,
+        stored,
+      )!;
+      expect(read.daysPerWeek, 2);
+      expect(read.minutes, (min: 8, max: 11));
+      expect(read.equipment, [Equipment.dumbbell, Equipment.bench]);
+      expect(read.equipmentProfile, EquipmentProfile.dumbbells);
+      expect(read.text('en').name, 'Dumbbell Basics');
       final saved = result.valueOrNull! as ProgramSaved;
       expect(saved.record!.draft, ProgramDraft.fromJson(json));
     });

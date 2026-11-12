@@ -20,7 +20,7 @@ class ProgramEditorState extends Equatable {
     required this.isNew,
     this.draft = const ProgramDraft(),
     this.loaded,
-    this.catalogue = const [],
+    this.catalogue,
     this.exercises = const {},
     this.entries = const {},
     this.problems = const [],
@@ -38,7 +38,9 @@ class ProgramEditorState extends Equatable {
   final ProgramRecord? loaded;
 
   /// Every loaded card, for the checks across programs.
-  final List<ProgramRecord> catalogue;
+  /// Null until it first arrives; the checks across programs need it, so
+  /// nothing is saved before.
+  final List<ProgramRecord>? catalogue;
 
   /// Every loaded exercise by id, for the picker and the rules.
   final Map<String, ExerciseRecord> exercises;
@@ -164,10 +166,12 @@ class ProgramEditorCubit extends Cubit<ProgramEditorState> {
          ),
        ) {
     // The list pages show stream failures; the checks run on what arrived.
-    _catalogue = watchProgramCards().listen(
-      (catalogue) => emit(state.copyWith(catalogue: catalogue)),
-      onError: (Object _) {},
-    );
+    _catalogue = watchProgramCards().listen((catalogue) {
+      emit(state.copyWith(catalogue: catalogue));
+      if (state.problems.isNotEmpty) {
+        emit(state.copyWith(problems: _validate(state.draft)));
+      }
+    }, onError: (Object _) {});
     _exercises = watchExerciseRecords().listen(
       (records) => emit(
         state.copyWith(
@@ -337,18 +341,24 @@ class ProgramEditorCubit extends Cubit<ProgramEditorState> {
     switch (result) {
       case Ok(value: ProgramSaved(:final record)):
         _id = draft.id;
-        _versionUnknown = record == null;
+        // Read back as someone else saved it right after this save: what
+        // this save wrote is the base, so the next save checks it first
+        // and is refused.
+        final overtaken = record != null && record.draft != draft;
+        _versionUnknown = record == null || overtaken;
         emit(
           state.copyWith(
             isNew: false,
-            loaded:
-                record ??
-                ProgramRecord(
-                  json: content,
-                  version: (card: null, detail: null),
-                ),
+            loaded: record == null || overtaken
+                ? ProgramRecord(
+                    json: content,
+                    version: (card: null, detail: null),
+                  )
+                : record,
             draft: draft,
-            status: EditorStatus.saved,
+            status: overtaken
+                ? EditorStatus.changedSinceLoaded
+                : EditorStatus.saved,
           ),
         );
       case Ok(value: ProgramIdTaken()):
@@ -394,13 +404,24 @@ class ProgramEditorCubit extends Cubit<ProgramEditorState> {
     return result;
   }
 
-  List<ContentProblem> _validate(ProgramDraft draft) =>
-      validateCatalogueProgram(
-        draft,
-        exercises: state.entries,
-        catalogue: state.catalogue,
-        isNew: state.isNew,
-      );
+  List<ContentProblem> _validate(ProgramDraft draft) {
+    final catalogue = state.catalogue;
+    if (catalogue == null) return const [catalogueNotLoaded];
+    return validateCatalogueProgram(
+      draft,
+      exercises: state.entries,
+      catalogue: catalogue,
+      isNew: state.isNew,
+    );
+  }
+
+  /// Refuses a save until the other programs are loaded: without them a
+  /// clashing id, name or order would go unnoticed.
+  static const catalogueNotLoaded = ContentProblem(
+    'catalogue',
+    'The other programs have not loaded yet, so the id, name and order '
+        'cannot be checked. Wait for the program list, or reload the page.',
+  );
 
   @override
   Future<void> close() async {

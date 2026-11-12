@@ -121,14 +121,7 @@ class _EditorView extends StatelessWidget {
                     ),
                   ],
                 ),
-              Expanded(
-                // A replaced draft, or days and items added, moved or
-                // removed, rebuild every field.
-                child: KeyedSubtree(
-                  key: ValueKey(state.formVersion),
-                  child: _Form(state: state),
-                ),
-              ),
+              Expanded(child: _Form(state: state)),
               const Divider(height: 1),
               StatusActions(
                 noun: 'program',
@@ -165,140 +158,158 @@ class _Form extends StatelessWidget {
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: maxFormWidth),
+        // The list stays when the fields are rebuilt, so the scroll does.
         child: ListView(
           padding: const EdgeInsets.all(Gap.md),
           children: [
-            if (state.problems.isNotEmpty)
-              ProblemSummary(
-                title: '${state.problems.length} problem(s) block saving',
-                messages: [for (final p in state.problems) p.message],
-              ),
-            FormSection(
-              title: 'Card',
-              children: [
-                FormRow([
-                  TextInput(
-                    label: 'Id (pr_ + snake_case; cannot change once saved)',
-                    value: draft.id,
-                    enabled: state.isNew,
-                    problems: problems('id'),
-                    onChanged: (id) => cubit.change((d) => d.copyWith(id: id)),
-                  ),
-                  NumberInput(
-                    label: 'Order in the catalogue (1 first, unique)',
-                    value: draft.order,
-                    problems: problems('order'),
-                    onChanged: (order) =>
-                        cubit.change((d) => d.copyWith(order: order)),
-                  ),
-                ]),
-                SwitchListTile(
-                  title: const Text('Premium'),
-                  subtitle: const Text(
-                    'Only users with premium can read its days.',
-                  ),
-                  value: draft.premium,
-                  onChanged: (premium) =>
-                      cubit.change((d) => d.copyWith(premium: premium)),
-                ),
-                FieldProblems(problems('premium')),
-                FormRow([
-                  CodePicker<Level>(
-                    label: 'Level',
-                    values: Level.values,
-                    value: draft.level,
-                    problems: problems('level'),
-                    onChanged: (v) => cubit.change((d) => d.copyWith(level: v)),
-                  ),
-                  CodePicker<Goal>(
-                    label: 'Goal',
-                    values: Goal.values,
-                    value: draft.goal,
-                    problems: problems('goal'),
-                    onChanged: (v) => cubit.change((d) => d.copyWith(goal: v)),
-                  ),
-                  CodePicker<EquipmentProfile>(
-                    label: 'Equipment profile (every exercise fits it)',
-                    values: EquipmentProfile.values,
-                    value: draft.equipmentProfile,
-                    problems: problems('equipmentProfile'),
-                    onChanged: (v) =>
-                        cubit.change((d) => d.copyWith(equipmentProfile: v)),
-                  ),
-                ]),
-                NumberInput(
-                  label:
-                      'Length in weeks (optional, '
-                      '${ProgramLimits.minLengthWeeks}-'
-                      '${ProgramLimits.maxLengthWeeks})',
-                  value: draft.lengthWeeks,
-                  problems: problems('lengthWeeks'),
-                  onChanged: (weeks) =>
-                      cubit.change((d) => d.copyWith(lengthWeeks: weeks)),
-                ),
-              ],
-            ),
-            for (final language in languages)
-              FormSection(
-                title: 'Text (${language.toUpperCase()})',
+            // A replaced draft, or days and items added, moved or removed,
+            // rebuild every field.
+            KeyedSubtree(
+              key: ValueKey(state.formVersion),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextInput(
-                    label:
-                        'Name (1-${ProgramLimits.maxNameLength} characters, '
-                        'unique)',
-                    value: draft.textOf(language).name,
-                    problems: problems('l10n.$language.name'),
-                    onChanged: (name) => cubit.change(
-                      (d) => d.withText(
-                        language,
-                        CatalogueText(
-                          name: name,
-                          summary: d.textOf(language).summary,
+                  if (state.problems.isNotEmpty)
+                    ProblemSummary(
+                      title: '${state.problems.length} problem(s) block saving',
+                      messages: [for (final p in state.problems) p.message],
+                    ),
+                  FormSection(
+                    title: 'Card',
+                    children: [
+                      FormRow([
+                        TextInput(
+                          label:
+                              'Id (pr_ + snake_case; cannot change once saved)',
+                          value: draft.id,
+                          enabled: state.isNew,
+                          problems: problems('id'),
+                          onChanged: (id) =>
+                              cubit.change((d) => d.copyWith(id: id)),
                         ),
+                        NumberInput(
+                          label: 'Order in the catalogue (1 first, unique)',
+                          value: draft.order,
+                          problems: problems('order'),
+                          onChanged: (order) =>
+                              cubit.change((d) => d.copyWith(order: order)),
+                        ),
+                      ]),
+                      SwitchListTile(
+                        title: const Text('Premium'),
+                        subtitle: const Text(
+                          'Only users with premium can read its days.',
+                        ),
+                        value: draft.premium,
+                        onChanged: (premium) =>
+                            cubit.change((d) => d.copyWith(premium: premium)),
+                      ),
+                      FieldProblems(problems('premium')),
+                      FormRow([
+                        CodePicker<Level>(
+                          label: 'Level',
+                          values: Level.values,
+                          value: draft.level,
+                          problems: problems('level'),
+                          onChanged: (v) =>
+                              cubit.change((d) => d.copyWith(level: v)),
+                        ),
+                        CodePicker<Goal>(
+                          label: 'Goal',
+                          values: Goal.values,
+                          value: draft.goal,
+                          problems: problems('goal'),
+                          onChanged: (v) =>
+                              cubit.change((d) => d.copyWith(goal: v)),
+                        ),
+                        CodePicker<EquipmentProfile>(
+                          label: 'Equipment profile (every exercise fits it)',
+                          values: EquipmentProfile.values,
+                          value: draft.equipmentProfile,
+                          problems: problems('equipmentProfile'),
+                          onChanged: (v) => cubit.change(
+                            (d) => d.copyWith(equipmentProfile: v),
+                          ),
+                        ),
+                      ]),
+                      NumberInput(
+                        label:
+                            'Length in weeks (optional, '
+                            '${ProgramLimits.minLengthWeeks}-'
+                            '${ProgramLimits.maxLengthWeeks})',
+                        value: draft.lengthWeeks,
+                        problems: problems('lengthWeeks'),
+                        onChanged: (weeks) =>
+                            cubit.change((d) => d.copyWith(lengthWeeks: weeks)),
+                      ),
+                    ],
+                  ),
+                  for (final language in languages)
+                    FormSection(
+                      title: 'Text (${language.toUpperCase()})',
+                      children: [
+                        TextInput(
+                          label:
+                              'Name (1-${ProgramLimits.maxNameLength} characters, '
+                              'unique)',
+                          value: draft.textOf(language).name,
+                          problems: problems('l10n.$language.name'),
+                          onChanged: (name) => cubit.change(
+                            (d) => d.withText(
+                              language,
+                              CatalogueText(
+                                name: name,
+                                summary: d.textOf(language).summary,
+                              ),
+                            ),
+                          ),
+                        ),
+                        TextInput(
+                          label:
+                              'Summary (${summarySentences.min}-'
+                              '${summarySentences.max} full sentences)',
+                          value: draft.textOf(language).summary,
+                          multiline: true,
+                          problems: problems('l10n.$language.summary'),
+                          onChanged: (summary) => cubit.change(
+                            (d) => d.withText(
+                              language,
+                              CatalogueText(
+                                name: d.textOf(language).name,
+                                summary: summary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  _Computed(state: state),
+                  for (final (index, _) in draft.days.indexed)
+                    _DaySection(state: state, day: index),
+                  FieldProblems(problems('days')),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: draft.days.length < ProgramLimits.maxDays
+                          ? cubit.addDay
+                          : null,
+                      icon: const Icon(Icons.add),
+                      label: const Text(
+                        'Add day (max ${ProgramLimits.maxDays})',
                       ),
                     ),
                   ),
-                  TextInput(
-                    label:
-                        'Summary (${summarySentences.min}-'
-                        '${summarySentences.max} full sentences)',
-                    value: draft.textOf(language).summary,
-                    multiline: true,
-                    problems: problems('l10n.$language.summary'),
-                    onChanged: (summary) => cubit.change(
-                      (d) => d.withText(
-                        language,
-                        CatalogueText(
-                          name: d.textOf(language).name,
-                          summary: summary,
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Problems about fields the form has no input for, e.g. across
+                  // the catalogue or an unknown field written in the console.
+                  FieldProblems([
+                    for (final problem in state.problems)
+                      if (!_formFields.contains(problem.field) &&
+                          !problem.field.startsWith('days['))
+                        problem.message,
+                  ]),
                 ],
               ),
-            _Computed(state: state),
-            for (final (index, _) in draft.days.indexed)
-              _DaySection(state: state, day: index),
-            FieldProblems(problems('days')),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: draft.days.length < ProgramLimits.maxDays
-                    ? cubit.addDay
-                    : null,
-                icon: const Icon(Icons.add),
-                label: const Text('Add day (max ${ProgramLimits.maxDays})'),
-              ),
             ),
-            // Problems about fields the form has no input for, e.g. across
-            // the catalogue or an unknown field written in the console.
-            FieldProblems([
-              for (final problem in state.problems)
-                if (!_formFields.contains(problem.field) &&
-                    !problem.field.startsWith('days['))
-                  problem.message,
-            ]),
             const SizedBox(height: Gap.xl),
           ],
         ),
@@ -543,6 +554,7 @@ class _ItemRow extends StatelessWidget {
             ),
             FormRow([
               NumberInput(
+                key: const ValueKey('sets'),
                 label:
                     'Sets (${ProgramLimits.minSets}-${ProgramLimits.maxSets})',
                 value: value.sets < 0 ? null : value.sets,
@@ -552,11 +564,13 @@ class _ItemRow extends StatelessWidget {
               // so it can be cleared.
               if (!timed || value.repMin != null || value.repMax != null) ...[
                 NumberInput(
+                  key: const ValueKey('repMin'),
                   label: 'Reps from',
                   value: value.repMin,
                   onChanged: (v) => edit((i) => i.copyWith(repMin: () => v)),
                 ),
                 NumberInput(
+                  key: const ValueKey('repMax'),
                   label: 'Reps to',
                   value: value.repMax,
                   onChanged: (v) => edit((i) => i.copyWith(repMax: () => v)),
@@ -564,6 +578,7 @@ class _ItemRow extends StatelessWidget {
               ],
               if (timed || value.durationS != null)
                 NumberInput(
+                  key: const ValueKey('durationS'),
                   label:
                       'Duration (s, ${ProgramLimits.minDurationS}-'
                       '${ProgramLimits.maxDurationS})',
@@ -571,6 +586,7 @@ class _ItemRow extends StatelessWidget {
                   onChanged: (v) => edit((i) => i.copyWith(durationS: () => v)),
                 ),
               NumberInput(
+                key: const ValueKey('restS'),
                 label: 'Rest (s, 0-${ProgramLimits.maxRestS})',
                 value: value.restS < 0 ? null : value.restS,
                 onChanged: (v) => edit((i) => i.copyWith(restS: v ?? -1)),
