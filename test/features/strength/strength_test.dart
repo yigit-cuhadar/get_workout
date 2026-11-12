@@ -20,6 +20,25 @@ void main() {
       expect(StrengthRange.all.start(now), isNull);
     });
 
+    test('a month end stays in the month of the start', () {
+      expect(
+        StrengthRange.months6.start(DateTime(2026, 8, 31, 9)),
+        DateTime(2026, 2, 28),
+      );
+      expect(
+        StrengthRange.months6.start(DateTime(2028, 8, 31)),
+        DateTime(2028, 2, 29),
+      );
+      expect(
+        StrengthRange.year1.start(DateTime(2028, 2, 29)),
+        DateTime(2027, 2, 28),
+      );
+      expect(
+        StrengthRange.months6.start(DateTime(2026, 3, 31)),
+        DateTime(2025, 9, 30),
+      );
+    });
+
     test('only the 12 weeks are free', () {
       expect(StrengthRange.free, StrengthRange.weeks12);
       expect(

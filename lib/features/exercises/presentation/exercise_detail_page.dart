@@ -230,7 +230,8 @@ class _DetailBody extends StatelessWidget {
           leading: const Icon(Icons.trending_up),
           title: Text(l10n.detailProgress),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.go(Routes.strengthExercise(exercise.id)),
+          onTap: () =>
+              context.push(Routes.exerciseStrength(exerciseRoute(exercise.id))),
         ),
         if (exercise.note case final note?)
           ..._lines(l10n.detailNote, [note], (_, line) => line),

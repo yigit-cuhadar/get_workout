@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../../settings/domain/user_settings.dart';
 import '../../workout/domain/exercise_stats.dart';
 
@@ -16,8 +18,8 @@ enum StrengthRange {
   /// The first day shown, from its local midnight; null for [all].
   DateTime? start(DateTime now) => switch (this) {
     weeks12 => DateTime(now.year, now.month, now.day - 7 * 12),
-    months6 => DateTime(now.year, now.month - 6, now.day),
-    year1 => DateTime(now.year - 1, now.month, now.day),
+    months6 => _monthsBefore(now, 6),
+    year1 => _monthsBefore(now, 12),
     all => null,
   };
 
@@ -25,6 +27,14 @@ enum StrengthRange {
   /// chose this range.
   StrengthRange allowed(bool? premium) =>
       this.premium && premium != true ? free : this;
+}
+
+/// [now]'s day [months] months earlier, at midnight; past the end of that
+/// month (August 31 to February), its last day.
+DateTime _monthsBefore(DateTime now, int months) {
+  final month = DateTime(now.year, now.month - months);
+  final lastDay = DateTime(month.year, month.month + 1, 0).day;
+  return DateTime(month.year, month.month, math.min(now.day, lastDay));
 }
 
 /// One workout's best estimated one-rep max, in the user's weight unit.

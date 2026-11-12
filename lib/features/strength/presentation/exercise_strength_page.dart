@@ -96,32 +96,34 @@ class _Strength extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(bottom: Gap.xl),
       children: [
-        Padding(
-          padding: const EdgeInsets.all(Gap.md),
-          child: Text(
-            l10n.strengthChartTitle,
-            style: theme.textTheme.titleMedium,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-          child: _RangePicker(state.range),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(Gap.md),
-          child: state.points.isEmpty
-              ? Text(l10n.strengthChartEmpty)
-              : _E1rmChart(state.points, unit),
-        ),
-        if (state.olderLocked)
-          ListTile(
-            leading: const Icon(Icons.lock_outline),
-            title: Text(l10n.strengthOlderLocked),
-            trailing: TextButton(
-              onPressed: () => context.openPaywall(),
-              child: Text(l10n.strengthUnlock),
+        if (state.charted) ...[
+          Padding(
+            padding: const EdgeInsets.all(Gap.md),
+            child: Text(
+              l10n.strengthChartTitle(l10n.weightUnitLabel(unit)),
+              style: theme.textTheme.titleMedium,
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+            child: _RangePicker(state.range),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(Gap.md),
+            child: state.points.isEmpty
+                ? Text(l10n.strengthChartEmpty)
+                : _E1rmChart(state.points, unit),
+          ),
+          if (state.olderLocked)
+            ListTile(
+              leading: const Icon(Icons.lock_outline),
+              title: Text(l10n.strengthOlderLocked),
+              trailing: TextButton(
+                onPressed: () => context.openPaywall(),
+                child: Text(l10n.strengthUnlock),
+              ),
+            ),
+        ],
         Padding(
           padding: const EdgeInsets.fromLTRB(Gap.md, Gap.md, Gap.md, 0),
           child: Text(l10n.strengthRecords, style: theme.textTheme.titleMedium),
@@ -191,8 +193,9 @@ class _E1rmChart extends StatelessWidget {
     final axisDates = span > _daysOfShortDates
         ? DateFormat.yMMM(locale)
         : DateFormat.MMMd(locale);
+    // Whole kg or lb: finer steps would only show noise.
     final numbers = NumberFormat.decimalPattern(locale)
-      ..maximumFractionDigits = 1;
+      ..maximumFractionDigits = 0;
     DateTime date(double x) => DateTime.fromMillisecondsSinceEpoch(x.round());
     return LineChart(
       points: [
@@ -201,6 +204,7 @@ class _E1rmChart extends StatelessWidget {
       ],
       xLabel: (x) => axisDates.format(date(x)),
       yLabel: numbers.format,
+      yPrecision: 1,
       pointLabel: (index) {
         final point = points[index];
         return l10n.strengthPoint(

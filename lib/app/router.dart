@@ -99,9 +99,15 @@ abstract final class Routes {
   static const cardioNew = '$cardio/new';
   static String cardioSession(String id) => '$cardio/$id';
   static const history = '$progress/history';
-  static const strength = '$progress/strength';
+  static const strength = '$progress/$strengthSegment';
   static String strengthExercise(String exerciseId) =>
       '$strength/${Uri.encodeComponent(exerciseId)}';
+
+  /// An exercise's strength page above [exerciseLocation], where its detail
+  /// page is open.
+  static String exerciseStrength(String exerciseLocation) =>
+      '$exerciseLocation/$strengthSegment';
+  static const strengthSegment = 'strength';
 
   /// Adds a past workout.
   static const historyNew = '$history/new';
@@ -304,6 +310,11 @@ GoRouter buildRouter(
                                 exerciseId,
                               ),
                         ),
+                        routes: [
+                          _exerciseStrength(
+                            (state) => state.pathParameters['exerciseId']!,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -348,6 +359,7 @@ GoRouter buildRouter(
                       exerciseId: state.pathParameters['id']!,
                     ),
                   ),
+                  _exerciseStrength((state) => state.pathParameters['id']!),
                 ],
               ),
             ],
@@ -373,7 +385,7 @@ GoRouter buildRouter(
                 ],
               ),
               GoRoute(
-                path: 'strength',
+                path: Routes.strengthSegment,
                 builder: (_, _) => const StrengthListPage(),
                 routes: [
                   GoRoute(
@@ -490,6 +502,15 @@ ExercisePickerPage _picker(GoRouterState state) {
     multiple: query['multiple'] == 'true',
   );
 }
+
+/// An exercise's strength page above its detail page, in the tab
+/// showing that, so going back returns to the exercise.
+GoRoute _exerciseStrength(String Function(GoRouterState state) exerciseId) =>
+    GoRoute(
+      path: Routes.strengthSegment,
+      builder: (_, state) =>
+          ExerciseStrengthPage(exerciseId: exerciseId(state)),
+    );
 
 GoRoute _page(String path, Widget page) =>
     GoRoute(path: path, builder: (_, _) => page);

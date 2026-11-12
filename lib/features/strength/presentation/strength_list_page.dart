@@ -114,8 +114,7 @@ class _ExerciseTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final dates = MaterialLocalizations.of(context);
     final name =
-        item.exercise?.localized(context).name ??
-        (item.removed ? l10n.strengthRemovedExercise : '');
+        item.exercise?.localized(context).name ?? l10n.strengthRemovedExercise;
     return ListTile(
       title: Text(name),
       subtitle: Text(

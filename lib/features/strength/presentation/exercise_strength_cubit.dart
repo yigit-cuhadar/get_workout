@@ -19,6 +19,7 @@ class ExerciseStrengthState extends Equatable {
     this.records = const [],
     this.points = const [],
     this.trained = false,
+    this.charted = false,
     this.range = StrengthRange.free,
     this.olderLocked = false,
   });
@@ -31,6 +32,10 @@ class ExerciseStrengthState extends Equatable {
 
   /// The exercise has stats; without them there is nothing to show.
   final bool trained;
+
+  /// The exercise has an e1RM in some workout. Without a weight and reps
+  /// (bodyweight, timed) it never has, and there is no chart.
+  final bool charted;
 
   /// The range shown: the one chosen, as far as Premium allows.
   final StrengthRange range;
@@ -45,6 +50,7 @@ class ExerciseStrengthState extends Equatable {
     records,
     points,
     trained,
+    charted,
     range,
     olderLocked,
   ];
@@ -137,6 +143,7 @@ class ExerciseStrengthCubit extends Cubit<ExerciseStrengthState> {
         records: orderedRecords(stats),
         points: e1rmSeries(stats.history, range: range, now: now, unit: _unit),
         trained: true,
+        charted: stats.history.any((point) => point.bestE1rmKg != null),
         range: range,
         olderLocked:
             _premium == false &&

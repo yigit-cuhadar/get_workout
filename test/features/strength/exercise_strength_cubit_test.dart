@@ -153,6 +153,31 @@ void main() {
     await cubit.close();
   });
 
+  test('charted when some workout has an e1RM', () async {
+    final cubit = await opened(value: squat);
+    expect(cubit.state.charted, isTrue);
+    await cubit.close();
+  });
+
+  test('a bodyweight or timed exercise has records but no chart', () async {
+    final plank = ExerciseStats(
+      records: {
+        RecordKind.longestDuration: StatRecord(
+          value: 90,
+          date: recent,
+          workoutId: 'w2',
+        ),
+      },
+      history: [HistoryPoint(date: recent, workoutId: 'w2')],
+    );
+    final cubit = await opened(value: plank);
+    expect(cubit.state.trained, isTrue);
+    expect(cubit.state.charted, isFalse);
+    expect(cubit.state.records.single.kind, RecordKind.longestDuration);
+    expect(cubit.state.points, isEmpty);
+    await cubit.close();
+  });
+
   test('an exercise not done yet', () async {
     final cubit = await opened();
     expect(cubit.state.status, ExerciseStrengthStatus.ready);

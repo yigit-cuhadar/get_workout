@@ -111,7 +111,7 @@ void main() {
     await cubit.close();
   });
 
-  test('a custom exercise is not removed before custom ones load', () async {
+  test('loading until custom exercises can be named', () async {
     whenListen(
       catalogue,
       catalogueStates.stream,
@@ -119,14 +119,52 @@ void main() {
     );
     final cubit = build();
     await signIn(alice);
-    await show({'custom_abc': doneOn(DateTime(2026, 11, 1))});
-    expect(cubit.state.items.single.removed, isFalse);
+    await show({
+      'squat': doneOn(DateTime(2026, 10, 1)),
+      'custom_abc': doneOn(DateTime(2026, 11, 1)),
+    });
+    expect(cubit.state.status, StrengthListStatus.loading);
 
     catalogueStates.add(
       CatalogueReady([squat, move('custom_abc', name: 'Mine')]),
     );
     await pumpEventQueue();
-    expect(cubit.state.items.single.exercise?.id, 'custom_abc');
+    expect(cubit.state.status, StrengthListStatus.ready);
+    expect(cubit.state.items.first.exercise?.id, 'custom_abc');
+    await cubit.close();
+  });
+
+  test('loading until the catalogue is there', () async {
+    whenListen(
+      catalogue,
+      catalogueStates.stream,
+      initialState: const CatalogueLoading(),
+    );
+    final cubit = build();
+    await signIn(alice);
+    await show(aliceStats);
+    expect(cubit.state.status, StrengthListStatus.loading);
+
+    catalogueStates.add(CatalogueReady([squat, bench]));
+    await pumpEventQueue();
+    expect(ids(cubit.state), ['bench', 'squat', 'ex_retired']);
+    await cubit.close();
+  });
+
+  test('a catalogue that cannot load fails, and retry retries it', () async {
+    whenListen(
+      catalogue,
+      catalogueStates.stream,
+      initialState: const CatalogueFailed(NetworkFailure()),
+    );
+    when(catalogue.retry).thenAnswer((_) async {});
+    final cubit = build();
+    await signIn(alice);
+    await show(aliceStats);
+    expect(cubit.state.status, StrengthListStatus.failure);
+
+    cubit.retry();
+    verify(catalogue.retry).called(1);
     await cubit.close();
   });
 
@@ -168,6 +206,28 @@ void main() {
     cubit.retry();
     await show(aliceStats);
     expect(cubit.state.status, StrengthListStatus.ready);
+    await cubit.close();
+  });
+
+  test('a failure stays until the stats arrive again', () async {
+    final cubit = build();
+    await signIn(alice);
+    await show(aliceStats);
+    stats.addError(const NetworkFailure());
+    await pumpEventQueue();
+    expect(cubit.state.status, StrengthListStatus.failure);
+
+    // Neither the catalogue nor a search brings the old list back.
+    catalogueStates.add(CatalogueReady([squat, bench]));
+    await pumpEventQueue();
+    cubit.setQuery('squat');
+    expect(cubit.state.status, StrengthListStatus.failure);
+    expect(cubit.state.items, isEmpty);
+
+    cubit.retry();
+    await show(aliceStats);
+    expect(cubit.state.status, StrengthListStatus.ready);
+    expect(ids(cubit.state), ['squat']);
     await cubit.close();
   });
 
