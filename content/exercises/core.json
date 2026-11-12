@@ -621,7 +621,9 @@
     ],
     "family": "bird_dog",
     "familyRank": 1,
-    "pinnedAlternatives": [],
+    "pinnedAlternatives": [
+      "ex_dead_bug"
+    ],
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 92,

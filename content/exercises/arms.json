@@ -223,11 +223,10 @@
       "dumbbell"
     ],
     "mainMuscles": [
-      "biceps"
-    ],
-    "secondaryMuscles": [
+      "biceps",
       "forearm"
     ],
+    "secondaryMuscles": [],
     "family": "hammer_curl",
     "familyRank": 2,
     "pinnedAlternatives": [],
@@ -1066,11 +1065,10 @@
       "cable"
     ],
     "mainMuscles": [
-      "biceps"
-    ],
-    "secondaryMuscles": [
+      "biceps",
       "forearm"
     ],
+    "secondaryMuscles": [],
     "family": "hammer_curl",
     "familyRank": 3,
     "pinnedAlternatives": [],
@@ -1528,11 +1526,10 @@
       "dumbbell"
     ],
     "mainMuscles": [
-      "biceps"
-    ],
-    "secondaryMuscles": [
+      "biceps",
       "forearm"
     ],
+    "secondaryMuscles": [],
     "family": "hammer_curl",
     "familyRank": 4,
     "pinnedAlternatives": [],
@@ -1818,11 +1815,10 @@
       "resistance_band"
     ],
     "mainMuscles": [
-      "biceps"
-    ],
-    "secondaryMuscles": [
+      "biceps",
       "forearm"
     ],
+    "secondaryMuscles": [],
     "family": "hammer_curl",
     "familyRank": 1,
     "pinnedAlternatives": [],
@@ -2211,7 +2207,7 @@
       "lat"
     ],
     "family": "dead_hang",
-    "familyRank": 2,
+    "familyRank": 3,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
@@ -2435,6 +2431,157 @@
         "cues": [
           "Arms locked",
           "Rings to the hips"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_wrist_curl",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "underhand",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "wrist_curl",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 413,
+    "l10n": {
+      "en": {
+        "name": "Band Wrist Curl",
+        "aliases": [],
+        "setup": [
+          "Sit on a bench or chair with the middle of a band under your feet.",
+          "Rest your forearms on your thighs, palms up, with your wrists past your knees."
+        ],
+        "execution": [
+          "Curl your wrists up as far as possible.",
+          "Lower slowly against the band."
+        ],
+        "mistakes": [
+          "Lifting the forearms off the thighs.",
+          "Letting the band pull the wrists down fast."
+        ],
+        "cues": [
+          "Only the wrists move"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_band_reverse_wrist_curl",
+    "status": "live",
+    "loggingType": "reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "pull",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "overhand",
+    "equipment": [
+      "resistance_band"
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [],
+    "family": "reverse_wrist_curl",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 414,
+    "l10n": {
+      "en": {
+        "name": "Band Reverse Wrist Curl",
+        "aliases": [
+          "Band Wrist Extension"
+        ],
+        "setup": [
+          "Sit on a bench or chair with the middle of a band under your feet.",
+          "Rest your forearms on your thighs, palms down, with your hands past your knees."
+        ],
+        "execution": [
+          "Lift the backs of your hands as high as possible.",
+          "Lower slowly against the band."
+        ],
+        "mistakes": [
+          "Lifting the forearms off the thighs.",
+          "Using a band too strong to lift with the wrists alone."
+        ],
+        "cues": [
+          "Lead with the knuckles"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_false_grip_hang",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "intermediate",
+    "force": "static",
+    "movementPattern": "isolation",
+    "position": "hanging",
+    "equipment": [
+      "rings"
+    ],
+    "equipmentAlternatives": [
+      [
+        "pull_up_bar"
+      ]
+    ],
+    "mainMuscles": [
+      "forearm"
+    ],
+    "secondaryMuscles": [
+      "lat",
+      "trap"
+    ],
+    "family": "dead_hang",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "popularity": 415,
+    "l10n": {
+      "en": {
+        "name": "False Grip Hang",
+        "aliases": [
+          "False Grip Dead Hang"
+        ],
+        "setup": [
+          "Set the rings high enough to hang with straight arms.",
+          "Grip each ring with the heel of your palm over the top, so your wrist bends over it."
+        ],
+        "execution": [
+          "Hang with straight arms, keeping the wrists bent over the rings.",
+          "Step down as soon as the grip starts slipping into a normal hang."
+        ],
+        "mistakes": [
+          "Letting the wrists straighten into a regular grip.",
+          "Holding on after the grip has slipped."
+        ],
+        "safety": "Start with short holds; the false grip loads the wrists and elbows hard.",
+        "cues": [
+          "Wrists over the rings",
+          "Shoulders engaged"
         ]
       }
     }

@@ -423,7 +423,10 @@
     ],
     "family": "med_ball_slam",
     "familyRank": 1,
-    "pinnedAlternatives": [],
+    "pinnedAlternatives": [
+      "ex_wall_ball",
+      "ex_battle_rope_waves"
+    ],
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 133,
@@ -1437,7 +1440,10 @@
     ],
     "family": "med_ball_rotational_throw",
     "familyRank": 1,
-    "pinnedAlternatives": [],
+    "pinnedAlternatives": [
+      "ex_cable_woodchop",
+      "ex_landmine_rotation"
+    ],
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 364,
