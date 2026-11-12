@@ -994,9 +994,14 @@ from the earlier FitLab app.
   from the body log, "Measured <date>" (the entry's date; body fat takes
   the oldest of its circumferences'; the year only when not this one).
   Profile values (height, age, a profile-only weight) have no date.
-  Tapping the tile turns it into the normal field, focused, holding the
-  value; it stays a field (the cubit's `known` map drops it). Sex and
-  activity stay selectors: they already show the known choice. They are
+  The tile has an edit icon; tapping it turns it into the normal field,
+  focused, holding the value; it stays a field (the cubit's `known` map
+  drops it). Focusing a field before the values arrive counts as editing
+  it, so a late value never replaces it. Both the waist and the abdomen
+  are known; the body fat calculator shows the one for the selected sex
+  (abdomen for men, waist for women), or an empty field, unless the user
+  typed or started editing it. Sex and activity stay selectors: they
+  already show the known choice. They are
   starting values only: nothing is written back. They load once when a
   calculator opens; a value arriving late fills only inputs the user has
   not changed (even one they cleared stays empty). A source that cannot

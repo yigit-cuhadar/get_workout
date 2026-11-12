@@ -156,7 +156,7 @@ void main() {
       final known = await getKnownValues('u1');
 
       expect(known.neckCm, 39);
-      expect(known.waistCm, 84);
+      expect(known.abdomenCm, 84);
       expect(known.hipCm, 98);
       expect(
         known.bodyFatPercent,
@@ -245,29 +245,41 @@ void main() {
       expect(known.neckCm, 45);
     });
 
-    test('the waist is the formula\'s: the abdomen for men, the waist for '
-        'women, none without a sex', () async {
-      Stream<List<BodyEntry>> measured() => Stream.value([
-        entry(
-          'e1',
-          DateTime(2026, 11, 3),
-          measurements: {
-            BodyMeasurement.waist: 76,
-            BodyMeasurement.abdomen: 84,
-          },
-        ),
-      ]);
-      given(profile: Stream.value(man), entries: measured());
-      expect((await getKnownValues('u1')).waistCm, 84);
-
+    test('both waists are known whatever the sex; the formula\'s is the '
+        'abdomen for men, the waist for women', () async {
       given(
-        profile: Stream.value(const UserProfile(sex: Sex.female)),
-        entries: measured(),
+        entries: Stream.value([
+          entry(
+            'e2',
+            DateTime(2026, 11, 10),
+            measurements: {BodyMeasurement.abdomen: 84},
+          ),
+          entry(
+            'e1',
+            DateTime(2026, 11, 3),
+            measurements: {
+              BodyMeasurement.waist: 76,
+              BodyMeasurement.abdomen: 85,
+            },
+          ),
+        ]),
       );
-      expect((await getKnownValues('u1')).waistCm, 76);
 
-      given(profile: Stream.value(const UserProfile()), entries: measured());
-      expect((await getKnownValues('u1')).waistCm, isNull);
+      final known = await getKnownValues('u1');
+
+      expect(known.waistCm, 76);
+      expect(known.waistDate, DateTime(2026, 11, 3));
+      expect(known.abdomenCm, 84);
+      expect(known.abdomenDate, DateTime(2026, 11, 10));
+      expect(known.navyWaistFor(Sex.male), (
+        cm: 84.0,
+        date: DateTime(2026, 11, 10),
+      ));
+      expect(known.navyWaistFor(Sex.female), (
+        cm: 76.0,
+        date: DateTime(2026, 11, 3),
+      ));
+      expect(const KnownBodyValues(waistCm: 76).navyWaistFor(Sex.male), isNull);
     });
 
     test('each value from the body log carries its entry\'s date; the '
@@ -293,7 +305,7 @@ void main() {
 
       expect(known.weightDate, DateTime(2026, 11, 3));
       expect(known.neckDate, DateTime(2026, 9, 1));
-      expect(known.waistDate, DateTime(2026, 11, 10));
+      expect(known.abdomenDate, DateTime(2026, 11, 10));
       expect(known.hipDate, DateTime(2026, 9, 1));
       // As recent as its oldest measurement.
       expect(known.bodyFatDate, DateTime(2026, 9, 1));

@@ -37,7 +37,7 @@ class CaloriesPage extends StatelessWidget {
                 SexSelector(selected: state.sex, onChanged: cubit.sexChanged),
                 KnownNumberField(
                   known: state.known[CalculatorInput.bodyWeight],
-                  onEdit: () => cubit.editKnown(CalculatorInput.bodyWeight),
+                  onEdit: () => cubit.edit(CalculatorInput.bodyWeight),
                   name: l10n.calcKnownWeight,
                   unit: format.weightUnitLabel,
                   label: l10n.calcBodyWeight(format.weightUnitLabel),
@@ -47,7 +47,7 @@ class CaloriesPage extends StatelessWidget {
                 ),
                 KnownNumberField(
                   known: state.known[CalculatorInput.height],
-                  onEdit: () => cubit.editKnown(CalculatorInput.height),
+                  onEdit: () => cubit.edit(CalculatorInput.height),
                   name: l10n.calcKnownHeight,
                   unit: format.lengthUnitLabel,
                   label: l10n.calcHeight(format.lengthUnitLabel),
@@ -57,7 +57,7 @@ class CaloriesPage extends StatelessWidget {
                 ),
                 KnownNumberField(
                   known: state.known[CalculatorInput.age],
-                  onEdit: () => cubit.editKnown(CalculatorInput.age),
+                  onEdit: () => cubit.edit(CalculatorInput.age),
                   name: l10n.calcKnownAge,
                   unit: l10n.calcUnitYears,
                   label: l10n.calcAge,

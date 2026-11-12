@@ -37,7 +37,7 @@ class MacrosPage extends StatelessWidget {
                 ),
                 KnownNumberField(
                   known: state.known[CalculatorInput.bodyWeight],
-                  onEdit: () => cubit.editKnown(CalculatorInput.bodyWeight),
+                  onEdit: () => cubit.edit(CalculatorInput.bodyWeight),
                   name: l10n.calcKnownWeight,
                   unit: format.weightUnitLabel,
                   label: l10n.calcBodyWeight(format.weightUnitLabel),

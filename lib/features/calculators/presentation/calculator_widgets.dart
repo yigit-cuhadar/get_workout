@@ -69,6 +69,7 @@ class NumberField extends StatefulWidget {
     this.value = '',
     this.wholeNumber = false,
     this.autofocus = false,
+    this.onFocus,
   });
 
   final String label;
@@ -77,6 +78,7 @@ class NumberField extends StatefulWidget {
   final String value;
   final bool wholeNumber;
   final bool autofocus;
+  final VoidCallback? onFocus;
 
   @override
   State<NumberField> createState() => _NumberFieldState();
@@ -102,17 +104,22 @@ class _NumberFieldState extends State<NumberField> {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: Gap.md),
-    child: TextField(
-      controller: _controller,
-      onChanged: widget.onChanged,
-      autofocus: widget.autofocus,
-      keyboardType: TextInputType.numberWithOptions(
-        decimal: !widget.wholeNumber,
-      ),
-      decoration: InputDecoration(
-        labelText: widget.label,
-        errorText: widget.errorText,
-        errorMaxLines: 3,
+    child: Focus(
+      onFocusChange: (focused) {
+        if (focused) widget.onFocus?.call();
+      },
+      child: TextField(
+        controller: _controller,
+        onChanged: widget.onChanged,
+        autofocus: widget.autofocus,
+        keyboardType: TextInputType.numberWithOptions(
+          decimal: !widget.wholeNumber,
+        ),
+        decoration: InputDecoration(
+          labelText: widget.label,
+          errorText: widget.errorText,
+          errorMaxLines: 3,
+        ),
       ),
     ),
   );
@@ -120,8 +127,8 @@ class _NumberFieldState extends State<NumberField> {
 
 /// A [NumberField] that, while [known], shows the value the app knows as a
 /// tile instead: [name], the value in [unit] and, for a value from the body
-/// log, the day it was recorded. Tapping the tile calls [onEdit], which
-/// clears [known], and opens the field focused.
+/// log, the day it was recorded. Tapping the tile, or focusing the field,
+/// calls [onEdit], which clears [known]; the field then opens focused.
 class KnownNumberField extends StatefulWidget {
   const KnownNumberField({
     super.key,
@@ -164,6 +171,7 @@ class _KnownNumberFieldState extends State<KnownNumberField> {
         errorText: widget.errorText,
         wholeNumber: widget.wholeNumber,
         autofocus: _edited,
+        onFocus: widget.onEdit,
       );
     }
     final l10n = AppLocalizations.of(context);
@@ -178,9 +186,16 @@ class _KnownNumberFieldState extends State<KnownNumberField> {
           : date == null
           ? null
           : Text(l10n.calcMeasuredOn(_day(date, l10n.localeName))),
-      trailing: Text(
-        l10n.calcKnownValue(widget.value, widget.unit),
-        style: theme.textTheme.titleMedium,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.calcKnownValue(widget.value, widget.unit),
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(width: Gap.sm),
+          const Icon(Icons.edit_outlined),
+        ],
       ),
       onTap: () {
         setState(() => _edited = true);

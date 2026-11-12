@@ -46,10 +46,8 @@ class BodyIndicesState extends Equatable {
   List<Object?> get props => [weight, height, bodyFat, known, result];
 }
 
-enum _Input { weight, height, bodyFat }
-
 /// Starts from what the app knows of the user; a value arriving late fills
-/// only the inputs the user has not changed.
+/// only the inputs the user has not changed or started editing.
 class BodyIndicesCubit extends Cubit<BodyIndicesState> {
   BodyIndicesCubit(
     this._calculateIndices,
@@ -64,7 +62,7 @@ class BodyIndicesCubit extends Cubit<BodyIndicesState> {
   final CalculateBodyIndices _calculateIndices;
   final WeightUnit weightUnit;
   final LengthUnit lengthUnit;
-  final _changed = <_Input>{};
+  final _changed = <CalculatorInput>{};
 
   Future<void> _prefill(
     GetCurrentUser getCurrentUser,
@@ -75,32 +73,24 @@ class BodyIndicesCubit extends Cubit<BodyIndicesState> {
     final known = await getKnownValues(uid);
     if (isClosed) return;
     final knownInputs = {...state.known};
-    String? fill(
-      _Input input,
-      CalculatorInput field,
-      String? text, [
-      DateTime? date,
-    ]) {
+    String? fill(CalculatorInput input, String? text, [DateTime? date]) {
       if (_changed.contains(input) || text == null) return null;
-      knownInputs[field] = KnownInput(date);
+      knownInputs[input] = KnownInput(date);
       return text;
     }
 
     _calculate(
       state._with(
         weight: fill(
-          _Input.weight,
           CalculatorInput.bodyWeight,
           knownText(known.weightKg, weightUnit.fromKg),
           known.weightDate,
         ),
         height: fill(
-          _Input.height,
           CalculatorInput.height,
           knownText(known.heightCm, lengthUnit.fromCm),
         ),
         bodyFat: fill(
-          _Input.bodyFat,
           CalculatorInput.bodyFat,
           knownText(known.bodyFatPercent),
           known.bodyFatDate,
@@ -110,22 +100,25 @@ class BodyIndicesCubit extends Cubit<BodyIndicesState> {
     );
   }
 
-  /// Turns a known [input] into a field the user can change.
-  void editKnown(CalculatorInput input) =>
-      _calculate(state._with(known: {...state.known}..remove(input)));
+  /// The user started editing [input]: it is a plain field from now on,
+  /// which known values leave alone.
+  void edit(CalculatorInput input) {
+    _changed.add(input);
+    _calculate(state._with(known: {...state.known}..remove(input)));
+  }
 
   void weightChanged(String text) {
-    _changed.add(_Input.weight);
+    _changed.add(CalculatorInput.bodyWeight);
     _calculate(state._with(weight: text));
   }
 
   void heightChanged(String text) {
-    _changed.add(_Input.height);
+    _changed.add(CalculatorInput.height);
     _calculate(state._with(height: text));
   }
 
   void bodyFatChanged(String text) {
-    _changed.add(_Input.bodyFat);
+    _changed.add(CalculatorInput.bodyFat);
     _calculate(state._with(bodyFat: text));
   }
 

@@ -57,8 +57,8 @@ class MacrosState extends Equatable {
   ];
 }
 
-/// Starts from the user's known weight, unless they changed it before it
-/// arrived. Calories are not known: they depend on the target chosen.
+/// Starts from the user's known weight, unless they changed or started
+/// editing it before it arrived. Calories are not known: they depend on the target chosen.
 class MacrosCubit extends Cubit<MacrosState> {
   MacrosCubit(
     this._split,
@@ -71,7 +71,7 @@ class MacrosCubit extends Cubit<MacrosState> {
 
   final SplitMacros _split;
   final WeightUnit weightUnit;
-  var _weightChanged = false;
+  final _changed = <CalculatorInput>{};
 
   Future<void> _prefill(
     GetCurrentUser getCurrentUser,
@@ -80,7 +80,7 @@ class MacrosCubit extends Cubit<MacrosState> {
     final uid = getCurrentUser()?.id;
     if (uid == null) return;
     final known = await getKnownValues(uid);
-    if (isClosed || _weightChanged) return;
+    if (isClosed || _changed.contains(CalculatorInput.bodyWeight)) return;
     final weight = knownText(known.weightKg, weightUnit.fromKg);
     if (weight == null) return;
     _calculate(
@@ -91,14 +91,17 @@ class MacrosCubit extends Cubit<MacrosState> {
     );
   }
 
-  /// Turns a known [input] into a field the user can change.
-  void editKnown(CalculatorInput input) =>
-      _calculate(state._with(known: {...state.known}..remove(input)));
+  /// The user started editing [input]: it is a plain field from now on,
+  /// which known values leave alone.
+  void edit(CalculatorInput input) {
+    _changed.add(input);
+    _calculate(state._with(known: {...state.known}..remove(input)));
+  }
 
   void caloriesChanged(String text) => _calculate(state._with(calories: text));
 
   void weightChanged(String text) {
-    _weightChanged = true;
+    _changed.add(CalculatorInput.bodyWeight);
     _calculate(state._with(weight: text));
   }
 

@@ -33,7 +33,7 @@ class BodyFatPage extends StatelessWidget {
                 SexSelector(selected: state.sex, onChanged: cubit.sexChanged),
                 KnownNumberField(
                   known: state.known[CalculatorInput.height],
-                  onEdit: () => cubit.editKnown(CalculatorInput.height),
+                  onEdit: () => cubit.edit(CalculatorInput.height),
                   name: l10n.calcKnownHeight,
                   unit: unit,
                   label: l10n.calcHeight(unit),
@@ -43,7 +43,7 @@ class BodyFatPage extends StatelessWidget {
                 ),
                 KnownNumberField(
                   known: state.known[CalculatorInput.neck],
-                  onEdit: () => cubit.editKnown(CalculatorInput.neck),
+                  onEdit: () => cubit.edit(CalculatorInput.neck),
                   name: l10n.calcKnownNeck,
                   unit: unit,
                   label: l10n.calcNeck(unit),
@@ -53,7 +53,7 @@ class BodyFatPage extends StatelessWidget {
                 ),
                 KnownNumberField(
                   known: state.known[CalculatorInput.waist],
-                  onEdit: () => cubit.editKnown(CalculatorInput.waist),
+                  onEdit: () => cubit.edit(CalculatorInput.waist),
                   name: state.sex == Sex.male
                       ? l10n.calcKnownAbdomen
                       : l10n.calcKnownWaist,
@@ -68,7 +68,7 @@ class BodyFatPage extends StatelessWidget {
                 if (state.sex == Sex.female)
                   KnownNumberField(
                     known: state.known[CalculatorInput.hip],
-                    onEdit: () => cubit.editKnown(CalculatorInput.hip),
+                    onEdit: () => cubit.edit(CalculatorInput.hip),
                     name: l10n.calcKnownHips,
                     unit: unit,
                     label: l10n.calcHip(unit),

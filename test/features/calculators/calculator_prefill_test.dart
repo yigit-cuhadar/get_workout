@@ -16,6 +16,7 @@ import 'known_values_fakes.dart';
 
 final weighed = DateTime(2026, 11, 11);
 final measured = DateTime(2026, 11, 3);
+final waistMeasured = DateTime(2026, 10, 20);
 
 final everything = KnownBodyValues(
   sex: Sex.male,
@@ -25,8 +26,10 @@ final everything = KnownBodyValues(
   weightDate: weighed,
   neckCm: 39,
   neckDate: measured,
-  waistCm: 84.5,
-  waistDate: measured,
+  waistCm: 76,
+  waistDate: waistMeasured,
+  abdomenCm: 84.5,
+  abdomenDate: measured,
   hipCm: 98,
   hipDate: measured,
   bodyFatPercent: 15.24,
@@ -162,7 +165,7 @@ void main() {
       await arrive(everything);
       final result = cubit.state.result;
 
-      cubit.editKnown(CalculatorInput.bodyWeight);
+      cubit.edit(CalculatorInput.bodyWeight);
 
       expect(cubit.state.weight, '80.4');
       expect(cubit.state.result, result);
@@ -174,6 +177,17 @@ void main() {
       cubit.weightChanged('');
       expect(cubit.state.weight, '');
       expect(cubit.state.known, isNot(contains(CalculatorInput.bodyWeight)));
+    });
+
+    test('an input the user started editing before the values arrived '
+        'stays theirs', () async {
+      final cubit = build()..edit(CalculatorInput.bodyWeight);
+
+      await arrive(everything);
+
+      expect(cubit.state.weight, '');
+      expect(cubit.state.known, isNot(contains(CalculatorInput.bodyWeight)));
+      expect(cubit.state.height, '180');
     });
 
     test('an input changed before the values arrived is not known', () async {
@@ -241,7 +255,7 @@ void main() {
         CalculatorInput.hip: KnownInput(measured),
       });
 
-      cubit.editKnown(CalculatorInput.neck);
+      cubit.edit(CalculatorInput.neck);
       expect(cubit.state.known, isNot(contains(CalculatorInput.neck)));
       expect(cubit.state.neck, '39');
     });
@@ -249,7 +263,7 @@ void main() {
     test('unknown circumferences stay empty', () async {
       final cubit = build();
 
-      await arrive(const KnownBodyValues(sex: Sex.male, waistCm: 84));
+      await arrive(const KnownBodyValues(sex: Sex.male, abdomenCm: 84));
 
       expect(cubit.state.waist, '84');
       expect(
@@ -257,6 +271,90 @@ void main() {
         ['', '', ''],
       );
       expect(cubit.state.result, isNull);
+    });
+  });
+
+  group('BodyFatCubit waist', () {
+    BodyFatCubit build() => BodyFatCubit(
+      const EstimateBodyFat(),
+      FakeCurrentUser(),
+      known,
+      lengthUnit: LengthUnit.cm,
+    );
+
+    test('follows the selected sex: the abdomen for men, the waist for '
+        'women', () async {
+      final cubit = build();
+      await arrive(everything);
+      expect(cubit.state.waist, '84.5');
+      expect(cubit.state.known[CalculatorInput.waist], KnownInput(measured));
+
+      cubit.sexChanged(Sex.female);
+      expect(cubit.state.waist, '76');
+      expect(
+        cubit.state.known[CalculatorInput.waist],
+        KnownInput(waistMeasured),
+      );
+
+      cubit.sexChanged(Sex.male);
+      expect(cubit.state.waist, '84.5');
+      expect(cubit.state.known[CalculatorInput.waist], KnownInput(measured));
+    });
+
+    test('a measurement not known for the selected sex leaves an empty '
+        'field', () async {
+      final cubit = build();
+      await arrive(
+        KnownBodyValues(sex: Sex.female, waistCm: 76, waistDate: waistMeasured),
+      );
+      expect(cubit.state.waist, '76');
+
+      cubit.sexChanged(Sex.male);
+
+      expect(cubit.state.waist, '');
+      expect(cubit.state.known, isNot(contains(CalculatorInput.waist)));
+    });
+
+    test('a sex chosen before the values arrive picks the waist', () async {
+      final cubit = build()..sexChanged(Sex.female);
+
+      await arrive(everything);
+
+      expect(cubit.state.sex, Sex.female);
+      expect(cubit.state.waist, '76');
+      expect(
+        cubit.state.known[CalculatorInput.waist],
+        KnownInput(waistMeasured),
+      );
+    });
+
+    test('a waist the user typed or started editing is never '
+        'replaced', () async {
+      final cubit = build();
+      await arrive(everything);
+
+      cubit
+        ..waistChanged('90')
+        ..sexChanged(Sex.female);
+      expect(cubit.state.waist, '90');
+
+      final edited = build();
+      await pumpEventQueue();
+      edited
+        ..edit(CalculatorInput.waist)
+        ..sexChanged(Sex.female);
+      expect(edited.state.waist, '84.5');
+      expect(edited.state.known, isNot(contains(CalculatorInput.waist)));
+    });
+
+    test('a waist focused before the values arrive stays empty', () async {
+      final cubit = build()..edit(CalculatorInput.waist);
+
+      await arrive(everything);
+
+      expect(cubit.state.waist, '');
+      expect(cubit.state.known, isNot(contains(CalculatorInput.waist)));
+      expect(cubit.state.neck, '39');
     });
   });
 
@@ -313,7 +411,7 @@ void main() {
         CalculatorInput.bodyFat: KnownInput(measured),
       });
 
-      cubit.editKnown(CalculatorInput.bodyFat);
+      cubit.edit(CalculatorInput.bodyFat);
       expect(cubit.state.known.keys, [CalculatorInput.height]);
       expect(cubit.state.bodyFat, '15.2');
     });
@@ -338,7 +436,7 @@ void main() {
         CalculatorInput.bodyWeight: KnownInput(weighed),
       });
 
-      cubit.editKnown(CalculatorInput.bodyWeight);
+      cubit.edit(CalculatorInput.bodyWeight);
       expect(cubit.state.known, isEmpty);
       expect(cubit.state.weight, '80.4');
     });

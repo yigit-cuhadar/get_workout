@@ -35,7 +35,7 @@ class BodyIndicesPage extends StatelessWidget {
               children: [
                 KnownNumberField(
                   known: state.known[CalculatorInput.bodyWeight],
-                  onEdit: () => cubit.editKnown(CalculatorInput.bodyWeight),
+                  onEdit: () => cubit.edit(CalculatorInput.bodyWeight),
                   name: l10n.calcKnownWeight,
                   unit: format.weightUnitLabel,
                   label: l10n.calcBodyWeight(format.weightUnitLabel),
@@ -45,7 +45,7 @@ class BodyIndicesPage extends StatelessWidget {
                 ),
                 KnownNumberField(
                   known: state.known[CalculatorInput.height],
-                  onEdit: () => cubit.editKnown(CalculatorInput.height),
+                  onEdit: () => cubit.edit(CalculatorInput.height),
                   name: l10n.calcKnownHeight,
                   unit: format.lengthUnitLabel,
                   label: l10n.calcHeight(format.lengthUnitLabel),
@@ -55,7 +55,7 @@ class BodyIndicesPage extends StatelessWidget {
                 ),
                 KnownNumberField(
                   known: state.known[CalculatorInput.bodyFat],
-                  onEdit: () => cubit.editKnown(CalculatorInput.bodyFat),
+                  onEdit: () => cubit.edit(CalculatorInput.bodyFat),
                   name: l10n.calcBodyFatResult,
                   unit: l10n.calcUnitPercent,
                   label: l10n.calcBodyFatOptional,
