@@ -551,7 +551,7 @@ Group 4, programs
 Group 5, workout
 - [x] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery
 - [x] Free workout — start empty, save as program at the end
-- [ ] Rest timer — auto start, +15 s, skip, notification
+- [x] Rest timer — auto start, +15 s, skip, notification
 - [ ] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification
 - [x] Finish and summary — records with a short celebration, `exerciseStats` update
 - [x] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
