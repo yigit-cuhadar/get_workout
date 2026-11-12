@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../workout/presentation/rest_timer_cubit.dart';
 import '../domain/user_settings.dart';
 import 'settings_cubit.dart';
 
-/// Units, workout and appearance rows. Needs [SettingsCubit] above it.
+/// Units, workout and appearance rows. Needs [SettingsCubit] and
+/// [RestTimerCubit] above it.
 class SettingsSection extends StatelessWidget {
   const SettingsSection({super.key});
 
@@ -21,6 +23,7 @@ class SettingsSection extends StatelessWidget {
       builder: (context, state) {
         final cubit = context.read<SettingsCubit>();
         final settings = state.settings;
+        final rest = settings.restTimer;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -60,6 +63,29 @@ class SettingsSection extends StatelessWidget {
               onChanged: (scale) =>
                   cubit.update(settings.copyWith(effortScale: scale)),
             ),
+            SwitchListTile(
+              title: Text(l10n.settingsRestTimer),
+              subtitle: Text(l10n.settingsRestTimerOn),
+              value: rest.enabled,
+              onChanged: (enabled) => cubit.update(
+                settings.copyWith(restTimer: rest.copyWith(enabled: enabled)),
+              ),
+            ),
+            _ChoiceTile(
+              title: l10n.settingsRestDefault,
+              values: ({...RestTimerSettings.choicesS, rest.defaultS}.toList()
+                ..sort()),
+              selected: rest.defaultS,
+              labelOf: l10n.programSeconds,
+              onChanged: (seconds) => cubit.update(
+                settings.copyWith(restTimer: rest.copyWith(defaultS: seconds)),
+              ),
+            ),
+            SwitchListTile(
+              title: Text(l10n.settingsRestNotify),
+              value: rest.notify ?? false,
+              onChanged: (on) => _setNotify(context, on),
+            ),
             _Header(l10n.settingsAppearance),
             _ChoiceTile(
               title: l10n.settingsTheme,
@@ -76,6 +102,17 @@ class SettingsSection extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+Future<void> _setNotify(BuildContext context, bool on) async {
+  final l10n = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  final notifying = await context.read<RestTimerCubit>().setNotify(on);
+  if (on && !notifying) {
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.settingsRestNotifyDenied)),
     );
   }
 }

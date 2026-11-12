@@ -8,7 +8,6 @@ import '../../programs/domain/program.dart';
 import '../../programs/domain/program_schedule.dart';
 import '../../programs/domain/program_usecases.dart';
 import 'exercise_stats.dart';
-import 'set_logging.dart';
 import 'workout.dart';
 import 'workout_editing.dart';
 import 'workout_repository.dart';
@@ -96,10 +95,7 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
     if (workout.exercises.isEmpty) {
       return const Err(ValidationFailure('no done set'));
     }
-    final invalid = workout.exercises.any(
-      (e) => e.sets.any((s) => validateSet(s, e.loggingType).isNotEmpty),
-    );
-    if (invalid || !fitsLimits(workout)) {
+    if (!isStorable(workout)) {
       return const Err(ValidationFailure('invalid workout'));
     }
     final read = await _repository.getStats(params.uid, workout.exerciseIds);

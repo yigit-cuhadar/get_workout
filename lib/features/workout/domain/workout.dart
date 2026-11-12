@@ -17,6 +17,9 @@ enum SetType implements Coded {
   final String code;
 }
 
+/// A set of a workout: its exercise's index and its own.
+typedef SetRef = ({int exercise, int set});
+
 /// Limits of what a workout holds. Lengths count UTF-16 code units, as the
 /// rules do.
 abstract final class WorkoutLimits {
@@ -30,6 +33,9 @@ abstract final class WorkoutLimits {
   static const maxReps = 1000;
   static const maxWeightKg = 1000.0;
   static const maxDurationS = 86400;
+
+  /// The longest a stored workout can be set to last.
+  static const maxWorkoutDuration = Duration(hours: 24);
 
   /// 5 stands for "5 or more".
   static const maxRir = 5;
@@ -236,16 +242,18 @@ class Workout extends Equatable {
   bool get hasUndoneSets => exercises.any((e) => e.sets.any((s) => !s.done));
 
   Workout copyWith({
+    DateTime? startedAt,
     DateTime? finishedAt,
+    String? name,
     String? Function()? note,
     List<WorkoutExercise>? exercises,
   }) => Workout(
     id: id,
-    startedAt: startedAt,
+    startedAt: startedAt ?? this.startedAt,
     finishedAt: finishedAt ?? this.finishedAt,
     programId: programId,
     dayIndex: dayIndex,
-    name: name,
+    name: name ?? this.name,
     note: note != null ? note() : this.note,
     exercises: exercises ?? this.exercises,
   );

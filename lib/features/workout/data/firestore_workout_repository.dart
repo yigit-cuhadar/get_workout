@@ -25,6 +25,11 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
 
   final FirebaseFirestore _firestore;
   final Future<void> Function() _waitForPendingWrites;
+  final _rejectedEdits = StreamController<Failure>.broadcast();
+
+  /// The commit of each [saveWorkout] since the app started, by user and
+  /// workout, until [isStored] has its answer.
+  final _commits = <String, Future<void>>{};
 
   /// How long finishing waits for the server's stats, all of them
   /// together, before taking the cache's.
@@ -33,6 +38,9 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
   /// The most workouts of one exercise a rebuild reads, years of training;
   /// beyond it the stats are left as they are.
   static const maxRebuildWorkouts = 500;
+
+  /// Workouts per history page without an end.
+  static const historyPageSize = 20;
 
   @override
   String newWorkoutId(String uid) => _workouts(uid).doc().id;
@@ -43,16 +51,61 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
           .doc(exerciseId)
           .snapshots()
           .map((snap) => statsFromMap(snap.data()))
-          .transform(
-            StreamTransformer.fromHandlers(
-              handleError: (error, stack, sink) {
-                final failure =
-                    mapFirebaseError(error) ?? UnknownFailure('$error', error);
-                Log.e('workout', failure.message, error, stack);
-                sink.addError(failure, stack);
-              },
-            ),
-          );
+          .transform(_failures());
+
+  @override
+  Stream<HistoryPage> watchHistory(
+    String uid, {
+    HistoryCursor? after,
+    HistoryCursor? through,
+  }) {
+    var query = _workouts(uid).orderBy('startedAt', descending: true);
+    if (after != null) query = query.startAfterDocument(_position(after));
+    query = through == null
+        ? query.limit(historyPageSize)
+        : query.endAtDocument(_position(through));
+    return query
+        .snapshots()
+        .map(
+          (snap) => (
+            workouts: [
+              for (final doc in snap.docs) ?workoutFromMap(doc.id, doc.data()),
+            ],
+            end: snap.docs.isEmpty ? null : HistoryCursor(snap.docs.last),
+            more: through == null && snap.docs.length == historyPageSize,
+          ),
+        )
+        .transform(_failures());
+  }
+
+  static DocumentSnapshot<Map<String, dynamic>> _position(
+    HistoryCursor cursor,
+  ) => cursor.position as DocumentSnapshot<Map<String, dynamic>>;
+
+  @override
+  Stream<StoredWorkout?> watchWorkout(String uid, String id) =>
+      _workouts(uid)
+          .doc(id)
+          .snapshots(includeMetadataChanges: true)
+          .map((snap) {
+            final data = snap.data();
+            final workout = data == null ? null : workoutFromMap(id, data);
+            return workout == null
+                ? null
+                : (workout: workout, pending: snap.metadata.hasPendingWrites);
+          })
+          .transform(_failures());
+
+  /// Stream errors as [Failure]s, logged.
+  static StreamTransformer<T, T> _failures<T>() =>
+      StreamTransformer.fromHandlers(
+        handleError: (error, stack, sink) {
+          final failure =
+              mapFirebaseError(error) ?? UnknownFailure('$error', error);
+          Log.e('workout', failure.message, error, stack);
+          sink.addError(failure, stack);
+        },
+      );
 
   @override
   Future<Result<Map<String, StatsRead>>> getStats(
@@ -116,11 +169,22 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
         'activeProgram': FirestoreProgramRepository.activeToMap(advance),
       }, SetOptions(merge: true));
     }
-    _logRejection(batch.commit());
+    final commit = batch.commit();
+    _commits['$uid/${workout.id}'] = commit;
+    _logRejection(commit);
   }, mapper: mapFirebaseError);
 
   @override
   Future<Result<bool>> isStored(String uid, String id) => guard(() async {
+    // The batch's own answer tells a refusal from a later deletion.
+    if (_commits.remove('$uid/$id') case final commit?) {
+      try {
+        await commit;
+        return true;
+      } on Object {
+        return false;
+      }
+    }
     await _waitForPendingWrites();
     final doc = await _workouts(uid)
         .doc(id)
@@ -133,17 +197,60 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
     String uid,
     String exerciseId,
   ) => guard(() async {
-    final snap = await _workouts(uid)
-        .where('exerciseIds', arrayContains: exerciseId)
-        .limit(maxRebuildWorkouts)
-        .get(const GetOptions(source: Source.server));
-    return (
-      workouts: [
-        for (final doc in snap.docs) ?workoutFromMap(doc.id, doc.data()),
-      ],
-      complete: snap.docs.length < maxRebuildWorkouts,
+    // A pending edit would otherwise be missed, and its stats overwritten.
+    // Offline this waits until the device is online again.
+    await _waitForPendingWrites();
+    return _exerciseWorkouts(
+      await _doing(
+        uid,
+        exerciseId,
+      ).get(const GetOptions(source: Source.server)),
     );
   }, mapper: mapFirebaseError);
+
+  @override
+  Future<Result<WorkoutsByExercise>> workoutsDoing(
+    String uid,
+    List<String> exerciseIds,
+  ) => guard(() async {
+    final queries = [for (final id in exerciseIds) _doing(uid, id)];
+    Future<List<QuerySnapshot<Map<String, dynamic>>>> read(Source source) =>
+        Future.wait([
+          for (final q in queries) q.get(GetOptions(source: source)),
+        ]);
+    List<QuerySnapshot<Map<String, dynamic>>> snaps;
+    var current = true;
+    try {
+      snaps = await () async {
+        await _waitForPendingWrites();
+        return read(Source.server);
+      }().timeout(serverWait);
+    } on Object {
+      current = false;
+      snaps = await read(Source.cache);
+    }
+    return (
+      workouts: {
+        for (final (i, id) in exerciseIds.indexed)
+          id: _exerciseWorkouts(snaps[i]),
+      },
+      current: current,
+    );
+  }, mapper: mapFirebaseError);
+
+  Query<Map<String, dynamic>> _doing(String uid, String exerciseId) =>
+      _workouts(uid)
+          .where('exerciseIds', arrayContains: exerciseId)
+          .limit(maxRebuildWorkouts);
+
+  static ExerciseWorkouts _exerciseWorkouts(
+    QuerySnapshot<Map<String, dynamic>> snap,
+  ) => (
+    workouts: [
+      for (final doc in snap.docs) ?workoutFromMap(doc.id, doc.data()),
+    ],
+    complete: snap.docs.length < maxRebuildWorkouts,
+  );
 
   @override
   Future<Result<void>> saveStats(
@@ -154,6 +261,52 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
     final doc = _stats(uid).doc(exerciseId);
     _logRejection(stats == null ? doc.delete() : doc.set(statsToMap(stats)));
   }, mapper: mapFirebaseError);
+
+  @override
+  Future<Result<void>> updateWorkout(
+    String uid,
+    Workout workout,
+    Map<String, ExerciseStats?> stats,
+  ) => guard(() async {
+    _commitEdit(
+      _withStats(uid, stats)
+        ..set(_workouts(uid).doc(workout.id), workoutToMap(workout)),
+    );
+  }, mapper: mapFirebaseError);
+
+  @override
+  Future<Result<void>> deleteWorkout(
+    String uid,
+    String id,
+    Map<String, ExerciseStats?> stats,
+  ) => guard(() async {
+    _commitEdit(_withStats(uid, stats)..delete(_workouts(uid).doc(id)));
+  }, mapper: mapFirebaseError);
+
+  @override
+  Stream<Failure> get rejectedEdits => _rejectedEdits.stream;
+
+  WriteBatch _withStats(String uid, Map<String, ExerciseStats?> stats) {
+    final batch = _firestore.batch();
+    for (final MapEntry(key: id, :value) in stats.entries) {
+      final doc = _stats(uid).doc(id);
+      value == null ? batch.delete(doc) : batch.set(doc, statsToMap(value));
+    }
+    return batch;
+  }
+
+  /// Like [_logRejection], and a refusal is reported on [rejectedEdits].
+  void _commitEdit(WriteBatch batch) => unawaited(
+    batch.commit().then(
+      (_) {},
+      onError: (Object error, StackTrace stack) {
+        final failure =
+            mapFirebaseError(error) ?? UnknownFailure('$error', error);
+        Log.e('workout', 'edit rejected: ${failure.message}', error, stack);
+        _rejectedEdits.add(failure);
+      },
+    ),
+  );
 
   /// Firestore applies a write to its cache at once but completes it only
   /// when the server confirms, which never happens offline, so callers do
