@@ -1,5 +1,6 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../programs/domain/calendar_date.dart';
 import 'exercise_stats.dart';
 import 'workout.dart';
 import 'workout_editing.dart';
@@ -25,6 +26,16 @@ class WatchHistory {
     after: query.after,
     through: query.through,
   );
+}
+
+/// The finished workouts started on the local dates [from] through [to],
+/// oldest first.
+class WatchWorkoutsBetween {
+  const WatchWorkoutsBetween(this._repository);
+  final WorkoutRepository _repository;
+
+  Stream<List<Workout>> call(String uid, CalendarDate from, CalendarDate to) =>
+      _repository.watchWorkoutsBetween(uid, from, to);
 }
 
 class WatchStoredWorkout {

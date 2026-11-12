@@ -1,6 +1,7 @@
 import 'package:forge_core/forge_core.dart';
 
 import '../../programs/domain/active_program.dart';
+import '../../programs/domain/calendar_date.dart';
 import 'exercise_stats.dart';
 import 'rest.dart';
 import 'workout.dart';
@@ -103,6 +104,14 @@ abstract interface class WorkoutRepository {
     HistoryCursor? after,
     HistoryCursor? through,
   });
+
+  /// The finished workouts started on the local dates [from] through [to],
+  /// oldest first, the device's cache first; again on every change.
+  Stream<List<Workout>> watchWorkoutsBetween(
+    String uid,
+    CalendarDate from,
+    CalendarDate to,
+  );
 
   /// Workout [id], null when there is none (or it cannot be read); again on
   /// every change.

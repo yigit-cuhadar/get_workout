@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/workout/data/firestore_workout_repository.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
@@ -174,6 +176,50 @@ void main() {
       ])).valueOrNull!;
       expect(read.current, isFalse);
       expect(ids(read.workouts['squat']!.workouts), ['w0']);
+    });
+  });
+
+  group('workouts between dates', () {
+    Future<void> startedAt(String id, DateTime start) => repository.saveWorkout(
+      'u1',
+      workout(id, const [], startedAt: start, finishedAt: start),
+      const {},
+    );
+
+    test('from local midnight of the first date to the end of the last, '
+        'oldest first', () async {
+      await startedAt('before', DateTime(2026, 11, 8, 23, 59));
+      await startedAt('last', DateTime(2026, 11, 15, 23, 59));
+      await startedAt('first', DateTime(2026, 11, 9));
+      await startedAt('after', DateTime(2026, 11, 16));
+      await startedAt('other', DateTime(2026, 11, 10));
+      await firestore.doc('users/u2/workouts/x').set({
+        'startedAt': Timestamp.fromDate(DateTime(2026, 11, 10)),
+      });
+
+      final workouts = await repository
+          .watchWorkoutsBetween(
+            'u1',
+            CalendarDate(2026, 11, 9),
+            CalendarDate(2026, 11, 15),
+          )
+          .first;
+      expect(ids(workouts), ['first', 'other', 'last']);
+    });
+
+    test('skip unreadable documents', () async {
+      await startedAt('ok', DateTime(2026, 11, 10));
+      await firestore.doc('users/u1/workouts/bad').set({
+        'startedAt': Timestamp.fromDate(DateTime(2026, 11, 11)),
+      });
+      final workouts = await repository
+          .watchWorkoutsBetween(
+            'u1',
+            CalendarDate(2026, 11, 9),
+            CalendarDate(2026, 11, 15),
+          )
+          .first;
+      expect(ids(workouts), ['ok']);
     });
   });
 }
