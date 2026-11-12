@@ -59,8 +59,10 @@ void main() {
     repository = MockRepository();
     records = StreamController();
     when(() => repository.watchAll()).thenAnswer((_) => records.stream);
+    // No retry fires during a test: [records] can be listened to only once.
     cubit = ExerciseListCubit(
       watchExerciseRecords: WatchExerciseRecords(repository),
+      firstRetryDelay: const Duration(hours: 1),
     );
     records.add([dip, row, curl, press]);
     await pumpEventQueue();
