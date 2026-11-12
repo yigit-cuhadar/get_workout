@@ -185,7 +185,9 @@ from the earlier FitLab app.
   explosive patterns, never left-out ones, never with the area's muscles as
   main muscles and, where another fits, not as secondary ones either;
   compound first for quads, pecs, lats, hamstrings and glutes, isolation
-  first for the rest. Reps: strength 4-6 (isolation 8-12; exercises without
+  first for the rest. Each day's next exercise goes to the muscle furthest
+  short of what it still needs that week (secondary work counts), so short
+  sessions share the time fairly. Reps: strength 4-6 (isolation 8-12; exercises without
   a load get the muscle range), muscle 6-10 / 10-15, fat loss 10-15 / 12-15
   with rests capped at 60 s, general 8-12 / 10-15; timed exercises 30/40/45 s
   by level; rest is the exercise's default. 2-5 sets an exercise (4 at most
@@ -193,7 +195,8 @@ from the earlier FitLab app.
   `estimateDay`; weekly sets reach the targets as far as the days and
   sessions allow. Answers that give no program (days out of range, a split
   needing more days, a day no exercise fits) get a typed reason, not an
-  empty program; a trained muscle no exercise fits is named on the preview.
+  empty program; a trained muscle no exercise of the week works directly
+  (none fits, or none fitted the sessions) is named on the preview.
   Saved as the user's own (`origin: generated`, "<split>, <n> days", days
   "Upper A", ...), editable like any other and never marked `premium`:
   Premium gates the generator, not the programs it made. Its entry is on
