@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
 
@@ -164,7 +165,7 @@ class _TrendPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_TrendPainter old) =>
-      old.sets != sets ||
+      !listEquals(old.sets, sets) ||
       old.scale != scale ||
       old.band != band ||
       old.colors != colors;

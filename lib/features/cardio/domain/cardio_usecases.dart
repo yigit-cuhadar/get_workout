@@ -1,5 +1,6 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../programs/domain/calendar_date.dart';
 import 'cardio_repository.dart';
 import 'cardio_session.dart';
 import 'cardio_validation.dart';
@@ -19,6 +20,17 @@ class WatchCardioSessions {
 
   Stream<List<CardioSession>> call(String uid) =>
       _repository.watchSessions(uid);
+}
+
+/// Local dates from [from] to [to], both included.
+typedef CardioRange = ({String uid, CalendarDate from, CalendarDate to});
+
+class WatchCardioBetween {
+  const WatchCardioBetween(this._repository);
+  final CardioRepository _repository;
+
+  Stream<List<CardioSession>> call(CardioRange query) => _repository
+      .watchSessionsBetween(query.uid, from: query.from, to: query.to);
 }
 
 class WatchRejectedCardioWrites {

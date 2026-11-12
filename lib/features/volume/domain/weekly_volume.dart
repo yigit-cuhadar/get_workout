@@ -137,8 +137,7 @@ List<WeekVolume> volumeWeeks(
   final sorted = [...workouts]
     ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
   for (final workout in sorted) {
-    final week = CalendarDate.of(workout.startedAt.toLocal())
-        .startOfWeek(first.weekday);
+    final week = workout.startDate.startOfWeek(first.weekday);
     final entries = byWeek[week];
     if (entries == null) continue;
     for (final exercise in workout.exercises) {

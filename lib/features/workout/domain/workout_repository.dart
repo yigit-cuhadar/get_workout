@@ -105,13 +105,14 @@ abstract interface class WorkoutRepository {
     HistoryCursor? through,
   });
 
-  /// The finished workouts started on the local dates [from] through [to],
-  /// oldest first, the device's cache first; again on every change.
+  /// The finished workouts started on the local dates [from] to [to], both
+  /// included, oldest first; again on every change, the device's cache
+  /// first.
   Stream<List<Workout>> watchWorkoutsBetween(
-    String uid,
-    CalendarDate from,
-    CalendarDate to,
-  );
+    String uid, {
+    required CalendarDate from,
+    required CalendarDate to,
+  });
 
   /// Workout [id], null when there is none (or it cannot be read); again on
   /// every change.

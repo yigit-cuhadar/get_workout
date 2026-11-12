@@ -4,6 +4,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../../../core/first_weekday.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/muscle_meshes.dart';
 import '../../exercises/domain/vocabulary.dart';
@@ -24,9 +25,7 @@ class VolumePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Material counts weekdays from 0, Sunday; ISO from 1, Monday.
-    final index = MaterialLocalizations.of(context).firstDayOfWeekIndex;
-    final firstWeekday = index == 0 ? DateTime.sunday : index;
+    final firstWeekday = MaterialLocalizations.of(context).firstWeekday;
     return BlocProvider(
       key: ValueKey(firstWeekday),
       create: (_) => sl<VolumeCubit>(param1: firstWeekday),
@@ -50,14 +49,16 @@ class _VolumeView extends StatelessWidget {
         children: [
           _WeekSelector(state),
           Expanded(
+            // While another week loads the one before stays, so the model
+            // keeps its camera and nothing flashes.
             child: switch (state.status) {
-              VolumeStatus.loading => const LoadingView(),
               VolumeStatus.failure => ErrorView(
                 message: l10n.volumeLoadFailed,
                 retryLabel: l10n.retry,
                 onRetry: cubit.retry,
               ),
-              VolumeStatus.ready => _Week(shown!),
+              _ when shown == null => const LoadingView(),
+              _ => _Week(state, shown),
             },
           ),
         ],
@@ -73,9 +74,7 @@ class _WeekSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final dates = MaterialLocalizations.of(context);
     final cubit = context.read<VolumeCubit>();
-    final week = state.week;
     return Row(
       children: [
         IconButton(
@@ -85,14 +84,7 @@ class _WeekSelector extends StatelessWidget {
         ),
         Expanded(
           child: Text(
-            state.isThisWeek
-                ? l10n.volumeThisWeek
-                : l10n.volumeWeekRange(
-                    dates.formatShortMonthDay(week.toLocalDateTime()),
-                    dates.formatShortMonthDay(
-                      week.addDays(DateTime.daysPerWeek - 1).toLocalDateTime(),
-                    ),
-                  ),
+            _weekLabel(context, state),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium,
           ),
@@ -107,8 +99,24 @@ class _WeekSelector extends StatelessWidget {
   }
 }
 
+/// "This week", or the week's first and last day.
+String _weekLabel(BuildContext context, VolumeState state) {
+  final l10n = AppLocalizations.of(context);
+  final dates = MaterialLocalizations.of(context);
+  final week = state.week;
+  return state.isThisWeek
+      ? l10n.volumeThisWeek
+      : l10n.volumeWeekRange(
+          dates.formatShortMonthDay(week.toLocalDateTime()),
+          dates.formatShortMonthDay(
+            week.addDays(DateTime.daysPerWeek - 1).toLocalDateTime(),
+          ),
+        );
+}
+
 class _Week extends StatelessWidget {
-  const _Week(this.week);
+  const _Week(this.state, this.week);
+  final VolumeState state;
   final WeekVolume week;
 
   @override
@@ -123,12 +131,20 @@ class _Week extends StatelessWidget {
       });
     return ListView(
       children: [
-        _VolumeModel(week),
+        _VolumeModel(
+          week,
+          semanticLabel: l10n.volumeModelLabel(_weekLabel(context, state)),
+        ),
         const _Legend(),
         if (week.entries.isEmpty)
           Padding(
             padding: const EdgeInsets.all(Gap.md),
-            child: Text(l10n.volumeNoWorkouts, textAlign: TextAlign.center),
+            child: Text(
+              state.isThisWeek
+                  ? l10n.volumeNoWorkoutsThisWeek
+                  : l10n.volumeNoWorkoutsThatWeek,
+              textAlign: TextAlign.center,
+            ),
           ),
         for (final muscle in muscles)
           ListTile(
@@ -148,8 +164,9 @@ class _Week extends StatelessWidget {
 /// The model with each trained muscle in its zone's colour; an untrained
 /// one keeps the body's colour. Tapping a muscle opens it.
 class _VolumeModel extends StatefulWidget {
-  const _VolumeModel(this.week);
+  const _VolumeModel(this.week, {required this.semanticLabel});
   final WeekVolume week;
+  final String semanticLabel;
 
   @override
   State<_VolumeModel> createState() => _VolumeModelState();
@@ -188,7 +205,7 @@ class _VolumeModelState extends State<_VolumeModel> {
               _showMuscle(context, muscle);
             }
           },
-          semanticLabel: l10n.volumeModelLabel,
+          semanticLabel: widget.semanticLabel,
         ),
       },
     );
@@ -261,7 +278,10 @@ class _MuscleSheet extends StatelessWidget {
               style: theme.textTheme.titleLarge,
             ),
             subtitle: Text(
-              '${l10n.setsText(sets)} · ${l10n.zoneLabel(VolumeZone.of(sets))}',
+              l10n.volumeMuscleSummary(
+                l10n.setsText(sets),
+                l10n.zoneLabel(VolumeZone.of(sets)),
+              ),
             ),
           ),
           _Header(l10n.volumeContributionsTitle),
@@ -278,8 +298,7 @@ class _MuscleSheet extends StatelessWidget {
               ),
               trailing: Text(l10n.setsText(given)),
             ),
-          _Header(l10n.volumeTrendTitle),
-          _Trend(muscle: muscle, weeks: state.weeks),
+          _Trend(muscle: muscle, state: state),
         ],
       ),
     );
@@ -299,48 +318,72 @@ class _MuscleSheet extends StatelessWidget {
 /// The muscle's sets per week, for Premium; a locked teaser that opens the
 /// paywall for everyone else, nothing while that is unknown.
 class _Trend extends StatelessWidget {
-  const _Trend({required this.muscle, required this.weeks});
+  const _Trend({required this.muscle, required this.state});
 
   final Muscle muscle;
-  final List<WeekVolume> weeks;
+  final VolumeState state;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final dates = MaterialLocalizations.of(context);
-    return switch (context.watchPremium()) {
-      PremiumStatus.unknown => const SizedBox.shrink(),
-      PremiumStatus.free => ListTile(
-        leading: const Icon(Icons.lock_outline),
-        title: Text(l10n.volumeTrendLocked),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: context.openPaywall,
-      ),
-      PremiumStatus.premium => Padding(
-        padding: const EdgeInsets.all(Gap.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            VolumeTrendChart(
-              sets: [for (final week in weeks) week.setsOf(muscle)],
-              semanticLabel: l10n.volumeTrendLabel(l10n.muscleName(muscle)),
-            ),
-            const Divider(),
-            if (weeks.isNotEmpty)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  for (final week in [weeks.first, weeks.last])
-                    Text(
-                      dates.formatShortMonthDay(week.start.toLocalDateTime()),
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                ],
-              ),
-          ],
+    final premium = context.watchPremium();
+    if (premium == PremiumStatus.unknown) return const SizedBox.shrink();
+    final weeks = state.weeks;
+    final sets = [for (final week in weeks) week.setsOf(muscle)];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Header(
+          state.isThisWeek
+              ? l10n.volumeTrendTitle(trendWeeks)
+              : l10n.volumeTrendTitleUntil(
+                  trendWeeks,
+                  dates.formatShortMonthDay(
+                    state.week
+                        .addDays(DateTime.daysPerWeek - 1)
+                        .toLocalDateTime(),
+                  ),
+                ),
         ),
-      ),
-    };
+        if (premium == PremiumStatus.free)
+          ListTile(
+            leading: const Icon(Icons.lock_outline),
+            title: Text(l10n.volumeTrendLocked(trendWeeks)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: context.openPaywall,
+          )
+        else if (!state.hasTrend)
+          const LoadingView()
+        else
+          Padding(
+            padding: const EdgeInsets.all(Gap.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                VolumeTrendChart(
+                  sets: sets,
+                  semanticLabel: l10n.volumeTrendLabel(
+                    l10n.muscleName(muscle),
+                    l10n.inlineList(sets.map(l10n.setsText)),
+                  ),
+                ),
+                const Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    for (final week in [weeks.first, weeks.last])
+                      Text(
+                        dates.formatShortMonthDay(week.start.toLocalDateTime()),
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 }
 

@@ -17,6 +17,17 @@ typedef HistoryQuery = ({
 /// replaced by [after], or [before] deleted (no [after]).
 typedef WorkoutChange = ({String uid, Workout? before, Workout? after});
 
+/// Local dates from [from] to [to], both included.
+typedef DateRangeQuery = ({String uid, CalendarDate from, CalendarDate to});
+
+class WatchWorkoutsBetween {
+  const WatchWorkoutsBetween(this._repository);
+  final WorkoutRepository _repository;
+
+  Stream<List<Workout>> call(DateRangeQuery query) => _repository
+      .watchWorkoutsBetween(query.uid, from: query.from, to: query.to);
+}
+
 class WatchHistory {
   const WatchHistory(this._repository);
   final WorkoutRepository _repository;
@@ -26,16 +37,6 @@ class WatchHistory {
     after: query.after,
     through: query.through,
   );
-}
-
-/// The finished workouts started on the local dates [from] through [to],
-/// oldest first.
-class WatchWorkoutsBetween {
-  const WatchWorkoutsBetween(this._repository);
-  final WorkoutRepository _repository;
-
-  Stream<List<Workout>> call(String uid, CalendarDate from, CalendarDate to) =>
-      _repository.watchWorkoutsBetween(uid, from, to);
 }
 
 class WatchStoredWorkout {

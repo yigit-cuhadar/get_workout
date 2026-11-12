@@ -8,6 +8,7 @@ import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
+import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/volume/domain/volume_usecases.dart';
 import 'package:get_workout/features/volume/domain/weekly_volume.dart';
 import 'package:get_workout/features/volume/presentation/volume_cubit.dart';
@@ -16,6 +17,7 @@ import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../programs/fixtures.dart' show FakePremium;
 import '../workout/fixtures.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
@@ -33,6 +35,7 @@ void main() {
   // Wednesday 11 November 2026.
   var now = DateTime(2026, 11, 11, 12);
   final thisMonday = d(2026, 11, 9);
+  final lastMonday = d(2026, 11, 2);
   final thisSunday = d(2026, 11, 8);
 
   final squats = workout('w1', [
@@ -42,10 +45,11 @@ void main() {
   late MockAuthRepository auth;
   late MockWorkoutRepository workouts;
   late MockCatalogueCubit catalogue;
+  late FakePremium premium;
   late StreamController<AuthUser?> users;
   late StreamController<ExerciseCatalogueState> catalogueStates;
 
-  /// The stream of each range asked for, by user and first date.
+  /// The stream of each range asked for, by user, first and last date.
   late Map<String, StreamController<List<Workout>>> ranges;
 
   setUpAll(() => registerFallbackValue(d(2026, 1, 1)));
@@ -55,18 +59,28 @@ void main() {
     auth = MockAuthRepository();
     workouts = MockWorkoutRepository();
     catalogue = MockCatalogueCubit();
+    premium = FakePremium();
     users = StreamController<AuthUser?>.broadcast();
     catalogueStates = StreamController<ExerciseCatalogueState>.broadcast();
     ranges = {};
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
     when(() => catalogue.state).thenReturn(const CatalogueLoading());
     when(() => catalogue.stream).thenAnswer((_) => catalogueStates.stream);
-    when(() => workouts.watchWorkoutsBetween(any(), any(), any())).thenAnswer((
-      call,
-    ) {
-      final [uid, from, _] = call.positionalArguments;
+    when(
+      () => workouts.watchWorkoutsBetween(
+        any(),
+        from: any(named: 'from'),
+        to: any(named: 'to'),
+      ),
+    ).thenAnswer((call) {
+      final uid = call.positionalArguments.single;
+      final from = call.namedArguments[#from];
+      final to = call.namedArguments[#to];
       return ranges
-          .putIfAbsent('$uid $from', StreamController<List<Workout>>.broadcast)
+          .putIfAbsent(
+            '$uid $from $to',
+            StreamController<List<Workout>>.broadcast,
+          )
           .stream;
     });
   });
@@ -76,31 +90,43 @@ void main() {
     watchAuthUser: WatchAuthUser(auth),
     watchVolume: WatchWeeklyVolume(WatchWorkoutsBetween(workouts)),
     catalogue: catalogue,
+    watchPremium: WatchPremium(premium),
     clock: () => now,
   );
 
-  /// The first date of the [trendWeeks] weeks ending with [week].
-  CalendarDate trendStart(CalendarDate week) =>
-      week.addDays(-7 * (trendWeeks - 1));
+  /// The first date of the [count] weeks ending with [week].
+  CalendarDate start(CalendarDate week, int count) =>
+      week.addDays(-7 * (count - 1));
 
-  StreamController<List<Workout>> range(String uid, CalendarDate week) =>
-      ranges['$uid ${trendStart(week)}']!;
+  /// The stream of [uid]'s [count] weeks ending with [week].
+  StreamController<List<Workout>> range(
+    String uid,
+    CalendarDate week, {
+    int count = 1,
+  }) => ranges['$uid ${start(week, count)} ${week.addDays(6)}']!;
+
+  List<WeekVolume> weeksOf(
+    CalendarDate week,
+    List<Workout> done, {
+    int count = 1,
+    Map<String, ExerciseMuscles> muscles = const {},
+  }) => volumeWeeks(
+    done,
+    first: start(week, count),
+    count: count,
+    muscles: muscles,
+  );
 
   VolumeState ready(
     CalendarDate week,
     List<Workout> done, {
-    CalendarDate? thisWeek,
+    int count = 1,
     Map<String, ExerciseMuscles> muscles = const {},
   }) => VolumeState(
     week: week,
-    thisWeek: thisWeek ?? thisMonday,
+    thisWeek: thisMonday,
     status: VolumeStatus.ready,
-    weeks: volumeWeeks(
-      done,
-      first: trendStart(week),
-      count: trendWeeks,
-      muscles: muscles,
-    ),
+    weeks: weeksOf(week, done, count: count, muscles: muscles),
   );
 
   test('starts loading at the current week', () {
@@ -112,7 +138,7 @@ void main() {
   });
 
   blocTest<VolumeCubit, VolumeState>(
-    'shows the week with the 11 before it, from the user\'s workouts',
+    'without Premium reads the week shown alone',
     build: build,
     act: (cubit) async {
       users.add(member);
@@ -126,14 +152,67 @@ void main() {
       verify(
         () => workouts.watchWorkoutsBetween(
           'u1',
-          d(2026, 8, 24),
-          d(2026, 11, 15),
+          from: thisMonday,
+          to: d(2026, 11, 15),
         ),
       ).called(1);
-      final shown = cubit.state.shown!;
-      expect(shown.start, thisMonday);
-      expect(shown.setsOf(Muscle.quads), 2);
+      expect(cubit.state.shown!.setsOf(Muscle.quads), 2);
+      expect(cubit.state.hasTrend, isFalse);
     },
+  );
+
+  blocTest<VolumeCubit, VolumeState>(
+    'with Premium reads the 12 weeks ending with it, and the week alone '
+    'again once Premium ends',
+    build: build,
+    act: (cubit) async {
+      users.add(member);
+      await pumpEventQueue();
+      range('u1', thisMonday).add([squats]);
+      await pumpEventQueue();
+      premium.controller.add(true);
+      await pumpEventQueue();
+      range('u1', thisMonday, count: trendWeeks).add([squats]);
+      await pumpEventQueue();
+      premium.controller.add(false);
+      await pumpEventQueue();
+      range('u1', thisMonday).add([squats]);
+    },
+    expect: () => [
+      ready(thisMonday, [squats]),
+      // The week stays on screen while the trend loads.
+      VolumeState(
+        week: thisMonday,
+        thisWeek: thisMonday,
+        weeks: weeksOf(thisMonday, [squats]),
+      ),
+      ready(thisMonday, [squats], count: trendWeeks),
+      VolumeState(
+        week: thisMonday,
+        thisWeek: thisMonday,
+        weeks: weeksOf(thisMonday, [squats], count: trendWeeks),
+      ),
+      ready(thisMonday, [squats]),
+    ],
+    verify: (_) => verify(
+      () => workouts.watchWorkoutsBetween(
+        'u1',
+        from: d(2026, 8, 24),
+        to: d(2026, 11, 15),
+      ),
+    ).called(1),
+  );
+
+  blocTest<VolumeCubit, VolumeState>(
+    'an unknown Premium status reads the week alone',
+    build: build,
+    act: (cubit) async {
+      premium.controller.add(null);
+      users.add(member);
+      await pumpEventQueue();
+      range('u1', thisMonday).add(const []);
+    },
+    expect: () => [ready(thisMonday, const [])],
   );
 
   blocTest<VolumeCubit, VolumeState>(
@@ -142,45 +221,73 @@ void main() {
     act: (cubit) async {
       users.add(member);
       await pumpEventQueue();
-      range('u1', thisSunday).add([squats]);
     },
-    verify: (cubit) {
-      verify(
-        () => workouts.watchWorkoutsBetween(
-          'u1',
-          d(2026, 8, 23),
-          d(2026, 11, 14),
-        ),
-      ).called(1);
-      expect(cubit.state.shown!.start, thisSunday);
-    },
+    verify: (cubit) => verify(
+      () => workouts.watchWorkoutsBetween(
+        'u1',
+        from: thisSunday,
+        to: d(2026, 11, 14),
+      ),
+    ).called(1),
   );
 
   blocTest<VolumeCubit, VolumeState>(
-    'goes back and forth a week, never past the current one',
+    'goes back and forth a week, never past the current one, keeping the '
+    'week on screen while the next loads',
     build: build,
     act: (cubit) async {
       users.add(member);
       await pumpEventQueue();
+      range('u1', thisMonday).add([squats]);
+      await pumpEventQueue();
       cubit.nextWeek();
       cubit.previousWeek();
       await pumpEventQueue();
-      range('u1', d(2026, 11, 2)).add([squats]);
+      range('u1', lastMonday).add(const []);
       await pumpEventQueue();
       cubit.nextWeek();
       await pumpEventQueue();
       range('u1', thisMonday).add([squats]);
     },
     expect: () => [
-      VolumeState(week: d(2026, 11, 2), thisWeek: thisMonday),
-      ready(d(2026, 11, 2), [squats]),
-      VolumeState(week: thisMonday, thisWeek: thisMonday),
+      ready(thisMonday, [squats]),
+      VolumeState(
+        week: lastMonday,
+        thisWeek: thisMonday,
+        weeks: weeksOf(thisMonday, [squats]),
+      ),
+      ready(lastMonday, const []),
+      VolumeState(
+        week: thisMonday,
+        thisWeek: thisMonday,
+        weeks: weeksOf(lastMonday, const []),
+      ),
       ready(thisMonday, [squats]),
     ],
     verify: (cubit) {
       expect(cubit.state.isThisWeek, isTrue);
       expect(cubit.state.hasNext, isFalse);
     },
+  );
+
+  blocTest<VolumeCubit, VolumeState>(
+    'drops what the week left behind still delivers',
+    build: build,
+    act: (cubit) async {
+      users.add(member);
+      await pumpEventQueue();
+      final left = range('u1', thisMonday);
+      cubit.previousWeek();
+      left.add([squats]);
+      await pumpEventQueue();
+      left.addError(const NetworkFailure());
+      await pumpEventQueue();
+      range('u1', lastMonday).add(const []);
+    },
+    expect: () => [
+      VolumeState(week: lastMonday, thisWeek: thisMonday),
+      ready(lastMonday, const []),
+    ],
   );
 
   blocTest<VolumeCubit, VolumeState>(
@@ -225,6 +332,11 @@ void main() {
     },
     expect: () => [
       ready(thisMonday, [squats]),
+      VolumeState(
+        week: thisMonday,
+        thisWeek: thisMonday,
+        weeks: weeksOf(thisMonday, [squats]),
+      ),
       ready(
         thisMonday,
         [squats],

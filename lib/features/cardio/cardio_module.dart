@@ -20,6 +20,7 @@ class CardioModule implements FeatureModule {
         () => FirestoreCardioRepository(FirebaseFirestore.instance),
       )
       ..registerFactory(() => WatchCardioSessions(sl()))
+      ..registerFactory(() => WatchCardioBetween(sl()))
       ..registerFactory(() => WatchRejectedCardioWrites(sl()))
       ..registerFactory(() => SaveCardioSession(sl()))
       ..registerFactory(() => DeleteCardioSession(sl()))

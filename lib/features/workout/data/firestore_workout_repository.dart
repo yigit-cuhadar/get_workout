@@ -79,17 +79,13 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
         .transform(_failures());
   }
 
-  static DocumentSnapshot<Map<String, dynamic>> _position(
-    HistoryCursor cursor,
-  ) => cursor.position as DocumentSnapshot<Map<String, dynamic>>;
-
   /// Only the date range is queried, which needs no composite index.
   @override
   Stream<List<Workout>> watchWorkoutsBetween(
-    String uid,
-    CalendarDate from,
-    CalendarDate to,
-  ) => _workouts(uid)
+    String uid, {
+    required CalendarDate from,
+    required CalendarDate to,
+  }) => _workouts(uid)
       .where(
         'startedAt',
         isGreaterThanOrEqualTo: Timestamp.fromDate(from.toLocalDateTime()),
@@ -106,6 +102,10 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
         ],
       )
       .transform(_failures());
+
+  static DocumentSnapshot<Map<String, dynamic>> _position(
+    HistoryCursor cursor,
+  ) => cursor.position as DocumentSnapshot<Map<String, dynamic>>;
 
   @override
   Stream<StoredWorkout?> watchWorkout(String uid, String id) =>

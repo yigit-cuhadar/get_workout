@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
@@ -180,46 +179,63 @@ void main() {
   });
 
   group('workouts between dates', () {
-    Future<void> startedAt(String id, DateTime start) => repository.saveWorkout(
-      'u1',
-      workout(id, const [], startedAt: start, finishedAt: start),
-      const {},
+    Workout at(String id, DateTime start) => workout(
+      id,
+      [
+        exercise('squat', [lift(100, 5)]),
+      ],
+      startedAt: start,
+      finishedAt: start.add(const Duration(hours: 1)),
     );
 
-    test('from local midnight of the first date to the end of the last, '
-        'oldest first', () async {
-      await startedAt('before', DateTime(2026, 11, 8, 23, 59));
-      await startedAt('last', DateTime(2026, 11, 15, 23, 59));
-      await startedAt('first', DateTime(2026, 11, 9));
-      await startedAt('after', DateTime(2026, 11, 16));
-      await startedAt('other', DateTime(2026, 11, 10));
-      await firestore.doc('users/u2/workouts/x').set({
-        'startedAt': Timestamp.fromDate(DateTime(2026, 11, 10)),
-      });
+    test('by local start date, both ends included, oldest first', () async {
+      for (final w in [
+        at('late', DateTime(2026, 11, 30, 23, 59)),
+        at('before', DateTime(2026, 10, 31, 23, 59)),
+        at('first', DateTime(2026, 11, 1)),
+        at('after', DateTime(2026, 12, 1)),
+        at('mid', DateTime(2026, 11, 15, 12)),
+      ]) {
+        await repository.saveWorkout('u1', w, const {});
+      }
+      await repository.saveWorkout(
+        'u2',
+        at('other', DateTime(2026, 11, 15)),
+        const {},
+      );
+      await pumpEventQueue();
 
-      final workouts = await repository
+      final read = await repository
           .watchWorkoutsBetween(
             'u1',
-            CalendarDate(2026, 11, 9),
-            CalendarDate(2026, 11, 15),
+            from: CalendarDate(2026, 11, 1),
+            to: CalendarDate(2026, 11, 30),
           )
           .first;
-      expect(ids(workouts), ['first', 'other', 'last']);
+      expect(ids(read), ['first', 'mid', 'late']);
     });
 
-    test('skip unreadable documents', () async {
-      await startedAt('ok', DateTime(2026, 11, 10));
-      await firestore.doc('users/u1/workouts/bad').set({
-        'startedAt': Timestamp.fromDate(DateTime(2026, 11, 11)),
-      });
-      final workouts = await repository
+    test('follow changes', () async {
+      final emitted = repository
           .watchWorkoutsBetween(
             'u1',
-            CalendarDate(2026, 11, 9),
-            CalendarDate(2026, 11, 15),
+            from: CalendarDate(2026, 11, 1),
+            to: CalendarDate(2026, 11, 30),
           )
-          .first;
-      expect(ids(workouts), ['ok']);
+          .map(ids);
+      final expectation = expectLater(
+        emitted,
+        emitsInOrder([
+          <String>[],
+          ['w1'],
+        ]),
+      );
+      await repository.saveWorkout(
+        'u1',
+        at('w1', DateTime(2026, 11, 2, 8)),
+        const {},
+      );
+      await expectation;
     });
   });
 }

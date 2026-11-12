@@ -4,8 +4,8 @@ import 'package:get_it/get_it.dart';
 import 'domain/volume_usecases.dart';
 import 'presentation/volume_cubit.dart';
 
-/// Registers weekly volume. Needs `AuthModule`, `ExercisesModule` and
-/// `WorkoutModule`.
+/// Registers weekly volume. Needs `AuthModule`, `ExercisesModule`,
+/// `ProgramsModule` (for the premium status) and `WorkoutModule`.
 class VolumeModule implements FeatureModule {
   const VolumeModule();
 
@@ -20,6 +20,7 @@ class VolumeModule implements FeatureModule {
           watchAuthUser: sl(),
           watchVolume: sl(),
           catalogue: sl(),
+          watchPremium: sl(),
         ),
       );
   }

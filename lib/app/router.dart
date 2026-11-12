@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
+import '../features/calendar/presentation/calendar_page.dart';
 import '../features/cardio/presentation/cardio_form_page.dart';
 import '../features/cardio/presentation/cardio_list_page.dart';
 import '../features/calculators/presentation/body_fat_page.dart';
@@ -19,6 +20,9 @@ import '../features/calculators/presentation/plates_page.dart';
 import '../features/exercises/presentation/custom_exercise_form_page.dart';
 import '../features/exercises/presentation/exercise_detail_page.dart';
 import '../features/exercises/presentation/exercises_page.dart';
+import '../features/generator/domain/generator_answers.dart';
+import '../features/generator/presentation/generator_page.dart';
+import '../features/generator/presentation/generator_preview_page.dart';
 import '../features/profile/domain/user_profile.dart';
 import '../features/profile/presentation/onboarding_page.dart';
 import '../features/profile/presentation/profile_cubit.dart';
@@ -60,6 +64,11 @@ abstract final class Routes {
   static const programs = '/programs';
   static const programNew = '$programs/new';
   static const catalogue = '$programs/catalogue';
+  static const programGenerator = '$programs/generate';
+
+  /// Push it with the `GeneratorAnswers` as `extra`; without them it goes
+  /// back to the questions.
+  static const programGeneratorPreview = '$programGenerator/preview';
   static String catalogueProgram(String id) =>
       '$catalogue/${Uri.encodeComponent(id)}';
 
@@ -91,6 +100,7 @@ abstract final class Routes {
   static String cardioSession(String id) => '$cardio/$id';
   static const history = '$progress/history';
   static const volume = '$progress/volume';
+  static const calendar = '$progress/calendar';
 
   /// Adds a past workout.
   static const historyNew = '$history/new';
@@ -260,6 +270,21 @@ GoRouter buildRouter(
               ),
               GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
               GoRoute(
+                path: 'generate',
+                builder: (_, _) => const GeneratorPage(),
+                routes: [
+                  GoRoute(
+                    path: 'preview',
+                    redirect: (_, state) => state.extra is GeneratorAnswers
+                        ? null
+                        : Routes.programGenerator,
+                    builder: (_, state) => GeneratorPreviewPage(
+                      answers: state.extra! as GeneratorAnswers,
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
                 path: 'catalogue',
                 builder: (_, _) => const CataloguePage(),
                 routes: [
@@ -347,6 +372,10 @@ GoRouter buildRouter(
                 ],
               ),
               GoRoute(path: 'volume', builder: (_, _) => const VolumePage()),
+              GoRoute(
+                path: 'calendar',
+                builder: (_, _) => const CalendarPage(),
+              ),
               GoRoute(
                 path: 'history',
                 builder: (_, _) => const HistoryPage(),
