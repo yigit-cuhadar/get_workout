@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
@@ -9,6 +8,8 @@ import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
 import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../fake_time.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -50,22 +51,6 @@ void main() {
     setFavorite: SetFavorite(library),
     retryDelay: delay,
   );
-
-  /// Runs [act] against a new cubit on fake time, so retries wait exactly
-  /// their delay however loaded the machine is; returns the states emitted.
-  List<FavoritesState> onFakeTime(void Function(FakeAsync async) act) {
-    final states = <FavoritesState>[];
-    fakeAsync((async) {
-      final cubit = build();
-      final subscription = cubit.stream.listen(states.add);
-      act(async);
-      async.flushMicrotasks();
-      unawaited(subscription.cancel());
-      unawaited(cubit.close());
-      async.flushMicrotasks();
-    });
-    return states;
-  }
 
   void writesReturn(Future<Result<void>> Function() result) => when(
     () => library.setFavorite(any(), any(), favorite: any(named: 'favorite')),
@@ -150,7 +135,7 @@ void main() {
   );
 
   test('a failed stream is followed again after a backoff', () {
-    final states = onFakeTime((async) {
+    final states = onFakeTime(build, (async, _) {
       users.add(member);
       async.flushMicrotasks();
       latest('u1').add({'squat'});
@@ -169,7 +154,7 @@ void main() {
   });
 
   test('a stream that keeps failing waits longer each time', () {
-    final states = onFakeTime((async) {
+    final states = onFakeTime(build, (async, _) {
       users.add(member);
       async.flushMicrotasks();
       latest('u1').add({'squat'});

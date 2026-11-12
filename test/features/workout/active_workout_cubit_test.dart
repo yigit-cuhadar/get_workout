@@ -24,6 +24,7 @@ import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../fake_time.dart';
 import 'fixtures.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
@@ -86,6 +87,7 @@ void main() {
   late ExerciseCatalogueState catalogueState;
   late StreamController<UserSettings> settings;
   var clock = now;
+  const retryDelay = Duration(milliseconds: 10);
 
   setUpAll(() {
     registerFallbackValue(saved);
@@ -173,7 +175,7 @@ void main() {
       catalogue: catalogue,
       watchSettings: WatchSettings(settingsRepository),
       clock: () => clock,
-      retryDelay: const Duration(milliseconds: 10),
+      retryDelay: retryDelay,
     );
   }
 
@@ -754,28 +756,27 @@ void main() {
       await cubit.close();
     });
 
-    test('stale stats wait while the server cannot be asked', () async {
-      var answers = [const Err<bool>(NetworkFailure()), const Ok<bool>(true)];
+    test('stale stats wait while the server cannot be asked', () {
+      final answers = [const Err<bool>(NetworkFailure()), const Ok<bool>(true)];
       when(() => repository.isStored('u1', 'w0'))
           .thenAnswer((_) async => answers.removeAt(0));
-      final cubit = await signedIn(
-        local: LocalWorkouts(
-          finished: [workout('w0', const [], finishedAt: end)],
-          staleStats: const {'bench'},
+      when(() => store.load('u1')).thenAnswer(
+        (_) async => Ok(
+          LocalWorkouts(
+            finished: [workout('w0', const [], finishedAt: end)],
+            staleStats: const {'bench'},
+          ),
         ),
       );
-      verifyNever(() => repository.workoutsWith(any(), any()));
-      final rebuilt = Completer<void>();
-      when(() => repository.workoutsWith('u1', 'bench')).thenAnswer((_) async {
-        rebuilt.complete();
-        return const Ok((workouts: [], complete: true));
+      onFakeTime(build, (async, _) {
+        users.add(alice);
+        async.flushMicrotasks();
+        async.elapse(retryDelay - const Duration(microseconds: 1));
+        verifyNever(() => repository.workoutsWith(any(), any()));
+        async.elapse(const Duration(microseconds: 1));
+        verify(() => repository.workoutsWith('u1', 'bench')).called(1);
+        expect(keptLocal(), const LocalWorkouts());
       });
-      // After the retry delay.
-      await rebuilt.future.timeout(const Duration(seconds: 5));
-      await pumpEventQueue();
-      expect(keptLocal(), const LocalWorkouts());
-      answers = [];
-      await cubit.close();
     });
 
     test('a failure keeps the workout in progress', () async {

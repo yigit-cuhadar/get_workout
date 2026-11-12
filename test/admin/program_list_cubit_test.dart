@@ -36,7 +36,11 @@ void main() {
     repository = MockRepository();
     cards = StreamController();
     when(() => repository.watchCards()).thenAnswer((_) => cards.stream);
-    cubit = ProgramListCubit(watchProgramCards: WatchProgramCards(repository));
+    // No retry fires during a test: [cards] can be listened to only once.
+    cubit = ProgramListCubit(
+      watchProgramCards: WatchProgramCards(repository),
+      firstRetryDelay: const Duration(hours: 1),
+    );
     cards.add([unordered, draft, strength, basics]);
     await pumpEventQueue();
   });

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
@@ -11,6 +10,8 @@ import 'package:get_workout/features/profile/domain/profile_usecases.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../fake_time.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -67,22 +68,6 @@ void main() {
 
   ProfileState loaded(String uid, UserProfile profile) =>
       ProfileState(uid: uid, status: ProfileStatus.loaded, profile: profile);
-
-  /// Runs [act] against a new cubit on fake time, so retries wait exactly
-  /// their delay however loaded the machine is; returns the states emitted.
-  List<ProfileState> onFakeTime(void Function(FakeAsync async) act) {
-    final states = <ProfileState>[];
-    fakeAsync((async) {
-      final cubit = build();
-      final subscription = cubit.stream.listen(states.add);
-      act(async);
-      async.flushMicrotasks();
-      unawaited(subscription.cancel());
-      unawaited(cubit.close());
-      async.flushMicrotasks();
-    });
-    return states;
-  }
 
   test('starts loading, for nobody', () {
     expect(build().state, const ProfileState());
@@ -166,7 +151,7 @@ void main() {
   );
 
   test('a failed first read is unavailable, then retried until it loads', () {
-    final states = onFakeTime((async) {
+    final states = onFakeTime(build, (async, _) {
       users.add(member);
       async.flushMicrotasks();
       stored['u1']!.addError(const NetworkFailure());
@@ -183,7 +168,7 @@ void main() {
   });
 
   test('a later stream error keeps the profile and follows it again', () {
-    final states = onFakeTime((async) {
+    final states = onFakeTime(build, (async, _) {
       users.add(member);
       async.flushMicrotasks();
       stored['u1']!
@@ -226,7 +211,7 @@ void main() {
   );
 
   test('a retry for a previous user never happens', () {
-    final states = onFakeTime((async) {
+    final states = onFakeTime(build, (async, _) {
       users.add(guest);
       async.flushMicrotasks();
       stored['g1']!.addError(const NetworkFailure());
