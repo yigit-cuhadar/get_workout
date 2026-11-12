@@ -117,6 +117,53 @@ from the earlier FitLab app.
   while the screen judges any week of any user. Focus programs and
   equipment-limited ones exceed or miss a band on purpose and say so in
   their summary.
+- **Catalogue in the app**: clients read the whole `programs` collection,
+  every status, and keep the live cards on device by `order` (no composite
+  index; offline from Firestore's cache after the first load). A premium
+  program's days are read only once the user is known to have premium; days
+  the rules refuse to a user with premium show "unlocking" and are read
+  again three times (after 2, 4 and 8 s), then on Retry, since the
+  entitlement may not have reached the server yet; a refused free program
+  is a failure. Days read under an earlier premium status are dropped.
+  "Use this program" waits for the exercise library and the user's
+  programs, and is blocked with a message when a day uses an exercise no
+  longer in the library (copying without it would change the program). It
+  copies the program into `users/{uid}/programs` (`origin: catalog`,
+  `sourceId`, `premium` for a premium one) through the builder's
+  validation and opens the copy, which is started like any own program;
+  when a copy from the same `sourceId` exists, it is offered first. An
+  exercise opened from a ready-made program opens its alternatives and
+  variations inside the Programs tab. Recommended for you: never a program
+  above the user's level (beginner while unanswered) or needing equipment
+  they lack (a program fits when the user owns all its primary `equipment`
+  or all of its equipment profile; an unknown code or a missing list is
+  not owned); while their equipment is unknown nothing is claimed to match
+  it and "Fits my equipment" filters nothing. The rest score 3 for the
+  goal, 2 for the level, 2 for the days per week (1 for a day more or
+  less); the top 3 show, ties in catalogue order, free programs first
+  unless the user is known to have premium. After onboarding the best
+  free recommendation is offered (use it, browse, or Today); with none, or
+  the catalogue offline, onboarding lands on Today, and so does signing in
+  from onboarding to an account already onboarded.
+  `ProgramsModule` takes the premium status and the premium action as
+  parameters, so programs never import the subscription feature; bootstrap
+  passes `SubscriptionModule.premiumStatus` (the app-level
+  `EntitlementCubit` as unknown / free / premium) and
+  `SubscriptionModule.showPaywall`. The program cubits follow that status,
+  so a page updates by itself once the paywall grants premium; pages get
+  the premium action from their page widget, never from `sl`.
+- **Copies of premium programs** (decided by the user, 2026-11-11): a copy
+  of a premium ready-made program is marked `premium: true` and keeps the
+  mark through edits and duplicates. Without premium it stays visible and
+  readable but cannot be started, rescheduled or trained; an active one
+  shows as locked on the Programs tab and is not stopped, so it resumes
+  when premium returns. While the premium status is unknown these actions
+  wait. `programAccess` is the one check, also for starting a workout
+  from such a program (Start <day> on the Programs tab, ▶ per day on the
+  program page): locked opens the paywall and starts only if premium was
+  bought; `ActiveWorkoutCubit` refuses it too. A workout in progress from
+  it can always be finished; free workouts are never gated. The gate is client-side only: the copy lives in the user's
+  own collection, and the rules only check that `premium` is a boolean.
 - **Steps**: read-only from Apple Health / Health Connect; not stored.
 - **Photos**: private app storage plus Cloud Storage backup. Never the gallery.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
@@ -166,8 +213,8 @@ from the earlier FitLab app.
   none; it works offline. Whether the program moves on is decided from the programs the
   device knows at that moment; if they are not loaded the program is left
   and the summary says so. The finished workout stays on the device until
-  the server confirms it (after all pending writes are answered, a server
-  read finds it); one the server refused comes back as the workout in
+  the server confirms it (its batch is acknowledged; see Unconfirmed
+  workouts); one the server refused comes back as the workout in
   progress, once none is open, and the user is told, so a workout is never
   lost. Its program advance went back with the batch.
 - **Workout times**: `startedAt` and `finishedAt` are device-clock
@@ -203,7 +250,50 @@ from the earlier FitLab app.
   are confirmed, rebuilt from that exercise's workouts read from the server
   (`rebuildStats`, at most 500 workouts; beyond that they are left). This
   also repairs two devices finishing at once. History keeps the latest 1000
-  points, each with its `workoutId`.
+  points, each with its `workoutId`. A rebuild first waits for the
+  device's pending writes, so it never reads past an edit the server has
+  not seen; offline it waits until the device is online. A rebuild that an
+  edit or a finish of the same user crossed is done again, so the last
+  stats write always comes from a read after every change.
+- **History**: Progress → Workout history lists finished workouts newest
+  first, 20 per page, while its page is open. The first five pages are live
+  listeners (cache first, so they work offline); older pages are read once.
+  A page gets a fixed end (`endAtDocument`) once the page after it
+  (`startAfterDocument`) loads, so pages never skip or repeat a workout.
+  Rows carry no records mark: it would need every exercise's stats. The
+  workout page names exercises from the catalogue (custom ones included),
+  else by the name stored with the workout (retired and deleted ones); a
+  program that no longer exists shows as deleted.
+- **Editing workouts**: editing, deleting and adding a past workout store
+  the workout in one batch, never changing `activeProgram`; a past workout
+  has no program, and moving a program workout's start only moves the day
+  shown as done. Edits keep ticked sets only and pass the finishing checks
+  (`isStorable`); the use case also refuses a start or end in the future
+  and a duration over 24 h. The batch carries the stats of every exercise
+  touched, before and after, rebuilt with `rebuildStats`, only when the
+  server returned all their workouts within 2 s after the pending writes;
+  stats are never rebuilt from the cache, which may lack workouts. Every
+  exercise touched then joins the device's stale-stats list and is rebuilt
+  from the server, as after finishing. An exercise with more than 500
+  workouts keeps its stats, on both paths and in the rebuild, so after an
+  edit they may stay stale.
+- **Editing a workout that changes elsewhere**: the edit page keeps
+  following the stored workout. Changed elsewhere, the save is blocked
+  until the user reloads the latest version (dropping their edits) or
+  discards; deleted elsewhere, only discarding is offered. A save replaces
+  the latest stored version, never re-creates a deleted one.
+- **Unconfirmed workouts**: a workout with a change the server has not
+  confirmed (`hasPendingWrites`: just finished, finished offline or just
+  edited) can be viewed but not edited or deleted; its page says it waits
+  to sync. A confirmed workout the user deletes also leaves the device's
+  list of finished workouts awaiting confirmation, so a confirmation in
+  flight never brings it back. Confirming a finished workout asks its
+  batch's own answer: acknowledged, it is dropped from the device even if
+  it was deleted elsewhere since; refused, it comes back as the workout in
+  progress. A save from before the app restarted has lost that answer, so
+  only then does absence on the server count as refused. A refused edit or delete is undone by
+  Firestore together with its stats (one batch) and reported on the
+  history list.
 - **Program progress**: doing another day of the active program shows it as
   done but leaves the schedule. Done days are read from workouts by date
   only, so no composite index is needed.
@@ -349,7 +439,10 @@ Variations are the other exercises of the same `family`, ordered by rank.
 
 **`programs/{id}`** (catalog card): `status`, `premium`, `level`, `goal`,
 `daysPerWeek`, `lengthWeeks?`, `equipment[]` (the primary `equipment` of
-every exercise used, computed by the validator), `equipmentProfile`
+every exercise used, computed by the validator), `minutes` (`{min, max}`,
+the shortest and longest session by the app's `estimateDay`, each day
+rounded to whole minutes and at least 1; checked by the validator; the app
+shows a card without a readable one without minutes), `equipmentProfile`
 (`full_gym` \| `home_gym` \| `dumbbells` \| `bodyweight` \| `bands`, for
 filtering; every exercise fits it through `equipment` or an alternative set),
 `order` (unique int, the catalogue's default sort),
@@ -374,7 +467,8 @@ trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
 
 **`users/{uid}/programs/{id}`**: `name`, `origin` (`own` \| `catalog` \|
 `generated`), `sourceId?`, `lengthWeeks?` (1-52), `days[]` (1-7),
-`updatedAt`. Starting a catalog program copies it here, so later catalog
+`premium?` (true on a copy of a premium ready-made program and on its
+duplicates; see Decisions), `updatedAt`. Starting a catalog program copies it here, so later catalog
 edits do not change it. `name` is 1-60 characters.
 
 - `days[]`: `name` (at most 40 characters, may be empty), `items[]` (1-20)
@@ -460,7 +554,7 @@ Group 5, workout
 - [ ] Rest timer — auto start, +15 s, skip, notification
 - [ ] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification
 - [x] Finish and summary — records with a short celebration, `exerciseStats` update
-- [ ] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
+- [x] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
 
 Group 6, progress
 - [ ] Calendar — month view of planned and done workouts and cardio
@@ -469,7 +563,7 @@ Group 6, progress
 - [ ] Today tab — next workout and week strip, quick actions, volume card, steps card
 
 Group 7, programs for everyone
-- [ ] Catalog — 25 ready-made programs (6 free), filters, detail, premium lock, admin program editor
+- [ ] Catalog — 25 ready-made programs (6 free), filters, detail, premium lock, admin program editor (the admin program editor is still to do)
 - [ ] Program generator (Premium) — questions (goal, level, days, session length, equipment, focus muscles, excluded exercises, area to go easy on, preferred split), preview, save as an editable program
 
 Group 8, body and extras

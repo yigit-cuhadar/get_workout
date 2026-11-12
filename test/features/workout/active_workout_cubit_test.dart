@@ -296,6 +296,104 @@ void main() {
       await cubit.close();
     });
 
+    group('a premium copy', () {
+      final paid = Program(
+        id: 'p9',
+        name: 'Paid',
+        premium: true,
+        days: [
+          ProgramDay(items: [item('squat')]),
+        ],
+      );
+
+      ProgramListState listWith(bool? premium) => ProgramListState(
+        status: ProgramListStatus.ready,
+        programs: [paid],
+        premium: premium,
+      );
+
+      Future<WorkoutStart> start(ActiveWorkoutCubit cubit) =>
+          cubit.startProgramDay(paid, 0, name: 'Paid', language: 'en');
+
+      test('starts with premium', () async {
+        when(() => programs.state).thenReturn(listWith(true));
+        final cubit = await signedIn();
+        expect(cubit.access(paid), ProgramAccess.open);
+        expect((await start(cubit)).started, isTrue);
+        await cubit.close();
+      });
+
+      test('does not start without premium', () async {
+        when(() => programs.state).thenReturn(listWith(false));
+        when(() => programs.stream).thenAnswer((_) => const Stream.empty());
+        final cubit = await signedIn();
+        expect(cubit.access(paid), ProgramAccess.locked);
+        expect(await start(cubit), (started: false, skipped: 0));
+        expect(cubit.state.workout, isNull);
+        await cubit.close();
+      });
+
+      test('waits for premium, e.g. right after the paywall', () async {
+        final lists = StreamController<ProgramListState>.broadcast();
+        addTearDown(lists.close);
+        when(() => programs.state).thenReturn(listWith(null));
+        when(() => programs.stream).thenAnswer((_) => lists.stream);
+        final cubit = await signedIn();
+        expect(cubit.access(paid), ProgramAccess.waiting);
+
+        final starting = start(cubit);
+        await pumpEventQueue();
+        expect(cubit.state.workout, isNull);
+        when(() => programs.state).thenReturn(listWith(true));
+        lists.add(listWith(true));
+
+        expect((await starting).started, isTrue);
+        await cubit.close();
+      });
+
+      test('an own program is never gated', () async {
+        when(() => programs.state).thenReturn(listWith(false));
+        final cubit = await signedIn();
+        expect(cubit.access(legs), ProgramAccess.open);
+        expect(
+          (await cubit.startProgramDay(
+            legs,
+            1,
+            name: 'Legs',
+            language: 'en',
+          )).started,
+          isTrue,
+        );
+        await cubit.close();
+      });
+
+      test('one in progress can still be finished without premium', () async {
+        when(() => programs.state).thenReturn(listWith(false));
+        final cubit = await signedIn(
+          draft: Workout(
+            id: 'w1',
+            startedAt: now,
+            programId: 'p9',
+            dayIndex: 0,
+            name: 'Paid',
+            exercises: [
+              exercise('squat', [lift(100, 5)]),
+            ],
+          ),
+        );
+        await cubit.finish();
+        verify(
+          () => repository.saveWorkout(
+            'u1',
+            any(),
+            any(),
+            advance: any(named: 'advance'),
+          ),
+        ).called(1);
+        await cubit.close();
+      });
+    });
+
     test('only one workout at a time', () async {
       final cubit = await signedIn(draft: saved);
       expect(cubit.startFree('Workout'), isFalse);
@@ -931,6 +1029,112 @@ void main() {
       users.add(bob);
       await pumpEventQueue();
       expect(cubit.state.rest, isNull);
+      await cubit.close();
+    });
+  });
+
+  group('stored workout changes', () {
+    test('stats from the cache are rebuilt from the server', () async {
+      final cubit = await signedIn();
+      cubit.storedWorkoutChanged(
+        'u1',
+        'w0',
+        deleted: false,
+        staleStats: const {'squat'},
+      );
+      await pumpEventQueue();
+      verify(() => repository.workoutsWith('u1', 'squat')).called(1);
+      verify(() => repository.saveStats('u1', 'squat', null)).called(1);
+      expect(keptLocal(), const LocalWorkouts());
+      await cubit.close();
+    });
+
+    test('a deleted workout awaiting confirmation never comes back', () async {
+      final finished = workout('w0', [
+        exercise('squat', [lift(100, 5)]),
+      ], finishedAt: end);
+      final stored = Completer<Result<bool>>();
+      when(() => repository.isStored('u1', 'w0'))
+          .thenAnswer((_) => stored.future);
+      final cubit = await signedIn(local: LocalWorkouts(finished: [finished]));
+      cubit.storedWorkoutChanged(
+        'u1',
+        'w0',
+        deleted: true,
+        staleStats: const {},
+      );
+      expect(keptLocal().finished, isEmpty);
+      // The confirmation in flight then finds it gone.
+      stored.complete(const Ok(false));
+      await pumpEventQueue();
+      expect(cubit.state.status, WorkoutStatus.none);
+      expect(cubit.state.restored, isNull);
+      await cubit.close();
+    });
+
+    test('a rebuild crossed by an edit is done again', () async {
+      final firstRead = Completer<Result<ExerciseWorkouts>>();
+      var reads = 0;
+      when(() => repository.workoutsWith('u1', 'squat')).thenAnswer((_) {
+        reads++;
+        return reads == 1
+            ? firstRead.future
+            : Future.value(const Ok((workouts: [], complete: true)));
+      });
+      final cubit = await signedIn(
+        local: const LocalWorkouts(staleStats: {'squat'}),
+      );
+      expect(reads, 1);
+      // The edit's batch starts while the first rebuild has read.
+      cubit.storedWorkoutChanged(
+        'u1',
+        'w0',
+        deleted: false,
+        staleStats: const {'squat'},
+      );
+      firstRead.complete(const Ok((workouts: [], complete: true)));
+      await pumpEventQueue();
+      // Its write may land after the edit's: a second rebuild follows.
+      expect(reads, 2);
+      verify(() => repository.saveStats('u1', 'squat', null)).called(2);
+      expect(keptLocal().staleStats, isEmpty);
+      await cubit.close();
+    });
+
+    test('a rebuild crossed by a finish is done again after it', () async {
+      final firstRead = Completer<Result<ExerciseWorkouts>>();
+      var reads = 0;
+      when(() => repository.workoutsWith('u1', 'squat')).thenAnswer((_) {
+        reads++;
+        return reads == 1
+            ? firstRead.future
+            : Future.value(const Ok((workouts: [], complete: true)));
+      });
+      when(() => repository.getStats('u1', ['squat'])).thenAnswer(
+        (_) async => const Ok({'squat': (stats: null, current: true)}),
+      );
+      final cubit = await signedIn(
+        draft: saved,
+        local: LocalWorkouts(draft: saved, staleStats: const {'squat'}),
+      );
+      await cubit.finish();
+      firstRead.complete(const Ok((workouts: [], complete: true)));
+      await pumpEventQueue();
+      expect(reads, 2);
+      expect(keptLocal().staleStats, isEmpty);
+      await cubit.close();
+    });
+
+    test('another user\'s change is ignored', () async {
+      final cubit = await signedIn();
+      cubit.storedWorkoutChanged(
+        'u2',
+        'w0',
+        deleted: false,
+        staleStats: const {'squat'},
+      );
+      await pumpEventQueue();
+      verifyNever(() => repository.workoutsWith(any(), any()));
       await cubit.close();
     });
   });

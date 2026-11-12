@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
+import 'package:get_workout/features/programs/domain/catalogue_program.dart';
+import 'package:get_workout/features/programs/domain/premium_status.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 
 /// An exercise with defaults for everything a program test does not care
@@ -48,16 +52,21 @@ ProgramItem item(
 );
 
 /// A valid two-day program of weighted rep exercises `a` to `d`.
-Program program({String? id, String name = 'Upper Lower', int? lengthWeeks}) =>
-    Program(
-      id: id,
-      name: name,
-      lengthWeeks: lengthWeeks,
-      days: [
-        ProgramDay(name: 'Upper', items: [item('a'), item('b')]),
-        ProgramDay(name: 'Lower', items: [item('c'), item('d')]),
-      ],
-    );
+Program program({
+  String? id,
+  String name = 'Upper Lower',
+  int? lengthWeeks,
+  bool premium = false,
+}) => Program(
+  id: id,
+  name: name,
+  lengthWeeks: lengthWeeks,
+  premium: premium,
+  days: [
+    ProgramDay(name: 'Upper', items: [item('a'), item('b')]),
+    ProgramDay(name: 'Lower', items: [item('c'), item('d')]),
+  ],
+);
 
 const loggingTypes = {
   'a': LoggingType.weightReps,
@@ -67,3 +76,46 @@ const loggingTypes = {
   'plank': LoggingType.duration,
   'pushup': LoggingType.reps,
 };
+
+/// A ready-made program's card; free, beginner, three days of dumbbell work
+/// unless told otherwise.
+CatalogueProgram card(
+  String id, {
+  bool premium = false,
+  Level level = Level.beginner,
+  Goal goal = Goal.buildMuscle,
+  int daysPerWeek = 3,
+  int? lengthWeeks,
+  List<Equipment>? equipment = const [Equipment.dumbbell, Equipment.bench],
+  EquipmentProfile profile = EquipmentProfile.dumbbells,
+  int order = 1,
+}) => CatalogueProgram(
+  id: id,
+  premium: premium,
+  level: level,
+  goal: goal,
+  daysPerWeek: daysPerWeek,
+  lengthWeeks: lengthWeeks,
+  equipment: equipment,
+  equipmentProfile: profile,
+  order: order,
+  l10n: {'en': CatalogueText(name: 'Program $id', summary: 'For $id.')},
+);
+
+/// A premium status the test sets; unknown until it adds one.
+class FakePremium implements PremiumStatus {
+  final controller = StreamController<bool?>.broadcast();
+
+  @override
+  Stream<bool?> watch() => controller.stream;
+}
+
+/// A premium status that never changes.
+class FixedPremium implements PremiumStatus {
+  const FixedPremium(this.premium);
+
+  final bool? premium;
+
+  @override
+  Stream<bool?> watch() => Stream.value(premium);
+}

@@ -12,6 +12,10 @@
     "pull_up_bar",
     "bodyweight"
   ],
+  "minutes": {
+    "min": 30,
+    "max": 32
+  },
   "l10n": {
     "en": {
       "name": "Bodyweight Basics 3-Day",

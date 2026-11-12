@@ -10,12 +10,16 @@ import 'data/device_rest_notifications.dart';
 import 'data/file_local_workout_store.dart';
 import 'data/firestore_workout_repository.dart';
 import 'data/workout_completed_days.dart';
+import 'domain/history_usecases.dart';
 import 'domain/rest_notifications.dart';
 import 'domain/rest_usecases.dart';
 import 'domain/workout_repository.dart';
 import 'domain/workout_usecases.dart';
 import 'presentation/active_workout_cubit.dart';
+import 'presentation/history_list_cubit.dart';
 import 'presentation/rest_timer_cubit.dart';
+import 'presentation/workout_detail_cubit.dart';
+import 'presentation/workout_edit_cubit.dart';
 
 /// Registers the workout feature. Needs `AuthModule`, `SettingsModule`,
 /// `NotificationsModule`, `ExercisesModule` and `ProgramsModule`, which
@@ -94,6 +98,43 @@ class WorkoutModule implements FeatureModule {
                     ),
             );
           },
+        ),
+      )
+      ..registerFactory(() => WatchHistory(sl()))
+      ..registerFactory(() => WatchStoredWorkout(sl()))
+      ..registerFactory(() => WatchRejectedWorkoutEdits(sl()))
+      ..registerFactory(() => SaveWorkoutChange(sl()))
+      // One per history page. The workout pages open above it, so it is
+      // there to report their refused edits.
+      ..registerFactory(
+        () => HistoryListCubit(
+          watchAuthUser: sl(),
+          watchHistory: sl(),
+          watchRejectedEdits: sl(),
+        ),
+      )
+      ..registerFactoryParam<WorkoutDetailCubit, String, void>(
+        (id, _) => WorkoutDetailCubit(
+          id: id,
+          getCurrentUser: sl(),
+          watchAuthUser: sl(),
+          watchWorkout: sl(),
+          saveChange: sl(),
+          changed: sl<ActiveWorkoutCubit>().storedWorkoutChanged,
+        ),
+      )
+      // A stored workout's id, or none and the name of a new past workout.
+      ..registerFactoryParam<WorkoutEditCubit, String?, String>(
+        (id, name) => WorkoutEditCubit(
+          id: id,
+          name: name,
+          getCurrentUser: sl(),
+          watchAuthUser: sl(),
+          watchWorkout: sl(),
+          newWorkoutId: sl(),
+          saveChange: sl(),
+          changed: sl<ActiveWorkoutCubit>().storedWorkoutChanged,
+          catalogue: sl(),
         ),
       );
   }

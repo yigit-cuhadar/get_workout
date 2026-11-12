@@ -14,6 +14,10 @@
     "bench",
     "pull_up_bar"
   ],
+  "minutes": {
+    "min": 30,
+    "max": 31
+  },
   "l10n": {
     "en": {
       "name": "Home Barbell Basics 3-Day",

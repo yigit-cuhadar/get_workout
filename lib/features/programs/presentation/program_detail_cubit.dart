@@ -78,15 +78,31 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
 
   Program? get _program => _list.state.program(programId);
 
-  Future<void> start(List<int> weekdays) => _withProgram(
-    (uid, program) =>
-        _startProgram((uid: uid, program: program, weekdays: weekdays)),
-  );
+  /// Whether the program may be started or rescheduled now.
+  ProgramAccess get access {
+    final program = _program;
+    return program == null
+        ? ProgramAccess.waiting
+        : _list.state.access(program);
+  }
 
-  /// Only for the active program.
+  /// Refused unless [access] is open.
+  Future<void> start(List<int> weekdays) {
+    if (access != ProgramAccess.open) return Future.value();
+    return _withProgram(
+      (uid, program) =>
+          _startProgram((uid: uid, program: program, weekdays: weekdays)),
+    );
+  }
+
+  /// Only for the active program, and refused unless [access] is open.
   Future<void> changeWeekdays(List<int> weekdays) {
     final active = _list.state.active;
-    if (active == null || active.programId != programId) return Future.value();
+    if (active == null ||
+        active.programId != programId ||
+        access != ProgramAccess.open) {
+      return Future.value();
+    }
     return _withProgram(
       (uid, program) => _changeWeekdays((
         uid: uid,

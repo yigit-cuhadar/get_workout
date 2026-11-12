@@ -8,16 +8,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../exercises/domain/exercise.dart';
-import '../../exercises/presentation/exercise_catalogue_cubit.dart';
-import '../../exercises/presentation/vocabulary_labels.dart';
-import '../../settings/presentation/settings_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
-import '../../../core/grouping.dart';
-import '../domain/program_editing.dart';
 import '../domain/program_schedule.dart';
 import 'program_detail_cubit.dart';
+import 'premium_prompt.dart';
+import 'program_day_section.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
 import 'weekday_dialog.dart';
@@ -74,7 +70,11 @@ class _ProgramDetailPageState extends State<ProgramDetailPage> {
         if (program != null) {
           return BlocProvider(
             create: (_) => sl<ProgramDetailCubit>(param1: id),
-            child: _ProgramDetailView(program: program, list: state),
+            child: _ProgramDetailView(
+              program: program,
+              list: state,
+              premium: sl<PremiumPrompt>(),
+            ),
           );
         }
         final l10n = AppLocalizations.of(context);
@@ -97,16 +97,22 @@ class _ProgramDetailPageState extends State<ProgramDetailPage> {
 }
 
 class _ProgramDetailView extends StatelessWidget {
-  const _ProgramDetailView({required this.program, required this.list});
+  const _ProgramDetailView({
+    required this.program,
+    required this.list,
+    required this.premium,
+  });
 
   final Program program;
   final ProgramListState list;
+  final PremiumPrompt premium;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ProgramDetailCubit>();
     final active = list.active?.programId == program.id ? list.active : null;
+    final access = list.access(program);
     return BlocConsumer<ProgramDetailCubit, ProgramDetailState>(
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
@@ -162,10 +168,15 @@ class _ProgramDetailView extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: active == null
+                child: active == null && access == ProgramAccess.locked
+                    ? PremiumLock(
+                        message: l10n.programLockedStart,
+                        prompt: premium,
+                      )
+                    : active == null
                     ? ForgeButton(
                         label: l10n.programStart,
-                        loading: busy,
+                        loading: busy || access == ProgramAccess.waiting,
                         onPressed: () => _start(context),
                       )
                     : Column(
@@ -188,7 +199,8 @@ class _ProgramDetailView extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: OutlinedButton(
-                                  onPressed: busy
+                                  onPressed:
+                                      busy || access != ProgramAccess.open
                                       ? null
                                       : () => _changeWeekdays(
                                           context,
@@ -206,13 +218,32 @@ class _ProgramDetailView extends StatelessWidget {
                               ),
                             ],
                           ),
+                          if (access == ProgramAccess.locked) ...[
+                            const SizedBox(height: Gap.sm),
+                            PremiumLock(
+                              message: l10n.programLockedActive,
+                              prompt: premium,
+                            ),
+                          ],
                         ],
                       ),
               ),
               if (program.lengthWeeks case final weeks?)
                 ListTile(title: Text(l10n.programWeekCount(weeks))),
               for (final (index, day) in program.days.indexed)
-                _DaySection(program: program, day: day, index: index),
+                ProgramDaySection(
+                  day: day,
+                  index: index,
+                  // Locked, it opens the paywall instead.
+                  action: day.items.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: l10n.workoutStartThisDay,
+                          icon: const Icon(Icons.play_arrow),
+                          onPressed: () =>
+                              startProgramDay(context, program, index),
+                        ),
+                ),
             ],
           ),
         );
@@ -290,86 +321,5 @@ class _ProgramDetailView extends StatelessWidget {
       ),
     );
     if (confirmed == true) await cubit.delete();
-  }
-}
-
-class _DaySection extends StatelessWidget {
-  const _DaySection({
-    required this.program,
-    required this.day,
-    required this.index,
-  });
-
-  final Program program;
-  final ProgramDay day;
-  final int index;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final unit = context.select(
-      (SettingsCubit cubit) => cubit.state.settings.weightUnit,
-    );
-    final catalogue = context.select(
-      (ExerciseCatalogueCubit cubit) => cubit.state,
-    );
-    final exercises = catalogue is CatalogueReady
-        ? {for (final e in catalogue.exercises) e.id: e}
-        : null;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Divider(),
-        ListTile(
-          title: Text(
-            l10n.dayName(day, index),
-            style: theme.textTheme.titleMedium,
-          ),
-          subtitle: day.items.isEmpty
-              ? null
-              : Text(l10n.estimateText(estimateDay(day))),
-          trailing: day.items.isEmpty
-              ? null
-              : IconButton(
-                  tooltip: l10n.workoutStartThisDay,
-                  icon: const Icon(Icons.play_arrow),
-                  onPressed: () => startProgramDay(context, program, index),
-                ),
-        ),
-        for (final (i, item) in day.items.indexed)
-          ListTile(
-            dense: true,
-            leading: item.group == null ? null : Text(item.group!),
-            title: Text(_name(l10n, exercises, item, context)),
-            subtitle: Text(
-              [
-                l10n.itemSummary(item, unit),
-                l10n.programRest(item.restS),
-                if (item.group case final group?)
-                  l10n.groupLabel(group, groupSize(day.items, i)),
-              ].join(' · '),
-            ),
-          ),
-      ],
-    );
-  }
-
-  static int groupSize(List<ProgramItem> items, int index) {
-    final (start, end) = groupRange(items, index);
-    return end - start;
-  }
-
-  static String _name(
-    AppLocalizations l10n,
-    Map<String, Exercise>? exercises,
-    ProgramItem item,
-    BuildContext context,
-  ) {
-    if (exercises == null) return l10n.programExerciseLoading;
-    final exercise = exercises[item.exerciseId];
-    return exercise == null
-        ? l10n.programExerciseUnavailable
-        : exercise.localized(context).name;
   }
 }

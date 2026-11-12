@@ -4,10 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
-import '../../../core/grouping.dart' as grouping;
 import '../../exercises/domain/exercise.dart';
-import '../../exercises/domain/exercise_queries.dart';
-import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_list_cubit.dart';
@@ -20,6 +17,7 @@ import '../domain/workout.dart';
 import '../domain/workout_editing.dart' as editing;
 import '../domain/workout_repository.dart';
 import '../domain/workout_usecases.dart';
+import 'workout_editor.dart';
 
 enum WorkoutStatus {
   /// The signed-in user's workout in progress is being looked for.
@@ -38,7 +36,7 @@ enum WorkoutStatus {
 /// were left out as no longer available.
 typedef WorkoutStart = ({bool started, int skipped});
 
-class ActiveWorkoutState extends Equatable {
+class ActiveWorkoutState extends Equatable implements EditedWorkout {
   const ActiveWorkoutState({
     this.status = WorkoutStatus.loading,
     this.workout,
@@ -56,6 +54,7 @@ class ActiveWorkoutState extends Equatable {
   final WorkoutStatus status;
 
   /// In progress, or once [WorkoutStatus.finished] as stored.
+  @override
   final Workout? workout;
 
   /// The rest of the workout in progress, also once it is over (until the
@@ -64,9 +63,10 @@ class ActiveWorkoutState extends Equatable {
 
   /// The stats of the workout's exercises that have arrived; null when an
   /// exercise has none yet.
+  @override
   final Map<String, ExerciseStats?> stats;
 
-  /// A set that could not be ticked for missing or wrong values.
+  @override
   final SetRef? invalidSet;
   final WorkoutSummary? summary;
 
@@ -96,14 +96,14 @@ class ActiveWorkoutState extends Equatable {
     return stats[id]?.last?.sets ?? const [];
   }
 
-  /// What the set did last time; see [lastTimeSet].
+  @override
   WorkoutSet? lastTime(SetRef ref) => lastTimeSet(
     workout!.exercises[ref.exercise],
     ref.set,
     _lastSets(ref.exercise),
   );
 
-  /// The values an empty field of the set shows, and takes when ticked.
+  @override
   SetValues suggestion(SetRef ref) => suggestedValues(
     workout!.exercises[ref.exercise],
     ref.set,
@@ -164,8 +164,10 @@ class ActiveWorkoutState extends Equatable {
 /// from what the device knew are rebuilt from the workouts once online.
 ///
 /// Ticking a set starts its rest under the user's rest timer settings; see
-/// [_restAfterEdit].
-class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
+/// [_restAfterEdit]. Only this workout has rests; editing a stored one
+/// does not.
+class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
+    with WorkoutEditor<ActiveWorkoutState> {
   ActiveWorkoutCubit({
     required WatchAuthUser watchAuthUser,
     required this._loadLocal,
@@ -222,10 +224,20 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   bool _syncAgain = false;
   Timer? _retry;
 
+  /// The exercise whose stats a sync is rebuilding, and whether a write to
+  /// them started meanwhile: the rebuild may have read before it and
+  /// written after it, so it is done again.
+  String? _rebuilding;
+  bool _rebuildOutdated = false;
+
+  /// Counts finishes, whose stats writes a rebuild may have crossed.
+  int _finishes = 0;
+
   /// How long starting a program day waits for the catalogue.
   static const catalogueWait = Duration(seconds: 10);
 
-  Map<String, Exercise> get _exercises => switch (_catalogue.state) {
+  @override
+  Map<String, Exercise> get knownExercises => switch (_catalogue.state) {
     CatalogueReady(:final exercises) => {for (final e in exercises) e.id: e},
     _ => const {},
   };
@@ -285,12 +297,18 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     ),
   );
 
+  /// Whether [program]'s days may be started now; see [programAccess].
+  ProgramAccess access(Program program) => _programs.state.access(program);
+
   /// Starts day [dayIndex] of [program] with its items as goals, named
   /// [name], exercise names in [language], once the catalogue knows every
-  /// item's exercise (custom ones included). Items whose exercise is gone
-  /// are left out and counted in [WorkoutStart.skipped]; nothing starts while
-  /// another workout is in progress, the catalogue does not load, or none
-  /// of the day's exercises is available.
+  /// item's exercise (custom ones included) and [access] is open (waiting,
+  /// like for the catalogue, for a premium status that may still be on its
+  /// way, e.g. right after the paywall). Items whose exercise is gone are
+  /// left out and counted in [WorkoutStart.skipped]; nothing starts while
+  /// another workout is in progress, the catalogue does not load, the
+  /// program needs premium the user does not have, or none of the day's
+  /// exercises is available.
   Future<WorkoutStart> startProgramDay(
     Program program,
     int dayIndex, {
@@ -300,6 +318,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     const notStarted = (started: false, skipped: 0);
     if (program.id == null || dayIndex < 0 || dayIndex >= program.days.length) {
       return notStarted;
+    }
+    if (access(program) != ProgramAccess.open) {
+      try {
+        await _programs.stream
+            .firstWhere((state) => state.access(program) == ProgramAccess.open)
+            .timeout(catalogueWait);
+      } on Object {
+        return notStarted;
+      }
     }
     final ids = [
       for (final item in program.days[dayIndex].items) item.exerciseId,
@@ -314,7 +341,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       }
     }
     if (isClosed) return notStarted;
-    final catalogue = _exercises;
+    final catalogue = knownExercises;
     final started = _start(
       (id, now) => editing.workoutFromProgramDay(
         id: id,
@@ -359,160 +386,19 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     unawaited(_sync(uid));
   }
 
-  void setNote(String text) =>
-      _edit((workout) => workout.copyWith(note: () => _note(text)));
-
-  /// Adds [exercises], named in [language], as many as fit; false when none
-  /// was added.
-  bool addExercises(List<Exercise> exercises, String language) {
-    final count = state.workout?.exercises.length;
-    _editExercises(
-      (list) => [
-        ...list,
-        for (final exercise in exercises.take(
-          WorkoutLimits.maxExercises - list.length,
-        ))
-          editing.exerciseFor(exercise, language),
-      ],
-    );
-    return state.status == WorkoutStatus.active &&
-        state.workout?.exercises.length != count;
-  }
-
-  void removeExercise(int index) => _editExercises(
-    (list) => _has(list, index) ? grouping.removeItem(list, index) : list,
-    movesSets: true,
-  );
-
-  void swapExercise(int index, Exercise exercise, String language) =>
-      _editExercise(index, (e) => editing.swapExercise(e, exercise, language));
-
-  /// [to] is where the exercise lands; see [grouping.moveItem].
-  void moveExercise(int from, int to) => _editExercises(
-    (list) => _has(list, from) && _has(list, to)
-        ? grouping.moveItem(list, from, to)
-        : list,
-    movesSets: true,
-  );
-
-  void linkWithNext(int index) => _editExercises(
-    (list) => _has(list, index) && grouping.canLinkWithNext(list, index)
-        ? grouping.linkWithNext(list, index)
-        : list,
-  );
-
-  void ungroup(int index) => _editExercises(
-    (list) => _has(list, index) ? grouping.ungroup(list, index) : list,
-  );
-
-  /// What could replace exercise [index], best first; empty when it is no
-  /// longer in the library. [owned] is the user's equipment.
-  List<Exercise> alternatives(int index, Set<Equipment> owned) {
-    final exercises = _exercises;
-    final id = state.workout?.exercises.elementAtOrNull(index)?.exerciseId;
-    final exercise = exercises[id];
-    return exercise == null
-        ? const []
-        : alternativesFor(exercise, exercises.values, owned: owned);
-  }
-
-  void setExerciseNote(int index, String text) =>
-      _editExercise(index, (e) => e.copyWith(note: () => _note(text)));
-
-  /// A new empty set after the last one.
-  void addSet(int index) => _editExercise(
-    index,
-    (e) => e.sets.length >= WorkoutLimits.maxSets
-        ? e
-        : e.copyWith(sets: [...e.sets, const WorkoutSet()]),
-  );
-
-  void removeSet(SetRef ref) => _editExercise(
-    ref.exercise,
-    (e) => _has(e.sets, ref.set)
-        ? e.copyWith(sets: [...e.sets]..removeAt(ref.set))
-        : e,
-    movesSets: true,
-  );
-
-  /// [text] is in [unit]; blank clears it.
-  void setWeight(SetRef ref, String text, WeightUnit unit) =>
-      _editSet(ref, (set, _) => set.copyWith(weightKg: () => _kg(text, unit)));
-
-  void setReps(SetRef ref, String text) =>
-      _editSet(ref, (set, _) => set.copyWith(reps: () => _whole(text)));
-
-  /// In seconds.
-  void setDuration(SetRef ref, String text) =>
-      _editSet(ref, (set, _) => set.copyWith(durationS: () => _whole(text)));
-
-  /// Leaving [SetType.drop] removes the drops; only rep-based exercises have
-  /// drop sets.
-  void setType(SetRef ref, SetType type) => _editSet(
-    ref,
-    (set, loggingType) => type == SetType.drop && !loggingType.logsReps
-        ? set
-        : set.copyWith(
-            type: type,
-            drops: type == SetType.drop ? set.drops : const [],
-          ),
-  );
-
-  void setToFailure(SetRef ref, bool toFailure) =>
-      _editSet(ref, (set, _) => set.copyWith(toFailure: toFailure));
-
-  /// Blank removes it.
-  void setSetNote(SetRef ref, String text) =>
-      _editSet(ref, (set, _) => set.copyWith(note: () => _note(text)));
-
-  /// Reps in reserve; null clears it.
-  void setRir(SetRef ref, int? rir) =>
-      _editSet(ref, (set, _) => set.copyWith(rir: () => rir));
-
-  void addDrop(SetRef ref) => _editSet(
-    ref,
-    (set, _) =>
-        set.type != SetType.drop || set.drops.length >= WorkoutLimits.maxDrops
-        ? set
-        : set.copyWith(drops: [...set.drops, const Drop()]),
-  );
-
-  void removeDrop(SetRef ref, int drop) => _editSet(
-    ref,
-    (set, _) => _has(set.drops, drop)
-        ? set.copyWith(drops: [...set.drops]..removeAt(drop))
-        : set,
-  );
-
-  /// [text] is in [unit]; blank clears it.
-  void setDropWeight(SetRef ref, int drop, String text, WeightUnit unit) =>
-      _editDrop(ref, drop, (d) => d.copyWith(weightKg: () => _kg(text, unit)));
-
-  void setDropReps(SetRef ref, int drop, String text) =>
-      _editDrop(ref, drop, (d) => d.copyWith(reps: () => _whole(text)));
-
   /// Ticks the set done, its empty values taken from
   /// [ActiveWorkoutState.suggestion]; one that still lacks values stays
   /// undone and is marked as [ActiveWorkoutState.invalidSet]. A done set is
-  /// unticked.
+  /// unticked. Rests follow in [edit].
+  @override
   void toggleDone(SetRef ref) {
-    final workout = state.workout;
-    if (state.status != WorkoutStatus.active ||
-        workout == null ||
-        !_has(workout.exercises, ref.exercise) ||
-        !_has(workout.exercises[ref.exercise].sets, ref.set)) {
-      return;
-    }
-    final exercise = workout.exercises[ref.exercise];
-    final set = exercise.sets[ref.set];
-    final toggled = set.done
-        ? set.copyWith(done: false)
-        : completeSet(set, exercise.loggingType, state.suggestion(ref));
+    if (state.status != WorkoutStatus.active || !hasSet(ref)) return;
+    final toggled = toggledSet(ref);
     if (toggled == null) {
       emit(state.copyWith(invalidSet: () => ref));
       return;
     }
-    _replaceSet(ref, toggled);
+    replaceSet(ref, toggled);
   }
 
   /// Adds [restExtension] to the running rest.
@@ -549,6 +435,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       return;
     }
     emit(state.copyWith(status: WorkoutStatus.finishing));
+    _finishes++;
     final programs = _programs.state;
     final result = await _finishWorkout((
       uid: uid,
@@ -576,8 +463,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         emit(
           state.copyWith(
             status: WorkoutStatus.finished,
-            workout: () => value.workout,
             rest: () => null,
+            workout: () => value.workout,
             summary: () => value.summary,
             invalidSet: () => null,
           ),
@@ -618,6 +505,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     for (final workout in [...?_local?.finished]) {
       final stored = await _confirmStored((uid: uid, id: workout.id));
       if (isClosed || _uid != uid) return true;
+      // Deleted by the user meanwhile.
+      if (!_local!.finished.any((w) => w.id == workout.id)) continue;
       switch (stored) {
         case Err(:final failure):
           Log.e('workout', 'workout not confirmed: ${failure.message}');
@@ -630,11 +519,20 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     }
     if (_local?.finished.isNotEmpty ?? true) return true;
     for (final id in [..._local!.staleStats]) {
+      final finishes = _finishes;
+      _rebuilding = id;
+      _rebuildOutdated = false;
       final rebuilt = await _rebuildStats((uid: uid, exerciseId: id));
+      _rebuilding = null;
       if (isClosed || _uid != uid) return true;
       if (rebuilt.failureOrNull case final failure?) {
         Log.e('workout', 'stats of $id not rebuilt: ${failure.message}');
         return false;
+      }
+      if (_rebuildOutdated || _finishes != finishes) {
+        // Still stale; the next round rebuilds it after that write.
+        _syncAgain = true;
+        continue;
       }
       final local = _local!;
       _local = local.copyWith(staleStats: {...local.staleStats}..remove(id));
@@ -697,7 +595,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       uid: uid,
       workout: workout,
       name: name,
-      catalogue: _exercises,
+      catalogue: knownExercises,
     ));
     if (isClosed || _uid != uid || state.status != WorkoutStatus.finished) {
       return;
@@ -724,68 +622,41 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     unawaited(_sync(uid));
   }
 
+  /// Takes note of a change user [uid] made to stored workout [id]: the
+  /// stats of [staleStats] are rebuilt from the server's workouts once the
+  /// finished workouts are confirmed, like those finishing computed from
+  /// the cache; a rebuild of one already running is done again, as it may
+  /// have read before the change and write after it. A deleted workout is no longer awaited, so a confirmation
+  /// that finds it gone never brings it back.
+  void storedWorkoutChanged(
+    String uid,
+    String id, {
+    required bool deleted,
+    required Set<String> staleStats,
+  }) {
+    final local = _local;
+    if (uid != _uid || local == null) return;
+    if (staleStats.contains(_rebuilding)) _rebuildOutdated = true;
+    _local = local.copyWith(
+      finished: [
+        for (final w in local.finished)
+          if (!deleted || w.id != id) w,
+      ],
+      staleStats: {...local.staleStats, ...staleStats},
+    );
+    _keep();
+    unawaited(_sync(uid));
+  }
+
   void failureShown() => emit(state.copyWith(failure: () => null));
 
   void restoredShown() => emit(state.copyWith(restored: () => null));
 
   void localUnreadableShown() => emit(state.copyWith(localUnreadable: false));
 
-  void _editDrop(SetRef ref, int drop, Drop Function(Drop drop) change) =>
-      _editSet(
-        ref,
-        (set, _) => _has(set.drops, drop)
-            ? set.copyWith(
-                drops: [
-                  for (final (i, d) in set.drops.indexed)
-                    i == drop ? change(d) : d,
-                ],
-              )
-            : set,
-      );
-
-  /// A done set that the change leaves invalid is no longer done.
-  void _editSet(
-    SetRef ref,
-    WorkoutSet Function(WorkoutSet set, LoggingType type) change,
-  ) {
-    final exercise = state.workout?.exercises.elementAtOrNull(ref.exercise);
-    final set = exercise?.sets.elementAtOrNull(ref.set);
-    if (exercise == null || set == null) return;
-    final type = exercise.loggingType;
-    var changed = change(set, type);
-    if (changed.done && validateSet(changed, type).isNotEmpty) {
-      changed = changed.copyWith(done: false);
-    }
-    _replaceSet(ref, changed);
-  }
-
-  void _replaceSet(SetRef ref, WorkoutSet set) => _editExercise(
-    ref.exercise,
-    (e) => e.copyWith(
-      sets: [for (final (i, s) in e.sets.indexed) i == ref.set ? set : s],
-    ),
-  );
-
-  void _editExercise(
-    int index,
-    WorkoutExercise Function(WorkoutExercise exercise) change, {
-    bool movesSets = false,
-  }) => _editExercises(
-    (list) => [for (final (i, e) in list.indexed) i == index ? change(e) : e],
-    movesSets: movesSets,
-  );
-
-  void _editExercises(
-    List<WorkoutExercise> Function(List<WorkoutExercise> list) change, {
-    bool movesSets = false,
-  }) => _edit(
-    (workout) => workout.copyWith(exercises: change(workout.exercises)),
-    movesSets: movesSets,
-  );
-
   /// Applies [change] to the workout in progress and keeps the result.
-  /// [movesSets] says the change may move sets to other positions.
-  void _edit(
+  @override
+  void edit(
     Workout Function(Workout workout) change, {
     bool movesSets = false,
   }) {
@@ -813,7 +684,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   }) {
     final ticked = movesSets ? null : newlyDone(before, after);
     if (ticked != null) {
-      final catalogue = _exercises;
+      final catalogue = knownExercises;
       final duration = restAfterTick(
         after,
         ticked,
@@ -896,22 +767,6 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     }
     _statsSubscriptions.clear();
     if (state.stats.isNotEmpty) emit(state.copyWith(stats: const {}));
-  }
-
-  static bool _has(List<Object?> list, int index) =>
-      index >= 0 && index < list.length;
-
-  static String? _note(String text) => text.trim().isEmpty ? null : text;
-
-  static double? _kg(String text, WeightUnit unit) {
-    final value = double.tryParse(text.trim().replaceAll(',', '.'));
-    return value == null || !value.isFinite ? null : unit.toKg(value);
-  }
-
-  static int? _whole(String text) {
-    final value = int.tryParse(text.trim());
-    // Text fields cap the length; this guards pasted text.
-    return value == null || value.abs() > 1000000 ? null : value;
   }
 
   @override

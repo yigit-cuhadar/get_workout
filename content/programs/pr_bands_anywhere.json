@@ -12,6 +12,10 @@
     "resistance_band",
     "bodyweight"
   ],
+  "minutes": {
+    "min": 30,
+    "max": 32
+  },
   "l10n": {
     "en": {
       "name": "Bands Anywhere 3-Day",
