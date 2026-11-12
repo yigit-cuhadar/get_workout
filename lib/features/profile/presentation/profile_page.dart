@@ -5,12 +5,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../account/presentation/privacy_section.dart';
 import '../../settings/presentation/settings_section.dart';
 import '../../subscription/presentation/premium_tile.dart';
 import 'profile_cubit.dart';
 
 /// The Profile tab: the account, Premium, profile and calculators rows, then
-/// the settings and any [debugSection].
+/// the settings, privacy and any [debugSection].
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key, this.debugSection});
 
@@ -56,6 +57,7 @@ class ProfilePage extends StatelessWidget {
               onTap: () => context.go(Routes.calculators),
             ),
             const SettingsSection(),
+            const PrivacySection(),
             ?debugSection,
           ],
         ),

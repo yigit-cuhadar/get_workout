@@ -46,6 +46,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../features/programs/fixtures.dart';
+import 'answered_consent.dart';
 import 'no_workout.dart';
 import 'today_stand_ins.dart';
 
@@ -231,6 +232,7 @@ void main() {
         providers: [
           BlocProvider.value(value: auth),
           BlocProvider.value(value: settings),
+          answeredConsent(),
           programList(),
           noWorkout(),
           noWorkout(),

@@ -5,6 +5,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 
 import '../../body/domain/body_entry.dart';
+import '../../programs/domain/calendar_date.dart';
 import '../domain/settings_repository.dart';
 import '../domain/user_settings.dart';
 
@@ -75,6 +76,8 @@ class FirestoreSettingsRepository implements SettingsRepository {
       ),
       restTimer: _restTimer(map['restTimer']),
       stepGoal: _stepGoal(map['stepGoal']),
+      workoutReminder: _workoutReminder(map['reminders']),
+      measurementReminder: _measurementReminder(map['reminders']),
       customBarWeightKg: _barWeight(map['barWeightKg']),
       customPlates: _plates(map['plates']),
       trackedMeasurements: _measurements(map['trackedMeasurements']),
@@ -94,6 +97,18 @@ class FirestoreSettingsRepository implements SettingsRepository {
       'notify': ?settings.restTimer.notify,
     },
     'stepGoal': settings.stepGoal,
+    'reminders': {
+      'workout': {
+        'enabled': settings.workoutReminder.enabled,
+        'minute': settings.workoutReminder.minute,
+      },
+      'measurement': {
+        'enabled': settings.measurementReminder.enabled,
+        'everyWeeks': settings.measurementReminder.everyWeeks,
+        'from': ?settings.measurementReminder.from?.toIso(),
+        'minute': settings.measurementReminder.minute,
+      },
+    },
     'barWeightKg': settings.customBarWeightKg ?? FieldValue.delete(),
     'plates':
         settings.customPlates
@@ -135,6 +150,43 @@ class FirestoreSettingsRepository implements SettingsRepository {
   int _stepGoal(Object? raw) => raw is num && raw.isFinite
       ? raw.round().clamp(StepGoal.min, StepGoal.max)
       : defaults.stepGoal;
+
+  /// Anything missing or of the wrong type reads as the default.
+  WorkoutReminderSettings _workoutReminder(Object? reminders) {
+    final fallback = defaults.workoutReminder;
+    final raw = reminders is Map ? reminders['workout'] : null;
+    if (raw is! Map) return fallback;
+    final enabled = raw['enabled'];
+    return WorkoutReminderSettings(
+      enabled: enabled is bool ? enabled : fallback.enabled,
+      minute: _minute(raw['minute']) ?? fallback.minute,
+    );
+  }
+
+  /// Anything missing or of the wrong type reads as the default; a cadence
+  /// the app does not offer reads as the nearest longer one.
+  MeasurementReminderSettings _measurementReminder(Object? reminders) {
+    final fallback = defaults.measurementReminder;
+    final raw = reminders is Map ? reminders['measurement'] : null;
+    if (raw is! Map) return fallback;
+    final enabled = raw['enabled'];
+    final weeks = raw['everyWeeks'];
+    return MeasurementReminderSettings(
+      enabled: enabled is bool ? enabled : fallback.enabled,
+      everyWeeks: weeks is num && weeks.isFinite
+          ? MeasurementReminderSettings.choicesWeeks.firstWhere(
+              (choice) => choice >= weeks,
+              orElse: () => MeasurementReminderSettings.choicesWeeks.last,
+            )
+          : fallback.everyWeeks,
+      from: CalendarDate.tryParse(raw['from']) ?? fallback.from,
+      minute: _minute(raw['minute']) ?? fallback.minute,
+    );
+  }
+
+  static int? _minute(Object? raw) => raw is num && raw.isFinite
+      ? raw.round().clamp(0, ReminderTime.max)
+      : null;
 
   static double? _barWeight(Object? raw) =>
       raw is num ? raw.toDouble().clamp(0, maxBarWeightKg) : null;

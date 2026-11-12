@@ -312,6 +312,70 @@ from the earlier FitLab app.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk).
+- **Analytics consent** (`lib/features/account`): `settings.analyticsConsent`
+  of each user, guests included (a guest has a uid and a user document;
+  linking keeps it, signing in to an existing account takes that account's
+  answer). Consent is per user, never per device. Null is not answered,
+  which collects nothing. Analytics and Crashlytics start off natively
+  (Info.plist, AndroidManifest.xml) and collect only in prod release
+  builds, for the signed-in user, after their yes; never the advertising
+  ID, Android ID or IDFV, and no ad personalisation signals (the `AD_ID`
+  permission is removed). The app replaces `forge_firebase`'s
+  `initFirebase` (which turns collection on at start) with
+  `FirebaseTelemetry.start`: same error routing, plus the answer the user
+  signed in at launch last gave on this device (one file per uid in app
+  support). Whenever the signed-in user changes or is unknown, collection
+  goes off until that user's stored answer is read, and stays off when the
+  read fails. `ConsentCubit` (app-wide) applies each answer as it arrives;
+  changes run one at a time and the latest wins. A yes first deletes the
+  crash reports recorded before it and is saved last, so a failure never
+  leaves a saved yes. Asked once the server (not a cached copy, which may
+  predate an answer from another device) says there is no answer, in a
+  dialog over the tabs only while they are the top route (never over
+  onboarding, the workout, the paywall or another dialog), with two equal
+  choices and no dismissing; changed with the switch under Profile →
+  Privacy. The settings feature leaves the field alone: its writes merge,
+  and `UserSettings` does not carry it.
+- **Privacy policy link**: Profile → Privacy, in the browser.
+  `LegalLinks.privacyUrl` (`lib/app/legal_links.dart`) is the one place the
+  address is written; the Android build reads it from that line into
+  `R.string.privacy_policy_url` for Health Connect's
+  `PrivacyPolicyActivity`.
+- **Deleting an account**: Account → "Delete account" ("Delete my data" for
+  a guest), set apart in the error colour, opens a page saying what is
+  deleted from the servers right away (profile and settings, programs,
+  workouts, records, custom exercises, cardio, body entries and photos,
+  the sign-in), what is cleared on this device at once and that the
+  offline copy goes at the next start, and that a store subscription is
+  not cancelled; then a confirmation dialog. Steps: the router holds
+  everyone in place (`DeletionUnderway`), so the vanished profile cannot
+  open onboarding and write the user's document again; the workout in
+  progress stops keeping and syncing for the user; the device's pending
+  writes are sent (10 s at most; offline fails with nothing asked or
+  deleted); the callable `deleteAccount` deletes. For an account with a
+  credential it wants a sign-in from the last 5 minutes, else the app asks
+  for the password (email only; Google and Apple are not offered yet) and
+  tries again. A guest is deleted the same way, without that check. Once
+  the server deleted the data, still signed in (so nothing of the next
+  guest is touched), the app removes the user's kept workouts file
+  (unreadable copies too), cancels every scheduled notification, records
+  no consent for them and resets the analytics id and unsent crash
+  reports, and marks Firestore's offline copy, which is cleared
+  (`clearPersistence`) at the next start before Firestore is used; then it
+  signs out and a new guest starts at onboarding. A local leftover is
+  logged, not reported. If only the sign-in is left (the function's
+  `details.reason` says so) the user stays held on the page, which offers
+  only "Try again". A function not deployed or not callable answers
+  `not-found` / `permission-denied`, shown as "deleting accounts isn't
+  available yet", never as done; anything else that failed before the
+  data went gives the workout back.
+- **Cloud Functions** (`functions/`): TypeScript, Node 22, 2nd gen, all in
+  `europe-west1` (`src/config.ts`, set once with `setGlobalOptions`; the
+  app's `CallableAccountRepository.region` must match). One file per
+  function, exported from `src/index.ts`; logic takes its Admin SDK
+  access as a parameter so `npm test` (lint, build, `node --test`) runs
+  without an emulator; CI runs it. Deploying is the Architect's step
+  (`firebase deploy --only functions --project <id>`), never an agent's.
 - **Onboarding questions**: goal, level, days per week and equipment need
   an answer to continue. The personal questions (sex, birth year, height,
   weight, target weight) can each be skipped with "Skip this question";
@@ -335,6 +399,61 @@ from the earlier FitLab app.
   count.
 - **Notifications**: local for rest end, workout reminders and measurement
   reminders; FCM topic push for announcements.
+- **Reminders** (`lib/features/notifications`): `settings.reminders` holds
+  `workout` (`enabled`, off by default; `minute` after local midnight,
+  08:00 by default) and `measurement` (`enabled`, off; `everyWeeks` 1, 2
+  or 4, 4 by default; `from`, the series' first date as `YYYY-MM-DD`, which
+  also gives its weekday, set to today when first turned on and to the
+  next such weekday from today when the day is changed; `minute`, 09:00).
+  Workout: one local notification at the time on every date
+  `ProgramSchedule.upcoming` plans a day for, 28 days ahead (at most 28
+  pending), none for a day done on that date, none once the program has
+  run its length, none for a locked premium copy; while the programs load
+  or fail, or the premium status of a premium copy is unknown, they are
+  left as they are, except that a reminder turned off is always cleared. Only the next
+  day is named ("Upper · Push Pull"); later ones name the program, as they
+  are due only if the user keeps to the plan. Measurement: the next four
+  of the series, skipping dates already measured (the planner takes them;
+  empty until the body feature is wired in). Horizon: reminders are only
+  planned while the app runs, so a user who does not open the app for
+  four weeks gets no more workout reminders, and the measurement reminder
+  stops after its four planned occurrences. Settings changes apply to
+  the settings current when the choice arrives; picking the series' own
+  weekday or cadence changes nothing, another weekday restarts the series
+  on that day's next date (`reminder_settings_changes.dart`). Both are pure planners (`reminder_plan.dart`);
+  `NotificationsCubit` plans again on every program list or settings
+  change, on every user change and on resume, and a repository diffs
+  against what is pending by payload (time and a hash of the text), so
+  equal ones stay. While the user's settings or programs load nothing is
+  touched, so a start never drops reminders; a change of user or signing
+  out drops them at once. Ids: rest 1, workout 100-127 (by date), measurement
+  200-203 (by occurrence), announcement in front 300. Reminders do not ask
+  for exact alarms on Android (they may fire up to an hour late). Taps:
+  a workout reminder opens Today, a measurement reminder the Progress tab
+  (until the measurement flow's route exists), an announcement Today; a
+  workout reminder tapped while the workout in progress is in front stays
+  there. A tap at launch waits until the app is past splash and
+  onboarding; navigation runs after the next frame.
+  Permission: turning a reminder on asks in the app with one line first
+  (unless the device already allows), then the system; a refusal shows a
+  dialog with "Open settings" (the app's notification settings), and the
+  reminder is stored on anyway, like the rest notification's wish; while
+  a reminder is on and the device refuses, the settings say so with "Open
+  settings". All notifications share the Android channel `workout`.
+- **Announcements**: FCM topics `announcements_<locale>` (`announcements_en`
+  in v1), followed once the device allows notifications, for the device's
+  language, leaving the other languages' topics. Notification messages:
+  the system shows them in the background (Android: channel `workout`,
+  icon `ic_notification`); in front the app shows them as a local
+  notification. A tap opens Today; no deep links in v1. Without a push
+  token (iOS without APNs) nothing is followed and nothing fails visibly;
+  a failed subscription is tried again on resume. FCM auto-init is off in
+  the native config (`firebase_messaging_auto_init_enabled`,
+  `FirebaseMessagingAutoInitEnabled`) and turned on only when following,
+  so a device that never allows notifications gets no push token.
+  Allowing notifications never waits for the subscription. Topic push needs no
+  stored tokens, so `users/{uid}/pushTokens` stays unwritten until a
+  feature needs per-user push.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
   / Progress / Profile. The active workout is full-screen and can be minimized
   to a bar above the tabs. Known limitation, to fix app-wide later: a link
@@ -782,7 +901,18 @@ only, JPEG, max 5 MB.
 ### Cloud Functions
 
 - `revenueCatWebhook` → writes `entitlements/{uid}`
-- `deleteAccount` (callable) → deletes the user's documents, photos and auth user
+- `deleteAccount` (callable, `functions/src/delete_account.ts`) → for the
+  signed-in caller: `users/{uid}` with every subcollection (customExercises,
+  programs, workouts, exerciseStats, cardio, bodyEntries, pushTokens and any
+  added later) by recursive delete, `entitlements/{uid}`, Storage
+  `users/{uid}/` (photos; a project without a default bucket has none,
+  logged), then the auth user last, so a partial failure can be retried;
+  every step succeeds when nothing is left. Refusals carry a
+  machine-readable `details.reason`, which the app maps on: `recent-sign-in`
+  (`failed-precondition`, a non-guest signed in more than 5 minutes ago)
+  and `sign-in-not-deleted` (`internal`, the data is gone but the auth user
+  is not; calling again finishes). RevenueCat keeps its customer; the
+  store subscription is the user's to cancel.
 - `sendAnnouncement` (callable, admin) → FCM topic push
 
 Admin access is a custom claim set by `tool/set_admin.sh`, using the project
@@ -853,8 +983,8 @@ Group 9, launch readiness
 - A guest who signs in to an existing account leaves an orphaned anonymous user and its data behind; clean these up with a scheduled function when Cloud Functions arrive.
 - Photo backup: `storage.rules` and the `storage` entry in `firebase.json`
   are written but not deployed, and the default bucket is not created yet
-  (both projects). `deleteAccount` must also delete
-  `users/{uid}/photos/**`; the orphaned-guest cleanup likewise.
+  (both projects). `deleteAccount` already deletes `users/{uid}/` in the
+  bucket; the orphaned-guest cleanup must do the same.
 - Body feature, not yet run on a device: the camera permission prompt and
   denial text, the ghost's alignment (front-camera previews are mirrored,
   saved photos are not; `mirrorGhost` in `ghost_camera.dart`), retake,
@@ -866,9 +996,23 @@ Group 9, launch readiness
   `GhostCamera` (`lib/core/ghost_camera.dart`, free of app code) stays in
   the app for this feature; move it into a forge package with widget tests
   for capture, camera switch and the unavailable state.
-- Account feature: call `ForgetBodyPhotos` (registered by `BodyModule`)
-  before or after deleting an account and when a guest's data is
-  discarded.
+- The projects are on the Blaze plan. `deleteAccount` is written but not
+  deployed: the Architect deploys `functions/` to dev, checks deletion on a
+  device (including the "not available" message before the deploy), then
+  prod.
+- After `revenueCatWebhook` exists, an event for a deleted user could write
+  `entitlements/{uid}` again; the webhook should skip uids with no auth user.
+- Accepted deviation, to be removed by two forge tasks (the app then uses
+  the packages and drops its workarounds):
+  - **forge_firebase**: `initFirebase` must not enable Analytics or
+    Crashlytics by default; it needs a consent-aware start (collection off
+    until the app applies a user's answer). Until then the app must never
+    call the current `initFirebase`, from `bootstrap.dart` or any other
+    entry point, including the future FCM background handler; it uses
+    `FirebaseTelemetry.start` instead (comment in `bootstrap.dart`).
+  - **forge_auth**: re-authentication with the password in
+    `AuthRepository` (and use cases); until then
+    `CallableAccountRepository.reauthenticate` calls Firebase Auth itself.
 - Female body model with the same mesh names: the user supplies it before release.
 - RevenueCat webhook (`revenueCatWebhook`, needs the Blaze plan): verify the
   Authorization header secret, write `entitlements/{app_user_id}` with
@@ -890,11 +1034,10 @@ Group 9, launch readiness
   build Android, so nothing has compiled the Android changes yet.
 - Release blocker: the Terms of Use and Privacy Policy links in
   `lib/app/legal_links.dart` are placeholders; publish the pages and
-  replace them.
+  replace them (Android picks up `privacyUrl` by itself).
 - Release blockers for steps: Health Connect's privacy-policy link opens
-  `PrivacyPolicyActivity`, which opens a copy of the placeholder privacy
-  URL in `PrivacyPolicyActivity.kt` (keep it equal to
-  `LegalLinks.privacy`); Play Console
+  `PrivacyPolicyActivity`, which opens `LegalLinks.privacyUrl` (passed in
+  by the build, still a placeholder); Play Console
   needs the Health apps declaration for READ_STEPS; the App ID needs the
   HealthKit capability (the Runner now carries the entitlement, so a
   device build signed by a team without it fails; the simulator does
@@ -904,6 +1047,42 @@ Group 9, launch readiness
 - The admin web build now bundles and loads the RevenueCat web script,
   because `purchases_flutter` registers a web plugin. Harmless; revisit if
   the admin build is split from the app.
+- `sendAnnouncement` (callable, admin claim) is pending, no longer blocked
+  by billing: it sends a notification message (`notification.title`,
+  `notification.body`) to topic `announcements_<locale>`; the client needs
+  no data fields. iOS push still needs the Apple Developer account: the
+  Push Notifications capability (`aps-environment` in
+  `Runner.entitlements`, not added yet, as it breaks device signing
+  without it) and an APNs key uploaded to both Firebase projects. Until
+  then iOS follows no topic.
+- Notifications, not built yet on a device: `firebase_messaging` 17, the
+  Android manifest's FCM default channel, icon and auto-init flag, and the
+  iOS `FirebaseMessagingAutoInitEnabled` key. The `workout` channel
+  exists only once a local notification was posted; before that, FCM uses
+  its own default channel. Check foreground display and taps on both
+  platforms, and that the admin web build still loads (the plugin
+  registers a web part).
+- The measurement reminder opens the Progress tab; point it at the
+  measurement flow's route once that feature is merged (`App`,
+  `_openNotification`).
+- The measurement reminder should skip dates that already have a
+  measurement: once the body feature is merged, pass the dates of body
+  entries with measurements as `measured` to `PlanMeasurementReminders`
+  (`NotificationsCubit._syncNow`, empty now) and plan again when they
+  change.
+- Forge tasks; the app's own versions are an accepted deviation for the
+  notifications PR, to be replaced once these exist:
+  - `forge_notifications`: a diff sync of an id range against the pending
+    notifications (the app's `DeviceNotificationRepository.syncReminders`
+    with payload signatures); a tap stream that buffers the launch tap
+    (the app's `NotificationTaps`); opening the app's notification
+    settings (the app calls `flutter_local_notifications` directly);
+    creating channels at init, and more than one channel (reminders and
+    announcements share the rest timer's `workout` channel).
+  - A messaging addition (to `forge_notifications` or a new package):
+    following a topic per language with leaving the others, foreground
+    display of pushed notifications, auto-init off until allowed (the
+    app's `FcmAnnouncementRepository`).
 - `forge_purchases` has no "unavailable" backend; the app swaps in its own
   repository for release builds without keys. Move it into the package when
   it is next changed.

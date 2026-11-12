@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/account/presentation/consent_prompt.dart';
 import '../features/programs/presentation/program_writes_notice.dart';
 import '../features/workout/presentation/workout_bar.dart';
 import '../l10n/app_localizations.dart';
@@ -17,7 +18,7 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      body: ProgramWritesNotice(child: shell),
+      body: ConsentPrompt(child: ProgramWritesNotice(child: shell)),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

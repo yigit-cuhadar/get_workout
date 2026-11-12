@@ -7,8 +7,20 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// The privacy policy's address has one source, lib/app/legal_links.dart;
+// PrivacyPolicyActivity gets it as R.string.privacy_policy_url.
+val privacyPolicyUrl: String =
+    Regex("""privacyUrl\s*=\s*'([^']+)'""")
+        .find(rootProject.file("../lib/app/legal_links.dart").readText())
+        ?.groupValues?.get(1)
+        ?: error("LegalLinks.privacyUrl not found in lib/app/legal_links.dart")
+
 android {
     namespace = "com.getworkout.get_workout"
+
+    buildFeatures {
+        resValues = true
+    }
     // flutter_local_notifications 23 needs 37 or later.
     compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
@@ -34,6 +46,7 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        resValue("string", "privacy_policy_url", privacyPolicyUrl)
     }
 
     buildTypes {

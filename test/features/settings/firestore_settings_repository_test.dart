@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/features/body/domain/body_entry.dart';
+import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/settings/data/firestore_settings_repository.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 
@@ -80,9 +81,73 @@ void main() {
         'restTimer': {'enabled': true, 'defaultS': 90},
         'stepGoal': 10000,
         'trackedMeasurements': standardMeasurements,
+        'reminders': {
+          'workout': {'enabled': false, 'minute': 480},
+          'measurement': {'enabled': false, 'everyWeeks': 4, 'minute': 540},
+        },
       },
     });
     expect(await repository.watchSettings('u1').first, settings);
+  });
+
+  group('reminders', () {
+    test('are stored and read back', () async {
+      final settings = defaults.copyWith(
+        workoutReminder: const WorkoutReminderSettings(
+          enabled: true,
+          minute: 1110,
+        ),
+        measurementReminder: MeasurementReminderSettings(
+          enabled: true,
+          everyWeeks: 2,
+          from: CalendarDate(2026, 11, 15),
+          minute: 600,
+        ),
+      );
+
+      await repository.saveSettings('u1', settings);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored['reminders'], {
+        'workout': {'enabled': true, 'minute': 1110},
+        'measurement': {
+          'enabled': true,
+          'everyWeeks': 2,
+          'from': '2026-11-15',
+          'minute': 600,
+        },
+      });
+      expect(await repository.watchSettings('u1').first, settings);
+    });
+
+    test('missing or malformed values read as the defaults', () async {
+      await user().set({
+        'settings': {
+          'reminders': {
+            'workout': {'enabled': 'yes', 'minute': 'noon'},
+            'measurement': {'enabled': 1, 'everyWeeks': 'often', 'from': 'x'},
+          },
+        },
+      });
+      final read = await repository.watchSettings('u1').first;
+      expect(read.workoutReminder, const WorkoutReminderSettings());
+      expect(read.measurementReminder, const MeasurementReminderSettings());
+    });
+
+    test('times are clamped and a cadence not offered rounds up', () async {
+      await user().set({
+        'settings': {
+          'reminders': {
+            'workout': {'minute': 5000},
+            'measurement': {'minute': -3, 'everyWeeks': 3},
+          },
+        },
+      });
+      final read = await repository.watchSettings('u1').first;
+      expect(read.workoutReminder.minute, ReminderTime.max);
+      expect(read.measurementReminder.minute, 0);
+      expect(read.measurementReminder.everyWeeks, 4);
+    });
   });
 
   group('rest timer', () {
@@ -253,6 +318,10 @@ void main() {
         'restTimer': {'enabled': true, 'defaultS': 90},
         'stepGoal': 10000,
         'trackedMeasurements': standardMeasurements,
+        'reminders': {
+          'workout': {'enabled': false, 'minute': 480},
+          'measurement': {'enabled': false, 'everyWeeks': 4, 'minute': 540},
+        },
       },
     });
   });
