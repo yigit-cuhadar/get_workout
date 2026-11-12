@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
@@ -66,6 +67,22 @@ void main() {
 
   ProfileState loaded(String uid, UserProfile profile) =>
       ProfileState(uid: uid, status: ProfileStatus.loaded, profile: profile);
+
+  /// Runs [act] against a new cubit on fake time, so retries wait exactly
+  /// their delay however loaded the machine is; returns the states emitted.
+  List<ProfileState> onFakeTime(void Function(FakeAsync async) act) {
+    final states = <ProfileState>[];
+    fakeAsync((async) {
+      final cubit = build();
+      final subscription = cubit.stream.listen(states.add);
+      act(async);
+      async.flushMicrotasks();
+      unawaited(subscription.cancel());
+      unawaited(cubit.close());
+      async.flushMicrotasks();
+    });
+    return states;
+  }
 
   test('starts loading, for nobody', () {
     expect(build().state, const ProfileState());
@@ -148,43 +165,39 @@ void main() {
     verify: (_) => verify(() => profiles.watchProfile('g1')).called(1),
   );
 
-  blocTest<ProfileCubit, ProfileState>(
-    'a failed first read is unavailable, then retried until it loads',
-    build: build,
-    act: (_) async {
+  test('a failed first read is unavailable, then retried until it loads', () {
+    final states = onFakeTime((async) {
       users.add(member);
-      await pumpEventQueue();
+      async.flushMicrotasks();
       stored['u1']!.addError(const NetworkFailure());
-      await Future<void>.delayed(retryDelay * 2);
+      async.elapse(retryDelay);
       // A new user is onboarded after all once the retry reads the profile.
       stored['u1']!.add(const UserProfile());
-    },
-    expect: () => [
+    });
+    expect(states, [
       const ProfileState(uid: 'u1'),
       const ProfileState(uid: 'u1', status: ProfileStatus.unavailable),
       loaded('u1', const UserProfile()),
-    ],
-    verify: (_) => verify(() => profiles.watchProfile('u1')).called(2),
-  );
+    ]);
+    verify(() => profiles.watchProfile('u1')).called(2);
+  });
 
-  blocTest<ProfileCubit, ProfileState>(
-    'a later stream error keeps the profile and follows it again',
-    build: build,
-    act: (_) async {
+  test('a later stream error keeps the profile and follows it again', () {
+    final states = onFakeTime((async) {
       users.add(member);
-      await pumpEventQueue();
+      async.flushMicrotasks();
       stored['u1']!
         ..add(strong)
         ..addError(const PermissionFailure());
-      await Future<void>.delayed(retryDelay * 2);
+      async.elapse(retryDelay);
       stored['u1']!.add(lean);
-    },
-    expect: () => [
+    });
+    expect(states, [
       const ProfileState(uid: 'u1'),
       loaded('u1', strong),
       loaded('u1', lean),
-    ],
-  );
+    ]);
+  });
 
   blocTest<ProfileCubit, ProfileState>(
     'resume follows a failed stream again at once',
@@ -212,24 +225,22 @@ void main() {
     verify: (_) => verify(() => profiles.watchProfile('u1')).called(2),
   );
 
-  blocTest<ProfileCubit, ProfileState>(
-    'a retry for a previous user never happens',
-    build: build,
-    act: (_) async {
+  test('a retry for a previous user never happens', () {
+    final states = onFakeTime((async) {
       users.add(guest);
-      await pumpEventQueue();
+      async.flushMicrotasks();
       stored['g1']!.addError(const NetworkFailure());
-      await pumpEventQueue();
+      async.flushMicrotasks();
       users.add(member);
-      await Future<void>.delayed(retryDelay * 2);
-    },
-    expect: () => [
+      async.elapse(retryDelay * 2);
+    });
+    expect(states, [
       const ProfileState(uid: 'g1'),
       const ProfileState(uid: 'g1', status: ProfileStatus.unavailable),
       const ProfileState(uid: 'u1'),
-    ],
-    verify: (_) => verify(() => profiles.watchProfile('g1')).called(1),
-  );
+    ]);
+    verify(() => profiles.watchProfile('g1')).called(1);
+  });
 
   group('save', () {
     blocTest<ProfileCubit, ProfileState>(
