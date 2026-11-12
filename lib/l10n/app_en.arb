@@ -449,6 +449,8 @@
   "@calcNeck": {"placeholders": {"unit": {"type": "String"}}},
   "calcWaist": "Waist ({unit})",
   "@calcWaist": {"placeholders": {"unit": {"type": "String"}}},
+  "calcWaistAtNavel": "Abdomen, at the navel ({unit})",
+  "@calcWaistAtNavel": {"placeholders": {"unit": {"type": "String"}}},
   "calcHip": "Hips ({unit})",
   "@calcHip": {"placeholders": {"unit": {"type": "String"}}},
   "calcBodyFatHowTo": "Measure the neck just below the larynx, the waist at the navel (men) or at its narrowest (women), and the hips at their widest.",
