@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../generator/presentation/generator_entry.dart';
 import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
 import '../domain/calendar_date.dart';
@@ -14,8 +15,9 @@ import '../domain/program_usecases.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
 
-/// The Programs tab: the way into the ready-made programs, the active
-/// program with this week's plan, then the other programs.
+/// The Programs tab: the ways into the ready-made programs and the
+/// generator, the active program with this week's plan, then the other
+/// programs.
 class ProgramsPage extends StatelessWidget {
   const ProgramsPage({super.key});
 
@@ -109,6 +111,8 @@ class _ProgramsViewState extends State<_ProgramsView> {
                     onPressed: () => context.go(Routes.catalogue),
                   ),
                   const SizedBox(height: Gap.sm),
+                  const GeneratorButton(),
+                  const SizedBox(height: Gap.sm),
                   OutlinedButton(
                     onPressed: create,
                     child: Text(l10n.programNew),
@@ -144,6 +148,7 @@ class _Programs extends StatelessWidget {
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.go(Routes.catalogue),
         ),
+        const GeneratorEntry(),
         if (active != null) ...[
           _Header(l10n.programActive),
           _ProgramTile(
