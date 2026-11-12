@@ -319,6 +319,33 @@ from the earlier FitLab app.
   workout page names exercises from the catalogue (custom ones included),
   else by the name stored with the workout (retired and deleted ones); a
   program that no longer exists shows as deleted.
+- **Strength**: Progress → Strength lists the exercises with stats (the
+  whole `exerciseStats` collection, live), most recently trained first
+  (`last.date`, else the latest history point), searched by catalogue name,
+  custom exercises included; it stays loading until every exercise is
+  named or known to be gone (one no longer in the library shows as
+  removed, since stats keep no name). If that collection read grows too
+  costly, the fix is a small last-trained index written in the same batch
+  as the stats. An exercise's page is also opened by "Records and
+  progress" on the exercise page, above it in whichever tab shows it, so
+  Back returns to the exercise. It lists the records (heaviest weight,
+  best e1RM, most reps, best set volume, longest time), each opening the
+  workout that set it, and charts each workout's best e1RM in the user's
+  unit, on an axis of whole kg or lb at least four units tall; an exercise
+  that never had an e1RM (bodyweight, timed) shows its records only.
+  Ranges: 12 weeks free; 6 months, 1 year and all Premium; a range starts
+  at local midnight of the same day that many months back, or that
+  month's last day when it is shorter. Records are all-time and free (the
+  workout summary shows them too); only the chart beyond 12 weeks is
+  Premium, and a free user with older results is told so and offered the
+  paywall. The gate is client-side: one stats document holds the whole
+  history, so the rules cannot withhold old points without splitting it,
+  and no server refusal can occur here.
+- **Charts**: `lib/core/line_chart.dart` is a small `CustomPainter` line
+  chart (points and formatters only; scaling and ticks are the pure
+  functions of `lib/core/chart_geometry.dart`), since neither the app nor
+  `forge_ui` has a chart and no chart package is added. Move both to
+  `forge_ui` when that package next changes.
 - **Editing workouts**: editing, deleting and adding a past workout store
   the workout in one batch, never changing `activeProgram`; a past workout
   has no program, and moving a program workout's start only moves the day
@@ -662,7 +689,7 @@ Group 5, workout
 Group 6, progress
 - [x] Calendar — month view of planned and done workouts and cardio
 - [x] Weekly volume — model coloring and bar list against the 10-20 band; 12-week trend (Premium)
-- [ ] Strength — per-exercise records and e1RM chart (beyond 12 weeks Premium)
+- [x] Strength — per-exercise records and e1RM chart (beyond 12 weeks Premium)
 - [ ] Today tab — next workout and week strip, quick actions, volume card, steps card
 
 Group 7, programs for everyone

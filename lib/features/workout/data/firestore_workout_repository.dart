@@ -55,6 +55,16 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
           .transform(_failures());
 
   @override
+  Stream<Map<String, ExerciseStats>> watchAllStats(String uid) => _stats(uid)
+      .snapshots()
+      .map(
+        (query) => {
+          for (final doc in query.docs) doc.id: ?statsFromMap(doc.data()),
+        },
+      )
+      .transform(_failures());
+
+  @override
   Stream<HistoryPage> watchHistory(
     String uid, {
     HistoryCursor? after,

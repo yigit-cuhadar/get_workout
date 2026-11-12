@@ -61,7 +61,17 @@ import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/subscription/presentation/paywall_page.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
+import 'package:get_workout/features/strength/presentation/exercise_strength_cubit.dart';
+import 'package:get_workout/features/strength/presentation/exercise_strength_page.dart';
+import 'package:get_workout/features/strength/presentation/strength_list_cubit.dart';
+import 'package:get_workout/features/strength/presentation/strength_list_page.dart';
 import 'package:get_workout/features/today/presentation/today_page.dart';
+import 'package:get_workout/features/workout/domain/exercise_stats.dart';
+import 'package:get_workout/features/workout/domain/history_usecases.dart';
+import 'package:get_workout/features/workout/domain/workout_repository.dart';
+import 'package:get_workout/features/workout/domain/workout_usecases.dart';
+import 'package:get_workout/features/workout/presentation/workout_detail_cubit.dart';
+import 'package:get_workout/features/workout/presentation/workout_detail_page.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
@@ -85,6 +95,8 @@ class MockCustomExerciseRepository extends Mock
 class MockProgramRepository extends Mock implements ProgramRepository {}
 
 class MockCatalogueRepository extends Mock implements CatalogueRepository {}
+
+class MockWorkoutRepository extends Mock implements WorkoutRepository {}
 
 const _squat = Exercise(
   id: 'squat',
@@ -1235,6 +1247,144 @@ void main() {
 
       expect(find.byType(PaywallPage), findsNothing);
       expect(find.text('You have Premium.'), findsOneWidget);
+    });
+  });
+
+  group('strength', () {
+    /// The strength pages and a workout's page, for a user whose squat set
+    /// a record in workout `w1`.
+    void registerStrength() {
+      final strengthAuth = MockAuthRepository();
+      when(strengthAuth.watchUser).thenAnswer((_) => Stream.value(guest));
+      when(() => strengthAuth.currentUser).thenReturn(guest);
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      final squat = ExerciseStats(
+        records: {
+          RecordKind.heaviestWeight: StatRecord(
+            value: 100,
+            date: yesterday,
+            workoutId: 'w1',
+          ),
+        },
+        history: [
+          HistoryPoint(date: yesterday, workoutId: 'w1', bestE1rmKg: 112),
+        ],
+      );
+      final workouts = MockWorkoutRepository();
+      when(() => workouts.watchAllStats(any()))
+          .thenAnswer((_) => Stream.value({'squat': squat}));
+      when(() => workouts.watchStats(any(), any()))
+          .thenAnswer((_) => Stream.value(squat));
+      when(() => workouts.watchWorkout(any(), any()))
+          .thenAnswer((_) => Stream.value(null));
+      sl
+        ..registerFactory(
+          () => StrengthListCubit(
+            watchAuthUser: WatchAuthUser(strengthAuth),
+            watchAllStats: WatchAllExerciseStats(workouts),
+            catalogue: catalogue,
+          ),
+        )
+        ..registerFactoryParam<ExerciseStrengthCubit, String, WeightUnit>(
+          (id, unit) => ExerciseStrengthCubit(
+            exerciseId: id,
+            watchAuthUser: WatchAuthUser(strengthAuth),
+            watchStats: WatchExerciseStats(workouts),
+            watchPremium: const WatchPremium(FixedPremium(false)),
+            unit: unit,
+          ),
+        )
+        ..registerFactoryParam<WorkoutDetailCubit, String, void>(
+          (id, _) => WorkoutDetailCubit(
+            id: id,
+            getCurrentUser: GetCurrentUser(strengthAuth),
+            watchAuthUser: WatchAuthUser(strengthAuth),
+            watchWorkout: WatchStoredWorkout(workouts),
+            saveChange: SaveWorkoutChange(workouts),
+            changed: (_, _, {required deleted, required staleStats}) {},
+          ),
+        );
+    }
+
+    String path() => router.routerDelegate.currentConfiguration.uri.path;
+
+    Future<void> back(WidgetTester tester) async {
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Progress lists the exercise and opens its page', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      registerStrength();
+      await tapTab(tester, 'Progress');
+      await tester.tap(find.text('Strength'));
+      await tester.pumpAndSettle();
+      expect(find.byType(StrengthListPage), findsOneWidget);
+
+      await tester.tap(find.text('Back Squat'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ExerciseStrengthPage), findsOneWidget);
+      expect(path(), Routes.strengthExercise('squat'));
+
+      await back(tester);
+      expect(find.byType(StrengthListPage), findsOneWidget);
+    });
+
+    testWidgets('records and progress opens above the exercise and leaves '
+        'the Progress tab alone', (tester) async {
+      await startAsGuest(tester);
+      registerStrength();
+      router.go(Routes.strength);
+      await tester.pumpAndSettle();
+      expect(find.byType(StrengthListPage), findsOneWidget);
+
+      await tapTab(tester, 'Exercises');
+      router.go(Routes.exercise('squat'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Records and progress'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(ExerciseDetailPage),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.tap(find.text('Records and progress'));
+      await tester.pumpAndSettle();
+
+      // Pushed above the exercise, in the Exercises tab.
+      expect(find.byType(ExerciseStrengthPage), findsOneWidget);
+      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(path(), Routes.exercise('squat'));
+
+      // A record opens the workout that set it, and back returns here.
+      await tester.scrollUntilVisible(
+        find.text('Heaviest weight'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(ExerciseStrengthPage),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.tap(find.text('Heaviest weight'));
+      await tester.pumpAndSettle();
+      expect(find.byType(WorkoutDetailPage), findsOneWidget);
+      await back(tester);
+      expect(find.byType(ExerciseStrengthPage), findsOneWidget);
+
+      await back(tester);
+      expect(find.byType(ExerciseDetailPage), findsOneWidget);
+      expect(path(), Routes.exercise('squat'));
+
+      await tapTab(tester, 'Progress');
+      expect(find.byType(StrengthListPage), findsOneWidget);
+      expect(path(), Routes.strength);
     });
   });
 }
