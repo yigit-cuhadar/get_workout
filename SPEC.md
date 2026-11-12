@@ -64,6 +64,22 @@ from the earlier FitLab app.
   it is seeded. `content/*.json` is the seed and the bulk-edit path;
   the admin panel edits Firestore directly and leaves `contentHash` alone, so
   the import skips (and fails on) documents edited there unless `--force`.
+- **Admin program editor**: edits `programs/{id}` and its `detail/main` in
+  one transaction, so both are written or neither; a save is refused when
+  either changed since the editor loaded them, and keeps `contentHash` and
+  unknown card fields, as the exercise editor does. Typed in: id, status,
+  premium, order, level, goal, equipment profile, length, name and summary
+  per language of `languages`, and the days. `daysPerWeek`, `equipment` and
+  `minutes` are computed from the days on save and shown read-only, so they
+  always match the rules. Every save, drafts included, must pass
+  `programProblems` and have an unused id and a unique name and order, as
+  the import rejects an invalid file whatever its status; the 6 free / 19
+  premium split of live programs shows as catalogue health and never
+  blocks, nor do the weekly-set warnings. The picker offers live exercises;
+  a new item takes the builder's defaults and the exercise's rest. A save
+  drops unknown fields inside days and items (the import rejects them too).
+  Readers take a whole double as an integer. Panel strings are English
+  literals like the rest of the panel (`lib/main_admin.dart`).
 - **Offline**: Firestore's persistent cache is the local database. The workout
   in progress is also kept in a local file so a crash never loses sets.
   Derived numbers are computed from workouts on read wherever the query is
