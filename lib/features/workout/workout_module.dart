@@ -28,8 +28,7 @@ class WorkoutModule implements FeatureModule {
   const WorkoutModule();
 
   /// The program days done, from the stored workouts.
-  static CompletedDays completedDays(GetIt _) =>
-      WorkoutCompletedDays(FirebaseFirestore.instance);
+  static CompletedDays completedDays(GetIt sl) => WorkoutCompletedDays(sl());
 
   @override
   void register(GetIt sl) {
@@ -101,6 +100,7 @@ class WorkoutModule implements FeatureModule {
         ),
       )
       ..registerFactory(() => WatchHistory(sl()))
+      ..registerFactory(() => WatchWorkoutsBetween(sl()))
       ..registerFactory(() => WatchStoredWorkout(sl()))
       ..registerFactory(() => WatchRejectedWorkoutEdits(sl()))
       ..registerFactory(() => SaveWorkoutChange(sl()))

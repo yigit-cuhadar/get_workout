@@ -2,6 +2,8 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../../core/grouping.dart';
 import '../../exercises/domain/vocabulary.dart';
+import '../../programs/domain/calendar_date.dart';
+import '../../programs/domain/completed_days.dart';
 import '../../programs/domain/program.dart';
 
 enum SetType implements Coded {
@@ -231,6 +233,9 @@ class Workout extends Equatable {
 
   bool get isFromProgram => programId != null && dayIndex != null;
 
+  /// The local date it started, the date a program day counts as done on.
+  CalendarDate get startDate => CalendarDate.of(startedAt.toLocal());
+
   /// Each exercise once, in order.
   List<String> get exerciseIds => [
     ...{for (final exercise in exercises) exercise.exerciseId},
@@ -270,3 +275,13 @@ class Workout extends Equatable {
     exercises,
   ];
 }
+
+/// The days of program [programId] that [workouts] did, by date.
+List<CompletedDay> completedDaysOf(
+  Iterable<Workout> workouts,
+  String programId,
+) => [
+  for (final workout in workouts)
+    if (workout.programId == programId && workout.dayIndex != null)
+      CompletedDay(date: workout.startDate, dayIndex: workout.dayIndex!),
+]..sort((a, b) => a.date.compareTo(b.date));

@@ -368,6 +368,26 @@ void main() {
     );
 
     blocTest<ProgramListCubit, ProgramListState>(
+      'is not offered when it was done on its date',
+      build: build,
+      act: (_) async {
+        await ready();
+        completed.add([
+          CompletedDay(date: CalendarDate(2026, 11, 12), dayIndex: 1),
+        ]);
+        await pumpEventQueue();
+      },
+      verify: (cubit) {
+        expect(cubit.state.missed, isNull);
+        expect(cubit.state.moveDate, isNull);
+        expect(
+          cubit.state.weekPlan.where((d) => d.status == PlannedStatus.missed),
+          isEmpty,
+        );
+      },
+    );
+
+    blocTest<ProgramListCubit, ProgramListState>(
       'is not offered while nothing was missed',
       build: () {
         now = DateTime(2026, 11, 12, 8);

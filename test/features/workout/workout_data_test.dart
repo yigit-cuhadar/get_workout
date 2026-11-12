@@ -289,7 +289,7 @@ service cloud.firestore {
       await store('w5', DateTime(2026, 11, 16), program: 'p1', day: 0);
       await pumpEventQueue();
 
-      final days = await WorkoutCompletedDays(firestore)
+      final days = await WorkoutCompletedDays(repository)
           .watch(
             'u1',
             'p1',

@@ -1,5 +1,6 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../programs/domain/calendar_date.dart';
 import 'cardio_session.dart';
 
 abstract interface class CardioRepository {
@@ -7,6 +8,14 @@ abstract interface class CardioRepository {
   /// change. Documents that cannot be read are skipped. Errors arrive as
   /// [Failure]s.
   Stream<List<CardioSession>> watchSessions(String uid);
+
+  /// The sessions of user [uid] started on the local dates [from] to [to],
+  /// both included, oldest first; otherwise like [watchSessions].
+  Stream<List<CardioSession>> watchSessionsBetween(
+    String uid, {
+    required CalendarDate from,
+    required CalendarDate to,
+  });
 
   /// Creates the session, with all its values, when it has no id. Otherwise
   /// updates the stored one in place: the type, date and duration, plus the
