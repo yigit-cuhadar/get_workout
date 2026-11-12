@@ -311,7 +311,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
         finished: schedule?.isFinished(today) ?? false,
         missed: missed
             ? PlannedDay(
-                date: active!.nextDate,
+                date: active.nextDate,
                 dayIndex: schedule.nextDayIndex,
                 status: PlannedStatus.missed,
               )
