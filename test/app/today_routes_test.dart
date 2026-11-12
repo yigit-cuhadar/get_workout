@@ -244,7 +244,10 @@ void main() {
     testWidgets('starts the next day through startProgramDay', (tester) async {
       await start(tester, programs: planned);
 
+      // The active program is the headline, its next day below.
+      expect(find.text('Active program'), findsOneWidget);
       expect(find.text('Upper Lower'), findsOneWidget);
+      expect(find.text('Next workout'), findsNothing);
       expect(find.textContaining('2 exercises · ~'), findsOneWidget);
       await tap(tester, find.text('Start Lower'));
 
@@ -333,8 +336,10 @@ void main() {
         programs: const ProgramListState(status: ProgramListStatus.ready),
       );
 
+      expect(find.text('Next workout'), findsOneWidget);
+      expect(find.text('Active program'), findsNothing);
       // The card's button, before the quick action of the same name.
-      await tap(tester, find.text('Start empty workout').first);
+      await tap(tester, find.text('Free workout').first);
 
       verify(() => workout.startFree('Workout')).called(1);
       expectAt(Routes.workout);
@@ -358,10 +363,10 @@ void main() {
   });
 
   group('quick actions', () {
-    testWidgets('start an empty workout', (tester) async {
+    testWidgets('start a free workout', (tester) async {
       await start(tester, programs: planned);
 
-      await tap(tester, find.text('Start empty workout'));
+      await tap(tester, find.text('Free workout'));
 
       verify(() => workout.startFree('Workout')).called(1);
       expectAt(Routes.workout);

@@ -115,23 +115,26 @@ class _TodayViewState extends State<_TodayView> {
   );
 }
 
-/// A card with a [title] row, which opens [onOpen] when given.
+/// A card with a [title] row, under its [label] when given, which opens
+/// [onOpen] when given.
 class _TodayCard extends StatelessWidget {
   const _TodayCard({
     required this.title,
     required this.child,
-    this.subtitle,
+    this.label,
     this.onOpen,
   });
 
   final String title;
-  final String? subtitle;
+  final String? label;
   final VoidCallback? onOpen;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = this.subtitle;
+    final label = this.label;
+    final theme = Theme.of(context);
+    final titleText = Text(title, style: theme.textTheme.titleMedium);
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
@@ -141,11 +144,20 @@ class _TodayCard extends StatelessWidget {
           Semantics(
             header: true,
             child: ListTile(
-              title: Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              subtitle: subtitle == null ? null : Text(subtitle),
+              title: label == null
+                  ? titleText
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        titleText,
+                      ],
+                    ),
               trailing: onOpen == null ? null : const Icon(Icons.chevron_right),
               onTap: onOpen,
             ),
@@ -180,9 +192,11 @@ class _NextWorkoutCard extends StatelessWidget {
       MissedProgramDay(:final program) => program,
       _ => null,
     };
+    // With an active program it is the headline, opening the program; its
+    // next day follows.
     return _TodayCard(
-      title: l10n.todayNextTitle,
-      subtitle: program?.name,
+      label: program == null ? null : l10n.todayActiveProgram,
+      title: program?.name ?? l10n.todayNextTitle,
       onOpen: program == null
           ? null
           : () => context.go(Routes.program(program.id!)),
@@ -308,7 +322,7 @@ class _NoProgramDay extends StatelessWidget {
           const SizedBox(height: Gap.sm),
           OutlinedButton(
             onPressed: () => startFreeWorkout(context),
-            child: Text(l10n.workoutStartEmpty),
+            child: Text(l10n.workoutStartFree),
           ),
         ],
       ),
@@ -370,7 +384,7 @@ class _QuickActionsCard extends StatelessWidget {
         children: [
           ListTile(
             leading: const Icon(Icons.play_arrow),
-            title: Text(l10n.workoutStartEmpty),
+            title: Text(l10n.workoutStartFree),
             onTap: () => startFreeWorkout(context),
           ),
           ListTile(

@@ -749,12 +749,23 @@ from the earlier FitLab app.
   is generic except for `CalendarDate`; move it to `forge_ui`, taking
   `DateTime` dates, when that package is next changed.
 - **Starting a workout**: the Programs and Today tabs start the next day,
-  a program's page any of its days, the Today tab also an empty workout,
+  a program's page any of its days, the Today tab also a free workout,
   and an exercise's page adds it to the workout in progress or, after
   asking, starts one with it. A program day waits until the user's custom
   exercises are loaded; exercises really gone are left out and the user is
   told how many. Starting while a workout is in progress asks to resume it
   or discard it.
+- **Empty workout**: a workout with no exercise (`Workout.isEmpty`; with
+  none there is no set, ticked or not, and a note alone does not count) is
+  open but not in progress (`ActiveWorkoutState.inProgress`): no bar in the
+  shell, not kept in the local file (an empty one kept by an older version
+  is dropped on load), no rest (`Rest.followEdit` ends it), never stored,
+  and starting another simply replaces it. Leaving its page (back or
+  minimize) ends it through `ActiveWorkoutCubit.leave`, and Discard or
+  Finish end it, all without asking. A free workout starts empty and is in
+  progress from its first exercise; a program day (or an exercise's page)
+  starts with exercises, so it is in progress at once; removing the last
+  exercise makes any workout empty again.
 - **Add to program**: an exercise's page appends it, with the default
   targets, to a day of one of the user's programs through the program's
   validation; a full day cannot be picked, and without programs it offers to
@@ -905,7 +916,10 @@ from the earlier FitLab app.
   be read adds nothing.
 - **Today tab** (`lib/features/today`): a scrolling list of independent
   cards, each on its own data, so one failing leaves the others. Next
-  workout: the Programs tab's own `ProgramListCubit` (one instance), so
+  workout: with an active program the card's headline is that program,
+  labelled "Active program" and opening its page, its next day below;
+  without one it is titled "Next workout". It uses the Programs tab's own
+  `ProgramListCubit` (one instance), so
   both show the same plan; the next day with its exercise count and
   estimate, the date it is planned for (`ProgramListState.nextDate`, the
   first of `ProgramSchedule.upcoming`) and Start through
@@ -918,12 +932,12 @@ from the earlier FitLab app.
   title, as the Programs tab waits, so a missed day never shows as a
   planned one with Start. A locked premium copy shows its day, locked,
   with Start opening the paywall. Without a program, or once it finished: the
-  catalogue, the generator and "Start empty workout". Week strip: the
+  catalogue, the generator and "Free workout". Week strip: the
   calendar's `calendarEntries` and marks over the current week from the
   locale's first weekday (Sunday in English, like weekly volume, unlike
   the program week plan), drawn by `MonthGrid` as one week; the strip and
   every day open the calendar, which has no route for a given date. Quick
-  actions: start an empty workout, log cardio, add a past workout, the
+  actions: a free workout, log cardio, add a past workout, the
   calculators (a row, not a card listing all six, which would crowd the
   tab; it opens the list under Profile, which keeps its own row). Volume
   card: `WatchWeeklyVolume` with one week, never the trend, whatever the
@@ -1173,7 +1187,7 @@ Group 4, programs
 
 Group 5, workout
 - [x] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery
-- [x] Free workout — start empty, save as program at the end
+- [x] Free workout — start empty (not in progress until an exercise is added), save as program at the end
 - [x] Rest timer — auto start, +15 s, skip, notification
 - [x] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification
 - [x] Finish and summary — records with a short celebration, `exerciseStats` update
