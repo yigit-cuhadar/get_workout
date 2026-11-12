@@ -1,13 +1,14 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 
-import { getAuth } from "firebase-admin/auth";
+import { Auth, getAuth } from "firebase-admin/auth";
 import {
   DocumentData,
+  Firestore,
   Timestamp,
   getFirestore,
 } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
-import { defineSecret, projectID } from "firebase-functions/params";
+import { defineSecret } from "firebase-functions/params";
 import { onRequest } from "firebase-functions/v2/https";
 
 /**
@@ -25,16 +26,27 @@ export const PREMIUM_ENTITLEMENT = "premium";
 const ANONYMOUS_PREFIX = "$RCAnonymousID:";
 
 /**
- * The expiry written for a premium purchase without one (a lifetime
+ * The expiry written for a non-renewing purchase without one (a lifetime
  * product): the last day Firestore timestamps hold, as the rules compare it.
  */
 export const NEVER_EXPIRES_MS = Date.UTC(9999, 11, 31);
 
+/** How long RevenueCat's TEMPORARY_ENTITLEMENT_GRANT lasts at most. */
+export const TEMPORARY_GRANT_MS = 24 * 60 * 60 * 1000;
+
+/** The one `cancel_reason` that means a refund. */
+const REFUND = "CUSTOMER_SUPPORT";
+
 /**
- * Events after which the user has Premium until the event's expiry: a
- * cancelled, paused or failing subscription runs to the end of what was
- * paid (or the grace period). A refund arrives as a CANCELLATION whose
- * expiry is already past.
+ * How many ids of events applied at the latest event time are kept, to
+ * tell a redelivery from another event of the same millisecond.
+ */
+const KEPT_EVENT_IDS = 20;
+
+/**
+ * Events after which the user has Premium: a cancelled (not refunded),
+ * paused or failing subscription runs to the end of what was paid, or of
+ * the grace period.
  */
 const GRANTING = new Set([
   "INITIAL_PURCHASE",
@@ -62,15 +74,16 @@ export const Reason = {
   invalidEvent: "invalid-event",
   testEvent: "test-event",
   unhandledType: "unhandled-type",
-  sandboxIgnored: "sandbox-ignored",
   notPremium: "not-premium",
+  /** A subscription event without an expiry, for a user with none known. */
+  noExpiry: "no-expiry",
   /** Only anonymous or unusable RevenueCat ids. */
   noUser: "no-user",
   /** No Auth user: a deleted account is never written again. */
   deletedUser: "deleted-user",
-  /** An event older than the last one applied for the user. */
+  /** An event older than the state stored, which it cannot change. */
   stale: "stale",
-  /** The last event applied, delivered again. */
+  /** An event already applied, delivered again. */
   duplicate: "duplicate",
   /** A transfer with nothing known to move. */
   nothingToTransfer: "nothing-to-transfer",
@@ -89,10 +102,12 @@ export interface RevenueCatEvent {
   appUserId?: string;
   originalAppUserId?: string;
   aliases: string[];
-  /** Null when the product grants no entitlement. */
+  /** Null when absent or when the product grants no entitlement. */
   entitlementIds: string[] | null;
   productId?: string;
-  /** Null for a purchase that never expires. */
+  newProductId?: string;
+  cancelReason?: string;
+  /** Null when absent: a non-renewing purchase that never expires. */
   expirationMs: number | null;
   gracePeriodExpirationMs: number | null;
   transferredFrom: string[];
@@ -103,11 +118,21 @@ export interface RevenueCatEvent {
 export interface StoredEntitlement {
   premium: boolean;
   expiresAtMs: number;
-  /** Absent when only a transfer away from the user was recorded. */
+  /** Absent when no event named a product for the user. */
   productId?: string;
-  /** `event_timestamp_ms` of the last event applied. */
+  /** `event_timestamp_ms` of the latest event applied. */
   lastEventMs: number;
-  lastEventId: string;
+  /** Ids of the events applied at [lastEventMs], at most [KEPT_EVENT_IDS]. */
+  lastEventIds: string[];
+}
+
+/** The entitlement an event leads to, before ordering is considered. */
+interface Outcome {
+  premium: boolean;
+  expiresAtMs: number;
+  productId?: string;
+  /** Only grants may still extend Premium when they arrive late. */
+  grant: boolean;
 }
 
 /** What one event writes, by uid, or why it writes nothing. */
@@ -121,12 +146,13 @@ export interface EntitlementStore {
   userExists(uid: string): Promise<boolean>;
   /**
    * In one transaction: reads `entitlements/{uid}` of each of [uids],
-   * passes them to [decide] and writes its plan.
+   * passes them to [decide] and writes its plan, all or nothing.
    */
   apply(
     uids: string[],
     decide: (stored: Map<string, StoredEntitlement | undefined>) => Plan,
   ): Promise<Plan>;
+  /** Deletes `entitlements/{uid}`; nothing to delete is fine. */
   delete(uid: string): Promise<void>;
 }
 
@@ -168,11 +194,18 @@ const strings = (value: unknown): string[] =>
 const optionalString = (value: unknown): string | undefined =>
   typeof value === "string" ? value : undefined;
 
+/** The event's fields, when the body holds an event object. */
+const eventFields = (body: unknown): { [key: string]: unknown } | null => {
+  const event = (body as { event?: unknown } | null)?.event;
+  return typeof event === "object" && event !== null
+    ? (event as { [key: string]: unknown })
+    : null;
+};
+
 /** The event in a webhook body, or null when it is not one. */
 export function parseEvent(body: unknown): RevenueCatEvent | null {
-  const event = (body as { event?: unknown } | null)?.event;
-  if (typeof event !== "object" || event === null) return null;
-  const fields = event as { [key: string]: unknown };
+  const fields = eventFields(body);
+  if (fields === null) return null;
   const { id, type, event_timestamp_ms: timestampMs } = fields;
   if (typeof id !== "string" || id.length === 0) return null;
   if (typeof type !== "string" || !isMillis(timestampMs)) return null;
@@ -201,6 +234,8 @@ export function parseEvent(body: unknown): RevenueCatEvent | null {
       ? strings(fields.entitlement_ids)
       : null,
     productId: optionalString(fields.product_id),
+    newProductId: optionalString(fields.new_product_id),
+    cancelReason: optionalString(fields.cancel_reason),
     expirationMs,
     gracePeriodExpirationMs,
     transferredFrom: strings(fields.transferred_from),
@@ -232,16 +267,134 @@ export function targetUid(event: RevenueCatEvent): string | undefined {
   return uids.size === 1 ? [...uids][0] : undefined;
 }
 
-/** Why [event] must not change [stored], if it must not. */
-function staleness(
+/**
+ * Whether [event] is about Premium. TEMPORARY_ENTITLEMENT_GRANT names no
+ * entitlement; the app has only Premium, so it is.
+ */
+const isPremiumEvent = (event: RevenueCatEvent) =>
+  event.type === "TEMPORARY_ENTITLEMENT_GRANT" ||
+  (event.entitlementIds?.includes(PREMIUM_ENTITLEMENT) ?? false);
+
+const optionalProduct = (productId: string | undefined) =>
+  productId === undefined ? {} : { productId };
+
+/** The expiry of Premium [stored] still grants, else 0. */
+const premiumUntil = (stored: StoredEntitlement | undefined) =>
+  stored?.premium ? stored.expiresAtMs : 0;
+
+/**
+ * What a premium event other than TRANSFER leads to from [stored], or null
+ * when it has no expiry to grant. Grants never shorten Premium already
+ * known: only EXPIRATION and a refund end it, and not when they are about
+ * another product than the one Premium runs on and that is still running
+ * (a plan switch, a temporary grant expiring next to a subscription).
+ */
+export function outcomeOf(
   event: RevenueCatEvent,
   stored: StoredEntitlement | undefined,
-): ReasonValue | undefined {
-  if (stored === undefined) return undefined;
-  if (event.timestampMs < stored.lastEventMs) return Reason.stale;
-  const same =
-    event.timestampMs === stored.lastEventMs && event.id === stored.lastEventId;
-  return same ? Reason.duplicate : undefined;
+): Outcome | null {
+  const { type, timestampMs, expirationMs, productId } = event;
+  const until = premiumUntil(stored);
+  const revokes =
+    type === "EXPIRATION" ||
+    (type === "CANCELLATION" && event.cancelReason === REFUND);
+  if (revokes) {
+    const otherProduct =
+      stored?.productId !== undefined &&
+      productId !== undefined &&
+      stored.productId !== productId &&
+      until > timestampMs;
+    if (stored && otherProduct) {
+      const { premium, expiresAtMs } = stored;
+      return {
+        premium,
+        expiresAtMs,
+        ...optionalProduct(stored.productId),
+        grant: false,
+      };
+    }
+    return {
+      premium: false,
+      expiresAtMs: Math.min(expirationMs ?? timestampMs, timestampMs),
+      ...optionalProduct(productId ?? stored?.productId),
+      grant: false,
+    };
+  }
+  let expiresAtMs: number | null;
+  let product = productId;
+  switch (type) {
+    case "TEMPORARY_ENTITLEMENT_GRANT":
+      expiresAtMs = timestampMs + TEMPORARY_GRANT_MS;
+      product = stored?.productId;
+      break;
+    case "NON_RENEWING_PURCHASE":
+      expiresAtMs = expirationMs ?? NEVER_EXPIRES_MS;
+      break;
+    case "BILLING_ISSUE":
+      expiresAtMs = Math.max(
+        expirationMs ?? 0,
+        event.gracePeriodExpirationMs ?? 0,
+      );
+      break;
+    case "PRODUCT_CHANGE":
+      expiresAtMs = expirationMs;
+      product = event.newProductId ?? productId;
+      break;
+    default:
+      expiresAtMs = expirationMs;
+  }
+  const kept = Math.max(expiresAtMs ?? 0, until);
+  if (kept === 0) return null;
+  return {
+    premium: true,
+    expiresAtMs: kept,
+    ...optionalProduct(product ?? stored?.productId),
+    grant: true,
+  };
+}
+
+/** Orders outcomes of one millisecond: later Premium, then product id. */
+const ranksAbove = (
+  a: { premium: boolean; expiresAtMs: number; productId?: string },
+  b: { premium: boolean; expiresAtMs: number; productId?: string },
+) => {
+  const rank = (o: typeof a) => (o.premium ? o.expiresAtMs : -1);
+  if (rank(a) !== rank(b)) return rank(a) > rank(b);
+  return (a.productId ?? "") > (b.productId ?? "");
+};
+
+/**
+ * What [outcome] of [event] makes of [stored], whatever order events
+ * arrive in: a newer event replaces the state; events of one millisecond
+ * keep the outcome that ranks highest; an older event only extends
+ * Premium still granted (a late grant, e.g. BILLING_ISSUE's grace after
+ * the billing error's CANCELLATION), else changes nothing. An event id
+ * already applied changes nothing.
+ */
+export function settle(
+  event: RevenueCatEvent,
+  stored: StoredEntitlement | undefined,
+  outcome: Outcome,
+): StoredEntitlement | ReasonValue {
+  const { premium, expiresAtMs, productId } = outcome;
+  const state = { premium, expiresAtMs, ...optionalProduct(productId) };
+  if (stored === undefined || event.timestampMs > stored.lastEventMs) {
+    const { timestampMs: lastEventMs, id } = event;
+    return { ...state, lastEventMs, lastEventIds: [id] };
+  }
+  if (stored.lastEventIds.includes(event.id)) return Reason.duplicate;
+  if (event.timestampMs === stored.lastEventMs) {
+    const lastEventIds = [...stored.lastEventIds, event.id].slice(
+      -KEPT_EVENT_IDS,
+    );
+    return ranksAbove(state, stored)
+      ? { ...state, lastEventMs: stored.lastEventMs, lastEventIds }
+      : { ...stored, lastEventIds };
+  }
+  if (outcome.grant && stored.premium && expiresAtMs > stored.expiresAtMs) {
+    return { ...stored, expiresAtMs };
+  }
+  return Reason.stale;
 }
 
 /** What a premium event other than TRANSFER writes for [uid]. */
@@ -250,43 +403,12 @@ export function planUpdate(
   uid: string,
   stored: StoredEntitlement | undefined,
 ): Plan {
-  const skip = staleness(event, stored);
-  if (skip) return { writes: new Map(), reason: skip };
-  const { type, timestampMs, expirationMs } = event;
-  let premium = true;
-  let expiresAtMs: number;
-  if (type === "EXPIRATION") {
-    premium = false;
-    expiresAtMs = expirationMs ?? timestampMs;
-  } else if (expirationMs === null) {
-    // Only a refund cancels a purchase that never expires.
-    premium = type !== "CANCELLATION";
-    expiresAtMs = premium ? NEVER_EXPIRES_MS : timestampMs;
-  } else if (type === "BILLING_ISSUE") {
-    // Premium lasts through the store's grace period.
-    expiresAtMs = Math.max(expirationMs, event.gracePeriodExpirationMs ?? 0);
-  } else if (type === "PRODUCT_CHANGE" && stored?.premium) {
-    // The change may take effect later; its own renewal sets the expiry.
-    expiresAtMs = Math.max(expirationMs, stored.expiresAtMs);
-  } else {
-    expiresAtMs = expirationMs;
-  }
-  const productId = event.productId ?? stored?.productId;
-  return {
-    writes: new Map([
-      [
-        uid,
-        {
-          premium,
-          expiresAtMs,
-          ...(productId === undefined ? {} : { productId }),
-          lastEventMs: timestampMs,
-          lastEventId: event.id,
-        },
-      ],
-    ]),
-    reason: Reason.applied,
-  };
+  const outcome = outcomeOf(event, stored);
+  if (outcome === null) return { writes: new Map(), reason: Reason.noExpiry };
+  const settled = settle(event, stored, outcome);
+  return typeof settled === "string"
+    ? { writes: new Map(), reason: settled }
+    : { writes: new Map([[uid, settled]]), reason: Reason.applied };
 }
 
 /**
@@ -301,53 +423,42 @@ export function planTransfer(
   stored: Map<string, StoredEntitlement | undefined>,
 ): Plan {
   const writes = new Map<string, StoredEntitlement>();
-  const bookkeeping = { lastEventMs: event.timestampMs, lastEventId: event.id };
+  let skipped: ReasonValue | undefined;
+  const put = (uid: string, outcome: Outcome) => {
+    const settled = settle(event, stored.get(uid), outcome);
+    if (typeof settled === "string") {
+      skipped ??= settled;
+    } else {
+      writes.set(uid, settled);
+    }
+  };
   let source: StoredEntitlement | undefined;
   for (const uid of from) {
     const entitlement = stored.get(uid);
-    if (
-      entitlement?.premium &&
-      entitlement.expiresAtMs > (source?.expiresAtMs ?? -1)
-    ) {
-      source = entitlement;
-    }
+    if (premiumUntil(entitlement) > premiumUntil(source)) source = entitlement;
   }
-  let skipped: ReasonValue | undefined;
   for (const uid of from) {
     const entitlement = stored.get(uid);
-    const skip = staleness(event, entitlement);
-    if (skip) {
-      skipped ??= skip;
-      continue;
-    }
-    writes.set(uid, {
+    put(uid, {
       premium: false,
       expiresAtMs: Math.min(
         entitlement?.expiresAtMs ?? event.timestampMs,
         event.timestampMs,
       ),
-      ...(entitlement?.productId === undefined
-        ? {}
-        : { productId: entitlement.productId }),
-      ...bookkeeping,
+      ...optionalProduct(entitlement?.productId),
+      grant: false,
     });
   }
   if (source) {
     for (const uid of to) {
       const entitlement = stored.get(uid);
-      const skip = staleness(event, entitlement);
-      if (skip) {
-        skipped ??= skip;
-        continue;
-      }
-      const keepsLater =
-        entitlement?.premium && entitlement.expiresAtMs > source.expiresAtMs;
-      const kept = keepsLater ? entitlement : source;
-      writes.set(uid, {
+      const keepsLater = premiumUntil(entitlement) > source.expiresAtMs;
+      const kept = keepsLater && entitlement ? entitlement : source;
+      put(uid, {
         premium: true,
         expiresAtMs: kept.expiresAtMs,
-        ...(kept.productId === undefined ? {} : { productId: kept.productId }),
-        ...bookkeeping,
+        ...optionalProduct(kept.productId),
+        grant: true,
       });
     }
   }
@@ -356,13 +467,20 @@ export function planTransfer(
   return { writes, reason };
 }
 
-/** The uids among [ids] that Auth has, in order. */
+/**
+ * The uids among [ids] that Auth has, in order. Those it does not have
+ * get their entitlement deleted, so a retry after a failure, or an event
+ * racing `deleteAccount`, leaves nothing behind.
+ */
 async function existing(
   store: EntitlementStore,
   ids: string[],
 ): Promise<string[]> {
   const uids = [...new Set(ids.filter(isUid))];
   const exists = await Promise.all(uids.map((uid) => store.userExists(uid)));
+  await Promise.all(
+    uids.filter((_, i) => !exists[i]).map((uid) => store.delete(uid)),
+  );
   return uids.filter((_, i) => exists[i]);
 }
 
@@ -394,27 +512,23 @@ async function applyEvent(
       planTransfer(event, from, to, stored),
     );
   } else {
-    if (!event.entitlementIds?.includes(PREMIUM_ENTITLEMENT)) {
-      return respond(200, Reason.notPremium);
-    }
+    if (!isPremiumEvent(event)) return respond(200, Reason.notPremium);
     const uid = targetUid(event);
     if (uid === undefined) return respond(200, Reason.noUser);
-    if (!(await store.userExists(uid))) return respond(200, Reason.deletedUser);
+    if ((await existing(store, [uid])).length === 0) {
+      return respond(200, Reason.deletedUser);
+    }
     plan = await store.apply([uid], (stored) =>
       planUpdate(event, uid, stored.get(uid)),
     );
   }
   // An account deleted while this was written: `deleteAccount` deletes
   // the entitlement again after the auth user, and this catches the rest.
-  for (const uid of plan.writes.keys()) {
-    if (!(await store.userExists(uid))) {
-      await store.delete(uid);
-      logger.warn("entitlement of a deleted account removed", { uid });
-    }
-  }
+  await existing(store, [...plan.writes.keys()]);
   logger.info("revenuecat event", {
     id: event.id,
     type: event.type,
+    environment: event.environment,
     uids: [...plan.writes.keys()],
     reason: plan.reason,
   });
@@ -425,15 +539,13 @@ async function applyEvent(
  * Handles one webhook delivery. RevenueCat counts only 200 as delivered
  * and retries anything else, so every event handled or deliberately
  * ignored answers 200, a request that is not RevenueCat's 4xx, and only a
- * failure a retry may fix 500. [acceptSandbox] is the dev project's.
+ * failure a retry may fix 500. Sandbox and production events are treated
+ * alike: with a release build only testers and App Review can buy in the
+ * sandbox, and their purchases must unlock what they paid for.
  */
 export async function revenueCatWebhookOf(
   request: WebhookRequest,
-  deps: {
-    authorization: string;
-    acceptSandbox: boolean;
-    store: EntitlementStore;
-  },
+  deps: { authorization: string; store: EntitlementStore },
 ): Promise<WebhookResponse> {
   // Never log the header or the body: either may hold the secret.
   if (!sameSecret(request.authorization, deps.authorization)) {
@@ -444,15 +556,16 @@ export async function revenueCatWebhookOf(
     return respond(405, Reason.methodNotAllowed);
   }
   if (!request.isJson) return respond(415, Reason.notJson);
+  // The type first: an event this function ignores may have any shape.
+  const type = eventFields(request.body)?.type;
+  if (type === "TEST") return respond(200, Reason.testEvent);
+  if (typeof type === "string" && !HANDLED.has(type)) {
+    return respond(200, Reason.unhandledType);
+  }
   const event = parseEvent(request.body);
   if (event === null) {
     logger.error("revenuecat webhook: not an event");
     return respond(400, Reason.invalidEvent);
-  }
-  if (event.type === "TEST") return respond(200, Reason.testEvent);
-  if (!HANDLED.has(event.type)) return respond(200, Reason.unhandledType);
-  if (event.environment === "SANDBOX" && !deps.acceptSandbox) {
-    return respond(200, Reason.sandboxIgnored);
   }
   try {
     return await applyEvent(event, deps.store);
@@ -470,19 +583,29 @@ const toStored = (data: DocumentData): StoredEntitlement => ({
   premium: data.premium === true,
   expiresAtMs:
     data.expiresAt instanceof Timestamp ? data.expiresAt.toMillis() : 0,
-  ...(typeof data.productId === "string" ? { productId: data.productId } : {}),
+  ...optionalProduct(
+    typeof data.productId === "string" ? data.productId : undefined,
+  ),
   lastEventMs: typeof data.lastEventMs === "number" ? data.lastEventMs : 0,
-  lastEventId: typeof data.lastEventId === "string" ? data.lastEventId : "",
+  lastEventIds: strings(data.lastEventIds),
 });
 
-/** The Admin SDK behind [EntitlementStore]. */
-export const firebaseEntitlementStore = (): EntitlementStore => {
-  const db = getFirestore();
+/** `entitlements/{uid}` as written: `expiresAt` a timestamp. */
+const toDocument = ({ expiresAtMs, ...rest }: StoredEntitlement) => ({
+  ...rest,
+  expiresAt: Timestamp.fromMillis(expiresAtMs),
+});
+
+/** [EntitlementStore] on [db] and [auth]. */
+export const firebaseEntitlementStore = (
+  db: Firestore,
+  auth: Pick<Auth, "getUser">,
+): EntitlementStore => {
   const entitlements = db.collection("entitlements");
   return {
     async userExists(uid) {
       try {
-        await getAuth().getUser(uid);
+        await auth.getUser(uid);
         return true;
       } catch (error) {
         if ((error as { code?: string }).code === "auth/user-not-found") {
@@ -503,11 +626,8 @@ export const firebaseEntitlementStore = (): EntitlementStore => {
             }),
           ),
         );
-        for (const [uid, { expiresAtMs, ...rest }] of plan.writes) {
-          transaction.set(entitlements.doc(uid), {
-            ...rest,
-            expiresAt: Timestamp.fromMillis(expiresAtMs),
-          });
+        for (const [uid, entitlement] of plan.writes) {
+          transaction.set(entitlements.doc(uid), toDocument(entitlement));
         }
         return plan;
       }),
@@ -517,12 +637,9 @@ export const firebaseEntitlementStore = (): EntitlementStore => {
   };
 };
 
-/**
- * RevenueCat's webhook. The dev project (id ending in `-dev`) also applies
- * sandbox purchases; prod ignores them.
- */
+/** RevenueCat's webhook; public, as RevenueCat calls it without Google auth. */
 export const revenueCatWebhook = onRequest(
-  { secrets: [webhookAuthorization] },
+  { secrets: [webhookAuthorization], invoker: "public", maxInstances: 10 },
   async (req, res) => {
     const response = await revenueCatWebhookOf(
       {
@@ -533,8 +650,7 @@ export const revenueCatWebhook = onRequest(
       },
       {
         authorization: webhookAuthorization.value(),
-        acceptSandbox: projectID.value().endsWith("-dev"),
-        store: firebaseEntitlementStore(),
+        store: firebaseEntitlementStore(getFirestore(), getAuth()),
       },
     );
     res.status(response.status).json(response.body);

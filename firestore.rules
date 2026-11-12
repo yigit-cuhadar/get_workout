@@ -374,7 +374,7 @@ service cloud.firestore {
     // Written only by the revenueCatWebhook function (deleted by
     // deleteAccount) through the Admin SDK: `premium` (bool), `expiresAt`
     // (timestamp), `productId` and the webhook's own `lastEventMs` and
-    // `lastEventId`. Rules read only `premium` and `expiresAt`
+    // `lastEventIds`. Rules read only `premium` and `expiresAt`
     // (hasEntitlement); a revoked entitlement keeps the document with
     // `premium` false so older events cannot grant it again.
     match /entitlements/{uid} {

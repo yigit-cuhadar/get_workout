@@ -54,54 +54,74 @@ from the earlier FitLab app.
   the documented contract
   (https://www.revenuecat.com/docs/integrations/webhooks,
   https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields,
-  https://www.revenuecat.com/docs/integrations/webhooks/sample-events):
+  https://www.revenuecat.com/docs/integrations/webhooks/sample-events; the
+  tests use the sample events, with our uid and entitlement):
   - Auth: the `Authorization` header must equal the Functions secret
     `REVENUECAT_WEBHOOK_AUTHORIZATION` exactly (the docs do not say whether
     RevenueCat adds a scheme, so the secret holds the whole value set in the
     dashboard, e.g. `Bearer <random>`); SHA-256 digests compared in
-    constant time; else 401. Neither header nor body is logged.
+    constant time; else 401. Neither header nor body is logged. Deployed
+    with `invoker: "public"` (RevenueCat has no Google credentials) and
+    `maxInstances: 10`.
   - Only 200 counts as delivered; RevenueCat retries anything else about 5
     times over 80 minutes. So handled and deliberately ignored events answer
     200, requests that are not RevenueCat's 401/405/415/400, and only an
-    Auth or Firestore failure 500. Every response body is `{reason}`
-    (`applied`, `test-event`, `unhandled-type`, `sandbox-ignored`,
-    `not-premium`, `no-user`, `deleted-user`, `stale`, `duplicate`,
-    `nothing-to-transfer`, `retry`, ...), visible in RevenueCat's delivery
-    log.
-  - Events: only those whose `entitlement_ids` include `premium`. Premium
-    until `expiration_at_ms` on INITIAL_PURCHASE, RENEWAL, UNCANCELLATION,
-    NON_RENEWING_PURCHASE, CANCELLATION (a refund carries a past expiry),
-    SUBSCRIPTION_PAUSED, SUBSCRIPTION_EXTENDED, TEMPORARY_ENTITLEMENT_GRANT
-    and REFUND_REVERSED; BILLING_ISSUE until the later of the expiry and
-    `grace_period_expiration_at_ms`; PRODUCT_CHANGE (not necessarily in
-    effect yet) never shortens a known expiry; EXPIRATION sets `premium`
-    false. A null expiry is a lifetime purchase (9999-12-31), and a null
-    expiry on CANCELLATION revokes at the event time. TRANSFER carries no
-    entitlement: what is known for the `transferred_from` uids moves to the
-    `transferred_to` uids (a later expiry they already have is kept) and the
-    old uids get `premium` false. TEST and every other type: 200, nothing
-    written.
+    Auth or Firestore failure 500. The event type is read first, so TEST
+    and any type not handled answer 200 whatever their shape. Every
+    response body is `{reason}` (`applied`, `test-event`, `unhandled-type`,
+    `not-premium`, `no-expiry`, `no-user`, `deleted-user`, `stale`,
+    `duplicate`, `nothing-to-transfer`, `retry`, ...), visible in
+    RevenueCat's delivery log.
+  - Sandbox and production events are treated alike (`environment` is only
+    logged): with a release build only TestFlight testers and App Review can
+    buy in the sandbox, and App Review buys against prod, so its purchase
+    must unlock server content too. An event reaching the other project's
+    webhook names a uid that project's Auth does not have and is skipped.
+  - Events (only those whose `entitlement_ids` include `premium`, except
+    TEMPORARY_ENTITLEMENT_GRANT, which names none; the app has only
+    Premium). Grants never shorten Premium already known:
+
+    | Event | Writes |
+    |---|---|
+    | INITIAL_PURCHASE, RENEWAL, UNCANCELLATION, SUBSCRIPTION_PAUSED, SUBSCRIPTION_EXTENDED, REFUND_REVERSED | premium until the later of `expiration_at_ms` and the known expiry; `productId` = `product_id` |
+    | CANCELLATION, any `cancel_reason` but a refund (UNSUBSCRIBE, BILLING_ERROR, ...) | the same: premium runs to the end of the period |
+    | CANCELLATION with `cancel_reason` CUSTOMER_SUPPORT (the docs' only refund reason) | premium false, `expiresAt` = the earlier of `expiration_at_ms` and the event time |
+    | EXPIRATION | premium false, as a refund |
+    | BILLING_ISSUE | premium until the later of `expiration_at_ms`, `grace_period_expiration_at_ms` and the known expiry |
+    | PRODUCT_CHANGE | as a grant; `productId` = `new_product_id` when present |
+    | NON_RENEWING_PURCHASE | as a grant; a null `expiration_at_ms` (the docs: non-subscription or lifetime products) is 9999-12-31 |
+    | TEMPORARY_ENTITLEMENT_GRANT (only `app_user_id` and the time) | premium until event time + 24 h (the docs' maximum), product kept |
+    | TRANSFER (no user, entitlement or expiry fields) | the `transferred_from` uids' known Premium moves to the `transferred_to` uids (a later expiry they have is kept); the old uids get premium false |
+    | TEST, anything else | nothing |
+
+    Any other type without an expiry is never lifetime: it keeps the known
+    expiry, or writes nothing (`no-expiry`). A refund or EXPIRATION for a
+    product other than the stored `productId`, while the stored Premium
+    still runs (a plan switch, a temporary grant expiring next to a
+    subscription), keeps Premium.
   - Users: `app_user_id`, else the single uid among `original_app_user_id`
     and `aliases`; `$RCAnonymousID:` ids are never written. A uid Auth does
-    not have (a deleted account) is skipped; after writing, a uid deleted
-    meanwhile has its document removed, and `deleteAccount` deletes the
-    entitlement again after the auth user, so no event recreates it.
-  - Order and redelivery: the document keeps `lastEventMs`
-    (`event_timestamp_ms`) and `lastEventId` of the last event applied; an
-    older event, or the same id again, changes nothing (one transaction).
-  - Environment: in the project whose id ends in `-dev` the function
-    applies `SANDBOX` and `PRODUCTION` events; any other project (prod)
-    answers `sandbox-ignored` to `SANDBOX`. The project id comes from the
-    built-in `projectID` param. RevenueCat can also filter by environment
-    per webhook, which the setup uses as well. So TestFlight (sandbox
-    purchases, release build on prod) gets no server Premium.
+    not have (a deleted account) is skipped and its `entitlements/{uid}`
+    deleted (idempotent, so a retry after a 500 leaves nothing either);
+    after writing, a uid deleted meanwhile has its document removed, and
+    `deleteAccount` deletes the entitlement again after the auth user.
+  - Order and redelivery (one transaction per event): the document keeps
+    `lastEventMs` (the latest `event_timestamp_ms` applied) and
+    `lastEventIds` (the ids applied at that time, at most 20). A newer event
+    replaces the state. Events of the same millisecond keep the outcome
+    with the later Premium expiry (then the greater `productId`), whatever
+    order they arrive in. An older event only extends Premium still
+    granted (so BILLING_ISSUE's grace survives arriving after the billing
+    error's CANCELLATION) and otherwise changes nothing; an id in
+    `lastEventIds` is a no-op. Grants extend by taking a maximum, so a
+    redelivered older grant is harmless too.
   - Not done: RevenueCat recommends fetching `GET /subscribers` after each
     event instead of trusting the payload; that needs a secret REST key and
-    would fix the payload's blind spots (an EXPIRATION of one store's
-    subscription while another store's still runs; a transfer from an
-    anonymous id or a deleted account, e.g. a restore by the new guest
-    after deleting the account, grants the server nothing until the next
-    renewal). Revisit if one of these shows up.
+    would fix the payload's blind spots (a transfer from an anonymous id or
+    a deleted account, e.g. a restore by the new guest after deleting the
+    account, grants the server nothing until the next renewal; two
+    concurrent subscriptions are tracked as one `productId`). Revisit if
+    one of these shows up.
 - **Paywall**: full-screen `/paywall`, yearly selected by default, prices as
   the store gives them, trial shown only when the plan carries one, restore
   and legal links always visible. Terms and privacy URLs live in
@@ -977,9 +997,9 @@ measurement day fills all three.
 ### Server-written
 
 **`entitlements/{uid}`**: `premium`, `expiresAt` (a Firestore timestamp; the
-webhook converts), `productId` (absent when the only event known was a
-transfer away), and the webhook's `lastEventMs` and `lastEventId` (ordering
-and redelivery). Written only by the RevenueCat webhook (and
+webhook converts), `productId` (absent when no event named a product),
+and the webhook's `lastEventMs` and `lastEventIds` (ordering and
+redelivery). Written only by the RevenueCat webhook (and
 `tool/set_premium.sh` on dev); readable by its owner. The rules read only
 `premium` and `expiresAt`.
 
@@ -1132,8 +1152,10 @@ Group 9, launch readiness
     `CallableAccountRepository.reauthenticate` calls Firebase Auth itself.
 - Female body model with the same mesh names: the user supplies it before release.
 - `revenueCatWebhook` is written and unit-tested, not deployed or tried
-  against RevenueCat. A deploy of all of `functions/` needs its secret to
-  exist: until step 1 is done, deploy the others by name (`--only
+  against RevenueCat. Deploying all of `functions/` needs its secret: an
+  interactive `firebase deploy` prompts for a missing one, a
+  non-interactive deploy (CI, an agent) fails. Until step 1 is done,
+  deploy the others by name (`--only
   functions:deleteAccount,functions:sendAnnouncement`), or do step 1 early
   (with a random value nothing is accepted until RevenueCat has it). Once
   the RevenueCat project exists, per Firebase project (dev first):
@@ -1145,8 +1167,9 @@ Group 9, launch readiness
   3. In RevenueCat, Integrations → Webhooks, one webhook per project: URL
      `https://europe-west1-<project-id>.cloudfunctions.net/revenueCatWebhook`
      (2nd gen also has a `run.app` URL; either works), the same
-     Authorization header value, environment Sandbox for dev and Production
-     for prod, all apps, all events.
+     Authorization header value; dev: Sandbox; prod: both Production and
+     Sandbox (App Review and TestFlight buy in the sandbox against prod);
+     all apps, all events.
   4. Send the dashboard's test event (answers `test-event`), then a sandbox
      purchase with a debug build on dev: `entitlements/<uid>` appears and a
      premium program's days open; cancel and wait for EXPIRATION.
