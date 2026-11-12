@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../../settings/domain/user_settings.dart';
@@ -47,16 +50,41 @@ class MacrosState extends Equatable {
   ];
 }
 
+/// Starts from the user's known weight, unless they changed it before it
+/// arrived. Calories are not known: they depend on the target chosen.
 class MacrosCubit extends Cubit<MacrosState> {
-  MacrosCubit(this._split, {required this.weightUnit})
-    : super(const MacrosState());
+  MacrosCubit(
+    this._split,
+    GetCurrentUser getCurrentUser,
+    GetKnownBodyValues getKnownValues, {
+    required this.weightUnit,
+  }) : super(const MacrosState()) {
+    unawaited(_prefill(getCurrentUser, getKnownValues));
+  }
 
   final SplitMacros _split;
   final WeightUnit weightUnit;
+  var _weightChanged = false;
+
+  Future<void> _prefill(
+    GetCurrentUser getCurrentUser,
+    GetKnownBodyValues getKnownValues,
+  ) async {
+    final uid = getCurrentUser()?.id;
+    if (uid == null) return;
+    final known = await getKnownValues(uid);
+    if (isClosed || _weightChanged) return;
+    _calculate(
+      state._with(weight: knownText(known.weightKg, weightUnit.fromKg)),
+    );
+  }
 
   void caloriesChanged(String text) => _calculate(state._with(calories: text));
 
-  void weightChanged(String text) => _calculate(state._with(weight: text));
+  void weightChanged(String text) {
+    _weightChanged = true;
+    _calculate(state._with(weight: text));
+  }
 
   void proteinChanged(double gPerKg) =>
       _calculate(state._with(proteinGPerKg: gPerKg));

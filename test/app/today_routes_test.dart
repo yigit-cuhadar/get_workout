@@ -67,6 +67,7 @@ const _targets = [
   Routes.workout,
   Routes.paywall,
   Routes.steps,
+  Routes.calculators,
 ];
 
 /// Two seconds of frames, enough for a route transition or a snack bar
@@ -380,6 +381,14 @@ void main() {
       await tap(tester, find.text('Add past workout'));
 
       expectAt(Routes.historyNew);
+    });
+
+    testWidgets('open the calculators', (tester) async {
+      await start(tester, programs: planned);
+
+      await tap(tester, find.text('Calculators'));
+
+      expectAt(Routes.calculators);
     });
   });
 

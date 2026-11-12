@@ -383,6 +383,11 @@ class _QuickActionsCard extends StatelessWidget {
             title: Text(l10n.historyAddPast),
             onTap: () => context.go(Routes.historyNew),
           ),
+          ListTile(
+            leading: const Icon(Icons.calculate_outlined),
+            title: Text(l10n.calculatorsTitle),
+            onTap: () => context.go(Routes.calculators),
+          ),
         ],
       ),
     );
