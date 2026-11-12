@@ -231,14 +231,14 @@ from the earlier FitLab app.
   app support), because HealthKit never says. Android refusal shows "Open
   Health Connect" and "Ask again"; a missing Health Connect offers its
   store page. On iOS a month of zeros shows a hint to allow access in
-  Settings, never a denial. The goal is `settings.stepGoal`, 10,000 by
+  Settings, never a denial. A failed request shows on the explanation or
+  refusal screen; a failed refresh keeps the steps and says so. The goal is `settings.stepGoal`, 10,000 by
   default, 1,000-50,000 in steps of 500, edited on the page through
   `SettingsCubit`. `GetTodaySteps` (today vs goal) is registered for the
-  Today card. Charts: `BarChart` in `lib/core` (zero-based bars with the
-  goal as a line), used for the week and the 30 days; `LineChart` suits
-  trends, not daily counts. The page computes the first weekday inline,
-  as the calendar does; switch it to `lib/core/first_weekday.dart` once
-  the weekly-volume PR is merged.
+  Today card. Both charts are `BarChart`s with the goal as a line. The
+  steps domain imports `forge_health` whole, platform code included; once
+  the package exposes a domain-only library (next forge tag), import that
+  instead.
 - **Photos**: private app storage plus Cloud Storage backup. Never the gallery.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
@@ -507,9 +507,14 @@ from the earlier FitLab app.
   keeps the week before on screen until the next arrives, so the model
   keeps its camera. `WatchWeeklyVolume` with one week is what the Today
   tab's card will call.
-- **Volume charts**: the band bars and the trend are small `CustomPainter`s
-  of the volume feature, like the cardio chart; unify them with the app's
-  line chart into one chart in `forge_ui` once both exist.
+- **Charts**: `LineChart` (trends, e.g. e1RM) and `BarChart` (zero-based
+  daily or weekly values with an optional target line, e.g. steps) live in
+  `lib/core` and share `ChartText` and the pure geometry in
+  `chart_geometry.dart`. When `forge_ui` next changes they move there
+  together; `BarChart` then gains an optional band and per-bar colours,
+  and the volume trend (`VolumeTrendChart` and its painter) is replaced
+  by it and deleted. The volume band bars and the cardio chart stay
+  feature widgets until then.
 
 - **Blocked on accounts the user will open when needed**: Apple Developer
   (Apple sign-in, HealthKit, iOS push, Live Activity on a real device), Google
@@ -759,13 +764,15 @@ Group 9, launch readiness
   `lib/app/legal_links.dart` are placeholders; publish the pages and
   replace them.
 - Release blockers for steps: Health Connect's privacy-policy link opens
-  `MainActivity`, which opens a copy of the placeholder privacy URL in
-  `MainActivity.kt` (keep it equal to `LegalLinks.privacy`); Play Console
+  `PrivacyPolicyActivity`, which opens a copy of the placeholder privacy
+  URL in `PrivacyPolicyActivity.kt` (keep it equal to
+  `LegalLinks.privacy`); Play Console
   needs the Health apps declaration for READ_STEPS; the App ID needs the
   HealthKit capability (the Runner now carries the entitlement, so a
   device build signed by a team without it fails; the simulator does
   not). The Android changes (minSdk 26, `FlutterFragmentActivity`,
-  manifest) have not been built yet.
+  `PrivacyPolicyActivity`, manifest) have not been built yet. Check on a
+  device where the iOS hint's "Open Settings" (`app-settings:`) lands.
 - The admin web build now bundles and loads the RevenueCat web script,
   because `purchases_flutter` registers a web plugin. Harmless; revisit if
   the admin build is split from the app.
