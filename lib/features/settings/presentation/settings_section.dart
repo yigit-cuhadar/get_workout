@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../notifications/presentation/reminder_settings_tiles.dart';
 import '../../workout/presentation/rest_timer_cubit.dart';
 import '../domain/user_settings.dart';
 import 'settings_cubit.dart';
 
-/// Units, workout and appearance rows. Needs [SettingsCubit] and
-/// [RestTimerCubit] above it.
+/// Units, workout, reminder and appearance rows. Needs [SettingsCubit] and
+/// [RestTimerCubit] above it, and what [ReminderSettingsTiles] needs.
 class SettingsSection extends StatelessWidget {
   const SettingsSection({super.key});
 
@@ -86,6 +87,7 @@ class SettingsSection extends StatelessWidget {
               value: rest.notify ?? false,
               onChanged: (on) => _setNotify(context, on),
             ),
+            const ReminderSettingsTiles(),
             _Header(l10n.settingsAppearance),
             _ChoiceTile(
               title: l10n.settingsTheme,

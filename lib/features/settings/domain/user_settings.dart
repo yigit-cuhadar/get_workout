@@ -1,5 +1,7 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../programs/domain/calendar_date.dart';
+
 enum WeightUnit { kg, lb }
 
 enum LengthUnit { cm, inch }
@@ -91,6 +93,70 @@ class RestTimerSettings extends Equatable {
   List<Object?> get props => [enabled, defaultS, notify];
 }
 
+/// A local time of day, in minutes after midnight, for reminders.
+abstract final class ReminderTime {
+  static const max = 24 * 60 - 1;
+}
+
+/// The reminder on the active program's training days
+/// (`settings.reminders.workout`).
+class WorkoutReminderSettings extends Equatable {
+  const WorkoutReminderSettings({this.enabled = false, this.minute = 8 * 60});
+
+  final bool enabled;
+
+  /// Minutes after local midnight, 0 to [ReminderTime.max].
+  final int minute;
+
+  WorkoutReminderSettings copyWith({bool? enabled, int? minute}) =>
+      WorkoutReminderSettings(
+        enabled: enabled ?? this.enabled,
+        minute: minute ?? this.minute,
+      );
+
+  @override
+  List<Object?> get props => [enabled, minute];
+}
+
+/// The reminder to log weight and measurements
+/// (`settings.reminders.measurement`): every [everyWeeks] weeks from
+/// [from], which also gives its weekday.
+class MeasurementReminderSettings extends Equatable {
+  const MeasurementReminderSettings({
+    this.enabled = false,
+    this.everyWeeks = 4,
+    this.from,
+    this.minute = 9 * 60,
+  });
+
+  final bool enabled;
+  final int everyWeeks;
+
+  /// The first date of the series; null until the reminder is turned on.
+  final CalendarDate? from;
+
+  /// Minutes after local midnight, 0 to [ReminderTime.max].
+  final int minute;
+
+  /// What the settings offer for [everyWeeks].
+  static const choicesWeeks = [1, 2, 4];
+
+  MeasurementReminderSettings copyWith({
+    bool? enabled,
+    int? everyWeeks,
+    CalendarDate? from,
+    int? minute,
+  }) => MeasurementReminderSettings(
+    enabled: enabled ?? this.enabled,
+    everyWeeks: everyWeeks ?? this.everyWeeks,
+    from: from ?? this.from,
+    minute: minute ?? this.minute,
+  );
+
+  @override
+  List<Object?> get props => [enabled, everyWeeks, from, minute];
+}
+
 /// The daily step goal (`settings.stepGoal`) the user can choose.
 abstract final class StepGoal {
   static const standard = 10000;
@@ -111,6 +177,8 @@ class UserSettings extends Equatable {
     this.effortScale = EffortScale.off,
     this.restTimer = const RestTimerSettings(),
     this.stepGoal = StepGoal.standard,
+    this.workoutReminder = const WorkoutReminderSettings(),
+    this.measurementReminder = const MeasurementReminderSettings(),
     this.customBarWeightKg,
     this.customPlates,
   });
@@ -134,6 +202,9 @@ class UserSettings extends Equatable {
 
   /// Steps a day, within [StepGoal.min] and [StepGoal.max].
   final int stepGoal;
+
+  final WorkoutReminderSettings workoutReminder;
+  final MeasurementReminderSettings measurementReminder;
 
   /// Set once the user edits their bar; until then [barWeightKg] follows
   /// [weightUnit], so switching units also switches the standard bar.
@@ -182,6 +253,8 @@ class UserSettings extends Equatable {
     EffortScale? effortScale,
     RestTimerSettings? restTimer,
     int? stepGoal,
+    WorkoutReminderSettings? workoutReminder,
+    MeasurementReminderSettings? measurementReminder,
     double? customBarWeightKg,
     List<Plate>? customPlates,
   }) => UserSettings(
@@ -191,6 +264,8 @@ class UserSettings extends Equatable {
     effortScale: effortScale ?? this.effortScale,
     restTimer: restTimer ?? this.restTimer,
     stepGoal: stepGoal ?? this.stepGoal,
+    workoutReminder: workoutReminder ?? this.workoutReminder,
+    measurementReminder: measurementReminder ?? this.measurementReminder,
     customBarWeightKg: customBarWeightKg ?? this.customBarWeightKg,
     customPlates: customPlates ?? this.customPlates,
   );
@@ -203,6 +278,8 @@ class UserSettings extends Equatable {
     effortScale: effortScale,
     restTimer: restTimer,
     stepGoal: stepGoal,
+    workoutReminder: workoutReminder,
+    measurementReminder: measurementReminder,
   );
 
   @override
@@ -213,6 +290,8 @@ class UserSettings extends Equatable {
     effortScale,
     restTimer,
     stepGoal,
+    workoutReminder,
+    measurementReminder,
     customBarWeightKg,
     customPlates,
   ];

@@ -1112,7 +1112,7 @@
   "@restNotificationNext": {"placeholders": {"exercise": {"type": "String"}, "set": {"type": "int"}}},
   "restNotificationBack": "Back to your workout",
   "notificationChannelName": "Workout",
-  "notificationChannelDescription": "Tells you when a rest is over",
+  "notificationChannelDescription": "Rest timer, reminders and announcements",
 
   "todayNextTitle": "Next workout",
   "todayNoProgram": "No active program. Pick a ready-made one, generate one or just train.",
@@ -1166,5 +1166,26 @@
   "@stepsChartLabel": {"placeholders": {"title": {"type": "String"}, "goal": {"type": "String"}, "values": {"type": "String"}}},
   "stepsGoal": "Daily goal",
   "stepsGoalValue": "{goal} steps",
-  "@stepsGoalValue": {"placeholders": {"goal": {"type": "int", "format": "decimalPattern"}}}
+  "@stepsGoalValue": {"placeholders": {"goal": {"type": "int", "format": "decimalPattern"}}},
+
+  "settingsReminders": "Reminders",
+  "settingsWorkoutReminder": "Workout reminder",
+  "settingsWorkoutReminderOn": "On training days at {time}",
+  "@settingsWorkoutReminderOn": {"placeholders": {"time": {"type": "String"}}},
+  "settingsMeasurementReminder": "Measurement reminder",
+  "settingsReminderTime": "Time",
+  "settingsReminderDay": "Day",
+  "settingsReminderRepeat": "Repeat",
+  "settingsReminderEvery": "{weeks, plural, =1{Every week} other{Every {weeks} weeks}}",
+  "@settingsReminderEvery": {"placeholders": {"weeks": {"type": "int"}}},
+  "remindersPermissionReason": "Reminders are notifications, so GetWorkout needs your permission to send them.",
+  "remindersAllow": "Allow",
+  "remindersLater": "Not now",
+  "remindersBlocked": "Notifications are off for GetWorkout in the system settings.",
+  "remindersOpenSettings": "Open settings",
+  "workoutReminderTitle": "Workout today",
+  "workoutReminderDay": "{day} · {program}",
+  "@workoutReminderDay": {"placeholders": {"day": {"type": "String"}, "program": {"type": "String"}}},
+  "measurementReminderTitle": "Measurement day",
+  "measurementReminderBody": "Log your weight and measurements."
 }
