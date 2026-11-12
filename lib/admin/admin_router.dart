@@ -11,6 +11,9 @@ import 'access/presentation/sign_in_page.dart';
 import 'exercises/presentation/exercise_editor_page.dart';
 import 'exercises/presentation/exercise_list_cubit.dart';
 import 'exercises/presentation/exercise_list_page.dart';
+import 'programs/presentation/program_editor_page.dart';
+import 'programs/presentation/program_list_cubit.dart';
+import 'programs/presentation/program_list_page.dart';
 
 abstract final class AdminRoutes {
   static const signIn = '/sign-in';
@@ -18,6 +21,9 @@ abstract final class AdminRoutes {
   static const exercises = '/exercises';
   static const newExercise = '$exercises/new';
   static String exercise(String id) => '$exercises/$id';
+  static const programs = '/programs';
+  static const newProgram = '$programs/new';
+  static String program(String id) => '$programs/$id';
 }
 
 /// Where [location] leads in [access], or null to stay. Only an admin gets
@@ -70,6 +76,28 @@ GoRouter buildAdminRouter(AccessCubit access) {
                 path: ':id',
                 builder: (_, state) =>
                     ExerciseEditorPage(id: state.pathParameters['id']),
+              ),
+            ],
+          ),
+        ],
+      ),
+      // Like the exercises: the list outlives a trip to the editor.
+      ShellRoute(
+        builder: (_, _, child) =>
+            BlocProvider(create: (_) => sl<ProgramListCubit>(), child: child),
+        routes: [
+          GoRoute(
+            path: AdminRoutes.programs,
+            builder: (_, _) => const ProgramListPage(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                builder: (_, _) => const ProgramEditorPage(id: null),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (_, state) =>
+                    ProgramEditorPage(id: state.pathParameters['id']),
               ),
             ],
           ),
