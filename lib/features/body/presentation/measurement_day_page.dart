@@ -121,7 +121,7 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
             return PopScope(
               canPop: false,
               onPopInvokedWithResult: (didPop, _) {
-                if (!didPop) unawaited(_back());
+                if (!didPop) unawaited(_back(context));
               },
               child: Scaffold(
                 appBar: AppBar(
@@ -201,11 +201,11 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
   }
 
   /// One step back; from the first step, out of the flow, after asking when
-  /// something was entered.
-  Future<void> _back() async {
+  /// something changed. [context] is below the [UnsavedChangesGuard].
+  Future<void> _back(BuildContext context) async {
     if (_cubit.back()) return;
-    if (_cubit.hasChanges && !await _confirmDiscard()) return;
-    if (mounted) context.pop();
+    if (_cubit.hasChanges && !await UnsavedChangesGuard.ask(context)) return;
+    if (context.mounted) context.pop();
   }
 
   Future<bool> _confirmDiscard() async {

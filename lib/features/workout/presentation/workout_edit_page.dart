@@ -86,7 +86,7 @@ class _EditView extends StatelessWidget {
             canPop: !cubit.hasChanges,
             onPopInvokedWithResult: (didPop, _) async {
               if (didPop) return;
-              if (await confirmDiscard() && context.mounted) {
+              if (await UnsavedChangesGuard.ask(context) && context.mounted) {
                 context.pop();
               }
             },

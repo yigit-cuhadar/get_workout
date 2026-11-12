@@ -380,6 +380,43 @@ void main() {
       photos: const {PhotoPose.back: keptBack},
     );
 
+    test('an untouched entry has no changes', () async {
+      final cubit = build(initial: initial);
+      expect(cubit.hasChanges, isFalse);
+
+      await cubit.next();
+      expect(cubit.hasChanges, isFalse);
+      await cubit.close();
+    });
+
+    test(
+      'a changed or cleared value is a change; typing it back is none',
+      () async {
+        final cubit = build(initial: initial);
+        final weight = cubit.state.weight;
+
+        cubit.setWeight('81');
+        expect(cubit.hasChanges, isTrue);
+        cubit.setWeight(weight);
+        expect(cubit.hasChanges, isFalse);
+
+        cubit.setWeight('');
+        expect(cubit.hasChanges, isTrue);
+        await cubit.close();
+      },
+    );
+
+    test('clearing a stored measurement is a change', () async {
+      final cubit = build(initial: initial);
+      await cubit.skip();
+      // The neck, the entry's own step after the weight.
+      expect(cubit.state.step, const MeasurementStep(BodyMeasurement.neck));
+
+      cubit.setMeasurement(BodyMeasurement.neck, '');
+      expect(cubit.hasChanges, isTrue);
+      await cubit.close();
+    });
+
     test(
       "skipping every step keeps all the entry's values and photos",
       () async {

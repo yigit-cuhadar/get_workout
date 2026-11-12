@@ -211,6 +211,61 @@ void main() {
       expect(find.byType(_EditPage), findsNothing);
     });
 
+    testWidgets('refusing many times in a row keeps the page', (tester) async {
+      await pumpApp(tester);
+      dirty.value = true;
+
+      for (var i = 0; i < 7; i++) {
+        router.go('/a');
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Keep'));
+        await tester.pumpAndSettle();
+      }
+
+      expect(prompts, 7);
+      expect(path(), '/a/edit');
+      expect(find.byType(_EditPage), findsOneWidget);
+    });
+
+    testWidgets('a page under a route above the tabs is brought up first', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      dirty.value = true;
+      unawaited(router.push('/c'));
+      await tester.pumpAndSettle();
+
+      router.go('/a');
+      await tester.pumpAndSettle();
+      expect(prompts, 1);
+      expect(find.text('c'), findsNothing);
+      await tester.tap(find.text('Keep'));
+      await tester.pumpAndSettle();
+
+      expect(path(), '/a/edit');
+      expect(find.byType(_EditPage), findsOneWidget);
+    });
+
+    testWidgets('a link while the back prompt is open asks nothing more', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      dirty.value = true;
+      await tester.pump();
+      unawaited(tester.binding.handlePopRoute());
+      await tester.pumpAndSettle();
+
+      router.go('/a');
+      await tester.pumpAndSettle();
+      expect(prompts, 1);
+      expect(find.text('Discard'), findsOneWidget);
+      await tester.tap(find.text('Discard'));
+      await tester.pumpAndSettle();
+
+      expect(path(), '/a');
+      expect(find.byType(_EditPage), findsNothing);
+    });
+
     testWidgets('a push asks nothing', (tester) async {
       await pumpApp(tester);
       dirty.value = true;
@@ -286,7 +341,7 @@ class _EditPage extends StatelessWidget {
         canPop: !dirty,
         onPopInvokedWithResult: (didPop, _) async {
           if (didPop) return;
-          if (await _confirm(context) && context.mounted) {
+          if (await UnsavedChangesGuard.ask(context) && context.mounted) {
             Navigator.of(context).pop();
           }
         },

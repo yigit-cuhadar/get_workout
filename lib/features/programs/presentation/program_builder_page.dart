@@ -93,7 +93,7 @@ class _BuilderView extends StatelessWidget {
             canPop: !state.dirty,
             onPopInvokedWithResult: (didPop, _) async {
               if (didPop) return;
-              if (await _confirmDiscard(context) && context.mounted) {
+              if (await UnsavedChangesGuard.ask(context) && context.mounted) {
                 Navigator.of(context).pop();
               }
             },
