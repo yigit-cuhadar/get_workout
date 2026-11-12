@@ -663,7 +663,7 @@ Group 5, workout
 Group 6, progress
 - [x] Calendar — month view of planned and done workouts and cardio
 - [ ] Weekly volume — model coloring and bar list against the 10-20 band; 12-week trend (Premium)
-- [ ] Strength — per-exercise records and e1RM chart (beyond 12 weeks Premium)
+- [x] Strength — per-exercise records and e1RM chart (beyond 12 weeks Premium)
 - [ ] Today tab — next workout and week strip, quick actions, volume card, steps card
 
 Group 7, programs for everyone
