@@ -723,7 +723,7 @@ Group 7, programs for everyone
 Group 8, body and extras
 - [ ] Weight log and measurement day — steps for weight, tracked measurements, four photos with ghost overlay, reminders, photo backup, compare
 - [x] Cardio — log, list, detail, weekly chart
-- [ ] Steps — health permission, today, week and 30-day chart, daily goal
+- [x] Steps — health permission, today, week and 30-day chart, daily goal
 - [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
 
 Group 9, launch readiness
