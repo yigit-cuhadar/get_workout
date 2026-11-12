@@ -87,6 +87,7 @@ class BodyListCubit extends Cubit<BodyListState> {
     required WatchPremium watchPremium,
     required this._findPhotos,
     required this._restorePhoto,
+    required this._reconcilePhotos,
     required this._deleteEntry,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now,
@@ -103,6 +104,9 @@ class BodyListCubit extends Cubit<BodyListState> {
         _entries = entries;
         _publish();
         unawaited(_findFiles(entries));
+        if (_follower.uid case final uid?) {
+          unawaited(_reconcilePhotos(uid, entries));
+        }
       },
       onError: (_) {
         _entries = null;
@@ -121,6 +125,7 @@ class BodyListCubit extends Cubit<BodyListState> {
 
   final FindBodyPhotos _findPhotos;
   final RestoreBodyPhoto _restorePhoto;
+  final ReconcileBodyPhotos _reconcilePhotos;
   final _restoring = <String>{};
   final DeleteBodyEntry _deleteEntry;
   final DateTime Function() _clock;
@@ -195,13 +200,21 @@ class BodyListCubit extends Cubit<BodyListState> {
     );
   }
 
+  /// Files a [restore] finished meanwhile are kept: it may have stored
+  /// them after the look here.
   Future<void> _findFiles(List<BodyEntry> entries) async {
-    final files = await _findPhotos([
-      for (final entry in entries) ...entry.photos.values,
-    ]);
+    final paths = [for (final entry in entries) ...entry.photos.values];
+    final files = await _findPhotos(paths);
     // A newer snapshot or another user has taken over meanwhile.
     if (isClosed || !identical(entries, _entries)) return;
-    emit(state.copyWith(photoFiles: files));
+    emit(
+      state.copyWith(
+        photoFiles: {
+          for (final path in paths)
+            path: ?(files[path] ?? state.photoFiles[path]),
+        },
+      ),
+    );
   }
 
   @override

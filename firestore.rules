@@ -52,9 +52,11 @@ rules_version = '2';
 // | read, list, delete own entry                                   | allow  |
 // | create/update: date timestamp                                  | allow  |
 // | ... plus numeric weightKg, measurements map, photos map        | allow  |
+// | ... plus keys the app does not know in either map              | allow  |
 // | ... plus fields the app does not know (kept by edits)          | allow  |
 // | missing date, or date not a timestamp                          | deny   |
 // | weightKg not a number, measurements or photos not a map        | deny   |
+// | a known measurement not a number, a known pose not a string    | deny   |
 // | any request for another user's entries, or signed out          | deny   |
 //
 // users/{uid}/programs/{id}, as the signed-in user `uid` (anyone else: deny):
@@ -169,11 +171,34 @@ service cloud.firestore {
         && (!('note' in data) || (data.note is string && data.note.size() <= 500));
     }
 
+    function optionalString(data, field) {
+      return !(field in data) || data[field] is string;
+    }
+
+    // Rules cannot loop, so the known keys are checked one by one; keys of
+    // a newer app version pass.
+    function isMeasurements(m) {
+      return m is map
+        && optionalNumber(m, 'neck') && optionalNumber(m, 'shoulders')
+        && optionalNumber(m, 'chest') && optionalNumber(m, 'waist')
+        && optionalNumber(m, 'abdomen') && optionalNumber(m, 'hips')
+        && optionalNumber(m, 'leftUpperArm') && optionalNumber(m, 'rightUpperArm')
+        && optionalNumber(m, 'leftForearm') && optionalNumber(m, 'rightForearm')
+        && optionalNumber(m, 'leftThigh') && optionalNumber(m, 'rightThigh')
+        && optionalNumber(m, 'leftCalf') && optionalNumber(m, 'rightCalf');
+    }
+
+    function isPhotos(p) {
+      return p is map
+        && optionalString(p, 'front') && optionalString(p, 'right')
+        && optionalString(p, 'left') && optionalString(p, 'back');
+    }
+
     function isBodyEntry(data) {
       return data.date is timestamp
         && optionalNumber(data, 'weightKg')
-        && (!('measurements' in data) || data.measurements is map)
-        && (!('photos' in data) || data.photos is map);
+        && (!('measurements' in data) || isMeasurements(data.measurements))
+        && (!('photos' in data) || isPhotos(data.photos));
     }
 
     // Updates write only name, length, days and updatedAt; origin stays as

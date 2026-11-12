@@ -13,11 +13,19 @@ abstract final class BodyLimits {
   static const minMeasurementCm = 10.0;
   static const maxMeasurementCm = 250.0;
 
+  /// Values are typed to one decimal in the user's unit, so a limit shown
+  /// in lb or inches (30 kg as 66.1 lb, 10 cm as 3.9 in) lies just outside
+  /// it in metric. Half a shown step of the coarser unit is let through.
+  static const _weightSlackKg = 0.05 * 0.45359237;
+  static const _lengthSlackCm = 0.05 * 2.54;
+
   /// False for NaN.
-  static bool weightKg(double kg) => kg >= minWeightKg && kg <= maxWeightKg;
+  static bool weightKg(double kg) =>
+      kg >= minWeightKg - _weightSlackKg && kg <= maxWeightKg + _weightSlackKg;
 
   static bool measurementCm(double cm) =>
-      cm >= minMeasurementCm && cm <= maxMeasurementCm;
+      cm >= minMeasurementCm - _lengthSlackCm &&
+      cm <= maxMeasurementCm + _lengthSlackCm;
 }
 
 /// Everything wrong with [entry] as of [now]; empty when it can be saved.

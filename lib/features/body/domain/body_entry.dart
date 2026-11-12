@@ -62,8 +62,17 @@ enum PhotoPose {
 
 /// Where the [pose] photo of entry [entryId] lives: the Cloud Storage path
 /// of its backup, and the same path inside the app's private storage.
-String photoPath(String uid, String entryId, PhotoPose pose) =>
-    'users/$uid/photos/$entryId/${pose.code}.jpg';
+/// [revision] (the capture time in ms) makes a retaken photo a new path, so
+/// every device sees that its copy is out of date and fetches the new one.
+String photoPath(String uid, String entryId, PhotoPose pose, int revision) =>
+    'users/$uid/photos/$entryId/${pose.code}-$revision.jpg';
+
+/// The folder of all of [uid]'s photos.
+String photoFolder(String uid) => 'users/$uid/photos';
+
+/// Whether [path] is one of [uid]'s photos.
+bool isPhotoOf(String path, String uid) =>
+    path.startsWith('${photoFolder(uid)}/');
 
 /// One `bodyEntries` document. A quick weight log has only [weightKg]; a
 /// measurement day may also have [measurements] and [photos].

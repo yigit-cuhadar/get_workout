@@ -24,7 +24,7 @@ void main() {
       BodyMeasurement.waist: 86,
       BodyMeasurement.leftCalf: 38.5,
     },
-    photos: const {PhotoPose.front: 'users/u1/photos/e1/front.jpg'},
+    photos: const {PhotoPose.front: 'users/u1/photos/e1/front-1.jpg'},
   );
 
   Future<void> settle() => pumpEventQueue();
@@ -49,7 +49,7 @@ void main() {
       'date': Timestamp.fromDate(day.date),
       'weightKg': 81.4,
       'measurements': {'waist': 86, 'leftCalf': 38.5},
-      'photos': {'front': 'users/u1/photos/e1/front.jpg'},
+      'photos': {'front': 'users/u1/photos/e1/front-1.jpg'},
     });
     expect(await repository.watchEntries('u1').first, [day]);
   });
@@ -114,6 +114,12 @@ void main() {
     await settle();
 
     expect((await doc('e1').get()).exists, isFalse);
+  });
+
+  test('a write confirms once the server has it', () async {
+    final started = await repository.addEntry('u1', day);
+
+    expect(await started.valueOrNull, isNull);
   });
 
   test('new ids are unique', () {

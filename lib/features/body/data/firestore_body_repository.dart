@@ -45,37 +45,37 @@ class FirestoreBodyRepository implements BodyRepository {
   String newEntryId(String uid) => _entries(uid).doc().id;
 
   @override
-  Future<Result<void>> addEntry(String uid, BodyEntry entry) => guard(
-    () async => _confirmLater(_entries(uid).doc(entry.id).set(toMap(entry))),
+  Future<Result<Confirmation>> addEntry(String uid, BodyEntry entry) => guard(
+    () async => _confirmation(_entries(uid).doc(entry.id).set(toMap(entry))),
     mapper: mapFirebaseError,
   );
 
   @override
-  Future<Result<void>> updateEntry(String uid, BodyEntry entry) => guard(
-    () async =>
-        _confirmLater(_entries(uid).doc(entry.id).update(_update(entry))),
-    mapper: mapFirebaseError,
-  );
+  Future<Result<Confirmation>> updateEntry(String uid, BodyEntry entry) =>
+      guard(
+        () async =>
+            _confirmation(_entries(uid).doc(entry.id).update(_update(entry))),
+        mapper: mapFirebaseError,
+      );
 
   @override
-  Future<Result<void>> deleteEntry(String uid, String id) => guard(
-    () async => _confirmLater(_entries(uid).doc(id).delete()),
+  Future<Result<Confirmation>> deleteEntry(String uid, String id) => guard(
+    () async => _confirmation(_entries(uid).doc(id).delete()),
     mapper: mapFirebaseError,
   );
 
   /// Firestore applies a write to its cache at once but completes it only
   /// when the server confirms, which never happens offline, so callers do
-  /// not wait for that.
-  void _confirmLater(Future<void> write) => unawaited(
-    write.then(
-      (_) {},
-      onError: (Object error, StackTrace stack) {
-        final failure =
-            mapFirebaseError(error) ?? UnknownFailure('$error', error);
-        Log.e('body', 'write rejected: ${failure.message}', error, stack);
-        _rejected.add(failure);
-      },
-    ),
+  /// not wait for that; a refusal is also reported on [rejectedWrites].
+  Confirmation _confirmation(Future<void> write) => write.then<Failure?>(
+    (_) => null,
+    onError: (Object error, StackTrace stack) {
+      final failure =
+          mapFirebaseError(error) ?? UnknownFailure('$error', error);
+      Log.e('body', 'write rejected: ${failure.message}', error, stack);
+      _rejected.add(failure);
+      return failure;
+    },
   );
 
   CollectionReference<Map<String, dynamic>> _entries(String uid) =>

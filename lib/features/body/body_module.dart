@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../settings/domain/user_settings.dart';
+import 'data/backup_exclusion.dart';
 import 'data/file_backup_queue.dart';
 import 'data/file_body_photo_store.dart';
 import 'data/firestore_body_repository.dart';
@@ -22,7 +24,8 @@ import 'presentation/measurement_day_cubit.dart';
 import 'presentation/weight_form_cubit.dart';
 
 /// Registers the weight log and measurement days. Needs `AuthModule` for
-/// the current user and `ProgramsModule` for `WatchPremium`.
+/// the current user, `ProgramsModule` for `WatchPremium` and
+/// `ProfileModule`, whose use cases keep the profile weight.
 class BodyModule implements FeatureModule {
   const BodyModule();
 
@@ -42,7 +45,10 @@ class BodyModule implements FeatureModule {
         () => FirestoreBodyRepository(FirebaseFirestore.instance),
       )
       ..registerLazySingleton<BodyPhotoStore>(
-        () => const FileBodyPhotoStore(getApplicationSupportDirectory),
+        () => FileBodyPhotoStore(
+          getApplicationSupportDirectory,
+          excludeFromBackup: backupExclusion(defaultTargetPlatform),
+        ),
       )
       ..registerLazySingleton<BodyPhotoBackup>(
         () => StorageBodyPhotoBackup(
@@ -53,7 +59,7 @@ class BodyModule implements FeatureModule {
         ),
       )
       ..registerLazySingleton<BackupQueue>(
-        () => const FileBackupQueue(getApplicationSupportDirectory),
+        () => FileBackupQueue(getApplicationSupportDirectory),
       )
       ..registerLazySingleton(() => BodyPhotoSync(sl(), sl(), sl()))
       ..registerFactory(() => WatchBodyEntries(sl()))
@@ -61,8 +67,14 @@ class BodyModule implements FeatureModule {
       ..registerFactory(() => NewBodyEntryId(sl()))
       ..registerFactory(() => FindBodyPhotos(sl()))
       ..registerFactory(() => RestoreBodyPhoto(sl()))
-      ..registerFactory(() => SaveBodyEntry(sl(), sl(), sl()))
-      ..registerFactory(() => DeleteBodyEntry(sl(), sl(), sl()))
+      ..registerFactory(() => ReconcileBodyPhotos(sl()))
+      ..registerFactory(() => DiscardCapture(sl()))
+      // For the account feature: before or after deleting an account, and
+      // when a guest's data is discarded.
+      ..registerFactory(() => ForgetBodyPhotos(sl()))
+      ..registerFactory(() => SyncProfileWeight(sl(), sl(), sl()))
+      ..registerFactory(() => SaveBodyEntry(sl(), sl(), sl(), sl()))
+      ..registerFactory(() => DeleteBodyEntry(sl(), sl(), sl(), sl()))
       // One list for the whole app: every body page shares it.
       ..registerLazySingleton(
         () => BodyListCubit(
@@ -72,6 +84,7 @@ class BodyModule implements FeatureModule {
           watchPremium: sl(),
           findPhotos: sl(),
           restorePhoto: sl(),
+          reconcilePhotos: sl(),
           deleteEntry: sl(),
         ),
       )
@@ -91,6 +104,8 @@ class BodyModule implements FeatureModule {
           setup: setup,
           saveEntry: sl(),
           newEntryId: sl(),
+          discardCapture: sl(),
+          watchEntries: sl(),
           restorePhoto: sl(),
           getCurrentUser: sl(),
           watchAuthUser: sl(),

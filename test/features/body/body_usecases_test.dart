@@ -1,154 +1,244 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/body/domain/body_entry.dart';
-import 'package:get_workout/features/body/domain/body_photo_sync.dart';
 import 'package:get_workout/features/body/domain/body_photos.dart';
-import 'package:get_workout/features/body/domain/body_repository.dart';
-import 'package:get_workout/features/body/domain/body_usecases.dart';
-import 'package:mocktail/mocktail.dart';
+import 'package:get_workout/features/profile/domain/user_profile.dart';
 
 import 'body_fakes.dart';
 
-class MockBodyRepository extends Mock implements BodyRepository {}
-
 void main() {
   final now = DateTime(2026, 11, 12, 9);
-  const kept = 'users/u1/photos/e1/front.jpg';
-  const newBack = 'users/u1/photos/e1/back.jpg';
+  final rev = now.millisecondsSinceEpoch;
+  const oldFront = 'users/u1/photos/e1/front-1.jpg';
+  final newFront = 'users/u1/photos/e1/front-$rev.jpg';
+  final newBack = 'users/u1/photos/e1/back-$rev.jpg';
 
-  late MockBodyRepository repository;
-  late FakePhotoStore store;
-  late FakeBackupQueue queue;
-  late BodyPhotoSync sync;
-
-  setUpAll(() {
-    registerFallbackValue(BodyEntry(id: 'x', date: DateTime(2026)));
-  });
+  late BodyPhotoWorld world;
 
   setUp(() {
-    repository = MockBodyRepository();
-    store = FakePhotoStore();
-    queue = FakeBackupQueue();
-    sync = BodyPhotoSync(queue, store, FakeBackup());
-    when(() => repository.addEntry(any(), any()))
-        .thenAnswer((_) async => const Ok(null));
-    when(() => repository.updateEntry(any(), any()))
-        .thenAnswer((_) async => const Ok(null));
-    when(() => repository.deleteEntry(any(), any()))
-        .thenAnswer((_) async => const Ok(null));
+    world = BodyPhotoWorld();
   });
 
-  SaveBodyEntry save() =>
-      SaveBodyEntry(repository, store, sync, clock: () => now);
-
   group('save', () {
-    test('files new photos, queues their backup, then stores the entry '
-        'naming them', () async {
-      final entry = BodyEntry(
-        id: 'e1',
-        date: now,
-        weightKg: 80,
-        photos: const {PhotoPose.front: kept},
-      );
-
-      final result = await save()((
+    test('stores the photos, writes the entry naming them, then queues '
+        'uploads and removes the camera files', () async {
+      final result = await world.save(() => now)((
         uid: 'u1',
-        entry: entry,
-        newPhotos: {PhotoPose.back: '/tmp/shot.jpg'},
-        isNew: false,
+        entry: BodyEntry(id: 'e1', date: now, weightKg: 80),
+        newPhotos: {
+          PhotoPose.front: '/tmp/a.jpg',
+          PhotoPose.back: '/tmp/b.jpg',
+        },
+        isNew: true,
       ));
 
       expect(result.isOk, isTrue);
-      expect(store.files, {newBack: 'local/$newBack'});
-      expect(queue.saved, {newBack: BackupTask.upload});
-      final stored =
-          verify(() => repository.updateEntry('u1', captureAny()))
-                  .captured
-                  .single
-              as BodyEntry;
-      expect(stored.photos, {PhotoPose.front: kept, PhotoPose.back: newBack});
-      verifyNever(() => repository.addEntry(any(), any()));
+      expect(world.repository.entries['e1']!.photos, {
+        PhotoPose.front: newFront,
+        PhotoPose.back: newBack,
+      });
+      expect(world.store.files.keys, unorderedEquals([newFront, newBack]));
+      expect(world.queue.saved, {
+        newFront: BackupState.upload,
+        newBack: BackupState.upload,
+      });
+      expect(world.store.discarded, ['/tmp/a.jpg', '/tmp/b.jpg']);
     });
 
-    test('a new entry is added', () async {
-      final entry = BodyEntry(id: 'w1', date: now, weightKg: 80);
+    test('a photo that fails removes those stored; a retry under the same '
+        'id saves it all', () async {
+      final entry = BodyEntry(id: 'e1', date: now);
+      final photos = {
+        PhotoPose.front: '/tmp/a.jpg',
+        PhotoPose.back: '/tmp/b.jpg',
+      };
+      world.store.failing.add('back');
 
-      await save()((uid: 'u1', entry: entry, newPhotos: {}, isNew: true));
-
-      verify(() => repository.addEntry('u1', entry)).called(1);
-    });
-
-    test('an invalid entry writes nothing', () async {
-      final entry = BodyEntry(id: 'w1', date: now, weightKg: 500);
-
-      final result = await save()((
+      final failed = await world.save(() => now)((
         uid: 'u1',
         entry: entry,
-        newPhotos: {PhotoPose.front: '/tmp/shot.jpg'},
+        newPhotos: photos,
+        isNew: true,
+      ));
+
+      expect(failed.isOk, isFalse);
+      expect(world.store.files, isEmpty);
+      expect(world.repository.calls, isEmpty);
+      expect(world.queue.saved, isEmpty);
+      expect(world.store.discarded, isEmpty);
+
+      world.store.failing.clear();
+      final retried = await world.save(() => now)((
+        uid: 'u1',
+        entry: entry,
+        newPhotos: photos,
+        isNew: true,
+      ));
+
+      expect(retried.isOk, isTrue);
+      expect(world.repository.calls, ['add e1']);
+      expect(world.store.files.keys, unorderedEquals([newFront, newBack]));
+    });
+
+    test('an entry that cannot be written removes the stored photos', () async {
+      world.repository.startFailure = const UnknownFailure('cache full');
+
+      final result = await world.save(() => now)((
+        uid: 'u1',
+        entry: BodyEntry(id: 'e1', date: now),
+        newPhotos: {PhotoPose.front: '/tmp/a.jpg'},
+        isNew: true,
+      ));
+
+      expect(result.isOk, isFalse);
+      expect(world.store.files, isEmpty);
+      expect(world.queue.saved, isEmpty);
+    });
+
+    test('a retake removes the replaced photo only once confirmed', () async {
+      world.store.files[oldFront] = 'local/old';
+      world.repository.holdConfirmations = true;
+
+      await world.save(() => now)((
+        uid: 'u1',
+        entry: BodyEntry(
+          id: 'e1',
+          date: now,
+          photos: const {PhotoPose.front: oldFront},
+        ),
+        newPhotos: {PhotoPose.front: '/tmp/a.jpg'},
+        isNew: false,
+      ));
+      expect(world.store.files.keys, unorderedEquals([oldFront, newFront]));
+
+      await world.repository.confirm();
+
+      expect(world.store.files.keys, [newFront]);
+      expect(world.queue.saved[oldFront], BackupState.delete);
+    });
+
+    test(
+      'a refused save removes its new photos, here and queued remotely',
+      () async {
+        world.store.files[oldFront] = 'local/old';
+        world.repository.holdConfirmations = true;
+
+        await world.save(() => now)((
+          uid: 'u1',
+          entry: BodyEntry(
+            id: 'e1',
+            date: now,
+            photos: const {PhotoPose.front: oldFront},
+          ),
+          newPhotos: {PhotoPose.front: '/tmp/a.jpg'},
+          isNew: false,
+        ));
+        await world.repository.confirm(const PermissionFailure());
+
+        expect(world.store.files.keys, [oldFront]);
+        expect(world.queue.saved[newFront], BackupState.delete);
+      },
+    );
+
+    test('an invalid entry writes nothing', () async {
+      final result = await world.save(() => now)((
+        uid: 'u1',
+        entry: BodyEntry(id: 'w1', date: now, weightKg: 500),
+        newPhotos: {PhotoPose.front: '/tmp/a.jpg'},
         isNew: true,
       ));
 
       expect(result.failureOrNull, isA<ValidationFailure>());
-      expect(store.files, isEmpty);
-      verifyNever(() => repository.addEntry(any(), any()));
+      expect(world.store.files, isEmpty);
+      expect(world.repository.calls, isEmpty);
     });
 
-    test(
-      'a photo that cannot be filed fails before the entry is stored',
-      () async {
-        store.failSave = true;
+    test('the profile weight follows the most recent weight', () async {
+      world.profiles.profile = const UserProfile(weightKg: 90);
+      world.repository.entries['new'] = BodyEntry(
+        id: 'new',
+        date: DateTime(2026, 11, 20),
+        measurements: const {BodyMeasurement.waist: 80},
+      );
 
-        final result = await save()((
-          uid: 'u1',
-          entry: BodyEntry(id: 'e1', date: now),
-          newPhotos: {PhotoPose.front: '/tmp/shot.jpg'},
-          isNew: true,
-        ));
+      await world.save(() => now)((
+        uid: 'u1',
+        entry: BodyEntry(id: 'w1', date: now, weightKg: 82),
+        newPhotos: const {},
+        isNew: true,
+      ));
+      expect(world.profiles.profile.weightKg, 82);
 
-        expect(result.isOk, isFalse);
-        expect(queue.saved, isEmpty);
-        verifyNever(() => repository.addEntry(any(), any()));
-      },
-    );
+      // An older weight logged later does not win.
+      await world.save(() => now)((
+        uid: 'u1',
+        entry: BodyEntry(id: 'w0', date: DateTime(2026, 1, 1), weightKg: 99),
+        newPhotos: const {},
+        isNew: true,
+      ));
+      expect(world.profiles.profile.weightKg, 82);
+    });
   });
 
   group('delete', () {
     final entry = BodyEntry(
       id: 'e1',
       date: now,
-      photos: const {PhotoPose.front: kept},
+      weightKg: 80,
+      photos: const {PhotoPose.front: oldFront},
     );
 
-    test(
-      'removes the entry, its photos, and queues their backup removal',
-      () async {
-        store.files[kept] = 'local/$kept';
+    test('removes the photos only once the server confirms', () async {
+      world.repository.entries['e1'] = entry;
+      world.store.files[oldFront] = 'local/old';
+      world.repository.holdConfirmations = true;
 
-        final result = await DeleteBodyEntry(repository, store, sync)((
-          uid: 'u1',
-          entry: entry,
-        ));
+      final result = await world.delete()((uid: 'u1', entry: entry));
 
-        expect(result.isOk, isTrue);
-        verify(() => repository.deleteEntry('u1', 'e1')).called(1);
-        expect(store.files, isEmpty);
-        expect(queue.saved, {kept: BackupTask.delete});
-      },
-    );
+      expect(result.isOk, isTrue);
+      expect(world.store.files, isNotEmpty);
+      expect(world.queue.saved, isEmpty);
 
-    test('keeps the photos when the entry could not be deleted', () async {
-      store.files[kept] = 'local/$kept';
-      when(() => repository.deleteEntry(any(), any()))
-          .thenAnswer((_) async => const Err(NetworkFailure()));
+      await world.repository.confirm();
 
-      final result = await DeleteBodyEntry(repository, store, sync)((
-        uid: 'u1',
-        entry: entry,
-      ));
+      expect(world.store.files, isEmpty);
+      expect(world.queue.saved, {oldFront: BackupState.delete});
+    });
+
+    test('a refused delete keeps the photos', () async {
+      world.store.files[oldFront] = 'local/old';
+      world.repository.holdConfirmations = true;
+
+      await world.delete()((uid: 'u1', entry: entry));
+      await world.repository.confirm(const PermissionFailure());
+
+      expect(world.store.files, {oldFront: 'local/old'});
+      expect(world.queue.saved, isEmpty);
+    });
+
+    test('a delete that cannot start keeps everything', () async {
+      world.store.files[oldFront] = 'local/old';
+      world.repository.startFailure = const NetworkFailure();
+
+      final result = await world.delete()((uid: 'u1', entry: entry));
 
       expect(result.failureOrNull, isA<NetworkFailure>());
-      expect(store.files, {kept: 'local/$kept'});
-      expect(queue.saved, isEmpty);
+      expect(world.store.files, {oldFront: 'local/old'});
+    });
+
+    test('the profile weight moves to the remaining latest weight', () async {
+      world.profiles.profile = const UserProfile(weightKg: 80);
+      world.repository.entries
+        ..['e1'] = entry
+        ..['old'] = BodyEntry(
+          id: 'old',
+          date: DateTime(2026, 5, 1),
+          weightKg: 84,
+        );
+
+      await world.delete()((uid: 'u1', entry: entry));
+
+      expect(world.profiles.profile.weightKg, 84);
     });
   });
 }

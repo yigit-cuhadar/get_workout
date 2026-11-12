@@ -2,7 +2,8 @@ rules_version = '2';
 
 // Expected results. There is no emulator here, so check changes against this.
 //
-// users/{uid}/photos/{entryId}/{pose}.jpg, pose front, right, left or back:
+// users/{uid}/photos/{entryId}/{pose}-{revision}.jpg, pose front, right, left
+// or back, revision the capture time in ms (a retake is a new file):
 // | Request                                                        | Result |
 // |----------------------------------------------------------------|--------|
 // | read, delete as the signed-in user `uid` (guests included)     | allow  |
@@ -20,7 +21,7 @@ service firebase.storage {
 
       allow read, delete: if isOwner();
       allow create, update: if isOwner()
-        && file in ['front.jpg', 'right.jpg', 'left.jpg', 'back.jpg']
+        && file.matches('(front|right|left|back)-[0-9]+[.]jpg')
         && request.resource.contentType == 'image/jpeg'
         && request.resource.size < 5 * 1024 * 1024;
     }

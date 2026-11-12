@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/features/body/domain/body_entry.dart';
 import 'package:get_workout/features/body/domain/body_stats.dart';
 import 'package:get_workout/features/body/domain/body_validation.dart';
+import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/strength/domain/strength.dart';
 
 void main() {
@@ -21,11 +22,13 @@ void main() {
     photos: photos,
   );
 
-  test('photo paths match the storage layout', () {
+  test('photo paths match the storage layout, with a revision', () {
     expect(
-      photoPath('u1', 'e1', PhotoPose.left),
-      'users/u1/photos/e1/left.jpg',
+      photoPath('u1', 'e1', PhotoPose.left, 1700),
+      'users/u1/photos/e1/left-1700.jpg',
     );
+    expect(isPhotoOf('users/u1/photos/e1/left-1.jpg', 'u1'), isTrue);
+    expect(isPhotoOf('users/u12/photos/e1/left-1.jpg', 'u1'), isFalse);
   });
 
   group('validation', () {
@@ -58,6 +61,22 @@ void main() {
         BodyIssue.weightOutOfRange,
       });
     });
+  });
+
+  test('the limits as shown in lb and inches are accepted, '
+      'one shown step beyond them is not', () {
+    double lb(double value) => WeightUnit.lb.toKg(value);
+    double inch(double value) => LengthUnit.inch.toCm(value);
+    expect(BodyLimits.weightKg(lb(66.1)), isTrue);
+    expect(BodyLimits.weightKg(lb(661.4)), isTrue);
+    expect(BodyLimits.weightKg(lb(66.0)), isFalse);
+    expect(BodyLimits.weightKg(lb(661.5)), isFalse);
+    expect(BodyLimits.weightKg(29.9), isFalse);
+    expect(BodyLimits.measurementCm(inch(3.9)), isTrue);
+    expect(BodyLimits.measurementCm(inch(98.4)), isTrue);
+    expect(BodyLimits.measurementCm(inch(3.8)), isFalse);
+    expect(BodyLimits.measurementCm(inch(98.5)), isFalse);
+    expect(BodyLimits.measurementCm(double.nan), isFalse);
   });
 
   group('weight series', () {

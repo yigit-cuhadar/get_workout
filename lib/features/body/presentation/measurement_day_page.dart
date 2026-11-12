@@ -14,7 +14,6 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/body_entry.dart';
 import 'body_entry_page.dart';
 import 'body_input.dart';
-import 'body_list_cubit.dart';
 import 'body_text.dart';
 import 'measurement_day_cubit.dart';
 
@@ -50,7 +49,6 @@ class _MeasurementDay extends StatelessWidget {
     final settings = context.read<SettingsCubit>().state.settings;
     final MeasurementDaySetup setup = (
       initial: entry,
-      entries: sl<BodyListCubit>().state.entries,
       tracked: settings.trackedMeasurements,
       weightUnit: settings.weightUnit,
       lengthUnit: settings.lengthUnit,
@@ -164,15 +162,7 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
             .showSnackBar(SnackBar(content: Text(text)));
     setState(() => _retaking = false);
     switch (state.status) {
-      case MeasurementDayStatus.saved:
-        // A retaken photo was written over its file; drop the old picture.
-        for (final pose in state.newPhotos.keys) {
-          if (state.keptFiles[pose] case final file?) {
-            unawaited(FileImage(File(file)).evict());
-          }
-        }
-        context.pop();
-      case MeasurementDayStatus.closed:
+      case MeasurementDayStatus.saved || MeasurementDayStatus.closed:
         context.pop();
       case MeasurementDayStatus.empty:
         tell(l10n.bodyNothingToSave);

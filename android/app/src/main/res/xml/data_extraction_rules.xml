@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 and later. Progress photos live only in the app and in its
+     own backup, so they and their backup queue stay out of cloud backups
+     and device transfers; everything else is backed up as before. Keep in
+     step with backup_rules.xml. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="users/"/>
+        <exclude domain="file" path="body_photo_backup.json"/>
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="users/"/>
+        <exclude domain="file" path="body_photo_backup.json"/>
+    </device-transfer>
+</data-extraction-rules>

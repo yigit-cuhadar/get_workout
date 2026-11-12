@@ -4,8 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/body/domain/body_entry.dart';
-import 'package:get_workout/features/body/domain/body_photo_sync.dart';
-import 'package:get_workout/features/body/domain/body_repository.dart';
 import 'package:get_workout/features/body/domain/body_usecases.dart';
 import 'package:get_workout/features/body/presentation/measurement_day_cubit.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
@@ -15,13 +13,12 @@ import 'body_fakes.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
-class MockBodyRepository extends Mock implements BodyRepository {}
-
 void main() {
   const user = AuthUser(id: 'u1', isAnonymous: true);
   final now = DateTime(2026, 11, 12, 9, 30);
+  final rev = now.millisecondsSinceEpoch;
   const tracked = {BodyMeasurement.waist, BodyMeasurement.hips};
-  const oldFront = 'users/u1/photos/old/front.jpg';
+  const oldFront = 'users/u1/photos/old/front-1.jpg';
   final previous = BodyEntry(
     id: 'old',
     date: DateTime(2026, 10, 1),
@@ -29,53 +26,43 @@ void main() {
   );
 
   late MockAuthRepository auth;
-  late MockBodyRepository repository;
-  late FakePhotoStore store;
-  late FakeBackupQueue queue;
   late StreamController<AuthUser?> users;
-  late BodyPhotoSync sync;
-
-  setUpAll(() {
-    registerFallbackValue(BodyEntry(id: 'x', date: DateTime(2026)));
-  });
+  late BodyPhotoWorld world;
 
   setUp(() {
     auth = MockAuthRepository();
-    repository = MockBodyRepository();
-    store = FakePhotoStore();
-    queue = FakeBackupQueue();
     users = StreamController<AuthUser?>.broadcast();
-    sync = BodyPhotoSync(queue, store, FakeBackup());
+    world = BodyPhotoWorld();
+    world.repository.entries['old'] = previous;
     when(() => auth.currentUser).thenReturn(user);
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
-    when(() => repository.newEntryId(any())).thenReturn('day');
-    when(() => repository.addEntry(any(), any()))
-        .thenAnswer((_) async => const Ok(null));
-    when(() => repository.updateEntry(any(), any()))
-        .thenAnswer((_) async => const Ok(null));
   });
 
   MeasurementDayCubit build({BodyEntry? initial}) => MeasurementDayCubit(
     setup: (
       initial: initial,
-      entries: [previous],
       tracked: tracked,
       weightUnit: WeightUnit.kg,
       lengthUnit: LengthUnit.inch,
     ),
-    saveEntry: SaveBodyEntry(repository, store, sync, clock: () => now),
-    newEntryId: NewBodyEntryId(repository),
-    restorePhoto: RestoreBodyPhoto(sync),
+    saveEntry: world.save(() => now),
+    newEntryId: NewBodyEntryId(world.repository),
+    discardCapture: DiscardCapture(world.store),
+    watchEntries: WatchBodyEntries(world.repository),
+    restorePhoto: RestoreBodyPhoto(world.sync),
     getCurrentUser: GetCurrentUser(auth),
     watchAuthUser: WatchAuthUser(auth),
     clock: () => now,
   );
 
-  BodyEntry saved() =>
-      verify(() => repository.addEntry('u1', captureAny())).captured.single
-          as BodyEntry;
+  Future<void> skipAll(MeasurementDayCubit cubit) async {
+    while (!cubit.state.isLast) {
+      await cubit.skip();
+    }
+    await cubit.skip();
+  }
 
-  test('steps go weight, tracked measurements in order, four photos', () {
+  test('steps go weight, tracked measurements in order, four photos', () async {
     final cubit = build();
 
     expect(cubit.state.steps, const [
@@ -87,17 +74,21 @@ void main() {
       PhotoStep(PhotoPose.left),
       PhotoStep(PhotoPose.back),
     ]);
-    unawaited(cubit.close());
-  });
-
-  test('the previous photo of a pose on the device is its ghost', () async {
-    store.files[oldFront] = 'local/old-front';
-    final cubit = build();
-    await pumpEventQueue();
-
-    expect(cubit.state.ghosts, {PhotoPose.front: 'local/old-front'});
     await cubit.close();
   });
+
+  test(
+    'loads the ghosts itself, from the backup when not on the device',
+    () async {
+      world.sync.start(Stream.value('u1'));
+      world.backup.remote[oldFront] = 'cloud';
+      final cubit = build();
+      await pumpEventQueue();
+
+      expect(cubit.state.ghosts, {PhotoPose.front: 'local/$oldFront'});
+      await cubit.close();
+    },
+  );
 
   test('a full day saves converted values and files its photos', () async {
     final cubit = build()..setWeight('80.5');
@@ -112,14 +103,34 @@ void main() {
     await cubit.skip(); // back, the last: saves
 
     expect(cubit.state.status, MeasurementDayStatus.saved);
-    final entry = saved();
-    expect(entry.id, 'day');
+    final entry = world.repository.entries['id1']!;
     expect(entry.date, now);
     expect(entry.weightKg, 80.5);
     expect(entry.measurements, {BodyMeasurement.waist: 34 * 2.54});
-    expect(entry.photos, {PhotoPose.front: 'users/u1/photos/day/front.jpg'});
-    expect(queue.saved.keys, ['users/u1/photos/day/front.jpg']);
+    final front = 'users/u1/photos/id1/front-$rev.jpg';
+    expect(entry.photos, {PhotoPose.front: front});
+    expect(world.queue.saved.keys, [front]);
+    expect(world.store.discarded, ['/tmp/front.jpg']);
     await cubit.close();
+  });
+
+  test('a retaken or skipped picture, and those left, are removed', () async {
+    final cubit = build();
+    for (var i = 0; i < 3; i++) {
+      await cubit.skip();
+    }
+    cubit
+      ..photoTaken('/tmp/a.jpg')
+      ..photoTaken('/tmp/b.jpg');
+    expect(world.store.discarded, ['/tmp/a.jpg']);
+
+    await cubit.skip();
+    expect(world.store.discarded, ['/tmp/a.jpg', '/tmp/b.jpg']);
+
+    cubit.photoTaken('/tmp/c.jpg');
+    await cubit.close();
+    expect(world.store.discarded, ['/tmp/a.jpg', '/tmp/b.jpg', '/tmp/c.jpg']);
+    expect(world.repository.calls, isEmpty);
   });
 
   test(
@@ -138,14 +149,39 @@ void main() {
     },
   );
 
+  test('the limits shown in inches are accepted', () async {
+    final cubit = build();
+    await cubit.skip();
+    cubit.setMeasurement('3.9');
+
+    await cubit.next();
+
+    expect(cubit.state.invalid, isFalse);
+    expect(cubit.state.index, 2);
+    await cubit.close();
+  });
+
   test('skipping everything saves nothing', () async {
     final cubit = build();
-    for (var i = 0; i < 7; i++) {
-      await cubit.skip();
-    }
+    await skipAll(cubit);
 
     expect(cubit.state.status, MeasurementDayStatus.empty);
-    verifyNever(() => repository.addEntry(any(), any()));
+    expect(world.repository.calls, isEmpty);
+    await cubit.close();
+  });
+
+  test('a failed save retried saves the same entry', () async {
+    world.repository.startFailure = const NetworkFailure();
+    final cubit = build()..setWeight('80');
+    await cubit.next();
+    await skipAll(cubit);
+    expect(cubit.state.status, MeasurementDayStatus.saveFailed);
+
+    world.repository.startFailure = null;
+    await cubit.next();
+
+    expect(world.repository.calls, ['add id1', 'add id1']);
+    expect(cubit.state.status, MeasurementDayStatus.saved);
     await cubit.close();
   });
 
@@ -171,35 +207,66 @@ void main() {
     await cubit.close();
   });
 
-  test('an edit keeps its date, untouched values and kept photos', () async {
-    const keptBack = 'users/u1/photos/e1/back.jpg';
+  group('editing', () {
+    const keptBack = 'users/u1/photos/e1/back-1.jpg';
     final initial = BodyEntry(
       id: 'e1',
       date: DateTime(2026, 11, 1),
       weightKg: 80.123,
-      measurements: const {BodyMeasurement.neck: 38.1},
+      measurements: const {
+        BodyMeasurement.neck: 38.1,
+        BodyMeasurement.waist: 86,
+      },
       photos: const {PhotoPose.back: keptBack},
     );
-    final cubit = build(initial: initial);
-    // The entry's own measurement is a step although not tracked.
-    expect(
-      cubit.state.steps,
-      contains(const MeasurementStep(BodyMeasurement.neck)),
+
+    test(
+      "skipping every step keeps all the entry's values and photos",
+      () async {
+        final cubit = build(initial: initial);
+        // The entry's own measurement is a step although not tracked.
+        expect(
+          cubit.state.steps,
+          contains(const MeasurementStep(BodyMeasurement.neck)),
+        );
+
+        await skipAll(cubit);
+
+        expect(world.repository.calls, ['update e1']);
+        final entry = world.repository.entries['e1']!;
+        expect(entry.date, initial.date);
+        expect(entry.weightKg, 80.123);
+        expect(entry.measurements, initial.measurements);
+        expect(entry.photos, {PhotoPose.back: keptBack});
+        await cubit.close();
+      },
     );
 
-    while (!cubit.state.isLast) {
-      await cubit.next();
-    }
-    await cubit.next();
+    test(
+      'a value typed and then skipped is dropped for the stored one',
+      () async {
+        final cubit = build(initial: initial)..setWeight('95');
 
-    final entry =
-        verify(() => repository.updateEntry('u1', captureAny())).captured.single
-            as BodyEntry;
-    expect(entry.date, initial.date);
-    expect(entry.weightKg, 80.123);
-    expect(entry.measurements, {BodyMeasurement.neck: 38.1});
-    expect(entry.photos, {PhotoPose.back: keptBack});
-    await cubit.close();
+        await skipAll(cubit);
+
+        expect(world.repository.entries['e1']!.weightKg, 80.123);
+        await cubit.close();
+      },
+    );
+
+    test('an emptied field with Next clears the value', () async {
+      final cubit = build(initial: initial)..setWeight('');
+      await cubit.next();
+      while (!cubit.state.isLast) {
+        await cubit.skip();
+      }
+      await cubit.skip();
+
+      final entry = world.repository.entries['e1']!;
+      expect(entry.weightKg, isNull);
+      expect(entry.measurements, initial.measurements);
+      await cubit.close();
+    });
   });
 
   test('closes when the user changes', () async {

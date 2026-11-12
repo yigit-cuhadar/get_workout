@@ -2,6 +2,10 @@ import 'package:forge_core/forge_core.dart';
 
 import 'body_entry.dart';
 
+/// Completes once the server has a write: with null when it took it, with
+/// the [Failure] when it refused it. Never completes while offline.
+typedef Confirmation = Future<Failure?>;
+
 abstract interface class BodyRepository {
   /// The most recent entries of user [uid], newest first, again on every
   /// change. Documents that cannot be read are skipped. Errors arrive as
@@ -15,16 +19,17 @@ abstract interface class BodyRepository {
   ///
   /// The result only covers starting the write: Firestore applies it to the
   /// local cache, so the stream shows it at once, and sends it whenever the
-  /// device is online. A rejection after that arrives on [rejectedWrites].
-  Future<Result<void>> addEntry(String uid, BodyEntry entry);
+  /// device is online. The [Confirmation] tells how the server took it; a
+  /// refusal also arrives on [rejectedWrites].
+  Future<Result<Confirmation>> addEntry(String uid, BodyEntry entry);
 
   /// Replaces the stored entry's date, weight, measurements and photos with
   /// [entry]'s, removing those it does not have; measurements and poses this
   /// app does not know are kept. Works like [addEntry].
-  Future<Result<void>> updateEntry(String uid, BodyEntry entry);
+  Future<Result<Confirmation>> updateEntry(String uid, BodyEntry entry);
 
   /// Works like [addEntry].
-  Future<Result<void>> deleteEntry(String uid, String id);
+  Future<Result<Confirmation>> deleteEntry(String uid, String id);
 
   /// Writes the server refused after they had already reported success;
   /// their change has left the stream again.

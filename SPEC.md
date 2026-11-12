@@ -239,46 +239,76 @@ from the earlier FitLab app.
   steps domain imports `forge_health` whole, platform code included; once
   the package exposes a domain-only library (next forge tag), import that
   instead.
-- **Photos**: private app storage plus Cloud Storage backup. Never the gallery.
+- **Photos**: private app storage plus Cloud Storage backup. Never the gallery
+  and never the device's own backups: Android's backup rules
+  (`res/xml/data_extraction_rules.xml`, `backup_rules.xml`) exclude
+  `files/users/` and `files/body_photo_backup.json`, everything else is
+  backed up as before; iOS sets `isExcludedFromBackup` on the photos'
+  folder (`getworkout/backup_exclusion` channel in `AppDelegate.swift`).
   Taken with the `camera` plugin (`GhostCamera` in `lib/core`, the previous
-  photo of the pose at 35% over the live preview; back camera first, a
-  switch button), then stored shrunk (longest side 1600 px, JPEG 85,
-  turned upright) in the app support directory at the storage path
-  (`users/{uid}/photos/{entryId}/{pose}.jpg`), the same string the entry's
-  `photos` map holds. Backup runs in the background after the local save
-  (`BodyPhotoSync`): uploads and deletions are queued per photo in
-  `body_photo_backup.json` on the device and done for the signed-in user;
-  failures stay queued and are retried at start, sign-in, app resume and
-  the next queued change (a newer task for a path replaces an older one).
-  A photo missing on the device (a new phone) is fetched from the backup
-  when a page shows it (entry, compare, the measurement day's ghosts and
-  kept photos). Guests are backed up like accounts: their uid is the one
-  linking keeps; a guest who signs in to an existing account leaves the
-  photos behind like the rest of their data (see Open questions). A photo
-  can be retaken, not removed alone; deleting an entry removes its photos
-  and queues their remote deletion. `storage.rules`: owner only,
-  `image/jpeg`, under 5 MB, the four pose file names.
+  photo of the pose at 35% over the live preview, mirrored with a mirrored
+  front-camera preview; back camera first, a switch button), then stored
+  shrunk (longest side 1600 px, JPEG 85, turned upright, metadata such as
+  location stripped) in the app support directory at the storage path, the
+  same string the entry's `photos` map holds. The camera's own file is
+  removed once stored, on a retake or skip, and when the flow is left.
+  A path carries a revision (`{pose}-{capture ms}.jpg`), so a retake is a
+  new path and every device sees its copy is out of date.
+  Saving is one change: all photos are stored, then the entry is written,
+  and only then are uploads queued; a failure removes what that attempt
+  stored, and a retry reuses the flow's entry id. The photos a retake
+  replaced, or a deleted entry's photos, are removed (here and queued for
+  the backup) only once the server confirms the write; a refused save
+  removes its new photos instead, so an undone change leaves nothing.
+  Backup (`BodyPhotoSync`) runs in the background: every photo's state
+  (upload, delete, uploaded) is kept in `body_photo_backup.json`, written
+  one save at a time; a file that cannot be read is renamed
+  `.unreadable-<time>` and never overwritten. Work is done for whoever is
+  signed in, the user checked before each task (a task failing because the
+  user changed goes on with the new user's); failures stay queued and are
+  retried at start, sign-in, app resume and the next queued change; a newer
+  state for a path wins over a task still running. Each entries snapshot
+  reconciles: photos on the device that an entry names and the queue does
+  not know are queued for upload (a lost queue, or photos from before the
+  backup). A photo missing on the device (a new phone, or a retake made on
+  another one) is fetched when a page shows it (entry, compare, the
+  measurement day's ghosts and kept photos). `ForgetBodyPhotos(uid)`
+  drops a user's backup work, waits for the running task and deletes
+  their photos on the device; the account feature calls it before or
+  after deleting an account and when a guest's data is discarded. Guests
+  are backed up like accounts: their uid is the one linking keeps. A
+  photo can be retaken, not removed alone. `storage.rules`: owner only,
+  `image/jpeg`, under 5 MB, file names `(front|right|left|back)-<digits>.jpg`.
 - **Weight log and measurement days** (`lib/features/body`): Progress →
   Weight and measurements. A quick log is an entry with only `weightKg`
   (date picker; today keeps the current time, another day is noon); a
   measurement day is a step flow, weight → each tracked measurement → front,
   right, left, back photos, every step skippable, the last one saves;
   nothing entered saves nothing. Edit re-runs the same form or flow,
-  prefilled; an entry's own measurements stay steps even if no longer
-  tracked; a value left as shown keeps its stored metric value exactly.
+  prefilled; skipping a step keeps the stored value (a value typed there
+  is dropped), and only an emptied field with Next clears one; an entry's
+  own measurements stay steps even if no longer tracked; a value left as
+  shown keeps its stored metric value exactly. The flow loads the
+  previous photos itself, so it works when opened first (e.g. from a
+  reminder).
   `settings.trackedMeasurements` is a list of codes (`neck`, `shoulders`,
   `chest`, `waist`, `abdomen`, `hips`, `leftUpperArm`, `rightUpperArm`,
   `leftForearm`, `rightForearm`, `leftThigh`, `rightThigh`, `leftCalf`,
   `rightCalf`, also the `measurements` keys), default chest, waist, hips,
   both upper arms and thighs, edited from the flow's app bar. Limits:
-  weight as the profile (30-300 kg), measurements 10-250 cm. The weight
-  chart is a `LineChart` with the strength ranges: 12 weeks free, longer
-  Premium (per Monetization, "charts beyond 12 weeks"); the profile's
+  weight as the profile (30-300 kg), measurements 10-250 cm; values are
+  typed to one decimal in the user's unit, so half a shown lb or inch
+  step of slack lets the limits as shown pass (66.1 and 661.4 lb, 3.9 in).
+  The weight chart is a `LineChart` with the strength ranges: 12 weeks
+  free, longer Premium (confirmed by the user); the profile's
   target weight shows with the distance to go. Compare: any two entries,
   the oldest and newest first, values with the change and photos per pose
-  side by side. Logging a weight does not update `profile.weightKg`.
-  Firestore rules validate `bodyEntries` (date timestamp, numeric
-  `weightKg`, `measurements` and `photos` maps).
+  side by side. Saving or deleting an entry sets `profile.weightKg` to
+  the weight of the most recent dated entry that has one, through the
+  profile's `UpdateProfile` (calculators and the target distance use it);
+  with no such entry the profile weight is left. Firestore rules validate
+  `bodyEntries` (date timestamp, numeric `weightKg`, `measurements` and
+  `photos` maps whose known keys hold numbers and strings).
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk).
@@ -731,8 +761,9 @@ deleted.
 **`users/{uid}/bodyEntries/{id}`**: `date`, `weightKg?`, `measurements` (map
 of cm values: neck, shoulders, chest, waist, abdomen, hips, and left/right
 upper arm, forearm, thigh, calf), `photos` (map of `front` \| `right` \|
-`left` \| `back` → storage path). A quick weight log is an entry with only
-`weightKg`; a measurement day fills all three.
+`left` \| `back` → storage path, which holds the photo's revision; see
+Storage). A quick weight log is an entry with only `weightKg`; a
+measurement day fills all three.
 
 **`users/{uid}/pushTokens/{token}`**: `platform`, `updatedAt`.
 
@@ -744,7 +775,9 @@ RevenueCat webhook; readable by its owner.
 
 ### Storage
 
-`users/{uid}/photos/{entryId}/{pose}.jpg`: owner only, JPEG, max 5 MB.
+`users/{uid}/photos/{entryId}/{pose}-{revision}.jpg`, revision the capture
+time in ms (a retake is a new file; the replaced one is deleted): owner
+only, JPEG, max 5 MB.
 
 ### Cloud Functions
 
@@ -824,12 +857,18 @@ Group 9, launch readiness
   `users/{uid}/photos/**`; the orphaned-guest cleanup likewise.
 - Body feature, not yet run on a device: the camera permission prompt and
   denial text, the ghost's alignment (front-camera previews are mirrored,
-  saved photos are not), retake and photo eviction, background upload and
-  restore against the dev bucket. Android manifest drops the camera
-  plugin's RECORD_AUDIO and WRITE_EXTERNAL_STORAGE and makes the camera
-  optional; not built yet.
-- `GhostCamera` (`lib/core/ghost_camera.dart`) is generic; move it into a
-  forge package with the next forge release.
+  saved photos are not; `mirrorGhost` in `ghost_camera.dart`), retake,
+  background upload and restore against the dev bucket, the iOS backup
+  exclusion channel. Android manifest drops the camera plugin's
+  RECORD_AUDIO and WRITE_EXTERNAL_STORAGE and makes the camera optional
+  (`tools:replace`); with the new backup rules, not built yet.
+- Forge task, a recorded deviation from "generic goes in a package":
+  `GhostCamera` (`lib/core/ghost_camera.dart`, free of app code) stays in
+  the app for this feature; move it into a forge package with widget tests
+  for capture, camera switch and the unavailable state.
+- Account feature: call `ForgetBodyPhotos` (registered by `BodyModule`)
+  before or after deleting an account and when a guest's data is
+  discarded.
 - Female body model with the same mesh names: the user supplies it before release.
 - RevenueCat webhook (`revenueCatWebhook`, needs the Blaze plan): verify the
   Authorization header secret, write `entitlements/{app_user_id}` with

@@ -152,11 +152,14 @@ class _GhostCameraState extends State<GhostCamera> {
                   : IgnorePointer(
                       child: Opacity(
                         opacity: _ghostOpacity,
-                        child: Image.file(
-                          File(ghost),
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
+                        child: Transform.flip(
+                          flipX: mirrorGhost(controller.description),
+                          child: Image.file(
+                            File(ghost),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
                         ),
                       ),
                     ),
@@ -187,3 +190,11 @@ class _GhostCameraState extends State<GhostCamera> {
     );
   }
 }
+
+/// Whether the ghost is flipped to match the preview of [camera]. Both
+/// platforms show the front camera's preview mirrored, like a mirror, but
+/// save its pictures unmirrored, as every ghost is; the back camera is
+/// mirrored in neither. Verify on iOS and Android whenever the camera
+/// plugin changes.
+bool mirrorGhost(CameraDescription camera) =>
+    camera.lensDirection == CameraLensDirection.front;

@@ -96,6 +96,9 @@ class WeightFormCubit extends Cubit<WeightFormState> {
   late final StreamSubscription<String?> _userSubscription;
   bool _submitted = false;
 
+  /// Fixed at the first save, so a retry saves the same entry.
+  String? _entryId;
+
   bool get isEditing => _initial != null;
 
   void setWeight(String text) => _change(state.copyWith(weight: text));
@@ -128,7 +131,10 @@ class WeightFormCubit extends Cubit<WeightFormState> {
       emit(state.copyWith(status: WeightFormStatus.closed));
       return;
     }
-    final (entry, issues) = _check(state, id: _initial?.id ?? _newEntryId(uid));
+    final (entry, issues) = _check(
+      state,
+      id: _entryId ??= _initial?.id ?? _newEntryId(uid),
+    );
     if (issues.isNotEmpty) {
       emit(state.copyWith(issues: issues, status: WeightFormStatus.editing));
       return;

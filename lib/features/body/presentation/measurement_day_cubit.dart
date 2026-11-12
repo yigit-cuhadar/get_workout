@@ -142,11 +142,9 @@ class MeasurementDayState extends Equatable {
 }
 
 /// What a measurement day starts from: the entry being edited (null for a
-/// new day), the user's entries (newest first, for the ghosts), what they
-/// track and their units.
+/// new day), what the user tracks and their units.
 typedef MeasurementDaySetup = ({
   BodyEntry? initial,
-  List<BodyEntry> entries,
   Set<BodyMeasurement> tracked,
   WeightUnit weightUnit,
   LengthUnit lengthUnit,
@@ -154,13 +152,18 @@ typedef MeasurementDaySetup = ({
 
 /// A measurement day, step by step: the weight, each tracked measurement,
 /// then a photo of each pose. Every step can be skipped; the last one
-/// saves. Edits [MeasurementDaySetup.initial] when given. Closes when the
-/// signed-in user changes.
+/// saves. Edits [MeasurementDaySetup.initial] when given; skipping a step
+/// then keeps its stored value, and only an emptied field clears one. The
+/// previous photos are loaded here, so the flow also works when opened
+/// first, e.g. from a reminder. Pictures taken and not kept are removed.
+/// Closes when the signed-in user changes.
 class MeasurementDayCubit extends Cubit<MeasurementDayState> {
   MeasurementDayCubit({
     required MeasurementDaySetup setup,
     required this._saveEntry,
     required this._newEntryId,
+    required this._discardCapture,
+    required WatchBodyEntries watchEntries,
     required RestoreBodyPhoto restorePhoto,
     required GetCurrentUser getCurrentUser,
     required WatchAuthUser watchAuthUser,
@@ -178,11 +181,12 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
         .listen((uid) {
           if (uid != _uid) _close();
         });
-    unawaited(_findPhotos(setup, restorePhoto, clock ?? DateTime.now));
+    unawaited(_findPhotos(watchEntries, restorePhoto));
   }
 
   final SaveBodyEntry _saveEntry;
   final NewBodyEntryId _newEntryId;
+  final DiscardCapture _discardCapture;
   final BodyEntry? _initial;
   final WeightUnit _weightUnit;
   final LengthUnit _lengthUnit;
@@ -190,6 +194,10 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
   final DateTime Function() _clock;
   final String? _uid;
   late final StreamSubscription<String?> _userSubscription;
+
+  /// Fixed at the first save, so a retry saves the same entry.
+  String? _entryId;
+  DateTime? _date;
 
   bool get isEditing => _initial != null;
 
@@ -221,19 +229,28 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
     for (final pose in PhotoPose.values) PhotoStep(pose),
   ];
 
+  /// The ghosts and the edited entry's photos, fetched from the backup
+  /// when not on this device.
   Future<void> _findPhotos(
-    MeasurementDaySetup setup,
+    WatchBodyEntries watchEntries,
     RestoreBodyPhoto restorePhoto,
-    DateTime Function() clock,
   ) async {
-    final initial = setup.initial;
+    final uid = _uid;
+    if (uid == null) return;
+    final initial = _initial;
+    final List<BodyEntry> entries;
+    try {
+      entries = await watchEntries(uid).first;
+    } on Object catch (error, stack) {
+      Log.e('body', 'no ghosts: entries not loaded', error, stack);
+      return;
+    }
     final previous = previousPhotos(
-      setup.entries,
-      date: initial?.date ?? clock(),
+      entries,
+      date: initial?.date ?? _clock(),
       excludeId: initial?.id,
     );
     final kept = initial?.photos ?? const {};
-    // Fetched from the backup when not on this device.
     final paths = {...previous.values, ...kept.values}.toList();
     final found = await Future.wait(paths.map(restorePhoto.call));
     final files = {for (final (i, path) in paths.indexed) path: ?found[i]};
@@ -274,9 +291,18 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
     }
   }
 
-  /// [file] is the picture just taken for the current step, a photo.
+  /// [file] is the picture just taken for the current step, a photo; one
+  /// taken before for it is removed.
   void photoTaken(String file) {
+    if (state.status
+        case MeasurementDayStatus.saving || MeasurementDayStatus.closed) {
+      unawaited(_discardCapture(file));
+      return;
+    }
     if (state.step case PhotoStep(:final pose)) {
+      if (state.newPhotos[pose] case final earlier?) {
+        unawaited(_discardCapture(earlier));
+      }
       _edit(state.copyWith(newPhotos: {...state.newPhotos, pose: file}));
     }
   }
@@ -299,17 +325,30 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
     await _advance();
   }
 
-  /// Moves on without the current step's value. A stored photo stays.
+  /// Moves on without changing the current step: what the edited entry
+  /// stores stays (a value typed here is dropped), as does a stored photo.
   Future<void> skip() async {
     if (!_canMove) return;
+    final initial = _initial;
     final cleared = switch (state.step) {
-      WeightStep() => state.copyWith(weight: ''),
+      WeightStep() => state.copyWith(
+        weight: metricText(initial?.weightKg, _weightUnit.fromKg),
+      ),
       MeasurementStep(:final measurement) => state.copyWith(
-        measurements: {...state.measurements}..remove(measurement),
+        measurements: {
+          ...state.measurements,
+          measurement: metricText(
+            initial?.measurements[measurement],
+            _lengthUnit.fromCm,
+          ),
+        },
       ),
-      PhotoStep(:final pose) => state.copyWith(
-        newPhotos: {...state.newPhotos}..remove(pose),
-      ),
+      PhotoStep(:final pose) => () {
+        if (state.newPhotos[pose] case final taken?) {
+          unawaited(_discardCapture(taken));
+        }
+        return state.copyWith(newPhotos: {...state.newPhotos}..remove(pose));
+      }(),
     };
     emit(
       cleared.copyWith(invalid: false, status: MeasurementDayStatus.editing),
@@ -387,8 +426,8 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
     }
     final initial = _initial;
     final entry = BodyEntry(
-      id: initial?.id ?? _newEntryId(uid),
-      date: initial?.date ?? _clock(),
+      id: _entryId ??= initial?.id ?? _newEntryId(uid),
+      date: _date ??= initial?.date ?? _clock(),
       weightKg: _weightKg,
       measurements: {
         for (final step in state.steps)
@@ -419,9 +458,14 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
     );
   }
 
+  /// The pictures taken are no longer needed: after a save they were
+  /// stored (and already removed), otherwise the flow was left.
   @override
   Future<void> close() async {
     await _userSubscription.cancel();
+    for (final file in state.newPhotos.values) {
+      await _discardCapture(file);
+    }
     return super.close();
   }
 }
