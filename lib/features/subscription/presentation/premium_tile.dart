@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_purchases/forge_purchases.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/open_link.dart';
 import 'premium.dart';
 import '../../../l10n/app_localizations.dart';
 import 'subscription_summary.dart';
@@ -38,12 +38,7 @@ class PremiumTile extends StatelessWidget {
     final failed = AppLocalizations.of(context).premiumManageFailed;
     final messenger = ScaffoldMessenger.of(context);
     final url = await context.read<EntitlementCubit>().managementUrl();
-    final opened =
-        url.valueOrNull != null &&
-        await launchUrl(
-          url.valueOrNull!,
-          mode: LaunchMode.externalApplication,
-        ).catchError((_) => false);
+    final opened = url.valueOrNull != null && await openLink(url.valueOrNull!);
     if (!opened) messenger.showSnackBar(SnackBar(content: Text(failed)));
   }
 }
