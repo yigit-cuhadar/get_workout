@@ -42,6 +42,9 @@ class _GhostCameraState extends State<GhostCamera> {
   CameraDescription? _camera;
   CameraController? _controller;
   bool _unavailable = false;
+
+  /// The cameras being closed; the next one opens after them.
+  Future<void> _closing = Future.value();
   bool _capturing = false;
 
   @override
@@ -77,6 +80,9 @@ class _GhostCameraState extends State<GhostCamera> {
       return;
     }
     if (_controller != null) return;
+    // A camera still closing would make this one fail to start.
+    await _closing;
+    if (!mounted || _controller != null) return;
     final controller = CameraController(
       camera,
       ResolutionPreset.high,
@@ -92,15 +98,25 @@ class _GhostCameraState extends State<GhostCamera> {
       if (_controller != controller) return;
       // Refused access, or no working camera.
       _controller = null;
-      await controller.dispose();
+      await _close(controller);
       if (mounted) setState(() => _unavailable = true);
+    }
+  }
+
+  /// Disposing one that never finished starting throws (the system's
+  /// permission prompt makes the app inactive mid-start); nothing to undo.
+  Future<void> _close(CameraController controller) async {
+    try {
+      await controller.dispose();
+    } on Object {
+      // Already gone.
     }
   }
 
   void _release() {
     final controller = _controller;
     _controller = null;
-    unawaited(controller?.dispose());
+    if (controller != null) _closing = _closing.then((_) => _close(controller));
     if (mounted) setState(() {});
   }
 
@@ -129,7 +145,8 @@ class _GhostCameraState extends State<GhostCamera> {
   @override
   void dispose() {
     _lifecycle.dispose();
-    unawaited(_controller?.dispose());
+    final controller = _controller;
+    if (controller != null) unawaited(_close(controller));
     super.dispose();
   }
 
