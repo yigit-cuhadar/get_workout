@@ -14,6 +14,7 @@ import '../features/notifications/notifications_module.dart';
 import '../features/profile/profile_module.dart';
 import '../features/programs/programs_module.dart';
 import '../features/settings/settings_module.dart';
+import '../features/strength/strength_module.dart';
 import '../features/workout/workout_module.dart';
 import '../features/subscription/subscription_module.dart';
 import 'app.dart';
@@ -38,6 +39,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     ),
     const GeneratorModule(),
     const WorkoutModule(),
+    const StrengthModule(),
     const CalendarModule(),
     SubscriptionModule(
       backend: purchasesBackend(

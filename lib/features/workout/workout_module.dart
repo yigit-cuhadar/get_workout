@@ -57,6 +57,7 @@ class WorkoutModule implements FeatureModule {
       ..registerFactory(() => RebuildExerciseStats(sl()))
       ..registerFactory(() => NewWorkoutId(sl()))
       ..registerFactory(() => WatchExerciseStats(sl()))
+      ..registerFactory(() => WatchAllExerciseStats(sl()))
       ..registerFactory(() => FinishWorkout(sl()))
       ..registerFactory(() => SaveWorkoutAsProgram(sl()))
       // One workout in progress for the whole app.

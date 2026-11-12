@@ -28,6 +28,12 @@ class ProgressPage extends StatelessWidget {
             onTap: () => context.go(Routes.history),
           ),
           ListTile(
+            leading: const Icon(Icons.trending_up),
+            title: Text(l10n.progressStrength),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go(Routes.strength),
+          ),
+          ListTile(
             leading: const Icon(Icons.directions_run),
             title: Text(l10n.progressCardio),
             trailing: const Icon(Icons.chevron_right),

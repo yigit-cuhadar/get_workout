@@ -72,6 +72,15 @@ class WatchExerciseStats {
       _repository.watchStats(ref.uid, ref.exerciseId);
 }
 
+class WatchAllExerciseStats {
+  const WatchAllExerciseStats(this._repository);
+  final WorkoutRepository _repository;
+
+  /// [uid]'s stats by exercise id.
+  Stream<Map<String, ExerciseStats>> call(String uid) =>
+      _repository.watchAllStats(uid);
+}
+
 /// Finishes the workout in progress now (see [finishWorkout]) and stores it
 /// with each exercise's stats updated and, when it did the active program's
 /// next day, the program moved on, in one batch that also works offline.
