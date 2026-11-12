@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../../../core/grouping.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/domain/vocabulary.dart';
@@ -79,4 +81,19 @@ Duration estimateDay(ProgramDay day) {
     seconds += rounds * members.last.restS;
   }
   return Duration(seconds: seconds);
+}
+
+/// The shortest and longest session of a program, in whole minutes.
+typedef SessionMinutes = ({int min, int max});
+
+/// [days]' [SessionMinutes] by [estimateDay], each day rounded to whole
+/// minutes and at least one; null without days. The catalogue stores it on
+/// each card.
+SessionMinutes? sessionMinutes(List<ProgramDay> days) {
+  if (days.isEmpty) return null;
+  final minutes = [
+    for (final day in days)
+      math.max(1, (estimateDay(day).inSeconds / 60).round()),
+  ]..sort();
+  return (min: minutes.first, max: minutes.last);
 }

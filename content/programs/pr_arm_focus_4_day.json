@@ -18,6 +18,10 @@
     "pull_up_bar",
     "dip_station"
   ],
+  "minutes": {
+    "min": 32,
+    "max": 46
+  },
   "l10n": {
     "en": {
       "name": "Arm Focus 4-Day",

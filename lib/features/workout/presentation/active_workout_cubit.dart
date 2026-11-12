@@ -266,12 +266,18 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     ),
   );
 
+  /// Whether [program]'s days may be started now; see [programAccess].
+  ProgramAccess access(Program program) => _programs.state.access(program);
+
   /// Starts day [dayIndex] of [program] with its items as goals, named
   /// [name], exercise names in [language], once the catalogue knows every
-  /// item's exercise (custom ones included). Items whose exercise is gone
-  /// are left out and counted in [WorkoutStart.skipped]; nothing starts while
-  /// another workout is in progress, the catalogue does not load, or none
-  /// of the day's exercises is available.
+  /// item's exercise (custom ones included) and [access] is open (waiting,
+  /// like for the catalogue, for a premium status that may still be on its
+  /// way, e.g. right after the paywall). Items whose exercise is gone are
+  /// left out and counted in [WorkoutStart.skipped]; nothing starts while
+  /// another workout is in progress, the catalogue does not load, the
+  /// program needs premium the user does not have, or none of the day's
+  /// exercises is available.
   Future<WorkoutStart> startProgramDay(
     Program program,
     int dayIndex, {
@@ -281,6 +287,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     const notStarted = (started: false, skipped: 0);
     if (program.id == null || dayIndex < 0 || dayIndex >= program.days.length) {
       return notStarted;
+    }
+    if (access(program) != ProgramAccess.open) {
+      try {
+        await _programs.stream
+            .firstWhere((state) => state.access(program) == ProgramAccess.open)
+            .timeout(catalogueWait);
+      } on Object {
+        return notStarted;
+      }
     }
     final ids = [
       for (final item in program.days[dayIndex].items) item.exerciseId,

@@ -14,8 +14,8 @@ import '../domain/program_usecases.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
 
-/// The Programs tab: the active program with this week's plan, then the
-/// other programs.
+/// The Programs tab: the way into the ready-made programs, the active
+/// program with this week's plan, then the other programs.
 class ProgramsPage extends StatelessWidget {
   const ProgramsPage({super.key});
 
@@ -100,7 +100,21 @@ class _ProgramsViewState extends State<_ProgramsView> {
             ),
             ProgramListStatus.ready when !hasPrograms => EmptyView(
               message: l10n.programsEmpty,
-              action: ForgeButton(label: l10n.programNew, onPressed: create),
+              action: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ForgeButton(
+                    label: l10n.catalogueBrowse,
+                    onPressed: () => context.go(Routes.catalogue),
+                  ),
+                  const SizedBox(height: Gap.sm),
+                  OutlinedButton(
+                    onPressed: create,
+                    child: Text(l10n.programNew),
+                  ),
+                ],
+              ),
             ),
             ProgramListStatus.ready => _Programs(state),
           },
@@ -119,24 +133,27 @@ class _Programs extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final active = state.activeProgram;
     final others = state.otherPrograms;
+    final access = active == null ? null : state.access(active);
     return ListView(
       padding: const EdgeInsets.only(bottom: Gap.xl * 2),
       children: [
+        ListTile(
+          leading: const Icon(Icons.auto_awesome_outlined),
+          title: Text(l10n.catalogueTitle),
+          subtitle: Text(l10n.catalogueEntryInfo),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go(Routes.catalogue),
+        ),
         if (active != null) ...[
           _Header(l10n.programActive),
           _ProgramTile(
             active,
+            locked: access == ProgramAccess.locked,
             subtitle: state.finished
                 ? l10n.programFinished
                 : l10n.weekdayList(state.active!.weekdays),
           ),
-          if (state.missed case final missed?)
-            _MissedDay(
-              program: active,
-              missed: missed,
-              moveDate: state.moveDate!,
-              busy: state.resolving,
-            ),
+          // Locked, it opens the paywall instead.
           if (state.nextDayIndex case final day?)
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -150,11 +167,39 @@ class _Programs extends StatelessWidget {
                 onPressed: () => startProgramDay(context, active, day),
               ),
             ),
-          if (!state.finished) _WeekPlan(program: active, plan: state.weekPlan),
+          // Kept, not stopped: it carries on once premium is back.
+          if (access == ProgramAccess.locked)
+            Padding(
+              padding: const EdgeInsets.all(Gap.md),
+              child: Row(
+                children: [
+                  const Icon(Icons.lock_outline),
+                  const SizedBox(width: Gap.sm),
+                  Expanded(child: Text(l10n.programLockedActive)),
+                ],
+              ),
+            )
+          else if (access == ProgramAccess.waiting)
+            const Padding(padding: EdgeInsets.all(Gap.md), child: LoadingView())
+          else ...[
+            if (state.missed case final missed?)
+              _MissedDay(
+                program: active,
+                missed: missed,
+                moveDate: state.moveDate!,
+                busy: state.resolving,
+              ),
+            if (!state.finished)
+              _WeekPlan(program: active, plan: state.weekPlan),
+          ],
         ],
         if (others.isNotEmpty) ...[
           _Header(active == null ? l10n.programsMine : l10n.programsOther),
-          for (final program in others) _ProgramTile(program),
+          for (final program in others)
+            _ProgramTile(
+              program,
+              locked: state.access(program) == ProgramAccess.locked,
+            ),
         ],
       ],
     );
@@ -173,9 +218,10 @@ class _Header extends StatelessWidget {
 }
 
 class _ProgramTile extends StatelessWidget {
-  const _ProgramTile(this.program, {this.subtitle});
+  const _ProgramTile(this.program, {required this.locked, this.subtitle});
 
   final Program program;
+  final bool locked;
   final String? subtitle;
 
   @override
@@ -190,7 +236,9 @@ class _ProgramTile extends StatelessWidget {
       title: Text(program.name),
       subtitle: Text(subtitle == null ? details : '$subtitle\n$details'),
       isThreeLine: subtitle != null,
-      trailing: const Icon(Icons.chevron_right),
+      trailing: locked
+          ? Icon(Icons.lock_outline, semanticLabel: l10n.catalogueLockedLabel)
+          : const Icon(Icons.chevron_right),
       onTap: () => context.go(Routes.program(program.id!)),
     );
   }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../programs/domain/premium_status.dart' as programs;
 
 /// Whether the signed-in user has Premium. [unknown] while it resolves:
 /// never show a paywall or a lock then.
@@ -15,6 +16,27 @@ PremiumStatus premiumStatusOf(EntitlementState state) => switch (state) {
   EntitlementInactive() => PremiumStatus.free,
   EntitlementActive() => PremiumStatus.premium,
 };
+
+/// [EntitlementCubit]'s status as features outside the widget tree take it:
+/// null while unknown.
+class EntitlementPremium implements programs.PremiumStatus {
+  const EntitlementPremium(this._entitlement);
+
+  final EntitlementCubit _entitlement;
+
+  @override
+  Stream<bool?> watch() async* {
+    yield _premium(_entitlement.state);
+    yield* _entitlement.stream.map(_premium).distinct();
+  }
+
+  static bool? _premium(EntitlementState state) =>
+      switch (premiumStatusOf(state)) {
+        PremiumStatus.unknown => null,
+        PremiumStatus.free => false,
+        PremiumStatus.premium => true,
+      };
+}
 
 /// The gate every premium feature uses: [watchPremium] to show a lock,
 /// [requirePremium] before entering.

@@ -16,6 +16,10 @@
     "bench",
     "bodyweight"
   ],
+  "minutes": {
+    "min": 31,
+    "max": 32
+  },
   "l10n": {
     "en": {
       "name": "Gym Starter: Full Body 3-Day",

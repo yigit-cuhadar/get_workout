@@ -18,6 +18,10 @@
     "pull_up_bar",
     "landmine"
   ],
+  "minutes": {
+    "min": 37,
+    "max": 44
+  },
   "l10n": {
     "en": {
       "name": "Advanced Hypertrophy 5-Day",

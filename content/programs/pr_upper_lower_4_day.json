@@ -17,6 +17,10 @@
     "bench",
     "pull_up_bar"
   ],
+  "minutes": {
+    "min": 34,
+    "max": 51
+  },
   "l10n": {
     "en": {
       "name": "Upper/Lower 4-Day",

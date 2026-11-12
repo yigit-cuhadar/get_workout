@@ -626,6 +626,17 @@ void main() {
     });
   });
 
+  test('sessionMinutes is the shortest and longest day, at least 1', () {
+    expect(sessionMinutes(const []), isNull);
+    expect(
+      sessionMinutes([
+        ProgramDay(items: [item('a', sets: 1, restS: 0, repMin: 1, repMax: 1)]),
+        ProgramDay(items: [item('a', restS: 60), item('b', restS: 60)]),
+      ]),
+      (min: 1, max: 9),
+    );
+  });
+
   group('Program.duplicate', () {
     test('copies the content as a new program of the user', () {
       final original = Program(
@@ -643,6 +654,13 @@ void main() {
       expect(copy.name, 'PPL (copy)');
       expect(copy.lengthWeeks, 8);
       expect(copy.days, original.days);
+    });
+
+    test('keeps the premium mark, also through edits', () {
+      final paid = program(id: 'p1', premium: true);
+      expect(paid.duplicate(copyOf).premium, isTrue);
+      expect(paid.copyWith(name: 'Mine').premium, isTrue);
+      expect(program().duplicate(copyOf).premium, isFalse);
     });
 
     test('shortens the name to make room for the suffix', () {
@@ -676,6 +694,21 @@ void main() {
     test('drops spaces left at the cut', () {
       final copy = program(name: '${'x' * 52} yy').duplicate(copyOf);
       expect(copy.name, '${'x' * 52} (copy)');
+    });
+  });
+
+  group('programAccess', () {
+    test('a program without the premium mark is always open', () {
+      for (final premium in [null, false, true]) {
+        expect(programAccess(program(), premium), ProgramAccess.open);
+      }
+    });
+
+    test('a premium copy needs premium, and waits while unknown', () {
+      final paid = program(premium: true);
+      expect(programAccess(paid, true), ProgramAccess.open);
+      expect(programAccess(paid, false), ProgramAccess.locked);
+      expect(programAccess(paid, null), ProgramAccess.waiting);
     });
   });
 

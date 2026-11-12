@@ -18,6 +18,10 @@
     "pull_up_bar",
     "ab_wheel"
   ],
+  "minutes": {
+    "min": 38,
+    "max": 61
+  },
   "l10n": {
     "en": {
       "name": "Upper/Lower Strength 4-Day",

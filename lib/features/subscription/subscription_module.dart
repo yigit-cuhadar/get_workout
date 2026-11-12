@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_it/get_it.dart';
 
+import '../programs/domain/premium_status.dart' as programs;
 import 'data/unavailable_purchases_repository.dart';
 import 'presentation/fake_store_controls.dart';
+import 'presentation/premium.dart';
 import 'presentation/premium_paywall_cubit.dart';
 import 'presentation/purchaser_session.dart';
 
@@ -61,6 +65,14 @@ class SubscriptionModule implements FeatureModule {
       kDebugMode && sl.isRegistered<FakePurchasesRepository>()
       ? FakeStoreControls(sl())
       : null;
+
+  /// The programs feature's premium status: the entitlement's.
+  static programs.PremiumStatus premiumStatus(GetIt sl) =>
+      EntitlementPremium(sl());
+
+  /// The programs feature's premium action: the paywall.
+  static void showPaywall(BuildContext context) =>
+      unawaited(context.openPaywall());
 
   @override
   void register(GetIt sl) {

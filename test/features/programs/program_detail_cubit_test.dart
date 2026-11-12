@@ -7,6 +7,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/programs/data/no_completed_days.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
+import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_repository.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/programs/presentation/program_detail_cubit.dart';
@@ -27,6 +28,7 @@ void main() {
   final now = DateTime(2026, 11, 11, 9);
   final upperLower = program(id: 'p1');
   final arms = program(id: 'p2', name: 'Arms');
+  final paid = program(id: 'p3', name: 'Paid', premium: true);
   final armsActive = ActiveProgram(
     programId: 'p2',
     weekdays: const [2, 5],
@@ -40,6 +42,7 @@ void main() {
   late StreamController<AuthUser?> users;
   late StreamController<ActiveProgram?> active;
   late ProgramListCubit list;
+  late FakePremium premium;
 
   setUpAll(() {
     registerFallbackValue(upperLower);
@@ -64,7 +67,7 @@ void main() {
     when(() => repository.watchActiveProgram(any()))
         .thenAnswer((_) => const Stream.empty());
     when(() => repository.watchPrograms('u1'))
-        .thenAnswer((_) => Stream.value([arms, upperLower]));
+        .thenAnswer((_) => Stream.value([arms, upperLower, paid]));
     when(() => repository.watchActiveProgram('u1'))
         .thenAnswer((_) => active.stream);
     when(() => repository.rejectedWrites)
@@ -84,6 +87,7 @@ void main() {
         clearActive: any(named: 'clearActive'),
       ),
     ).thenAnswer((_) async => const Ok(null));
+    premium = FakePremium();
     list = ProgramListCubit(
       watchAuthUser: WatchAuthUser(auth),
       watchPrograms: WatchPrograms(repository),
@@ -91,6 +95,7 @@ void main() {
       watchCompletedDays: const WatchCompletedDays(NoCompletedDays()),
       watchRejectedWrites: WatchRejectedProgramWrites(repository),
       resolveMissedDay: ResolveMissedDay(repository),
+      watchPremium: WatchPremium(premium),
       clock: () => now,
     );
   });
@@ -136,6 +141,99 @@ void main() {
       ),
     ).called(1),
   );
+
+  group('a premium copy', () {
+    Future<void> premiumIs(bool? value) async {
+      premium.controller.add(value);
+      await activeIs(null);
+    }
+
+    blocTest<ProgramDetailCubit, ProgramDetailState>(
+      'is not started without premium',
+      setUp: () => premiumIs(false),
+      build: () => build('p3'),
+      act: (cubit) => cubit.start(const [1, 3]),
+      expect: () => const <ProgramDetailState>[],
+      verify: (cubit) {
+        expect(cubit.access, ProgramAccess.locked);
+        verifyNever(() => repository.startProgram(any(), any()));
+      },
+    );
+
+    blocTest<ProgramDetailCubit, ProgramDetailState>(
+      'waits while premium is unknown',
+      setUp: () => premiumIs(null),
+      build: () => build('p3'),
+      act: (cubit) => cubit.start(const [1, 3]),
+      expect: () => const <ProgramDetailState>[],
+      verify: (cubit) {
+        expect(cubit.access, ProgramAccess.waiting);
+        verifyNever(() => repository.startProgram(any(), any()));
+      },
+    );
+
+    blocTest<ProgramDetailCubit, ProgramDetailState>(
+      'is started with premium',
+      setUp: () => premiumIs(true),
+      build: () => build('p3'),
+      act: (cubit) => cubit.start(const [1, 3]),
+      verify: (cubit) {
+        expect(cubit.access, ProgramAccess.open);
+        verify(() => repository.startProgram('u1', any())).called(1);
+      },
+    );
+
+    blocTest<ProgramDetailCubit, ProgramDetailState>(
+      'active without premium keeps its weekdays',
+      setUp: () async {
+        premium.controller.add(false);
+        await activeIs(
+          ActiveProgram(
+            programId: 'p3',
+            weekdays: const [2, 5],
+            nextDayIndex: 0,
+            nextDate: CalendarDate(2026, 11, 13),
+            startedAt: DateTime(2026, 11, 2),
+          ),
+        );
+      },
+      build: () => build('p3'),
+      act: (cubit) => cubit.changeWeekdays(const [1, 4]),
+      verify: (_) =>
+          verifyNever(() => repository.updateActiveProgram(any(), any())),
+    );
+
+    blocTest<ProgramDetailCubit, ProgramDetailState>(
+      'opens on the page as soon as premium is granted',
+      setUp: () => premiumIs(false),
+      build: () => build('p3'),
+      act: (cubit) async {
+        expect(cubit.access, ProgramAccess.locked);
+        premium.controller.add(true);
+        await pumpEventQueue();
+        expect(cubit.access, ProgramAccess.open);
+        await cubit.start(const [1, 3]);
+      },
+      verify: (_) =>
+          verify(() => repository.startProgram('u1', any())).called(1),
+    );
+
+    blocTest<ProgramDetailCubit, ProgramDetailState>(
+      'a duplicate keeps the premium mark',
+      setUp: () => premiumIs(false),
+      build: () => build('p3'),
+      act: (cubit) => cubit.duplicate(copyOf),
+      verify: (_) {
+        final copy =
+            verify(() => repository.createProgram('u1', captureAny()))
+                    .captured
+                    .single
+                as Program;
+        expect(copy.premium, isTrue);
+        expect(copy.origin, ProgramOrigin.own);
+      },
+    );
+  });
 
   blocTest<ProgramDetailCubit, ProgramDetailState>(
     'refuses weekdays that do not match the days',

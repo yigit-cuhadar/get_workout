@@ -52,8 +52,10 @@ rules_version = '2';
 // | read, list, delete own program                                 | allow  |
 // | create/update: name string of 1-60 characters, days a list of  | allow  |
 // | 1-7 entries, origin "own", "catalog" or "generated"            |        |
+// | ... plus premium true or false                                 | allow  |
 // | ... plus fields the app does not know (kept by edits)          | allow  |
 // | missing name, days or origin                                   | deny   |
+// | premium not a boolean                                          | deny   |
 // | name empty, longer than 60 characters or not a string          | deny   |
 // | days empty, more than 7 entries or not a list                  | deny   |
 // | origin any other value                                         | deny   |
@@ -165,7 +167,8 @@ service cloud.firestore {
         && data.days is list
         && data.days.size() >= 1
         && data.days.size() <= 7
-        && data.origin in ['own', 'catalog', 'generated'];
+        && data.origin in ['own', 'catalog', 'generated']
+        && (!('premium' in data) || data.premium is bool);
     }
 
     // Exercises are checked by the app; a document stays under 1 MB at

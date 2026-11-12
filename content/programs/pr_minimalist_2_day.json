@@ -16,6 +16,10 @@
     "machine",
     "bench"
   ],
+  "minutes": {
+    "min": 38,
+    "max": 40
+  },
   "l10n": {
     "en": {
       "name": "Minimalist Full Body 2-Day",

@@ -12,6 +12,10 @@
     "dumbbell",
     "bench"
   ],
+  "minutes": {
+    "min": 43,
+    "max": 45
+  },
   "l10n": {
     "en": {
       "name": "Dumbbell Push Pull Legs 3-Day",
