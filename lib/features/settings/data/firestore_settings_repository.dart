@@ -80,12 +80,12 @@ class FirestoreSettingsRepository implements SettingsRepository {
       measurementReminder: _measurementReminder(map['reminders']),
       customBarWeightKg: _barWeight(map['barWeightKg']),
       customPlates: _plates(map['plates']),
-      trackedMeasurements: _measurements(map['trackedMeasurements']),
+      customTrackedMeasurements: _measurements(map['trackedMeasurements']),
     );
   }
 
-  /// The bar and plates are written only while customised; deleting them
-  /// returns the user to the standard set of their weight unit.
+  /// The bar, plates and tracked measurements are written only while
+  /// customised; deleting them returns the user to the default.
   static Map<String, Object?> _toMap(UserSettings settings) => {
     'weightUnit': _weightCodes[settings.weightUnit],
     'lengthUnit': _lengthCodes[settings.lengthUnit],
@@ -115,15 +115,17 @@ class FirestoreSettingsRepository implements SettingsRepository {
             ?.map((plate) => {'weightKg': plate.weightKg, 'pairs': plate.pairs})
             .toList() ??
         FieldValue.delete(),
-    'trackedMeasurements': [
-      for (final measurement in settings.trackedMeasurements) measurement.code,
-    ],
+    'trackedMeasurements':
+        settings.customTrackedMeasurements
+            ?.map((measurement) => measurement.code)
+            .toList() ??
+        FieldValue.delete(),
   };
 
-  /// Unknown codes are dropped; anything but a list reads as the default.
-  Set<BodyMeasurement> _measurements(Object? raw) => raw is List
+  /// Unknown codes are dropped; anything but a list reads as not chosen.
+  static Set<BodyMeasurement>? _measurements(Object? raw) => raw is List
       ? {for (final code in raw) ?BodyMeasurement.fromCode(code)}
-      : defaults.trackedMeasurements;
+      : null;
 
   /// Anything missing or of the wrong type reads as the default; the
   /// duration is clamped to the limits.

@@ -38,7 +38,10 @@ void main() {
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
   });
 
-  MeasurementDayCubit build({BodyEntry? initial}) => MeasurementDayCubit(
+  MeasurementDayCubit build({
+    BodyEntry? initial,
+    Set<BodyMeasurement> tracked = tracked,
+  }) => MeasurementDayCubit(
     setup: (
       initial: initial,
       tracked: tracked,
@@ -93,7 +96,7 @@ void main() {
   test('a full day saves converted values and files its photos', () async {
     final cubit = build()..setWeight('80.5');
     await cubit.next();
-    cubit.setMeasurement('34');
+    cubit.setMeasurement(BodyMeasurement.waist, '34');
     await cubit.next();
     await cubit.skip(); // hips
     cubit.photoTaken('/tmp/front.jpg');
@@ -152,7 +155,7 @@ void main() {
   test('the limits shown in inches are accepted', () async {
     final cubit = build();
     await cubit.skip();
-    cubit.setMeasurement('3.9');
+    cubit.setMeasurement(BodyMeasurement.waist, '3.9');
 
     await cubit.next();
 
@@ -205,6 +208,121 @@ void main() {
     expect(cubit.state.step, const MeasurementStep(BodyMeasurement.hips));
     expect(cubit.state.steps[1], const MeasurementStep(BodyMeasurement.neck));
     await cubit.close();
+  });
+
+  group('pairs', () {
+    const thighs = {
+      BodyMeasurement.waist,
+      BodyMeasurement.leftThigh,
+      BodyMeasurement.rightThigh,
+      BodyMeasurement.leftCalf,
+    };
+
+    test('both sides tracked share a step; one side stays alone', () async {
+      final cubit = build(tracked: thighs);
+
+      expect(cubit.state.steps.take(4), const [
+        WeightStep(),
+        MeasurementStep(BodyMeasurement.waist),
+        PairStep(BodyMeasurement.leftThigh, BodyMeasurement.rightThigh),
+        MeasurementStep(BodyMeasurement.leftCalf),
+      ]);
+      expect(cubit.state.steps, hasLength(8));
+      await cubit.close();
+    });
+
+    test('Next saves both sides; an invalid side is named', () async {
+      final cubit = build(tracked: thighs);
+      await cubit.skip();
+      await cubit.skip(); // on the thighs
+      cubit
+        ..setMeasurement(BodyMeasurement.leftThigh, '22')
+        ..setMeasurement(BodyMeasurement.rightThigh, '200')
+        // Not on this step: ignored.
+        ..setMeasurement(BodyMeasurement.waist, '30');
+
+      await cubit.next();
+      expect(cubit.state.index, 2);
+      expect(cubit.state.invalid, isTrue);
+      expect(cubit.state.invalidMeasurements, {BodyMeasurement.rightThigh});
+
+      cubit.setMeasurement(BodyMeasurement.rightThigh, '22.5');
+      expect(cubit.state.invalidMeasurements, isEmpty);
+      await cubit.next();
+      expect(cubit.state.index, 3);
+      await skipAll(cubit);
+
+      expect(world.repository.entries['id1']!.measurements, {
+        BodyMeasurement.leftThigh: 22 * 2.54,
+        BodyMeasurement.rightThigh: 22.5 * 2.54,
+      });
+      await cubit.close();
+    });
+
+    test('a side gained or lost keeps the flow on that measurement', () async {
+      final cubit = build(tracked: thighs);
+      await cubit.skip();
+      await cubit.skip(); // on the thighs
+
+      cubit.setTracked({BodyMeasurement.waist, BodyMeasurement.rightThigh});
+      expect(
+        cubit.state.step,
+        const MeasurementStep(BodyMeasurement.rightThigh),
+      );
+
+      cubit.setTracked(thighs);
+      expect(
+        cubit.state.step,
+        const PairStep(BodyMeasurement.leftThigh, BodyMeasurement.rightThigh),
+      );
+      await cubit.close();
+    });
+
+    group('editing', () {
+      final initial = BodyEntry(
+        id: 'e1',
+        date: DateTime(2026, 11, 1),
+        measurements: const {
+          BodyMeasurement.leftUpperArm: 33,
+          BodyMeasurement.rightUpperArm: 34,
+        },
+      );
+
+      Future<MeasurementDayCubit> onArms() async {
+        // Upper arms are not tracked: the entry's own sides make the step.
+        final cubit = build(initial: initial);
+        while (cubit.state.step is! PairStep) {
+          await cubit.skip();
+        }
+        return cubit;
+      }
+
+      test('skipping a pair keeps both stored sides', () async {
+        final cubit = await onArms();
+        cubit.setMeasurement(BodyMeasurement.leftUpperArm, '20');
+
+        await skipAll(cubit);
+
+        expect(
+          world.repository.entries['e1']!.measurements,
+          initial.measurements,
+        );
+        await cubit.close();
+      });
+
+      test('an emptied side with Next clears only that side', () async {
+        final cubit = await onArms();
+        cubit.setMeasurement(BodyMeasurement.rightUpperArm, '');
+
+        await cubit.next();
+        await skipAll(cubit);
+
+        expect(world.repository.entries['e1']!.measurements, {
+          BodyMeasurement.leftUpperArm: 33,
+        });
+        await cubit.close();
+      });
+    });
   });
 
   group('editing', () {

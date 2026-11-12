@@ -182,7 +182,7 @@ class UserSettings extends Equatable {
     this.measurementReminder = const MeasurementReminderSettings(),
     this.customBarWeightKg,
     this.customPlates,
-    this.trackedMeasurements = BodyMeasurement.standard,
+    this.customTrackedMeasurements,
   });
 
   /// Imperial for the countries that use it day to day, metric elsewhere.
@@ -215,8 +215,9 @@ class UserSettings extends Equatable {
   /// Set once the user edits their plates; see [customBarWeightKg].
   final List<Plate>? customPlates;
 
-  /// What a measurement day asks for.
-  final Set<BodyMeasurement> trackedMeasurements;
+  /// What a measurement day asks for, once the user has chosen; until
+  /// then a default that depends on the profile's sex.
+  final Set<BodyMeasurement>? customTrackedMeasurements;
 
   double get barWeightKg => customBarWeightKg ?? defaultBarWeightKg(weightUnit);
 
@@ -262,7 +263,7 @@ class UserSettings extends Equatable {
     MeasurementReminderSettings? measurementReminder,
     double? customBarWeightKg,
     List<Plate>? customPlates,
-    Set<BodyMeasurement>? trackedMeasurements,
+    Set<BodyMeasurement>? customTrackedMeasurements,
   }) => UserSettings(
     weightUnit: weightUnit ?? this.weightUnit,
     lengthUnit: lengthUnit ?? this.lengthUnit,
@@ -274,7 +275,8 @@ class UserSettings extends Equatable {
     measurementReminder: measurementReminder ?? this.measurementReminder,
     customBarWeightKg: customBarWeightKg ?? this.customBarWeightKg,
     customPlates: customPlates ?? this.customPlates,
-    trackedMeasurements: trackedMeasurements ?? this.trackedMeasurements,
+    customTrackedMeasurements:
+        customTrackedMeasurements ?? this.customTrackedMeasurements,
   );
 
   /// Drops the custom bar and plates, back to the standard set of the unit.
@@ -285,7 +287,7 @@ class UserSettings extends Equatable {
     effortScale: effortScale,
     restTimer: restTimer,
     stepGoal: stepGoal,
-    trackedMeasurements: trackedMeasurements,
+    customTrackedMeasurements: customTrackedMeasurements,
     workoutReminder: workoutReminder,
     measurementReminder: measurementReminder,
   );
@@ -302,6 +304,6 @@ class UserSettings extends Equatable {
     measurementReminder,
     customBarWeightKg,
     customPlates,
-    trackedMeasurements,
+    customTrackedMeasurements,
   ];
 }

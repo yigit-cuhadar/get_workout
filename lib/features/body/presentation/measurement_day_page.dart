@@ -1,17 +1,22 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router.dart';
 import '../../../core/ghost_camera.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../profile/domain/user_profile.dart';
+import '../../profile/presentation/profile_cubit.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/body_entry.dart';
+import '../domain/entry_body_fat.dart';
 import 'body_entry_page.dart';
 import 'body_input.dart';
 import 'body_text.dart';
@@ -49,7 +54,7 @@ class _MeasurementDay extends StatelessWidget {
     final settings = context.read<SettingsCubit>().state.settings;
     final MeasurementDaySetup setup = (
       initial: entry,
-      tracked: settings.trackedMeasurements,
+      tracked: _tracked(context),
       weightUnit: settings.weightUnit,
       lengthUnit: settings.lengthUnit,
     );
@@ -59,6 +64,12 @@ class _MeasurementDay extends StatelessWidget {
     );
   }
 }
+
+/// What the user tracks: their own choice, else the default for their sex.
+Set<BodyMeasurement> _tracked(BuildContext context) => trackedMeasurements(
+  context.read<SettingsCubit>().state.settings.customTrackedMeasurements,
+  context.read<ProfileCubit>().state.profile.sex,
+);
 
 class _MeasurementDayView extends StatefulWidget {
   const _MeasurementDayView(this.settings);
@@ -83,10 +94,15 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
       listeners: [
         BlocListener<SettingsCubit, SettingsState>(
           listenWhen: (previous, current) =>
-              previous.settings.trackedMeasurements !=
-              current.settings.trackedMeasurements,
-          listener: (_, state) =>
-              _cubit.setTracked(state.settings.trackedMeasurements),
+              previous.settings.customTrackedMeasurements !=
+              current.settings.customTrackedMeasurements,
+          listener: (context, _) => _cubit.setTracked(_tracked(context)),
+        ),
+        // The default follows the sex.
+        BlocListener<ProfileCubit, ProfileState>(
+          listenWhen: (previous, current) =>
+              previous.profile.sex != current.profile.sex,
+          listener: (context, _) => _cubit.setTracked(_tracked(context)),
         ),
         BlocListener<MeasurementDayCubit, MeasurementDayState>(
           listenWhen: (previous, current) =>
@@ -211,14 +227,18 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
 
   Future<void> _editTracked() async {
     final settings = context.read<SettingsCubit>();
+    final tracked = _tracked(context);
     final chosen = await showDialog<Set<BodyMeasurement>>(
       context: context,
-      builder: (_) =>
-          _TrackedDialog(settings.state.settings.trackedMeasurements),
+      builder: (_) => BlocProvider.value(
+        value: context.read<ProfileCubit>(),
+        child: _TrackedDialog(tracked),
+      ),
     );
-    if (chosen == null) return;
+    // An unchanged set keeps following the default.
+    if (chosen == null || setEquals(chosen, tracked)) return;
     await settings.update(
-      settings.state.settings.copyWith(trackedMeasurements: chosen),
+      settings.state.settings.copyWith(customTrackedMeasurements: chosen),
     );
   }
 
@@ -228,46 +248,86 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
     final weightUnit = widget.settings.weightUnit;
     final lengthUnit = widget.settings.lengthUnit;
     Widget field({
-      required String title,
+      required Object key,
       required String unit,
       required String value,
-      required String error,
+      required String? error,
       required ValueChanged<String> onChanged,
-    }) => ListView(
+      String? label,
+      bool first = true,
+      bool last = true,
+    }) => TextFormField(
+      // A fresh field per step.
+      key: ValueKey(key),
+      initialValue: value,
+      autofocus: first,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: decimalInput,
+      textInputAction: last ? TextInputAction.done : TextInputAction.next,
+      decoration: InputDecoration(
+        labelText: label,
+        suffixText: unit,
+        errorText: error,
+        errorMaxLines: 2,
+      ),
+      onChanged: onChanged,
+      onFieldSubmitted: last ? (_) => _cubit.next() : null,
+    );
+    Widget page(String title, Widget fields) => ListView(
       children: [
         Text(title, style: theme.textTheme.headlineSmall),
         const SizedBox(height: Gap.md),
-        TextFormField(
-          // A fresh field per step.
-          key: ValueKey(state.step),
-          initialValue: value,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: decimalInput,
-          decoration: InputDecoration(
-            suffixText: unit,
-            errorText: state.invalid ? error : null,
-          ),
-          onChanged: onChanged,
-          onFieldSubmitted: (_) => _cubit.next(),
-        ),
+        fields,
       ],
+    );
+    Widget side(
+      BodyMeasurement measurement,
+      String label, {
+      required bool first,
+    }) => field(
+      key: (state.step, measurement),
+      label: label,
+      unit: l10n.bodyLengthUnit(lengthUnit),
+      value: state.measurements[measurement] ?? '',
+      error: state.invalidMeasurements.contains(measurement)
+          ? l10n.bodyMeasurementRange(lengthUnit)
+          : null,
+      onChanged: (text) => _cubit.setMeasurement(measurement, text),
+      first: first,
+      last: !first,
     );
 
     return switch (state.step) {
-      WeightStep() => field(
-        title: l10n.bodyWeightTitle,
-        unit: l10n.bodyWeightUnit(weightUnit),
-        value: state.weight,
-        error: l10n.bodyWeightRange(weightUnit),
-        onChanged: _cubit.setWeight,
+      WeightStep() => page(
+        l10n.bodyWeightTitle,
+        field(
+          key: state.step,
+          unit: l10n.bodyWeightUnit(weightUnit),
+          value: state.weight,
+          error: state.invalid ? l10n.bodyWeightRange(weightUnit) : null,
+          onChanged: _cubit.setWeight,
+        ),
       ),
-      MeasurementStep(:final measurement) => field(
-        title: l10n.measurementName(measurement),
-        unit: l10n.bodyLengthUnit(lengthUnit),
-        value: state.measurements[measurement] ?? '',
-        error: l10n.bodyMeasurementRange(lengthUnit),
-        onChanged: _cubit.setMeasurement,
+      MeasurementStep(:final measurement) => page(
+        l10n.measurementName(measurement),
+        field(
+          key: state.step,
+          unit: l10n.bodyLengthUnit(lengthUnit),
+          value: state.measurements[measurement] ?? '',
+          error: state.invalid ? l10n.bodyMeasurementRange(lengthUnit) : null,
+          onChanged: (text) => _cubit.setMeasurement(measurement, text),
+        ),
+      ),
+      PairStep(:final left, :final right) => page(
+        l10n.measurementPairName(left),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: side(left, l10n.bodyLeft, first: true)),
+            const SizedBox(width: Gap.md),
+            Expanded(child: side(right, l10n.bodyRight, first: false)),
+          ],
+        ),
       ),
       PhotoStep(:final pose) => _photo(context, state, pose),
     };
@@ -317,6 +377,10 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
 }
 
 /// The measurements a measurement day asks for; pops with the new set.
+/// "Body fat" stands for the measurements its estimate needs: ticking it
+/// ticks them, and it is ticked exactly while all of them are, so it is
+/// stopped by unticking one of them. Without the sex or height in the
+/// profile it links to the profile instead.
 class _TrackedDialog extends StatefulWidget {
   const _TrackedDialog(this.tracked);
   final Set<BodyMeasurement> tracked;
@@ -331,17 +395,27 @@ class _TrackedDialogState extends State<_TrackedDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final profile = context.select((ProfileCubit cubit) => cubit.state.profile);
+    final sex = profile.sex;
+    final needed = sex == null
+        ? const <BodyMeasurement>{}
+        : bodyFatMeasurements(sex);
     return AlertDialog(
       title: Text(l10n.bodyTrackedTitle),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            _bodyFat(l10n, profile, needed),
+            const Divider(),
             for (final measurement in BodyMeasurement.values)
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 value: _chosen.contains(measurement),
                 title: Text(l10n.measurementName(measurement)),
+                subtitle: needed.contains(measurement)
+                    ? Text(l10n.bodyFatPart)
+                    : null,
                 onChanged: (on) => setState(
                   () => on == true
                       ? _chosen.add(measurement)
@@ -361,6 +435,51 @@ class _TrackedDialogState extends State<_TrackedDialog> {
           child: Text(l10n.bodyDone),
         ),
       ],
+    );
+  }
+
+  Widget _bodyFat(
+    AppLocalizations l10n,
+    UserProfile profile,
+    Set<BodyMeasurement> needed,
+  ) {
+    final sex = profile.sex;
+    if (sex == null || profile.heightCm == null) {
+      return ListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(l10n.bodyFatTitle),
+        subtitle: Text(l10n.bodyFatNeedsProfile),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          final router = GoRouter.of(context);
+          Navigator.pop(context);
+          router.go(Routes.profileDetails);
+        },
+      );
+    }
+    final on = tracksBodyFat(_chosen, sex: sex, heightCm: profile.heightCm);
+    return CheckboxListTile(
+      contentPadding: EdgeInsets.zero,
+      value: on,
+      title: Text(l10n.bodyFatTitle),
+      subtitle: Text(
+        l10n.bodyFatNeeds(
+          [
+            for (final measurement in BodyMeasurement.values)
+              if (needed.contains(measurement))
+                l10n.measurementName(measurement),
+          ].join(', '),
+        ),
+      ),
+      // Ticked, it is stopped through one of its measurements.
+      onChanged: on
+          ? null
+          : (_) => setState(() {
+              final all = withBodyFat(_chosen, sex);
+              _chosen
+                ..clear()
+                ..addAll(all);
+            }),
     );
   }
 }

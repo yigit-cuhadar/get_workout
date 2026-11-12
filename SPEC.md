@@ -403,8 +403,34 @@ from the earlier FitLab app.
   `settings.trackedMeasurements` is a list of codes (`neck`, `shoulders`,
   `chest`, `waist`, `abdomen`, `hips`, `leftUpperArm`, `rightUpperArm`,
   `leftForearm`, `rightForearm`, `leftThigh`, `rightThigh`, `leftCalf`,
-  `rightCalf`, also the `measurements` keys), default chest, waist, hips,
-  both upper arms and thighs, edited from the flow's app bar. Limits:
+  `rightCalf`, also the `measurements` keys), stored only once the user
+  chooses (deleted otherwise, every stored list counts as chosen, also
+  one an earlier settings save wrote); until then the default is chest,
+  waist, hips, both upper arms and thighs, plus the body-fat measurements
+  of the profile's sex once it is known. Edited from the flow's app bar.
+  Both sides of a pair (upper arm, forearm, thigh, calf) that are steps
+  share one step with a Left and a Right field, skipped or cleared field
+  by field as above; entry and compare show them on one row (L / R).
+- **Body fat** (derived, never stored): US Navy, through the calculators'
+  `estimateBodyFat`, from an entry's measurements and the profile's sex
+  and height (`entryBodyFat` in `lib/features/body/domain`). Sites: the
+  waist is measured at its narrowest and the abdomen at the navel, so men
+  need `neck` + `abdomen`, women `neck` + `waist` + `hips`. An entry
+  without them, or with values the formula rejects, simply shows none.
+  Shown on the Weight and measurements page as a trend chart under the
+  weight chart (same range picker and 12-weeks-free rule; only once some
+  entry has one), in each history row, on the entry and as a change in
+  compare, with one decimal. "Measurements to track" has a "Body fat"
+  box: ticked exactly while all its measurements are tracked (nothing
+  stored); ticking it ticks them, and it is stopped by unticking one of
+  them (marked "Part of body fat"); without the sex or height it links to
+  the profile details instead.
+- **Camera orientation**: `GhostCamera` holds the screen in portrait while
+  it shows and locks the capture to portrait. The iPhone 17 family's
+  Center Stage front camera is mounted differently; `camera_avfoundation`
+  0.11.1 sets a fixed portrait rotation (90°) on the video and photo
+  connections, which is off by 90° for that camera, so its preview and
+  photo may still be sideways there; fixing that needs the plugin. Limits:
   weight as the profile (30-300 kg), measurements 10-250 cm; values are
   typed to one decimal in the user's unit, so half a shown lb or inch
   step of slack lets the limits as shown pass (66.1 and 661.4 lb, 3.9 in).
@@ -1076,7 +1102,8 @@ deleted.
 
 **`users/{uid}/bodyEntries/{id}`**: `date`, `weightKg?`, `measurements` (map
 of cm values: neck, shoulders, chest, waist, abdomen, hips, and left/right
-upper arm, forearm, thigh, calf), `photos` (map of `front` \| `right` \|
+upper arm, forearm, thigh, calf; body fat is derived from them and the
+profile, never stored), `photos` (map of `front` \| `right` \|
 `left` \| `back` → storage path, which holds the photo's revision; see
 Storage). A quick weight log is an entry with only `weightKg`; a
 measurement day fills all three.
