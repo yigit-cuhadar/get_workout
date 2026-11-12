@@ -54,7 +54,9 @@ class CalculatorScaffold<C extends Cubit<Object?>> extends StatelessWidget {
   }
 }
 
-/// A decimal or whole-number input that reports every change.
+/// A decimal or whole-number input that reports every change. A new
+/// [value] other than the text typed, such as a value known only once
+/// loaded, replaces the text.
 // ForgeTextField has no onChanged or errorText yet, which live results need.
 class NumberField extends StatefulWidget {
   const NumberField({
@@ -62,14 +64,14 @@ class NumberField extends StatefulWidget {
     required this.label,
     required this.onChanged,
     this.errorText,
-    this.initialValue = '',
+    this.value = '',
     this.wholeNumber = false,
   });
 
   final String label;
   final ValueChanged<String> onChanged;
   final String? errorText;
-  final String initialValue;
+  final String value;
   final bool wholeNumber;
 
   @override
@@ -77,7 +79,15 @@ class NumberField extends StatefulWidget {
 }
 
 class _NumberFieldState extends State<NumberField> {
-  late final _controller = TextEditingController(text: widget.initialValue);
+  late final _controller = TextEditingController(text: widget.value);
+
+  @override
+  void didUpdateWidget(NumberField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value && widget.value != _controller.text) {
+      _controller.text = widget.value;
+    }
+  }
 
   @override
   void dispose() {

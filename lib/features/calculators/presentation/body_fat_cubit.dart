@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../../settings/domain/user_settings.dart';
@@ -46,22 +49,71 @@ class BodyFatState extends Equatable {
   List<Object?> get props => [sex, height, neck, waist, hip, result];
 }
 
+enum _Input { sex, height, neck, waist, hip }
+
+/// Starts from what the app knows of the user; a value arriving late fills
+/// only the inputs the user has not changed.
 class BodyFatCubit extends Cubit<BodyFatState> {
-  BodyFatCubit(this._estimate, {required this.lengthUnit})
-    : super(const BodyFatState());
+  BodyFatCubit(
+    this._estimate,
+    GetCurrentUser getCurrentUser,
+    GetKnownBodyValues getKnownValues, {
+    required this.lengthUnit,
+  }) : super(const BodyFatState()) {
+    unawaited(_prefill(getCurrentUser, getKnownValues));
+  }
 
   final EstimateBodyFat _estimate;
   final LengthUnit lengthUnit;
+  final _changed = <_Input>{};
 
-  void sexChanged(Sex sex) => _calculate(state._with(sex: sex));
+  Future<void> _prefill(
+    GetCurrentUser getCurrentUser,
+    GetKnownBodyValues getKnownValues,
+  ) async {
+    final uid = getCurrentUser()?.id;
+    if (uid == null) return;
+    final known = await getKnownValues(uid);
+    if (isClosed) return;
+    T? fill<T>(_Input input, T? value) =>
+        _changed.contains(input) ? null : value;
+    String? length(_Input input, double? cm) =>
+        fill(input, knownText(cm, lengthUnit.fromCm));
+    _calculate(
+      state._with(
+        sex: fill(_Input.sex, known.sex),
+        height: length(_Input.height, known.heightCm),
+        neck: length(_Input.neck, known.neckCm),
+        waist: length(_Input.waist, known.waistCm),
+        hip: length(_Input.hip, known.hipCm),
+      ),
+    );
+  }
 
-  void heightChanged(String text) => _calculate(state._with(height: text));
+  void sexChanged(Sex sex) {
+    _changed.add(_Input.sex);
+    _calculate(state._with(sex: sex));
+  }
 
-  void neckChanged(String text) => _calculate(state._with(neck: text));
+  void heightChanged(String text) {
+    _changed.add(_Input.height);
+    _calculate(state._with(height: text));
+  }
 
-  void waistChanged(String text) => _calculate(state._with(waist: text));
+  void neckChanged(String text) {
+    _changed.add(_Input.neck);
+    _calculate(state._with(neck: text));
+  }
 
-  void hipChanged(String text) => _calculate(state._with(hip: text));
+  void waistChanged(String text) {
+    _changed.add(_Input.waist);
+    _calculate(state._with(waist: text));
+  }
+
+  void hipChanged(String text) {
+    _changed.add(_Input.hip);
+    _calculate(state._with(hip: text));
+  }
 
   void _calculate(BodyFatState inputs) => emit(
     BodyFatState(

@@ -885,6 +885,24 @@ from the earlier FitLab app.
   and the volume trend (`VolumeTrendChart` and its painter) is replaced
   by it and deleted. The volume band bars and the cardio chart stay
   feature widgets until then.
+- **Calculators start from what the app knows** (`GetKnownBodyValues`,
+  one read of the profile and the body entries, through their own use
+  cases): sex, age (current year minus birth year), height from the
+  profile; weight from the newest dated entry that has one, else the
+  profile; neck, waist and hips each from the newest entry that has it
+  (they may be from different days: neck is rarely measured and changes
+  little, waist drives the result); body fat (BMI/FFMI) by the
+  calculators' own US Navy formula from those, when sex, height and the
+  measurements allow it; activity from `daysPerWeek` (2 light, 3-5
+  moderate, 6 active, by the levels' wording). Units, bar and plates come
+  from settings as before. 1RM and the macros' calories stay empty (no
+  single source); the goal and target weight map onto no calculator
+  input. Values are shown to one decimal in the user's unit, with no hint
+  of their source (the calculators have no helper-text pattern). They are
+  starting values only: nothing is written back. They load once when a
+  calculator opens; a value arriving late fills only inputs the user has
+  not changed (even one they cleared stays empty). A source that cannot
+  be read adds nothing.
 - **Today tab** (`lib/features/today`): a scrolling list of independent
   cards, each on its own data, so one failing leaves the others. Next
   workout: the Programs tab's own `ProgramListCubit` (one instance), so
@@ -905,7 +923,9 @@ from the earlier FitLab app.
   locale's first weekday (Sunday in English, like weekly volume, unlike
   the program week plan), drawn by `MonthGrid` as one week; the strip and
   every day open the calendar, which has no route for a given date. Quick
-  actions: start an empty workout, log cardio, add a past workout. Volume
+  actions: start an empty workout, log cardio, add a past workout, the
+  calculators (a row, not a card listing all six, which would crowd the
+  tab; it opens the list under Profile, which keeps its own row). Volume
   card: `WatchWeeklyVolume` with one week, never the trend, whatever the
   user's premium: the trained muscles counted in, below and above the
   band and the three most trained as band bars; it opens Weekly volume,

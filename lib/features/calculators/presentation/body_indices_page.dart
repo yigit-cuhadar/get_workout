@@ -18,6 +18,8 @@ class BodyIndicesPage extends StatelessWidget {
       title: l10n.calcBodyIndicesTitle,
       create: (units) => BodyIndicesCubit(
         sl(),
+        sl(),
+        sl(),
         weightUnit: units.weight,
         lengthUnit: units.length,
       ),
@@ -33,16 +35,19 @@ class BodyIndicesPage extends StatelessWidget {
               children: [
                 NumberField(
                   label: l10n.calcBodyWeight(format.weightUnitLabel),
+                  value: state.weight,
                   onChanged: cubit.weightChanged,
                   errorText: error(CalculatorInput.bodyWeight),
                 ),
                 NumberField(
                   label: l10n.calcHeight(format.lengthUnitLabel),
+                  value: state.height,
                   onChanged: cubit.heightChanged,
                   errorText: error(CalculatorInput.height),
                 ),
                 NumberField(
                   label: l10n.calcBodyFatOptional,
+                  value: state.bodyFat,
                   onChanged: cubit.bodyFatChanged,
                   errorText: error(CalculatorInput.bodyFat),
                 ),

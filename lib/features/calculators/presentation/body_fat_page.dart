@@ -16,7 +16,8 @@ class BodyFatPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return CalculatorScaffold<BodyFatCubit>(
       title: l10n.calcBodyFatTitle,
-      create: (units) => BodyFatCubit(sl(), lengthUnit: units.length),
+      create: (units) =>
+          BodyFatCubit(sl(), sl(), sl(), lengthUnit: units.length),
       children: (context, format) => [
         CalculatorNote(l10n.calcBodyFatHowTo),
         BlocBuilder<BodyFatCubit, BodyFatState>(
@@ -32,25 +33,28 @@ class BodyFatPage extends StatelessWidget {
                 SexSelector(selected: state.sex, onChanged: cubit.sexChanged),
                 NumberField(
                   label: l10n.calcHeight(unit),
+                  value: state.height,
                   onChanged: cubit.heightChanged,
                   errorText: error(CalculatorInput.height),
                 ),
                 NumberField(
                   label: l10n.calcNeck(unit),
+                  value: state.neck,
                   onChanged: cubit.neckChanged,
                   errorText: error(CalculatorInput.neck),
                 ),
                 NumberField(
                   label: l10n.calcWaist(unit),
+                  value: state.waist,
                   onChanged: cubit.waistChanged,
                   errorText: error(CalculatorInput.waist),
                 ),
                 if (state.sex == Sex.female)
                   NumberField(
                     label: l10n.calcHip(unit),
+                    value: state.hip,
                     onChanged: cubit.hipChanged,
                     errorText: error(CalculatorInput.hip),
-                    initialValue: state.hip,
                   ),
                 if (problem != null) InputProblem(problem),
                 if (state.result case Calculated(:final value))
