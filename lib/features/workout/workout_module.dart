@@ -102,6 +102,7 @@ class WorkoutModule implements FeatureModule {
       )
       ..registerFactory(() => WatchHistory(sl()))
       ..registerFactory(() => WatchStoredWorkout(sl()))
+      ..registerFactory(() => WatchWorkoutsBetween(sl()))
       ..registerFactory(() => WatchRejectedWorkoutEdits(sl()))
       ..registerFactory(() => SaveWorkoutChange(sl()))
       // One per history page. The workout pages open above it, so it is
