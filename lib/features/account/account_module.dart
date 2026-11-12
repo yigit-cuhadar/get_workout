@@ -25,7 +25,7 @@ class AccountModule implements FeatureModule {
 
   final Telemetry telemetry;
 
-  /// Call right after `Firebase.initializeApp`, before anything uses
+  /// Call right after `initFirebase`, before anything uses
   /// Firestore: removes the offline copy a deleted account left.
   static Future<void> clearDeletedAccountCache() =>
       DeviceAccountData.clearOfflineCopyIfMarked(

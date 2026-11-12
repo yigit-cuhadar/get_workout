@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 import 'package:get_workout/features/notifications/data/fcm_announcement_repository.dart';
-import 'package:get_workout/features/notifications/data/notification_taps.dart';
+import 'package:get_workout/features/notifications/data/notification_payloads.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockMessaging extends Mock implements FirebaseMessaging {}

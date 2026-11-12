@@ -23,4 +23,9 @@ abstract final class NotificationPayloads {
       null => null,
     };
   }
+
+  /// The targets of tapped notifications' [payloads], without the taps
+  /// that have none (the rest notification) or an unknown one.
+  static Stream<NotificationTarget> targetsOf(Stream<String?> payloads) =>
+      payloads.map(targetOf).where((target) => target != null).cast();
 }

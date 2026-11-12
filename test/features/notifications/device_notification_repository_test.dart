@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 import 'package:get_workout/features/notifications/data/device_notification_repository.dart';
-import 'package:get_workout/features/notifications/data/notification_taps.dart';
+import 'package:get_workout/features/notifications/data/notification_payloads.dart';
 import 'package:get_workout/features/notifications/domain/notification_repository.dart';
 import 'package:get_workout/features/notifications/domain/reminder_plan.dart';
 import 'package:mocktail/mocktail.dart';
@@ -130,5 +130,17 @@ void main() {
     );
     expect(NotificationPayloads.targetOf(null), isNull);
     expect(NotificationPayloads.targetOf('reminder:other:1:2'), isNull);
+  });
+
+  test('taps without a known target are dropped', () async {
+    final targets = NotificationPayloads.targetsOf(
+      Stream.fromIterable([
+        null,
+        'unknown',
+        NotificationPayloads.reminder(ReminderKind.workout),
+      ]),
+    );
+
+    expect(await targets.toList(), [NotificationTarget.workout]);
   });
 }

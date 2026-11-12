@@ -490,36 +490,38 @@ from the earlier FitLab app.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk).
-- **Analytics consent** (`lib/features/account`): `settings.analyticsConsent`
-  of each user, guests included (a guest has a uid and a user document;
-  linking keeps it, signing in to an existing account takes that account's
-  answer). Consent is per user, never per device. Null is not answered,
-  which collects nothing. Analytics and Crashlytics start off natively
-  (Info.plist, AndroidManifest.xml) and collect only in prod release
-  builds, for the signed-in user, after their yes; never the advertising
-  ID, Android ID or IDFV, and no ad personalisation signals (the `AD_ID`
-  permission is removed). `forge_firebase`'s `initFirebase` leaves
-  collection as the native config sets it, and `FirebaseTelemetry.restore`
-  then applies the answer the user signed in at launch last gave on this
-  device (one file per uid in app support). Whenever the signed-in user changes or is unknown, collection
-  goes off until that user's stored answer is read, and stays off when the
-  read fails. `ConsentCubit` (app-wide) applies each answer as it arrives;
-  changes run one at a time and the latest wins. A yes first deletes the
-  crash reports recorded before it and is saved last, so a failure never
-  leaves a saved yes. Asked once the server (not a cached copy, which may
-  predate an answer from another device) says there is no answer, in a
-  dialog over the tabs only while they are the top route (never over
-  onboarding, the workout, the paywall or another dialog), with two equal
-  choices and no dismissing; changed with the switch under Profile →
-  Privacy. The settings feature leaves the field alone: its writes merge,
-  and `UserSettings` does not carry it.
+- **Analytics consent** (`lib/features/account`):
+  `settings.analyticsConsent` of each user, guests included (a guest has a
+  uid and a user document; linking keeps it, signing in to an existing
+  account takes that account's answer). Consent is per user, never per
+  device. Null is not answered, which collects nothing. Analytics and
+  Crashlytics start off natively (Info.plist, AndroidManifest.xml) and
+  collect only in prod release builds, for the signed-in user, after their
+  yes; never the advertising ID, Android ID or IDFV, and no ad
+  personalisation signals (the `AD_ID` permission is removed). At start,
+  collection is what the last applied answer left (the SDKs keep it), or
+  the native default (off) on a fresh install; `forge_firebase`'s
+  `initFirebase` does not change it, and `FirebaseTelemetry.restore` then
+  applies the answer the user signed in at launch last gave on this device
+  (one file per uid in app support). Whenever the signed-in user changes
+  or is unknown, collection goes off until that user's stored answer is
+  read, and stays off when the read fails. `ConsentCubit` (app-wide)
+  applies each answer as it arrives; changes run one at a time and the
+  latest wins. A yes first deletes the crash reports recorded before it
+  and is saved last, so a failure never leaves a saved yes. Asked once the
+  server (not a cached copy, which may predate an answer from another
+  device) says there is no answer, in a dialog over the tabs only while
+  they are the top route (never over onboarding, the workout, the paywall
+  or another dialog), with two equal choices and no dismissing; changed
+  with the switch under Profile → Privacy. The settings feature leaves the
+  field alone: its writes merge, and `UserSettings` does not carry it.
 - **Privacy policy link**: Profile → Privacy, in the browser.
   `LegalLinks.privacyUrl` (`lib/app/legal_links.dart`) is the one place the
   address is written; the Android build reads it from that line into
   `R.string.privacy_policy_url` for Health Connect's
   `PrivacyPolicyActivity`.
-- **Deleting an account**: Account → "Delete account" ("Delete my data" for
-  a guest), set apart in the error colour, opens a page saying what is
+- **Deleting an account**: Account → "Delete account" ("Delete my data"
+  for a guest), set apart in the error colour, opens a page saying what is
   deleted from the servers right away (profile and settings, programs,
   workouts, records, custom exercises, cardio, body entries and photos,
   the sign-in), what is cleared on this device at once and that the
@@ -532,21 +534,23 @@ from the earlier FitLab app.
   deleted); the callable `deleteAccount` deletes. For an account with a
   credential it wants a sign-in from the last 5 minutes, else the app asks
   for the password (`forge_auth`'s `Reauthenticate`) and tries again. A
-  user without a password (Google only) is told to sign in again instead
-  (`noPasswordCode`), which renews the sign-in. A guest is deleted the same way, without that check. Once
-  the server deleted the data, still signed in (so nothing of the next
-  guest is touched), the app removes the user's kept workouts file
-  (unreadable copies too), cancels every scheduled notification, records
-  no consent for them and resets the analytics id and unsent crash
-  reports, and marks Firestore's offline copy, which is cleared
-  (`clearPersistence`) at the next start before Firestore is used; then it
-  signs out and a new guest starts at onboarding. A local leftover is
-  logged, not reported. If only the sign-in is left (the function's
-  `details.reason` says so) the user stays held on the page, which offers
-  only "Try again". A function not deployed or not callable answers
-  `not-found` / `permission-denied`, shown as "deleting accounts isn't
-  available yet", never as done; anything else that failed before the
-  data went gives the workout back.
+  user without a password (Google only) is still asked for one once;
+  `Reauthenticate` then fails with `noPasswordCode` and the app tells them
+  to sign in again, which renews the sign-in. Skipping the dialog for them
+  needs the sign-in methods on `AuthUser` (forge task). A guest is deleted
+  the same way, without that check. Once the server deleted the data,
+  still signed in (so nothing of the next guest is touched), the app
+  removes the user's kept workouts file (unreadable copies too), cancels
+  every scheduled notification, records no consent for them and resets the
+  analytics id and unsent crash reports, and marks Firestore's offline
+  copy, which is cleared (`clearPersistence`) at the next start before
+  Firestore is used; then it signs out and a new guest starts at
+  onboarding. A local leftover is logged, not reported. If only the
+  sign-in is left (the function's `details.reason` says so) the user stays
+  held on the page, which offers only "Try again". A function not deployed
+  or not callable answers `not-found` / `permission-denied`, shown as
+  "deleting accounts isn't available yet", never as done; anything else
+  that failed before the data went gives the workout back.
 - **Cloud Functions** (`functions/`): TypeScript, Node 22, 2nd gen, all in
   `europe-west1` (`src/config.ts`, set once with `setGlobalOptions`; the
   app's one Dart constant `functionsRegion` in
@@ -592,9 +596,11 @@ from the earlier FitLab app.
   or fail, or the premium status of a premium copy is unknown, they are
   left as they are, except that a reminder turned off is always cleared. Only the next
   day is named ("Upper · Push Pull"); later ones name the program, as they
-  are due only if the user keeps to the plan. Measurement: the next four
-  of the series, skipping dates that already have a measurement day (a
-  body entry with measurements or photos; quick weight logs do not count),
+  are due only if the user keeps to the plan. Measurement: one for each
+  of the next four occurrences of the series except dates that already
+  have a measurement day (a body entry with measurements or photos; quick
+  weight logs do not count), so a measured one leaves three and the ids
+  stay distinct, as `Notifications.sync` requires; the dates are
   followed live through `WatchMeasuredDates`; while they load the
   measurement reminders are left as they are. Horizon: reminders are only
   planned while the app runs, so a user who does not open the app for
@@ -1418,8 +1424,11 @@ Group 9, launch readiness
   after the upgrade; check that they still fire and open their tab.
   `Notifications.openSettings` (the reminder tiles' "open settings") is
   not verified on either platform yet.
-- Forge tasks; the app's own versions are an accepted deviation for the
-  notifications PR, to be replaced once these exist:
+- Forge tasks; the app's own versions are accepted deviations, to be
+  replaced once these exist:
+  - `forge_auth`: the user's sign-in methods on `AuthUser`, so account
+    deletion asks only a user with a password for it and tells a Google
+    or Apple only user to sign in again straight away.
   - The Live Activity bridge (`AppDelegate.swift`'s `RestActivity` and a
     generic attributes type) could move to a package with a native iOS
     plugin once a second app needs one; the widget views stay in the app.

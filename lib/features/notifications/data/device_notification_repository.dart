@@ -3,7 +3,7 @@ import 'package:forge_notifications/forge_notifications.dart';
 
 import '../domain/notification_repository.dart';
 import '../domain/reminder_plan.dart';
-import 'notification_taps.dart';
+import 'notification_payloads.dart';
 
 /// [NotificationRepository] over the app's local notifications, waiting
 /// until they are initialised.

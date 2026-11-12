@@ -244,8 +244,25 @@ void main() {
         DateTime(2026, 12, 27, 9),
         DateTime(2027, 1, 24, 9),
         DateTime(2027, 2, 21, 9),
-        DateTime(2027, 3, 21, 9),
       ]);
+    });
+
+    test('a measured date later in the series leaves the ids distinct', () {
+      final all = run(DateTime(2026, 11, 12));
+      final reminders = run(
+        DateTime(2026, 11, 12),
+        measured: {CalendarDate(2026, 12, 27)},
+      );
+
+      expect(reminders.map((r) => r.at), [
+        DateTime(2026, 11, 29, 9),
+        DateTime(2027, 1, 24, 9),
+        DateTime(2027, 2, 21, 9),
+      ]);
+      final ids = reminders.map((r) => r.id).toList();
+      expect(ids.toSet(), hasLength(ids.length));
+      // Each keeps the id it has without the measurement.
+      expect(ids, [all[0].id, all[2].id, all[3].id]);
     });
 
     test('none when off or never started', () {

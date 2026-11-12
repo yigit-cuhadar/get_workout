@@ -19,7 +19,7 @@ import '../features/exercises/presentation/exercise_catalogue_cubit.dart';
 import '../features/profile/presentation/profile_cubit.dart';
 import '../features/programs/presentation/program_list_cubit.dart';
 import '../features/exercises/presentation/favorites_cubit.dart';
-import '../features/notifications/data/notification_taps.dart';
+import '../features/notifications/data/notification_payloads.dart';
 import '../features/notifications/presentation/notifications_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/settings_cubit.dart';
@@ -60,12 +60,7 @@ class _AppState extends State<App> {
     // Created now so reminders follow the user from the first auth event.
     final notifications = sl<NotificationsCubit>();
     _router.routerDelegate.addListener(_openTapped);
-    // A tap without a known target (the rest notification) never replaces
-    // one still waiting to open.
-    _taps = sl<NotificationTaps>().stream
-        .map(NotificationPayloads.targetOf)
-        .where((target) => target != null)
-        .cast<NotificationTarget>()
+    _taps = NotificationPayloads.targetsOf(sl<NotificationTaps>().stream)
         .listen(_openNotification);
     _lifecycle = AppLifecycleListener(
       onResume: () {
