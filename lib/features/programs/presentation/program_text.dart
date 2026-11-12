@@ -25,13 +25,21 @@ extension ProgramText on AppLocalizations {
         : programRepRange(min, max);
     final target = item.targetKg;
     final sets = programSetsTimes(item.sets, work);
-    return target == null ? sets : '$sets · ${weightText(target, unit)}';
+    return target == null ? sets : '$sets · ${liftedWeightText(target, unit)}';
   }
 
-  String weightText(double kg, WeightUnit unit) {
-    final value = NumberFormat.decimalPattern(localeName)
-      ..maximumFractionDigits = 1;
-    final number = value.format(unit.fromKg(kg));
+  /// A total or a derived weight (volume, estimated 1RM), to one decimal.
+  String weightText(double kg, WeightUnit unit) =>
+      _weightText(unit.fromKg(kg), unit, 1);
+
+  /// One lifted weight, as [WeightUnitConversion.shown] shows it.
+  String liftedWeightText(double kg, WeightUnit unit) =>
+      _weightText(unit.shownFromKg(kg), unit, 2);
+
+  String _weightText(double value, WeightUnit unit, int maxDecimals) {
+    final number = (NumberFormat.decimalPattern(
+      localeName,
+    )..maximumFractionDigits = maxDecimals).format(value);
     return switch (unit) {
       WeightUnit.kg => programWeightKg(number),
       WeightUnit.lb => programWeightLb(number),

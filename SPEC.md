@@ -189,7 +189,17 @@ from the earlier FitLab app.
   camera at yaw π) so the page scrolls over them; two CPU-rendered viewers
   share one parsed model and paint once. The Exercises tab's model stays
   interactive.
-- **Units**: stored metric. kg/lb and cm/in chosen by the user.
+- **Units**: stored metric. kg/lb and cm/in chosen by the user. A single
+  lifted weight is shown through `WeightUnit.shown`: on the unit's entry
+  grid (two decimals, what weight fields write back) it was typed in this
+  unit and shows as typed; otherwise it was typed in the other unit and
+  shows rounded, to whole lb (80 kg → 176 lb) or half kg (45 lb → 20.5 kg).
+  Display only: an untouched field stores nothing, an edited one stores what
+  was typed. Set rows and drops, previous and suggested values, workout
+  detail, heaviest-weight records and program targets use it; volume,
+  estimated 1RM (records and chart), body weight and the calculators keep
+  their own formatting. A weight typed with more than two decimals is taken
+  for the other unit's and shows rounded.
 - **Programs**: a name of 1-60 characters, 1-7 days, day names of at most
   40 characters, 1-20 exercises per day, an optional length of 1-52 weeks;
   lengths count UTF-16 code units in the fields and in validation. The

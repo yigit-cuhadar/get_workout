@@ -553,7 +553,7 @@ class _ItemEditorState extends State<_ItemEditor> {
   String _targetText() {
     final kg = _item.targetKg;
     if (kg == null) return '';
-    final value = _cubit.weightUnit.fromKg(kg);
+    final value = _cubit.weightUnit.shownFromKg(kg);
     final fixed = value.toStringAsFixed(2);
     return fixed.replaceFirst(RegExp(r'\.?0+$'), '');
   }

@@ -129,7 +129,8 @@ class SetRow extends StatelessWidget {
                   child: NumberCell(
                     value: set.weightKg == null
                         ? null
-                        : unit.fromKg(set.weightKg!),
+                        : unit.shownFromKg(set.weightKg!),
+                    shown: unit.shown,
                     hint: hint.weightKg == null
                         ? null
                         : l10n.weightField(hint.weightKg!, unit),
@@ -258,7 +259,8 @@ class _DropRow extends StatelessWidget {
               child: NumberCell(
                 value: drop.weightKg == null
                     ? null
-                    : unit.fromKg(drop.weightKg!),
+                    : unit.shownFromKg(drop.weightKg!),
+                shown: unit.shown,
                 decimal: true,
                 onChanged: (text) =>
                     cubit.setDropWeight(ref, index, text, unit),
@@ -292,12 +294,18 @@ class NumberCell extends StatefulWidget {
     required this.onChanged,
     this.hint,
     this.decimal = false,
+    this.shown,
   });
 
   final double? value;
   final String? hint;
   final bool decimal;
   final ValueChanged<String> onChanged;
+
+  /// How a typed number shows once stored, when that differs from what was
+  /// typed (a weight with more decimals than the entry grid shows rounded);
+  /// the field keeps the typed text.
+  final double Function(double typed)? shown;
 
   @override
   State<NumberCell> createState() => _NumberCellState();
@@ -316,7 +324,8 @@ class _NumberCellState extends State<NumberCell> {
   @override
   void didUpdateWidget(NumberCell oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final shown = _parse(_controller.text);
+    final typed = _parse(_controller.text);
+    final shown = typed == null ? null : widget.shown?.call(typed) ?? typed;
     final value = widget.value;
     final same = shown == null || value == null
         ? shown == value

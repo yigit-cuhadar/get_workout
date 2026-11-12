@@ -15,16 +15,16 @@ extension StrengthText on AppLocalizations {
   };
 
   /// A record's [value] as stored (kg, reps or seconds), weights in [unit].
-  String recordValue(RecordKind kind, double value, WeightUnit unit) =>
-      switch (kind) {
-        RecordKind.heaviestWeight ||
-        RecordKind.bestE1rm ||
-        RecordKind.bestSetVolume => weightText(value, unit),
-        RecordKind.mostReps => strengthReps(value.round()),
-        RecordKind.longestDuration => elapsedText(
-          Duration(seconds: value.round()),
-        ),
-      };
+  String recordValue(
+    RecordKind kind,
+    double value,
+    WeightUnit unit,
+  ) => switch (kind) {
+    RecordKind.heaviestWeight => liftedWeightText(value, unit),
+    RecordKind.bestE1rm || RecordKind.bestSetVolume => weightText(value, unit),
+    RecordKind.mostReps => strengthReps(value.round()),
+    RecordKind.longestDuration => elapsedText(Duration(seconds: value.round())),
+  };
 
   String rangeName(StrengthRange range) => switch (range) {
     StrengthRange.weeks12 => strengthRange12Weeks,

@@ -106,4 +106,63 @@ void main() {
     expect(LengthUnit.inch.fromCm(180), closeTo(70.866, 0.001));
     expect(LengthUnit.cm.fromCm(180), 180);
   });
+
+  group('shown lifted weights', () {
+    const lb = WeightUnit.lb;
+    const kg = WeightUnit.kg;
+
+    test('typed in kg, shown in lb: whole lb', () {
+      expect(lb.shownFromKg(80), 176);
+      expect(lb.shownFromKg(100), 220);
+      expect(lb.shownFromKg(22.5), 50);
+      expect(lb.shownFromKg(1.25), 3);
+    });
+
+    test('typed in lb, shown in kg: nearest half kg', () {
+      expect(kg.shownFromKg(lb.toKg(45)), 20.5);
+      expect(kg.shownFromKg(lb.toKg(135)), 61);
+      expect(kg.shownFromKg(lb.toKg(2.5)), 1);
+      // 1.36 kg is nearer 1.5 than 1.
+      expect(kg.shownFromKg(lb.toKg(3)), 1.5);
+    });
+
+    test('typed in the shown unit: as it is', () {
+      expect(lb.shownFromKg(lb.toKg(12.5)), 12.5);
+      expect(lb.shownFromKg(lb.toKg(176.37)), 176.37);
+      expect(lb.shownFromKg(lb.toKg(0.25)), 0.25);
+      expect(kg.shownFromKg(22.75), 22.75);
+      expect(kg.shownFromKg(20.41), 20.41);
+      expect(kg.shownFromKg(0), 0);
+      expect(lb.shownFromKg(0), 0);
+    });
+
+    test('every two-decimal lb weight up to 1000 lb survives storage', () {
+      for (var hundredths = 0; hundredths <= 100000; hundredths++) {
+        final typed = hundredths / 100;
+        expect(lb.shownFromKg(lb.toKg(typed)), typed);
+      }
+    });
+
+    test('no quarter-kg weight up to 500 kg is taken for a lb entry', () {
+      for (var quarters = 1; quarters <= 2000; quarters++) {
+        final shown = lb.shownFromKg(quarters / 4);
+        expect(shown, shown.roundToDouble(), reason: '${quarters / 4} kg');
+      }
+    });
+
+    test('no quarter-lb weight up to 1000 lb is taken for a kg entry', () {
+      for (var quarters = 1; quarters <= 4000; quarters++) {
+        final shown = kg.shownFromKg(lb.toKg(quarters / 4));
+        expect(shown * 2, (shown * 2).roundToDouble(), reason: '$quarters');
+      }
+    });
+
+    test('a shown weight shows the same again', () {
+      for (final value in [176.0, 176.37, 176.3698, 20.4117, 20.5, 0.004]) {
+        for (final unit in WeightUnit.values) {
+          expect(unit.shown(unit.shown(value)), unit.shown(value));
+        }
+      }
+    });
+  });
 }

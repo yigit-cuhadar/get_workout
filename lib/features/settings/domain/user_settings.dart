@@ -26,6 +26,28 @@ extension WeightUnitConversion on WeightUnit {
     WeightUnit.kg => kg,
     WeightUnit.lb => kg / kgPerLb,
   };
+
+  /// A lifted weight stored as [kg], as the user sees it in this unit: see
+  /// [shown].
+  double shownFromKg(double kg) => shown(fromKg(kg));
+
+  /// A lifted weight in this unit as the user sees it. On the entry grid
+  /// (two decimals, what weight fields write back) it was typed in this unit
+  /// and shows as typed; otherwise it was typed in the other unit and shows
+  /// rounded, to whole lb or to half kg. Only for display: stored weights
+  /// never change.
+  double shown(double value) {
+    final hundredths = value * 100;
+    // Float noise of a kg round trip is far below this; a weight typed in
+    // the other unit lands this close to the grid about once in a million.
+    if ((hundredths - hundredths.round()).abs() < 1e-6) {
+      return hundredths.round() / 100;
+    }
+    return switch (this) {
+      WeightUnit.kg => (value * 2).round() / 2,
+      WeightUnit.lb => value.roundToDouble(),
+    };
+  }
 }
 
 extension LengthUnitConversion on LengthUnit {
