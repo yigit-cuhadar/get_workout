@@ -49,6 +49,25 @@ describe("deleteAccountOf", () => {
     assert.equal(done[3], "auth u1");
   });
 
+  test("deletes the entitlement again after the sign-in", async () => {
+    // A webhook event that found the user before the sign-in went may have
+    // written it again.
+    const { store, done } = fakeStore();
+    await deleteAccountOf(caller("password", now), store, now);
+    assert.equal(done[4], "entitlement u1");
+  });
+
+  test("an entitlement left at the end does not fail the deletion", async () => {
+    const { store, done } = fakeStore();
+    let calls = 0;
+    store.deleteEntitlement = async (uid) => {
+      if (++calls === 2) throw new Error("unavailable");
+      done.push(`entitlement ${uid}`);
+    };
+    await deleteAccountOf(caller("password", now), store, now);
+    assert.equal(done.at(-1), "auth u1");
+  });
+
   test("refuses a caller who is not signed in", async () => {
     const { store, done } = fakeStore();
     await assert.rejects(
@@ -72,7 +91,7 @@ describe("deleteAccountOf", () => {
   test("a guest is deleted whenever it signed in", async () => {
     const { store, done } = fakeStore();
     await deleteAccountOf(caller("anonymous", 0), store, now);
-    assert.equal(done.length, 4);
+    assert.equal(done.length, 5);
   });
 
   test("keeps the sign-in when data is left, so a retry can finish", async () => {

@@ -44,11 +44,84 @@ from the earlier FitLab app.
   (`lib/features/subscription/presentation/premium.dart`). Unknown never shows
   a paywall or a lock. The client value is for UI only; paid data is
   enforced by `entitlements/{uid}` in the rules.
-- **Client vs server Premium**: until the RevenueCat webhook exists nothing
-  writes `entitlements/{uid}`, so client Premium (fake or RevenueCat) and
-  server access can disagree. Features treat a server refusal of premium
-  content as locked, whatever the client says. On dev,
-  `tool/set_premium.sh` writes the entitlement for demos.
+- **Client vs server Premium**: only `revenueCatWebhook` writes
+  `entitlements/{uid}` (written, not deployed), so client Premium (fake or
+  RevenueCat) and server access can disagree: the fake never reaches the
+  server, and a real purchase reaches it seconds to minutes later. Features
+  treat a server refusal of premium content as locked, whatever the client
+  says. On dev, `tool/set_premium.sh` writes the entitlement for demos.
+- **RevenueCat webhook** (`functions/src/revenuecat_webhook.ts`), built to
+  the documented contract
+  (https://www.revenuecat.com/docs/integrations/webhooks,
+  https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields,
+  https://www.revenuecat.com/docs/integrations/webhooks/sample-events; the
+  tests use the sample events, with our uid and entitlement):
+  - Auth: the `Authorization` header must equal the Functions secret
+    `REVENUECAT_WEBHOOK_AUTHORIZATION` exactly (the docs do not say whether
+    RevenueCat adds a scheme, so the secret holds the whole value set in the
+    dashboard, e.g. `Bearer <random>`); SHA-256 digests compared in
+    constant time; else 401. Neither header nor body is logged. Deployed
+    with `invoker: "public"` (RevenueCat has no Google credentials) and
+    `maxInstances: 10`.
+  - Only 200 counts as delivered; RevenueCat retries anything else about 5
+    times over 80 minutes. So handled and deliberately ignored events answer
+    200, requests that are not RevenueCat's 401/405/415/400, and only an
+    Auth or Firestore failure 500. The event type is read first, so TEST
+    and any type not handled answer 200 whatever their shape. Every
+    response body is `{reason}` (`applied`, `test-event`, `unhandled-type`,
+    `not-premium`, `no-expiry`, `no-user`, `deleted-user`, `stale`,
+    `duplicate`, `nothing-to-transfer`, `retry`, ...), visible in
+    RevenueCat's delivery log.
+  - Sandbox and production events are treated alike (`environment` is only
+    logged): with a release build only TestFlight testers and App Review can
+    buy in the sandbox, and App Review buys against prod, so its purchase
+    must unlock server content too. An event reaching the other project's
+    webhook names a uid that project's Auth does not have and is skipped.
+  - Events (only those whose `entitlement_ids` include `premium`, except
+    TEMPORARY_ENTITLEMENT_GRANT, which names none; the app has only
+    Premium). Grants never shorten Premium already known:
+
+    | Event | Writes |
+    |---|---|
+    | INITIAL_PURCHASE, RENEWAL, UNCANCELLATION, SUBSCRIPTION_PAUSED, SUBSCRIPTION_EXTENDED, REFUND_REVERSED | premium until the later of `expiration_at_ms` and the known expiry; `productId` = `product_id` |
+    | CANCELLATION, any `cancel_reason` but a refund (UNSUBSCRIBE, BILLING_ERROR, ...) | the same: premium runs to the end of the period |
+    | CANCELLATION with `cancel_reason` CUSTOMER_SUPPORT (the docs' only refund reason) | premium false, `expiresAt` = the earlier of `expiration_at_ms` and the event time |
+    | EXPIRATION | premium false, as a refund |
+    | BILLING_ISSUE | premium until the later of `expiration_at_ms`, `grace_period_expiration_at_ms` and the known expiry |
+    | PRODUCT_CHANGE | as a grant; `productId` = `new_product_id` when present |
+    | NON_RENEWING_PURCHASE | as a grant; a null `expiration_at_ms` (the docs: non-subscription or lifetime products) is 9999-12-31 |
+    | TEMPORARY_ENTITLEMENT_GRANT (only `app_user_id` and the time) | premium until event time + 24 h (the docs' maximum), product kept |
+    | TRANSFER (no user, entitlement or expiry fields) | the `transferred_from` uids' known Premium moves to the `transferred_to` uids (a later expiry they have is kept); the old uids get premium false |
+    | TEST, anything else | nothing |
+
+    Any other type without an expiry is never lifetime: it keeps the known
+    expiry, or writes nothing (`no-expiry`). A refund or EXPIRATION for a
+    product other than the stored `productId`, while the stored Premium
+    still runs (a plan switch, a temporary grant expiring next to a
+    subscription), keeps Premium.
+  - Users: `app_user_id`, else the single uid among `original_app_user_id`
+    and `aliases`; `$RCAnonymousID:` ids are never written. A uid Auth does
+    not have (a deleted account) is skipped and its `entitlements/{uid}`
+    deleted (idempotent, so a retry after a 500 leaves nothing either);
+    after writing, a uid deleted meanwhile has its document removed, and
+    `deleteAccount` deletes the entitlement again after the auth user.
+  - Order and redelivery (one transaction per event): the document keeps
+    `lastEventMs` (the latest `event_timestamp_ms` applied) and
+    `lastEventIds` (the ids applied at that time, at most 20). A newer event
+    replaces the state. Events of the same millisecond keep the outcome
+    with the later Premium expiry (then the greater `productId`), whatever
+    order they arrive in. An older event only extends Premium still
+    granted (so BILLING_ISSUE's grace survives arriving after the billing
+    error's CANCELLATION) and otherwise changes nothing; an id in
+    `lastEventIds` is a no-op. Grants extend by taking a maximum, so a
+    redelivered older grant is harmless too.
+  - Not done: RevenueCat recommends fetching `GET /subscribers` after each
+    event instead of trusting the payload; that needs a secret REST key and
+    would fix the payload's blind spots (a transfer from an anonymous id or
+    a deleted account, e.g. a restore by the new guest after deleting the
+    account, grants the server nothing until the next renewal; two
+    concurrent subscriptions are tracked as one `productId`). Revisit if
+    one of these shows up.
 - **Paywall**: full-screen `/paywall`, yearly selected by default, prices as
   the store gives them, trial shown only when the plan carries one, restore
   and legal links always visible. Terms and privacy URLs live in
@@ -64,6 +137,29 @@ from the earlier FitLab app.
   it is seeded. `content/*.json` is the seed and the bulk-edit path;
   the admin panel edits Firestore directly and leaves `contentHash` alone, so
   the import skips (and fails on) documents edited there unless `--force`.
+- **Exercise coverage** (`tool/coverage_report.dart`, logic in
+  `tool/src/content_coverage.dart`): prints the live library by main and
+  secondary muscle, equipment, equipment profile, level and pattern, the
+  exercises without an alternative or variation, single-member families,
+  near-duplicate names and text defects. Acceptance rule, from the
+  generator since the SPEC gave no number: in every equipment profile,
+  every muscle (any can be a focus) has at least `maxExercisesPerMuscle`
+  (3, the most exercises a generated day gives one muscle, never repeating
+  one) main-muscle exercises the generator may give a beginner, the
+  smallest pool: level at most intermediate, not mobility or explosive,
+  fitting through `equipment` or an alternative set. Exceptions, 2 each:
+  bodyweight × mid delt (prone Y raise and the wall isometric; the presses
+  are front-delt exercises) and bodyweight × forearm (dead hang, false grip
+  hang). The script exits non-zero on a shortfall, and
+  `test/tool/content_coverage_test.dart` runs the rule on the content files
+  in CI. Seed after the audit: 416 exercises, 415 live (279 beginner, 104
+  intermediate, 32 advanced); doable per profile: full gym 415, home gym
+  240, dumbbells 180, bodyweight 123, bands 141. Hammer curls have main
+  muscles biceps and forearm (brachioradialis is filed under forearm), and
+  pike and handstand presses list mid delt as secondary like every other
+  overhead press. The weekly-set warnings of the arm focus, glute focus,
+  calisthenics and kettlebell programs stay: each is a focus or
+  equipment-limited program whose summary says so.
 - **Admin program editor**: edits `programs/{id}` and its `detail/main` in
   one transaction, so both are written or neither; a save is refused when
   either changed since the editor loaded them, and keeps `contentHash` and
@@ -970,8 +1066,11 @@ measurement day fills all three.
 ### Server-written
 
 **`entitlements/{uid}`**: `premium`, `expiresAt` (a Firestore timestamp; the
-webhook converts), `productId`. Written only by the
-RevenueCat webhook; readable by its owner.
+webhook converts), `productId` (absent when no event named a product),
+and the webhook's `lastEventMs` and `lastEventIds` (ordering and
+redelivery). Written only by the RevenueCat webhook (and
+`tool/set_premium.sh` on dev); readable by its owner. The rules read only
+`premium` and `expiresAt`.
 
 **`announcements/{requestId}`**: `locale`, `title`, `body`, `status`
 (`sending`, `sent`, `failed`), `sentBy` (uid), `requestedAt`, and once
@@ -986,7 +1085,8 @@ only, JPEG, max 5 MB.
 
 ### Cloud Functions
 
-- `revenueCatWebhook` → writes `entitlements/{uid}`
+- `revenueCatWebhook` (HTTPS, `functions/src/revenuecat_webhook.ts`) →
+  writes `entitlements/{uid}`; see the RevenueCat webhook decision.
 - `deleteAccount` (callable, `functions/src/delete_account.ts`) → for the
   signed-in caller: `users/{uid}` with every subcollection (customExercises,
   programs, workouts, exerciseStats, cardio, bodyEntries, pushTokens and any
@@ -997,8 +1097,11 @@ only, JPEG, max 5 MB.
   machine-readable `details.reason`, which the app maps on: `recent-sign-in`
   (`failed-precondition`, a non-guest signed in more than 5 minutes ago)
   and `sign-in-not-deleted` (`internal`, the data is gone but the auth user
-  is not; calling again finishes). RevenueCat keeps its customer; the
-  store subscription is the user's to cancel.
+  is not; calling again finishes). Once the auth user is gone it deletes
+  `entitlements/{uid}` once more (a failure is logged), so a webhook event
+  racing the deletion leaves nothing; later events skip the uid. RevenueCat
+  keeps its customer and its events keep coming until the store
+  subscription, the user's to cancel, ends.
 - `sendAnnouncement` (callable, `functions/src/send_announcement.ts`) →
   for a caller with the `admin` claim, input `{requestId, locale, title,
   body}`: claims `announcements/{requestId}` in a transaction, sends a
@@ -1039,7 +1142,7 @@ Group 2, the model
 Group 3, exercises
 - [x] Exercise domain and sync — incremental sync by `updatedAt` — library works offline after first sync
 - [x] Admin panel — sign-in, exercise list, exercise editor with validation, draft/live/retire — an edit appears in the app after sync
-- [ ] Exercise content — 400+ exercises in English, loaded through the admin import — every muscle and equipment profile is covered
+- [x] Exercise content — 400+ exercises in English, loaded through the admin import — every muscle and equipment profile is covered
 - [x] Library — model tab with muscle sheet (main vs secondary), list, search, filters, sort — find any exercise in a few taps
 - [x] Exercise detail — text sections, model with worked muscles, alternatives, variations, favorite, add to workout or program
 - [x] Custom exercises — short form, edit, delete — shown with a "Custom" label everywhere
@@ -1076,7 +1179,7 @@ Group 9, launch readiness
 - [x] Onboarding — nine questions, suggested free program
 - [ ] Notifications — workout and measurement reminders, FCM announcements
 - [ ] Subscription — paywall, RevenueCat, entitlement checks, restore
-- [ ] Account — delete account, privacy policy link, analytics consent
+- [x] Account — delete account, privacy policy link, analytics consent
 
 ## Design
 
@@ -1105,8 +1208,6 @@ Group 9, launch readiness
   deployed: the Architect deploys `functions/` to dev, checks deletion on a
   device (including the "not available" message before the deploy), then
   prod.
-- After `revenueCatWebhook` exists, an event for a deleted user could write
-  `entitlements/{uid}` again; the webhook should skip uids with no auth user.
 - Accepted deviation, to be removed by two forge tasks (the app then uses
   the packages and drops its workarounds):
   - **forge_firebase**: `initFirebase` must not enable Analytics or
@@ -1119,12 +1220,31 @@ Group 9, launch readiness
     `AuthRepository` (and use cases); until then
     `CallableAccountRepository.reauthenticate` calls Firebase Auth itself.
 - Female body model with the same mesh names: the user supplies it before release.
-- RevenueCat webhook (`revenueCatWebhook`, needs the Blaze plan): verify the
-  Authorization header secret, write `entitlements/{app_user_id}` with
-  `premium`, `expiresAt` (a timestamp; lifetime products would need a far
-  date, the rules compare it) and `productId` on every event, including
-  TRANSFER (two uids) and EXPIRATION. Rules for `entitlements/{uid}` and the
-  premium program detail are already in `firestore.rules`.
+- `revenueCatWebhook` is written and unit-tested, not deployed or tried
+  against RevenueCat. Deploying all of `functions/` needs its secret: an
+  interactive `firebase deploy` prompts for a missing one, a
+  non-interactive deploy (CI, an agent) fails. Until step 1 is done,
+  deploy the others by name (`--only
+  functions:deleteAccount,functions:sendAnnouncement`), or do step 1 early
+  (with a random value nothing is accepted until RevenueCat has it). Once
+  the RevenueCat project exists, per Firebase project (dev first):
+  1. Make a random value (`openssl rand -hex 32`) and set the secret to the
+     exact header value: `firebase functions:secrets:set
+     REVENUECAT_WEBHOOK_AUTHORIZATION --project <id>` (e.g. `Bearer
+     <value>`; dev and prod get different values).
+  2. Deploy `functions/` (the Architect).
+  3. In RevenueCat, Integrations → Webhooks, one webhook per project: URL
+     `https://europe-west1-<project-id>.cloudfunctions.net/revenueCatWebhook`
+     (2nd gen also has a `run.app` URL; either works), the same
+     Authorization header value; dev: Sandbox; prod: both Production and
+     Sandbox (App Review and TestFlight buy in the sandbox against prod);
+     all apps, all events.
+  4. Send the dashboard's test event (answers `test-event`), then a sandbox
+     purchase with a debug build on dev: `entitlements/<uid>` appears and a
+     premium program's days open; cancel and wait for EXPIRATION.
+  Check then whether RevenueCat sends the header verbatim and
+  `Content-Type: application/json` (the docs say neither; anything else is
+  answered 401/415 and shows in the delivery log).
 - Store setup once the accounts exist: products (monthly, yearly with a
   7-day trial) in App Store Connect and Play Console, one RevenueCat project
   with entitlement `premium` and a current offering, the In-App Purchase
