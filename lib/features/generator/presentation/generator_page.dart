@@ -21,28 +21,59 @@ import 'generator_text.dart';
 
 /// The generator's questions, one at a time; the last one opens the
 /// preview. Entered through `openGenerator`, which checks for premium.
+/// What the profile and the equipment say prefills the questions not
+/// answered yet, also when they arrive after the page opened.
 class GeneratorPage extends StatelessWidget {
   const GeneratorPage({super.key});
 
-  @override
-  Widget build(BuildContext context) {
+  static GeneratorPrefill _prefill(BuildContext context) {
     final profile = context.read<ProfileCubit>().state.profile;
-    return BlocProvider(
-      create: (_) => sl<GeneratorQuestionsCubit>(
-        param1: (
-          goal: profile.goal,
-          level: profile.level,
-          daysPerWeek: profile.daysPerWeek,
-          equipment: context.read<EquipmentCubit>().state.owned,
-        ),
-      ),
-      child: const _QuestionsView(),
+    return (
+      goal: profile.goal,
+      level: profile.level,
+      daysPerWeek: profile.daysPerWeek,
+      equipment: context.read<EquipmentCubit>().state.owned,
     );
   }
+
+  @override
+  Widget build(BuildContext context) => BlocProvider(
+    create: (_) => sl<GeneratorQuestionsCubit>(param1: _prefill(context)),
+    child: MultiBlocListener(
+      listeners: [
+        BlocListener<ProfileCubit, ProfileState>(
+          listener: (context, _) => context
+              .read<GeneratorQuestionsCubit>()
+              .prefill(_prefill(context)),
+        ),
+        BlocListener<EquipmentCubit, EquipmentState>(
+          listener: (context, _) => context
+              .read<GeneratorQuestionsCubit>()
+              .prefill(_prefill(context)),
+        ),
+      ],
+      child: const _QuestionsView(),
+    ),
+  );
 }
 
-class _QuestionsView extends StatelessWidget {
+class _QuestionsView extends StatefulWidget {
   const _QuestionsView();
+
+  @override
+  State<_QuestionsView> createState() => _QuestionsViewState();
+}
+
+class _QuestionsViewState extends State<_QuestionsView> {
+  /// The preview is opening or open; a second tap opens no second one.
+  bool _previewing = false;
+
+  Future<void> _preview(GeneratorAnswers answers) async {
+    if (_previewing) return;
+    setState(() => _previewing = true);
+    await context.push(Routes.programGeneratorPreview, extra: answers);
+    if (mounted) setState(() => _previewing = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,77 +84,70 @@ class _QuestionsView extends StatelessWidget {
       builder: (context, state) {
         final info = l10n.generatorQuestionInfo(state.step);
         final answers = state.answers;
-        return PopScope(
-          canPop: state.step.index == 0,
-          onPopInvokedWithResult: (didPop, _) {
-            if (!didPop) cubit.back();
-          },
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text(l10n.generatorTitle),
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(Gap.xs),
-                child: LinearProgressIndicator(
-                  value: (state.step.index + 1) / GeneratorStep.values.length,
-                ),
+        final first = state.step.index == 0;
+        // The route itself always pops (tab re-tap, back swipe); the
+        // buttons step back through the questions.
+        return Scaffold(
+          appBar: AppBar(
+            leading: first ? null : BackButton(onPressed: cubit.back),
+            title: Text(l10n.generatorTitle),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(Gap.xs),
+              child: LinearProgressIndicator(
+                value: (state.step.index + 1) / GeneratorStep.values.length,
               ),
             ),
-            body: ListView(
-              padding: const EdgeInsets.symmetric(vertical: Gap.md),
-              children: [
+          ),
+          body: ListView(
+            padding: const EdgeInsets.symmetric(vertical: Gap.md),
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+                child: Text(
+                  l10n.generatorQuestion(state.step),
+                  style: theme.textTheme.headlineSmall,
+                ),
+              ),
+              if (info != null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                  child: Text(
-                    l10n.generatorQuestion(state.step),
-                    style: theme.textTheme.headlineSmall,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, 0),
+                  child: Text(info, style: theme.textTheme.bodyMedium),
                 ),
-                if (info != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      Gap.md,
-                      Gap.sm,
-                      Gap.md,
-                      0,
-                    ),
-                    child: Text(info, style: theme.textTheme.bodyMedium),
-                  ),
-                const SizedBox(height: Gap.md),
-                _Answer(state),
-              ],
-            ),
-            bottomNavigationBar: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(Gap.md),
-                child: Row(
-                  children: [
-                    if (state.step.index > 0) ...[
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: cubit.back,
-                          child: Text(l10n.generatorBack),
-                        ),
-                      ),
-                      const SizedBox(width: Gap.sm),
-                    ],
+              const SizedBox(height: Gap.md),
+              _Answer(state),
+            ],
+          ),
+          bottomNavigationBar: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(Gap.md),
+              child: Row(
+                children: [
+                  if (!first) ...[
                     Expanded(
-                      child: state.isLast
-                          ? ForgeButton(
-                              label: l10n.generatorCreate,
-                              onPressed: state.answered && answers != null
-                                  ? () => context.push(
-                                      Routes.programGeneratorPreview,
-                                      extra: answers,
-                                    )
-                                  : null,
-                            )
-                          : ForgeButton(
-                              label: l10n.generatorNext,
-                              onPressed: state.answered ? cubit.next : null,
-                            ),
+                      child: OutlinedButton(
+                        onPressed: cubit.back,
+                        child: Text(l10n.generatorBack),
+                      ),
                     ),
+                    const SizedBox(width: Gap.sm),
                   ],
-                ),
+                  Expanded(
+                    child: state.isLast
+                        ? ForgeButton(
+                            label: l10n.generatorCreate,
+                            onPressed:
+                                state.answered &&
+                                    answers != null &&
+                                    !_previewing
+                                ? () => _preview(answers)
+                                : null,
+                          )
+                        : ForgeButton(
+                            label: l10n.generatorNext,
+                            onPressed: state.answered ? cubit.next : null,
+                          ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -46,10 +46,12 @@ void main() {
 
   tearDown(() => libraries.close());
 
-  GeneratorPreviewCubit build([GeneratorAnswers? answers]) {
+  GeneratorPreviewCubit build([
+    GeneratorAnswers? answers,
+    AuthUser? user = const AuthUser(id: 'u1', isAnonymous: true),
+  ]) {
     final auth = MockAuthRepository();
-    when(() => auth.currentUser)
-        .thenReturn(const AuthUser(id: 'u1', isAnonymous: true));
+    when(() => auth.currentUser).thenReturn(user);
     return GeneratorPreviewCubit(
       answers ?? given,
       catalogue: catalogue,
@@ -203,6 +205,29 @@ void main() {
     await cubit.save(name: 'Mine', dayName: (_) => '');
     expect(cubit.state.saveStatus, SaveStatus.failed);
     expect(cubit.state.saveFailure, isA<ValidationFailure>());
+    verifyNever(() => repository.createProgram(any(), any()));
+    await cubit.close();
+  });
+
+  test('says why it cannot save while nobody is signed in', () async {
+    when(() => catalogue.state).thenReturn(CatalogueReady(library));
+    final cubit = build(null, null);
+    await pumpEventQueue();
+    await cubit.save(name: 'Mine', dayName: (_) => '');
+    expect(cubit.state.saveStatus, SaveStatus.failed);
+    expect(cubit.state.saveFailure, isA<AuthFailure>());
+    verifyNever(() => repository.createProgram(any(), any()));
+    await cubit.close();
+  });
+
+  test('says why it cannot save while the library reloads', () async {
+    when(() => catalogue.state).thenReturn(CatalogueReady(library));
+    final cubit = build();
+    await pumpEventQueue();
+    when(() => catalogue.state).thenReturn(const CatalogueLoading());
+    await cubit.save(name: 'Mine', dayName: (_) => '');
+    expect(cubit.state.saveStatus, SaveStatus.failed);
+    expect(cubit.state.saveFailure, isA<NotFoundFailure>());
     verifyNever(() => repository.createProgram(any(), any()));
     await cubit.close();
   });

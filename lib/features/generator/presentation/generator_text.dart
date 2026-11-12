@@ -58,7 +58,7 @@ extension GeneratorText on AppLocalizations {
     _ => null,
   };
 
-  String generationIssueText(GenerationIssue? issue) => switch (issue) {
+  String generationIssueText(GenerationIssue issue) => switch (issue) {
     GenerationIssue.daysOutOfRange => generatorIssueDays(
       GeneratorLimits.minDays,
       GeneratorLimits.maxDays,
@@ -67,6 +67,5 @@ extension GeneratorText on AppLocalizations {
       TrainingSplit.pushPullLegs.minDays,
     ),
     GenerationIssue.noExercises => generatorIssueNoExercises,
-    null => generatorFailed,
   };
 }

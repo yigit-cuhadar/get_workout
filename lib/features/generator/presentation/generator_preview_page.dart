@@ -48,6 +48,8 @@ class _PreviewView extends StatelessWidget {
               SnackBar(
                 content: Text(switch (state.saveFailure) {
                   NetworkFailure() => l10n.errorNetwork,
+                  AuthFailure() => l10n.generatorSaveSignedOut,
+                  NotFoundFailure() => l10n.generatorSaveLibraryLoading,
                   ValidationFailure() => l10n.generatorSaveInvalid,
                   _ => l10n.programSaveFailed,
                 }),
@@ -67,7 +69,7 @@ class _PreviewView extends StatelessWidget {
             onRetry: cubit.retry,
           ),
           PreviewStatus.impossible => EmptyView(
-            message: l10n.generationIssueText(state.issue),
+            message: l10n.generationIssueText(state.issue!),
             action: OutlinedButton(
               onPressed: () => context.pop(),
               child: Text(l10n.generatorChangeAnswers),

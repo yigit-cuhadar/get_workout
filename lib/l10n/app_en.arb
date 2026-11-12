@@ -921,7 +921,6 @@
   "generatorIssueSplit": "Needs {days} or more days a week",
   "@generatorIssueSplit": {"placeholders": {"days": {"type": "int"}}},
   "generatorIssueNoExercises": "No exercises fit these answers for every day. Add equipment, leave out fewer exercises or pick another area to go easy on.",
-  "generatorFailed": "Couldn't make a program from these answers.",
   "generatorChangeAnswers": "Change answers",
   "generatorPreviewTitle": "Your program",
   "generatorSummary": "{days, plural, =1{1 day} other{{days} days}} a week, up to {minutes} minutes each",
@@ -934,6 +933,8 @@
   "@generatorSetsOfTarget": {"placeholders": {"sets": {"type": "String"}, "target": {"type": "int"}}},
   "generatorRegenerate": "Regenerate",
   "generatorSave": "Save",
+  "generatorSaveSignedOut": "You're not signed in right now. Try again in a moment.",
+  "generatorSaveLibraryLoading": "The exercise library is still loading. Try again in a moment.",
   "generatorSaveInvalid": "This program can't be saved as it is. Regenerate and try again.",
   "generatorProgramName": "{split}, {days, plural, =1{1 day} other{{days} days}}",
   "@generatorProgramName": {"placeholders": {"split": {"type": "String"}, "days": {"type": "int"}}}

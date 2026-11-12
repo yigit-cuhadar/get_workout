@@ -111,10 +111,7 @@ class _ProgramsViewState extends State<_ProgramsView> {
                     onPressed: () => context.go(Routes.catalogue),
                   ),
                   const SizedBox(height: Gap.sm),
-                  OutlinedButton(
-                    onPressed: () => openGenerator(context),
-                    child: Text(l10n.generatorTitle),
-                  ),
+                  const GeneratorButton(),
                   const SizedBox(height: Gap.sm),
                   OutlinedButton(
                     onPressed: create,

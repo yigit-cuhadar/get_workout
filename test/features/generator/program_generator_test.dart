@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/exercises/domain/exercise.dart';
@@ -82,6 +84,11 @@ void main() {
         expect(exercise.mainMuscles, isNot(contains(muscle)), reason: why);
       }
     }
+    expect(generated.uncovered, {
+      for (final muscle in generated.targets.keys)
+        if (!exercisesOf(generated).any((e) => e.mainMuscles.contains(muscle)))
+          muscle,
+    }, reason: reason);
     generated.weeklySets.forEach((muscle, sets) {
       if (generated.targets.containsKey(muscle)) {
         expect(
@@ -166,9 +173,44 @@ void main() {
               reason: '${muscle.code}, seed $seed',
             );
           }
+          // Calves and abs, last in importance, still get theirs.
+          for (final muscle in [Muscle.calf, Muscle.abdominal]) {
+            expect(
+              generated.weeklySets[muscle],
+              greaterThanOrEqualTo(generated.targets[muscle]! - 1),
+              reason: '${muscle.code}, seed $seed',
+            );
+          }
+          expect(generated.uncovered, isEmpty, reason: 'seed $seed');
         }
       });
     }
+
+    test('are shared fairly when the sessions are short', () {
+      for (final minutes in [30, 45]) {
+        for (var seed = 0; seed < 5; seed++) {
+          final generated = generate(
+            answers(days: 3, minutes: minutes),
+            seed: seed,
+          );
+          final shares = [
+            for (final MapEntry(key: muscle, value: target)
+                in generated.targets.entries)
+              (generated.weeklySets[muscle] ?? 0) / target,
+          ];
+          final reason =
+              '$minutes minutes, seed $seed: '
+              '${generated.weeklySets}';
+          expect(generated.uncovered, isEmpty, reason: reason);
+          expect(shares.reduce(math.min), greaterThan(0.25), reason: reason);
+          expect(
+            shares.reduce(math.max) - shares.reduce(math.min),
+            lessThan(0.9),
+            reason: reason,
+          );
+        }
+      }
+    });
 
     test('count 1 for a main and 0.5 for a secondary muscle', () {
       final generated = generate(answers());

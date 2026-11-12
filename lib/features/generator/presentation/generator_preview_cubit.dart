@@ -50,6 +50,9 @@ class GeneratorPreviewState extends Equatable {
 
   /// The stored program, once saved.
   final String? savedId;
+
+  /// Why the last save failed: an [AuthFailure] while nobody is signed
+  /// in, a [NotFoundFailure] while the library reloads, or the store's.
   final Failure? saveFailure;
 
   GeneratorPreviewState copyWith({
@@ -123,10 +126,20 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
     final uid = _getCurrentUser()?.id;
     final library = _catalogue.state;
     if (program == null ||
-        uid == null ||
-        library is! CatalogueReady ||
         state.saveStatus == SaveStatus.saving ||
         state.saveStatus == SaveStatus.saved) {
+      return;
+    }
+    // Both pass quickly: the user changes, or the library reloads.
+    if (uid == null || library is! CatalogueReady) {
+      emit(
+        state.copyWith(
+          saveStatus: SaveStatus.failed,
+          saveFailure: () => uid == null
+              ? const AuthFailure('nobody is signed in')
+              : const NotFoundFailure('the exercise library is loading'),
+        ),
+      );
       return;
     }
     emit(
@@ -194,7 +207,8 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
         ),
         (failure) => GeneratorPreviewState(
           status: PreviewStatus.impossible,
-          issue: failure is GenerationFailure ? failure.issue : null,
+          // The use case fails with nothing else.
+          issue: (failure as GenerationFailure).issue,
           seed: seed,
         ),
       ),

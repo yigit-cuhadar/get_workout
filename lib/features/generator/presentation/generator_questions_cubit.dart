@@ -134,21 +134,37 @@ class GeneratorQuestionsState extends Equatable {
 /// The generator's questions, one at a time, prefilled from what the user
 /// already answered in onboarding.
 class GeneratorQuestionsCubit extends Cubit<GeneratorQuestionsState> {
-  GeneratorQuestionsCubit(GeneratorPrefill prefill)
-    : super(
-        GeneratorQuestionsState(
-          goal: prefill.goal,
-          level: prefill.level,
-          daysPerWeek: switch (prefill.daysPerWeek) {
-            final days?
-                when days >= GeneratorLimits.minDays &&
-                    days <= GeneratorLimits.maxDays =>
-              days,
-            _ => null,
-          },
-          equipment: prefill.equipment?.difference({Equipment.bodyweight}),
-        ),
+  GeneratorQuestionsCubit(GeneratorPrefill prefill) : super(_answered(prefill));
+
+  /// The questions [prefill] answers; days the generator does not offer
+  /// stay unanswered.
+  static GeneratorQuestionsState _answered(GeneratorPrefill prefill) =>
+      GeneratorQuestionsState(
+        goal: prefill.goal,
+        level: prefill.level,
+        daysPerWeek: switch (prefill.daysPerWeek) {
+          final days?
+              when days >= GeneratorLimits.minDays &&
+                  days <= GeneratorLimits.maxDays =>
+            days,
+          _ => null,
+        },
+        equipment: prefill.equipment?.difference({Equipment.bodyweight}),
       );
+
+  /// Fills the questions not answered yet from [prefill], e.g. once the
+  /// profile has loaded.
+  void prefill(GeneratorPrefill prefill) {
+    final from = _answered(prefill);
+    emit(
+      state.copyWith(
+        goal: state.goal ?? from.goal,
+        level: state.level ?? from.level,
+        daysPerWeek: state.daysPerWeek ?? from.daysPerWeek,
+        equipment: state.equipment ?? from.equipment,
+      ),
+    );
+  }
 
   /// To the next question, once this one is answered.
   void next() {

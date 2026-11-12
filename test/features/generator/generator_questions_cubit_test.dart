@@ -171,4 +171,29 @@ void main() {
     cubit.setSplit(null);
     expect(cubit.state.answered, isTrue);
   });
+
+  test('a later prefill fills only what is still unanswered', () {
+    final cubit = GeneratorQuestionsCubit(none)..setGoal(Goal.loseFat);
+    cubit.prefill((
+      goal: Goal.buildMuscle,
+      level: Level.beginner,
+      daysPerWeek: 9,
+      equipment: {Equipment.bodyweight, Equipment.rings},
+    ));
+    expect(cubit.state.goal, Goal.loseFat);
+    expect(cubit.state.level, Level.beginner);
+    expect(cubit.state.daysPerWeek, isNull);
+    expect(cubit.state.equipment, {Equipment.rings});
+    cubit
+      ..toggleEquipment(Equipment.rings)
+      ..prefill((
+        goal: null,
+        level: null,
+        daysPerWeek: 4,
+        equipment: {Equipment.sled},
+      ));
+    // Bodyweight only was the user's answer.
+    expect(cubit.state.equipment, isEmpty);
+    expect(cubit.state.daysPerWeek, 4);
+  });
 }

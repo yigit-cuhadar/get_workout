@@ -32,3 +32,23 @@ class GeneratorEntry extends StatelessWidget {
     );
   }
 }
+
+/// The generator as a button, e.g. while there are no programs; locked
+/// without premium.
+class GeneratorButton extends StatelessWidget {
+  const GeneratorButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final locked = context.watchPremium() == PremiumStatus.free;
+    return OutlinedButton.icon(
+      icon: Icon(
+        locked ? Icons.lock_outline : Icons.tune,
+        semanticLabel: locked ? l10n.catalogueLockedLabel : null,
+      ),
+      label: Text(l10n.generatorTitle),
+      onPressed: () => openGenerator(context),
+    );
+  }
+}
