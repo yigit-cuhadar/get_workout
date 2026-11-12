@@ -101,7 +101,9 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
     });
   }
 
-  /// Signs in again with [password], then deletes.
+  /// Signs in again with [password], then deletes. A user without a
+  /// password (Google or Apple only) must sign in again instead, so is not
+  /// asked again.
   Future<void> confirmPassword(String password) async {
     if (state.status != DeleteStatus.needsPassword) return;
     emit(const DeleteAccountState(DeleteStatus.deleting));
@@ -109,7 +111,10 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
     if (isClosed) return;
     if (failure != null) {
       return emit(
-        DeleteAccountState(DeleteStatus.needsPassword, failure: failure),
+        DeleteAccountState(switch (failure) {
+          AuthFailure(code: noPasswordCode) => DeleteStatus.failed,
+          _ => DeleteStatus.needsPassword,
+        }, failure: failure),
       );
     }
     await _delete();

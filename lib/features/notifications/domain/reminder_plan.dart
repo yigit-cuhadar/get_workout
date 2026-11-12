@@ -55,14 +55,12 @@ abstract final class ReminderIds {
   /// own.
   static const measurementCount = 4;
 
-  static Iterable<int> of(ReminderKind kind) => switch (kind) {
-    ReminderKind.workout => Iterable.generate(
-      workoutDays,
-      (i) => workoutBase + i,
-    ),
-    ReminderKind.measurement => Iterable.generate(
-      measurementCount,
-      (i) => measurementBase + i,
+  /// The [count] ids from [base] that [kind] owns.
+  static ({int base, int count}) of(ReminderKind kind) => switch (kind) {
+    ReminderKind.workout => (base: workoutBase, count: workoutDays),
+    ReminderKind.measurement => (
+      base: measurementBase,
+      count: measurementCount,
     ),
   };
 }

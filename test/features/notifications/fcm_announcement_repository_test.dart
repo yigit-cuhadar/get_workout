@@ -19,7 +19,7 @@ void main() {
   late StreamController<RemoteMessage> messages;
   late StreamController<RemoteMessage> opened;
   late NotificationTaps taps;
-  late List<NotificationTarget> tapped;
+  late List<String?> tapped;
   late FcmAnnouncementRepository repository;
 
   setUp(() {
@@ -29,7 +29,7 @@ void main() {
     opened = StreamController();
     taps = NotificationTaps();
     tapped = [];
-    taps.listen(tapped.add);
+    taps.stream.listen(tapped.add);
     when(() => messaging.getInitialMessage()).thenAnswer((_) async => null);
     when(() => messaging.getAPNSToken()).thenAnswer((_) async => null);
     when(() => messaging.setAutoInitEnabled(any())).thenAnswer((_) async {});
@@ -140,8 +140,8 @@ void main() {
     await pumpEventQueue();
 
     expect(tapped, [
-      NotificationTarget.announcement,
-      NotificationTarget.announcement,
+      NotificationPayloads.announcement,
+      NotificationPayloads.announcement,
     ]);
   });
 

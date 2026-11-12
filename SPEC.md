@@ -383,8 +383,8 @@ from the earlier FitLab app.
   device that no entry names, the queue does not know and are older than
   ten minutes are removed: those of a save stored but never written, or
   refused while the app was closed. Nothing in the feature reports to
-  analytics or crash reporting itself: `Log.e` goes to
-  `FirebaseTelemetry`'s hook, which follows the consent; nothing is
+  analytics or crash reporting itself: `Log.e` goes to Crashlytics through
+  `initFirebase`'s hook, which follows the consent; nothing is
   uploaded or fetched while signed out. A
   photo can be retaken, not removed alone. `storage.rules`: owner only,
   `image/jpeg`, under 5 MB, file names `(front|right|left|back)-<digits>.jpg`.
@@ -485,8 +485,8 @@ from the earlier FitLab app.
   photo of the pose without a slider. The domain model
   (`MeasurementSummary`, `measurement_summary.dart`) does every number;
   `FindBaseline` picks the baseline; `MeasurementSummaryCubit` follows the
-  entries and the profile itself. The slider is
-  `lib/core/before_after_slider.dart`, free of app code.
+  entries and the profile itself. The slider is `forge_ui`'s
+  `BeforeAfterSlider`.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk).
@@ -498,11 +498,10 @@ from the earlier FitLab app.
   (Info.plist, AndroidManifest.xml) and collect only in prod release
   builds, for the signed-in user, after their yes; never the advertising
   ID, Android ID or IDFV, and no ad personalisation signals (the `AD_ID`
-  permission is removed). The app replaces `forge_firebase`'s
-  `initFirebase` (which turns collection on at start) with
-  `FirebaseTelemetry.start`: same error routing, plus the answer the user
-  signed in at launch last gave on this device (one file per uid in app
-  support). Whenever the signed-in user changes or is unknown, collection
+  permission is removed). `forge_firebase`'s `initFirebase` leaves
+  collection as the native config sets it, and `FirebaseTelemetry.restore`
+  then applies the answer the user signed in at launch last gave on this
+  device (one file per uid in app support). Whenever the signed-in user changes or is unknown, collection
   goes off until that user's stored answer is read, and stays off when the
   read fails. `ConsentCubit` (app-wide) applies each answer as it arrives;
   changes run one at a time and the latest wins. A yes first deletes the
@@ -532,8 +531,9 @@ from the earlier FitLab app.
   writes are sent (10 s at most; offline fails with nothing asked or
   deleted); the callable `deleteAccount` deletes. For an account with a
   credential it wants a sign-in from the last 5 minutes, else the app asks
-  for the password (email only; Google and Apple are not offered yet) and
-  tries again. A guest is deleted the same way, without that check. Once
+  for the password (`forge_auth`'s `Reauthenticate`) and tries again. A
+  user without a password (Google only) is told to sign in again instead
+  (`noPasswordCode`), which renews the sign-in. A guest is deleted the same way, without that check. Once
   the server deleted the data, still signed in (so nothing of the next
   guest is touched), the app removes the user's kept workouts file
   (unreadable copies too), cancels every scheduled notification, records
@@ -604,9 +604,10 @@ from the earlier FitLab app.
   weekday or cadence changes nothing, another weekday restarts the series
   on that day's next date (`reminder_settings_changes.dart`). Both are pure planners (`reminder_plan.dart`);
   `NotificationsCubit` plans again on every program list, settings or
-  measurement-day change, on every user change and on resume, and a repository diffs
-  against what is pending by payload (time and a hash of the text), so
-  equal ones stay. While the user's settings or programs load nothing is
+  measurement-day change, on every user change and on resume, and
+  `forge_notifications`' `Notifications.sync` diffs each kind's id range
+  against what is pending (by a signature of time, text and alarm mode),
+  so equal ones stay. While the user's settings or programs load nothing is
   touched, so a start never drops reminders; a change of user or signing
   out drops them at once. Ids: rest 1, rest countdown 2 (Android, lock
   screen), workout 100-127 (by date), measurement 200-203 (by
@@ -1323,25 +1324,10 @@ Group 9, launch readiness
   `GhostCamera` (`lib/core/ghost_camera.dart`, free of app code) stays in
   the app for this feature; move it into a forge package with widget tests
   for capture, camera switch and the unavailable state.
-- Forge task, a recorded deviation like `GhostCamera`:
-  `BeforeAfterSlider` (`lib/core/before_after_slider.dart`, free of app
-  code, with widget tests) belongs in `forge_ui`; move it there with its
-  tests at the next forge release.
 - The projects are on the Blaze plan. `deleteAccount` is written but not
   deployed: the Architect deploys `functions/` to dev, checks deletion on a
   device (including the "not available" message before the deploy), then
   prod.
-- Accepted deviation, to be removed by two forge tasks (the app then uses
-  the packages and drops its workarounds):
-  - **forge_firebase**: `initFirebase` must not enable Analytics or
-    Crashlytics by default; it needs a consent-aware start (collection off
-    until the app applies a user's answer). Until then the app must never
-    call the current `initFirebase`, from `bootstrap.dart` or any other
-    entry point, including the future FCM background handler; it uses
-    `FirebaseTelemetry.start` instead (comment in `bootstrap.dart`).
-  - **forge_auth**: re-authentication with the password in
-    `AuthRepository` (and use cases); until then
-    `CallableAccountRepository.reauthenticate` calls Firebase Auth itself.
 - Female body model with the same mesh names: the user supplies it before release.
 - `revenueCatWebhook` is written and unit-tested, not deployed or tried
   against RevenueCat. Deploying all of `functions/` needs its secret: an
@@ -1387,8 +1373,7 @@ Group 9, launch readiness
   `POST_PROMOTED_NOTIFICATIONS` on Android. A device build needs the
   extension's App ID under the team (automatic signing); untestable until
   the Apple Developer account: behaviour on a real device while
-  suspended. Needs `forge_notifications` with `showCountdown` and
-  channels at init merged and tagged, and every forge `ref` moved to it.
+  suspended.
 - Release blocker: the Terms of Use and Privacy Policy links in
   `lib/app/legal_links.dart` are placeholders; publish the pages and
   replace them (Android picks up `privacyUrl` by itself).
@@ -1427,15 +1412,14 @@ Group 9, launch readiness
   FCM's fallback channel before); check that one sent to a fresh install
   shows on `workout`. Check foreground display and taps on both
   platforms, and that the admin web build still loads (the plugin
-  registers a web part).
+  registers a web part). Since forge v0.7.0 reminders sync through
+  `Notifications.sync`, whose signatures differ from the app's former
+  ones, so every pending reminder is rescheduled once at the first start
+  after the upgrade; check that they still fire and open their tab.
+  `Notifications.openSettings` (the reminder tiles' "open settings") is
+  not verified on either platform yet.
 - Forge tasks; the app's own versions are an accepted deviation for the
   notifications PR, to be replaced once these exist:
-  - `forge_notifications`: a diff sync of an id range against the pending
-    notifications (the app's `DeviceNotificationRepository.syncReminders`
-    with payload signatures); a tap stream that buffers the launch tap
-    (the app's `NotificationTaps`); opening the app's notification
-    settings (the app calls `flutter_local_notifications` directly).
-    Done: channels created at init, and a second (countdown) channel.
   - The Live Activity bridge (`AppDelegate.swift`'s `RestActivity` and a
     generic attributes type) could move to a package with a native iOS
     plugin once a second app needs one; the widget views stay in the app.

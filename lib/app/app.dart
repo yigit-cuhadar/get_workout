@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_notifications/forge_notifications.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 
@@ -44,6 +45,7 @@ class _AppState extends State<App> {
     profileDebugSection: SubscriptionModule.debugControls(sl),
   );
   late final AppLifecycleListener _lifecycle;
+  late final StreamSubscription<NotificationTarget> _taps;
 
   /// A tapped notification, until the app is past its start.
   NotificationTarget? _tapped;
@@ -58,7 +60,13 @@ class _AppState extends State<App> {
     // Created now so reminders follow the user from the first auth event.
     final notifications = sl<NotificationsCubit>();
     _router.routerDelegate.addListener(_openTapped);
-    sl<NotificationTaps>().listen(_openNotification);
+    // A tap without a known target (the rest notification) never replaces
+    // one still waiting to open.
+    _taps = sl<NotificationTaps>().stream
+        .map(NotificationPayloads.targetOf)
+        .where((target) => target != null)
+        .cast<NotificationTarget>()
+        .listen(_openNotification);
     _lifecycle = AppLifecycleListener(
       onResume: () {
         unawaited(sl<ExerciseCatalogueCubit>().appResumed());
@@ -93,6 +101,7 @@ class _AppState extends State<App> {
 
   @override
   void dispose() {
+    unawaited(_taps.cancel());
     _router.routerDelegate.removeListener(_openTapped);
     _lifecycle.dispose();
     _router.dispose();
