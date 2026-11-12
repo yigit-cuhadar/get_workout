@@ -219,7 +219,26 @@ from the earlier FitLab app.
   the Programs tab for everyone, locked when free, and opens through
   `requirePremium()`; it is a feature of its own, so the programs feature
   still never imports the subscription one (the tab only shows its entry).
-- **Steps**: read-only from Apple Health / Health Connect; not stored.
+- **Steps**: read-only from Apple Health / Health Connect through
+  `forge_health`; never stored, so `firestore.rules` is unchanged. The
+  platform store in every build on iOS and Android; the fake only in debug
+  and profile builds on other platforms. The Steps page (Progress tab)
+  reads the last 30 days in one call and derives today and the week (the
+  locale's first weekday) from it; it reloads on app resume and on pull,
+  never by polling. Access: unless already granted, a one-screen
+  explanation comes first and the system is asked only after "Continue";
+  that the user was asked is remembered on the device (a marker file in
+  app support), because HealthKit never says. Android refusal shows "Open
+  Health Connect" and "Ask again"; a missing Health Connect offers its
+  store page. On iOS a month of zeros shows a hint to allow access in
+  Settings, never a denial. A failed request shows on the explanation or
+  refusal screen; a failed refresh keeps the steps and says so. The goal is `settings.stepGoal`, 10,000 by
+  default, 1,000-50,000 in steps of 500, edited on the page through
+  `SettingsCubit`. `GetTodaySteps` (today vs goal) is registered for the
+  Today card. Both charts are `BarChart`s with the goal as a line. The
+  steps domain imports `forge_health` whole, platform code included; once
+  the package exposes a domain-only library (next forge tag), import that
+  instead.
 - **Photos**: private app storage plus Cloud Storage backup. Never the gallery.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
@@ -488,9 +507,14 @@ from the earlier FitLab app.
   keeps the week before on screen until the next arrives, so the model
   keeps its camera. `WatchWeeklyVolume` with one week is what the Today
   tab's card calls.
-- **Volume charts**: the band bars and the trend are small `CustomPainter`s
-  of the volume feature, like the cardio chart; unify them with the app's
-  line chart into one chart in `forge_ui` once both exist.
+- **Charts**: `LineChart` (trends, e.g. e1RM) and `BarChart` (zero-based
+  daily or weekly values with an optional target line, e.g. steps) live in
+  `lib/core` and share `ChartText` and the pure geometry in
+  `chart_geometry.dart`. When `forge_ui` next changes they move there
+  together; `BarChart` then gains an optional band and per-bar colours,
+  and the volume trend (`VolumeTrendChart` and its painter) is replaced
+  by it and deleted. The volume band bars and the cardio chart stay
+  feature widgets until then.
 - **Today tab** (`lib/features/today`): a scrolling list of independent
   cards, each on its own data, so one failing leaves the others. Next
   workout: the Programs tab's own `ProgramListCubit` (one instance), so
@@ -724,7 +748,7 @@ Group 7, programs for everyone
 Group 8, body and extras
 - [ ] Weight log and measurement day — steps for weight, tracked measurements, four photos with ghost overlay, reminders, photo backup, compare
 - [x] Cardio — log, list, detail, weekly chart
-- [ ] Steps — health permission, today, week and 30-day chart, daily goal
+- [x] Steps — health permission, today, week and 30-day chart, daily goal
 - [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
 
 Group 9, launch readiness
@@ -764,6 +788,16 @@ Group 9, launch readiness
 - Release blocker: the Terms of Use and Privacy Policy links in
   `lib/app/legal_links.dart` are placeholders; publish the pages and
   replace them.
+- Release blockers for steps: Health Connect's privacy-policy link opens
+  `PrivacyPolicyActivity`, which opens a copy of the placeholder privacy
+  URL in `PrivacyPolicyActivity.kt` (keep it equal to
+  `LegalLinks.privacy`); Play Console
+  needs the Health apps declaration for READ_STEPS; the App ID needs the
+  HealthKit capability (the Runner now carries the entitlement, so a
+  device build signed by a team without it fails; the simulator does
+  not). The Android changes (minSdk 26, `FlutterFragmentActivity`,
+  `PrivacyPolicyActivity`, manifest) have not been built yet. Check on a
+  device where the iOS hint's "Open Settings" (`app-settings:`) lands.
 - The admin web build now bundles and loads the RevenueCat web script,
   because `purchases_flutter` registers a web plugin. Harmless; revisit if
   the admin build is split from the app.
