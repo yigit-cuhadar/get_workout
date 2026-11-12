@@ -9,10 +9,11 @@ import '../domain/exercise_stats.dart';
 import '../domain/workout.dart';
 
 extension WorkoutText on AppLocalizations {
-  /// A number in [unit] for a text field: up to two decimals, no trailing
+  /// A lifted weight in [unit] for a text field, as
+  /// [WeightUnitConversion.shown] shows it: up to two decimals, no trailing
   /// zeros, no grouping.
   String weightField(double kg, WeightUnit unit) =>
-      numberField(unit.fromKg(kg));
+      numberField(unit.shownFromKg(kg));
 
   String numberField(num value) =>
       value.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
@@ -46,7 +47,7 @@ extension WorkoutText on AppLocalizations {
               : programSeconds(set.durationS!)
         : '${set.reps ?? ''}';
     if (!type.logsWeight || kg == null || kg == 0) return work;
-    return '${numberField(unit.fromKg(kg))} × $work';
+    return '${weightField(kg, unit)} × $work';
   }
 
   /// The program goal of [exercise], e.g. `3 × 8–12 · 60 kg`.
@@ -75,9 +76,9 @@ extension WorkoutText on AppLocalizations {
     final value = record.value;
     final text = switch (record.kind) {
       RecordKind.heaviestWeight => recordHeaviestWeight(
-        weightText(value, unit),
+        liftedWeightText(value, unit),
       ),
-      RecordKind.bestE1rm => recordBestE1rm(weightText(value, unit)),
+      RecordKind.bestE1rm => recordBestE1rm(estimatedWeightText(value, unit)),
       RecordKind.bestSetVolume => recordBestSetVolume(weightText(value, unit)),
       RecordKind.mostReps => recordMostReps(value.round()),
       RecordKind.longestDuration => recordLongestDuration(

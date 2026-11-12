@@ -37,7 +37,8 @@ DateTime _monthsBefore(DateTime now, int months) {
   return DateTime(month.year, month.month, math.min(now.day, lastDay));
 }
 
-/// One workout's best estimated one-rep max, in the user's weight unit.
+/// One workout's best estimated one-rep max, in the user's weight unit as
+/// `WeightUnitConversion.estimatedFromKg` shows it.
 typedef E1rmPoint = ({DateTime date, double value, String workoutId});
 
 /// The workouts of [history] in [range] (see [StrengthRange.start]) that
@@ -55,7 +56,7 @@ List<E1rmPoint> e1rmSeries(
         if (start == null || !point.date.isBefore(start))
           (
             date: point.date,
-            value: unit.fromKg(kg),
+            value: unit.estimatedFromKg(kg),
             workoutId: point.workoutId,
           ),
   ];

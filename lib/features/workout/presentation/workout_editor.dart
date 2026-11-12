@@ -4,6 +4,7 @@ import '../../../core/grouping.dart' as grouping;
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/domain/exercise_queries.dart';
 import '../../exercises/domain/vocabulary.dart';
+import '../../settings/domain/retyped_weights.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/exercise_stats.dart';
 import '../domain/set_logging.dart';
@@ -42,6 +43,9 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   /// The live exercises by id, for alternatives.
   Map<String, Exercise> get knownExercises;
 
+  /// Keyed by set and drop (null for the set's own weight).
+  final _retyped = RetypedWeights<(SetRef, int?)>();
+
   void setNote(String text) =>
       edit((workout) => workout.copyWith(note: () => _note(text)));
 
@@ -66,8 +70,10 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     movesSets: true,
   );
 
-  void swapExercise(int index, Exercise exercise, String language) =>
-      _editExercise(index, (e) => editing.swapExercise(e, exercise, language));
+  void swapExercise(int index, Exercise exercise, String language) {
+    _retyped.clear();
+    _editExercise(index, (e) => editing.swapExercise(e, exercise, language));
+  }
 
   /// [to] is where the exercise lands; see [grouping.moveItem].
   void moveExercise(int from, int to) => _editExercises(
@@ -117,9 +123,13 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     movesSets: true,
   );
 
-  /// [text] is in [unit]; blank clears it.
-  void setWeight(SetRef ref, String text, WeightUnit unit) =>
-      _editSet(ref, (set, _) => set.copyWith(weightKg: () => _kg(text, unit)));
+  /// [text] is in [unit]; blank clears it. See [RetypedWeights].
+  void setWeight(SetRef ref, String text, WeightUnit unit) => _editSet(
+    ref,
+    (set, _) => set.copyWith(
+      weightKg: () => _retyped.kg((ref, null), text, unit, set.weightKg),
+    ),
+  );
 
   void setReps(SetRef ref, String text) =>
       _editSet(ref, (set, _) => set.copyWith(reps: () => _whole(text)));
@@ -159,16 +169,25 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
         : set.copyWith(drops: [...set.drops, const Drop()]),
   );
 
-  void removeDrop(SetRef ref, int drop) => _editSet(
-    ref,
-    (set, _) => _has(set.drops, drop)
-        ? set.copyWith(drops: [...set.drops]..removeAt(drop))
-        : set,
-  );
+  void removeDrop(SetRef ref, int drop) {
+    _retyped.clear();
+    _editSet(
+      ref,
+      (set, _) => _has(set.drops, drop)
+          ? set.copyWith(drops: [...set.drops]..removeAt(drop))
+          : set,
+    );
+  }
 
-  /// [text] is in [unit]; blank clears it.
+  /// [text] is in [unit]; blank clears it. See [RetypedWeights].
   void setDropWeight(SetRef ref, int drop, String text, WeightUnit unit) =>
-      _editDrop(ref, drop, (d) => d.copyWith(weightKg: () => _kg(text, unit)));
+      _editDrop(
+        ref,
+        drop,
+        (d) => d.copyWith(
+          weightKg: () => _retyped.kg((ref, drop), text, unit, d.weightKg),
+        ),
+      );
 
   void setDropReps(SetRef ref, int drop, String text) =>
       _editDrop(ref, drop, (d) => d.copyWith(reps: () => _whole(text)));
@@ -241,20 +260,18 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   void _editExercises(
     List<WorkoutExercise> Function(List<WorkoutExercise> list) change, {
     bool movesSets = false,
-  }) => edit(
-    (workout) => workout.copyWith(exercises: change(workout.exercises)),
-    movesSets: movesSets,
-  );
+  }) {
+    if (movesSets) _retyped.clear();
+    edit(
+      (workout) => workout.copyWith(exercises: change(workout.exercises)),
+      movesSets: movesSets,
+    );
+  }
 
   static bool _has(List<Object?> list, int index) =>
       index >= 0 && index < list.length;
 
   static String? _note(String text) => text.trim().isEmpty ? null : text;
-
-  static double? _kg(String text, WeightUnit unit) {
-    final value = double.tryParse(text.trim().replaceAll(',', '.'));
-    return value == null || !value.isFinite ? null : unit.toKg(value);
-  }
 
   static int? _whole(String text) {
     final value = int.tryParse(text.trim());
