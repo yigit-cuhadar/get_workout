@@ -10,8 +10,6 @@ import '../../shell/editor_status.dart';
 import '../domain/exercise_admin_usecases.dart';
 import '../domain/exercise_draft.dart';
 
-export '../../shell/editor_status.dart';
-
 class ExerciseEditorState extends Equatable {
   const ExerciseEditorState({
     required this.isNew,
