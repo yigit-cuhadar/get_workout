@@ -12,6 +12,7 @@ void main() {
               child: LineChart(
                 points: points,
                 xLabel: (x) => 'x${x.round()}',
+                yPrecision: 1,
                 yLabel: (y) => 'y${y.round()}',
                 pointLabel: (index) => 'point $index',
               ),
@@ -52,4 +53,32 @@ void main() {
     await pump(tester, const [(x: 0, y: 1), (x: 1, y: 3)]);
     expect(find.textContaining('point'), findsNothing);
   });
+
+  for (final textScale in [1.0, 2.0, 3.0]) {
+    testWidgets('draws at text scale $textScale', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
+            child: Scaffold(
+              body: SizedBox(
+                width: 320,
+                child: LineChart(
+                  points: [
+                    for (var i = 0; i < 30; i++)
+                      (x: i * 86400000.0, y: 100.0 + i),
+                  ],
+                  xLabel: (x) => 'Nov ${x ~/ 86400000}',
+                  yLabel: (y) => y.toStringAsFixed(0),
+                  yPrecision: 1,
+                  pointLabel: (index) => 'point $index',
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

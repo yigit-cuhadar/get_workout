@@ -9,9 +9,10 @@ import 'chart_geometry.dart';
 typedef ChartPoint = ({double x, double y});
 
 /// A line through [points] with a value axis of round numbers and labels
-/// along the bottom. Tapping picks the point nearest across, whose
-/// [pointLabel] then shows above the chart. Knows nothing of what it shows;
-/// the callers' formatters write every label.
+/// along the bottom, as many as fit at the user's text size. Tapping picks
+/// the point nearest across, whose [pointLabel] then shows above the
+/// chart. Knows nothing of what it shows; the callers' formatters write
+/// every label.
 // Belongs in forge_ui; move it there when that package next changes.
 class LineChart extends StatefulWidget {
   const LineChart({
@@ -19,6 +20,7 @@ class LineChart extends StatefulWidget {
     required this.points,
     required this.xLabel,
     required this.yLabel,
+    required this.yPrecision,
     required this.pointLabel,
   });
 
@@ -26,6 +28,10 @@ class LineChart extends StatefulWidget {
   final List<ChartPoint> points;
   final String Function(double x) xLabel;
   final String Function(double y) yLabel;
+
+  /// The smallest difference [yLabel] shows, e.g. 1 for whole numbers; see
+  /// [niceTicks].
+  final double yPrecision;
 
   /// The text for the tapped point, by its index in [points].
   final String Function(int index) pointLabel;
@@ -50,11 +56,13 @@ class _LineChartState extends State<LineChart> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final labelStyle = theme.textTheme.labelSmall?.copyWith(
-      color: colors.onSurfaceVariant,
+    final text = _LabelText(
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: colors.onSurfaceVariant,
+      ),
+      direction: Directionality.of(context),
+      scaler: MediaQuery.textScalerOf(context),
     );
-    final textDirection = Directionality.of(context);
-    final textScaler = MediaQuery.textScalerOf(context);
     final selected = _selected;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -69,15 +77,7 @@ class _LineChartState extends State<LineChart> {
           aspectRatio: LineChart._aspectRatio,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final layout = _ChartLayout(
-                size: constraints.biggest,
-                points: widget.points,
-                xLabel: widget.xLabel,
-                yLabel: widget.yLabel,
-                style: labelStyle,
-                textDirection: textDirection,
-                textScaler: textScaler,
-              );
+              final layout = _ChartLayout.of(constraints.biggest, widget, text);
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTapDown: (details) => setState(
@@ -89,6 +89,7 @@ class _LineChartState extends State<LineChart> {
                   size: Size.infinite,
                   painter: _LineChartPainter(
                     layout: layout,
+                    text: text,
                     selected: selected,
                     line: colors.primary,
                     grid: colors.outlineVariant,
@@ -103,49 +104,91 @@ class _LineChartState extends State<LineChart> {
   }
 }
 
-/// A painted label and where its anchor value sits on its axis.
-typedef _Label = ({TextPainter text, double at});
+/// How the labels are written; measures and paints them.
+class _LabelText {
+  const _LabelText({
+    required this.style,
+    required this.direction,
+    required this.scaler,
+  });
 
-/// Where everything goes for [size]: the plot area inside the labels, the
-/// points and the labels of both axes.
+  final TextStyle? style;
+  final TextDirection direction;
+  final TextScaler scaler;
+
+  /// Laid out; the caller disposes it.
+  TextPainter painter(String text) => TextPainter(
+    text: TextSpan(text: text, style: style),
+    textDirection: direction,
+    textScaler: scaler,
+  )..layout();
+
+  Size measure(String text) {
+    final painter = this.painter(text);
+    final size = painter.size;
+    painter.dispose();
+    return size;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is _LabelText &&
+      other.style == style &&
+      other.direction == direction &&
+      other.scaler == scaler;
+
+  @override
+  int get hashCode => Object.hash(style, direction, scaler);
+}
+
+/// A label and where its value sits along its axis.
+typedef _Label = ({String text, double at});
+
+/// Where everything goes: the plot inside the labels, the points and the
+/// labels of both axes.
 class _ChartLayout {
-  factory _ChartLayout({
-    required Size size,
-    required List<ChartPoint> points,
-    required String Function(double x) xLabel,
-    required String Function(double y) yLabel,
-    required TextStyle? style,
-    required TextDirection textDirection,
-    required TextScaler textScaler,
-  }) {
-    TextPainter label(String text) => TextPainter(
-      text: TextSpan(text: text, style: style),
-      textDirection: textDirection,
-      textScaler: textScaler,
-    )..layout();
+  const _ChartLayout(
+    this.plot,
+    this.labelHeight,
+    this.positions,
+    this.yLabels,
+    this.xLabels,
+  );
 
+  factory _ChartLayout.of(Size size, LineChart chart, _LabelText text) {
+    final points = chart.points;
     if (points.isEmpty) {
-      return _ChartLayout._(Offset.zero & size, const [], const [], const []);
+      return _ChartLayout(Offset.zero & size, 0, const [], const [], const []);
     }
     final xs = [for (final point in points) point.x];
     final ys = [for (final point in points) point.y];
     final minX = xs.reduce(math.min);
     final maxX = xs.reduce(math.max);
-    final yTicks = niceTicks(ys.reduce(math.min), ys.reduce(math.max));
-    final yTexts = [for (final tick in yTicks) label(yLabel(tick))];
-    final ends = [label(xLabel(minX)), label(xLabel(maxX))];
-    final xWidth = ends.map((text) => text.width).reduce(math.max);
-    final lineHeight = ends.first.height;
-    for (final text in ends) {
-      text.dispose();
-    }
-    final yWidth = yTexts.map((text) => text.width).reduce(math.max);
-    final plot = Rect.fromLTRB(
-      yWidth + Gap.sm,
-      lineHeight / 2,
-      size.width - xWidth / 2,
-      size.height - lineHeight - Gap.xs,
+    final yTicks = niceTicks(
+      ys.reduce(math.min),
+      ys.reduce(math.max),
+      precision: chart.yPrecision,
     );
+    final ySizes = [
+      for (final tick in yTicks) text.measure(chart.yLabel(tick)),
+    ];
+    final xSizes = [
+      text.measure(chart.xLabel(minX)),
+      text.measure(chart.xLabel(maxX)),
+    ];
+    final labelHeight = [
+      ...ySizes,
+      ...xSizes,
+    ].map((size) => size.height).reduce(math.max);
+    final xWidth = xSizes.map((size) => size.width).reduce(math.max);
+    final frame = chartFrame(
+      size,
+      yLabelWidth: ySizes.map((size) => size.width).reduce(math.max),
+      xLabelWidth: xWidth,
+      labelHeight: labelHeight,
+      gap: Gap.sm,
+    );
+    final plot = frame.plot;
     double x(double value) => scale(
       value,
       domainMin: minX,
@@ -160,38 +203,61 @@ class _ChartLayout {
       rangeMin: plot.bottom,
       rangeMax: plot.top,
     );
-    final xCount = math.min(
-      points.length,
-      labelsThatFit(plot.width, xWidth, gap: Gap.md),
-    );
-    return _ChartLayout._(
+    return _ChartLayout(
       plot,
+      labelHeight,
       [for (final point in points) Offset(x(point.x), y(point.y))],
-      [for (final (i, tick) in yTicks.indexed) (text: yTexts[i], at: y(tick))],
       [
-        for (final tick in spreadTicks(minX, maxX, xCount))
-          (text: label(xLabel(tick)), at: x(tick)),
+        for (final tick in thinTicks(yTicks, frame.yLabels))
+          (text: chart.yLabel(tick), at: y(tick)),
+      ],
+      [
+        for (final tick in spreadTicks(
+          minX,
+          maxX,
+          math.min(points.length, frame.xLabels),
+        ))
+          (text: chart.xLabel(tick), at: x(tick)),
       ],
     );
   }
 
-  _ChartLayout._(this.plot, this.positions, this.yLabels, this.xLabels);
-
   final Rect plot;
+  final double labelHeight;
   final List<Offset> positions;
   final List<_Label> yLabels;
   final List<_Label> xLabels;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _ChartLayout &&
+      other.plot == plot &&
+      other.labelHeight == labelHeight &&
+      listEquals(other.positions, positions) &&
+      listEquals(other.yLabels, yLabels) &&
+      listEquals(other.xLabels, xLabels);
+
+  @override
+  int get hashCode => Object.hash(
+    plot,
+    labelHeight,
+    Object.hashAll(positions),
+    Object.hashAll(yLabels),
+    Object.hashAll(xLabels),
+  );
 }
 
 class _LineChartPainter extends CustomPainter {
   _LineChartPainter({
     required this.layout,
+    required this.text,
     required this.selected,
     required this.line,
     required this.grid,
   });
 
   final _ChartLayout layout;
+  final _LabelText text;
   final int? selected;
   final Color line;
   final Color grid;
@@ -209,14 +275,22 @@ class _LineChartPainter extends CustomPainter {
       ..strokeWidth = _gridWidth;
     for (final (:text, :at) in layout.yLabels) {
       canvas.drawLine(Offset(plot.left, at), Offset(plot.right, at), gridPaint);
-      text.paint(
+      final label = this.text.painter(text);
+      label.paint(
         canvas,
-        Offset(plot.left - Gap.sm - text.width, at - text.height / 2),
+        Offset(plot.left - Gap.sm - label.width, at - label.height / 2),
       );
+      label.dispose();
     }
+    final top = xLabelsTop(plot, layout.labelHeight, Gap.sm);
     for (final (:text, :at) in layout.xLabels) {
-      final left = (at - text.width / 2).clamp(0.0, size.width - text.width);
-      text.paint(canvas, Offset(left, plot.bottom + Gap.xs));
+      final label = this.text.painter(text);
+      final left = math.max(
+        0.0,
+        math.min(at - label.width / 2, size.width - label.width),
+      );
+      label.paint(canvas, Offset(left, top));
+      label.dispose();
     }
     final positions = layout.positions;
     if (positions.isEmpty) return;
@@ -244,6 +318,7 @@ class _LineChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(_LineChartPainter oldDelegate) =>
       oldDelegate.layout != layout ||
+      oldDelegate.text != text ||
       oldDelegate.selected != selected ||
       oldDelegate.line != line ||
       oldDelegate.grid != grid;
