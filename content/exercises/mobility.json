@@ -217,7 +217,9 @@
     ],
     "family": "childs_pose",
     "familyRank": 1,
-    "pinnedAlternatives": [],
+    "pinnedAlternatives": [
+      "ex_cat_cow"
+    ],
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 213,
@@ -701,7 +703,9 @@
     ],
     "family": "arm_circles",
     "familyRank": 1,
-    "pinnedAlternatives": [],
+    "pinnedAlternatives": [
+      "ex_band_shoulder_pass_through"
+    ],
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 324,
