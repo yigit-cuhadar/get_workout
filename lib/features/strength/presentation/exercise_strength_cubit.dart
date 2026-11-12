@@ -5,7 +5,7 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../../../core/user_stream_follower.dart';
-import '../../programs/domain/premium_status.dart';
+import '../../programs/domain/program_usecases.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../workout/domain/exercise_stats.dart';
 import '../../workout/domain/workout_usecases.dart';
@@ -59,7 +59,7 @@ class ExerciseStrengthCubit extends Cubit<ExerciseStrengthState> {
     required this.exerciseId,
     required WatchAuthUser watchAuthUser,
     required WatchExerciseStats watchStats,
-    required PremiumStatus premium,
+    required WatchPremium watchPremium,
     required this._unit,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now,
@@ -86,7 +86,7 @@ class ExerciseStrengthCubit extends Cubit<ExerciseStrengthState> {
       },
       logTag: 'strength',
     );
-    _premiumSubscription = premium.watch().listen((premium) {
+    _premiumSubscription = watchPremium().listen((premium) {
       _premium = premium;
       _publish();
     });

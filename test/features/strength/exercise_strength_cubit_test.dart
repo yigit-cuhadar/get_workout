@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/strength/domain/strength.dart';
 import 'package:get_workout/features/strength/presentation/exercise_strength_cubit.dart';
@@ -61,7 +62,7 @@ void main() {
       exerciseId: 'squat',
       watchAuthUser: WatchAuthUser(auth),
       watchStats: WatchExerciseStats(repository),
-      premium: premium,
+      watchPremium: WatchPremium(premium),
       unit: unit,
       clock: () => now,
     );
