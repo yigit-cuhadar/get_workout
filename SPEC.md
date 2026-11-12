@@ -64,6 +64,29 @@ from the earlier FitLab app.
   it is seeded. `content/*.json` is the seed and the bulk-edit path;
   the admin panel edits Firestore directly and leaves `contentHash` alone, so
   the import skips (and fails on) documents edited there unless `--force`.
+- **Exercise coverage** (`tool/coverage_report.dart`, logic in
+  `tool/src/content_coverage.dart`): prints the live library by main and
+  secondary muscle, equipment, equipment profile, level and pattern, the
+  exercises without an alternative or variation, single-member families,
+  near-duplicate names and text defects. Acceptance rule, from the
+  generator since the SPEC gave no number: in every equipment profile,
+  every muscle (any can be a focus) has at least `maxExercisesPerMuscle`
+  (3, the most exercises a generated day gives one muscle, never repeating
+  one) main-muscle exercises the generator may give a beginner, the
+  smallest pool: level at most intermediate, not mobility or explosive,
+  fitting through `equipment` or an alternative set. Exceptions, 2 each:
+  bodyweight × mid delt (prone Y raise and the wall isometric; the presses
+  are front-delt exercises) and bodyweight × forearm (dead hang, false grip
+  hang). The script exits non-zero on a shortfall, and
+  `test/tool/content_coverage_test.dart` runs the rule on the content files
+  in CI. Seed after the audit: 416 exercises, 415 live (279 beginner, 104
+  intermediate, 32 advanced); doable per profile: full gym 415, home gym
+  240, dumbbells 180, bodyweight 123, bands 141. Hammer curls have main
+  muscles biceps and forearm (brachioradialis is filed under forearm), and
+  pike and handstand presses list mid delt as secondary like every other
+  overhead press. The weekly-set warnings of the arm focus, glute focus,
+  calisthenics and kettlebell programs stay: each is a focus or
+  equipment-limited program whose summary says so.
 - **Admin program editor**: edits `programs/{id}` and its `detail/main` in
   one transaction, so both are written or neither; a save is refused when
   either changed since the editor loaded them, and keeps `contentHash` and

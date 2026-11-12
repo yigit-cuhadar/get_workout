@@ -185,12 +185,15 @@ const _compoundFirst = {
 
 const _minSets = 2;
 const _startSets = 3;
-const _maxExercisesPerMuscle = 3;
 const _minExercisesPerDay = 3;
 const _maxExercisesPerDay = 10;
 
-/// Patterns that are not strength work.
-const _leftOut = {MovementPattern.mobility, MovementPattern.explosive};
+/// The most exercises a day gives one muscle; it never repeats one in a
+/// day, so a muscle needs this many usable exercises to get its full share.
+const maxExercisesPerMuscle = 3;
+
+/// Patterns that are not strength work; the generator never uses them.
+const leftOutPatterns = {MovementPattern.mobility, MovementPattern.explosive};
 
 /// Makes a program from [answers] with the [exercises] of the library.
 /// Choices between equally good exercises follow [seed], so the same
@@ -334,7 +337,7 @@ class _Generator {
     final easy = answers.easyArea?.muscles ?? const <Muscle>{};
     return level != null &&
         level.index <= answers.level.index + 1 &&
-        !_leftOut.contains(e.movementPattern) &&
+        !leftOutPatterns.contains(e.movementPattern) &&
         !answers.excluded.contains(e.id) &&
         !e.mainMuscles.any(easy.contains) &&
         e.isDoableWith(answers.equipment);
@@ -372,7 +375,7 @@ class _Generator {
           : 0.0;
       for (final muscle in muscles) {
         if (closed.contains(muscle) ||
-            (exercisesFor[muscle] ?? 0) >= _maxExercisesPerMuscle) {
+            (exercisesFor[muscle] ?? 0) >= maxExercisesPerMuscle) {
           continue;
         }
         final short =
