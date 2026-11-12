@@ -44,7 +44,9 @@ class BodyFatPage extends StatelessWidget {
                   errorText: error(CalculatorInput.neck),
                 ),
                 NumberField(
-                  label: l10n.calcWaist(unit),
+                  label: state.sex == Sex.male
+                      ? l10n.calcWaistAtNavel(unit)
+                      : l10n.calcWaist(unit),
                   value: state.waist,
                   onChanged: cubit.waistChanged,
                   errorText: error(CalculatorInput.waist),
