@@ -9,7 +9,7 @@ class WatchAnalyticsConsent {
   const WatchAnalyticsConsent(this._repository);
   final ConsentRepository _repository;
 
-  Stream<bool?> call(String uid) => _repository.watchConsent(uid);
+  Stream<StoredConsent> call(String uid) => _repository.watchConsent(uid);
 }
 
 class SaveAnalyticsConsent implements UseCase<void, ConsentAnswer> {
@@ -21,13 +21,23 @@ class SaveAnalyticsConsent implements UseCase<void, ConsentAnswer> {
       _repository.saveConsent(params.uid, params.consent);
 }
 
-/// Collects only after a yes; not answered yet is no.
-class ApplyAnalyticsConsent implements UseCase<void, bool?> {
+/// Points collection at the signed-in user (null: nobody); off until
+/// [ApplyAnalyticsConsent] gives their answer.
+class FollowAnalyticsUser implements UseCase<void, String?> {
+  const FollowAnalyticsUser(this._telemetry);
+  final Telemetry _telemetry;
+
+  @override
+  Future<Result<void>> call(String? params) => _telemetry.follow(params);
+}
+
+class ApplyAnalyticsConsent implements UseCase<void, ConsentAnswer> {
   const ApplyAnalyticsConsent(this._telemetry);
   final Telemetry _telemetry;
 
   @override
-  Future<Result<void>> call(bool? params) => _telemetry.apply(params ?? false);
+  Future<Result<void>> call(ConsentAnswer params) =>
+      _telemetry.apply(params.uid, params.consent);
 }
 
 class Reauthenticate implements UseCase<void, String> {
@@ -39,10 +49,14 @@ class Reauthenticate implements UseCase<void, String> {
       _repository.reauthenticate(params);
 }
 
-/// Deletes user [String]'s account on the server, which also ends the
-/// session here, then what this device keeps of them. Once the server has
-/// deleted it the deletion counts as done: a local leftover is logged, not
-/// reported.
+/// Deletes user [String]'s account on the server, then, still signed in so
+/// nothing of the next user is touched, what this device keeps of them,
+/// and only then signs out.
+///
+/// Once the server has deleted the data the device is cleared even if the
+/// sign-in is left ([PartlyDeletedFailure], returned, without signing
+/// out, so the user can delete again). A local leftover is logged, not
+/// reported: the account is gone.
 class DeleteUserAccount implements UseCase<void, String> {
   const DeleteUserAccount(this._repository, this._local, this._telemetry);
   final AccountRepository _repository;
@@ -52,12 +66,19 @@ class DeleteUserAccount implements UseCase<void, String> {
   @override
   Future<Result<void>> call(String params) async {
     final deleted = await _repository.deleteAccount();
-    if (!deleted.isOk) return deleted;
-    for (final cleanup in [_local.clear(params), _telemetry.forget()]) {
-      if ((await cleanup).failureOrNull case final failure?) {
-        Log.e('account', 'left on the device: ${failure.message}');
-      }
+    final failure = deleted.failureOrNull;
+    if (failure != null && failure is! PartlyDeletedFailure) return deleted;
+    for (final cleanup in [_local.clear(params), _telemetry.forget(params)]) {
+      _logLeftover(await cleanup);
     }
+    if (failure != null) return deleted;
+    _logLeftover(await _repository.signOut());
     return const Ok(null);
+  }
+
+  static void _logLeftover(Result<void> result) {
+    if (result.failureOrNull case final failure?) {
+      Log.e('account', 'left after deletion: ${failure.message}');
+    }
   }
 }

@@ -5,8 +5,9 @@ import { HttpsError } from "firebase-functions/v2/https";
 
 import {
   AccountStore,
-  RECENT_LOGIN_REQUIRED,
+  Reason,
   deleteAccountOf,
+  deleteUserFiles,
 } from "./delete_account";
 
 const now = 1_000_000;
@@ -63,7 +64,7 @@ describe("deleteAccountOf", () => {
       deleteAccountOf(caller("password", now - 301), store, now),
       (error: HttpsError) =>
         error.code === "failed-precondition" &&
-        error.message === RECENT_LOGIN_REQUIRED,
+        (error.details as { reason: string }).reason === Reason.recentSignIn,
     );
     assert.deepEqual(done, []);
   });
@@ -80,5 +81,57 @@ describe("deleteAccountOf", () => {
       deleteAccountOf(caller("password", now), store, now),
     );
     assert.ok(!done.includes("auth u1"));
+  });
+
+  test("says when only the sign-in is left, so the app retries", async () => {
+    const { store, done } = fakeStore(["auth"]);
+    await assert.rejects(
+      deleteAccountOf(caller("password", now), store, now),
+      (error: HttpsError) =>
+        error.code === "internal" &&
+        (error.details as { reason: string }).reason ===
+          Reason.signInNotDeleted,
+    );
+    assert.equal(done.length, 3);
+  });
+});
+
+describe("deleteUserFiles", () => {
+  test("deletes the user's folder only", async () => {
+    const prefixes: string[] = [];
+    await deleteUserFiles(
+      () => ({
+        deleteFiles: async ({ prefix }) => prefixes.push(prefix),
+      }),
+      "u1",
+    );
+    assert.deepEqual(prefixes, ["users/u1/"]);
+  });
+
+  test("a missing default bucket is nothing to delete", async () => {
+    await deleteUserFiles(
+      () => ({
+        deleteFiles: async () => {
+          throw Object.assign(new Error("Not Found"), { code: 404 });
+        },
+      }),
+      "u1",
+    );
+    await deleteUserFiles(() => {
+      throw new Error("Bucket name not specified or invalid.");
+    }, "u1");
+  });
+
+  test("other failures fail the deletion", async () => {
+    await assert.rejects(
+      deleteUserFiles(
+        () => ({
+          deleteFiles: async () => {
+            throw Object.assign(new Error("Forbidden"), { code: 403 });
+          },
+        }),
+        "u1",
+      ),
+    );
   });
 });

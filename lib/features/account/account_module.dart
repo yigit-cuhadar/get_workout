@@ -9,6 +9,7 @@ import 'package:forge_notifications/forge_notifications.dart';
 import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../workout/presentation/active_workout_cubit.dart';
 import 'data/callable_account_repository.dart';
 import 'data/device_account_data.dart';
 import 'data/firebase_telemetry.dart';
@@ -27,9 +28,18 @@ class AccountModule implements FeatureModule {
 
   final FirebaseTelemetry telemetry;
 
+  /// Call right after `Firebase.initializeApp`, before anything uses
+  /// Firestore: removes the offline copy a deleted account left.
+  static Future<void> clearDeletedAccountCache() =>
+      DeviceAccountData.clearOfflineCopyIfMarked(
+        getApplicationSupportDirectory,
+        FirebaseFirestore.instance,
+      );
+
   /// Call right after `Firebase.initializeApp`, in place of
-  /// `forge_firebase`'s `initFirebase`: collection follows the consent last
-  /// applied on this device until the user's own answer is read.
+  /// `forge_firebase`'s `initFirebase`: collection follows the answer the
+  /// signed-in user last gave on this device, until their stored one is
+  /// read.
   static Future<FirebaseTelemetry> startTelemetry(AppEnv env) async {
     final telemetry = FirebaseTelemetry(
       allowed: env.isProd && kReleaseMode,
@@ -37,7 +47,7 @@ class AccountModule implements FeatureModule {
       analytics: FirebaseAnalytics.instance,
       crashlytics: FirebaseCrashlytics.instance,
     );
-    await telemetry.start();
+    await telemetry.start(FirebaseAuth.instance.currentUser?.uid);
     return telemetry;
   }
 
@@ -54,14 +64,21 @@ class AccountModule implements FeatureModule {
             region: CallableAccountRepository.region,
           ),
           FirebaseAuth.instance,
+          FirebaseFirestore.instance,
         ),
       )
       ..registerLazySingleton<LocalAccountData>(
-        () => DeviceAccountData(sl(), sl.getAsync<Notifications>()),
+        () => DeviceAccountData(
+          sl(),
+          sl.getAsync<Notifications>(),
+          getApplicationSupportDirectory,
+        ),
       )
       ..registerFactory(() => WatchAnalyticsConsent(sl()))
       ..registerFactory(() => SaveAnalyticsConsent(sl()))
+      ..registerFactory(() => FollowAnalyticsUser(sl()))
       ..registerFactory(() => ApplyAnalyticsConsent(sl()))
+      ..registerLazySingleton(DeletionUnderway.new)
       ..registerFactory(() => Reauthenticate(sl()))
       ..registerFactory(() => DeleteUserAccount(sl(), sl(), sl()))
       ..registerLazySingleton(
@@ -69,6 +86,7 @@ class AccountModule implements FeatureModule {
           watchAuthUser: sl(),
           watchConsent: sl(),
           saveConsent: sl(),
+          followUser: sl(),
           applyConsent: sl(),
         ),
       )
@@ -77,6 +95,9 @@ class AccountModule implements FeatureModule {
           getCurrentUser: sl(),
           deleteAccount: sl(),
           reauthenticate: sl(),
+          underway: sl(),
+          releaseWorkouts: sl<ActiveWorkoutCubit>().releaseUser,
+          resumeWorkouts: sl<ActiveWorkoutCubit>().resumeUser,
         ),
       );
   }

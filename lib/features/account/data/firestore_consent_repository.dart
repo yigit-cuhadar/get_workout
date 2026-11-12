@@ -15,15 +15,20 @@ class FirestoreConsentRepository implements ConsentRepository {
   final FirebaseFirestore _firestore;
 
   @override
-  Stream<bool?> watchConsent(String uid) => _user(uid)
-      .snapshots()
+  Stream<StoredConsent> watchConsent(String uid) => _user(uid)
+      // A cached snapshot is followed by the server's, which says whether
+      // a missing answer is really missing.
+      .snapshots(includeMetadataChanges: true)
       .map((snap) {
         // Anything but a boolean reads as not answered.
         final settings = snap.data()?['settings'];
-        return settings is Map && settings['analyticsConsent'] is bool
-            ? settings['analyticsConsent'] as bool
-            : null;
+        final consent = settings is Map ? settings['analyticsConsent'] : null;
+        return (
+          consent: consent is bool ? consent : null,
+          fromServer: !snap.metadata.isFromCache,
+        );
       })
+      .distinct()
       .transform(
         StreamTransformer.fromHandlers(
           handleError: (error, stack, sink) {

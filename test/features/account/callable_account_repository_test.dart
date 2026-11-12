@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart' hide Result;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,13 +17,19 @@ class MockCallableResult extends Mock implements HttpsCallableResult<void> {}
 
 class MockAuth extends Mock implements FirebaseAuth {}
 
+class MockFirestore extends Mock implements FirebaseFirestore {}
+
 class MockUser extends Mock implements User {}
 
 class MockUserCredential extends Mock implements UserCredential {}
 
 class FunctionsError extends FirebaseFunctionsException {
-  FunctionsError(String code, [String message = 'error'])
-    : super(code: code, message: message);
+  FunctionsError(String code, {String? reason})
+    : super(
+        code: code,
+        message: 'error',
+        details: reason == null ? null : {'reason': reason},
+      );
 }
 
 void main() {
@@ -28,6 +37,7 @@ void main() {
   late MockCallable callable;
   late MockAuth auth;
   late MockUser user;
+  late MockFirestore firestore;
   late CallableAccountRepository repository;
 
   setUpAll(
@@ -41,7 +51,14 @@ void main() {
     callable = MockCallable();
     auth = MockAuth();
     user = MockUser();
-    repository = CallableAccountRepository(functions, auth);
+    firestore = MockFirestore();
+    repository = CallableAccountRepository(
+      functions,
+      auth,
+      firestore,
+      pendingWritesWait: const Duration(milliseconds: 50),
+    );
+    when(() => firestore.waitForPendingWrites()).thenAnswer((_) async {});
     when(() => functions.httpsCallable('deleteAccount')).thenReturn(callable);
     when(() => callable.call<void>())
         .thenAnswer((_) async => MockCallableResult());
@@ -53,23 +70,38 @@ void main() {
   });
 
   group('deleteAccount', () {
-    test('calls the function, then signs out here', () async {
+    test('sends pending writes, then calls the function', () async {
       expect((await repository.deleteAccount()).isOk, isTrue);
-      verifyInOrder([() => callable.call<void>(), () => auth.signOut()]);
-    });
-
-    test('a function that is not deployed is unavailable, not done', () async {
-      when(() => callable.call<void>()).thenThrow(FunctionsError('not-found'));
-      expect(
-        (await repository.deleteAccount()).failureOrNull,
-        isA<DeletionUnavailableFailure>(),
-      );
+      verifyInOrder([
+        () => firestore.waitForPendingWrites(),
+        () => callable.call<void>(),
+      ]);
       verifyNever(() => auth.signOut());
     });
 
-    test('a sign-in too old asks for a recent one', () async {
+    test('offline, nothing is asked of the server', () async {
+      when(() => firestore.waitForPendingWrites())
+          .thenAnswer((_) => Completer<void>().future);
+      expect(
+        (await repository.deleteAccount()).failureOrNull,
+        isA<NetworkFailure>(),
+      );
+      verifyNever(() => callable.call<void>());
+    });
+
+    test('a function not deployed or not callable is unavailable', () async {
+      for (final code in ['not-found', 'permission-denied']) {
+        when(() => callable.call<void>()).thenThrow(FunctionsError(code));
+        expect(
+          (await repository.deleteAccount()).failureOrNull,
+          isA<DeletionUnavailableFailure>(),
+        );
+      }
+    });
+
+    test('the reason in the details decides, not the message', () async {
       when(() => callable.call<void>()).thenThrow(
-        FunctionsError('failed-precondition', recentLoginRequiredCode),
+        FunctionsError('failed-precondition', reason: 'recent-sign-in'),
       );
       expect(
         (await repository.deleteAccount()).failureOrNull,
@@ -78,6 +110,12 @@ void main() {
           'code',
           recentLoginRequiredCode,
         ),
+      );
+      when(() => callable.call<void>())
+          .thenThrow(FunctionsError('internal', reason: 'sign-in-not-deleted'));
+      expect(
+        (await repository.deleteAccount()).failureOrNull,
+        isA<PartlyDeletedFailure>(),
       );
     });
 
@@ -89,12 +127,17 @@ void main() {
         isA<NetworkFailure>(),
       );
       when(() => callable.call<void>())
-          .thenThrow(FunctionsError('failed-precondition', 'something else'));
+          .thenThrow(FunctionsError('failed-precondition'));
       expect(
         (await repository.deleteAccount()).failureOrNull,
         isA<UnknownFailure>(),
       );
     });
+  });
+
+  test('signs out', () async {
+    expect((await repository.signOut()).isOk, isTrue);
+    verify(() => auth.signOut()).called(1);
   });
 
   group('reauthenticate', () {

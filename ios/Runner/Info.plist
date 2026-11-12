@@ -8,6 +8,12 @@
 	<false/>
 	<key>FirebaseCrashlyticsCollectionEnabled</key>
 	<false/>
+	<!-- With consent, still no vendor ID or ad personalisation signals; the
+	     app does not link AdSupport, so no advertising ID either. -->
+	<key>GOOGLE_ANALYTICS_IDFV_COLLECTION_ENABLED</key>
+	<false/>
+	<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS</key>
+	<false/>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

@@ -22,52 +22,53 @@ void main() {
     telemetry = MockTelemetry();
     when(() => account.deleteAccount()).thenAnswer((_) async => const Ok(null));
     when(() => local.clear(any())).thenAnswer((_) async => const Ok(null));
-    when(() => telemetry.forget()).thenAnswer((_) async => const Ok(null));
-    when(() => telemetry.apply(any())).thenAnswer((_) async => const Ok(null));
+    when(() => telemetry.forget(any())).thenAnswer((_) async => const Ok(null));
   });
 
   group('DeleteUserAccount', () {
     DeleteUserAccount delete() => DeleteUserAccount(account, local, telemetry);
 
-    test('clears the device only after the server deleted', () async {
+    setUp(
+      () =>
+          when(() => account.signOut()).thenAnswer((_) async => const Ok(null)),
+    );
+
+    test('clears the device while still signed in, then signs out', () async {
       expect((await delete()('u1')).isOk, isTrue);
       verifyInOrder([
         () => account.deleteAccount(),
         () => local.clear('u1'),
-        () => telemetry.forget(),
+        () => telemetry.forget('u1'),
+        () => account.signOut(),
       ]);
     });
 
-    test('a server failure keeps everything on the device', () async {
+    test('a server failure keeps everything and stays signed in', () async {
       when(() => account.deleteAccount())
           .thenAnswer((_) async => const Err(NetworkFailure()));
       expect((await delete()('u1')).failureOrNull, isA<NetworkFailure>());
       verifyNever(() => local.clear(any()));
-      verifyNever(() => telemetry.forget());
+      verifyNever(() => telemetry.forget(any()));
+      verifyNever(() => account.signOut());
+    });
+
+    test('data gone but the sign-in left: the device is cleared, the user '
+        'stays signed in to finish', () async {
+      when(() => account.deleteAccount())
+          .thenAnswer((_) async => const Err(PartlyDeletedFailure()));
+      expect((await delete()('u1')).failureOrNull, isA<PartlyDeletedFailure>());
+      verify(() => local.clear('u1')).called(1);
+      verify(() => telemetry.forget('u1')).called(1);
+      verifyNever(() => account.signOut());
     });
 
     test('a local leftover does not undo a done deletion', () async {
       when(() => local.clear(any()))
           .thenAnswer((_) async => const Err(UnknownFailure()));
-      when(() => telemetry.forget())
+      when(() => telemetry.forget(any()))
           .thenAnswer((_) async => const Err(UnknownFailure()));
       expect((await delete()('u1')).isOk, isTrue);
-    });
-  });
-
-  group('ApplyAnalyticsConsent', () {
-    test('not answered collects nothing', () async {
-      await ApplyAnalyticsConsent(telemetry)(null);
-      verify(() => telemetry.apply(false)).called(1);
-    });
-
-    test('an answer is applied as given', () async {
-      await ApplyAnalyticsConsent(telemetry)(true);
-      await ApplyAnalyticsConsent(telemetry)(false);
-      verifyInOrder([
-        () => telemetry.apply(true),
-        () => telemetry.apply(false),
-      ]);
+      verify(() => account.signOut()).called(1);
     });
   });
 }

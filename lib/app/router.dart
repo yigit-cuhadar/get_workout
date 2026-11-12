@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -162,10 +163,13 @@ abstract final class Routes {
 /// an account), so the gates are the splash while the session and then the
 /// user's profile resolve, a retry screen when the guest sign-in failed, and
 /// onboarding until the profile records it as completed.
-/// [profileDebugSection] ends the Profile tab in debug builds.
+/// [profileDebugSection] ends the Profile tab in debug builds. While
+/// [deletionUnderway], nobody is moved: the deleted profile must not open
+/// onboarding before the user is signed out.
 GoRouter buildRouter(
   AuthCubit auth,
   ProfileCubit profile, {
+  ValueListenable<bool>? deletionUnderway,
   Widget? profileDebugSection,
 }) {
   // Who onboarding was last shown to.
@@ -179,6 +183,7 @@ GoRouter buildRouter(
     // even when its gate equals the previous user's (the splash after a
     // retried guest start), hence the uid in the key.
     refreshListenable: Listenable.merge([
+      deletionUnderway,
       _StreamListenable(
         auth.stream.map((state) => state.runtimeType).distinct(),
       ),
@@ -190,6 +195,7 @@ GoRouter buildRouter(
       ),
     ]),
     redirect: (context, state) {
+      if (deletionUnderway?.value ?? false) return null;
       final location = state.matchedLocation;
       final atGate =
           location == Routes.splash || location == Routes.startFailed;

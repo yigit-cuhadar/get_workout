@@ -17,19 +17,33 @@ void main() {
   late MockAnalytics analytics;
   late MockCrashlytics crashlytics;
 
+  /// What the SDKs were last told; null before anything.
+  bool? collecting;
+
+  final flutterError = FlutterError.onError;
+  final platformError = PlatformDispatcher.instance.onError;
+  final logError = Log.onError;
+
   setUp(() {
     directory = Directory.systemTemp.createTempSync('telemetry');
     analytics = MockAnalytics();
     crashlytics = MockCrashlytics();
-    when(() => analytics.setAnalyticsCollectionEnabled(any()))
-        .thenAnswer((_) async {});
+    collecting = null;
+    when(() => analytics.setAnalyticsCollectionEnabled(any())).thenAnswer(
+      (call) async => collecting = call.positionalArguments.first as bool,
+    );
     when(() => analytics.resetAnalyticsData()).thenAnswer((_) async {});
     when(() => crashlytics.setCrashlyticsCollectionEnabled(any()))
         .thenAnswer((_) async {});
     when(() => crashlytics.deleteUnsentReports()).thenAnswer((_) async {});
   });
 
-  tearDown(() => directory.deleteSync(recursive: true));
+  tearDown(() {
+    FlutterError.onError = flutterError;
+    PlatformDispatcher.instance.onError = platformError;
+    Log.onError = logError;
+    directory.deleteSync(recursive: true);
+  });
 
   FirebaseTelemetry telemetry({bool allowed = true}) => FirebaseTelemetry(
     allowed: allowed,
@@ -39,72 +53,110 @@ void main() {
     crashlytics: crashlytics,
   );
 
-  void verifyCollection(bool collect) {
-    verify(() => crashlytics.setCrashlyticsCollectionEnabled(collect));
-    verify(() => analytics.setAnalyticsCollectionEnabled(collect));
+  /// A telemetry following [uid] that said [consent].
+  Future<FirebaseTelemetry> answered(String uid, bool consent) async {
+    final subject = telemetry();
+    await subject.follow(uid);
+    await subject.apply(uid, consent);
+    return subject;
   }
 
   group('start', () {
-    final onError = FlutterError.onError;
-    final platformError = PlatformDispatcher.instance.onError;
-    final logError = Log.onError;
-    tearDown(() {
-      FlutterError.onError = onError;
-      PlatformDispatcher.instance.onError = platformError;
-      Log.onError = logError;
+    test('collects nothing for nobody or a user never asked here', () async {
+      await telemetry().start(null);
+      expect(collecting, isFalse);
+      await telemetry().start('u1');
+      expect(collecting, isFalse);
     });
 
-    test('collects nothing on a device never asked', () async {
-      await telemetry().start();
-      verifyCollection(false);
-    });
+    test('applies only the signed-in user\'s own answer', () async {
+      await answered('u1', true);
+      await answered('u2', false);
 
-    test('applies the consent applied last on this device', () async {
-      await telemetry().apply(true);
-      clearInteractions(analytics);
-      clearInteractions(crashlytics);
-
-      await telemetry().start();
-
-      verifyCollection(true);
+      await telemetry().start('u1');
+      expect(collecting, isTrue);
+      await telemetry().start('u2');
+      expect(collecting, isFalse);
+      await telemetry().start(null);
+      expect(collecting, isFalse);
     });
   });
 
-  test('collects only with consent', () async {
-    final subject = telemetry();
-    await subject.apply(true);
-    verifyCollection(true);
-    await subject.apply(false);
-    verifyCollection(false);
+  test('another user turns collection off until their answer', () async {
+    final subject = await answered('u1', true);
+    expect(collecting, isTrue);
+
+    await subject.follow('u2');
+    expect(collecting, isFalse);
+    // The previous user's answer no longer applies.
+    await subject.apply('u1', true);
+    expect(collecting, isFalse);
+    await subject.apply('u2', true);
+    expect(collecting, isTrue);
+  });
+
+  test('following the same user again changes nothing', () async {
+    final subject = await answered('u1', true);
+    await subject.follow('u1');
+    expect(collecting, isTrue);
   });
 
   test('never collects where not allowed, whatever the consent', () async {
-    await telemetry(allowed: false).apply(true);
-    verifyCollection(false);
-    verifyNever(() => crashlytics.deleteUnsentReports());
+    final subject = telemetry(allowed: false);
+    await subject.follow('u1');
+    await subject.apply('u1', true);
+    expect(collecting, isFalse);
     verifyNever(() => crashlytics.setCrashlyticsCollectionEnabled(true));
   });
 
-  test('crash reports kept from before a yes are dropped, once', () async {
+  test('of quick answers the latest wins', () async {
     final subject = telemetry();
-    await subject.apply(false);
+    await subject.follow('u1');
+    await Future.wait([subject.apply('u1', true), subject.apply('u1', false)]);
+    expect(collecting, isFalse);
+    await telemetry().start('u1');
+    expect(collecting, isFalse);
+  });
+
+  test('crash reports kept from before a yes are dropped, once', () async {
+    final subject = await answered('u1', false);
     verifyNever(() => crashlytics.deleteUnsentReports());
-    await subject.apply(true);
+    await subject.apply('u1', true);
     verify(() => crashlytics.deleteUnsentReports()).called(1);
     // Reports recorded with consent are left to be sent.
-    await subject.apply(true);
+    await subject.apply('u1', true);
     verifyNever(() => crashlytics.deleteUnsentReports());
   });
 
-  test('forgets the analytics id and unsent reports', () async {
-    expect((await telemetry().forget()).isOk, isTrue);
-    verify(() => analytics.resetAnalyticsData()).called(1);
-    verify(() => crashlytics.deleteUnsentReports()).called(1);
+  test('a yes that fails on the way is not saved', () async {
+    when(() => crashlytics.deleteUnsentReports())
+        .thenThrow(Exception('no plugin'));
+    final subject = telemetry();
+    await subject.follow('u1');
+    expect((await subject.apply('u1', true)).isOk, isFalse);
+    expect(collecting, isFalse);
+
+    await telemetry().start('u1');
+    expect(collecting, isFalse);
   });
 
-  test('a failure is reported, not thrown', () async {
-    when(() => analytics.setAnalyticsCollectionEnabled(any()))
-        .thenThrow(Exception('no plugin'));
-    expect((await telemetry().apply(true)).isOk, isFalse);
+  test('forgetting a user stops collection and records no', () async {
+    final subject = await answered('u1', true);
+    expect((await subject.forget('u1')).isOk, isTrue);
+    expect(collecting, isFalse);
+    verify(() => analytics.resetAnalyticsData()).called(1);
+    await telemetry().start('u1');
+    expect(collecting, isFalse);
   });
+
+  test(
+    'a failure is reported, not thrown, and later calls still run',
+    () async {
+      when(() => analytics.setAnalyticsCollectionEnabled(any()))
+          .thenThrow(Exception('no plugin'));
+      final subject = telemetry();
+      expect((await subject.follow('u1')).isOk, isFalse);
+      expect((await subject.apply('u1', false)).isOk, isFalse);
+    },
+  );
 }

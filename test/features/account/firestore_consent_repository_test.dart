@@ -14,11 +14,11 @@ void main() {
   });
 
   test('not answered without a user document or a boolean', () async {
-    expect(await repository.watchConsent('u1').first, isNull);
+    expect((await repository.watchConsent('u1').first).consent, isNull);
     await firestore.collection('users').doc('u1').set({
       'settings': {'analyticsConsent': 'yes'},
     });
-    expect(await repository.watchConsent('u1').first, isNull);
+    expect((await repository.watchConsent('u1').first).consent, isNull);
   });
 
   test('saves into settings without touching the rest', () async {
@@ -34,12 +34,12 @@ void main() {
       'profile': {'goal': 'get_stronger'},
       'settings': {'weightUnit': 'lb', 'analyticsConsent': true},
     });
-    expect(await repository.watchConsent('u1').first, isTrue);
+    expect((await repository.watchConsent('u1').first).consent, isTrue);
   });
 
   test('follows changes', () async {
     final answers = expectLater(
-      repository.watchConsent('u1'),
+      repository.watchConsent('u1').map((stored) => stored.consent),
       emitsInOrder([null, true, false]),
     );
     await pumpEventQueue();
@@ -51,7 +51,7 @@ void main() {
 
   test('a user only reads their own', () async {
     await repository.saveConsent('u2', true);
-    expect(await repository.watchConsent('u1').first, isNull);
+    expect((await repository.watchConsent('u1').first).consent, isNull);
   });
 
   test('saving the other settings keeps the answer', () async {
@@ -64,6 +64,6 @@ void main() {
       firestore,
       defaults: settings,
     ).saveSettings('u1', settings.copyWith(weightUnit: WeightUnit.lb));
-    expect(await repository.watchConsent('u1').first, isTrue);
+    expect((await repository.watchConsent('u1').first).consent, isTrue);
   });
 }

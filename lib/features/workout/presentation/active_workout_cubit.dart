@@ -215,6 +215,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   final _statsSubscriptions = <String, StreamSubscription<ExerciseStats?>>{};
   String? _uid;
 
+  /// The user [releaseUser] let go of.
+  String? _released;
+
   /// What the device keeps for [_uid]; null until loaded, and while it
   /// cannot be read nothing is kept.
   LocalWorkouts? _local;
@@ -243,6 +246,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   };
 
   Future<void> _onUser(String? uid) async {
+    if (uid != null) _released = null;
     _uid = uid;
     _local = null;
     _retry?.cancel();
@@ -279,6 +283,24 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       rest: () => local.rest,
     );
     unawaited(_sync(uid));
+  }
+
+  /// Stops keeping and syncing [uid]'s workouts, as if they signed out,
+  /// while their account is being deleted, so nothing of theirs is written
+  /// after the server deleted it. [resumeUser] undoes it when the deletion
+  /// did not happen.
+  Future<void> releaseUser(String uid) async {
+    if (_uid != uid) return;
+    _released = uid;
+    await _onUser(null);
+  }
+
+  /// Follows the user [releaseUser] let go again, unless another signed in
+  /// meanwhile.
+  Future<void> resumeUser() async {
+    final uid = _released;
+    _released = null;
+    if (uid != null && _uid == null) await _onUser(uid);
   }
 
   /// Starts an empty workout named [name]; false while another is in

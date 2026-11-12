@@ -46,40 +46,59 @@ class _DeleteAccountView extends StatelessWidget {
           ).showSnackBar(SnackBar(content: Text(_failureText(l10n, failure))));
         }
       },
-      builder: (context, state) => Scaffold(
-        appBar: AppBar(
-          title: Text(
-            email == null ? l10n.accountDeleteGuest : l10n.accountDelete,
-          ),
-        ),
-        body: ListView(
-          padding: const EdgeInsets.all(Gap.lg),
-          children: [
-            Text(l10n.deleteIntro, style: theme.textTheme.titleMedium),
-            const SizedBox(height: Gap.md),
-            for (final item in [
-              l10n.deleteItemProfile,
-              l10n.deleteItemTraining,
-              l10n.deleteItemBody,
-              if (email != null) l10n.deleteItemSignIn(email),
-            ])
-              ListTile(
-                leading: const Icon(Icons.remove_circle_outline),
-                title: Text(item),
-              ),
-            const SizedBox(height: Gap.md),
-            Text(l10n.deleteSubscriptionNote),
-            const SizedBox(height: Gap.md),
-            Text(l10n.deleteAfter),
-            const SizedBox(height: Gap.lg),
-            ForgeButton(
-              label: email == null
-                  ? l10n.accountDeleteGuest
-                  : l10n.accountDelete,
-              loading: state.status == DeleteStatus.deleting,
-              onPressed: () => _confirm(context),
+      // Half deleted, the user may only finish; the account is unusable.
+      builder: (context, state) => PopScope(
+        canPop: state.status != DeleteStatus.partlyDeleted,
+        child: Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading:
+                state.status != DeleteStatus.partlyDeleted,
+            title: Text(
+              email == null ? l10n.accountDeleteGuest : l10n.accountDelete,
             ),
-          ],
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(Gap.lg),
+            children: [
+              if (state.status == DeleteStatus.partlyDeleted) ...[
+                Text(l10n.deleteAlmostDone, style: theme.textTheme.titleMedium),
+                const SizedBox(height: Gap.lg),
+                ForgeButton(
+                  label: l10n.deleteFinish,
+                  onPressed: context.read<DeleteAccountCubit>().delete,
+                ),
+                const SizedBox(height: Gap.xl),
+              ],
+              Text(l10n.deleteIntro, style: theme.textTheme.titleMedium),
+              const SizedBox(height: Gap.md),
+              for (final item in [
+                l10n.deleteItemProfile,
+                l10n.deleteItemTraining,
+                l10n.deleteItemBody,
+                if (email != null) l10n.deleteItemSignIn(email),
+              ])
+                ListTile(
+                  leading: const Icon(Icons.remove_circle_outline),
+                  title: Text(item),
+                ),
+              const SizedBox(height: Gap.md),
+              Text(l10n.deleteDeviceNote),
+              const SizedBox(height: Gap.md),
+              Text(l10n.deleteSubscriptionNote),
+              const SizedBox(height: Gap.md),
+              Text(l10n.deleteAfter),
+              const SizedBox(height: Gap.lg),
+              ForgeButton(
+                label: email == null
+                    ? l10n.accountDeleteGuest
+                    : l10n.accountDelete,
+                loading: state.status == DeleteStatus.deleting,
+                onPressed: state.status == DeleteStatus.partlyDeleted
+                    ? null
+                    : () => _confirm(context),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -124,7 +143,7 @@ class _DeleteAccountView extends StatelessWidget {
   static String _failureText(AppLocalizations l10n, Failure failure) =>
       switch (failure) {
         DeletionUnavailableFailure() => l10n.deleteUnavailable,
-        NetworkFailure() => l10n.errorNetwork,
+        NetworkFailure() => l10n.deleteOffline,
         AuthFailure(
           code: 'invalid-credential' || 'wrong-password' || 'user-mismatch',
         ) =>

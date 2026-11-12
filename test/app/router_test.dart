@@ -27,6 +27,7 @@ import 'package:get_workout/features/exercises/presentation/exercises_page.dart'
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:get_workout/features/account/presentation/account_page.dart';
+import 'package:get_workout/features/account/presentation/delete_account_cubit.dart';
 import 'package:get_workout/features/calculators/calculators_module.dart';
 import 'package:get_workout/features/calculators/presentation/body_fat_page.dart';
 import 'package:get_workout/features/calculators/presentation/body_indices_page.dart';
@@ -77,6 +78,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../features/programs/fixtures.dart' show FixedPremium, card;
+import 'answered_consent.dart';
 import 'no_workout.dart';
 import 'today_stand_ins.dart';
 
@@ -152,7 +154,12 @@ void main() {
     registerFallbackValue(<ProfileField>{});
   });
 
-  setUp(() => storedProfile = onboarded);
+  late DeletionUnderway deletionUnderway;
+
+  setUp(() {
+    storedProfile = onboarded;
+    deletionUnderway = DeletionUnderway();
+  });
 
   // Created inside each test so stream events run in the test's fake zone.
   void setUpAuth() {
@@ -390,6 +397,7 @@ void main() {
       providers: [
         BlocProvider.value(value: auth),
         BlocProvider.value(value: settings),
+        answeredConsent(),
         programList(),
         noWorkout(),
         BlocProvider.value(value: profile),
@@ -402,7 +410,11 @@ void main() {
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: router = buildRouter(auth, profile),
+        routerConfig: router = buildRouter(
+          auth,
+          profile,
+          deletionUnderway: deletionUnderway,
+        ),
       ),
     ),
   );
@@ -812,6 +824,24 @@ void main() {
       expect(find.byType(TodayPage), findsOneWidget);
       expect(find.byType(LoadingView), findsNothing);
       verify(() => profiles.watchProfile('u2')).called(1);
+    });
+
+    testWidgets('a deletion underway keeps the user in place until it ends', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      await tapTab(tester, 'Profile');
+      deletionUnderway.value = true;
+
+      // The server deleted the profile; the user is not signed out yet.
+      profileStream.add(const UserProfile());
+      await tester.pumpAndSettle();
+      expect(find.byType(OnboardingPage), findsNothing);
+      expect(find.byType(ProfilePage), findsOneWidget);
+
+      deletionUnderway.value = false;
+      await tester.pumpAndSettle();
+      expect(find.byType(OnboardingPage), findsOneWidget);
     });
 
     testWidgets('signing out onboards the new guest', (tester) async {

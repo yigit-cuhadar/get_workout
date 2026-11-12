@@ -10,7 +10,7 @@ plugins {
 // The privacy policy's address has one source, lib/app/legal_links.dart;
 // PrivacyPolicyActivity gets it as R.string.privacy_policy_url.
 val privacyPolicyUrl: String =
-    Regex("""static const privacyUrl = '([^']+)';""")
+    Regex("""privacyUrl\s*=\s*'([^']+)'""")
         .find(rootProject.file("../lib/app/legal_links.dart").readText())
         ?.groupValues?.get(1)
         ?: error("LegalLinks.privacyUrl not found in lib/app/legal_links.dart")

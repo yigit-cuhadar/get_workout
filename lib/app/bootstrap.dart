@@ -26,6 +26,10 @@ import 'app.dart';
 Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: options);
+  await AccountModule.clearDeletedAccountCache();
+  // Never forge_firebase's initFirebase, here or in any other entry point
+  // (e.g. a future FCM background handler): it turns Analytics and
+  // Crashlytics on before the user agreed. See SPEC's open questions.
   final telemetry = await AccountModule.startTelemetry(env);
   sl.registerSingleton<AppEnv>(env);
   registerModules([
