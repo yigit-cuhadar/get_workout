@@ -422,9 +422,15 @@ from the earlier FitLab app.
   entry has one), in each history row, on the entry and as a change in
   compare, with one decimal. "Measurements to track" has a "Body fat"
   box: ticked exactly while all its measurements are tracked (nothing
-  stored); ticking it ticks them, and it is stopped by unticking one of
-  them (marked "Part of body fat"); without the sex or height it links to
-  the profile details instead.
+  stored); ticking it ticks them (marked "Part of body fat"), unticking it
+  unticks those not in the standard set (men: neck and abdomen; women:
+  neck), keeping the rest; if none would change it stays ticked and says
+  to untick one of them. Without the sex or height it links to the
+  profile details instead. Which measurement is the formula's waist
+  (`navyWaist`: abdomen for men, waist for women) is one mapping, used by
+  `entryBodyFat` and by the calculators' prefill (`knownBodyValues`; no
+  waist is prefilled while the sex is unknown). Each measurement step
+  shows a one-line hint of where to put the tape (ARB `bodyHint*`).
 - **Camera orientation**: `GhostCamera` holds the screen in portrait while
   it shows and locks the capture to portrait. The iPhone 17 family's
   Center Stage front camera is mounted differently; `camera_avfoundation`
@@ -436,14 +442,51 @@ from the earlier FitLab app.
   step of slack lets the limits as shown pass (66.1 and 661.4 lb, 3.9 in).
   The weight chart is a `LineChart` with the strength ranges: 12 weeks
   free, longer Premium (confirmed by the user); the profile's
-  target weight shows with the distance to go. Compare: any two entries,
-  the oldest and newest first, values with the change and photos per pose
-  side by side. Saving or deleting an entry sets `profile.weightKg` to
+  target weight shows with the distance to go. Comparing is the
+  measurement summary (below). Saving or deleting an entry sets `profile.weightKg` to
   the weight of the most recent dated entry that has one, through the
   profile's `UpdateProfile` (calculators and the target distance use it);
   with no such entry the profile weight is left. Firestore rules validate
   `bodyEntries` (date timestamp, numeric `weightKg`, `measurements` and
   `photos` maps whose known keys hold numbers and strings).
+- **Measurement summary** (`lib/features/body`, planned with the owner):
+  one screen, `MeasurementSummaryPage`, titled "Measurement summary" at
+  `/progress/body/summary/:id` (opened in place of the flow right after a
+  new measurement day is saved; never after an edit) and "Compare" at
+  `/progress/body/:id/compare` (a measurement day's page, when it has an
+  earlier one, and Progress → "Compare measurement days", the newest
+  measurement day, off with "Needs two measurement days" until there are
+  two). The app-bar compare icon and the old compare page are gone; no
+  sharing or export. A measurement day is an entry with measurements or
+  photos (quick weight logs are not, as for the reminders). The baseline
+  is one of the measurement days dated before the entry: the previous
+  one by default, "First" (the oldest) or any of them from a list ("Other
+  date"); the chips show only with two or more. A chosen day that is
+  deleted or moves after the entry falls back to the previous day. Order:
+  the dates; body fat, fat mass and lean mass (from each day's own
+  weight; fat and lean mass need the later day's weight) with changes,
+  or one line on what is missing (sex/height with a link to the profile,
+  the measurements, or values the formula rejects); every value either
+  day has (weight, measurements, pairs on one row, a missing side a dash)
+  before → after with the difference, differences in the primary colour
+  whatever their sign; the target (hidden without a target weight or a
+  weight that day): distance, and an estimated date at the rate between
+  the two days, given only when the target is not reached (within
+  0.05 kg), the earlier day has a weight, the days are at least 7 days
+  apart, the weight moved toward the target, and the date is between now
+  and 2 years from now; then the photos of one pose (chips of the poses
+  either day has) on a before/after slider, the earlier left of a bar the
+  user drags, both photos filling the same 3:4 area (cover), a missing
+  one as a note on its half; photos of the shown pose are fetched from
+  the backup when missing. Without an earlier measurement day the same
+  screen shows the day alone: its date with "No earlier measurement day
+  to compare with yet.", values without before or change ("Values"),
+  body fat without change, the target without an estimate, and the
+  photo of the pose without a slider. The domain model
+  (`MeasurementSummary`, `measurement_summary.dart`) does every number;
+  `FindBaseline` picks the baseline; `MeasurementSummaryCubit` follows the
+  entries and the profile itself. The slider is
+  `lib/core/before_after_slider.dart`, free of app code.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk).
@@ -1221,6 +1264,7 @@ Group 8, body and extras
 - [x] Cardio — log, list, detail, weekly chart
 - [x] Steps — health permission, today, week and 30-day chart, daily goal
 - [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
+- [ ] Measurement summary — one summary/compare screen (baseline choice, body fat and lean mass, changes, target estimate, photo slider), opened after saving a measurement day, from a day's page and from Progress; where-to-measure hints; body-fat box unticks; one waist mapping for body fat and calculators
 
 Group 9, launch readiness
 - [x] Onboarding — nine questions, suggested free program
@@ -1264,6 +1308,10 @@ Group 9, launch readiness
   `GhostCamera` (`lib/core/ghost_camera.dart`, free of app code) stays in
   the app for this feature; move it into a forge package with widget tests
   for capture, camera switch and the unavailable state.
+- Forge task, a recorded deviation like `GhostCamera`:
+  `BeforeAfterSlider` (`lib/core/before_after_slider.dart`, free of app
+  code, with widget tests) belongs in `forge_ui`; move it there with its
+  tests at the next forge release.
 - The projects are on the Blaze plan. `deleteAccount` is written but not
   deployed: the Architect deploys `functions/` to dev, checks deletion on a
   device (including the "not available" message before the deploy), then

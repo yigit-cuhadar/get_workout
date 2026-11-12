@@ -132,12 +132,18 @@ void main() {
           entry(
             'e3',
             DateTime(2026, 11, 10),
-            measurements: {BodyMeasurement.waist: 84, BodyMeasurement.chest: 1},
+            measurements: {
+              BodyMeasurement.abdomen: 84,
+              BodyMeasurement.chest: 1,
+            },
           ),
           entry(
             'e2',
             DateTime(2026, 11, 3),
-            measurements: {BodyMeasurement.waist: 86, BodyMeasurement.hips: 98},
+            measurements: {
+              BodyMeasurement.abdomen: 86,
+              BodyMeasurement.hips: 98,
+            },
           ),
           entry(
             'e1',
@@ -227,13 +233,41 @@ void main() {
           entry(
             'e1',
             DateTime(2026, 11, 3),
-            measurements: {BodyMeasurement.neck: 45, BodyMeasurement.waist: 44},
+            measurements: {
+              BodyMeasurement.neck: 45,
+              BodyMeasurement.abdomen: 44,
+            },
           ),
         ]),
       );
       final known = await getKnownValues('u1');
       expect(known.bodyFatPercent, isNull);
       expect(known.neckCm, 45);
+    });
+
+    test('the waist is the formula\'s: the abdomen for men, the waist for '
+        'women, none without a sex', () async {
+      Stream<List<BodyEntry>> measured() => Stream.value([
+        entry(
+          'e1',
+          DateTime(2026, 11, 3),
+          measurements: {
+            BodyMeasurement.waist: 76,
+            BodyMeasurement.abdomen: 84,
+          },
+        ),
+      ]);
+      given(profile: Stream.value(man), entries: measured());
+      expect((await getKnownValues('u1')).waistCm, 84);
+
+      given(
+        profile: Stream.value(const UserProfile(sex: Sex.female)),
+        entries: measured(),
+      );
+      expect((await getKnownValues('u1')).waistCm, 76);
+
+      given(profile: Stream.value(const UserProfile()), entries: measured());
+      expect((await getKnownValues('u1')).waistCm, isNull);
     });
 
     test('nothing known leaves every value empty', () async {

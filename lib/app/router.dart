@@ -8,10 +8,10 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
-import '../features/body/presentation/body_compare_page.dart';
 import '../features/body/presentation/body_entry_page.dart';
 import '../features/body/presentation/body_page.dart';
 import '../features/body/presentation/measurement_day_page.dart';
+import '../features/body/presentation/measurement_summary_page.dart';
 import '../features/body/presentation/weight_form_page.dart';
 import '../features/account/presentation/delete_account_page.dart';
 import '../features/calendar/presentation/calendar_page.dart';
@@ -125,8 +125,10 @@ abstract final class Routes {
   static const body = '$progress/body';
   static const bodyWeightNew = '$body/weight';
   static const bodyMeasureNew = '$body/measure';
-  static const bodyCompare = '$body/compare';
+  static String bodySummary(String id) =>
+      '$body/summary/${Uri.encodeComponent(id)}';
   static String bodyEntry(String id) => '$body/${Uri.encodeComponent(id)}';
+  static String bodyEntryCompare(String id) => '${bodyEntry(id)}/compare';
   static String bodyEntryWeight(String id) => '${bodyEntry(id)}/weight';
   static String bodyEntryMeasure(String id) => '${bodyEntry(id)}/measure';
 
@@ -474,9 +476,13 @@ GoRouter buildRouter(
                     path: 'measure',
                     builder: (_, _) => const MeasurementDayNewPage(),
                   ),
+                  // Right after a new measurement day is saved.
                   GoRoute(
-                    path: 'compare',
-                    builder: (_, _) => const BodyComparePage(),
+                    path: 'summary/:id',
+                    builder: (_, state) => MeasurementSummaryPage(
+                      id: state.pathParameters['id']!,
+                      compare: false,
+                    ),
                   ),
                   GoRoute(
                     path: ':id',
@@ -492,6 +498,13 @@ GoRouter buildRouter(
                         path: 'measure',
                         builder: (_, state) => MeasurementDayEditPage(
                           id: state.pathParameters['id']!,
+                        ),
+                      ),
+                      GoRoute(
+                        path: 'compare',
+                        builder: (_, state) => MeasurementSummaryPage(
+                          id: state.pathParameters['id']!,
+                          compare: true,
                         ),
                       ),
                     ],

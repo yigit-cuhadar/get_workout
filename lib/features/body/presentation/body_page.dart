@@ -42,17 +42,7 @@ class _BodyView extends StatelessWidget {
         context.read<BodyListCubit>().rejectionShown();
       },
       builder: (context, state) => Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.bodyTitle),
-          actions: [
-            if (state.entries.length > 1)
-              IconButton(
-                tooltip: l10n.bodyCompare,
-                icon: const Icon(Icons.compare),
-                onPressed: () => context.go(Routes.bodyCompare),
-              ),
-          ],
-        ),
+        appBar: AppBar(title: Text(l10n.bodyTitle)),
         body: switch (state.status) {
           BodyListStatus.loading => const LoadingView(),
           BodyListStatus.failure => ErrorView(

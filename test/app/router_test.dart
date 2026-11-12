@@ -81,6 +81,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../features/programs/fixtures.dart' show FixedPremium, card;
 import 'answered_consent.dart';
+import 'body_stand_in.dart';
 import 'no_workout.dart';
 import 'today_stand_ins.dart';
 
@@ -377,6 +378,7 @@ void main() {
       clock: () => DateTime(9999),
     );
     registerTodayStandIns();
+    registerBodyListStandIn();
     sl.registerFactory(
       () => PremiumPaywallCubit(
         getOffering: GetOffering(store),

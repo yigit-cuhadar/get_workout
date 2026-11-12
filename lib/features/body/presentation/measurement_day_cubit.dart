@@ -231,6 +231,13 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
 
   bool get isEditing => _initial != null;
 
+  /// The id of the new entry once saved, for its summary; null before, and
+  /// when editing.
+  String? get savedNewId =>
+      state.status == MeasurementDayStatus.saved && !isEditing
+      ? _entryId
+      : null;
+
   static MeasurementDayState _initialState(MeasurementDaySetup setup) {
     final initial = setup.initial;
     return MeasurementDayState(
