@@ -15,7 +15,9 @@ import 'domain/reminder_plan.dart';
 import 'presentation/notifications_cubit.dart';
 
 /// Registers local notifications, initialised once in the background
-/// (`sl.getAsync<Notifications>()` waits for that), the reminders and the
+/// (`sl.getAsync<Notifications>()` waits for that), which creates the
+/// Android channels before any pushed message can need them, the
+/// reminders and the
 /// announcements. Not for the admin panel. Needs `AuthModule`,
 /// `SettingsModule`, `ProgramsModule` and `BodyModule` (measurement days).
 class NotificationsModule implements FeatureModule {
@@ -34,6 +36,14 @@ class NotificationsModule implements FeatureModule {
             name: l10n.notificationChannelName,
             description: l10n.notificationChannelDescription,
             importance: Importance.high,
+          ),
+          // The running rest on the lock screen. Default importance: lower
+          // ones may be hidden there. Silent, unlike `workout`.
+          countdownChannel: NotificationChannel(
+            id: 'rest',
+            name: l10n.restChannelName,
+            description: l10n.restChannelDescription,
+            importance: Importance.defaultImportance,
           ),
           androidIcon: 'ic_notification',
         );

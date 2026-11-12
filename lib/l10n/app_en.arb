@@ -1112,6 +1112,9 @@
   "restNotificationNext": "Next: {exercise}, set {set}",
   "@restNotificationNext": {"placeholders": {"exercise": {"type": "String"}, "set": {"type": "int"}}},
   "restNotificationBack": "Back to your workout",
+  "restLockScreenTitle": "Rest",
+  "restChannelName": "Rest timer",
+  "restChannelDescription": "The running rest, counting down on the lock screen",
   "notificationChannelName": "Workout",
   "notificationChannelDescription": "Rest timer, reminders and announcements",
 

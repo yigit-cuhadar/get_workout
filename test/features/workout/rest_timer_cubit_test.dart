@@ -7,6 +7,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/workout/domain/rest.dart';
+import 'package:get_workout/features/workout/domain/rest_lock_screen.dart';
 import 'package:get_workout/features/workout/domain/rest_notifications.dart';
 import 'package:get_workout/features/workout/domain/rest_usecases.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
@@ -24,6 +25,8 @@ class MockSettingsCubit extends MockCubit<SettingsState>
 
 class MockRestNotifications extends Mock implements RestNotifications {}
 
+class MockRestLockScreen extends Mock implements RestLockScreen {}
+
 void main() {
   final start = DateTime(2026, 11, 11, 18);
   final squats = workout('w1', [
@@ -40,7 +43,9 @@ void main() {
   late ActiveWorkoutState workoutState;
   late MockSettingsCubit settings;
   late SettingsState settingsState;
+  late StreamController<SettingsState> settingsStates;
   late MockRestNotifications notifications;
+  late MockRestLockScreen lockScreen;
 
   /// What this device says: whether it lets the app notify, what a request
   /// answers, and whether the user was asked here.
@@ -51,6 +56,9 @@ void main() {
   setUpAll(() {
     registerFallbackValue(base);
     registerFallbackValue(DateTime(2000));
+    registerFallbackValue(
+      RestCountdown(endsAt: DateTime(2000), title: '', over: ''),
+    );
   });
 
   setUp(() {
@@ -68,11 +76,17 @@ void main() {
       base.copyWith(restTimer: const RestTimerSettings(notify: true)),
     );
     when(() => settings.state).thenAnswer((_) => settingsState);
+    settingsStates = StreamController.broadcast(sync: true);
+    when(() => settings.stream).thenAnswer((_) => settingsStates.stream);
     when(() => settings.update(any())).thenAnswer((call) async {
       settingsState = SettingsState(
         call.positionalArguments.single as UserSettings,
       );
     });
+
+    lockScreen = MockRestLockScreen();
+    when(() => lockScreen.show(any())).thenAnswer((_) async => const Ok(null));
+    when(lockScreen.clear).thenAnswer((_) async => const Ok(null));
 
     notifications = MockRestNotifications();
     allowed = true;
@@ -98,7 +112,10 @@ void main() {
     });
   });
 
-  tearDown(() => workoutStates.close());
+  tearDown(() async {
+    await workoutStates.close();
+    await settingsStates.close();
+  });
 
   bool? wish() => settingsState.settings.restTimer.notify;
 
@@ -135,6 +152,15 @@ void main() {
             body: next == null
                 ? 'Done'
                 : '${workout.exercises[next.exercise].name} ${next.set + 1}',
+          ),
+          showOnLockScreen: ShowRestOnLockScreen(lockScreen),
+          clearLockScreen: ClearRestFromLockScreen(lockScreen),
+          lockScreenText: (workout, next) => (
+            title: 'Rest',
+            detail: next == null
+                ? null
+                : '${workout.exercises[next.exercise].name} ${next.set + 1}',
+            over: 'Over',
           ),
           clock: async.getClock(start).now,
         );
@@ -467,6 +493,215 @@ void main() {
           async.flushMicrotasks();
           verifyNever(notifications.cancel);
         });
+      });
+    });
+  });
+
+  group('lock screen', () {
+    final end = start.add(const Duration(seconds: 90));
+
+    RestCountdown countdown(DateTime endsAt, {String? detail = 'squat 2'}) =>
+        RestCountdown(
+          endsAt: endsAt,
+          title: 'Rest',
+          detail: detail,
+          over: 'Over',
+        );
+
+    void verifyShown(DateTime endsAt, {String? detail = 'squat 2'}) =>
+        verify(() => lockScreen.show(countdown(endsAt, detail: detail)))
+            .called(1);
+
+    void verifyNotShown() => verifyNever(() => lockScreen.show(any()));
+
+    /// Runs [body] once the start has cleared the lock screen.
+    void runStarted(
+      void Function(FakeAsync async, RestTimerCubit cubit) body,
+    ) => run((async, cubit) {
+      clearInteractions(lockScreen);
+      body(async, cubit);
+    });
+
+    test('one left from an earlier run is cleared at start', () {
+      run((async, cubit) {
+        verify(lockScreen.clear).called(1);
+        verifyNotShown();
+      });
+    });
+
+    test('a rest kept from before a restart is shown at start', () {
+      workoutState = ActiveWorkoutState(
+        status: WorkoutStatus.active,
+        workout: squats,
+        rest: Rest(endsAt: end, after: first),
+      );
+      run((async, cubit) {
+        verifyShown(end);
+        verifyNever(lockScreen.clear);
+      });
+    });
+
+    test('a started rest shows its end and the next set, once', () {
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.flushMicrotasks();
+        verifyShown(end);
+
+        async.elapse(const Duration(seconds: 30));
+        verifyNotShown();
+        verifyNever(lockScreen.clear);
+      });
+    });
+
+    test('without a next set it shows no detail', () {
+      final done = workout('w1', [
+        exercise('squat', [lift(100, 5)]),
+      ]);
+      runStarted((async, cubit) {
+        emitWorkout(
+          ActiveWorkoutState(
+            status: WorkoutStatus.active,
+            workout: done,
+            rest: Rest(endsAt: end, after: first),
+          ),
+        );
+        async.flushMicrotasks();
+        verifyShown(end, detail: null);
+      });
+    });
+
+    test('+15 s and a restart on the next set replace it', () {
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.elapse(const Duration(seconds: 10));
+        final extended = end.add(restExtension);
+        emitRest(Rest(endsAt: extended, after: first));
+        async.elapse(const Duration(seconds: 10));
+        final restarted = start.add(const Duration(seconds: 110));
+        emitRest(Rest(endsAt: restarted, after: first));
+        async.flushMicrotasks();
+
+        verifyInOrder([
+          () => lockScreen.show(countdown(end)),
+          () => lockScreen.show(countdown(extended)),
+          () => lockScreen.show(countdown(restarted)),
+        ]);
+        verifyNever(lockScreen.clear);
+      });
+    });
+
+    test('skip clears it', () {
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.flushMicrotasks();
+        emitRest(null);
+        async.flushMicrotasks();
+        verify(lockScreen.clear).called(1);
+      });
+    });
+
+    test('the end in front clears it, once', () {
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.elapse(const Duration(seconds: 89));
+        verifyNever(lockScreen.clear);
+        async.elapse(const Duration(seconds: 1));
+        expect(cubit.state.phase, RestPhase.over);
+        verify(lockScreen.clear).called(1);
+        async.elapse(RestTimerCubit.overFor);
+        verifyNever(lockScreen.clear);
+      });
+    });
+
+    test('finishing, discarding and signing out clear it', () {
+      runStarted((async, cubit) {
+        for (final ended in [
+          ActiveWorkoutState(status: WorkoutStatus.finished, workout: squats),
+          const ActiveWorkoutState(status: WorkoutStatus.none),
+          // Signed out: the user's workout is dropped.
+          const ActiveWorkoutState(),
+        ]) {
+          emitRest(Rest(endsAt: end, after: first));
+          async.flushMicrotasks();
+          clearInteractions(lockScreen);
+          emitWorkout(ended);
+          async.flushMicrotasks();
+          verify(lockScreen.clear).called(1);
+          verifyNotShown();
+        }
+      });
+    });
+
+    test('shows nothing while the rest timer is off in the settings', () {
+      settingsState = SettingsState(
+        base.copyWith(restTimer: const RestTimerSettings(enabled: false)),
+      );
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.elapse(const Duration(seconds: 10));
+        verifyNotShown();
+      });
+    });
+
+    test('turning the rest timer off clears it, on shows it again', () {
+      void setEnabled(bool enabled) {
+        settingsState = SettingsState(
+          base.copyWith(restTimer: RestTimerSettings(enabled: enabled)),
+        );
+        settingsStates.add(settingsState);
+      }
+
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.flushMicrotasks();
+        verifyShown(end);
+
+        setEnabled(false);
+        async.flushMicrotasks();
+        verify(lockScreen.clear).called(1);
+
+        setEnabled(true);
+        async.flushMicrotasks();
+        verifyShown(end);
+      });
+    });
+
+    test('the notification wish does not matter: it never alerts', () {
+      setWish(false);
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.flushMicrotasks();
+        verifyShown(end);
+      });
+    });
+
+    test('calls run one after another, so the last one wins', () {
+      runStarted((async, cubit) {
+        // Made on fake time, so completing it runs on fake time.
+        final showing = Completer<Result<void>>();
+        when(() => lockScreen.show(any())).thenAnswer((_) => showing.future);
+        emitRest(Rest(endsAt: end, after: first));
+        emitRest(null);
+        async.flushMicrotasks();
+        verify(() => lockScreen.show(any())).called(1);
+        verifyNever(lockScreen.clear);
+
+        showing.complete(const Ok(null));
+        async.flushMicrotasks();
+        verify(lockScreen.clear).called(1);
+      });
+    });
+
+    test('a failure is only logged, and later changes still apply', () {
+      when(() => lockScreen.show(any()))
+          .thenAnswer((_) async => const Err(UnknownFailure('disabled')));
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.flushMicrotasks();
+        emitRest(null);
+        async.flushMicrotasks();
+        verify(() => lockScreen.show(any())).called(1);
+        verify(lockScreen.clear).called(1);
       });
     });
   });

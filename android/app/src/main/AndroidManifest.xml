@@ -5,6 +5,9 @@
          and VIBRATE itself. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <!-- The rest's lock-screen countdown may be promoted to a Live Update
+         (Android 16 status bar chip). Not a runtime permission. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS"/>
     <!-- Steps, read from Health Connect. -->
     <uses-permission android:name="android.permission.health.READ_STEPS"/>
     <!-- Progress photos, taken with the camera plugin. It also declares

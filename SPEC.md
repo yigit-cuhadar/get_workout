@@ -443,8 +443,9 @@ from the earlier FitLab app.
   against what is pending by payload (time and a hash of the text), so
   equal ones stay. While the user's settings or programs load nothing is
   touched, so a start never drops reminders; a change of user or signing
-  out drops them at once. Ids: rest 1, workout 100-127 (by date), measurement
-  200-203 (by occurrence), announcement in front 300. Reminders do not ask
+  out drops them at once. Ids: rest 1, rest countdown 2 (Android, lock
+  screen), workout 100-127 (by date), measurement 200-203 (by
+  occurrence), announcement in front 300. Reminders do not ask
   for exact alarms on Android (they may fire up to an hour late). Taps:
   a workout reminder opens Today, a measurement reminder a new measurement
   day (`Routes.bodyMeasureNew`, unless one is already open), an
@@ -457,7 +458,10 @@ from the earlier FitLab app.
   dialog with "Open settings" (the app's notification settings), and the
   reminder is stored on anyway, like the rest notification's wish; while
   a reminder is on and the device refuses, the settings say so with "Open
-  settings". All notifications share the Android channel `workout`.
+  settings". All notifications share the Android channel `workout`,
+  except the rest countdown (`rest`). Both channels are created when
+  notifications initialise at app start (no permission needed), so a
+  pushed announcement finds `workout` before any local notification.
 - **Announcements**: FCM topics `announcements_<locale>` (`announcements_en`
   in v1), followed once the device allows notifications, for the device's
   language, leaving the other languages' topics. Notification messages:
@@ -712,6 +716,44 @@ from the earlier FitLab app.
   Android, for exact alarms (without them the notification falls back to
   an inexact alarm, possibly late). The rest notification has id 1 on one
   Android channel, `workout` ("Workout", high importance).
+- **Rest on the lock screen**: while a rest runs and `settings.restTimer`
+  is enabled, the lock screen shows it counting down, drawn by the system
+  so it ticks without the app (`RestTimerCubit` through
+  `ShowRestOnLockScreen` / `ClearRestFromLockScreen`; `RestLockScreen`
+  with an iOS and an Android adapter). Title "Rest", the next set as in
+  the rest notification (none when nothing is left). Shown when a rest
+  starts (also one restored at app start), replaced on +15 s or a new
+  rest, removed when it is over in front, skipped, unticked, the workout
+  finished or discarded, the user changes or signs out, or the rest timer
+  is turned off; one left from an earlier run is removed at start. It is
+  silent whatever `notify` says: the end is announced by the rest
+  notification (id 1) alone, so nothing alerts twice.
+  Android: an ongoing notification, id 2, on its own channel `rest`
+  ("Rest timer", default importance, no sound or vibration; lower
+  importances count as silent and may be hidden on the lock screen), with
+  a system chronometer counting down to the end and a timeout at the end,
+  so the system removes it even with the app killed; replaced in place,
+  never updated per second; asks for promotion to a Live Update (Android
+  16 status bar chip, `POST_PROMOTED_NOTIFICATIONS`). A separate id from
+  the end alert because that one is scheduled only while the app hides
+  and cancelled when it shows, and the countdown stays across both. It
+  needs the notification permission and never asks for it: without it
+  nothing shows. No foreground service: nothing has to run until the end
+  (the chronometer and timeout are the system's), and a service would
+  need a declared type and Play review; the cost is that from Android 14
+  the user can swipe it away while unlocked, until the next change.
+  iOS (16.2+, below that nothing shows): a Live Activity from the
+  `RestTimer` widget extension (lock screen, Dynamic Island), started by
+  the app in front through `AppDelegate.swift`
+  (`getworkout/rest_activity`), updated and ended while the app runs; its
+  texts come from the app. No push updates (no APNs yet), so the app
+  cannot end it while suspended: its stale date is the rest's end, after
+  which it shows "Rest over" until the app runs again (then removed) or
+  iOS ends it (8 h). Users can turn Live Activities off per app; then
+  nothing shows. No App Group: the app's own ActivityKit bridge passes
+  the content, so the `live_activities` plugin (App Group, iOS 16.1
+  minimum for the whole app) is not used, and the app keeps iOS 15
+  (ActivityKit weak-linked).
 - **Weekly volume**: Progress → Weekly volume shows one week, the current
   one first; earlier weeks are free to browse, later than the current one
   never. A week starts on the locale's first weekday
@@ -1091,6 +1133,15 @@ Group 9, launch readiness
   (compileSdk, for flutter_local_notifications 23) and AGP 9.1.1
   downloaded; the disk is nearly full, so free space first. CI does not
   build Android, so nothing has compiled the Android changes yet.
+- Lock-screen rest, not built yet: the `RestTimer` widget extension
+  target (hand-added to `project.pbxproj`; bundle id
+  `com.getworkout.app.RestTimer`, iOS 16.2, embedded before Thin Binary),
+  `NSSupportsLiveActivities`, ActivityKit weak-linked in the Runner, and
+  `POST_PROMOTED_NOTIFICATIONS` on Android. A device build needs the
+  extension's App ID under the team (automatic signing); untestable until
+  the Apple Developer account: behaviour on a real device while
+  suspended. Needs `forge_notifications` with `showCountdown` and
+  channels at init merged and tagged, and every forge `ref` moved to it.
 - Release blocker: the Terms of Use and Privacy Policy links in
   `lib/app/legal_links.dart` are placeholders; publish the pages and
   replace them (Android picks up `privacyUrl` by itself).
@@ -1119,8 +1170,9 @@ Group 9, launch readiness
 - Notifications, not built yet on a device: `firebase_messaging` 17, the
   Android manifest's FCM default channel, icon and auto-init flag, and the
   iOS `FirebaseMessagingAutoInitEnabled` key. The `workout` channel
-  exists only once a local notification was posted; before that, FCM uses
-  its own default channel. Check foreground display and taps on both
+  is now created at start (an announcement on the emulator had landed on
+  FCM's fallback channel before); check that one sent to a fresh install
+  shows on `workout`. Check foreground display and taps on both
   platforms, and that the admin web build still loads (the plugin
   registers a web part).
 - Forge tasks; the app's own versions are an accepted deviation for the
@@ -1129,9 +1181,11 @@ Group 9, launch readiness
     notifications (the app's `DeviceNotificationRepository.syncReminders`
     with payload signatures); a tap stream that buffers the launch tap
     (the app's `NotificationTaps`); opening the app's notification
-    settings (the app calls `flutter_local_notifications` directly);
-    creating channels at init, and more than one channel (reminders and
-    announcements share the rest timer's `workout` channel).
+    settings (the app calls `flutter_local_notifications` directly).
+    Done: channels created at init, and a second (countdown) channel.
+  - The Live Activity bridge (`AppDelegate.swift`'s `RestActivity` and a
+    generic attributes type) could move to a package with a native iOS
+    plugin once a second app needs one; the widget views stay in the app.
   - A messaging addition (to `forge_notifications` or a new package):
     following a topic per language with leaving the others, foreground
     display of pushed notifications, auto-init off until allowed (the
