@@ -156,6 +156,17 @@ abstract final class Routes {
   static const paywall = '/paywall';
 }
 
+/// Whether [location] is past the start (splash, retry, onboarding and the
+/// program suggested after it), where the app leads the way and a
+/// notification tap waits.
+bool isPastStart(String location) =>
+    location.isNotEmpty &&
+    location != Routes.splash &&
+    location != Routes.startFailed &&
+    location != Routes.afterOnboarding &&
+    location != Routes.onboarding &&
+    !location.startsWith('${Routes.onboarding}/');
+
 /// All routes live here. There is always a user (a guest until they create
 /// an account), so the gates are the splash while the session and then the
 /// user's profile resolve, a retry screen when the guest sign-in failed, and
