@@ -39,6 +39,39 @@ enum BodyMeasurement {
     }
     return null;
   }
+
+  /// The right side of a left one; null for every other measurement.
+  BodyMeasurement? get rightSide => switch (this) {
+    leftUpperArm => rightUpperArm,
+    leftForearm => rightForearm,
+    leftThigh => rightThigh,
+    leftCalf => rightCalf,
+    _ => null,
+  };
+}
+
+/// [measurements] in their usual order, grouped: a left and right side that
+/// are both there form one group of two (left first), every other
+/// measurement a group of its own.
+List<List<BodyMeasurement>> pairedMeasurements(
+  Set<BodyMeasurement> measurements,
+) {
+  final rights = {
+    for (final measurement in measurements)
+      if (measurement.rightSide case final right?
+          when measurements.contains(right))
+        right,
+  };
+  return [
+    for (final measurement in BodyMeasurement.values)
+      if (measurements.contains(measurement) && !rights.contains(measurement))
+        [
+          measurement,
+          if (measurement.rightSide case final right?
+              when rights.contains(right))
+            right,
+        ],
+  ];
 }
 
 /// The four progress photos of a measurement day, in the order they are

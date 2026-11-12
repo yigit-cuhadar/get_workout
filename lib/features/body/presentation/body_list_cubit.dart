@@ -5,6 +5,8 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../../../core/user_stream_follower.dart';
+import '../../profile/domain/profile_usecases.dart';
+import '../../profile/domain/user_profile.dart';
 import '../../programs/domain/program_usecases.dart';
 import '../../strength/domain/strength.dart';
 import '../domain/body_entry.dart';
@@ -21,6 +23,9 @@ class BodyListState extends Equatable {
     this.range = StrengthRange.free,
     this.points = const [],
     this.olderLocked = false,
+    this.bodyFat = const {},
+    this.bodyFatPoints = const [],
+    this.bodyFatOlderLocked = false,
     this.writeRejected = false,
   });
 
@@ -43,6 +48,16 @@ class BodyListState extends Equatable {
   /// they are behind Premium.
   final bool olderLocked;
 
+  /// The body fat of every entry it can be estimated for, by entry id,
+  /// from the profile's sex and height; never stored.
+  final Map<String, double> bodyFat;
+
+  /// The body fats in [range], oldest first.
+  final List<BodyFatPoint> bodyFatPoints;
+
+  /// As [olderLocked], for body fat.
+  final bool bodyFatOlderLocked;
+
   /// The server refused a save or delete that already looked done; tell the
   /// user, then call [BodyListCubit.rejectionShown].
   final bool writeRejected;
@@ -60,6 +75,9 @@ class BodyListState extends Equatable {
     range: range,
     points: points,
     olderLocked: olderLocked,
+    bodyFat: bodyFat,
+    bodyFatPoints: bodyFatPoints,
+    bodyFatOlderLocked: bodyFatOlderLocked,
     writeRejected: writeRejected ?? this.writeRejected,
   );
 
@@ -71,12 +89,15 @@ class BodyListState extends Equatable {
     range,
     points,
     olderLocked,
+    bodyFat,
+    bodyFatPoints,
+    bodyFatOlderLocked,
     writeRejected,
   ];
 }
 
 /// The body entries of whoever is signed in, followed live, with the weight
-/// chart. Starts over on every user change. Ranges beyond
+/// and body-fat charts; body fat follows the profile's sex and height. Starts over on every user change. Ranges beyond
 /// [StrengthRange.free] show only while the user is known to have Premium;
 /// the page asks for Premium before choosing one.
 class BodyListCubit extends Cubit<BodyListState> {
@@ -85,6 +106,7 @@ class BodyListCubit extends Cubit<BodyListState> {
     required WatchBodyEntries watchEntries,
     required WatchRejectedBodyWrites watchRejectedWrites,
     required WatchPremium watchPremium,
+    required WatchProfile watchProfile,
     required this._findPhotos,
     required this._restorePhoto,
     required this._reconcilePhotos,
@@ -114,6 +136,16 @@ class BodyListCubit extends Cubit<BodyListState> {
       },
       logTag: 'body',
     );
+    _profileFollower = UserStreamFollower(
+      userIds: watchAuthUser().map((user) => user?.id),
+      watch: watchProfile.call,
+      onUser: (_) => _profile = null,
+      onData: (profile) {
+        _profile = profile;
+        if (_entries != null) _publish();
+      },
+      logTag: 'body',
+    );
     _premiumSubscription = watchPremium().listen((premium) {
       _premium = premium;
       if (_entries != null) _publish();
@@ -130,6 +162,10 @@ class BodyListCubit extends Cubit<BodyListState> {
   final DeleteBodyEntry _deleteEntry;
   final DateTime Function() _clock;
   late final UserStreamFollower<List<BodyEntry>> _follower;
+
+  /// A profile that fails to load leaves the last one in use.
+  late final UserStreamFollower<UserProfile> _profileFollower;
+  UserProfile? _profile;
   late final StreamSubscription<bool?> _premiumSubscription;
   late final StreamSubscription<Failure> _rejectedSubscription;
   List<BodyEntry>? _entries;
@@ -185,6 +221,11 @@ class BodyListCubit extends Cubit<BodyListState> {
     }
     final now = _clock();
     final range = _chosen.allowed(_premium);
+    final bodyFat = bodyFatByEntry(
+      entries,
+      sex: _profile?.sex,
+      heightCm: _profile?.heightCm,
+    );
     emit(
       BodyListState(
         status: BodyListStatus.ready,
@@ -195,6 +236,16 @@ class BodyListCubit extends Cubit<BodyListState> {
         olderLocked:
             _premium == false &&
             hasWeightBefore(entries, range: StrengthRange.free, now: now),
+        bodyFat: bodyFat,
+        bodyFatPoints: bodyFatSeries(entries, bodyFat, range: range, now: now),
+        bodyFatOlderLocked:
+            _premium == false &&
+            hasBodyFatBefore(
+              entries,
+              bodyFat,
+              range: StrengthRange.free,
+              now: now,
+            ),
         writeRejected: state.writeRejected,
       ),
     );
@@ -220,6 +271,7 @@ class BodyListCubit extends Cubit<BodyListState> {
   @override
   Future<void> close() async {
     await _follower.cancel();
+    await _profileFollower.cancel();
     await _premiumSubscription.cancel();
     await _rejectedSubscription.cancel();
     return super.close();

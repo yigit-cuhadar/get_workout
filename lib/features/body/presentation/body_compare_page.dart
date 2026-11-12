@@ -122,15 +122,25 @@ class _ComparisonState extends State<_Comparison> {
         const SizedBox(height: Gap.md),
         _Row(
           name: l10n.bodyWeightTitle,
-          pair: comparison.weightKg,
+          values: [comparison.weightKg],
           value: (kg) => l10n.bodyWeight(kg, settings.weightUnit),
           change: (kg) => l10n.bodyWeightChange(kg, settings.weightUnit),
         ),
-        for (final MapEntry(key: measurement, value: pair)
-            in comparison.measurements.entries)
+        if (comparison.bodyFat(widget.state.bodyFat) case final bodyFat
+            when bodyFat.before != null || bodyFat.after != null)
           _Row(
-            name: l10n.measurementName(measurement),
-            pair: pair,
+            name: l10n.bodyFatTitle,
+            values: [bodyFat],
+            value: l10n.bodyFat,
+            change: l10n.bodyFatChange,
+          ),
+        for (final group in comparison.measurementGroups)
+          _Row(
+            name: l10n.measurementGroupName(group),
+            values: [
+              for (final measurement in group)
+                comparison.measurements[measurement]!,
+            ],
             value: (cm) => l10n.bodyLength(cm, settings.lengthUnit),
             change: (cm) => l10n.bodyLengthChange(cm, settings.lengthUnit),
           ),
@@ -155,17 +165,20 @@ class _ComparisonState extends State<_Comparison> {
   }
 }
 
-/// A value on both dates, then the change between them.
+/// A value on both dates, then the change between them; for both sides of
+/// a pair, the left and right values joined.
 class _Row extends StatelessWidget {
   const _Row({
     required this.name,
-    required this.pair,
+    required this.values,
     required this.value,
     required this.change,
   });
 
   final String name;
-  final ValuePair pair;
+
+  /// One, or the left and the right side.
+  final List<ValuePair> values;
   final String Function(double) value;
   final String Function(double) change;
 
@@ -173,19 +186,32 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    String text(double? metric) =>
-        metric == null ? l10n.bodyNoValue : value(metric);
-    final difference = pair.change;
+    String joined(Iterable<String> texts) => switch (texts.toList()) {
+      [final left, final right] => l10n.bodyPair(left, right),
+      final single => single.single,
+    };
+    String text(double? Function(ValuePair) side) => joined([
+      for (final pair in values)
+        if (side(pair) case final metric?) value(metric) else l10n.bodyNoValue,
+    ]);
+    final differences = [for (final pair in values) pair.change];
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: Gap.xs),
       child: Row(
         children: [
           Expanded(flex: 2, child: Text(name)),
-          Expanded(child: Text(text(pair.before))),
-          Expanded(child: Text(text(pair.after))),
+          Expanded(child: Text(text((pair) => pair.before))),
+          Expanded(child: Text(text((pair) => pair.after))),
           Expanded(
             child: Text(
-              difference == null ? '' : change(difference),
+              differences.every((difference) => difference == null)
+                  ? ''
+                  : joined([
+                      for (final difference in differences)
+                        difference == null
+                            ? l10n.bodyNoValue
+                            : change(difference),
+                    ]),
               textAlign: TextAlign.end,
               style: theme.textTheme.titleSmall,
             ),
