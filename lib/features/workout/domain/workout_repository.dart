@@ -190,4 +190,8 @@ abstract interface class LocalWorkoutStore {
 
   /// Replaces what is kept for [uid], all at once.
   Future<Result<void>> save(String uid, LocalWorkouts workouts);
+
+  /// Deletes everything kept for [uid], unreadable copies included, and
+  /// drops a write still waiting.
+  Future<Result<void>> remove(String uid);
 }

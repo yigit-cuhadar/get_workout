@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
+import '../features/account/presentation/delete_account_page.dart';
 import '../features/calendar/presentation/calendar_page.dart';
 import '../features/cardio/presentation/cardio_form_page.dart';
 import '../features/cardio/presentation/cardio_list_page.dart';
@@ -138,6 +139,7 @@ abstract final class Routes {
   /// Opens in sign-up mode; [accountSignIn] opens it in sign-in mode.
   static const accountAuth = '$account/auth';
   static const accountSignIn = '$accountAuth?mode=sign-in';
+  static const accountDelete = '$account/delete';
 
   static const profileDetails = '$profile/details';
   static String profileQuestion(ProfileField field) =>
@@ -452,6 +454,10 @@ GoRouter buildRouter(
                           state.uri.queryParameters['mode'] != 'sign-in',
                       onSignedIn: () => context.pop(),
                     ),
+                  ),
+                  GoRoute(
+                    path: 'delete',
+                    builder: (_, _) => const DeleteAccountPage(),
                   ),
                 ],
               ),
