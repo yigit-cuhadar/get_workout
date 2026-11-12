@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'access/presentation/access_cubit.dart';
 import 'access/presentation/access_page.dart';
 import 'access/presentation/sign_in_page.dart';
+import 'announcements/presentation/announcements_page.dart';
 import 'exercises/presentation/exercise_editor_page.dart';
 import 'exercises/presentation/exercise_list_cubit.dart';
 import 'exercises/presentation/exercise_list_page.dart';
@@ -24,6 +25,7 @@ abstract final class AdminRoutes {
   static const programs = '/programs';
   static const newProgram = '$programs/new';
   static String program(String id) => '$programs/$id';
+  static const announcements = '/announcements';
 }
 
 /// Where [location] leads in [access], or null to stay. Only an admin gets
@@ -102,6 +104,10 @@ GoRouter buildAdminRouter(AccessCubit access) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AdminRoutes.announcements,
+        builder: (_, _) => const AnnouncementsPage(),
       ),
     ],
   );
