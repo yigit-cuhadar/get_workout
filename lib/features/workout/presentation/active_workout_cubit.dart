@@ -25,6 +25,9 @@ enum WorkoutStatus {
 
   /// No workout in progress.
   none,
+
+  /// A workout is open; it is in progress only once it is not empty (see
+  /// [ActiveWorkoutState.inProgress]).
   active,
   finishing,
 
@@ -87,8 +90,11 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   final String? savedProgramId;
 
   /// A workout is in progress (or being finished), so another cannot start.
+  /// An empty one is not ([Workout.isEmpty]): it is not kept, shows nowhere
+  /// and another simply replaces it.
   bool get inProgress =>
-      status == WorkoutStatus.active || status == WorkoutStatus.finishing;
+      (status == WorkoutStatus.active || status == WorkoutStatus.finishing) &&
+      !(workout?.isEmpty ?? true);
 
   /// The working sets of the exercise's latest workout.
   List<WorkoutSet> _lastSets(int exercise) {
@@ -271,7 +277,11 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       return;
     }
     // Set aside by the store; what is kept from now on starts empty.
-    final local = result.valueOrNull ?? const LocalWorkouts();
+    final kept = result.valueOrNull ?? const LocalWorkouts();
+    // An empty one kept by an older version is no workout in progress.
+    final local = kept.draft?.isEmpty ?? false
+        ? kept.copyWith(draft: () => null, rest: () => null)
+        : kept;
     _local = local;
     if (result.failureOrNull case final failure?) {
       Log.e('workout', 'kept workouts unreadable: ${failure.message}');
@@ -304,7 +314,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   }
 
   /// Starts an empty workout named [name]; false while another is in
-  /// progress.
+  /// progress. It is not in progress itself until an exercise is added.
   bool startFree(String name) =>
       _start((id, now) => Workout(id: id, startedAt: now, name: name));
 
@@ -389,14 +399,23 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     bool allowEmpty = true,
   }) {
     final uid = _uid;
-    if (uid == null || _local == null || state.status != WorkoutStatus.none) {
-      return false;
-    }
+    final open =
+        state.status == WorkoutStatus.none ||
+        (state.status == WorkoutStatus.active && !state.inProgress);
+    if (uid == null || _local == null || !open) return false;
     final workout = build(_newWorkoutId(uid), _clock());
     if (!allowEmpty && workout.exercises.isEmpty) return false;
     _emitWorkout(workout, status: WorkoutStatus.active);
     _keep();
     return true;
+  }
+
+  /// Ends the open workout when the user leaves it while it is empty; one
+  /// in progress stays, minimized.
+  Future<void> leave() async {
+    if (state.status == WorkoutStatus.active && !state.inProgress) {
+      await discard();
+    }
   }
 
   /// Throws the workout in progress away.
