@@ -198,7 +198,7 @@ class _BarDialogState extends State<_BarDialog> {
       title: Text(l10n.calcBar),
       content: NumberField(
         label: l10n.calcBarWeight(widget.format.weightUnitLabel),
-        initialValue: _text,
+        value: _text,
         onChanged: (text) => setState(() => _text = text),
         errorText: widget.format.errorFor(CalculatorInput.barWeight, check),
       ),
@@ -251,13 +251,13 @@ class _PlateDialogState extends State<_PlateDialog> {
         children: [
           NumberField(
             label: l10n.calcPlateWeight(format.weightUnitLabel),
-            initialValue: _weight,
+            value: _weight,
             onChanged: (text) => setState(() => _weight = text),
             errorText: format.errorFor(CalculatorInput.plateWeight, check),
           ),
           NumberField(
             label: l10n.calcPlatePairs,
-            initialValue: _pairs,
+            value: _pairs,
             wholeNumber: true,
             onChanged: (text) => setState(() => _pairs = text),
             errorText: format.errorFor(CalculatorInput.platePairs, check),

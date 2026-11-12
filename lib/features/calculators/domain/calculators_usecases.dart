@@ -1,8 +1,13 @@
+import '../../body/domain/body_entry.dart';
+import '../../body/domain/body_usecases.dart';
+import '../../profile/domain/profile_usecases.dart';
+import '../../profile/domain/user_profile.dart';
 import '../../settings/domain/user_settings.dart';
 import 'body_fat.dart';
 import 'body_indices.dart';
 import 'calculation.dart';
 import 'calories.dart';
+import 'known_body_values.dart';
 import 'macros.dart';
 import 'one_rep_max.dart';
 import 'plates.dart';
@@ -111,4 +116,38 @@ class CalculateBodyIndices {
     heightCm: heightCm,
     bodyFatPercent: bodyFatPercent,
   );
+}
+
+/// What a user's profile and body entries already say, for
+/// the calculators to start from. Both are read once, at the same time; a
+/// source that cannot be read adds nothing, so this never fails.
+class GetKnownBodyValues {
+  GetKnownBodyValues(
+    this._watchProfile,
+    this._watchEntries, {
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now;
+  final WatchProfile _watchProfile;
+  final WatchBodyEntries _watchEntries;
+  final DateTime Function() _clock;
+
+  Future<KnownBodyValues> call(String uid) async {
+    final (profile, entries) = await (
+      _firstOr(_watchProfile(uid), const UserProfile()),
+      _firstOr(_watchEntries(uid), const <BodyEntry>[]),
+    ).wait;
+    return knownBodyValues(
+      profile: profile,
+      entries: entries,
+      currentYear: _clock().year,
+    );
+  }
+
+  static Future<T> _firstOr<T>(Stream<T> stream, T fallback) async {
+    try {
+      return await stream.first;
+    } on Object {
+      return fallback;
+    }
+  }
 }

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../../settings/domain/user_settings.dart';
@@ -46,27 +49,77 @@ class CaloriesState extends Equatable {
   List<Object?> get props => [sex, activity, weight, height, age, result];
 }
 
+enum _Input { sex, activity, weight, height, age }
+
+/// Starts from what the app knows of the user; a value arriving late fills
+/// only the inputs the user has not changed.
 class CaloriesCubit extends Cubit<CaloriesState> {
   CaloriesCubit(
-    this._estimate, {
+    this._estimate,
+    GetCurrentUser getCurrentUser,
+    GetKnownBodyValues getKnownValues, {
     required this.weightUnit,
     required this.lengthUnit,
-  }) : super(const CaloriesState());
+  }) : super(const CaloriesState()) {
+    unawaited(_prefill(getCurrentUser, getKnownValues));
+  }
 
   final EstimateCalories _estimate;
   final WeightUnit weightUnit;
   final LengthUnit lengthUnit;
+  final _changed = <_Input>{};
 
-  void sexChanged(Sex sex) => _calculate(state._with(sex: sex));
+  Future<void> _prefill(
+    GetCurrentUser getCurrentUser,
+    GetKnownBodyValues getKnownValues,
+  ) async {
+    final uid = getCurrentUser()?.id;
+    if (uid == null) return;
+    final known = await getKnownValues(uid);
+    if (isClosed) return;
+    T? fill<T>(_Input input, T? value) =>
+        _changed.contains(input) ? null : value;
+    _calculate(
+      state._with(
+        sex: fill(_Input.sex, known.sex),
+        activity: fill(_Input.activity, known.activity),
+        weight: fill(
+          _Input.weight,
+          knownText(known.weightKg, weightUnit.fromKg),
+        ),
+        height: fill(
+          _Input.height,
+          knownText(known.heightCm, lengthUnit.fromCm),
+        ),
+        age: fill(_Input.age, known.ageYears?.toString()),
+      ),
+    );
+  }
 
-  void activityChanged(ActivityLevel activity) =>
-      _calculate(state._with(activity: activity));
+  void sexChanged(Sex sex) {
+    _changed.add(_Input.sex);
+    _calculate(state._with(sex: sex));
+  }
 
-  void weightChanged(String text) => _calculate(state._with(weight: text));
+  void activityChanged(ActivityLevel activity) {
+    _changed.add(_Input.activity);
+    _calculate(state._with(activity: activity));
+  }
 
-  void heightChanged(String text) => _calculate(state._with(height: text));
+  void weightChanged(String text) {
+    _changed.add(_Input.weight);
+    _calculate(state._with(weight: text));
+  }
 
-  void ageChanged(String text) => _calculate(state._with(age: text));
+  void heightChanged(String text) {
+    _changed.add(_Input.height);
+    _calculate(state._with(height: text));
+  }
+
+  void ageChanged(String text) {
+    _changed.add(_Input.age);
+    _calculate(state._with(age: text));
+  }
 
   void _calculate(CaloriesState inputs) => emit(
     CaloriesState(

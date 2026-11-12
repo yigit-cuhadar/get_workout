@@ -14,6 +14,8 @@ import 'package:get_workout/features/calculators/presentation/one_rep_max_cubit.
 import 'package:get_workout/features/calculators/presentation/plates_cubit.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 
+import 'known_values_fakes.dart';
+
 /// The same physical quantities typed in either unit system.
 String lb(double kg) => '${WeightUnit.lb.fromKg(kg)}';
 String inches(double cm) => '${LengthUnit.inch.fromCm(cm)}';
@@ -25,6 +27,8 @@ void main() {
     CaloriesCubit build(WeightUnit weight, LengthUnit length) =>
         CaloriesCubit(
             const EstimateCalories(),
+            signedOut,
+            noKnownValues,
             weightUnit: weight,
             lengthUnit: length,
           )
@@ -51,6 +55,8 @@ void main() {
       final cubit =
           CaloriesCubit(
               const EstimateCalories(),
+              signedOut,
+              noKnownValues,
               weightUnit: WeightUnit.kg,
               lengthUnit: LengthUnit.cm,
             )
@@ -97,14 +103,24 @@ void main() {
   group('BodyFatCubit', () {
     test('inches and cm give the same result', () {
       final metric =
-          BodyFatCubit(const EstimateBodyFat(), lengthUnit: LengthUnit.cm)
+          BodyFatCubit(
+              const EstimateBodyFat(),
+              signedOut,
+              noKnownValues,
+              lengthUnit: LengthUnit.cm,
+            )
             ..sexChanged(Sex.female)
             ..heightChanged('165')
             ..neckChanged('33')
             ..waistChanged('70')
             ..hipChanged('95');
       final imperial =
-          BodyFatCubit(const EstimateBodyFat(), lengthUnit: LengthUnit.inch)
+          BodyFatCubit(
+              const EstimateBodyFat(),
+              signedOut,
+              noKnownValues,
+              lengthUnit: LengthUnit.inch,
+            )
             ..sexChanged(Sex.female)
             ..heightChanged(inches(165))
             ..neckChanged(inches(33))
@@ -120,7 +136,12 @@ void main() {
 
     test('the hip is needed for women only', () {
       final cubit =
-          BodyFatCubit(const EstimateBodyFat(), lengthUnit: LengthUnit.cm)
+          BodyFatCubit(
+              const EstimateBodyFat(),
+              signedOut,
+              noKnownValues,
+              lengthUnit: LengthUnit.cm,
+            )
             ..heightChanged('180')
             ..neckChanged('38')
             ..waistChanged('85');
@@ -262,11 +283,22 @@ void main() {
 
   group('MacrosCubit', () {
     test('body weight in lb gives the same macros', () {
-      final metric = MacrosCubit(const SplitMacros(), weightUnit: WeightUnit.kg)
-        ..caloriesChanged('2500')
-        ..weightChanged('80');
+      final metric =
+          MacrosCubit(
+              const SplitMacros(),
+              signedOut,
+              noKnownValues,
+              weightUnit: WeightUnit.kg,
+            )
+            ..caloriesChanged('2500')
+            ..weightChanged('80');
       final imperial =
-          MacrosCubit(const SplitMacros(), weightUnit: WeightUnit.lb)
+          MacrosCubit(
+              const SplitMacros(),
+              signedOut,
+              noKnownValues,
+              weightUnit: WeightUnit.lb,
+            )
             ..caloriesChanged('2500')
             ..weightChanged(lb(80));
 
@@ -278,11 +310,17 @@ void main() {
     });
 
     test('protein and fat changes recalculate', () {
-      final cubit = MacrosCubit(const SplitMacros(), weightUnit: WeightUnit.kg)
-        ..caloriesChanged('2000')
-        ..weightChanged('70')
-        ..proteinChanged(2.4)
-        ..fatChanged(35);
+      final cubit =
+          MacrosCubit(
+              const SplitMacros(),
+              signedOut,
+              noKnownValues,
+              weightUnit: WeightUnit.kg,
+            )
+            ..caloriesChanged('2000')
+            ..weightChanged('70')
+            ..proteinChanged(2.4)
+            ..fatChanged(35);
       expect(valueOf(cubit.state.result).carbsG, closeTo(157, 1e-9));
       // 672 kcal of protein + 35 % of 1000 = 1022 kcal > 1000.
       cubit.caloriesChanged('1000');
@@ -298,6 +336,8 @@ void main() {
       final metric =
           BodyIndicesCubit(
               const CalculateBodyIndices(),
+              signedOut,
+              noKnownValues,
               weightUnit: WeightUnit.kg,
               lengthUnit: LengthUnit.cm,
             )
@@ -307,6 +347,8 @@ void main() {
       final imperial =
           BodyIndicesCubit(
               const CalculateBodyIndices(),
+              signedOut,
+              noKnownValues,
               weightUnit: WeightUnit.lb,
               lengthUnit: LengthUnit.inch,
             )
@@ -325,6 +367,8 @@ void main() {
       final cubit =
           BodyIndicesCubit(
               const CalculateBodyIndices(),
+              signedOut,
+              noKnownValues,
               weightUnit: WeightUnit.kg,
               lengthUnit: LengthUnit.cm,
             )

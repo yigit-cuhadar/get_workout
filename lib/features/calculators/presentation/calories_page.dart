@@ -20,6 +20,8 @@ class CaloriesPage extends StatelessWidget {
       title: l10n.calcCaloriesTitle,
       create: (units) => CaloriesCubit(
         sl(),
+        sl(),
+        sl(),
         weightUnit: units.weight,
         lengthUnit: units.length,
       ),
@@ -35,21 +37,26 @@ class CaloriesPage extends StatelessWidget {
                 SexSelector(selected: state.sex, onChanged: cubit.sexChanged),
                 NumberField(
                   label: l10n.calcBodyWeight(format.weightUnitLabel),
+                  value: state.weight,
                   onChanged: cubit.weightChanged,
                   errorText: error(CalculatorInput.bodyWeight),
                 ),
                 NumberField(
                   label: l10n.calcHeight(format.lengthUnitLabel),
+                  value: state.height,
                   onChanged: cubit.heightChanged,
                   errorText: error(CalculatorInput.height),
                 ),
                 NumberField(
                   label: l10n.calcAge,
+                  value: state.age,
                   onChanged: cubit.ageChanged,
                   errorText: error(CalculatorInput.age),
                   wholeNumber: true,
                 ),
                 DropdownButtonFormField<ActivityLevel>(
+                  // Rebuilt for a known level that arrives after the page.
+                  key: ValueKey(state.activity),
                   initialValue: state.activity,
                   isExpanded: true,
                   decoration: InputDecoration(labelText: l10n.calcActivity),

@@ -28,6 +28,8 @@ import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:get_workout/features/account/presentation/account_page.dart';
 import 'package:get_workout/features/account/presentation/delete_account_cubit.dart';
+import 'package:get_workout/features/body/domain/body_repository.dart';
+import 'package:get_workout/features/body/domain/body_usecases.dart';
 import 'package:get_workout/features/calculators/calculators_module.dart';
 import 'package:get_workout/features/calculators/presentation/body_fat_page.dart';
 import 'package:get_workout/features/calculators/presentation/body_indices_page.dart';
@@ -87,6 +89,8 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 class MockSettingsRepository extends Mock implements SettingsRepository {}
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
+
+class MockBodyRepository extends Mock implements BodyRepository {}
 
 class MockExerciseRepository extends Mock implements ExerciseRepository {}
 
@@ -188,6 +192,11 @@ void main() {
     final settingsAuth = MockAuthRepository();
     when(settingsAuth.watchUser).thenAnswer((_) => const Stream.empty());
     when(() => settingsAuth.currentUser).thenReturn(null);
+    // Calculators start signed out here, so they ask for no known values.
+    sl
+      ..registerFactory(() => GetCurrentUser(settingsAuth))
+      ..registerFactory(() => WatchProfile(MockProfileRepository()))
+      ..registerFactory(() => WatchBodyEntries(MockBodyRepository()));
     final settingsRepository = MockSettingsRepository();
     settings = SettingsCubit(
       watchAuthUser: WatchAuthUser(settingsAuth),

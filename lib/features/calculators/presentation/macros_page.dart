@@ -16,7 +16,8 @@ class MacrosPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return CalculatorScaffold<MacrosCubit>(
       title: l10n.calcMacrosTitle,
-      create: (units) => MacrosCubit(sl(), weightUnit: units.weight),
+      create: (units) =>
+          MacrosCubit(sl(), sl(), sl(), weightUnit: units.weight),
       children: (context, format) => [
         BlocBuilder<MacrosCubit, MacrosState>(
           builder: (context, state) {
@@ -36,6 +37,7 @@ class MacrosPage extends StatelessWidget {
                 ),
                 NumberField(
                   label: l10n.calcBodyWeight(format.weightUnitLabel),
+                  value: state.weight,
                   onChanged: cubit.weightChanged,
                   errorText: format.errorFor(
                     CalculatorInput.bodyWeight,
