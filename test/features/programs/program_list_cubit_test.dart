@@ -160,6 +160,7 @@ void main() {
         status: ProgramListStatus.ready,
         programs: [other, upperLower],
         active: active,
+        nextDate: CalendarDate(2026, 11, 12),
         weekPlan: [
           PlannedDay(
             date: CalendarDate(2026, 11, 9),
@@ -199,6 +200,7 @@ void main() {
     verify: (cubit) {
       expect(cubit.state.finished, isTrue);
       expect(cubit.state.weekPlan, isEmpty);
+      expect(cubit.state.nextDate, isNull);
     },
   );
 
@@ -364,6 +366,8 @@ void main() {
           ),
         );
         expect(cubit.state.moveDate, CalendarDate(2026, 11, 16));
+        // Until resolved it comes first again, on the next training day.
+        expect(cubit.state.nextDate, CalendarDate(2026, 11, 16));
       },
     );
 

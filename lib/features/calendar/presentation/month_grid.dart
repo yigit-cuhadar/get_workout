@@ -6,11 +6,12 @@ import '../../programs/domain/calendar_date.dart';
 /// A month as rows of [weeks] under the weekday names, one tappable cell
 /// per date with the [marks] of that date below its number. Dates outside
 /// [month]'s month are dimmed; [today] is outlined and [selected] filled.
+/// One week without a [month] is a week strip, nothing dimmed.
 class MonthGrid extends StatelessWidget {
   const MonthGrid({
     super.key,
     required this.weeks,
-    required this.month,
+    this.month,
     required this.selected,
     required this.today,
     required this.onSelected,
@@ -20,7 +21,7 @@ class MonthGrid extends StatelessWidget {
 
   /// Each seven dates; see `monthWeeks`.
   final List<List<CalendarDate>> weeks;
-  final CalendarDate month;
+  final CalendarDate? month;
   final CalendarDate selected;
   final CalendarDate today;
   final ValueChanged<CalendarDate> onSelected;
@@ -35,6 +36,7 @@ class MonthGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final names = MaterialLocalizations.of(context).narrowWeekdays;
+    final month = this.month;
     return Column(
       children: [
         ExcludeSemantics(
@@ -61,7 +63,7 @@ class MonthGrid extends StatelessWidget {
                 Expanded(
                   child: _DayCell(
                     date: date,
-                    inMonth: date.month == month.month,
+                    inMonth: month == null || date.month == month.month,
                     selected: date == selected,
                     today: date == today,
                     marks: marks(date),
