@@ -73,12 +73,23 @@ class SetBubbles extends StatelessWidget {
         ],
     ];
     final warmupSlots = warmups.map((w) => w.length).fold(0, math.max);
-    const empty = SizedBox.square(dimension: kMinInteractiveDimension);
+    final rounds = working.map((w) => w.length).fold(0, math.max);
+    final size = bubbleSize(context);
+    // Whether a row in [from, to) has a set in [round].
+    bool any(int from, int to, int round) =>
+        working.sublist(from, to).any((w) => round < w.length);
+    Widget empty([double? height]) =>
+        SizedBox(width: size, height: height ?? size);
+    Widget line([double? height]) => SizedBox(
+      width: size,
+      height: height ?? size,
+      child: VerticalDivider(width: size),
+    );
     Widget row(int k) => Row(
       spacing: Gap.sm,
       children: [
         SizedBox.square(
-          dimension: kMinInteractiveDimension,
+          dimension: size,
           child: Center(
             child: Text(
               groupItemLabel(exercises, start + k),
@@ -89,25 +100,26 @@ class SetBubbles extends StatelessWidget {
         for (var slot = 0; slot < warmupSlots; slot++)
           slot < warmups[k].length
               ? _setBubble(start + k, warmups[k][slot])
-              : empty,
-        for (final set in working[k]) _setBubble(start + k, set),
+              : empty(),
+        for (var round = 0; round < rounds; round++)
+          round < working[k].length
+              ? _setBubble(start + k, working[k][round])
+              // A round's line passes a row without a set in it.
+              : any(0, k, round) && any(k + 1, group.length, round)
+              ? line()
+              : empty(),
         _AddBubble(exercise: start + k, editor: editor, state: state),
       ],
     );
-    // Joins the bubbles of a round in rows [k] and [k + 1].
+    // Joins the bubbles of a round across the gap below row [k].
     Widget connectors(int k) => Row(
       spacing: Gap.sm,
       children: [
-        for (var slot = 0; slot <= warmupSlots; slot++)
-          const SizedBox(width: kMinInteractiveDimension),
-        for (var round = 0; round < working[k].length; round++)
-          SizedBox(
-            width: kMinInteractiveDimension,
-            height: Gap.sm,
-            child: round < working[k + 1].length
-                ? const VerticalDivider(width: kMinInteractiveDimension)
-                : null,
-          ),
+        for (var slot = 0; slot <= warmupSlots; slot++) empty(Gap.sm),
+        for (var round = 0; round < rounds; round++)
+          any(0, k + 1, round) && any(k + 1, group.length, round)
+              ? line(Gap.sm)
+              : empty(Gap.sm),
       ],
     );
     return Column(
@@ -184,8 +196,15 @@ class _AddBubble extends StatelessWidget {
   }
 }
 
-/// A round button of the size of a tap target, outlined, dashed or filled
-/// as selected or done.
+/// A bubble's side: a tap target, grown with the text scale so its label
+/// and tick fit.
+double bubbleSize(BuildContext context) => math.max(
+  kMinInteractiveDimension,
+  MediaQuery.textScalerOf(context).scale(kMinInteractiveDimension),
+);
+
+/// A round button of [bubbleSize], outlined, dashed or filled as selected
+/// or done.
 class _Bubble extends StatelessWidget {
   const _Bubble({
     required this.label,
@@ -206,7 +225,7 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final outline = selected ? colors.primary : colors.outline;
+    final side = BorderSide(color: selected ? colors.primary : colors.outline);
     return Semantics(
       button: true,
       selected: selected,
@@ -214,18 +233,16 @@ class _Bubble extends StatelessWidget {
       label: label,
       excludeSemantics: true,
       child: SizedBox.square(
-        dimension: kMinInteractiveDimension,
+        dimension: bubbleSize(context),
         child: CustomPaint(
-          foregroundPainter: dashed ? _DashedCircle(outline) : null,
+          foregroundPainter: dashed ? _DashedCircle(side) : null,
           child: Material(
             color: selected
                 ? colors.primaryContainer
                 : done
                 ? colors.secondaryContainer
                 : colors.surface,
-            shape: CircleBorder(
-              side: dashed ? BorderSide.none : BorderSide(color: outline),
-            ),
+            shape: CircleBorder(side: dashed ? BorderSide.none : side),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onTap,
@@ -238,26 +255,24 @@ class _Bubble extends StatelessWidget {
   }
 }
 
-/// The dashed outline of a warm-up's bubble.
+/// The dashed outline of a warm-up's bubble, drawn as [side] would be.
 class _DashedCircle extends CustomPainter {
-  const _DashedCircle(this.color);
+  const _DashedCircle(this.side);
 
-  final Color color;
+  final BorderSide side;
 
   static const _dashes = 12;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke;
-    final rect = Offset.zero & size;
+    final paint = side.toPaint();
+    final rect = (Offset.zero & size).deflate(side.width / 2);
     const sweep = math.pi / _dashes;
     for (var i = 0; i < _dashes; i++) {
-      canvas.drawArc(rect.deflate(0.5), i * 2 * sweep, sweep, false, paint);
+      canvas.drawArc(rect, i * 2 * sweep, sweep, false, paint);
     }
   }
 
   @override
-  bool shouldRepaint(_DashedCircle oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(_DashedCircle oldDelegate) => oldDelegate.side != side;
 }

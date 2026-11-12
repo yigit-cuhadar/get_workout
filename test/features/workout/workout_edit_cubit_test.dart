@@ -13,6 +13,7 @@ import 'package:get_workout/features/workout/domain/workout_editing.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:get_workout/features/workout/presentation/workout_edit_cubit.dart';
+import 'package:get_workout/features/workout/presentation/workout_editor.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
@@ -203,6 +204,85 @@ void main() {
       expect(cubit.state.invalidSet, (exercise: 0, set: 0));
       cubit.setWeight((exercise: 0, set: 0), '70', WeightUnit.kg);
       expect(cubit.state.invalidSet, isNull);
+      await cubit.close();
+    });
+  });
+
+  group('selection', () {
+    test('a stored workout opens on its first exercise\'s last set', () async {
+      final cubit = await editing();
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      await cubit.close();
+    });
+
+    test('an edit without a selection of its own keeps it', () async {
+      final cubit = await editing();
+      cubit
+        ..addSet(0, SetType.normal)
+        ..selectSet((exercise: 0, set: 0))
+        ..setName('Legs day')
+        ..setReps((exercise: 0, set: 0), '6')
+        ..setNote('Good');
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      await cubit.close();
+    });
+
+    test(
+      'added sets are selected, a warm-up before the working sets',
+      () async {
+        final cubit = await editing();
+        cubit.addSet(0, SetType.normal);
+        expect(cubit.state.selection, (exercise: 0, set: 1));
+        cubit.addSet(0, SetType.warmup);
+        expect(cubit.state.workout!.exercises[0].sets.first.isWarmup, isTrue);
+        expect(cubit.state.selection, (exercise: 0, set: 0));
+        await cubit.close();
+      },
+    );
+
+    test('a tick moves on to the next set to do, else stays', () async {
+      final cubit = await editing();
+      cubit
+        ..addSet(0, SetType.normal)
+        ..addSet(0, SetType.normal)
+        ..selectSet((exercise: 0, set: 1))
+        ..toggleDone((exercise: 0, set: 1));
+      expect(cubit.state.selection, (exercise: 0, set: 2));
+      cubit.toggleDone((exercise: 0, set: 2));
+      expect(cubit.state.selection, (exercise: 0, set: 2));
+      await cubit.close();
+    });
+
+    test('removing the selected set selects the one before', () async {
+      final cubit = await editing();
+      cubit
+        ..addSet(0, SetType.normal)
+        ..removeSet((exercise: 0, set: 1));
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      await cubit.close();
+    });
+
+    test('a new pick clears the message of a set not ticked', () async {
+      final cubit = await editing();
+      cubit
+        ..addExercises([move('row')], 'en')
+        ..toggleDone((exercise: 1, set: 0));
+      expect(cubit.state.invalidSet, (exercise: 1, set: 0));
+      cubit.selectSet((exercise: 0, set: 0));
+      expect(cubit.state.invalidSet, isNull);
+      await cubit.close();
+    });
+
+    test('a reload starts over on the selection, keeps the set view', () async {
+      final cubit = await editing();
+      cubit
+        ..toggleSetView()
+        ..addSet(0, SetType.normal);
+      stored.add((workout: legs.copyWith(name: 'Theirs'), pending: false));
+      await pumpEventQueue();
+      cubit.reload();
+      expect(cubit.state.picked, isNull);
+      expect(cubit.state.setView, SetView.selectedSet);
       await cubit.close();
     });
   });

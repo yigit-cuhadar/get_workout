@@ -26,6 +26,36 @@ void main() {
     expect(l10n.weightField(WeightUnit.lb.toKg(102.5), WeightUnit.lb), '102.5');
   });
 
+  test('last time keeps what a bodyweight exercise\'s weight means', () {
+    const kg = WeightUnit.kg;
+    final set = lift(20, 8);
+    expect(l10n.setWithUnitText(set, LoggingType.weightReps, kg), '20 kg × 8');
+    expect(
+      l10n.setWithUnitText(set, LoggingType.weightedBodyweight, kg),
+      '+20 kg × 8',
+    );
+    expect(
+      l10n.setWithUnitText(set, LoggingType.assistedBodyweight, kg),
+      '−20 kg × 8',
+    );
+    expect(
+      l10n.setWithUnitText(lift(0, 8), LoggingType.weightedBodyweight, kg),
+      '8',
+    );
+  });
+
+  test('effort shows on the chosen scale, failed on every one', () {
+    const hard = WorkoutSet(rir: 1);
+    expect(l10n.effortText(hard, EffortScale.byFeel), 'Hard');
+    expect(l10n.effortText(hard, EffortScale.rir), 'RIR 1');
+    expect(l10n.effortText(hard, EffortScale.rpe), 'RPE 9');
+    const failed = WorkoutSet(rir: 2, toFailure: true);
+    for (final scale in EffortScale.values) {
+      expect(l10n.effortText(failed, scale), 'Failed');
+    }
+    expect(l10n.effortText(const WorkoutSet(), EffortScale.rir), isNull);
+  });
+
   group('sets as the set column numbers them', () {
     final bench = exercise('Bench Press', [
       lift(40, 10, type: SetType.warmup),

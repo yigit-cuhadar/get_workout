@@ -145,7 +145,8 @@ extension WorkoutText on AppLocalizations {
     };
   }
 
-  /// A set as it was done with the weight's unit, e.g. `80 kg × 8`.
+  /// A set as it was done with the weight's unit, e.g. `80 kg × 8`,
+  /// `+10 kg × 8` (added) or `−20 kg × 8` (assistance).
   String setWithUnitText(WorkoutSet set, LoggingType type, WeightUnit unit) {
     final kg = set.weightKg;
     if (!type.logsWeight || kg == null || kg == 0) {
@@ -156,7 +157,14 @@ extension WorkoutText on AppLocalizations {
       type,
       unit,
     );
-    return '${liftedWeightText(kg, unit)} × $work';
+    final weight = liftedWeightText(kg, unit);
+    // As the weight field's label says: added, or assistance.
+    final load = switch (type) {
+      LoggingType.weightedBodyweight => workoutAddedWeight(weight),
+      LoggingType.assistedBodyweight => workoutAssistance(weight),
+      _ => weight,
+    };
+    return '$load × $work';
   }
 
   /// Whole minutes; under one, "< 1 min".

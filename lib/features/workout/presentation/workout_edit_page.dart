@@ -152,137 +152,133 @@ class _Form extends StatelessWidget {
     final duration = (workout.finishedAt ?? start).difference(start);
     final saving = state.status == WorkoutEditStatus.saving;
     final conflict = state.conflict;
-    return Column(
-      children: [
-        Expanded(
-          child: ListView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.only(bottom: Gap.xl),
-            children: [
-              if (saving) const LinearProgressIndicator(),
-              if (conflict != null)
-                MaterialBanner(
-                  content: Text(
-                    conflict == WorkoutEditConflict.changed
-                        ? l10n.historyChangedElsewhere
-                        : l10n.historyDeletedElsewhere,
+    return SetBarLayout(
+      state: state,
+      editor: cubit,
+      content: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.only(bottom: Gap.xl),
+        children: [
+          if (saving) const LinearProgressIndicator(),
+          if (conflict != null)
+            MaterialBanner(
+              content: Text(
+                conflict == WorkoutEditConflict.changed
+                    ? l10n.historyChangedElsewhere
+                    : l10n.historyDeletedElsewhere,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => context.pop(),
+                  child: Text(l10n.historyDiscardChanges),
+                ),
+                if (conflict == WorkoutEditConflict.changed)
+                  TextButton(
+                    onPressed: cubit.reload,
+                    child: Text(l10n.historyReload),
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => context.pop(),
-                      child: Text(l10n.historyDiscardChanges),
-                    ),
-                    if (conflict == WorkoutEditConflict.changed)
-                      TextButton(
-                        onPressed: cubit.reload,
-                        child: Text(l10n.historyReload),
-                      ),
-                  ],
-                ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: TextFormField(
-                  initialValue: workout.name,
-                  textCapitalization: TextCapitalization.sentences,
-                  inputFormatters: [
-                    maxLengthFormatter(WorkoutLimits.maxNameLength),
-                  ],
-                  decoration: InputDecoration(labelText: l10n.historyName),
-                  onChanged: cubit.setName,
-                ),
-              ),
-              ListTile(
-                title: Text(l10n.historyDate),
-                trailing: Text(dates.formatMediumDate(start)),
-                onTap: () => _pickDate(context, start),
-              ),
-              ListTile(
-                title: Text(l10n.historyStartTime),
-                trailing: Text(TimeOfDay.fromDateTime(start).format(context)),
-                onTap: () => _pickTime(context, start),
-              ),
-              // Show the duration as stored: minutes past 59 carry into hours,
-              // and more than 24 hours is cut.
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(l10n.workoutDuration)),
-                    Expanded(
-                      child: NumberCell(
-                        value: duration.inHours.toDouble(),
-                        hint: l10n.historyHours,
-                        onChanged: (text) => cubit.setTotalDuration(
-                          Duration(
-                            hours: int.tryParse(text) ?? 0,
-                            minutes: duration.inMinutes % 60,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Text(l10n.historyHours),
-                    Expanded(
-                      child: NumberCell(
-                        value: (duration.inMinutes % 60).toDouble(),
-                        hint: l10n.historyMinutes,
-                        onChanged: (text) => cubit.setTotalDuration(
-                          Duration(
-                            hours: duration.inHours,
-                            minutes: int.tryParse(text) ?? 0,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Text(l10n.historyMinutes),
-                  ],
-                ),
-              ),
-              if (workout.exercises.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(Gap.md),
-                  child: Text(l10n.workoutEmpty, textAlign: TextAlign.center),
-                ),
-              ExerciseCards(
-                state: state,
-                editor: cubit,
-                picker: Routes.historyPicker,
-                exerciseRoute: Routes.historyExercise,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(Gap.md),
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.programAddExercises),
-                  onPressed:
-                      workout.exercises.length >= WorkoutLimits.maxExercises
-                      ? null
-                      : () => _addExercises(context, workout),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: NoteField(
-                  initial: workout.note,
-                  label: l10n.workoutNote,
-                  maxLength: WorkoutLimits.maxNoteLength,
-                  onChanged: cubit.setNote,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(Gap.md),
-                child: ForgeButton(
-                  label: l10n.historySave,
-                  loading: saving,
-                  onPressed: saving || conflict != null
-                      ? null
-                      : () => _save(context, workout),
-                ),
-              ),
-            ],
+              ],
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+            child: TextFormField(
+              initialValue: workout.name,
+              textCapitalization: TextCapitalization.sentences,
+              inputFormatters: [
+                maxLengthFormatter(WorkoutLimits.maxNameLength),
+              ],
+              decoration: InputDecoration(labelText: l10n.historyName),
+              onChanged: cubit.setName,
+            ),
           ),
-        ),
-        SetBarArea(state: state, editor: cubit),
-      ],
+          ListTile(
+            title: Text(l10n.historyDate),
+            trailing: Text(dates.formatMediumDate(start)),
+            onTap: () => _pickDate(context, start),
+          ),
+          ListTile(
+            title: Text(l10n.historyStartTime),
+            trailing: Text(TimeOfDay.fromDateTime(start).format(context)),
+            onTap: () => _pickTime(context, start),
+          ),
+          // Show the duration as stored: minutes past 59 carry into hours,
+          // and more than 24 hours is cut.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+            child: Row(
+              children: [
+                Expanded(child: Text(l10n.workoutDuration)),
+                Expanded(
+                  child: NumberCell(
+                    value: duration.inHours.toDouble(),
+                    hint: l10n.historyHours,
+                    onChanged: (text) => cubit.setTotalDuration(
+                      Duration(
+                        hours: int.tryParse(text) ?? 0,
+                        minutes: duration.inMinutes % 60,
+                      ),
+                    ),
+                  ),
+                ),
+                Text(l10n.historyHours),
+                Expanded(
+                  child: NumberCell(
+                    value: (duration.inMinutes % 60).toDouble(),
+                    hint: l10n.historyMinutes,
+                    onChanged: (text) => cubit.setTotalDuration(
+                      Duration(
+                        hours: duration.inHours,
+                        minutes: int.tryParse(text) ?? 0,
+                      ),
+                    ),
+                  ),
+                ),
+                Text(l10n.historyMinutes),
+              ],
+            ),
+          ),
+          if (workout.exercises.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(Gap.md),
+              child: Text(l10n.workoutEmpty, textAlign: TextAlign.center),
+            ),
+          ExerciseCards(
+            state: state,
+            editor: cubit,
+            picker: Routes.historyPicker,
+            exerciseRoute: Routes.historyExercise,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(Gap.md),
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.add),
+              label: Text(l10n.programAddExercises),
+              onPressed: workout.exercises.length >= WorkoutLimits.maxExercises
+                  ? null
+                  : () => _addExercises(context, workout),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+            child: NoteField(
+              initial: workout.note,
+              label: l10n.workoutNote,
+              maxLength: WorkoutLimits.maxNoteLength,
+              onChanged: cubit.setNote,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(Gap.md),
+            child: ForgeButton(
+              label: l10n.historySave,
+              loading: saving,
+              onPressed: saving || conflict != null
+                  ? null
+                  : () => _save(context, workout),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -1,7 +1,11 @@
 import 'package:flutter/widgets.dart';
 
-/// Scrolls [child] into view when it first shows, e.g. once selected, and
-/// whenever the window's metrics change, e.g. as the keyboard opens.
+import 'set_bar.dart';
+
+/// Scrolls [child], the selected set, into view when it first shows (it is
+/// built anew whenever the selection changes), and as the window's metrics
+/// change (the keyboard opening) while a field of the [SetBar] has focus;
+/// another field opening the keyboard is left to scroll to itself.
 class KeepVisible extends StatefulWidget {
   const KeepVisible({super.key, required this.child});
 
@@ -20,7 +24,10 @@ class _KeepVisibleState extends State<KeepVisible> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeMetrics() => _reveal();
+  void didChangeMetrics() {
+    final focused = FocusManager.instance.primaryFocus?.context;
+    if (focused?.findAncestorWidgetOfExactType<SetBar>() != null) _reveal();
+  }
 
   @override
   void dispose() {

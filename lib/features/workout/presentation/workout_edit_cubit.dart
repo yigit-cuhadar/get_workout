@@ -322,9 +322,16 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     );
   }
 
+  /// A new pick drops the message of a set that could not be ticked.
   @override
   void emitSelection({SetSelection? Function()? picked, SetView? setView}) =>
-      emit(state.copyWith(picked: picked, setView: setView));
+      emit(
+        state.copyWith(
+          picked: picked,
+          setView: setView,
+          invalidSet: picked == null ? null : () => null,
+        ),
+      );
 
   /// Ticks the set done, its empty values taken from the sets before it;
   /// one that still lacks values stays undone and is marked as

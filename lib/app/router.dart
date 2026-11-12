@@ -674,10 +674,9 @@ ExercisePickerPage _picker(GoRouterState state) {
   );
 }
 
-/// An exercise's strength page above its detail page, in the tab
-/// showing that, so going back returns to the exercise.
-/// An exercise's detail page above a workout, so going back returns to the
-/// workout as it was; [exerciseRoute] is where it opens other exercises.
+/// An exercise's detail page pushed above a workout (in progress or being
+/// edited), so going back returns to it; [exerciseRoute] is where it opens
+/// other exercises.
 GoRoute _workoutExercise(String Function(String id) exerciseRoute) => GoRoute(
   path: 'exercises/:exerciseId',
   builder: (_, state) => ExerciseDetailPage(
@@ -687,6 +686,8 @@ GoRoute _workoutExercise(String Function(String id) exerciseRoute) => GoRoute(
   routes: [_exerciseStrength((state) => state.pathParameters['exerciseId']!)],
 );
 
+/// An exercise's strength page above its detail page, in the tab
+/// showing that, so going back returns to the exercise.
 GoRoute _exerciseStrength(String Function(GoRouterState state) exerciseId) =>
     GoRoute(
       path: Routes.strengthSegment,

@@ -87,9 +87,7 @@ class WorkoutPage extends StatelessWidget {
 
 enum _WorkoutAction { reorder, discard }
 
-/// The exercises above the set bar, then the rest, which steps aside while
-/// the keyboard is up so the bar sits right on it (it stays mounted, so it
-/// still asks about notifications).
+/// The exercises above the set bar, then the rest; see [SetBarLayout].
 class _ActiveWorkout extends StatelessWidget {
   const _ActiveWorkout(this.state);
   final ActiveWorkoutState state;
@@ -100,7 +98,6 @@ class _ActiveWorkout extends StatelessWidget {
     final cubit = context.read<ActiveWorkoutCubit>();
     final workout = state.workout!;
     final finishing = state.status == WorkoutStatus.finishing;
-    final typing = MediaQuery.viewInsetsOf(context).bottom > 0;
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) unawaited(cubit.leave());
@@ -149,65 +146,48 @@ class _ActiveWorkout extends StatelessWidget {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.only(bottom: Gap.xl),
-                children: [
-                  if (finishing) const LinearProgressIndicator(),
-                  if (workout.exercises.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(Gap.md),
-                      child: Text(
-                        l10n.workoutEmpty,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ExerciseCards(
-                    state: state,
-                    editor: cubit,
-                    picker: Routes.workoutPicker,
-                    exerciseRoute: Routes.workoutExercise,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(Gap.md),
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.programAddExercises),
-                      onPressed:
-                          workout.exercises.length >= WorkoutLimits.maxExercises
-                          ? null
-                          : () => _addExercises(context, workout),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                    child: NoteField(
-                      initial: workout.note,
-                      label: l10n.workoutNote,
-                      maxLength: WorkoutLimits.maxNoteLength,
-                      onChanged: cubit.setNote,
-                    ),
-                  ),
-                ],
+        body: SetBarLayout(
+          state: state,
+          editor: cubit,
+          below: const RestBelowBar(child: RestStrip()),
+          content: ListView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.only(bottom: Gap.xl),
+            children: [
+              if (finishing) const LinearProgressIndicator(),
+              if (workout.exercises.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(Gap.md),
+                  child: Text(l10n.workoutEmpty, textAlign: TextAlign.center),
+                ),
+              ExerciseCards(
+                state: state,
+                editor: cubit,
+                picker: Routes.workoutPicker,
+                exerciseRoute: Routes.workoutExercise,
               ),
-            ),
-            SetBarArea(
-              state: state,
-              editor: cubit,
-              below: Offstage(
-                offstage: typing,
-                child: MediaQuery.removePadding(
-                  context: context,
-                  removeBottom: true,
-                  child: const RestStrip(),
+              Padding(
+                padding: const EdgeInsets.all(Gap.md),
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.programAddExercises),
+                  onPressed:
+                      workout.exercises.length >= WorkoutLimits.maxExercises
+                      ? null
+                      : () => _addExercises(context, workout),
                 ),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+                child: NoteField(
+                  initial: workout.note,
+                  label: l10n.workoutNote,
+                  maxLength: WorkoutLimits.maxNoteLength,
+                  onChanged: cubit.setNote,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

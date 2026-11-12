@@ -15,33 +15,108 @@ import 'number_cell.dart';
 import 'workout_editor.dart';
 import 'workout_text.dart';
 
-/// The bottom of a page logging a workout: the [SetBar], then [below] it
-/// (e.g. the rest), then the safe area, on one surface.
-class SetBarArea extends StatelessWidget {
-  const SetBarArea({
+/// A page logging a workout: [content] above, and at the bottom the
+/// [SetBar], then [below] it (e.g. the rest), then the safe area, on one
+/// surface. The bottom takes at most [maxBottomShare] of the page (of what
+/// the keyboard leaves); the bar's drops and effort scroll beyond that,
+/// its title, values and tick always show.
+class SetBarLayout extends StatelessWidget {
+  const SetBarLayout({
     super.key,
+    required this.content,
     required this.state,
     required this.editor,
     this.below,
   });
 
+  final Widget content;
   final EditedWorkout state;
   final WorkoutEditor<EditedWorkout> editor;
   final Widget? below;
 
+  static const maxBottomShare = 0.6;
+
   @override
-  Widget build(BuildContext context) => Material(
-    color: Theme.of(context).colorScheme.surfaceContainer,
-    child: SafeArea(
-      top: false,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SetBar(state: state, editor: editor),
-          ?below,
-        ],
-      ),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => Column(
+      children: [
+        Expanded(child: content),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: constraints.maxHeight * maxBottomShare,
+          ),
+          child: Material(
+            color: Theme.of(context).colorScheme.surfaceContainer,
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Flexible(
+                    child: SetBar(state: state, editor: editor),
+                  ),
+                  ?below,
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// The rest strip, out of the way while the keyboard is up so the
+/// [SetBar] sits right on it. It stays mounted, so it still asks about
+/// notifications; only it rebuilds as the keyboard moves.
+class RestBelowBar extends StatefulWidget {
+  const RestBelowBar({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<RestBelowBar> createState() => _RestBelowBarState();
+}
+
+class _RestBelowBarState extends State<RestBelowBar>
+    with WidgetsBindingObserver {
+  bool _typing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _typing = _keyboardUp();
+  }
+
+  @override
+  void didChangeMetrics() {
+    final typing = _keyboardUp();
+    if (typing != _typing) setState(() => _typing = typing);
+  }
+
+  /// The page's own insets are taken off by the scaffold, so the view's.
+  bool _keyboardUp() => View.of(context).viewInsets.bottom > 0;
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Offstage(
+    offstage: _typing,
+    child: MediaQuery.removePadding(
+      context: context,
+      removeBottom: true,
+      child: widget.child,
     ),
   );
 }
@@ -163,13 +238,6 @@ class SetBar extends StatelessWidget {
               ),
             ],
           ),
-          if (set.type == SetType.drop)
-            _Drops(ref: ref, set: set, type: type, unit: unit, editor: editor),
-          _EffortChoice(
-            scale: settings.effortScale,
-            chosen: settings.effortScale.stepOf(set),
-            onChosen: (step) => editor.setEffort(ref, step),
-          ),
           if (state.invalidSet == ref)
             Text(
               l10n.workoutSetInvalid,
@@ -177,6 +245,29 @@ class SetBar extends StatelessWidget {
                 color: theme.colorScheme.error,
               ),
             ),
+          // What does not fit the bar's share of the page scrolls.
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (set.type == SetType.drop)
+                    _Drops(
+                      ref: ref,
+                      set: set,
+                      type: type,
+                      unit: unit,
+                      editor: editor,
+                    ),
+                  _EffortChoice(
+                    scale: settings.effortScale,
+                    chosen: settings.effortScale.stepOf(set),
+                    onChosen: (step) => editor.setEffort(ref, step),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

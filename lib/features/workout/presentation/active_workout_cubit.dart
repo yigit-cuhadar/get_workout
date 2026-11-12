@@ -733,9 +733,16 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     _keep();
   }
 
+  /// A new pick drops the message of a set that could not be ticked.
   @override
   void emitSelection({SetSelection? Function()? picked, SetView? setView}) =>
-      emit(state.copyWith(picked: picked, setView: setView));
+      emit(
+        state.copyWith(
+          picked: picked,
+          setView: setView,
+          invalidSet: picked == null ? null : () => null,
+        ),
+      );
 
   /// The rest once an edit made [after] of [before]: a set ticked done
   /// starts the rest [restAfterTick] gives, replacing the running one;
