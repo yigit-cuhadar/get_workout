@@ -4,8 +4,8 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../features/exercises/domain/vocabulary.dart';
-import '../../access/presentation/access_cubit.dart';
 import '../../admin_router.dart';
+import '../../shell/admin_nav.dart';
 import '../../shell/admin_text.dart';
 import '../domain/exercise_admin_usecases.dart';
 import '../domain/exercise_draft.dart';
@@ -21,19 +21,10 @@ class ExerciseListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final access = context.watch<AccessCubit>().state;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Exercises'),
-        actions: [
-          if (access case SignedIn(:final user))
-            Center(child: Text(user.email ?? user.id)),
-          TextButton(
-            onPressed: context.read<AccessCubit>().signOut,
-            child: const Text('Sign out'),
-          ),
-          const SizedBox(width: Gap.sm),
-        ],
+        actions: const [AdminNav()],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go(AdminRoutes.newExercise),

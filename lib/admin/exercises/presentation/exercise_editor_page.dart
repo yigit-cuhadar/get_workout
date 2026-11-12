@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -8,12 +7,11 @@ import 'package:go_router/go_router.dart';
 import '../../../features/exercises/domain/content_rules.dart';
 import '../../../features/exercises/domain/vocabulary.dart';
 import '../../admin_router.dart';
+import '../../shell/admin_form.dart';
 import '../../shell/admin_text.dart';
+import '../../shell/editor_status.dart';
 import '../domain/exercise_draft.dart';
 import 'exercise_editor_cubit.dart';
-
-/// The widest the form grows on a desktop screen.
-const _maxContentWidth = 960.0;
 
 /// Creates an exercise ([id] null) or edits one, field by field, with the
 /// content rules' problems shown next to the fields they concern.
@@ -140,106 +138,18 @@ class _Actions extends StatelessWidget {
 
   final ExerciseEditorState state;
 
-  Future<void> _confirmThen(
-    BuildContext context, {
-    required String title,
-    required String body,
-    required String confirm,
-    required VoidCallback action,
-  }) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(body),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(confirm),
-          ),
-        ],
-      ),
-    );
-    if (confirmed ?? false) action();
-  }
-
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<ExerciseEditorCubit>();
-    final saving = state.status == EditorStatus.saving;
-    final stored = state.isNew ? null : state.loaded?.draft.status;
-    void publish() => _confirmThen(
-      context,
-      title: 'Publish this exercise?',
-      body: 'It becomes visible to every user at their next sync.',
-      confirm: 'Publish',
-      action: () => cubit.saveAs(ExerciseStatus.live),
-    );
-    void retire() => _confirmThen(
-      context,
-      title: 'Retire this exercise?',
-      body:
-          'Users stop seeing it at their next sync. It is kept, and can be '
-          'published again.',
-      confirm: 'Retire',
-      action: () => cubit.saveAs(ExerciseStatus.retired),
-    );
-    void toDraft() => stored == ExerciseStatus.live
-        ? _confirmThen(
-            context,
-            title: 'Move this exercise back to draft?',
-            body: 'Users stop seeing it at their next sync.',
-            confirm: 'Move to draft',
-            action: () => cubit.saveAs(ExerciseStatus.draft),
-          )
-        : cubit.saveAs(ExerciseStatus.draft);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (saving) const LinearProgressIndicator(),
-        Padding(
-          padding: const EdgeInsets.all(Gap.md),
-          child: Wrap(
-            spacing: Gap.sm,
-            runSpacing: Gap.sm,
-            alignment: WrapAlignment.end,
-            children: [
-              if (stored != null)
-                FilledButton(
-                  onPressed: saving || !state.canSave() ? null : cubit.save,
-                  child: Text('Save (stays ${codeLabel(stored)})'),
-                ),
-              if (stored != ExerciseStatus.draft)
-                OutlinedButton(
-                  onPressed: saving || !state.canSave(ExerciseStatus.draft)
-                      ? null
-                      : toDraft,
-                  child: const Text('Save as draft'),
-                ),
-              if (stored != ExerciseStatus.live)
-                OutlinedButton(
-                  onPressed: saving || !state.canSave(ExerciseStatus.live)
-                      ? null
-                      : publish,
-                  child: const Text('Publish'),
-                ),
-              if (stored != null && stored != ExerciseStatus.retired)
-                OutlinedButton(
-                  onPressed: saving || !state.canSave(ExerciseStatus.retired)
-                      ? null
-                      : retire,
-                  child: const Text('Retire'),
-                ),
-            ],
-          ),
-        ),
-      ],
+    return StatusActions(
+      noun: 'exercise',
+      liveEffect: 'It becomes visible to every user at their next sync.',
+      hiddenEffect: 'Users stop seeing it at their next sync.',
+      stored: state.isNew ? null : state.loaded?.draft.status,
+      saving: state.status == EditorStatus.saving,
+      canSave: state.canSave,
+      onSave: cubit.save,
+      onSaveAs: cubit.saveAs,
     );
   }
 }
@@ -267,47 +177,47 @@ class _Form extends StatelessWidget {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: _maxContentWidth),
+        constraints: const BoxConstraints(maxWidth: maxFormWidth),
         child: ListView(
           padding: const EdgeInsets.all(Gap.md),
           children: [
             if (state.problems.isNotEmpty)
-              _ProblemList(
+              ProblemSummary(
                 title: '${state.problems.length} problem(s) block saving',
                 messages: [for (final p in state.problems) p.message],
               ),
-            _Section(
+            FormSection(
               title: 'Identity',
               children: [
-                _TextInput(
+                TextInput(
                   label: 'Id (ex_ + snake_case; cannot change once saved)',
                   value: draft.id,
                   enabled: state.isNew,
                   problems: problems('id'),
                   onChanged: (id) => edit((d) => d.copyWith(id: id)),
                 ),
-                _TextInput(
+                TextInput(
                   label: 'Name (English)',
                   value: draft.name,
                   problems: problems('l10n.en.name'),
                   onChanged: (name) => edit((d) => d.copyWith(name: name)),
                 ),
-                _Row([
-                  _TextInput(
+                FormRow([
+                  TextInput(
                     label: 'Family (snake_case)',
                     value: draft.family,
                     problems: problems('family'),
                     onChanged: (family) =>
                         edit((d) => d.copyWith(family: family)),
                   ),
-                  _NumberInput(
+                  NumberInput(
                     label: 'Family rank (1 = easiest)',
                     value: draft.familyRank,
                     problems: problems('familyRank'),
                     onChanged: (rank) =>
                         edit((d) => d.copyWith(familyRank: rank)),
                   ),
-                  _NumberInput(
+                  NumberInput(
                     label: 'Popularity (1 sorts first)',
                     value: draft.popularity,
                     problems: problems('popularity'),
@@ -317,25 +227,25 @@ class _Form extends StatelessWidget {
                 ]),
               ],
             ),
-            _Section(
+            FormSection(
               title: 'Classification',
               children: [
-                _Row([
-                  _CodePicker<LoggingType>(
+                FormRow([
+                  CodePicker<LoggingType>(
                     label: 'Logging type',
                     values: LoggingType.values,
                     value: draft.loggingType,
                     problems: problems('loggingType'),
                     onChanged: (v) => edit((d) => d.copyWith(loggingType: v)),
                   ),
-                  _CodePicker<Mechanic>(
+                  CodePicker<Mechanic>(
                     label: 'Mechanic',
                     values: Mechanic.values,
                     value: draft.mechanic,
                     problems: problems('mechanic'),
                     onChanged: (v) => edit((d) => d.copyWith(mechanic: v)),
                   ),
-                  _CodePicker<Laterality>(
+                  CodePicker<Laterality>(
                     label: 'Laterality',
                     values: Laterality.values,
                     value: draft.laterality,
@@ -343,22 +253,22 @@ class _Form extends StatelessWidget {
                     onChanged: (v) => edit((d) => d.copyWith(laterality: v)),
                   ),
                 ]),
-                _Row([
-                  _CodePicker<Level>(
+                FormRow([
+                  CodePicker<Level>(
                     label: 'Level',
                     values: Level.values,
                     value: draft.level,
                     problems: problems('level'),
                     onChanged: (v) => edit((d) => d.copyWith(level: v)),
                   ),
-                  _CodePicker<Force>(
+                  CodePicker<Force>(
                     label: 'Force',
                     values: Force.values,
                     value: draft.force,
                     problems: problems('force'),
                     onChanged: (v) => edit((d) => d.copyWith(force: v)),
                   ),
-                  _CodePicker<MovementPattern>(
+                  CodePicker<MovementPattern>(
                     label: 'Movement pattern',
                     values: MovementPattern.values,
                     value: draft.movementPattern,
@@ -367,15 +277,15 @@ class _Form extends StatelessWidget {
                         edit((d) => d.copyWith(movementPattern: v)),
                   ),
                 ]),
-                _Row([
-                  _CodePicker<Position>(
+                FormRow([
+                  CodePicker<Position>(
                     label: 'Position',
                     values: Position.values,
                     value: draft.position,
                     problems: problems('position'),
                     onChanged: (v) => edit((d) => d.copyWith(position: v)),
                   ),
-                  _CodePicker<Grip>(
+                  CodePicker<Grip>(
                     label: 'Grip (optional)',
                     values: Grip.values,
                     value: draft.grip,
@@ -383,7 +293,7 @@ class _Form extends StatelessWidget {
                     problems: problems('grip'),
                     onChanged: (v) => edit((d) => d.copyWith(grip: v)),
                   ),
-                  _CodePicker<GripWidth>(
+                  CodePicker<GripWidth>(
                     label: 'Grip width (optional)',
                     values: GripWidth.values,
                     value: draft.gripWidth,
@@ -392,8 +302,8 @@ class _Form extends StatelessWidget {
                     onChanged: (v) => edit((d) => d.copyWith(gripWidth: v)),
                   ),
                 ]),
-                _Row([
-                  _NumberInput(
+                FormRow([
+                  NumberInput(
                     label: 'Default rest (s, $minRestS-$maxRestS)',
                     value: draft.defaultRestS,
                     problems: problems('defaultRestS'),
@@ -411,7 +321,7 @@ class _Form extends StatelessWidget {
                 ]),
               ],
             ),
-            _Section(
+            FormSection(
               title: 'Equipment',
               children: [
                 _CodeChips<Equipment>(
@@ -439,7 +349,7 @@ class _Form extends StatelessWidget {
                       ),
                     ),
                   ),
-                _Problems(problems('equipmentAlternatives')),
+                FieldProblems(problems('equipmentAlternatives')),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
@@ -463,7 +373,7 @@ class _Form extends StatelessWidget {
                 ),
               ],
             ),
-            _Section(
+            FormSection(
               title: 'Muscles',
               children: [
                 _CodeChips<Muscle>(
@@ -483,7 +393,7 @@ class _Form extends StatelessWidget {
                 ),
               ],
             ),
-            _Section(
+            FormSection(
               title: 'Alternatives (overrides of the computed list)',
               children: [
                 _IdList(
@@ -506,7 +416,7 @@ class _Form extends StatelessWidget {
                 ),
               ],
             ),
-            _Section(
+            FormSection(
               title: 'Text (English)',
               children: [
                 _StringList(
@@ -534,7 +444,7 @@ class _Form extends StatelessWidget {
                   problems: problems('l10n.en.mistakes'),
                   onChanged: (v) => edit((d) => d.copyWith(mistakes: v)),
                 ),
-                _TextInput(
+                TextInput(
                   label: 'Safety (optional)',
                   value: draft.safety ?? '',
                   problems: problems('l10n.en.safety'),
@@ -551,7 +461,7 @@ class _Form extends StatelessWidget {
             ),
             // Problems about fields the form has no input for, e.g. an unknown
             // field written in the console.
-            _Problems([
+            FieldProblems([
               for (final problem in state.problems)
                 if (!_formFields.contains(problem.field)) problem.message,
             ]),
@@ -569,164 +479,6 @@ final _formFields = {
   ...allowedKeys.difference({'l10n'}),
   for (final key in allowedTextKeys) 'l10n.en.$key',
 };
-
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.children});
-
-  final String title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(Gap.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            for (final child in children) ...[
-              const SizedBox(height: Gap.md),
-              child,
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Row extends StatelessWidget {
-  const _Row(this.children);
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final (index, child) in children.indexed) ...[
-          if (index > 0) const SizedBox(width: Gap.md),
-          Expanded(child: child),
-        ],
-      ],
-    );
-  }
-}
-
-class _Problems extends StatelessWidget {
-  const _Problems(this.messages);
-
-  final List<String> messages;
-
-  @override
-  Widget build(BuildContext context) {
-    if (messages.isEmpty) return const SizedBox.shrink();
-    final style = TextStyle(color: Theme.of(context).colorScheme.error);
-    return Padding(
-      padding: const EdgeInsets.only(top: Gap.xs),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [for (final message in messages) Text(message, style: style)],
-      ),
-    );
-  }
-}
-
-class _ProblemList extends StatelessWidget {
-  const _ProblemList({required this.title, required this.messages});
-
-  final String title;
-  final List<String> messages;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Card(
-      color: scheme.errorContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(Gap.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium
-                  ?.copyWith(color: scheme.onErrorContainer),
-            ),
-            for (final message in messages)
-              Text(message, style: TextStyle(color: scheme.onErrorContainer)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TextInput extends StatelessWidget {
-  const _TextInput({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-    this.problems = const [],
-    this.enabled = true,
-  });
-
-  final String label;
-  final String value;
-  final ValueChanged<String> onChanged;
-  final List<String> problems;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextFormField(
-          initialValue: value,
-          enabled: enabled,
-          decoration: InputDecoration(labelText: label),
-          onChanged: onChanged,
-        ),
-        _Problems(problems),
-      ],
-    );
-  }
-}
-
-/// A whole number; anything else reads as unset, which the rules report.
-class _NumberInput extends StatelessWidget {
-  const _NumberInput({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-    this.problems = const [],
-  });
-
-  final String label;
-  final int? value;
-  final ValueChanged<int?> onChanged;
-  final List<String> problems;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextFormField(
-          initialValue: value?.toString() ?? '',
-          decoration: InputDecoration(labelText: label),
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onChanged: (text) => onChanged(int.tryParse(text)),
-        ),
-        _Problems(problems),
-      ],
-    );
-  }
-}
 
 class _DecimalInput extends StatelessWidget {
   const _DecimalInput({
@@ -752,46 +504,7 @@ class _DecimalInput extends StatelessWidget {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: (text) => onChanged(double.tryParse(text)),
         ),
-        _Problems(problems),
-      ],
-    );
-  }
-}
-
-class _CodePicker<T extends Coded> extends StatelessWidget {
-  const _CodePicker({
-    required this.label,
-    required this.values,
-    required this.value,
-    required this.onChanged,
-    this.optional = false,
-    this.problems = const [],
-  });
-
-  final String label;
-  final List<T> values;
-  final T? value;
-  final ValueChanged<T?> onChanged;
-  final bool optional;
-  final List<String> problems;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        DropdownButtonFormField<T?>(
-          initialValue: value,
-          decoration: InputDecoration(labelText: label),
-          items: [
-            if (optional || value == null)
-              DropdownMenuItem(child: Text(optional ? 'None' : 'Choose')),
-            for (final value in values)
-              DropdownMenuItem(value: value, child: Text(codeLabel(value))),
-          ],
-          onChanged: onChanged,
-        ),
-        _Problems(problems),
+        FieldProblems(problems),
       ],
     );
   }
@@ -849,7 +562,7 @@ class _CodeChips<T extends Coded> extends StatelessWidget {
               ),
           ],
         ),
-        _Problems(problems),
+        FieldProblems(problems),
       ],
     );
   }
@@ -876,7 +589,7 @@ class _IdList extends StatelessWidget {
   Future<void> _add(BuildContext context) async {
     final picked = await showDialog<String>(
       context: context,
-      builder: (_) => _ExercisePicker(
+      builder: (_) => ExercisePickerDialog(
         choices: [
           for (final id in choices)
             if (!ids.contains(id)) id,
@@ -910,68 +623,7 @@ class _IdList extends StatelessWidget {
             ),
           ],
         ),
-        _Problems(problems),
-      ],
-    );
-  }
-}
-
-class _ExercisePicker extends StatefulWidget {
-  const _ExercisePicker({required this.choices, required this.names});
-
-  final List<String> choices;
-  final Map<String, String> names;
-
-  @override
-  State<_ExercisePicker> createState() => _ExercisePickerState();
-}
-
-class _ExercisePickerState extends State<_ExercisePicker> {
-  String _query = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final needle = _query.trim().toLowerCase();
-    final matches = [
-      for (final id in widget.choices)
-        if ('$id ${widget.names[id]}'.toLowerCase().contains(needle)) id,
-    ];
-    return AlertDialog(
-      title: const Text('Pick an exercise'),
-      content: SizedBox(
-        width: _maxContentWidth / 2,
-        height: MediaQuery.sizeOf(context).height / 2,
-        child: Column(
-          children: [
-            TextField(
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Search name or id',
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: (query) => setState(() => _query = query),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: matches.length,
-                itemBuilder: (context, index) {
-                  final id = matches[index];
-                  return ListTile(
-                    title: Text(widget.names[id] ?? id),
-                    subtitle: Text(id),
-                    onTap: () => Navigator.pop(context, id),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
+        FieldProblems(problems),
       ],
     );
   }
@@ -1074,7 +726,7 @@ class _StringListState extends State<_StringList> {
             label: const Text('Add line'),
           ),
         ),
-        _Problems(widget.problems),
+        FieldProblems(widget.problems),
       ],
     );
   }
