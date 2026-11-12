@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import 'chart_geometry.dart';
+import 'chart_text.dart';
 
 typedef ChartPoint = ({double x, double y});
 
@@ -56,13 +57,7 @@ class _LineChartState extends State<LineChart> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final text = _LabelText(
-      style: theme.textTheme.labelSmall?.copyWith(
-        color: colors.onSurfaceVariant,
-      ),
-      direction: Directionality.of(context),
-      scaler: MediaQuery.textScalerOf(context),
-    );
+    final text = ChartText.of(context);
     final selected = _selected;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -104,43 +99,6 @@ class _LineChartState extends State<LineChart> {
   }
 }
 
-/// How the labels are written; measures and paints them.
-class _LabelText {
-  const _LabelText({
-    required this.style,
-    required this.direction,
-    required this.scaler,
-  });
-
-  final TextStyle? style;
-  final TextDirection direction;
-  final TextScaler scaler;
-
-  /// Laid out; the caller disposes it.
-  TextPainter painter(String text) => TextPainter(
-    text: TextSpan(text: text, style: style),
-    textDirection: direction,
-    textScaler: scaler,
-  )..layout();
-
-  Size measure(String text) {
-    final painter = this.painter(text);
-    final size = painter.size;
-    painter.dispose();
-    return size;
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      other is _LabelText &&
-      other.style == style &&
-      other.direction == direction &&
-      other.scaler == scaler;
-
-  @override
-  int get hashCode => Object.hash(style, direction, scaler);
-}
-
 /// A label and where its value sits along its axis.
 typedef _Label = ({String text, double at});
 
@@ -155,7 +113,7 @@ class _ChartLayout {
     this.xLabels,
   );
 
-  factory _ChartLayout.of(Size size, LineChart chart, _LabelText text) {
+  factory _ChartLayout.of(Size size, LineChart chart, ChartText text) {
     final points = chart.points;
     if (points.isEmpty) {
       return _ChartLayout(Offset.zero & size, 0, const [], const [], const []);
@@ -257,7 +215,7 @@ class _LineChartPainter extends CustomPainter {
   });
 
   final _ChartLayout layout;
-  final _LabelText text;
+  final ChartText text;
   final int? selected;
   final Color line;
   final Color grid;

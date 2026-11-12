@@ -84,12 +84,16 @@ void main() {
     test('withStandardEquipment drops only the custom equipment', () {
       final custom = imperial.copyWith(
         themePreference: ThemePreference.dark,
+        stepGoal: 6000,
         customBarWeightKg: 15,
         customPlates: const [Plate(weightKg: 10, pairs: 3)],
       );
       expect(
         custom.withStandardEquipment(),
-        imperial.copyWith(themePreference: ThemePreference.dark),
+        imperial.copyWith(
+          themePreference: ThemePreference.dark,
+          stepGoal: 6000,
+        ),
       );
     });
   });

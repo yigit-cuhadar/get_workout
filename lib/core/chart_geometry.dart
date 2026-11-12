@@ -135,3 +135,43 @@ int? nearestIndex(List<double> xs, double x) {
   }
   return nearest;
 }
+
+/// The share of its slot a bar is wide; the rest is the space between bars.
+const barShare = 0.6;
+
+/// The bars of [values] across [plot]: one equal slot each, the bar
+/// [barShare] of it wide and centred in it, rising from the plot's bottom,
+/// the value 0, to the value on an axis up to [top] at the plot's top.
+/// Values at or below zero, or any on an axis up to zero, have no height;
+/// values above [top] stop at the top.
+List<Rect> barRects(Rect plot, List<double> values, {required double top}) {
+  if (values.isEmpty) return const [];
+  final slot = plot.width / values.length;
+  final width = slot * barShare;
+  return [
+    for (final (i, value) in values.indexed)
+      Rect.fromLTRB(
+        plot.left + slot * i + (slot - width) / 2,
+        top <= 0 || value <= 0
+            ? plot.bottom
+            : scale(
+                math.min(value, top),
+                domainMin: 0,
+                domainMax: top,
+                rangeMin: plot.bottom,
+                rangeMax: plot.top,
+              ),
+        plot.left + slot * i + (slot + width) / 2,
+        plot.bottom,
+      ),
+  ];
+}
+
+/// Which of [count] bars get a label below when [fit] labels fit: every
+/// k-th counted back from the last, the latest, oldest first.
+List<int> labelledBars(int count, int fit) => [
+  for (final index in thinTicks([
+    for (var i = count - 1; i >= 0; i--) i.toDouble(),
+  ], fit).reversed)
+    index.toInt(),
+];

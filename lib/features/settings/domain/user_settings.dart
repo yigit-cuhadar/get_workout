@@ -91,6 +91,16 @@ class RestTimerSettings extends Equatable {
   List<Object?> get props => [enabled, defaultS, notify];
 }
 
+/// The daily step goal (`settings.stepGoal`) the user can choose.
+abstract final class StepGoal {
+  static const standard = 10000;
+  static const min = 1000;
+  static const max = 50000;
+
+  /// The editor moves in these steps.
+  static const step = 500;
+}
+
 /// The user's app preferences. Values are always stored metric; these only
 /// choose how they are shown.
 class UserSettings extends Equatable {
@@ -100,6 +110,7 @@ class UserSettings extends Equatable {
     this.themePreference = ThemePreference.system,
     this.effortScale = EffortScale.off,
     this.restTimer = const RestTimerSettings(),
+    this.stepGoal = StepGoal.standard,
     this.customBarWeightKg,
     this.customPlates,
   });
@@ -120,6 +131,9 @@ class UserSettings extends Equatable {
   final ThemePreference themePreference;
   final EffortScale effortScale;
   final RestTimerSettings restTimer;
+
+  /// Steps a day, within [StepGoal.min] and [StepGoal.max].
+  final int stepGoal;
 
   /// Set once the user edits their bar; until then [barWeightKg] follows
   /// [weightUnit], so switching units also switches the standard bar.
@@ -167,6 +181,7 @@ class UserSettings extends Equatable {
     ThemePreference? themePreference,
     EffortScale? effortScale,
     RestTimerSettings? restTimer,
+    int? stepGoal,
     double? customBarWeightKg,
     List<Plate>? customPlates,
   }) => UserSettings(
@@ -175,6 +190,7 @@ class UserSettings extends Equatable {
     themePreference: themePreference ?? this.themePreference,
     effortScale: effortScale ?? this.effortScale,
     restTimer: restTimer ?? this.restTimer,
+    stepGoal: stepGoal ?? this.stepGoal,
     customBarWeightKg: customBarWeightKg ?? this.customBarWeightKg,
     customPlates: customPlates ?? this.customPlates,
   );
@@ -186,6 +202,7 @@ class UserSettings extends Equatable {
     themePreference: themePreference,
     effortScale: effortScale,
     restTimer: restTimer,
+    stepGoal: stepGoal,
   );
 
   @override
@@ -195,6 +212,7 @@ class UserSettings extends Equatable {
     themePreference,
     effortScale,
     restTimer,
+    stepGoal,
     customBarWeightKg,
     customPlates,
   ];

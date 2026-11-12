@@ -73,6 +73,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
         defaults.effortScale,
       ),
       restTimer: _restTimer(map['restTimer']),
+      stepGoal: _stepGoal(map['stepGoal']),
       customBarWeightKg: _barWeight(map['barWeightKg']),
       customPlates: _plates(map['plates']),
     );
@@ -90,6 +91,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
       'defaultS': settings.restTimer.defaultS,
       'notify': ?settings.restTimer.notify,
     },
+    'stepGoal': settings.stepGoal,
     'barWeightKg': settings.customBarWeightKg ?? FieldValue.delete(),
     'plates':
         settings.customPlates
@@ -117,6 +119,12 @@ class FirestoreSettingsRepository implements SettingsRepository {
       notify: notify is bool ? notify : fallback.notify,
     );
   }
+
+  /// Anything but a number reads as the default; a number is rounded and
+  /// clamped to the limits.
+  int _stepGoal(Object? raw) => raw is num && raw.isFinite
+      ? raw.round().clamp(StepGoal.min, StepGoal.max)
+      : defaults.stepGoal;
 
   static double? _barWeight(Object? raw) =>
       raw is num ? raw.toDouble().clamp(0, maxBarWeightKg) : null;
