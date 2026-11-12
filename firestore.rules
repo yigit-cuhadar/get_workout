@@ -24,6 +24,8 @@ rules_version = '2';
 //   programs/{id}/detail/x   admin claim, any program               allow allow
 //   entitlements/{uid}       owner                                  allow deny
 //   entitlements/{uid}       anyone else, admins included           deny  deny
+//   announcements/{id}       admin claim                            allow deny
+//   announcements/{id}       anyone else                            deny  deny
 //   users/{uid}/**           owner                                  allow allow
 //   users/{uid}/**           anyone else                            deny  deny
 //   anything else            anyone                                 deny  deny
@@ -319,6 +321,12 @@ service cloud.firestore {
     // Written only by the RevenueCat webhook through the Admin SDK.
     match /entitlements/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
+    }
+
+    // The history of sent announcements, written only by the
+    // sendAnnouncement function through the Admin SDK.
+    match /announcements/{id} {
+      allow read: if isAdmin();
     }
   }
 }

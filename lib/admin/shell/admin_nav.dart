@@ -14,6 +14,7 @@ class AdminNav extends StatelessWidget {
   static const _lists = [
     ('Exercises', AdminRoutes.exercises),
     ('Programs', AdminRoutes.programs),
+    ('Announcements', AdminRoutes.announcements),
   ];
 
   @override
