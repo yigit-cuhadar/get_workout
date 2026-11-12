@@ -660,12 +660,15 @@ from the earlier FitLab app.
   announcement is dropped rather than arriving weeks late.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
   / Progress / Profile. The active workout is full-screen and can be minimized
-  to a bar above the tabs. Known limitation, to fix app-wide later: a link
-  that `context.go`es into another tab replaces that tab's stack, so a page
-  open there with unsaved changes (e.g. a program or workout being edited)
-  is dropped without its discard prompt. The pattern predates the Today
-  tab, which adds seven such links (program, catalogue, calendar, log
-  cardio, add a past workout, weekly volume, steps).
+  to a bar above the tabs. A `go` (a link, a notification tap) replaces
+  its tab's stack; a page there with unsaved changes (program builder,
+  workout edit, measurement day) is never dropped silently. One router
+  guard (`onEnter`, `lib/core/unsaved_changes.dart`) brings that page's
+  tab up and asks with the page's own discard prompt: keep editing stays
+  there, discard makes the navigation again. Pages without changes, other
+  tabs' stacks, pushes and tab switches are left alone; back stays with
+  each page's `PopScope`, so nothing asks twice, and a page that saved has
+  no changes left to ask about.
 - **Workouts on the device**: per user one JSON file
   (`workouts_<uid>.json` in the app's private support directory, versioned)
   holds the workout in progress, finished workouts the server has not

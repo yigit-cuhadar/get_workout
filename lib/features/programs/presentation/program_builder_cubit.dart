@@ -205,6 +205,9 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
 
   bool get isEditing => programId != null;
 
+  /// Changes a navigation away would lose; none once the builder closed.
+  bool get hasChanges => state.dirty && !_closed;
+
   bool get _closed => state.status == ProgramBuilderStatus.closed;
 
   /// Loads the program to edit; again after a failure.

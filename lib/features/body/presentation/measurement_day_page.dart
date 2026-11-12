@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/ghost_camera.dart';
+import '../../../core/unsaved_changes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../profile/domain/user_profile.dart';
 import '../../profile/presentation/profile_cubit.dart';
@@ -111,62 +112,66 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
           listener: _onChange,
         ),
       ],
-      child: BlocBuilder<MeasurementDayCubit, MeasurementDayState>(
-        builder: (context, state) {
-          final busy = state.status == MeasurementDayStatus.saving;
-          return PopScope(
-            canPop: false,
-            onPopInvokedWithResult: (didPop, _) {
-              if (!didPop) unawaited(_back(state));
-            },
-            child: Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  l10n.bodyStepOf(state.index + 1, state.steps.length),
-                ),
-                actions: [
-                  IconButton(
-                    tooltip: l10n.bodyTrackedTitle,
-                    icon: const Icon(Icons.tune),
-                    onPressed: busy ? null : _editTracked,
+      child: UnsavedChangesGuard(
+        hasChanges: () => _cubit.hasChanges,
+        confirmDiscard: _confirmDiscard,
+        child: BlocBuilder<MeasurementDayCubit, MeasurementDayState>(
+          builder: (context, state) {
+            final busy = state.status == MeasurementDayStatus.saving;
+            return PopScope(
+              canPop: false,
+              onPopInvokedWithResult: (didPop, _) {
+                if (!didPop) unawaited(_back());
+              },
+              child: Scaffold(
+                appBar: AppBar(
+                  title: Text(
+                    l10n.bodyStepOf(state.index + 1, state.steps.length),
                   ),
-                ],
-              ),
-              body: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(Gap.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(child: _step(context, state)),
-                      const SizedBox(height: Gap.md),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextButton(
-                              onPressed: busy ? null : _cubit.skip,
-                              child: Text(l10n.bodySkip),
+                  actions: [
+                    IconButton(
+                      tooltip: l10n.bodyTrackedTitle,
+                      icon: const Icon(Icons.tune),
+                      onPressed: busy ? null : _editTracked,
+                    ),
+                  ],
+                ),
+                body: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(Gap.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: _step(context, state)),
+                        const SizedBox(height: Gap.md),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: busy ? null : _cubit.skip,
+                                child: Text(l10n.bodySkip),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: Gap.sm),
-                          Expanded(
-                            child: ForgeButton(
-                              label: state.isLast
-                                  ? l10n.bodySave
-                                  : l10n.bodyNext,
-                              loading: busy,
-                              onPressed: _cubit.next,
+                            const SizedBox(width: Gap.sm),
+                            Expanded(
+                              child: ForgeButton(
+                                label: state.isLast
+                                    ? l10n.bodySave
+                                    : l10n.bodyNext,
+                                loading: busy,
+                                onPressed: _cubit.next,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -197,13 +202,9 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
 
   /// One step back; from the first step, out of the flow, after asking when
   /// something was entered.
-  Future<void> _back(MeasurementDayState state) async {
+  Future<void> _back() async {
     if (_cubit.back()) return;
-    final entered =
-        state.weight.isNotEmpty ||
-        state.measurements.values.any((text) => text.isNotEmpty) ||
-        state.newPhotos.isNotEmpty;
-    if (entered && !await _confirmDiscard()) return;
+    if (_cubit.hasChanges && !await _confirmDiscard()) return;
     if (mounted) context.pop();
   }
 

@@ -231,6 +231,16 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
 
   bool get isEditing => _initial != null;
 
+  /// Something was entered that leaving the flow would lose; nothing once
+  /// it saved or closed.
+  bool get hasChanges => switch (state.status) {
+    MeasurementDayStatus.saved || MeasurementDayStatus.closed => false,
+    _ =>
+      state.weight.isNotEmpty ||
+          state.measurements.values.any((text) => text.isNotEmpty) ||
+          state.newPhotos.isNotEmpty,
+  };
+
   /// The id of the new entry once saved, for its summary; null before, and
   /// when editing.
   String? get savedNewId =>

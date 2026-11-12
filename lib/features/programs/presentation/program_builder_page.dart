@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/max_length_formatter.dart';
+import '../../../core/unsaved_changes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
@@ -43,91 +44,95 @@ class _BuilderView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ProgramBuilderCubit>();
-    return BlocConsumer<ProgramBuilderCubit, ProgramBuilderState>(
-      listenWhen: (previous, current) =>
-          previous.status != current.status || current.adjusted.isNotEmpty,
-      listener: (context, state) {
-        if (state.adjusted.isNotEmpty) {
-          final names = [
-            for (final id in state.adjusted)
-              state.exercises[id]?.localized(context).name ?? id,
-          ];
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.programAdjusted(l10n.inlineList(names))),
-            ),
-          );
-          cubit.adjustedShown();
-          return;
-        }
-        switch (state.status) {
-          case ProgramBuilderStatus.saved when cubit.isEditing:
-            context.pop();
-          case ProgramBuilderStatus.saved:
-            context.go(Routes.program(state.savedId!, created: true));
-          case ProgramBuilderStatus.closed:
-            context.go(Routes.programs);
-          case ProgramBuilderStatus.saveFailed:
+    return UnsavedChangesGuard(
+      hasChanges: () => cubit.hasChanges,
+      confirmDiscard: () => _confirmDiscard(context),
+      child: BlocConsumer<ProgramBuilderCubit, ProgramBuilderState>(
+        listenWhen: (previous, current) =>
+            previous.status != current.status || current.adjusted.isNotEmpty,
+        listener: (context, state) {
+          if (state.adjusted.isNotEmpty) {
+            final names = [
+              for (final id in state.adjusted)
+                state.exercises[id]?.localized(context).name ?? id,
+            ];
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                  state.failure is NetworkFailure
-                      ? l10n.errorNetwork
-                      : l10n.programSaveFailed,
-                ),
+                content: Text(l10n.programAdjusted(l10n.inlineList(names))),
               ),
             );
-          default:
-        }
-      },
-      builder: (context, state) {
-        final catalogue = context.watch<ExerciseCatalogueCubit>().state;
-        final ready =
-            state.status != ProgramBuilderStatus.loading &&
-            catalogue is CatalogueReady;
-        return PopScope(
-          canPop: !state.dirty,
-          onPopInvokedWithResult: (didPop, _) async {
-            if (didPop) return;
-            if (await _confirmDiscard(context) && context.mounted) {
-              Navigator.of(context).pop();
-            }
-          },
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text(
-                cubit.isEditing ? l10n.programEditTitle : l10n.programNew,
-              ),
-              actions: [
-                if (ready)
-                  TextButton(
-                    onPressed: state.isBusy ? null : cubit.save,
-                    child: Text(l10n.programSave),
+            cubit.adjustedShown();
+            return;
+          }
+          switch (state.status) {
+            case ProgramBuilderStatus.saved when cubit.isEditing:
+              context.pop();
+            case ProgramBuilderStatus.saved:
+              context.go(Routes.program(state.savedId!, created: true));
+            case ProgramBuilderStatus.closed:
+              context.go(Routes.programs);
+            case ProgramBuilderStatus.saveFailed:
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    state.failure is NetworkFailure
+                        ? l10n.errorNetwork
+                        : l10n.programSaveFailed,
                   ),
-              ],
-            ),
-            body: switch (state.status) {
-              ProgramBuilderStatus.notFound => EmptyView(
-                message: l10n.programNotFound,
-              ),
-              ProgramBuilderStatus.loadFailed => ErrorView(
-                message: l10n.programsLoadFailed,
-                retryLabel: l10n.retry,
-                onRetry: cubit.load,
-              ),
-              _ => switch (catalogue) {
-                CatalogueFailed() => ErrorView(
-                  message: l10n.libraryLoadFailed,
-                  retryLabel: l10n.retry,
-                  onRetry: context.read<ExerciseCatalogueCubit>().retry,
                 ),
-                _ when !ready => const LoadingView(),
-                _ => const _Form(),
-              },
+              );
+            default:
+          }
+        },
+        builder: (context, state) {
+          final catalogue = context.watch<ExerciseCatalogueCubit>().state;
+          final ready =
+              state.status != ProgramBuilderStatus.loading &&
+              catalogue is CatalogueReady;
+          return PopScope(
+            canPop: !state.dirty,
+            onPopInvokedWithResult: (didPop, _) async {
+              if (didPop) return;
+              if (await _confirmDiscard(context) && context.mounted) {
+                Navigator.of(context).pop();
+              }
             },
-          ),
-        );
-      },
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  cubit.isEditing ? l10n.programEditTitle : l10n.programNew,
+                ),
+                actions: [
+                  if (ready)
+                    TextButton(
+                      onPressed: state.isBusy ? null : cubit.save,
+                      child: Text(l10n.programSave),
+                    ),
+                ],
+              ),
+              body: switch (state.status) {
+                ProgramBuilderStatus.notFound => EmptyView(
+                  message: l10n.programNotFound,
+                ),
+                ProgramBuilderStatus.loadFailed => ErrorView(
+                  message: l10n.programsLoadFailed,
+                  retryLabel: l10n.retry,
+                  onRetry: cubit.load,
+                ),
+                _ => switch (catalogue) {
+                  CatalogueFailed() => ErrorView(
+                    message: l10n.libraryLoadFailed,
+                    retryLabel: l10n.retry,
+                    onRetry: context.read<ExerciseCatalogueCubit>().retry,
+                  ),
+                  _ when !ready => const LoadingView(),
+                  _ => const _Form(),
+                },
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 

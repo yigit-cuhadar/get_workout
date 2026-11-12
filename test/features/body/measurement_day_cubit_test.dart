@@ -205,6 +205,31 @@ void main() {
     await cubit.close();
   });
 
+  test('has changes once something is entered, until saved', () async {
+    final cubit = build();
+    expect(cubit.hasChanges, isFalse);
+
+    cubit.setWeight('80');
+    expect(cubit.hasChanges, isTrue);
+
+    await cubit.next();
+    await skipAll(cubit);
+    expect(cubit.state.status, MeasurementDayStatus.saved);
+    expect(cubit.hasChanges, isFalse);
+    await cubit.close();
+  });
+
+  test('has no changes once closed', () async {
+    final cubit = build()..setWeight('80');
+
+    users.add(null);
+    await pumpEventQueue();
+
+    expect(cubit.state.status, MeasurementDayStatus.closed);
+    expect(cubit.hasChanges, isFalse);
+    await cubit.close();
+  });
+
   test('back moves one step, and is false on the first', () async {
     final cubit = build();
     expect(cubit.back(), isFalse);
