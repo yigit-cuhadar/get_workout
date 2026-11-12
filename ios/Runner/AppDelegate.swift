@@ -23,8 +23,8 @@ import UserNotifications
 
   /// The running rest as a Live Activity
   /// (lib/features/workout/data/ios_rest_lock_screen.dart): "show" starts
-  /// or updates it, "end" removes it. Below iOS 16.2, or with Live
-  /// Activities off, both do nothing.
+  /// or updates it and answers whether it shows (false with Live
+  /// Activities off), "end" removes it. Below iOS 16.2 both do nothing.
   private func registerRestActivity(_ registry: FlutterPluginRegistry) {
     guard let registrar = registry.registrar(forPlugin: "RestActivity") else { return }
     let channel = FlutterMethodChannel(
@@ -54,8 +54,7 @@ import UserNotifications
         )
         Task { @MainActor in
           do {
-            try await RestActivity.show(state)
-            result(nil)
+            result(try await RestActivity.show(state))
           } catch {
             result(FlutterError(code: "show-failed", message: error.localizedDescription, details: nil))
           }
@@ -103,7 +102,9 @@ import UserNotifications
 /// then; without push updates the app ends it only when it runs again.
 @available(iOS 16.2, *)
 enum RestActivity {
-  static func show(_ state: RestActivityAttributes.ContentState) async throws {
+  /// Whether it shows; false with Live Activities turned off. Throws when
+  /// the app may not start one (not in front).
+  static func show(_ state: RestActivityAttributes.ContentState) async throws -> Bool {
     let content = ActivityContent(state: state, staleDate: state.endsAt)
     let running = Activity<RestActivityAttributes>.activities.filter {
       $0.activityState == .active || $0.activityState == .stale
@@ -113,14 +114,15 @@ enum RestActivity {
       for extra in running.dropFirst() {
         await extra.end(nil, dismissalPolicy: .immediate)
       }
-      return
+      return true
     }
-    guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+    guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
     _ = try Activity<RestActivityAttributes>.request(
       attributes: RestActivityAttributes(),
       content: content,
       pushType: nil
     )
+    return true
   }
 
   static func end() async {

@@ -692,6 +692,63 @@ void main() {
       });
     });
 
+    test('a failed show is tried again on the next tick', () {
+      var failing = true;
+      when(() => lockScreen.show(any())).thenAnswer(
+        (_) async =>
+            failing ? const Err(UnknownFailure('off')) : const Ok(null),
+      );
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.flushMicrotasks();
+        verifyShown(end);
+
+        failing = false;
+        async.elapse(const Duration(seconds: 1));
+        verifyShown(end);
+
+        async.elapse(const Duration(seconds: 5));
+        verifyNotShown();
+      });
+    });
+
+    test('a throwing call counts as failed and later calls still run', () {
+      runStarted((async, cubit) {
+        when(() => lockScreen.show(any())).thenThrow(StateError('bug'));
+        emitRest(Rest(endsAt: end, after: first));
+        async.flushMicrotasks();
+        emitRest(null);
+        async.flushMicrotasks();
+        verify(() => lockScreen.show(any())).called(1);
+        verify(lockScreen.clear).called(1);
+      });
+    });
+
+    test('allowing notifications mid-rest shows it again at once', () {
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.flushMicrotasks();
+        verifyShown(end);
+
+        unawaited(cubit.setNotify(true));
+        async.flushMicrotasks();
+        verifyShown(end);
+      });
+    });
+
+    test('a refused permission shows nothing again', () {
+      requestGrants = false;
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.flushMicrotasks();
+        verifyShown(end);
+
+        unawaited(cubit.setNotify(true));
+        async.flushMicrotasks();
+        verifyNotShown();
+      });
+    });
+
     test('a failure is only logged, and later changes still apply', () {
       when(() => lockScreen.show(any()))
           .thenAnswer((_) async => const Err(UnknownFailure('disabled')));

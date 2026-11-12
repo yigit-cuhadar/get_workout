@@ -738,7 +738,10 @@ from the earlier FitLab app.
   the end alert because that one is scheduled only while the app hides
   and cancelled when it shows, and the countdown stays across both. It
   needs the notification permission and never asks for it: without it
-  nothing shows. No foreground service: nothing has to run until the end
+  nothing shows, and it shows at once when the user allows notifications
+  mid-rest. A show or removal that fails (also iOS with Live Activities
+  off, or before the app may start one) does not count as done: the next
+  second of the countdown tries again. No foreground service: nothing has to run until the end
   (the chronometer and timeout are the system's), and a service would
   need a declared type and Play review; the cost is that from Android 14
   the user can swipe it away while unlocked, until the next change.
@@ -749,7 +752,8 @@ from the earlier FitLab app.
   texts come from the app. No push updates (no APNs yet), so the app
   cannot end it while suspended: its stale date is the rest's end, after
   which it shows "Rest over" until the app runs again (then removed) or
-  iOS ends it (8 h). Users can turn Live Activities off per app; then
+  iOS removes it (ended after 8 h, kept on the lock screen up to 4 h
+  more: 12 h at most). Users can turn Live Activities off per app; then
   nothing shows. No App Group: the app's own ActivityKit bridge passes
   the content, so the `live_activities` plugin (App Group, iOS 16.1
   minimum for the whole app) is not used, and the app keeps iOS 15

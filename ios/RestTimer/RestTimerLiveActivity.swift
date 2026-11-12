@@ -47,10 +47,14 @@ struct RestTimerLiveActivity: Widget {
       } compactLeading: {
         Image(systemName: "timer")
       } compactTrailing: {
+        // Wide enough for 30:00 (rests stay under 31 min); scales down
+        // rather than truncating a longer "over" text.
         RestCountdown(state: context.state, isStale: context.isStale)
           .monospacedDigit()
           .multilineTextAlignment(.trailing)
-          .frame(maxWidth: 44)
+          .lineLimit(1)
+          .minimumScaleFactor(0.5)
+          .frame(width: 56)
       } minimal: {
         Image(systemName: "timer")
       }
@@ -69,7 +73,8 @@ struct RestCountdown: View {
     if isStale || state.endsAt <= now {
       Text(state.over)
     } else {
-      Text(timerInterval: now...state.endsAt, countsDown: true)
+      // Never an hours part: a rest ends within 30 min.
+      Text(timerInterval: now...state.endsAt, countsDown: true, showsHours: false)
     }
   }
 }

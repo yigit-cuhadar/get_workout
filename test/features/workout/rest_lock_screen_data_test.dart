@@ -66,15 +66,17 @@ void main() {
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     late List<MethodCall> calls;
+    late bool? shows;
 
     setUp(() {
       calls = [];
+      shows = true;
       messenger.setMockMethodCallHandler(methods, (call) async {
         calls.add(call);
         if (call.method == 'end') {
           throw PlatformException(code: 'boom');
         }
-        return null;
+        return shows;
       });
     });
 
@@ -89,6 +91,17 @@ void main() {
         'detail': 'Next: Squat, set 2',
         'over': 'Rest over',
       });
+    });
+
+    test('Live Activities turned off is a failure, to try again', () async {
+      shows = false;
+      final result = await const IosRestLockScreen().show(countdown);
+      expect(result.failureOrNull, isA<UnknownFailure>());
+    });
+
+    test('below iOS 16.2 (no answer) is no failure', () async {
+      shows = null;
+      expect((await const IosRestLockScreen().show(countdown)).isOk, isTrue);
     });
 
     test('a native failure is a failure, not a throw', () async {

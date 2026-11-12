@@ -132,9 +132,13 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   bool _considered = false;
 
   /// The rest on the lock screen, null for none. Unknown until the first
-  /// sync, which so also removes one left from an earlier run.
+  /// sync, which so also removes one left from an earlier run, and again
+  /// after a call failed, so the next tick tries again.
   Rest? _onLockScreen;
   bool _lockScreenKnown = false;
+
+  /// Counts lock screen syncs, so a failure only unsettles the latest.
+  int _lockScreenSync = 0;
 
   /// Lock screen calls run one after another, so the last one wins.
   Future<void> _lockScreenCalls = Future.value();
@@ -211,6 +215,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     if (_lockScreenKnown && shown == _onLockScreen) return;
     _lockScreenKnown = true;
     _onLockScreen = shown;
+    final sync = ++_lockScreenSync;
     final Future<Result<void>> Function() call;
     if (shown == null || workout == null) {
       call = () => _clearLockScreen(const NoParams());
@@ -225,9 +230,15 @@ class RestTimerCubit extends Cubit<RestTimerState> {
       call = () => _showOnLockScreen(countdown);
     }
     _lockScreenCalls = _lockScreenCalls.then((_) async {
-      final result = await call();
+      Result<void> result;
+      try {
+        result = await call();
+      } catch (error) {
+        result = Err(UnknownFailure('$error', error));
+      }
       if (result.failureOrNull case final failure?) {
         Log.e('rest', 'lock screen not updated: ${failure.message}');
+        if (sync == _lockScreenSync) _lockScreenKnown = false;
       }
     });
   }
@@ -268,7 +279,13 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     if (granted.failureOrNull case final failure?) {
       Log.e('rest', 'notification permission not asked: ${failure.message}');
     }
-    return granted.valueOrNull ?? false;
+    final allowed = granted.valueOrNull ?? false;
+    // On Android the countdown needs the permission: show it now.
+    if (allowed && !isClosed) {
+      _lockScreenKnown = false;
+      _syncLockScreen();
+    }
+    return allowed;
   }
 
   Future<void> _considerAsking() async {
