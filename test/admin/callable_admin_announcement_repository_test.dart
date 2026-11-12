@@ -14,11 +14,11 @@ class MockCallable extends Mock implements HttpsCallable {}
 class MockCallableResult extends Mock implements HttpsCallableResult<Object?> {}
 
 class FunctionsError extends FirebaseFunctionsException {
-  FunctionsError(String code, {String? reason})
+  FunctionsError(String code, {String? reason, Map<String, Object?>? more})
     : super(
         code: code,
         message: 'error',
-        details: reason == null ? null : {'reason': reason},
+        details: reason == null ? null : {'reason': reason, ...?more},
       );
 }
 
@@ -93,7 +93,33 @@ void main() {
         await failureFor(
           FunctionsError('already-exists', reason: 'in-progress'),
         ),
-        isA<AnnouncementInProgressFailure>(),
+        isA<AnnouncementInProgressFailure>().having(
+          (f) => f.requestedAt,
+          'requestedAt',
+          isNull,
+        ),
+      );
+      expect(
+        await failureFor(
+          FunctionsError(
+            'already-exists',
+            reason: 'in-progress',
+            more: {'requestedAt': 1700000000000},
+          ),
+        ),
+        isA<AnnouncementInProgressFailure>().having(
+          (f) => f.requestedAt,
+          'requestedAt',
+          DateTime.fromMillisecondsSinceEpoch(1700000000000),
+        ),
+      );
+      expect(
+        await failureFor(FunctionsError('internal', reason: 'send-failed')),
+        isA<AnnouncementNotSentFailure>(),
+      );
+      expect(
+        await failureFor(FunctionsError('unknown', reason: 'outcome-unknown')),
+        isA<AnnouncementOutcomeUnknownFailure>(),
       );
       for (final reason in ['invalid-input', 'request-id-reused']) {
         expect(
@@ -122,7 +148,7 @@ void main() {
         isA<PermissionFailure>(),
       );
       expect(
-        await failureFor(FunctionsError('internal', reason: 'send-failed')),
+        await failureFor(FunctionsError('internal')),
         isA<UnknownFailure>(),
       );
     });

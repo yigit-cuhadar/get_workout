@@ -85,21 +85,28 @@ void main() {
 
   test('sends the trimmed draft, then empties the form', () async {
     fill();
-    final requestId = cubit.state.requestId;
     await cubit.send();
-    expect(requests().single, (
-      id: requestId,
-      draft: const AnnouncementDraft(
-        title: 'New programs',
-        body: 'Three are live.',
-      ),
-    ));
+    final request = requests().single;
+    expect(request.id, matches(RegExp(r'^[A-Za-z0-9]{20}$')));
+    expect(
+      request.draft,
+      const AnnouncementDraft(title: 'New programs', body: 'Three are live.'),
+    );
     final state = cubit.state;
     expect(state.status, AnnouncementSendStatus.sent);
     expect(state.sent, sent);
     expect(state.draft, const AnnouncementDraft());
-    expect(state.requestId, isNot(requestId));
+    expect(state.lastAttempt, isNull);
     expect(state.formVersion, 1);
+  });
+
+  test('after a success, the same text again is a new request', () async {
+    fill();
+    await cubit.send();
+    fill();
+    await cubit.send();
+    final ids = requests().map((r) => r.id).toList();
+    expect(ids[1], isNot(ids[0]));
   });
 
   test('sends once while a send is underway, and locks the form', () async {
@@ -117,29 +124,52 @@ void main() {
     verify(() => repository.send(any())).called(1);
   });
 
-  test(
-    'a retry after a failure keeps the request id; an edit does not',
-    () async {
+  group('after a failure', () {
+    setUp(() {
       when(() => repository.send(any()))
           .thenAnswer((_) async => const Err(NetworkFailure()));
       fill();
-      final requestId = cubit.state.requestId;
+    });
+
+    /// The ids of every request sent, the first failing one included.
+    Future<List<String>> idsAfter(void Function() edit) async {
       await cubit.send();
       expect(cubit.state.status, AnnouncementSendStatus.failed);
       expect(cubit.state.failure, isA<NetworkFailure>());
-      expect(cubit.state.draft.title, ' New programs ');
+      edit();
+      await cubit.send();
+      return [for (final request in requests()) request.id];
+    }
 
-      await cubit.send();
-      cubit.setBody('Four are live.');
-      await cubit.send();
-      expect(requests().map((r) => r.id), [
-        requestId,
-        requestId,
-        isNot(requestId),
-      ]);
-      expect(cubit.state.status, AnnouncementSendStatus.failed);
-    },
-  );
+    test('a retry keeps the request id', () async {
+      final ids = await idsAfter(() {});
+      expect(ids[1], ids[0]);
+    });
+
+    test('typing and deleting a character keeps the request id', () async {
+      final ids = await idsAfter(
+        () => cubit
+          ..setBody('Three are live.!')
+          ..setBody('Three are live.'),
+      );
+      expect(ids[1], ids[0]);
+    });
+
+    test('spaces around the text keep the request id', () async {
+      final ids = await idsAfter(
+        () => cubit
+          ..setTitle('New programs')
+          ..setBody('Three are live.  '),
+      );
+      expect(ids[1], ids[0]);
+    });
+
+    test('other text is a new request id', () async {
+      final ids = await idsAfter(() => cubit.setBody('Four are live.'));
+      expect(ids[1], isNot(ids[0]));
+      expect(cubit.state.lastAttempt?.draft.body, 'Four are live.');
+    });
+  });
 
   test('a refusal for the claim refreshes the token and says so', () async {
     when(() => repository.send(any()))

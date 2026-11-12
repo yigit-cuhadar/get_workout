@@ -18,7 +18,7 @@ enum AnnouncementSendStatus {
 
 class AnnouncementsState extends Equatable {
   const AnnouncementsState({
-    required this.requestId,
+    this.lastAttempt,
     this.draft = const AnnouncementDraft(),
     this.status = AnnouncementSendStatus.editing,
     this.failure,
@@ -31,9 +31,10 @@ class AnnouncementsState extends Equatable {
 
   final AnnouncementDraft draft;
 
-  /// Sent with [draft]; kept until the draft changes or is sent, so sending
-  /// again after a failure never sends it twice.
-  final String requestId;
+  /// The last request sent and not known to have gone through: its id and
+  /// trimmed draft. Sending the same trimmed text again reuses the id, so
+  /// the server never sends it twice; null after a send went through.
+  final AnnouncementRequest? lastAttempt;
   final AnnouncementSendStatus status;
 
   /// Why the last send failed, with [AnnouncementSendStatus.failed].
@@ -60,7 +61,7 @@ class AnnouncementsState extends Equatable {
 
   AnnouncementsState copyWith({
     AnnouncementDraft? draft,
-    String? requestId,
+    AnnouncementRequest? Function()? lastAttempt,
     AnnouncementSendStatus? status,
     Failure? failure,
     bool? accessRefreshed,
@@ -70,7 +71,7 @@ class AnnouncementsState extends Equatable {
     Failure? Function()? historyFailure,
   }) => AnnouncementsState(
     draft: draft ?? this.draft,
-    requestId: requestId ?? this.requestId,
+    lastAttempt: lastAttempt != null ? lastAttempt() : this.lastAttempt,
     status: status ?? this.status,
     // The outcome of a send belongs to its status and goes with it.
     failure: status == null ? this.failure : failure,
@@ -88,7 +89,7 @@ class AnnouncementsState extends Equatable {
   @override
   List<Object?> get props => [
     draft,
-    requestId,
+    lastAttempt,
     status,
     failure,
     accessRefreshed,
@@ -108,7 +109,7 @@ class AnnouncementsCubit extends Cubit<AnnouncementsState> {
     required this._sendAnnouncement,
     required this._checkAdminAccess,
     Duration firstRetryDelay = const Duration(seconds: 1),
-  }) : super(AnnouncementsState(requestId: newAnnouncementRequestId())) {
+  }) : super(const AnnouncementsState()) {
     _listener = RetryingListener(
       watch: watchAnnouncements.call,
       onData: (history) =>
@@ -132,25 +133,32 @@ class AnnouncementsCubit extends Cubit<AnnouncementsState> {
 
   void setBody(String body) => _edit(state.draft.copyWith(body: body));
 
-  /// Other text is another announcement, so it gets a new request id. Not
-  /// while sending: the form is locked then.
+  /// Not while sending: the form is locked then.
   void _edit(AnnouncementDraft draft) {
     if (state.status == AnnouncementSendStatus.sending) return;
     if (draft == state.draft) return;
-    emit(
-      state.copyWith(
-        draft: draft,
-        requestId: newAnnouncementRequestId(),
-        status: AnnouncementSendStatus.editing,
-      ),
-    );
+    emit(state.copyWith(draft: draft, status: AnnouncementSendStatus.editing));
   }
 
   /// Sends the draft once; a call while a send is underway does nothing.
+  /// The same trimmed text as the last attempt goes under its id, so a
+  /// retry is never sent twice; other text is another announcement.
   Future<void> send() async {
     if (!state.canSend) return;
-    final request = (id: state.requestId, draft: state.draft);
-    emit(state.copyWith(status: AnnouncementSendStatus.sending));
+    final draft = state.draft.trimmed;
+    final last = state.lastAttempt;
+    final AnnouncementRequest request = (
+      id: last != null && last.draft == draft
+          ? last.id
+          : newAnnouncementRequestId(),
+      draft: draft,
+    );
+    emit(
+      state.copyWith(
+        lastAttempt: () => request,
+        status: AnnouncementSendStatus.sending,
+      ),
+    );
     final result = await _sendAnnouncement(request);
     if (isClosed) return;
     switch (result) {
@@ -158,7 +166,7 @@ class AnnouncementsCubit extends Cubit<AnnouncementsState> {
         emit(
           state.copyWith(
             draft: AnnouncementDraft(locale: request.draft.locale),
-            requestId: newAnnouncementRequestId(),
+            lastAttempt: () => null,
             status: AnnouncementSendStatus.sent,
             sent: sent,
             formVersion: state.formVersion + 1,

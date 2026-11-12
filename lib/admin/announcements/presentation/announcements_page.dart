@@ -22,29 +22,44 @@ class AnnouncementsPage extends StatelessWidget {
   );
 }
 
-/// What the panel says about a failed send.
-String _sendFailureMessage(Failure failure, {required bool accessRefreshed}) =>
-    switch (failure) {
-      PermissionFailure() when accessRefreshed =>
-        'Refused, but this account still has admin access and its token is '
-            'now refreshed. Send again.',
-      PermissionFailure() =>
-        'Refused: this account has no current admin claim.',
-      AnnouncementsUnavailableFailure() =>
-        'Sending is not available: the sendAnnouncement function is not '
-            'deployed to this project. Nothing was sent.',
-      AnnouncementInProgressFailure() =>
-        'This announcement is being sent right now. Check the history '
-            'before sending again.',
-      NetworkFailure() =>
-        'No connection to Firebase; it may or may not have been sent. '
-            'Sending again is safe: the same announcement is never sent '
-            'twice.',
-      ValidationFailure(:final message) => 'Refused: $message',
-      _ =>
-        '${failureMessage(failure)} Sending again is safe: the same '
-            'announcement is never sent twice.',
-    };
+/// A request left `sending` too long ([isStaleSending]).
+const _outcomeUnknown = 'Unknown — check a device before sending again';
+
+/// What the panel says about a failed send at [now]. Only a failure after
+/// which nothing was sent says sending again may send it.
+String _sendFailureMessage(
+  Failure failure, {
+  required bool accessRefreshed,
+  required DateTime now,
+}) => switch (failure) {
+  PermissionFailure() when accessRefreshed =>
+    'Refused, but this account still has admin access and its token is '
+        'now refreshed. Send again.',
+  PermissionFailure() => 'Refused: this account has no current admin claim.',
+  AnnouncementsUnavailableFailure() =>
+    'Sending is not available: the sendAnnouncement function is not '
+        'deployed to this project. Nothing was sent.',
+  AnnouncementInProgressFailure(:final requestedAt)
+      when isStaleSending(requestedAt, now) =>
+    '$_outcomeUnknown. This announcement may or may not have reached '
+        'devices, and it will not be sent again.',
+  AnnouncementInProgressFailure() =>
+    'This announcement is being sent right now. Check the history '
+        'before sending again.',
+  AnnouncementNotSentFailure() =>
+    'FCM refused it, so nothing was sent. You can send it again.',
+  AnnouncementOutcomeUnknownFailure() =>
+    'FCM did not say whether it took the announcement: it may or may '
+        'not reach devices. Check a device; the same text will not be '
+        'sent again.',
+  NetworkFailure() =>
+    'No connection to Firebase; it may or may not have been sent. '
+        'Sending the same text again never sends it twice.',
+  ValidationFailure(:final message) => 'Refused: $message',
+  _ =>
+    '${failureMessage(failure)} It may or may not have been sent; '
+        'sending the same text again never sends it twice.',
+};
 
 class _AnnouncementsView extends StatelessWidget {
   const _AnnouncementsView();
@@ -75,6 +90,7 @@ class _AnnouncementsView extends StatelessWidget {
                 _sendFailureMessage(
                   failure,
                   accessRefreshed: state.accessRefreshed,
+                  now: DateTime.now(),
                 ),
               );
             default:
@@ -288,6 +304,10 @@ class _HistoryRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final a = announcement;
     final (status, color) = switch (a.status) {
+      _ when a.outcomeUnknownAt(DateTime.now()) => (
+        _outcomeUnknown,
+        scheme.error,
+      ),
       AnnouncementStatus.sent => ('Sent', scheme.primary),
       AnnouncementStatus.sending => ('Sending', scheme.tertiary),
       AnnouncementStatus.failed => ('Failed, not sent', scheme.error),

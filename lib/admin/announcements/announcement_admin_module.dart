@@ -3,7 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_it/get_it.dart';
 
-import '../../features/account/data/callable_account_repository.dart';
+import '../../app/functions_region.dart';
 import 'data/callable_admin_announcement_repository.dart';
 import 'domain/admin_announcement_repository.dart';
 import 'domain/announcement_admin_usecases.dart';
@@ -19,10 +19,7 @@ class AnnouncementAdminModule implements FeatureModule {
     sl
       ..registerLazySingleton<AdminAnnouncementRepository>(
         () => CallableAdminAnnouncementRepository(
-          // The one region of the app's functions.
-          FirebaseFunctions.instanceFor(
-            region: CallableAccountRepository.region,
-          ),
+          FirebaseFunctions.instanceFor(region: functionsRegion),
           FirebaseFirestore.instance,
         ),
       )

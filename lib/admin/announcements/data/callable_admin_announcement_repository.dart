@@ -28,6 +28,8 @@ class CallableAdminAnnouncementRepository
   static const _inProgress = 'in-progress';
   static const _invalidInput = 'invalid-input';
   static const _requestIdReused = 'request-id-reused';
+  static const _sendFailed = 'send-failed';
+  static const _outcomeUnknown = 'outcome-unknown';
 
   @override
   Stream<List<Announcement>> watchHistory() => _firestore
@@ -76,8 +78,19 @@ class CallableAdminAnnouncementRepository
     final reason = details is Map ? details['reason'] : null;
     return switch ((error.code, reason)) {
       (_, _notAdmin) => PermissionFailure(message, error),
-      (_, _inProgress) => AnnouncementInProgressFailure(message, error),
+      (_, _inProgress) => AnnouncementInProgressFailure(
+        message: message,
+        requestedAt: switch ((details as Map)['requestedAt']) {
+          final num millis => DateTime.fromMillisecondsSinceEpoch(
+            millis.toInt(),
+          ),
+          _ => null,
+        },
+        cause: error,
+      ),
       (_, _invalidInput || _requestIdReused) => ValidationFailure(message),
+      (_, _sendFailed) => AnnouncementNotSentFailure(message, error),
+      (_, _outcomeUnknown) => AnnouncementOutcomeUnknownFailure(message, error),
       // Not deployed (404), or deployed without permission to call it.
       ('not-found' || 'permission-denied', _) =>
         AnnouncementsUnavailableFailure(message, error),

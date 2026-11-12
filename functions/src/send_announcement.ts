@@ -1,4 +1,4 @@
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { FieldValue, Timestamp, getFirestore } from "firebase-admin/firestore";
 import { TopicMessage, getMessaging } from "firebase-admin/messaging";
 import { CallableRequest, HttpsError, onCall } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions/v2";
@@ -16,6 +16,44 @@ export const MAX_BODY = 240;
 /** The Android channel every notification of the app uses. */
 export const ANDROID_CHANNEL = "workout";
 
+/**
+ * How long FCM keeps trying to deliver an announcement to a device that is
+ * offline; after that a dated announcement is dropped, not shown late.
+ */
+export const TIME_TO_LIVE_SECONDS = 3 * 24 * 60 * 60;
+
+/**
+ * FCM error codes (`messaging/<code>`) after which FCM certainly did not
+ * accept the message, so sending the request again cannot duplicate it.
+ * Any other error (timeouts, `internal-error`, `server-unavailable`,
+ * unknown) may hide an accepted message.
+ */
+const DEFINITE_REFUSALS = new Set([
+  "invalid-argument",
+  "invalid-recipient",
+  "invalid-payload",
+  "invalid-data-payload-key",
+  "payload-size-limit-exceeded",
+  "invalid-options",
+  "invalid-package-name",
+  "mismatched-credential",
+  "authentication-error",
+  "third-party-auth-error",
+  "message-rate-exceeded",
+  "topics-message-rate-exceeded",
+  "device-message-rate-exceeded",
+]);
+
+/** Whether FCM certainly did not accept the message when it threw [error]. */
+export const isDefiniteRefusal = (error: unknown): boolean => {
+  const code = (error as { code?: unknown } | null)?.code;
+  return (
+    typeof code === "string" &&
+    code.startsWith("messaging/") &&
+    DEFINITE_REFUSALS.has(code.slice("messaging/".length))
+  );
+};
+
 /** A request id: a Firestore auto id or another short random token. */
 const REQUEST_ID = /^[A-Za-z0-9_-]{8,64}$/;
 
@@ -28,7 +66,13 @@ export const Reason = {
   invalidInput: "invalid-input",
   inProgress: "in-progress",
   requestIdReused: "request-id-reused",
+  /** FCM refused the message; nothing was sent, a retry may send. */
   sendFailed: "send-failed",
+  /**
+   * FCM may or may not have accepted the message; the request stays
+   * `sending` and is never sent again.
+   */
+  outcomeUnknown: "outcome-unknown",
 } as const;
 
 export interface Announcement {
@@ -41,6 +85,8 @@ export interface Announcement {
 export interface StoredAnnouncement extends Announcement {
   status: "sending" | "sent" | "failed";
   messageId?: string;
+  /** `requestedAt` in milliseconds since the epoch. */
+  requestedAtMillis?: number;
 }
 
 /** What [AnnouncementStore.claim]'s decision says. */
@@ -61,6 +107,7 @@ export interface AnnouncementStore {
   ): Promise<Claim>;
   /** Sets `sent`, the FCM message id and `sentAt` (server time). */
   markSent(id: string, messageId: string): Promise<void>;
+  /** Sets `failed`: nothing was sent, so the id may be sent again. */
   markFailed(id: string): Promise<void>;
   /** Sends through FCM; the message id. */
   send(message: TopicMessage): Promise<string>;
@@ -143,25 +190,39 @@ export function decideClaim(
     case "sent":
       return { kind: "sent", messageId: stored.messageId ?? "" };
     case "sending":
+      // Also a send whose outcome is unknown; the panel tells them apart
+      // by the age of the request.
       throw new HttpsError(
         "already-exists",
         "This announcement is being sent.",
-        { reason: Reason.inProgress },
+        { reason: Reason.inProgress, requestedAt: stored.requestedAtMillis },
       );
     default:
       return { kind: "send", announcement };
   }
 }
 
-/** The notification message of [announcement] to its language's topic. */
-export function topicMessage(announcement: Announcement): TopicMessage {
+/**
+ * The notification message of [announcement] to its language's topic,
+ * dropped [TIME_TO_LIVE_SECONDS] after [nowSeconds].
+ */
+export function topicMessage(
+  announcement: Announcement,
+  nowSeconds: number,
+): TopicMessage {
   const { locale, title, body } = announcement;
   return {
     // The app follows `announcements_<language>` (FcmAnnouncementRepository).
     topic: `announcements_${locale}`,
     notification: { title, body },
-    android: { notification: { channelId: ANDROID_CHANNEL } },
-    apns: { payload: { aps: { sound: "default" } } },
+    android: {
+      ttl: TIME_TO_LIVE_SECONDS * 1000,
+      notification: { channelId: ANDROID_CHANNEL },
+    },
+    apns: {
+      headers: { "apns-expiration": `${nowSeconds + TIME_TO_LIVE_SECONDS}` },
+      payload: { aps: { sound: "default" } },
+    },
   };
 }
 
@@ -174,6 +235,7 @@ export async function sendAnnouncementOf(
   auth: CallerAuth,
   data: unknown,
   store: AnnouncementStore,
+  nowSeconds: number,
 ): Promise<SendResult> {
   if (!auth) throw new HttpsError("unauthenticated", "Sign in first.");
   if (auth.token.admin !== true) {
@@ -190,11 +252,23 @@ export async function sendAnnouncementOf(
   }
   let messageId: string;
   try {
-    messageId = await store.send(topicMessage(announcement));
+    messageId = await store.send(topicMessage(announcement, nowSeconds));
   } catch (error) {
+    if (!isDefiniteRefusal(error)) {
+      // FCM may have taken it: left `sending`, so no retry sends it again.
+      logger.error("announcement outcome unknown", {
+        requestId,
+        error: String(error),
+      });
+      throw new HttpsError(
+        "unknown",
+        "The announcement may or may not have been sent.",
+        { reason: Reason.outcomeUnknown },
+      );
+    }
     logger.error("announcement not sent", { requestId, error: String(error) });
-    // Left `sending`, a retry of this id is refused as in progress; the
-    // panel then needs an edit, which makes a new id.
+    // Left `sending` instead, a retry is refused as in progress; that is
+    // safe, only less convenient.
     await store.markFailed(requestId).catch((markError: unknown) =>
       logger.error("failed send not recorded", {
         requestId,
@@ -226,10 +300,19 @@ export const firebaseAnnouncementStore = (): AnnouncementStore => {
     claim: (id, sentBy, decide) =>
       getFirestore().runTransaction(async (transaction) => {
         const doc = announcements.doc(id);
-        const stored = (await transaction.get(doc)).data() as
-          | StoredAnnouncement
-          | undefined;
-        const claim = decide(stored);
+        const data = (await transaction.get(doc)).data();
+        const requestedAt = data?.requestedAt;
+        const claim = decide(
+          data === undefined
+            ? undefined
+            : ({
+                ...data,
+                requestedAtMillis:
+                  requestedAt instanceof Timestamp
+                    ? requestedAt.toMillis()
+                    : undefined,
+              } as StoredAnnouncement),
+        );
         if (claim.kind === "send") {
           transaction.set(doc, {
             ...claim.announcement,
@@ -255,5 +338,10 @@ export const firebaseAnnouncementStore = (): AnnouncementStore => {
 };
 
 export const sendAnnouncement = onCall((request) =>
-  sendAnnouncementOf(request.auth, request.data, firebaseAnnouncementStore()),
+  sendAnnouncementOf(
+    request.auth,
+    request.data,
+    firebaseAnnouncementStore(),
+    Math.floor(Date.now() / 1000),
+  ),
 );

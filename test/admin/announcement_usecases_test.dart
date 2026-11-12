@@ -50,6 +50,27 @@ void main() {
     });
   });
 
+  test('a request still sending after 5 minutes has an unknown outcome', () {
+    final requestedAt = DateTime(2026, 1, 1, 12);
+    Announcement record(AnnouncementStatus status) => Announcement(
+      id: 'r1',
+      locale: 'en',
+      title: 'T',
+      body: 'B',
+      status: status,
+      sentBy: 'admin1',
+      requestedAt: requestedAt,
+      sentAt: null,
+    );
+    final soon = requestedAt.add(const Duration(minutes: 5));
+    final later = soon.add(const Duration(seconds: 1));
+    expect(record(AnnouncementStatus.sending).outcomeUnknownAt(soon), isFalse);
+    expect(record(AnnouncementStatus.sending).outcomeUnknownAt(later), isTrue);
+    expect(record(AnnouncementStatus.sent).outcomeUnknownAt(later), isFalse);
+    expect(record(AnnouncementStatus.failed).outcomeUnknownAt(later), isFalse);
+    expect(isStaleSending(null, later), isFalse);
+  });
+
   test('request ids are 20 random letters and digits', () {
     final ids = {for (var i = 0; i < 100; i++) newAnnouncementRequestId()};
     expect(ids, hasLength(100));

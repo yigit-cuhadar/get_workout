@@ -12,7 +12,9 @@ abstract interface class AdminAnnouncementRepository {
   /// Sends [request]'s draft as it is (trim and check it first). Fails with
   /// [PermissionFailure] without the admin claim,
   /// [AnnouncementsUnavailableFailure] when the function cannot be called,
-  /// [AnnouncementInProgressFailure] while the same request is being sent,
+  /// [AnnouncementInProgressFailure] while the same request is `sending`,
+  /// [AnnouncementNotSentFailure] when FCM certainly refused it,
+  /// [AnnouncementOutcomeUnknownFailure] when FCM may have taken it,
   /// [ValidationFailure] when the function refuses the input and
   /// [NetworkFailure] offline.
   Future<Result<SentAnnouncement>> send(AnnouncementRequest request);

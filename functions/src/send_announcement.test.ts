@@ -10,8 +10,11 @@ import {
   MAX_TITLE,
   Reason,
   StoredAnnouncement,
+  TIME_TO_LIVE_SECONDS,
   sendAnnouncementOf,
 } from "./send_announcement";
+
+const now = 1_000_000;
 
 type Auth = Parameters<typeof sendAnnouncementOf>[0];
 
@@ -26,11 +29,20 @@ const request = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const send = (auth: Auth, data: unknown, store: AnnouncementStore) =>
+  sendAnnouncementOf(auth, data, store, now);
+
+/** An error as the Admin SDK's messaging throws it. */
+const fcmError = (code: string) =>
+  Object.assign(new Error(code), { code: `messaging/${code}` });
+
 /**
- * `announcements` in memory, claimed as the Firestore transaction does;
- * [sendError] fails FCM.
+ * `announcements` in memory. A claim reads and writes with no await in
+ * between, so like the Firestore transaction a second claimant of an id
+ * sees the first one's `sending`. FCM fails with [options.sendError], and
+ * waits for [options.gate] when given.
  */
-function fakeStore(sendError?: Error) {
+function fakeStore(options: { sendError?: Error; gate?: Promise<void> } = {}) {
   const docs = new Map<string, StoredAnnouncement & { sentBy: string }>();
   const sent: TopicMessage[] = [];
   const stored = (id: string) => {
@@ -42,7 +54,12 @@ function fakeStore(sendError?: Error) {
     async claim(id, sentBy, decide) {
       const claim = decide(docs.get(id));
       if (claim.kind === "send") {
-        docs.set(id, { ...claim.announcement, status: "sending", sentBy });
+        docs.set(id, {
+          ...claim.announcement,
+          status: "sending",
+          sentBy,
+          requestedAtMillis: now * 1000,
+        });
       }
       return claim;
     },
@@ -53,7 +70,8 @@ function fakeStore(sendError?: Error) {
       docs.set(id, { ...stored(id), status: "failed" });
     },
     async send(message) {
-      if (sendError) throw sendError;
+      await options.gate;
+      if (options.sendError) throw options.sendError;
       sent.push(message);
       return `projects/p/messages/${sent.length}`;
     },
@@ -74,7 +92,7 @@ const refusedWith =
 describe("sendAnnouncementOf", () => {
   test("sends a notification message to the language's topic", async () => {
     const { store, docs, sent } = fakeStore();
-    const result = await sendAnnouncementOf(
+    const result = await send(
       caller(),
       request({
         title: "  New programs ",
@@ -94,24 +112,32 @@ describe("sendAnnouncementOf", () => {
           title: "New programs",
           body: "Three new programs are live.",
         },
-        android: { notification: { channelId: "workout" } },
-        apns: { payload: { aps: { sound: "default" } } },
+        android: {
+          ttl: 3 * 24 * 60 * 60 * 1000,
+          notification: { channelId: "workout" },
+        },
+        apns: {
+          headers: { "apns-expiration": `${now + 3 * 24 * 60 * 60}` },
+          payload: { aps: { sound: "default" } },
+        },
       },
     ]);
+    assert.equal(TIME_TO_LIVE_SECONDS, 3 * 24 * 60 * 60);
     assert.deepEqual(docs.get("req_12345678"), {
       locale: "en",
       title: "New programs",
       body: "Three new programs are live.",
       status: "sent",
       sentBy: "admin1",
+      requestedAtMillis: now * 1000,
       messageId: "projects/p/messages/1",
     });
   });
 
   test("a request id sends once; a retry gets the first send", async () => {
     const { store, sent } = fakeStore();
-    await sendAnnouncementOf(caller(), request(), store);
-    const again = await sendAnnouncementOf(caller(), request(), store);
+    await send(caller(), request(), store);
+    const again = await send(caller(), request(), store);
     assert.equal(sent.length, 1);
     assert.deepEqual(again, {
       id: "req_12345678",
@@ -120,39 +146,92 @@ describe("sendAnnouncementOf", () => {
     });
   });
 
+  test("two calls with one id at once send once", async () => {
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const { store, sent } = fakeStore({ gate });
+    const both = Promise.allSettled([
+      send(caller(), request(), store),
+      send(caller(), request(), store),
+    ]);
+    await new Promise((resolve) => setImmediate(resolve));
+    release();
+    const [first, second] = await both;
+    assert.equal(sent.length, 1);
+    assert.equal(first.status, "fulfilled");
+    assert.equal(second.status, "rejected");
+    assert.ok(
+      refusedWith("already-exists", Reason.inProgress)(
+        (second as PromiseRejectedResult).reason,
+      ),
+    );
+  });
+
   test("refuses a request id being sent, or used for other text", async () => {
     const { store, docs, sent } = fakeStore();
     docs.set("req_12345678", {
       ...request(),
       status: "sending",
       sentBy: "admin1",
+      requestedAtMillis: 42,
     });
     await assert.rejects(
-      sendAnnouncementOf(caller(), request(), store),
-      refusedWith("already-exists", Reason.inProgress),
+      send(caller(), request(), store),
+      (error: HttpsError) =>
+        refusedWith("already-exists", Reason.inProgress)(error) &&
+        (error.details as { requestedAt: number }).requestedAt === 42,
     );
     await assert.rejects(
-      sendAnnouncementOf(caller(), request({ title: "Other" }), store),
+      send(caller(), request({ title: "Other" }), store),
       refusedWith("invalid-argument", Reason.requestIdReused),
     );
     assert.equal(sent.length, 0);
   });
 
-  test("a failed send is recorded and can be retried", async () => {
-    const failing = fakeStore(new Error("fcm down"));
-    await assert.rejects(
-      sendAnnouncementOf(caller(), request(), failing.store),
-      refusedWith("internal", Reason.sendFailed),
-    );
-    const failed = failing.stored("req_12345678");
-    assert.equal(failed.status, "failed");
+  test("a certain FCM refusal is recorded failed and retryable", async () => {
+    for (const code of [
+      "invalid-argument",
+      "mismatched-credential",
+      "authentication-error",
+      "third-party-auth-error",
+      "message-rate-exceeded",
+    ]) {
+      const failing = fakeStore({ sendError: fcmError(code) });
+      await assert.rejects(
+        send(caller(), request(), failing.store),
+        refusedWith("internal", Reason.sendFailed),
+      );
+      const failed = failing.stored("req_12345678");
+      assert.equal(failed.status, "failed", code);
 
-    const { store, docs, sent } = fakeStore();
-    docs.set("req_12345678", failed);
-    const result = await sendAnnouncementOf(caller(), request(), store);
-    assert.equal(result.alreadySent, false);
-    assert.equal(sent.length, 1);
-    assert.equal(docs.get("req_12345678")?.status, "sent");
+      const { store, docs, sent } = fakeStore();
+      docs.set("req_12345678", failed);
+      const result = await send(caller(), request(), store);
+      assert.equal(result.alreadySent, false);
+      assert.equal(sent.length, 1);
+      assert.equal(docs.get("req_12345678")?.status, "sent");
+    }
+  });
+
+  test("an unclear FCM error stays sending, never sent again", async () => {
+    for (const error of [
+      fcmError("internal-error"),
+      fcmError("server-unavailable"),
+      fcmError("unknown-error"),
+      Object.assign(new Error("timeout"), { code: "ETIMEDOUT" }),
+      new Error("socket hang up"),
+    ]) {
+      const { store, stored } = fakeStore({ sendError: error });
+      await assert.rejects(
+        send(caller(), request(), store),
+        refusedWith("unknown", Reason.outcomeUnknown),
+      );
+      assert.equal(stored("req_12345678").status, "sending", error.message);
+      await assert.rejects(
+        send(caller(), request(), store),
+        refusedWith("already-exists", Reason.inProgress),
+      );
+    }
   });
 
   test("a send that was not recorded still succeeds", async () => {
@@ -160,7 +239,7 @@ describe("sendAnnouncementOf", () => {
     store.markSent = async () => {
       throw new Error("firestore down");
     };
-    const result = await sendAnnouncementOf(caller(), request(), store);
+    const result = await send(caller(), request(), store);
     assert.equal(result.alreadySent, false);
     assert.equal(sent.length, 1);
   });
@@ -168,12 +247,12 @@ describe("sendAnnouncementOf", () => {
   test("refuses a caller signed out or without the admin claim", async () => {
     const { store, docs, sent } = fakeStore();
     await assert.rejects(
-      sendAnnouncementOf(undefined, request(), store),
+      send(undefined, request(), store),
       (error: HttpsError) => error.code === "unauthenticated",
     );
     for (const claims of [{}, { admin: "true" }, { admin: false }]) {
       await assert.rejects(
-        sendAnnouncementOf(caller(claims), request(), store),
+        send(caller(claims), request(), store),
         refusedWith("permission-denied", Reason.notAdmin),
       );
     }
@@ -198,7 +277,7 @@ describe("sendAnnouncementOf", () => {
     ];
     for (const [data, field] of cases) {
       await assert.rejects(
-        sendAnnouncementOf(caller(), data, store),
+        send(caller(), data, store),
         refusedWith("invalid-argument", Reason.invalidInput, field),
         `expected ${field} to be refused`,
       );
@@ -209,7 +288,7 @@ describe("sendAnnouncementOf", () => {
 
   test("accepts text at the length limits", async () => {
     const { store, sent } = fakeStore();
-    await sendAnnouncementOf(
+    await send(
       caller(),
       request({ title: "t".repeat(MAX_TITLE), body: "b".repeat(MAX_BODY) }),
       store,

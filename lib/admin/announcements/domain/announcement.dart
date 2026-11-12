@@ -67,6 +67,15 @@ class AnnouncementDraft extends Equatable {
 /// does not know.
 enum AnnouncementStatus { sending, sent, failed, unknown }
 
+/// How long a send may take before a request still `sending` is taken as
+/// one whose outcome is unknown (the function died, or FCM did not say).
+const staleSendingAfter = Duration(minutes: 5);
+
+/// Whether a request still `sending` since [requestedAt] is stale at [now]:
+/// it may or may not have reached devices, and nothing recovers it.
+bool isStaleSending(DateTime? requestedAt, DateTime now) =>
+    requestedAt != null && now.difference(requestedAt) > staleSendingAfter;
+
 /// One request to send, as `sendAnnouncement` records it in
 /// `announcements/{id}`.
 class Announcement extends Equatable {
@@ -92,6 +101,10 @@ class Announcement extends Equatable {
   final String sentBy;
   final DateTime? requestedAt;
   final DateTime? sentAt;
+
+  /// Still `sending` long after it was requested ([isStaleSending]).
+  bool outcomeUnknownAt(DateTime now) =>
+      status == AnnouncementStatus.sending && isStaleSending(requestedAt, now);
 
   @override
   List<Object?> get props => [
@@ -120,7 +133,7 @@ class SentAnnouncement extends Equatable {
   List<Object?> get props => [messageId, alreadySent];
 }
 
-/// A request to send [draft] under the request [id]: the same id sends
+/// A request to send [draft] under the request [id]: the server sends an id
 /// once, so a retry after an unclear failure never sends twice.
 typedef AnnouncementRequest = ({String id, AnnouncementDraft draft});
 
@@ -145,11 +158,35 @@ final class AnnouncementsUnavailableFailure extends Failure {
   ]) : super(cause: cause);
 }
 
-/// The same request is being sent right now; its outcome shows in the
-/// history.
+/// The same request is `sending`: right now, or, when [requestedAt] is
+/// stale ([isStaleSending]), with an outcome nobody knows. It is never sent
+/// again.
 final class AnnouncementInProgressFailure extends Failure {
-  const AnnouncementInProgressFailure([
-    super.message = 'announcement being sent',
+  const AnnouncementInProgressFailure({
+    String message = 'announcement being sent',
+    this.requestedAt,
+    Object? cause,
+  }) : super(message, cause: cause);
+
+  /// When the request was made; null when the server did not say.
+  final DateTime? requestedAt;
+}
+
+/// FCM certainly did not take the announcement: nothing was sent, and
+/// sending it again may send it.
+final class AnnouncementNotSentFailure extends Failure {
+  const AnnouncementNotSentFailure([
+    super.message = 'announcement not sent',
+    Object? cause,
+  ]) : super(cause: cause);
+}
+
+/// FCM may or may not have taken the announcement. The request stays
+/// `sending` and is never sent again; only a device tells whether it
+/// arrived.
+final class AnnouncementOutcomeUnknownFailure extends Failure {
+  const AnnouncementOutcomeUnknownFailure([
+    super.message = 'announcement outcome unknown',
     Object? cause,
   ]) : super(cause: cause);
 }

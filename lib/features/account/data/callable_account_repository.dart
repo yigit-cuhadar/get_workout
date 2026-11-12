@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 
+import '../../../app/functions_region.dart';
 import '../domain/account_repository.dart';
 
 /// Deletes through the callable Cloud Function `deleteAccount` (SPEC's
@@ -28,8 +29,8 @@ class CallableAccountRepository implements AccountRepository {
   /// longer means offline.
   final Duration pendingWritesWait;
 
-  /// Where the functions are deployed (`functions/src/config.ts`).
-  static const region = 'europe-west1';
+  /// Where the functions are deployed.
+  static const region = functionsRegion;
   static const function = 'deleteAccount';
 
   /// `details.reason` values of the function's refusals
