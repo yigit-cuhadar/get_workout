@@ -16,8 +16,8 @@ import 'active_workout_cubit.dart';
 enum _InProgressChoice { resume, discard }
 
 /// Starts a workout with [start] and opens it. While another is in progress
-/// the user resumes that one or discards it first; a finished one whose
-/// summary is still open is put away.
+/// the user resumes that one or discards it first; an empty one is simply
+/// replaced, and a finished one whose summary is still open is put away.
 Future<void> startWorkout(
   BuildContext context,
   Future<WorkoutStart> Function(ActiveWorkoutCubit cubit) start,
@@ -115,7 +115,7 @@ Future<void> addToWorkout(BuildContext context, Exercise exercise) async {
   final language = Localizations.localeOf(context).languageCode;
   final name = exercise.localized(context).name;
   final workout = cubit.state.workout;
-  if (cubit.state.status == WorkoutStatus.active && workout != null) {
+  if (cubit.state.inProgress && workout != null) {
     final added = cubit.addExercises([exercise], language);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

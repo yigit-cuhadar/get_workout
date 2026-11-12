@@ -1121,6 +1121,7 @@
   "notificationChannelDescription": "Rest timer, reminders and announcements",
 
   "todayNextTitle": "Next workout",
+  "todayActiveProgram": "Active program",
   "todayNoProgram": "No active program. Pick a ready-made one, generate one or just train.",
   "todayProgramFinished": "You finished {program}. Pick your next program or just train.",
   "@todayProgramFinished": {"placeholders": {"program": {"type": "String"}}},
