@@ -6,6 +6,7 @@ import 'package:forge_core/forge_core.dart';
 import 'access/access_module.dart';
 import 'admin_app.dart';
 import 'exercises/exercise_admin_module.dart';
+import 'programs/program_admin_module.dart';
 
 /// Composition root of the admin panel; the mobile app's is
 /// `lib/app/bootstrap.dart`, and the two share no registrations.
@@ -18,6 +19,7 @@ Future<void> bootstrapAdmin(AppEnv env, FirebaseOptions options) async {
     AuthModule(),
     AdminAccessModule(),
     ExerciseAdminModule(),
+    ProgramAdminModule(),
   ]);
   runApp(AdminApp(env: env, projectId: options.projectId));
 }

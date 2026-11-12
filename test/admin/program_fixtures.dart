@@ -1,4 +1,3 @@
-import 'package:get_workout/admin/exercises/domain/exercise_draft.dart';
 import 'package:get_workout/admin/programs/domain/program_admin_usecases.dart';
 import 'package:get_workout/admin/programs/domain/program_draft.dart';
 
@@ -100,6 +99,3 @@ ProgramRecord programRecord(
 /// [json] without its days, as the list reads a card.
 Map<String, Object?> cardOf(Map<String, Object?> json) =>
     Map.of(json)..remove('days');
-
-ExerciseRecord exerciseRecord(String id) =>
-    exerciseRecords.firstWhere((record) => record.id == id);
