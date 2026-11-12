@@ -384,7 +384,9 @@ from the earlier FitLab app.
   data went gives the workout back.
 - **Cloud Functions** (`functions/`): TypeScript, Node 22, 2nd gen, all in
   `europe-west1` (`src/config.ts`, set once with `setGlobalOptions`; the
-  app's `CallableAccountRepository.region` must match). One file per
+  app's one Dart constant `functionsRegion` in
+  `lib/app/functions_region.dart`, used by the app and the admin panel,
+  must match). One file per
   function, exported from `src/index.ts`; logic takes its Admin SDK
   access as a parameter so `npm test` (lint, build, `node --test`) runs
   without an emulator; CI runs it. Deploying is the Architect's step
@@ -470,6 +472,23 @@ from the earlier FitLab app.
   Allowing notifications never waits for the subscription. Topic push needs no
   stored tokens, so `users/{uid}/pushTokens` stays unwritten until a
   feature needs per-user push.
+- **Sending announcements**: the admin panel's Announcements page
+  (`lib/admin/announcements`) calls `sendAnnouncement` after a confirmation
+  that it reaches every user who allowed notifications and cannot be
+  recalled. Title at most 65 and body at most 240 characters after
+  trimming (UTF-16 units on both sides; longer is cut off on most lock
+  screens), languages of `languages` only. A send carries a random request
+  id; the page remembers the last attempt (id and trimmed text) and sends
+  the same trimmed text and language under the same id, a new id only for
+  other text or after a send went through. The function sends a request
+  id once, so a retry after an unclear failure (offline, timeout) never
+  sends twice. Every request is recorded in `announcements/{requestId}`,
+  which the page lists as the history (latest 50); a request still
+  `sending` 5 minutes after `requestedAt` shows as "Unknown — check a
+  device before sending again", and nothing recovers it automatically.
+  Messages carry the Android channel `workout`, APNs `sound: default`, and
+  a time to live of 3 days (Android `ttl`, `apns-expiration`), so a dated
+  announcement is dropped rather than arriving weeks late.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
   / Progress / Profile. The active workout is full-screen and can be minimized
   to a bar above the tabs. Known limitation, to fix app-wide later: a link
@@ -908,6 +927,11 @@ measurement day fills all three.
 webhook converts), `productId`. Written only by the
 RevenueCat webhook; readable by its owner.
 
+**`announcements/{requestId}`**: `locale`, `title`, `body`, `status`
+(`sending`, `sent`, `failed`), `sentBy` (uid), `requestedAt`, and once
+sent `sentAt` and `messageId` (FCM's). Written only by `sendAnnouncement`;
+readable by admins.
+
 ### Storage
 
 `users/{uid}/photos/{entryId}/{pose}-{revision}.jpg`, revision the capture
@@ -929,7 +953,26 @@ only, JPEG, max 5 MB.
   and `sign-in-not-deleted` (`internal`, the data is gone but the auth user
   is not; calling again finishes). RevenueCat keeps its customer; the
   store subscription is the user's to cancel.
-- `sendAnnouncement` (callable, admin) → FCM topic push
+- `sendAnnouncement` (callable, `functions/src/send_announcement.ts`) →
+  for a caller with the `admin` claim, input `{requestId, locale, title,
+  body}`: claims `announcements/{requestId}` in a transaction, sends a
+  notification message to topic `announcements_<locale>`, then records it
+  sent. Only an FCM error that certainly means it was not accepted
+  (invalid argument, payload or recipient, mismatched credential, auth
+  errors, rate limits) records it `failed`, which a retry of the same id
+  may send again; any other error (timeouts, `internal-error`,
+  `server-unavailable`, unknown) leaves it `sending`, never sent again.
+  Returns
+  `{id, messageId, alreadySent}`; a request id already sent returns the
+  first send without sending. Refusals carry `details.reason`:
+  `not-admin` (`permission-denied`), `invalid-input` (`invalid-argument`,
+  with `details.field`), `request-id-reused` (`invalid-argument`, the id
+  holds other text), `in-progress` (`already-exists`, the id is
+  `sending`; `details.requestedAt` in epoch milliseconds, which the panel
+  uses to tell a stale one), `send-failed` (`internal`, FCM certainly
+  refused; nothing was sent) and `outcome-unknown` (`unknown`, FCM may have
+  taken it). A request left `sending` stays refused as in progress;
+  different text gets a new id.
 
 Admin access is a custom claim set by `tool/set_admin.sh`, using the project
 owner's gcloud access token passed in `GOOGLE_ACCESS_TOKEN`.
@@ -1063,14 +1106,16 @@ Group 9, launch readiness
 - The admin web build now bundles and loads the RevenueCat web script,
   because `purchases_flutter` registers a web plugin. Harmless; revisit if
   the admin build is split from the app.
-- `sendAnnouncement` (callable, admin claim) is pending, no longer blocked
-  by billing: it sends a notification message (`notification.title`,
-  `notification.body`) to topic `announcements_<locale>`; the client needs
-  no data fields. iOS push still needs the Apple Developer account: the
-  Push Notifications capability (`aps-environment` in
-  `Runner.entitlements`, not added yet, as it breaks device signing
-  without it) and an APNs key uploaded to both Firebase projects. Until
-  then iOS follows no topic.
+- `sendAnnouncement` and the panel's Announcements page are written but
+  the function is not deployed: the Architect deploys `functions/` and
+  `firestore.rules` to dev, checks the page before the deploy ("not
+  deployed" message), then sends one to an Android device following
+  `announcements_en` (shown on channel `workout`, tap opens Today), checks
+  the history and that a non-admin is refused, then prod. iOS push still
+  needs the Apple Developer account: the Push Notifications capability
+  (`aps-environment` in `Runner.entitlements`, not added yet, as it breaks
+  device signing without it) and an APNs key uploaded to both Firebase
+  projects. Until then iOS follows no topic.
 - Notifications, not built yet on a device: `firebase_messaging` 17, the
   Android manifest's FCM default channel, icon and auto-init flag, and the
   iOS `FirebaseMessagingAutoInitEnabled` key. The `workout` channel
