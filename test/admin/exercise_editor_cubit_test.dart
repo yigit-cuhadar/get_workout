@@ -9,6 +9,7 @@ import 'package:get_workout/admin/exercises/domain/exercise_admin_usecases.dart'
 import 'package:get_workout/admin/exercises/domain/exercise_draft.dart';
 import 'package:get_workout/admin/exercises/presentation/exercise_editor_cubit.dart';
 import 'package:get_workout/admin/shell/admin_text.dart';
+import 'package:get_workout/admin/shell/editor_status.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:mocktail/mocktail.dart';
 
