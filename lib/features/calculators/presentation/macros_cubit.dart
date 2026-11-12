@@ -16,6 +16,7 @@ class MacrosState extends Equatable {
     this.weight = '',
     this.proteinGPerKg = defaultProteinGPerKg,
     this.fatPercent = defaultFatPercent,
+    this.known = const {},
     this.result,
   });
 
@@ -25,6 +26,9 @@ class MacrosState extends Equatable {
   final double proteinGPerKg;
   final double fatPercent;
 
+  /// Holds the weight while it is the known one.
+  final Map<CalculatorInput, KnownInput> known;
+
   /// Null until calories and weight are filled in.
   final Calculation<Macros>? result;
 
@@ -33,11 +37,13 @@ class MacrosState extends Equatable {
     String? weight,
     double? proteinGPerKg,
     double? fatPercent,
+    Map<CalculatorInput, KnownInput>? known,
   }) => MacrosState(
     calories: calories ?? this.calories,
     weight: weight ?? this.weight,
     proteinGPerKg: proteinGPerKg ?? this.proteinGPerKg,
     fatPercent: fatPercent ?? this.fatPercent,
+    known: known ?? this.known,
   );
 
   @override
@@ -46,12 +52,13 @@ class MacrosState extends Equatable {
     weight,
     proteinGPerKg,
     fatPercent,
+    known,
     result,
   ];
 }
 
-/// Starts from the user's known weight, unless they changed it before it
-/// arrived. Calories are not known: they depend on the target chosen.
+/// Starts from the user's known weight, unless they changed or started
+/// editing it before it arrived. Calories are not known: they depend on the target chosen.
 class MacrosCubit extends Cubit<MacrosState> {
   MacrosCubit(
     this._split,
@@ -64,7 +71,7 @@ class MacrosCubit extends Cubit<MacrosState> {
 
   final SplitMacros _split;
   final WeightUnit weightUnit;
-  var _weightChanged = false;
+  final _changed = <CalculatorInput>{};
 
   Future<void> _prefill(
     GetCurrentUser getCurrentUser,
@@ -73,16 +80,28 @@ class MacrosCubit extends Cubit<MacrosState> {
     final uid = getCurrentUser()?.id;
     if (uid == null) return;
     final known = await getKnownValues(uid);
-    if (isClosed || _weightChanged) return;
+    if (isClosed || _changed.contains(CalculatorInput.bodyWeight)) return;
+    final weight = knownText(known.weightKg, weightUnit.fromKg);
+    if (weight == null) return;
     _calculate(
-      state._with(weight: knownText(known.weightKg, weightUnit.fromKg)),
+      state._with(
+        weight: weight,
+        known: {CalculatorInput.bodyWeight: KnownInput(known.weightDate)},
+      ),
     );
+  }
+
+  /// The user started editing [input]: it is a plain field from now on,
+  /// which known values leave alone.
+  void edit(CalculatorInput input) {
+    _changed.add(input);
+    _calculate(state._with(known: {...state.known}..remove(input)));
   }
 
   void caloriesChanged(String text) => _calculate(state._with(calories: text));
 
   void weightChanged(String text) {
-    _weightChanged = true;
+    _changed.add(CalculatorInput.bodyWeight);
     _calculate(state._with(weight: text));
   }
 
@@ -101,6 +120,7 @@ class MacrosCubit extends Cubit<MacrosState> {
         weight: inputs.weight,
         proteinGPerKg: inputs.proteinGPerKg,
         fatPercent: inputs.fatPercent,
+        known: inputs.known,
         result: calories == null || weight == null
             ? null
             : _split(
