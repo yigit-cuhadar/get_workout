@@ -390,6 +390,7 @@ void main() {
       providers: [
         BlocProvider.value(value: auth),
         BlocProvider.value(value: settings),
+        programList(),
         noWorkout(),
         BlocProvider.value(value: profile),
         BlocProvider.value(value: catalogue),

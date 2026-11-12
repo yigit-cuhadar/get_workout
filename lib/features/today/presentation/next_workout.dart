@@ -21,8 +21,8 @@ class NoProgramDay extends NextWorkout {
 }
 
 /// The active [program]'s next day, planned for [date] (null when the
-/// program ends before another training day). With [access] other than
-/// open, starting it goes through the premium gate.
+/// program ends before another training day). Locked, starting it opens
+/// the paywall.
 class NextProgramDay extends NextWorkout {
   const NextProgramDay({
     required this.program,
@@ -59,16 +59,20 @@ class MissedProgramDay extends NextWorkout {
   List<Object?> get props => [program, missed, moveDate];
 }
 
-/// The next workout of a ready [state], derived only from what the
-/// Programs tab shows: a missed day is offered only while the program is
-/// open, as there.
-NextWorkout nextWorkoutOf(ProgramListState state) {
+/// The next workout of [state], derived only from what the Programs tab
+/// shows; null until it is known: while the list loads, and while the
+/// premium status of a premium copy is (a missed day could otherwise show
+/// as a planned one with Start). A missed day is offered only while the
+/// program is open, as there.
+NextWorkout? nextWorkoutOf(ProgramListState state) {
+  if (state.status != ProgramListStatus.ready) return null;
   final program = state.activeProgram;
   final dayIndex = state.nextDayIndex;
   if (program == null || dayIndex == null) {
     return NoProgramDay(finished: state.finished ? program : null);
   }
   final access = state.access(program);
+  if (access == ProgramAccess.waiting) return null;
   final missed = state.missed;
   final moveDate = state.moveDate;
   if (missed != null && moveDate != null && access == ProgramAccess.open) {

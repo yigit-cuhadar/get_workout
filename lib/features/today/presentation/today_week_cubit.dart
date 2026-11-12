@@ -92,7 +92,8 @@ class TodayWeekCubit extends Cubit<TodayWeekState> {
   }
 
   /// Moves to the current day, and week when it changed, e.g. after the
-  /// app slept over midnight.
+  /// app slept over midnight; a snapshot arriving after the week ended
+  /// moves to the new week too.
   void refreshNow() {
     final now = _initial(firstWeekday, _clock);
     if (now.today == state.today) return;
@@ -170,10 +171,11 @@ class TodayWeekCubit extends Cubit<TodayWeekState> {
         !_activeKnown) {
       return;
     }
-    final active = _active;
-    // The week followed; refreshNow follows the next one.
-    final days = state.days;
     final today = CalendarDate.of(_clock());
+    // The week ended since it was followed: follow the new one instead.
+    if (today.startOfWeek(firstWeekday) != state.days.first) return _follow();
+    final active = _active;
+    final days = state.days;
     emit(
       TodayWeekState(
         today: today,

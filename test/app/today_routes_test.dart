@@ -12,8 +12,11 @@ import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_schedule.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
-import 'package:get_workout/features/subscription/subscription_module.dart';
+import 'package:get_workout/features/settings/domain/user_settings.dart';
+import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
+import 'package:get_workout/features/steps/domain/steps.dart';
 import 'package:get_workout/features/today/presentation/today_page.dart';
+import 'package:get_workout/features/today/presentation/today_steps_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_volume_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_week_cubit.dart';
 import 'package:get_workout/features/volume/domain/weekly_volume.dart';
@@ -38,6 +41,15 @@ class MockVolumeCubit extends MockCubit<TodayVolumeState>
 class MockWorkoutCubit extends MockCubit<ActiveWorkoutState>
     implements ActiveWorkoutCubit {}
 
+class MockStepsCubit extends MockCubit<TodayStepsState>
+    implements TodayStepsCubit {}
+
+class MockEntitlementCubit extends MockCubit<EntitlementState>
+    implements EntitlementCubit {}
+
+class MockSettingsCubit extends MockCubit<SettingsState>
+    implements SettingsCubit {}
+
 const workoutOf = fixtures.workout;
 
 CalendarDate d(int year, int month, int day) => CalendarDate(year, month, day);
@@ -53,7 +65,18 @@ const _targets = [
   Routes.programGenerator,
   '/programs/p1',
   Routes.workout,
+  Routes.paywall,
+  Routes.steps,
 ];
+
+/// Two seconds of frames, enough for a route transition or a snack bar
+/// to come in; bounded, so nothing that animates for ever can hang a
+/// test.
+Future<void> settle(WidgetTester tester) async {
+  for (var i = 0; i < 20; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
 
 void main() {
   final upperLower = program(id: 'p1');
@@ -110,7 +133,7 @@ void main() {
 
   late MockProgramListCubit list;
   late MockWorkoutCubit workout;
-  late EntitlementCubit entitlement;
+  late MockStepsCubit steps;
   late GoRouter router;
 
   setUpAll(() {
@@ -122,13 +145,19 @@ void main() {
     WidgetTester tester, {
     required ProgramListState programs,
     TodayVolumeState? volumeState,
+    TodayStepsState stepsState = const TodayStepsState(
+      status: TodayStepsStatus.ready,
+      progress: StepGoalProgress(steps: 4000, goal: 10000),
+    ),
+    EntitlementState premium = const EntitlementUnknown(),
+    ProgramAccess access = ProgramAccess.open,
   }) async {
     list = MockProgramListCubit();
     when(() => list.state).thenReturn(programs);
     workout = MockWorkoutCubit();
     when(() => workout.state)
         .thenReturn(const ActiveWorkoutState(status: WorkoutStatus.none));
-    when(() => workout.access(any())).thenReturn(ProgramAccess.open);
+    when(() => workout.access(any())).thenReturn(access);
     when(() => workout.startFree(any())).thenReturn(true);
     when(
       () => workout.startProgramDay(
@@ -138,16 +167,14 @@ void main() {
         language: any(named: 'language'),
       ),
     ).thenAnswer((_) async => (started: true, skipped: 0));
-    // Never configured, so the premium status stays unknown.
-    final store = FakePurchasesRepository(plans: fakePlans);
-    entitlement = EntitlementCubit(
-      configure: ConfigurePurchases(store),
-      watchEntitlement: WatchEntitlement(store),
-      identify: IdentifyPurchaser(store),
-      reset: ResetPurchaser(store),
-      refresh: RefreshEntitlement(store),
-      getManagementUrl: GetManagementUrl(store),
-    );
+    final entitlement = MockEntitlementCubit();
+    when(() => entitlement.state).thenReturn(premium);
+    final settings = MockSettingsCubit();
+    when(() => settings.state)
+        .thenReturn(SettingsState(UserSettings.defaultsFor(null)));
+    steps = MockStepsCubit();
+    when(() => steps.state).thenReturn(stepsState);
+    when(() => steps.load(any())).thenAnswer((_) async {});
     sl
       ..registerSingleton<ProgramListCubit>(list)
       ..registerFactoryParam<TodayWeekCubit, int, void>((firstWeekday, _) {
@@ -161,7 +188,8 @@ void main() {
         final cubit = MockVolumeCubit();
         when(() => cubit.state).thenReturn(volumeState ?? volume);
         return cubit;
-      });
+      })
+      ..registerFactory<TodayStepsCubit>(() => steps);
     router = GoRouter(
       initialLocation: Routes.today,
       routes: [
@@ -177,7 +205,8 @@ void main() {
       MultiBlocProvider(
         providers: [
           BlocProvider<ActiveWorkoutCubit>.value(value: workout),
-          BlocProvider.value(value: entitlement),
+          BlocProvider<EntitlementCubit>.value(value: entitlement),
+          BlocProvider<SettingsCubit>.value(value: settings),
         ],
         child: MaterialApp.router(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -186,13 +215,10 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
-  tearDown(() async {
-    await entitlement.close();
-    await sl.reset();
-  });
+  tearDown(() => sl.reset());
 
   /// The stub page of [path] is on top.
   void expectAt(String path) => expect(find.text('at $path'), findsOneWidget);
@@ -204,13 +230,13 @@ void main() {
       100,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
   Future<void> tap(WidgetTester tester, Finder finder) async {
     await reveal(tester, finder);
     await tester.tap(finder);
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
   group('the next workout', () {
@@ -230,6 +256,29 @@ void main() {
         ),
       ).called(1);
       expectAt(Routes.workout);
+    });
+
+    testWidgets('a locked premium copy opens the paywall, not the day', (
+      tester,
+    ) async {
+      await start(
+        tester,
+        programs: planned,
+        premium: const EntitlementInactive(),
+        access: ProgramAccess.locked,
+      );
+
+      await tap(tester, find.text('Start Lower'));
+
+      expectAt(Routes.paywall);
+      verifyNever(
+        () => workout.startProgramDay(
+          any(),
+          any(),
+          name: any(named: 'name'),
+          language: any(named: 'language'),
+        ),
+      );
     });
 
     testWidgets('opens its program', (tester) async {
@@ -361,5 +410,45 @@ void main() {
 
     expect(find.text('Start Lower'), findsOneWidget);
     await reveal(tester, find.text("Couldn't load your workouts"));
+  });
+
+  group('steps', () {
+    testWidgets('today against the goal, opening the Steps page', (
+      tester,
+    ) async {
+      await start(tester, programs: planned);
+      verify(() => steps.load(10000)).called(1);
+
+      await reveal(tester, find.text('4,000 of 10,000'));
+      expect(find.text('6,000 to go'), findsOneWidget);
+      await tap(tester, find.text('Steps'));
+
+      expectAt(Routes.steps);
+    });
+
+    testWidgets('not set up: an entry to the Steps page', (tester) async {
+      await start(
+        tester,
+        programs: planned,
+        stepsState: const TodayStepsState(status: TodayStepsStatus.setUp),
+      );
+
+      await tap(tester, find.text('See your steps'));
+
+      expectAt(Routes.steps);
+    });
+
+    testWidgets('no card without a health store', (tester) async {
+      await start(
+        tester,
+        programs: planned,
+        stepsState: const TodayStepsState(status: TodayStepsStatus.unavailable),
+      );
+      await reveal(tester, find.text('Sets this week'));
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
+      await settle(tester);
+
+      expect(find.text('Steps'), findsNothing);
+    });
   });
 }

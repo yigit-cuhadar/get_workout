@@ -17,11 +17,14 @@ import '../../programs/domain/program_editing.dart';
 import '../../programs/presentation/missed_day_prompt.dart';
 import '../../programs/presentation/program_list_cubit.dart';
 import '../../programs/presentation/program_text.dart';
+import '../../settings/presentation/settings_cubit.dart';
+import '../../steps/domain/steps.dart';
 import '../../volume/domain/weekly_volume.dart';
 import '../../volume/presentation/volume_charts.dart';
 import '../../volume/presentation/volume_text.dart';
 import '../../workout/presentation/start_workout.dart';
 import 'next_workout.dart';
+import 'today_steps_cubit.dart';
 import 'today_volume_cubit.dart';
 import 'today_week_cubit.dart';
 
@@ -41,6 +44,7 @@ class TodayPage extends StatelessWidget {
         BlocProvider.value(value: sl<ProgramListCubit>()),
         BlocProvider(create: (_) => sl<TodayWeekCubit>(param1: firstWeekday)),
         BlocProvider(create: (_) => sl<TodayVolumeCubit>(param1: firstWeekday)),
+        BlocProvider(create: (_) => sl<TodayStepsCubit>()),
       ],
       child: const _TodayView(),
     );
@@ -63,6 +67,7 @@ class _TodayViewState extends State<_TodayView> {
     _WeekCard(),
     _QuickActionsCard(),
     _VolumeCard(),
+    _StepsCard(),
   ];
 
   /// Today moves on while the app sleeps, without a new snapshot to
@@ -72,13 +77,20 @@ class _TodayViewState extends State<_TodayView> {
     super.initState();
     _lifecycle = AppLifecycleListener(onResume: _refreshNow);
     context.read<ProgramListCubit>().refreshNow();
+    _loadSteps();
   }
 
   void _refreshNow() {
     context.read<ProgramListCubit>().refreshNow();
     context.read<TodayWeekCubit>().refreshNow();
     context.read<TodayVolumeCubit>().refreshNow();
+    // Steps are read, never followed, and may change in the health store.
+    _loadSteps();
   }
+
+  void _loadSteps() => context.read<TodayStepsCubit>().load(
+    context.read<SettingsCubit>().state.settings.stepGoal,
+  );
 
   @override
   void dispose() {
@@ -89,12 +101,16 @@ class _TodayViewState extends State<_TodayView> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(AppLocalizations.of(context).tabToday)),
-    body: ListView.separated(
-      // Room to scroll the last card clear of the shell's workout bar.
-      padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, Gap.xl * 2),
-      itemCount: _cards.length,
-      separatorBuilder: (_, _) => const SizedBox(height: Gap.sm),
-      itemBuilder: (_, index) => _cards[index],
+    body: BlocListener<SettingsCubit, SettingsState>(
+      listenWhen: (previous, current) =>
+          previous.settings.stepGoal != current.settings.stepGoal,
+      listener: (_, _) => _loadSteps(),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(Gap.md),
+        itemCount: _cards.length,
+        separatorBuilder: (_, _) => const SizedBox(height: Gap.sm),
+        itemBuilder: (_, index) => _cards[index],
+      ),
     ),
   );
 }
@@ -158,9 +174,7 @@ class _NextWorkoutCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<ProgramListCubit>().state;
-    final next = state.status == ProgramListStatus.ready
-        ? nextWorkoutOf(state)
-        : null;
+    final next = nextWorkoutOf(state);
     final program = switch (next) {
       NextProgramDay(:final program) ||
       MissedProgramDay(:final program) => program,
@@ -172,53 +186,51 @@ class _NextWorkoutCard extends StatelessWidget {
       onOpen: program == null
           ? null
           : () => context.go(Routes.program(program.id!)),
-      child: switch (state.status) {
-        ProgramListStatus.loading => const _Loading(),
-        ProgramListStatus.failure => ErrorView(
+      child: switch (next) {
+        null when state.status == ProgramListStatus.failure => ErrorView(
           message: l10n.programsLoadFailed,
           retryLabel: l10n.retry,
           onRetry: context.read<ProgramListCubit>().retry,
         ),
-        ProgramListStatus.ready => switch (next!) {
-          NoProgramDay(:final finished) => _NoProgramDay(finished),
-          NextProgramDay(
-            :final program,
-            :final dayIndex,
-            :final date,
-            :final access,
-          ) =>
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _ProgramDay(program, dayIndex, date: date),
-                if (access == ProgramAccess.locked)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.lock_outline),
-                        const SizedBox(width: Gap.sm),
-                        Expanded(child: Text(l10n.programLockedActive)),
-                      ],
-                    ),
+        null => const _Loading(),
+        NoProgramDay(:final finished) => _NoProgramDay(finished),
+        NextProgramDay(
+          :final program,
+          :final dayIndex,
+          :final date,
+          :final access,
+        ) =>
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _ProgramDay(program, dayIndex, date: date),
+              if (access == ProgramAccess.locked)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.lock_outline),
+                      const SizedBox(width: Gap.sm),
+                      Expanded(child: Text(l10n.programLockedActive)),
+                    ],
                   ),
-                const SizedBox(height: Gap.sm),
-              ],
-            ),
-          MissedProgramDay(:final program, :final missed, :final moveDate) =>
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _ProgramDay(program, missed.dayIndex),
-                MissedDayPrompt(
-                  program: program,
-                  missed: missed,
-                  moveDate: moveDate,
-                  busy: state.resolving,
                 ),
-              ],
-            ),
-        },
+              const SizedBox(height: Gap.sm),
+            ],
+          ),
+        MissedProgramDay(:final program, :final missed, :final moveDate) =>
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _ProgramDay(program, missed.dayIndex),
+              MissedDayPrompt(
+                program: program,
+                missed: missed,
+                moveDate: moveDate,
+                busy: state.resolving,
+              ),
+            ],
+          ),
       },
     );
   }
@@ -445,6 +457,69 @@ class _WeekVolume extends StatelessWidget {
               onTap: () => context.go(Routes.volume),
             ),
       ],
+    );
+  }
+}
+
+/// Today's steps against the daily goal; opens the Steps page, which also
+/// sets access up. No card on a device without a health store.
+class _StepsCard extends StatelessWidget {
+  const _StepsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final state = context.watch<TodayStepsCubit>().state;
+    void open() => context.go(Routes.steps);
+    if (state.status == TodayStepsStatus.unavailable) {
+      return const SizedBox.shrink();
+    }
+    return _TodayCard(
+      title: l10n.stepsTitle,
+      onOpen: open,
+      child: switch ((state.status, state.progress)) {
+        (TodayStepsStatus.setUp, _) => ListTile(
+          leading: const Icon(Icons.directions_walk),
+          title: Text(l10n.todayStepsSetUp),
+          onTap: open,
+        ),
+        (TodayStepsStatus.failure, _) => ErrorView(
+          message: l10n.stepsLoadFailed,
+          retryLabel: l10n.retry,
+          onRetry: () => context.read<TodayStepsCubit>().load(
+            context.read<SettingsCubit>().state.settings.stepGoal,
+          ),
+        ),
+        (TodayStepsStatus.ready, final progress?) => _StepsProgress(progress),
+        _ => const _Loading(),
+      },
+    );
+  }
+}
+
+class _StepsProgress extends StatelessWidget {
+  const _StepsProgress(this.progress);
+  final StepGoalProgress progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.todayStepsProgress(progress.steps, progress.goal)),
+          const SizedBox(height: Gap.sm),
+          LinearProgressIndicator(value: progress.fraction),
+          const SizedBox(height: Gap.sm),
+          Text(
+            progress.reached
+                ? l10n.stepsGoalReached
+                : l10n.stepsToGo(progress.remaining),
+          ),
+        ],
+      ),
     );
   }
 }

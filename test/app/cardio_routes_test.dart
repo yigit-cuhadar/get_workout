@@ -126,6 +126,8 @@ void main() {
         providers: [
           BlocProvider.value(value: auth),
           BlocProvider.value(value: settings),
+          programList(),
+          unknownPremium(),
           noWorkout(),
           noWorkout(),
         ],

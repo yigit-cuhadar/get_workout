@@ -231,6 +231,7 @@ void main() {
         providers: [
           BlocProvider.value(value: auth),
           BlocProvider.value(value: settings),
+          programList(),
           noWorkout(),
           noWorkout(),
           BlocProvider.value(value: catalogue),

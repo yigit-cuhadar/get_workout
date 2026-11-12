@@ -43,6 +43,14 @@ void main() {
     premium: premium,
   );
 
+  test('nothing is known while the list loads or failed', () {
+    expect(nextWorkoutOf(const ProgramListState()), isNull);
+    expect(
+      nextWorkoutOf(const ProgramListState(status: ProgramListStatus.failure)),
+      isNull,
+    );
+  });
+
   test('without an active program there is no program day', () {
     expect(nextWorkoutOf(ready()), const NoProgramDay());
   });
@@ -126,16 +134,32 @@ void main() {
       );
     });
 
-    test('waits while premium is unknown', () {
-      final next = nextWorkoutOf(
-        ready(
-          programs: [premiumCopy],
-          activeProgram: active,
-          nextDate: CalendarDate(2026, 11, 12),
-          premium: null,
+    test('is not known while premium is unknown, missed day or not', () {
+      expect(
+        nextWorkoutOf(
+          ready(
+            programs: [premiumCopy],
+            activeProgram: active,
+            nextDate: CalendarDate(2026, 11, 12),
+            premium: null,
+          ),
         ),
+        isNull,
       );
-      expect((next as NextProgramDay).access, ProgramAccess.waiting);
+      // Not a planned day with Start in place of the missed one.
+      expect(
+        nextWorkoutOf(
+          ready(
+            programs: [premiumCopy],
+            activeProgram: active,
+            nextDate: CalendarDate(2026, 11, 16),
+            missedDay: missed,
+            moveDate: CalendarDate(2026, 11, 16),
+            premium: null,
+          ),
+        ),
+        isNull,
+      );
     });
   });
 }

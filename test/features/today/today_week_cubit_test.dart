@@ -293,6 +293,29 @@ void main() {
   );
 
   blocTest<TodayWeekCubit, TodayWeekState>(
+    'a snapshot after the week ended follows the new week',
+    build: build,
+    act: (cubit) async {
+      await load(alice, done: [upper]);
+      // Saturday night turns into Sunday with the app in front.
+      now = DateTime(2026, 11, 15, 0, 5);
+      workoutStreams['u1 $sunday']!.add([upper]);
+      await pumpEventQueue();
+      expect(cubit.state.status, TodayWeekStatus.loading);
+      expect(cubit.state.days.first, d(2026, 11, 15));
+      await load(alice, from: d(2026, 11, 15));
+    },
+    verify: (cubit) {
+      expect(cubit.state.status, TodayWeekStatus.ready);
+      expect(cubit.state.today, d(2026, 11, 15));
+      expect(cubit.state.days, [
+        for (var i = 0; i < 7; i++) d(2026, 11, 15).addDays(i),
+      ]);
+      expect(cubit.state.entries, isEmpty);
+    },
+  );
+
+  blocTest<TodayWeekCubit, TodayWeekState>(
     'moves to the next week after midnight on its last day',
     build: build,
     act: (cubit) async {
