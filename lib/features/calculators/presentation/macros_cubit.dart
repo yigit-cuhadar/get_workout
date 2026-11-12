@@ -16,6 +16,7 @@ class MacrosState extends Equatable {
     this.weight = '',
     this.proteinGPerKg = defaultProteinGPerKg,
     this.fatPercent = defaultFatPercent,
+    this.known = const {},
     this.result,
   });
 
@@ -25,6 +26,9 @@ class MacrosState extends Equatable {
   final double proteinGPerKg;
   final double fatPercent;
 
+  /// Holds the weight while it is the known one.
+  final Map<CalculatorInput, KnownInput> known;
+
   /// Null until calories and weight are filled in.
   final Calculation<Macros>? result;
 
@@ -33,11 +37,13 @@ class MacrosState extends Equatable {
     String? weight,
     double? proteinGPerKg,
     double? fatPercent,
+    Map<CalculatorInput, KnownInput>? known,
   }) => MacrosState(
     calories: calories ?? this.calories,
     weight: weight ?? this.weight,
     proteinGPerKg: proteinGPerKg ?? this.proteinGPerKg,
     fatPercent: fatPercent ?? this.fatPercent,
+    known: known ?? this.known,
   );
 
   @override
@@ -46,6 +52,7 @@ class MacrosState extends Equatable {
     weight,
     proteinGPerKg,
     fatPercent,
+    known,
     result,
   ];
 }
@@ -74,10 +81,19 @@ class MacrosCubit extends Cubit<MacrosState> {
     if (uid == null) return;
     final known = await getKnownValues(uid);
     if (isClosed || _weightChanged) return;
+    final weight = knownText(known.weightKg, weightUnit.fromKg);
+    if (weight == null) return;
     _calculate(
-      state._with(weight: knownText(known.weightKg, weightUnit.fromKg)),
+      state._with(
+        weight: weight,
+        known: {CalculatorInput.bodyWeight: KnownInput(known.weightDate)},
+      ),
     );
   }
+
+  /// Turns a known [input] into a field the user can change.
+  void editKnown(CalculatorInput input) =>
+      _calculate(state._with(known: {...state.known}..remove(input)));
 
   void caloriesChanged(String text) => _calculate(state._with(calories: text));
 
@@ -101,6 +117,7 @@ class MacrosCubit extends Cubit<MacrosState> {
         weight: inputs.weight,
         proteinGPerKg: inputs.proteinGPerKg,
         fatPercent: inputs.fatPercent,
+        known: inputs.known,
         result: calories == null || weight == null
             ? null
             : _split(

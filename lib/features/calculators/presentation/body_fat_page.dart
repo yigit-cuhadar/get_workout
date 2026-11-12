@@ -31,19 +31,33 @@ class BodyFatPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SexSelector(selected: state.sex, onChanged: cubit.sexChanged),
-                NumberField(
+                KnownNumberField(
+                  known: state.known[CalculatorInput.height],
+                  onEdit: () => cubit.editKnown(CalculatorInput.height),
+                  name: l10n.calcKnownHeight,
+                  unit: unit,
                   label: l10n.calcHeight(unit),
                   value: state.height,
                   onChanged: cubit.heightChanged,
                   errorText: error(CalculatorInput.height),
                 ),
-                NumberField(
+                KnownNumberField(
+                  known: state.known[CalculatorInput.neck],
+                  onEdit: () => cubit.editKnown(CalculatorInput.neck),
+                  name: l10n.calcKnownNeck,
+                  unit: unit,
                   label: l10n.calcNeck(unit),
                   value: state.neck,
                   onChanged: cubit.neckChanged,
                   errorText: error(CalculatorInput.neck),
                 ),
-                NumberField(
+                KnownNumberField(
+                  known: state.known[CalculatorInput.waist],
+                  onEdit: () => cubit.editKnown(CalculatorInput.waist),
+                  name: state.sex == Sex.male
+                      ? l10n.calcKnownAbdomen
+                      : l10n.calcKnownWaist,
+                  unit: unit,
                   label: state.sex == Sex.male
                       ? l10n.calcWaistAtNavel(unit)
                       : l10n.calcWaist(unit),
@@ -52,7 +66,11 @@ class BodyFatPage extends StatelessWidget {
                   errorText: error(CalculatorInput.waist),
                 ),
                 if (state.sex == Sex.female)
-                  NumberField(
+                  KnownNumberField(
+                    known: state.known[CalculatorInput.hip],
+                    onEdit: () => cubit.editKnown(CalculatorInput.hip),
+                    name: l10n.calcKnownHips,
+                    unit: unit,
                     label: l10n.calcHip(unit),
                     value: state.hip,
                     onChanged: cubit.hipChanged,

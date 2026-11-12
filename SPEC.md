@@ -989,8 +989,14 @@ from the earlier FitLab app.
   moderate, 6 active, by the levels' wording). Units, bar and plates come
   from settings as before. 1RM and the macros' calories stay empty (no
   single source); the goal and target weight map onto no calculator
-  input. Values are shown to one decimal in the user's unit, with no hint
-  of their source (the calculators have no helper-text pattern). They are
+  input. A known number shows as a tile (`KnownNumberField`), not a field:
+  its name, the value to one decimal in the user's unit and, for a value
+  from the body log, "Measured <date>" (the entry's date; body fat takes
+  the oldest of its circumferences'; the year only when not this one).
+  Profile values (height, age, a profile-only weight) have no date.
+  Tapping the tile turns it into the normal field, focused, holding the
+  value; it stays a field (the cubit's `known` map drops it). Sex and
+  activity stay selectors: they already show the known choice. They are
   starting values only: nothing is written back. They load once when a
   calculator opens; a value arriving late fills only inputs the user has
   not changed (even one they cleared stays empty). A source that cannot

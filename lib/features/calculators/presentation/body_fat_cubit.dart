@@ -17,6 +17,7 @@ class BodyFatState extends Equatable {
     this.neck = '',
     this.waist = '',
     this.hip = '',
+    this.known = const {},
     this.result,
   });
 
@@ -28,6 +29,9 @@ class BodyFatState extends Equatable {
   final String waist;
   final String hip;
 
+  /// The length inputs still holding the known value.
+  final Map<CalculatorInput, KnownInput> known;
+
   /// Body fat %; null until every needed input is filled in.
   final Calculation<double>? result;
 
@@ -37,16 +41,18 @@ class BodyFatState extends Equatable {
     String? neck,
     String? waist,
     String? hip,
+    Map<CalculatorInput, KnownInput>? known,
   }) => BodyFatState(
     sex: sex ?? this.sex,
     height: height ?? this.height,
     neck: neck ?? this.neck,
     waist: waist ?? this.waist,
     hip: hip ?? this.hip,
+    known: known ?? this.known,
   );
 
   @override
-  List<Object?> get props => [sex, height, neck, waist, hip, result];
+  List<Object?> get props => [sex, height, neck, waist, hip, known, result];
 }
 
 enum _Input { sex, height, neck, waist, hip }
@@ -77,18 +83,48 @@ class BodyFatCubit extends Cubit<BodyFatState> {
     if (isClosed) return;
     T? fill<T>(_Input input, T? value) =>
         _changed.contains(input) ? null : value;
-    String? length(_Input input, double? cm) =>
-        fill(input, knownText(cm, lengthUnit.fromCm));
+    final knownInputs = {...state.known};
+    String? length(
+      _Input input,
+      CalculatorInput field,
+      double? cm, [
+      DateTime? date,
+    ]) {
+      final text = fill(input, knownText(cm, lengthUnit.fromCm));
+      if (text != null) knownInputs[field] = KnownInput(date);
+      return text;
+    }
+
     _calculate(
       state._with(
         sex: fill(_Input.sex, known.sex),
-        height: length(_Input.height, known.heightCm),
-        neck: length(_Input.neck, known.neckCm),
-        waist: length(_Input.waist, known.waistCm),
-        hip: length(_Input.hip, known.hipCm),
+        height: length(_Input.height, CalculatorInput.height, known.heightCm),
+        neck: length(
+          _Input.neck,
+          CalculatorInput.neck,
+          known.neckCm,
+          known.neckDate,
+        ),
+        waist: length(
+          _Input.waist,
+          CalculatorInput.waist,
+          known.waistCm,
+          known.waistDate,
+        ),
+        hip: length(
+          _Input.hip,
+          CalculatorInput.hip,
+          known.hipCm,
+          known.hipDate,
+        ),
+        known: knownInputs,
       ),
     );
   }
+
+  /// Turns a known [input] into a field the user can change.
+  void editKnown(CalculatorInput input) =>
+      _calculate(state._with(known: {...state.known}..remove(input)));
 
   void sexChanged(Sex sex) {
     _changed.add(_Input.sex);
@@ -122,6 +158,7 @@ class BodyFatCubit extends Cubit<BodyFatState> {
       neck: inputs.neck,
       waist: inputs.waist,
       hip: inputs.hip,
+      known: inputs.known,
       result: _result(inputs),
     ),
   );

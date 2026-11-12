@@ -33,19 +33,31 @@ class BodyIndicesPage extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                NumberField(
+                KnownNumberField(
+                  known: state.known[CalculatorInput.bodyWeight],
+                  onEdit: () => cubit.editKnown(CalculatorInput.bodyWeight),
+                  name: l10n.calcKnownWeight,
+                  unit: format.weightUnitLabel,
                   label: l10n.calcBodyWeight(format.weightUnitLabel),
                   value: state.weight,
                   onChanged: cubit.weightChanged,
                   errorText: error(CalculatorInput.bodyWeight),
                 ),
-                NumberField(
+                KnownNumberField(
+                  known: state.known[CalculatorInput.height],
+                  onEdit: () => cubit.editKnown(CalculatorInput.height),
+                  name: l10n.calcKnownHeight,
+                  unit: format.lengthUnitLabel,
                   label: l10n.calcHeight(format.lengthUnitLabel),
                   value: state.height,
                   onChanged: cubit.heightChanged,
                   errorText: error(CalculatorInput.height),
                 ),
-                NumberField(
+                KnownNumberField(
+                  known: state.known[CalculatorInput.bodyFat],
+                  onEdit: () => cubit.editKnown(CalculatorInput.bodyFat),
+                  name: l10n.calcBodyFatResult,
+                  unit: l10n.calcUnitPercent,
                   label: l10n.calcBodyFatOptional,
                   value: state.bodyFat,
                   onChanged: cubit.bodyFatChanged,

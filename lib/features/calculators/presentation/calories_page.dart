@@ -35,19 +35,31 @@ class CaloriesPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SexSelector(selected: state.sex, onChanged: cubit.sexChanged),
-                NumberField(
+                KnownNumberField(
+                  known: state.known[CalculatorInput.bodyWeight],
+                  onEdit: () => cubit.editKnown(CalculatorInput.bodyWeight),
+                  name: l10n.calcKnownWeight,
+                  unit: format.weightUnitLabel,
                   label: l10n.calcBodyWeight(format.weightUnitLabel),
                   value: state.weight,
                   onChanged: cubit.weightChanged,
                   errorText: error(CalculatorInput.bodyWeight),
                 ),
-                NumberField(
+                KnownNumberField(
+                  known: state.known[CalculatorInput.height],
+                  onEdit: () => cubit.editKnown(CalculatorInput.height),
+                  name: l10n.calcKnownHeight,
+                  unit: format.lengthUnitLabel,
                   label: l10n.calcHeight(format.lengthUnitLabel),
                   value: state.height,
                   onChanged: cubit.heightChanged,
                   errorText: error(CalculatorInput.height),
                 ),
-                NumberField(
+                KnownNumberField(
+                  known: state.known[CalculatorInput.age],
+                  onEdit: () => cubit.editKnown(CalculatorInput.age),
+                  name: l10n.calcKnownAge,
+                  unit: l10n.calcUnitYears,
                   label: l10n.calcAge,
                   value: state.age,
                   onChanged: cubit.ageChanged,

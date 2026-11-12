@@ -15,6 +15,7 @@ class BodyIndicesState extends Equatable {
     this.weight = '',
     this.height = '',
     this.bodyFat = '',
+    this.known = const {},
     this.result,
   });
 
@@ -23,18 +24,26 @@ class BodyIndicesState extends Equatable {
   final String height;
   final String bodyFat;
 
+  /// The inputs still holding the known value.
+  final Map<CalculatorInput, KnownInput> known;
+
   /// Null until weight and height are filled in.
   final Calculation<BodyIndices>? result;
 
-  BodyIndicesState _with({String? weight, String? height, String? bodyFat}) =>
-      BodyIndicesState(
-        weight: weight ?? this.weight,
-        height: height ?? this.height,
-        bodyFat: bodyFat ?? this.bodyFat,
-      );
+  BodyIndicesState _with({
+    String? weight,
+    String? height,
+    String? bodyFat,
+    Map<CalculatorInput, KnownInput>? known,
+  }) => BodyIndicesState(
+    weight: weight ?? this.weight,
+    height: height ?? this.height,
+    bodyFat: bodyFat ?? this.bodyFat,
+    known: known ?? this.known,
+  );
 
   @override
-  List<Object?> get props => [weight, height, bodyFat, result];
+  List<Object?> get props => [weight, height, bodyFat, known, result];
 }
 
 enum _Input { weight, height, bodyFat }
@@ -65,22 +74,45 @@ class BodyIndicesCubit extends Cubit<BodyIndicesState> {
     if (uid == null) return;
     final known = await getKnownValues(uid);
     if (isClosed) return;
-    String? fill(_Input input, String? text) =>
-        _changed.contains(input) ? null : text;
+    final knownInputs = {...state.known};
+    String? fill(
+      _Input input,
+      CalculatorInput field,
+      String? text, [
+      DateTime? date,
+    ]) {
+      if (_changed.contains(input) || text == null) return null;
+      knownInputs[field] = KnownInput(date);
+      return text;
+    }
+
     _calculate(
       state._with(
         weight: fill(
           _Input.weight,
+          CalculatorInput.bodyWeight,
           knownText(known.weightKg, weightUnit.fromKg),
+          known.weightDate,
         ),
         height: fill(
           _Input.height,
+          CalculatorInput.height,
           knownText(known.heightCm, lengthUnit.fromCm),
         ),
-        bodyFat: fill(_Input.bodyFat, knownText(known.bodyFatPercent)),
+        bodyFat: fill(
+          _Input.bodyFat,
+          CalculatorInput.bodyFat,
+          knownText(known.bodyFatPercent),
+          known.bodyFatDate,
+        ),
+        known: knownInputs,
       ),
     );
   }
+
+  /// Turns a known [input] into a field the user can change.
+  void editKnown(CalculatorInput input) =>
+      _calculate(state._with(known: {...state.known}..remove(input)));
 
   void weightChanged(String text) {
     _changed.add(_Input.weight);
@@ -105,6 +137,7 @@ class BodyIndicesCubit extends Cubit<BodyIndicesState> {
         weight: inputs.weight,
         height: inputs.height,
         bodyFat: inputs.bodyFat,
+        known: inputs.known,
         result: weight == null || height == null
             ? null
             : _calculateIndices(

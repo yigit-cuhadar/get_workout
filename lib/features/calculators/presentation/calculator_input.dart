@@ -1,3 +1,5 @@
+import 'package:forge_core/forge_core.dart';
+
 /// The value of a number field: null while empty, NaN when it is not a
 /// number, which every range check rejects.
 double? readNumber(String text) {
@@ -20,4 +22,16 @@ String? knownText(double? metric, [double Function(double)? convert]) {
   if (metric == null) return null;
   final text = (convert?.call(metric) ?? metric).toStringAsFixed(1);
   return text.endsWith('.0') ? text.substring(0, text.length - 2) : text;
+}
+
+/// An input still holding the value the app knows, shown as that value
+/// until the user taps it to edit. [date] is when it was recorded, null for
+/// a value that does not change over time.
+class KnownInput extends Equatable {
+  const KnownInput([this.date]);
+
+  final DateTime? date;
+
+  @override
+  List<Object?> get props => [date];
 }
