@@ -12,7 +12,20 @@
           "package_name": "com.getworkout.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "629736947899-fujfdoql4r2m3d9k6kmrqavvuai2ng69.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.getworkout.app",
+            "certificate_hash": "31d1b55b36ef095b27083adb21f240fce006414a"
+          }
+        },
+        {
+          "client_id": "629736947899-fclene45pqdm4br23ktchdkadk90f2v2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAe5oxFjIS4A-InEykbrbHyoXwIhrfdQRk"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "629736947899-fclene45pqdm4br23ktchdkadk90f2v2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "629736947899-qmmvg5gv5j31601s84r3c11b5fhc034l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.getworkout.app"
+              }
+            }
+          ]
         }
       }
     }

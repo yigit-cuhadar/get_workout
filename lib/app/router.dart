@@ -197,6 +197,11 @@ String? notificationDestination(NotificationTarget target, String location) =>
         location == Routes.bodyMeasureNew ? null : Routes.bodyMeasureNew,
     };
 
+/// The sign-in providers offered next to email. Apple joins once the app is
+/// signed by a paid Apple Developer team (the Sign in with Apple
+/// entitlement); the App Store requires it wherever Google is offered.
+const socialProviders = [SocialProvider.google];
+
 /// All routes live here. There is always a user (a guest until they create
 /// an account), so the gates are the splash while the session and then the
 /// user's profile resolve, a retry screen when the guest sign-in failed, and
@@ -294,6 +299,7 @@ GoRouter buildRouter(
             path: 'sign-in',
             builder: (context, _) => AuthPage(
               strings: localizedAuthStrings(AppLocalizations.of(context)),
+              providers: socialProviders,
               initialSignUp: false,
               onSignedIn: () => context.pop(),
             ),
@@ -532,6 +538,7 @@ GoRouter buildRouter(
                       strings: localizedAuthStrings(
                         AppLocalizations.of(context),
                       ),
+                      providers: socialProviders,
                       initialSignUp:
                           state.uri.queryParameters['mode'] != 'sign-in',
                       onSignedIn: () => context.pop(),
