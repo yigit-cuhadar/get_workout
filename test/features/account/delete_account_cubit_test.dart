@@ -53,6 +53,8 @@ void main() {
         .thenAnswer((_) async => const Ok(null));
     when(() => account.signOut()).thenAnswer((_) async => const Ok(null));
     when(() => local.clear(any())).thenAnswer((_) async => const Ok(null));
+    when(() => local.holdWrites(any())).thenAnswer((_) async {});
+    when(() => local.releaseWrites(any())).thenAnswer((_) async {});
     when(() => telemetry.forget(any())).thenAnswer((_) async => const Ok(null));
   });
 

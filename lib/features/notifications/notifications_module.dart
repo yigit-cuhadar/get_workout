@@ -17,7 +17,7 @@ import 'presentation/notifications_cubit.dart';
 /// Registers local notifications, initialised once in the background
 /// (`sl.getAsync<Notifications>()` waits for that), the reminders and the
 /// announcements. Not for the admin panel. Needs `AuthModule`,
-/// `SettingsModule` and `ProgramsModule`.
+/// `SettingsModule`, `ProgramsModule` and `BodyModule` (measurement days).
 class NotificationsModule implements FeatureModule {
   const NotificationsModule();
 
@@ -73,6 +73,7 @@ class NotificationsModule implements FeatureModule {
         () => NotificationsCubit(
           watchAuthUser: sl(),
           watchSettings: sl(),
+          watchMeasured: sl(),
           programs: sl(),
           planWorkout: const PlanWorkoutReminders(),
           planMeasurement: const PlanMeasurementReminders(),

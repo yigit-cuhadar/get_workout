@@ -1,0 +1,29 @@
+rules_version = '2';
+
+// Expected results. There is no emulator here, so check changes against this.
+//
+// users/{uid}/photos/{entryId}/{pose}-{revision}.jpg, pose front, right, left
+// or back, revision the capture time in ms (a retake is a new file):
+// | Request                                                        | Result |
+// |----------------------------------------------------------------|--------|
+// | read, delete as the signed-in user `uid` (guests included)     | allow  |
+// | create/update as `uid`: contentType image/jpeg, under 5 MB     | allow  |
+// | create/update of any other type, 5 MB or more                  | deny   |
+// | any other file name in the entry's folder                      | deny   |
+// | any request by anyone else, or signed out                      | deny   |
+// | any other path                                                 | deny   |
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{uid}/photos/{entryId}/{file} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+
+      allow read, delete: if isOwner();
+      allow create, update: if isOwner()
+        && file.matches('(front|right|left|back)-[0-9]+[.]jpg')
+        && request.resource.contentType == 'image/jpeg'
+        && request.resource.size < 5 * 1024 * 1024;
+    }
+  }
+}

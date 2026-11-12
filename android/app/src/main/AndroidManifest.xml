@@ -7,6 +7,19 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <!-- Steps, read from Health Connect. -->
     <uses-permission android:name="android.permission.health.READ_STEPS"/>
+    <!-- Progress photos, taken with the camera plugin. It also declares
+         audio and storage, which the app never uses (no video, never the
+         gallery), and requires a camera, which only the photos need. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
+    <!-- Photos never touch shared storage, and analytics never uses an
+         advertising ID or ad attribution (see the consent decision). -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove"/>
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove"/>
+    <uses-feature android:name="android.hardware.camera.any" android:required="false"
+        tools:replace="android:required"/>
     <!-- Analytics never reads the advertising ID: firebase_analytics adds
          this permission, removed here. -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"
@@ -14,7 +27,9 @@
     <application
         android:label="Get Workout"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules">
         <activity
             android:name=".MainActivity"
             android:exported="true"

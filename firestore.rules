@@ -48,6 +48,19 @@ rules_version = '2';
 // | note not a string, or longer than 500 characters               | deny   |
 // | any request for another user's sessions, or signed out         | deny   |
 //
+// users/{uid}/bodyEntries/{id}, as the signed-in user `uid` (anyone else: deny):
+// | Request                                                        | Result |
+// |----------------------------------------------------------------|--------|
+// | read, list, delete own entry                                   | allow  |
+// | create/update: date timestamp                                  | allow  |
+// | ... plus numeric weightKg, measurements map, photos map        | allow  |
+// | ... plus keys the app does not know in either map              | allow  |
+// | ... plus fields the app does not know (kept by edits)          | allow  |
+// | missing date, or date not a timestamp                          | deny   |
+// | weightKg not a number, measurements or photos not a map        | deny   |
+// | a known measurement not a number, a known pose not a string    | deny   |
+// | any request for another user's entries, or signed out          | deny   |
+//
 // users/{uid}/programs/{id}, as the signed-in user `uid` (anyone else: deny):
 // | Request                                                        | Result |
 // |----------------------------------------------------------------|--------|
@@ -160,6 +173,36 @@ service cloud.firestore {
         && (!('note' in data) || (data.note is string && data.note.size() <= 500));
     }
 
+    function optionalString(data, field) {
+      return !(field in data) || data[field] is string;
+    }
+
+    // Rules cannot loop, so the known keys are checked one by one; keys of
+    // a newer app version pass.
+    function isMeasurements(m) {
+      return m is map
+        && optionalNumber(m, 'neck') && optionalNumber(m, 'shoulders')
+        && optionalNumber(m, 'chest') && optionalNumber(m, 'waist')
+        && optionalNumber(m, 'abdomen') && optionalNumber(m, 'hips')
+        && optionalNumber(m, 'leftUpperArm') && optionalNumber(m, 'rightUpperArm')
+        && optionalNumber(m, 'leftForearm') && optionalNumber(m, 'rightForearm')
+        && optionalNumber(m, 'leftThigh') && optionalNumber(m, 'rightThigh')
+        && optionalNumber(m, 'leftCalf') && optionalNumber(m, 'rightCalf');
+    }
+
+    function isPhotos(p) {
+      return p is map
+        && optionalString(p, 'front') && optionalString(p, 'right')
+        && optionalString(p, 'left') && optionalString(p, 'back');
+    }
+
+    function isBodyEntry(data) {
+      return data.date is timestamp
+        && optionalNumber(data, 'weightKg')
+        && (!('measurements' in data) || isMeasurements(data.measurements))
+        && (!('photos' in data) || isPhotos(data.photos));
+    }
+
     // Updates write only name, length, days and updatedAt; origin stays as
     // stored and is checked on the result.
     function isProgram(data) {
@@ -268,6 +311,12 @@ service cloud.firestore {
       }
 
       // Validated; only reachable here, the rule below excludes it.
+      match /bodyEntries/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isBodyEntry(request.resource.data);
+      }
+
+      // Validated; only reachable here, the rule below excludes it.
       match /programs/{id} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid) && isProgram(request.resource.data);
@@ -296,7 +345,7 @@ service cloud.firestore {
       // Every other subcollection, at any depth, as before.
       match /{collection}/{document=**} {
         allow read, write: if isOwner(uid)
-          && !(collection in ['cardio', 'programs', 'workouts', 'exerciseStats', 'customExercises']);
+          && !(collection in ['cardio', 'bodyEntries', 'programs', 'workouts', 'exerciseStats', 'customExercises']);
       }
     }
 

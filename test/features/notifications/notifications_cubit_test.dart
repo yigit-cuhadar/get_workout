@@ -4,6 +4,9 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/body/domain/body_entry.dart';
+import 'package:get_workout/features/body/domain/body_repository.dart';
+import 'package:get_workout/features/body/domain/body_usecases.dart';
 import 'package:get_workout/features/notifications/domain/notification_repository.dart';
 import 'package:get_workout/features/notifications/domain/notifications_usecases.dart';
 import 'package:get_workout/features/notifications/domain/reminder_plan.dart';
@@ -31,6 +34,8 @@ class MockNotificationRepository extends Mock
 
 class MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
+
+class MockBodyRepository extends Mock implements BodyRepository {}
 
 void main() {
   // Wednesday 11 November 2026, 07:00.
@@ -76,6 +81,11 @@ void main() {
   /// What each sync asked for, in order.
   late List<({ReminderKind kind, List<ReminderNotice> wanted})> syncs;
 
+  /// Each user's body entries: what is known at once (none: still loading)
+  /// and later changes.
+  late Map<String, List<BodyEntry>?> knownEntries;
+  late Map<String, StreamController<List<BodyEntry>>> entryChanges;
+
   /// While set, every sync waits for it.
   Completer<void>? gate;
 
@@ -95,6 +105,8 @@ void main() {
     allowed = true;
     requestGrants = true;
     syncs = [];
+    knownEntries = {};
+    entryChanges = {};
     gate = null;
     when(device.allowed).thenAnswer((_) async => Ok(allowed));
     when(device.request).thenAnswer((_) async {
@@ -118,7 +130,7 @@ void main() {
   tearDown(() async {
     await users.close();
     await programStates.close();
-    for (final controller in settings.values) {
+    for (final controller in [...settings.values, ...entryChanges.values]) {
       await controller.close();
     }
   });
@@ -133,9 +145,24 @@ void main() {
           )
           .stream,
     );
+    final body = MockBodyRepository();
+    when(() => body.watchEntries(any())).thenAnswer((call) async* {
+      final uid = call.positionalArguments.single as String;
+      final changes = entryChanges.putIfAbsent(
+        uid,
+        () => StreamController.broadcast(sync: true),
+      );
+      // Nobody has entries unless a test says otherwise.
+      final known = knownEntries.containsKey(uid)
+          ? knownEntries[uid]
+          : const <BodyEntry>[];
+      if (known != null) yield known;
+      yield* changes.stream;
+    });
     return NotificationsCubit(
       watchAuthUser: WatchAuthUser(auth),
       watchSettings: WatchSettings(repository),
+      watchMeasured: WatchMeasuredDates(body),
       programs: programs,
       planWorkout: const PlanWorkoutReminders(),
       planMeasurement: const PlanMeasurementReminders(),
@@ -191,6 +218,71 @@ void main() {
       await cubit.close();
     },
   );
+
+  group('measurement days', () {
+    BodyEntry measuredOn(DateTime date) => BodyEntry(
+      id: '$date',
+      date: date,
+      measurements: const {BodyMeasurement.waist: 80},
+    );
+
+    test('a reminder is skipped on a day already measured', () async {
+      knownEntries['u1'] = [
+        measuredOn(DateTime(2026, 11, 11, 6)),
+        // A quick weight log is no measurement day.
+        BodyEntry(id: 'w', date: DateTime(2026, 12, 9, 6), weightKg: 80),
+      ];
+      final cubit = build();
+      signIn('u1');
+      emitSettings('u1', reminding);
+      await pumpEventQueue();
+
+      final dates = [
+        for (final reminder in lastOf(ReminderKind.measurement))
+          CalendarDate.of(reminder.at),
+      ];
+      expect(dates.first, CalendarDate(2026, 12, 9));
+      expect(dates, isNot(contains(today)));
+      await cubit.close();
+    });
+
+    test('reminders are planned again when the entries change', () async {
+      final cubit = build();
+      signIn('u1');
+      emitSettings('u1', reminding);
+      await pumpEventQueue();
+      expect(CalendarDate.of(lastOf(ReminderKind.measurement).first.at), today);
+
+      entryChanges['u1']!.add([measuredOn(DateTime(2026, 11, 11, 6, 30))]);
+      await pumpEventQueue();
+
+      expect(
+        CalendarDate.of(lastOf(ReminderKind.measurement).first.at),
+        CalendarDate(2026, 12, 9),
+      );
+      await cubit.close();
+    });
+
+    test(
+      'measurement reminders wait for the entries; turned off clears',
+      () async {
+        knownEntries['u1'] = null;
+        final cubit = build();
+        signIn('u1');
+        emitSettings('u1', reminding);
+        await pumpEventQueue();
+        expect(
+          syncs.where((sync) => sync.kind == ReminderKind.measurement),
+          isEmpty,
+        );
+
+        emitSettings('u1', base);
+        await pumpEventQueue();
+        expect(lastOf(ReminderKind.measurement), isEmpty);
+        await cubit.close();
+      },
+    );
+  });
 
   test('leaves workout reminders alone while programs load', () async {
     final cubit = build();

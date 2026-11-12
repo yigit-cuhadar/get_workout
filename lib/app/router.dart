@@ -8,6 +8,11 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
+import '../features/body/presentation/body_compare_page.dart';
+import '../features/body/presentation/body_entry_page.dart';
+import '../features/body/presentation/body_page.dart';
+import '../features/body/presentation/measurement_day_page.dart';
+import '../features/body/presentation/weight_form_page.dart';
 import '../features/account/presentation/delete_account_page.dart';
 import '../features/calendar/presentation/calendar_page.dart';
 import '../features/cardio/presentation/cardio_form_page.dart';
@@ -117,6 +122,13 @@ abstract final class Routes {
       '$exerciseLocation/$strengthSegment';
   static const strengthSegment = 'strength';
   static const calendar = '$progress/calendar';
+  static const body = '$progress/body';
+  static const bodyWeightNew = '$body/weight';
+  static const bodyMeasureNew = '$body/measure';
+  static const bodyCompare = '$body/compare';
+  static String bodyEntry(String id) => '$body/${Uri.encodeComponent(id)}';
+  static String bodyEntryWeight(String id) => '${bodyEntry(id)}/weight';
+  static String bodyEntryMeasure(String id) => '${bodyEntry(id)}/measure';
 
   /// Adds a past workout.
   static const historyNew = '$history/new';
@@ -180,9 +192,9 @@ String? notificationDestination(NotificationTarget target, String location) =>
             ? null
             : Routes.today,
       NotificationTarget.announcement => Routes.today,
-      // The measurement flow is being built elsewhere; until it is merged, its
-      // reminder opens the Progress tab.
-      NotificationTarget.measurement => Routes.progress,
+      // A new measurement day, unless one is already open.
+      NotificationTarget.measurement =>
+        location == Routes.bodyMeasureNew ? null : Routes.bodyMeasureNew,
     };
 
 /// All routes live here. There is always a user (a guest until they create
@@ -442,6 +454,44 @@ GoRouter buildRouter(
                 builder: (_, _) => const CalendarPage(),
               ),
               GoRoute(path: 'steps', builder: (_, _) => const StepsPage()),
+              GoRoute(
+                path: 'body',
+                builder: (_, _) => const BodyPage(),
+                routes: [
+                  // Before ':id', which would match these too; entry ids
+                  // are Firestore auto ids.
+                  GoRoute(
+                    path: 'weight',
+                    builder: (_, _) => const WeightNewPage(),
+                  ),
+                  GoRoute(
+                    path: 'measure',
+                    builder: (_, _) => const MeasurementDayNewPage(),
+                  ),
+                  GoRoute(
+                    path: 'compare',
+                    builder: (_, _) => const BodyComparePage(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) =>
+                        BodyEntryPage(id: state.pathParameters['id']!),
+                    routes: [
+                      GoRoute(
+                        path: 'weight',
+                        builder: (_, state) =>
+                            WeightEditPage(id: state.pathParameters['id']!),
+                      ),
+                      GoRoute(
+                        path: 'measure',
+                        builder: (_, state) => MeasurementDayEditPage(
+                          id: state.pathParameters['id']!,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
               GoRoute(
                 path: 'history',
                 builder: (_, _) => const HistoryPage(),

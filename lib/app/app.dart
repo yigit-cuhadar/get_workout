@@ -9,6 +9,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../features/body/body_module.dart';
 import '../features/account/presentation/consent_cubit.dart';
 import '../features/account/presentation/delete_account_cubit.dart';
 import '../features/exercises/presentation/body_model_cubit.dart';
@@ -53,6 +54,7 @@ class _AppState extends State<App> {
     // Created now so the store follows the user from the first auth event.
     final purchaser = sl<PurchaserSession>();
     final rest = sl<RestTimerCubit>();
+    BodyModule.startPhotoBackup(sl);
     // Created now so reminders follow the user from the first auth event.
     final notifications = sl<NotificationsCubit>();
     _router.routerDelegate.addListener(_openTapped);
@@ -61,6 +63,7 @@ class _AppState extends State<App> {
       onResume: () {
         unawaited(sl<ExerciseCatalogueCubit>().appResumed());
         purchaser.resume();
+        BodyModule.resumed(sl);
         unawaited(notifications.resumed());
       },
       onHide: rest.hidden,

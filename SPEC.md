@@ -239,7 +239,89 @@ from the earlier FitLab app.
   steps domain imports `forge_health` whole, platform code included; once
   the package exposes a domain-only library (next forge tag), import that
   instead.
-- **Photos**: private app storage plus Cloud Storage backup. Never the gallery.
+- **Photos**: private app storage plus Cloud Storage backup. Never the gallery
+  and never the device's own backups: Android's backup rules
+  (`res/xml/data_extraction_rules.xml`, `backup_rules.xml`) exclude
+  `files/users/` and `files/body_photo_backup.json`, everything else is
+  backed up as before; iOS sets `isExcludedFromBackup` on the photos'
+  folder (`getworkout/backup_exclusion` channel in `AppDelegate.swift`).
+  Taken with the `camera` plugin (`GhostCamera` in `lib/core`, the previous
+  photo of the pose at 35% over the live preview, mirrored with a mirrored
+  front-camera preview; back camera first, a switch button), then stored
+  shrunk (longest side 1600 px, JPEG 85, turned upright, metadata such as
+  location stripped) in the app support directory at the storage path, the
+  same string the entry's `photos` map holds. The camera's own file is
+  removed once stored, on a retake or skip, and when the flow is left.
+  A path carries a revision (`{pose}-{capture ms}.jpg`), so a retake is a
+  new path and every device sees its copy is out of date.
+  Saving is one change: all photos are stored, then the entry is written,
+  and only then are uploads queued; a failure removes what that attempt
+  stored, and a retry reuses the flow's entry id. The photos a retake
+  replaced, or a deleted entry's photos, are removed (here and queued for
+  the backup) only once the server confirms the write; a refused save
+  removes its new photos instead, so an undone change leaves nothing.
+  Backup (`BodyPhotoSync`) runs in the background: every photo's state
+  (upload, delete, uploaded) is kept in `body_photo_backup.json`, written
+  one save at a time; a file that cannot be read is renamed
+  `.unreadable-<time>` and never overwritten. Work is done for whoever is
+  signed in, the user checked before each task (a task failing because the
+  user changed goes on with the new user's); failures stay queued and are
+  retried at start, sign-in, app resume and the next queued change; a newer
+  state for a path wins over a task still running. Each entries snapshot
+  reconciles: photos on the device that an entry names and the queue does
+  not know are queued for upload (a lost queue, or photos from before the
+  backup). A photo missing on the device (a new phone, or a retake made on
+  another one) is fetched when a page shows it (entry, compare, the
+  measurement day's ghosts and kept photos). Account deletion
+  (`DeleteUserAccount` through `LocalAccountData`) stops the user's backup
+  and drops their queue before the `deleteAccount` callable runs, so no
+  upload lands after the server deleted `users/{uid}/`, resumes it if the
+  deletion did not happen, and `DeviceAccountData.clear` removes their
+  photos with the rest of the device data (`ForgetBodyPhotos`). Guests
+  are backed up like accounts: their uid is the one linking keeps. A
+  guest who is left (signed out, or replaced by signing in to an existing
+  account) can never come back, so their photos and queue on the device
+  are removed at that moment. Orphans: on every sign-in, once the server
+  has answered (a snapshot not from the cache; unlimited, so old entries
+  count, and including writes not sent yet), the user's photos on the
+  device that no entry names, the queue does not know and are older than
+  ten minutes are removed: those of a save stored but never written, or
+  refused while the app was closed. Nothing in the feature reports to
+  analytics or crash reporting itself: `Log.e` goes to
+  `FirebaseTelemetry`'s hook, which follows the consent; nothing is
+  uploaded or fetched while signed out. A
+  photo can be retaken, not removed alone. `storage.rules`: owner only,
+  `image/jpeg`, under 5 MB, file names `(front|right|left|back)-<digits>.jpg`.
+- **Weight log and measurement days** (`lib/features/body`): Progress →
+  Weight and measurements. A quick log is an entry with only `weightKg`
+  (date picker; today keeps the current time, another day is noon); a
+  measurement day is a step flow, weight → each tracked measurement → front,
+  right, left, back photos, every step skippable, the last one saves;
+  nothing entered saves nothing. Edit re-runs the same form or flow,
+  prefilled; skipping a step keeps the stored value (a value typed there
+  is dropped), and only an emptied field with Next clears one; an entry's
+  own measurements stay steps even if no longer tracked; a value left as
+  shown keeps its stored metric value exactly. The flow loads the
+  previous photos itself, so it works when opened first (e.g. from a
+  reminder).
+  `settings.trackedMeasurements` is a list of codes (`neck`, `shoulders`,
+  `chest`, `waist`, `abdomen`, `hips`, `leftUpperArm`, `rightUpperArm`,
+  `leftForearm`, `rightForearm`, `leftThigh`, `rightThigh`, `leftCalf`,
+  `rightCalf`, also the `measurements` keys), default chest, waist, hips,
+  both upper arms and thighs, edited from the flow's app bar. Limits:
+  weight as the profile (30-300 kg), measurements 10-250 cm; values are
+  typed to one decimal in the user's unit, so half a shown lb or inch
+  step of slack lets the limits as shown pass (66.1 and 661.4 lb, 3.9 in).
+  The weight chart is a `LineChart` with the strength ranges: 12 weeks
+  free, longer Premium (confirmed by the user); the profile's
+  target weight shows with the distance to go. Compare: any two entries,
+  the oldest and newest first, values with the change and photos per pose
+  side by side. Saving or deleting an entry sets `profile.weightKg` to
+  the weight of the most recent dated entry that has one, through the
+  profile's `UpdateProfile` (calculators and the target distance use it);
+  with no such entry the profile weight is left. Firestore rules validate
+  `bodyEntries` (date timestamp, numeric `weightKg`, `measurements` and
+  `photos` maps whose known keys hold numbers and strings).
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk).
@@ -346,24 +428,27 @@ from the earlier FitLab app.
   left as they are, except that a reminder turned off is always cleared. Only the next
   day is named ("Upper · Push Pull"); later ones name the program, as they
   are due only if the user keeps to the plan. Measurement: the next four
-  of the series, skipping dates already measured (the planner takes them;
-  empty until the body feature is wired in). Horizon: reminders are only
+  of the series, skipping dates that already have a measurement day (a
+  body entry with measurements or photos; quick weight logs do not count),
+  followed live through `WatchMeasuredDates`; while they load the
+  measurement reminders are left as they are. Horizon: reminders are only
   planned while the app runs, so a user who does not open the app for
   four weeks gets no more workout reminders, and the measurement reminder
   stops after its four planned occurrences. Settings changes apply to
   the settings current when the choice arrives; picking the series' own
   weekday or cadence changes nothing, another weekday restarts the series
   on that day's next date (`reminder_settings_changes.dart`). Both are pure planners (`reminder_plan.dart`);
-  `NotificationsCubit` plans again on every program list or settings
-  change, on every user change and on resume, and a repository diffs
+  `NotificationsCubit` plans again on every program list, settings or
+  measurement-day change, on every user change and on resume, and a repository diffs
   against what is pending by payload (time and a hash of the text), so
   equal ones stay. While the user's settings or programs load nothing is
   touched, so a start never drops reminders; a change of user or signing
   out drops them at once. Ids: rest 1, workout 100-127 (by date), measurement
   200-203 (by occurrence), announcement in front 300. Reminders do not ask
   for exact alarms on Android (they may fire up to an hour late). Taps:
-  a workout reminder opens Today, a measurement reminder the Progress tab
-  (until the measurement flow's route exists), an announcement Today; a
+  a workout reminder opens Today, a measurement reminder a new measurement
+  day (`Routes.bodyMeasureNew`, unless one is already open), an
+  announcement Today; a
   workout reminder tapped while the workout in progress is in front stays
   there. A tap at launch waits until the app is past splash and
   onboarding; navigation runs after the next frame.
@@ -830,8 +915,9 @@ deleted.
 **`users/{uid}/bodyEntries/{id}`**: `date`, `weightKg?`, `measurements` (map
 of cm values: neck, shoulders, chest, waist, abdomen, hips, and left/right
 upper arm, forearm, thigh, calf), `photos` (map of `front` \| `right` \|
-`left` \| `back` → storage path). A quick weight log is an entry with only
-`weightKg`; a measurement day fills all three.
+`left` \| `back` → storage path, which holds the photo's revision; see
+Storage). A quick weight log is an entry with only `weightKg`; a
+measurement day fills all three.
 
 **`users/{uid}/pushTokens/{token}`**: `platform`, `updatedAt`.
 
@@ -848,7 +934,9 @@ readable by admins.
 
 ### Storage
 
-`users/{uid}/photos/{entryId}/{pose}.jpg`: owner only, JPEG, max 5 MB.
+`users/{uid}/photos/{entryId}/{pose}-{revision}.jpg`, revision the capture
+time in ms (a retake is a new file; the replaced one is deleted): owner
+only, JPEG, max 5 MB.
 
 ### Cloud Functions
 
@@ -933,7 +1021,7 @@ Group 7, programs for everyone
 - [x] Program generator (Premium) — questions (goal, level, days, session length, equipment, focus muscles, excluded exercises, area to go easy on, preferred split), preview, save as an editable program
 
 Group 8, body and extras
-- [ ] Weight log and measurement day — steps for weight, tracked measurements, four photos with ghost overlay, reminders, photo backup, compare
+- [x] Weight log and measurement day — steps for weight, tracked measurements, four photos with ghost overlay, reminders, photo backup, compare
 - [x] Cardio — log, list, detail, weekly chart
 - [x] Steps — health permission, today, week and 30-day chart, daily goal
 - [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
@@ -952,14 +1040,27 @@ Group 9, launch readiness
 
 - Google and Apple sign-in are implemented in `forge_auth` but not enabled: Google needs a support email for the OAuth consent screen, Apple needs the Developer account. Until then the app offers email only.
 - A guest who signs in to an existing account leaves an orphaned anonymous user and its data behind; clean these up with a scheduled function when Cloud Functions arrive.
+- Photo backup: `storage.rules` and the `storage` entry in `firebase.json`
+  are written but not deployed, and the default bucket is not created yet
+  (both projects). `deleteAccount` already deletes `users/{uid}/` in the
+  bucket; the orphaned-guest cleanup must do the same.
+- Body feature, not yet run on a device: the camera permission prompt and
+  denial text, the ghost's alignment (front-camera previews are mirrored,
+  saved photos are not; `mirrorGhost` in `ghost_camera.dart`), retake,
+  background upload and restore against the dev bucket, the iOS backup
+  exclusion channel. Android manifest drops the camera plugin's
+  RECORD_AUDIO and WRITE_EXTERNAL_STORAGE and makes the camera optional
+  (`tools:replace`); with the new backup rules, not built yet.
+- Forge task, a recorded deviation from "generic goes in a package":
+  `GhostCamera` (`lib/core/ghost_camera.dart`, free of app code) stays in
+  the app for this feature; move it into a forge package with widget tests
+  for capture, camera switch and the unavailable state.
 - The projects are on the Blaze plan. `deleteAccount` is written but not
   deployed: the Architect deploys `functions/` to dev, checks deletion on a
   device (including the "not available" message before the deploy), then
   prod.
 - After `revenueCatWebhook` exists, an event for a deleted user could write
   `entitlements/{uid}` again; the webhook should skip uids with no auth user.
-- When the body feature's photos are kept on the device, deletion must also
-  remove that user's private photos (`DeviceAccountData`).
 - Accepted deviation, to be removed by two forge tasks (the app then uses
   the packages and drops its workarounds):
   - **forge_firebase**: `initFirebase` must not enable Analytics or
@@ -1022,14 +1123,6 @@ Group 9, launch readiness
   its own default channel. Check foreground display and taps on both
   platforms, and that the admin web build still loads (the plugin
   registers a web part).
-- The measurement reminder opens the Progress tab; point it at the
-  measurement flow's route once that feature is merged (`App`,
-  `_openNotification`).
-- The measurement reminder should skip dates that already have a
-  measurement: once the body feature is merged, pass the dates of body
-  entries with measurements as `measured` to `PlanMeasurementReminders`
-  (`NotificationsCubit._syncNow`, empty now) and plan again when they
-  change.
 - Forge tasks; the app's own versions are an accepted deviation for the
   notifications PR, to be replaced once these exist:
   - `forge_notifications`: a diff sync of an id range against the pending

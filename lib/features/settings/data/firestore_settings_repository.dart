@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 
+import '../../body/domain/body_entry.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../domain/settings_repository.dart';
 import '../domain/user_settings.dart';
@@ -79,6 +80,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
       measurementReminder: _measurementReminder(map['reminders']),
       customBarWeightKg: _barWeight(map['barWeightKg']),
       customPlates: _plates(map['plates']),
+      trackedMeasurements: _measurements(map['trackedMeasurements']),
     );
   }
 
@@ -113,7 +115,15 @@ class FirestoreSettingsRepository implements SettingsRepository {
             ?.map((plate) => {'weightKg': plate.weightKg, 'pairs': plate.pairs})
             .toList() ??
         FieldValue.delete(),
+    'trackedMeasurements': [
+      for (final measurement in settings.trackedMeasurements) measurement.code,
+    ],
   };
+
+  /// Unknown codes are dropped; anything but a list reads as the default.
+  Set<BodyMeasurement> _measurements(Object? raw) => raw is List
+      ? {for (final code in raw) ?BodyMeasurement.fromCode(code)}
+      : defaults.trackedMeasurements;
 
   /// Anything missing or of the wrong type reads as the default; the
   /// duration is clamped to the limits.

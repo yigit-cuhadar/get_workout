@@ -21,8 +21,8 @@ import 'presentation/consent_cubit.dart';
 import 'presentation/delete_account_cubit.dart';
 
 /// Registers analytics consent and account deletion. Needs `AuthModule`,
-/// `NotificationsModule` and `WorkoutModule` (whose kept workouts deletion
-/// removes), and the [telemetry] started by [startTelemetry].
+/// `NotificationsModule`, `WorkoutModule` and `BodyModule` (whose kept
+/// workouts and photos deletion removes), and the [telemetry] started by [startTelemetry].
 class AccountModule implements FeatureModule {
   const AccountModule({required this.telemetry});
 
@@ -72,6 +72,9 @@ class AccountModule implements FeatureModule {
           sl(),
           sl.getAsync<Notifications>(),
           getApplicationSupportDirectory,
+          stopPhotoBackup: sl(),
+          resumePhotoBackup: sl(),
+          forgetPhotos: sl(),
         ),
       )
       ..registerFactory(() => WatchAnalyticsConsent(sl()))

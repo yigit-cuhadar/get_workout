@@ -1,5 +1,6 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../body/domain/body_entry.dart';
 import '../../programs/domain/calendar_date.dart';
 
 enum WeightUnit { kg, lb }
@@ -181,6 +182,7 @@ class UserSettings extends Equatable {
     this.measurementReminder = const MeasurementReminderSettings(),
     this.customBarWeightKg,
     this.customPlates,
+    this.trackedMeasurements = BodyMeasurement.standard,
   });
 
   /// Imperial for the countries that use it day to day, metric elsewhere.
@@ -212,6 +214,9 @@ class UserSettings extends Equatable {
 
   /// Set once the user edits their plates; see [customBarWeightKg].
   final List<Plate>? customPlates;
+
+  /// What a measurement day asks for.
+  final Set<BodyMeasurement> trackedMeasurements;
 
   double get barWeightKg => customBarWeightKg ?? defaultBarWeightKg(weightUnit);
 
@@ -257,6 +262,7 @@ class UserSettings extends Equatable {
     MeasurementReminderSettings? measurementReminder,
     double? customBarWeightKg,
     List<Plate>? customPlates,
+    Set<BodyMeasurement>? trackedMeasurements,
   }) => UserSettings(
     weightUnit: weightUnit ?? this.weightUnit,
     lengthUnit: lengthUnit ?? this.lengthUnit,
@@ -268,6 +274,7 @@ class UserSettings extends Equatable {
     measurementReminder: measurementReminder ?? this.measurementReminder,
     customBarWeightKg: customBarWeightKg ?? this.customBarWeightKg,
     customPlates: customPlates ?? this.customPlates,
+    trackedMeasurements: trackedMeasurements ?? this.trackedMeasurements,
   );
 
   /// Drops the custom bar and plates, back to the standard set of the unit.
@@ -278,6 +285,7 @@ class UserSettings extends Equatable {
     effortScale: effortScale,
     restTimer: restTimer,
     stepGoal: stepGoal,
+    trackedMeasurements: trackedMeasurements,
     workoutReminder: workoutReminder,
     measurementReminder: measurementReminder,
   );
@@ -294,5 +302,6 @@ class UserSettings extends Equatable {
     measurementReminder,
     customBarWeightKg,
     customPlates,
+    trackedMeasurements,
   ];
 }

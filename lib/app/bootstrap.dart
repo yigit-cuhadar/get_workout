@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../features/body/body_module.dart';
 import '../features/account/account_module.dart';
 import '../features/calculators/calculators_module.dart';
 import '../features/calendar/calendar_module.dart';
@@ -54,6 +55,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     const TodayModule(),
     healthModule(platform: defaultTargetPlatform, release: kReleaseMode),
     const StepsModule(),
+    const BodyModule(),
     SubscriptionModule(
       backend: purchasesBackend(
         platform: defaultTargetPlatform,

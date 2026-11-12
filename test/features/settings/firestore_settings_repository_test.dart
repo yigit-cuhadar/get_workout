@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_workout/features/body/domain/body_entry.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/settings/data/firestore_settings_repository.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
@@ -10,6 +11,9 @@ void main() {
     weightUnit: WeightUnit.lb,
     lengthUnit: LengthUnit.inch,
   );
+  final standardMeasurements = [
+    for (final measurement in BodyMeasurement.standard) measurement.code,
+  ];
   late FakeFirebaseFirestore firestore;
   late FirestoreSettingsRepository repository;
 
@@ -76,6 +80,7 @@ void main() {
         'effortScale': 'rpe',
         'restTimer': {'enabled': true, 'defaultS': 90},
         'stepGoal': 10000,
+        'trackedMeasurements': standardMeasurements,
         'reminders': {
           'workout': {'enabled': false, 'minute': 480},
           'measurement': {'enabled': false, 'everyWeeks': 4, 'minute': 540},
@@ -250,6 +255,47 @@ void main() {
     });
   });
 
+  group('tracked measurements', () {
+    test('are stored as codes and read back', () async {
+      final settings = defaults.copyWith(
+        trackedMeasurements: {BodyMeasurement.neck, BodyMeasurement.leftCalf},
+      );
+
+      await repository.saveSettings('u1', settings);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored['trackedMeasurements'], ['neck', 'leftCalf']);
+      expect(await repository.watchSettings('u1').first, settings);
+    });
+
+    test('none tracked stays none', () async {
+      final settings = defaults.copyWith(trackedMeasurements: {});
+
+      await repository.saveSettings('u1', settings);
+
+      expect(
+        (await repository.watchSettings('u1').first).trackedMeasurements,
+        isEmpty,
+      );
+    });
+
+    test('missing reads as the default, unknown codes are dropped', () async {
+      await user().set({'settings': <String, Object?>{}});
+      expect(
+        (await repository.watchSettings('u1').first).trackedMeasurements,
+        BodyMeasurement.standard,
+      );
+      await user().set({
+        'settings': {
+          'trackedMeasurements': ['waist', 'wingspan', 3],
+        },
+      });
+      expect((await repository.watchSettings('u1').first).trackedMeasurements, {
+        BodyMeasurement.waist,
+      });
+    });
+  });
+
   test('save keeps the other fields of the user document', () async {
     await user().set({
       'profile': {'goal': 'get_stronger'},
@@ -271,6 +317,7 @@ void main() {
         'effortScale': 'off',
         'restTimer': {'enabled': true, 'defaultS': 90},
         'stepGoal': 10000,
+        'trackedMeasurements': standardMeasurements,
         'reminders': {
           'workout': {'enabled': false, 'minute': 480},
           'measurement': {'enabled': false, 'everyWeeks': 4, 'minute': 540},
