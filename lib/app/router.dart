@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/unsaved_changes.dart';
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
 import '../features/body/presentation/body_entry_page.dart';
@@ -219,8 +221,10 @@ GoRouter buildRouter(
 }) {
   // Who onboarding was last shown to.
   String? onboardingUid;
+  final unsavedChanges = UnsavedChanges();
   return GoRouter(
     initialLocation: Routes.splash,
+    onEnter: unsavedChanges.onEnter,
     // Refresh only when the redirect can change. A refresh re-parses the
     // current location; if it lands while a page pops itself on the same
     // auth change (AuthPage.onSignedIn), it restores that page. A pending
@@ -323,7 +327,10 @@ GoRouter buildRouter(
             const MaterialPage(fullscreenDialog: true, child: PaywallPage()),
       ),
       StatefulShellRoute.indexedStack(
-        builder: (_, _, shell) => AppShell(shell: shell),
+        builder: (_, _, shell) => RepositoryProvider.value(
+          value: unsavedChanges,
+          child: AppShell(shell: shell),
+        ),
         branches: [
           _tab(Routes.today, const TodayPage()),
           _tab(

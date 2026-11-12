@@ -127,8 +127,10 @@ void main() {
       final cubit = await build();
       cubit.setName('Push');
       expect(cubit.state.dirty, isTrue);
+      expect(cubit.hasChanges, isTrue);
       cubit.setName('');
       expect(cubit.state.dirty, isFalse);
+      expect(cubit.hasChanges, isFalse);
     });
 
     test('a blank length is none, a number is weeks', () async {
@@ -606,10 +608,13 @@ void main() {
 
   test('closes when the user changes and then ignores edits', () async {
     final cubit = await filled(['a']);
+    expect(cubit.hasChanges, isTrue);
     when(() => auth.currentUser).thenReturn(null);
     users.add(const AuthUser(id: 'g2', isAnonymous: true));
     await pumpEventQueue();
     expect(cubit.state.status, ProgramBuilderStatus.closed);
+    // Leaving a closed builder asks nothing.
+    expect(cubit.hasChanges, isFalse);
     final closed = cubit.state;
     cubit.setName('Other');
     await cubit.save();

@@ -397,7 +397,8 @@ from the earlier FitLab app.
   prefilled; skipping a step keeps the stored value (a value typed there
   is dropped), and only an emptied field with Next clears one; an entry's
   own measurements stay steps even if no longer tracked; a value left as
-  shown keeps its stored metric value exactly. The flow loads the
+  shown keeps its stored metric value exactly. Leaving the flow asks first
+  when a value differs from how it opened or a picture was taken. The flow loads the
   previous photos itself, so it works when opened first (e.g. from a
   reminder).
   `settings.trackedMeasurements` is a list of codes (`neck`, `shoulders`,
@@ -667,12 +668,16 @@ from the earlier FitLab app.
   announcement is dropped rather than arriving weeks late.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
   / Progress / Profile. The active workout is full-screen and can be minimized
-  to a bar above the tabs. Known limitation, to fix app-wide later: a link
-  that `context.go`es into another tab replaces that tab's stack, so a page
-  open there with unsaved changes (e.g. a program or workout being edited)
-  is dropped without its discard prompt. The pattern predates the Today
-  tab, which adds seven such links (program, catalogue, calendar, log
-  cardio, add a past workout, weekly volume, steps).
+  to a bar above the tabs. A `go` (a link, a notification tap) replaces
+  its tab's stack; a page there with unsaved changes (program builder,
+  workout edit, measurement day) is never dropped silently. One router
+  guard (`onEnter`, `lib/core/unsaved_changes.dart`) brings that page up
+  (its tab, the workout or paywall above the tabs put away, the workout
+  staying in its bar) and asks with the page's own discard prompt: keep
+  editing stays there, discard makes the navigation again. Pages without
+  changes (an edit left as it opened, a page that saved), other tabs'
+  stacks, pushes and tab switches are left alone. Back and the guard share
+  one prompt per page, so nothing asks twice.
 - **Workouts on the device**: per user one JSON file
   (`workouts_<uid>.json` in the app's private support directory, versioned)
   holds the workout in progress, finished workouts the server has not
