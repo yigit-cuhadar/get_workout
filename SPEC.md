@@ -266,6 +266,61 @@ from the earlier FitLab app.
   count.
 - **Notifications**: local for rest end, workout reminders and measurement
   reminders; FCM topic push for announcements.
+- **Reminders** (`lib/features/notifications`): `settings.reminders` holds
+  `workout` (`enabled`, off by default; `minute` after local midnight,
+  08:00 by default) and `measurement` (`enabled`, off; `everyWeeks` 1, 2
+  or 4, 4 by default; `from`, the series' first date as `YYYY-MM-DD`, which
+  also gives its weekday, set to today when first turned on and to the
+  next such weekday from today when the day is changed; `minute`, 09:00).
+  Workout: one local notification at the time on every date
+  `ProgramSchedule.upcoming` plans a day for, 28 days ahead (at most 28
+  pending), none for a day done on that date, none once the program has
+  run its length, none for a locked premium copy; while the programs load
+  or fail, or the premium status of a premium copy is unknown, they are
+  left as they are, except that a reminder turned off is always cleared. Only the next
+  day is named ("Upper · Push Pull"); later ones name the program, as they
+  are due only if the user keeps to the plan. Measurement: the next four
+  of the series, skipping dates already measured (the planner takes them;
+  empty until the body feature is wired in). Horizon: reminders are only
+  planned while the app runs, so a user who does not open the app for
+  four weeks gets no more workout reminders, and the measurement reminder
+  stops after its four planned occurrences. Settings changes apply to
+  the settings current when the choice arrives; picking the series' own
+  weekday or cadence changes nothing, another weekday restarts the series
+  on that day's next date (`reminder_settings_changes.dart`). Both are pure planners (`reminder_plan.dart`);
+  `NotificationsCubit` plans again on every program list or settings
+  change, on every user change and on resume, and a repository diffs
+  against what is pending by payload (time and a hash of the text), so
+  equal ones stay. While the user's settings or programs load nothing is
+  touched, so a start never drops reminders; a change of user or signing
+  out drops them at once. Ids: rest 1, workout 100-127 (by date), measurement
+  200-203 (by occurrence), announcement in front 300. Reminders do not ask
+  for exact alarms on Android (they may fire up to an hour late). Taps:
+  a workout reminder opens Today, a measurement reminder the Progress tab
+  (until the measurement flow's route exists), an announcement Today; a
+  workout reminder tapped while the workout in progress is in front stays
+  there. A tap at launch waits until the app is past splash and
+  onboarding; navigation runs after the next frame.
+  Permission: turning a reminder on asks in the app with one line first
+  (unless the device already allows), then the system; a refusal shows a
+  dialog with "Open settings" (the app's notification settings), and the
+  reminder is stored on anyway, like the rest notification's wish; while
+  a reminder is on and the device refuses, the settings say so with "Open
+  settings". All notifications share the Android channel `workout`.
+- **Announcements**: FCM topics `announcements_<locale>` (`announcements_en`
+  in v1), followed once the device allows notifications, for the device's
+  language, leaving the other languages' topics. Notification messages:
+  the system shows them in the background (Android: channel `workout`,
+  icon `ic_notification`); in front the app shows them as a local
+  notification. A tap opens Today; no deep links in v1. Without a push
+  token (iOS without APNs) nothing is followed and nothing fails visibly;
+  a failed subscription is tried again on resume. FCM auto-init is off in
+  the native config (`firebase_messaging_auto_init_enabled`,
+  `FirebaseMessagingAutoInitEnabled`) and turned on only when following,
+  so a device that never allows notifications gets no push token.
+  Allowing notifications never waits for the subscription. Topic push needs no
+  stored tokens, so `users/{uid}/pushTokens` stays unwritten until a
+  feature needs per-user push.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
   / Progress / Profile. The active workout is full-screen and can be minimized
   to a bar above the tabs. Known limitation, to fix app-wide later: a link
@@ -815,6 +870,42 @@ Group 9, launch readiness
 - The admin web build now bundles and loads the RevenueCat web script,
   because `purchases_flutter` registers a web plugin. Harmless; revisit if
   the admin build is split from the app.
+- `sendAnnouncement` (callable, admin claim) is pending, no longer blocked
+  by billing: it sends a notification message (`notification.title`,
+  `notification.body`) to topic `announcements_<locale>`; the client needs
+  no data fields. iOS push still needs the Apple Developer account: the
+  Push Notifications capability (`aps-environment` in
+  `Runner.entitlements`, not added yet, as it breaks device signing
+  without it) and an APNs key uploaded to both Firebase projects. Until
+  then iOS follows no topic.
+- Notifications, not built yet on a device: `firebase_messaging` 17, the
+  Android manifest's FCM default channel, icon and auto-init flag, and the
+  iOS `FirebaseMessagingAutoInitEnabled` key. The `workout` channel
+  exists only once a local notification was posted; before that, FCM uses
+  its own default channel. Check foreground display and taps on both
+  platforms, and that the admin web build still loads (the plugin
+  registers a web part).
+- The measurement reminder opens the Progress tab; point it at the
+  measurement flow's route once that feature is merged (`App`,
+  `_openNotification`).
+- The measurement reminder should skip dates that already have a
+  measurement: once the body feature is merged, pass the dates of body
+  entries with measurements as `measured` to `PlanMeasurementReminders`
+  (`NotificationsCubit._syncNow`, empty now) and plan again when they
+  change.
+- Forge tasks; the app's own versions are an accepted deviation for the
+  notifications PR, to be replaced once these exist:
+  - `forge_notifications`: a diff sync of an id range against the pending
+    notifications (the app's `DeviceNotificationRepository.syncReminders`
+    with payload signatures); a tap stream that buffers the launch tap
+    (the app's `NotificationTaps`); opening the app's notification
+    settings (the app calls `flutter_local_notifications` directly);
+    creating channels at init, and more than one channel (reminders and
+    announcements share the rest timer's `workout` channel).
+  - A messaging addition (to `forge_notifications` or a new package):
+    following a topic per language with leaving the others, foreground
+    display of pushed notifications, auto-init off until allowed (the
+    app's `FcmAnnouncementRepository`).
 - `forge_purchases` has no "unavailable" backend; the app swaps in its own
   repository for release builds without keys. Move it into the package when
   it is next changed.
