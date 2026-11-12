@@ -54,6 +54,48 @@ void main() {
     });
   });
 
+  group('summary', () {
+    // Pecs 12 sets (within), quads 3 (below), lats 21 (above), glutes 1.5
+    // as secondary (below).
+    final volume = week([
+      at('w1', DateTime(2026, 11, 10, 18), [
+        worked('bench', List.filled(12, lift(60, 8))),
+        worked(
+          'squat',
+          List.filled(3, lift(100, 5)),
+          main: const [Muscle.quads],
+          secondary: const [Muscle.glute],
+        ),
+        worked('row', List.filled(21, lift(50, 10)), main: const [Muscle.lat]),
+      ]),
+    ]);
+
+    test('muscles by sets, most first, ties in vocabulary order', () {
+      expect(volume.musclesBySets.take(5), [
+        Muscle.lat,
+        Muscle.pec,
+        Muscle.quads,
+        Muscle.glute,
+        // Untrained, in vocabulary order.
+        Muscle.trap,
+      ]);
+      expect(volume.musclesBySets, hasLength(Muscle.values.length));
+    });
+
+    test('counts trained muscles per zone, untrained ones in none', () {
+      expect(volume.zoneCounts, {
+        VolumeZone.below: 2,
+        VolumeZone.within: 1,
+        VolumeZone.above: 1,
+      });
+      expect(week(const []).zoneCounts, {
+        VolumeZone.below: 0,
+        VolumeZone.within: 0,
+        VolumeZone.above: 0,
+      });
+    });
+  });
+
   group('counting', () {
     test('a set counts 1 for main and 0.5 for secondary muscles', () {
       final volume = week([

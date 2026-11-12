@@ -123,12 +123,7 @@ class _Week extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scale = volumeScale(week.sets.values);
-    // Most sets first; ties in vocabulary order.
-    final muscles = [...Muscle.values]
-      ..sort((a, b) {
-        final bySets = week.setsOf(b).compareTo(week.setsOf(a));
-        return bySets != 0 ? bySets : a.index.compareTo(b.index);
-      });
+    final muscles = week.musclesBySets;
     return ListView(
       children: [
         _VolumeModel(
