@@ -34,6 +34,9 @@ import '../features/programs/presentation/programs_page.dart';
 import '../features/progress/presentation/progress_page.dart';
 import '../features/subscription/presentation/paywall_page.dart';
 import '../features/today/presentation/today_page.dart';
+import '../features/workout/presentation/history_page.dart';
+import '../features/workout/presentation/workout_detail_page.dart';
+import '../features/workout/presentation/workout_edit_page.dart';
 import '../features/workout/presentation/workout_page.dart';
 import '../l10n/app_localizations.dart';
 import 'app_shell.dart';
@@ -85,6 +88,17 @@ abstract final class Routes {
   static const cardio = '$progress/cardio';
   static const cardioNew = '$cardio/new';
   static String cardioSession(String id) => '$cardio/$id';
+  static const history = '$progress/history';
+
+  /// Adds a past workout.
+  static const historyNew = '$history/new';
+
+  /// [exercisePicker] above a workout being edited.
+  static String historyPicker({required int max, required bool multiple}) =>
+      '$history/pick?max=$max&multiple=$multiple';
+  static String historyWorkout(String id) =>
+      '$history/${Uri.encodeComponent(id)}';
+  static String historyEdit(String id) => '${historyWorkout(id)}/edit';
   static const profile = '/profile';
 
   /// The workout in progress, full screen above the tabs; push it so going
@@ -327,6 +341,30 @@ GoRouter buildRouter(
                     path: ':id',
                     builder: (_, state) =>
                         CardioSessionPage(id: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'history',
+                builder: (_, _) => const HistoryPage(),
+                routes: [
+                  // Before ':id', which would match these too.
+                  GoRoute(
+                    path: 'new',
+                    builder: (_, _) => const WorkoutEditPage(),
+                  ),
+                  GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) =>
+                        WorkoutDetailPage(id: state.pathParameters['id']!),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (_, state) =>
+                            WorkoutEditPage(id: state.pathParameters['id']),
+                      ),
+                    ],
                   ),
                 ],
               ),
