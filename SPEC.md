@@ -183,7 +183,12 @@ from the earlier FitLab app.
 - **3D model**: our own renderer, written in Dart, built first because it is
   the riskiest part. Source model has 37 meshes: 19 muscle groups (left/right
   split except abdominal and oblique) plus the body. A female model with the
-  same mesh names is required before release; the user supplies it.
+  same mesh names is required before release; the user supplies it. The
+  exercise page shows it twice, front and back side by side with the worked
+  muscles coloured, both fixed (`interactive: false`, the back through a
+  camera at yaw π) so the page scrolls over them; two CPU-rendered viewers
+  share one parsed model and paint once. The Exercises tab's model stays
+  interactive.
 - **Units**: stored metric. kg/lb and cm/in chosen by the user.
 - **Programs**: a name of 1-60 characters, 1-7 days, day names of at most
   40 characters, 1-20 exercises per day, an optional length of 1-52 weeks;
