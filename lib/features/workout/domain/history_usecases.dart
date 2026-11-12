@@ -1,5 +1,6 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../programs/domain/calendar_date.dart';
 import 'exercise_stats.dart';
 import 'workout.dart';
 import 'workout_editing.dart';
@@ -15,6 +16,17 @@ typedef HistoryQuery = ({
 /// A change to the stored workouts: [after] added (no [before]), [before]
 /// replaced by [after], or [before] deleted (no [after]).
 typedef WorkoutChange = ({String uid, Workout? before, Workout? after});
+
+/// Local dates from [from] to [to], both included.
+typedef DateRangeQuery = ({String uid, CalendarDate from, CalendarDate to});
+
+class WatchWorkoutsBetween {
+  const WatchWorkoutsBetween(this._repository);
+  final WorkoutRepository _repository;
+
+  Stream<List<Workout>> call(DateRangeQuery query) => _repository
+      .watchWorkoutsBetween(query.uid, from: query.from, to: query.to);
+}
 
 class WatchHistory {
   const WatchHistory(this._repository);
