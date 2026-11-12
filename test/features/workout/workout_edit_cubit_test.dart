@@ -185,7 +185,7 @@ void main() {
 
     test('a new set takes the values of the set before it', () async {
       final cubit = await editing();
-      cubit.addSet(0);
+      cubit.addSet(0, SetType.normal);
       cubit.toggleDone((exercise: 0, set: 1));
       expect(cubit.state.workout!.exercises.single.sets, [
         lift(100, 5),

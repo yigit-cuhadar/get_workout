@@ -57,7 +57,7 @@ class SettingsSection extends StatelessWidget {
               values: EffortScale.values,
               selected: settings.effortScale,
               labelOf: (scale) => switch (scale) {
-                EffortScale.off => l10n.effortOff,
+                EffortScale.byFeel => l10n.effortByFeel,
                 EffortScale.rir => l10n.effortRir,
                 EffortScale.rpe => l10n.effortRpe,
               },

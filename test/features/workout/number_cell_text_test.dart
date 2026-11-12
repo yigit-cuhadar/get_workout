@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
-import 'package:get_workout/features/workout/presentation/workout_set_row.dart';
+import 'package:get_workout/features/workout/presentation/number_cell.dart';
 
 void main() {
   const lb = WeightUnit.lb;
