@@ -1,10 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/workout/domain/rest_lock_screen.dart';
 import 'package:get_workout/features/workout/domain/rest_notifications.dart';
 import 'package:get_workout/features/workout/domain/rest_usecases.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockRestNotifications extends Mock implements RestNotifications {}
+
+class MockRestLockScreen extends Mock implements RestLockScreen {}
 
 void main() {
   late MockRestNotifications notifications;
@@ -70,5 +73,34 @@ void main() {
     await DeclineRestNotifications(notifications)(const NoParams());
     verify(notifications.markAskedHere).called(1);
     verifyNever(notifications.request);
+  });
+
+  group('lock screen', () {
+    late MockRestLockScreen lockScreen;
+    final countdown = RestCountdown(
+      endsAt: DateTime(2026, 11, 11, 18, 2),
+      title: 'Rest',
+      detail: 'Next: Squat, set 2',
+      over: 'Rest over',
+    );
+
+    setUp(() => lockScreen = MockRestLockScreen());
+
+    test('showing passes the countdown and its result on', () async {
+      when(() => lockScreen.show(countdown))
+          .thenAnswer((_) async => const Err(UnknownFailure('off')));
+      final result = await ShowRestOnLockScreen(lockScreen)(countdown);
+      expect(result.failureOrNull, isA<UnknownFailure>());
+      verify(() => lockScreen.show(countdown)).called(1);
+    });
+
+    test('clearing clears', () async {
+      when(lockScreen.clear).thenAnswer((_) async => const Ok(null));
+      final result = await ClearRestFromLockScreen(lockScreen)(
+        const NoParams(),
+      );
+      expect(result.isOk, isTrue);
+      verify(lockScreen.clear).called(1);
+    });
   });
 }

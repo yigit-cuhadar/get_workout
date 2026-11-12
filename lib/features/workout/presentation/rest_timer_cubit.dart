@@ -5,6 +5,7 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/rest.dart';
+import '../domain/rest_lock_screen.dart';
 import '../domain/rest_usecases.dart';
 import '../domain/workout.dart';
 import 'active_workout_cubit.dart';
@@ -55,6 +56,14 @@ typedef RestNotificationText = ({String title, String body}) Function(
   SetRef? next,
 );
 
+/// The lock screen's text for a rest of [workout] after which [next] (null:
+/// none left) is due.
+typedef RestLockScreenText =
+    ({String title, String? detail, String over}) Function(
+      Workout workout,
+      SetRef? next,
+    );
+
 /// Counts down the rest of the workout in progress, from its end time on
 /// the device clock, and emits only that, so nothing else rebuilds every
 /// second.
@@ -65,6 +74,12 @@ typedef RestNotificationText = ({String title, String body}) Function(
 /// app. It needs the user's yes (`settings.restTimer.notify`); the device's
 /// permission is asked only after they say yes in the app, at most once
 /// per device.
+///
+/// A running rest is also on the lock screen, counted down by the system
+/// (iOS Live Activity, Android ongoing notification), while the rest timer
+/// is on in the settings, from its start until it is over, skipped or
+/// dropped (finish, discard, user change); one left from an earlier run is
+/// removed at start. It never alerts: the end is the notification's.
 class RestTimerCubit extends Cubit<RestTimerState> {
   RestTimerCubit({
     required ActiveWorkoutCubit workout,
@@ -75,6 +90,9 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     required this._schedule,
     required this._cancel,
     required this._text,
+    required this._showOnLockScreen,
+    required this._clearLockScreen,
+    required this._lockScreenText,
     DateTime Function()? clock,
   }) : _workout = workout,
        _clock = clock ?? DateTime.now,
@@ -82,6 +100,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     _status = workout.state.status;
     _rest = workout.state.rest;
     _subscription = workout.stream.listen(_onWorkout);
+    _settingsSubscription = _settings.stream.listen((_) => _syncLockScreen());
     unawaited(_cancelNotification());
     _tick();
   }
@@ -94,8 +113,12 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   final ScheduleRestNotification _schedule;
   final CancelRestNotification _cancel;
   final RestNotificationText _text;
+  final ShowRestOnLockScreen _showOnLockScreen;
+  final ClearRestFromLockScreen _clearLockScreen;
+  final RestLockScreenText _lockScreenText;
   final DateTime Function() _clock;
   late final StreamSubscription<ActiveWorkoutState> _subscription;
+  late final StreamSubscription<SettingsState> _settingsSubscription;
   late WorkoutStatus _status;
   Rest? _rest;
   Timer? _timer;
@@ -107,6 +130,18 @@ class RestTimerCubit extends Cubit<RestTimerState> {
 
   /// Whether asking was considered in this run of the app.
   bool _considered = false;
+
+  /// The rest on the lock screen, null for none. Unknown until the first
+  /// sync, which so also removes one left from an earlier run, and again
+  /// after a call failed, so the next tick tries again.
+  Rest? _onLockScreen;
+  bool _lockScreenKnown = false;
+
+  /// Counts lock screen syncs, so a failure only unsettles the latest.
+  int _lockScreenSync = 0;
+
+  /// Lock screen calls run one after another, so the last one wins.
+  Future<void> _lockScreenCalls = Future.value();
 
   /// How long "rest over" shows.
   static const overFor = Duration(seconds: 3);
@@ -142,6 +177,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
       emit(state.copyWith(phase: RestPhase.running, remainingS: seconds));
       // Again when the shown second changes.
       _timer = Timer(left - Duration(seconds: seconds - 1), _tick);
+      _syncLockScreen();
       return;
     }
     final over =
@@ -161,6 +197,50 @@ class RestTimerCubit extends Cubit<RestTimerState> {
         () => emit(state.copyWith(phase: RestPhase.none)),
       );
     }
+    _syncLockScreen();
+  }
+
+  /// Puts the running rest on the lock screen, or takes it off, when that
+  /// changes.
+  void _syncLockScreen() {
+    final rest = _rest;
+    final workout = _workout.state.workout;
+    final shown =
+        rest != null &&
+            workout != null &&
+            rest.runsAt(_clock()) &&
+            _settings.state.settings.restTimer.enabled
+        ? rest
+        : null;
+    if (_lockScreenKnown && shown == _onLockScreen) return;
+    _lockScreenKnown = true;
+    _onLockScreen = shown;
+    final sync = ++_lockScreenSync;
+    final Future<Result<void>> Function() call;
+    if (shown == null || workout == null) {
+      call = () => _clearLockScreen(const NoParams());
+    } else {
+      final text = _lockScreenText(workout, nextSet(workout, shown.after));
+      final countdown = RestCountdown(
+        endsAt: shown.endsAt,
+        title: text.title,
+        detail: text.detail,
+        over: text.over,
+      );
+      call = () => _showOnLockScreen(countdown);
+    }
+    _lockScreenCalls = _lockScreenCalls.then((_) async {
+      Result<void> result;
+      try {
+        result = await call();
+      } catch (error) {
+        result = Err(UnknownFailure('$error', error));
+      }
+      if (result.failureOrNull case final failure?) {
+        Log.e('rest', 'lock screen not updated: ${failure.message}');
+        if (sync == _lockScreenSync) _lockScreenKnown = false;
+      }
+    });
   }
 
   /// The app went to the background: notify at the end of a running rest.
@@ -199,7 +279,13 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     if (granted.failureOrNull case final failure?) {
       Log.e('rest', 'notification permission not asked: ${failure.message}');
     }
-    return granted.valueOrNull ?? false;
+    final allowed = granted.valueOrNull ?? false;
+    // On Android the countdown needs the permission: show it now.
+    if (allowed && !isClosed) {
+      _lockScreenKnown = false;
+      _syncLockScreen();
+    }
+    return allowed;
   }
 
   Future<void> _considerAsking() async {
@@ -261,6 +347,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   Future<void> close() async {
     _timer?.cancel();
     await _subscription.cancel();
+    await _settingsSubscription.cancel();
     return super.close();
   }
 }
