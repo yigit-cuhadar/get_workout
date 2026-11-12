@@ -3,7 +3,7 @@ import 'package:forge_core/forge_core.dart';
 import '../../exercises/domain/vocabulary.dart';
 
 /// How a generated week is split into days.
-enum Split {
+enum TrainingSplit {
   fullBody,
   upperLower,
   pushPullLegs;
@@ -69,7 +69,7 @@ class GeneratorAnswers extends Equatable {
   final EasyArea? easyArea;
 
   /// Null picks the split that suits [daysPerWeek] and [level].
-  final Split? split;
+  final TrainingSplit? split;
 
   @override
   List<Object?> get props => [

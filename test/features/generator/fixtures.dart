@@ -29,7 +29,7 @@ GeneratorAnswers answers({
   Set<Muscle> focus = const {},
   Set<String> excluded = const {},
   EasyArea? easyArea,
-  Split? split,
+  TrainingSplit? split,
 }) => GeneratorAnswers(
   goal: goal,
   level: level,

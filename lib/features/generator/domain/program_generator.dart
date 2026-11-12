@@ -22,7 +22,7 @@ enum GenerationIssue {
   /// Days per week outside [GeneratorLimits.minDays]..[GeneratorLimits.maxDays].
   daysOutOfRange,
 
-  /// The chosen split needs more days a week ([Split.minDays]).
+  /// The chosen split needs more days a week ([TrainingSplit.minDays]).
   splitNeedsMoreDays,
 
   /// A day gets no exercise: the equipment, level, exclusions and the area
@@ -58,7 +58,7 @@ class GeneratedProgram extends Equatable {
     this.uncovered = const {},
   });
 
-  final Split split;
+  final TrainingSplit split;
   final List<GeneratedDay> days;
 
   /// The weekly sets aimed for, per trained muscle.
@@ -88,22 +88,22 @@ class GeneratedProgram extends Equatable {
 }
 
 /// The split used for [answers]: the chosen one, or by days and level.
-Split splitFor(GeneratorAnswers answers) =>
+TrainingSplit splitFor(GeneratorAnswers answers) =>
     answers.split ??
     switch (answers.daysPerWeek) {
-      <= 3 => Split.fullBody,
-      4 => Split.upperLower,
-      _ when answers.level == Level.beginner => Split.upperLower,
-      _ => Split.pushPullLegs,
+      <= 3 => TrainingSplit.fullBody,
+      4 => TrainingSplit.upperLower,
+      _ when answers.level == Level.beginner => TrainingSplit.upperLower,
+      _ => TrainingSplit.pushPullLegs,
     };
 
 /// The days of a week of [split] trained [days] times.
-List<DayKind> splitDays(Split split, int days) => switch (split) {
-  Split.fullBody => List.filled(days, DayKind.fullBody),
-  Split.upperLower => [
+List<DayKind> splitDays(TrainingSplit split, int days) => switch (split) {
+  TrainingSplit.fullBody => List.filled(days, DayKind.fullBody),
+  TrainingSplit.upperLower => [
     for (var i = 0; i < days; i++) i.isEven ? DayKind.upper : DayKind.lower,
   ],
-  Split.pushPullLegs => [
+  TrainingSplit.pushPullLegs => [
     DayKind.push,
     DayKind.pull,
     DayKind.legs,

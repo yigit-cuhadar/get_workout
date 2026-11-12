@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/app/router.dart';
@@ -37,6 +38,7 @@ import 'package:get_workout/features/settings/domain/settings_repository.dart';
 import 'package:get_workout/features/settings/domain/settings_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
+import 'package:get_workout/features/subscription/subscription_module.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
@@ -137,7 +139,24 @@ void main() {
       watchEquipment: WatchOwnedEquipment(userLibrary),
       saveEquipment: SaveOwnedEquipment(userLibrary),
     );
-    appCubits = [settings, catalogue, favorites, equipment, profile];
+    // Never configured, so the premium status stays unknown.
+    final store = FakePurchasesRepository(plans: fakePlans);
+    final entitlement = EntitlementCubit(
+      configure: ConfigurePurchases(store),
+      watchEntitlement: WatchEntitlement(store),
+      identify: IdentifyPurchaser(store),
+      reset: ResetPurchaser(store),
+      refresh: RefreshEntitlement(store),
+      getManagementUrl: GetManagementUrl(store),
+    );
+    appCubits = [
+      settings,
+      catalogue,
+      favorites,
+      equipment,
+      profile,
+      entitlement,
+    ];
 
     repository = MockProgramRepository();
     programs = StreamController<List<Program>>();
@@ -210,6 +229,7 @@ void main() {
           BlocProvider.value(value: catalogue),
           BlocProvider.value(value: favorites),
           BlocProvider.value(value: equipment),
+          BlocProvider.value(value: entitlement),
         ],
         child: MaterialApp.router(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

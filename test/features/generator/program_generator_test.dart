@@ -106,7 +106,7 @@ void main() {
           days <= GeneratorLimits.maxDays;
           days++
         ) {
-          for (final split in [null, ...Split.values]) {
+          for (final split in [null, ...TrainingSplit.values]) {
             for (final level in Level.values) {
               // Goals and session lengths take turns, so each is met with
               // every other answer somewhere.
@@ -122,7 +122,7 @@ void main() {
                 split: split,
               );
               final result = generateProgram(given, library, seed: days);
-              if (split == Split.pushPullLegs && days < 3) {
+              if (split == TrainingSplit.pushPullLegs && days < 3) {
                 expect(issueOf(result), GenerationIssue.splitNeedsMoreDays);
                 continue;
               }
@@ -262,28 +262,31 @@ void main() {
 
   group('split', () {
     test('suits the days when none is chosen', () {
-      Split auto(int days, [Level level = Level.intermediate]) =>
+      TrainingSplit auto(int days, [Level level = Level.intermediate]) =>
           splitFor(answers(days: days, level: level));
-      expect(auto(2), Split.fullBody);
-      expect(auto(3), Split.fullBody);
-      expect(auto(4), Split.upperLower);
-      expect(auto(5), Split.pushPullLegs);
-      expect(auto(6), Split.pushPullLegs);
-      expect(auto(5, Level.beginner), Split.upperLower);
-      expect(auto(6, Level.beginner), Split.upperLower);
+      expect(auto(2), TrainingSplit.fullBody);
+      expect(auto(3), TrainingSplit.fullBody);
+      expect(auto(4), TrainingSplit.upperLower);
+      expect(auto(5), TrainingSplit.pushPullLegs);
+      expect(auto(6), TrainingSplit.pushPullLegs);
+      expect(auto(5, Level.beginner), TrainingSplit.upperLower);
+      expect(auto(6, Level.beginner), TrainingSplit.upperLower);
     });
 
     test('keeps the chosen one', () {
-      expect(splitFor(answers(days: 6, split: Split.fullBody)), Split.fullBody);
+      expect(
+        splitFor(answers(days: 6, split: TrainingSplit.fullBody)),
+        TrainingSplit.fullBody,
+      );
     });
 
     test('lays out the days of each split', () {
-      expect(splitDays(Split.upperLower, 3), [
+      expect(splitDays(TrainingSplit.upperLower, 3), [
         DayKind.upper,
         DayKind.lower,
         DayKind.upper,
       ]);
-      expect(splitDays(Split.pushPullLegs, 5), [
+      expect(splitDays(TrainingSplit.pushPullLegs, 5), [
         DayKind.push,
         DayKind.pull,
         DayKind.legs,
@@ -291,14 +294,16 @@ void main() {
         DayKind.lower,
       ]);
       for (var days = 3; days <= GeneratorLimits.maxDays; days++) {
-        for (final split in Split.values) {
+        for (final split in TrainingSplit.values) {
           expect(splitDays(split, days), hasLength(days));
         }
       }
     });
 
     test('names repeated days by variant', () {
-      final generated = generate(answers(days: 3, split: Split.upperLower));
+      final generated = generate(
+        answers(days: 3, split: TrainingSplit.upperLower),
+      );
       expect(generated.days.map((d) => (d.kind, d.variant)), [
         (DayKind.upper, 0),
         (DayKind.lower, null),
@@ -402,7 +407,7 @@ void main() {
         lift('pushup', [Muscle.pec], type: LoggingType.reps),
       ];
       ProgramItem itemOf(Goal goal, String id) => generateProgram(
-        answers(goal: goal, days: 2, split: Split.fullBody),
+        answers(goal: goal, days: 2, split: TrainingSplit.fullBody),
         library,
       ).valueOrNull!.days.first.items.firstWhere((i) => i.exerciseId == id);
       final squat = itemOf(Goal.getStronger, 'squat');
@@ -431,7 +436,10 @@ void main() {
     test('push/pull/legs on two days', () {
       expect(
         issueOf(
-          generateProgram(answers(days: 2, split: Split.pushPullLegs), library),
+          generateProgram(
+            answers(days: 2, split: TrainingSplit.pushPullLegs),
+            library,
+          ),
         ),
         GenerationIssue.splitNeedsMoreDays,
       );
@@ -468,7 +476,7 @@ void main() {
 
     test('a day whose muscles have no exercise, others do', () {
       // Upper days have exercises, lower days none.
-      final result = generateProgram(answers(split: Split.upperLower), [
+      final result = generateProgram(answers(split: TrainingSplit.upperLower), [
         lift('bench', [Muscle.pec]),
         lift('row', [Muscle.lat]),
       ]);
@@ -477,7 +485,9 @@ void main() {
   });
 
   test('the stored program is a generated, editable one', () {
-    final generated = generate(answers(days: 2, split: Split.upperLower));
+    final generated = generate(
+      answers(days: 2, split: TrainingSplit.upperLower),
+    );
     final program = generated.toProgram(
       name: 'Mine',
       dayName: (day) => '${day.kind.name} ${day.variant}',
