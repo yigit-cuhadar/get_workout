@@ -56,14 +56,9 @@ class _ProgramsViewState extends State<_ProgramsView> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return BlocConsumer<ProgramListCubit, ProgramListState>(
-      // A failed missed-day choice is reported by its prompt.
-      listenWhen: (_, current) => current.writeRejected,
-      listener: (context, state) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.programWritesRejected)));
-        _cubit.rejectionShown();
-      },
+    // A refused write is told by the shell's ProgramWritesNotice, a failed
+    // missed-day choice by its prompt.
+    return BlocBuilder<ProgramListCubit, ProgramListState>(
       builder: (context, state) {
         final hasPrograms = state.programs.isNotEmpty;
         void create() => context.go(Routes.programNew);

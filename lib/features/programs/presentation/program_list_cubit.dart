@@ -196,7 +196,9 @@ class ProgramListCubit extends Cubit<ProgramListState> {
   /// Subscribes again after a failure.
   void retry() => _follow();
 
-  void rejectionShown() => emit(state.copyWith(writeRejected: false));
+  void rejectionShown() {
+    if (state.writeRejected) emit(state.copyWith(writeRejected: false));
+  }
 
   void resolveFailureShown() =>
       emit(state.copyWith(resolveFailure: () => null));

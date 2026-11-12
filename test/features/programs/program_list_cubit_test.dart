@@ -285,7 +285,11 @@ void main() {
     act: (cubit) async {
       rejected.add(const PermissionFailure());
       await pumpEventQueue();
-      cubit.rejectionShown();
+      // Shown by the one notice in the shell; a second clear changes
+      // nothing.
+      cubit
+        ..rejectionShown()
+        ..rejectionShown();
     },
     expect: () => [
       const ProgramListState(writeRejected: true),
@@ -433,6 +437,22 @@ void main() {
         },
       );
     }
+
+    blocTest<ProgramListCubit, ProgramListState>(
+      'a choice the server refuses later is reported as a refused write',
+      build: build,
+      act: (cubit) async {
+        await ready();
+        await cubit.resolveMissed(MissedDayChoice.doToday);
+        // The write looked done offline; the server refuses it later.
+        rejected.add(const PermissionFailure());
+        await pumpEventQueue();
+        expect(cubit.state.writeRejected, isTrue);
+        expect(cubit.state.resolveFailure, isNull);
+        cubit.rejectionShown();
+      },
+      verify: (cubit) => expect(cubit.state.writeRejected, isFalse),
+    );
 
     blocTest<ProgramListCubit, ProgramListState>(
       'a failed resolution is reported once',
