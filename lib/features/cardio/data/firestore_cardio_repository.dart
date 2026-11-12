@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 
+import '../../programs/domain/calendar_date.dart';
 import '../domain/cardio_repository.dart';
 import '../domain/cardio_session.dart';
 import '../domain/cardio_type.dart';
@@ -35,9 +36,29 @@ class FirestoreCardioRepository implements CardioRepository {
   Stream<Failure> get rejectedWrites => _rejected.stream;
 
   @override
-  Stream<List<CardioSession>> watchSessions(String uid) => _sessions(uid)
-      .orderBy('date', descending: true)
-      .limit(maxSessions)
+  Stream<List<CardioSession>> watchSessions(String uid) => _read(
+    _sessions(uid).orderBy('date', descending: true).limit(maxSessions),
+  );
+
+  @override
+  Stream<List<CardioSession>> watchSessionsBetween(
+    String uid, {
+    required CalendarDate from,
+    required CalendarDate to,
+  }) => _read(
+    _sessions(uid)
+        .where(
+          'date',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(from.toLocalDateTime()),
+        )
+        .where(
+          'date',
+          isLessThan: Timestamp.fromDate(to.addDays(1).toLocalDateTime()),
+        )
+        .orderBy('date'),
+  );
+
+  Stream<List<CardioSession>> _read(Query<Map<String, dynamic>> query) => query
       .snapshots()
       .map(
         (snap) => [for (final doc in snap.docs) ?fromMap(doc.id, doc.data())],

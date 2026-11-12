@@ -6,6 +6,7 @@ import 'package:forge_firebase/forge_firebase.dart';
 
 import '../../programs/data/firestore_program_repository.dart';
 import '../../programs/domain/active_program.dart';
+import '../../programs/domain/calendar_date.dart';
 import '../domain/exercise_stats.dart';
 import '../domain/workout.dart';
 import '../domain/workout_repository.dart';
@@ -87,6 +88,30 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
         )
         .transform(_failures());
   }
+
+  /// Only the date range is queried, which needs no composite index.
+  @override
+  Stream<List<Workout>> watchWorkoutsBetween(
+    String uid, {
+    required CalendarDate from,
+    required CalendarDate to,
+  }) => _workouts(uid)
+      .where(
+        'startedAt',
+        isGreaterThanOrEqualTo: Timestamp.fromDate(from.toLocalDateTime()),
+      )
+      .where(
+        'startedAt',
+        isLessThan: Timestamp.fromDate(to.addDays(1).toLocalDateTime()),
+      )
+      .orderBy('startedAt')
+      .snapshots()
+      .map(
+        (snap) => [
+          for (final doc in snap.docs) ?workoutFromMap(doc.id, doc.data()),
+        ],
+      )
+      .transform(_failures());
 
   static DocumentSnapshot<Map<String, dynamic>> _position(
     HistoryCursor cursor,

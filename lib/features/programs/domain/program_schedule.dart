@@ -123,26 +123,46 @@ class ProgramSchedule {
     }
   }
 
-  /// The plan of [today]'s week, Monday to Sunday, by date: the [completed]
-  /// days of the week as done, a missed next day once on the date it was
-  /// planned for, and the [upcoming] days falling in the week.
+  /// The plan of [today]'s week, Monday to Sunday; see [plan].
   List<PlannedDay> weekPlan(
     CalendarDate today, {
     List<CompletedDay> completed = const [],
   }) {
     final start = today.weekStart;
-    final next = start.addDays(7);
-    bool inWeek(CalendarDate date) =>
-        !date.isBefore(start) && date.isBefore(next);
-    final plan = [
+    return plan(today, from: start, to: start.addDays(6), completed: completed);
+  }
+
+  /// The plan from [from] to [to], both included, as planned on [today],
+  /// by date: the [completed] days in the range as done, each once, a
+  /// missed next day once on the date it was planned for, and the
+  /// [upcoming] days falling in the range. A day not done yet that was
+  /// done on its date anyway (the program did not move on) shows only as
+  /// done.
+  List<PlannedDay> plan(
+    CalendarDate today, {
+    required CalendarDate from,
+    required CalendarDate to,
+    List<CompletedDay> completed = const [],
+  }) {
+    final after = to.addDays(1);
+    bool inRange(CalendarDate date) =>
+        !date.isBefore(from) && date.isBefore(after);
+    final done = {
       for (final day in completed)
-        if (inWeek(day.date))
-          PlannedDay(
-            date: day.date,
-            dayIndex: day.dayIndex,
-            status: PlannedStatus.done,
-          ),
-      if (isMissed(today) && inWeek(active.nextDate))
+        if (inRange(day.date)) day,
+    };
+    bool undone(CalendarDate date, int dayIndex) =>
+        !done.contains(CompletedDay(date: date, dayIndex: dayIndex));
+    final plan = [
+      for (final day in done)
+        PlannedDay(
+          date: day.date,
+          dayIndex: day.dayIndex,
+          status: PlannedStatus.done,
+        ),
+      if (isMissed(today) &&
+          inRange(active.nextDate) &&
+          undone(active.nextDate, nextDayIndex))
         PlannedDay(
           date: active.nextDate,
           dayIndex: nextDayIndex,
@@ -150,12 +170,13 @@ class ProgramSchedule {
         ),
       for (final day in upcoming(
         today,
-      ).takeWhile((day) => day.date.isBefore(next)))
-        PlannedDay(
-          date: day.date,
-          dayIndex: day.dayIndex,
-          status: PlannedStatus.planned,
-        ),
+      ).takeWhile((day) => day.date.isBefore(after)))
+        if (inRange(day.date) && undone(day.date, day.dayIndex))
+          PlannedDay(
+            date: day.date,
+            dayIndex: day.dayIndex,
+            status: PlannedStatus.planned,
+          ),
     ];
     // Stable, so a date's done day stays before its planned one.
     return plan..sort((a, b) => a.date.compareTo(b.date));

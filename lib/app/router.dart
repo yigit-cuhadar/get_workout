@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
+import '../features/calendar/presentation/calendar_page.dart';
 import '../features/cardio/presentation/cardio_form_page.dart';
 import '../features/cardio/presentation/cardio_list_page.dart';
 import '../features/calculators/presentation/body_fat_page.dart';
@@ -108,6 +109,7 @@ abstract final class Routes {
   static String exerciseStrength(String exerciseLocation) =>
       '$exerciseLocation/$strengthSegment';
   static const strengthSegment = 'strength';
+  static const calendar = '$progress/calendar';
 
   /// Adds a past workout.
   static const historyNew = '$history/new';
@@ -395,6 +397,10 @@ GoRouter buildRouter(
                     ),
                   ),
                 ],
+              ),
+              GoRoute(
+                path: 'calendar',
+                builder: (_, _) => const CalendarPage(),
               ),
               GoRoute(
                 path: 'history',

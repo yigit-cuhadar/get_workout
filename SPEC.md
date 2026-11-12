@@ -379,6 +379,28 @@ from the earlier FitLab app.
 - **Program progress**: doing another day of the active program shows it as
   done but leaves the schedule. Done days are read from workouts by date
   only, so no composite index is needed.
+- **Calendar**: Progress → Calendar shows one month (previous / next;
+  tapping a date of a neighbouring month opens that month), weeks starting
+  on the locale's first day. It follows the month's dates plus six days on
+  each side (every date its first and last week can show) live: workouts
+  and cardio by local start date, a range on one field, so no composite
+  index. A date is marked for a workout done, cardio done, a program day
+  planned and a program day missed. Planned days come from
+  `ProgramSchedule.plan`, the week plan's logic over any range: a program
+  day done (a workout of the active program and that day, on that local
+  date) shows only as its workout, and a day done twice on one date shows
+  once, on the Programs tab too. A next day done on its date without the
+  program moving on (it was not loaded at finishing) is done, not planned
+  or missed, here and on the Programs tab, whose missed-day prompt knows
+  only this week's done days. The missed next day shows on its date as
+  missed (resolved on the Programs tab, not started here) and again where
+  it is planned now. A planned day starts through `startProgramDay`, so a
+  locked premium copy's days show but open the paywall. A workout opens
+  its history page, a cardio session its page (which finds only the 500
+  newest sessions). If the programs cannot be read, what was done still
+  shows. `MonthGrid` (`lib/features/calendar/presentation/month_grid.dart`)
+  is generic except for `CalendarDate`; move it to `forge_ui`, taking
+  `DateTime` dates, when that package is next changed.
 - **Starting a workout**: the Programs tab starts the next day, a program's
   page any of its days, the Today tab an empty workout until that tab is
   built, and an exercise's page adds it to the workout in progress or, after
@@ -639,7 +661,7 @@ Group 5, workout
 - [x] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
 
 Group 6, progress
-- [ ] Calendar — month view of planned and done workouts and cardio
+- [x] Calendar — month view of planned and done workouts and cardio
 - [ ] Weekly volume — model coloring and bar list against the 10-20 band; 12-week trend (Premium)
 - [ ] Strength — per-exercise records and e1RM chart (beyond 12 weeks Premium)
 - [ ] Today tab — next workout and week strip, quick actions, volume card, steps card

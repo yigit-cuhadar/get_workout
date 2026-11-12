@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/workout/data/firestore_workout_repository.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
@@ -191,6 +192,67 @@ void main() {
       expect(await stats.moveNext(), isTrue);
       expect(stats.current, isEmpty);
       await stats.cancel();
+    });
+  });
+
+  group('workouts between dates', () {
+    Workout at(String id, DateTime start) => workout(
+      id,
+      [
+        exercise('squat', [lift(100, 5)]),
+      ],
+      startedAt: start,
+      finishedAt: start.add(const Duration(hours: 1)),
+    );
+
+    test('by local start date, both ends included, oldest first', () async {
+      for (final w in [
+        at('late', DateTime(2026, 11, 30, 23, 59)),
+        at('before', DateTime(2026, 10, 31, 23, 59)),
+        at('first', DateTime(2026, 11, 1)),
+        at('after', DateTime(2026, 12, 1)),
+        at('mid', DateTime(2026, 11, 15, 12)),
+      ]) {
+        await repository.saveWorkout('u1', w, const {});
+      }
+      await repository.saveWorkout(
+        'u2',
+        at('other', DateTime(2026, 11, 15)),
+        const {},
+      );
+      await pumpEventQueue();
+
+      final read = await repository
+          .watchWorkoutsBetween(
+            'u1',
+            from: CalendarDate(2026, 11, 1),
+            to: CalendarDate(2026, 11, 30),
+          )
+          .first;
+      expect(ids(read), ['first', 'mid', 'late']);
+    });
+
+    test('follow changes', () async {
+      final emitted = repository
+          .watchWorkoutsBetween(
+            'u1',
+            from: CalendarDate(2026, 11, 1),
+            to: CalendarDate(2026, 11, 30),
+          )
+          .map(ids);
+      final expectation = expectLater(
+        emitted,
+        emitsInOrder([
+          <String>[],
+          ['w1'],
+        ]),
+      );
+      await repository.saveWorkout(
+        'u1',
+        at('w1', DateTime(2026, 11, 2, 8)),
+        const {},
+      );
+      await expectation;
     });
   });
 }

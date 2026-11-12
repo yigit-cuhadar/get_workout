@@ -5,6 +5,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/cardio/data/firestore_cardio_repository.dart';
 import 'package:get_workout/features/cardio/domain/cardio_session.dart';
 import 'package:get_workout/features/cardio/domain/cardio_type.dart';
+import 'package:get_workout/features/programs/domain/calendar_date.dart';
 
 void main() {
   const allFields = {...CardioField.values};
@@ -250,4 +251,36 @@ void main() {
 
     await expectation;
   });
+
+  test(
+    'sessions between dates: local dates, ends included, oldest first',
+    () async {
+      for (final date in [
+        DateTime(2026, 11, 30, 23, 59),
+        DateTime(2026, 10, 31, 23, 59),
+        DateTime(2026, 11, 1),
+        DateTime(2026, 12, 1),
+      ]) {
+        await save(
+          CardioSession(
+            type: CardioType.treadmillWalk,
+            date: date,
+            duration: const Duration(minutes: 20),
+          ),
+        );
+      }
+
+      final read = await repository
+          .watchSessionsBetween(
+            'u1',
+            from: CalendarDate(2026, 11, 1),
+            to: CalendarDate(2026, 11, 30),
+          )
+          .first;
+      expect(
+        [for (final s in read) s.date],
+        [DateTime(2026, 11, 1), DateTime(2026, 11, 30, 23, 59)],
+      );
+    },
+  );
 }

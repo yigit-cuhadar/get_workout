@@ -390,6 +390,99 @@ void main() {
     });
   });
 
+  group('plan', () {
+    test('a day done twice on one date shows once', () {
+      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
+      final twice = CompletedDay(date: d(2026, 11, 9), dayIndex: 0);
+      expect(plan.weekPlan(d(2026, 11, 11), completed: [twice, twice]), [
+        done(d(2026, 11, 9), 0),
+        planned(d(2026, 11, 11), 1),
+        planned(d(2026, 11, 13), 2),
+      ]);
+    });
+
+    test('a planned day done on its date shows only as done', () {
+      // Done today, but the program did not move on.
+      final plan = schedule(active(nextDate: d(2026, 11, 11)));
+      expect(
+        plan.weekPlan(
+          d(2026, 11, 11),
+          completed: [CompletedDay(date: d(2026, 11, 11), dayIndex: 0)],
+        ),
+        [done(d(2026, 11, 11), 0), planned(d(2026, 11, 13), 1)],
+      );
+    });
+
+    test('a missed day done on its date is not missed', () {
+      // Wednesday's day 1 was done, but the program did not move on.
+      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
+      expect(
+        plan.weekPlan(
+          d(2026, 11, 12),
+          completed: [CompletedDay(date: d(2026, 11, 11), dayIndex: 1)],
+        ),
+        [done(d(2026, 11, 11), 1), planned(d(2026, 11, 13), 1)],
+      );
+    });
+
+    test('another day done on a planned date leaves it planned', () {
+      final plan = schedule(active(nextDate: d(2026, 11, 11)));
+      expect(
+        plan.weekPlan(
+          d(2026, 11, 11),
+          completed: [CompletedDay(date: d(2026, 11, 11), dayIndex: 2)],
+        ),
+        [
+          done(d(2026, 11, 11), 2),
+          planned(d(2026, 11, 11), 0),
+          planned(d(2026, 11, 13), 1),
+        ],
+      );
+    });
+
+    test('covers any range, both ends included', () {
+      final plan = schedule(active(nextDate: d(2026, 11, 11)));
+      expect(
+        plan.plan(d(2026, 11, 11), from: d(2026, 11, 13), to: d(2026, 11, 20)),
+        [
+          planned(d(2026, 11, 13), 1),
+          planned(d(2026, 11, 16), 2),
+          planned(d(2026, 11, 18), 0),
+          planned(d(2026, 11, 20), 1),
+        ],
+      );
+    });
+
+    test('a range in the past plans nothing but its missed day', () {
+      final plan = schedule(active(nextDayIndex: 2, nextDate: d(2026, 10, 30)));
+      expect(
+        plan.plan(d(2026, 11, 11), from: d(2026, 10, 1), to: d(2026, 10, 31)),
+        [missed(d(2026, 10, 30), 2)],
+      );
+      expect(
+        plan.plan(d(2026, 11, 11), from: d(2026, 9, 1), to: d(2026, 9, 30)),
+        isEmpty,
+      );
+    });
+
+    test('ends with the program', () {
+      // Four weeks from Monday 2 November: the last day is 27 November.
+      final plan = schedule(
+        active(weekdays: const [5], nextDate: d(2026, 11, 13)),
+        dayCount: 1,
+        lengthWeeks: 4,
+      );
+      expect(
+        plan.plan(d(2026, 11, 12), from: d(2026, 11, 1), to: d(2026, 12, 31)),
+        [
+          planned(d(2026, 11, 13), 0),
+          planned(d(2026, 11, 20), 0),
+          planned(d(2026, 11, 27), 0),
+        ],
+      );
+    });
+  });
+
   group('missed days', () {
     final missedMonday = active(nextDayIndex: 1, nextDate: d(2026, 11, 9));
 
