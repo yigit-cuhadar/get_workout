@@ -160,6 +160,7 @@ void main() {
         status: ProgramListStatus.ready,
         programs: [other, upperLower],
         active: active,
+        nextDate: CalendarDate(2026, 11, 12),
         weekPlan: [
           PlannedDay(
             date: CalendarDate(2026, 11, 9),
@@ -199,6 +200,7 @@ void main() {
     verify: (cubit) {
       expect(cubit.state.finished, isTrue);
       expect(cubit.state.weekPlan, isEmpty);
+      expect(cubit.state.nextDate, isNull);
     },
   );
 
@@ -283,7 +285,11 @@ void main() {
     act: (cubit) async {
       rejected.add(const PermissionFailure());
       await pumpEventQueue();
-      cubit.rejectionShown();
+      // Shown by the one notice in the shell; a second clear changes
+      // nothing.
+      cubit
+        ..rejectionShown()
+        ..rejectionShown();
     },
     expect: () => [
       const ProgramListState(writeRejected: true),
@@ -364,6 +370,8 @@ void main() {
           ),
         );
         expect(cubit.state.moveDate, CalendarDate(2026, 11, 16));
+        // Until resolved it comes first again, on the next training day.
+        expect(cubit.state.nextDate, CalendarDate(2026, 11, 16));
       },
     );
 
@@ -429,6 +437,22 @@ void main() {
         },
       );
     }
+
+    blocTest<ProgramListCubit, ProgramListState>(
+      'a choice the server refuses later is reported as a refused write',
+      build: build,
+      act: (cubit) async {
+        await ready();
+        await cubit.resolveMissed(MissedDayChoice.doToday);
+        // The write looked done offline; the server refuses it later.
+        rejected.add(const PermissionFailure());
+        await pumpEventQueue();
+        expect(cubit.state.writeRejected, isTrue);
+        expect(cubit.state.resolveFailure, isNull);
+        cubit.rejectionShown();
+      },
+      verify: (cubit) => expect(cubit.state.writeRejected, isFalse),
+    );
 
     blocTest<ProgramListCubit, ProgramListState>(
       'a failed resolution is reported once',

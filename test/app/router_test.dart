@@ -78,6 +78,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../features/programs/fixtures.dart' show FixedPremium, card;
 import 'no_workout.dart';
+import 'today_stand_ins.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -359,6 +360,7 @@ void main() {
       // Past every expiry, so no expiry timer outlives a test.
       clock: () => DateTime(9999),
     );
+    registerTodayStandIns();
     sl.registerFactory(
       () => PremiumPaywallCubit(
         getOffering: GetOffering(store),
@@ -388,6 +390,7 @@ void main() {
       providers: [
         BlocProvider.value(value: auth),
         BlocProvider.value(value: settings),
+        programList(),
         noWorkout(),
         BlocProvider.value(value: profile),
         BlocProvider.value(value: catalogue),

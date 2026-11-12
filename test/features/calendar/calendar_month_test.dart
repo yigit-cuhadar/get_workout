@@ -112,6 +112,41 @@ void main() {
     });
   });
 
+  group('calendarMarks', () {
+    final upperLower = program(id: 'p1');
+    PlanEntry plan(PlannedStatus status) => PlanEntry(
+      upperLower,
+      PlannedDay(date: d(2026, 11, 12), dayIndex: 0, status: status),
+    );
+    final run = CardioEntry(
+      CardioSession(
+        type: CardioType.treadmillRun,
+        date: DateTime(2026, 11, 12, 7),
+        duration: const Duration(minutes: 20),
+      ),
+    );
+    final done = WorkoutEntry(
+      workout('w1', const [], startedAt: DateTime(2026, 11, 12, 8)),
+    );
+
+    test('each kind once, in a fixed order', () {
+      expect(
+        calendarMarks([
+          plan(PlannedStatus.missed),
+          run,
+          done,
+          done,
+          plan(PlannedStatus.planned),
+        ]),
+        CalendarMark.values,
+      );
+    });
+
+    test('nothing for a date without entries', () {
+      expect(calendarMarks(const []), isEmpty);
+    });
+  });
+
   group('calendarEntries', () {
     // Wednesday 11 November 2026; Mon/Wed/Fri, day 1 next, today.
     final today = d(2026, 11, 11);

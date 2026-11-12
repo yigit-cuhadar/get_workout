@@ -94,6 +94,20 @@ class WeekVolume extends Equatable {
 
   double setsOf(Muscle muscle) => sets[muscle] ?? 0;
 
+  /// Every muscle, most sets first; ties in vocabulary order.
+  List<Muscle> get musclesBySets => [...Muscle.values]
+    ..sort((a, b) {
+      final bySets = setsOf(b).compareTo(setsOf(a));
+      return bySets != 0 ? bySets : a.index.compareTo(b.index);
+    });
+
+  /// How many trained muscles fall in each [VolumeZone]; an untrained one
+  /// counts in none.
+  Map<VolumeZone, int> get zoneCounts => {
+    for (final zone in VolumeZone.values)
+      zone: sets.values.where((value) => VolumeZone.of(value) == zone).length,
+  };
+
   /// The entries that gave [muscle] sets, oldest first.
   List<VolumeContribution> contributionsTo(Muscle muscle) => [
     for (final entry in entries)

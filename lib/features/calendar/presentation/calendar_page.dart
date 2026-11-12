@@ -16,6 +16,7 @@ import '../../workout/presentation/start_workout.dart';
 import '../../workout/presentation/workout_text.dart';
 import '../domain/calendar_month.dart';
 import 'calendar_cubit.dart';
+import 'calendar_marks.dart';
 import 'month_grid.dart';
 
 /// A month of finished workouts, cardio and planned program days, with the
@@ -74,12 +75,10 @@ class _CalendarView extends StatelessWidget {
                 selected: state.selected,
                 today: state.today,
                 onSelected: cubit.select,
-                marks: (date) => _marks(context, state.entriesOn(date)),
-                semanticLabel: (date) => [
-                  dates.formatFullDate(date.toLocalDateTime()),
-                  for (final kind in _kinds(state.entriesOn(date)))
-                    _markLabel(l10n, kind),
-                ].join(', '),
+                marks: (date) =>
+                    calendarMarkIcons(context, state.entriesOn(date)),
+                semanticLabel: (date) =>
+                    calendarDayLabel(context, date, state.entriesOn(date)),
               ),
             ),
             const Divider(),
@@ -103,51 +102,6 @@ class _CalendarView extends StatelessWidget {
       ),
     );
   }
-}
-
-enum _Kind { workout, cardio, planned, missed }
-
-/// The kinds of [entries], each once, in a fixed order.
-List<_Kind> _kinds(List<CalendarEntry> entries) {
-  final kinds = {
-    for (final entry in entries)
-      switch (entry) {
-        WorkoutEntry() => _Kind.workout,
-        CardioEntry() => _Kind.cardio,
-        PlanEntry(:final day) =>
-          day.status == PlannedStatus.missed ? _Kind.missed : _Kind.planned,
-      },
-  };
-  return [
-    for (final kind in _Kind.values)
-      if (kinds.contains(kind)) kind,
-  ];
-}
-
-String _markLabel(AppLocalizations l10n, _Kind kind) => switch (kind) {
-  _Kind.workout => l10n.calendarWorkoutMark,
-  _Kind.cardio => l10n.calendarCardioMark,
-  _Kind.planned => l10n.calendarPlannedMark,
-  _Kind.missed => l10n.calendarMissedMark,
-};
-
-List<Widget> _marks(BuildContext context, List<CalendarEntry> entries) {
-  final colors = Theme.of(context).colorScheme;
-  return [
-    for (final kind in _kinds(entries))
-      Icon(
-        switch (kind) {
-          _Kind.workout || _Kind.cardio => Icons.circle,
-          _Kind.planned || _Kind.missed => Icons.circle_outlined,
-        },
-        size: Gap.sm,
-        color: switch (kind) {
-          _Kind.workout || _Kind.planned => colors.primary,
-          _Kind.cardio => colors.tertiary,
-          _Kind.missed => colors.error,
-        },
-      ),
-  ];
 }
 
 /// The entries of the selected [date].

@@ -12,6 +12,7 @@ import '../features/exercises/presentation/body_model_cubit.dart';
 import '../features/exercises/presentation/equipment_cubit.dart';
 import '../features/exercises/presentation/exercise_catalogue_cubit.dart';
 import '../features/profile/presentation/profile_cubit.dart';
+import '../features/programs/presentation/program_list_cubit.dart';
 import '../features/exercises/presentation/favorites_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/settings_cubit.dart';
@@ -74,6 +75,9 @@ class _AppState extends State<App> {
         BlocProvider.value(value: sl<ActiveWorkoutCubit>()),
         BlocProvider.value(value: sl<RestTimerCubit>()),
         BlocProvider.value(value: sl<EntitlementCubit>()),
+        // For the shell's ProgramWritesNotice; the workout cubit already
+        // follows it from the start.
+        BlocProvider.value(value: sl<ProgramListCubit>()),
       ],
       child: BlocListener<RestTimerCubit, RestTimerState>(
         listenWhen: (previous, current) =>

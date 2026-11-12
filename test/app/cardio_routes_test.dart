@@ -30,6 +30,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'no_workout.dart';
+import 'today_stand_ins.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -118,12 +119,15 @@ void main() {
           initial: session,
         ),
       );
+    registerTodayStandIns();
 
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
           BlocProvider.value(value: auth),
           BlocProvider.value(value: settings),
+          programList(),
+          unknownPremium(),
           noWorkout(),
           noWorkout(),
         ],

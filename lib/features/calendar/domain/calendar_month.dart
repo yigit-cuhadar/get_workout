@@ -52,6 +52,28 @@ class PlanEntry extends CalendarEntry {
   List<Object?> get props => [program, day];
 }
 
+/// What a date is marked with, in the order its marks show.
+enum CalendarMark { workout, cardio, planned, missed }
+
+/// The marks of a date's [entries], each once, in [CalendarMark] order.
+List<CalendarMark> calendarMarks(List<CalendarEntry> entries) {
+  final marks = {
+    for (final entry in entries)
+      switch (entry) {
+        WorkoutEntry() => CalendarMark.workout,
+        CardioEntry() => CalendarMark.cardio,
+        PlanEntry(:final day) =>
+          day.status == PlannedStatus.missed
+              ? CalendarMark.missed
+              : CalendarMark.planned,
+      },
+  };
+  return [
+    for (final mark in CalendarMark.values)
+      if (marks.contains(mark)) mark,
+  ];
+}
+
 /// The first day of [date]'s month.
 CalendarDate monthOf(CalendarDate date) =>
     CalendarDate(date.year, date.month, 1);

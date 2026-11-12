@@ -20,6 +20,7 @@ class ProgramListState extends Equatable {
     this.active,
     this.weekPlan = const [],
     this.finished = false,
+    this.nextDate,
     this.missed,
     this.moveDate,
     this.failure,
@@ -42,6 +43,11 @@ class ProgramListState extends Equatable {
 
   /// The active program has run its length.
   final bool finished;
+
+  /// The date [nextDayIndex] is planned for as of today: the first of the
+  /// program's upcoming days, so a missed day falls on today or the next
+  /// selected weekday. Null without an active program or once it finished.
+  final CalendarDate? nextDate;
 
   /// The active program's next day, when its date has passed undone.
   final PlannedDay? missed;
@@ -98,6 +104,7 @@ class ProgramListState extends Equatable {
     active: active,
     weekPlan: weekPlan,
     finished: finished,
+    nextDate: nextDate,
     missed: missed,
     moveDate: moveDate,
     failure: failure,
@@ -116,6 +123,7 @@ class ProgramListState extends Equatable {
     active,
     weekPlan,
     finished,
+    nextDate,
     missed,
     moveDate,
     failure,
@@ -188,7 +196,9 @@ class ProgramListCubit extends Cubit<ProgramListState> {
   /// Subscribes again after a failure.
   void retry() => _follow();
 
-  void rejectionShown() => emit(state.copyWith(writeRejected: false));
+  void rejectionShown() {
+    if (state.writeRejected) emit(state.copyWith(writeRejected: false));
+  }
 
   void resolveFailureShown() =>
       emit(state.copyWith(resolveFailure: () => null));
@@ -294,6 +304,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
             dayCount: program.days.length,
             lengthWeeks: program.lengthWeeks,
           );
+    final finished = schedule?.isFinished(today) ?? false;
     // Done on its date without the program moving on is not missed; only
     // this week's done days are known.
     final missed =
@@ -308,7 +319,8 @@ class ProgramListCubit extends Cubit<ProgramListState> {
         programs: programs,
         active: active,
         weekPlan: schedule?.weekPlan(today, completed: _completed) ?? const [],
-        finished: schedule?.isFinished(today) ?? false,
+        finished: finished,
+        nextDate: finished ? null : schedule?.upcoming(today).firstOrNull?.date,
         missed: missed
             ? PlannedDay(
                 date: active.nextDate,

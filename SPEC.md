@@ -268,7 +268,12 @@ from the earlier FitLab app.
   reminders; FCM topic push for announcements.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
   / Progress / Profile. The active workout is full-screen and can be minimized
-  to a bar above the tabs.
+  to a bar above the tabs. Known limitation, to fix app-wide later: a link
+  that `context.go`es into another tab replaces that tab's stack, so a page
+  open there with unsaved changes (e.g. a program or workout being edited)
+  is dropped without its discard prompt. The pattern predates the Today
+  tab, which adds seven such links (program, catalogue, calendar, log
+  cardio, add a past workout, weekly volume, steps).
 - **Workouts on the device**: per user one JSON file
   (`workouts_<uid>.json` in the app's private support directory, versioned)
   holds the workout in progress, finished workouts the server has not
@@ -420,9 +425,9 @@ from the earlier FitLab app.
   shows. `MonthGrid` (`lib/features/calendar/presentation/month_grid.dart`)
   is generic except for `CalendarDate`; move it to `forge_ui`, taking
   `DateTime` dates, when that package is next changed.
-- **Starting a workout**: the Programs tab starts the next day, a program's
-  page any of its days, the Today tab an empty workout until that tab is
-  built, and an exercise's page adds it to the workout in progress or, after
+- **Starting a workout**: the Programs and Today tabs start the next day,
+  a program's page any of its days, the Today tab also an empty workout,
+  and an exercise's page adds it to the workout in progress or, after
   asking, starts one with it. A program day waits until the user's custom
   exercises are loaded; exercises really gone are left out and the user is
   told how many. Starting while a workout is in progress asks to resume it
@@ -506,7 +511,7 @@ from the earlier FitLab app.
   user's own workouts, so the gate is client-side only. Changing week
   keeps the week before on screen until the next arrives, so the model
   keeps its camera. `WatchWeeklyVolume` with one week is what the Today
-  tab's card will call.
+  tab's card calls.
 - **Charts**: `LineChart` (trends, e.g. e1RM) and `BarChart` (zero-based
   daily or weekly values with an optional target line, e.g. steps) live in
   `lib/core` and share `ChartText` and the pure geometry in
@@ -515,6 +520,40 @@ from the earlier FitLab app.
   and the volume trend (`VolumeTrendChart` and its painter) is replaced
   by it and deleted. The volume band bars and the cardio chart stay
   feature widgets until then.
+- **Today tab** (`lib/features/today`): a scrolling list of independent
+  cards, each on its own data, so one failing leaves the others. Next
+  workout: the Programs tab's own `ProgramListCubit` (one instance), so
+  both show the same plan; the next day with its exercise count and
+  estimate, the date it is planned for (`ProgramListState.nextDate`, the
+  first of `ProgramSchedule.upcoming`) and Start through
+  `startProgramDay`. A missed day shows the Programs tab's
+  `MissedDayPrompt`, only while the program is open, as there; a failed
+  choice is reported by the prompt that made it, so the two tabs never
+  both do, and a write the server refuses later by the one
+  `ProgramWritesNotice` in the shell, whichever tab is open. While the
+  premium status of a premium copy is unknown the card shows only its
+  title, as the Programs tab waits, so a missed day never shows as a
+  planned one with Start. A locked premium copy shows its day, locked,
+  with Start opening the paywall. Without a program, or once it finished: the
+  catalogue, the generator and "Start empty workout". Week strip: the
+  calendar's `calendarEntries` and marks over the current week from the
+  locale's first weekday (Sunday in English, like weekly volume, unlike
+  the program week plan), drawn by `MonthGrid` as one week; the strip and
+  every day open the calendar, which has no route for a given date. Quick
+  actions: start an empty workout, log cardio, add a past workout. Volume
+  card: `WatchWeeklyVolume` with one week, never the trend, whatever the
+  user's premium: the trained muscles counted in, below and above the
+  band and the three most trained as band bars; it opens Weekly volume,
+  and has no model. Steps card: `GetTodaySteps` against
+  `settings.stepGoal` (read again when the goal changes), opening the
+  Steps page. Today only checks access and never asks the system: not
+  asked here yet, refused or Health Connect missing show one line, "See
+  your steps", that opens the Steps page to set it up; a device without a
+  health store shows no card. Cards show only their title while loading
+  (the cache answers at once; no spinner on the home tab); cubits move to
+  the new day and week when the app resumes, and the week strip also when
+  a snapshot arrives after the week ended; steps are read again on
+  resume.
 
 - **Blocked on accounts the user will open when needed**: Apple Developer
   (Apple sign-in, HealthKit, iOS push, Live Activity on a real device), Google
@@ -714,7 +753,7 @@ Group 6, progress
 - [x] Calendar — month view of planned and done workouts and cardio
 - [x] Weekly volume — model coloring and bar list against the 10-20 band; 12-week trend (Premium)
 - [x] Strength — per-exercise records and e1RM chart (beyond 12 weeks Premium)
-- [ ] Today tab — next workout and week strip, quick actions, volume card, steps card
+- [x] Today tab — next workout and week strip, quick actions, volume card, steps card
 
 Group 7, programs for everyone
 - [x] Catalog — 25 ready-made programs (6 free), filters, detail, premium lock, admin program editor
