@@ -6,6 +6,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 
 import '../features/calculators/calculators_module.dart';
+import '../features/calendar/calendar_module.dart';
 import '../features/cardio/cardio_module.dart';
 import '../features/exercises/exercises_module.dart';
 import '../features/profile/profile_module.dart';
@@ -33,6 +34,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
       showPremium: SubscriptionModule.showPaywall,
     ),
     const WorkoutModule(),
+    const CalendarModule(),
     SubscriptionModule(
       backend: purchasesBackend(
         platform: defaultTargetPlatform,
