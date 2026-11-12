@@ -252,7 +252,7 @@ void main() {
       expect(cubit.state.localUnreadable, isTrue);
       cubit.localUnreadableShown();
       expect(cubit.state.localUnreadable, isFalse);
-      expect(cubit.startFree('Workout'), isTrue);
+      expect(cubit.startWith(squat, 'Workout', 'en'), isTrue);
       await pumpEventQueue();
       expect(kept()!.name, 'Workout');
       await cubit.close();
@@ -293,13 +293,90 @@ void main() {
   });
 
   group('start', () {
-    test('an empty workout is kept at once', () async {
+    test('a free workout is in progress only while it has exercises', () async {
       final cubit = await signedIn();
       expect(cubit.startFree('Workout'), isTrue);
-      final expected = Workout(id: 'w1', startedAt: now, name: 'Workout');
-      expect(cubit.state.workout, expected);
+      final empty = Workout(id: 'w1', startedAt: now, name: 'Workout');
+      expect(cubit.state.status, WorkoutStatus.active);
+      expect(cubit.state.workout, empty);
+      expect(cubit.state.inProgress, isFalse);
       await pumpEventQueue();
-      expect(kept(), expected);
+      expect(kept(), isNull);
+
+      cubit.addExercises([squat], 'en');
+      expect(cubit.state.inProgress, isTrue);
+      await pumpEventQueue();
+      expect(kept()!.exerciseIds, ['squat']);
+
+      // Empty again: no exercise, so nothing logged either.
+      cubit.removeExercise(0);
+      expect(cubit.state.inProgress, isFalse);
+      await pumpEventQueue();
+      expect(kept(), isNull);
+      await cubit.close();
+    });
+
+    test('a program day is in progress at once', () async {
+      final cubit = await signedIn();
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      expect(cubit.state.inProgress, isTrue);
+      await pumpEventQueue();
+      expect(kept()!.exerciseIds, ['squat']);
+      await cubit.close();
+    });
+
+    test('leaving an empty workout ends it, never kept or stored', () async {
+      final cubit = await signedIn();
+      cubit.startFree('Workout');
+      await cubit.leave();
+      expect(cubit.state.status, WorkoutStatus.none);
+      expect(cubit.state.workout, isNull);
+      await pumpEventQueue();
+      for (final local in verify(
+        () => store.save('u1', captureAny()),
+      ).captured.cast<LocalWorkouts>()) {
+        expect(local.draft, isNull);
+      }
+      verifyNever(
+        () => repository.saveWorkout(
+          any(),
+          any(),
+          any(),
+          advance: any(named: 'advance'),
+        ),
+      );
+      await cubit.close();
+    });
+
+    test('leaving a workout in progress keeps it', () async {
+      final cubit = await signedIn(draft: saved);
+      await cubit.leave();
+      expect(cubit.state.status, WorkoutStatus.active);
+      expect(cubit.state.workout, saved);
+      await cubit.close();
+    });
+
+    test('an empty workout never blocks starting another', () async {
+      final cubit = await signedIn();
+      when(() => repository.newWorkoutId(any())).thenReturn('w2');
+      cubit.startFree('Workout');
+      when(() => repository.newWorkoutId(any())).thenReturn('w3');
+      expect(
+        await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en'),
+        (started: true, skipped: 1),
+      );
+      expect(cubit.state.workout!.id, 'w3');
+      expect(cubit.state.inProgress, isTrue);
+      await cubit.close();
+    });
+
+    test('an empty workout kept by an older version is none', () async {
+      final cubit = await signedIn(
+        draft: Workout(id: 'w0', startedAt: now, name: 'Workout'),
+      );
+      expect(cubit.state.status, WorkoutStatus.none);
+      expect(cubit.state.workout, isNull);
+      expect(cubit.startFree('Workout'), isTrue);
       await cubit.close();
     });
 
@@ -1014,6 +1091,20 @@ void main() {
       // The squat set, now the second exercise's, no longer ends it.
       cubit.toggleDone((exercise: 1, set: 0));
       expect(cubit.state.rest, Rest(endsAt: restEnd));
+      await cubit.close();
+    });
+
+    test('removing the last exercise ends the rest', () async {
+      final cubit = await signedIn();
+      cubit
+        ..startWith(squat, 'Workout', 'en')
+        ..setWeight(first, '100', WeightUnit.kg)
+        ..setReps(first, '5')
+        ..toggleDone(first);
+      expect(cubit.state.rest, isNotNull);
+      cubit.removeExercise(0);
+      expect(cubit.state.inProgress, isFalse);
+      expect(cubit.state.rest, isNull);
       await cubit.close();
     });
 

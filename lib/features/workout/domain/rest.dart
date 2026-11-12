@@ -43,8 +43,9 @@ class Rest extends Equatable {
 
   /// This rest once an edit made [after]: unlinked when the edit
   /// [movesSets] (its set may now be elsewhere), else ended when its set
-  /// is no longer done.
+  /// is no longer done. An empty workout has no rest.
   Rest? followEdit(Workout after, {required bool movesSets}) {
+    if (after.isEmpty) return null;
     final at = this.after;
     if (at == null) return this;
     if (movesSets) return detached();

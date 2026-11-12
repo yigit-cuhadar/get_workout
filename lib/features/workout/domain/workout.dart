@@ -233,6 +233,13 @@ class Workout extends Equatable {
 
   bool get isFromProgram => programId != null && dayIndex != null;
 
+  /// No exercise yet, so no set either (a note alone does not count): not
+  /// yet a workout in progress. It is not kept on the device, shows nowhere
+  /// as running, never blocks starting another and is never stored; leaving
+  /// it ends it. A program day starts with its exercises, so it is not
+  /// empty; removing the last exercise makes any workout empty again.
+  bool get isEmpty => exercises.isEmpty;
+
   /// The local date it started, the date a program day counts as done on.
   CalendarDate get startDate => CalendarDate.of(startedAt.toLocal());
 

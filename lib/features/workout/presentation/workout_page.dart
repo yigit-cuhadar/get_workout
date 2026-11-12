@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
@@ -20,7 +22,8 @@ import 'workout_editor_view.dart';
 import 'workout_text.dart';
 
 /// The workout in progress, full screen above the tabs; back minimizes it
-/// to the bar. Once finished it shows the summary.
+/// to the bar, or ends it while it is empty. Once finished it shows the
+/// summary.
 class WorkoutPage extends StatelessWidget {
   const WorkoutPage({super.key});
 
@@ -62,9 +65,11 @@ class WorkoutPage extends StatelessWidget {
             ),
           );
         }
-        // Discarded, put away after the summary, or another user.
-        if (state.status == WorkoutStatus.none ||
-            state.status == WorkoutStatus.loading) {
+        // Discarded, put away after the summary, or another user; not when
+        // leaving the page ended it.
+        if ((state.status == WorkoutStatus.none ||
+                state.status == WorkoutStatus.loading) &&
+            (ModalRoute.of(context)?.isActive ?? false)) {
           context.canPop() ? context.pop() : context.go(Routes.home);
         }
       },
@@ -93,88 +98,94 @@ class _ActiveWorkout extends StatelessWidget {
       (SettingsCubit cubit) => cubit.state.settings,
     );
     final finishing = state.status == WorkoutStatus.finishing;
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: l10n.workoutMinimize,
-          icon: const Icon(Icons.keyboard_arrow_down),
-          onPressed: () => context.pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(workout.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-            ElapsedText(
-              since: workout.startedAt,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: finishing ? null : () => _finish(context),
-            child: Text(l10n.workoutFinish),
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) unawaited(cubit.leave());
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: l10n.workoutMinimize,
+            icon: const Icon(Icons.keyboard_arrow_down),
+            onPressed: () => context.pop(),
           ),
-          PopupMenuButton<_WorkoutAction>(
-            tooltip: l10n.workoutMenu,
-            enabled: !finishing,
-            onSelected: (action) => switch (action) {
-              _WorkoutAction.reorder => _reorder(context),
-              _WorkoutAction.discard => _discard(context),
-            },
-            itemBuilder: (_) => [
-              if (workout.exercises.length > 1)
-                PopupMenuItem(
-                  value: _WorkoutAction.reorder,
-                  child: Text(l10n.workoutReorder),
-                ),
-              PopupMenuItem(
-                value: _WorkoutAction.discard,
-                child: Text(l10n.workoutDiscard),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(workout.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ElapsedText(
+                since: workout.startedAt,
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
           ),
-        ],
-      ),
-      bottomNavigationBar: const RestStrip(),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: Gap.xl),
-        children: [
-          if (finishing) const LinearProgressIndicator(),
-          if (workout.exercises.isEmpty)
+          actions: [
+            TextButton(
+              onPressed: finishing ? null : () => _finish(context),
+              child: Text(l10n.workoutFinish),
+            ),
+            PopupMenuButton<_WorkoutAction>(
+              tooltip: l10n.workoutMenu,
+              enabled: !finishing,
+              onSelected: (action) => switch (action) {
+                _WorkoutAction.reorder => _reorder(context),
+                _WorkoutAction.discard => _discard(context),
+              },
+              itemBuilder: (_) => [
+                if (workout.exercises.length > 1)
+                  PopupMenuItem(
+                    value: _WorkoutAction.reorder,
+                    child: Text(l10n.workoutReorder),
+                  ),
+                PopupMenuItem(
+                  value: _WorkoutAction.discard,
+                  child: Text(l10n.workoutDiscard),
+                ),
+              ],
+            ),
+          ],
+        ),
+        bottomNavigationBar: const RestStrip(),
+        body: ListView(
+          padding: const EdgeInsets.only(bottom: Gap.xl),
+          children: [
+            if (finishing) const LinearProgressIndicator(),
+            if (workout.exercises.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(Gap.md),
+                child: Text(l10n.workoutEmpty, textAlign: TextAlign.center),
+              ),
+            for (final index in workout.exercises.indexed.map((e) => e.$1))
+              ExerciseSection(
+                index: index,
+                state: state,
+                editor: cubit,
+                picker: Routes.workoutPicker,
+                unit: settings.weightUnit,
+                effort: settings.effortScale,
+              ),
             Padding(
               padding: const EdgeInsets.all(Gap.md),
-              child: Text(l10n.workoutEmpty, textAlign: TextAlign.center),
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.add),
+                label: Text(l10n.programAddExercises),
+                onPressed:
+                    workout.exercises.length >= WorkoutLimits.maxExercises
+                    ? null
+                    : () => _addExercises(context, workout),
+              ),
             ),
-          for (final index in workout.exercises.indexed.map((e) => e.$1))
-            ExerciseSection(
-              index: index,
-              state: state,
-              editor: cubit,
-              picker: Routes.workoutPicker,
-              unit: settings.weightUnit,
-              effort: settings.effortScale,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+              child: NoteField(
+                initial: workout.note,
+                label: l10n.workoutNote,
+                maxLength: WorkoutLimits.maxNoteLength,
+                onChanged: cubit.setNote,
+              ),
             ),
-          Padding(
-            padding: const EdgeInsets.all(Gap.md),
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.add),
-              label: Text(l10n.programAddExercises),
-              onPressed: workout.exercises.length >= WorkoutLimits.maxExercises
-                  ? null
-                  : () => _addExercises(context, workout),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-            child: NoteField(
-              initial: workout.note,
-              label: l10n.workoutNote,
-              maxLength: WorkoutLimits.maxNoteLength,
-              onChanged: cubit.setNote,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -197,6 +208,8 @@ class _ActiveWorkout extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ActiveWorkoutCubit>();
     final workout = state.workout!;
+    // Nothing to lose, so nothing to confirm.
+    if (workout.isEmpty) return cubit.discard();
     if (workout.doneSetCount == 0) {
       final discard = await confirmChoice(
         context,
@@ -228,13 +241,14 @@ class _ActiveWorkout extends StatelessWidget {
   Future<void> _discard(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ActiveWorkoutCubit>();
-    if (await confirmChoice(
-      context,
-      title: l10n.workoutDiscardTitle,
-      body: l10n.workoutDiscardBody,
-      cancel: l10n.cancel,
-      confirm: l10n.workoutDiscardConfirm,
-    )) {
+    if (state.workout!.isEmpty ||
+        await confirmChoice(
+          context,
+          title: l10n.workoutDiscardTitle,
+          body: l10n.workoutDiscardBody,
+          cancel: l10n.cancel,
+          confirm: l10n.workoutDiscardConfirm,
+        )) {
       await cubit.discard();
     }
   }

@@ -235,6 +235,14 @@ void main() {
     test('an edit that moves sets forgets the set', () {
       expect(rest.followEdit(before, movesSets: true), Rest(endsAt: end));
     });
+
+    test('an empty workout has no rest, even an unlinked one', () {
+      final empty = edited(const []);
+      expect(empty.isEmpty, isTrue);
+      expect(before.isEmpty, isFalse);
+      expect(rest.followEdit(empty, movesSets: true), isNull);
+      expect(Rest(endsAt: end).followEdit(empty, movesSets: false), isNull);
+    });
   });
 
   group('Rest', () {
