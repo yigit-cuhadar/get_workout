@@ -1003,8 +1003,11 @@ from the earlier FitLab app.
   cards, each on its own data, so one failing leaves the others. Next
   workout: while a workout is in progress (`ActiveWorkoutState.inProgress`,
   so not an empty one) the card is that workout, labelled "Workout in
-  progress", with the program day it was started from and "Resume
-  workout", which opens it like the workout bar and never starts another.
+  progress", with "Resume workout", which opens it like the workout bar
+  and never starts another. A workout stores no day name, so its program
+  day shows only while that day would still give it its name (not since
+  renamed, moved or deleted). While the workout in progress is still
+  looked for, the card shows only its title, never Start.
   Otherwise, with an active program the card's headline is that program,
   labelled "Active program" and opening its page, its next day below;
   without one it is titled "Next workout". It uses the Programs tab's own

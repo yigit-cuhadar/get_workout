@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/first_weekday.dart';
+import '../../../core/text_length.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calendar/presentation/calendar_marks.dart';
 import '../../calendar/presentation/month_grid.dart';
@@ -22,6 +23,7 @@ import '../../steps/domain/steps.dart';
 import '../../volume/domain/weekly_volume.dart';
 import '../../volume/presentation/volume_charts.dart';
 import '../../volume/presentation/volume_text.dart';
+import '../../workout/domain/workout.dart';
 import '../../workout/presentation/active_workout_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
 import 'next_workout.dart';
@@ -189,7 +191,17 @@ class _NextWorkoutCard extends StatelessWidget {
     final state = context.watch<ProgramListCubit>().state;
     final next = nextWorkoutOf(
       state,
-      context.watch<ActiveWorkoutCubit>().state,
+      context.select(
+        (ActiveWorkoutCubit cubit) => activeWorkoutViewOf(cubit.state),
+      ),
+      // As startProgramDay names it.
+      startName: (program, dayIndex) => cutToLength(
+        l10n.workoutProgramDayName(
+          program.name,
+          l10n.dayName(program.days[dayIndex], dayIndex),
+        ),
+        WorkoutLimits.maxNameLength,
+      ),
     );
     if (next case WorkoutInProgress()) return _WorkoutInProgressCard(next);
     final program = switch (next) {
@@ -265,25 +277,22 @@ class _WorkoutInProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final program = next.program;
-    final dayIndex = next.dayIndex;
     void open() => context.push(Routes.workout);
     return _TodayCard(
       label: l10n.todayWorkoutInProgress,
-      title: next.workout.name,
+      title: next.name,
       onOpen: open,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (program != null)
+          if ((next.program, next.dayIndex) case (
+            final program?,
+            final dayIndex?,
+          ))
             ListTile(
               leading: const Icon(Icons.fitness_center),
-              title: Text(
-                dayIndex == null
-                    ? program.name
-                    : l10n.dayName(program.days[dayIndex], dayIndex),
-              ),
-              subtitle: dayIndex == null ? null : Text(program.name),
+              title: Text(l10n.dayName(program.days[dayIndex], dayIndex)),
+              subtitle: Text(program.name),
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),

@@ -46,11 +46,16 @@ void main() {
     premium: premium,
   );
 
+  /// The name a day gives the workout it starts, as on the page.
+  String startName(Program program, int dayIndex) =>
+      '${program.name} · ${program.days[dayIndex].name}';
+
+  NextWorkout? next(ProgramListState state, ActiveWorkoutState workout) =>
+      nextWorkoutOf(state, activeWorkoutViewOf(workout), startName: startName);
+
   /// No workout in progress.
-  NextWorkout? idle(ProgramListState state) => nextWorkoutOf(
-    state,
-    const ActiveWorkoutState(status: WorkoutStatus.none),
-  );
+  NextWorkout? idle(ProgramListState state) =>
+      next(state, const ActiveWorkoutState(status: WorkoutStatus.none));
 
   const exercise = WorkoutExercise(
     exerciseId: 'a',
@@ -63,74 +68,107 @@ void main() {
 
   group('a workout in progress', () {
     final started = DateTime(2026, 11, 12, 18);
-    final dayOne = Workout(
+    final lower = Workout(
       id: 'w1',
       startedAt: started,
       programId: 'p1',
       dayIndex: 1,
       name: 'Upper Lower · Lower',
-      exercises: [exercise],
+      exercises: const [exercise],
     );
 
-    test('comes first, with its program day', () {
+    test('comes first, with the program day it was started from', () {
       expect(
-        nextWorkoutOf(
+        next(
           ready(activeProgram: active, nextDate: CalendarDate(2026, 11, 12)),
-          running(dayOne),
+          running(lower),
         ),
-        WorkoutInProgress(workout: dayOne, program: upperLower, dayIndex: 1),
+        WorkoutInProgress(
+          name: 'Upper Lower · Lower',
+          program: upperLower,
+          dayIndex: 1,
+        ),
       );
     });
 
     test('also while finishing, and while the list loads', () {
       expect(
-        nextWorkoutOf(
+        next(
           const ProgramListState(),
-          ActiveWorkoutState(status: WorkoutStatus.finishing, workout: dayOne),
+          ActiveWorkoutState(status: WorkoutStatus.finishing, workout: lower),
         ),
-        WorkoutInProgress(workout: dayOne),
+        const WorkoutInProgress(name: 'Upper Lower · Lower'),
       );
     });
 
-    test('of no program, or of one gone or without the day, has none', () {
-      final free = Workout(
-        id: 'w2',
-        startedAt: started,
-        name: 'Workout',
-        exercises: [exercise],
-      );
+    test('shows no program day that is not the one it was started from', () {
+      const name = WorkoutInProgress(name: 'Upper Lower · Lower');
+      // A free workout.
       expect(
-        nextWorkoutOf(ready(), running(free)),
-        WorkoutInProgress(workout: free),
+        next(
+          ready(),
+          running(
+            Workout(
+              id: 'w2',
+              startedAt: started,
+              name: 'Upper Lower · Lower',
+              exercises: const [exercise],
+            ),
+          ),
+        ),
+        name,
       );
-      expect(
-        nextWorkoutOf(ready(programs: const []), running(dayOne)),
-        WorkoutInProgress(workout: dayOne),
-      );
-      final dayNine = Workout(
+      // The program is gone, or the day.
+      expect(next(ready(programs: const []), running(lower)), name);
+      final moved = Workout(
         id: 'w3',
         startedAt: started,
         programId: 'p1',
         dayIndex: 9,
-        name: 'Upper Lower · Day 10',
-        exercises: [exercise],
+        name: 'Upper Lower · Lower',
+        exercises: const [exercise],
       );
+      expect(next(ready(), running(moved)), name);
+      // Days reordered or renamed since, or the workout renamed.
+      final reordered = program(id: 'p1');
+      final swapped = Program(
+        id: 'p1',
+        name: reordered.name,
+        days: reordered.days.reversed.toList(),
+      );
+      expect(next(ready(programs: [swapped]), running(lower)), name);
       expect(
-        nextWorkoutOf(ready(), running(dayNine)),
-        WorkoutInProgress(workout: dayNine, program: upperLower),
+        next(ready(), running(lower.copyWith(name: 'Leg day'))),
+        const WorkoutInProgress(name: 'Leg day'),
       );
     });
 
     test('does not count while empty, nor once finished', () {
       final empty = Workout(id: 'w4', startedAt: started, name: 'Workout');
-      expect(nextWorkoutOf(ready(), running(empty)), const NoProgramDay());
+      expect(next(ready(), running(empty)), const NoProgramDay());
       expect(
-        nextWorkoutOf(
+        next(
           ready(),
-          ActiveWorkoutState(status: WorkoutStatus.finished, workout: dayOne),
+          ActiveWorkoutState(status: WorkoutStatus.finished, workout: lower),
         ),
         const NoProgramDay(),
       );
+    });
+
+    test('is not known while it is looked for, so no Start shows', () {
+      expect(
+        next(
+          ready(activeProgram: active, nextDate: CalendarDate(2026, 11, 12)),
+          const ActiveWorkoutState(),
+        ),
+        isNull,
+      );
+    });
+
+    test('rebuilds the card only for what it shows', () {
+      final view = activeWorkoutViewOf(running(lower));
+      final logged = lower.copyWith(exercises: const [exercise, exercise]);
+      expect(activeWorkoutViewOf(running(logged)), view);
     });
   });
 

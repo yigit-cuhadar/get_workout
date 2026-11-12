@@ -176,15 +176,17 @@ class _FormState extends State<_Form> {
   );
 
   /// The name field of the day last added, which takes the focus once;
-  /// opening the builder or switching days never does.
-  final _newDayName = FocusNode();
+  /// opening the builder or switching days never does. A fresh node per
+  /// added day: moving a focused node to the next field would leave it
+  /// focused without a keyboard.
+  FocusNode? _newDayName;
   Key? _newDayKey;
 
   @override
   void dispose() {
     _name.dispose();
     _weeks.dispose();
-    _newDayName.dispose();
+    _newDayName?.dispose();
     super.dispose();
   }
 
@@ -193,11 +195,16 @@ class _FormState extends State<_Form> {
       ValueKey('day-${state.selectedDay}-${state.program.days.length}');
 
   void _addDay() {
+    final days = _cubit.state.program.days.length;
     _cubit.addDay();
+    if (_cubit.state.program.days.length == days) return;
+    final previous = _newDayName;
+    final node = _newDayName = FocusNode();
     _newDayKey = _dayKey(_cubit.state);
-    // Its field is built in the next frame.
+    // The new day's field is built, and the previous one's gone, by then.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _newDayName.requestFocus();
+      previous?.dispose();
+      if (mounted) node.requestFocus();
     });
   }
 
