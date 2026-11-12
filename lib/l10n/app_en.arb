@@ -541,6 +541,7 @@
   "programsOther": "Other programs",
   "programWritesRejected": "A change to your programs couldn't be saved.",
   "programNew": "New program",
+  "programNewInfo": "Build your own, day by day",
   "programActive": "Active program",
   "programFinished": "Finished",
   "programWeekEmpty": "Nothing planned this week",
@@ -1137,6 +1138,8 @@
 
   "todayNextTitle": "Next workout",
   "todayActiveProgram": "Active program",
+  "todayWorkoutInProgress": "Workout in progress",
+  "todayResumeWorkout": "Resume workout",
   "todayNoProgram": "No active program. Pick a ready-made one, generate one or just train.",
   "todayProgramFinished": "You finished {program}. Pick your next program or just train.",
   "@todayProgramFinished": {"placeholders": {"program": {"type": "String"}}},
