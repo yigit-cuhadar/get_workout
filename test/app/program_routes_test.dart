@@ -47,6 +47,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../features/programs/fixtures.dart';
 import 'no_workout.dart';
+import 'today_stand_ins.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -223,6 +224,7 @@ void main() {
         ),
         instanceName: ProgramsModule.pickerLibrary,
       );
+    registerTodayStandIns();
 
     await tester.pumpWidget(
       MultiBlocProvider(

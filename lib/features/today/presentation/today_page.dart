@@ -141,6 +141,16 @@ class _TodayCard extends StatelessWidget {
   }
 }
 
+/// A card's body while its data loads: its title only. Data comes from
+/// Firestore's cache at once, so a spinner on the home tab would only
+/// flash.
+class _Loading extends StatelessWidget {
+  const _Loading();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(height: Gap.md);
+}
+
 class _NextWorkoutCard extends StatelessWidget {
   const _NextWorkoutCard();
 
@@ -163,10 +173,7 @@ class _NextWorkoutCard extends StatelessWidget {
           ? null
           : () => context.go(Routes.program(program.id!)),
       child: switch (state.status) {
-        ProgramListStatus.loading => const Padding(
-          padding: EdgeInsets.all(Gap.md),
-          child: LoadingView(),
-        ),
+        ProgramListStatus.loading => const _Loading(),
         ProgramListStatus.failure => ErrorView(
           message: l10n.programsLoadFailed,
           retryLabel: l10n.retry,
@@ -392,10 +399,7 @@ class _VolumeCard extends StatelessWidget {
           onRetry: context.read<TodayVolumeCubit>().retry,
         ),
         (TodayVolumeStatus.ready, final week?) => _WeekVolume(week),
-        _ => const Padding(
-          padding: EdgeInsets.all(Gap.md),
-          child: LoadingView(),
-        ),
+        _ => const _Loading(),
       },
     );
   }
