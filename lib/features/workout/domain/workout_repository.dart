@@ -3,6 +3,7 @@ import 'package:forge_core/forge_core.dart';
 import '../../programs/domain/active_program.dart';
 import '../../programs/domain/calendar_date.dart';
 import 'exercise_stats.dart';
+import 'rest.dart';
 import 'workout.dart';
 
 /// Stats as read at finishing: [current] when the server confirmed them,
@@ -144,11 +145,15 @@ abstract interface class WorkoutRepository {
 class LocalWorkouts extends Equatable {
   const LocalWorkouts({
     this.draft,
+    this.rest,
     this.finished = const [],
     this.staleStats = const {},
   });
 
   final Workout? draft;
+
+  /// The rest of [draft]; never without it.
+  final Rest? rest;
   final List<Workout> finished;
 
   /// Exercise ids whose stats were computed from what the device knew, or
@@ -157,16 +162,18 @@ class LocalWorkouts extends Equatable {
 
   LocalWorkouts copyWith({
     Workout? Function()? draft,
+    Rest? Function()? rest,
     List<Workout>? finished,
     Set<String>? staleStats,
   }) => LocalWorkouts(
     draft: draft != null ? draft() : this.draft,
+    rest: rest != null ? rest() : this.rest,
     finished: finished ?? this.finished,
     staleStats: staleStats ?? this.staleStats,
   );
 
   @override
-  List<Object?> get props => [draft, finished, staleStats];
+  List<Object?> get props => [draft, rest, finished, staleStats];
 }
 
 /// [LocalWorkouts] per user on the device, so a crash or a killed app never

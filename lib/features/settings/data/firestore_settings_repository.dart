@@ -72,6 +72,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
         map['effortScale'],
         defaults.effortScale,
       ),
+      restTimer: _restTimer(map['restTimer']),
       customBarWeightKg: _barWeight(map['barWeightKg']),
       customPlates: _plates(map['plates']),
     );
@@ -84,6 +85,11 @@ class FirestoreSettingsRepository implements SettingsRepository {
     'lengthUnit': _lengthCodes[settings.lengthUnit],
     'themeMode': _themeCodes[settings.themePreference],
     'effortScale': _effortCodes[settings.effortScale],
+    'restTimer': {
+      'enabled': settings.restTimer.enabled,
+      'defaultS': settings.restTimer.defaultS,
+      'notify': ?settings.restTimer.notify,
+    },
     'barWeightKg': settings.customBarWeightKg ?? FieldValue.delete(),
     'plates':
         settings.customPlates
@@ -91,6 +97,26 @@ class FirestoreSettingsRepository implements SettingsRepository {
             .toList() ??
         FieldValue.delete(),
   };
+
+  /// Anything missing or of the wrong type reads as the default; the
+  /// duration is clamped to the limits.
+  RestTimerSettings _restTimer(Object? raw) {
+    final fallback = defaults.restTimer;
+    if (raw is! Map) return fallback;
+    final enabled = raw['enabled'];
+    final seconds = raw['defaultS'];
+    final notify = raw['notify'];
+    return RestTimerSettings(
+      enabled: enabled is bool ? enabled : fallback.enabled,
+      defaultS: seconds is num && seconds.isFinite
+          ? seconds.round().clamp(
+              RestTimerSettings.minS,
+              RestTimerSettings.maxS,
+            )
+          : fallback.defaultS,
+      notify: notify is bool ? notify : fallback.notify,
+    );
+  }
 
   static double? _barWeight(Object? raw) =>
       raw is num ? raw.toDouble().clamp(0, maxBarWeightKg) : null;
