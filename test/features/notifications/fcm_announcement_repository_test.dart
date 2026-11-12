@@ -32,6 +32,7 @@ void main() {
     taps.listen(tapped.add);
     when(() => messaging.getInitialMessage()).thenAnswer((_) async => null);
     when(() => messaging.getAPNSToken()).thenAnswer((_) async => null);
+    when(() => messaging.setAutoInitEnabled(any())).thenAnswer((_) async {});
     when(() => messaging.subscribeToTopic(any())).thenAnswer((_) async {});
     when(() => messaging.unsubscribeFromTopic(any())).thenAnswer((_) async {});
     when(
@@ -67,6 +68,17 @@ void main() {
     verify(() => messaging.unsubscribeFromTopic('announcements_de')).called(1);
     verify(() => messaging.subscribeToTopic('announcements_en')).called(1);
     verifyNever(() => messaging.unsubscribeFromTopic('announcements_en'));
+  });
+
+  test('turns on push tokens before following', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+
+    await repository.follow('en');
+
+    verifyInOrder([
+      () => messaging.setAutoInitEnabled(true),
+      () => messaging.subscribeToTopic('announcements_en'),
+    ]);
   });
 
   test('on iOS without an APNs token it quietly follows nothing', () async {

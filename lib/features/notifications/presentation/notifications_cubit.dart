@@ -132,7 +132,8 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     }
     final allowed = result.valueOrNull ?? false;
     if (!isClosed) emit(NotificationsState(allowed: allowed));
-    if (allowed) await _follow();
+    // Following needs the network; the answer must not wait for it.
+    if (allowed) unawaited(_follow());
     return allowed;
   }
 
@@ -184,8 +185,10 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     final settings = _userSettings;
     if (settings == null) return;
     final now = _clock();
-    final workout = _workoutInput(settings, now);
-    if (workout != null) {
+    // Turned off is cleared whatever is known about the programs.
+    if (!settings.workoutReminder.enabled) {
+      await _syncKind(ReminderKind.workout, const []);
+    } else if (_workoutInput(settings, now) case final workout?) {
       await _syncKind(ReminderKind.workout, [
         for (final reminder in _planWorkout(workout))
           _notice(reminder.id, reminder.at, _workoutText(reminder)),
@@ -194,6 +197,9 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     await _syncKind(ReminderKind.measurement, [
       for (final reminder in _planMeasurement((
         settings: settings.measurementReminder,
+        // Until the body feature is merged nothing is known measured; see
+        // SPEC Open questions.
+        measured: const {},
         now: now,
       )))
         _notice(reminder.id, reminder.at, _measurementText()),

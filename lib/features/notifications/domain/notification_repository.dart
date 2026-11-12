@@ -16,8 +16,8 @@ abstract interface class NotificationRepository {
   /// Opens the system settings of the app's notifications.
   Future<Result<void>> openSettings();
 
-  /// Follows a device time zone change; whether it changed.
-  Future<Result<bool>> refreshTimeZone();
+  /// Follows a device time zone change.
+  Future<Result<void>> refreshTimeZone();
 
   /// Makes the pending reminders of [kind] exactly [wanted]: schedules what
   /// is missing or differs, cancels the rest of that kind, and leaves equal

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
@@ -40,8 +41,8 @@ class _AppState extends State<App> {
   );
   late final AppLifecycleListener _lifecycle;
 
-  /// Where a tapped notification leads, until the app is past its start.
-  String? _tapped;
+  /// A tapped notification, until the app is past its start.
+  NotificationTarget? _tapped;
 
   @override
   void initState() {
@@ -65,24 +66,23 @@ class _AppState extends State<App> {
   }
 
   void _openNotification(NotificationTarget target) {
-    _tapped = switch (target) {
-      NotificationTarget.workout ||
-      NotificationTarget.announcement => Routes.today,
-      // The measurement flow is being built elsewhere; until it is merged,
-      // its reminder opens the Progress tab.
-      NotificationTarget.measurement => Routes.progress,
-    };
+    _tapped = target;
     _openTapped();
   }
 
   void _openTapped() {
-    final location = _tapped;
-    if (location == null ||
-        !isPastStart(_router.routerDelegate.currentConfiguration.uri.path)) {
-      return;
-    }
+    final target = _tapped;
+    final location = _router.routerDelegate.currentConfiguration.uri.path;
+    if (target == null || !isPastStart(location)) return;
     _tapped = null;
-    _router.go(location);
+    final destination = notificationDestination(target, location);
+    if (destination == null) return;
+    // Never from inside the router delegate's own notification.
+    SchedulerBinding.instance
+      ..addPostFrameCallback((_) {
+        if (mounted) _router.go(destination);
+      })
+      ..ensureVisualUpdate();
   }
 
   @override

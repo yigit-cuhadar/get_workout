@@ -3,10 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../programs/domain/calendar_date.dart';
-import '../../programs/domain/program_schedule.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
+import '../domain/reminder_settings_changes.dart';
 import 'notifications_cubit.dart';
 
 /// The reminder rows of the settings. Needs [SettingsCubit] above it, and
@@ -22,8 +22,13 @@ class ReminderSettingsTiles extends StatelessWidget {
     );
     final workout = settings.workoutReminder;
     final measurement = settings.measurementReminder;
-    void update(UserSettings Function(UserSettings settings) change) =>
-        context.read<SettingsCubit>().update(change(settings));
+    // Applied to the settings as they are when the choice arrives.
+    void update(UserSettings Function(UserSettings settings) change) {
+      final cubit = context.read<SettingsCubit>();
+      cubit.update(change(cubit.state.settings));
+    }
+
+    CalendarDate today() => CalendarDate.of(DateTime.now());
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -41,18 +46,14 @@ class ReminderSettingsTiles extends StatelessWidget {
           onChanged: (on) => _switch(
             context,
             on,
-            (settings) => settings.copyWith(
-              workoutReminder: settings.workoutReminder.copyWith(enabled: on),
-            ),
+            (settings) => settings.withWorkoutReminder(enabled: on),
           ),
         ),
         if (workout.enabled)
           _TimeTile(
             minute: workout.minute,
             onChanged: (minute) => update(
-              (settings) => settings.copyWith(
-                workoutReminder: workout.copyWith(minute: minute),
-              ),
+              (settings) => settings.withWorkoutReminder(minute: minute),
             ),
           ),
         SwitchListTile(
@@ -61,14 +62,8 @@ class ReminderSettingsTiles extends StatelessWidget {
           onChanged: (on) => _switch(
             context,
             on,
-            (settings) => settings.copyWith(
-              measurementReminder: settings.measurementReminder.copyWith(
-                enabled: on,
-                from:
-                    settings.measurementReminder.from ??
-                    CalendarDate.of(DateTime.now()),
-              ),
-            ),
+            (settings) =>
+                settings.withMeasurementReminder(enabled: on, today: today()),
           ),
         ),
         if (measurement.enabled) ...[
@@ -78,8 +73,9 @@ class ReminderSettingsTiles extends StatelessWidget {
             selected: measurement.everyWeeks,
             labelOf: l10n.settingsReminderEvery,
             onChanged: (weeks) => update(
-              (settings) => settings.copyWith(
-                measurementReminder: measurement.copyWith(everyWeeks: weeks),
+              (settings) => settings.withMeasurementReminder(
+                everyWeeks: weeks,
+                today: today(),
               ),
             ),
           ),
@@ -88,22 +84,19 @@ class ReminderSettingsTiles extends StatelessWidget {
             values: const [1, 2, 3, 4, 5, 6, 7],
             selected: measurement.from?.weekday ?? DateTime.now().weekday,
             labelOf: l10n.weekdayLong,
-            // The series starts again on the first such day from today.
             onChanged: (weekday) => update(
-              (settings) => settings.copyWith(
-                measurementReminder: measurement.copyWith(
-                  from: ProgramSchedule.nextWeekday([
-                    weekday,
-                  ], from: CalendarDate.of(DateTime.now())),
-                ),
+              (settings) => settings.withMeasurementReminder(
+                weekday: weekday,
+                today: today(),
               ),
             ),
           ),
           _TimeTile(
             minute: measurement.minute,
             onChanged: (minute) => update(
-              (settings) => settings.copyWith(
-                measurementReminder: measurement.copyWith(minute: minute),
+              (settings) => settings.withMeasurementReminder(
+                minute: minute,
+                today: today(),
               ),
             ),
           ),

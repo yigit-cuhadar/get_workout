@@ -38,10 +38,8 @@ class DeviceNotificationRepository implements NotificationRepository {
   }
 
   @override
-  Future<Result<bool>> refreshTimeZone() async =>
-      (await (await _notifications).refreshTimeZone()).map(
-        (zone) => zone.changed,
-      );
+  Future<Result<void>> refreshTimeZone() async =>
+      (await (await _notifications).refreshTimeZone()).map((_) {});
 
   @override
   Future<Result<void>> syncReminders(

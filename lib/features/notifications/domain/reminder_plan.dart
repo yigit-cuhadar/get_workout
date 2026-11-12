@@ -135,12 +135,16 @@ class PlanWorkoutReminders {
 
 typedef MeasurementReminderInput = ({
   MeasurementReminderSettings settings,
+
+  /// Dates that already have a measurement; their occurrence is skipped.
+  Set<CalendarDate> measured,
   DateTime now,
 });
 
 /// The next [ReminderIds.measurementCount] measurement reminders: every
-/// `everyWeeks` weeks from `from` at the chosen time. Occurrence `k` of the
-/// series keeps id `measurementBase + k % measurementCount`.
+/// `everyWeeks` weeks from `from` at the chosen time, but none on a date
+/// already measured. Occurrence `k` of the series keeps id
+/// `measurementBase + k % measurementCount`.
 class PlanMeasurementReminders {
   const PlanMeasurementReminders();
 
@@ -154,8 +158,9 @@ class PlanMeasurementReminders {
     var k = elapsed <= 0 ? 0 : elapsed ~/ period;
     final reminders = <MeasurementReminder>[];
     while (reminders.length < ReminderIds.measurementCount) {
-      final at = _at(from.addDays(period * k), settings.minute);
-      if (at.isAfter(input.now)) {
+      final date = from.addDays(period * k);
+      final at = _at(date, settings.minute);
+      if (at.isAfter(input.now) && !input.measured.contains(date)) {
         reminders.add(
           MeasurementReminder(
             id: ReminderIds.measurementBase + k % ReminderIds.measurementCount,

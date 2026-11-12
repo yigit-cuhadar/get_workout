@@ -21,6 +21,7 @@ import '../features/exercises/presentation/custom_exercise_form_page.dart';
 import '../features/exercises/presentation/exercise_detail_page.dart';
 import '../features/exercises/presentation/exercises_page.dart';
 import '../features/generator/domain/generator_answers.dart';
+import '../features/notifications/data/notification_taps.dart';
 import '../features/generator/presentation/generator_page.dart';
 import '../features/generator/presentation/generator_preview_page.dart';
 import '../features/profile/domain/user_profile.dart';
@@ -166,6 +167,20 @@ bool isPastStart(String location) =>
     location != Routes.afterOnboarding &&
     location != Routes.onboarding &&
     !location.startsWith('${Routes.onboarding}/');
+
+/// Where a tap on a notification about [target] leads from [location], or
+/// null to stay: a workout reminder leaves the workout in progress in front.
+String? notificationDestination(NotificationTarget target, String location) =>
+    switch (target) {
+      NotificationTarget.workout =>
+        location == Routes.workout || location.startsWith('${Routes.workout}/')
+            ? null
+            : Routes.today,
+      NotificationTarget.announcement => Routes.today,
+      // The measurement flow is being built elsewhere; until it is merged, its
+      // reminder opens the Progress tab.
+      NotificationTarget.measurement => Routes.progress,
+    };
 
 /// All routes live here. There is always a user (a guest until they create
 /// an account), so the gates are the splash while the session and then the

@@ -42,6 +42,9 @@ class FcmAnnouncementRepository implements AnnouncementRepository {
   @override
   Future<Result<void>> follow(String language) => guard(() async {
     await _listen();
+    // Off in the native config, so devices that never allow notifications
+    // get no push token.
+    await _messaging.setAutoInitEnabled(true);
     if (!await _hasToken()) return;
     for (final other in _languages) {
       if (other != language) {

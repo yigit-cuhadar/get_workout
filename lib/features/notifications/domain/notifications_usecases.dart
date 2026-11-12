@@ -29,12 +29,12 @@ class OpenNotificationSettings implements UseCase<void, NoParams> {
   Future<Result<void>> call(NoParams params) => _repository.openSettings();
 }
 
-class RefreshTimeZone implements UseCase<bool, NoParams> {
+class RefreshTimeZone implements UseCase<void, NoParams> {
   const RefreshTimeZone(this._repository);
   final NotificationRepository _repository;
 
   @override
-  Future<Result<bool>> call(NoParams params) => _repository.refreshTimeZone();
+  Future<Result<void>> call(NoParams params) => _repository.refreshTimeZone();
 }
 
 class SyncReminders implements UseCase<void, ReminderSync> {

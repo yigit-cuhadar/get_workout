@@ -76,6 +76,9 @@ void main() {
   /// What each sync asked for, in order.
   late List<({ReminderKind kind, List<ReminderNotice> wanted})> syncs;
 
+  /// While set, every sync waits for it.
+  Completer<void>? gate;
+
   setUpAll(() => registerFallbackValue(ReminderKind.workout));
 
   setUp(() {
@@ -92,18 +95,20 @@ void main() {
     allowed = true;
     requestGrants = true;
     syncs = [];
+    gate = null;
     when(device.allowed).thenAnswer((_) async => Ok(allowed));
     when(device.request).thenAnswer((_) async {
       allowed = requestGrants;
       return Ok(allowed);
     });
     when(device.openSettings).thenAnswer((_) async => const Ok(null));
-    when(device.refreshTimeZone).thenAnswer((_) async => const Ok(false));
+    when(device.refreshTimeZone).thenAnswer((_) async => const Ok(null));
     when(() => device.syncReminders(any(), any())).thenAnswer((call) async {
       syncs.add((
         kind: call.positionalArguments[0] as ReminderKind,
         wanted: call.positionalArguments[1] as List<ReminderNotice>,
       ));
+      await gate?.future;
       return const Ok(null);
     });
     when(() => announcements.follow(any()))
@@ -307,6 +312,167 @@ void main() {
     await cubit.close();
   });
 
+  group('a reminder turned off is cleared whatever the programs say', () {
+    final off = reminding.copyWith(
+      workoutReminder: const WorkoutReminderSettings(minute: 1200),
+    );
+    for (final (name, programState) in [
+      ('loading', const ProgramListState()),
+      (
+        'failed',
+        const ProgramListState(
+          status: ProgramListStatus.failure,
+          failure: UnknownFailure('offline'),
+        ),
+      ),
+      ('premium unknown', ready(premiumCopy: true, premium: null)),
+    ]) {
+      test(name, () async {
+        final cubit = build();
+        signIn('u1');
+        emitPrograms(programState);
+        emitSettings('u1', off);
+        await pumpEventQueue();
+
+        expect(lastOf(ReminderKind.workout), isEmpty);
+        await cubit.close();
+      });
+    }
+  });
+
+  test(
+    'a time changed while programs load applies once they are known',
+    () async {
+      final cubit = build();
+      signIn('u1');
+      emitSettings(
+        'u1',
+        reminding.copyWith(
+          workoutReminder: const WorkoutReminderSettings(
+            enabled: true,
+            minute: 1200,
+          ),
+        ),
+      );
+      await pumpEventQueue();
+      expect(syncs.where((sync) => sync.kind == ReminderKind.workout), isEmpty);
+
+      emitPrograms(ready());
+      await pumpEventQueue();
+
+      expect(lastOf(ReminderKind.workout).first.at, DateTime(2026, 11, 11, 20));
+      await cubit.close();
+    },
+  );
+
+  test(
+    'changes during a running sync are planned once, on the latest',
+    () async {
+      final cubit = build();
+      signIn('u1');
+      emitPrograms(ready());
+      gate = Completer();
+      emitSettings('u1', reminding);
+      await pumpEventQueue();
+      expect(syncs, hasLength(1), reason: 'the first sync is running');
+
+      for (final minute in [600, 660]) {
+        emitSettings(
+          'u1',
+          reminding.copyWith(
+            workoutReminder: WorkoutReminderSettings(
+              enabled: true,
+              minute: minute,
+            ),
+          ),
+        );
+      }
+      gate!.complete();
+      gate = null;
+      await pumpEventQueue();
+
+      final workout = syncs.where((sync) => sync.kind == ReminderKind.workout);
+      expect(workout, hasLength(2));
+      expect(workout.last.wanted.first.at, DateTime(2026, 11, 11, 11));
+      await cubit.close();
+    },
+  );
+
+  test(
+    'a user change during a running sync ends with nothing pending',
+    () async {
+      final cubit = build();
+      signIn('u1');
+      emitPrograms(ready());
+      gate = Completer();
+      emitSettings('u1', reminding);
+      await pumpEventQueue();
+
+      signIn('u2');
+      emitPrograms(const ProgramListState());
+      gate!.complete();
+      gate = null;
+      await pumpEventQueue();
+
+      expect(lastOf(ReminderKind.workout), isEmpty);
+      expect(lastOf(ReminderKind.measurement), isEmpty);
+      await cubit.close();
+    },
+  );
+
+  test('switching to another program reminds of that one', () async {
+    final cubit = build();
+    signIn('u1');
+    emitPrograms(ready());
+    emitSettings('u1', reminding);
+    await pumpEventQueue();
+
+    emitPrograms(
+      ProgramListState(
+        status: ProgramListStatus.ready,
+        programs: [
+          program(id: 'p1'),
+          program(id: 'p2', name: 'Push Pull'),
+        ],
+        active: ActiveProgram(
+          programId: 'p2',
+          weekdays: const [4],
+          nextDayIndex: 0,
+          nextDate: CalendarDate(2026, 11, 12),
+          startedAt: now,
+        ),
+        premium: false,
+      ),
+    );
+    await pumpEventQueue();
+
+    final workout = lastOf(ReminderKind.workout);
+    expect(workout.first.at, DateTime(2026, 11, 12, 8));
+    expect(workout.first.body, 'Upper · Push Pull');
+    expect(workout[1].body, 'Push Pull');
+    await cubit.close();
+  });
+
+  test('deleting the active program drops its reminders', () async {
+    final cubit = build();
+    signIn('u1');
+    emitPrograms(ready());
+    emitSettings('u1', reminding);
+    await pumpEventQueue();
+
+    emitPrograms(
+      ProgramListState(
+        status: ProgramListStatus.ready,
+        active: active,
+        premium: false,
+      ),
+    );
+    await pumpEventQueue();
+
+    expect(lastOf(ReminderKind.workout), isEmpty);
+    await cubit.close();
+  });
+
   group('access', () {
     test('known at start; announcements followed once allowed', () async {
       final cubit = build();
@@ -331,6 +497,21 @@ void main() {
 
       expect(cubit.state, const NotificationsState(allowed: true));
       verify(() => announcements.follow('en')).called(1);
+      await cubit.close();
+    });
+
+    test('allowing does not wait for announcements to be followed', () async {
+      allowed = false;
+      final following = Completer<Result<void>>();
+      when(() => announcements.follow(any()))
+          .thenAnswer((_) => following.future);
+      final cubit = build();
+      await pumpEventQueue();
+
+      expect(await cubit.allow(), isTrue);
+
+      verify(() => announcements.follow('en')).called(1);
+      following.complete(const Ok(null));
       await cubit.close();
     });
 

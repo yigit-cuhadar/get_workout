@@ -66,8 +66,13 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
         </receiver>
-        <!-- Announcements (FCM) shown by the system while the app is in the
-             background: the local notifications' channel and icon. -->
+        <!-- Announcements (FCM): no push token until the app allows
+             notifications and turns this on; shown by the system while the
+             app is in the background on the local notifications' channel
+             and with their icon. -->
+        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="false"/>
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="workout"/>

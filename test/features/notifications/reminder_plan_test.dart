@@ -4,6 +4,7 @@ import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/completed_days.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
+import 'package:get_workout/features/programs/domain/program_schedule.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 
 import '../programs/fixtures.dart';
@@ -116,6 +117,45 @@ void main() {
       expect(reminders.last.at, DateTime(2026, 11, 13, 8));
     });
 
+    test('new weekdays move the reminders with them', () {
+      final changed = ProgramSchedule(
+        active(),
+        dayCount: 2,
+      ).withWeekdays(const [2, 4], today);
+
+      final reminders = run(activeProgram: changed);
+
+      expect(reminders.take(3).map((r) => r.at), [
+        DateTime(2026, 11, 12, 8),
+        DateTime(2026, 11, 17, 8),
+        DateTime(2026, 11, 19, 8),
+      ]);
+    });
+
+    test('a missed day moved to the next training day is reminded there', () {
+      final missed = ProgramSchedule(
+        active(next: CalendarDate(2026, 11, 9)),
+        dayCount: 2,
+      );
+
+      final reminders = run(activeProgram: missed.moveToNextWeekday(today));
+
+      expect(reminders.first.at, DateTime(2026, 11, 13, 8));
+      expect(reminders.first.day?.index, 0);
+    });
+
+    test('a skipped missed day reminds of the day after it', () {
+      final missed = ProgramSchedule(
+        active(next: CalendarDate(2026, 11, 9)),
+        dayCount: 2,
+      );
+
+      final reminders = run(activeProgram: missed.skip(today));
+
+      expect(reminders.first.at, DateTime(2026, 11, 11, 8));
+      expect(reminders.first.day?.day.name, 'Lower');
+    });
+
     test('none when off, without a program, or a locked one', () {
       expect(run(settings: const WorkoutReminderSettings()), isEmpty);
       expect(run(noProgram: true), isEmpty);
@@ -143,6 +183,7 @@ void main() {
       int everyWeeks = 4,
       bool enabled = true,
       CalendarDate? start,
+      Set<CalendarDate> measured = const {},
     }) => plan((
       settings: MeasurementReminderSettings(
         enabled: enabled,
@@ -150,6 +191,7 @@ void main() {
         from: start ?? from,
         minute: 9 * 60,
       ),
+      measured: measured,
       now: now,
     ));
 
@@ -192,11 +234,26 @@ void main() {
       expect(later.first.id, now[1].id);
     });
 
+    test('a date already measured is skipped', () {
+      final reminders = run(
+        DateTime(2026, 11, 12),
+        measured: {CalendarDate(2026, 11, 29)},
+      );
+
+      expect(reminders.map((r) => r.at), [
+        DateTime(2026, 12, 27, 9),
+        DateTime(2027, 1, 24, 9),
+        DateTime(2027, 2, 21, 9),
+        DateTime(2027, 3, 21, 9),
+      ]);
+    });
+
     test('none when off or never started', () {
       expect(run(DateTime(2026, 11, 12), enabled: false), isEmpty);
       expect(
         plan((
           settings: const MeasurementReminderSettings(enabled: true),
+          measured: const {},
           now: DateTime(2026, 11, 12),
         )),
         isEmpty,
