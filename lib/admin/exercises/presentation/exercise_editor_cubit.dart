@@ -6,23 +6,11 @@ import 'package:forge_core/forge_core.dart';
 import '../../../features/exercises/domain/content_rules.dart';
 import '../../../features/exercises/domain/vocabulary.dart';
 import '../../access/domain/access_usecases.dart';
+import '../../shell/editor_status.dart';
 import '../domain/exercise_admin_usecases.dart';
 import '../domain/exercise_draft.dart';
 
-enum EditorStatus {
-  loading,
-  loadFailed,
-  editing,
-  saving,
-
-  /// The last save went through.
-  saved,
-
-  /// The document changed since it was loaded; saving is refused until the
-  /// editor reloads it.
-  changedSinceLoaded,
-  saveFailed,
-}
+export '../../shell/editor_status.dart';
 
 class ExerciseEditorState extends Equatable {
   const ExerciseEditorState({
