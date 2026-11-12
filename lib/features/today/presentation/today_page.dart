@@ -322,7 +322,7 @@ class _NoProgramDay extends StatelessWidget {
           const SizedBox(height: Gap.sm),
           OutlinedButton(
             onPressed: () => startFreeWorkout(context),
-            child: Text(l10n.workoutStartFree),
+            child: Text(l10n.workoutStartEmpty),
           ),
         ],
       ),
@@ -384,7 +384,7 @@ class _QuickActionsCard extends StatelessWidget {
         children: [
           ListTile(
             leading: const Icon(Icons.play_arrow),
-            title: Text(l10n.workoutStartFree),
+            title: Text(l10n.workoutStartEmpty),
             onTap: () => startFreeWorkout(context),
           ),
           ListTile(

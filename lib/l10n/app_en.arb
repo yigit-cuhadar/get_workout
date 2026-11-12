@@ -802,7 +802,7 @@
   "workoutFreeName": "Workout",
   "workoutProgramDayName": "{program} · {day}",
   "@workoutProgramDayName": {"placeholders": {"program": {"type": "String"}, "day": {"type": "String"}}},
-  "workoutStartFree": "Free workout",
+  "workoutStartEmpty": "Start empty workout",
   "workoutStartDay": "Start {day}",
   "@workoutStartDay": {"placeholders": {"day": {"type": "String"}}},
   "workoutStartThisDay": "Start this day",

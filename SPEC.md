@@ -958,7 +958,8 @@ from the earlier FitLab app.
   title, as the Programs tab waits, so a missed day never shows as a
   planned one with Start. A locked premium copy shows its day, locked,
   with Start opening the paywall. Without a program, or once it finished: the
-  catalogue, the generator and "Free workout". Week strip: the
+  catalogue, the generator and "Start empty workout" (the app never calls
+  it "free": users read that as "at no cost"). Week strip: the
   calendar's `calendarEntries` and marks over the current week from the
   locale's first weekday (Sunday in English, like weekly volume, unlike
   the program week plan), drawn by `MonthGrid` as one week; the strip and

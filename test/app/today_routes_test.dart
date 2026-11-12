@@ -339,7 +339,7 @@ void main() {
       expect(find.text('Next workout'), findsOneWidget);
       expect(find.text('Active program'), findsNothing);
       // The card's button, before the quick action of the same name.
-      await tap(tester, find.text('Free workout').first);
+      await tap(tester, find.text('Start empty workout').first);
 
       verify(() => workout.startFree('Workout')).called(1);
       expectAt(Routes.workout);
@@ -366,7 +366,7 @@ void main() {
     testWidgets('start a free workout', (tester) async {
       await start(tester, programs: planned);
 
-      await tap(tester, find.text('Free workout'));
+      await tap(tester, find.text('Start empty workout'));
 
       verify(() => workout.startFree('Workout')).called(1);
       expectAt(Routes.workout);
