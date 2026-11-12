@@ -175,11 +175,37 @@ class _FormState extends State<_Form> {
     text: _cubit.state.program.lengthWeeks?.toString() ?? '',
   );
 
+  /// The name field of the day last added, which takes the focus once;
+  /// opening the builder or switching days never does. A fresh node per
+  /// added day: moving a focused node to the next field would leave it
+  /// focused without a keyboard.
+  FocusNode? _newDayName;
+  Key? _newDayKey;
+
   @override
   void dispose() {
     _name.dispose();
     _weeks.dispose();
+    _newDayName?.dispose();
     super.dispose();
+  }
+
+  /// A new field per day, so it shows that day's name.
+  static Key _dayKey(ProgramBuilderState state) =>
+      ValueKey('day-${state.selectedDay}-${state.program.days.length}');
+
+  void _addDay() {
+    final days = _cubit.state.program.days.length;
+    _cubit.addDay();
+    if (_cubit.state.program.days.length == days) return;
+    final previous = _newDayName;
+    final node = _newDayName = FocusNode();
+    _newDayKey = _dayKey(_cubit.state);
+    // The new day's field is built, and the previous one's gone, by then.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      previous?.dispose();
+      if (mounted) node.requestFocus();
+    });
   }
 
   @override
@@ -189,6 +215,7 @@ class _FormState extends State<_Form> {
     final validation = state.validation;
     final day = state.day!;
     final dayIndex = state.selectedDay;
+    final dayKey = _dayKey(state);
     final items = day.items;
     String? programError(Set<ProgramIssue> issues) => validation.program
         .where(issues.contains)
@@ -265,7 +292,7 @@ class _FormState extends State<_Form> {
                 ActionChip(
                   avatar: const Icon(Icons.add),
                   label: Text(l10n.programAddDay),
-                  onPressed: state.canAddDay ? _cubit.addDay : null,
+                  onPressed: state.canAddDay ? _addDay : null,
                 ),
               ],
             ),
@@ -275,8 +302,8 @@ class _FormState extends State<_Form> {
               children: [
                 Expanded(
                   child: TextFormField(
-                    // A new field per day, so it shows that day's name.
-                    key: ValueKey('day-$dayIndex-${state.program.days.length}'),
+                    key: dayKey,
+                    focusNode: dayKey == _newDayKey ? _newDayName : null,
                     initialValue: day.name,
                     textCapitalization: TextCapitalization.sentences,
                     inputFormatters: [
@@ -553,7 +580,7 @@ class _ItemEditorState extends State<_ItemEditor> {
   String _targetText() {
     final kg = _item.targetKg;
     if (kg == null) return '';
-    final value = _cubit.weightUnit.fromKg(kg);
+    final value = _cubit.weightUnit.shownFromKg(kg);
     final fixed = value.toStringAsFixed(2);
     return fixed.replaceFirst(RegExp(r'\.?0+$'), '');
   }

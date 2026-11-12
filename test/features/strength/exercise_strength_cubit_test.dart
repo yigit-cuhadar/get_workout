@@ -97,7 +97,7 @@ void main() {
       (kind: RecordKind.bestE1rm, record: e1rm),
     ]);
     expect(state.range, StrengthRange.weeks12);
-    expect(values(state), [116.7]);
+    expect(values(state), [116.5]);
     verify(() => repository.watchStats('u1', 'squat')).called(1);
     await cubit.close();
   });
@@ -122,7 +122,7 @@ void main() {
     final cubit = await opened(value: squat, hasPremium: true);
     cubit.selectRange(StrengthRange.all);
     expect(cubit.state.range, StrengthRange.all);
-    expect(values(cubit.state), [90, 116.7]);
+    expect(values(cubit.state), [90, 116.5]);
     await cubit.close();
   });
 
@@ -130,13 +130,13 @@ void main() {
     final cubit = await opened(value: squat);
     cubit.selectRange(StrengthRange.year1);
     expect(cubit.state.range, StrengthRange.weeks12);
-    expect(values(cubit.state), [116.7]);
+    expect(values(cubit.state), [116.5]);
 
     // The paywall closed before the status caught up.
     premium.controller.add(true);
     await pumpEventQueue();
     expect(cubit.state.range, StrengthRange.year1);
-    expect(values(cubit.state), [90, 116.7]);
+    expect(values(cubit.state), [90, 116.5]);
 
     // Premium ending falls back to the free range.
     premium.controller.add(false);
@@ -147,9 +147,9 @@ void main() {
 
   test('values in the user unit, changed live', () async {
     final cubit = await opened(value: squat, unit: WeightUnit.lb);
-    expect(values(cubit.state).single, closeTo(257.28, 0.01));
+    expect(values(cubit.state).single, 257);
     cubit.setUnit(WeightUnit.kg);
-    expect(values(cubit.state), [116.7]);
+    expect(values(cubit.state), [116.5]);
     await cubit.close();
   });
 

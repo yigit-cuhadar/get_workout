@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/calories.dart';
 import 'calculator_format.dart';
+import 'calculator_input.dart';
 
 typedef Units = ({WeightUnit weight, LengthUnit length});
 
@@ -66,6 +68,8 @@ class NumberField extends StatefulWidget {
     this.errorText,
     this.value = '',
     this.wholeNumber = false,
+    this.autofocus = false,
+    this.onFocus,
   });
 
   final String label;
@@ -73,6 +77,8 @@ class NumberField extends StatefulWidget {
   final String? errorText;
   final String value;
   final bool wholeNumber;
+  final bool autofocus;
+  final VoidCallback? onFocus;
 
   @override
   State<NumberField> createState() => _NumberFieldState();
@@ -98,19 +104,112 @@ class _NumberFieldState extends State<NumberField> {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: Gap.md),
-    child: TextField(
-      controller: _controller,
-      onChanged: widget.onChanged,
-      keyboardType: TextInputType.numberWithOptions(
-        decimal: !widget.wholeNumber,
-      ),
-      decoration: InputDecoration(
-        labelText: widget.label,
-        errorText: widget.errorText,
-        errorMaxLines: 3,
+    child: Focus(
+      onFocusChange: (focused) {
+        if (focused) widget.onFocus?.call();
+      },
+      child: TextField(
+        controller: _controller,
+        onChanged: widget.onChanged,
+        autofocus: widget.autofocus,
+        keyboardType: TextInputType.numberWithOptions(
+          decimal: !widget.wholeNumber,
+        ),
+        decoration: InputDecoration(
+          labelText: widget.label,
+          errorText: widget.errorText,
+          errorMaxLines: 3,
+        ),
       ),
     ),
   );
+}
+
+/// A [NumberField] that, while [known], shows the value the app knows as a
+/// tile instead: [name], the value in [unit] and, for a value from the body
+/// log, the day it was recorded. Tapping the tile, or focusing the field,
+/// calls [onEdit], which clears [known]; the field then opens focused.
+class KnownNumberField extends StatefulWidget {
+  const KnownNumberField({
+    super.key,
+    required this.known,
+    required this.onEdit,
+    required this.name,
+    required this.unit,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.errorText,
+    this.wholeNumber = false,
+  });
+
+  final KnownInput? known;
+  final VoidCallback onEdit;
+  final String name;
+  final String unit;
+  final String label;
+  final String value;
+  final ValueChanged<String> onChanged;
+  final String? errorText;
+  final bool wholeNumber;
+
+  @override
+  State<KnownNumberField> createState() => _KnownNumberFieldState();
+}
+
+class _KnownNumberFieldState extends State<KnownNumberField> {
+  var _edited = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final known = widget.known;
+    if (known == null) {
+      return NumberField(
+        label: widget.label,
+        value: widget.value,
+        onChanged: widget.onChanged,
+        errorText: widget.errorText,
+        wholeNumber: widget.wholeNumber,
+        autofocus: _edited,
+        onFocus: widget.onEdit,
+      );
+    }
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final date = known.date;
+    final error = widget.errorText;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(widget.name),
+      subtitle: error != null
+          ? Text(error, style: TextStyle(color: theme.colorScheme.error))
+          : date == null
+          ? null
+          : Text(l10n.calcMeasuredOn(_day(date, l10n.localeName))),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.calcKnownValue(widget.value, widget.unit),
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(width: Gap.sm),
+          const Icon(Icons.edit_outlined),
+        ],
+      ),
+      onTap: () {
+        setState(() => _edited = true);
+        widget.onEdit();
+      },
+    );
+  }
+
+  /// The year only when it is not this one.
+  static String _day(DateTime date, String locale) =>
+      (date.year == DateTime.now().year
+              ? DateFormat.MMMd(locale)
+              : DateFormat.yMMMd(locale))
+          .format(date);
 }
 
 class SexSelector extends StatelessWidget {

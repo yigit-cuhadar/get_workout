@@ -121,14 +121,12 @@ class SetRow extends StatelessWidget {
               if (type.logsWeight)
                 Expanded(
                   flex: SetColumns.value,
-                  child: NumberCell(
-                    value: set.weightKg == null
-                        ? null
-                        : unit.fromKg(set.weightKg!),
+                  child: NumberCell.weight(
+                    kg: set.weightKg,
+                    unit: unit,
                     hint: hint.weightKg == null
                         ? null
                         : l10n.weightField(hint.weightKg!, unit),
-                    decimal: true,
                     onChanged: (text) => cubit.setWeight(ref, text, unit),
                   ),
                 ),
@@ -250,11 +248,9 @@ class _DropRow extends StatelessWidget {
           if (type.logsWeight)
             Expanded(
               flex: SetColumns.value,
-              child: NumberCell(
-                value: drop.weightKg == null
-                    ? null
-                    : unit.fromKg(drop.weightKg!),
-                decimal: true,
+              child: NumberCell.weight(
+                kg: drop.weightKg,
+                unit: unit,
                 onChanged: (text) =>
                     cubit.setDropWeight(ref, index, text, unit),
               ),
@@ -278,45 +274,82 @@ class _DropRow extends StatelessWidget {
 }
 
 /// A number field showing [value] (in display units). It keeps what the
-/// user types while that still means [value], and shows [value] when it
-/// changes from elsewhere, e.g. a tick filling in the suggestion.
+/// user types while that still means the stored value, and shows [value]
+/// when that changes from elsewhere, e.g. a tick filling in the suggestion
+/// or another set moving into this row.
 class NumberCell extends StatefulWidget {
   const NumberCell({
     super.key,
     required this.value,
     required this.onChanged,
     this.hint,
-    this.decimal = false,
-  });
+  }) : stored = value,
+       toStored = null,
+       decimal = false;
+
+  /// A lifted weight stored as [kg], shown in [unit] as
+  /// [WeightUnitConversion.shownFromKg] shows it.
+  NumberCell.weight({
+    super.key,
+    required double? kg,
+    required WeightUnit unit,
+    required this.onChanged,
+    this.hint,
+  }) : value = kg == null ? null : unit.shownFromKg(kg),
+       stored = kg,
+       toStored = unit.toKg,
+       decimal = true;
 
   final double? value;
   final String? hint;
   final bool decimal;
   final ValueChanged<String> onChanged;
 
+  /// What [value] stands for, and how a typed number is stored, when that
+  /// differs from what is shown; null [toStored] stores numbers as typed.
+  final double? stored;
+  final double Function(double typed)? toStored;
+
   @override
   State<NumberCell> createState() => _NumberCellState();
 }
 
+/// The text a number cell holding [text] shows instead, or null to keep
+/// it: kept while it stores as [stored] (or already reads as [value]).
+String? numberCellText(
+  String text, {
+  required double? value,
+  required double? stored,
+  double Function(double typed)? toStored,
+}) {
+  final typed = double.tryParse(text.trim().replaceAll(',', '.'));
+  final typedStored = typed == null ? null : toStored?.call(typed) ?? typed;
+  final same = typedStored == null || stored == null
+      ? typedStored == stored
+      : (typedStored - stored).abs() < 1e-9;
+  final shown = _numberText(value);
+  return same || shown == text ? null : shown;
+}
+
+String _numberText(double? value) => value == null
+    ? ''
+    : value.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
+
 class _NumberCellState extends State<NumberCell> {
-  late final _controller = TextEditingController(text: _format(widget.value));
-
-  String _format(double? value) => value == null
-      ? ''
-      : value.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
-
-  double? _parse(String text) =>
-      double.tryParse(text.trim().replaceAll(',', '.'));
+  late final _controller = TextEditingController(
+    text: _numberText(widget.value),
+  );
 
   @override
   void didUpdateWidget(NumberCell oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final shown = _parse(_controller.text);
-    final value = widget.value;
-    final same = shown == null || value == null
-        ? shown == value
-        : (shown - value).abs() < 1e-6;
-    if (!same) _controller.text = _format(value);
+    final text = numberCellText(
+      _controller.text,
+      value: widget.value,
+      stored: widget.stored,
+      toStored: widget.toStored,
+    );
+    if (text != null) _controller.text = text;
   }
 
   @override

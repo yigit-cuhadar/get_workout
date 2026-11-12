@@ -183,15 +183,40 @@ from the earlier FitLab app.
 - **3D model**: our own renderer, written in Dart, built first because it is
   the riskiest part. Source model has 37 meshes: 19 muscle groups (left/right
   split except abdominal and oblique) plus the body. A female model with the
-  same mesh names is required before release; the user supplies it.
-- **Units**: stored metric. kg/lb and cm/in chosen by the user.
+  same mesh names is required before release; the user supplies it. The
+  exercise page shows it twice, front and back side by side with the worked
+  muscles coloured, both fixed (`interactive: false`, the back through a
+  camera at yaw π) so the page scrolls over them; two CPU-rendered viewers
+  share one parsed model and paint once. The Exercises tab's model stays
+  interactive.
+- **Units**: stored metric. kg/lb and cm/in chosen by the user. A single
+  lifted weight is shown through `WeightUnit.shown`: within two decimals
+  (the precision weight fields show; 1e-8 hundredths of tolerance, the
+  nearest other-unit weights being 4e-6 off: 538.92 lb, 244.45 kg) it was
+  typed in this unit and shows as typed; otherwise it was typed in the other
+  unit and shows rounded, to whole lb (80 kg → 176 lb) or half kg (45 lb →
+  20.5 kg), or to two decimals when that would show a positive weight as 0.
+  Display only: fields store what is typed, converted to kg; an untouched
+  field stores nothing, and typing back the number a field showed keeps its
+  stored kg (`RetypedWeights`, in the workout editor and the program
+  builder). Set rows and drops, previous and suggested values, workout
+  detail, heaviest-weight records and program targets use it. The estimated
+  1RM is computed, so it always shows rounded the same way
+  (`estimatedFromKg`: records, the strength chart and its labels); volume,
+  body weight and the calculators (results of typed inputs) keep their own
+  formatting. A weight typed with more than two decimals is taken for the
+  other unit's and shows rounded.
 - **Programs**: a name of 1-60 characters, 1-7 days, day names of at most
   40 characters, 1-20 exercises per day, an optional length of 1-52 weeks;
   lengths count UTF-16 code units in the fields and in validation. The
   Firestore rules validate the top-level fields only (`name`, `days` count,
   `origin`); the app validates days and items. Items whose exercise's
   logging type changed are fitted to the new type when the builder loads
-  them, and the user is told.
+  them, and the user is told. The Programs tab opens with three rows, the
+  same with or without programs: ready-made programs, the generator and
+  "New program" (the builder); no floating button. In the builder, Add
+  day selects the new day and focuses its name; opening the builder or
+  switching days never takes the focus.
 - **Schedule**: `activeProgram.nextDate` is a calendar date stored as a
   `YYYY-MM-DD` string, so it is the same date in every time zone, and
   `startedAt` is a device-clock timestamp because starting a program must
@@ -1041,15 +1066,33 @@ from the earlier FitLab app.
   moderate, 6 active, by the levels' wording). Units, bar and plates come
   from settings as before. 1RM and the macros' calories stay empty (no
   single source); the goal and target weight map onto no calculator
-  input. Values are shown to one decimal in the user's unit, with no hint
-  of their source (the calculators have no helper-text pattern). They are
+  input. A known number shows as a tile (`KnownNumberField`), not a field:
+  its name, the value to one decimal in the user's unit and, for a value
+  from the body log, "Measured <date>" (the entry's date; body fat takes
+  the oldest of its circumferences'; the year only when not this one).
+  Profile values (height, age, a profile-only weight) have no date.
+  The tile has an edit icon; tapping it turns it into the normal field,
+  focused, holding the value; it stays a field (the cubit's `known` map
+  drops it). Focusing a field before the values arrive counts as editing
+  it, so a late value never replaces it. Both the waist and the abdomen
+  are known; the body fat calculator shows the one for the selected sex
+  (abdomen for men, waist for women), or an empty field, unless the user
+  typed or started editing it. Sex and activity stay selectors: they
+  already show the known choice. They are
   starting values only: nothing is written back. They load once when a
   calculator opens; a value arriving late fills only inputs the user has
   not changed (even one they cleared stays empty). A source that cannot
   be read adds nothing.
 - **Today tab** (`lib/features/today`): a scrolling list of independent
   cards, each on its own data, so one failing leaves the others. Next
-  workout: with an active program the card's headline is that program,
+  workout: while a workout is in progress (`ActiveWorkoutState.inProgress`,
+  so not an empty one) the card is that workout, labelled "Workout in
+  progress", with "Resume workout", which opens it like the workout bar
+  and never starts another. A workout stores no day name, so its program
+  day shows only while that day would still give it its name (not since
+  renamed, moved or deleted). While the workout in progress is still
+  looked for, the card shows only its title, never Start.
+  Otherwise, with an active program the card's headline is that program,
   labelled "Active program" and opening its page, its next day below;
   without one it is titled "Next workout". It uses the Programs tab's own
   `ProgramListCubit` (one instance), so

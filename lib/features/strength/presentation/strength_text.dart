@@ -17,8 +17,8 @@ extension StrengthText on AppLocalizations {
   /// A record's [value] as stored (kg, reps or seconds), weights in [unit].
   String recordValue(RecordKind kind, double value, WeightUnit unit) =>
       switch (kind) {
-        RecordKind.heaviestWeight ||
-        RecordKind.bestE1rm ||
+        RecordKind.heaviestWeight => liftedWeightText(value, unit),
+        RecordKind.bestE1rm => estimatedWeightText(value, unit),
         RecordKind.bestSetVolume => weightText(value, unit),
         RecordKind.mostReps => strengthReps(value.round()),
         RecordKind.longestDuration => elapsedText(

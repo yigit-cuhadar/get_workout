@@ -4,6 +4,7 @@ import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/domain/program_schedule.dart';
 import '../../programs/presentation/program_list_cubit.dart';
+import '../../workout/presentation/active_workout_cubit.dart';
 
 /// What the Today tab offers to train next.
 sealed class NextWorkout extends Equatable {
@@ -59,12 +60,72 @@ class MissedProgramDay extends NextWorkout {
   List<Object?> get props => [program, missed, moveDate];
 }
 
-/// The next workout of [state], derived only from what the Programs tab
-/// shows; null until it is known: while the list loads, and while the
-/// premium status of a premium copy is (a missed day could otherwise show
-/// as a planned one with Start). A missed day is offered only while the
-/// program is open, as there.
-NextWorkout? nextWorkoutOf(ProgramListState state) {
+/// A workout named [name] is in progress, so it is resumed rather than
+/// another started; started from day [dayIndex] of [program] when that
+/// day is still the one it was started from.
+class WorkoutInProgress extends NextWorkout {
+  const WorkoutInProgress({required this.name, this.program, this.dayIndex});
+
+  final String name;
+  final Program? program;
+  final int? dayIndex;
+
+  @override
+  List<Object?> get props => [name, program, dayIndex];
+}
+
+/// What Today shows of the active workout, so the card rebuilds only when
+/// that changes, not on every logged set.
+typedef ActiveWorkoutView = ({
+  bool loading,
+  bool inProgress,
+  String? name,
+  String? programId,
+  int? dayIndex,
+});
+
+ActiveWorkoutView activeWorkoutViewOf(ActiveWorkoutState state) => (
+  loading: state.status == WorkoutStatus.loading,
+  inProgress: state.inProgress,
+  name: state.workout?.name,
+  programId: state.workout?.programId,
+  dayIndex: state.workout?.dayIndex,
+);
+
+/// The next workout: the one in progress in [active] (an empty one is not),
+/// else derived only from what the Programs tab shows in [state]; null
+/// until it is known: while the workout in progress is looked for (Start
+/// could otherwise show for a day already running), while the list loads,
+/// and while the premium status of a premium copy is (a missed day could
+/// otherwise show as a planned one with Start). A missed day is offered
+/// only while the program is open, as there.
+///
+/// A workout does not store its day's name; [startName] is the name a day
+/// gives the workout it starts, so a workout still named so was started
+/// from that day as it is now (not since renamed, moved or deleted).
+NextWorkout? nextWorkoutOf(
+  ProgramListState state,
+  ActiveWorkoutView active, {
+  required String Function(Program program, int dayIndex) startName,
+}) {
+  if (active.loading) return null;
+  if (active case (
+    inProgress: true,
+    name: final name?,
+    :final programId,
+    :final dayIndex,
+    loading: _,
+  )) {
+    final program = programId == null ? null : state.program(programId);
+    final matches =
+        program != null &&
+        dayIndex != null &&
+        dayIndex < program.days.length &&
+        startName(program, dayIndex) == name;
+    return matches
+        ? WorkoutInProgress(name: name, program: program, dayIndex: dayIndex)
+        : WorkoutInProgress(name: name);
+  }
   if (state.status != ProgramListStatus.ready) return null;
   final program = state.activeProgram;
   final dayIndex = state.nextDayIndex;
