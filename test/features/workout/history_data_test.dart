@@ -176,4 +176,21 @@ void main() {
       expect(ids(read.workouts['squat']!.workouts), ['w0']);
     });
   });
+
+  group('all stats', () {
+    test('every exercise of the user, by id, again on a change', () async {
+      final squat = rebuildStats('squat', [onDay(0)])!;
+      await repository.saveStats('u1', 'squat', squat);
+      await repository.saveStats('u2', 'bench', squat);
+      final stats = StreamIterator(repository.watchAllStats('u1'));
+
+      expect(await stats.moveNext(), isTrue);
+      expect(stats.current, {'squat': squat});
+
+      await repository.saveStats('u1', 'squat', null);
+      expect(await stats.moveNext(), isTrue);
+      expect(stats.current, isEmpty);
+      await stats.cancel();
+    });
+  });
 }
