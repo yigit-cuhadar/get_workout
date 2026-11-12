@@ -603,7 +603,7 @@ Group 6, progress
 
 Group 7, programs for everyone
 - [ ] Catalog — 25 ready-made programs (6 free), filters, detail, premium lock, admin program editor (the admin program editor is still to do)
-- [ ] Program generator (Premium) — questions (goal, level, days, session length, equipment, focus muscles, excluded exercises, area to go easy on, preferred split), preview, save as an editable program
+- [x] Program generator (Premium) — questions (goal, level, days, session length, equipment, focus muscles, excluded exercises, area to go easy on, preferred split), preview, save as an editable program
 
 Group 8, body and extras
 - [ ] Weight log and measurement day — steps for weight, tracked measurements, four photos with ghost overlay, reminders, photo backup, compare
