@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/max_length_formatter.dart';
+import '../../../core/unsaved_changes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -39,90 +40,94 @@ class _EditView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<WorkoutEditCubit>();
-    return BlocConsumer<WorkoutEditCubit, WorkoutEditState>(
-      listenWhen: (previous, current) =>
-          previous.status != current.status ||
-          current.issue != null ||
-          current.failure != null,
-      listener: (context, state) {
-        if (state.status == WorkoutEditStatus.saved ||
-            state.status == WorkoutEditStatus.closed) {
-          context.pop();
-          return;
-        }
-        if (state.status != WorkoutEditStatus.editing) return;
-        final message = switch ((state.issue, state.failure)) {
-          (WorkoutChangeIssue.noDoneSet, _) => l10n.historyNoDoneSet,
-          (WorkoutChangeIssue.startInFuture, _) => l10n.historyStartInFuture,
-          (WorkoutChangeIssue.endInFuture, _) => l10n.historyEndInFuture,
-          (WorkoutChangeIssue.badDuration, _) => l10n.historyBadDuration,
-          (WorkoutChangeIssue.invalid, _) => l10n.historyInvalid,
-          (_, NetworkFailure()) => l10n.errorNetwork,
-          (_, _?) => l10n.historySaveFailed,
-          _ => null,
-        };
-        if (message == null) return;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(message)));
-        cubit.problemShown();
-      },
-      builder: (context, state) {
-        final workout = state.workout;
-        final editing =
-            state.status == WorkoutEditStatus.editing ||
-            state.status == WorkoutEditStatus.saving;
-        return PopScope(
-          canPop: !cubit.hasChanges,
-          onPopInvokedWithResult: (didPop, _) async {
-            if (didPop) return;
-            if (await confirmChoice(
-                  context,
-                  title: l10n.historyDiscardTitle,
-                  body: null,
-                  cancel: l10n.programKeepEditing,
-                  confirm: l10n.workoutDiscardConfirm,
-                ) &&
-                context.mounted) {
-              context.pop();
-            }
-          },
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text(
-                cubit.isNew ? l10n.historyPastTitle : l10n.historyEditTitle,
-              ),
-              actions: [
-                if (editing && workout!.exercises.length > 1)
-                  IconButton(
-                    tooltip: l10n.workoutReorder,
-                    icon: const Icon(Icons.swap_vert),
-                    onPressed: () => showModalBottomSheet<void>(
-                      context: context,
-                      showDragHandle: true,
-                      isScrollControlled: true,
-                      builder: (_) => ReorderSheet(editor: cubit),
-                    ),
-                  ),
-              ],
-            ),
-            body: switch (state.status) {
-              WorkoutEditStatus.missing => EmptyView(
-                message: l10n.historyNotFound,
-              ),
-              WorkoutEditStatus.syncing => EmptyView(
-                message: l10n.historySyncing,
-              ),
-              WorkoutEditStatus.failure => ErrorView(
-                message: l10n.historyLoadFailed,
-                retryLabel: l10n.retry,
-                onRetry: cubit.retry,
-              ),
-              _ when !editing => const LoadingView(),
-              _ => _Form(state),
+    Future<bool> confirmDiscard() => confirmChoice(
+      context,
+      title: l10n.historyDiscardTitle,
+      body: null,
+      cancel: l10n.programKeepEditing,
+      confirm: l10n.workoutDiscardConfirm,
+    );
+    return UnsavedChangesGuard(
+      hasChanges: () => cubit.hasChanges,
+      confirmDiscard: confirmDiscard,
+      child: BlocConsumer<WorkoutEditCubit, WorkoutEditState>(
+        listenWhen: (previous, current) =>
+            previous.status != current.status ||
+            current.issue != null ||
+            current.failure != null,
+        listener: (context, state) {
+          if (state.status == WorkoutEditStatus.saved ||
+              state.status == WorkoutEditStatus.closed) {
+            context.pop();
+            return;
+          }
+          if (state.status != WorkoutEditStatus.editing) return;
+          final message = switch ((state.issue, state.failure)) {
+            (WorkoutChangeIssue.noDoneSet, _) => l10n.historyNoDoneSet,
+            (WorkoutChangeIssue.startInFuture, _) => l10n.historyStartInFuture,
+            (WorkoutChangeIssue.endInFuture, _) => l10n.historyEndInFuture,
+            (WorkoutChangeIssue.badDuration, _) => l10n.historyBadDuration,
+            (WorkoutChangeIssue.invalid, _) => l10n.historyInvalid,
+            (_, NetworkFailure()) => l10n.errorNetwork,
+            (_, _?) => l10n.historySaveFailed,
+            _ => null,
+          };
+          if (message == null) return;
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(message)));
+          cubit.problemShown();
+        },
+        builder: (context, state) {
+          final workout = state.workout;
+          final editing =
+              state.status == WorkoutEditStatus.editing ||
+              state.status == WorkoutEditStatus.saving;
+          return PopScope(
+            canPop: !cubit.hasChanges,
+            onPopInvokedWithResult: (didPop, _) async {
+              if (didPop) return;
+              if (await UnsavedChangesGuard.ask(context) && context.mounted) {
+                context.pop();
+              }
             },
-          ),
-        );
-      },
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  cubit.isNew ? l10n.historyPastTitle : l10n.historyEditTitle,
+                ),
+                actions: [
+                  if (editing && workout!.exercises.length > 1)
+                    IconButton(
+                      tooltip: l10n.workoutReorder,
+                      icon: const Icon(Icons.swap_vert),
+                      onPressed: () => showModalBottomSheet<void>(
+                        context: context,
+                        showDragHandle: true,
+                        isScrollControlled: true,
+                        builder: (_) => ReorderSheet(editor: cubit),
+                      ),
+                    ),
+                ],
+              ),
+              body: switch (state.status) {
+                WorkoutEditStatus.missing => EmptyView(
+                  message: l10n.historyNotFound,
+                ),
+                WorkoutEditStatus.syncing => EmptyView(
+                  message: l10n.historySyncing,
+                ),
+                WorkoutEditStatus.failure => ErrorView(
+                  message: l10n.historyLoadFailed,
+                  retryLabel: l10n.retry,
+                  onRetry: cubit.retry,
+                ),
+                _ when !editing => const LoadingView(),
+                _ => _Form(state),
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }
