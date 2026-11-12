@@ -318,9 +318,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
         active: active,
         weekPlan: schedule?.weekPlan(today, completed: _completed) ?? const [],
         finished: finished,
-        nextDate: finished
-            ? null
-            : schedule?.upcoming(today).firstOrNull?.date,
+        nextDate: finished ? null : schedule?.upcoming(today).firstOrNull?.date,
         missed: missed
             ? PlannedDay(
                 date: active.nextDate,

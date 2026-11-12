@@ -60,9 +60,8 @@ class _ProgramsViewState extends State<_ProgramsView> {
       // A failed missed-day choice is reported by its prompt.
       listenWhen: (_, current) => current.writeRejected,
       listener: (context, state) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.programWritesRejected)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.programWritesRejected)));
         _cubit.rejectionShown();
       },
       builder: (context, state) {
