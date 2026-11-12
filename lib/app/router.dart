@@ -32,6 +32,8 @@ import '../features/programs/presentation/program_builder_page.dart';
 import '../features/programs/presentation/program_detail_page.dart';
 import '../features/programs/presentation/programs_page.dart';
 import '../features/progress/presentation/progress_page.dart';
+import '../features/strength/presentation/exercise_strength_page.dart';
+import '../features/strength/presentation/strength_list_page.dart';
 import '../features/subscription/presentation/paywall_page.dart';
 import '../features/today/presentation/today_page.dart';
 import '../features/workout/presentation/history_page.dart';
@@ -89,6 +91,9 @@ abstract final class Routes {
   static const cardioNew = '$cardio/new';
   static String cardioSession(String id) => '$cardio/$id';
   static const history = '$progress/history';
+  static const strength = '$progress/strength';
+  static String strengthExercise(String exerciseId) =>
+      '$strength/${Uri.encodeComponent(exerciseId)}';
 
   /// Adds a past workout.
   static const historyNew = '$history/new';
@@ -341,6 +346,18 @@ GoRouter buildRouter(
                     path: ':id',
                     builder: (_, state) =>
                         CardioSessionPage(id: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'strength',
+                builder: (_, _) => const StrengthListPage(),
+                routes: [
+                  GoRoute(
+                    path: ':exerciseId',
+                    builder: (_, state) => ExerciseStrengthPage(
+                      exerciseId: state.pathParameters['exerciseId']!,
+                    ),
                   ),
                 ],
               ),

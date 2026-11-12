@@ -226,6 +226,12 @@ class _DetailBody extends StatelessWidget {
           l10n.detailLoggingType,
           l10n.loggingTypeName(exercise.loggingType),
         ),
+        ListTile(
+          leading: const Icon(Icons.trending_up),
+          title: Text(l10n.detailProgress),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go(Routes.strengthExercise(exercise.id)),
+        ),
         if (exercise.note case final note?)
           ..._lines(l10n.detailNote, [note], (_, line) => line),
         ..._lines(l10n.detailSetup, text.setup, numbered),
