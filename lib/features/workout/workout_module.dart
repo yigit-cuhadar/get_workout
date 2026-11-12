@@ -6,6 +6,7 @@ import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../core/device_localizations.dart';
+import '../notifications/data/notification_payloads.dart';
 import '../programs/domain/completed_days.dart';
 import 'data/android_workout_lock_screen.dart';
 import 'data/device_rest_notifications.dart';
@@ -54,7 +55,10 @@ class WorkoutModule implements FeatureModule {
       ..registerLazySingleton<WorkoutLockScreen>(
         () => defaultTargetPlatform == TargetPlatform.iOS
             ? const IosWorkoutLockScreen()
-            : AndroidWorkoutLockScreen(sl.getAsync<Notifications>()),
+            : AndroidWorkoutLockScreen(
+                sl.getAsync<Notifications>(),
+                payload: NotificationPayloads.activeWorkout,
+              ),
       )
       ..registerFactory(() => ShowWorkoutOnLockScreen(sl()))
       ..registerFactory(() => ClearWorkoutFromLockScreen(sl()))

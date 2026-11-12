@@ -46,7 +46,7 @@ class _AppState extends State<App> {
     profileDebugSection: SubscriptionModule.debugControls(sl),
   );
   late final AppLifecycleListener _lifecycle;
-  late final StreamSubscription<NotificationTarget> _taps;
+  late final StreamSubscription<String?> _taps;
   late final StreamSubscription<void> _lockScreenTaps;
 
   /// A tapped notification or lock-screen activity, until the app is past
@@ -64,8 +64,13 @@ class _AppState extends State<App> {
     // Created now so reminders follow the user from the first auth event.
     final notifications = sl<NotificationsCubit>();
     _router.routerDelegate.addListener(_openTapped);
-    _taps = NotificationPayloads.targetsOf(sl<NotificationTaps>().stream)
-        .listen(_openNotification);
+    _taps = sl<NotificationTaps>().stream.listen((payload) {
+      if (payload == NotificationPayloads.activeWorkout) {
+        unawaited(_openLockScreenTap());
+      } else if (NotificationPayloads.targetOf(payload) case final target?) {
+        _openNotification(target);
+      }
+    });
     _lockScreenTaps = sl<WatchLockScreenTaps>()().listen(
       (_) => unawaited(_openLockScreenTap()),
     );
@@ -89,8 +94,9 @@ class _AppState extends State<App> {
     _openTapped();
   }
 
-  /// Waits for the workout to be loaded, so a tap that launched the app
-  /// opens the workout in progress too.
+  /// A tap on the workout's lock-screen activity (iOS) or notification
+  /// (Android). Waits for the workout to be loaded, so a tap that launched
+  /// the app opens the workout in progress too.
   Future<void> _openLockScreenTap() async {
     final workout = sl<ActiveWorkoutCubit>();
     if (workout.state.status == WorkoutStatus.loading) {

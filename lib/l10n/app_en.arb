@@ -1121,8 +1121,8 @@
   "@workoutLockScreenCurrent": {"placeholders": {"exercise": {"type": "String"}, "set": {"type": "String"}, "sets": {"type": "int"}}},
   "workoutLockScreenWarmup": "{exercise} · set {set}",
   "@workoutLockScreenWarmup": {"placeholders": {"exercise": {"type": "String"}, "set": {"type": "String"}}},
-  "restChannelName": "Rest timer",
-  "restChannelDescription": "The running rest, counting down on the lock screen",
+  "lockScreenChannelName": "Workout in progress",
+  "lockScreenChannelDescription": "The workout in progress and its rests, on the lock screen",
   "notificationChannelName": "Workout",
   "notificationChannelDescription": "Rest timer, reminders and announcements",
 

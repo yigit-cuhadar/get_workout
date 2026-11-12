@@ -130,17 +130,10 @@ void main() {
     );
     expect(NotificationPayloads.targetOf(null), isNull);
     expect(NotificationPayloads.targetOf('reminder:other:1:2'), isNull);
-  });
-
-  test('taps without a known target are dropped', () async {
-    final targets = NotificationPayloads.targetsOf(
-      Stream.fromIterable([
-        null,
-        'unknown',
-        NotificationPayloads.reminder(ReminderKind.workout),
-      ]),
+    // Opened like the iOS Live Activity, not as a target.
+    expect(
+      NotificationPayloads.targetOf(NotificationPayloads.activeWorkout),
+      isNull,
     );
-
-    expect(await targets.toList(), [NotificationTarget.workout]);
   });
 }

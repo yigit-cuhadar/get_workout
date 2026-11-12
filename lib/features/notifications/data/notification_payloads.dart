@@ -6,6 +6,10 @@ enum NotificationTarget { workout, measurement, announcement }
 /// The payloads of the app's notifications.
 abstract final class NotificationPayloads {
   static const announcement = 'announcement';
+
+  /// The workout in progress on the lock screen (Android); opens it like
+  /// the iOS Live Activity, not through [targetOf].
+  static const activeWorkout = 'active-workout';
   static const _reminder = 'reminder';
 
   static String reminder(ReminderKind kind) => '$_reminder:${kind.name}';
@@ -23,9 +27,4 @@ abstract final class NotificationPayloads {
       null => null,
     };
   }
-
-  /// The targets of tapped notifications' [payloads], without the taps
-  /// that have none (the rest notification) or an unknown one.
-  static Stream<NotificationTarget> targetsOf(Stream<String?> payloads) =>
-      payloads.map(targetOf).where((target) => target != null).cast();
 }

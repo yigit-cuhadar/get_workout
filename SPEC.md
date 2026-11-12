@@ -616,8 +616,8 @@ from the earlier FitLab app.
   against what is pending (by a signature of time, text and alarm mode),
   so equal ones stay. While the user's settings or programs load nothing is
   touched, so a start never drops reminders; a change of user or signing
-  out drops them at once. Ids: rest 1, rest countdown 2 (Android, lock
-  screen), workout 100-127 (by date), measurement 200-203 (by
+  out drops them at once. Ids: rest 1, and on the lock screen (Android)
+  rest countdown 2 and workout in progress 3, workout 100-127 (by date), measurement 200-203 (by
   occurrence), announcement in front 300. Reminders do not ask
   for exact alarms on Android (they may fire up to an hour late). Taps:
   a workout reminder opens Today, a measurement reminder a new measurement
@@ -933,24 +933,37 @@ from the earlier FitLab app.
   Activities off, or before the app may start one) is logged once and the
   same content is not tried again until the app shows again; content that
   changes is tried at once.
-  Android shows the rest only, nothing outside a rest (an ongoing workout
-  notification is not built): an ongoing notification, id 2, on its own
-  channel `rest` ("Rest timer", default importance, no sound or vibration;
-  lower importances count as silent and may be hidden on the lock screen),
-  with a system chronometer counting down to the end and a timeout at the
-  end, so the system removes it even with the app killed; replaced in
-  place, never updated per second (it is posted again only when what the
-  lock screen shows changes, e.g. the next set); asks for promotion to a
-  Live Update (Android 16 status bar chip, `POST_PROMOTED_NOTIFICATIONS`).
-  A separate id from the end alert because that one is scheduled only
-  while the app hides and cancelled when it shows, and the countdown stays
-  across both. It needs the notification permission and never asks for
-  it: without it nothing shows, and it shows at once when the user allows
-  notifications mid-rest. No foreground service: nothing has to run until
-  the end (the chronometer and timeout are the system's), and a service
-  would need a declared type and Play review; the cost is that from
-  Android 14 the user can swipe it away while unlocked, until the next
-  change.
+  Android: ongoing, silent notifications on their own channel `rest`
+  ("Workout in progress"; the id is from when it showed rests only;
+  default importance, no sound or vibration; lower importances count as
+  silent and may be hidden on the lock screen), whose system chronometers
+  run without the app, one at a time: the workout, id 3 (title its name,
+  text the set to do now, counting up from `startedAt`;
+  `Notifications.showStopwatch`), or during a rest the rest, id 2 (title
+  "Rest", the next set, counting down, with a timeout at the end so the
+  system removes it even with the app killed; `showCountdown`). When a
+  rest starts the workout is taken off and scheduled back for the rest's
+  end (`scheduleStopwatch`, exact when the device allows exact alarms,
+  else possibly late, with nothing shown meanwhile but never a stale
+  countdown), so it returns while the app is suspended or killed; under
+  its own id because a notification replaced as the countdown times out
+  could be removed with it, so the two never race. +15 s replaces both;
+  a rest cut short (skip, untick, rest timer off) drops the scheduled one
+  and shows the workout at once; once the rest is over in front the app
+  does the same. Both are replaced in place, never updated per second
+  (posted again only when what they show changes), and ask for promotion
+  to a Live Update (Android 16 status bar chip,
+  `POST_PROMOTED_NOTIFICATIONS`). A tap opens the app with payload
+  `active-workout`, handled like the iOS Live Activity's tap (below). A
+  separate id from the end alert (1) because that one is scheduled only
+  while the app hides and cancelled when it shows, and these stay across
+  both. They need the notification permission and never ask for it:
+  without it nothing shows, and they show at once when the user allows
+  notifications mid-rest. They are ongoing, so they cannot be dismissed on
+  the lock screen; no foreground service (nothing has to run: the
+  chronometers, timeout and alarm are the system's, and a service would
+  need a declared type and Play review), so from Android 14 the user can
+  swipe them away while unlocked, until the next change.
   iOS (16.2+, below that nothing shows): one Live Activity for the whole
   workout from the `RestTimer` widget extension (target and bundle id kept
   from when it showed rests only; `WorkoutActivityAttributes`,
@@ -1312,7 +1325,7 @@ Group 5, workout
 - [x] Free workout — start empty (not in progress until an exercise is added), save as program at the end
 - [x] Rest timer — auto start, +15 s, skip, notification
 - [x] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification
-- [ ] Workout on the lock screen — iOS Live Activity for the whole workout (workout and rest modes, tap opens it); Android unchanged (rest only)
+- [ ] Workout on the lock screen — iOS Live Activity and Android ongoing notifications for the whole workout (workout and rest modes, tap opens it)
 - [x] Finish and summary — records with a short celebration, `exerciseStats` update
 - [x] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
 
@@ -1446,6 +1459,22 @@ Group 9, launch readiness
   presentation without squeezing the labels. An activity started by an older build (`RestActivityAttributes`)
   is no longer seen by the app and stays until iOS ends it; only matters
   for a device that had one running across the update.
+- Workout on the lock screen (Android), not built yet; it needs
+  `forge_notifications`' `showStopwatch` / `scheduleStopwatch` (forge
+  branch `feat/ongoing-stopwatch-notification`, to be tagged and pinned).
+  Check on the emulator: the notification appears with the first exercise
+  and counts up from the start; a rest replaces it with the countdown and
+  the next set, and the workout comes back at the end with the app in
+  front, in the background and killed (with and without exact alarms
+  allowed), and at once on skip; +15 s moves both; finish, discard and
+  sign-out remove it and nothing comes back later; relaunching with a
+  workout in progress shows it once (no duplicate) and without one
+  removes it; it makes no sound, cannot be swiped away on the lock
+  screen, and is promoted to a status bar chip on Android 16; a tap in
+  both modes opens the workout page (also from a killed app), and with
+  no workout in progress only opens the app; the channel shows as
+  "Workout in progress" in the system settings (renamed from "Rest
+  timer").
 - Release blocker: the Terms of Use and Privacy Policy links in
   `lib/app/legal_links.dart` are placeholders; publish the pages and
   replace them (Android picks up `privacyUrl` by itself).
