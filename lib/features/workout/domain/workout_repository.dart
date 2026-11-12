@@ -2,6 +2,7 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../programs/domain/active_program.dart';
 import 'exercise_stats.dart';
+import 'rest.dart';
 import 'workout.dart';
 
 /// Stats as read at finishing: [current] when the server confirmed them,
@@ -11,6 +12,28 @@ typedef StatsRead = ({ExerciseStats? stats, bool current});
 /// Workouts that do an exercise, for rebuilding its stats; [complete] is
 /// false when there were more than one query returns.
 typedef ExerciseWorkouts = ({List<Workout> workouts, bool complete});
+
+/// The workouts doing each exercise, read together: from the server when it
+/// answers for all of them quickly ([current]), else from the device's
+/// cache, which may lack some.
+typedef WorkoutsByExercise = ({
+  Map<String, ExerciseWorkouts> workouts,
+  bool current,
+});
+
+/// A stored workout and whether it has changes the server has not
+/// confirmed yet.
+typedef StoredWorkout = ({Workout workout, bool pending});
+
+/// Where a page of the history ends. Only the repository reads [position].
+final class HistoryCursor {
+  const HistoryCursor(this.position);
+  final Object position;
+}
+
+/// Finished workouts, newest first. [end] is the last one's place, null
+/// when there is none; [more] tells that older ones may follow.
+typedef HistoryPage = ({List<Workout> workouts, HistoryCursor? end, bool more});
 
 /// Finished workouts (`users/{uid}/workouts`), the stats derived from them
 /// (`users/{uid}/exerciseStats`) and, when a workout moves it on, the active
@@ -45,13 +68,16 @@ abstract interface class WorkoutRepository {
     ActiveProgram? advance,
   });
 
-  /// Whether the server holds workout [id], once every write this device
-  /// started has been answered; true after a successful [saveWorkout],
-  /// false after a refused one. Waits while offline; fails when the server
-  /// cannot be asked.
+  /// Whether the server took workout [id]: true once a [saveWorkout] of it
+  /// is acknowledged, even if it was deleted since (on another device),
+  /// false when it was refused. For a save started before the app last
+  /// restarted, whose answer is lost, whether the server holds it once
+  /// every write this device started has been answered. Waits while
+  /// offline; fails when the server cannot be asked.
   Future<Result<bool>> isStored(String uid, String id);
 
-  /// The workouts doing [exerciseId], from the server.
+  /// The workouts doing [exerciseId], from the server once every write
+  /// this device started has been answered; waits while offline.
   Future<Result<ExerciseWorkouts>> workoutsWith(String uid, String exerciseId);
 
   /// Replaces the stats of [exerciseId]; null removes them.
@@ -60,6 +86,47 @@ abstract interface class WorkoutRepository {
     String exerciseId,
     ExerciseStats? stats,
   );
+
+  /// The workouts doing each of [exerciseIds]; see [WorkoutsByExercise].
+  Future<Result<WorkoutsByExercise>> workoutsDoing(
+    String uid,
+    List<String> exerciseIds,
+  );
+
+  /// One page of the finished workouts, again on every change, the
+  /// device's cache first. The first page starts at the newest; a later one
+  /// [after] the end of the page before it. Without [through] a page holds a
+  /// fixed number of workouts; with it, every workout down to that end, so
+  /// pages loaded one after another never skip or repeat one.
+  Stream<HistoryPage> watchHistory(
+    String uid, {
+    HistoryCursor? after,
+    HistoryCursor? through,
+  });
+
+  /// Workout [id], null when there is none (or it cannot be read); again on
+  /// every change.
+  Stream<StoredWorkout?> watchWorkout(String uid, String id);
+
+  /// Replaces stored [workout] and the stats of each exercise in [stats]
+  /// (null removes them) in one batch. Like [saveWorkout] it only starts
+  /// the write; a refusal arrives on [rejectedEdits].
+  Future<Result<void>> updateWorkout(
+    String uid,
+    Workout workout,
+    Map<String, ExerciseStats?> stats,
+  );
+
+  /// Removes workout [id] and replaces [stats] as [updateWorkout] does.
+  Future<Result<void>> deleteWorkout(
+    String uid,
+    String id,
+    Map<String, ExerciseStats?> stats,
+  );
+
+  /// Edits and deletions the server refused after they had started; their
+  /// change has left the device's cache again.
+  Stream<Failure> get rejectedEdits;
 }
 
 /// What the device keeps for a user between launches: the workout in
@@ -68,11 +135,15 @@ abstract interface class WorkoutRepository {
 class LocalWorkouts extends Equatable {
   const LocalWorkouts({
     this.draft,
+    this.rest,
     this.finished = const [],
     this.staleStats = const {},
   });
 
   final Workout? draft;
+
+  /// The rest of [draft]; never without it.
+  final Rest? rest;
   final List<Workout> finished;
 
   /// Exercise ids whose stats were computed from what the device knew, or
@@ -81,16 +152,18 @@ class LocalWorkouts extends Equatable {
 
   LocalWorkouts copyWith({
     Workout? Function()? draft,
+    Rest? Function()? rest,
     List<Workout>? finished,
     Set<String>? staleStats,
   }) => LocalWorkouts(
     draft: draft != null ? draft() : this.draft,
+    rest: rest != null ? rest() : this.rest,
     finished: finished ?? this.finished,
     staleStats: staleStats ?? this.staleStats,
   );
 
   @override
-  List<Object?> get props => [draft, finished, staleStats];
+  List<Object?> get props => [draft, rest, finished, staleStats];
 }
 
 /// [LocalWorkouts] per user on the device, so a crash or a killed app never

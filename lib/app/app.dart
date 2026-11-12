@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
@@ -15,6 +16,7 @@ import '../features/exercises/presentation/favorites_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/settings_cubit.dart';
 import '../features/workout/presentation/active_workout_cubit.dart';
+import '../features/workout/presentation/rest_timer_cubit.dart';
 import '../features/subscription/presentation/purchaser_session.dart';
 import '../features/subscription/subscription_module.dart';
 import '../l10n/app_localizations.dart';
@@ -40,11 +42,14 @@ class _AppState extends State<App> {
     super.initState();
     // Created now so the store follows the user from the first auth event.
     final purchaser = sl<PurchaserSession>();
+    final rest = sl<RestTimerCubit>();
     _lifecycle = AppLifecycleListener(
       onResume: () {
         unawaited(sl<ExerciseCatalogueCubit>().appResumed());
         purchaser.resume();
       },
+      onHide: rest.hidden,
+      onShow: rest.shown,
     );
   }
 
@@ -67,22 +72,28 @@ class _AppState extends State<App> {
         BlocProvider.value(value: sl<EquipmentCubit>()),
         BlocProvider.value(value: sl<BodyModelCubit>()),
         BlocProvider.value(value: sl<ActiveWorkoutCubit>()),
+        BlocProvider.value(value: sl<RestTimerCubit>()),
         BlocProvider.value(value: sl<EntitlementCubit>()),
       ],
-      child: BlocSelector<SettingsCubit, SettingsState, ThemePreference>(
-        selector: (state) => state.settings.themePreference,
-        builder: (context, theme) => MaterialApp.router(
-          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          theme: ForgeTheme.light(),
-          darkTheme: ForgeTheme.dark(),
-          themeMode: switch (theme) {
-            ThemePreference.system => ThemeMode.system,
-            ThemePreference.light => ThemeMode.light,
-            ThemePreference.dark => ThemeMode.dark,
-          },
-          routerConfig: _router,
+      child: BlocListener<RestTimerCubit, RestTimerState>(
+        listenWhen: (previous, current) =>
+            current.phase == RestPhase.over && previous.phase != current.phase,
+        listener: (_, _) => unawaited(HapticFeedback.heavyImpact()),
+        child: BlocSelector<SettingsCubit, SettingsState, ThemePreference>(
+          selector: (state) => state.settings.themePreference,
+          builder: (context, theme) => MaterialApp.router(
+            onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: ForgeTheme.light(),
+            darkTheme: ForgeTheme.dark(),
+            themeMode: switch (theme) {
+              ThemePreference.system => ThemeMode.system,
+              ThemePreference.light => ThemeMode.light,
+              ThemePreference.dark => ThemeMode.dark,
+            },
+            routerConfig: _router,
+          ),
         ),
       ),
     );

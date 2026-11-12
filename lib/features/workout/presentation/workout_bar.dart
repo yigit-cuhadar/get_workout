@@ -6,9 +6,11 @@ import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import 'active_workout_cubit.dart';
 import 'elapsed_text.dart';
+import 'rest_strip.dart';
 
 /// The minimized workout, above the tab bar on every tab while one is in
-/// progress or its summary waits; tapping it opens the workout. Also tells
+/// progress or its summary waits, with the time since it started or the
+/// rest's time left; tapping it opens the workout. Also tells
 /// the user when a workout refused by the server is back in progress, or
 /// kept workouts could not be read.
 class WorkoutBar extends StatelessWidget {
@@ -58,7 +60,7 @@ class WorkoutBar extends StatelessWidget {
               title: Text(workout.name, maxLines: 1),
               subtitle: state.status == WorkoutStatus.finished
                   ? Text(AppLocalizations.of(context).workoutBarFinished)
-                  : ElapsedText(since: workout.startedAt),
+                  : RestOrElse(idle: ElapsedText(since: workout.startedAt)),
               trailing: const Icon(Icons.keyboard_arrow_up),
               onTap: () => context.push(Routes.workout),
             ),
