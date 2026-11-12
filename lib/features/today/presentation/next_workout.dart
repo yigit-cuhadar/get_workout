@@ -4,6 +4,8 @@ import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/domain/program_schedule.dart';
 import '../../programs/presentation/program_list_cubit.dart';
+import '../../workout/domain/workout.dart';
+import '../../workout/presentation/active_workout_cubit.dart';
 
 /// What the Today tab offers to train next.
 sealed class NextWorkout extends Equatable {
@@ -59,12 +61,41 @@ class MissedProgramDay extends NextWorkout {
   List<Object?> get props => [program, missed, moveDate];
 }
 
-/// The next workout of [state], derived only from what the Programs tab
-/// shows; null until it is known: while the list loads, and while the
-/// premium status of a premium copy is (a missed day could otherwise show
-/// as a planned one with Start). A missed day is offered only while the
-/// program is open, as there.
-NextWorkout? nextWorkoutOf(ProgramListState state) {
+/// A [workout] is in progress, so it is resumed rather than another
+/// started; started from day [dayIndex] of [program] when that program
+/// is known and still has the day.
+class WorkoutInProgress extends NextWorkout {
+  const WorkoutInProgress({required this.workout, this.program, this.dayIndex});
+
+  final Workout workout;
+  final Program? program;
+  final int? dayIndex;
+
+  @override
+  List<Object?> get props => [workout, program, dayIndex];
+}
+
+/// The next workout: the one in progress in [active] (an empty one is not),
+/// else derived only from what the Programs tab shows in [state]; null
+/// until it is known: while the list loads, and while the premium status
+/// of a premium copy is (a missed day could otherwise show as a planned
+/// one with Start). A missed day is offered only while the program is
+/// open, as there.
+NextWorkout? nextWorkoutOf(ProgramListState state, ActiveWorkoutState active) {
+  if (active.workout case final workout? when active.inProgress) {
+    final program = switch (workout.programId) {
+      final id? => state.program(id),
+      null => null,
+    };
+    final dayIndex = workout.dayIndex;
+    final hasDay =
+        program != null && dayIndex != null && dayIndex < program.days.length;
+    return WorkoutInProgress(
+      workout: workout,
+      program: program,
+      dayIndex: hasDay ? dayIndex : null,
+    );
+  }
   if (state.status != ProgramListStatus.ready) return null;
   final program = state.activeProgram;
   final dayIndex = state.nextDayIndex;

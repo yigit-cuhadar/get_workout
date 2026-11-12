@@ -191,7 +191,11 @@ from the earlier FitLab app.
   Firestore rules validate the top-level fields only (`name`, `days` count,
   `origin`); the app validates days and items. Items whose exercise's
   logging type changed are fitted to the new type when the builder loads
-  them, and the user is told.
+  them, and the user is told. The Programs tab opens with three rows, the
+  same with or without programs: ready-made programs, the generator and
+  "New program" (the builder); no floating button. In the builder, Add
+  day selects the new day and focuses its name; opening the builder or
+  switching days never takes the focus.
 - **Schedule**: `activeProgram.nextDate` is a calendar date stored as a
   `YYYY-MM-DD` string, so it is the same date in every time zone, and
   `startedAt` is a device-clock timestamp because starting a program must
@@ -997,7 +1001,11 @@ from the earlier FitLab app.
   be read adds nothing.
 - **Today tab** (`lib/features/today`): a scrolling list of independent
   cards, each on its own data, so one failing leaves the others. Next
-  workout: with an active program the card's headline is that program,
+  workout: while a workout is in progress (`ActiveWorkoutState.inProgress`,
+  so not an empty one) the card is that workout, labelled "Workout in
+  progress", with the program day it was started from and "Resume
+  workout", which opens it like the workout bar and never starts another.
+  Otherwise, with an active program the card's headline is that program,
   labelled "Active program" and opening its page, its next day below;
   without one it is titled "Next workout". It uses the Programs tab's own
   `ProgramListCubit` (one instance), so

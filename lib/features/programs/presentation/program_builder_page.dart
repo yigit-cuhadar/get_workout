@@ -175,11 +175,30 @@ class _FormState extends State<_Form> {
     text: _cubit.state.program.lengthWeeks?.toString() ?? '',
   );
 
+  /// The name field of the day last added, which takes the focus once;
+  /// opening the builder or switching days never does.
+  final _newDayName = FocusNode();
+  Key? _newDayKey;
+
   @override
   void dispose() {
     _name.dispose();
     _weeks.dispose();
+    _newDayName.dispose();
     super.dispose();
+  }
+
+  /// A new field per day, so it shows that day's name.
+  static Key _dayKey(ProgramBuilderState state) =>
+      ValueKey('day-${state.selectedDay}-${state.program.days.length}');
+
+  void _addDay() {
+    _cubit.addDay();
+    _newDayKey = _dayKey(_cubit.state);
+    // Its field is built in the next frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _newDayName.requestFocus();
+    });
   }
 
   @override
@@ -189,6 +208,7 @@ class _FormState extends State<_Form> {
     final validation = state.validation;
     final day = state.day!;
     final dayIndex = state.selectedDay;
+    final dayKey = _dayKey(state);
     final items = day.items;
     String? programError(Set<ProgramIssue> issues) => validation.program
         .where(issues.contains)
@@ -265,7 +285,7 @@ class _FormState extends State<_Form> {
                 ActionChip(
                   avatar: const Icon(Icons.add),
                   label: Text(l10n.programAddDay),
-                  onPressed: state.canAddDay ? _cubit.addDay : null,
+                  onPressed: state.canAddDay ? _addDay : null,
                 ),
               ],
             ),
@@ -275,8 +295,8 @@ class _FormState extends State<_Form> {
               children: [
                 Expanded(
                   child: TextFormField(
-                    // A new field per day, so it shows that day's name.
-                    key: ValueKey('day-$dayIndex-${state.program.days.length}'),
+                    key: dayKey,
+                    focusNode: dayKey == _newDayKey ? _newDayName : null,
                     initialValue: day.name,
                     textCapitalization: TextCapitalization.sentences,
                     inputFormatters: [
