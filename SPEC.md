@@ -64,6 +64,22 @@ from the earlier FitLab app.
   it is seeded. `content/*.json` is the seed and the bulk-edit path;
   the admin panel edits Firestore directly and leaves `contentHash` alone, so
   the import skips (and fails on) documents edited there unless `--force`.
+- **Admin program editor**: edits `programs/{id}` and its `detail/main` in
+  one transaction, so both are written or neither; a save is refused when
+  either changed since the editor loaded them, and keeps `contentHash` and
+  unknown card fields, as the exercise editor does. Typed in: id, status,
+  premium, order, level, goal, equipment profile, length, name and summary
+  per language of `languages`, and the days. `daysPerWeek`, `equipment` and
+  `minutes` are computed from the days on save and shown read-only, so they
+  always match the rules. Every save, drafts included, must pass
+  `programProblems` and have an unused id and a unique name and order, as
+  the import rejects an invalid file whatever its status; the 6 free / 19
+  premium split of live programs shows as catalogue health and never
+  blocks, nor do the weekly-set warnings. The picker offers live exercises;
+  a new item takes the builder's defaults and the exercise's rest. A save
+  drops unknown fields inside days and items (the import rejects them too).
+  Readers take a whole double as an integer. Panel strings are English
+  literals like the rest of the panel (`lib/main_admin.dart`).
 - **Offline**: Firestore's persistent cache is the local database. The workout
   in progress is also kept in a local file so a crash never loses sets.
   Derived numbers are computed from workouts on read wherever the query is
@@ -164,6 +180,45 @@ from the earlier FitLab app.
   bought; `ActiveWorkoutCubit` refuses it too. A workout in progress from
   it can always be finished; free workouts are never gated. The gate is client-side only: the copy lives in the user's
   own collection, and the rules only check that `premium` is a boolean.
+- **Program generator** (`lib/features/generator`): pure Dart on the device,
+  the same program for the same answers, library and seed; Regenerate takes
+  the next seed. Questions: goal, level, 2-6 days (onboarding's range),
+  session of 30/45/60/75/90 minutes (60 preselected), equipment (presets or
+  items), up to 3 focus muscles, exercises to leave out (from the picker),
+  one area to go easy on (shoulders, elbows, lower back, hips or knees, each
+  a set of muscles) and the split; goal, level, days and equipment are
+  prefilled from the profile. Splits: full body, upper/lower, push/pull/legs
+  (3+ days; 4 adds an upper day, 5 upper and lower); "best for my days" is
+  full body for 2-3 days, upper/lower for 4, push/pull/legs for 5-6
+  (upper/lower for beginners). Weekly targets: 10/14/18 sets by level for
+  the catalogue's major muscles (inside the 10-20 band and each level's
+  catalogue band), half for calves and abs, +4 (at most 20) for a focus
+  muscle, none for the area to go easy on (which wins over focus); other
+  muscles are worked only through these exercises, and no trained muscle
+  passes 20. Exercises: live catalogue ones only (a custom one has no
+  level), fitting the equipment through `equipment` or an alternative set,
+  at most one level above the user (the catalogue rule), never mobility or
+  explosive patterns, never left-out ones, never with the area's muscles as
+  main muscles and, where another fits, not as secondary ones either;
+  compound first for quads, pecs, lats, hamstrings and glutes, isolation
+  first for the rest. Each day's next exercise goes to the muscle furthest
+  short of what it still needs that week (secondary work counts), so short
+  sessions share the time fairly. Reps: strength 4-6 (isolation 8-12; exercises without
+  a load get the muscle range), muscle 6-10 / 10-15, fat loss 10-15 / 12-15
+  with rests capped at 60 s, general 8-12 / 10-15; timed exercises 30/40/45 s
+  by level; rest is the exercise's default. 2-5 sets an exercise (4 at most
+  for beginners), up to 10 exercises a day, each day within the session by
+  `estimateDay`; weekly sets reach the targets as far as the days and
+  sessions allow. Answers that give no program (days out of range, a split
+  needing more days, a day no exercise fits) get a typed reason, not an
+  empty program; a trained muscle no exercise of the week works directly
+  (none fits, or none fitted the sessions) is named on the preview.
+  Saved as the user's own (`origin: generated`, "<split>, <n> days", days
+  "Upper A", ...), editable like any other and never marked `premium`:
+  Premium gates the generator, not the programs it made. Its entry is on
+  the Programs tab for everyone, locked when free, and opens through
+  `requirePremium()`; it is a feature of its own, so the programs feature
+  still never imports the subscription one (the tab only shows its entry).
 - **Steps**: read-only from Apple Health / Health Connect; not stored.
 - **Photos**: private app storage plus Cloud Storage backup. Never the gallery.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
@@ -583,8 +638,8 @@ Group 6, progress
 - [ ] Today tab — next workout and week strip, quick actions, volume card, steps card
 
 Group 7, programs for everyone
-- [ ] Catalog — 25 ready-made programs (6 free), filters, detail, premium lock, admin program editor (the admin program editor is still to do)
-- [ ] Program generator (Premium) — questions (goal, level, days, session length, equipment, focus muscles, excluded exercises, area to go easy on, preferred split), preview, save as an editable program
+- [x] Catalog — 25 ready-made programs (6 free), filters, detail, premium lock, admin program editor
+- [x] Program generator (Premium) — questions (goal, level, days, session length, equipment, focus muscles, excluded exercises, area to go easy on, preferred split), preview, save as an editable program
 
 Group 8, body and extras
 - [ ] Weight log and measurement day — steps for weight, tracked measurements, four photos with ghost overlay, reminders, photo backup, compare
