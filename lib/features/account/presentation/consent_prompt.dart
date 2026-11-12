@@ -23,6 +23,11 @@ class ConsentPrompt extends StatefulWidget {
 class _ConsentPromptState extends State<ConsentPrompt> {
   bool _open = false;
 
+  /// The answer just given, until the cubit's state shows it: saving takes a
+  /// moment, and the tabs become the top route again the instant the dialog
+  /// closes, which would ask a second time.
+  bool _answered = false;
+
   /// Also runs when the tabs become, or stop being, the top route.
   @override
   void didChangeDependencies() {
@@ -36,7 +41,7 @@ class _ConsentPromptState extends State<ConsentPrompt> {
   }
 
   Future<void> _askIfUnanswered(ConsentState state) async {
-    if (!mounted || _open || !state.unanswered) return;
+    if (!mounted || _open || _answered || !state.unanswered) return;
     if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
     _open = true;
     final cubit = context.read<ConsentCubit>();
@@ -63,15 +68,25 @@ class _ConsentPromptState extends State<ConsentPrompt> {
       ),
     );
     _open = false;
-    if (consent != null) unawaited(cubit.answer(consent));
+    if (consent == null) return;
+    _answered = true;
+    await cubit.answer(consent);
+    // Not saved: ask again the next time the tabs come to the front.
+    if (cubit.state.failure != null) _answered = false;
   }
 
   @override
   Widget build(BuildContext context) =>
       BlocListener<ConsentCubit, ConsentState>(
         listenWhen: (previous, current) =>
-            current.unanswered && !previous.unanswered,
-        listener: (_, state) => unawaited(_askIfUnanswered(state)),
+            current.unanswered != previous.unanswered,
+        listener: (_, state) {
+          if (state.unanswered) {
+            unawaited(_askIfUnanswered(state));
+          } else {
+            _answered = false;
+          }
+        },
         child: widget.child,
       );
 }

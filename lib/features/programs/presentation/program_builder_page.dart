@@ -197,6 +197,12 @@ class _FormState extends State<_Form> {
     return ReorderableListView.builder(
       buildDefaultDragHandles: false,
       padding: const EdgeInsets.only(bottom: Gap.xl),
+      // The dragged row is rebuilt in the navigator's overlay, above this
+      // page's cubit, which the row reads.
+      proxyDecorator: (child, _, _) => BlocProvider.value(
+        value: _cubit,
+        child: Material(elevation: 4, child: child),
+      ),
       header: Padding(
         padding: const EdgeInsets.all(Gap.md),
         child: Column(
