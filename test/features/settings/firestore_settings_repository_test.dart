@@ -74,6 +74,7 @@ void main() {
         'themeMode': 'dark',
         'effortScale': 'rpe',
         'restTimer': {'enabled': true, 'defaultS': 90},
+        'stepGoal': 10000,
       },
     });
     expect(await repository.watchSettings('u1').first, settings);
@@ -141,6 +142,49 @@ void main() {
     });
   });
 
+  group('step goal', () {
+    test('is stored and read back', () async {
+      final settings = defaults.copyWith(stepGoal: 7500);
+
+      await repository.saveSettings('u1', settings);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored['stepGoal'], 7500);
+      expect(await repository.watchSettings('u1').first, settings);
+    });
+
+    test('a missing or malformed goal reads as the default', () async {
+      await user().set({
+        'settings': {'stepGoal': 'many'},
+      });
+      expect(
+        (await repository.watchSettings('u1').first).stepGoal,
+        StepGoal.standard,
+      );
+    });
+
+    test('a goal outside the limits is clamped and rounded', () async {
+      await user().set({
+        'settings': {'stepGoal': 999999},
+      });
+      expect(
+        (await repository.watchSettings('u1').first).stepGoal,
+        StepGoal.max,
+      );
+      await user().set({
+        'settings': {'stepGoal': 12.0},
+      });
+      expect(
+        (await repository.watchSettings('u1').first).stepGoal,
+        StepGoal.min,
+      );
+      await user().set({
+        'settings': {'stepGoal': 8000.4},
+      });
+      expect((await repository.watchSettings('u1').first).stepGoal, 8000);
+    });
+  });
+
   test('save keeps the other fields of the user document', () async {
     await user().set({
       'profile': {'goal': 'get_stronger'},
@@ -161,6 +205,7 @@ void main() {
         'themeMode': 'system',
         'effortScale': 'off',
         'restTimer': {'enabled': true, 'defaultS': 90},
+        'stepGoal': 10000,
       },
     });
   });
