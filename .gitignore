@@ -50,6 +50,7 @@ app.*.map.json
 # MobileAppForge
 pubspec_overrides.yaml
 firebase-debug.log
+.firebase/
 
 # Cloud Functions: dependencies and the compiled output
 functions/node_modules/
