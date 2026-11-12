@@ -4,6 +4,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/first_weekday.dart';
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../cardio/presentation/cardio_text.dart';
@@ -36,10 +37,7 @@ class _CalendarView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final dates = MaterialLocalizations.of(context);
-    // 0 is Sunday; the grid takes ISO weekdays.
-    final firstWeekday = dates.firstDayOfWeekIndex == 0
-        ? DateTime.sunday
-        : dates.firstDayOfWeekIndex;
+    final firstWeekday = dates.firstWeekday;
     final cubit = context.read<CalendarCubit>();
     return BlocBuilder<CalendarCubit, CalendarState>(
       builder: (context, state) => Scaffold(

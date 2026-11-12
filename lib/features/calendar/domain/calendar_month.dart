@@ -72,7 +72,7 @@ List<List<CalendarDate>> monthWeeks(
   assert(firstWeekday >= 1 && firstWeekday <= 7);
   final first = monthOf(month);
   final last = addMonths(first, 1).addDays(-1);
-  var start = first.addDays(-((first.weekday - firstWeekday) % 7));
+  var start = first.startOfWeek(firstWeekday);
   return [
     for (; !start.isAfter(last); start = start.addDays(7))
       [for (var i = 0; i < 7; i++) start.addDays(i)],

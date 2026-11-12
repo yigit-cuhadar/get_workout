@@ -102,6 +102,17 @@ void main() {
       expect(d(2027, 1, 3).weekStart, d(2026, 12, 28));
     });
 
+    test('starts its week on any weekday a locale uses', () {
+      // Wednesday 11 November 2026.
+      expect(d(2026, 11, 11).startOfWeek(DateTime.sunday), d(2026, 11, 8));
+      expect(d(2026, 11, 8).startOfWeek(DateTime.sunday), d(2026, 11, 8));
+      expect(d(2026, 11, 14).startOfWeek(DateTime.sunday), d(2026, 11, 8));
+      expect(d(2026, 11, 11).startOfWeek(DateTime.saturday), d(2026, 11, 7));
+      expect(d(2026, 11, 13).startOfWeek(DateTime.saturday), d(2026, 11, 7));
+      expect(d(2026, 11, 14).startOfWeek(DateTime.saturday), d(2026, 11, 14));
+      expect(d(2027, 1, 2).startOfWeek(DateTime.sunday), d(2026, 12, 27));
+    });
+
     test('reads and writes YYYY-MM-DD', () {
       expect(d(2026, 3, 7).toIso(), '2026-03-07');
       expect(CalendarDate.tryParse('2026-03-07'), d(2026, 3, 7));
