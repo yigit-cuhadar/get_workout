@@ -78,7 +78,7 @@ extension WorkoutText on AppLocalizations {
       RecordKind.heaviestWeight => recordHeaviestWeight(
         liftedWeightText(value, unit),
       ),
-      RecordKind.bestE1rm => recordBestE1rm(weightText(value, unit)),
+      RecordKind.bestE1rm => recordBestE1rm(estimatedWeightText(value, unit)),
       RecordKind.bestSetVolume => recordBestSetVolume(weightText(value, unit)),
       RecordKind.mostReps => recordMostReps(value.round()),
       RecordKind.longestDuration => recordLongestDuration(

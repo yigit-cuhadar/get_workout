@@ -87,14 +87,14 @@ void main() {
       expect([for (final p in series) p.value], [90, 95, 100, 110]);
     });
 
-    test('values in pounds for a user who lifts in pounds', () {
+    test('values in whole pounds for a user who lifts in pounds', () {
       final series = e1rmSeries(
         [point(DateTime(2026, 11, 1), 100)],
         range: StrengthRange.weeks12,
         now: now,
         unit: WeightUnit.lb,
       );
-      expect(series.single.value, closeTo(220.46, 0.01));
+      expect(series.single.value, 220);
     });
 
     test('empty without history', () {

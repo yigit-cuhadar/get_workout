@@ -190,16 +190,22 @@ from the earlier FitLab app.
   share one parsed model and paint once. The Exercises tab's model stays
   interactive.
 - **Units**: stored metric. kg/lb and cm/in chosen by the user. A single
-  lifted weight is shown through `WeightUnit.shown`: on the unit's entry
-  grid (two decimals, what weight fields write back) it was typed in this
-  unit and shows as typed; otherwise it was typed in the other unit and
-  shows rounded, to whole lb (80 kg → 176 lb) or half kg (45 lb → 20.5 kg).
-  Display only: an untouched field stores nothing, an edited one stores what
-  was typed. Set rows and drops, previous and suggested values, workout
-  detail, heaviest-weight records and program targets use it; volume,
-  estimated 1RM (records and chart), body weight and the calculators keep
-  their own formatting. A weight typed with more than two decimals is taken
-  for the other unit's and shows rounded.
+  lifted weight is shown through `WeightUnit.shown`: within two decimals
+  (the precision weight fields show; 1e-8 hundredths of tolerance, the
+  nearest other-unit weights being 4e-6 off: 538.92 lb, 244.45 kg) it was
+  typed in this unit and shows as typed; otherwise it was typed in the other
+  unit and shows rounded, to whole lb (80 kg → 176 lb) or half kg (45 lb →
+  20.5 kg), or to two decimals when that would show a positive weight as 0.
+  Display only: fields store what is typed, converted to kg; an untouched
+  field stores nothing, and typing back the number a field showed keeps its
+  stored kg (`RetypedWeights`, in the workout editor and the program
+  builder). Set rows and drops, previous and suggested values, workout
+  detail, heaviest-weight records and program targets use it. The estimated
+  1RM is computed, so it always shows rounded the same way
+  (`estimatedFromKg`: records, the strength chart and its labels); volume,
+  body weight and the calculators (results of typed inputs) keep their own
+  formatting. A weight typed with more than two decimals is taken for the
+  other unit's and shows rounded.
 - **Programs**: a name of 1-60 characters, 1-7 days, day names of at most
   40 characters, 1-20 exercises per day, an optional length of 1-52 weeks;
   lengths count UTF-16 code units in the fields and in validation. The

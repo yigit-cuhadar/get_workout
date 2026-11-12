@@ -70,7 +70,35 @@ void main() {
       expect(l10n.liftedWeightText(lb.toKg(12.25), lb), '12.25 lb');
     });
 
-    test('derived weights keep their own formatting', () {
+    test('a positive weight never reads as 0', () {
+      expect(
+        l10n.setText(
+          const WorkoutSet(weightKg: 0.2, reps: 8),
+          LoggingType.weightReps,
+          lb,
+        ),
+        '0.44 × 8',
+      );
+      expect(l10n.liftedWeightText(lb.toKg(0.5), WeightUnit.kg), '0.23 kg');
+    });
+
+    test('an estimated one-rep max is always rounded', () {
+      expect(
+        l10n.recordText(
+          NewRecord(
+            exerciseId: 'e',
+            name: 'Squat',
+            kind: RecordKind.bestE1rm,
+            value: lb.toKg(225.4),
+          ),
+          lb,
+        ),
+        'Squat: Best estimated 1RM 225 lb',
+      );
+      expect(l10n.estimatedWeightText(102.3, WeightUnit.kg), '102.5 kg');
+    });
+
+    test('volume keeps its own formatting', () {
       expect(
         l10n.recordText(
           NewRecord(

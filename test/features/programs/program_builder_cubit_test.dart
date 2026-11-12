@@ -312,6 +312,29 @@ void main() {
       expect(cubit.state.day!.items[0].targetKg, isNull);
     });
 
+    test('a target typed back as shown keeps the stored kg', () async {
+      when(() => repository.getProgram('u1', 'p1')).thenAnswer(
+        (_) async => Ok(
+          Program(
+            id: 'p1',
+            name: 'Old',
+            days: [
+              ProgramDay(items: [item('a', targetKg: 80)]),
+            ],
+          ),
+        ),
+      );
+      final cubit = await build(programId: 'p1', unit: WeightUnit.lb);
+      // 80 kg shows as 176 lb.
+      cubit
+        ..setTarget(0, '17')
+        ..setTarget(0, '176');
+      expect(cubit.state.day!.items[0].targetKg, 80);
+      expect(cubit.state.dirty, isFalse);
+      cubit.setTarget(0, '177');
+      expect(cubit.state.day!.items[0].targetKg, WeightUnit.lb.toKg(177));
+    });
+
     test('supersets, circuits, moves and removals', () async {
       final cubit = await filled(['a', 'b', 'c', 'd']);
       List<String?> groups() => [

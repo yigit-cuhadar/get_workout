@@ -136,25 +136,50 @@ void main() {
       expect(lb.shownFromKg(0), 0);
     });
 
-    test('every two-decimal lb weight up to 1000 lb survives storage', () {
+    // Every two-decimal weight in the valid range (1000 kg, 2205 lb) comes
+    // back as typed in its own unit and shows rounded in the other.
+    test('every two-decimal kg weight up to 1000 kg', () {
       for (var hundredths = 0; hundredths <= 100000; hundredths++) {
         final typed = hundredths / 100;
-        expect(lb.shownFromKg(lb.toKg(typed)), typed);
+        expect(kg.shownFromKg(typed), typed);
+        final inLb = lb.shownFromKg(typed);
+        if (typed >= 0.5) expect(inLb, inLb.roundToDouble(), reason: '$typed');
       }
     });
 
-    test('no quarter-kg weight up to 500 kg is taken for a lb entry', () {
-      for (var quarters = 1; quarters <= 2000; quarters++) {
-        final shown = lb.shownFromKg(quarters / 4);
-        expect(shown, shown.roundToDouble(), reason: '${quarters / 4} kg');
+    test('every two-decimal lb weight up to 2205 lb', () {
+      for (var hundredths = 0; hundredths <= 220500; hundredths++) {
+        final typed = hundredths / 100;
+        final stored = lb.toKg(typed);
+        expect(lb.shownFromKg(stored), typed);
+        final inKg = kg.shownFromKg(stored);
+        if (typed >= 0.6) {
+          expect(inKg * 2, (inKg * 2).roundToDouble(), reason: '$typed');
+        }
       }
     });
 
-    test('no quarter-lb weight up to 1000 lb is taken for a kg entry', () {
-      for (var quarters = 1; quarters <= 4000; quarters++) {
-        final shown = kg.shownFromKg(lb.toKg(quarters / 4));
-        expect(shown * 2, (shown * 2).roundToDouble(), reason: '$quarters');
-      }
+    test('the closest calls to the other grid', () {
+      expect(lb.shownFromKg(lb.toKg(538.92)), 538.92);
+      expect(kg.shownFromKg(lb.toKg(538.92)), 244.5);
+      expect(kg.shownFromKg(244.45), 244.45);
+      expect(lb.shownFromKg(244.45), 539);
+    });
+
+    test('a positive weight never shows as 0', () {
+      expect(lb.shownFromKg(0.2), 0.44);
+      expect(kg.shownFromKg(lb.toKg(0.5)), 0.23);
+      expect(lb.shownFromKg(0.001), 0.01);
+      expect(lb.estimatedFromKg(0.1), 0.22);
+      expect(kg.estimatedFromKg(0.2), 0.2);
+    });
+
+    test('an estimated one-rep max is always rounded', () {
+      expect(lb.estimatedFromKg(lb.toKg(225.4)), 225);
+      expect(lb.estimatedFromKg(100), 220);
+      expect(kg.estimatedFromKg(102.3), 102.5);
+      expect(kg.estimatedFromKg(102.2), 102);
+      expect(kg.estimatedFromKg(lb.toKg(225)), 102);
     });
 
     test('a shown weight shows the same again', () {

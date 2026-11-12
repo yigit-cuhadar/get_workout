@@ -31,22 +31,35 @@ extension WeightUnitConversion on WeightUnit {
   /// [shown].
   double shownFromKg(double kg) => shown(fromKg(kg));
 
-  /// A lifted weight in this unit as the user sees it. On the entry grid
-  /// (two decimals, what weight fields write back) it was typed in this unit
-  /// and shows as typed; otherwise it was typed in the other unit and shows
-  /// rounded, to whole lb or to half kg. Only for display: stored weights
-  /// never change.
+  /// A lifted weight in this unit as the user sees it. Within two decimals
+  /// (the precision weight fields show) it was typed in this unit and shows
+  /// as typed; otherwise it was typed in the other unit and shows rounded,
+  /// to whole lb or to half kg, or to two decimals when that rounding would
+  /// show a weight as 0. Only for display: fields store what is typed,
+  /// converted to kg.
   double shown(double value) {
     final hundredths = value * 100;
-    // Float noise of a kg round trip is far below this; a weight typed in
-    // the other unit lands this close to the grid about once in a million.
-    if ((hundredths - hundredths.round()).abs() < 1e-6) {
-      return hundredths.round() / 100;
-    }
-    return switch (this) {
+    final grid = hundredths.round() / 100;
+    // A kg round trip drifts at most 3e-11 hundredths up to 1000 kg; the
+    // nearest a two-decimal weight in the other unit comes is 4e-6
+    // (538.92 lb, 244.45 kg).
+    if ((hundredths - hundredths.round()).abs() < 1e-8) return grid;
+    return _rounded(value);
+  }
+
+  /// An estimated one-rep max stored as [kg], as the user sees it: computed,
+  /// never typed, so always rounded as [shown] rounds.
+  double estimatedFromKg(double kg) => _rounded(fromKg(kg));
+
+  /// Whole lb or half kg; two decimals when that would show a weight as 0.
+  double _rounded(double value) {
+    final rounded = switch (this) {
       WeightUnit.kg => (value * 2).round() / 2,
       WeightUnit.lb => value.roundToDouble(),
     };
+    if (rounded != 0 || value <= 0) return rounded;
+    final hundredths = (value * 100).round() / 100;
+    return hundredths > 0 ? hundredths : 0.01;
   }
 }
 

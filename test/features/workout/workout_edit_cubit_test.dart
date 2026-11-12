@@ -207,6 +207,52 @@ void main() {
     });
   });
 
+  group('a weight shown rounded', () {
+    const ref = (exercise: 0, set: 0);
+    double? weight(WorkoutEditCubit cubit) =>
+        cubit.state.workout!.exercises.single.sets.single.weightKg;
+
+    test('and typed back as shown keeps the stored kg', () async {
+      final cubit = await editing();
+      // 100 kg shows as 220 lb. Emptying the field would untick the set.
+      for (final text in ['22', '2', '22', '220']) {
+        cubit.setWeight(ref, text, WeightUnit.lb);
+      }
+      expect(weight(cubit), 100);
+      expect(cubit.hasChanges, isFalse);
+      cubit.setWeight(ref, '221', WeightUnit.lb);
+      expect(weight(cubit), WeightUnit.lb.toKg(221));
+      expect(cubit.hasChanges, isTrue);
+      await cubit.close();
+    });
+
+    test('also in a drop', () async {
+      final cubit = await editing();
+      cubit
+        ..setType(ref, SetType.drop)
+        ..addDrop(ref)
+        ..setDropWeight(ref, 0, '80', WeightUnit.kg);
+      double? drop() => cubit
+          .state
+          .workout!
+          .exercises
+          .single
+          .sets
+          .single
+          .drops
+          .single
+          .weightKg;
+      // 80 kg shows as 176 lb.
+      cubit
+        ..setDropWeight(ref, 0, '17', WeightUnit.lb)
+        ..setDropWeight(ref, 0, '176', WeightUnit.lb);
+      expect(drop(), 80);
+      cubit.setDropWeight(ref, 0, '177', WeightUnit.lb);
+      expect(drop(), WeightUnit.lb.toKg(177));
+      await cubit.close();
+    });
+  });
+
   group('saving', () {
     test('stores the edit with its rebuilt stats', () async {
       final cubit = await editing();

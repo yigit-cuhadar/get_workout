@@ -28,13 +28,18 @@ extension ProgramText on AppLocalizations {
     return target == null ? sets : '$sets · ${liftedWeightText(target, unit)}';
   }
 
-  /// A total or a derived weight (volume, estimated 1RM), to one decimal.
+  /// A total (volume), to one decimal.
   String weightText(double kg, WeightUnit unit) =>
       _weightText(unit.fromKg(kg), unit, 1);
 
   /// One lifted weight, as [WeightUnitConversion.shown] shows it.
   String liftedWeightText(double kg, WeightUnit unit) =>
       _weightText(unit.shownFromKg(kg), unit, 2);
+
+  /// An estimated one-rep max, as [WeightUnitConversion.estimatedFromKg]
+  /// shows it.
+  String estimatedWeightText(double kg, WeightUnit unit) =>
+      _weightText(unit.estimatedFromKg(kg), unit, 2);
 
   String _weightText(double value, WeightUnit unit, int maxDecimals) {
     final number = (NumberFormat.decimalPattern(
