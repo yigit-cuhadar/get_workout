@@ -17,8 +17,11 @@ import '../domain/consent_repository.dart';
 /// are read; another user's answer never applies. Both SDKs also start
 /// with collection off natively (Info.plist, AndroidManifest.xml).
 ///
-/// Changes run one at a time, in order; one superseded by a later answer
-/// while waiting is skipped.
+/// Changes run one at a time, in order. A user change ([follow]) or a
+/// later answer counts from the moment it is made: an answer still waiting,
+/// or still running (e.g. on a slow crash report deletion), stops before
+/// its next step, so a yes never turns collection on, or is saved, after
+/// it was overtaken.
 class FirebaseTelemetry implements Telemetry {
   FirebaseTelemetry({
     required this.allowed,
@@ -53,19 +56,32 @@ class FirebaseTelemetry implements Telemetry {
         _crashlytics.recordError(error, stack, reason: reason);
   }
 
+  /// Completes once every change asked for so far has run.
+  @visibleForTesting
+  Future<void> get settled async {
+    Future<void> tail;
+    do {
+      tail = _tail;
+      await tail;
+    } while (!identical(tail, _tail));
+  }
+
   @override
-  Future<Result<void>> follow(String? uid) => _run(() async {
-    if (uid == _uid) return;
+  Future<Result<void>> follow(String? uid) {
+    if (uid == _uid) return Future.value(const Ok(null));
+    // Set now, so an answer in flight for the previous user stops.
     _uid = uid;
-    await _setCollection(false);
-  });
+    ++_latest;
+    return _run(() => _setCollection(false));
+  }
 
   @override
   Future<Result<void>> apply(String uid, bool consent) {
     final turn = ++_latest;
+    // A later answer, a user change or a forget since: no longer counts.
+    bool current() => turn == _latest && uid == _uid;
     return _run(() async {
-      // A later answer, or another user, since: this one no longer counts.
-      if (turn != _latest || uid != _uid) return;
+      if (!current()) return;
       if (!consent) {
         await _setCollection(false);
         return _save(uid, false);
@@ -73,7 +89,11 @@ class FirebaseTelemetry implements Telemetry {
       // Reports recorded before the yes are never sent. The yes is saved
       // last, so a failure on the way never leaves one saved.
       if (await _saved(uid) != true) await _crashlytics.deleteUnsentReports();
+      if (!current()) return;
       await _setCollection(true);
+      // Overtaken while turning on: the change that did it runs next and
+      // turns collection off again; the yes is not saved.
+      if (!current()) return;
       await _save(uid, true);
     });
   }
