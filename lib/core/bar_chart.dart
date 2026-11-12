@@ -23,6 +23,7 @@ class BarChart extends StatefulWidget {
     required this.yLabel,
     required this.yPrecision,
     required this.barLabel,
+    required this.semanticLabel,
     this.target,
   });
 
@@ -38,6 +39,9 @@ class BarChart extends StatefulWidget {
 
   /// The text for the tapped bar, by its index in [values].
   final String Function(int index) barLabel;
+
+  /// What the chart shows, values included, for screen readers.
+  final String semanticLabel;
 
   /// A value marked by a line across the bars, e.g. a goal; the axis always
   /// reaches it.
@@ -74,32 +78,35 @@ class _BarChartState extends State<BarChart> {
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: Gap.sm),
-        AspectRatio(
-          aspectRatio: BarChart._aspectRatio,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final layout = _BarLayout.of(constraints.biggest, widget, text);
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTapDown: (details) => setState(
-                  () => _selected = nearestIndex([
-                    for (final bar in layout.bars) bar.center.dx,
-                  ], details.localPosition.dx),
-                ),
-                child: CustomPaint(
-                  size: Size.infinite,
-                  painter: _BarChartPainter(
-                    layout: layout,
-                    text: text,
-                    selected: selected,
-                    bar: colors.primary,
-                    selectedBar: colors.tertiary,
-                    target: colors.outline,
-                    grid: colors.outlineVariant,
+        Semantics(
+          label: widget.semanticLabel,
+          child: AspectRatio(
+            aspectRatio: BarChart._aspectRatio,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final layout = _BarLayout.of(constraints.biggest, widget, text);
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: (details) => setState(
+                    () => _selected = nearestIndex([
+                      for (final bar in layout.bars) bar.center.dx,
+                    ], details.localPosition.dx),
                   ),
-                ),
-              );
-            },
+                  child: CustomPaint(
+                    size: Size.infinite,
+                    painter: _BarChartPainter(
+                      layout: layout,
+                      text: text,
+                      selected: selected,
+                      bar: colors.primary,
+                      selectedBar: colors.tertiary,
+                      target: colors.outline,
+                      grid: colors.outlineVariant,
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],

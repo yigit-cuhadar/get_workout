@@ -1116,6 +1116,8 @@
   "@stepsLastDays": {"placeholders": {"days": {"type": "int"}}},
   "stepsOnDay": "{date}: {steps}",
   "@stepsOnDay": {"placeholders": {"date": {"type": "String"}, "steps": {"type": "String"}}},
+  "stepsChartLabel": "{title}, goal {goal}: {values}",
+  "@stepsChartLabel": {"placeholders": {"title": {"type": "String"}, "goal": {"type": "String"}, "values": {"type": "String"}}},
   "stepsGoal": "Daily goal",
   "stepsGoalValue": "{goal} steps",
   "@stepsGoalValue": {"placeholders": {"goal": {"type": "int", "format": "decimalPattern"}}}

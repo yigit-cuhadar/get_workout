@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../core/bar_chart.dart';
 import '../../../core/first_weekday.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/steps.dart';
@@ -266,12 +267,14 @@ class _Steps extends StatelessWidget {
             ),
           title(l10n.stepsThisWeek),
           _StepsChart(
+            title: l10n.stepsThisWeek,
             days: history.week(firstWeekday),
             goal: goal,
             dayLabel: DateFormat.E(locale),
           ),
           title(l10n.stepsLastDays(stepHistoryDays)),
           _StepsChart(
+            title: l10n.stepsLastDays(stepHistoryDays),
             days: history.days,
             goal: goal,
             dayLabel: DateFormat.MMMd(locale),
@@ -336,11 +339,13 @@ class _Today extends StatelessWidget {
 /// A bar a day with the goal across; a tap names the day and its steps.
 class _StepsChart extends StatelessWidget {
   const _StepsChart({
+    required this.title,
     required this.days,
     required this.goal,
     required this.dayLabel,
   });
 
+  final String title;
   final List<DailySteps> days;
   final int goal;
 
@@ -352,6 +357,8 @@ class _StepsChart extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final axis = NumberFormat.compact(locale: l10n.localeName);
     final fullDate = DateFormat.MMMEd(l10n.localeName);
+    String dayText(DailySteps day) =>
+        l10n.stepsOnDay(fullDate.format(day.day), l10n.stepsCount(day.count));
     return Padding(
       padding: const EdgeInsets.all(Gap.md),
       child: BarChart(
@@ -359,9 +366,11 @@ class _StepsChart extends StatelessWidget {
         xLabel: (index) => dayLabel.format(days[index].day),
         yLabel: axis.format,
         yPrecision: 1,
-        barLabel: (index) => l10n.stepsOnDay(
-          fullDate.format(days[index].day),
-          l10n.stepsCount(days[index].count),
+        barLabel: (index) => dayText(days[index]),
+        semanticLabel: l10n.stepsChartLabel(
+          title,
+          l10n.stepsGoalValue(goal),
+          l10n.inlineList(days.map(dayText)),
         ),
         target: goal.toDouble(),
       ),

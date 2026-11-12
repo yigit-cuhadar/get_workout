@@ -21,6 +21,7 @@ void main() {
               yLabel: (y) => y.toStringAsFixed(0),
               yPrecision: 1,
               barLabel: (index) => 'bar $index',
+              semanticLabel: 'chart of ${values.length}',
               target: target,
             ),
           ),
@@ -74,5 +75,12 @@ void main() {
   testWidgets('all zero draws', (tester) async {
     await pump(tester, List.filled(7, 0));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('screen readers get the summary', (tester) async {
+    final handle = tester.ensureSemantics();
+    await pump(tester, const [1, 2, 3]);
+    expect(find.bySemanticsLabel('chart of 3'), findsOneWidget);
+    handle.dispose();
   });
 }
