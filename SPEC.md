@@ -401,9 +401,9 @@ from the earlier FitLab app.
   shows. `MonthGrid` (`lib/features/calendar/presentation/month_grid.dart`)
   is generic except for `CalendarDate`; move it to `forge_ui`, taking
   `DateTime` dates, when that package is next changed.
-- **Starting a workout**: the Programs tab starts the next day, a program's
-  page any of its days, the Today tab an empty workout until that tab is
-  built, and an exercise's page adds it to the workout in progress or, after
+- **Starting a workout**: the Programs and Today tabs start the next day,
+  a program's page any of its days, the Today tab also an empty workout,
+  and an exercise's page adds it to the workout in progress or, after
   asking, starts one with it. A program day waits until the user's custom
   exercises are loaded; exercises really gone are left out and the user is
   told how many. Starting while a workout is in progress asks to resume it
@@ -487,10 +487,35 @@ from the earlier FitLab app.
   user's own workouts, so the gate is client-side only. Changing week
   keeps the week before on screen until the next arrives, so the model
   keeps its camera. `WatchWeeklyVolume` with one week is what the Today
-  tab's card will call.
+  tab's card calls.
 - **Volume charts**: the band bars and the trend are small `CustomPainter`s
   of the volume feature, like the cardio chart; unify them with the app's
   line chart into one chart in `forge_ui` once both exist.
+- **Today tab** (`lib/features/today`): a scrolling list of independent
+  cards, each on its own data, so one failing leaves the others. Next
+  workout: the Programs tab's own `ProgramListCubit` (one instance), so
+  both show the same plan; the next day with its exercise count and
+  estimate, the date it is planned for (`ProgramListState.nextDate`, the
+  first of `ProgramSchedule.upcoming`) and Start through
+  `startProgramDay`. A missed day shows the Programs tab's
+  `MissedDayPrompt`, only while the program is open, as there; a failed
+  choice is reported by the prompt that made it, so the two tabs never
+  both do. A locked premium copy shows its day, locked, with Start
+  opening the paywall. Without a program, or once it finished: the
+  catalogue, the generator and "Start empty workout". Week strip: the
+  calendar's `calendarEntries` and marks over the current week from the
+  locale's first weekday (Sunday in English, like weekly volume, unlike
+  the program week plan), drawn by `MonthGrid` as one week; the strip and
+  every day open the calendar, which has no route for a given date. Quick
+  actions: start an empty workout, log cardio, add a past workout. Volume
+  card: `WatchWeeklyVolume` with one week, never the trend, whatever the
+  user's premium: the trained muscles counted in, below and above the
+  band and the three most trained as band bars; it opens Weekly volume,
+  and has no model. Cards show only their title while loading (the cache
+  answers at once; no spinner on the home tab); cubits move to the new
+  day and week when the app resumes. The steps card is added to the
+  card list (`_TodayViewState._cards` in `today_page.dart`) when Steps
+  lands.
 
 - **Blocked on accounts the user will open when needed**: Apple Developer
   (Apple sign-in, HealthKit, iOS push, Live Activity on a real device), Google
