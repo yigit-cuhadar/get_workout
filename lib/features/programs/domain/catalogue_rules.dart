@@ -10,6 +10,7 @@
 // tool/validate_content.dart and the importer, so it is pure Dart and its
 // messages are the validator's output.
 import '../../exercises/domain/content_rules.dart';
+import '../../exercises/domain/muscle_volume.dart';
 import '../../exercises/domain/vocabulary.dart';
 import 'program.dart';
 import 'program_editing.dart';
@@ -486,15 +487,17 @@ ProgramSummary summarizeProgram(
     for (final item in day.items) {
       final exercise = library[item.exerciseId];
       if (exercise == null || item.sets < 0) continue;
-      for (final (key, weight) in [
-        ('mainMuscles', 1.0),
-        ('secondaryMuscles', 0.5),
-      ]) {
-        for (final muscle in exercise.strings(key)) {
-          final m = Muscle.values.byCode(muscle);
-          if (m != null) sets[m] = (sets[m] ?? 0) + item.sets * weight;
-        }
-      }
+      List<Muscle> muscles(String key) => [
+        for (final code in exercise.strings(key)) ?Muscle.values.byCode(code),
+      ];
+      addMuscleSets(
+        sets,
+        muscleSets(
+          main: muscles('mainMuscles'),
+          secondary: muscles('secondaryMuscles'),
+          sets: item.sets,
+        ),
+      );
     }
   }
   return ProgramSummary(

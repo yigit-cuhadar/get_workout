@@ -101,6 +101,7 @@ dev_dependencies:
   fake_cloud_firestore: ^4.5.0
   mocktail: ^1.0.5
   crypto: ^3.0.8
+  url_launcher_platform_interface: ^2.3.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

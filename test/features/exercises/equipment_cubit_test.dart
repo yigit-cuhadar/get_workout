@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
@@ -54,6 +55,22 @@ void main() {
     saveEquipment: SaveOwnedEquipment(library),
     retryDelay: delay,
   );
+
+  /// Runs [act] against a new cubit on fake time, so retries wait exactly
+  /// their delay however loaded the machine is; returns the states emitted.
+  List<EquipmentState> onFakeTime(void Function(FakeAsync async) act) {
+    final states = <EquipmentState>[];
+    fakeAsync((async) {
+      final cubit = build();
+      final subscription = cubit.stream.listen(states.add);
+      act(async);
+      async.flushMicrotasks();
+      unawaited(subscription.cancel());
+      unawaited(cubit.close());
+      async.flushMicrotasks();
+    });
+    return states;
+  }
 
   void savesReturn(Future<Result<void>> Function() result) =>
       when(() => library.saveEquipment(any(), any()))
@@ -117,24 +134,24 @@ void main() {
     ],
   );
 
-  blocTest<EquipmentCubit, EquipmentState>(
-    'a failed stream is followed again after a backoff',
-    build: build,
-    act: (_) async {
-      await signIn(member, barbell);
+  test('a failed stream is followed again after a backoff', () {
+    final states = onFakeTime((async) {
+      users.add(member);
+      async.flushMicrotasks();
+      latest('u1').add(barbell);
       latest('u1').addError(const PermissionFailure());
-      await pumpEventQueue();
+      async.flushMicrotasks();
       expect(watched['u1'], hasLength(1));
 
-      await Future<void>.delayed(retryDelay * 2);
+      async.elapse(retryDelay);
       expect(watched['u1'], hasLength(2));
       latest('u1').add(dumbbells);
-    },
-    expect: () => [
+    });
+    expect(states, [
       const EquipmentState(barbell),
       const EquipmentState(dumbbells),
-    ],
-  );
+    ]);
+  });
 
   blocTest<EquipmentCubit, EquipmentState>(
     'a save while the stream is down follows the stream again at once',

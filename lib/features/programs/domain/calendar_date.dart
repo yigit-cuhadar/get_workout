@@ -27,7 +27,12 @@ class CalendarDate extends Equatable implements Comparable<CalendarDate> {
   CalendarDate addDays(int days) => CalendarDate(year, month, day + days);
 
   /// The Monday of this date's week.
-  CalendarDate get weekStart => addDays(1 - weekday);
+  CalendarDate get weekStart => startOfWeek(DateTime.monday);
+
+  /// The first day of this date's week, for weeks starting on ISO weekday
+  /// [firstWeekday] (1 Monday to 7 Sunday), as locales differ.
+  CalendarDate startOfWeek(int firstWeekday) =>
+      addDays(-((weekday - firstWeekday) % 7));
 
   bool isBefore(CalendarDate other) => compareTo(other) < 0;
   bool isAfter(CalendarDate other) => compareTo(other) > 0;

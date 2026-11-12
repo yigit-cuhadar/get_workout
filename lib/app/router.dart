@@ -41,6 +41,7 @@ import '../features/strength/presentation/exercise_strength_page.dart';
 import '../features/strength/presentation/strength_list_page.dart';
 import '../features/subscription/presentation/paywall_page.dart';
 import '../features/today/presentation/today_page.dart';
+import '../features/volume/presentation/volume_page.dart';
 import '../features/workout/presentation/history_page.dart';
 import '../features/workout/presentation/workout_detail_page.dart';
 import '../features/workout/presentation/workout_edit_page.dart';
@@ -102,6 +103,7 @@ abstract final class Routes {
   static String cardioSession(String id) => '$cardio/$id';
   static const history = '$progress/history';
   static const steps = '$progress/steps';
+  static const volume = '$progress/volume';
   static const strength = '$progress/$strengthSegment';
   static String strengthExercise(String exerciseId) =>
       '$strength/${Uri.encodeComponent(exerciseId)}';
@@ -388,6 +390,7 @@ GoRouter buildRouter(
                   ),
                 ],
               ),
+              GoRoute(path: 'volume', builder: (_, _) => const VolumePage()),
               GoRoute(
                 path: Routes.strengthSegment,
                 builder: (_, _) => const StrengthListPage(),

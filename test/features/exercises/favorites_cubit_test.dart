@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
@@ -49,6 +50,22 @@ void main() {
     setFavorite: SetFavorite(library),
     retryDelay: delay,
   );
+
+  /// Runs [act] against a new cubit on fake time, so retries wait exactly
+  /// their delay however loaded the machine is; returns the states emitted.
+  List<FavoritesState> onFakeTime(void Function(FakeAsync async) act) {
+    final states = <FavoritesState>[];
+    fakeAsync((async) {
+      final cubit = build();
+      final subscription = cubit.stream.listen(states.add);
+      act(async);
+      async.flushMicrotasks();
+      unawaited(subscription.cancel());
+      unawaited(cubit.close());
+      async.flushMicrotasks();
+    });
+    return states;
+  }
 
   void writesReturn(Future<Result<void>> Function() result) => when(
     () => library.setFavorite(any(), any(), favorite: any(named: 'favorite')),
@@ -132,45 +149,45 @@ void main() {
     ],
   );
 
-  blocTest<FavoritesCubit, FavoritesState>(
-    'a failed stream is followed again after a backoff',
-    build: build,
-    act: (_) async {
-      await signIn(member, {'squat'});
+  test('a failed stream is followed again after a backoff', () {
+    final states = onFakeTime((async) {
+      users.add(member);
+      async.flushMicrotasks();
+      latest('u1').add({'squat'});
       latest('u1').addError(const PermissionFailure());
-      await pumpEventQueue();
+      async.flushMicrotasks();
       expect(watched['u1'], hasLength(1));
 
-      await Future<void>.delayed(retryDelay * 2);
+      async.elapse(retryDelay);
       expect(watched['u1'], hasLength(2));
       latest('u1').add({'squat', 'bench'});
-    },
-    expect: () => [
+    });
+    expect(states, [
       const FavoritesState({'squat'}),
       const FavoritesState({'squat', 'bench'}),
-    ],
-  );
+    ]);
+  });
 
-  blocTest<FavoritesCubit, FavoritesState>(
-    'a stream that keeps failing waits longer each time',
-    build: build,
-    act: (_) async {
-      await signIn(member, {'squat'});
+  test('a stream that keeps failing waits longer each time', () {
+    final states = onFakeTime((async) {
+      users.add(member);
+      async.flushMicrotasks();
+      latest('u1').add({'squat'});
       latest('u1').addError(const PermissionFailure());
-      await Future<void>.delayed(retryDelay * 1.5);
+      async.elapse(retryDelay);
       expect(watched['u1'], hasLength(2));
 
       latest('u1').addError(const PermissionFailure());
-      await Future<void>.delayed(retryDelay * 1.5);
+      async.elapse(retryDelay);
       // The second retry waits twice as long.
       expect(watched['u1'], hasLength(2));
-      await Future<void>.delayed(retryDelay * 1.5);
+      async.elapse(retryDelay);
       expect(watched['u1'], hasLength(3));
-    },
-    expect: () => [
+    });
+    expect(states, [
       const FavoritesState({'squat'}),
-    ],
-  );
+    ]);
+  });
 
   blocTest<FavoritesCubit, FavoritesState>(
     'a tap while the stream is down writes from the last known favourites '

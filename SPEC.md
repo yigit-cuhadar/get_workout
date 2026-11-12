@@ -484,6 +484,32 @@ from the earlier FitLab app.
   Android, for exact alarms (without them the notification falls back to
   an inexact alarm, possibly late). The rest notification has id 1 on one
   Android channel, `workout` ("Workout", high importance).
+- **Weekly volume**: Progress → Weekly volume shows one week, the current
+  one first; earlier weeks are free to browse, later than the current one
+  never. A week starts on the locale's first weekday
+  (`MaterialLocalizations.firstDayOfWeekIndex`, `CalendarDate.startOfWeek`);
+  with English as the only language that is Sunday, while the program
+  week plan and the cardio chart keep Monday. A workout belongs to the
+  week of the local date it started, like a program day, so a daylight
+  saving change never moves it. Counting is the programs' own
+  (`muscleSets` in `exercises/domain/muscle_volume.dart`) over done sets
+  that are not warm-ups; an exercise's muscles are the library's current
+  ones (custom exercises included), else, for a retired or deleted one,
+  those stored with the workout. Each muscle is judged against 10-20 sets
+  whatever the user's level: below, within (both ends inside) or above, in
+  the theme's tertiary, primary and error colours on the model and the
+  bars; a muscle with no sets keeps the body's colour. Tapping a muscle
+  lists the exercises and workouts that gave it sets. The 12-week trend
+  (the week shown and the 11 before it) is Premium, a locked row opening
+  the paywall otherwise. Only Premium reads those 12 weeks (again when
+  Premium comes or goes); everyone else reads the week alone. They are the
+  user's own workouts, so the gate is client-side only. Changing week
+  keeps the week before on screen until the next arrives, so the model
+  keeps its camera. `WatchWeeklyVolume` with one week is what the Today
+  tab's card will call.
+- **Volume charts**: the band bars and the trend are small `CustomPainter`s
+  of the volume feature, like the cardio chart; unify them with the app's
+  line chart into one chart in `forge_ui` once both exist.
 
 - **Blocked on accounts the user will open when needed**: Apple Developer
   (Apple sign-in, HealthKit, iOS push, Live Activity on a real device), Google
@@ -681,7 +707,7 @@ Group 5, workout
 
 Group 6, progress
 - [x] Calendar — month view of planned and done workouts and cardio
-- [ ] Weekly volume — model coloring and bar list against the 10-20 band; 12-week trend (Premium)
+- [x] Weekly volume — model coloring and bar list against the 10-20 band; 12-week trend (Premium)
 - [x] Strength — per-exercise records and e1RM chart (beyond 12 weeks Premium)
 - [ ] Today tab — next workout and week strip, quick actions, volume card, steps card
 

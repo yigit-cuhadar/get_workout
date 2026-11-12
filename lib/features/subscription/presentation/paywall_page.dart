@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/legal_links.dart';
+import '../../../core/open_link.dart';
 import '../../../l10n/app_localizations.dart';
 import 'premium_paywall_cubit.dart';
 import 'subscription_text.dart';
@@ -224,7 +224,7 @@ class _Footer extends StatelessWidget {
   Future<void> _open(BuildContext context, Uri uri) async {
     final failed = AppLocalizations.of(context).linkOpenFailed;
     final messenger = ScaffoldMessenger.of(context);
-    final opened = await launchUrl(uri).catchError((_) => false);
-    if (!opened) messenger.showSnackBar(SnackBar(content: Text(failed)));
+    if (await openLink(uri)) return;
+    messenger.showSnackBar(SnackBar(content: Text(failed)));
   }
 }
