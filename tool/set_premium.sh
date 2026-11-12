@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Writes or removes a user's server-side entitlement on a dev project, so
-# premium content can be demoed before the RevenueCat webhook exists.
+# premium content can be demoed without a store purchase.
 set -euo pipefail
 
 usage() {
@@ -12,6 +12,10 @@ Writes entitlements/<uid> with {"premium": true, "expiresAt": now + days}
 (30 days by default), or deletes it with "off". Only for projects whose id
 ends in -dev; in prod only the RevenueCat webhook writes entitlements. The
 token needs Firestore write access to the project.
+
+Either replaces the whole document, including what the webhook keeps to
+order events (lastEventMs, lastEventId), so the next store event for the
+user applies whatever its time.
 
 This is the server's view only: the app's own Premium state comes from the
 store (or the fake) and is not changed.

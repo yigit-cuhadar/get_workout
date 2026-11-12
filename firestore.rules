@@ -24,6 +24,10 @@ rules_version = '2';
 //   programs/{id}/detail/x   admin claim, any program               allow allow
 //   entitlements/{uid}       owner                                  allow deny
 //   entitlements/{uid}       anyone else, admins included           deny  deny
+//   entitlements/{uid}       any client create/update/delete,       -     deny
+//                            whatever the fields (only the
+//                            revenueCatWebhook and deleteAccount
+//                            functions write, through the Admin SDK)
 //   announcements/{id}       admin claim                            allow deny
 //   announcements/{id}       anyone else                            deny  deny
 //   users/{uid}/**           owner                                  allow allow
@@ -367,7 +371,12 @@ service cloud.firestore {
       }
     }
 
-    // Written only by the RevenueCat webhook through the Admin SDK.
+    // Written only by the revenueCatWebhook function (deleted by
+    // deleteAccount) through the Admin SDK: `premium` (bool), `expiresAt`
+    // (timestamp), `productId` and the webhook's own `lastEventMs` and
+    // `lastEventId`. Rules read only `premium` and `expiresAt`
+    // (hasEntitlement); a revoked entitlement keeps the document with
+    // `premium` false so older events cannot grant it again.
     match /entitlements/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
     }
