@@ -41,6 +41,14 @@ WorkoutExercise exerciseFor(
         ),
 );
 
+/// Where a new set of [type] goes in [exercise]: a warm-up after the last
+/// warm-up (before the working sets, at the start without one), any other
+/// set at the end.
+int newSetPosition(WorkoutExercise exercise, SetType type) =>
+    type == SetType.warmup
+    ? exercise.sets.lastIndexWhere((set) => set.isWarmup) + 1
+    : exercise.sets.length;
+
 /// A workout of day [dayIndex] of [program], its items as goals. Items whose
 /// exercise is not in [catalogue] (deleted or retired) are left out.
 Workout workoutFromProgramDay({

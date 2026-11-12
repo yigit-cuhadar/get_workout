@@ -28,7 +28,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
     ThemePreference.dark: 'dark',
   };
   static const _effortCodes = {
-    EffortScale.off: 'off',
+    EffortScale.byFeel: 'feel',
     EffortScale.rir: 'rir',
     EffortScale.rpe: 'rpe',
   };
@@ -69,11 +69,10 @@ class FirestoreSettingsRepository implements SettingsRepository {
         map['themeMode'],
         defaults.themePreference,
       ),
-      effortScale: _decode(
-        _effortCodes,
-        map['effortScale'],
-        defaults.effortScale,
-      ),
+      // "Off" was an older choice, replaced by by feel.
+      effortScale: map['effortScale'] == 'off'
+          ? EffortScale.byFeel
+          : _decode(_effortCodes, map['effortScale'], defaults.effortScale),
       restTimer: _restTimer(map['restTimer']),
       stepGoal: _stepGoal(map['stepGoal']),
       workoutReminder: _workoutReminder(map['reminders']),
