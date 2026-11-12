@@ -13,6 +13,10 @@
     "dip_station",
     "bodyweight"
   ],
+  "minutes": {
+    "min": 38,
+    "max": 41
+  },
   "l10n": {
     "en": {
       "name": "Advanced Calisthenics 4-Day",

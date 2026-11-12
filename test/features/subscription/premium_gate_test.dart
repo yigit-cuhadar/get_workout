@@ -74,6 +74,24 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  test('the programs\' premium status follows the entitlement', () async {
+    final seen = <bool?>[];
+    final subscription = EntitlementPremium(entitlement)
+        .watch()
+        .listen(seen.add);
+    addTearDown(subscription.cancel);
+    await pumpEventQueue();
+    expect(seen, [null]);
+
+    await entitlement.identify('u1');
+    await pumpEventQueue();
+    expect(seen, [null, false]);
+
+    await store.purchase(fakePlans.first);
+    await pumpEventQueue();
+    expect(seen, [null, false, true]);
+  });
+
   testWidgets('unknown: no paywall, the user is asked to wait', (tester) async {
     await pump(tester);
     await tap(tester, 'Open');

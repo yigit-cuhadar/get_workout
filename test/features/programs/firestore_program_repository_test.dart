@@ -65,6 +65,7 @@ void main() {
       expect(data['origin'], 'own');
       expect(data['lengthWeeks'], 8);
       expect(data.containsKey('sourceId'), isFalse);
+      expect(data.containsKey('premium'), isFalse);
       expect(data['updatedAt'], isA<Timestamp>());
       expect(data['days'], [
         {
@@ -165,6 +166,18 @@ void main() {
         );
       },
     );
+
+    test('a premium copy is stored marked and read back marked', () async {
+      final id = await create(program(premium: true));
+
+      expect((await programs('u1').doc(id).get()).data()!['premium'], isTrue);
+      final stored = (await repository.getProgram('u1', id)).valueOrNull!;
+      expect(stored.premium, isTrue);
+
+      await repository.updateProgram('u1', stored.copyWith(name: 'Mine'));
+      await pumpEventQueue();
+      expect((await programs('u1').doc(id).get()).data()!['premium'], isTrue);
+    });
 
     test(
       'an edit keeps unknown fields of the program, days and items',

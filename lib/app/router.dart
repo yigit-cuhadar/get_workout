@@ -24,7 +24,10 @@ import '../features/profile/presentation/onboarding_page.dart';
 import '../features/profile/presentation/profile_cubit.dart';
 import '../features/profile/presentation/profile_details_page.dart';
 import '../features/profile/presentation/profile_page.dart';
+import '../features/programs/presentation/catalogue_detail_page.dart';
+import '../features/programs/presentation/catalogue_page.dart';
 import '../features/programs/presentation/exercise_picker_page.dart';
+import '../features/programs/presentation/program_suggestion_page.dart';
 import '../features/programs/presentation/program_builder_page.dart';
 import '../features/programs/presentation/program_detail_page.dart';
 import '../features/programs/presentation/programs_page.dart';
@@ -45,13 +48,21 @@ abstract final class Routes {
   /// onboarding is still needed.
   static const onboardingSignIn = '$onboarding/sign-in';
 
-  /// Where finishing or skipping onboarding lands. The program suggestion
-  /// (programs catalogue) plugs in here.
-  static const afterOnboarding = today;
+  /// Where finishing or skipping onboarding lands: a suggested program,
+  /// which goes on to Today.
+  static const afterOnboarding = '/suggested-program';
 
   static const today = '/today';
   static const programs = '/programs';
   static const programNew = '$programs/new';
+  static const catalogue = '$programs/catalogue';
+  static String catalogueProgram(String id) =>
+      '$catalogue/${Uri.encodeComponent(id)}';
+
+  /// An exercise of a ready-made program, opened inside the Programs tab.
+  static String catalogueExercise(String programId, String exerciseId) =>
+      '${catalogueProgram(programId)}/exercises/'
+      '${Uri.encodeComponent(exerciseId)}';
 
   /// [created]: the program was just stored; see [ProgramDetailPage.created].
   static String program(String id, {bool created = false}) =>
@@ -116,6 +127,8 @@ GoRouter buildRouter(
   ProfileCubit profile, {
   Widget? profileDebugSection,
 }) {
+  // Who onboarding was last shown to.
+  String? onboardingUid;
   return GoRouter(
     initialLocation: Routes.splash,
     // Refresh only when the redirect can change. A refresh re-parses the
@@ -153,13 +166,18 @@ GoRouter buildRouter(
           // onboarding flash. Someone already in the app stays where they are.
           _ProfileGate.pending =>
             location == Routes.startFailed ? Routes.splash : null,
-          _ProfileGate.onboarding => atOnboarding ? null : Routes.onboarding,
+          _ProfileGate.onboarding => () {
+            onboardingUid = user.id;
+            return atOnboarding ? null : Routes.onboarding;
+          }(),
           // Includes a profile that could not be read: never trap the user.
+          // Signing in from onboarding to an account already onboarded is
+          // no onboarding done here.
           _ProfileGate.ready =>
-            atGate
-                ? Routes.home
-                : atOnboarding
+            atOnboarding && user.id == onboardingUid
                 ? Routes.afterOnboarding
+                : atGate || atOnboarding
+                ? Routes.home
                 : null,
         },
       };
@@ -198,6 +216,10 @@ GoRouter buildRouter(
         ],
       ),
       GoRoute(
+        path: Routes.afterOnboarding,
+        builder: (_, _) => const ProgramSuggestionPage(),
+      ),
+      GoRoute(
         path: Routes.workout,
         builder: (_, _) => const WorkoutPage(),
         routes: [GoRoute(path: 'pick', builder: (_, state) => _picker(state))],
@@ -221,6 +243,30 @@ GoRouter buildRouter(
                 builder: (_, _) => const ProgramBuilderPage(),
               ),
               GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+              GoRoute(
+                path: 'catalogue',
+                builder: (_, _) => const CataloguePage(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) =>
+                        CatalogueDetailPage(id: state.pathParameters['id']!),
+                    routes: [
+                      GoRoute(
+                        path: 'exercises/:exerciseId',
+                        builder: (_, state) => ExerciseDetailPage(
+                          exerciseId: state.pathParameters['exerciseId']!,
+                          exerciseRoute: (exerciseId) =>
+                              Routes.catalogueExercise(
+                                state.pathParameters['id']!,
+                                exerciseId,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
               GoRoute(
                 path: ':id',
                 builder: (_, state) => ProgramDetailPage(
@@ -249,8 +295,10 @@ GoRouter buildRouter(
               ),
               GoRoute(
                 path: ':id',
-                builder: (_, state) =>
-                    ExerciseDetailPage(exerciseId: state.pathParameters['id']!),
+                builder: (_, state) => ExerciseDetailPage(
+                  exerciseId: state.pathParameters['id']!,
+                  exerciseRoute: Routes.exercise,
+                ),
                 routes: [
                   GoRoute(
                     path: 'edit',

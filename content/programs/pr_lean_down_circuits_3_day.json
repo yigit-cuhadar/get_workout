@@ -13,6 +13,10 @@
     "bench",
     "bodyweight"
   ],
+  "minutes": {
+    "min": 31,
+    "max": 33
+  },
   "l10n": {
     "en": {
       "name": "Lean-Down Circuits 3-Day",

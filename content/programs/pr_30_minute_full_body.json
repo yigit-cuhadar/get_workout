@@ -14,6 +14,10 @@
     "machine",
     "bench"
   ],
+  "minutes": {
+    "min": 28,
+    "max": 30
+  },
   "l10n": {
     "en": {
       "name": "30-Minute Full Body 3-Day",

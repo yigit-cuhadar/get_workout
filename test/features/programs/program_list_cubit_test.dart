@@ -45,6 +45,7 @@ void main() {
   late Map<String, StreamController<ActiveProgram?>> actives;
   late StreamController<List<CompletedDay>> completed;
   late StreamController<Failure> rejected;
+  late FakePremium premium;
 
   setUpAll(() {
     registerFallbackValue(CalendarDate(2026, 1, 1));
@@ -60,6 +61,7 @@ void main() {
     actives = {};
     completed = StreamController<List<CompletedDay>>.broadcast();
     rejected = StreamController<Failure>.broadcast();
+    premium = FakePremium();
     now = DateTime(2026, 11, 11, 12);
     when(() => auth.watchUser()).thenAnswer((_) => users.stream);
     when(() => repository.rejectedWrites).thenAnswer((_) => rejected.stream);
@@ -98,6 +100,7 @@ void main() {
     watchCompletedDays: WatchCompletedDays(completedDays),
     watchRejectedWrites: WatchRejectedProgramWrites(repository),
     resolveMissedDay: ResolveMissedDay(repository, clock: () => now),
+    watchPremium: WatchPremium(premium),
     clock: () => now,
   );
 
@@ -426,6 +429,72 @@ void main() {
         expect(cubit.state.resolveFailure, isNull);
       },
     );
+
+    group('of a premium copy', () {
+      setUp(
+        () => when(
+          () => repository.watchPrograms('u1'),
+        ).thenAnswer((_) => Stream.value([program(id: 'p1', premium: true)])),
+      );
+
+      Future<void> readyWith(bool? hasPremium) async {
+        await signIn(member);
+        premium.controller.add(hasPremium);
+        actives['u1']!.add(active);
+        await pumpEventQueue();
+      }
+
+      blocTest<ProgramListCubit, ProgramListState>(
+        'is locked without premium, still active and not resolved',
+        build: build,
+        act: (cubit) async {
+          await readyWith(false);
+          await cubit.resolveMissed(MissedDayChoice.skip);
+        },
+        verify: (cubit) {
+          expect(cubit.state.active, active);
+          expect(
+            cubit.state.access(cubit.state.activeProgram!),
+            ProgramAccess.locked,
+          );
+          verifyNever(() => repository.updateActiveProgram(any(), any()));
+        },
+      );
+
+      blocTest<ProgramListCubit, ProgramListState>(
+        'waits while premium is unknown',
+        build: build,
+        act: (cubit) async {
+          await readyWith(null);
+          await cubit.resolveMissed(MissedDayChoice.skip);
+        },
+        verify: (cubit) {
+          expect(
+            cubit.state.access(cubit.state.activeProgram!),
+            ProgramAccess.waiting,
+          );
+          verifyNever(() => repository.updateActiveProgram(any(), any()));
+        },
+      );
+
+      blocTest<ProgramListCubit, ProgramListState>(
+        'opens again with premium',
+        build: build,
+        act: (cubit) async {
+          await readyWith(false);
+          premium.controller.add(true);
+          await pumpEventQueue();
+          await cubit.resolveMissed(MissedDayChoice.skip);
+        },
+        verify: (cubit) {
+          expect(
+            cubit.state.access(cubit.state.activeProgram!),
+            ProgramAccess.open,
+          );
+          verify(() => repository.updateActiveProgram('u1', any())).called(1);
+        },
+      );
+    });
   });
 
   blocTest<ProgramListCubit, ProgramListState>(

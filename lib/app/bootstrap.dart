@@ -27,7 +27,11 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     const CardioModule(),
     const CalculatorsModule(),
     const ExercisesModule(),
-    const ProgramsModule(completedDays: WorkoutModule.completedDays),
+    const ProgramsModule(
+      completedDays: WorkoutModule.completedDays,
+      premium: SubscriptionModule.premiumStatus,
+      showPremium: SubscriptionModule.showPaywall,
+    ),
     const WorkoutModule(),
     SubscriptionModule(
       backend: purchasesBackend(

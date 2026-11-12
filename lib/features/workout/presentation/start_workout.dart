@@ -9,6 +9,7 @@ import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_text.dart';
+import '../../subscription/presentation/premium.dart';
 import '../domain/workout.dart';
 import 'active_workout_cubit.dart';
 
@@ -69,19 +70,24 @@ Future<void> startWorkout(
   await context.push(Routes.workout);
 }
 
-/// Starts day [dayIndex] of [program]; see [startWorkout].
+/// Starts day [dayIndex] of [program]; see [startWorkout]. A copy of a
+/// premium program needs premium: without it the paywall opens instead, and
+/// the day starts only if the user unlocked it there.
 Future<void> startProgramDay(
   BuildContext context,
   Program program,
   int dayIndex,
-) {
+) async {
+  final access = context.read<ActiveWorkoutCubit>().access(program);
+  if (access != ProgramAccess.open && !await context.requirePremium()) return;
+  if (!context.mounted) return;
   final l10n = AppLocalizations.of(context);
   final language = Localizations.localeOf(context).languageCode;
   final name = l10n.workoutProgramDayName(
     program.name,
     l10n.dayName(program.days[dayIndex], dayIndex),
   );
-  return startWorkout(
+  await startWorkout(
     context,
     (cubit) => cubit.startProgramDay(
       program,
