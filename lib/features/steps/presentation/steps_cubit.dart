@@ -5,6 +5,21 @@ import 'package:forge_health/forge_health.dart';
 import '../domain/steps.dart';
 import '../domain/steps_usecases.dart';
 
+/// Where the page shows [StepsState.failure].
+enum StepsFailureShown {
+  none,
+
+  /// Nothing to show yet: an error with a retry in place of the page.
+  page,
+
+  /// Beside the screen of the access that stands (the explanation, a
+  /// refusal, ...), e.g. a failed "Continue" or "Ask again".
+  inline,
+
+  /// Briefly over the steps, which stay.
+  snack,
+}
+
 class StepsState extends Equatable {
   const StepsState({
     this.access,
@@ -19,7 +34,8 @@ class StepsState extends Equatable {
   /// The last read, while [access] is readable.
   final StepsHistory? history;
 
-  /// Set when the last load failed; what was known before stays.
+  /// Set when the last load or request failed; what was known before
+  /// stays.
   final Failure? failure;
 
   /// Asking for access or opening settings.
@@ -32,6 +48,14 @@ class StepsState extends Equatable {
     return access != null &&
         history != null &&
         showsAccessHint(access, history);
+  }
+
+  StepsFailureShown get failureShown {
+    if (failure == null) return StepsFailureShown.none;
+    final access = this.access;
+    if (access == null) return StepsFailureShown.page;
+    if (!access.readable) return StepsFailureShown.inline;
+    return history == null ? StepsFailureShown.page : StepsFailureShown.snack;
   }
 
   @override

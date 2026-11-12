@@ -6,6 +6,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/bar_chart.dart';
+import '../../../core/first_weekday.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -56,12 +57,11 @@ class _StepsViewState extends State<_StepsView> {
             .showSnackBar(SnackBar(content: Text(text)));
     return MultiBlocListener(
       listeners: [
-        // A failure with something to show: the page keeps showing it.
+        // A failed refresh: the steps stay.
         BlocListener<StepsCubit, StepsState>(
           listenWhen: (previous, current) =>
-              current.failure != null &&
               current.failure != previous.failure &&
-              current.history != null,
+              current.failureShown == StepsFailureShown.snack,
           listener: (_, _) => snack(l10n.stepsRefreshFailed),
         ),
         BlocListener<SettingsCubit, SettingsState>(
@@ -86,22 +86,38 @@ class _StepsViewState extends State<_StepsView> {
       retryLabel: l10n.retry,
       onRetry: _cubit.load,
     );
+    if (state.failureShown == StepsFailureShown.page) return failed;
+    final inlineFailure = state.failureShown == StepsFailureShown.inline
+        ? const _InlineFailure()
+        : null;
     final history = state.history;
     return switch (state.access) {
-      null => state.failure == null ? const LoadingView() : failed,
-      StepsAccess.unsupported => EmptyView(message: l10n.stepsUnsupported),
+      null => const LoadingView(),
+      StepsAccess.unsupported => EmptyView(
+        message: l10n.stepsUnsupported,
+        action: inlineFailure,
+      ),
       StepsAccess.notInstalled => EmptyView(
         message: l10n.stepsNotInstalled,
-        action: FilledButton(
-          onPressed: state.busy ? null : () => _openSettings(context),
-          child: Text(l10n.stepsGetHealthConnect),
+        action: Column(
+          children: [
+            ?inlineFailure,
+            FilledButton(
+              onPressed: state.busy ? null : () => _openSettings(context),
+              child: Text(l10n.stepsGetHealthConnect),
+            ),
+          ],
         ),
       ),
-      StepsAccess.explain => _Explanation(busy: state.busy),
+      StepsAccess.explain => _Explanation(
+        busy: state.busy,
+        failure: inlineFailure,
+      ),
       StepsAccess.denied => EmptyView(
         message: l10n.stepsDenied,
         action: Column(
           children: [
+            ?inlineFailure,
             FilledButton(
               onPressed: state.busy ? null : () => _openSettings(context),
               child: Text(l10n.stepsOpenHealthConnect),
@@ -114,8 +130,8 @@ class _StepsViewState extends State<_StepsView> {
           ],
         ),
       ),
-      StepsAccess.granted || StepsAccess.undetermined when history == null =>
-        state.failure == null ? const LoadingView() : failed,
+      StepsAccess.granted ||
+      StepsAccess.undetermined when history == null => const LoadingView(),
       StepsAccess.granted || StepsAccess.undetermined => _Steps(
         history: history!,
         accessHint: state.accessHint,
@@ -136,8 +152,9 @@ class _StepsViewState extends State<_StepsView> {
 /// What the steps are for, before the system asks for access; asked only
 /// after the user continues.
 class _Explanation extends StatelessWidget {
-  const _Explanation({required this.busy});
+  const _Explanation({required this.busy, required this.failure});
   final bool busy;
+  final Widget? failure;
 
   @override
   Widget build(BuildContext context) {
@@ -164,12 +181,37 @@ class _Explanation extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: Gap.lg),
+            ?failure,
             ForgeButton(
               label: l10n.stepsContinue,
               loading: busy,
               onPressed: context.read<StepsCubit>().allow,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// That the last request or load failed, above the actions to try again.
+class _InlineFailure extends StatelessWidget {
+  const _InlineFailure();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final store = theme.platform == TargetPlatform.iOS
+        ? l10n.stepsStoreApple
+        : l10n.stepsStoreGoogle;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Gap.md),
+      child: Text(
+        l10n.stepsRequestFailed(store),
+        textAlign: TextAlign.center,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.error,
         ),
       ),
     );
@@ -194,12 +236,7 @@ class _Steps extends StatelessWidget {
     final goal = context.select(
       (SettingsCubit cubit) => cubit.state.settings.stepGoal,
     );
-    final firstWeekday = switch (MaterialLocalizations.of(context)
-        .firstDayOfWeekIndex) {
-      // Material counts from 0, Sunday; the week takes ISO weekdays.
-      0 => DateTime.sunday,
-      final index => index,
-    };
+    final firstWeekday = MaterialLocalizations.of(context).firstWeekday;
     final locale = l10n.localeName;
     Widget title(String text) => Padding(
       padding: const EdgeInsets.fromLTRB(Gap.md, Gap.lg, Gap.md, 0),

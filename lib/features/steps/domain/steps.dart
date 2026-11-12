@@ -71,7 +71,7 @@ class StepsHistory extends Equatable {
       for (final day in days) CalendarDate.of(day.day): day.count,
     };
     final today = CalendarDate.of(last.day);
-    final start = today.addDays(-((today.weekday - firstWeekday) % 7));
+    final start = today.startOfWeek(firstWeekday);
     return [
       for (var i = 0; i < 7; i++)
         DailySteps(

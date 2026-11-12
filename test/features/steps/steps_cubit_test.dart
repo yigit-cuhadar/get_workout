@@ -249,4 +249,58 @@ void main() {
     expect(await cubit.openSettings(), isFalse);
     expect(cubit.state.busy, isFalse);
   });
+
+  group('where a failure shows', () {
+    const failure = UnknownFailure('boom');
+
+    test('none without one', () async {
+      health.permissionStatus = HealthPermission.granted;
+      await cubit.load();
+      expect(cubit.state.failureShown, StepsFailureShown.none);
+    });
+
+    test('in place of the page while nothing is known', () async {
+      health.failure = failure;
+      await cubit.load();
+      expect(cubit.state.failureShown, StepsFailureShown.page);
+    });
+
+    test('in place of the page when the first read fails', () async {
+      health.permissionStatus = HealthPermission.granted;
+      health.stepsFor = (_) => throw const UnknownFailure('read');
+      await cubit.load();
+      expect(cubit.state.access, StepsAccess.granted);
+      expect(cubit.state.history, isNull);
+      expect(cubit.state.failureShown, StepsFailureShown.page);
+    });
+
+    test('on the explanation when "Continue" fails', () async {
+      await cubit.load();
+      health.failure = failure;
+      await cubit.allow();
+      expect(cubit.state.access, StepsAccess.explain);
+      expect(cubit.state.failureShown, StepsFailureShown.inline);
+    });
+
+    test('on the refusal when "Ask again" fails', () async {
+      prompt.asked = true;
+      await cubit.load();
+      health.failure = failure;
+      await cubit.allow();
+      expect(cubit.state.access, StepsAccess.denied);
+      expect(cubit.state.failureShown, StepsFailureShown.inline);
+
+      health.failure = null;
+      await cubit.load();
+      expect(cubit.state.failureShown, StepsFailureShown.none);
+    });
+
+    test('briefly over the steps when a refresh fails', () async {
+      health.permissionStatus = HealthPermission.granted;
+      await cubit.load();
+      health.failure = failure;
+      await cubit.load();
+      expect(cubit.state.failureShown, StepsFailureShown.snack);
+    });
+  });
 }
