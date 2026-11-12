@@ -294,7 +294,14 @@ class ProgramListCubit extends Cubit<ProgramListState> {
             dayCount: program.days.length,
             lengthWeeks: program.lengthWeeks,
           );
-    final missed = schedule != null && schedule.isMissed(today);
+    // Done on its date without the program moving on is not missed; only
+    // this week's done days are known.
+    final missed =
+        schedule != null &&
+        schedule.isMissed(today) &&
+        !_completed.contains(
+          CompletedDay(date: active!.nextDate, dayIndex: schedule.nextDayIndex),
+        );
     emit(
       ProgramListState(
         status: ProgramListStatus.ready,

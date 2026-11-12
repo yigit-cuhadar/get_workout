@@ -84,7 +84,8 @@ List<List<CalendarDate>> monthWeeks(
 ({CalendarDate from, CalendarDate to}) monthRange(CalendarDate month) {
   final first = monthOf(month);
   return (
-    from: first.addDays(-6), // Six days after the last.
+    from: first.addDays(-6),
+    // Six days after the last.
     to: addMonths(first, 1).addDays(5),
   );
 }

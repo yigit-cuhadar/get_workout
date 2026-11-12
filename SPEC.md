@@ -307,7 +307,10 @@ from the earlier FitLab app.
   `ProgramSchedule.plan`, the week plan's logic over any range: a program
   day done (a workout of the active program and that day, on that local
   date) shows only as its workout, and a day done twice on one date shows
-  once, on the Programs tab too. The missed next day shows on its date as
+  once, on the Programs tab too. A next day done on its date without the
+  program moving on (it was not loaded at finishing) is done, not planned
+  or missed, here and on the Programs tab, whose missed-day prompt knows
+  only this week's done days. The missed next day shows on its date as
   missed (resolved on the Programs tab, not started here) and again where
   it is planned now. A planned day starts through `startProgramDay`, so a
   locked premium copy's days show but open the paywall. A workout opens

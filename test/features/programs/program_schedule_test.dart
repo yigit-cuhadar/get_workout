@@ -413,6 +413,18 @@ void main() {
       );
     });
 
+    test('a missed day done on its date is not missed', () {
+      // Wednesday's day 1 was done, but the program did not move on.
+      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
+      expect(
+        plan.weekPlan(
+          d(2026, 11, 12),
+          completed: [CompletedDay(date: d(2026, 11, 11), dayIndex: 1)],
+        ),
+        [done(d(2026, 11, 11), 1), planned(d(2026, 11, 13), 1)],
+      );
+    });
+
     test('another day done on a planned date leaves it planned', () {
       final plan = schedule(active(nextDate: d(2026, 11, 11)));
       expect(

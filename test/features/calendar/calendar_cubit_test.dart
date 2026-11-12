@@ -298,6 +298,57 @@ void main() {
     await cubit.close();
   });
 
+  test('a failure, then another month: everything followed again', () async {
+    final cubit = build();
+    await signIn(alice);
+    workoutStreams[november]!.addError(const NetworkFailure('offline'));
+    await pumpEventQueue();
+    expect(cubit.state.status, CalendarStatus.failure);
+
+    programStreams.clear();
+    activeStreams.clear();
+    cubit.showMonth(1);
+    await pumpEventQueue();
+    await deliver(month: 'u1 2026-11-25', activeProgram: active);
+    expect(cubit.state.status, CalendarStatus.ready);
+    expect(cubit.state.entriesOn(d(2026, 12, 2)), hasLength(1));
+    await cubit.close();
+  });
+
+  test(
+    'after a failure and another month, the active program updates',
+    () async {
+      final cubit = build();
+      await signIn(alice);
+      await deliver();
+      workoutStreams[november]!.addError(const NetworkFailure('offline'));
+      await pumpEventQueue();
+      expect(cubit.state.status, CalendarStatus.failure);
+
+      programStreams.clear();
+      activeStreams.clear();
+      cubit.showMonth(1);
+      await pumpEventQueue();
+      await deliver(month: 'u1 2026-11-25', sessions: []);
+      expect(cubit.state.status, CalendarStatus.ready);
+      expect(cubit.state.entriesOn(d(2026, 12, 2)), isEmpty);
+
+      activeStreams['u1']!.add(active);
+      await pumpEventQueue();
+      expect(cubit.state.entriesOn(d(2026, 12, 2)), [
+        PlanEntry(
+          upperLower,
+          PlannedDay(
+            date: d(2026, 12, 2),
+            dayIndex: 0,
+            status: PlannedStatus.planned,
+          ),
+        ),
+      ]);
+      await cubit.close();
+    },
+  );
+
   test('without programs it still shows what was done', () async {
     final cubit = build();
     await signIn(alice);

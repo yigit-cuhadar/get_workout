@@ -96,14 +96,14 @@ class CalendarCubit extends Cubit<CalendarState> {
     final month = addMonths(state.month, months);
     final selected = monthOf(today) == month ? today : month;
     emit(CalendarState(month: month, selected: selected, today: today));
-    _followMonth();
+    _followNewMonth();
   }
 
   /// Lists [date]'s entries; a date of another month also shows its month.
   void select(CalendarDate date) {
     if (monthOf(date) != state.month) {
       emit(CalendarState(month: monthOf(date), selected: date, today: _today));
-      _followMonth();
+      _followNewMonth();
       return;
     }
     emit(
@@ -172,6 +172,11 @@ class CalendarCubit extends Cubit<CalendarState> {
     }
     _followMonth();
   }
+
+  /// After a failure nothing is followed any more, the user's programs
+  /// included; follow those again too.
+  void _followNewMonth() =>
+      _programsSubscription == null ? _followUser() : _followMonth();
 
   void _followMonth() {
     _cancelMonth();
