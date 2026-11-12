@@ -41,7 +41,7 @@ void main() {
     );
   });
 
-  test('the effort scale reads its codes, off when unknown', () async {
+  test('the effort scale reads its codes, by feel when unknown', () async {
     await user().set({
       'settings': {'effortScale': 'rir'},
     });
@@ -54,8 +54,25 @@ void main() {
     });
     expect(
       (await repository.watchSettings('u1').first).effortScale,
-      EffortScale.off,
+      EffortScale.byFeel,
     );
+  });
+
+  test('the effort scale "off" of older versions reads as by feel', () async {
+    // Other defaults, so by feel can only come from the stored code.
+    final rpeByDefault = FirestoreSettingsRepository(
+      firestore,
+      defaults: defaults.copyWith(effortScale: EffortScale.rpe),
+    );
+    for (final code in ['off', 'feel']) {
+      await user().set({
+        'settings': {'effortScale': code},
+      });
+      expect(
+        (await rpeByDefault.watchSettings('u1').first).effortScale,
+        EffortScale.byFeel,
+      );
+    }
   });
 
   test('save writes the settings map with stored codes', () async {
@@ -327,7 +344,7 @@ void main() {
         'weightUnit': 'kg',
         'lengthUnit': 'in',
         'themeMode': 'system',
-        'effortScale': 'off',
+        'effortScale': 'feel',
         'restTimer': {'enabled': true, 'defaultS': 90},
         'stepGoal': 10000,
         'reminders': {

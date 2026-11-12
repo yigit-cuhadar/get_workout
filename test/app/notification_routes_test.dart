@@ -29,7 +29,7 @@ void main() {
   });
 
   /// A router shaped like the app's: tabs in a shell, the workout pushed
-  /// above them with its picker above it.
+  /// above them with its picker and exercise details above it.
   Future<GoRouter> pumpRouter(WidgetTester tester) async {
     Widget page(GoRouterState state) => Text(state.uri.path);
     GoRoute route(String path, {List<RouteBase> routes = const []}) =>
@@ -37,7 +37,10 @@ void main() {
     final router = GoRouter(
       initialLocation: Routes.today,
       routes: [
-        route(Routes.workout, routes: [route('pick')]),
+        route(
+          Routes.workout,
+          routes: [route('pick'), route('exercises/:exerciseId')],
+        ),
         route(Routes.paywall),
         StatefulShellRoute.indexedStack(
           builder: (_, _, shell) => shell,
@@ -83,7 +86,12 @@ void main() {
   });
 
   group('with the workout open', () {
-    for (final above in [null, '${Routes.workout}/pick', Routes.paywall]) {
+    for (final above in [
+      null,
+      '${Routes.workout}/pick',
+      Routes.workoutExercise('ex_squat'),
+      Routes.paywall,
+    ]) {
       testWidgets('${above ?? 'in front'}: taps keep it', (tester) async {
         final router = await pumpRouter(tester);
         unawaited(router.push(Routes.workout));

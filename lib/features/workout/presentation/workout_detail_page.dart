@@ -246,24 +246,14 @@ class _SetLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final type = exercise.loggingType;
-    final number = exercise.sets
-        .take(index + 1)
-        .where((s) => !s.isWarmup)
-        .length;
     final details = [
       l10n.setText(set, type, unit),
-      if (set.toFailure) l10n.workoutFailureShort,
-      if (set.rir case final rir?)
-        l10n.effortText(rir, rpe: effort == EffortScale.rpe),
+      ?l10n.effortText(set, effort),
       ?set.note,
     ];
     return ListTile(
       dense: true,
-      leading: Text(switch (set.type) {
-        SetType.warmup => l10n.workoutWarmupShort,
-        SetType.drop => '$number${l10n.workoutDropShort}',
-        SetType.normal => '$number',
-      }),
+      leading: Text(l10n.setLabel(exercise, index)),
       title: Text(details.join(' · ')),
       subtitle: set.drops.isEmpty
           ? null

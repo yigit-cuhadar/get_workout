@@ -96,6 +96,17 @@ void main() {
     });
   });
 
+  test('a new warm-up goes after the warm-ups, other sets at the end', () {
+    final warmup = lift(40, 10, type: SetType.warmup);
+    final working = exercise('squat', [lift(100, 5), lift(100, 5)]);
+    expect(newSetPosition(working, SetType.warmup), 0);
+    expect(newSetPosition(working, SetType.normal), 2);
+    final warmed = exercise('squat', [warmup, warmup, lift(100, 5)]);
+    expect(newSetPosition(warmed, SetType.warmup), 2);
+    expect(newSetPosition(warmed, SetType.drop), 3);
+    expect(newSetPosition(exercise('squat', []), SetType.warmup), 0);
+  });
+
   test('finishWorkout keeps done sets and drops empty exercises', () {
     final draft = workout('w1', [
       exercise('squat', [lift(100, 5), lift(100, 5, done: false)], group: 'A'),

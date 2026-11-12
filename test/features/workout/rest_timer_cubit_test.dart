@@ -936,6 +936,96 @@ void main() {
       });
     });
 
+    group(
+      'in a superset, sets added or removed forget the set ticked last',
+      () {
+        WorkoutSet todo() => const WorkoutSet();
+        WorkoutSet done() => lift(100, 5);
+        Workout superset(List<WorkoutSet> squats, List<WorkoutSet> rows) =>
+            workout('w1', [
+              exercise('squat', squats, group: 'A'),
+              exercise('row', rows, group: 'A'),
+            ]);
+        LockScreenWorkout now(String set) => LockScreenWorkout(
+          name: 'Workout w1',
+          startedAt: start,
+          current: set,
+        );
+
+        test('a warm-up inserted before the ticked set', () {
+          // Squat 1 ticked, row 1 skipped, squat 2 ticked last.
+          workoutState = ActiveWorkoutState(
+            status: WorkoutStatus.active,
+            workout: superset([todo(), todo(), todo()], [todo(), todo()]),
+          );
+          runStarted((async, cubit) {
+            for (final step in [
+              superset([done(), todo(), todo()], [todo(), todo()]),
+              superset([done(), done(), todo()], [todo(), todo()]),
+            ]) {
+              emitWorkout(
+                ActiveWorkoutState(status: WorkoutStatus.active, workout: step),
+              );
+              async.flushMicrotasks();
+            }
+            clearInteractions(lockScreen);
+            // Squat 2's old place now holds squat 1, which would name row 1.
+            emitWorkout(
+              ActiveWorkoutState(
+                status: WorkoutStatus.active,
+                workout: superset(
+                  [
+                    const WorkoutSet(type: SetType.warmup),
+                    done(),
+                    done(),
+                    todo(),
+                  ],
+                  [todo(), todo()],
+                ),
+              ),
+            );
+            async.flushMicrotasks();
+            // The new warm-up, as the workout screen selects it.
+            verifyShown(now('squat now 1'));
+          });
+        });
+
+        test('a set removed before the ticked set', () {
+          // Squats 1, 3, then 2 ticked; the rows not yet.
+          workoutState = ActiveWorkoutState(
+            status: WorkoutStatus.active,
+            workout: superset(
+              [todo(), todo(), todo()],
+              [todo(), todo(), todo()],
+            ),
+          );
+          runStarted((async, cubit) {
+            for (final step in [
+              superset([done(), todo(), todo()], [todo(), todo(), todo()]),
+              superset([done(), todo(), done()], [todo(), todo(), todo()]),
+              superset([done(), done(), done()], [todo(), todo(), todo()]),
+            ]) {
+              emitWorkout(
+                ActiveWorkoutState(status: WorkoutStatus.active, workout: step),
+              );
+              async.flushMicrotasks();
+            }
+            clearInteractions(lockScreen);
+            // Squat 1 removed: squat 2's old place holds squat 3, which would
+            // name row 2.
+            emitWorkout(
+              ActiveWorkoutState(
+                status: WorkoutStatus.active,
+                workout: superset([done(), done()], [todo(), todo(), todo()]),
+              ),
+            );
+            async.flushMicrotasks();
+            verifyShown(now('row now 1'));
+          });
+        });
+      },
+    );
+
     test('a throwing call counts as failed and later calls still run', () {
       runStarted((async, cubit) {
         when(() => lockScreen.show(any())).thenThrow(StateError('bug'));

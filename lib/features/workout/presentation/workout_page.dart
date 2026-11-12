@@ -17,7 +17,9 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/workout.dart';
 import 'active_workout_cubit.dart';
 import 'elapsed_text.dart';
+import 'exercise_cards.dart';
 import 'rest_strip.dart';
+import 'set_bar.dart';
 import 'workout_editor_view.dart';
 import 'workout_text.dart';
 
@@ -85,6 +87,7 @@ class WorkoutPage extends StatelessWidget {
 
 enum _WorkoutAction { reorder, discard }
 
+/// The exercises above the set bar, then the rest; see [SetBarLayout].
 class _ActiveWorkout extends StatelessWidget {
   const _ActiveWorkout(this.state);
   final ActiveWorkoutState state;
@@ -94,9 +97,6 @@ class _ActiveWorkout extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ActiveWorkoutCubit>();
     final workout = state.workout!;
-    final settings = context.select(
-      (SettingsCubit cubit) => cubit.state.settings,
-    );
     final finishing = state.status == WorkoutStatus.finishing;
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
@@ -120,6 +120,7 @@ class _ActiveWorkout extends StatelessWidget {
             ],
           ),
           actions: [
+            SetViewToggle(state.setView, onPressed: cubit.toggleSetView),
             TextButton(
               onPressed: finishing ? null : () => _finish(context),
               child: Text(l10n.workoutFinish),
@@ -145,46 +146,48 @@ class _ActiveWorkout extends StatelessWidget {
             ),
           ],
         ),
-        bottomNavigationBar: const RestStrip(),
-        body: ListView(
-          padding: const EdgeInsets.only(bottom: Gap.xl),
-          children: [
-            if (finishing) const LinearProgressIndicator(),
-            if (workout.exercises.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(Gap.md),
-                child: Text(l10n.workoutEmpty, textAlign: TextAlign.center),
-              ),
-            for (final index in workout.exercises.indexed.map((e) => e.$1))
-              ExerciseSection(
-                index: index,
+        body: SetBarLayout(
+          state: state,
+          editor: cubit,
+          below: const RestBelowBar(child: RestStrip()),
+          content: ListView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.only(bottom: Gap.xl),
+            children: [
+              if (finishing) const LinearProgressIndicator(),
+              if (workout.exercises.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(Gap.md),
+                  child: Text(l10n.workoutEmpty, textAlign: TextAlign.center),
+                ),
+              ExerciseCards(
                 state: state,
                 editor: cubit,
                 picker: Routes.workoutPicker,
-                unit: settings.weightUnit,
-                effort: settings.effortScale,
+                exerciseRoute: Routes.workoutExercise,
               ),
-            Padding(
-              padding: const EdgeInsets.all(Gap.md),
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.add),
-                label: Text(l10n.programAddExercises),
-                onPressed:
-                    workout.exercises.length >= WorkoutLimits.maxExercises
-                    ? null
-                    : () => _addExercises(context, workout),
+              Padding(
+                padding: const EdgeInsets.all(Gap.md),
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.programAddExercises),
+                  onPressed:
+                      workout.exercises.length >= WorkoutLimits.maxExercises
+                      ? null
+                      : () => _addExercises(context, workout),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-              child: NoteField(
-                initial: workout.note,
-                label: l10n.workoutNote,
-                maxLength: WorkoutLimits.maxNoteLength,
-                onChanged: cubit.setNote,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+                child: NoteField(
+                  initial: workout.note,
+                  label: l10n.workoutNote,
+                  maxLength: WorkoutLimits.maxNoteLength,
+                  onChanged: cubit.setNote,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

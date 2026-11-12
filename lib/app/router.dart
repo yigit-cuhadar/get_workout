@@ -143,6 +143,10 @@ abstract final class Routes {
   static String historyWorkout(String id) =>
       '$history/${Uri.encodeComponent(id)}';
   static String historyEdit(String id) => '${historyWorkout(id)}/edit';
+
+  /// An exercise's detail page above a workout being edited.
+  static String historyExercise(String id) =>
+      '$history/exercises/${Uri.encodeComponent(id)}';
   static const profile = '/profile';
 
   /// The workout in progress, full screen above the tabs; push it so going
@@ -152,6 +156,10 @@ abstract final class Routes {
   /// [exercisePicker] above the workout.
   static String workoutPicker({required int max, required bool multiple}) =>
       '$workout/pick?max=$max&multiple=$multiple';
+
+  /// An exercise's detail page above the workout.
+  static String workoutExercise(String id) =>
+      '$workout/exercises/${Uri.encodeComponent(id)}';
   static const account = '$profile/account';
 
   /// Opens in sign-up mode; [accountSignIn] opens it in sign-in mode.
@@ -351,7 +359,10 @@ GoRouter buildRouter(
       GoRoute(
         path: Routes.workout,
         builder: (_, _) => const WorkoutPage(),
-        routes: [GoRoute(path: 'pick', builder: (_, state) => _picker(state))],
+        routes: [
+          GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+          _workoutExercise(Routes.workoutExercise),
+        ],
       ),
       GoRoute(
         path: Routes.paywall,
@@ -560,6 +571,7 @@ GoRouter buildRouter(
                     builder: (_, _) => const WorkoutEditPage(),
                   ),
                   GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+                  _workoutExercise(Routes.historyExercise),
                   GoRoute(
                     path: ':id',
                     builder: (_, state) =>
@@ -661,6 +673,18 @@ ExercisePickerPage _picker(GoRouterState state) {
     multiple: query['multiple'] == 'true',
   );
 }
+
+/// An exercise's detail page pushed above a workout (in progress or being
+/// edited), so going back returns to it; [exerciseRoute] is where it opens
+/// other exercises.
+GoRoute _workoutExercise(String Function(String id) exerciseRoute) => GoRoute(
+  path: 'exercises/:exerciseId',
+  builder: (_, state) => ExerciseDetailPage(
+    exerciseId: state.pathParameters['exerciseId']!,
+    exerciseRoute: exerciseRoute,
+  ),
+  routes: [_exerciseStrength((state) => state.pathParameters['exerciseId']!)],
+);
 
 /// An exercise's strength page above its detail page, in the tab
 /// showing that, so going back returns to the exercise.

@@ -224,9 +224,17 @@ from the earlier FitLab app.
   it today, moves it to the next training weekday or skips it; the week
   plan shows it once, on its date. A program with a length ends that many
   weeks after its start date.
-- **Effort scale**: optional per set, off by default. RIR by default, worded
-  plainly ("How many more reps could you do?"); RPE selectable. Stored as RIR
-  (`rpe = 10 - rir`).
+- **Effort scale**: optional per set, picked in the set bar (picking the
+  chosen step again clears it). Settings → "Effort per set": By feel
+  (default), RIR or RPE; there is no "Off" (`settings.effortScale` codes
+  `feel`, `rir`, `rpe`; the older `off` reads as by feel). Every scale is
+  stored the same way, as RIR (`rpe = 10 - rir`): by feel Easy ("4+ reps
+  left") stores 4, Moderate ("2–3 left") 2, Hard ("1 left") 1, Max ("0
+  left") 0, and a stored RIR shows as Easy from 4, Moderate at 2-3, Hard at
+  1, Max at 0. Every scale ends with "Failed" (the last rep was attempted
+  and not completed), stored as `toFailure` with RIR 0; there is no separate
+  failure switch, and any set with `toFailure` shows Failed whatever its
+  RIR. Effort shows in the chosen scale everywhere (bar, workout detail).
 - **1RM**: Epley, `weight * (1 + reps / 30)`; sets above 12 reps are ignored.
 - **Volume**: each completed working set counts 1 for every main muscle and
   0.5 for every secondary muscle. Warm-up sets do not count. A drop set counts
@@ -735,9 +743,52 @@ from the earlier FitLab app.
   program target (weight, bottom of the rep range, duration). A warm-up only
   follows the warm-up before it. A done set edited into an invalid one is
   unticked. A weighted or assisted bodyweight set without a weight has none
-  added. Effort is a whole number: RIR 0-5 (5 means 5+) or RPE 10-5. Sets
+  added. Effort is a whole number: RIR 0-5 (5 means 5+) or RPE 10-5, see
+  Effort scale. Sets
   take a note of up to 200 characters. Durations are typed in seconds; a
   minutes and seconds input is left to the design phase.
+- **Workout screen**: shared by the workout in progress and editing a
+  stored or past workout. One card per exercise, or per superset/circuit;
+  only the card of the selected set is open (name, goal, last time, note,
+  an info button to the exercise's detail page, the menu), the others show
+  "Squat · 1/3" with the menu still there, and tapping one opens it on its
+  first undone set, else its last. The selection is presentation state in
+  the editor cubit (`SetSelection`, `set_selection.dart`): until something
+  is picked it is the next set to do (`nextSet`, which knows supersets),
+  else the first exercise; ticking moves it to the next set to do (the
+  exercise's last set opens the next exercise with undone sets, a finished
+  round of a group goes to the next round's first exercise), unticking or
+  an invalid tick keeps it; an added set is selected; removing or moving
+  sets and exercises keeps it on its set or exercise (removing the selected
+  set selects the one that took its place, else the one before; removing its
+  exercise falls back to the next set to do); skipping the rest leaves it.
+  Two set views exist for now, switched by an app-bar button, until the
+  owner picks one and the other is deleted (`SetView`; in memory, kept from
+  one workout to the next while the app runs; the edit page has its own,
+  starting with bubbles): **bubbles** (a wrapping row of round bubbles, a
+  warm-up dashed with "W", a drop set "2D", done ones ticked, the selected
+  one in the theme's selected colours, a "+" bubble; a group stacks one row
+  per exercise, labelled A1, A2, warm-ups first, then one column per round
+  with the round's bubbles joined) and **selected set** ("Squat · set 2 of
+  3", a warm-up "Squat · set W", last time's set, arrows within the exercise,
+  "Add set"). Adding a set asks Normal / Warm-up / Drop set (a drop set
+  only for rep-based exercises); a warm-up goes after the existing
+  warm-ups, other sets at the end, all empty with the usual suggestions as
+  hints. The **set bar** sits at the bottom of the page above the rest
+  strip and the safe area; while the keyboard is up the rest strip steps
+  aside (still mounted) so the bar sits right on the keyboard, the list
+  above shrinks and stays scrollable, and the selected bubble or set is
+  scrolled into view. It shows the selected set ("Squat · set 2 of 3", last
+  time in the bubbles view, the set note), its fields by logging type with
+  the suggestion as hint, a drop set's drops (edit, remove, add) right
+  under them, the effort steps, the tick (which needs no keyboard and starts
+  the rest as before) and a "more" sheet for the set type, note and
+  removal; an invalid tick's message shows in it. Sets are named
+  everywhere by `setLabel` and `setToDo` (W, 1, 2D; "of N" counts working
+  sets), the same as the lock screen and the rest notification. The exercise detail page
+  opens above the workout (`/workout/exercises/:id`, and
+  `/progress/history/exercises/:id` above the edit page), so back returns
+  to the workout as it was.
 - **Records**: heaviest weight (every type with a weight except assisted),
   best e1RM and best set volume (`weight_reps`, `weighted_bodyweight` on the
   added weight), most reps (rep types), longest duration (duration types).
@@ -1365,6 +1416,7 @@ Group 4, programs
 
 Group 5, workout
 - [x] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery
+- [x] Workout screen redesign — one exercise open at a time, set bar, bubbles or selected-set view (temporary toggle), effort by feel / RIR / RPE with Failed, exercise details from the workout, add set by kind
 - [x] Free workout — start empty (not in progress until an exercise is added), save as program at the end
 - [x] Rest timer — auto start, +15 s, skip, notification
 - [x] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification

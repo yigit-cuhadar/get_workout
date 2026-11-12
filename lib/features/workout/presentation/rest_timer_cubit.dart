@@ -290,13 +290,18 @@ class RestTimerCubit extends Cubit<RestTimerState> {
       _lastTicked = null;
       return;
     }
+    // Sets added, removed or moved (a warm-up goes before the working
+    // sets): its place may now name another done set.
+    if (!sameShape(before, now)) {
+      _lastTicked = null;
+      return;
+    }
     final ticked = newlyDone(before, now);
     if (ticked != null) {
       _lastTicked = ticked;
       return;
     }
-    // An edit may have moved sets or unticked it: keep it only while it
-    // still names a done set.
+    // An edit may have unticked it: keep it only while it is done.
     final last = _lastTicked;
     final set = last == null
         ? null

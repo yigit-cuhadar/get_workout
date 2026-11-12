@@ -9,9 +9,9 @@ enum LengthUnit { cm, inch }
 
 enum ThemePreference { system, light, dark }
 
-/// How effort is asked for per set, if at all. Always stored as reps in
-/// reserve (RIR); RPE is shown as `10 - RIR`.
-enum EffortScale { off, rir, rpe }
+/// How a set's effort is shown and picked. Always stored as reps in reserve
+/// (RIR) whichever is shown; see `EffortScaleSteps`.
+enum EffortScale { byFeel, rir, rpe }
 
 const kgPerLb = 0.45359237;
 const cmPerInch = 2.54;
@@ -210,7 +210,7 @@ class UserSettings extends Equatable {
     required this.weightUnit,
     required this.lengthUnit,
     this.themePreference = ThemePreference.system,
-    this.effortScale = EffortScale.off,
+    this.effortScale = EffortScale.byFeel,
     this.restTimer = const RestTimerSettings(),
     this.stepGoal = StepGoal.standard,
     this.workoutReminder = const WorkoutReminderSettings(),
