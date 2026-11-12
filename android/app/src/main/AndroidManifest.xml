@@ -7,7 +7,7 @@
     <!-- Steps, read from Health Connect. -->
     <uses-permission android:name="android.permission.health.READ_STEPS"/>
     <application
-        android:label="get_workout"
+        android:label="Get Workout"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
