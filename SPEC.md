@@ -579,7 +579,7 @@ Group 6, progress
 - [ ] Today tab — next workout and week strip, quick actions, volume card, steps card
 
 Group 7, programs for everyone
-- [ ] Catalog — 25 ready-made programs (6 free), filters, detail, premium lock, admin program editor (the admin program editor is still to do)
+- [x] Catalog — 25 ready-made programs (6 free), filters, detail, premium lock, admin program editor
 - [ ] Program generator (Premium) — questions (goal, level, days, session length, equipment, focus muscles, excluded exercises, area to go easy on, preferred split), preview, save as an editable program
 
 Group 8, body and extras
