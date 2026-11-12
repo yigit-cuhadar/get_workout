@@ -9,6 +9,28 @@ import '../domain/exercise_stats.dart';
 import '../domain/workout.dart';
 
 extension WorkoutText on AppLocalizations {
+  /// Set [set] of [exercise] as the set column labels it: a warm-up as
+  /// such, else its number among the working sets, marked for a drop set.
+  String setLabel(WorkoutExercise exercise, int set) {
+    final number = exercise.sets.take(set + 1).where((s) => !s.isWarmup).length;
+    return switch (exercise.sets[set].type) {
+      SetType.warmup => workoutWarmupShort,
+      SetType.drop => '$number$workoutDropShort',
+      SetType.normal => '$number',
+    };
+  }
+
+  /// Set [set] of [exercise] as the one to do now, e.g. `Bench Press · set
+  /// 2 of 3`, out of the working sets; a warm-up without the count.
+  String setToDo(WorkoutExercise exercise, int set) {
+    final label = setLabel(exercise, set);
+    if (exercise.sets[set].isWarmup) {
+      return workoutLockScreenWarmup(exercise.name, label);
+    }
+    final working = exercise.sets.where((s) => !s.isWarmup).length;
+    return workoutLockScreenCurrent(exercise.name, label, working);
+  }
+
   /// A lifted weight in [unit] for a text field, as
   /// [WeightUnitConversion.shown] shows it: up to two decimals, no trailing
   /// zeros, no grouping.

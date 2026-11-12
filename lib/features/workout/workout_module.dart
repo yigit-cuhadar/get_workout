@@ -6,22 +6,24 @@ import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../core/device_localizations.dart';
+import '../notifications/data/notification_payloads.dart';
 import '../programs/domain/completed_days.dart';
-import 'data/android_rest_lock_screen.dart';
+import 'data/android_workout_lock_screen.dart';
 import 'data/device_rest_notifications.dart';
 import 'data/file_local_workout_store.dart';
 import 'data/firestore_workout_repository.dart';
-import 'data/ios_rest_lock_screen.dart';
+import 'data/ios_workout_lock_screen.dart';
 import 'data/workout_completed_days.dart';
 import 'domain/history_usecases.dart';
-import 'domain/rest_lock_screen.dart';
 import 'domain/rest_notifications.dart';
 import 'domain/rest_usecases.dart';
+import 'domain/workout_lock_screen.dart';
 import 'domain/workout_repository.dart';
 import 'domain/workout_usecases.dart';
 import 'presentation/active_workout_cubit.dart';
 import 'presentation/history_list_cubit.dart';
 import 'presentation/rest_timer_cubit.dart';
+import 'presentation/workout_text.dart';
 import 'presentation/workout_detail_cubit.dart';
 import 'presentation/workout_edit_cubit.dart';
 
@@ -50,13 +52,17 @@ class WorkoutModule implements FeatureModule {
           getApplicationSupportDirectory,
         ),
       )
-      ..registerLazySingleton<RestLockScreen>(
+      ..registerLazySingleton<WorkoutLockScreen>(
         () => defaultTargetPlatform == TargetPlatform.iOS
-            ? const IosRestLockScreen()
-            : AndroidRestLockScreen(sl.getAsync<Notifications>()),
+            ? const IosWorkoutLockScreen()
+            : AndroidWorkoutLockScreen(
+                sl.getAsync<Notifications>(),
+                payload: NotificationPayloads.activeWorkout,
+              ),
       )
-      ..registerFactory(() => ShowRestOnLockScreen(sl()))
-      ..registerFactory(() => ClearRestFromLockScreen(sl()))
+      ..registerFactory(() => ShowWorkoutOnLockScreen(sl()))
+      ..registerFactory(() => ClearWorkoutFromLockScreen(sl()))
+      ..registerFactory(() => WatchLockScreenTaps(sl()))
       ..registerFactory(() => ShouldAskRestNotifications(sl()))
       ..registerFactory(() => AllowRestNotifications(sl()))
       ..registerFactory(() => DeclineRestNotifications(sl()))
@@ -105,7 +111,7 @@ class WorkoutModule implements FeatureModule {
                   ? l10n.restNotificationBack
                   : l10n.restNotificationNext(
                       workout.exercises[next.exercise].name,
-                      next.set + 1,
+                      l10n.setLabel(workout.exercises[next.exercise], next.set),
                     ),
             );
           },
@@ -113,15 +119,18 @@ class WorkoutModule implements FeatureModule {
           clearLockScreen: sl(),
           lockScreenText: (workout, next) {
             final l10n = deviceLocalizations();
+            final rest = l10n.restLockScreenTitle;
+            if (next == null) {
+              return (current: null, rest: rest, afterRest: null);
+            }
+            final exercise = workout.exercises[next.exercise];
             return (
-              title: l10n.restLockScreenTitle,
-              detail: next == null
-                  ? null
-                  : l10n.restNotificationNext(
-                      workout.exercises[next.exercise].name,
-                      next.set + 1,
-                    ),
-              over: l10n.restOver,
+              current: l10n.setToDo(exercise, next.set),
+              rest: rest,
+              afterRest: l10n.restNotificationNext(
+                exercise.name,
+                l10n.setLabel(exercise, next.set),
+              ),
             );
           },
         ),

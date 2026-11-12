@@ -87,10 +87,6 @@ class SetRow extends StatelessWidget {
     final type = exercise.loggingType;
     final previous = state.lastTime(ref);
     final hint = state.suggestion(ref);
-    final number = exercise.sets
-        .take(ref.set + 1)
-        .where((s) => !s.isWarmup)
-        .length;
     final flags = [
       if (set.toFailure) l10n.workoutFailureShort,
       if (set.rir case final rir?)
@@ -108,11 +104,10 @@ class SetRow extends StatelessWidget {
                 flex: SetColumns.label,
                 child: TextButton(
                   onPressed: () => _openOptions(context),
-                  child: Text(switch (set.type) {
-                    SetType.warmup => l10n.workoutWarmupShort,
-                    SetType.drop => '$number${l10n.workoutDropShort}',
-                    SetType.normal => '$number',
-                  }, semanticsLabel: l10n.workoutSetActions(ref.set + 1)),
+                  child: Text(
+                    l10n.setLabel(exercise, ref.set),
+                    semanticsLabel: l10n.workoutSetActions(ref.set + 1),
+                  ),
                 ),
               ),
               Expanded(

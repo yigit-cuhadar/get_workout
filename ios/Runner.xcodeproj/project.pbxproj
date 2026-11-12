@@ -16,9 +16,9 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
-		5A1C0D000000000000000005 /* RestActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000001 /* RestActivityAttributes.swift */; };
-		5A1C0D000000000000000006 /* RestActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000001 /* RestActivityAttributes.swift */; };
-		5A1C0D000000000000000007 /* RestTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000002 /* RestTimerLiveActivity.swift */; };
+		5A1C0D000000000000000005 /* WorkoutActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000001 /* WorkoutActivityAttributes.swift */; };
+		5A1C0D000000000000000006 /* WorkoutActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000001 /* WorkoutActivityAttributes.swift */; };
+		5A1C0D000000000000000007 /* WorkoutLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000002 /* WorkoutLiveActivity.swift */; };
 		5A1C0D000000000000000008 /* RestTimer.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000004 /* RestTimer.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -82,8 +82,8 @@
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7884E8692EC3CC0400C636F2 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
-		5A1C0D000000000000000001 /* RestActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestActivityAttributes.swift; sourceTree = "<group>"; };
-		5A1C0D000000000000000002 /* RestTimerLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerLiveActivity.swift; sourceTree = "<group>"; };
+		5A1C0D000000000000000001 /* WorkoutActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutActivityAttributes.swift; sourceTree = "<group>"; };
+		5A1C0D000000000000000002 /* WorkoutLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLiveActivity.swift; sourceTree = "<group>"; };
 		5A1C0D000000000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5A1C0D000000000000000004 /* RestTimer.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RestTimer.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -168,8 +168,8 @@
 		5A1C0D000000000000000009 /* RestTimer */ = {
 			isa = PBXGroup;
 			children = (
-				5A1C0D000000000000000001 /* RestActivityAttributes.swift */,
-				5A1C0D000000000000000002 /* RestTimerLiveActivity.swift */,
+				5A1C0D000000000000000001 /* WorkoutActivityAttributes.swift */,
+				5A1C0D000000000000000002 /* WorkoutLiveActivity.swift */,
 				5A1C0D000000000000000003 /* Info.plist */,
 			);
 			path = RestTimer;
@@ -399,7 +399,7 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
-				5A1C0D000000000000000005 /* RestActivityAttributes.swift in Sources */,
+				5A1C0D000000000000000005 /* WorkoutActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -407,8 +407,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5A1C0D000000000000000006 /* RestActivityAttributes.swift in Sources */,
-				5A1C0D000000000000000007 /* RestTimerLiveActivity.swift in Sources */,
+				5A1C0D000000000000000006 /* WorkoutActivityAttributes.swift in Sources */,
+				5A1C0D000000000000000007 /* WorkoutLiveActivity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

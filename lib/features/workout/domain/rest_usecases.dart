@@ -1,6 +1,5 @@
 import 'package:forge_core/forge_core.dart';
 
-import 'rest_lock_screen.dart';
 import 'rest_notifications.dart';
 
 /// The rest notification's text and time.
@@ -64,20 +63,4 @@ class CancelRestNotification implements UseCase<void, NoParams> {
 
   @override
   Future<Result<void>> call(NoParams params) => _notifications.cancel();
-}
-
-class ShowRestOnLockScreen implements UseCase<void, RestCountdown> {
-  const ShowRestOnLockScreen(this._lockScreen);
-  final RestLockScreen _lockScreen;
-
-  @override
-  Future<Result<void>> call(RestCountdown params) => _lockScreen.show(params);
-}
-
-class ClearRestFromLockScreen implements UseCase<void, NoParams> {
-  const ClearRestFromLockScreen(this._lockScreen);
-  final RestLockScreen _lockScreen;
-
-  @override
-  Future<Result<void>> call(NoParams params) => _lockScreen.clear();
 }
