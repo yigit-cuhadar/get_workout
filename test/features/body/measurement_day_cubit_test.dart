@@ -117,6 +117,23 @@ void main() {
     await cubit.close();
   });
 
+  test('a new day names its id once saved, for its summary; an edited one '
+      'does not', () async {
+    final cubit = build()..setWeight('80');
+    await cubit.next();
+    expect(cubit.savedNewId, isNull);
+    await skipAll(cubit);
+    expect(cubit.state.status, MeasurementDayStatus.saved);
+    expect(cubit.savedNewId, 'id1');
+    await cubit.close();
+
+    final edit = build(initial: world.repository.entries['id1']);
+    await skipAll(edit);
+    expect(edit.state.status, MeasurementDayStatus.saved);
+    expect(edit.savedNewId, isNull);
+    await edit.close();
+  });
+
   test('a retaken or skipped picture, and those left, are removed', () async {
     final cubit = build();
     for (var i = 0; i < 3; i++) {

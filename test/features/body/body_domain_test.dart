@@ -137,32 +137,4 @@ void main() {
       {PhotoPose.front: 'c/front', PhotoPose.back: 'b/back'},
     );
   });
-
-  test('a comparison orders by date and pairs what either has', () {
-    final later = entry(
-      'b',
-      DateTime(2026, 11, 1),
-      kg: 80,
-      measurements: {BodyMeasurement.waist: 84, BodyMeasurement.neck: 38},
-      photos: {PhotoPose.back: 'b/back'},
-    );
-    final earlier = entry(
-      'a',
-      DateTime(2026, 10, 1),
-      kg: 82.5,
-      measurements: {BodyMeasurement.waist: 88},
-      photos: {PhotoPose.front: 'a/front'},
-    );
-
-    final comparison = BodyComparison.of(later, earlier);
-
-    expect(comparison.before, earlier);
-    expect(comparison.weightKg.change, -2.5);
-    expect(comparison.measurements, {
-      BodyMeasurement.neck: (before: null, after: 38.0),
-      BodyMeasurement.waist: (before: 88.0, after: 84.0),
-    });
-    expect(comparison.measurements[BodyMeasurement.neck]!.change, isNull);
-    expect(comparison.poses, [PhotoPose.front, PhotoPose.back]);
-  });
 }

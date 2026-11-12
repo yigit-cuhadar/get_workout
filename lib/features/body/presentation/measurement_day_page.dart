@@ -178,6 +178,9 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
             .showSnackBar(SnackBar(content: Text(text)));
     setState(() => _retaking = false);
     switch (state.status) {
+      // A new day goes on to its summary, in place of the flow.
+      case MeasurementDayStatus.saved when _cubit.savedNewId != null:
+        context.go(Routes.bodySummary(_cubit.savedNewId!));
       case MeasurementDayStatus.saved || MeasurementDayStatus.closed:
         context.pop();
       case MeasurementDayStatus.empty:
@@ -273,11 +276,15 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
       onChanged: onChanged,
       onFieldSubmitted: last ? (_) => _cubit.next() : null,
     );
-    Widget page(String title, Widget fields) => ListView(
+    Widget page(String title, Widget fields, {String? hint}) => ListView(
       children: [
         Text(title, style: theme.textTheme.headlineSmall),
         const SizedBox(height: Gap.md),
         fields,
+        if (hint != null) ...[
+          const SizedBox(height: Gap.sm),
+          Text(hint, style: theme.textTheme.bodySmall),
+        ],
       ],
     );
     Widget side(
@@ -317,6 +324,7 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
           error: state.invalid ? l10n.bodyMeasurementRange(lengthUnit) : null,
           onChanged: (text) => _cubit.setMeasurement(measurement, text),
         ),
+        hint: l10n.measurementHint(measurement),
       ),
       PairStep(:final left, :final right) => page(
         l10n.measurementPairName(left),
@@ -328,6 +336,7 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
             Expanded(child: side(right, l10n.bodyRight, first: false)),
           ],
         ),
+        hint: l10n.measurementHint(left),
       ),
       PhotoStep(:final pose) => _photo(context, state, pose),
     };
@@ -378,7 +387,8 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
 
 /// The measurements a measurement day asks for; pops with the new set.
 /// "Body fat" stands for the measurements its estimate needs: ticking it
-/// ticks them, and it is ticked exactly while all of them are, so it is
+/// ticks them, and it is ticked exactly while all of them are. Unticking
+/// it unticks those not in the standard set; when all are standard, it is
 /// stopped by unticking one of them. Without the sex or height in the
 /// profile it links to the profile instead.
 class _TrackedDialog extends StatefulWidget {
@@ -458,28 +468,29 @@ class _TrackedDialogState extends State<_TrackedDialog> {
       );
     }
     final on = tracksBodyFat(_chosen, sex: sex, heightCm: profile.heightCm);
+    final off = withoutBodyFat(_chosen, sex);
+    final stuck = on && setEquals(off, _chosen);
+    final names = [
+      for (final measurement in BodyMeasurement.values)
+        if (needed.contains(measurement)) l10n.measurementName(measurement),
+    ].join(', ');
+    void choose(Set<BodyMeasurement> chosen) => setState(
+      () => _chosen
+        ..clear()
+        ..addAll(chosen),
+    );
     return CheckboxListTile(
       contentPadding: EdgeInsets.zero,
       value: on,
       title: Text(l10n.bodyFatTitle),
+      // Stuck when all its measurements are standard ones: it is then
+      // stopped through one of them.
       subtitle: Text(
-        l10n.bodyFatNeeds(
-          [
-            for (final measurement in BodyMeasurement.values)
-              if (needed.contains(measurement))
-                l10n.measurementName(measurement),
-          ].join(', '),
-        ),
+        stuck ? l10n.bodyFatNeeds(names) : l10n.bodyFatNeedsList(names),
       ),
-      // Ticked, it is stopped through one of its measurements.
-      onChanged: on
+      onChanged: stuck
           ? null
-          : (_) => setState(() {
-              final all = withBodyFat(_chosen, sex);
-              _chosen
-                ..clear()
-                ..addAll(all);
-            }),
+          : (_) => choose(on ? off : withBodyFat(_chosen, sex)),
     );
   }
 }

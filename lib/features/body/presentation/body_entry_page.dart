@@ -10,6 +10,7 @@ import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/body_entry.dart';
+import '../domain/measurement_summary.dart';
 import 'body_list_cubit.dart';
 import 'body_photo.dart';
 import 'body_text.dart';
@@ -109,6 +110,12 @@ class _EntryViewState extends State<_EntryView> {
     final bodyFat = context.select(
       (BodyListCubit cubit) => cubit.state.bodyFat[entry.id],
     );
+    // A measurement day with an earlier one compares with it.
+    final comparable = context.select(
+      (BodyListCubit cubit) =>
+          isMeasurementDay(entry) &&
+          baselineCandidates(cubit.state.entries, entry).isNotEmpty,
+    );
     final weight = entry.weightKg;
     String length(BodyMeasurement measurement) =>
         l10n.bodyLength(entry.measurements[measurement]!, settings.lengthUnit);
@@ -168,6 +175,16 @@ class _EntryViewState extends State<_EntryView> {
                 _ => length(group.single),
               }),
             ),
+          if (comparable) ...[
+            const SizedBox(height: Gap.sm),
+            OutlinedButton.icon(
+              onPressed: _deleting
+                  ? null
+                  : () => context.go(Routes.bodyEntryCompare(entry.id)),
+              icon: const Icon(Icons.compare),
+              label: Text(l10n.bodyCompare),
+            ),
+          ],
           if (entry.photos.isNotEmpty) ...[
             const SizedBox(height: Gap.md),
             PhotoRows([

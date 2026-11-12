@@ -30,6 +30,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'answered_consent.dart';
+import 'body_stand_in.dart';
 import 'no_workout.dart';
 import 'today_stand_ins.dart';
 
@@ -121,6 +122,7 @@ void main() {
         ),
       );
     registerTodayStandIns();
+    registerBodyListStandIn();
 
     await tester.pumpWidget(
       MultiBlocProvider(

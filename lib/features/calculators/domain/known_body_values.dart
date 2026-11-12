@@ -1,6 +1,7 @@
 import 'package:forge_core/forge_core.dart';
 
 import '../../body/domain/body_entry.dart';
+import '../../body/domain/entry_body_fat.dart';
 import '../../profile/domain/user_profile.dart';
 import 'body_fat.dart';
 import 'calculation.dart';
@@ -26,6 +27,9 @@ class KnownBodyValues extends Equatable {
   final double? heightCm;
   final double? weightKg;
   final double? neckCm;
+
+  /// The formula's waist, the measurement `navyWaist` names for [sex];
+  /// unknown without a sex.
   final double? waistCm;
   final double? hipCm;
 
@@ -72,7 +76,8 @@ KnownBodyValues knownBodyValues({
   }
   final UserProfile(:sex, :heightCm, :birthYear, :daysPerWeek) = profile;
   final neckCm = latest(BodyMeasurement.neck);
-  final waistCm = latest(BodyMeasurement.waist);
+  // Which measurement is the formula's waist depends on the sex.
+  final waistCm = sex == null ? null : latest(navyWaist(sex));
   final hipCm = latest(BodyMeasurement.hips);
   return KnownBodyValues(
     sex: sex,

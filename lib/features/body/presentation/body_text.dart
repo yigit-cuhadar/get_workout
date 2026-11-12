@@ -57,6 +57,23 @@ extension BodyText on AppLocalizations {
     BodyMeasurement.rightCalf => bodyRightCalf,
   };
 
+  /// Where to put the tape for [measurement]; both sides of a pair share
+  /// one.
+  String measurementHint(BodyMeasurement measurement) => switch (measurement) {
+    BodyMeasurement.neck => bodyHintNeck,
+    BodyMeasurement.shoulders => bodyHintShoulders,
+    BodyMeasurement.chest => bodyHintChest,
+    BodyMeasurement.waist => bodyHintWaist,
+    BodyMeasurement.abdomen => bodyHintAbdomen,
+    BodyMeasurement.hips => bodyHintHips,
+    BodyMeasurement.leftUpperArm ||
+    BodyMeasurement.rightUpperArm => bodyHintUpperArm,
+    BodyMeasurement.leftForearm ||
+    BodyMeasurement.rightForearm => bodyHintForearm,
+    BodyMeasurement.leftThigh || BodyMeasurement.rightThigh => bodyHintThigh,
+    BodyMeasurement.leftCalf || BodyMeasurement.rightCalf => bodyHintCalf,
+  };
+
   /// The name of the pair whose left side is [left], e.g. "Thigh".
   String measurementPairName(BodyMeasurement left) => switch (left) {
     BodyMeasurement.leftUpperArm => bodyUpperArm,

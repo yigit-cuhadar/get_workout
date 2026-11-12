@@ -5,17 +5,20 @@ import '../../calculators/domain/calculation.dart';
 import '../../profile/domain/user_profile.dart';
 import 'body_entry.dart';
 
+/// The measurement the US Navy body-fat formula calls the waist for [sex]:
+/// it is taken at the navel for men, which is the abdomen here, and at its
+/// narrowest for women, which is the waist here.
+BodyMeasurement navyWaist(Sex sex) => switch (sex) {
+  Sex.male => BodyMeasurement.abdomen,
+  Sex.female => BodyMeasurement.waist,
+};
+
 /// The measurements the US Navy body-fat formula needs for [sex], besides
-/// the height. It takes the waist at the navel for men, which is the
-/// abdomen here, and the waist at its narrowest for women, which is the
-/// waist here.
-Set<BodyMeasurement> bodyFatMeasurements(Sex sex) => switch (sex) {
-  Sex.male => const {BodyMeasurement.neck, BodyMeasurement.abdomen},
-  Sex.female => const {
-    BodyMeasurement.neck,
-    BodyMeasurement.waist,
-    BodyMeasurement.hips,
-  },
+/// the height: the neck, the [navyWaist] and, for women, the hips.
+Set<BodyMeasurement> bodyFatMeasurements(Sex sex) => {
+  BodyMeasurement.neck,
+  navyWaist(sex),
+  if (sex == Sex.female) BodyMeasurement.hips,
 };
 
 /// The body fat of one entry's measurements, or why there is none. Never
@@ -87,10 +90,7 @@ EntryBodyFat entryBodyFat(
     sex: sex,
     heightCm: heightCm,
     neckCm: measurements[BodyMeasurement.neck]!,
-    waistCm: switch (sex) {
-      Sex.male => measurements[BodyMeasurement.abdomen]!,
-      Sex.female => measurements[BodyMeasurement.waist]!,
-    },
+    waistCm: measurements[navyWaist(sex)]!,
     hipCm: measurements[BodyMeasurement.hips],
   );
   return switch (estimate) {
@@ -118,6 +118,14 @@ Set<BodyMeasurement> withBodyFat(Set<BodyMeasurement> tracked, Sex sex) => {
   ...tracked,
   ...bodyFatMeasurements(sex),
 };
+
+/// [tracked] without the measurements that are there only for body fat:
+/// those [sex]'s estimate needs that are not in the standard set. Equal to
+/// [tracked] when there are none, e.g. every one of them is standard.
+Set<BodyMeasurement> withoutBodyFat(Set<BodyMeasurement> tracked, Sex sex) =>
+    tracked.difference(
+      bodyFatMeasurements(sex).difference(BodyMeasurement.standard),
+    );
 
 /// Whether body fat is tracked: it can be estimated (the sex and height
 /// are known) and every measurement it needs is in [tracked]. Derived, never

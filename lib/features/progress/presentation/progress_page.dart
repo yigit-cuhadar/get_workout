@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_core/forge_core.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../body/domain/measurement_summary.dart';
+import '../../body/presentation/body_list_cubit.dart';
 
 /// The Progress tab: one row per kind of progress.
 class ProgressPage extends StatelessWidget {
@@ -57,7 +61,43 @@ class ProgressPage extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.go(Routes.body),
           ),
+          const _CompareTile(),
         ],
+      ),
+    );
+  }
+}
+
+/// Opens the newest measurement day compared with the previous one; off,
+/// saying why, until there are two.
+class _CompareTile extends StatelessWidget {
+  const _CompareTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return BlocProvider.value(
+      value: sl<BodyListCubit>(),
+      child: BlocSelector<BodyListCubit, BodyListState, (bool, String?)>(
+        selector: (state) => (
+          state.status == BodyListStatus.ready,
+          newestComparable(state.entries)?.id,
+        ),
+        builder: (context, selected) {
+          final (ready, id) = selected;
+          return ListTile(
+            leading: const Icon(Icons.compare),
+            title: Text(l10n.progressCompare),
+            subtitle: ready && id == null
+                ? Text(l10n.progressCompareNeedsTwo)
+                : null,
+            trailing: const Icon(Icons.chevron_right),
+            enabled: id != null,
+            onTap: id == null
+                ? null
+                : () => context.go(Routes.bodyEntryCompare(id)),
+          );
+        },
       ),
     );
   }
