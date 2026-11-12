@@ -64,6 +64,17 @@ export async function deleteAccountOf(
       reason: Reason.signInNotDeleted,
     });
   }
+  // A RevenueCat event that found the user just before the sign-in went may
+  // have written the entitlement again; the webhook skips users Auth no
+  // longer has, so deleting it once more now leaves nothing behind.
+  try {
+    await store.deleteEntitlement(uid);
+  } catch (error) {
+    logger.error("entitlement left after deletion", {
+      uid,
+      error: String(error),
+    });
+  }
   logger.info("account deleted", { uid });
 }
 
