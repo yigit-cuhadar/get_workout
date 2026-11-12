@@ -1187,7 +1187,20 @@ Group 9, launch readiness
 
 ## Open questions
 
-- Google and Apple sign-in are implemented in `forge_auth` but not enabled: Google needs a support email for the OAuth consent screen, Apple needs the Developer account. Until then the app offers email only.
+- Google sign-in is offered next to email (`socialProviders` in
+  `lib/app/router.dart`); both providers are enabled in both Firebase
+  projects. It runs through Firebase Auth's browser flow, so iOS returns
+  through the encoded Firebase app id URL schemes in `Info.plist` (dev and
+  prod) and Android needs the signing certificate's SHA registered on the
+  Firebase Android app: the debug keystore's SHA-1 and SHA-256 are
+  registered on dev. Still open: the release (Play app signing) SHA on
+  prod once the Play Console exists, and a completed sign-in on a device
+  (the emulator check stopped at the browser opening).
+- Apple sign-in is enabled in Firebase but not offered: it needs the Sign
+  in with Apple entitlement, which only a paid Apple Developer team can
+  sign (the free personal team cannot), and on Android an Apple Services
+  ID. The App Store requires it wherever Google is offered, so it must be
+  added before the iOS release.
 - A guest who signs in to an existing account leaves an orphaned anonymous user and its data behind; clean these up with a scheduled function when Cloud Functions arrive.
 - Photo backup: `storage.rules` and the `storage` entry in `firebase.json`
   are written but not deployed, and the default bucket is not created yet

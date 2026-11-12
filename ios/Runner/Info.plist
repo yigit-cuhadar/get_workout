@@ -36,6 +36,20 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<!-- Firebase Auth returns from the browser (Google sign-in) through the
+	     app's encoded Firebase app id: dev, then prod. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>app-1-629736947899-ios-e57e808bbf06fb24bd299e</string>
+				<string>app-1-451944630151-ios-47442e4cd12c53d0ca7522</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>NSCameraUsageDescription</key>
