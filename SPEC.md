@@ -243,6 +243,51 @@ from the earlier FitLab app.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk).
+- **Analytics consent** (`lib/features/account`): `settings.analyticsConsent`
+  of each user, guests included (a guest has a uid and a user document;
+  linking keeps it, signing in to an existing account takes that account's
+  answer). Null is not answered, which collects nothing. Analytics and
+  Crashlytics start off natively (Info.plist, AndroidManifest.xml) and
+  collect only in prod release builds with a yes. The app replaces
+  `forge_firebase`'s `initFirebase` (which turns collection on at start)
+  with `FirebaseTelemetry.start`: same error routing, plus the consent last
+  applied on this device (a file in app support), applied before the
+  user's answer is read. `ConsentCubit` (app-wide) applies each answer as
+  it arrives, from Firestore's cache at once. Asked once in a dialog over
+  the tabs (never during onboarding) with two equal choices and no
+  dismissing; changed with the switch under Profile → Privacy. Crash
+  reports recorded before a yes are deleted, never sent. The settings
+  feature leaves the field alone: its writes merge, and `UserSettings` does
+  not carry it.
+- **Privacy policy link**: Profile → Privacy, in the browser.
+  `LegalLinks.privacyUrl` (`lib/app/legal_links.dart`) is the one place the
+  address is written; the Android build reads it from that line into
+  `R.string.privacy_policy_url` for Health Connect's
+  `PrivacyPolicyActivity`.
+- **Deleting an account**: Account → "Delete account" ("Delete my data" for
+  a guest), set apart in the error colour, opens a page listing what goes
+  (profile and settings, programs, workouts, records, custom exercises,
+  cardio, body entries and photos, the sign-in) and that a store
+  subscription is not cancelled; then a confirmation dialog. The callable
+  `deleteAccount` deletes; for an account with a credential it wants a
+  sign-in from the last 5 minutes, else the app asks for the password
+  (email only; Google and Apple are not offered yet) and tries again. A
+  guest is deleted the same way, without that check. Once the server
+  confirms, the app signs out, removes the user's kept workouts file
+  (unreadable copies too), cancels every scheduled notification and resets
+  the analytics id and unsent crash reports; a local leftover is logged,
+  not reported, since the account is gone. Firestore's cache is not
+  cleared (that needs the instance shut down; it is evicted like any
+  cache). A new guest then starts, at onboarding. A function not deployed
+  answers `not-found`, shown as "deleting accounts isn't available yet",
+  never as done.
+- **Cloud Functions** (`functions/`): TypeScript, Node 22, 2nd gen, all in
+  `europe-west1` (`src/config.ts`, set once with `setGlobalOptions`; the
+  app's `CallableAccountRepository.region` must match). One file per
+  function, exported from `src/index.ts`; logic takes its Admin SDK
+  access as a parameter so `npm test` (lint, build, `node --test`) runs
+  without an emulator; CI runs it. Deploying is the Architect's step
+  (`firebase deploy --only functions --project <id>`), never an agent's.
 - **Onboarding questions**: goal, level, days per week and equipment need
   an answer to continue. The personal questions (sex, birth year, height,
   weight, target weight) can each be skipped with "Skip this question";
@@ -710,7 +755,15 @@ RevenueCat webhook; readable by its owner.
 ### Cloud Functions
 
 - `revenueCatWebhook` → writes `entitlements/{uid}`
-- `deleteAccount` (callable) → deletes the user's documents, photos and auth user
+- `deleteAccount` (callable, `functions/src/delete_account.ts`) → for the
+  signed-in caller: `users/{uid}` with every subcollection (customExercises,
+  programs, workouts, exerciseStats, cardio, bodyEntries, pushTokens and any
+  added later) by recursive delete, `entitlements/{uid}`, Storage
+  `users/{uid}/` (photos), then the auth user last, so a partial failure
+  can be retried; every step succeeds when nothing is left. Refuses
+  `failed-precondition` / `requires-recent-login` when a non-guest signed
+  in more than 5 minutes ago. RevenueCat keeps its customer; the store
+  subscription is the user's to cancel.
 - `sendAnnouncement` (callable, admin) → FCM topic push
 
 Admin access is a custom claim set by `tool/set_admin.sh`, using the project
@@ -779,7 +832,19 @@ Group 9, launch readiness
 
 - Google and Apple sign-in are implemented in `forge_auth` but not enabled: Google needs a support email for the OAuth consent screen, Apple needs the Developer account. Until then the app offers email only.
 - A guest who signs in to an existing account leaves an orphaned anonymous user and its data behind; clean these up with a scheduled function when Cloud Functions arrive.
-- The projects are not linked to a billing account yet; needed before photo backup and Cloud Functions.
+- The projects are on the Blaze plan. `deleteAccount` is written but not
+  deployed: the Architect deploys `functions/` to dev, checks deletion on a
+  device (including the "not available" message before the deploy), then
+  prod.
+- After `revenueCatWebhook` exists, an event for a deleted user could write
+  `entitlements/{uid}` again; the webhook should skip uids with no auth user.
+- When the body feature's photos are kept on the device, deletion must also
+  remove that user's private photos (`DeviceAccountData`).
+- `forge_firebase`: `initFirebase` should take the consent (or leave
+  collection off) so the app need not replace it; `forge_auth`: no
+  re-authentication in `AuthRepository`, so the account feature signs in
+  again through Firebase Auth itself. Move both into the packages when they
+  next change.
 - Female body model with the same mesh names: the user supplies it before release.
 - RevenueCat webhook (`revenueCatWebhook`, needs the Blaze plan): verify the
   Authorization header secret, write `entitlements/{app_user_id}` with
@@ -801,11 +866,10 @@ Group 9, launch readiness
   build Android, so nothing has compiled the Android changes yet.
 - Release blocker: the Terms of Use and Privacy Policy links in
   `lib/app/legal_links.dart` are placeholders; publish the pages and
-  replace them.
+  replace them (Android picks up `privacyUrl` by itself).
 - Release blockers for steps: Health Connect's privacy-policy link opens
-  `PrivacyPolicyActivity`, which opens a copy of the placeholder privacy
-  URL in `PrivacyPolicyActivity.kt` (keep it equal to
-  `LegalLinks.privacy`); Play Console
+  `PrivacyPolicyActivity`, which opens `LegalLinks.privacyUrl` (passed in
+  by the build, still a placeholder); Play Console
   needs the Health apps declaration for READ_STEPS; the App ID needs the
   HealthKit capability (the Runner now carries the entitlement, so a
   device build signed by a team without it fails; the simulator does
