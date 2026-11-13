@@ -94,6 +94,12 @@ void main() {
         VolumeZone.above: 0,
       });
     });
+
+    test('totals the working sets once each, not per muscle', () {
+      // 12 + 3 + 21, though the squat's sets also count for glutes.
+      expect(volume.totalSets, 36);
+      expect(week(const []).totalSets, 0);
+    });
   });
 
   group('counting', () {

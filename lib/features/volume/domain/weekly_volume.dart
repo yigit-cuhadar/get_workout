@@ -94,6 +94,9 @@ class WeekVolume extends Equatable {
 
   double setsOf(Muscle muscle) => sets[muscle] ?? 0;
 
+  /// The working sets done, each once, whatever muscles it gave sets.
+  int get totalSets => entries.fold(0, (total, entry) => total + entry.sets);
+
   /// Every muscle, most sets first; ties in vocabulary order.
   List<Muscle> get musclesBySets => [...Muscle.values]
     ..sort((a, b) {
