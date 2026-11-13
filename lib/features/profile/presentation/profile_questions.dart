@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/question_page.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
@@ -166,139 +167,94 @@ class ProfileQuestion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final info = l10n.questionInfo(field);
-    final header = [
-      Text(l10n.question(field), style: theme.textTheme.headlineSmall),
-      if (info != null) ...[
-        const SizedBox(height: Gap.sm),
-        Text(info, style: theme.textTheme.bodyMedium),
-      ],
-      const SizedBox(height: Gap.md),
-    ];
     final answer = BlocBuilder<ProfileFormCubit, ProfileFormState>(
-      builder: (context, state) => switch (field) {
-        ProfileField.goal => _Choice(
-          values: Goal.values,
-          selected: state.answers.goal,
-          title: l10n.goalName,
-          onChanged: context.read<ProfileFormCubit>().setGoal,
-        ),
-        ProfileField.level => _Choice(
-          values: Level.values,
-          selected: state.answers.level,
-          title: l10n.levelName,
-          subtitle: l10n.levelInfo,
-          onChanged: context.read<ProfileFormCubit>().setLevel,
-        ),
-        ProfileField.daysPerWeek => _Choice(
-          values: [
-            for (
-              var days = ProfileLimits.minDaysPerWeek;
-              days <= ProfileLimits.maxDaysPerWeek;
-              days++
-            )
-              days,
-          ],
-          selected: state.answers.daysPerWeek,
-          title: l10n.profileDays,
-          onChanged: context.read<ProfileFormCubit>().setDaysPerWeek,
-        ),
-        ProfileField.equipment => _EquipmentAnswer(state.answers.equipment),
-        ProfileField.sex => _Choice(
-          values: Sex.values,
-          selected: state.answers.sex,
-          title: l10n.sexName,
-          onChanged: context.read<ProfileFormCubit>().setSex,
-        ),
-        ProfileField.birthYear => _BirthYearAnswer(state.answers.birthYear),
-        ProfileField.height => _HeightAnswer(state.answers.heightCm),
-        ProfileField.weight => _WeightAnswer(field, state.answers.weightKg),
-        ProfileField.targetWeight => _WeightAnswer(
-          field,
-          state.answers.targetWeightKg,
-        ),
+      builder: (context, state) {
+        final cubit = context.read<ProfileFormCubit>();
+        return switch (field) {
+          ProfileField.goal => ChoiceAnswer(
+            values: Goal.values,
+            selected: state.answers.goal,
+            title: l10n.goalName,
+            onChanged: cubit.setGoal,
+          ),
+          ProfileField.level => ChoiceAnswer(
+            values: Level.values,
+            selected: state.answers.level,
+            title: l10n.levelName,
+            subtitle: l10n.levelInfo,
+            onChanged: cubit.setLevel,
+          ),
+          ProfileField.daysPerWeek => ChoiceAnswer(
+            values: [
+              for (
+                var days = ProfileLimits.minDaysPerWeek;
+                days <= ProfileLimits.maxDaysPerWeek;
+                days++
+              )
+                days,
+            ],
+            selected: state.answers.daysPerWeek,
+            title: l10n.profileDays,
+            onChanged: cubit.setDaysPerWeek,
+          ),
+          ProfileField.equipment => EquipmentAnswer(
+            owned: state.answers.equipment,
+            onPreset: cubit.applyPreset,
+            onToggle: cubit.toggleEquipment,
+          ),
+          ProfileField.sex => ChoiceAnswer(
+            values: Sex.values,
+            selected: state.answers.sex,
+            title: l10n.sexName,
+            onChanged: cubit.setSex,
+          ),
+          ProfileField.birthYear => _BirthYearAnswer(state.answers.birthYear),
+          ProfileField.height => _HeightAnswer(state.answers.heightCm),
+          ProfileField.weight => _WeightAnswer(field, state.answers.weightKg),
+          ProfileField.targetWeight => _WeightAnswer(
+            field,
+            state.answers.targetWeightKg,
+          ),
+        };
       },
     );
-    const padding = EdgeInsets.all(Gap.md);
-    return switch (field) {
-      // Lists scroll when taller than the page, and sit at its bottom when
-      // not.
-      ProfileField.goal ||
-      ProfileField.level ||
-      ProfileField.daysPerWeek ||
-      ProfileField.equipment ||
-      ProfileField.sex => CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: padding,
-            sliver: SliverFillRemaining(
-              hasScrollBody: false,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [...header, const Spacer(), answer],
-              ),
-            ),
-          ),
-        ],
-      ),
-      ProfileField.birthYear ||
-      ProfileField.height ||
-      ProfileField.weight ||
-      ProfileField.targetWeight => Padding(
-        padding: padding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [...header, const Spacer(), answer],
-        ),
-      ),
-    };
+    return QuestionLayout(
+      title: l10n.question(field),
+      info: l10n.questionInfo(field),
+      answer: answer,
+      scrolls: switch (field) {
+        ProfileField.goal ||
+        ProfileField.level ||
+        ProfileField.daysPerWeek ||
+        ProfileField.equipment ||
+        ProfileField.sex => true,
+        ProfileField.birthYear ||
+        ProfileField.height ||
+        ProfileField.weight ||
+        ProfileField.targetWeight => false,
+      },
+    );
   }
 }
 
-class _Choice<T> extends StatelessWidget {
-  const _Choice({
-    required this.values,
-    required this.selected,
-    required this.title,
-    required this.onChanged,
-    this.subtitle,
+/// The equipment owned: presets as chips, then each item. Bodyweight is
+/// always owned, so it is not offered.
+class EquipmentAnswer extends StatelessWidget {
+  const EquipmentAnswer({
+    super.key,
+    required this.owned,
+    required this.onPreset,
+    required this.onToggle,
   });
 
-  final List<T> values;
-  final T? selected;
-  final String Function(T value) title;
-  final String Function(T value)? subtitle;
-  final ValueChanged<T> onChanged;
-
-  @override
-  Widget build(BuildContext context) => RadioGroup<T>(
-    groupValue: selected,
-    onChanged: (value) {
-      if (value != null) onChanged(value);
-    },
-    child: Column(
-      children: [
-        for (final value in values)
-          RadioListTile<T>(
-            value: value,
-            title: Text(title(value)),
-            subtitle: subtitle == null ? null : Text(subtitle!(value)),
-          ),
-      ],
-    ),
-  );
-}
-
-class _EquipmentAnswer extends StatelessWidget {
-  const _EquipmentAnswer(this.owned);
-
+  /// Null until answered.
   final Set<Equipment>? owned;
+  final ValueChanged<EquipmentProfile> onPreset;
+  final ValueChanged<Equipment> onToggle;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final cubit = context.read<ProfileFormCubit>();
     final owned = this.owned;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -314,7 +270,7 @@ class _EquipmentAnswer extends StatelessWidget {
                     owned != null &&
                     owned.length == preset.equipment.length &&
                     owned.containsAll(preset.equipment),
-                onSelected: (_) => cubit.applyPreset(preset),
+                onSelected: (_) => onPreset(preset),
               ),
           ],
         ),
@@ -324,7 +280,7 @@ class _EquipmentAnswer extends StatelessWidget {
             CheckboxListTile(
               value: owned?.contains(item) ?? false,
               title: Text(l10n.equipmentName(item)),
-              onChanged: (_) => cubit.toggleEquipment(item),
+              onChanged: (_) => onToggle(item),
             ),
       ],
     );

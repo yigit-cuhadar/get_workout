@@ -13,7 +13,6 @@ import '../../settings/presentation/first_weekday.dart';
 import '../../workout/presentation/start_workout.dart';
 import '../domain/active_program.dart';
 import '../domain/program.dart';
-import '../domain/program_editing.dart';
 import '../domain/program_schedule.dart';
 import 'program_detail_cubit.dart';
 import 'premium_prompt.dart';
@@ -411,63 +410,19 @@ class _DaysState extends State<_Days> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final program = widget.program;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final (index, day) in program.days.indexed) ...[
           if (index > 0) const SizedBox(height: Gap.sm),
-          Card(
-            margin: EdgeInsets.zero,
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ListTile(
-                  title: Text(
-                    l10n.dayName(day, index),
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  subtitle: day.items.isEmpty
-                      ? null
-                      : Text(
-                          l10n.programDaySummary(
-                            day.items.length,
-                            l10n.estimateText(estimateDay(day)),
-                          ),
-                        ),
-                  trailing: day.items.isEmpty
-                      ? null
-                      : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Locked, it opens the paywall instead.
-                            IconButton(
-                              tooltip: l10n.workoutStartThisDay,
-                              icon: const Icon(Icons.play_arrow),
-                              onPressed: () =>
-                                  startProgramDay(context, program, index),
-                            ),
-                            IconButton(
-                              tooltip: _open.contains(index)
-                                  ? l10n.programDayHide
-                                  : l10n.programDayShow,
-                              icon: Icon(
-                                _open.contains(index)
-                                    ? Icons.expand_less
-                                    : Icons.expand_more,
-                              ),
-                              onPressed: () => _toggle(index),
-                            ),
-                          ],
-                        ),
-                  onTap: day.items.isEmpty ? null : () => _toggle(index),
-                ),
-                if (_open.contains(index)) ProgramDayItems(day: day),
-              ],
-            ),
+          ProgramDayCard(
+            day: day,
+            index: index,
+            open: _open.contains(index),
+            onToggle: () => _toggle(index),
+            // Locked, it opens the paywall instead.
+            onStart: () => startProgramDay(context, program, index),
           ),
         ],
       ],

@@ -154,10 +154,13 @@ class _Suggestion extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: Gap.md),
               child: Text(l10n.suggestionBody),
             ),
-            CatalogueProgramTile(
-              suggestion.program,
-              premium: false,
-              reasons: suggestion.reasons,
+            Padding(
+              padding: const EdgeInsets.all(Gap.md),
+              child: CatalogueProgramCard(
+                suggestion.program,
+                premium: false,
+                reasons: suggestion.reasons,
+              ),
             ),
             if (state.status == CatalogueDetailStatus.ready &&
                 state.useStatus != UseStatus.exercisesMissing &&

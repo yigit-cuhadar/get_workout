@@ -14,6 +14,17 @@ extension CatalogueTextLabels on AppLocalizations {
     if (program.lengthWeeks case final weeks?) programWeekCount(weeks),
   ].join(' · ');
 
+  /// Level, goal, days a week, length, equipment and session time, each a
+  /// tag of its card.
+  List<String> catalogueTags(CatalogueProgram program) => [
+    levelName(program.level),
+    goalName(program.goal),
+    catalogueDaysPerWeek(program.daysPerWeek),
+    if (program.lengthWeeks case final weeks?) programWeekCount(weeks),
+    presetName(program.equipmentProfile),
+    if (program.minutes case final minutes?) sessionMinutesText(minutes),
+  ];
+
   String matchText(List<MatchReason> reasons) => catalogueMatches(
     inlineList(
       reasons.map(

@@ -547,6 +547,20 @@ from the earlier FitLab app.
   `SubscriptionModule.showPaywall`. The program cubits follow that status,
   so a page updates by itself once the paywall grants premium; pages get
   the premium action from their page widget, never from `sl`.
+- **Ready-made programs page** (UX pass, 2026-11-13, variant B): the
+  filters as chips under the app bar, scrolling sideways: "Fits my
+  equipment" (toggles in place; while the equipment is unknown it opens
+  the sheet, which says why), then for Level, Days per week, Goal and
+  Equipment each chosen value as a removable chip (removing it turns that
+  value off) or, with none chosen, the filter's name; a chip opens the
+  filters sheet, as does the filter action in the app bar (badged while
+  filtering). While filtering, "n filters on" (each chosen value counts
+  one, `CatalogueFilter.activeCount`) and Clear. Then "Recommended for you"
+  (hidden while filtering) and "All programs", each program a card
+  (`CatalogueProgramCard`, also on the post-onboarding suggestion): name
+  with Free, Premium or the lock, the facts as tags (level, goal, days a
+  week, length, equipment profile, session time) and "Matches your ..."
+  where it applies. The filters sheet is unchanged.
 - **Copies of premium programs** (decided by the user, 2026-11-11): a copy
   of a premium ready-made program is marked `premium: true` and keeps the
   mark through edits and duplicates. Without premium it stays visible and
@@ -598,6 +612,15 @@ from the earlier FitLab app.
   the Programs tab for everyone, locked when free, and opens through
   `requirePremium()`; it is a feature of its own, so the programs feature
   still never imports the subscription one (the tab only shows its entry).
+  Layout (UX pass, 2026-11-13): the questions are laid out as onboarding's
+  (one per page, Back and the progress segments with "n / 9" in the app
+  bar, "Generate a program" above the question, the answer near the
+  thumb, Next or "Create my program" at the bottom; Back on the first
+  question leaves). The preview: split and summary, the uncovered muscles
+  as a card, a Weekly sets card with each target muscle as a plain bar
+  filled to its own target (full once met) and "x of target", then the days as the
+  program page's day cards (`ProgramDayCard`, without ▶), the first open
+  and again after Regenerate; Regenerate and Save fixed at the bottom.
 - **Steps**: read-only from Apple Health / Health Connect through
   `forge_health`; never stored, so `firestore.rules` is unchanged. The
   platform store in every build on iOS and Android; the fake only in debug
@@ -898,7 +921,11 @@ from the earlier FitLab app.
   number question counts as answered when it shows; the target weight
   follows the weight until the user picks one. "I already have an
   account" shows on the welcome page for a guest only. In "Your profile"
-  every answer can be changed but not removed.
+  every answer can be changed but not removed. The page frame, the
+  question layout and the radio answers are shared with the generator
+  (`QuestionScaffold`, `QuestionLayout`, `ChoiceAnswer` in
+  `lib/core/question_page.dart`; `EquipmentAnswer` in
+  `profile_questions.dart`).
 - **Birth year**: a plausibility range (age 13-100), not an age gate. An
   implausible year is only not accepted as an answer; nothing is blocked.
 - **Custom exercises**: ordinary exercises everywhere the catalogue is
@@ -1547,7 +1574,11 @@ from the earlier FitLab app.
   user's own workouts, so the gate is client-side only. Changing week
   keeps the week before on screen until the next arrives, so the model
   keeps its camera. `WatchWeeklyVolume` with one week is what the Today
-  tab's card calls.
+  tab's card calls. Layout (UX pass, 2026-11-13, variant A): the week
+  switcher, one body model (dragged to turn, so front and back are the
+  same model) with "Drag to turn · tap a muscle" under it once loaded,
+  the legend, then the muscle bars in one card; a muscle opens its sheet
+  as before.
 - **Charts**: `LineChart` (trends, e.g. e1RM) and `BarChart` (zero-based
   daily or weekly values with an optional target line, e.g. steps) live in
   `lib/core` and share `ChartText` and the pure geometry in
@@ -1919,13 +1950,13 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Profile — every setting on one page in groups; Premium is a distinct card with Get Premium
 - [x] Paywall — two layouts kept for an A/B test: plans as a list, plans as cards side by side; Remote Config `paywall_layout` assigns them
 - [x] Program detail — a summary card (state, weekdays, length, Change days, Stop), days collapse
-- [ ] Program builder — stays as built: day chips, sets and reps in a sheet
+- [x] Program builder — stays as built: day chips, sets and reps in a sheet
 - [x] Exercise detail — model with main and secondary muscles, a table of facts (equipment, level, mechanic, pattern, sides, logged as, also called), Setup and How to do it as numbered steps, Common mistakes, Safety and Cues each as their own card, Note, then one Similar exercises list tagged Alternative or Variation. One Add button in the app bar (workout or program). The Records and progress row leaves this page; the strength page stays reachable from Progress
 - [x] Workout detail (history) — the summary card of the workout summary (date, program link, four stats), the workout note as its own card, sets as a table per exercise
-- [ ] Ready-made programs — cards with tags; the filters show as chips above the list and open the filters sheet
-- [ ] Generator — questions use the onboarding question layout; the preview shows weekly sets as bars and days that collapse, Regenerate and Save fixed at the bottom
+- [x] Ready-made programs — cards with tags; the filters show as chips above the list and open the filters sheet
+- [x] Generator — questions use the onboarding question layout; the preview shows weekly sets as bars and days that collapse, Regenerate and Save fixed at the bottom
 - [x] Cardio — this week's summary on top, the 12-week chart, sessions by week; Log cardio is a full-width button fixed at the bottom
-- [ ] Weekly volume — stays as built with one body model, the legend and the muscle bars
+- [x] Weekly volume — stays as built with one body model, the legend and the muscle bars
 - [x] Remaining pages (strength, calculators, account, sign-in with the Google mark on its button, your profile, warm-up settings, cardio form, workout edit, ready-made program page) keep their structure; their look is settled in the design phase
 
 ## Design

@@ -52,6 +52,9 @@ class ProgramCatalogueState extends Equatable {
   /// Whether the filters leave anything out.
   bool get filtering => filter.isActive(profile.equipment);
 
+  /// How many filter values are on.
+  int get filterCount => filter.activeCount(profile.equipment);
+
   /// Free programs first unless the user is known to have premium.
   List<Recommendation> get recommended =>
       recommendPrograms(programs, profile, freeFirst: premium != true);

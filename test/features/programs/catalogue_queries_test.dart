@@ -105,6 +105,20 @@ void main() {
       expect(ids(filter, owned: {Equipment.barbell}), ['b']);
       expect(ids(filter), ['a', 'b']);
     });
+
+    test('counts each chosen value, fits my equipment once known', () {
+      const filter = CatalogueFilter(
+        levels: {Level.beginner, Level.advanced},
+        daysPerWeek: {3},
+        goals: {Goal.getStronger},
+        profiles: {EquipmentProfile.dumbbells},
+        fitsMyEquipment: true,
+      );
+
+      expect(filter.activeCount({Equipment.barbell}), 6);
+      expect(filter.activeCount(null), 5);
+      expect(const CatalogueFilter().activeCount(const {}), 0);
+    });
   });
 
   group('recommendPrograms', () {
