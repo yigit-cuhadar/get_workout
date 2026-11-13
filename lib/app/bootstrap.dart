@@ -16,6 +16,7 @@ import '../features/generator/generator_module.dart';
 import '../features/notifications/notifications_module.dart';
 import '../features/profile/profile_module.dart';
 import '../features/programs/programs_module.dart';
+import '../features/progress/progress_module.dart';
 import '../features/settings/settings_module.dart';
 import '../features/today/today_module.dart';
 import '../features/steps/steps_module.dart';
@@ -52,6 +53,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     const StrengthModule(),
     const CalendarModule(),
     const TodayModule(),
+    const ProgressModule(),
     healthModule(platform: defaultTargetPlatform, release: kReleaseMode),
     const StepsModule(),
     const BodyModule(),

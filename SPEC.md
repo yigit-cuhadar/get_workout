@@ -1132,6 +1132,15 @@ from the earlier FitLab app.
 - **Program progress**: doing another day of the active program shows it as
   done but leaves the schedule. Done days are read from workouts by date
   only, so no composite index is needed.
+- **Progress tab** (UX pass, 2026-11-13): one card per area, each opening
+  its page from anywhere on the card. Body: the latest weight, the weights
+  of the last 12 weeks as a sparkline, the newest body fat, Log weight and
+  Measurement day. Calendar: this week's strip (the one Today shows) and
+  the month's count of finished workouts. Weekly volume: this week's total
+  and muscle bars, never the trend. Strength: the best estimated 1RM of the
+  most recently trained exercises. Cardio: this week. Steps: today against
+  the goal. Each card reads through its own cubit and shows its own
+  failure, so one area failing leaves the others.
 - **Calendar**: Progress → Calendar is one scrolling page (UX pass,
   2026-11-13): a card with this week's strip, which opens to the month
   (previous / next; tapping a date of a neighbouring month opens that
@@ -1716,7 +1725,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [ ] Train, My program — the day list has no Start; Ready-made, Generate, New program and Start empty workout stay
 - [x] Workout, set entry — minus/plus steppers; tapping the number types it
 - [x] Workout, rest — after a set the panel asks the effort (four options in a grid plus Failed, one line of explanation each, Skip) above a slim timer bar; the RPE scale uses the same layout with RPE 6 or less, 7, 8, 9, 10 and Failed. Once answered only the timer bar shows (time, +15 s, Skip); the next set's entry appears when the rest ends or is skipped
-- [ ] Progress — one small widget per area, each opening its page: Body (last weight, curve, last body fat, Log weight, Measurement day), the calendar week, weekly volume, strength, cardio, steps with a bar
+- [x] Progress — one small widget per area, each opening its page: Body (last weight, curve, last body fat, Log weight, Measurement day), the calendar week, weekly volume, strength, cardio, steps with a bar
 - [x] Calendar with workout history — one page: a week strip that opens to the month, then one list by day with workouts, cardio, planned days (with Start) and missed days, Show older workouts; Add past workout in the app bar. Workout history as its own page goes away
 - [ ] Body with Compare — two views, Overview (one chart with up to three series picked from weight, body fat, fat mass, lean mass, each measurement, weekly sets and daily steps, plus a target weight line; Log weight, Measurement day, history) and Compare (Previous / First / Other date, photos slider with poses, body fat, all changes, target weight)
 - [x] Onboarding, birth year — a wheel showing the year only
