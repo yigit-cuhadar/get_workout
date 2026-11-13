@@ -9,6 +9,7 @@ import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/effort.dart';
 import '../domain/exercise_stats.dart';
+import '../domain/set_logging.dart';
 import '../domain/set_selection.dart';
 import '../domain/workout.dart';
 
@@ -284,9 +285,11 @@ extension WorkoutText on AppLocalizations {
     return workoutMinutes((duration.inSeconds / 60).round());
   }
 
+  /// What [record] is and its value in [unit], without its exercise, e.g.
+  /// `Heaviest weight 80 kg`.
   String recordText(NewRecord record, WeightUnit unit) {
     final value = record.value;
-    final text = switch (record.kind) {
+    return switch (record.kind) {
       RecordKind.heaviestWeight => recordHeaviestWeight(
         liftedWeightText(value, unit),
       ),
@@ -297,8 +300,35 @@ extension WorkoutText on AppLocalizations {
         elapsedText(Duration(seconds: value.round())),
       ),
     };
-    return workoutRecordLine(record.name, text);
   }
+
+  /// The header of the set table of an exercise of [type]: set, the values
+  /// [setValues] gives, then effort.
+  List<String> setColumns(LoggingType type, WeightUnit unit) => [
+    historySet,
+    if (type.logsWeight) weightLabel(type, unit),
+    if (type.logsReps) workoutReps,
+    if (type.isDurationBased) historyTime,
+    historyEffort,
+  ];
+
+  /// [set] in the value columns of [setColumns]: the weight in [unit]
+  /// without the unit (none when there is none or it is 0, as [setText]),
+  /// reps or time.
+  List<String> setValues(WorkoutSet set, LoggingType type, WeightUnit unit) {
+    final kg = set.weightKg;
+    final seconds = set.durationS;
+    return [
+      if (type.logsWeight) kg == null || kg == 0 ? '' : weightField(kg, unit),
+      if (type.logsReps) '${set.reps ?? ''}',
+      if (type.isDurationBased) seconds == null ? '' : programSeconds(seconds),
+    ];
+  }
+
+  /// The effort of [set] on [scale] and its note, e.g. `Hard · last rep
+  /// slow`; empty without either.
+  String setRemark(WorkoutSet set, EffortScale scale) =>
+      [?effortText(set, scale), ?set.note].join(' · ');
 
   String lastTimeText(DateTime date) =>
       workoutLastTime(DateFormat.MMMEd(localeName).format(date));

@@ -57,6 +57,87 @@ void main() {
     expect(l10n.effortText(const WorkoutSet(), EffortScale.rir), isNull);
   });
 
+  group('a stored workout\'s set table', () {
+    const kg = WeightUnit.kg;
+
+    test('has the columns of the exercise\'s logging type', () {
+      expect(l10n.setColumns(LoggingType.weightReps, kg), [
+        'Set',
+        'kg',
+        'Reps',
+        'Effort',
+      ]);
+      expect(l10n.setColumns(LoggingType.assistedBodyweight, WeightUnit.lb), [
+        'Set',
+        '−lb',
+        'Reps',
+        'Effort',
+      ]);
+      expect(l10n.setColumns(LoggingType.duration, kg), [
+        'Set',
+        'Time',
+        'Effort',
+      ]);
+      expect(l10n.setColumns(LoggingType.weightDuration, kg), [
+        'Set',
+        'kg',
+        'Time',
+        'Effort',
+      ]);
+    });
+
+    test('every row, a drop row too, fills every column', () {
+      for (final type in LoggingType.values) {
+        final columns = l10n.setColumns(type, kg).length;
+        expect(
+          l10n.setValues(const WorkoutSet(), type, kg).length + 2,
+          columns,
+        );
+        // Drop rows are built from a set of the drop's weight and reps.
+        expect(
+          l10n
+                  .setValues(const WorkoutSet(weightKg: 20, reps: 6), type, kg)
+                  .length +
+              2,
+          columns,
+        );
+      }
+    });
+
+    test('fills one value per column, leaving out a missing weight', () {
+      expect(l10n.setValues(lift(60, 8), LoggingType.weightReps, kg), [
+        '60',
+        '8',
+      ]);
+      expect(l10n.setValues(lift(0, 8), LoggingType.weightedBodyweight, kg), [
+        '',
+        '8',
+      ]);
+      expect(
+        l10n.setValues(
+          const WorkoutSet(weightKg: 20, durationS: 45),
+          LoggingType.weightDuration,
+          kg,
+        ),
+        ['20', '45 s'],
+      );
+      expect(l10n.setValues(const WorkoutSet(), LoggingType.duration, kg), [
+        '',
+      ]);
+    });
+
+    test('ends with the effort on the chosen scale and the note', () {
+      const set = WorkoutSet(rir: 0, note: 'last rep slow');
+      expect(l10n.setRemark(set, EffortScale.byFeel), 'Max · last rep slow');
+      expect(l10n.setRemark(set, EffortScale.rpe), 'RPE 10 · last rep slow');
+      expect(
+        l10n.setRemark(const WorkoutSet(note: 'grip'), EffortScale.rir),
+        'grip',
+      );
+      expect(l10n.setRemark(const WorkoutSet(), EffortScale.rir), '');
+    });
+  });
+
   group('sets as the set column numbers them', () {
     final bench = exercise('Bench Press', [
       lift(40, 10, type: SetType.warmup),
@@ -218,7 +299,7 @@ void main() {
           ),
           lb,
         ),
-        'Squat: Heaviest weight 176 lb',
+        'Heaviest weight 176 lb',
       );
     });
 
@@ -250,7 +331,7 @@ void main() {
           ),
           lb,
         ),
-        'Squat: Best estimated 1RM 225 lb',
+        'Best estimated 1RM 225 lb',
       );
       expect(l10n.estimatedWeightText(102.3, WeightUnit.kg), '102.5 kg');
     });
@@ -266,7 +347,7 @@ void main() {
           ),
           lb,
         ),
-        'Squat: Best set volume 176.4 lb',
+        'Best set volume 176.4 lb',
       );
       expect(l10n.weightText(kg80, lb), '176.4 lb');
     });
