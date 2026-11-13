@@ -262,11 +262,17 @@ void main() {
       await cubit.close();
     });
 
-    test('the effort row asks about the selected done set, no tips', () async {
+    test('a tick asks nothing; a selected done set has its row', () async {
       final cubit = await editing();
       expect(cubit.state.selection, (exercise: 0, set: 0));
-      expect(cubit.state.effortRef, (exercise: 0, set: 0));
-      expect(cubit.state.offersTips, isFalse);
+      expect(cubit.state.effortRowRef, (exercise: 0, set: 0));
+      cubit
+        ..addSet(0, SetType.normal)
+        ..setReps((exercise: 0, set: 1), '5')
+        ..setWeight((exercise: 0, set: 1), '100', WeightUnit.kg)
+        ..toggleDone((exercise: 0, set: 1));
+      expect(cubit.state.workout!.exercises[0].sets[1].done, isTrue);
+      expect(cubit.state.questionRef, isNull);
       await cubit.close();
     });
 

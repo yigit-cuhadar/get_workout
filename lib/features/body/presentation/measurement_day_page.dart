@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_camera/forge_camera.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
-import '../../../core/ghost_camera.dart';
 import '../../../core/unsaved_changes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../profile/domain/user_profile.dart';

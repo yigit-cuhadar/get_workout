@@ -113,7 +113,6 @@ Future<void> addSetOfKind(
                   l10n.workoutAddSet,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                trailing: const WorkoutHelpButton(),
               ),
               if (setTypesTipDue(seen))
                 TipBanner(
