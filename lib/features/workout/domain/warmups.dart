@@ -11,12 +11,31 @@ typedef WarmupRamp = ({WeightUnit unit, List<WarmupStep> steps});
 /// included) and timed ones do not.
 bool takesWarmups(LoggingType type) => type == LoggingType.weightReps;
 
+/// Whether [exercise], placed after [before] in a workout, may have
+/// automatic warm-ups: it [takesWarmups] and, with
+/// [WarmupScope.firstPerMuscle] in [settings], no exercise before it that
+/// itself [takesWarmups] works its main muscle (the first of its main
+/// muscles; one without is a group of its own). Such an earlier exercise
+/// counts with or without its warm-ups; push-ups or a plank do not.
+bool warmupsAllowed(
+  WorkoutExercise exercise,
+  List<WorkoutExercise> before,
+  WarmupSettings? settings,
+) {
+  if (!takesWarmups(exercise.loggingType)) return false;
+  final muscle = exercise.mainMuscles.firstOrNull;
+  return settings?.scope != WarmupScope.firstPerMuscle ||
+      muscle == null ||
+      !before.any(
+        (e) =>
+            takesWarmups(e.loggingType) && e.mainMuscles.firstOrNull == muscle,
+      );
+}
+
 /// [exercise] as it enters a workout whose exercises [before] it are
-/// [before], starting with one empty warm-up per set of [settings]' scheme:
-/// when [takesWarmups], it has no warm-up yet, they fit in
-/// [WorkoutLimits.maxSets], and with [WarmupScope.firstPerMuscle] no
-/// exercise before it has its main muscle (the first of its main muscles;
-/// one without is a group of its own).
+/// [before], starting with one empty warm-up per set of [settings]' scheme
+/// when [warmupsAllowed], it has no warm-up yet, and they fit in
+/// [WorkoutLimits.maxSets].
 WorkoutExercise warmedUp(
   WorkoutExercise exercise,
   List<WorkoutExercise> before,
@@ -25,15 +44,9 @@ WorkoutExercise warmedUp(
   final steps = settings.steps;
   final sets = exercise.sets;
   if (steps.isEmpty ||
-      !takesWarmups(exercise.loggingType) ||
+      !warmupsAllowed(exercise, before, settings) ||
       sets.any((set) => set.isWarmup) ||
       sets.length + steps.length > WorkoutLimits.maxSets) {
-    return exercise;
-  }
-  final muscle = exercise.mainMuscles.firstOrNull;
-  if (settings.scope == WarmupScope.firstPerMuscle &&
-      muscle != null &&
-      before.any((e) => e.mainMuscles.firstOrNull == muscle)) {
     return exercise;
   }
   return exercise.copyWith(
@@ -59,13 +72,15 @@ List<WorkoutExercise> warmedUpAll(
 }
 
 /// [swapped], made from [before] by `swapExercise`, without the warm-ups
-/// still untouched in [before] (nothing entered, not done) when it does not
-/// [takesWarmups]: they were there for the exercise swapped out.
+/// still untouched in [before] (nothing entered, not done) unless warm-ups
+/// are [allowed] for it (see [warmupsAllowed]): they were there for the
+/// exercise swapped out.
 WorkoutExercise withoutUnusedWarmups(
   WorkoutExercise before,
-  WorkoutExercise swapped,
-) {
-  if (takesWarmups(swapped.loggingType)) return swapped;
+  WorkoutExercise swapped, {
+  required bool allowed,
+}) {
+  if (allowed) return swapped;
   const untouched = WorkoutSet(type: SetType.warmup);
   return swapped.copyWith(
     sets: [

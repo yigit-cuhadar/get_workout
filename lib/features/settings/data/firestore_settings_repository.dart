@@ -189,11 +189,18 @@ class FirestoreSettingsRepository implements SettingsRepository {
               reps.round().clamp(WarmupLimits.minReps, WarmupLimits.maxReps),
             ),
     ].take(WarmupLimits.maxSets).toList();
-    final scheme = _decode(_schemeCodes, raw['scheme'], fallback.scheme);
+    var scheme = _decode(_schemeCodes, raw['scheme'], fallback.scheme);
+    if (scheme == WarmupScheme.custom && custom.isEmpty) {
+      scheme = WarmupScheme.standard;
+    }
+    // This app writes both in agreement: a mismatch is an older version
+    // flipping the switch last, which wins.
+    if (legacy == false) scheme = WarmupScheme.off;
+    if (legacy == true && scheme == WarmupScheme.off) {
+      scheme = WarmupScheme.standard;
+    }
     return WarmupSettings(
-      scheme: scheme == WarmupScheme.custom && custom.isEmpty
-          ? WarmupScheme.standard
-          : scheme,
+      scheme: scheme,
       custom: custom,
       scope: _decode(_scopeCodes, raw['scope'], fallback.scope),
     );

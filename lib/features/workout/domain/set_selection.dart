@@ -174,9 +174,7 @@ SetRef? restQuestionSet(
     withRest &&
         asking != null &&
         _rated(workout, asking) &&
-        rest != null &&
-        rest.after == asking &&
-        rest.runsAt(now)
+        restStartedBy(rest, asking, now)
     ? asking
     : null;
 

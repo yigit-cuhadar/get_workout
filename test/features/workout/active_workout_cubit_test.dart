@@ -742,6 +742,27 @@ void main() {
       await cubit.close();
     });
 
+    test('a swap is judged against the exercises before it', () async {
+      final fly = move('fly');
+      final row = move('row', muscles: const [Muscle.lat]);
+      final cubit = await signedIn(
+        warmups: true,
+        warmupSettings: const WarmupSettings(scope: WarmupScope.firstPerMuscle),
+      );
+      cubit
+        ..startFree('Workout')
+        ..addExercises([squat, row], 'en');
+      expect(types(cubit, 1).first, SetType.warmup);
+      // Its untouched warm-ups go when the rule refuses them (the fixtures
+      // all work the quads, which the squat warmed up).
+      cubit.swapExercise(1, fly, 'en');
+      expect(types(cubit, 1), [SetType.normal]);
+      // And come when it grants them.
+      cubit.swapExercise(1, row, 'en');
+      expect(types(cubit, 1), [SetType.warmup, SetType.warmup, SetType.normal]);
+      await cubit.close();
+    });
+
     test('the scheme and scope chosen decide them', () async {
       final cubit = await signedIn(
         warmups: true,
@@ -866,6 +887,60 @@ void main() {
           ..toggleDone(first)
           ..toggleDone(first);
         expect(cubit.restQuestionRef, isNull);
+        await cubit.close();
+      });
+      test('it has no timeout, however long the rest', () {
+        fakeAsync((async) {
+          late ActiveWorkoutCubit cubit;
+          unawaited(withSquat().then((built) => cubit = built));
+          async.elapse(const Duration(seconds: 1));
+          cubit.toggleDone(first);
+          expect(cubit.state.askingWithRest, isTrue);
+          // The injected clock stands still: the rest runs throughout.
+          async.elapse(WorkoutEditor.effortQuestionTime * 3);
+          expect(cubit.state.asking, first);
+          expect(cubit.restQuestionRef, first);
+          unawaited(cubit.close());
+          async.flushMicrotasks();
+        });
+      });
+
+      test('a rest kept from before a relaunch brings no question', () async {
+        final draft = workout('w1', [
+          exercise('squat', [lift(100, 5), const WorkoutSet()]),
+        ]);
+        final cubit = await signedIn(
+          local: LocalWorkouts(
+            draft: draft,
+            rest: Rest(
+              endsAt: now.add(const Duration(seconds: 60)),
+              after: first,
+            ),
+          ),
+        );
+        expect(cubit.state.rest, isNotNull);
+        expect(cubit.restQuestionRef, isNull);
+        expect(cubit.state.questionRef, isNull);
+        await cubit.close();
+      });
+
+      test('mid-round while the round before rests: the bar asks', () async {
+        final cubit = await withSquat();
+        cubit
+          ..addExercises([bench], 'en')
+          ..linkWithNext(0)
+          // Bench has a second round too.
+          ..addSet(1, SetType.normal)
+          ..toggleDone(first)
+          ..setWeight((exercise: 1, set: 0), '60', WeightUnit.kg)
+          ..setReps((exercise: 1, set: 0), '8')
+          ..toggleDone((exercise: 1, set: 0));
+        // The round's last set started the rest.
+        expect(cubit.state.rest?.after, (exercise: 1, set: 0));
+        cubit.toggleDone(second);
+        expect(cubit.state.rest?.after, (exercise: 1, set: 0));
+        expect(cubit.restQuestionRef, isNull);
+        expect(cubit.state.questionRef, second);
         await cubit.close();
       });
     });

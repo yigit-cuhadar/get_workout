@@ -126,6 +126,31 @@ void main() {
         expect(day.map(warmups), [2, 2, 2]);
       });
 
+      test('only earlier exercises done with a weight count', () {
+        WorkoutExercise body(String id, Muscle muscle, LoggingType type) =>
+            exercise(id, const [
+              WorkoutSet(),
+            ], type: type).copyWith(mainMuscles: [muscle]);
+        final day = warmedUpAll(
+          [
+            body('push-up', Muscle.pec, LoggingType.reps),
+            lift3('bench', muscle: Muscle.pec),
+            body('plank', Muscle.abdominal, LoggingType.duration),
+            lift3('cable crunch', muscle: Muscle.abdominal),
+          ],
+          const [],
+          first,
+        );
+        expect(day.map(warmups), [0, 2, 0, 2]);
+        // One done with a weight counts, its warm-ups removed or not.
+        expect(
+          warmupsAllowed(lift3('fly', muscle: Muscle.pec), [
+            lift3('bench', muscle: Muscle.pec),
+          ], first),
+          isFalse,
+        );
+      });
+
       test('superset members count one after the other', () {
         final day = warmedUpAll(
           [
@@ -154,14 +179,14 @@ void main() {
         loggingType: LoggingType.duration,
         sets: const [warmup, warmup, WorkoutSet()],
       );
-      expect(withoutUnusedWarmups(squat, plank).sets, const [
+      expect(withoutUnusedWarmups(squat, plank, allowed: false).sets, const [
         warmup,
         WorkoutSet(),
       ]);
     });
 
     test('keeps them for one that takes warm-ups', () {
-      expect(withoutUnusedWarmups(squat, squat), squat);
+      expect(withoutUnusedWarmups(squat, squat, allowed: true), squat);
     });
   });
 

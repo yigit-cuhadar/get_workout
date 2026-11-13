@@ -249,8 +249,13 @@ from the earlier FitLab app.
     as long as that rest (`restQuestionSet`: the rest still that set's and
     running, so "+15 s" extends it): gone when the rest runs out or is
     skipped, when a step is picked (stored on that set; the countdown
-    stays), another set is ticked (its own question replaces it), the set
-    is unticked, removed or moved, or the workout finishes. Picking
+    stays), another set is ticked (its own question replaces it), any set
+    is unticked, any edit moves sets (adding a warm-up before, removing or
+    reordering sets or exercises), or the workout finishes. A rest kept
+    over a relaunch brings no question. The strip takes at most 40 % of
+    the bottom area (`SetBarLayout.maxBelowShare`, the bar keeps the rest):
+    its countdown always shows, the question and the first-use tip scroll
+    under it. Picking
     another set or opening an exercise leaves it. Opening the help changes
     nothing; a rest ending meanwhile leaves the sheet open and the
     question gone. The strip, and so the question, steps aside while the
@@ -287,9 +292,12 @@ from the earlier FitLab app.
     finger), and warm-ups follow them by position.
   - **Which exercises**: every exercise, or the first exercise for each
     muscle group: an exercise gets warm-ups only when no exercise before
-    it in the workout has the same main muscle (the first of its
+    it in the workout that is itself done with a weight and reps
+    (`weight_reps`) has the same main muscle (the first of its
     `mainMuscles`, the 19 muscle groups of the vocabulary; one without any
-    is a group of its own). Decided as it enters the workout (a program
+    is a group of its own); push-ups before bench press or a plank before
+    loaded core work do not count, a loaded one counts even if its
+    warm-ups were deleted (`warmupsAllowed`). Decided as it enters the workout (a program
     day in day order, superset members one after the other; one added or
     swapped in against the exercises before it); reordering later adds or
     removes nothing (`warmedUp`, `warmedUpAll`).
@@ -300,7 +308,9 @@ from the earlier FitLab app.
   as Off, true or missing as Standard. `autoWarmups` is still written
   (false only for Off) so app versions before the schemes keep a matching
   switch; they ignore `warmups` (unknown keys are not read), and a switch
-  flipped in such a version is not seen by this one. Malformed custom sets
+  flipped in such a version wins: this app writes both in agreement, so
+  when they disagree an older version wrote last (`autoWarmups` false
+  reads as Off whatever the scheme, true with Off as Standard). Malformed custom sets
   are dropped or clamped; Custom without sets reads as Standard.
   Exercises logged with a weight and reps (`weight_reps` only: weighted
   and assisted bodyweight, reps-only and timed exercises get none) start
@@ -308,9 +318,11 @@ from the earlier FitLab app.
   when they enter a workout in progress: a program day started, an
   exercise added (also to an empty workout, and "start with this
   exercise"), or swapped in while none of its sets is done (the selection
-  then opens its first warm-up). Swapped for an exercise that takes none,
-  its untouched warm-ups (nothing entered, not done) go
-  (`withoutUnusedWarmups`). The scheme and the unit are the user's own
+  then opens its first warm-up). A swapped-in exercise is judged against
+  the exercises before it: its untouched warm-ups (nothing entered, not
+  done) go when it may have none there (a type that takes none, or the
+  muscle-group rule refusing them; `withoutUnusedWarmups`), and come when
+  the rule grants them. The scheme and the unit are the user's own
   settings: a program day waits for them (up to the catalogue wait); while
   they have not arrived, or cannot be read, nothing gets warm-ups and
   warm-ups suggest no ramp (never a ramp in a unit not known yet). Never

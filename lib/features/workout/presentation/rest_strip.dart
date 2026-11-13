@@ -75,7 +75,12 @@ class RestStrip extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 tile,
-                if (state.phase == RestPhase.running) const _RestQuestion(),
+                // The countdown always shows; the question scrolls in what
+                // the strip's share of the page leaves.
+                if (state.phase == RestPhase.running)
+                  const Flexible(
+                    child: SingleChildScrollView(child: _RestQuestion()),
+                  ),
               ],
             ),
           ),

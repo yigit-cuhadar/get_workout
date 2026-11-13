@@ -24,9 +24,12 @@ abstract interface class EditedWorkout {
   /// null follows the next set to do. See [EditedSelection.selection].
   SetSelection? get picked;
 
-  /// The working set just ticked whose effort the set bar asks, until it
-  /// is answered or skipped, any set is picked, sets move, or
-  /// [effortQuestionTime] passes; see [questionSet] and [restQuestionSet].
+  /// The working set just ticked whose effort is asked: in the rest strip
+  /// while the rest its tick started runs ([askingWithRest], see
+  /// [restQuestionSet]), else in the set bar until answered, skipped, a set
+  /// is picked or [effortQuestionTime] passes (see [questionSet]). Any
+  /// answer, another tick, unticking it or an edit that moves sets ends
+  /// either.
   SetRef? get asking;
 
   /// Whether the tick of [asking] started a rest, so the rest strip asks
@@ -199,21 +202,22 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     );
   }
 
-  /// Its untouched warm-ups go when the new exercise takes none (see
-  /// [withoutUnusedWarmups]); one without a done set gets warm-ups as one
+  /// Its untouched warm-ups go when the new exercise may have none there
+  /// (see [warmupsAllowed], [withoutUnusedWarmups]); one without a done set gets warm-ups as one
   /// added would. When that changes its sets, it opens on its first undone.
   void swapExercise(int index, Exercise exercise, String language) {
     final before = state.workout?.exercises.elementAtOrNull(index);
     if (before == null || !canEdit) return;
     final swapped = editing.swapExercise(before, exercise, language);
-    final kept = withoutUnusedWarmups(before, swapped);
     final settings = warmupSettings;
+    final earlier = state.workout!.exercises.take(index).toList();
+    final kept = withoutUnusedWarmups(
+      before,
+      swapped,
+      allowed: warmupsAllowed(swapped, earlier, settings),
+    );
     final fitted = before.doneSets.isEmpty && settings != null
-        ? warmedUp(
-            kept,
-            state.workout!.exercises.take(index).toList(),
-            settings,
-          )
+        ? warmedUp(kept, earlier, settings)
         : kept;
     final resized = fitted.sets.length != swapped.sets.length;
     final current = state.selection;

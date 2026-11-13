@@ -513,6 +513,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   /// stays with its rest.
   void pageOpened() {
     final dropsQuestion = state.asking != null && !state.askingWithRest;
+    if (dropsQuestion) pauseAsking();
     if (state.picked == null && !dropsQuestion) return;
     emit(
       state.copyWith(

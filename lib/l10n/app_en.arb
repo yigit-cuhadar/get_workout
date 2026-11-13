@@ -107,7 +107,7 @@
   "warmupScopeTitle": "Which exercises",
   "warmupScopeEvery": "Every exercise",
   "warmupScopeFirst": "First exercise for each muscle group",
-  "warmupScopeFirstHint": "An exercise whose main muscle an earlier one already worked starts without",
+  "warmupScopeFirstHint": "An exercise starts without when an earlier exercise done with a weight already worked its main muscle",
   "warmupPercent": "% of working weight",
   "warmupReps": "Reps",
   "warmupAddSet": "Add warm-up set",

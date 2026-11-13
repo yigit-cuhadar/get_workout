@@ -288,6 +288,28 @@ void main() {
       );
     });
 
+    test('the old switch written last by an older version wins', () async {
+      await user().set({
+        'settings': {
+          'warmups': {'scheme': 'full', 'scope': 'every'},
+          'autoWarmups': false,
+        },
+      });
+      expect(
+        (await repository.watchSettings('u1').first).warmups.scheme,
+        WarmupScheme.off,
+      );
+      await user().set({
+        'settings': {
+          'warmups': {'scheme': 'off', 'scope': 'firstPerMuscle'},
+          'autoWarmups': true,
+        },
+      });
+      final warmups = (await repository.watchSettings('u1').first).warmups;
+      expect(warmups.scheme, WarmupScheme.standard);
+      expect(warmups.scope, WarmupScope.firstPerMuscle);
+    });
+
     test('malformed custom sets are dropped or clamped', () async {
       await user().set({
         'settings': {

@@ -39,6 +39,9 @@ class SetBarLayout extends StatelessWidget {
 
   static const maxBottomShare = 0.6;
 
+  /// Of the bottom, the most [below] takes; the bar keeps the rest.
+  static const maxBelowShare = 0.4;
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) => Column(
@@ -59,7 +62,18 @@ class SetBarLayout extends StatelessWidget {
                   Flexible(
                     child: SetBar(state: state, editor: editor),
                   ),
-                  ?below,
+                  // Laid out first, so it is capped to leave the bar the
+                  // most room; what does not fit scrolls inside it.
+                  if (below case final below?)
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight:
+                            constraints.maxHeight *
+                            maxBottomShare *
+                            maxBelowShare,
+                      ),
+                      child: below,
+                    ),
                 ],
               ),
             ),
