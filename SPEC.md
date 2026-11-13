@@ -889,9 +889,9 @@ from the earlier FitLab app.
   its name and a haptic tick) under a search box. The box is an entry, not
   a field: it shows the current search and opens the one exercise list
   page (`LibraryPage`, `/exercises/list`, declared before `:id`, inside
-  Train's stack, an explicit `MaterialPage` because go_router's default
-  page for `builder` routes has no transition here), pushed above the view
-  so back returns to the model as it was. The list page holds search,
+  Train's stack, fading in over 150 ms: the owner preferred a short fade
+  to the platform's slide, so the page has no back-swipe), pushed above
+  the view so back returns to the model as it was. The list page holds search,
   filters, sort, the count, favourite stars and, in its app bar only, the
   + for a custom exercise; there is no model on it. Opened from the box,
   its search field takes focus once the page's route animation has
