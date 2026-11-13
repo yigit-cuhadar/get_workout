@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/calendar/domain/calendar_days.dart';
 import 'package:get_workout/features/calendar/domain/calendar_month.dart';
 import 'package:get_workout/features/calendar/presentation/calendar_list_cubit.dart';
 import 'package:get_workout/features/cardio/domain/cardio_repository.dart';
@@ -13,6 +14,7 @@ import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_repository.dart';
+import 'package:get_workout/features/programs/domain/program_schedule.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/workout/domain/history_usecases.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
@@ -37,7 +39,7 @@ void main() {
   const bob = AuthUser(id: 'u2', isAnonymous: true);
   const c1 = HistoryCursor('c1');
   const c2 = HistoryCursor('c2');
-  // Wednesday 11 November 2026.
+  // Wednesday 11 November 2026; the week runs from the 9th to the 15th.
   final now = DateTime(2026, 11, 11, 20);
   final upperLower = program(id: 'p1');
   final active = ActiveProgram(
@@ -47,12 +49,13 @@ void main() {
     nextDate: d(2026, 11, 13),
     startedAt: DateTime(2026, 11, 2),
   );
-  final run = CardioSession(
-    id: 'c1',
+  CardioSession session(String id, DateTime date) => CardioSession(
+    id: id,
     type: CardioType.treadmillRun,
-    date: DateTime(2026, 11, 10, 7),
+    date: date,
     duration: const Duration(minutes: 30),
   );
+  final run = session('c1', DateTime(2026, 11, 10, 7));
 
   late StreamController<AuthUser?> users;
   late StreamController<Failure> rejected;
@@ -60,15 +63,24 @@ void main() {
   late MockCardioRepository cardio;
   late MockProgramRepository programs;
 
-  /// The streams asked for: history pages by user, start and end, the rest
-  /// by user.
+  /// The streams asked for: history pages by user, start and end; ranges
+  /// of dates by user, first and last date; the rest by user.
   late Map<String, StreamController<HistoryPage>> pages;
-  late Map<String, StreamController<List<CardioSession>>> cardioStreams;
+  late Map<String, StreamController<List<Workout>>> workoutRanges;
+  late Map<String, StreamController<List<CardioSession>>> cardioRanges;
   late Map<String, StreamController<List<Program>>> programStreams;
   late Map<String, StreamController<ActiveProgram?>> activeStreams;
 
+  /// What each cardio range answers, empty unless set; see [emit].
+  late Map<String, List<CardioSession>> cardioOf;
+  late Set<String> cardioAnswered;
+
   String key(String uid, HistoryCursor? after, HistoryCursor? through) =>
       '$uid ${after?.position} ${through?.position}';
+
+  String rangeKey(Invocation call) =>
+      '${call.positionalArguments.first} ${call.namedArguments[#from]} '
+      '${call.namedArguments[#to]}';
 
   /// Workout `w<day>`, on that day of November 2026; older ids are older.
   Workout w(int day) =>
@@ -77,13 +89,15 @@ void main() {
   HistoryPage page(List<int> days, {HistoryCursor? end, bool more = false}) =>
       (workouts: [for (final day in days) w(day)], end: end, more: more);
 
-  StreamController<T> by<T>(
+  StreamController<T> byUser<T>(
     Map<String, StreamController<T>> streams,
     Invocation call,
   ) => streams.putIfAbsent(
     call.positionalArguments.first as String,
     StreamController<T>.broadcast,
   );
+
+  setUpAll(() => registerFallbackValue(d(2026, 1, 1)));
 
   setUp(() {
     users = StreamController<AuthUser?>();
@@ -92,9 +106,12 @@ void main() {
     cardio = MockCardioRepository();
     programs = MockProgramRepository();
     pages = {};
-    cardioStreams = {};
+    workoutRanges = {};
+    cardioRanges = {};
     programStreams = {};
     activeStreams = {};
+    cardioOf = {};
+    cardioAnswered = {};
     when(
       () => repository.watchHistory(
         any(),
@@ -113,13 +130,33 @@ void main() {
           )
           .stream,
     );
+    when(
+      () => repository.watchWorkoutsBetween(
+        any(),
+        from: any(named: 'from'),
+        to: any(named: 'to'),
+      ),
+    ).thenAnswer(
+      (call) => workoutRanges
+          .putIfAbsent(rangeKey(call), StreamController.broadcast)
+          .stream,
+    );
     when(() => repository.rejectedEdits).thenAnswer((_) => rejected.stream);
-    when(() => cardio.watchSessions(any()))
-        .thenAnswer((call) => by(cardioStreams, call).stream);
+    when(
+      () => cardio.watchSessionsBetween(
+        any(),
+        from: any(named: 'from'),
+        to: any(named: 'to'),
+      ),
+    ).thenAnswer(
+      (call) => cardioRanges
+          .putIfAbsent(rangeKey(call), StreamController.broadcast)
+          .stream,
+    );
     when(() => programs.watchPrograms(any()))
-        .thenAnswer((call) => by(programStreams, call).stream);
+        .thenAnswer((call) => byUser(programStreams, call).stream);
     when(() => programs.watchActiveProgram(any()))
-        .thenAnswer((call) => by(activeStreams, call).stream);
+        .thenAnswer((call) => byUser(activeStreams, call).stream);
   });
 
   tearDown(() async {
@@ -127,8 +164,21 @@ void main() {
     await rejected.close();
   });
 
-  /// Signed in as [user], with no cardio and no program unless [known] is
-  /// false.
+  /// Answers the cardio ranges asked for since the last call.
+  Future<void> answerCardio() async {
+    for (final MapEntry(:key, :value) in cardioRanges.entries.toList()) {
+      if (cardioAnswered.add(key)) value.add(cardioOf[key] ?? const []);
+    }
+    await pumpEventQueue();
+  }
+
+  Future<void> answerUser(String uid, {ActiveProgram? activeProgram}) async {
+    programStreams[uid]!.add([upperLower]);
+    activeStreams[uid]!.add(activeProgram);
+    await pumpEventQueue();
+  }
+
+  /// Signed in as [user], with no active program unless [known] is false.
   Future<CalendarListCubit> signedIn({
     AuthUser user = alice,
     bool known = true,
@@ -139,7 +189,8 @@ void main() {
       firstWeekday: DateTime.monday,
       watchAuthUser: WatchAuthUser(auth),
       watchHistory: WatchHistory(repository),
-      watchCardio: WatchCardioSessions(cardio),
+      watchWorkouts: WatchWorkoutsBetween(repository),
+      watchCardio: WatchCardioBetween(cardio),
       watchPrograms: WatchPrograms(programs),
       watchActiveProgram: WatchActiveProgram(programs),
       watchRejectedEdits: WatchRejectedWorkoutEdits(repository),
@@ -147,18 +198,16 @@ void main() {
     );
     users.add(user);
     await pumpEventQueue();
-    if (known) {
-      cardioStreams[user.id]!.add([]);
-      programStreams[user.id]!.add([]);
-      activeStreams[user.id]!.add(null);
-      await pumpEventQueue();
-    }
+    if (known) await answerUser(user.id);
     return cubit;
   }
 
+  /// Answers history page [key] with [data], then the cardio of the dates
+  /// it brought in.
   Future<void> emit(String key, HistoryPage data) async {
     pages[key]!.add(data);
     await pumpEventQueue();
+    await answerCardio();
   }
 
   List<String> ids(CalendarListCubit cubit) => [
@@ -167,35 +216,44 @@ void main() {
         if (entry case WorkoutEntry(:final workout)) workout.id,
   ];
 
-  test('ready once workouts, cardio and the program are known', () async {
+  List<CalendarDate> dates(CalendarListCubit cubit) => [
+    for (final day in cubit.state.days) day.date,
+  ];
+
+  test('ready once workouts, the program and the cardio of the dates '
+      'listed are known', () async {
     final cubit = await signedIn(known: false);
-    await emit('u1 null null', page([11, 9]));
-    cardioStreams['u1']!.add([run]);
+    pages['u1 null null']!.add(page([11, 9]));
     programStreams['u1']!.add([upperLower]);
     await pumpEventQueue();
-    expect(cubit.state.status, CalendarListStatus.loading);
-
+    // Asked only once everything else is known.
+    expect(cardioRanges, isEmpty);
     activeStreams['u1']!.add(active);
     await pumpEventQueue();
+    expect(cubit.state.status, CalendarListStatus.loading);
+    // This week, back to the oldest workout, which is in it.
+    expect(cardioRanges.keys, ['u1 2026-11-09 2026-11-15']);
+
+    cardioOf['u1 2026-11-09 2026-11-15'] = [run];
+    await answerCardio();
     expect(cubit.state.status, CalendarListStatus.ready);
     expect(
-      [for (final day in cubit.state.days) day.date],
+      dates(cubit),
       // This week's planned Friday first.
       [d(2026, 11, 13), d(2026, 11, 11), d(2026, 11, 10), d(2026, 11, 9)],
     );
     expect(cubit.state.days.first.entries.single, isA<PlanEntry>());
     expect(cubit.state.days[2].entries, [CardioEntry(run)]);
     expect(cubit.state.isEmpty, isFalse);
+    verifyNever(() => cardio.watchSessions(any()));
     await cubit.close();
   });
 
   test('without programs it still lists what was done', () async {
     final cubit = await signedIn(known: false);
-    await emit('u1 null null', page([11]));
-    cardioStreams['u1']!.add([]);
     programStreams['u1']!.addError(const NetworkFailure('offline'));
     activeStreams['u1']!.addError(const NetworkFailure('offline'));
-    await pumpEventQueue();
+    await emit('u1 null null', page([11]));
     expect(cubit.state.status, CalendarListStatus.ready);
     expect(ids(cubit), ['w11']);
     await cubit.close();
@@ -243,24 +301,46 @@ void main() {
     await cubit.close();
   });
 
-  test('cardio older than the workouts loaded waits for them', () async {
+  test('each older page reads the cardio of its own dates only', () async {
     final cubit = await signedIn();
-    final early = CardioSession(
-      id: 'c2',
-      type: CardioType.treadmillRun,
-      date: DateTime(2026, 11, 2, 7),
-      duration: const Duration(minutes: 30),
-    );
-    cardioStreams['u1']!.add([run, early]);
-    await emit('u1 null null', page([9], end: c1, more: true));
-    expect(
-      [for (final day in cubit.state.days) day.date],
-      [d(2026, 11, 10), d(2026, 11, 9)],
-    );
+    final early = session('c2', DateTime(2026, 11, 2, 7));
+    cardioOf['u1 2026-11-08 2026-11-15'] = [run];
+    cardioOf['u1 2026-11-02 2026-11-07'] = [early];
+    await emit('u1 null null', page([9, 8], end: c1, more: true));
+    // From the oldest workout's date, which shows only its workouts.
+    expect(dates(cubit), [d(2026, 11, 10), d(2026, 11, 9), d(2026, 11, 8)]);
 
     cubit.loadMore();
-    await emit('u1 c1 null', page([1]));
-    expect(cubit.state.days.map((day) => day.date), contains(d(2026, 11, 2)));
+    pages['u1 c1 null']!.add(page([4, 2], end: c2, more: true));
+    await pumpEventQueue();
+    expect(cardioRanges.keys, [
+      'u1 2026-11-08 2026-11-15',
+      'u1 2026-11-02 2026-11-07',
+    ]);
+    // Until that cardio is known, the spinner stays.
+    expect(cubit.state.loadingMore, isTrue);
+    await answerCardio();
+    expect(cubit.state.loadingMore, isFalse);
+    // The 2nd is the oldest workout's date: its run waits.
+    expect(dates(cubit), contains(d(2026, 11, 2)));
+    expect(cubit.state.days.last.entries, [WorkoutEntry(w(2))]);
+
+    cubit.loadMore();
+    await emit('u1 c2 null', page([1]));
+    expect(cubit.state.days.last.date, d(2026, 11, 1));
+    expect(
+      cubit.state.days.firstWhere((day) => day.date == d(2026, 11, 2)).entries,
+      [WorkoutEntry(w(2)), CardioEntry(early)],
+    );
+    // Each range read once.
+    verify(
+      () => cardio.watchSessionsBetween(
+        'u1',
+        from: d(2026, 11, 2),
+        to: d(2026, 11, 7),
+      ),
+    ).called(1);
+    expect(cardioRanges.keys, hasLength(3));
     await cubit.close();
   });
 
@@ -273,53 +353,107 @@ void main() {
       after = 'c$i';
       cubit.loadMore();
     }
-    // Page 6 (index 5) is the first read once: it stops after its answer.
-    final once = pages['u1 c4 c5']!;
-    expect(once.hasListener, isTrue);
-    await emit('u1 c4 c5', page([5], end: const HistoryCursor('c5')));
-    expect(once.hasListener, isFalse);
+    // Page 6 (index 5) is the first read once: it stops after its answer
+    // and, when the next one loads, is not read again with its end.
+    expect(pages['u1 c4 null']!.hasListener, isFalse);
+    expect(pages, isNot(contains('u1 c4 c5')));
     expect(pages['u1 c3 c4']!.hasListener, isTrue);
-    expect(ids(cubit), ['w10', 'w9', 'w8', 'w7', 'w6', 'w5']);
+    await emit('u1 c5 null', page([4], end: const HistoryCursor('c6')));
+    expect(pages['u1 c5 null']!.hasListener, isFalse);
+    expect(ids(cubit), ['w10', 'w9', 'w8', 'w7', 'w6', 'w5', 'w4']);
     await cubit.close();
   });
 
-  test('a date asked for loads older pages until it is covered', () async {
+  test('an older date asked for is read on its own, no page more', () async {
     final cubit = await signedIn();
     await emit('u1 null null', page([9, 8], end: c1, more: true));
 
-    cubit.reveal(d(2026, 11, 4));
-    expect(cubit.state.loadingMore, isTrue);
-    await emit('u1 c1 null', page([5, 4], end: c2, more: true));
-    // Its own date is the oldest loaded: one more page.
-    expect(cubit.state.loadingMore, isTrue);
-    expect(pages, contains('u1 c2 null'));
-    await emit('u1 c2 null', page([1]));
-    expect(cubit.state.loadingMore, isFalse);
-    expect(cubit.state.days.map((day) => day.date), contains(d(2026, 11, 4)));
+    cubit.reveal(d(2026, 11, 1));
+    expect(cubit.state.pinned, CalendarDay(d(2026, 11, 1), const []));
+    expect(cubit.state.pinnedLoading, isTrue);
+    expect(pages, hasLength(1));
+    expect(workoutRanges.keys, ['u1 2026-11-01 2026-11-01']);
 
-    // A covered date without entries is listed empty, until another one.
-    cubit.reveal(d(2026, 11, 6));
-    final empty = cubit.state.days.firstWhere(
-      (day) => day.date == d(2026, 11, 6),
-    );
-    expect(empty.entries, isEmpty);
-    expect(cubit.state.isEmpty, isFalse);
-    cubit.reveal(null);
+    workoutRanges['u1 2026-11-01 2026-11-01']!.add([w(1)]);
+    await answerCardio();
+    expect(cubit.state.pinnedLoading, isFalse);
     expect(
-      cubit.state.days.map((day) => day.date),
-      isNot(contains(d(2026, 11, 6))),
+      cubit.state.pinned,
+      CalendarDay(d(2026, 11, 1), [WorkoutEntry(w(1))]),
     );
+    // The list itself is as it was.
+    expect(ids(cubit), ['w9', 'w8']);
+
+    // Once the list shows it, in place instead.
+    cubit.loadMore();
+    await emit('u1 c1 null', page([1]));
+    expect(cubit.state.pinned, isNull);
+    expect(workoutRanges['u1 2026-11-01 2026-11-01']!.hasListener, isFalse);
+    expect(ids(cubit), ['w9', 'w8', 'w1']);
+    await cubit.close();
+  });
+
+  test('a later date asked for shows on its own, and goes', () async {
+    final cubit = await signedIn(known: false);
+    await answerUser('u1', activeProgram: active);
+    await emit('u1 null null', page([9]));
+
+    cubit.reveal(d(2026, 11, 20));
+    workoutRanges['u1 2026-11-20 2026-11-20']!.add([]);
+    await answerCardio();
+    expect(
+      cubit.state.pinned,
+      CalendarDay(d(2026, 11, 20), [
+        PlanEntry(
+          upperLower,
+          PlannedDay(
+            date: d(2026, 11, 20),
+            dayIndex: 1,
+            status: PlannedStatus.planned,
+          ),
+        ),
+      ]),
+    );
+    // The list still ends with this week.
+    expect(dates(cubit), [d(2026, 11, 13), d(2026, 11, 9)]);
+
+    cubit.reveal(null);
+    expect(cubit.state.pinned, isNull);
+    expect(workoutRanges['u1 2026-11-20 2026-11-20']!.hasListener, isFalse);
+    await cubit.close();
+  });
+
+  test('a listed date asked for shows in place, even empty', () async {
+    final cubit = await signedIn();
+    await emit('u1 null null', page([11, 9]));
+    cubit.reveal(d(2026, 11, 10));
+    expect(cubit.state.pinned, isNull);
+    expect(
+      cubit.state.days.firstWhere((day) => day.date == d(2026, 11, 10)).entries,
+      isEmpty,
+    );
+    cubit.reveal(null);
+    expect(dates(cubit), isNot(contains(d(2026, 11, 10))));
     await cubit.close();
   });
 
   test('closing stops every listener', () async {
     final cubit = await signedIn();
     await emit('u1 null null', page([9], end: c1, more: true));
-    cubit.loadMore();
+    cubit
+      ..loadMore()
+      ..reveal(d(2026, 10, 1));
+    await pumpEventQueue();
     await cubit.close();
-    expect(pages.values.any((c) => c.hasListener), isFalse);
-    expect(cardioStreams['u1']!.hasListener, isFalse);
-    expect(activeStreams['u1']!.hasListener, isFalse);
+    for (final streams in [
+      pages,
+      workoutRanges,
+      cardioRanges,
+      programStreams,
+      activeStreams,
+    ]) {
+      expect(streams.values.any((c) => c.hasListener), isFalse);
+    }
   });
 
   test('without more nothing loads', () async {
@@ -336,22 +470,23 @@ void main() {
     await pumpEventQueue();
     expect(cubit.state.status, CalendarListStatus.failure);
     expect(cubit.state.failure, isA<NetworkFailure>());
-    expect(cardioStreams['u1']!.hasListener, isFalse);
+    expect(programStreams['u1']!.hasListener, isFalse);
 
     cubit.retry();
     expect(cubit.state.status, CalendarListStatus.loading);
     await pumpEventQueue();
-    cardioStreams['u1']!.add([]);
-    programStreams['u1']!.add([]);
-    activeStreams['u1']!.add(null);
+    await answerUser('u1');
+    cardioAnswered.clear();
     await emit('u1 null null', page([9]));
     expect(ids(cubit), ['w9']);
     await cubit.close();
   });
 
   test('a cardio failure fails the list', () async {
-    final cubit = await signedIn(known: false);
-    cardioStreams['u1']!.addError(const NetworkFailure());
+    final cubit = await signedIn();
+    pages['u1 null null']!.add(page([9]));
+    await pumpEventQueue();
+    cardioRanges.values.single.addError(const NetworkFailure());
     await pumpEventQueue();
     expect(cubit.state.status, CalendarListStatus.failure);
     await cubit.close();
@@ -368,9 +503,7 @@ void main() {
     pages['u1 null null']!.add(page([8]));
     await pumpEventQueue();
     expect(cubit.state.days, isEmpty);
-    cardioStreams['u2']!.add([]);
-    programStreams['u2']!.add([]);
-    activeStreams['u2']!.add(null);
+    await answerUser('u2');
     await emit('u2 null null', page([5]));
     expect(ids(cubit), ['w5']);
     await cubit.close();

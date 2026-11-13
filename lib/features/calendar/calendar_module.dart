@@ -30,6 +30,7 @@ class CalendarModule implements FeatureModule {
           firstWeekday: firstWeekday,
           watchAuthUser: sl(),
           watchHistory: sl(),
+          watchWorkouts: sl(),
           watchCardio: sl(),
           watchPrograms: sl(),
           watchActiveProgram: sl(),

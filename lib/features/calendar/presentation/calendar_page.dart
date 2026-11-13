@@ -50,11 +50,20 @@ class _CalendarView extends StatefulWidget {
 }
 
 class _CalendarViewState extends State<_CalendarView> {
+  final _scroll = ScrollController();
+
   /// Each listed date's header, to scroll to.
   final _headers = <CalendarDate, GlobalKey>{};
 
   /// The date tapped, until the list has scrolled to it.
   CalendarDate? _pending;
+  bool _seeking = false;
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   void _select(CalendarDate date) {
     context.read<CalendarCubit>().select(date);
@@ -71,16 +80,54 @@ class _CalendarViewState extends State<_CalendarView> {
     _pending = null;
   }
 
-  void _scrollToPending() => WidgetsBinding.instance.addPostFrameCallback((_) {
-    final header = _headers[_pending]?.currentContext;
-    if (header == null || !header.mounted) return;
-    _pending = null;
-    Scrollable.ensureVisible(
-      header,
-      duration: kThemeAnimationDuration,
-      curve: Curves.easeOut,
-    );
-  });
+  void _scrollToPending() =>
+      WidgetsBinding.instance.addPostFrameCallback((_) => _seek());
+
+  /// Brings the pending date's header to the top. The dates are built
+  /// lazily, so it may not be built yet: until it is, jumps a screen at a
+  /// time towards it, past the dates built, then scrolls to it. Waits for
+  /// a later state while it is not listed yet.
+  Future<void> _seek() async {
+    if (_seeking) return;
+    _seeking = true;
+    try {
+      // Bounded, should the list keep changing under it.
+      for (var jumps = 0; jumps < 200; jumps++) {
+        if (!mounted) return;
+        final pending = _pending;
+        if (pending == null) return;
+        final list = context.read<CalendarListCubit>().state;
+        final order = [
+          ?list.pinned?.date,
+          for (final day in list.days) day.date,
+        ];
+        final index = order.indexOf(pending);
+        if (index < 0) return;
+        final header = _headers[pending]?.currentContext;
+        if (header != null && header.mounted) {
+          _pending = null;
+          await Scrollable.ensureVisible(
+            header,
+            duration: kThemeAnimationDuration,
+            curve: Curves.easeOut,
+          );
+          return;
+        }
+        final lastBuilt = order.lastIndexWhere(
+          (date) => _headers[date]?.currentContext != null,
+        );
+        final position = _scroll.position;
+        final step = position.viewportDimension;
+        final target = (position.pixels + (lastBuilt < index ? step : -step))
+            .clamp(position.minScrollExtent, position.maxScrollExtent);
+        if (target == position.pixels) return;
+        _scroll.jumpTo(target);
+        await WidgetsBinding.instance.endOfFrame;
+      }
+    } finally {
+      _seeking = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,20 +150,87 @@ class _CalendarViewState extends State<_CalendarView> {
             ),
           ],
         ),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _PeriodCard(onSelected: _select, onMove: _leave),
-            Expanded(
-              child: BlocConsumer<CalendarListCubit, CalendarListState>(
-                listener: (_, _) => _scrollToPending(),
-                builder: (context, state) => _List(state, headers: _headers),
+        body: BlocConsumer<CalendarListCubit, CalendarListState>(
+          listener: (_, _) => _scrollToPending(),
+          builder: (context, state) => CustomScrollView(
+            controller: _scroll,
+            slivers: [
+              SliverToBoxAdapter(
+                child: _PeriodCard(onSelected: _select, onMove: _leave),
               ),
-            ),
-          ],
+              ..._list(context, state),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  /// Everything by date, newest first, built as it scrolls in, then the
+  /// button loading older workouts.
+  List<Widget> _list(BuildContext context, CalendarListState state) {
+    final l10n = AppLocalizations.of(context);
+    final cubit = context.read<CalendarListCubit>();
+    Widget fill(Widget child) =>
+        SliverFillRemaining(hasScrollBody: false, child: child);
+    GlobalKey header(CalendarDate date) =>
+        _headers.putIfAbsent(date, GlobalKey.new);
+    return switch (state.status) {
+      CalendarListStatus.loading => [fill(const LoadingView())],
+      CalendarListStatus.failure => [
+        fill(
+          ErrorView(
+            message: l10n.historyLoadFailed,
+            retryLabel: l10n.retry,
+            onRetry: cubit.retry,
+          ),
+        ),
+      ],
+      CalendarListStatus.ready when state.isEmpty => [
+        fill(
+          EmptyView(
+            message: l10n.historyEmpty,
+            action: ForgeButton(
+              label: l10n.workoutStartWorkout,
+              onPressed: () => startFreeWorkout(context),
+            ),
+          ),
+        ),
+      ],
+      CalendarListStatus.ready => [
+        if (state.pinned case final pinned?)
+          SliverToBoxAdapter(
+            child: _Day(
+              key: header(pinned.date),
+              day: pinned,
+              loading: state.pinnedLoading,
+            ),
+          ),
+        SliverList.builder(
+          itemCount: state.days.length,
+          itemBuilder: (_, index) {
+            final day = state.days[index];
+            return _Day(key: header(day.date), day: day);
+          },
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.only(bottom: Gap.xl),
+          sliver: SliverToBoxAdapter(
+            child: state.more
+                ? Padding(
+                    padding: const EdgeInsets.all(Gap.md),
+                    child: state.loadingMore
+                        ? const Center(child: CircularProgressIndicator())
+                        : OutlinedButton(
+                            onPressed: cubit.loadMore,
+                            child: Text(l10n.historyLoadOlder),
+                          ),
+                  )
+                : null,
+          ),
+        ),
+      ],
+    };
   }
 }
 
@@ -197,62 +311,12 @@ class _PeriodCard extends StatelessWidget {
   }
 }
 
-/// Everything by date, newest first, then the button loading older
-/// workouts.
-class _List extends StatelessWidget {
-  const _List(this.state, {required this.headers});
-
-  final CalendarListState state;
-  final Map<CalendarDate, GlobalKey> headers;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final cubit = context.read<CalendarListCubit>();
-    return switch (state.status) {
-      CalendarListStatus.loading => const LoadingView(),
-      CalendarListStatus.failure => ErrorView(
-        message: l10n.historyLoadFailed,
-        retryLabel: l10n.retry,
-        onRetry: cubit.retry,
-      ),
-      CalendarListStatus.ready when state.isEmpty => EmptyView(
-        message: l10n.historyEmpty,
-        action: ForgeButton(
-          label: l10n.workoutStartWorkout,
-          onPressed: () => startFreeWorkout(context),
-        ),
-      ),
-      // Every date built, so any of them can be scrolled to.
-      CalendarListStatus.ready => SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: Gap.xl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final day in state.days)
-              _Day(key: headers.putIfAbsent(day.date, GlobalKey.new), day: day),
-            if (state.more)
-              Padding(
-                padding: const EdgeInsets.all(Gap.md),
-                child: state.loadingMore
-                    ? const Center(child: CircularProgressIndicator())
-                    : OutlinedButton(
-                        onPressed: cubit.loadMore,
-                        child: Text(l10n.historyLoadOlder),
-                      ),
-              ),
-          ],
-        ),
-      ),
-    };
-  }
-}
-
-/// A date's header and its entries.
+/// A date's header and its entries, or a spinner while [loading] them.
 class _Day extends StatelessWidget {
-  const _Day({super.key, required this.day});
+  const _Day({super.key, required this.day, this.loading = false});
 
   final CalendarDay day;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -270,7 +334,12 @@ class _Day extends StatelessWidget {
             style: Theme.of(context).textTheme.titleSmall,
           ),
         ),
-        if (day.entries.isEmpty)
+        if (loading)
+          const Padding(
+            padding: EdgeInsets.all(Gap.md),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (day.entries.isEmpty)
           ListTile(title: Text(l10n.calendarDayEmpty))
         else
           for (final entry in day.entries)
