@@ -51,15 +51,26 @@ class ExerciseCards extends StatefulWidget {
 }
 
 /// A pointer held on the header of [exercise] since [down].
-typedef _Hold = ({int pointer, int exercise, Offset down, double slop});
+typedef _Hold = ({int pointer, int exercise, Offset down});
 
+/// The drag of a card goes through these, all owned by
+/// [_ExerciseCardsState]: a header is held as long as a long press, the
+/// cards collapse to their lines, the held line is scrolled back under the
+/// finger, and only then is the drag let start ([_HoldGate.open]), so it
+/// measures the one-line card; once the finger is lifted the cards expand
+/// when the drop has been applied (or at the latest after [_dropFallback]).
+/// Any pointer end, a scroll first, or the page going away ends it.
 class _ExerciseCardsState extends State<ExerciseCards> {
-  final _list = GlobalKey<SliverReorderableListState>();
-
   /// The held exercise's line while [_collapsed].
   final _heldLine = GlobalKey();
 
   _Hold? _hold;
+
+  /// The drag of the held header, waiting for [_HoldGate.open].
+  _HoldGate? _gate;
+
+  /// The gate a header just made, before [_holdStarted] takes it.
+  _HoldGate? _newGate;
 
   /// Where the held pointer is now.
   Offset _finger = Offset.zero;
@@ -67,16 +78,11 @@ class _ExerciseCardsState extends State<ExerciseCards> {
 
   /// Every card shows only its one-line exercises: from the moment a header
   /// is held until its card is dropped, so the dragged card and the list
-  /// are short.
+  /// are short. Headers cannot be held meanwhile.
   bool _collapsed = false;
   bool _dragging = false;
   Animation<double>? _proxyAnimation;
   Timer? _dropTimer;
-
-  /// How long after collapsing the drag starts: the frames that lay the
-  /// cards out short and scroll the held line back under the finger, as the
-  /// drag measures the card when it starts.
-  static const _settle = Duration(milliseconds: 100);
 
   /// Expands the cards should the drop's own end not be seen (a drag the
   /// list cancelled); longer than the drop animation.
@@ -91,7 +97,6 @@ class _ExerciseCardsState extends State<ExerciseCards> {
 
   @override
   Widget build(BuildContext context) => SliverReorderableList(
-    key: _list,
     itemCount: groupBlocks(widget.state.workout!.exercises).length,
     onReorderStart: (_) => _dragging = true,
     onReorderItem: widget.editor.moveBlock,
@@ -122,7 +127,9 @@ class _ExerciseCardsState extends State<ExerciseCards> {
     final lines = _collapsed || proxy;
     final open =
         !lines && selected != null && selected >= start && selected < end;
-    final moves = proxy ? null : _moves(block, blocks.length);
+    // Nothing to hold while a card moves or edits are refused.
+    final holdable = !proxy && !_collapsed && widget.editor.canEdit;
+    final moves = holdable ? _moves(block, blocks.length) : null;
     return Card(
       key: key,
       child: Column(
@@ -157,6 +164,7 @@ class _ExerciseCardsState extends State<ExerciseCards> {
                         onPointerDown: (event) => _holdStarted(event, i),
                         child: _HoldDragStartListener(
                           index: block,
+                          onGate: (gate) => _newGate = gate,
                           child: tile,
                         ),
                       ),
@@ -188,18 +196,17 @@ class _ExerciseCardsState extends State<ExerciseCards> {
 
   /// Follows the pointer down on exercise [exercise]'s header, wherever the
   /// header goes, and collapses the cards once it is held as long as a
-  /// long press; [_HoldDragStartListener] starts the drag after [_settle].
+  /// long press. The header's [_HoldDragStartListener] has made [_gate]
+  /// just before.
   void _holdStarted(PointerDownEvent event, int exercise) {
-    if (_hold != null || _collapsed) return;
-    _hold = (
-      pointer: event.pointer,
-      exercise: exercise,
-      down: event.position,
-      slop: computeHitSlop(
-        event.kind,
-        MediaQuery.maybeGestureSettingsOf(context),
-      ),
-    );
+    final gate = _newGate;
+    _newGate = null;
+    if (_hold != null || _collapsed || _dragging) {
+      gate?.reject();
+      return;
+    }
+    _gate = gate;
+    _hold = (pointer: event.pointer, exercise: exercise, down: event.position);
     _finger = event.position;
     GestureBinding.instance.pointerRouter.addRoute(event.pointer, _held);
     _holdTimer = Timer(kLongPressTimeout, _collapse);
@@ -210,8 +217,12 @@ class _ExerciseCardsState extends State<ExerciseCards> {
     if (hold == null) return;
     if (event is PointerMoveEvent) {
       _finger = event.position;
+      final slop = computeHitSlop(
+        event.kind,
+        MediaQuery.maybeGestureSettingsOf(context),
+      );
       // Moved before the drag started: a scroll, so no drag comes.
-      if (!_dragging && (event.position - hold.down).distance > hold.slop) {
+      if (!_dragging && (event.position - hold.down).distance > slop) {
         _holdEnded();
       }
     } else if (event is PointerUpEvent || event is PointerCancelEvent) {
@@ -231,6 +242,9 @@ class _ExerciseCardsState extends State<ExerciseCards> {
   void _endTracking() {
     _holdTimer?.cancel();
     _holdTimer = null;
+    // A drag that has not started never will.
+    _gate?.reject();
+    _gate = null;
     if (_hold case final hold?) {
       GestureBinding.instance.pointerRouter.removeRoute(hold.pointer, _held);
     }
@@ -244,15 +258,12 @@ class _ExerciseCardsState extends State<ExerciseCards> {
   }
 
   /// Scrolls the held exercise's line back under the finger, the open card
-  /// above it having shrunk. A line laid out of reach gets no drag.
+  /// above it having shrunk, then lets the drag start once that is laid
+  /// out. A line laid out of reach gets no drag.
   void _keepUnderFinger() {
     if (!mounted || _hold == null) return;
     final line = _heldLine.currentContext?.findRenderObject();
-    if (line is! RenderBox || !line.hasSize) {
-      _list.currentState?.cancelReorder();
-      _holdEnded();
-      return;
-    }
+    if (line is! RenderBox || !line.hasSize) return _holdEnded();
     final position = Scrollable.of(context).position;
     final centre = line.localToGlobal(line.size.center(Offset.zero)).dy;
     position.jumpTo(
@@ -261,14 +272,25 @@ class _ExerciseCardsState extends State<ExerciseCards> {
         position.maxScrollExtent,
       ),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _hold == null) return;
+      final line = _heldLine.currentContext?.findRenderObject();
+      if (line is! RenderBox || !line.hasSize) return _holdEnded();
+      final gate = _gate;
+      _gate = null;
+      gate?.open();
+    });
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   /// Expands the cards once [animation], the dragged card's, has carried it
-  /// to where it was dropped.
+  /// to where it was dropped and the drop has been applied.
   void _expandWhenDropped(Animation<double> animation) {
     if (identical(animation, _proxyAnimation)) return;
     _proxyAnimation = animation;
     animation.addListener(() {
+      // The list applies the drop right after this last tick, in the same
+      // frame the cards expand in.
       if (animation.isDismissed) _expand();
     });
   }
@@ -281,17 +303,85 @@ class _ExerciseCardsState extends State<ExerciseCards> {
   }
 }
 
-/// Starts dragging card [index] once its header is held [_settle] longer
-/// than a long press, after [_ExerciseCardsState._collapse].
-class _HoldDragStartListener extends ReorderableDelayedDragStartListener {
-  const _HoldDragStartListener({required super.index, required super.child});
+/// Starts dragging card [index] only when its [_HoldGate], handed to
+/// [onGate], opens.
+class _HoldDragStartListener extends ReorderableDragStartListener {
+  const _HoldDragStartListener({
+    required super.index,
+    required this.onGate,
+    required super.child,
+  });
+
+  final ValueChanged<_HoldGate> onGate;
 
   @override
   MultiDragGestureRecognizer createRecognizer() =>
-      DelayedMultiDragGestureRecognizer(
-        debugOwner: this,
-        delay: kLongPressTimeout + _ExerciseCardsState._settle,
-      );
+      _HoldRecognizer(onGate: onGate, debugOwner: this);
+}
+
+class _HoldRecognizer extends MultiDragGestureRecognizer {
+  _HoldRecognizer({required this.onGate, super.debugOwner});
+
+  final ValueChanged<_HoldGate> onGate;
+
+  @override
+  MultiDragPointerState createNewPointerState(PointerDownEvent event) {
+    final gate = _HoldGate(event.position, event.kind, gestureSettings);
+    onGate(gate);
+    return gate;
+  }
+
+  @override
+  String get debugDescription => 'hold to drag';
+}
+
+/// A pointer that drags only once [open]ed, and gives way to a scroll if
+/// it moves first.
+class _HoldGate extends MultiDragPointerState {
+  _HoldGate(super.initialPosition, super.kind, super.gestureSettings);
+
+  bool _open = false;
+  bool _done = false;
+  GestureMultiDragStartCallback? _starter;
+
+  /// Lets the drag start: claims the pointer, or starts at once when it
+  /// was already given.
+  void open() {
+    if (_done || _open) return;
+    _open = true;
+    final starter = _starter;
+    _starter = null;
+    starter != null
+        ? starter(initialPosition)
+        : resolve(GestureDisposition.accepted);
+  }
+
+  /// Gives the pointer up; no drag starts.
+  void reject() {
+    if (_done || _open) return;
+    _done = true;
+    resolve(GestureDisposition.rejected);
+  }
+
+  @override
+  void accepted(GestureMultiDragStartCallback starter) {
+    if (_done) return;
+    _open ? starter(initialPosition) : _starter = starter;
+  }
+
+  @override
+  void checkForResolutionAfterMove() {
+    if (_open || _done) return;
+    if (pendingDelta!.distance > computeHitSlop(kind, gestureSettings)) {
+      reject();
+    }
+  }
+
+  @override
+  void dispose() {
+    _done = true;
+    super.dispose();
+  }
 }
 
 Widget? _groupLeading(List<WorkoutExercise> exercises, int index) =>

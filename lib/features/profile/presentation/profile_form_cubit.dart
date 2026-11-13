@@ -89,17 +89,27 @@ class ProfileFormState extends Equatable {
   ];
 }
 
+/// Who last ended onboarding with "Skip for now" in this run of the app.
+/// The router then lands them on Today instead of suggesting a program.
+/// Not stored: at the next start a completed profile goes to Today anyway.
+class SkippedOnboarding {
+  String? uid;
+}
+
 /// The profile questions as a form, in the user's units. Onboarding asks all
 /// of them and closes with a summary; editing asks one and saves it alone.
 class ProfileFormCubit extends Cubit<ProfileFormState> {
   /// Every question, then the summary. Finishing or skipping completes
-  /// onboarding with whatever was answered.
+  /// onboarding with whatever was answered; skipping is recorded in
+  /// [skipped].
   ProfileFormCubit.onboarding({
     required String uid,
     required UserProfile initial,
     required CompleteOnboarding completeOnboarding,
+    required SkippedOnboarding skipped,
     this._now = DateTime.now,
   }) : _save = ((answers) => completeOnboarding((uid: uid, answers: answers))),
+       _markSkipped = ((skip) => skipped.uid = skip ? uid : null),
        super(
          ProfileFormState(
            questions: ProfileField.values,
@@ -116,6 +126,7 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     required UserProfile initial,
     this._now = DateTime.now,
   }) : _save = null,
+       _markSkipped = null,
        super(
          ProfileFormState(
            questions: [field],
@@ -126,6 +137,7 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
 
   final DateTime Function() _now;
   final Future<Result<void>> Function(UserProfile answers)? _save;
+  final void Function(bool skipped)? _markSkipped;
 
   /// The birth years [enterBirthYear] accepts this year.
   ({int min, int max}) get birthYearRange {
@@ -218,7 +230,7 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
   /// Ends onboarding now with the answers given so far.
   Future<void> skip() async {
     if (state.onboarding && state.status == ProfileFormStatus.editing) {
-      await _submit();
+      await _submit(skipped: true);
     }
   }
 
@@ -239,7 +251,11 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     );
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit({bool skipped = false}) async {
+    // Before saving: the completed profile reaches the router from
+    // Firestore's local cache before the save returns, or never returns
+    // while offline.
+    _markSkipped?.call(skipped);
     emit(state.copyWith(status: ProfileFormStatus.submitted));
     final save = _save;
     if (save == null) return;

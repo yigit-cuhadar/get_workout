@@ -733,6 +733,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   void localUnreadableShown() => emit(state.copyWith(localUnreadable: false));
 
+  @override
+  bool get canEdit =>
+      state.status == WorkoutStatus.active && state.workout != null;
+
   /// Applies [change] to the workout in progress and keeps the result.
   @override
   void edit(
@@ -741,7 +745,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     SetSelection? Function(Workout after)? select,
   }) {
     final workout = state.workout;
-    if (state.status != WorkoutStatus.active || workout == null) return;
+    if (!canEdit || workout == null) return;
     final changed = change(workout);
     if (changed == workout) return;
     _emitWorkout(

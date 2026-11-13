@@ -289,6 +289,10 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     }
   }
 
+  @override
+  bool get canEdit =>
+      state.status == WorkoutEditStatus.editing && state.workout != null;
+
   /// Applies [change] while editing; no reference to a set is kept here,
   /// so [movesSets] does not matter.
   @override
@@ -298,7 +302,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     SetSelection? Function(Workout after)? select,
   }) {
     final workout = state.workout;
-    if (state.status != WorkoutEditStatus.editing || workout == null) return;
+    if (!canEdit || workout == null) return;
     final changed = change(workout);
     if (changed == workout) return;
     emit(

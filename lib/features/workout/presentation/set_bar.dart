@@ -187,7 +187,7 @@ class SetBar extends StatelessWidget {
                   context: context,
                   showDragHandle: true,
                   isScrollControlled: true,
-                  builder: (_) => _SetOptions(ref: ref, editor: editor),
+                  builder: (_) => _SetOptions(editor: editor),
                 ),
               ),
             ],
@@ -392,11 +392,12 @@ class _StepLabel extends StatelessWidget {
   }
 }
 
-/// A set's kind, note and removal; every change applies at once.
+/// The selected set's kind, note and removal; every change applies at
+/// once. It follows the selection, which follows the set when a change of
+/// kind moves it.
 class _SetOptions extends StatelessWidget {
-  const _SetOptions({required this.ref, required this.editor});
+  const _SetOptions({required this.editor});
 
-  final SetRef ref;
   final WorkoutEditor<EditedWorkout> editor;
 
   @override
@@ -406,9 +407,12 @@ class _SetOptions extends StatelessWidget {
     return BlocBuilder<WorkoutEditor<EditedWorkout>, EditedWorkout>(
       bloc: editor,
       builder: (context, state) {
-        final exercise = state.workout?.exercises.elementAtOrNull(ref.exercise);
-        final set = exercise?.sets.elementAtOrNull(ref.set);
-        if (exercise == null || set == null) return const SizedBox.shrink();
+        final selection = state.selection;
+        final index = selection?.set;
+        if (selection == null || index == null) return const SizedBox.shrink();
+        final ref = (exercise: selection.exercise, set: index);
+        final exercise = state.workout!.exercises[ref.exercise];
+        final set = exercise.sets[ref.set];
         return SafeArea(
           top: false,
           child: Padding(
@@ -433,6 +437,7 @@ class _SetOptions extends StatelessWidget {
                   ],
                 ),
                 TextFormField(
+                  key: ValueKey(ref),
                   initialValue: set.note,
                   maxLines: null,
                   textCapitalization: TextCapitalization.sentences,

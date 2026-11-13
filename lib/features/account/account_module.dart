@@ -68,6 +68,8 @@ class AccountModule implements FeatureModule {
       ..registerLazySingleton(
         () => ConsentCubit(
           watchAuthUser: sl(),
+          getCurrentUser: sl(),
+          deletionUnderway: sl<DeletionUnderway>(),
           watchConsent: sl(),
           saveConsent: sl(),
           followUser: sl(),
