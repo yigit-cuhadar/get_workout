@@ -154,6 +154,7 @@ class _TodayCard extends StatelessWidget {
     );
     final trailing = [
       if (detail != null) Text(detail),
+      if (detail != null && onOpen != null) const SizedBox(width: Gap.xs),
       if (onOpen != null) const Icon(Icons.chevron_right),
     ];
     return Card(
@@ -276,6 +277,7 @@ class _WorkoutCard extends StatelessWidget {
         _ProgramDayCard(
           program,
           missed.dayIndex,
+          busy: state.resolving,
           child: MissedDayPrompt(
             program: program,
             missed: missed,
@@ -346,6 +348,7 @@ class _ProgramDayCard extends StatelessWidget {
     this.dayIndex, {
     required this.child,
     this.date,
+    this.busy = false,
   });
 
   final Program program;
@@ -353,6 +356,10 @@ class _ProgramDayCard extends StatelessWidget {
 
   /// When it is planned; a missed day says so itself.
   final CalendarDate? date;
+
+  /// While true the card does not open the program: a tap on a button that
+  /// is disabled meanwhile would otherwise fall through to the card.
+  final bool busy;
   final Widget child;
 
   @override
@@ -365,7 +372,7 @@ class _ProgramDayCard extends StatelessWidget {
       prominent: true,
       label: program.name,
       title: name,
-      onOpen: () => context.go(Routes.program(program.id!)),
+      onOpen: busy ? null : () => context.go(Routes.program(program.id!)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
