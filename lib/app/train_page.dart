@@ -13,7 +13,7 @@ enum TrainView { program, exercises }
 /// as two views of one page. Each view has its own location, so links and
 /// back keep working; both locations show this page under [pageKey], so the
 /// navigator updates it in place and the other view keeps its state (the
-/// body model is not loaded again, the list keeps its place).
+/// body model is not loaded again).
 class TrainPage extends StatefulWidget {
   const TrainPage({super.key, required this.view});
 

@@ -487,9 +487,15 @@ GoRouter buildRouter(
                   // Before ':id', which would match these too.
                   GoRoute(
                     path: 'list',
-                    builder: (_, state) => LibraryPage(
-                      muscle: Muscle.values.byCode(
-                        state.uri.queryParameters['muscle'],
+                    // A MaterialPage, for a transition the search box's Hero
+                    // flies in: go_router's default page for `builder`
+                    // routes has none here.
+                    pageBuilder: (_, state) => MaterialPage(
+                      key: state.pageKey,
+                      child: LibraryPage(
+                        muscle: Muscle.values.byCode(
+                          state.uri.queryParameters['muscle'],
+                        ),
                       ),
                     ),
                   ),

@@ -393,16 +393,61 @@ void main() {
       expect(ids(cubit.state.muscleExercises!.alsoWorks), ['bench_press']);
     });
 
-    test('the sections follow search and sort', () {
-      final cubit = build()
-        ..openMuscle(Muscle.pec)
-        ..setSort(ExerciseSort.alphabetical);
+    test('the sections follow search and sort', () async {
+      // Least popular, but second from A to Z.
+      final fly = exercise(
+        'fly',
+        name: 'Cable Fly',
+        popularity: 9,
+        main: [Muscle.pec],
+      );
+      final cubit = build();
+      catalogueChanges.add(CatalogueReady([..._all, fly]));
+      await pumpEventQueue();
+      cubit.openMuscle(Muscle.pec);
       expect(ids(cubit.state.muscleExercises!.main), [
         'bench_press',
         'push_up',
+        'fly',
       ]);
+
+      cubit.setSort(ExerciseSort.alphabetical);
+      expect(ids(cubit.state.muscleExercises!.main), [
+        'bench_press',
+        'fly',
+        'push_up',
+      ]);
+
       cubit.setQuery('push');
       expect(ids(cubit.state.muscleExercises!.main), ['push_up']);
+    });
+
+    test('leaving it takes its filter away and keeps the rest', () {
+      final cubit = build()
+        ..setSort(ExerciseSort.alphabetical)
+        ..toggleLevel(Level.intermediate)
+        ..openMuscle(Muscle.pec)
+        ..setQuery('bench')
+        ..leaveMuscle(Muscle.pec);
+      expect(cubit.state.filter.muscles, isEmpty);
+      expect(cubit.state.filter.levels, {Level.intermediate});
+      expect(cubit.state.sort, ExerciseSort.alphabetical);
+      expect(cubit.state.query, 'bench');
+    });
+
+    test('leaving it keeps a muscle filter the user changed', () {
+      final cubit = build()
+        ..openMuscle(Muscle.pec)
+        ..toggleMuscle(Muscle.quads)
+        ..leaveMuscle(Muscle.pec);
+      expect(cubit.state.filter.muscles, {Muscle.pec, Muscle.quads});
+
+      cubit
+        ..openMuscle(Muscle.pec)
+        ..toggleMuscle(Muscle.pec)
+        ..toggleMuscle(Muscle.biceps)
+        ..leaveMuscle(Muscle.pec);
+      expect(cubit.state.filter.muscles, {Muscle.biceps});
     });
 
     test('a filter of the muscle set by hand splits the same way', () {

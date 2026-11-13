@@ -10,29 +10,29 @@ import '../library_cubit.dart';
 import '../vocabulary_labels.dart';
 import 'exercise_tile.dart';
 import 'filter_sheet.dart';
-import 'muscle_preview.dart';
 
 /// Search, filters, sort and the resulting exercises. Everything the model
 /// offers is reachable here too, which makes it the screen reader's path.
 ///
 /// Each result is an [ExerciseTile] opening its detail, or what [tileBuilder]
-/// builds, e.g. to select exercises instead. With [showsMuscle], a list
-/// filtered to exactly one muscle starts with that muscle on the model and
-/// its name, and splits into the exercises working it as a main muscle and
-/// those working it as a secondary one.
+/// builds, e.g. to select exercises instead.
 class LibraryListView extends StatefulWidget {
   const LibraryListView({
     super.key,
     this.tileBuilder,
-    this.autofocus = false,
-    this.showsMuscle = false,
+    this.focusSearch = false,
+    this.sectionsFor,
   });
 
   final Widget Function(BuildContext context, Exercise exercise)? tileBuilder;
 
-  /// Whether the search field takes focus when the list first shows.
-  final bool autofocus;
-  final bool showsMuscle;
+  /// Whether the search field takes focus once the page's route is in.
+  final bool focusSearch;
+
+  /// While this is the only muscle filtered, the results split into the
+  /// exercises working it as a main muscle and those working it as a
+  /// secondary one.
+  final Muscle? sectionsFor;
 
   @override
   State<LibraryListView> createState() => _LibraryListViewState();
@@ -43,8 +43,37 @@ class _LibraryListViewState extends State<LibraryListView> {
     text: context.read<LibraryCubit>().state.query,
   );
 
+  /// Whether the search field may take focus: the page's route is in, so
+  /// the keyboard comes up once, after any transition and Hero flight.
+  var _routeIn = false;
+
+  /// The route animation awaited for [_routeIn].
+  Animation<double>? _entering;
+  var _watching = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!widget.focusSearch || _watching) return;
+    _watching = true;
+    final animation = ModalRoute.of(context)?.animation;
+    if (animation == null || animation.isCompleted) {
+      _routeIn = true;
+    } else {
+      _entering = animation..addStatusListener(_onEntering);
+    }
+  }
+
+  void _onEntering(AnimationStatus status) {
+    if (!status.isCompleted) return;
+    _entering?.removeStatusListener(_onEntering);
+    _entering = null;
+    setState(() => _routeIn = true);
+  }
+
   @override
   void dispose() {
+    _entering?.removeStatusListener(_onEntering);
     _search.dispose();
     super.dispose();
   }
@@ -69,8 +98,11 @@ class _LibraryListViewState extends State<LibraryListView> {
                   Expanded(
                     child: LibrarySearchHero(
                       child: TextField(
+                        // A new field once the route is in, autofocusing
+                        // then.
+                        key: ValueKey(_routeIn),
+                        autofocus: _routeIn,
                         controller: _search,
-                        autofocus: widget.autofocus,
                         onChanged: library.setQuery,
                         textInputAction: TextInputAction.search,
                         decoration: InputDecoration(
@@ -131,12 +163,14 @@ class _LibraryListViewState extends State<LibraryListView> {
               ),
             ),
             Expanded(
-              child: switch ((state.muscle, state.muscleExercises)) {
-                (final muscle?, final sections?) when widget.showsMuscle =>
-                  _MuscleList(muscle, sections, tile: _tile),
+              child: switch (state.muscleExercises) {
                 _ when results.isEmpty => EmptyView(
                   message: l10n.libraryNoResults,
                 ),
+                final sections?
+                    when widget.sectionsFor != null &&
+                        state.muscle == widget.sectionsFor =>
+                  _Sections(sections, tile: _tile),
                 _ => ListView.builder(
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
@@ -157,12 +191,10 @@ class _LibraryListViewState extends State<LibraryListView> {
       ExerciseTile(exercise, showFavorite: true);
 }
 
-/// The results for one [muscle]: the model with it coloured, its name, and
-/// the [sections].
-class _MuscleList extends StatelessWidget {
-  const _MuscleList(this.muscle, this.sections, {required this.tile});
+/// The results of one muscle under "Main" and "Also works".
+class _Sections extends StatelessWidget {
+  const _Sections(this.sections, {required this.tile});
 
-  final Muscle muscle;
   final MuscleExercises sections;
   final Widget Function(BuildContext context, Exercise exercise) tile;
 
@@ -181,21 +213,6 @@ class _MuscleList extends StatelessWidget {
     return ListView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       children: [
-        MusclePreview(main: [muscle], heightRatio: 1 / 5),
-        Semantics(
-          header: true,
-          child: ListTile(
-            title: Text(
-              l10n.muscleName(muscle),
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ),
-        ),
-        if (sections.main.isEmpty && sections.alsoWorks.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(Gap.md),
-            child: Text(l10n.libraryNoResults),
-          ),
         ...section(l10n.libraryMuscleMain, sections.main),
         ...section(l10n.libraryMuscleAlsoWorks, sections.alsoWorks),
       ],
@@ -205,7 +222,7 @@ class _MuscleList extends StatelessWidget {
 
 /// The search field flying between the Exercises view's
 /// [LibrarySearchEntry] and the list page. In flight it is drawn as the
-/// entry, so no second text field takes focus meanwhile.
+/// entry; the page's field takes focus only once its route is in.
 class LibrarySearchHero extends StatelessWidget {
   const LibrarySearchHero({super.key, required this.child});
 

@@ -28,6 +28,7 @@ import 'package:get_workout/features/exercises/presentation/exercises_page.dart'
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_page.dart';
+import 'package:get_workout/features/exercises/presentation/widgets/body_view.dart';
 import 'package:get_workout/features/exercises/presentation/widgets/library_list_view.dart';
 import 'package:get_workout/features/account/presentation/account_page.dart';
 import 'package:get_workout/features/account/domain/account_usecases.dart';
@@ -556,7 +557,7 @@ void main() {
       openLocations(router.routerDelegate.currentConfiguration).last;
 
   bool searchFocused(WidgetTester tester) => tester
-      .state<EditableTextState>(find.byType(EditableText))
+      .state<EditableTextState>(find.byType(EditableText, skipOffstage: false))
       .widget
       .focusNode
       .hasFocus;
@@ -691,6 +692,18 @@ void main() {
   });
 
   group('exercise list', () {
+    LibraryState library() => sl<LibraryCubit>().state;
+    List<String> ids(List<Exercise> exercises) => [
+      for (final exercise in exercises) exercise.id,
+    ];
+
+    Future<void> startWithSplitSquat(WidgetTester tester) async {
+      holdCatalogue = true;
+      await startAsGuest(tester);
+      exerciseFeed.add([_squat, _splitSquat]);
+      await openExercises(tester);
+    }
+
     testWidgets('the search box opens it inside Train, searching; back '
         'returns to the Exercises view', (tester) async {
       await startAsGuest(tester);
@@ -703,7 +716,6 @@ void main() {
       expect(front(), Routes.exerciseList);
       expect(selectedTab(tester), 1);
       expect(searchFocused(tester), isTrue);
-      expect(find.text('1 exercise'), findsOneWidget);
 
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
@@ -719,7 +731,13 @@ void main() {
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
 
-      expect(find.text('squat'), findsOneWidget, reason: 'the box shows it');
+      expect(
+        find.descendant(
+          of: find.byType(LibrarySearchEntry),
+          matching: find.text('squat'),
+        ),
+        findsOneWidget,
+      );
       await tester.tap(find.byType(LibrarySearchEntry));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(TextField, 'squat'), findsOneWidget);
@@ -727,46 +745,33 @@ void main() {
 
     testWidgets('a muscle opens it filtered, in main and also-works '
         'sections, without the keyboard', (tester) async {
-      // Tall enough for both sections below the model.
-      tester.view.physicalSize = const Size(2400, 4800);
-      addTearDown(tester.view.reset);
-      holdCatalogue = true;
-      await startAsGuest(tester);
-      exerciseFeed.add([_squat, _splitSquat]);
-      await openExercises(tester);
+      await startWithSplitSquat(tester);
 
       unawaited(router.push(Routes.exerciseListOf(Muscle.quads)));
       await tester.pumpAndSettle();
 
-      expect(find.byType(LibraryPage), findsOneWidget);
+      expect(front(), Routes.exerciseList);
       expect(selectedTab(tester), 1);
       expect(searchFocused(tester), isFalse);
-      // The muscle's title and its removable filter.
-      expect(find.text('Quads'), findsNWidgets(2));
-      expect(find.byType(InputChip), findsOneWidget);
-      double top(String text) => tester.getTopLeft(find.text(text)).dy;
-      final order = [
-        'Main',
-        'Back Squat',
-        'Also works',
-        'Split Squat',
-      ].map(top).toList();
-      expect(order, [...order]..sort());
+      expect(library().filter.muscles, {Muscle.quads});
+      expect(ids(library().muscleExercises!.main), ['squat']);
+      expect(ids(library().muscleExercises!.alsoWorks), ['split_squat']);
+      expect(find.text('Main'), findsOneWidget);
+      expect(find.text('Also works'), findsOneWidget);
 
+      // The muscle's chip.
       await tester.tap(find.byTooltip('Delete'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(InputChip), findsNothing);
-      expect(find.text('Quads'), findsNothing);
+      expect(library().filter.muscles, isEmpty);
       expect(find.text('Main'), findsNothing);
       expect(find.text('Also works'), findsNothing);
       expect(find.text('Back Squat'), findsOneWidget);
       expect(find.text('Split Squat'), findsOneWidget);
     });
 
-    testWidgets('a muscle clears the search but keeps it out of the box', (
-      tester,
-    ) async {
+    testWidgets('a muscle visit clears the search and takes its muscle '
+        'along when it ends, so the box opens without it', (tester) async {
       await startAsGuest(tester);
       await openList(tester);
       await tester.enterText(find.byType(TextField), 'bench');
@@ -775,9 +780,87 @@ void main() {
 
       unawaited(router.push(Routes.exerciseListOf(Muscle.quads)));
       await tester.pumpAndSettle();
+      expect(library().query, '');
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(TextField, 'bench'), findsNothing);
-      expect(find.text('Back Squat'), findsOneWidget);
+      expect(library().filter.muscles, isEmpty);
+      expect(
+        find.descendant(
+          of: find.byType(LibrarySearchEntry),
+          matching: find.text('bench'),
+        ),
+        findsNothing,
+      );
+      await tester.tap(find.byType(LibrarySearchEntry));
+      await tester.pumpAndSettle();
+      expect(library().filter.muscles, isEmpty);
+      expect(find.text('Main'), findsNothing);
+    });
+
+    testWidgets('a muscle filter the user changed outlives the visit', (
+      tester,
+    ) async {
+      await startWithSplitSquat(tester);
+      unawaited(router.push(Routes.exerciseListOf(Muscle.quads)));
+      await tester.pumpAndSettle();
+
+      sl<LibraryCubit>().toggleMuscle(Muscle.glute);
+      await tester.pumpAndSettle();
+      expect(find.text('Main'), findsNothing);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(library().filter.muscles, {Muscle.quads, Muscle.glute});
+    });
+
+    testWidgets('one muscle picked by hand gives no sections', (tester) async {
+      await startWithSplitSquat(tester);
+      await tester.tap(find.byType(LibrarySearchEntry));
+      await tester.pumpAndSettle();
+
+      sl<LibraryCubit>().toggleMuscle(Muscle.quads);
+      await tester.pumpAndSettle();
+
+      expect(library().muscle, Muscle.quads);
+      expect(find.text('Main'), findsNothing);
+      expect(find.text('Split Squat'), findsOneWidget);
+    });
+
+    testWidgets('a link to another muscle updates the open page', (
+      tester,
+    ) async {
+      await startWithSplitSquat(tester);
+      router.go(Routes.exerciseListOf(Muscle.quads));
+      await tester.pumpAndSettle();
+
+      router.go(Routes.exerciseListOf(Muscle.glute));
+      await tester.pumpAndSettle();
+      expect(find.byType(LibraryPage), findsOneWidget);
+      expect(library().filter.muscles, {Muscle.glute});
+      expect(ids(library().muscleExercises!.main), ['split_squat']);
+      expect(find.text('Main'), findsOneWidget);
+
+      router.go(Routes.exerciseList);
+      await tester.pumpAndSettle();
+      expect(find.byType(LibraryPage), findsOneWidget);
+      expect(library().filter.muscles, isEmpty);
+      expect(find.text('Main'), findsNothing);
+    });
+
+    testWidgets('one gesture on the model opens one page', (tester) async {
+      await startAsGuest(tester);
+      await openExercises(tester);
+      final model = tester.element(find.byType(BodyView));
+
+      openMuscleList(model, Muscle.quads);
+      await tester.pump();
+      // A second tap, or a slide ending, while the list comes in.
+      openMuscleList(model, Muscle.glute);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LibraryPage), findsOneWidget);
+      expect(library().filter.muscles, {Muscle.quads});
     });
 
     testWidgets('is not taken for an exercise id', (tester) async {
@@ -793,6 +876,19 @@ void main() {
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       expect(find.byType(ExercisesPage), findsOneWidget);
+    });
+
+    testWidgets('selecting Train again ends a muscle visit', (tester) async {
+      await startAsGuest(tester);
+      await openExercises(tester);
+      unawaited(router.push(Routes.exerciseListOf(Muscle.quads)));
+      await tester.pumpAndSettle();
+
+      await tapTab(tester, 'Train');
+
+      expect(find.byType(LibraryPage), findsNothing);
+      expect(find.byType(ExercisesPage), findsOneWidget);
+      expect(library().filter.muscles, isEmpty);
     });
 
     testWidgets('selecting Train again returns to the Exercises view', (

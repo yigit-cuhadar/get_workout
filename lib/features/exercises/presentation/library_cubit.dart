@@ -167,6 +167,13 @@ class LibraryCubit extends Cubit<LibraryState> {
     filter: state.filter.copyWith(muscles: {muscle}),
   );
 
+  /// Ends browsing [muscle]: its filter goes, unless the user changed the
+  /// muscle filter meanwhile.
+  void leaveMuscle(Muscle muscle) {
+    if (isClosed || state.muscle != muscle) return;
+    _recompute(filter: state.filter.copyWith(muscles: const {}));
+  }
+
   void setSort(ExerciseSort sort) => _recompute(sort: sort);
 
   void toggleMuscle(Muscle muscle) => _recompute(

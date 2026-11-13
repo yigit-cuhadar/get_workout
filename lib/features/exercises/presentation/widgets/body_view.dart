@@ -14,6 +14,15 @@ import '../../domain/vocabulary.dart';
 import '../body_model_cubit.dart';
 import '../vocabulary_labels.dart';
 
+/// Opens the exercise list for [muscle] above the page of [context], unless
+/// a page already covers it: a second tap, or a slide ending, while the
+/// list is coming in or open opens nothing more.
+void openMuscleList(BuildContext context, Muscle muscle) {
+  if (ModalRoute.isCurrentOf(context) ?? true) {
+    context.push(Routes.exerciseListOf(muscle));
+  }
+}
+
 /// The body model: tap a muscle, or press and slide across muscles, to open
 /// the exercise list filtered to it.
 class BodyView extends StatefulWidget {
@@ -57,7 +66,7 @@ class _BodyViewState extends State<BodyView> {
   }
 
   void _open(Muscle? muscle) {
-    if (muscle != null) context.push(Routes.exerciseListOf(muscle));
+    if (muscle != null) openMuscleList(context, muscle);
   }
 
   @override
