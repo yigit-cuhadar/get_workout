@@ -13,6 +13,12 @@ class CardioWeek extends Equatable {
   Duration get duration =>
       sessions.fold(Duration.zero, (sum, session) => sum + session.duration);
 
+  /// The distance of the sessions that have one; null when none has.
+  double? get distanceKm {
+    final distances = sessions.map((s) => s.distanceKm).nonNulls;
+    return distances.isEmpty ? null : distances.reduce((a, b) => a + b);
+  }
+
   @override
   List<Object?> get props => [start, sessions];
 }

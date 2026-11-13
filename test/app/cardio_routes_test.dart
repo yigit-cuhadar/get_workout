@@ -224,6 +224,17 @@ void main() {
   testWidgets('a session opens its edit form', (tester) async {
     await start(tester);
     await openCardio(tester, [run]);
+    // The week's summary and the chart come first.
+    await tester.scrollUntilVisible(
+      find.text('Outdoor run'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(CardioListPage),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
 
     await tap(tester, find.text('Outdoor run'));
 
