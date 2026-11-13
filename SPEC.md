@@ -151,15 +151,21 @@ from the earlier FitLab app.
   among the Fake store rows (Remote Config, A or B; in memory until
   restart); release builds do not register the override. Events, through
   `Telemetry.logEvent` (`forge_core`): `paywall_view` {`layout`: `a`|`b`}
-  once per paywall open, when the plans first show (not on a failed load):
+  once per paywall open, when the plans first show to a user without
+  Premium (not on a failed load, nor for a subscriber, whose paywall
+  closes at once):
   the experiment's activation event; `paywall_purchase` {`plan`: the
-  store's product id, `layout`} on each purchase or trial start that
+  plan's period, `monthly` or `yearly` (the same on both stores, whose
+  product ids differ), `layout`} on each purchase or trial start that
   granted Premium on the paywall: the goal. A pending purchase approved
   later and a restore are not counted. Events follow the analytics consent
   below, so only prod release builds, for signed-in users (guests
-  included) who agreed to share usage data, are counted. The Remote
-  Config parameter and the experiment are set up in the console, not by
-  the app.
+  included) who agreed to share usage data, are counted. Remote Config
+  itself is fetched for every user, whatever their answer to "Share usage
+  data" (owner's call, 2026-11-13): a user who declines still gets a
+  layout but is never measured; the privacy policy says so instead of the
+  fetch being gated. The Remote Config parameter and the experiment are
+  set up in the console, not by the app.
 - **Profile tab** (UX pass, 2026-11-13, owner's pick): one page, top to
   bottom: the account row, the Premium card, Your profile, Calculators,
   then the settings groups (Units, Workout, Reminders, Appearance), Privacy
@@ -805,7 +811,8 @@ from the earlier FitLab app.
   `BeforeAfterSlider`.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
-  export (the user accepted the EU risk).
+  export (the user accepted the EU risk). Remote Config (the paywall A/B
+  test) sends the Firebase installation ID for every user, consent or not.
 - **Analytics consent** (`lib/features/account`):
   `settings.analyticsConsent` of each user, guests included (a guest has a
   uid and a user document; linking keeps it, signing in to an existing
@@ -2048,7 +2055,10 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
   timer").
 - Release blocker: the Terms of Use and Privacy Policy links in
   `lib/app/legal_links.dart` are placeholders; publish the pages and
-  replace them (Android picks up `privacyUrl` by itself).
+  replace them (Android picks up `privacyUrl` by itself). The published
+  privacy policy and the App Store / Play privacy labels must say that the
+  app contacts Firebase Remote Config with a Firebase installation ID for
+  all users, to choose between app layouts.
 - Release blockers for steps: Health Connect's privacy-policy link opens
   `PrivacyPolicyActivity`, which opens `LegalLinks.privacyUrl` (passed in
   by the build, still a placeholder); Play Console
