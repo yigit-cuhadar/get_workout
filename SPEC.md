@@ -238,53 +238,109 @@ from the earlier FitLab app.
   Effort is only stored and shown (bar, workout detail); nothing else uses
   it yet, and the help says just that. Effort is only asked about a DONE
   working set; warm-ups are never rated. Right after a working set is
-  ticked in the workout in progress, the set bar BECOMES the question
-  (`questionSet`, `asking` in the editor state): "Set 1 done · 80 kg × 8"
-  ("Drop set 2 done · …", the exercise first when the selection has moved
-  to another one: "Squat · Set 3 done · 100 kg × 5"), the scale's question
-  ("How hard was it?", "How many more reps could you have done?", "How
-  hard was it, from 1 to 10?") with the "?" help, the steps with Failed,
-  and Skip; no fields and no tick, so nothing is logged to the wrong set,
-  and the keyboard is already closed by the tick. The rest strip stays
-  below and the rest starts as before. The bar returns to the next set
-  when a step is picked (stored on that set), Skip is tapped, any set is
-  picked or an exercise opened, an edit moves sets, or after
-  `WorkoutEditor.effortQuestionTime` (10 s) untouched; any touch on the
-  question restarts that time, and it waits while the help is open (the
-  timer lives in the editor cubit and stops as it closes). The question
-  never shows while edits are refused (finishing), and an answer refused
-  then leaves it open. Editing a past workout never asks on a tick. A selected
-  done set shows its effort row under its values, named: "Set 1 · how hard
-  was it?" (`effortRowSet`); an undone set never has one.
-- **Automatic warm-up sets**: Settings → "Automatic warm-up sets", on by
-  default, also for users who never set it (`settings.autoWarmups`, a
-  missing value reads as on). While on, an exercise logged with a weight
-  and reps (`weight_reps` only: weighted and assisted bodyweight, reps-only
-  and timed exercises get none) starts with two empty warm-ups before its
-  working sets (`withWarmups`) when it enters a workout in progress: a
-  program day started, an exercise added (also to an empty workout, and
-  "start with this exercise"), or swapped in while none of its sets is done
-  (the selection then opens its first warm-up). Swapped for an exercise
-  that takes none, its untouched warm-ups (nothing entered, not done) go
-  (`withoutUnusedWarmups`). The choice and the unit are the user's own
+  ticked in the workout in progress it is asked in one of two places:
+  - **Its tick started a rest** (`restStartedBy`, `askingWithRest`): in
+    the rest strip, under the countdown with +15 s and Skip, one line
+    naming the set with its values and the scale's short question ("Set 1
+    · 80 kg × 8 — how hard?", "… — reps left?", "… — RPE?", the exercise
+    first when the selection is on another one), the "?" help and the
+    steps with Failed; no Skip of its own. The set bar meanwhile shows the
+    next set as usual, so its weight can be set during the rest. It lasts
+    as long as that rest (`restQuestionSet`: the rest still that set's and
+    running, so "+15 s" extends it): gone when the rest runs out or is
+    skipped, when a step is picked (stored on that set; the countdown
+    stays), another set is ticked (its own question replaces it), any set
+    is unticked, any edit moves sets (adding a warm-up before, removing or
+    reordering sets or exercises), or the workout finishes. A rest kept
+    over a relaunch brings no question. The strip takes at most 40 % of
+    the bottom area (`SetBarLayout.maxBelowShare`, the bar keeps the rest):
+    its countdown always shows, the question and the first-use tip scroll
+    under it. Picking
+    another set or opening an exercise leaves it. Opening the help changes
+    nothing; a rest ending meanwhile leaves the sheet open and the
+    question gone. The strip, and so the question, steps aside while the
+    keyboard is up.
+  - **It started none** (rest timer off, a set mid-round in a superset):
+    the set bar becomes the question (`questionSet`): "Set 1 done · 80 kg
+    × 8" ("Drop set 2 done · …", the exercise first when the selection
+    moved on: "Squat · Set 3 done · 100 kg × 5"), the scale's question
+    ("How hard was it?", "How many more reps could you have done?", "How
+    hard was it, from 1 to 10?") with the "?" help, the steps with Failed,
+    and Skip; no fields and no tick, the keyboard already closed by the
+    tick. The bar returns to the next set when a step is picked, Skip is
+    tapped, any set is picked or an exercise opened, an edit moves sets,
+    or after `WorkoutEditor.effortQuestionTime` (20 s) untouched; any
+    touch restarts that time and it waits while the help is open.
+  Neither shows while edits are refused (finishing), and an answer refused
+  then leaves it open. Editing a past workout never asks on a tick. A
+  selected done set shows its effort row under its values, named: "Set 1 ·
+  how hard was it?" (`effortRowSet`); an undone set never has one.
+- **Automatic warm-up sets**: Settings → "Automatic warm-up sets" (its
+  row shows e.g. "Standard · Every exercise") opens a page
+  (`/profile/warmups`) with:
+  - **Scheme**: Off, Light (60 % × 6), Standard (50 % × 8 · 75 % × 4,
+    the default, also for users who never chose), Full (40 % × 8 · 60 % ×
+    5 · 80 % × 2) or Custom; each preset shows its sets. Custom lists its
+    sets, each a percentage (10-95) and reps (1-20) checked as typed with
+    the app's usual "Enter a value from … to …"; an invalid field is not
+    kept until fixed. A set can be removed (not the last) and "Add warm-up
+    set" appends one (up to 5) midway from the last to 90 % (on 5 %) with
+    half its reps (`nextWarmupStep`). Custom starts, the first time, from
+    the scheme chosen then (Standard's sets from Off) and keeps its sets
+    while another scheme is chosen. Sets stay in the order entered (they
+    are a sequence the user builds; nothing re-sorts rows under the
+    finger), and warm-ups follow them by position.
+  - **Which exercises**: every exercise, or the first exercise for each
+    muscle group: an exercise gets warm-ups only when no exercise before
+    it in the workout that is itself done with a weight and reps
+    (`weight_reps`) has the same main muscle (the first of its
+    `mainMuscles`, the 19 muscle groups of the vocabulary; one without any
+    is a group of its own); push-ups before bench press or a plank before
+    loaded core work do not count, a loaded one counts even if its
+    warm-ups were deleted (`warmupsAllowed`). Decided as it enters the workout (a program
+    day in day order, superset members one after the other; one added or
+    swapped in against the exercises before it); reordering later adds or
+    removes nothing (`warmedUp`, `warmedUpAll`).
+  - Rounding stays the fixed 2.5 kg / 5 lb step.
+  Stored as `settings.warmups` (`scheme` code `off`/`light`/`standard`/
+  `full`/`custom`, `custom` [{`percent`, `reps`}], `scope` `every`/
+  `firstPerMuscle`); without it the old `settings.autoWarmups` reads false
+  as Off, true or missing as Standard. `autoWarmups` is still written
+  (false only for Off) so app versions before the schemes keep a matching
+  switch; they ignore `warmups` (unknown keys are not read), and a switch
+  flipped in such a version wins: this app writes both in agreement, so
+  when they disagree an older version wrote last (`autoWarmups` false
+  reads as Off whatever the scheme, true with Off as Standard). Malformed custom sets
+  are dropped or clamped; Custom without sets reads as Standard.
+  Exercises logged with a weight and reps (`weight_reps` only: weighted
+  and assisted bodyweight, reps-only and timed exercises get none) start
+  with one empty warm-up per set of the scheme before their working sets
+  when they enter a workout in progress: a program day started, an
+  exercise added (also to an empty workout, and "start with this
+  exercise"), or swapped in while none of its sets is done (the selection
+  then opens its first warm-up). A swapped-in exercise is judged against
+  the exercises before it: its untouched warm-ups (nothing entered, not
+  done) go when it may have none there (a type that takes none, or the
+  muscle-group rule refusing them; `withoutUnusedWarmups`), and come when
+  the rule grants them. The scheme and the unit are the user's own
   settings: a program day waits for them (up to the catalogue wait); while
   they have not arrived, or cannot be read, nothing gets warm-ups and
-  warm-ups suggest no ramp (never a ramp in a unit not known yet). Never on a past workout
-  (edited or added by hand), never to exercises already in the workout
-  when the setting changes, and none when the exercise already has a
-  warm-up or the two would pass the set limit. There is no "repeat a
-  workout" yet; a workout saved as a program starts as a program day.
-  The warm-ups' values are suggestions, like any set's: warm-up 1 is 50 %
-  of the first working set's weight × 8, warm-up 2 (and any later one)
-  75 % × 4 (`warmupRamp`, `rampedWarmup`), W being that set's weight as
-  typed, else as suggested; rounded to 2.5 kg or 5 lb in the user's unit,
-  never below one step nor above W (a fixed step: the plate inventory is
-  not consulted). They follow W until typed over or ticked; while W is
-  unknown (or 0) they fall back to the usual warm-up rule (the warm-up
-  before it), normally empty. In the workout in progress this ramp applies
-  to every warm-up of a `weight_reps` exercise, added automatically or
-  not; editing a past workout keeps the plain rule. Warm-ups keep their
-  meaning everywhere (no stats, volume, records or "of N", no rest).
+  warm-ups suggest no ramp (never a ramp in a unit not known yet). Never
+  on a past workout (edited or added by hand), never to exercises already
+  in the workout when the setting changes, and none when the exercise
+  already has a warm-up or they would pass the set limit. There is no
+  "repeat a workout" yet; a workout saved as a program starts as a
+  program day. The warm-ups' values are suggestions, like any set's:
+  warm-up n follows the scheme's set n (past the last, the last; with Off,
+  hand-added warm-ups follow Standard's), its percentage of W for its reps
+  (`rampedWarmup`), W being the first working set's weight as typed, else
+  as suggested; rounded to 2.5 kg or 5 lb in the user's unit, never below
+  one step nor above W. They follow W until typed over or ticked; while W
+  is unknown (or 0) they fall back to the usual warm-up rule (the warm-up
+  before it), normally empty. In the workout in progress this applies to
+  every warm-up of a `weight_reps` exercise, added automatically or not;
+  editing a past workout keeps the plain rule. Warm-ups keep their meaning
+  everywhere (no stats, volume, records or "of N", no rest).
 - **Explanations for beginners**: each set type has a one-line description
   under its name in the add-set sheet and the bubble's long-press menu
   (Normal "A regular working set.", Warm-up "A lighter set to get ready.
@@ -301,9 +357,10 @@ from the earlier FitLab app.
   and drop sets.
 - **First-use tips**: three inline banners (Material `MaterialBanner`,
   never modal), each with "Got it", none until the user's settings have
-  arrived: effort, inside the effort question the first time (under the
-  steps, scrolling, so Skip and the steps stay in view), until it is
-  dismissed, an effort is picked or the question skipped; set types, at the top of the add-set sheet, until a
+  arrived: effort, inside the effort question the first time, in the
+  rest strip or the bar (under the steps, so the countdown, Skip and the
+  steps stay in view), until it is dismissed, an effort is picked or the
+  question skipped; set types, at the top of the add-set sheet, until a
   type is picked there; automatic warm-ups, at the top of the workout in
   progress once warm-ups were added to it automatically
   (`warmupsAdded`), until the setting is changed. Dismissing or using the
@@ -876,6 +933,15 @@ from the earlier FitLab app.
   sets and exercises keeps it on its set or exercise (removing the selected
   set selects the one that took its place, else the one before; removing its
   exercise falls back to the next set to do); skipping the rest leaves it.
+  Each time the workout page opens (from the minimized bar, Today's
+  "Resume workout", a lock-screen or notification tap, or a relaunch, when
+  nothing is kept anyway) the pick is forgotten, so the exercise with the
+  next set to do is open on that set (`pageOpened`, called as the page is
+  built anew); pages opened above it (the exercise picker or details, the
+  sheets, the paywall) and closed leave it exactly as it was, as the page
+  is not built anew. An effort question left in the bar (its tick started
+  no rest) is dropped then too; one in the rest strip stays while its rest
+  runs, as the minimized bar shows that rest. The edit page is unaffected.
   The open card shows its sets as **bubbles** (the owner's pick; the
   "selected set only" view was tried and deleted): a wrapping row of round
   bubbles, a warm-up dashed with "W", a drop set "2D", done ones ticked, the
@@ -1396,7 +1462,8 @@ reader has an active entitlement.
 
 **`users/{uid}`**: `profile` (goal, level, daysPerWeek, equipment[], sex,
 birthYear, heightCm, weightKg, targetWeightKg), `settings` (units,
-effortScale, restTimer, autoWarmups, seenTips[], bar and plates, stepGoal,
+effortScale, restTimer, warmups (autoWarmups for older versions), seenTips[],
+bar and plates, stepGoal,
 reminder times,
 trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
 `activeProgram` (`programId`, `weekdays[]` ISO 1-7, `nextDayIndex`,

@@ -13,6 +13,7 @@ Exercise move(
   LoggingType type = LoggingType.weightReps,
   int rest = 90,
   String? name,
+  List<Muscle> muscles = const [Muscle.quads],
 }) => Exercise(
   id: id,
   loggingType: type,
@@ -23,7 +24,7 @@ Exercise move(
   movementPattern: MovementPattern.squat,
   position: Position.standing,
   equipment: const [Equipment.barbell],
-  mainMuscles: const [Muscle.quads],
+  mainMuscles: muscles,
   family: id,
   familyRank: 1,
   defaultRestS: rest,

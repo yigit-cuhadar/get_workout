@@ -152,9 +152,31 @@ bool _rated(Workout? workout, SetRef ref) {
 }
 
 /// The set the set bar asks the effort of, in place of the selected set's
-/// values: [asking] (the working set just ticked) while it is still done.
-SetRef? questionSet(Workout? workout, SetRef? asking) =>
-    asking != null && _rated(workout, asking) ? asking : null;
+/// values: [asking] (the working set just ticked) while it is still done,
+/// when its tick started no rest ([withRest] false); with a rest the rest
+/// strip asks instead, see [restQuestionSet].
+SetRef? questionSet(
+  Workout? workout,
+  SetRef? asking, {
+  required bool withRest,
+}) => !withRest && asking != null && _rated(workout, asking) ? asking : null;
+
+/// The set the rest strip asks the effort of at [now]: [asking] while it is
+/// still done and the rest its tick started ([withRest]) is still its own
+/// ([rest] after it, so "+15 s" keeps it) and runs; it goes with the rest.
+SetRef? restQuestionSet(
+  Workout? workout,
+  SetRef? asking, {
+  required bool withRest,
+  required Rest? rest,
+  required DateTime now,
+}) =>
+    withRest &&
+        asking != null &&
+        _rated(workout, asking) &&
+        restStartedBy(rest, asking, now)
+    ? asking
+    : null;
 
 /// The set whose effort row the set bar shows under its values: the
 /// selected set when it is done and not a warm-up; never an undone set.

@@ -39,6 +39,9 @@ class SetBarLayout extends StatelessWidget {
 
   static const maxBottomShare = 0.6;
 
+  /// Of the bottom, the most [below] takes; the bar keeps the rest.
+  static const maxBelowShare = 0.4;
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) => Column(
@@ -59,7 +62,18 @@ class SetBarLayout extends StatelessWidget {
                   Flexible(
                     child: SetBar(state: state, editor: editor),
                   ),
-                  ?below,
+                  // Laid out first, so it is capped to leave the bar the
+                  // most room; what does not fit scrolls inside it.
+                  if (below case final below?)
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight:
+                            constraints.maxHeight *
+                            maxBottomShare *
+                            maxBelowShare,
+                      ),
+                      child: below,
+                    ),
                 ],
               ),
             ),
@@ -384,7 +398,7 @@ class _EffortRow extends StatelessWidget {
             const WorkoutHelpButton(),
           ],
         ),
-        _EffortChoice(
+        EffortChoice(
           scale: scale,
           chosen: scale.stepOf(exercise.sets[rated.set]),
           onChosen: (step) {
@@ -471,7 +485,7 @@ class _EffortQuestion extends StatelessWidget {
                 ),
               ],
             ),
-            _EffortChoice(
+            EffortChoice(
               scale: scale,
               chosen: scale.stepOf(set),
               onChosen: (step) {
@@ -500,8 +514,9 @@ class _EffortQuestion extends StatelessWidget {
 
 /// The steps of [scale] in a row, [chosen] selected; picking the chosen
 /// one again clears it.
-class _EffortChoice extends StatelessWidget {
-  const _EffortChoice({
+class EffortChoice extends StatelessWidget {
+  const EffortChoice({
+    super.key,
     required this.scale,
     required this.chosen,
     required this.onChosen,

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../notifications/presentation/reminder_settings_tiles.dart';
 import '../../workout/presentation/rest_timer_cubit.dart';
 import '../domain/user_settings.dart';
 import 'settings_cubit.dart';
+import 'warmup_settings_page.dart';
 
 /// Units, workout, reminder and appearance rows. Needs [SettingsCubit] and
 /// [RestTimerCubit] above it, and what [ReminderSettingsTiles] needs.
@@ -64,15 +67,11 @@ class SettingsSection extends StatelessWidget {
               onChanged: (scale) =>
                   cubit.update(settings.copyWith(effortScale: scale)),
             ),
-            SwitchListTile(
+            ListTile(
               title: Text(l10n.settingsAutoWarmups),
-              subtitle: Text(l10n.settingsAutoWarmupsOn),
-              value: settings.autoWarmups,
-              onChanged: (on) {
-                cubit.update(settings.copyWith(autoWarmups: on));
-                // Its tip has nothing left to tell.
-                cubit.tipSeen(Tip.autoWarmups);
-              },
+              subtitle: Text(l10n.warmupSettingsSummary(settings.warmups)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(Routes.warmupSettings),
             ),
             SwitchListTile(
               title: Text(l10n.settingsRestTimer),

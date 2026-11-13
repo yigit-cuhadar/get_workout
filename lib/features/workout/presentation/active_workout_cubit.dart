@@ -56,8 +56,10 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.savedProgramId,
     this.picked,
     this.asking,
+    this.askingWithRest = false,
     this.warmupsAdded = false,
     this.weightUnit,
+    this.warmupSteps = const [],
   });
 
   final WorkoutStatus status;
@@ -99,6 +101,8 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   final SetSelection? picked;
   @override
   final SetRef? asking;
+  @override
+  final bool askingWithRest;
 
   /// Warm-ups were added to this workout automatically, which its tip
   /// tells.
@@ -107,6 +111,10 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   /// The user's, which warm-ups are suggested in (see [suggestedValues]);
   /// null until their settings arrive, and warm-ups suggest no ramp.
   final WeightUnit? weightUnit;
+
+  /// The user's warm-up sets that warm-ups' suggestions follow by position
+  /// ([WarmupSettings.rampSteps]); set with [weightUnit].
+  final List<WarmupStep> warmupSteps;
 
   /// A workout is in progress (or being finished), so another cannot start.
   /// An empty one is not ([Workout.isEmpty]): it is not kept, shows nowhere
@@ -133,7 +141,10 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     workout!.exercises[ref.exercise],
     ref.set,
     _lastSets(ref.exercise),
-    warmupUnit: weightUnit,
+    ramp: switch (weightUnit) {
+      final unit? => (unit: unit, steps: warmupSteps),
+      null => null,
+    },
   );
 
   ActiveWorkoutState copyWith({
@@ -150,8 +161,10 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     String? Function()? savedProgramId,
     SetSelection? Function()? picked,
     SetRef? Function()? asking,
+    bool? askingWithRest,
     bool? warmupsAdded,
     WeightUnit? Function()? weightUnit,
+    List<WarmupStep>? warmupSteps,
   }) => ActiveWorkoutState(
     status: status ?? this.status,
     workout: workout != null ? workout() : this.workout,
@@ -168,8 +181,10 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
         : this.savedProgramId,
     picked: picked != null ? picked() : this.picked,
     asking: asking != null ? asking() : this.asking,
+    askingWithRest: askingWithRest ?? this.askingWithRest,
     warmupsAdded: warmupsAdded ?? this.warmupsAdded,
     weightUnit: weightUnit != null ? weightUnit() : this.weightUnit,
+    warmupSteps: warmupSteps ?? this.warmupSteps,
   );
 
   @override
@@ -187,8 +202,10 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     savedProgramId,
     picked,
     asking,
+    askingWithRest,
     warmupsAdded,
     weightUnit,
+    warmupSteps,
   ];
 }
 
@@ -286,7 +303,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   static const catalogueWait = Duration(seconds: 10);
 
   @override
-  bool get addsWarmups => _settings?.autoWarmups ?? false;
+  WarmupSettings? get warmupSettings => _settings?.warmups;
 
   @override
   Map<String, Exercise> get knownExercises => switch (_catalogue.state) {
@@ -311,8 +328,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
               _settings = settings;
               _restTimer = settings.restTimer;
               if (!ready.isCompleted) ready.complete(settings);
-              if (settings.weightUnit != state.weightUnit) {
-                emit(state.copyWith(weightUnit: () => settings.weightUnit));
+              final steps = settings.warmups.rampSteps;
+              if (settings.weightUnit != state.weightUnit ||
+                  steps != state.warmupSteps) {
+                emit(
+                  state.copyWith(
+                    weightUnit: () => settings.weightUnit,
+                    warmupSteps: steps,
+                  ),
+                );
               }
             },
             // The settings feature logs it; the last known ones stay, and
@@ -381,9 +405,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       startedAt: now,
       name: name,
       exercises: [
-        switch (editing.exerciseFor(exercise, language)) {
-          final added when addsWarmups => withWarmups(added),
-          final added => added,
+        switch ((editing.exerciseFor(exercise, language), warmupSettings)) {
+          (final added, final settings?) => warmedUp(added, const [], settings),
+          (final added, null) => added,
         },
       ],
     ),
@@ -450,7 +474,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         dayIndex: dayIndex,
         catalogue: catalogue,
         language: language,
-        warmups: settings?.autoWarmups ?? false,
+        warmups: settings?.warmups,
       ),
       allowEmpty: false,
     );
@@ -481,6 +505,23 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     );
     _keep();
     return true;
+  }
+
+  /// The workout page opened, anew after it was left: what the user picked
+  /// before goes, so the next set to do is selected, and so does a question
+  /// left in the bar (its tick started no rest); one in the rest strip
+  /// stays with its rest.
+  void pageOpened() {
+    final dropsQuestion = state.asking != null && !state.askingWithRest;
+    if (dropsQuestion) pauseAsking();
+    if (state.picked == null && !dropsQuestion) return;
+    emit(
+      state.copyWith(
+        picked: () => null,
+        invalidSet: () => null,
+        asking: dropsQuestion ? () => null : null,
+      ),
+    );
   }
 
   /// Ends the open workout when the user leaves it while it is empty; one
@@ -732,6 +773,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         status: WorkoutStatus.none,
         localUnreadable: state.localUnreadable,
         weightUnit: state.weightUnit,
+        warmupSteps: state.warmupSteps,
       ),
     );
     unawaited(_sync(uid));
@@ -794,13 +836,14 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     _keep();
   }
 
-  /// A new pick drops the message of a set that could not be ticked.
+  /// A new pick drops the message of a set that could not be ticked, and
+  /// the effort question in the bar; the rest strip's stays.
   @override
   void emitPicked(SetSelection? picked) => emit(
     state.copyWith(
       picked: () => picked,
       invalidSet: () => null,
-      asking: () => null,
+      asking: state.askingWithRest ? null : () => null,
     ),
   );
 
@@ -808,7 +851,22 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   bool get asksEffort => true;
 
   @override
-  void emitAsking(SetRef? asking) => emit(state.copyWith(asking: () => asking));
+  void emitAsking(SetRef? asking) => emit(
+    state.copyWith(
+      asking: () => asking,
+      askingWithRest:
+          asking != null && restStartedBy(state.rest, asking, _clock()),
+    ),
+  );
+
+  /// The set the rest strip asks the effort of now; see [restQuestionSet].
+  SetRef? get restQuestionRef => restQuestionSet(
+    state.workout,
+    state.asking,
+    withRest: state.askingWithRest,
+    rest: state.rest,
+    now: _clock(),
+  );
 
   @override
   void noteWarmupsAdded() {

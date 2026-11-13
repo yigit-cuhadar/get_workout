@@ -24,10 +24,17 @@ abstract interface class EditedWorkout {
   /// null follows the next set to do. See [EditedSelection.selection].
   SetSelection? get picked;
 
-  /// The working set just ticked whose effort the set bar asks, until it
-  /// is answered or skipped, any set is picked, sets move, or
-  /// [effortQuestionTime] passes; see [questionSet].
+  /// The working set just ticked whose effort is asked: in the rest strip
+  /// while the rest its tick started runs ([askingWithRest], see
+  /// [restQuestionSet]), else in the set bar until answered, skipped, a set
+  /// is picked or [effortQuestionTime] passes (see [questionSet]). Any
+  /// answer, another tick, unticking it or an edit that moves sets ends
+  /// either.
   SetRef? get asking;
+
+  /// Whether the tick of [asking] started a rest, so the rest strip asks
+  /// for as long as it runs; see [restStartedBy].
+  bool get askingWithRest;
 
   /// The stats of the workout's exercises that have arrived.
   Map<String, ExerciseStats?> get stats;
@@ -48,7 +55,8 @@ extension EditedSelection on EditedWorkout {
 
   /// The set the set bar asks the effort of instead of showing the selected
   /// set; see [questionSet].
-  SetRef? get questionRef => questionSet(workout, asking);
+  SetRef? get questionRef =>
+      questionSet(workout, asking, withRest: askingWithRest);
 
   /// The set whose effort row shows under the selected set's values; see
   /// [effortRowSet].
@@ -93,25 +101,27 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   /// The live exercises by id, for alternatives.
   Map<String, Exercise> get knownExercises;
 
-  /// Whether exercises added or swapped in start [withWarmups].
-  bool get addsWarmups;
+  /// The warm-ups exercises added or swapped in start with (see
+  /// [warmedUp]); null for none.
+  WarmupSettings? get warmupSettings;
 
   /// Keyed by set and drop (null for the set's own weight).
   final _retyped = RetypedWeights<(SetRef, int?)>();
 
   /// How long the set bar asks the effort of a set just ticked when left
-  /// alone.
-  static const effortQuestionTime = Duration(seconds: 10);
+  /// alone, when its tick started no rest.
+  static const effortQuestionTime = Duration(seconds: 20);
 
   /// Ends the effort question after [effortQuestionTime].
   Timer? _questionTimer;
 
-  /// Asks the effort of [ref], or of none, for [effortQuestionTime].
+  /// Asks the effort of [ref], or of none: with the rest its tick started,
+  /// else in the bar for [effortQuestionTime].
   void _ask(SetRef? ref) {
     _questionTimer?.cancel();
     _questionTimer = null;
     if (state.asking != ref) emitAsking(ref);
-    if (ref != null) {
+    if (ref != null && !state.askingWithRest) {
       _questionTimer = Timer(effortQuestionTime, () {
         if (!isClosed && state.asking == ref) emitAsking(null);
       });
@@ -162,10 +172,14 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     final before = state.workout;
     final current = state.selection;
     final room = WorkoutLimits.maxExercises - (before?.exercises.length ?? 0);
-    final added = [
+    final fresh = [
       for (final exercise in exercises.take(room))
-        _warmedUp(editing.exerciseFor(exercise, language)),
+        editing.exerciseFor(exercise, language),
     ];
+    final settings = warmupSettings;
+    final added = settings == null
+        ? fresh
+        : warmedUpAll(fresh, before?.exercises ?? const [], settings);
     _editExercises(
       (list) => [...list, ...added],
       select: (after) => before == null
@@ -188,15 +202,23 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     );
   }
 
-  /// Its untouched warm-ups go when the new exercise takes none (see
-  /// [withoutUnusedWarmups]); one without a done set gets warm-ups as one
+  /// Its untouched warm-ups go when the new exercise may have none there
+  /// (see [warmupsAllowed], [withoutUnusedWarmups]); one without a done set gets warm-ups as one
   /// added would. When that changes its sets, it opens on its first undone.
   void swapExercise(int index, Exercise exercise, String language) {
     final before = state.workout?.exercises.elementAtOrNull(index);
     if (before == null || !canEdit) return;
     final swapped = editing.swapExercise(before, exercise, language);
-    final kept = withoutUnusedWarmups(before, swapped);
-    final fitted = before.doneSets.isEmpty ? _warmedUp(kept) : kept;
+    final settings = warmupSettings;
+    final earlier = state.workout!.exercises.take(index).toList();
+    final kept = withoutUnusedWarmups(
+      before,
+      swapped,
+      allowed: warmupsAllowed(swapped, earlier, settings),
+    );
+    final fitted = before.doneSets.isEmpty && settings != null
+        ? warmedUp(kept, earlier, settings)
+        : kept;
     final resized = fitted.sets.length != swapped.sets.length;
     final current = state.selection;
     _retyped.clear();
@@ -210,9 +232,6 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     );
     if (fitted.sets.length > kept.sets.length) noteWarmupsAdded();
   }
-
-  WorkoutExercise _warmedUp(WorkoutExercise exercise) =>
-      addsWarmups ? withWarmups(exercise) : exercise;
 
   /// [to] is where the exercise lands; see [grouping.moveItem].
   void moveExercise(int from, int to) {

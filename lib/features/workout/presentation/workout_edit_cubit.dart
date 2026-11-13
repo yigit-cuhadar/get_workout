@@ -6,6 +6,7 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
+import '../../settings/domain/user_settings.dart';
 import '../domain/exercise_stats.dart';
 import '../domain/history_usecases.dart';
 import '../domain/set_logging.dart';
@@ -76,6 +77,9 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
   /// Never: see [WorkoutEditCubit.asksEffort].
   @override
   SetRef? get asking => null;
+
+  @override
+  bool get askingWithRest => false;
 
   /// A stored workout has nothing to compare with, so no last time is shown.
   @override
@@ -320,7 +324,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
 
   /// A past workout is logged as it was done.
   @override
-  bool get addsWarmups => false;
+  WarmupSettings? get warmupSettings => null;
 
   /// A new pick drops the message of a set that could not be ticked.
   @override
@@ -335,7 +339,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
   @override
   void emitAsking(SetRef? asking) {}
 
-  /// Never: see [addsWarmups].
+  /// Never: see [warmupSettings].
   @override
   void noteWarmupsAdded() {}
 
