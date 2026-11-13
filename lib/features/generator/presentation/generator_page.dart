@@ -5,6 +5,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/question_page.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/domain/vocabulary.dart';
@@ -78,79 +79,37 @@ class _QuestionsViewState extends State<_QuestionsView> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final cubit = context.read<GeneratorQuestionsCubit>();
     return BlocBuilder<GeneratorQuestionsCubit, GeneratorQuestionsState>(
       builder: (context, state) {
-        final info = l10n.generatorQuestionInfo(state.step);
         final answers = state.answers;
-        final first = state.step.index == 0;
-        // The route itself always pops (tab re-tap, back swipe); the
-        // buttons step back through the questions.
-        return Scaffold(
-          appBar: AppBar(
-            leading: first ? null : BackButton(onPressed: cubit.back),
-            title: Text(l10n.generatorTitle),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(Gap.xs),
-              child: LinearProgressIndicator(
-                value: (state.step.index + 1) / GeneratorStep.values.length,
-              ),
-            ),
+        final step = state.step.index;
+        final count = GeneratorStep.values.length;
+        // The route itself always pops (tab re-tap, back swipe, Back on the
+        // first question); Back steps back through the questions.
+        return QuestionScaffold(
+          step: step,
+          count: count,
+          progress: l10n.questionProgress(step + 1, count),
+          onBack: step == 0 ? null : cubit.back,
+          body: QuestionLayout(
+            key: ValueKey(state.step),
+            caption: l10n.generatorTitle,
+            title: l10n.generatorQuestion(state.step),
+            info: l10n.generatorQuestionInfo(state.step),
+            answer: _Answer(state),
           ),
-          body: ListView(
-            padding: const EdgeInsets.symmetric(vertical: Gap.md),
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: Text(
-                  l10n.generatorQuestion(state.step),
-                  style: theme.textTheme.headlineSmall,
+          action: state.isLast
+              ? ForgeButton(
+                  label: l10n.generatorCreate,
+                  onPressed: state.answered && answers != null && !_previewing
+                      ? () => _preview(answers)
+                      : null,
+                )
+              : ForgeButton(
+                  label: l10n.generatorNext,
+                  onPressed: state.answered ? cubit.next : null,
                 ),
-              ),
-              if (info != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, 0),
-                  child: Text(info, style: theme.textTheme.bodyMedium),
-                ),
-              const SizedBox(height: Gap.md),
-              _Answer(state),
-            ],
-          ),
-          bottomNavigationBar: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(Gap.md),
-              child: Row(
-                children: [
-                  if (!first) ...[
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: cubit.back,
-                        child: Text(l10n.generatorBack),
-                      ),
-                    ),
-                    const SizedBox(width: Gap.sm),
-                  ],
-                  Expanded(
-                    child: state.isLast
-                        ? ForgeButton(
-                            label: l10n.generatorCreate,
-                            onPressed:
-                                state.answered &&
-                                    answers != null &&
-                                    !_previewing
-                                ? () => _preview(answers)
-                                : null,
-                          )
-                        : ForgeButton(
-                            label: l10n.generatorNext,
-                            onPressed: state.answered ? cubit.next : null,
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         );
       },
     );
@@ -168,20 +127,20 @@ class _Answer extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<GeneratorQuestionsCubit>();
     return switch (state.step) {
-      GeneratorStep.goal => _Choice(
+      GeneratorStep.goal => ChoiceAnswer(
         values: Goal.values,
         selected: state.goal,
         title: l10n.goalName,
         onChanged: cubit.setGoal,
       ),
-      GeneratorStep.level => _Choice(
+      GeneratorStep.level => ChoiceAnswer(
         values: Level.values,
         selected: state.level,
         title: l10n.levelName,
         subtitle: l10n.levelInfo,
         onChanged: cubit.setLevel,
       ),
-      GeneratorStep.days => _Choice(
+      GeneratorStep.days => ChoiceAnswer(
         values: [
           for (
             var days = GeneratorLimits.minDays;
@@ -194,13 +153,17 @@ class _Answer extends StatelessWidget {
         title: l10n.profileDays,
         onChanged: cubit.setDays,
       ),
-      GeneratorStep.session => _Choice(
+      GeneratorStep.session => ChoiceAnswer(
         values: GeneratorLimits.sessionMinutes,
         selected: state.sessionMinutes,
         title: l10n.generatorMinutes,
         onChanged: cubit.setSessionMinutes,
       ),
-      GeneratorStep.equipment => _EquipmentAnswer(state.equipment),
+      GeneratorStep.equipment => EquipmentAnswer(
+        owned: state.equipment,
+        onPreset: cubit.applyPreset,
+        onToggle: cubit.toggleEquipment,
+      ),
       GeneratorStep.focus => ChoiceSection<Muscle>(
         title: l10n.generatorFocusCount(
           state.focus.length,
@@ -215,14 +178,14 @@ class _Answer extends StatelessWidget {
         onToggle: cubit.toggleFocus,
       ),
       GeneratorStep.excluded => _ExcludedAnswer(state.excluded),
-      GeneratorStep.easyArea => _Choice<EasyArea?>(
+      GeneratorStep.easyArea => ChoiceAnswer<EasyArea?>(
         values: const [null, ...EasyArea.values],
         selected: state.easyArea,
         title: (area) =>
             area == null ? l10n.generatorAreaNone : l10n.easyAreaName(area),
         onChanged: cubit.setEasyArea,
       ),
-      GeneratorStep.split => _Choice<TrainingSplit?>(
+      GeneratorStep.split => ChoiceAnswer<TrainingSplit?>(
         values: const [null, ...TrainingSplit.values],
         selected: state.split,
         title: (split) =>
@@ -241,90 +204,6 @@ class _Answer extends StatelessWidget {
         onChanged: cubit.setSplit,
       ),
     };
-  }
-}
-
-/// One answer of [values]. Null may be one of them, e.g. "none".
-class _Choice<T> extends StatelessWidget {
-  const _Choice({
-    required this.values,
-    required this.selected,
-    required this.title,
-    required this.onChanged,
-    this.subtitle,
-    this.enabled,
-  });
-
-  final List<T> values;
-  final T? selected;
-  final String Function(T value) title;
-  final String? Function(T value)? subtitle;
-  final bool Function(T value)? enabled;
-  final ValueChanged<T> onChanged;
-
-  @override
-  Widget build(BuildContext context) => RadioGroup<T>(
-    groupValue: selected,
-    // Nothing is toggleable, so a null value is the answer "none".
-    onChanged: (value) => onChanged(value as T),
-    child: Column(
-      children: [
-        for (final value in values)
-          RadioListTile<T>(
-            value: value,
-            enabled: enabled?.call(value) ?? true,
-            title: Text(title(value)),
-            subtitle: switch (subtitle?.call(value)) {
-              final text? => Text(text),
-              null => null,
-            },
-          ),
-      ],
-    ),
-  );
-}
-
-class _EquipmentAnswer extends StatelessWidget {
-  const _EquipmentAnswer(this.owned);
-
-  final Set<Equipment>? owned;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final cubit = context.read<GeneratorQuestionsCubit>();
-    final owned = this.owned;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-          child: Wrap(
-            spacing: Gap.sm,
-            runSpacing: Gap.sm,
-            children: [
-              for (final preset in EquipmentProfile.values)
-                ChoiceChip(
-                  label: Text(l10n.presetName(preset)),
-                  selected:
-                      owned != null &&
-                      owned.length == preset.equipment.length &&
-                      owned.containsAll(preset.equipment),
-                  onSelected: (_) => cubit.applyPreset(preset),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: Gap.md),
-        for (final item in Equipment.values)
-          if (item != Equipment.bodyweight)
-            CheckboxListTile(
-              value: owned?.contains(item) ?? false,
-              title: Text(l10n.equipmentName(item)),
-              onChanged: (_) => cubit.toggleEquipment(item),
-            ),
-      ],
-    );
   }
 }
 
@@ -363,7 +242,7 @@ class _ExcludedAnswer extends StatelessWidget {
             ),
           ),
         Padding(
-          padding: const EdgeInsets.all(Gap.md),
+          padding: const EdgeInsets.only(top: Gap.md),
           child: OutlinedButton.icon(
             icon: const Icon(Icons.add),
             label: Text(l10n.generatorExcludedAdd),

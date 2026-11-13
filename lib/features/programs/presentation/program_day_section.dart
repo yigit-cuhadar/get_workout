@@ -47,6 +47,80 @@ class ProgramDaySection extends StatelessWidget {
   }
 }
 
+/// One day of a program as a card: its name, exercise count and estimate,
+/// opening to its exercises when [open]. With [onStart], ▶ starts it.
+/// Which days are open is the page's own view state.
+class ProgramDayCard extends StatelessWidget {
+  const ProgramDayCard({
+    super.key,
+    required this.day,
+    required this.index,
+    required this.open,
+    required this.onToggle,
+    this.onStart,
+  });
+
+  final ProgramDay day;
+  final int index;
+  final bool open;
+  final VoidCallback onToggle;
+  final VoidCallback? onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final onStart = this.onStart;
+    final empty = day.items.isEmpty;
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ListTile(
+            title: Text(
+              l10n.dayName(day, index),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            subtitle: empty
+                ? null
+                : Text(
+                    l10n.programDaySummary(
+                      day.items.length,
+                      l10n.estimateText(estimateDay(day)),
+                    ),
+                  ),
+            trailing: empty
+                ? null
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (onStart != null)
+                        IconButton(
+                          tooltip: l10n.workoutStartThisDay,
+                          icon: const Icon(Icons.play_arrow),
+                          onPressed: onStart,
+                        ),
+                      IconButton(
+                        tooltip: open
+                            ? l10n.programDayHide
+                            : l10n.programDayShow,
+                        icon: Icon(
+                          open ? Icons.expand_less : Icons.expand_more,
+                        ),
+                        onPressed: onToggle,
+                      ),
+                    ],
+                  ),
+            onTap: empty ? null : onToggle,
+          ),
+          if (open) ProgramDayItems(day: day),
+        ],
+      ),
+    );
+  }
+}
+
 /// A program day's exercises, one row each, with sets, rest and group.
 /// With [onExerciseTap], an exercise of the library opens.
 class ProgramDayItems extends StatelessWidget {

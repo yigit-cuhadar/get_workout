@@ -12,6 +12,7 @@ import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_day_section.dart';
 import '../domain/generator_answers.dart';
 import '../domain/program_generator.dart';
+import '../../volume/presentation/volume_charts.dart';
 import 'generator_preview_cubit.dart';
 import 'generator_text.dart';
 
@@ -130,50 +131,120 @@ class _Program extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     return ListView(
-      padding: const EdgeInsets.only(bottom: Gap.md),
+      padding: const EdgeInsets.all(Gap.md),
       children: [
-        ListTile(
-          title: Text(
-            l10n.splitName(program.split),
-            style: theme.textTheme.titleLarge,
-          ),
-          subtitle: Text(
-            l10n.generatorSummary(answers.daysPerWeek, answers.sessionMinutes),
-          ),
+        Text(l10n.splitName(program.split), style: theme.textTheme.titleLarge),
+        Text(
+          l10n.generatorSummary(answers.daysPerWeek, answers.sessionMinutes),
         ),
-        if (program.uncovered.isNotEmpty)
-          ListTile(
-            leading: Icon(
-              Icons.warning_amber_outlined,
-              color: theme.colorScheme.error,
-            ),
-            title: Text(
-              l10n.generatorUncovered(l10n.muscleNames(program.uncovered)),
+        if (program.uncovered.isNotEmpty) ...[
+          const SizedBox(height: Gap.md),
+          Card(
+            margin: EdgeInsets.zero,
+            child: ListTile(
+              leading: Icon(
+                Icons.warning_amber_outlined,
+                color: theme.colorScheme.error,
+              ),
+              title: Text(
+                l10n.generatorUncovered(l10n.muscleNames(program.uncovered)),
+              ),
             ),
           ),
-        ExpansionTile(
-          title: Text(l10n.generatorWeeklySets),
-          subtitle: Text(l10n.generatorWeeklySetsInfo),
-          children: [
-            for (final MapEntry(key: muscle, value: target)
-                in program.targets.entries)
-              ListTile(
-                dense: true,
-                title: Text(l10n.muscleName(muscle)),
-                trailing: Text(
-                  l10n.generatorSetsOfTarget(
-                    formatSets(program.weeklySets[muscle] ?? 0),
-                    target,
-                  ),
+        ],
+        const SizedBox(height: Gap.md),
+        _WeeklySets(program),
+        const SizedBox(height: Gap.md),
+        _Days(program),
+      ],
+    );
+  }
+}
+
+/// Each target muscle's weekly sets as a bar over the reference band, and
+/// against its target for these answers.
+class _WeeklySets extends StatelessWidget {
+  const _WeeklySets(this.program);
+
+  final GeneratedProgram program;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scale = volumeScale(program.weeklySets.values);
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ListTile(
+            title: Text(
+              l10n.generatorWeeklySets,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            subtitle: Text(l10n.generatorWeeklySetsInfo),
+          ),
+          for (final MapEntry(key: muscle, value: target)
+              in program.targets.entries)
+            ListTile(
+              title: Text(l10n.muscleName(muscle)),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: Gap.sm),
+                child: VolumeBandBar(
+                  sets: program.weeklySets[muscle] ?? 0,
+                  scale: scale,
                 ),
               ),
-          ],
-        ),
-        for (final (i, day) in program.days.indexed)
-          ProgramDaySection(
+              trailing: Text(
+                l10n.generatorSetsOfTarget(
+                  formatSets(program.weeklySets[muscle] ?? 0),
+                  target,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The days as cards that open to their exercises, the first one open; so
+/// again for each program Regenerate makes.
+class _Days extends StatefulWidget {
+  const _Days(this.program);
+
+  final GeneratedProgram program;
+
+  @override
+  State<_Days> createState() => _DaysState();
+}
+
+class _DaysState extends State<_Days> {
+  var _open = {0};
+
+  @override
+  void didUpdateWidget(_Days oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.program != oldWidget.program) _open = {0};
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (index, day) in widget.program.days.indexed) ...[
+          if (index > 0) const SizedBox(height: Gap.sm),
+          ProgramDayCard(
             day: ProgramDay(name: l10n.generatedDayName(day), items: day.items),
-            index: i,
+            index: index,
+            open: _open.contains(index),
+            onToggle: () => setState(() {
+              if (!_open.remove(index)) _open.add(index);
+            }),
           ),
+        ],
       ],
     );
   }

@@ -6,6 +6,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/question_page.dart';
 
 import '../../../l10n/app_localizations.dart';
 import 'profile_cubit.dart';
@@ -68,67 +69,28 @@ class _OnboardingView extends StatelessWidget {
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) cubit.back();
           },
-          child: Scaffold(
-            appBar: AppBar(
-              automaticallyImplyLeading: false,
-              leading: BackButton(onPressed: submitted ? null : cubit.back),
-              title: _Progress(step: state.step, count: state.questions.length),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: Gap.md),
-                  child: Text(
-                    l10n.onboardingProgress(
-                      state.step + 1,
-                      state.questions.length,
-                    ),
-                  ),
-                ),
-              ],
+          child: QuestionScaffold(
+            step: state.step,
+            count: state.questions.length,
+            progress: l10n.questionProgress(
+              state.step + 1,
+              state.questions.length,
             ),
-            body: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: ProfileQuestion(
-                      state.question,
-                      key: ValueKey(state.question),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(Gap.md),
-                    child: ForgeButton(
-                      label: l10n.onboardingNext,
-                      loading: submitted,
-                      onPressed: state.canContinue ? cubit.next : null,
-                    ),
-                  ),
-                ],
-              ),
+            onBack: submitted ? null : cubit.back,
+            body: ProfileQuestion(
+              state.question,
+              key: ValueKey(state.question),
+            ),
+            action: ForgeButton(
+              label: l10n.onboardingNext,
+              loading: submitted,
+              onPressed: state.canContinue ? cubit.next : null,
             ),
           ),
         );
       },
     );
   }
-}
-
-/// One segment per question, those up to [step] filled.
-class _Progress extends StatelessWidget {
-  const _Progress({required this.step, required this.count});
-
-  final int step;
-  final int count;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      for (var i = 0; i < count; i++) ...[
-        if (i > 0) const SizedBox(width: Gap.xs),
-        Expanded(child: LinearProgressIndicator(value: i <= step ? 1 : 0)),
-      ],
-    ],
-  );
 }
 
 class _Welcome extends StatelessWidget {
