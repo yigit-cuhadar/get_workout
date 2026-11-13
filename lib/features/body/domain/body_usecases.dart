@@ -5,6 +5,7 @@ import 'package:forge_core/forge_core.dart';
 import '../../profile/domain/profile_usecases.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../profile/domain/user_profile.dart';
+import 'body_chart.dart';
 import 'body_entry.dart';
 import 'body_photo_sync.dart';
 import 'body_photos.dart';
@@ -53,6 +54,27 @@ class NewBodyEntryId {
   final BodyRepository _repository;
 
   String call(String uid) => _repository.newEntryId(uid);
+}
+
+/// What user [String] picked for the Body chart on this device; null until
+/// they pick.
+class LoadBodyChart implements UseCase<BodyChartChoice?, String> {
+  const LoadBodyChart(this._store);
+  final BodyChartStore _store;
+
+  @override
+  Future<Result<BodyChartChoice?>> call(String uid) => _store.load(uid);
+}
+
+typedef BodyChartSave = ({String uid, BodyChartChoice choice});
+
+class SaveBodyChart implements UseCase<void, BodyChartSave> {
+  const SaveBodyChart(this._store);
+  final BodyChartStore _store;
+
+  @override
+  Future<Result<void>> call(BodyChartSave params) =>
+      _store.save(params.uid, params.choice);
 }
 
 /// The files of the photos at those paths that are on this device.

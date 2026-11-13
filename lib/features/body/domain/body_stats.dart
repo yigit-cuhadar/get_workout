@@ -23,22 +23,16 @@ List<WeightPoint> weightSeries(
   ];
 }
 
-/// Whether [entries] have a weight from before [range] starts: weights a
-/// free user is told exist, behind Premium.
-bool hasWeightBefore(
+/// Whether any of [entries] is from before [range] starts: results a free
+/// user is told exist, behind Premium.
+bool hasEntryBefore(
   List<BodyEntry> entries, {
   required StrengthRange range,
   required DateTime now,
 }) {
   final start = range.start(now);
-  return start != null &&
-      entries.any(
-        (entry) => entry.weightKg != null && entry.date.isBefore(start),
-      );
+  return start != null && entries.any((entry) => entry.date.isBefore(start));
 }
-
-/// One entry's body fat.
-typedef BodyFatPoint = ({DateTime date, double percent});
 
 /// The body fat of each of [entries] it can be estimated for, by entry id;
 /// see [entryBodyFat].
@@ -55,38 +49,6 @@ Map<String, double> bodyFatByEntry(
     ).percent,
 };
 
-/// The body fat [percents] (see [bodyFatByEntry]) of [entries] (newest
-/// first) in [range], oldest first.
-List<BodyFatPoint> bodyFatSeries(
-  List<BodyEntry> entries,
-  Map<String, double> percents, {
-  required StrengthRange range,
-  required DateTime now,
-}) {
-  final start = range.start(now);
-  return [
-    for (final entry in entries.reversed)
-      if (percents[entry.id] case final percent?)
-        if (start == null || !entry.date.isBefore(start))
-          (date: entry.date, percent: percent),
-  ];
-}
-
-/// Whether any of [entries] with a body fat in [percents] is from before
-/// [range] starts; see [hasWeightBefore].
-bool hasBodyFatBefore(
-  List<BodyEntry> entries,
-  Map<String, double> percents, {
-  required StrengthRange range,
-  required DateTime now,
-}) {
-  final start = range.start(now);
-  return start != null &&
-      entries.any(
-        (entry) => percents.containsKey(entry.id) && entry.date.isBefore(start),
-      );
-}
-
 /// The local dates of [entries] that are measurement days, not quick
 /// weight logs; for the measurement reminders.
 Set<CalendarDate> measuredDates(List<BodyEntry> entries) => {
@@ -94,13 +56,13 @@ Set<CalendarDate> measuredDates(List<BodyEntry> entries) => {
     if (!entry.isWeightOnly) CalendarDate.of(entry.date.toLocal()),
 };
 
+/// The newest of [entries] (newest first) that has a weight.
+BodyEntry? latestWeighIn(List<BodyEntry> entries) =>
+    entries.where((entry) => entry.weightKg != null).firstOrNull;
+
 /// The newest weight of [entries] (newest first).
-double? latestWeightKg(List<BodyEntry> entries) {
-  for (final entry in entries) {
-    if (entry.weightKg case final kg?) return kg;
-  }
-  return null;
-}
+double? latestWeightKg(List<BodyEntry> entries) =>
+    latestWeighIn(entries)?.weightKg;
 
 /// For each pose, the path of the newest photo of [entries] (newest first)
 /// taken before [date] by an entry other than [excludeId]: the ghost a new

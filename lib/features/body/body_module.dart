@@ -11,24 +11,28 @@ import 'package:path_provider/path_provider.dart';
 import '../settings/domain/user_settings.dart';
 import 'data/backup_exclusion.dart';
 import 'data/file_backup_queue.dart';
+import 'data/file_body_chart_store.dart';
 import 'data/file_body_photo_store.dart';
 import 'data/firestore_body_repository.dart';
 import 'data/storage_body_photo_backup.dart';
 import 'domain/body_entry.dart';
+import 'domain/body_chart.dart';
 import 'domain/body_photo_sync.dart';
 import 'domain/body_photos.dart';
 import 'domain/body_repository.dart';
 import 'domain/body_usecases.dart';
 import 'domain/measurement_summary.dart';
+import 'presentation/body_chart_cubit.dart';
 import 'presentation/body_list_cubit.dart';
 import 'presentation/measurement_day_cubit.dart';
 import 'presentation/measurement_summary_cubit.dart';
 import 'presentation/weight_form_cubit.dart';
 
 /// Registers the weight log and measurement days. Needs `AuthModule` for
-/// the current user, `ProgramsModule` for `WatchPremium` and
-/// `ProfileModule`, whose use cases keep the profile weight and give the
-/// sex and height for body fat.
+/// the current user, `ProgramsModule` for `WatchPremium`, `ProfileModule`,
+/// whose use cases keep the profile weight and give the sex and height for
+/// body fat, and for the chart `VolumeModule`, `StepsModule` and
+/// `HealthModule`.
 class BodyModule implements FeatureModule {
   const BodyModule();
 
@@ -68,6 +72,11 @@ class BodyModule implements FeatureModule {
         () => FileBackupQueue(getApplicationSupportDirectory),
       )
       ..registerLazySingleton(() => BodyPhotoSync(sl(), sl(), sl(), sl()))
+      ..registerLazySingleton<BodyChartStore>(
+        () => FileBodyChartStore(getApplicationSupportDirectory),
+      )
+      ..registerFactory(() => LoadBodyChart(sl()))
+      ..registerFactory(() => SaveBodyChart(sl()))
       ..registerFactory(() => WatchBodyEntries(sl()))
       // For the measurement reminders.
       ..registerFactory(() => WatchMeasuredDates(sl()))
@@ -99,6 +108,20 @@ class BodyModule implements FeatureModule {
           deleteEntry: sl(),
         ),
       )
+      // One per Body page; the parameter is the locale's first weekday.
+      ..registerFactoryParam<BodyChartCubit, int, void>(
+        (firstWeekday, _) => BodyChartCubit(
+          firstWeekday: firstWeekday,
+          body: sl(),
+          watchAuthUser: sl(),
+          watchPremium: sl(),
+          loadChoice: sl(),
+          saveChoice: sl(),
+          watchVolume: sl(),
+          getStepsAccess: sl(),
+          getDailySteps: sl(),
+        ),
+      )
       // The entry edited (null: a new log) and the weight unit.
       ..registerFactoryParam<WeightFormCubit, BodyEntry?, WeightUnit>(
         (entry, unit) => WeightFormCubit(
@@ -110,8 +133,9 @@ class BodyModule implements FeatureModule {
           initial: entry,
         ),
       )
-      // The id of the entry summed up.
-      ..registerFactoryParam<MeasurementSummaryCubit, String, void>(
+      // The id of the entry summed up; null to choose it, the newest
+      // comparable by default.
+      ..registerFactoryParam<MeasurementSummaryCubit, String?, void>(
         (id, _) => MeasurementSummaryCubit(
           afterId: id,
           watchAuthUser: sl(),

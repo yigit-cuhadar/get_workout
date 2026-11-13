@@ -118,7 +118,7 @@ void main() {
     await pumpEventQueue();
   }
 
-  test('loads the signed-in user\'s entries with a 12-week chart', () async {
+  test('loads the signed-in user\'s entries with a 12-week range', () async {
     await signIn();
     expect(cubit.state.status, BodyListStatus.loading);
 
@@ -127,11 +127,10 @@ void main() {
     expect(cubit.state.status, BodyListStatus.ready);
     expect(cubit.state.entries, [recent, old]);
     expect(cubit.state.range, StrengthRange.weeks12);
-    expect(cubit.state.points, [(date: recent.date, kg: 80.0)]);
   });
 
   test(
-    'a free user is told of older weights; Premium widens the range',
+    'a free user is told of older entries; Premium widens the range',
     () async {
       await signIn();
       await receive([recent, old]);
@@ -145,7 +144,6 @@ void main() {
       premium.controller.add(true);
       await pumpEventQueue();
       expect(cubit.state.range, StrengthRange.all);
-      expect(cubit.state.points, hasLength(2));
       expect(cubit.state.olderLocked, isFalse);
     },
   );
@@ -172,36 +170,14 @@ void main() {
       await signIn();
       await receive([newer, recent, older]);
       expect(cubit.state.bodyFat, isEmpty);
-      expect(cubit.state.bodyFatPoints, isEmpty);
 
       await profile(man);
 
       expect(cubit.state.bodyFat.keys, {'n', 'o'});
       expect(cubit.state.bodyFat['n']!, lessThan(cubit.state.bodyFat['o']!));
-      expect(cubit.state.bodyFatPoints, [
-        (date: newer.date, percent: cubit.state.bodyFat['n']!),
-      ]);
 
       await profile(const UserProfile(sex: Sex.male));
       expect(cubit.state.bodyFat, isEmpty);
-    });
-
-    test('older body fat is behind Premium like weights', () async {
-      await signIn();
-      await profile(man);
-      await receive([newer, older]);
-      premium.controller.add(false);
-      await pumpEventQueue();
-      expect(cubit.state.bodyFatOlderLocked, isTrue);
-
-      premium.controller.add(true);
-      cubit.selectRange(StrengthRange.all);
-      await pumpEventQueue();
-      expect(cubit.state.bodyFatOlderLocked, isFalse);
-      expect(cubit.state.bodyFatPoints.map((point) => point.date), [
-        older.date,
-        newer.date,
-      ]);
     });
 
     test('another user starts without the previous profile', () async {

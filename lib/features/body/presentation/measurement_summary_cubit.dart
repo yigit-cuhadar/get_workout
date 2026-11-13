@@ -18,6 +18,9 @@ enum MeasurementSummaryStatus {
 
   /// The entry does not exist (any more).
   notFound,
+
+  /// Choosing the later day: there are fewer than two measurement days.
+  nothingToCompare,
 }
 
 class MeasurementSummaryState extends Equatable {
@@ -26,6 +29,7 @@ class MeasurementSummaryState extends Equatable {
     this.summary,
     this.baseline = const PreviousDay(),
     this.candidates = const [],
+    this.laterCandidates = const [],
     this.pose,
     this.photoFiles = const {},
   });
@@ -41,6 +45,10 @@ class MeasurementSummaryState extends Equatable {
   /// The earlier measurement days it can be compared with, newest first.
   final List<BodyEntry> candidates;
 
+  /// While choosing the later day, the days it can be: see
+  /// [comparableDays].
+  final List<BodyEntry> laterCandidates;
+
   /// The pose the photos show; null when neither entry has a photo.
   final PhotoPose? pose;
 
@@ -53,6 +61,7 @@ class MeasurementSummaryState extends Equatable {
     summary,
     baseline,
     candidates,
+    laterCandidates,
     pose,
     photoFiles,
   ];
@@ -61,8 +70,10 @@ class MeasurementSummaryState extends Equatable {
 /// One measurement day of whoever is signed in compared with an earlier
 /// one, both followed live with the profile (body fat, target weight):
 /// the previous measurement day unless another [Baseline] is chosen. The
-/// photos of the chosen pose are fetched from the backup when not on this
-/// device.
+/// later day is the entry `afterId`; without one it can be chosen
+/// ([chooseAfter]), and is otherwise, or once the chosen one is gone, the
+/// newest of [comparableDays]. The photos of the chosen pose are fetched
+/// from the backup when not on this device.
 class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
   MeasurementSummaryCubit({
     required this._afterId,
@@ -115,7 +126,7 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
     );
   }
 
-  final String _afterId;
+  final String? _afterId;
   final FindBaseline _findBaseline;
   final RestoreBodyPhoto _restorePhoto;
   final DateTime Function() _clock;
@@ -125,6 +136,7 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
   List<BodyEntry>? _entries;
   UserProfile? _profile;
   Baseline _baseline = const PreviousDay();
+  String? _chosenAfter;
   PhotoPose? _pose;
   Map<String, String> _photoFiles = const {};
 
@@ -138,6 +150,12 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
     _publish();
   }
 
+  /// Compares day [id] with an earlier one, when no day was given.
+  void chooseAfter(String id) {
+    _chosenAfter = id;
+    _publish();
+  }
+
   void selectPose(PhotoPose pose) {
     _pose = pose;
     _publish();
@@ -147,17 +165,29 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
     final entries = _entries;
     final profile = _profile;
     if (entries == null || profile == null) return;
-    final after = entries.where((entry) => entry.id == _afterId).firstOrNull;
+    final later = _afterId == null
+        ? comparableDays(entries)
+        : const <BodyEntry>[];
+    final after = switch (_afterId) {
+      final id? => entries.where((entry) => entry.id == id).firstOrNull,
+      null =>
+        later.where((entry) => entry.id == _chosenAfter).firstOrNull ??
+            later.firstOrNull,
+    };
     if (after == null) {
       emit(
         MeasurementSummaryState(
-          status: MeasurementSummaryStatus.notFound,
+          status: _afterId == null
+              ? MeasurementSummaryStatus.nothingToCompare
+              : MeasurementSummaryStatus.notFound,
           baseline: _baseline,
           pose: _pose,
         ),
       );
       return;
     }
+    // A chosen day that is gone gave the newest.
+    if (after.id != _chosenAfter) _chosenAfter = null;
     final before = _findBaseline(entries, after, _baseline);
     // A chosen day that is gone gave the previous one.
     if (_baseline case ChosenDay(:final id) when before?.id != id) {
@@ -177,6 +207,7 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
         summary: summary,
         baseline: _baseline,
         candidates: baselineCandidates(entries, after),
+        laterCandidates: later,
         pose: pose,
         photoFiles: _photoFiles,
       ),
@@ -208,6 +239,7 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
           summary: state.summary,
           baseline: state.baseline,
           candidates: state.candidates,
+          laterCandidates: state.laterCandidates,
           pose: state.pose,
           photoFiles: _photoFiles,
         ),

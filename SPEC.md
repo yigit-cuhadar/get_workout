@@ -588,15 +588,34 @@ from the earlier FitLab app.
   Both sides of a pair (upper arm, forearm, thigh, calf) that are steps
   share one step with a Left and a Right field, skipped or cleared field
   by field as above; entry and compare show them on one row (L / R).
+- **Body page** (UX pass, 2026-11-13): two views behind one segmented
+  control. Overview: the latest weight and target, one chart, the range
+  picker (12 weeks free), Log weight, Measurement day and the history.
+  The chart shows up to three series picked in "Add to chart": weight,
+  body fat, fat mass, lean mass and every measurement as lines, weekly
+  sets and daily steps (a week's average, today's partial day left out) as
+  bars, plus the target weight line while weight shows. Each series keeps
+  its own scale; tapping a point shows the values of that date. Weekly
+  sets and daily steps are Premium (owner, 2026-11-13): locked in the
+  sheet, never read for a free user, and a stored choice of them is hidden,
+  not deleted. Hidden series do not count toward the three; when Premium
+  returns, the first three in stored order show. While Premium is not yet
+  known they are neither locked nor read. The choice is kept on the device only (owner, 2026-11-13),
+  one JSON file per user in the app support directory, so there is no
+  data model field and a new device starts from the default (weight, and
+  body fat once an entry has one). An unreadable choice file counts as not
+  chosen. Under "All", daily steps go back to the oldest body entry or one
+  year, whichever is older. Compare: the measurement summary's
+  comparison with Previous / First / Other date. `series_chart.dart` is
+  generic; move it to `forge_ui` when that package is next changed.
 - **Body fat** (derived, never stored): US Navy, through the calculators'
   `estimateBodyFat`, from an entry's measurements and the profile's sex
   and height (`entryBodyFat` in `lib/features/body/domain`). Sites: the
   waist is measured at its narrowest and the abdomen at the navel, so men
   need `neck` + `abdomen`, women `neck` + `waist` + `hips`. An entry
   without them, or with values the formula rejects, simply shows none.
-  Shown on the Weight and measurements page as a trend chart under the
-  weight chart (same range picker and 12-weeks-free rule; only once some
-  entry has one), in each history row, on the entry and as a change in
+  Shown on the Weight and measurements page as a series of its chart
+  (see Body page; only once some entry has one), in each history row, on the entry and as a change in
   compare, with one decimal. "Measurements to track" has a "Body fat"
   box: ticked exactly while all its measurements are tracked (nothing
   stored); ticking it ticks them (marked "Part of body fat"), unticking it
@@ -637,11 +656,10 @@ from the earlier FitLab app.
 - **Measurement summary** (`lib/features/body`, planned with the owner):
   one screen, `MeasurementSummaryPage`, titled "Measurement summary" at
   `/progress/body/summary/:id` (opened in place of the flow right after a
-  new measurement day is saved; never after an edit) and "Compare" at
-  `/progress/body/:id/compare` (a measurement day's page, when it has an
-  earlier one, and Progress → "Compare measurement days", the newest
-  measurement day, off with "Needs two measurement days" until there are
-  two). The app-bar compare icon and the old compare page are gone; no
+  new measurement day is saved; never after an edit). The same comparison
+  is the Body page's Compare view (see Body page), which a measurement
+  day's page opens for that day at `/progress/body?compare=<id>` when it
+  has an earlier one. The app-bar compare icon and the old compare page are gone; no
   sharing or export. A measurement day is an entry with measurements or
   photos (quick weight logs are not, as for the reminders). The baseline
   is one of the measurement days dated before the entry: the previous
@@ -1711,7 +1729,7 @@ Group 8, body and extras
 - [x] Cardio — log, list, detail, weekly chart
 - [x] Steps — health permission, today, week and 30-day chart, daily goal
 - [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
-- [x] Measurement summary — one summary/compare screen (baseline choice, body fat and lean mass, changes, target estimate, photo slider), opened after saving a measurement day, from a day's page and from Progress; where-to-measure hints; body-fat box unticks; one waist mapping for body fat and calculators
+- [x] Measurement summary — one summary/compare screen (baseline choice, body fat and lean mass, changes, target estimate, photo slider), opened after saving a measurement day, and as Compare on the Body page and from a measurement day's page; where-to-measure hints; body-fat box unticks; one waist mapping for body fat and calculators
 
 Group 9, launch readiness
 - [x] Onboarding — nine questions, suggested free program
@@ -1729,7 +1747,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Workout, rest — after a set the panel asks the effort (four options in a grid plus Failed, one line of explanation each, Skip) above a slim timer bar; the RPE scale uses the same layout with RPE 6 or less, 7, 8, 9, 10 and Failed. Once answered only the timer bar shows (time, +15 s, Skip); the next set's entry appears when the rest ends or is skipped
 - [x] Progress — one small widget per area, each opening its page: Body (last weight, curve, last body fat, Log weight, Measurement day), the calendar week, weekly volume, strength, cardio, steps with a bar
 - [x] Calendar with workout history — one page: a week strip that opens to the month, then one list by day with workouts, cardio, planned days (with Start) and missed days, Show older workouts; Add past workout in the app bar. Workout history as its own page goes away
-- [ ] Body with Compare — two views, Overview (one chart with up to three series picked from weight, body fat, fat mass, lean mass, each measurement, weekly sets and daily steps, plus a target weight line; Log weight, Measurement day, history) and Compare (Previous / First / Other date, photos slider with poses, body fat, all changes, target weight)
+- [x] Body with Compare — two views, Overview (one chart with up to three series picked from weight, body fat, fat mass, lean mass, each measurement, weekly sets and daily steps, plus a target weight line; Log weight, Measurement day, history) and Compare (Previous / First / Other date, photos slider with poses, body fat, all changes, target weight)
 - [x] Onboarding, birth year — a wheel showing the year only
 - [ ] Steps — today as a ring, the daily goal edited in place (steps of 100, tap the number to type), one chart switching between this week and the last 30 days
 - [ ] Workout summary — one prominent card with the name and four stats, records below, Done and Save as program at the bottom

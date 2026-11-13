@@ -56,6 +56,7 @@ void main() {
   late FakePhotoStore store;
   late FakeBackup backup;
   late BodyPhotoSync sync;
+  late MeasurementSummaryCubit Function(String? afterId) build;
   late MeasurementSummaryCubit cubit;
 
   setUp(() {
@@ -78,8 +79,8 @@ void main() {
           (user) => user == null ? null : (id: user.id, guest: false),
         ),
       );
-    cubit = MeasurementSummaryCubit(
-      afterId: 'd3',
+    build = (afterId) => MeasurementSummaryCubit(
+      afterId: afterId,
       watchAuthUser: WatchAuthUser(auth),
       watchEntries: WatchBodyEntries(repository),
       watchProfile: WatchProfile(profileRepository),
@@ -87,6 +88,7 @@ void main() {
       restorePhoto: RestoreBodyPhoto(sync),
       clock: () => now,
     );
+    cubit = build('d3');
   });
 
   tearDown(() async {
@@ -268,5 +270,53 @@ void main() {
     profiles.add(const UserProfile());
     await pumpEventQueue();
     expect(cubit.state.status, MeasurementSummaryStatus.notFound);
+  });
+
+  group('without a given day', () {
+    setUp(() async {
+      await cubit.close();
+      cubit = build(null);
+    });
+
+    test('compares the newest measurement day with the previous', () async {
+      await load([newest, log, middle, oldest]);
+
+      expect(cubit.state.summary!.after, newest);
+      expect(cubit.state.summary!.before, middle);
+      expect(cubit.state.laterCandidates, [newest, middle]);
+    });
+
+    test('the later day can be chosen; the baseline follows it', () async {
+      await load([newest, log, middle, oldest]);
+      cubit.chooseBaseline(const ChosenDay('d2'));
+
+      cubit.chooseAfter('d2');
+
+      expect(cubit.state.summary!.after, middle);
+      // The chosen day is no longer earlier: back to the previous one.
+      expect(cubit.state.baseline, const PreviousDay());
+      expect(cubit.state.summary!.before, oldest);
+      expect(cubit.state.candidates, [oldest]);
+    });
+
+    test('a chosen day that is gone gives the newest again', () async {
+      await load([newest, middle, oldest]);
+      cubit.chooseAfter('d2');
+
+      entries.add([newest, oldest]);
+      await pumpEventQueue();
+
+      expect(cubit.state.summary!.after, newest);
+      expect(cubit.state.summary!.before, oldest);
+    });
+
+    test('fewer than two measurement days leave nothing to compare', () async {
+      await load([newest, log]);
+      expect(cubit.state.status, MeasurementSummaryStatus.nothingToCompare);
+
+      entries.add([newest, middle]);
+      await pumpEventQueue();
+      expect(cubit.state.status, MeasurementSummaryStatus.ready);
+    });
   });
 }

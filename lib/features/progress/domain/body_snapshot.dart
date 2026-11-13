@@ -4,6 +4,9 @@ import '../../body/domain/body_entry.dart';
 import '../../body/domain/body_stats.dart';
 import '../../strength/domain/strength.dart';
 
+/// One entry's body fat.
+typedef BodyFatPoint = ({DateTime date, double percent});
+
 /// What the Progress tab shows of the body log.
 class BodySnapshot extends Equatable {
   const BodySnapshot({
