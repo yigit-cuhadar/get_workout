@@ -18,23 +18,26 @@ import 'workout_help.dart';
 import 'workout_text.dart';
 
 /// A page logging a workout: [content] above, and at the bottom the
-/// [SetBar], then [below] it (e.g. the rest), then the safe area, on one
-/// surface. The bottom takes at most [maxBottomShare] of the page (of what
-/// the keyboard leaves); the bar's drops and effort row scroll beyond
-/// that, its title, values and tick always show (as the effort question's
-/// set, Skip and steps do, its tip scrolling).
+/// [SetBar] (its set's values only while [entry]), then [below] it (e.g.
+/// the rest), then the safe area, on one surface. The bottom takes at most
+/// [maxBottomShare] of the page (of what the keyboard leaves); the bar's
+/// drops and effort row scroll beyond that, its title, values and tick
+/// always show (as the effort question's set and Skip do, its choices
+/// and tip scrolling). What the bottom leaves goes to [content].
 class SetBarLayout extends StatelessWidget {
   const SetBarLayout({
     super.key,
     required this.content,
     required this.state,
     required this.editor,
+    this.entry = true,
     this.below,
   });
 
   final Widget content;
   final EditedWorkout state;
   final WorkoutEditor<EditedWorkout> editor;
+  final bool entry;
   final Widget? below;
 
   static const maxBottomShare = 0.6;
@@ -60,7 +63,7 @@ class SetBarLayout extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Flexible(
-                    child: SetBar(state: state, editor: editor),
+                    child: SetBar(state: state, editor: editor, entry: entry),
                   ),
                   // Laid out first, so it is capped to leave the bar the
                   // most room; what does not fit scrolls inside it.
@@ -139,14 +142,21 @@ class _RestBelowBarState extends State<RestBelowBar>
 }
 
 /// The selected set of the workout [editor] edits: which one it is, its
-/// values with the suggestion as hint, its drops, its effort when it is
-/// done, its options and the tick; nothing while no set is selected. Right
-/// after a working set is ticked it is [_EffortQuestion] instead.
+/// values in steppers with the suggestion as hint, its drops, its effort
+/// when it is done, its options and the tick; nothing while no set is
+/// selected or not [entry]. Right after a working set is ticked it is
+/// [_EffortQuestion] instead.
 class SetBar extends StatelessWidget {
-  const SetBar({super.key, required this.state, required this.editor});
+  const SetBar({
+    super.key,
+    required this.state,
+    required this.editor,
+    this.entry = true,
+  });
 
   final EditedWorkout state;
   final WorkoutEditor<EditedWorkout> editor;
+  final bool entry;
 
   @override
   Widget build(BuildContext context) {
@@ -167,7 +177,9 @@ class SetBar extends StatelessWidget {
     }
     final selection = state.selection;
     final index = selection?.set;
-    if (selection == null || index == null) return const SizedBox.shrink();
+    if (!entry || selection == null || index == null) {
+      return const SizedBox.shrink();
+    }
     final ref = (exercise: selection.exercise, set: index);
     final exercise = state.workout!.exercises[ref.exercise];
     final set = exercise.sets[ref.set];
@@ -227,46 +239,52 @@ class SetBar extends StatelessWidget {
             ],
           ),
           Row(
+            spacing: Gap.sm,
             children: [
               if (type.logsWeight)
                 Expanded(
-                  child: NumberCell.weight(
-                    key: ValueKey(('weight', ref)),
-                    kg: set.weightKg,
-                    unit: unit,
-                    label: l10n.weightLabel(type, unit),
-                    hint: hint.weightKg == null
-                        ? null
-                        : l10n.weightField(hint.weightKg!, unit),
-                    onChanged: (text) => editor.setWeight(ref, text, unit),
+                  child: _Stepper(
+                    less: l10n.workoutLessWeight,
+                    more: l10n.workoutMoreWeight,
+                    onStep: (steps) => editor.stepWeight(ref, steps, unit),
+                    cell: NumberCell.weight(
+                      key: ValueKey(('weight', ref)),
+                      kg: set.weightKg,
+                      unit: unit,
+                      label: l10n.weightLabel(type, unit),
+                      hint: hint.weightKg == null
+                          ? null
+                          : l10n.weightField(hint.weightKg!, unit),
+                      onChanged: (text) => editor.setWeight(ref, text, unit),
+                    ),
                   ),
                 ),
               Expanded(
                 child: type.isDurationBased
-                    ? NumberCell(
-                        key: ValueKey(('duration', ref)),
-                        value: set.durationS?.toDouble(),
-                        label: l10n.workoutSeconds,
-                        hint: hint.durationS?.toString(),
-                        onChanged: (text) => editor.setDuration(ref, text),
+                    ? _Stepper(
+                        less: l10n.workoutFewerSeconds,
+                        more: l10n.workoutMoreSeconds,
+                        onStep: (steps) => editor.stepDuration(ref, steps),
+                        cell: NumberCell(
+                          key: ValueKey(('duration', ref)),
+                          value: set.durationS?.toDouble(),
+                          label: l10n.workoutSeconds,
+                          hint: hint.durationS?.toString(),
+                          onChanged: (text) => editor.setDuration(ref, text),
+                        ),
                       )
-                    : NumberCell(
-                        key: ValueKey(('reps', ref)),
-                        value: set.reps?.toDouble(),
-                        label: l10n.workoutReps,
-                        hint: hint.reps?.toString(),
-                        onChanged: (text) => editor.setReps(ref, text),
+                    : _Stepper(
+                        less: l10n.workoutFewerReps,
+                        more: l10n.workoutMoreReps,
+                        onStep: (steps) => editor.stepReps(ref, steps),
+                        cell: NumberCell(
+                          key: ValueKey(('reps', ref)),
+                          value: set.reps?.toDouble(),
+                          label: l10n.workoutReps,
+                          hint: hint.reps?.toString(),
+                          onChanged: (text) => editor.setReps(ref, text),
+                        ),
                       ),
-              ),
-              IconButton.filledTonal(
-                tooltip: set.done ? l10n.workoutUntick : l10n.workoutTick,
-                isSelected: set.done,
-                icon: const Icon(Icons.check),
-                selectedIcon: const Icon(Icons.check_circle),
-                onPressed: () {
-                  FocusScope.of(context).unfocus();
-                  editor.toggleDone(ref);
-                },
               ),
             ],
           ),
@@ -277,6 +295,18 @@ class SetBar extends StatelessWidget {
                 color: theme.colorScheme.error,
               ),
             ),
+          const SizedBox(height: Gap.sm),
+          set.done
+              ? OutlinedButton.icon(
+                  icon: const Icon(Icons.check_circle),
+                  label: Text(l10n.workoutUntick),
+                  onPressed: () => _toggle(context, ref),
+                )
+              : FilledButton.icon(
+                  icon: const Icon(Icons.check),
+                  label: Text(l10n.workoutLogSet),
+                  onPressed: () => _toggle(context, ref),
+                ),
           // What does not fit the bar's share of the page scrolls.
           Flexible(
             child: SingleChildScrollView(
@@ -301,6 +331,45 @@ class SetBar extends StatelessWidget {
       ),
     );
   }
+
+  void _toggle(BuildContext context, SetRef ref) {
+    FocusScope.of(context).unfocus();
+    editor.toggleDone(ref);
+  }
+}
+
+/// A set value's [cell] between [−] and [+], which move it a step down
+/// ([onStep] -1) or up (+1); [less] and [more] name them. Tapping the
+/// cell types the value.
+class _Stepper extends StatelessWidget {
+  const _Stepper({
+    required this.cell,
+    required this.less,
+    required this.more,
+    required this.onStep,
+  });
+
+  final Widget cell;
+  final String less;
+  final String more;
+  final ValueChanged<int> onStep;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      IconButton(
+        tooltip: less,
+        icon: const Icon(Icons.remove),
+        onPressed: () => onStep(-1),
+      ),
+      Expanded(child: cell),
+      IconButton(
+        tooltip: more,
+        icon: const Icon(Icons.add),
+        onPressed: () => onStep(1),
+      ),
+    ],
+  );
 }
 
 /// The drops of a drop set, each editable and removable, and adding one.
@@ -412,9 +481,10 @@ class _EffortRow extends StatelessWidget {
 }
 
 /// The bar while it asks the effort of [asked], the working set just
-/// ticked: the set and its values, the question with the help, the steps,
-/// Skip, and the first time its [tip]. No field or tick, so nothing is
-/// logged to the wrong set; any touch keeps the question from timing out.
+/// ticked: which set and its values, the help, Skip, the steps in an
+/// [EffortGrid], and the first time its [tip]. No field or tick, so
+/// nothing is logged to the wrong set; any touch keeps the question from
+/// timing out.
 class _EffortQuestion extends StatelessWidget {
   const _EffortQuestion({
     required this.asked,
@@ -438,7 +508,7 @@ class _EffortQuestion extends StatelessWidget {
     );
     final scale = current.effortScale;
     final workout = state.workout!;
-    final set = workout.exercises[asked.exercise].sets[asked.set];
+    final exercise = workout.exercises[asked.exercise];
     return Listener(
       onPointerDown: (_) => editor.keepAsking(),
       child: Padding(
@@ -450,17 +520,32 @@ class _EffortQuestion extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    l10n.effortDoneText(
-                      workout,
-                      asked,
-                      state.selection,
-                      current.weightUnit,
-                    ),
-                    style: theme.textTheme.titleSmall,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.effortAskTitle(scale, exercise, asked.set),
+                        style: theme.textTheme.titleSmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        l10n.effortAskValues(
+                          workout,
+                          asked,
+                          state.selection,
+                          current.weightUnit,
+                        ),
+                        style: theme.textTheme.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
+                ),
+                WorkoutHelpButton(
+                  onOpen: editor.pauseAsking,
+                  onClosed: editor.keepAsking,
                 ),
                 TextButton(
                   onPressed: () {
@@ -471,44 +556,100 @@ class _EffortQuestion extends StatelessWidget {
                 ),
               ],
             ),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.effortQuestion(scale),
-                    style: theme.textTheme.labelLarge,
-                  ),
-                ),
-                WorkoutHelpButton(
-                  onOpen: editor.pauseAsking,
-                  onClosed: editor.keepAsking,
-                ),
-              ],
-            ),
-            EffortChoice(
-              scale: scale,
-              chosen: scale.stepOf(set),
-              onChosen: (step) {
-                editor.setEffort(asked, step);
-                // Used, so its tip has nothing left to tell.
-                settings.tipSeen(Tip.effort);
-              },
-            ),
-            if (tip)
-              // Below the steps and scrolling, so it never pushes them or
-              // Skip out of the bar's share of the page.
-              Flexible(
-                child: SingleChildScrollView(
-                  child: TipBanner(
-                    text: l10n.tipEffort,
-                    onDismiss: () => settings.tipSeen(Tip.effort),
+            const SizedBox(height: Gap.sm),
+            // Scrolling, so the set and Skip stay in the bar's share of
+            // the page.
+            Flexible(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: Gap.sm),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      EffortGrid(
+                        scale: scale,
+                        chosen: scale.stepOf(exercise.sets[asked.set]),
+                        onChosen: (step) {
+                          editor.setEffort(asked, step);
+                          // Used, so its tip has nothing left to tell.
+                          settings.tipSeen(Tip.effort);
+                        },
+                      ),
+                      if (tip)
+                        TipBanner(
+                          text: l10n.tipEffort,
+                          onDismiss: () => settings.tipSeen(Tip.effort),
+                        ),
+                    ],
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),
     );
+  }
+}
+
+/// The steps of [scale] two by two, each with what it means in one line,
+/// [chosen] selected; the last one alone takes the whole row. Picking the
+/// chosen one again clears it.
+class EffortGrid extends StatelessWidget {
+  const EffortGrid({
+    super.key,
+    required this.scale,
+    required this.chosen,
+    required this.onChosen,
+  });
+
+  final EffortScale scale;
+  final EffortStep? chosen;
+  final ValueChanged<EffortStep?> onChosen;
+
+  @override
+  Widget build(BuildContext context) {
+    final steps = scale.steps;
+    return Column(
+      spacing: Gap.sm,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < steps.length; i += 2)
+          if (i + 1 < steps.length)
+            IntrinsicHeight(
+              child: Row(
+                spacing: Gap.sm,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: _option(context, steps[i])),
+                  Expanded(child: _option(context, steps[i + 1])),
+                ],
+              ),
+            )
+          else
+            _option(context, steps[i]),
+      ],
+    );
+  }
+
+  Widget _option(BuildContext context, EffortStep step) {
+    final l10n = AppLocalizations.of(context);
+    final selected = step == chosen;
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(l10n.effortStepLabel(step, scale)),
+        Text(
+          l10n.effortStepMeaning(step, scale),
+          style: Theme.of(context).textTheme.labelSmall,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+    void pick() => onChosen(selected ? null : step);
+    return selected
+        ? FilledButton.tonal(onPressed: pick, child: content)
+        : OutlinedButton(onPressed: pick, child: content);
   }
 }
 

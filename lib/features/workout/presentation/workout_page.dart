@@ -21,6 +21,7 @@ import 'active_workout_cubit.dart';
 import 'elapsed_text.dart';
 import 'exercise_cards.dart';
 import 'rest_strip.dart';
+import 'rest_timer_cubit.dart';
 import 'set_bar.dart';
 import 'workout_editor_view.dart';
 import 'workout_help.dart';
@@ -104,6 +105,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
 enum _WorkoutAction { discard }
 
 /// The exercises above the set bar, then the rest; see [SetBarLayout].
+/// After a tick that starts a rest, the bar shows only the effort question
+/// until the rest is over (see [ActiveWorkoutState.entryWaitsForRest]).
 class _ActiveWorkout extends StatelessWidget {
   const _ActiveWorkout(this.state);
   final ActiveWorkoutState state;
@@ -117,6 +120,9 @@ class _ActiveWorkout extends StatelessWidget {
     final seen = context.select(
       (SettingsCubit cubit) =>
           cubit.state.loaded ? cubit.state.settings.seenTips : null,
+    );
+    final resting = context.select(
+      (RestTimerCubit timer) => timer.state.phase == RestPhase.running,
     );
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
@@ -162,6 +168,7 @@ class _ActiveWorkout extends StatelessWidget {
         body: SetBarLayout(
           state: state,
           editor: cubit,
+          entry: !(state.entryWaitsForRest && resting),
           below: const RestBelowBar(child: RestStrip()),
           content: CustomScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,

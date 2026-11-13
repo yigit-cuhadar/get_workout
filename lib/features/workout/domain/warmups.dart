@@ -90,12 +90,9 @@ WorkoutExercise withoutUnusedWarmups(
   );
 }
 
-/// The steps a warm-up's weight is rounded to in [unit], in kg: 2.5 kg or
-/// 5 lb.
-double warmupStepKg(WeightUnit unit) => unit.toKg(switch (unit) {
-  WeightUnit.kg => 2.5,
-  WeightUnit.lb => 5,
-});
+/// The steps a warm-up's weight is rounded to in [unit], in kg: its
+/// [WeightUnitConversion.weightStep].
+double warmupStepKg(WeightUnit unit) => unit.toKg(unit.weightStep);
 
 /// Warm-up [position] (0 for the first) of an exercise whose first working
 /// set lifts [workingKg], as [steps] have it (past the last, the last): its

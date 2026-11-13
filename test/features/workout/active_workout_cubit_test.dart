@@ -814,59 +814,76 @@ void main() {
       return cubit;
     }
 
-    group('with a rest, in the rest strip', () {
-      test('asks about that set while the bar shows the next', () async {
+    group('with a rest', () {
+      test('asks about that set while the next waits for the rest', () async {
         final cubit = await withSquat();
         cubit.toggleDone(first);
         expect(cubit.state.rest?.after, first);
-        expect(cubit.restQuestionRef, first);
-        expect(cubit.state.questionRef, isNull);
+        expect(cubit.state.questionRef, first);
         expect(cubit.state.selection, second);
+        expect(cubit.state.entryWaitsForRest, isTrue);
         await cubit.close();
       });
 
-      test('an answer lands on that set and ends it', () async {
+      test('an answer lands on that set; the rest alone goes on', () async {
         final cubit = await withSquat();
         cubit
           ..toggleDone(first)
           ..setEffort(first, const EffortStep.reserve(2));
         final sets = cubit.state.workout!.exercises[0].sets;
         expect((sets[0].rir, sets[1].rir), (2, null));
-        expect(cubit.restQuestionRef, isNull);
+        expect(cubit.state.questionRef, isNull);
         expect(cubit.state.rest, isNotNull);
+        expect(cubit.state.entryWaitsForRest, isTrue);
         await cubit.close();
       });
 
-      test('it goes with the rest: run out or skipped', () async {
-        final cubit = await withSquat();
-        cubit.toggleDone(first);
-        clock = clock.add(const Duration(seconds: 91));
-        expect(cubit.restQuestionRef, isNull);
-        clock = now;
-        expect(cubit.restQuestionRef, first);
-        cubit.skipRest();
-        expect(cubit.restQuestionRef, isNull);
-        await cubit.close();
-      });
-
-      test('+15 s keeps it as long', () async {
+      test('skipping it leaves the rest alone too', () async {
         final cubit = await withSquat();
         cubit
           ..toggleDone(first)
-          ..extendRest();
-        clock = clock.add(const Duration(seconds: 100));
-        expect(cubit.restQuestionRef, first);
+          ..skipEffort();
+        expect(cubit.state.questionRef, isNull);
+        expect(cubit.state.rest, isNotNull);
+        expect(cubit.state.entryWaitsForRest, isTrue);
         await cubit.close();
       });
 
-      test('picking another set or exercise keeps it', () async {
+      test('it outlasts the rest, run out or skipped', () async {
+        final cubit = await withSquat();
+        cubit.toggleDone(first);
+        clock = clock.add(const Duration(seconds: 91));
+        expect(cubit.state.questionRef, first);
+        clock = now;
+        cubit.skipRest();
+        expect(cubit.state.rest, isNull);
+        expect(cubit.state.questionRef, first);
+        cubit.skipEffort();
+        expect(cubit.state.questionRef, isNull);
+        await cubit.close();
+      });
+
+      test('picking a set ends it and shows that set at once', () async {
         final cubit = await withSquat();
         cubit
           ..addExercises([bench], 'en')
           ..toggleDone(first)
-          ..selectSet((exercise: 1, set: 0))
-          ..openExercise(0);
-        expect(cubit.restQuestionRef, first);
+          ..selectSet((exercise: 1, set: 0));
+        expect(cubit.state.questionRef, isNull);
+        expect(cubit.state.entryWaitsForRest, isFalse);
+        expect(cubit.state.selection, (exercise: 1, set: 0));
+        expect(cubit.state.rest, isNotNull);
+        await cubit.close();
+      });
+
+      test('adding a set shows it at once', () async {
+        final cubit = await withSquat();
+        cubit
+          ..toggleDone(first)
+          ..setEffort(first, const EffortStep.reserve(2))
+          ..addSet(0, SetType.normal);
+        expect(cubit.state.entryWaitsForRest, isFalse);
+        expect(cubit.state.selection, (exercise: 0, set: 2));
         await cubit.close();
       });
 
@@ -875,9 +892,9 @@ void main() {
         cubit
           ..toggleDone(first)
           ..toggleDone(second);
-        expect(cubit.restQuestionRef, second);
+        expect(cubit.state.questionRef, second);
         cubit.addSet(0, SetType.warmup);
-        expect(cubit.restQuestionRef, isNull);
+        expect(cubit.state.questionRef, isNull);
         await cubit.close();
       });
 
@@ -886,26 +903,41 @@ void main() {
         cubit
           ..toggleDone(first)
           ..toggleDone(first);
-        expect(cubit.restQuestionRef, isNull);
+        expect(cubit.state.questionRef, isNull);
         await cubit.close();
       });
-      test('it has no timeout, however long the rest', () {
+
+      test('a set ticked again keeps its effort and is not asked', () async {
+        final cubit = await withSquat();
+        cubit
+          ..toggleDone(first)
+          ..setEffort(first, const EffortStep.reserve(1))
+          ..toggleDone(first)
+          ..toggleDone(first);
+        expect(cubit.state.workout!.exercises[0].sets[0].rir, 1);
+        expect(cubit.state.rest?.after, first);
+        expect(cubit.state.questionRef, isNull);
+        expect(cubit.state.entryWaitsForRest, isTrue);
+        await cubit.close();
+      });
+
+      test('it has no timeout, however long it takes', () {
         fakeAsync((async) {
           late ActiveWorkoutCubit cubit;
           unawaited(withSquat().then((built) => cubit = built));
           async.elapse(const Duration(seconds: 1));
           cubit.toggleDone(first);
           expect(cubit.state.askingWithRest, isTrue);
-          // The injected clock stands still: the rest runs throughout.
           async.elapse(WorkoutEditor.effortQuestionTime * 3);
-          expect(cubit.state.asking, first);
-          expect(cubit.restQuestionRef, first);
+          clock = clock.add(const Duration(minutes: 5));
+          async.elapse(WorkoutEditor.effortQuestionTime * 3);
+          expect(cubit.state.questionRef, first);
           unawaited(cubit.close());
           async.flushMicrotasks();
         });
       });
 
-      test('a rest kept from before a relaunch brings no question', () async {
+      test('a rest kept from before a relaunch asks nothing', () async {
         final draft = workout('w1', [
           exercise('squat', [lift(100, 5), const WorkoutSet()]),
         ]);
@@ -919,8 +951,8 @@ void main() {
           ),
         );
         expect(cubit.state.rest, isNotNull);
-        expect(cubit.restQuestionRef, isNull);
         expect(cubit.state.questionRef, isNull);
+        expect(cubit.state.entryWaitsForRest, isFalse);
         await cubit.close();
       });
 
@@ -939,19 +971,18 @@ void main() {
         expect(cubit.state.rest?.after, (exercise: 1, set: 0));
         cubit.toggleDone(second);
         expect(cubit.state.rest?.after, (exercise: 1, set: 0));
-        expect(cubit.restQuestionRef, isNull);
         expect(cubit.state.questionRef, second);
         await cubit.close();
       });
     });
 
-    group('without a rest, in the bar', () {
+    group('without a rest', () {
       test('asks about that set; skip or a pick ends it', () async {
         final cubit = await withSquat(rests: false);
         cubit.toggleDone(first);
         expect(cubit.state.rest, isNull);
         expect(cubit.state.questionRef, first);
-        expect(cubit.restQuestionRef, isNull);
+        expect(cubit.state.entryWaitsForRest, isFalse);
         cubit.skipEffort();
         expect(cubit.state.questionRef, isNull);
         cubit
@@ -1026,7 +1057,7 @@ void main() {
       await cubit.close();
     });
 
-    test('opening the page again drops a question in the bar only', () async {
+    test('opening the page again drops a question with no rest', () async {
       final bar = await withSquat(rests: false);
       bar.toggleDone(first);
       expect(bar.state.questionRef, first);
@@ -1042,7 +1073,7 @@ void main() {
         final cubit = await withSquat();
         cubit.toggleDone(first);
         cubit.pageOpened();
-        expect(cubit.restQuestionRef, first);
+        expect(cubit.state.questionRef, first);
         await cubit.close();
       },
     );
@@ -1052,7 +1083,6 @@ void main() {
       cubit.toggleDone(first);
       expect(cubit.state.workout!.exercises[0].sets[0].isWarmup, isTrue);
       expect(cubit.state.questionRef, isNull);
-      expect(cubit.restQuestionRef, isNull);
       await cubit.close();
     });
 
@@ -1098,6 +1128,35 @@ void main() {
       await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
       return cubit;
     }
+
+    test('steppers move values from the suggestion while empty', () async {
+      final cubit = await withSquat();
+      // The program asks 100 kg × 5.
+      cubit
+        ..stepWeight(first, 1, WeightUnit.kg)
+        ..stepReps(first, -1);
+      var set = cubit.state.workout!.exercises.first.sets.first;
+      expect((set.weightKg, set.reps), (102.5, 4));
+      cubit
+        ..stepWeight(first, -1, WeightUnit.lb)
+        ..stepReps(first, 1);
+      set = cubit.state.workout!.exercises.first.sets.first;
+      expect(WeightUnit.lb.shownFromKg(set.weightKg!), 221);
+      expect(set.reps, 5);
+      await pumpEventQueue();
+      expect(kept()!.exercises.first.sets.first, set);
+      await cubit.close();
+    });
+
+    test('seconds step by one', () async {
+      final cubit = await withSquat();
+      cubit
+        ..addExercises([plank], 'en')
+        ..stepDuration((exercise: 1, set: 0), 1)
+        ..stepDuration((exercise: 1, set: 0), 1);
+      expect(cubit.state.workout!.exercises[1].sets[0].durationS, 2);
+      await cubit.close();
+    });
 
     test('weights are typed in the unit and kept in kg', () async {
       final cubit = await withSquat();

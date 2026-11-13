@@ -21,8 +21,9 @@ class EffortStep extends Equatable {
 
 extension EffortScaleSteps on EffortScale {
   /// Easiest first, [EffortStep.failure] last. By feel: easy (4+ left),
-  /// moderate (2-3), hard (1), max (0); RIR and RPE: every reps in reserve
-  /// from [WorkoutLimits.maxRir] (5+) down to 0.
+  /// moderate (2-3), hard (1), max (0); RIR: every reps in reserve from
+  /// [WorkoutLimits.maxRir] (5+) down to 0; RPE: from RPE 6 or less (4+
+  /// left, stored as 4) up to RPE 10 (0 left).
   List<EffortStep> get steps => [
     ...switch (this) {
       EffortScale.byFeel => const [
@@ -32,12 +33,18 @@ extension EffortScaleSteps on EffortScale {
         EffortStep.reserve(0),
       ],
       EffortScale.rir || EffortScale.rpe => [
-        for (var rir = WorkoutLimits.maxRir; rir >= 0; rir--)
-          EffortStep.reserve(rir),
+        for (var rir = _topRir; rir >= 0; rir--) EffortStep.reserve(rir),
       ],
     },
     EffortStep.failure,
   ];
+
+  /// The most reps in reserve a step of this scale stands for: more show
+  /// as it.
+  int get _topRir => switch (this) {
+    EffortScale.byFeel || EffortScale.rpe => 4,
+    EffortScale.rir => WorkoutLimits.maxRir,
+  };
 
   /// The step [set] shows as on this scale; null without effort. A set to
   /// failure shows failed whatever its rir, as older sets may have one.
@@ -54,12 +61,15 @@ extension EffortScaleSteps on EffortScale {
             : rir == 1
             ? 1
             : 0,
-      EffortScale.rir || EffortScale.rpe => rir.clamp(0, WorkoutLimits.maxRir),
+      EffortScale.rir || EffortScale.rpe => rir.clamp(0, _topRir),
     });
   }
 }
 
 extension SetEffort on WorkoutSet {
+  /// Whether an effort was given, failed included.
+  bool get hasEffort => rir != null || toFailure;
+
   /// This set with [step] as its effort; null clears it.
   WorkoutSet withEffort(EffortStep? step) =>
       copyWith(rir: () => step?.rir, toFailure: step?.failed ?? false);

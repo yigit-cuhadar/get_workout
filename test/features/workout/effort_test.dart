@@ -18,7 +18,9 @@ void main() {
       EffortStep.reserve(0),
       EffortStep.failure,
     ]);
-    expect(EffortScale.rpe.steps.map((s) => s.rir), [5, 4, 3, 2, 1, 0, 0]);
+    expect(EffortScale.rir.steps.map((s) => s.rir), [5, 4, 3, 2, 1, 0, 0]);
+    // RPE 6 or less (4 left and more) up to RPE 10.
+    expect(EffortScale.rpe.steps.map((s) => s.rir), [4, 3, 2, 1, 0, 0]);
   });
 
   test('a picked step reads back as itself on every scale', () {
@@ -51,6 +53,9 @@ void main() {
   test('RIR and RPE show the stored reps in reserve', () {
     expect(EffortScale.rir.stepOf(stored(3)), const EffortStep.reserve(3));
     expect(EffortScale.rpe.stepOf(stored(0)), const EffortStep.reserve(0));
+    expect(EffortScale.rir.stepOf(stored(5)), const EffortStep.reserve(5));
+    // More than 4 left is RPE 6 or less.
+    expect(EffortScale.rpe.stepOf(stored(5)), const EffortStep.reserve(4));
   });
 
   test('older sets: to failure with any rir, or none, shows failed', () {
@@ -59,5 +64,11 @@ void main() {
       expect(scale.stepOf(stored(null, toFailure: true)), EffortStep.failure);
       expect(scale.stepOf(stored(null)), isNull);
     }
+  });
+
+  test('a set has an effort once rated or failed', () {
+    expect(stored(null).hasEffort, isFalse);
+    expect(stored(0).hasEffort, isTrue);
+    expect(stored(null, toFailure: true).hasEffort, isTrue);
   });
 }

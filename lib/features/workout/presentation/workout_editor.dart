@@ -24,16 +24,15 @@ abstract interface class EditedWorkout {
   /// null follows the next set to do. See [EditedSelection.selection].
   SetSelection? get picked;
 
-  /// The working set just ticked whose effort is asked: in the rest strip
-  /// while the rest its tick started runs ([askingWithRest], see
-  /// [restQuestionSet]), else in the set bar until answered, skipped, a set
-  /// is picked or [effortQuestionTime] passes (see [questionSet]). Any
-  /// answer, another tick, unticking it or an edit that moves sets ends
-  /// either.
+  /// The working set just ticked without an effort, whose effort the set
+  /// bar asks (see [questionSet]) until answered, skipped or a set is
+  /// picked; when its tick started no rest ([askingWithRest]), also until
+  /// [WorkoutEditor.effortQuestionTime] passes. Another tick, unticking it
+  /// or an edit that moves sets ends it too.
   SetRef? get asking;
 
-  /// Whether the tick of [asking] started a rest, so the rest strip asks
-  /// for as long as it runs; see [restStartedBy].
+  /// Whether the tick of [asking] started a rest, so the question waits
+  /// for an answer however long it takes; see [restStartedBy].
   bool get askingWithRest;
 
   /// The stats of the workout's exercises that have arrived.
@@ -55,8 +54,7 @@ extension EditedSelection on EditedWorkout {
 
   /// The set the set bar asks the effort of instead of showing the selected
   /// set; see [questionSet].
-  SetRef? get questionRef =>
-      questionSet(workout, asking, withRest: askingWithRest);
+  SetRef? get questionRef => questionSet(workout, asking);
 
   /// The set whose effort row shows under the selected set's values; see
   /// [effortRowSet].
@@ -115,8 +113,8 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   /// Ends the effort question after [effortQuestionTime].
   Timer? _questionTimer;
 
-  /// Asks the effort of [ref], or of none: with the rest its tick started,
-  /// else in the bar for [effortQuestionTime].
+  /// Asks the effort of [ref], or of none: until answered when its tick
+  /// started a rest, else for [effortQuestionTime].
   void _ask(SetRef? ref) {
     _questionTimer?.cancel();
     _questionTimer = null;
@@ -329,6 +327,48 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   void setDuration(SetRef ref, String text) =>
       _editSet(ref, (set, _) => set.copyWith(durationS: () => _whole(text)));
 
+  /// Moves the weight [steps] steps of [unit], from the suggestion while
+  /// it is empty; see [steppedWeightKg].
+  void stepWeight(SetRef ref, int steps, WeightUnit unit) => _editSet(
+    ref,
+    (set, _) => set.copyWith(
+      weightKg: () => steppedWeightKg(
+        set.weightKg,
+        state.suggestion(ref).weightKg,
+        steps,
+        unit,
+      ),
+    ),
+  );
+
+  /// Moves the reps by [steps], from the suggestion while they are empty;
+  /// see [steppedCount].
+  void stepReps(SetRef ref, int steps) => _editSet(
+    ref,
+    (set, _) => set.copyWith(
+      reps: () => steppedCount(
+        set.reps,
+        state.suggestion(ref).reps,
+        steps,
+        WorkoutLimits.maxReps,
+      ),
+    ),
+  );
+
+  /// Moves the seconds by [steps], from the suggestion while they are
+  /// empty; see [steppedCount].
+  void stepDuration(SetRef ref, int steps) => _editSet(
+    ref,
+    (set, _) => set.copyWith(
+      durationS: () => steppedCount(
+        set.durationS,
+        state.suggestion(ref).durationS,
+        steps,
+        WorkoutLimits.maxDurationS,
+      ),
+    ),
+  );
+
   /// Leaving [SetType.drop] removes the drops; only rep-based exercises have
   /// drop sets. A set that becomes or stops being a warm-up moves where
   /// [editing.retypedSetPosition] puts it, the selection following it.
@@ -426,7 +466,8 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
 
   /// Puts [toggled] (see [toggledSet]) in the place of [ref]; ticked done,
   /// the next set to do is selected, see [selectionAfterTick], else [ref].
-  /// A working set ticked done is asked its effort where [asksEffort].
+  /// A working set ticked done without an effort yet (one ticked again
+  /// keeps its own) is asked its effort where [asksEffort].
   void applyToggled(SetRef ref, WorkoutSet toggled) {
     if (!canEdit) return;
     _replaceSet(
@@ -434,7 +475,9 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
       toggled,
       select: (after) => toggled.done ? selectionAfterTick(after, ref) : ref,
     );
-    _ask(asksEffort && toggled.done && !toggled.isWarmup ? ref : null);
+    final ask =
+        asksEffort && toggled.done && !toggled.isWarmup && !toggled.hasEffort;
+    _ask(ask ? ref : null);
   }
 
   void _replaceSet(

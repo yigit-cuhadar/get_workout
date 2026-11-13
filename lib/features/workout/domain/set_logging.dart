@@ -1,5 +1,6 @@
 import '../../exercises/domain/vocabulary.dart';
 import '../../programs/domain/program.dart';
+import '../../settings/domain/user_settings.dart';
 import 'warmups.dart';
 import 'workout.dart';
 
@@ -168,3 +169,18 @@ WorkoutSet? completeSet(
   );
   return validateSet(filled, type).isEmpty ? filled : null;
 }
+
+/// A stepper's [steps] (−1 or +1) applied to a lifted weight of [kg], or
+/// of [hint] while it is empty, else of none: moved by its unit's
+/// [WeightUnitConversion.weightStep] from the weight as [unit] shows it,
+/// kept from 0 to [WorkoutLimits.maxWeightKg].
+double steppedWeightKg(double? kg, double? hint, int steps, WeightUnit unit) {
+  final shown = unit.shownFromKg(kg ?? hint ?? 0);
+  final stepped = unit.toKg(shown + steps * unit.weightStep);
+  return stepped.clamp(0, WorkoutLimits.maxWeightKg);
+}
+
+/// A stepper's [steps] (−1 or +1) applied to reps or seconds of [value],
+/// or of [hint] while it is empty, else of none: kept from 1 to [max].
+int steppedCount(int? value, int? hint, int steps, int max) =>
+    ((value ?? hint ?? 0) + steps).clamp(1, max);

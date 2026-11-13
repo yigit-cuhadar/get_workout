@@ -57,6 +57,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.picked,
     this.asking,
     this.askingWithRest = false,
+    this.entryWaitsForRest = false,
     this.warmupsAdded = false,
     this.weightUnit,
     this.warmupSteps = const [],
@@ -103,6 +104,11 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   final SetRef? asking;
   @override
   final bool askingWithRest;
+
+  /// The last tick started the rest, so the next set's values wait until
+  /// that rest is over: while it runs, the set bar shows nothing but the
+  /// effort question. Picking a set or adding one shows it at once.
+  final bool entryWaitsForRest;
 
   /// Warm-ups were added to this workout automatically, which its tip
   /// tells.
@@ -162,6 +168,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     SetSelection? Function()? picked,
     SetRef? Function()? asking,
     bool? askingWithRest,
+    bool? entryWaitsForRest,
     bool? warmupsAdded,
     WeightUnit? Function()? weightUnit,
     List<WarmupStep>? warmupSteps,
@@ -182,6 +189,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     picked: picked != null ? picked() : this.picked,
     asking: asking != null ? asking() : this.asking,
     askingWithRest: askingWithRest ?? this.askingWithRest,
+    entryWaitsForRest: entryWaitsForRest ?? this.entryWaitsForRest,
     warmupsAdded: warmupsAdded ?? this.warmupsAdded,
     weightUnit: weightUnit != null ? weightUnit() : this.weightUnit,
     warmupSteps: warmupSteps ?? this.warmupSteps,
@@ -203,6 +211,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     picked,
     asking,
     askingWithRest,
+    entryWaitsForRest,
     warmupsAdded,
     weightUnit,
     warmupSteps,
@@ -509,8 +518,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   /// The workout page opened, anew after it was left: what the user picked
   /// before goes, so the next set to do is selected, and so does a question
-  /// left in the bar (its tick started no rest); one in the rest strip
-  /// stays with its rest.
+  /// whose tick started no rest; one whose tick started a rest stays.
   void pageOpened() {
     final dropsQuestion = state.asking != null && !state.askingWithRest;
     if (dropsQuestion) pauseAsking();
@@ -826,26 +834,42 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     if (!canEdit || workout == null) return;
     final changed = change(workout);
     if (changed == workout) return;
+    final (rest, started) = _restAfterEdit(
+      workout,
+      changed,
+      movesSets: movesSets,
+    );
     _emitWorkout(
       changed,
       status: WorkoutStatus.active,
-      rest: () => _restAfterEdit(workout, changed, movesSets: movesSets),
+      rest: () => rest,
       picked: select == null ? state.picked : select(changed),
       keepQuestion: !movesSets,
+      entryWaitsForRest: started || state.entryWaitsForRest,
     );
     _keep();
   }
 
-  /// A new pick drops the message of a set that could not be ticked, and
-  /// the effort question in the bar; the rest strip's stays.
+  /// A new pick drops the message of a set that could not be ticked and
+  /// the effort question, and shows the picked set even while resting.
   @override
   void emitPicked(SetSelection? picked) => emit(
     state.copyWith(
       picked: () => picked,
       invalidSet: () => null,
-      asking: state.askingWithRest ? null : () => null,
+      asking: () => null,
+      entryWaitsForRest: false,
     ),
   );
+
+  /// The set added is shown even while resting.
+  @override
+  void addSet(int index, SetType type) {
+    super.addSet(index, type);
+    if (state.entryWaitsForRest) {
+      emit(state.copyWith(entryWaitsForRest: false));
+    }
+  }
 
   @override
   bool get asksEffort => true;
@@ -859,26 +883,17 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     ),
   );
 
-  /// The set the rest strip asks the effort of now; see [restQuestionSet].
-  SetRef? get restQuestionRef => restQuestionSet(
-    state.workout,
-    state.asking,
-    withRest: state.askingWithRest,
-    rest: state.rest,
-    now: _clock(),
-  );
-
   @override
   void noteWarmupsAdded() {
     if (!state.warmupsAdded) emit(state.copyWith(warmupsAdded: true));
   }
 
-  /// The rest once an edit made [after] of [before]: a set ticked done
-  /// starts the rest [restAfterTick] gives, replacing the running one;
-  /// otherwise the running one goes on, ends when the set that started it
-  /// is no longer done, or forgets that set when the edit [movesSets] (see
-  /// [Rest.followEdit]).
-  Rest? _restAfterEdit(
+  /// The rest once an edit made [after] of [before], and whether the edit
+  /// started it: a set ticked done starts the rest [restAfterTick] gives,
+  /// replacing the running one; otherwise the running one goes on, ends
+  /// when the set that started it is no longer done, or forgets that set
+  /// when the edit [movesSets] (see [Rest.followEdit]).
+  (Rest?, bool) _restAfterEdit(
     Workout before,
     Workout after, {
     required bool movesSets,
@@ -893,10 +908,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         exerciseRestS: (id) => catalogue[id]?.defaultRestS,
       );
       if (duration != null) {
-        return Rest(endsAt: _clock().add(duration), after: ticked);
+        return (Rest(endsAt: _clock().add(duration), after: ticked), true);
       }
     }
-    return state.rest?.followEdit(after, movesSets: movesSets);
+    return (state.rest?.followEdit(after, movesSets: movesSets), false);
   }
 
   /// [picked] is null, the next set to do, for a workout that did not
@@ -907,6 +922,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     Rest? Function()? rest,
     SetSelection? picked,
     bool keepQuestion = false,
+    bool entryWaitsForRest = false,
     bool? warmupsAdded,
   }) {
     emit(
@@ -917,6 +933,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         invalidSet: () => null,
         picked: () => picked,
         asking: keepQuestion ? null : () => null,
+        entryWaitsForRest: entryWaitsForRest,
         warmupsAdded: warmupsAdded,
       ),
     );
