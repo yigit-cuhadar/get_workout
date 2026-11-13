@@ -129,6 +129,7 @@ class _Week extends StatelessWidget {
     final scale = volumeScale(week.sets.values);
     final muscles = week.musclesBySets;
     return ListView(
+      padding: const EdgeInsets.only(bottom: Gap.md),
       children: [
         _VolumeModel(
           week,
@@ -145,16 +146,30 @@ class _Week extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ),
-        for (final muscle in muscles)
-          ListTile(
-            title: Text(l10n.muscleName(muscle)),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: Gap.sm),
-              child: VolumeBandBar(sets: week.setsOf(muscle), scale: scale),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+          child: Card(
+            margin: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (final muscle in muscles)
+                  ListTile(
+                    title: Text(l10n.muscleName(muscle)),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: Gap.sm),
+                      child: VolumeBandBar(
+                        sets: week.setsOf(muscle),
+                        scale: scale,
+                      ),
+                    ),
+                    trailing: Text(l10n.setsText(week.setsOf(muscle))),
+                    onTap: () => _showMuscle(context, muscle),
+                  ),
+              ],
             ),
-            trailing: Text(l10n.setsText(week.setsOf(muscle))),
-            onTap: () => _showMuscle(context, muscle),
           ),
+        ),
       ],
     );
   }
@@ -186,27 +201,40 @@ class _VolumeModelState extends State<_VolumeModel> {
     final l10n = AppLocalizations.of(context);
     final colors = Theme.of(context).colorScheme;
     final week = widget.week;
-    return SizedBox(
-      height: MediaQuery.sizeOf(context).height * _heightRatio,
-      child: switch (context.watch<BodyModelCubit>().state) {
-        BodyModelLoading() => const LoadingView(),
-        BodyModelFailed() => Center(child: Text(l10n.modelLoadFailed)),
-        BodyModelReady(:final model) => ModelViewer(
-          model: model,
-          partColors: {
-            for (final MapEntry(key: muscle, value: sets) in week.sets.entries)
-              for (final mesh in muscle.meshNames)
-                mesh: VolumeZone.of(sets).color(colors),
+    final model = context.watch<BodyModelCubit>().state;
+    // One model, turned by dragging, shows the front and the back.
+    return Column(
+      children: [
+        SizedBox(
+          height: MediaQuery.sizeOf(context).height * _heightRatio,
+          child: switch (model) {
+            BodyModelLoading() => const LoadingView(),
+            BodyModelFailed() => Center(child: Text(l10n.modelLoadFailed)),
+            BodyModelReady(:final model) => ModelViewer(
+              model: model,
+              partColors: {
+                for (final MapEntry(key: muscle, value: sets)
+                    in week.sets.entries)
+                  for (final mesh in muscle.meshNames)
+                    mesh: VolumeZone.of(sets).color(colors),
+              },
+              selectable: (part) => muscleOfMesh(part) != null,
+              onPartTap: (part) {
+                if (muscleOfMesh(part) case final muscle?) {
+                  _showMuscle(context, muscle);
+                }
+              },
+              semanticLabel: widget.semanticLabel,
+            ),
           },
-          selectable: (part) => muscleOfMesh(part) != null,
-          onPartTap: (part) {
-            if (muscleOfMesh(part) case final muscle?) {
-              _showMuscle(context, muscle);
-            }
-          },
-          semanticLabel: widget.semanticLabel,
         ),
-      },
+        if (model is BodyModelReady)
+          Text(
+            l10n.volumeModelHint,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+      ],
     );
   }
 }

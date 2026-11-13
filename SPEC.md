@@ -1574,7 +1574,11 @@ from the earlier FitLab app.
   user's own workouts, so the gate is client-side only. Changing week
   keeps the week before on screen until the next arrives, so the model
   keeps its camera. `WatchWeeklyVolume` with one week is what the Today
-  tab's card calls.
+  tab's card calls. Layout (UX pass, 2026-11-13, variant A): the week
+  switcher, one body model (dragged to turn, so front and back are the
+  same model) with "Drag to turn · tap a muscle" under it once loaded,
+  the legend, then the muscle bars in one card; a muscle opens its sheet
+  as before.
 - **Charts**: `LineChart` (trends, e.g. e1RM) and `BarChart` (zero-based
   daily or weekly values with an optional target line, e.g. steps) live in
   `lib/core` and share `ChartText` and the pure geometry in
@@ -1952,7 +1956,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Ready-made programs — cards with tags; the filters show as chips above the list and open the filters sheet
 - [x] Generator — questions use the onboarding question layout; the preview shows weekly sets as bars and days that collapse, Regenerate and Save fixed at the bottom
 - [x] Cardio — this week's summary on top, the 12-week chart, sessions by week; Log cardio is a full-width button fixed at the bottom
-- [ ] Weekly volume — stays as built with one body model, the legend and the muscle bars
+- [x] Weekly volume — stays as built with one body model, the legend and the muscle bars
 - [x] Remaining pages (strength, calculators, account, sign-in with the Google mark on its button, your profile, warm-up settings, cardio form, workout edit, ready-made program page) keep their structure; their look is settled in the design phase
 
 ## Design
