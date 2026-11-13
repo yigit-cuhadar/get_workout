@@ -12,10 +12,13 @@ void main() {
   late FakePurchasesRepository store;
   late EntitlementCubit entitlement;
   late GoRouter router;
+  late ValueNotifier<int> refresh;
   bool? allowed;
+  var redirectPaywall = false;
 
   setUp(() {
     allowed = null;
+    redirectPaywall = false;
     store = FakePurchasesRepository(
       plans: fakePlans,
       purchaseDelay: Duration.zero,
@@ -34,8 +37,13 @@ void main() {
 
   tearDown(() => entitlement.close());
 
-  Future<void> pump(WidgetTester tester) {
+  Future<void> pump(WidgetTester tester) async {
+    refresh = ValueNotifier(0);
+    addTearDown(refresh.dispose);
     router = GoRouter(
+      // Like the app's: pushes are parsed asynchronously.
+      onEnter: (_, _, _, _) => const Allow(),
+      refreshListenable: refresh,
       routes: [
         GoRoute(
           path: '/',
@@ -48,6 +56,7 @@ void main() {
         ),
         GoRoute(
           path: Routes.paywall,
+          redirect: (_, _) => redirectPaywall ? '/elsewhere' : null,
           builder: (context, _) => Scaffold(
             body: Column(
               children: [
@@ -71,7 +80,7 @@ void main() {
       ],
     );
     addTearDown(router.dispose);
-    return tester.pumpWidget(
+    await tester.pumpWidget(
       BlocProvider.value(
         value: entitlement,
         child: MaterialApp.router(
@@ -81,6 +90,19 @@ void main() {
         ),
       ),
     );
+    // The first location is parsed asynchronously too.
+    await tester.pump();
+  }
+
+  int paywalls() =>
+      openLocations(router.routerDelegate.currentConfiguration)
+          .where((location) => location == Routes.paywall)
+          .length;
+
+  Future<void> free(WidgetTester tester) async {
+    await pump(tester);
+    await tester.runAsync(() => entitlement.identify('u1'));
+    await tester.pumpAndSettle();
   }
 
   Future<void> tap(WidgetTester tester, String text) async {
@@ -162,7 +184,7 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
-    expect(find.text('Buy'), findsOneWidget);
+    expect(paywalls(), 1);
     expect(allowed, isFalse);
 
     tester.state<NavigatorState>(find.byType(Navigator)).pop();
@@ -204,5 +226,54 @@ void main() {
 
     expect(find.text('Buy'), findsOneWidget);
     expect(allowed, isNull);
+  });
+
+  testWidgets('a go before the push is parsed: not allowed, opens again', (
+    tester,
+  ) async {
+    await free(tester);
+
+    final opened = tester.element(find.text('Open')).openPaywall();
+    router.go('/elsewhere');
+    await tester.pumpAndSettle();
+    expect(paywalls(), 0);
+    expect(await opened, isFalse);
+
+    router.go('/');
+    await tester.pumpAndSettle();
+    await tap(tester, 'Open');
+    expect(paywalls(), 1);
+  });
+
+  testWidgets('a redirected push removed by a go: not allowed, opens again', (
+    tester,
+  ) async {
+    await free(tester);
+    redirectPaywall = true;
+
+    await tap(tester, 'Open');
+    expect(find.text('Elsewhere'), findsOneWidget);
+    expect(allowed, isNull);
+    router.go('/');
+    await tester.pumpAndSettle();
+    expect(allowed, isFalse);
+
+    redirectPaywall = false;
+    allowed = null;
+    await tap(tester, 'Open');
+    expect(paywalls(), 1);
+    expect(allowed, isNull);
+  });
+
+  testWidgets('after a refresh, its result is still returned', (tester) async {
+    await free(tester);
+
+    await tap(tester, 'Open');
+    refresh.value++;
+    await tester.pumpAndSettle();
+    expect(paywalls(), 1);
+    await tap(tester, 'Unlocked');
+
+    expect(allowed, isTrue);
   });
 }

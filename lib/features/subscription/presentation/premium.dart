@@ -87,40 +87,76 @@ extension PremiumGate on BuildContext {
 /// call until the paywall has left the page stack.
 final _paywallOpen = Expando<bool>();
 
-/// Pushes the paywall on [router] and completes once it has left the page
-/// stack: with its result when popped, with null when a `go` (a
-/// notification tap, a tab switch, a redirect) removed it, which never
-/// completes the push itself.
+/// Pushes the paywall on [router] and completes once that push has left
+/// the page stack: with its result when popped, with null when a `go` (a
+/// notification tap, a tab switch, a redirect) removed it, or when the push
+/// never reached the stack because a later navigation replaced it before it
+/// was parsed. go_router completes the push itself only on a pop, and not
+/// even then once a refresh has rebuilt the stack.
 Future<bool?> _pushPaywall(GoRouter router) {
+  final provider = router.routeInformationProvider;
   final delegate = router.routerDelegate;
   final closed = Completer<bool?>();
   void close(FutureOr<bool?> result) {
     if (!closed.isCompleted) closed.complete(result);
   }
 
+  // The push's own navigation: set before the push returns, and pending
+  // while it is still the provider's value.
+  final pushed = router.push<bool>(Routes.paywall);
+  final navigation = provider.value.state;
+  final completer = navigation is RouteInformationState
+      ? navigation.completer
+      : null;
+  bool pending() => identical(provider.value.state, navigation);
+
+  // Found by its completer once parsed, then by its page key: a refresh
+  // rebuilds the stack's pushed pages with new completers.
   ImperativeRouteMatch? shown;
   void track() {
-    final match = _paywallIn(delegate.currentConfiguration);
+    final match = _pushedIn(
+      delegate.currentConfiguration.matches,
+      (match) => shown == null
+          ? identical(match.completer, completer)
+          : match.pageKey == shown!.pageKey,
+    );
     if (match != null) {
       shown = match;
     } else if (shown case final gone?) {
-      // A pop completes the push before the page leaves the stack.
+      // A pop completes the page's match before it leaves the stack.
       close(
         gone.completer.isCompleted
-            ? gone.completer.future.then((result) => result as bool?)
+            ? gone.completer.future.then((result) => result == true)
             : null,
       );
+    } else if (!pending()) {
+      close(null);
     }
   }
 
   delegate.addListener(track);
-  // Also completes a push that was redirected and never showed the paywall.
-  unawaited(router.push<bool>(Routes.paywall).then(close));
-  return closed.future.whenComplete(() => delegate.removeListener(track));
+  provider.addListener(track);
+  // Without an `onEnter` or async redirect the push is parsed at once.
+  track();
+  unawaited(pushed.then(close));
+  return closed.future.whenComplete(() {
+    delegate.removeListener(track);
+    provider.removeListener(track);
+  });
 }
 
-/// The paywall's page in [stack], or null while it is not open.
-ImperativeRouteMatch? _paywallIn(RouteMatchList stack) => stack.matches
-    .whereType<ImperativeRouteMatch>()
-    .where((match) => match.matchedLocation == Routes.paywall)
-    .lastOrNull;
+/// The page pushed onto [matches] that [test] picks, also inside a shell.
+ImperativeRouteMatch? _pushedIn(
+  List<RouteMatchBase> matches,
+  bool Function(ImperativeRouteMatch match) test,
+) {
+  for (final match in matches) {
+    final found = switch (match) {
+      ImperativeRouteMatch() when test(match) => match,
+      ShellRouteMatch() => _pushedIn(match.matches, test),
+      _ => null,
+    };
+    if (found != null) return found;
+  }
+  return null;
+}
