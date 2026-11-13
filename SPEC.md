@@ -897,6 +897,14 @@ from the earlier FitLab app.
     weight are asked where first needed (calculators, body). Analytics
     consent is asked after the first finished workout, notifications at the
     first rest as today.
+  - **Workout screen**: today's structure stays (one exercise open, set
+    bubbles, the panel at the bottom). The panel does one job at a time: set
+    entry, or the rest with a large countdown and the effort question under
+    it. A done bubble shows its values under it. Weight and reps have minus
+    and plus steppers; tapping the number opens the keyboard. The set bar's
+    own menu goes (set type and removal stay on the bubble's long-press).
+    Tips appear one at a time. The summary shows the workout's records and
+    its worked muscles on the model.
 - **Workouts on the device**: per user one JSON file
   (`workouts_<uid>.json` in the app's private support directory, versioned)
   holds the workout in progress, finished workouts the server has not
