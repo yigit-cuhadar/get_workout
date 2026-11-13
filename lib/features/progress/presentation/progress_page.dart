@@ -128,13 +128,6 @@ class _ProgressViewState extends State<_ProgressView> {
                 ],
               ),
             ),
-            // Kept until the calendar holds the history.
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: Text(l10n.progressHistory),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go(Routes.history),
-            ),
             const _CompareTile(),
           ],
         ),
