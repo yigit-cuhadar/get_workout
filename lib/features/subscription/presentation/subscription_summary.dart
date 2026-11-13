@@ -1,7 +1,7 @@
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 
-/// What the Profile tab's Premium row says, most urgent first.
+/// What the Profile tab's Premium card says, most urgent first.
 sealed class SubscriptionSummary extends Equatable {
   const SubscriptionSummary();
 
@@ -25,17 +25,17 @@ sealed class SubscriptionSummary extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Not resolved yet; the row does nothing.
+/// Not resolved yet; the card offers no action.
 final class SubscriptionChecking extends SubscriptionSummary {
   const SubscriptionChecking();
 }
 
-/// Opens the paywall.
+/// Offers the paywall.
 final class SubscriptionFree extends SubscriptionSummary {
   const SubscriptionFree();
 }
 
-/// The rest open the store's manage page.
+/// The rest but [SubscriptionLifetime] offer the store's manage page.
 final class SubscriptionBillingIssue extends SubscriptionSummary {
   const SubscriptionBillingIssue();
 }
