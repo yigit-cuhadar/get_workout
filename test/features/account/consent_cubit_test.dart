@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -119,8 +120,13 @@ void main() {
   late TrackedTelemetry subject;
   setUp(() => subject = TrackedTelemetry(telemetry()));
 
+  late ValueNotifier<bool> deleting;
+  setUp(() => deleting = ValueNotifier(false));
+
   ConsentCubit build() => ConsentCubit(
     watchAuthUser: WatchAuthUser(auth),
+    getCurrentUser: GetCurrentUser(auth),
+    deletionUnderway: deleting,
     watchConsent: WatchAnalyticsConsent(consents),
     saveConsent: SaveAnalyticsConsent(consents),
     followUser: FollowAnalyticsUser(subject),
@@ -135,6 +141,7 @@ void main() {
   }
 
   Future<void> signIn(AuthUser? user) async {
+    when(() => auth.currentUser).thenReturn(user);
     users.add(user);
     await settle();
   }
@@ -228,6 +235,53 @@ void main() {
     },
   );
 
+  test('the deleted user\'s vanished answer neither asks nor applies, and '
+      'the next guest is asked once the server says so', () async {
+    final cubit = build();
+    await signIn(guestA);
+    await answer('a', null);
+    expect(cubit.state.unanswered, isTrue);
+    history.clear();
+
+    deleting.value = true;
+    await settle();
+    expect(cubit.state, const ConsentState());
+    // The server deleted A's document.
+    await answer('a', null);
+    expect(cubit.state.unanswered, isFalse);
+    expect(history, isEmpty);
+
+    // Signed out before the deletion ends; A is not followed again.
+    when(() => auth.currentUser).thenReturn(null);
+    deleting.value = false;
+    await settle();
+    expect(cubit.state, const ConsentState());
+
+    await signIn(guestB);
+    await answer('b', null);
+    expect(cubit.state.uid, 'b');
+    expect(cubit.state.unanswered, isTrue);
+    await cubit.close();
+  });
+
+  test('a deletion that failed follows the user again', () async {
+    final cubit = build();
+    await signIn(guestA);
+    await answer('a', true);
+
+    deleting.value = true;
+    await settle();
+    expect(cubit.state.loaded, isFalse);
+
+    // Watched afresh, like Firestore's new snapshot stream.
+    stored.remove('a');
+    deleting.value = false;
+    await answer('a', true);
+    expect(cubit.state.consent, isTrue);
+    expect(collecting, isTrue);
+    await cubit.close();
+  });
+
   test('a cached copy without an answer neither asks nor applies', () async {
     final cubit = build();
     await signIn(guestA);
@@ -300,10 +354,25 @@ void main() {
     build: () => build(),
     act: (cubit) async {
       await signIn(guestA);
+      await answer('a', null);
       await cubit.answer(true);
     },
     verify: (_) => verify(() => consents.saveConsent('a', true)).called(1),
   );
+
+  test('an answer given after the user changed is not saved', () async {
+    final cubit = build();
+    await signIn(guestA);
+    await answer('a', null);
+    // A dialog asked A; B signs in before the answer comes.
+    await signIn(guestB);
+    await cubit.answer(true);
+    await signIn(null);
+    await cubit.answer(true);
+
+    verifyNever(() => consents.saveConsent(any(), any()));
+    await cubit.close();
+  });
 
   blocTest<ConsentCubit, ConsentState>(
     'a failed save is reported and the answer stays as stored',
@@ -317,7 +386,7 @@ void main() {
       await cubit.answer(true);
     },
     expect: () => [
-      const ConsentState(stored: (consent: false, fromServer: true)),
+      const ConsentState(uid: 'a', stored: (consent: false, fromServer: true)),
       isA<ConsentState>()
           .having((s) => s.consent, 'consent', false)
           .having((s) => s.failure, 'failure', isA<NetworkFailure>()),

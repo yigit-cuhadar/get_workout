@@ -289,7 +289,8 @@ from the earlier FitLab app.
   unless the user is known to have premium. After onboarding the best
   free recommendation is offered (use it, browse, or Today); with none, or
   the catalogue offline, onboarding lands on Today, and so does signing in
-  from onboarding to an account already onboarded.
+  from onboarding to an account already onboarded, and skipping onboarding
+  ("Skip for now"), which suggests nothing.
   `ProgramsModule` takes the premium status and the premium action as
   parameters, so programs never import the subscription feature; bootstrap
   passes `SubscriptionModule.premiumStatus` (the app-level
@@ -469,8 +470,16 @@ from the earlier FitLab app.
   it shows and locks the capture to portrait. The iPhone 17 family's
   Center Stage front camera is mounted differently; `camera_avfoundation`
   0.11.1 sets a fixed portrait rotation (90°) on the video and photo
-  connections, which is off by 90° for that camera, so its preview and
-  photo may still be sideways there; fixing that needs the plugin. Limits:
+  connections, which is off by 90° for that camera (sideways, stretched
+  preview; flutter/flutter#196204, no fix released). The app overrides it
+  with a patched copy in `third_party/camera_avfoundation` (pristine 0.11.1
+  minus `example/`; every change marked `PATCH` in `DefaultCamera.swift`):
+  on iOS 17+ the fixed angles are applied relative to the video
+  connection's starting `videoRotationAngle`, which Apple sets so the
+  front camera still delivers buffers like earlier iPhones and which is 0
+  on the other cameras, for both the video and the photo connection.
+  Chosen over `RotationCoordinator`, which follows the phone's physical
+  orientation and so cannot honour the portrait lock. Limits:
   weight as the profile (30-300 kg), measurements 10-250 cm; values are
   typed to one decimal in the user's unit, so half a shown lb or inch
   step of slack lets the limits as shown pass (66.1 and 661.4 lb, 3.9 in).
@@ -544,9 +553,14 @@ from the earlier FitLab app.
   latest wins. A yes first deletes the crash reports recorded before it
   and is saved last, so a failure never leaves a saved yes. Asked once the
   server (not a cached copy, which may predate an answer from another
-  device) says there is no answer, in a dialog over the tabs only while
-  they are the top route (never over onboarding, the workout, the paywall
-  or another dialog), with two equal choices and no dismissing; changed
+  device) says there is no answer and the same user's profile is past
+  onboarding (never while a new user's profile loads in the tabs after
+  signing out, deleting the account or switching accounts), in a dialog
+  over the tabs only while they are the top route (never over onboarding,
+  the workout, the paywall or another dialog), with two equal choices and
+  no dismissing. While an account is being deleted (`DeletionUnderway`)
+  its consent is not followed, so the deleted document neither asks nor
+  records an answer; a deletion that failed follows it again. Changed
   with the switch under Profile → Privacy. The settings feature leaves the
   field alone: its writes merge, and `UserSettings` does not carry it.
 - **Privacy policy link**: Profile → Privacy, in the browser.
@@ -597,7 +611,12 @@ from the earlier FitLab app.
 - **Onboarding questions**: goal, level, days per week and equipment need
   an answer to continue. The personal questions (sex, birth year, height,
   weight, target weight) can each be skipped with "Skip this question";
-  "Skip for now" still ends onboarding with whatever was answered.
+  "Skip for now" still ends onboarding with whatever was answered, and
+  lands on Today with no program suggested (the skip is remembered in
+  memory only; a later start with a completed profile never suggests).
+  "I already have an account" shows on the first question for a guest
+  only: once signed in to an account (also a guest just linked to one) it
+  is gone.
 - **Birth year**: a plausibility range (age 13-100), not an age gate. An
   implausible year is only not accepted as an answer; nothing is blocked.
 - **Custom exercises**: ordinary exercises everywhere the catalogue is
@@ -1493,6 +1512,12 @@ Group 9, launch readiness
   exclusion channel. Android manifest drops the camera plugin's
   RECORD_AUDIO and WRITE_EXTERNAL_STORAGE and makes the camera optional
   (`tools:replace`); with the new backup rules, not built yet.
+- `third_party/camera_avfoundation` (patched 0.11.1, see Camera
+  orientation): not yet checked on a device. Drop the copy and its
+  `dependency_overrides` entry once a `camera_avfoundation` release fixes
+  flutter/flutter#196204, after checking the iPhone 17 front camera with
+  it. Until then do not bump `camera` past what 0.11.1 satisfies without
+  re-copying the new release and re-applying the `PATCH` lines.
 - Forge task, a recorded deviation from "generic goes in a package":
   `GhostCamera` (`lib/core/ghost_camera.dart`, free of app code) stays in
   the app for this feature; move it into a forge package with widget tests

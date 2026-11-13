@@ -27,6 +27,9 @@ import 'package:get_workout/features/exercises/presentation/exercises_page.dart'
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:get_workout/features/account/presentation/account_page.dart';
+import 'package:get_workout/features/account/domain/account_usecases.dart';
+import 'package:get_workout/features/account/domain/consent_repository.dart';
+import 'package:get_workout/features/account/presentation/consent_cubit.dart';
 import 'package:get_workout/features/account/presentation/delete_account_cubit.dart';
 import 'package:get_workout/features/body/domain/body_repository.dart';
 import 'package:get_workout/features/body/domain/body_usecases.dart';
@@ -44,6 +47,7 @@ import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:get_workout/features/profile/presentation/onboarding_page.dart';
 import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:get_workout/features/profile/presentation/profile_details_page.dart';
+import 'package:get_workout/features/profile/presentation/profile_form_cubit.dart';
 import 'package:get_workout/features/profile/presentation/profile_page.dart';
 import 'package:get_workout/features/programs/domain/catalogue_program.dart';
 import 'package:get_workout/features/programs/domain/catalogue_repository.dart';
@@ -90,6 +94,10 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 class MockSettingsRepository extends Mock implements SettingsRepository {}
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
+
+class MockConsentRepository extends Mock implements ConsentRepository {}
+
+class MockTelemetry extends Mock implements Telemetry {}
 
 class MockBodyRepository extends Mock implements BodyRepository {}
 
@@ -157,13 +165,19 @@ void main() {
   setUpAll(() {
     registerFallbackValue(const UserProfile());
     registerFallbackValue(<ProfileField>{});
+    registerFallbackValue(<Equipment>{});
   });
 
   late DeletionUnderway deletionUnderway;
 
+  /// A real consent cubit for the consent prompt's tests; otherwise every
+  /// user has answered.
+  ConsentCubit? consent;
+
   setUp(() {
     storedProfile = onboarded;
     deletionUnderway = DeletionUnderway();
+    consent = null;
   });
 
   // Created inside each test so stream events run in the test's fake zone.
@@ -212,6 +226,9 @@ void main() {
     if (!holdCatalogue) exerciseFeed.add([_squat]);
     when(exercises.watchExercises).thenAnswer((_) => exerciseFeed.stream);
     final userLibrary = MockUserLibraryRepository();
+    // Onboarding saves an equipment answer through the library.
+    when(() => userLibrary.saveEquipment(any(), any()))
+        .thenAnswer((_) async => const Ok(null));
     final customExercises = MockCustomExerciseRepository();
     when(() => customExercises.rejectedWrites)
         .thenAnswer((_) => const Stream.empty());
@@ -354,6 +371,7 @@ void main() {
       ..registerFactory(
         () => CompleteOnboarding(profiles, SaveOwnedEquipment(userLibrary)),
       )
+      ..registerLazySingleton(SkippedOnboarding.new)
       ..registerFactory(
         () => UpdateProfile(profiles, SaveOwnedEquipment(userLibrary)),
       );
@@ -408,7 +426,10 @@ void main() {
       providers: [
         BlocProvider.value(value: auth),
         BlocProvider.value(value: settings),
-        answeredConsent(),
+        if (consent case final consent?)
+          BlocProvider.value(value: consent)
+        else
+          answeredConsent(),
         programList(),
         noWorkout(),
         BlocProvider.value(value: profile),
@@ -425,6 +446,7 @@ void main() {
           auth,
           profile,
           deletionUnderway: deletionUnderway,
+          skippedOnboarding: sl(),
         ),
       ),
     ),
@@ -735,11 +757,28 @@ void main() {
       expect(find.byType(OnboardingPage), findsOneWidget);
     });
 
-    testWidgets('skipping completes onboarding and lands on Today', (
-      tester,
-    ) async {
+    testWidgets('skipping completes onboarding and lands on Today, with '
+        'no program suggested', (tester) async {
+      readyMade = [
+        card(
+          'pr_free',
+          goal: Goal.loseFat,
+          equipment: const [Equipment.bodyweight],
+          profile: EquipmentProfile.bodyweight,
+        ),
+      ];
       storedProfile = const UserProfile();
       await startAsGuest(tester);
+      // Answers the free program fits, which finishing would suggest.
+      when(() => profiles.completeOnboarding(any(), any())).thenAnswer((_) {
+        profileStream.add(
+          storedProfile = UserProfile(
+            goal: Goal.loseFat,
+            onboardingCompletedAt: DateTime(2026),
+          ),
+        );
+        return Future.value(const Ok(null));
+      });
 
       await tester.tap(find.text('Lose fat'));
       await tester.pumpAndSettle();
@@ -754,6 +793,7 @@ void main() {
       ).called(1);
       expect(find.byType(TodayPage), findsOneWidget);
       expect(find.byType(OnboardingPage), findsNothing);
+      expect(find.byType(ProgramSuggestionPage), findsNothing);
     });
 
     testWidgets('a fitting free program is suggested after onboarding', (
@@ -768,7 +808,12 @@ void main() {
         ),
         card('pr_paid', premium: true, goal: Goal.loseFat, order: 2),
       ];
-      storedProfile = const UserProfile();
+      storedProfile = const UserProfile(
+        goal: Goal.loseFat,
+        level: Level.beginner,
+        daysPerWeek: 3,
+        equipment: {},
+      );
       await startAsGuest(tester);
       when(() => profiles.completeOnboarding(any(), any())).thenAnswer((_) {
         profileStream.add(
@@ -780,9 +825,16 @@ void main() {
         return Future.value(const Ok(null));
       });
 
-      await tester.tap(find.text('Lose fat'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Skip for now'));
+      // Through every question to the summary, and finished there.
+      for (var i = 0; i < 4; i++) {
+        await tester.tap(find.text('Next'));
+        await tester.pumpAndSettle();
+      }
+      for (var i = 0; i < 5; i++) {
+        await tester.tap(find.text('Skip this question'));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('Start training'));
       await tester.pumpAndSettle();
 
       expect(find.byType(ProgramSuggestionPage), findsOneWidget);
@@ -954,6 +1006,23 @@ void main() {
       expect(find.byType(OnboardingPage), findsOneWidget);
       expect(find.byType(AuthPage), findsNothing);
       expect(find.text('Question 1 of 9'), findsOneWidget);
+      // Signed in already.
+      expect(find.text('I already have an account'), findsNothing);
+    });
+
+    testWidgets('a guest linked to a new account is not offered to sign in', (
+      tester,
+    ) async {
+      storedProfile = const UserProfile();
+      await startAsGuest(tester);
+      expect(find.text('I already have an account'), findsOneWidget);
+
+      // Linking keeps the uid and the guest's unfinished onboarding.
+      users.add(member);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OnboardingPage), findsOneWidget);
+      expect(find.text('I already have an account'), findsNothing);
     });
 
     testWidgets('a personal question can be skipped on its own', (
@@ -1030,6 +1099,102 @@ void main() {
     expect(find.byType(ProfileDetailsPage), findsOneWidget);
     expect(find.text('Get stronger'), findsOneWidget);
     expect(find.byType(NavigationBar), findsOneWidget);
+  });
+
+  group('consent prompt', () {
+    const unanswered = (consent: null, fromServer: true);
+    final dialog = find.text('Help improve GetWorkout?');
+    late MockConsentRepository consents;
+
+    /// Starts as onboarded guest u1, who answered; [answers] are the
+    /// server's answers of the other users (none: not answered).
+    Future<void> start(
+      WidgetTester tester, [
+      Map<String, bool> answers = const {},
+    ]) async {
+      setUpAuth();
+      consents = MockConsentRepository();
+      when(() => consents.watchConsent(any())).thenAnswer((call) {
+        final uid = call.positionalArguments.first as String;
+        return Stream.value(
+          uid == 'u1'
+              ? (consent: true, fromServer: true)
+              : answers.containsKey(uid)
+              ? (consent: answers[uid], fromServer: true)
+              : unanswered,
+        );
+      });
+      when(() => consents.saveConsent(any(), any()))
+          .thenAnswer((_) async => const Ok(null));
+      final telemetry = MockTelemetry();
+      when(() => telemetry.follow(any()))
+          .thenAnswer((_) async => const Ok(null));
+      when(() => telemetry.apply(any(), any()))
+          .thenAnswer((_) async => const Ok(null));
+      consent = ConsentCubit(
+        watchAuthUser: WatchAuthUser(repository),
+        getCurrentUser: GetCurrentUser(repository),
+        deletionUnderway: deletionUnderway,
+        watchConsent: WatchAnalyticsConsent(consents),
+        saveConsent: SaveAnalyticsConsent(consents),
+        followUser: FollowAnalyticsUser(telemetry),
+        applyConsent: ApplyAnalyticsConsent(telemetry),
+      );
+      addTearDown(consent!.close);
+      await pumpApp(tester);
+      users.add(guest);
+      await tester.pumpAndSettle();
+      expect(find.byType(TodayPage), findsOneWidget);
+      expect(dialog, findsNothing);
+    }
+
+    testWidgets('a new guest after sign-out is asked only on Today, once', (
+      tester,
+    ) async {
+      await start(tester);
+      when(() => repository.signInAnonymously()).thenAnswer((_) async {
+        users.add(const AuthUser(id: 'u2', isAnonymous: true));
+        return const Ok(guest);
+      });
+      // The new guest's profile arrives after their consent.
+      storedProfile = null;
+
+      users.add(null);
+      await tester.pumpAndSettle();
+      // Still on the tabs, the new guest's profile loading.
+      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(dialog, findsNothing);
+
+      profileStream.add(const UserProfile());
+      await tester.pumpAndSettle();
+      expect(find.byType(OnboardingPage), findsOneWidget);
+      expect(dialog, findsNothing);
+
+      await tester.tap(find.text('Skip for now'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TodayPage), findsOneWidget);
+      expect(dialog, findsOneWidget);
+
+      await tester.tap(find.text("Don't allow"));
+      await tester.pumpAndSettle();
+      expect(dialog, findsNothing);
+      verify(() => consents.saveConsent('u2', false)).called(1);
+    });
+
+    testWidgets('an account signed in from the tabs is asked once its '
+        'profile shows it onboarded', (tester) async {
+      await start(tester);
+      storedProfile = null;
+
+      users.add(const AuthUser(id: 'u2', email: 'b@c.de'));
+      await tester.pumpAndSettle();
+      expect(dialog, findsNothing);
+
+      profileStream.add(onboarded);
+      await tester.pumpAndSettle();
+      expect(find.byType(TodayPage), findsOneWidget);
+      expect(dialog, findsOneWidget);
+    });
   });
 
   group('pages follow the signed-in user', () {
