@@ -794,7 +794,6 @@
   "profileFeetInches": "{feet} ft {inches} in",
   "@profileFeetInches": {"placeholders": {"feet": {"type": "int"}, "inches": {"type": "String"}}},
   "profileRulerHint": "Drag the ruler, or tap the number to type",
-  "profileClearAnswer": "Clear answer",
   "unitFtIn": "ft in",
 
   "goalBuildMuscle": "Build muscle",

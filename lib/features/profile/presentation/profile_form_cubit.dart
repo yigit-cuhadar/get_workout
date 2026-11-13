@@ -51,9 +51,6 @@ class ProfileFormState extends Equatable {
 
   bool get canContinue => welcome || answers.answered(question);
 
-  /// Editing a personal question can remove its answer.
-  bool get canClear => !onboarding && question.optional;
-
   ProfileFormState copyWith({
     bool? welcome,
     int? step,
@@ -241,13 +238,6 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     } else if (state.onboarding) {
       emit(state.copyWith(welcome: true));
     }
-  }
-
-  /// Removes the answer being edited and saves that.
-  Future<void> clear() async {
-    if (!state.canClear || state.status != ProfileFormStatus.editing) return;
-    emit(state.copyWith(answers: state.answers.without(state.question)));
-    await _submit();
   }
 
   void _show({required int step}) {
