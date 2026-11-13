@@ -296,17 +296,21 @@ class SetBar extends StatelessWidget {
               ),
             ),
           const SizedBox(height: Gap.sm),
-          set.done
-              ? OutlinedButton.icon(
-                  icon: const Icon(Icons.check_circle),
-                  label: Text(l10n.workoutUntick),
-                  onPressed: () => _toggle(context, ref),
-                )
-              : FilledButton.icon(
-                  icon: const Icon(Icons.check),
-                  label: Text(l10n.workoutLogSet),
-                  onPressed: () => _toggle(context, ref),
-                ),
+          // The bar's right padding is narrow for the menu button above.
+          Padding(
+            padding: const EdgeInsets.only(right: Gap.md - Gap.xs),
+            child: set.done
+                ? OutlinedButton.icon(
+                    icon: const Icon(Icons.check_circle),
+                    label: Text(l10n.workoutUntick),
+                    onPressed: () => _toggle(context, ref),
+                  )
+                : FilledButton.icon(
+                    icon: const Icon(Icons.check),
+                    label: Text(l10n.workoutLogSet),
+                    onPressed: () => _toggle(context, ref),
+                  ),
+          ),
           // What does not fit the bar's share of the page scrolls.
           Flexible(
             child: SingleChildScrollView(
