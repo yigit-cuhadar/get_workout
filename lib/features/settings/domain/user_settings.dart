@@ -43,6 +43,12 @@ extension WeightUnitConversion on WeightUnit {
   /// [shown].
   double shownFromKg(double kg) => shown(fromKg(kg));
 
+  /// What lifted weights go up and down by in this unit: 2.5 kg or 5 lb.
+  double get weightStep => switch (this) {
+    WeightUnit.kg => 2.5,
+    WeightUnit.lb => 5,
+  };
+
   /// A lifted weight in this unit as the user sees it. Within two decimals
   /// (the precision weight fields show) it was typed in this unit and shows
   /// as typed; otherwise it was typed in the other unit and shows rounded,

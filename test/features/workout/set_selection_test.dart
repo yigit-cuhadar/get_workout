@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_workout/features/workout/domain/rest.dart';
 import 'package:get_workout/features/workout/domain/set_selection.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 
@@ -306,41 +305,13 @@ void main() {
       ]),
     ]);
 
-    test(
-      'the bar asks about a done working set whose tick started no rest',
-      () {
-        SetRef? asked(SetRef? ref, {bool withRest = false}) =>
-            questionSet(w, ref, withRest: withRest);
-        expect(asked((exercise: 0, set: 1)), (exercise: 0, set: 1));
-        expect(asked((exercise: 0, set: 1), withRest: true), isNull);
-        expect(asked(null), isNull);
-        expect(asked((exercise: 0, set: 0)), isNull);
-        expect(asked((exercise: 0, set: 2)), isNull);
-        expect(asked((exercise: 3, set: 0)), isNull);
-      },
-    );
-
-    test('the rest strip asks while the rest its tick started runs', () {
-      const ref = (exercise: 0, set: 1);
-      final at = DateTime(2026, 11, 11, 18);
-      final rest = Rest(
-        endsAt: at.add(const Duration(seconds: 90)),
-        after: ref,
-      );
-      SetRef? asked(Rest? rest, {DateTime? now, bool withRest = true}) =>
-          restQuestionSet(
-            w,
-            ref,
-            withRest: withRest,
-            rest: rest,
-            now: now ?? at,
-          );
-      expect(asked(rest), ref);
-      expect(asked(rest, withRest: false), isNull);
+    test('the bar asks about a done working set', () {
+      SetRef? asked(SetRef? ref) => questionSet(w, ref);
+      expect(asked((exercise: 0, set: 1)), (exercise: 0, set: 1));
       expect(asked(null), isNull);
-      expect(asked(rest.detached()), isNull);
-      expect(asked(rest, now: rest.endsAt), isNull);
-      expect(asked(rest.extendedAt(at), now: rest.endsAt), ref);
+      expect(asked((exercise: 0, set: 0)), isNull);
+      expect(asked((exercise: 0, set: 2)), isNull);
+      expect(asked((exercise: 3, set: 0)), isNull);
     });
 
     test('the effort row is the selected set when it is done', () {

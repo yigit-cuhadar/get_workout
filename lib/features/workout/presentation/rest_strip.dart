@@ -3,24 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../../settings/domain/user_settings.dart';
-import '../../settings/presentation/settings_cubit.dart';
-import '../domain/effort.dart';
 import '../domain/rest.dart';
-import '../domain/set_selection.dart';
-import '../domain/workout_tips.dart';
 import 'active_workout_cubit.dart';
 import 'rest_timer_cubit.dart';
-import 'set_bar.dart';
-import 'workout_editor.dart';
-import 'workout_help.dart';
 import 'workout_text.dart';
 
-/// The running rest below the workout, with +15 s and Skip and, while it
-/// is the rest of a working set just ticked, the effort question about that
-/// set ([_RestQuestion]); then briefly "Rest over"; nothing otherwise. Asks
-/// once whether to notify when a rest is over. Only this rebuilds as the
-/// seconds pass.
+/// The running rest below the workout, in one slim line: the time left,
+/// +15 s and Skip rest; then briefly "Rest over"; nothing otherwise. The
+/// effort question about the set just ticked is the set bar's, above it.
+/// Asks once whether to notify when a rest is over. Only this rebuilds as
+/// the seconds pass.
 class RestStrip extends StatelessWidget {
   const RestStrip({super.key});
 
@@ -37,51 +29,50 @@ class RestStrip extends StatelessWidget {
           previous.remainingS != current.remainingS,
       builder: (context, state) {
         final workout = context.read<ActiveWorkoutCubit>();
-        final tile = switch (state.phase) {
+        final line = switch (state.phase) {
           RestPhase.none => null,
-          RestPhase.running => ListTile(
-            leading: const Icon(Icons.timer_outlined),
-            title: Text(
-              l10n.restRemaining(
-                l10n.elapsedText(Duration(seconds: state.remainingS)),
+          RestPhase.running => Row(
+            children: [
+              const Icon(Icons.timer_outlined),
+              const SizedBox(width: Gap.sm),
+              Expanded(
+                child: Text(
+                  l10n.restRemaining(
+                    l10n.elapsedText(Duration(seconds: state.remainingS)),
+                  ),
+                ),
               ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextButton(
-                  onPressed: workout.extendRest,
-                  child: Text(l10n.restAdd(restExtension.inSeconds)),
-                ),
-                TextButton(
-                  onPressed: workout.skipRest,
-                  child: Text(l10n.restSkip),
-                ),
-              ],
-            ),
+              TextButton(
+                onPressed: workout.extendRest,
+                child: Text(l10n.restAdd(restExtension.inSeconds)),
+              ),
+              TextButton(
+                onPressed: workout.skipRest,
+                child: Text(l10n.restSkip),
+              ),
+            ],
           ),
-          RestPhase.over => ListTile(
-            leading: const Icon(Icons.timer_off_outlined),
-            title: Text(l10n.restOver),
+          RestPhase.over => Row(
+            children: [
+              const Icon(Icons.timer_off_outlined),
+              const SizedBox(width: Gap.sm),
+              Expanded(child: Text(l10n.restOver)),
+            ],
           ),
         };
-        if (tile == null) return const SizedBox.shrink();
+        if (line == null) return const SizedBox.shrink();
         return Material(
           color: colors.secondaryContainer,
           child: SafeArea(
             top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                tile,
-                // The countdown always shows; the question scrolls in what
-                // the strip's share of the page leaves.
-                if (state.phase == RestPhase.running)
-                  const Flexible(
-                    child: SingleChildScrollView(child: _RestQuestion()),
-                  ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Gap.md,
+                Gap.xs,
+                Gap.xs,
+                Gap.xs,
+              ),
+              child: line,
             ),
           ),
         );
@@ -110,75 +101,6 @@ class RestStrip extends StatelessWidget {
       ),
     );
     await cubit.answerNotify(allow: allow ?? false);
-  }
-}
-
-/// The effort question about the working set whose rest runs (see
-/// [restQuestionSet]): the set and its values with the question, the
-/// help, the steps, and the first time its tip; nothing once answered or
-/// while edits are refused.
-class _RestQuestion extends StatelessWidget {
-  const _RestQuestion();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final settingsState = context.select((SettingsCubit cubit) => cubit.state);
-    final settings = settingsState.settings;
-    final settingsCubit = context.read<SettingsCubit>();
-    return BlocBuilder<ActiveWorkoutCubit, ActiveWorkoutState>(
-      builder: (context, state) {
-        final cubit = context.read<ActiveWorkoutCubit>();
-        final asked = cubit.restQuestionRef;
-        if (asked == null || !cubit.canEdit) return const SizedBox.shrink();
-        final workout = state.workout!;
-        final scale = settings.effortScale;
-        final set = workout.exercises[asked.exercise].sets[asked.set];
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.xs, Gap.sm),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.effortStripQuestion(
-                        scale,
-                        workout,
-                        asked,
-                        state.selection,
-                        settings.weightUnit,
-                      ),
-                      style: Theme.of(context).textTheme.labelLarge,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const WorkoutHelpButton(),
-                ],
-              ),
-              EffortChoice(
-                scale: scale,
-                chosen: scale.stepOf(set),
-                onChosen: (step) {
-                  cubit.setEffort(asked, step);
-                  // Used, so its tip has nothing left to tell.
-                  settingsCubit.tipSeen(Tip.effort);
-                },
-              ),
-              // Below the steps, so it never pushes them or the countdown
-              // out of view.
-              if (effortTipDue(settingsState.loaded ? settings.seenTips : null))
-                TipBanner(
-                  text: l10n.tipEffort,
-                  onDismiss: () => settingsCubit.tipSeen(Tip.effort),
-                ),
-            ],
-          ),
-        );
-      },
-    );
   }
 }
 

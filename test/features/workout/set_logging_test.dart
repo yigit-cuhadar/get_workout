@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
+import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/workout/domain/set_logging.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 
@@ -215,6 +216,47 @@ void main() {
         )),
         isNull,
       );
+    });
+  });
+
+  group('steppers', () {
+    test('a weight moves by 2.5 kg or 5 lb from what is shown', () {
+      const kg = WeightUnit.kg;
+      const lb = WeightUnit.lb;
+      expect(steppedWeightKg(60, null, 1, kg), 62.5);
+      expect(steppedWeightKg(60, null, -1, kg), 57.5);
+      expect(lb.shownFromKg(steppedWeightKg(lb.toKg(135), null, 1, lb)), 140);
+      // 135 lb (61.23 kg) shows as 61 kg: the step starts there.
+      expect(steppedWeightKg(lb.toKg(135), null, 1, kg), 63.5);
+    });
+
+    test('a weight steps to hundredths, without float drift', () {
+      expect(steppedWeightKg(0.28, null, 1, WeightUnit.kg), 2.78);
+      expect(steppedWeightKg(2.78, null, -1, WeightUnit.kg), 0.28);
+    });
+
+    test('an empty weight starts from the suggestion, else from none', () {
+      expect(steppedWeightKg(null, 100, 1, WeightUnit.kg), 102.5);
+      expect(steppedWeightKg(null, null, 1, WeightUnit.kg), 2.5);
+    });
+
+    test('a weight stays within its limits', () {
+      expect(steppedWeightKg(0, null, -1, WeightUnit.kg), 0);
+      expect(steppedWeightKg(1, null, -1, WeightUnit.kg), 0);
+      expect(
+        steppedWeightKg(WorkoutLimits.maxWeightKg, null, 1, WeightUnit.kg),
+        WorkoutLimits.maxWeightKg,
+      );
+    });
+
+    test('reps and seconds move by one, from the suggestion, from 1', () {
+      expect(steppedCount(8, null, 1, 1000), 9);
+      expect(steppedCount(8, 5, -1, 1000), 7);
+      expect(steppedCount(null, 5, 1, 1000), 6);
+      expect(steppedCount(null, null, 1, 1000), 1);
+      expect(steppedCount(null, null, -1, 1000), 1);
+      expect(steppedCount(1, null, -1, 1000), 1);
+      expect(steppedCount(1000, null, 1, 1000), 1000);
     });
   });
 }

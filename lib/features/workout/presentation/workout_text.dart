@@ -130,12 +130,15 @@ extension WorkoutText on AppLocalizations {
     SetType.drop => workoutSetDropHint,
   };
 
-  /// What [step] of [scale] means in words, e.g. `1 rep left`.
+  /// What [step] of [scale] means in one line, e.g. `1 rep left`; the
+  /// scale's easiest step stands for that many reps left or more.
   String effortStepMeaning(EffortStep step, EffortScale scale) {
-    if (step.failed) return helpFailed;
-    if (effortStepHint(step, scale) case final hint?) return hint;
-    return step.rir >= WorkoutLimits.maxRir
-        ? helpRepsLeftPlus(WorkoutLimits.maxRir)
+    if (step.failed) return effortFailedMeaning;
+    if (scale == EffortScale.byFeel && step.rir == 2) {
+      return helpRepsLeftRange(2, 3);
+    }
+    return step == scale.steps.first
+        ? helpRepsLeftPlus(step.rir)
         : helpRepsLeft(step.rir);
   }
 
@@ -149,12 +152,24 @@ extension WorkoutText on AppLocalizations {
         : effortSetName(number);
   }
 
-  /// What the effort question of [scale] asks about the set just done.
-  String effortQuestion(EffortScale scale) => switch (scale) {
-    EffortScale.byFeel => effortQuestionFeel,
-    EffortScale.rir => effortQuestionRir,
-    EffortScale.rpe => effortQuestionRpe,
-  };
+  /// The effort question about set [index] of [exercise] just done, e.g.
+  /// `How hard was set 3?`, `RPE of drop set 2?`.
+  String effortAskTitle(
+    EffortScale scale,
+    WorkoutExercise exercise,
+    int index,
+  ) {
+    final sets = exercise.sets;
+    final number = sets.take(index + 1).where((s) => !s.isWarmup).length;
+    final set = sets[index].type == SetType.drop
+        ? effortAskDropSetName(number)
+        : effortAskSetName(number);
+    return switch (scale) {
+      EffortScale.byFeel => effortAskFeel(set),
+      EffortScale.rir => effortAskRir(set),
+      EffortScale.rpe => effortAskRpe(set),
+    };
+  }
 
   /// What the effort row of [scale] asks about selected done set [index]
   /// of [exercise], e.g. `Set 1 · how hard was it?`.
@@ -171,52 +186,24 @@ extension WorkoutText on AppLocalizations {
     };
   }
 
-  /// The effort question's title for set [asked] of [workout] just done,
-  /// with its values in [unit]: `Set 1 done · 80 kg × 8`, its exercise
-  /// first when it is not the [selected] one.
-  String effortDoneText(
+  /// What set [asked] of [workout] just did, under its effort question,
+  /// in [unit]: `80 kg × 8`, its exercise first when it is not the
+  /// [selected] one.
+  String effortAskValues(
     Workout workout,
     SetRef asked,
     SetSelection? selected,
     WeightUnit unit,
   ) {
     final exercise = workout.exercises[asked.exercise];
-    final set = ratedSetName(exercise, asked.set);
     final values = setWithUnitText(
       exercise.sets[asked.set],
       exercise.loggingType,
       unit,
     );
     return selected?.exercise == asked.exercise
-        ? effortDoneTitle(set, values)
-        : effortDoneTitleOf(exercise.name, set, values);
-  }
-
-  /// The rest strip's question about set [asked] of [workout] just done,
-  /// with its values in [unit]: `Set 1 · 80 kg × 8 — how hard?`, its
-  /// exercise first when it is not the [selected] one.
-  String effortStripQuestion(
-    EffortScale scale,
-    Workout workout,
-    SetRef asked,
-    SetSelection? selected,
-    WeightUnit unit,
-  ) {
-    final exercise = workout.exercises[asked.exercise];
-    final name = ratedSetName(exercise, asked.set);
-    final values = setWithUnitText(
-      exercise.sets[asked.set],
-      exercise.loggingType,
-      unit,
-    );
-    final set = selected?.exercise == asked.exercise
-        ? effortStripSet(name, values)
-        : effortStripSetOf(exercise.name, name, values);
-    return switch (scale) {
-      EffortScale.byFeel => effortStripFeel(set),
-      EffortScale.rir => effortStripRir(set),
-      EffortScale.rpe => effortStripRpe(set),
-    };
+        ? values
+        : effortAskValuesOf(exercise.name, values);
   }
 
   /// The progress of [exercise] in working sets, e.g. `Squat · 1/3`, as
@@ -227,8 +214,8 @@ extension WorkoutText on AppLocalizations {
     exercise.sets.where((s) => !s.isWarmup).length,
   );
 
-  /// [step] as a choice of [scale] shows it: `Easy`, `4` (RIR), `6` (RPE),
-  /// `Failed`.
+  /// [step] as a choice of [scale] shows it: `Easy`, `4` (RIR), `RPE 7`,
+  /// `RPE 6 or less`, `Failed`.
   String effortStepLabel(EffortStep step, EffortScale scale) {
     if (step.failed) return effortFailed;
     return switch (scale) {
@@ -240,7 +227,8 @@ extension WorkoutText on AppLocalizations {
       },
       EffortScale.rir =>
         step.rir >= WorkoutLimits.maxRir ? workoutRirFivePlus : '${step.rir}',
-      EffortScale.rpe => '${10 - step.rir}',
+      EffortScale.rpe =>
+        step.rir >= 4 ? effortRpeSixOrLess : workoutRpe(10 - step.rir),
     };
   }
 
@@ -263,9 +251,8 @@ extension WorkoutText on AppLocalizations {
     if (step == null) return null;
     if (step.failed) return effortFailed;
     return switch (scale) {
-      EffortScale.byFeel => effortStepLabel(step, scale),
+      EffortScale.byFeel || EffortScale.rpe => effortStepLabel(step, scale),
       EffortScale.rir => workoutRir(step.rir),
-      EffortScale.rpe => workoutRpe(10 - step.rir),
     };
   }
 

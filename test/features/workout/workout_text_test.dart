@@ -92,37 +92,24 @@ void main() {
       ]);
       const selected = (exercise: 0, set: 3);
       expect(
-        l10n.effortDoneText(w, (exercise: 0, set: 1), selected, WeightUnit.kg),
-        'Set 1 done · 80 kg × 8',
+        l10n.effortAskTitle(EffortScale.byFeel, bench, 1),
+        'How hard was set 1?',
       );
       expect(
-        l10n.effortDoneText(w, (exercise: 0, set: 2), selected, WeightUnit.kg),
-        'Drop set 2 done · 80 kg × 8',
+        l10n.effortAskTitle(EffortScale.rpe, bench, 2),
+        'RPE of drop set 2?',
       );
       expect(
-        l10n.effortDoneText(w, (exercise: 1, set: 0), selected, WeightUnit.kg),
-        'Squat · Set 1 done · 100 kg × 5',
-      );
-      expect(l10n.effortQuestion(EffortScale.byFeel), 'How hard was it?');
-      expect(
-        l10n.effortStripQuestion(
-          EffortScale.byFeel,
-          w,
-          (exercise: 0, set: 1),
-          selected,
-          WeightUnit.kg,
-        ),
-        'Set 1 · 80 kg × 8 — how hard?',
+        l10n.effortAskTitle(EffortScale.rir, bench, 1),
+        'Reps left in set 1?',
       );
       expect(
-        l10n.effortStripQuestion(
-          EffortScale.rir,
-          w,
-          (exercise: 1, set: 0),
-          selected,
-          WeightUnit.kg,
-        ),
-        'Squat · Set 1 · 100 kg × 5 — reps left?',
+        l10n.effortAskValues(w, (exercise: 0, set: 1), selected, WeightUnit.kg),
+        '80 kg × 8',
+      );
+      expect(
+        l10n.effortAskValues(w, (exercise: 1, set: 0), selected, WeightUnit.kg),
+        'Squat · 100 kg × 5',
       );
       expect(
         l10n.effortRowQuestion(EffortScale.rir, bench, 1),
@@ -156,13 +143,42 @@ void main() {
         '2 reps left',
         '1 rep left',
         'No reps left',
-        "You tried the last rep and couldn't finish it.",
+        'Could not finish the last rep',
       ],
     );
     expect(
-      l10n.effortStepMeaning(const EffortStep.reserve(1), EffortScale.byFeel),
-      '1 left',
+      [
+        for (final step in EffortScale.byFeel.steps)
+          l10n.effortStepMeaning(step, EffortScale.byFeel),
+      ],
+      [
+        '4 or more reps left',
+        '2–3 reps left',
+        '1 rep left',
+        'No reps left',
+        'Could not finish the last rep',
+      ],
     );
+  });
+
+  test('RPE goes from 6 or less to 10, each with the reps left', () {
+    const rpe = EffortScale.rpe;
+    expect(
+      [
+        for (final step in rpe.steps)
+          (l10n.effortStepLabel(step, rpe), l10n.effortStepMeaning(step, rpe)),
+      ],
+      [
+        ('RPE 6 or less', '4 or more reps left'),
+        ('RPE 7', '3 reps left'),
+        ('RPE 8', '2 reps left'),
+        ('RPE 9', '1 rep left'),
+        ('RPE 10', 'No reps left'),
+        ('Failed', 'Could not finish the last rep'),
+      ],
+    );
+    // An older set with 5 left reads as the easiest step.
+    expect(l10n.effortText(const WorkoutSet(rir: 5), rpe), 'RPE 6 or less');
   });
 
   group('a weight typed in the other unit shows rounded', () {
