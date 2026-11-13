@@ -14,13 +14,16 @@ import '../../../core/text_length.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/presentation/settings_cubit.dart';
+import '../../settings/domain/user_settings.dart';
 import '../domain/workout.dart';
+import '../domain/workout_tips.dart';
 import 'active_workout_cubit.dart';
 import 'elapsed_text.dart';
 import 'exercise_cards.dart';
 import 'rest_strip.dart';
 import 'set_bar.dart';
 import 'workout_editor_view.dart';
+import 'workout_help.dart';
 import 'workout_text.dart';
 
 /// The workout in progress, full screen above the tabs; back minimizes it
@@ -98,6 +101,9 @@ class _ActiveWorkout extends StatelessWidget {
     final cubit = context.read<ActiveWorkoutCubit>();
     final workout = state.workout!;
     final finishing = state.status == WorkoutStatus.finishing;
+    final settings = context.select(
+      (SettingsCubit cubit) => cubit.state.settings,
+    );
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) unawaited(cubit.leave());
@@ -149,6 +155,17 @@ class _ActiveWorkout extends StatelessWidget {
               SliverList.list(
                 children: [
                   if (finishing) const LinearProgressIndicator(),
+                  if (autoWarmupsTipDue(
+                    workout,
+                    settings.seenTips,
+                    autoWarmups: settings.autoWarmups,
+                  ))
+                    TipBanner(
+                      text: l10n.tipAutoWarmups,
+                      onDismiss: () => context.read<SettingsCubit>().tipSeen(
+                        Tip.autoWarmups,
+                      ),
+                    ),
                   if (workout.exercises.isEmpty)
                     Padding(
                       padding: const EdgeInsets.all(Gap.md),

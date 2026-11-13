@@ -11,8 +11,10 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/effort.dart';
 import '../domain/set_logging.dart';
 import '../domain/workout.dart';
+import '../domain/workout_tips.dart';
 import 'number_cell.dart';
 import 'workout_editor.dart';
+import 'workout_help.dart';
 import 'workout_text.dart';
 
 /// A page logging a workout: [content] above, and at the bottom the
@@ -170,6 +172,11 @@ class SetBar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (set.type != SetType.normal)
+                      Text(
+                        l10n.setTypeHint(set.type),
+                        style: theme.textTheme.bodySmall,
+                      ),
                     if (details.isNotEmpty)
                       Text(
                         details.join(' · '),
@@ -257,10 +264,31 @@ class SetBar extends StatelessWidget {
                       unit: unit,
                       editor: editor,
                     ),
+                  if (effortTipDue(state.workout!, settings.seenTips))
+                    TipBanner(
+                      text: l10n.tipEffort,
+                      onDismiss: () =>
+                          context.read<SettingsCubit>().tipSeen(Tip.effort),
+                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.effortQuestion(settings.effortScale),
+                          style: theme.textTheme.labelLarge,
+                        ),
+                      ),
+                      const WorkoutHelpButton(),
+                    ],
+                  ),
                   _EffortChoice(
                     scale: settings.effortScale,
                     chosen: settings.effortScale.stepOf(set),
-                    onChosen: (step) => editor.setEffort(ref, step),
+                    onChosen: (step) {
+                      editor.setEffort(ref, step);
+                      // Used, so its tip has nothing left to tell.
+                      context.read<SettingsCubit>().tipSeen(Tip.effort);
+                    },
                   ),
                 ],
               ),
@@ -349,13 +377,11 @@ class _EffortChoice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         spacing: Gap.xs,
         children: [
-          Text(l10n.workoutEffort, style: theme.textTheme.labelLarge),
           for (final step in scale.steps)
             ChoiceChip(
               showCheckmark: false,

@@ -4,6 +4,7 @@ import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/presentation/program_text.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
+import 'package:get_workout/features/workout/domain/effort.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/presentation/workout_text.dart';
@@ -83,6 +84,29 @@ void main() {
       );
       expect(l10n.setToDo(warmed, 1), 'Bench Press · Warm-up 2 of 2');
     });
+  });
+
+  test('each effort step says what it means on its scale', () {
+    expect(
+      [
+        for (final step in EffortScale.rir.steps)
+          l10n.effortStepMeaning(step, EffortScale.rir),
+      ],
+      [
+        '5 or more reps left',
+        '4 reps left',
+        '3 reps left',
+        '2 reps left',
+        '1 rep left',
+        'No reps left',
+        "You tried the last rep and couldn't finish it.",
+      ],
+    );
+    expect(
+      l10n.effortStepMeaning(const EffortStep.reserve(1), EffortScale.byFeel),
+      '1 left',
+    );
+    expect(l10n.effortQuestion(EffortScale.byFeel), 'How hard was this set?');
   });
 
   group('a weight typed in the other unit shows rounded', () {

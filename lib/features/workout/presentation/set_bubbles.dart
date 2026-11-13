@@ -159,17 +159,33 @@ class _SetBubble extends StatelessWidget {
         selection?.exercise == ref.exercise && selection?.set == ref.set;
     final style = theme.textTheme.labelLarge;
     // The same as the set bar's options: see WorkoutEditor.setType.
-    final actions = {
+    final types = [
       for (final type in exercise.loggingType.setTypes)
-        if (type != set.type)
-          l10n.workoutChangeSetType(l10n.setTypeLabel(type)): () =>
-              editor.setType(ref, type),
+        if (type != set.type) type,
+    ];
+    final actions = {
+      for (final type in types)
+        l10n.workoutChangeSetType(l10n.setTypeLabel(type)): () =>
+            editor.setType(ref, type),
       l10n.workoutRemoveSet: () => editor.removeSet(ref),
     };
     final bubble = MenuAnchor(
       menuChildren: [
-        for (final MapEntry(key: label, value: action) in actions.entries)
-          MenuItemButton(onPressed: action, child: Text(label)),
+        for (final type in types)
+          MenuItemButton(
+            onPressed: () => editor.setType(ref, type),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.workoutChangeSetType(l10n.setTypeLabel(type))),
+                Text(l10n.setTypeHint(type), style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+        MenuItemButton(
+          onPressed: () => editor.removeSet(ref),
+          child: Text(l10n.workoutRemoveSet),
+        ),
       ],
       builder: (context, menu, _) => _Bubble(
         label: l10n.setBubbleLabel(exercise, ref.set),

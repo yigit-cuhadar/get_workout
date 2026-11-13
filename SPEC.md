@@ -235,6 +235,57 @@ from the earlier FitLab app.
   and not completed), stored as `toFailure` with RIR 0; there is no separate
   failure switch, and any set with `toFailure` shows Failed whatever its
   RIR. Effort shows in the chosen scale everywhere (bar, workout detail).
+  Effort is only stored and shown (bar, workout detail); nothing else uses
+  it yet, and the help says just that.
+- **Automatic warm-up sets**: Settings → "Automatic warm-up sets", on by
+  default, also for users who never set it (`settings.autoWarmups`, a
+  missing value reads as on). While on, an exercise logged with a weight
+  and reps (`weight_reps` only: weighted and assisted bodyweight, reps-only
+  and timed exercises get none) starts with two empty warm-ups before its
+  working sets (`withWarmups`) when it enters a workout in progress: a
+  program day started, an exercise added (also to an empty workout, and
+  "start with this exercise"), or swapped in while none of its sets is done
+  (the selection then opens its first warm-up). Never on a past workout
+  (edited or added by hand), never to exercises already in the workout
+  when the setting changes, and none when the exercise already has a
+  warm-up or the two would pass the set limit. There is no "repeat a
+  workout" yet; a workout saved as a program starts as a program day.
+  The warm-ups' values are suggestions, like any set's: warm-up 1 is 50 %
+  of the first working set's weight × 8, warm-up 2 (and any later one)
+  75 % × 4 (`warmupRamp`, `rampedWarmup`), W being that set's weight as
+  typed, else as suggested; rounded to 2.5 kg or 5 lb in the user's unit,
+  never below one step nor above W (a fixed step: the plate inventory is
+  not consulted). They follow W until typed over or ticked; while W is
+  unknown (or 0) they fall back to the usual warm-up rule (the warm-up
+  before it), normally empty. In the workout in progress this ramp applies
+  to every warm-up of a `weight_reps` exercise, added automatically or
+  not; editing a past workout keeps the plain rule. Warm-ups keep their
+  meaning everywhere (no stats, volume, records or "of N", no rest).
+- **Explanations for beginners**: each set type has a one-line description
+  under its name in the add-set sheet and the bubble's long-press menu
+  (Normal "A regular working set.", Warm-up "A lighter set to get ready.
+  Not counted in your stats.", Drop set "Finish the set, then lower the
+  weight and keep going without rest."). The set bar asks the scale's
+  question above the effort chips ("How hard was this set?", "How many
+  more reps could you have done?", "How hard was this set, from 1 to
+  10?") and, for a warm-up or drop set, shows its description under the
+  title, which names the kind in words (`setToDo`: "Bench Press · Warm-up
+  1 of 2", "· Warm-up" for the only one, "· Drop set 2 of 3"; the lock
+  screen and rest notification follow). An "Explain" (?) button next to
+  the question and in the add-set sheet opens one scrolling help sheet:
+  what effort is and what the app does with it, every step of the user's
+  scale and what it means, Failed, warm-up sets (with the automatic ramp)
+  and drop sets.
+- **First-use tips**: three inline banners (Material `MaterialBanner`,
+  never modal), each with "Got it": effort, in the set bar once a set of
+  the workout is ticked, until an effort is picked; set types, at the top
+  of the add-set sheet, until a type is picked there; automatic warm-ups,
+  at the top of the workout in progress while the setting is on and a
+  `weight_reps` exercise has a warm-up, until the setting is changed.
+  Dismissing or using the thing marks it seen for good, in
+  `settings.seenTips` (codes `effort`, `setTypes`, `autoWarmups`; the app
+  has no local flag store, and this follows the user across devices).
+  Which tip is due is pure logic (`workout_tips.dart`).
 - **1RM**: Epley, `weight * (1 + reps / 30)`; sets above 12 reps are ignored.
 - **Volume**: each completed working set counts 1 for every main muscle and
   0.5 for every secondary muscle. Warm-up sets do not count. A drop set counts
@@ -1033,7 +1084,8 @@ from the earlier FitLab app.
   setting says). Rest: title "Rest" and the next set as in the rest
   notification (none when nothing is left); workout: its name, the elapsed
   time since `startedAt`, and the set to do now ("Bench Press · set 2 of
-  3", "Bench Press · set W" for a warm-up; none when every set is done).
+  3", "Bench Press · Warm-up 1 of 2", "Bench Press · Drop set 2 of 3", as
+  `setToDo` names it; none when every set is done).
   Sets are named as the workout page's set column names them (`setLabel`:
   W for a warm-up, else the number among the working sets, 2D for a drop
   set; "of N" counts working sets), in the rest notification too. The set
@@ -1316,7 +1368,8 @@ reader has an active entitlement.
 
 **`users/{uid}`**: `profile` (goal, level, daysPerWeek, equipment[], sex,
 birthYear, heightCm, weightKg, targetWeightKg), `settings` (units,
-effortScale, restTimer, bar and plates, stepGoal, reminder times,
+effortScale, restTimer, autoWarmups, seenTips[], bar and plates, stepGoal,
+reminder times,
 trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
 `activeProgram` (`programId`, `weekdays[]` ISO 1-7, `nextDayIndex`,
 `nextDate` `YYYY-MM-DD`, `startedAt` device-clock timestamp).
