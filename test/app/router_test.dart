@@ -1089,7 +1089,7 @@ void main() {
       await startAsGuest(tester);
       router.go(Routes.exercise('squat'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Add to…'));
+      await tester.tap(find.text('Add'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Add to program'));
       await tester.pumpAndSettle();
@@ -2130,36 +2130,13 @@ void main() {
       expect(path(), Routes.progress);
     });
 
-    testWidgets('records and progress opens above the exercise and leaves '
-        'the Progress tab alone', (tester) async {
+    testWidgets('a record opens the workout that set it, and back returns', (
+      tester,
+    ) async {
       await startAsGuest(tester);
       registerStrength();
-      router.go(Routes.strength);
+      router.go(Routes.strengthExercise('squat'));
       await tester.pumpAndSettle();
-      expect(find.byType(StrengthListPage), findsOneWidget);
-
-      await tapTab(tester, 'Train');
-      router.go(Routes.exercise('squat'));
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('Records and progress'),
-        200,
-        scrollable: find
-            .descendant(
-              of: find.byType(ExerciseDetailPage),
-              matching: find.byType(Scrollable),
-            )
-            .first,
-      );
-      await tester.tap(find.text('Records and progress'));
-      await tester.pumpAndSettle();
-
-      // Pushed above the exercise, in the Train tab.
-      expect(find.byType(ExerciseStrengthPage), findsOneWidget);
-      expect(find.byType(NavigationBar), findsOneWidget);
-      expect(path(), Routes.exercise('squat'));
-
-      // A record opens the workout that set it, and back returns here.
       await tester.scrollUntilVisible(
         find.text('Heaviest weight'),
         200,
@@ -2175,14 +2152,7 @@ void main() {
       expect(find.byType(WorkoutDetailPage), findsOneWidget);
       await back(tester);
       expect(find.byType(ExerciseStrengthPage), findsOneWidget);
-
-      await back(tester);
-      expect(find.byType(ExerciseDetailPage), findsOneWidget);
-      expect(path(), Routes.exercise('squat'));
-
-      await tapTab(tester, 'Progress');
-      expect(find.byType(StrengthListPage), findsOneWidget);
-      expect(path(), Routes.strength);
+      expect(path(), Routes.strengthExercise('squat'));
     });
   });
 

@@ -10,7 +10,7 @@ import '../vocabulary_labels.dart';
 
 /// A row opening the exercise's detail page at [route]: name, main muscles
 /// and equipment, marked when custom, with a favourite star when
-/// [showFavorite]. With [onSelect] it shows a checkbox for [selected] and
+/// [showFavorite], else [tag] at its end. With [onSelect] it shows a checkbox for [selected] and
 /// selects instead.
 class ExerciseTile extends StatelessWidget {
   const ExerciseTile(
@@ -20,6 +20,7 @@ class ExerciseTile extends StatelessWidget {
     this.selected = false,
     this.onSelect,
     this.route = Routes.exercise,
+    this.tag,
   });
 
   final Exercise exercise;
@@ -29,6 +30,9 @@ class ExerciseTile extends StatelessWidget {
 
   /// The detail page's location for an exercise id.
   final String Function(String id) route;
+
+  /// How it relates to the page listing it, e.g. "Variation".
+  final String? tag;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +45,7 @@ class ExerciseTile extends StatelessWidget {
             l10n.equipmentNames(exercise.equipment),
           );
     final onSelect = this.onSelect;
+    final tag = this.tag;
     return ListTile(
       leading: onSelect == null
           ? null
@@ -48,7 +53,11 @@ class ExerciseTile extends StatelessWidget {
       selected: selected,
       title: Text(exercise.localized(context).name),
       subtitle: Text(exercise.isCustom ? l10n.customSummary(summary) : summary),
-      trailing: showFavorite ? FavoriteButton(exercise.id) : null,
+      trailing: showFavorite
+          ? FavoriteButton(exercise.id)
+          : tag == null
+          ? null
+          : Text(tag),
       onTap: onSelect ?? () => context.push(route(exercise.id)),
     );
   }

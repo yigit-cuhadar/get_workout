@@ -1148,6 +1148,21 @@ from the earlier FitLab app.
   `setLabel`), the value columns of its logging type (weight in the unit
   with its field label, reps, time) and Effort (on the chosen scale, then
   the set note); each drop is a row under its set, named in the last column.
+- **Exercise detail** (UX pass, 2026-11-13, owner's pick): the app bar
+  holds the name, the favourite star, one Add button whose menu offers
+  "Add to workout" (the workout in progress, else asking to start one) and
+  "Add to program", the same in every place the page opens, and, for a
+  custom exercise, a menu with Edit and Delete. The body: the "Custom"
+  label, the model (front and back) with Main muscles and Also works; a
+  card of facts (equipment with its alternative sets, level, mechanic,
+  movement pattern, sides, logged as, also called); Setup and How to do
+  it as numbered steps; Common mistakes, Safety and Cues (as chips) each
+  as their own card; the custom exercise's Note; then one Similar
+  exercises list, alternatives first, each tagged Alternative or
+  Variation. An alternative of the same family is listed once, as a
+  variation. Anything an exercise lacks is left out, so a custom exercise
+  shows the model, muscles, its facts, Note and nothing below. Records and
+  progress left the page; an exercise's strength page opens from Progress.
 - **Strength**: Progress → Strength lists the exercises with stats (the
   whole `exerciseStats` collection, live), most recently trained first
   (`last.date`, else the latest history point), searched by catalogue name,
@@ -1155,9 +1170,9 @@ from the earlier FitLab app.
   named or known to be gone (one no longer in the library shows as
   removed, since stats keep no name). If that collection read grows too
   costly, the fix is a small last-trained index written in the same batch
-  as the stats. An exercise's page is also opened by "Records and
-  progress" on the exercise page, above it in whichever tab shows it, so
-  Back returns to the exercise. It lists the records (heaviest weight,
+  as the stats. An exercise's page opens from there and from its Progress
+  tile only; the exercise detail page no longer links to it (UX pass,
+  2026-11-13). It lists the records (heaviest weight,
   best e1RM, most reps, best set volume, longest time), each opening the
   workout that set it, and charts each workout's best e1RM in the user's
   unit, on an axis of whole kg or lb at least four units tall; an exercise
@@ -1820,7 +1835,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [ ] Paywall — two layouts kept for an A/B test: plans as a list, plans as three cards side by side
 - [ ] Program detail — a summary card (state, weekdays, length, Change days, Stop), days collapse
 - [ ] Program builder — stays as built: day chips, sets and reps in a sheet
-- [ ] Exercise detail — model with main and secondary muscles, a table of facts (equipment, level, mechanic, pattern, sides, logged as, also called), Setup and How to do it as numbered steps, Common mistakes, Safety and Cues each as their own card, Note, then one Similar exercises list tagged Alternative or Variation. One Add button in the app bar (workout or program). The Records and progress row leaves this page; the strength page stays reachable from Progress
+- [x] Exercise detail — model with main and secondary muscles, a table of facts (equipment, level, mechanic, pattern, sides, logged as, also called), Setup and How to do it as numbered steps, Common mistakes, Safety and Cues each as their own card, Note, then one Similar exercises list tagged Alternative or Variation. One Add button in the app bar (workout or program). The Records and progress row leaves this page; the strength page stays reachable from Progress
 - [x] Workout detail (history) — the summary card of the workout summary (date, program link, four stats), the workout note as its own card, sets as a table per exercise
 - [ ] Ready-made programs — cards with tags; the filters show as chips above the list and open the filters sheet
 - [ ] Generator — questions use the onboarding question layout; the preview shows weekly sets as bars and days that collapse, Regenerate and Save fixed at the bottom

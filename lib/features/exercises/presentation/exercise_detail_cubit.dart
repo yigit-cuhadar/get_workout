@@ -45,6 +45,8 @@ final class DetailReady extends ExerciseDetailState {
   });
 
   final Exercise exercise;
+
+  /// None of them is also one of [variations]; one list shows both.
   final List<Exercise> alternatives;
   final List<Exercise> variations;
 
@@ -79,7 +81,7 @@ final class DetailDeleted extends ExerciseDetailState {
 }
 
 /// One exercise with its alternatives (preferring the user's equipment) and
-/// variations, kept current as the catalogue and the equipment change. A
+/// variations, an exercise in both being a variation, kept current as the catalogue and the equipment change. A
 /// custom exercise can be deleted here.
 class ExerciseDetailCubit extends Cubit<ExerciseDetailState> {
   ExerciseDetailCubit(
@@ -162,15 +164,20 @@ class ExerciseDetailCubit extends Cubit<ExerciseDetailState> {
           ? const DetailNotFound()
           : const DetailLoading();
     }
+    final variations = variationsOf(exercise, catalogue);
+    final variationIds = {for (final variation in variations) variation.id};
     return DetailReady(
       exercise,
       // Unknown equipment counts as bodyweight only.
-      alternatives: alternativesFor(
-        exercise,
-        catalogue,
-        owned: _owned ?? const {},
-      ),
-      variations: variationsOf(exercise, catalogue),
+      alternatives: [
+        for (final other in alternativesFor(
+          exercise,
+          catalogue,
+          owned: _owned ?? const {},
+        ))
+          if (!variationIds.contains(other.id)) other,
+      ],
+      variations: variations,
     );
   }
 

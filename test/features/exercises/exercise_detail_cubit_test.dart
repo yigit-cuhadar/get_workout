@@ -47,13 +47,19 @@ final _machinePress = exercise(
   equipment: [Equipment.machine],
   family: 'machine_press',
 );
+final _inclineBench = exercise(
+  'incline_bench',
+  popularity: 4,
+  equipment: [Equipment.dumbbell, Equipment.bench],
+  family: 'incline_press',
+);
 final _custom = Exercise.custom(
   id: 'custom_press',
   name: 'Band Press',
   loggingType: LoggingType.reps,
   mainMuscles: const [Muscle.pec],
 );
-final _all = [_bench, _machinePress, _dumbbellBench];
+final _all = [_bench, _machinePress, _dumbbellBench, _inclineBench];
 
 void main() {
   late MockCatalogueCubit catalogue;
@@ -101,8 +107,14 @@ void main() {
     final state = build('bench').state as DetailReady;
     expect(state.exercise, _bench);
     // Unknown equipment: nothing is doable, so popularity decides.
-    expect(ids(state.alternatives), ['machine_press', 'dumbbell_bench']);
+    expect(ids(state.alternatives), ['machine_press', 'incline_bench']);
     expect(ids(state.variations), ['dumbbell_bench']);
+  });
+
+  test('an alternative of the same family shows as a variation only', () {
+    final state = build('bench').state as DetailReady;
+    expect(ids(state.alternatives), isNot(contains('dumbbell_bench')));
+    expect(ids(state.variations), contains('dumbbell_bench'));
   });
 
   blocTest<ExerciseDetailCubit, ExerciseDetailState>(
@@ -114,7 +126,7 @@ void main() {
     expect: () => [
       DetailReady(
         _bench,
-        alternatives: [_dumbbellBench, _machinePress],
+        alternatives: [_inclineBench, _machinePress],
         variations: [_dumbbellBench],
       ),
     ],
@@ -159,7 +171,7 @@ void main() {
     expect: () => [
       DetailReady(
         _bench,
-        alternatives: [_machinePress, _dumbbellBench],
+        alternatives: [_machinePress, _inclineBench],
         variations: [_dumbbellBench],
       ),
     ],
