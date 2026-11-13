@@ -15,7 +15,7 @@ enum EffortScale { byFeel, rir, rpe }
 
 /// The first day of the week everywhere in the app (`settings.weekStart`).
 enum WeekStart {
-  /// The phone's, from its region.
+  /// The phone's, from its region (which may give Friday too).
   automatic,
   monday,
   sunday,
@@ -30,6 +30,30 @@ enum WeekStart {
     saturday => DateTime.saturday,
   };
 }
+
+/// The first day of the week in region [countryCode] (ISO 3166, e.g.
+/// `TR`) as an ISO weekday: Monday unless CLDR lists another.
+int regionFirstWeekday(String countryCode) {
+  final region = countryCode.toUpperCase();
+  if (_sundayRegions.contains(region)) return DateTime.sunday;
+  if (_saturdayRegions.contains(region)) return DateTime.saturday;
+  if (_fridayRegions.contains(region)) return DateTime.friday;
+  return DateTime.monday;
+}
+
+// CLDR 49 supplemental weekData firstDay ("001", the default, is Monday).
+const _sundayRegions = {
+  'AG', 'AS', 'BD', 'BR', 'BS', 'BT', 'BW', 'BZ', 'CA', 'CO', 'DM', 'DO', //
+  'ET', 'GT', 'GU', 'HK', 'HN', 'ID', 'IL', 'IN', 'IS', 'JM', 'JP', 'KE', //
+  'KH', 'KR', 'LA', 'MH', 'MM', 'MO', 'MT', 'MX', 'MZ', 'NI', 'NP', 'PA', //
+  'PE', 'PH', 'PK', 'PR', 'PT', 'PY', 'SA', 'SG', 'SV', 'TH', 'TT', 'TW', //
+  'UM', 'US', 'VE', 'VI', 'WS', 'YE', 'ZA', 'ZW', //
+};
+const _saturdayRegions = {
+  'AF', 'BH', 'DJ', 'DZ', 'EG', 'IQ', 'IR', 'JO', 'KW', 'LY', 'OM', 'QA', //
+  'SD', 'SY', //
+};
+const _fridayRegions = {'MV'};
 
 /// A first-use tip the app shows once (`settings.seenTips`).
 enum Tip {

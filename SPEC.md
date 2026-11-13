@@ -241,11 +241,13 @@ from the earlier FitLab app.
   Monday, Sunday or Saturday (`settings.weekStart`, written only when not
   automatic). Automatic is the phone's region, not the app's language
   (English only, so Sunday for everyone): the device locale
-  (`PlatformDispatcher.locale`, followed on change) looked up in intl's
+  (`PlatformDispatcher.locale`, followed on change). With a region, CLDR's
+  weekData `firstDay` for it (CLDR 49, a const table in
+  `regionFirstWeekday`; unlisted regions Monday): `en_TR`, `tr_TR`,
+  `en_GB` Monday, `en_US` Sunday, `ar_EG` Saturday, `MV` Friday (only
+  Automatic can give Friday). Without a region, the language in intl's
   bundled date symbols (`dateTimeSymbolMap()`, `FIRSTDAYOFWEEK`, 0 =
-  Monday): language and region (`tr_TR`, `en_GB`: Monday; `en_US`:
-  Sunday), else the language (`ar_SA`, `fa_IR`: Saturday; `en_TR`: Sunday,
-  as intl has no English-in-Turkey), else Monday. `WeekStart.firstWeekday`
+  Monday), else Monday. `WeekStart.firstWeekday`
   resolves the setting against it; widgets read it in `build` with
   `context.watchFirstWeekday()` and pass it to the cubits they create,
   which follow a change while alive through `FirstWeekdayListener`

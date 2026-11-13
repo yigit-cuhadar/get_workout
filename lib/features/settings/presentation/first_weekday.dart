@@ -3,22 +3,20 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../domain/user_settings.dart';
 import 'settings_cubit.dart';
 
 /// The first day of the week of [locale] as an ISO weekday (1 Monday to 7
-/// Sunday), from intl's date symbols: the full locale's, else its
-/// language's, else Monday. Not the app's language: English is its only
-/// one, while a phone set to Turkey or the UK starts weeks on Monday.
+/// Sunday): its region's (see [regionFirstWeekday]), so English in Turkey
+/// starts on Monday; without a region, its language's in intl's date
+/// symbols, else Monday. Not the app's language: English is its only one.
 int localeFirstWeekday(Locale locale) {
   final country = locale.countryCode;
-  final first =
-      (country == null
-          ? null
-          : _firstDays['${locale.languageCode}_$country']) ??
-      _firstDays[locale.languageCode] ??
-      0;
+  if (country != null && country.isNotEmpty) {
+    return regionFirstWeekday(country);
+  }
   // intl counts from 0, Monday.
-  return first + 1;
+  return (_firstDays[locale.languageCode] ?? 0) + 1;
 }
 
 /// Each locale intl has symbols for, with its first day of the week; built
