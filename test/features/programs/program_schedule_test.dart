@@ -52,6 +52,12 @@ List<(int, CalendarDate)> take(
 
 void main() {
   group('CalendarDate', () {
+    test('counts the days since another date', () {
+      expect(d(2026, 11, 9).daysSince(d(2026, 11, 2)), 7);
+      expect(d(2026, 11, 2).daysSince(d(2026, 11, 9)), -7);
+      expect(d(2027, 1, 1).daysSince(d(2026, 12, 31)), 1);
+    });
+
     test('knows its ISO weekday', () {
       expect(d(2026, 11, 9).weekday, DateTime.monday);
       expect(d(2026, 11, 15).weekday, DateTime.sunday);
@@ -716,6 +722,19 @@ void main() {
         twoWeeks(d(2026, 11, 25))
             .weekPlan(d(2026, 11, 25), firstWeekday: DateTime.monday),
         isEmpty,
+      );
+    });
+
+    test('counts weeks from the start date, within the length', () {
+      final plan = twoWeeks(d(2026, 11, 11));
+      expect(plan.week(d(2026, 11, 10)), 1);
+      expect(plan.week(d(2026, 11, 11)), 1);
+      expect(plan.week(d(2026, 11, 17)), 1);
+      expect(plan.week(d(2026, 11, 18)), 2);
+      expect(plan.week(d(2026, 12, 30)), 2);
+      expect(
+        schedule(active(nextDate: d(2026, 11, 11))).week(d(2026, 12, 30)),
+        9,
       );
     });
 

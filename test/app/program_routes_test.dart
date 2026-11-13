@@ -255,6 +255,8 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  setUpAll(() => registerFallbackValue(stored));
+
   tearDown(() async {
     await auth.close();
     for (final cubit in appCubits) {
@@ -309,6 +311,7 @@ void main() {
 
     await tap(tester, find.text('Leg Day'));
     expect(find.byType(ProgramDetailPage), findsOneWidget);
+    // Not active, so its first day is open.
     expect(find.text('Back Squat'), findsOneWidget);
     expect(path(), Routes.program('p1'));
 
@@ -496,6 +499,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Leg Day'), findsOneWidget);
     expect(find.text('Back Squat'), findsOneWidget);
+  });
+
+  testWidgets('a copy opens a page of its own, which acts on the copy', (
+    tester,
+  ) async {
+    final copy = Program(id: 'p2', name: 'Leg Day (copy)', days: stored.days);
+    await start(tester);
+    when(() => repository.createProgram('u1', any()))
+        .thenAnswer((_) async => const Ok('p2'));
+    when(
+      () => repository.deleteProgram(
+        'u1',
+        any(),
+        clearActive: any(named: 'clearActive'),
+      ),
+    ).thenAnswer((_) async => const Ok(null));
+    await openPrograms(tester, [stored, copy]);
+    await tap(tester, find.text('Leg Day'));
+
+    await tap(tester, find.byType(PopupMenuButton<VoidCallback>));
+    await tap(tester, find.text('Duplicate'));
+    expect(path(), Routes.program('p2'));
+    expect(find.text('Leg Day (copy)'), findsOneWidget);
+
+    await tap(tester, find.byType(PopupMenuButton<VoidCallback>));
+    await tap(tester, find.text('Delete'));
+    await tap(
+      tester,
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Delete'),
+      ),
+    );
+    verify(() => repository.deleteProgram('u1', 'p2', clearActive: false))
+        .called(1);
+    verifyNever(
+      () => repository.deleteProgram(
+        'u1',
+        'p1',
+        clearActive: any(named: 'clearActive'),
+      ),
+    );
   });
 
   testWidgets('the name field stops at the limit validation uses', (

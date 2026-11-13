@@ -161,6 +161,7 @@ void main() {
         status: ProgramListStatus.ready,
         programs: [other, upperLower],
         active: active,
+        week: 2,
         nextDate: CalendarDate(2026, 11, 12),
         weekPlan: [
           PlannedDay(

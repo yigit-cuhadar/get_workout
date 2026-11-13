@@ -455,6 +455,9 @@ GoRouter buildRouter(
                   GoRoute(
                     path: ':id',
                     builder: (_, state) => ProgramDetailPage(
+                      // Another program, e.g. a copy just made from this
+                      // page, gets a page of its own, not this one's state.
+                      key: ValueKey(state.pathParameters['id']),
                       id: state.pathParameters['id']!,
                       created: state.uri.queryParameters['created'] == 'true',
                     ),
