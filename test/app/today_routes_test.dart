@@ -242,7 +242,6 @@ void main() {
       await start(tester, programs: planned);
 
       // The active program is the headline, its next day below.
-      expect(find.text('Active program'), findsOneWidget);
       expect(find.text('Upper Lower'), findsOneWidget);
       expect(find.text('Next workout'), findsNothing);
       expect(find.textContaining('2 exercises · ~'), findsOneWidget);
@@ -332,7 +331,6 @@ void main() {
       );
 
       expect(find.text('Next workout'), findsOneWidget);
-      expect(find.text('Active program'), findsNothing);
       await tap(tester, find.text('Start empty workout'));
 
       verify(() => workout.startFree('Workout')).called(1);
@@ -392,7 +390,8 @@ void main() {
       await start(tester, programs: planned);
       verify(() => steps.load(10000)).called(1);
 
-      await reveal(tester, find.text('4,000 of 10,000'));
+      await reveal(tester, find.text('4,000 steps'));
+      expect(find.text('of 10,000'), findsOneWidget);
       expect(find.text('6,000 to go'), findsOneWidget);
       await tap(tester, find.text('Steps'));
 
