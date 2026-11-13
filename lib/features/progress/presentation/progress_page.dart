@@ -184,20 +184,19 @@ class _ProgressCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
+                  Semantics(
+                    header: true,
+                    child: Text(title, style: theme.textTheme.titleMedium),
+                  ),
+                  const SizedBox(width: Gap.sm),
+                  // Takes the rest of the row, so the arrow stays at its end.
                   Expanded(
-                    child: Semantics(
-                      header: true,
-                      child: Text(title, style: theme.textTheme.titleMedium),
+                    child: Text(
+                      caption ?? '',
+                      style: theme.textTheme.bodyMedium,
+                      textAlign: TextAlign.end,
                     ),
                   ),
-                  if (caption != null)
-                    Flexible(
-                      child: Text(
-                        caption,
-                        style: theme.textTheme.bodyMedium,
-                        textAlign: TextAlign.end,
-                      ),
-                    ),
                   const Icon(Icons.chevron_right),
                 ],
               ),
