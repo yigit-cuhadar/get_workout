@@ -894,9 +894,13 @@ from the earlier FitLab app.
     this week's sets, steps card. No quick actions card and no weight card.
   - **Train**: Programs and Exercises merged, two views. "My program"
     (active program, its days, other programs: catalogue, generator, new;
-    start an empty workout) and "Exercises" (model, list, search, filters,
-    sort, favourites, custom exercises). A muscle's exercise list opens under
-    the model, which stays visible.
+    start an empty workout) and "Exercises". The Exercises view is the
+    model with a search box above it and no Body/List switch. The box opens,
+    with an animation, the one exercise list page: search, filters, sort,
+    favourites, and the + for a custom exercise in its app bar (nowhere
+    else). Tapping a muscle opens the same page filtered to it, with a small
+    strip of the model showing that muscle at the top and the list in two
+    sections, main and secondary.
   - **Progress**: data cards instead of a menu. Calendar (workout history
     joins it: detail, edit, delete, add a past workout), strength, body
     (weight, measurement days, photos, compare), cardio, step history.
@@ -1702,7 +1706,7 @@ Group 9, launch readiness
 
 Group 10, UX pass (see Decisions; each flow's layout is picked by the owner from wireframe variants before it is built)
 - [ ] Navigation — four tabs (Today / Train / Progress / Profile), Programs and Exercises merged, quick actions moved to their tabs — every existing screen is still reachable
-- [ ] Train, exercises view — a muscle's exercise list opens under the model, which stays visible
+- [ ] Train, exercises view — model with a search box; one list page with search, filters, sort and +, opened by the box or filtered by a tapped muscle with its model strip
 - [ ] Today — next workout, week strip, heat-map model with muscle detail, steps card
 - [ ] Progress — data cards; history inside the calendar; one page per exercise with its statistics
 - [ ] Onboarding — short enough that nobody quits; the rest asked when first needed
