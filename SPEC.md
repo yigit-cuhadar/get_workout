@@ -187,7 +187,7 @@ from the earlier FitLab app.
   exercise page shows it twice, front and back side by side with the worked
   muscles coloured, both fixed (`interactive: false`, the back through a
   camera at yaw π) so the page scrolls over them; two CPU-rendered viewers
-  share one parsed model and paint once. The Exercises tab's model stays
+  share one parsed model and paint once. The Exercises view's model stays
   interactive.
 - **Units**: stored metric. kg/lb and cm/in chosen by the user. A single
   lifted weight is shown through `WeightUnit.shown`: within two decimals
@@ -212,9 +212,15 @@ from the earlier FitLab app.
   Firestore rules validate the top-level fields only (`name`, `days` count,
   `origin`); the app validates days and items. Items whose exercise's
   logging type changed are fitted to the new type when the builder loads
-  them, and the user is told. The Programs tab opens with three rows, the
-  same with or without programs: ready-made programs, the generator and
-  "New program" (the builder); no floating button. In the builder, Add
+  them, and the user is told. Train's "My program" view shows the active
+  program first (its schedule, Start and this week's days), then four
+  rows, the same with or without programs: ready-made programs, the
+  generator, "New program" (the builder) and "Start empty workout"; then
+  the other programs. Without an active program the rows come first; no
+  floating button. "Add to program" on an exercise without programs opens
+  the builder: inside Train it is pushed above the exercise and saving or
+  leaving returns there (`Routes.programNewReturning`), so the exercise
+  can be added; from a workout or the history it opens in Train as before. In the builder, Add
   day selects the new day and focuses its name; opening the builder or
   switching days never takes the focus.
 - **Schedule**: `activeProgram.nextDate` is a calendar date stored as a
@@ -413,7 +419,7 @@ from the earlier FitLab app.
   validation and opens the copy, which is started like any own program;
   when a copy from the same `sourceId` exists, it is offered first. An
   exercise opened from a ready-made program opens its alternatives and
-  variations inside the Programs tab. Recommended for you: never a program
+  variations inside Train. Recommended for you: never a program
   above the user's level (beginner while unanswered) or needing equipment
   they lack (a program fits when the user owns all its primary `equipment`
   or all of its equipment profile; an unknown code or a missing list is
@@ -437,10 +443,10 @@ from the earlier FitLab app.
   of a premium ready-made program is marked `premium: true` and keeps the
   mark through edits and duplicates. Without premium it stays visible and
   readable but cannot be started, rescheduled or trained; an active one
-  shows as locked on the Programs tab and is not stopped, so it resumes
+  shows as locked in the My program view and is not stopped, so it resumes
   when premium returns. While the premium status is unknown these actions
   wait. `programAccess` is the one check, also for starting a workout
-  from such a program (Start <day> on the Programs tab, ▶ per day on the
+  from such a program (Start <day> in the My program view, ▶ per day on the
   program page): locked opens the paywall and starts only if premium was
   bought; `ActiveWorkoutCubit` refuses it too. A workout in progress from
   it can always be finished; free workouts are never gated. The gate is client-side only: the copy lives in the user's
@@ -481,9 +487,9 @@ from the earlier FitLab app.
   Saved as the user's own (`origin: generated`, "<split>, <n> days", days
   "Upper A", ...), editable like any other and never marked `premium`:
   Premium gates the generator, not the programs it made. Its entry is on
-  the Programs tab for everyone, locked when free, and opens through
+  the My program view for everyone, locked when free, and opens through
   `requirePremium()`; it is a feature of its own, so the programs feature
-  still never imports the subscription one (the tab only shows its entry).
+  still never imports the subscription one (the view only shows its entry).
 - **Steps**: read-only from Apple Health / Health Connect through
   `forge_health`; never stored, so `firestore.rules` is unchanged. The
   platform store in every build on iOS and Android; the fake only in debug
@@ -868,8 +874,9 @@ from the earlier FitLab app.
   showed, "My program" at first. The active workout is full-screen and can
   be minimized to a bar above the tabs. A `go` (a link, a notification
   tap) replaces its tab's stack (Train's for either view, via
-  `UnsavedChanges.sharedTabs`); a page there with unsaved changes (program builder,
-  workout edit, measurement day) is never dropped silently. One router
+  `UnsavedChanges.sharedTabs`); a page there with unsaved changes
+  (program builder, custom exercise form, workout edit, measurement day)
+  is never dropped silently. One router
   guard (`onEnter`, `lib/core/unsaved_changes.dart`) brings that page up
   (its tab, the workout or paywall above the tabs put away, the workout
   staying in its bar) and asks with the page's own discard prompt: keep
@@ -881,7 +888,8 @@ from the earlier FitLab app.
   structure and flows are reworked with the default theme, as ordinary
   features (Group 10). Subscription stays open meanwhile; the paywall's
   layout is part of the pass. No feature is removed, only moved. Target
-  navigation, replacing the five tabs above once built:
+  per tab (the four tabs themselves are built, see Navigation; the rest
+  is built by the later Group 10 items):
   - **Today**: next workout, week strip, the body model as a heat map of
     this week's sets, steps card. No quick actions card and no weight card.
   - **Train**: Programs and Exercises merged, two views. "My program"
@@ -1134,11 +1142,11 @@ from the earlier FitLab app.
   `ProgramSchedule.plan`, the week plan's logic over any range: a program
   day done (a workout of the active program and that day, on that local
   date) shows only as its workout, and a day done twice on one date shows
-  once, on the Programs tab too. A next day done on its date without the
+  once, in the My program view too. A next day done on its date without the
   program moving on (it was not loaded at finishing) is done, not planned
-  or missed, here and on the Programs tab, whose missed-day prompt knows
+  or missed, here and in the My program view, whose missed-day prompt knows
   only this week's done days. The missed next day shows on its date as
-  missed (resolved on the Programs tab, not started here) and again where
+  missed (resolved in the My program view, not started here) and again where
   it is planned now. A planned day starts through `startProgramDay`, so a
   locked premium copy's days show but open the paywall. A workout opens
   its history page, a cardio session its page (which finds only the 500

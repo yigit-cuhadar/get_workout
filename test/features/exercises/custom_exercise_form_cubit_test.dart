@@ -82,6 +82,38 @@ void main() {
     expect(cubit.isEditing, isTrue);
   });
 
+  group('hasChanges', () {
+    test('none as opened, new or edited', () {
+      expect(build().hasChanges, isFalse);
+      expect(build(stored).hasChanges, isFalse);
+    });
+
+    test('any input changes it; undoing the change removes it', () {
+      final cubit = build(stored)..setName('Landmine Row');
+      expect(cubit.hasChanges, isTrue);
+      cubit.setName('Landmine Press');
+      expect(cubit.hasChanges, isFalse);
+      cubit.toggleSecondaryMuscle(Muscle.pec);
+      expect(cubit.hasChanges, isTrue);
+      cubit.toggleSecondaryMuscle(Muscle.pec);
+      expect(cubit.hasChanges, isFalse);
+    });
+
+    test('a refused save is no change of its own', () async {
+      final cubit = build();
+      await cubit.save();
+      expect(cubit.state.issues, isNotEmpty);
+      expect(cubit.hasChanges, isFalse);
+    });
+
+    test('none once saved', () async {
+      final cubit = build(stored)..setNote('Slower');
+      await cubit.save();
+      expect(cubit.state.status, CustomExerciseFormStatus.saved);
+      expect(cubit.hasChanges, isFalse);
+    });
+  });
+
   test('a muscle is main or secondary, never both', () {
     final cubit = build()
       ..toggleSecondaryMuscle(Muscle.pec)

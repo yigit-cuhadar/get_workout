@@ -77,6 +77,10 @@ abstract final class Routes {
   static const today = '/today';
   static const programs = '/programs';
   static const programNew = '$programs/new';
+
+  /// [programNew] pushed above a page in Train, which saving or leaving it
+  /// returns to.
+  static const programNewReturning = '$programNew?return=true';
   static const catalogue = '$programs/catalogue';
   static const programGenerator = '$programs/generate';
 
@@ -218,6 +222,12 @@ List<String> openLocations(RouteMatchList stack) {
   visit(stack.matches);
   return open;
 }
+
+/// Whether [location] is in the Train tab, under either of its views.
+bool isInTrain(String location) => [
+  Routes.programs,
+  Routes.exercises,
+].any((root) => location == root || location.startsWith('$root/'));
 
 /// Whether the workout page, or one above it, is among the [open] pages.
 bool _workoutOpen(List<String> open) => open.any(
@@ -397,7 +407,9 @@ GoRouter buildRouter(
                   // Before ':id', which would match these too.
                   GoRoute(
                     path: 'new',
-                    builder: (_, _) => const ProgramBuilderPage(),
+                    builder: (_, state) => ProgramBuilderPage(
+                      returns: state.uri.queryParameters['return'] == 'true',
+                    ),
                   ),
                   GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
                   GoRoute(

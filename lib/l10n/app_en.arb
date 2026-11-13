@@ -820,6 +820,7 @@
   "customEquipment": "Equipment (optional)",
   "customNote": "Note (optional)",
   "customSave": "Save",
+  "customDiscardBody": "Your changes to this exercise will be lost.",
   "customDelete": "Delete",
   "customDeleteTitle": "Delete this exercise?",
   "customDeleteBody": "Programs that use it will show it as unavailable. This can't be undone.",

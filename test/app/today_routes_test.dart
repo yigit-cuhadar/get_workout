@@ -290,9 +290,7 @@ void main() {
       expectAt('/programs/p1');
     });
 
-    testWidgets('a missed day is resolved like on the Programs tab', (
-      tester,
-    ) async {
+    testWidgets('a missed day is resolved like in My program', (tester) async {
       await start(tester, programs: missed);
       when(() => list.resolveMissed(any())).thenAnswer((_) async {});
 

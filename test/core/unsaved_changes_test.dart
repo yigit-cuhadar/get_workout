@@ -22,52 +22,37 @@ class _Page implements UnsavedPage {
 
 void main() {
   group('drops', () {
+    // Every tab under its own first segment.
+    final separate = UnsavedChanges(sharedTabs: const {});
+
     test('going elsewhere in the same tab drops the page', () {
-      expect(
-        UnsavedChanges().drops(Routes.program('p1'), Routes.programNew),
-        isTrue,
-      );
-      expect(
-        UnsavedChanges().drops(Routes.programs, Routes.programEdit('p1')),
-        isTrue,
-      );
-      expect(UnsavedChanges().drops(Routes.today, '/today/x'), isTrue);
+      expect(separate.drops(Routes.program('p1'), Routes.programNew), isTrue);
+      expect(separate.drops(Routes.programs, Routes.programEdit('p1')), isTrue);
+      expect(separate.drops(Routes.today, '/today/x'), isTrue);
     });
 
     test('going to the page or past it keeps it', () {
+      expect(separate.drops(Routes.programNew, Routes.programNew), isFalse);
       expect(
-        UnsavedChanges().drops(Routes.programNew, Routes.programNew),
-        isFalse,
-      );
-      expect(
-        UnsavedChanges().drops(
-          Routes.historyEdit('w1'),
-          Routes.historyWorkout('w1'),
-        ),
+        separate.drops(Routes.historyEdit('w1'), Routes.historyWorkout('w1')),
         isFalse,
       );
     });
 
     test('a page whose path only starts the same is dropped', () {
       expect(
-        UnsavedChanges().drops('${Routes.programNew}x', Routes.programNew),
+        separate.drops('${Routes.programNew}x', Routes.programNew),
         isTrue,
       );
     });
 
     test('another tab keeps its own stack', () {
+      expect(separate.drops(Routes.calendar, Routes.programNew), isFalse);
       expect(
-        UnsavedChanges().drops(Routes.calendar, Routes.programNew),
+        separate.drops(Routes.profileDetails, Routes.bodyMeasureNew),
         isFalse,
       );
-      expect(
-        UnsavedChanges().drops(Routes.profileDetails, Routes.bodyMeasureNew),
-        isFalse,
-      );
-      expect(
-        UnsavedChanges().drops('/profiles', Routes.profileDetails),
-        isFalse,
-      );
+      expect(separate.drops('/profiles', Routes.profileDetails), isFalse);
     });
 
     test('a tab under several first segments is one stack', () {
@@ -76,13 +61,13 @@ void main() {
       expect(unsaved.drops('/b/x', '/a/edit'), isTrue);
       expect(unsaved.drops('/a', '/b/edit'), isTrue);
       expect(unsaved.drops('/c', '/a/edit'), isFalse);
-      expect(UnsavedChanges().drops('/b', '/a/edit'), isFalse);
+      expect(separate.drops('/b', '/a/edit'), isFalse);
     });
   });
 
   group('droppedBy', () {
     test('finds the page with changes that a location drops', () {
-      final unsaved = UnsavedChanges();
+      final unsaved = UnsavedChanges(sharedTabs: const {});
       final builder = _Page(Routes.programNew);
       final measure = _Page(Routes.bodyMeasureNew);
       unsaved
@@ -96,7 +81,7 @@ void main() {
     });
 
     test('skips pages without changes', () {
-      final unsaved = UnsavedChanges();
+      final unsaved = UnsavedChanges(sharedTabs: const {});
       final builder = _Page(Routes.programNew, hasUnsavedChanges: false);
       unsaved.add(builder);
 
@@ -106,7 +91,7 @@ void main() {
     });
 
     test('forgets a removed page', () {
-      final unsaved = UnsavedChanges();
+      final unsaved = UnsavedChanges(sharedTabs: const {});
       final builder = _Page(Routes.programNew);
       unsaved
         ..add(builder)
@@ -124,7 +109,7 @@ void main() {
     Future<void> pumpApp(WidgetTester tester) async {
       dirty = ValueNotifier(false);
       prompts = 0;
-      final unsaved = UnsavedChanges();
+      final unsaved = UnsavedChanges(sharedTabs: const {});
       router = GoRouter(
         initialLocation: '/a',
         onEnter: unsaved.onEnter,

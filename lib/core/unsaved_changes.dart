@@ -19,7 +19,7 @@ abstract interface class UnsavedPage {
 /// The open pages with unsaved changes, so that a navigation which would
 /// drop one asks first. Pages join through [UnsavedChangesGuard].
 class UnsavedChanges {
-  UnsavedChanges({this.sharedTabs = const {}});
+  UnsavedChanges({required this.sharedTabs});
 
   /// Tabs whose stack is another's, by first location: one tab's pages
   /// under several first path segments (`{'/b': '/a'}` puts `/b/...` in
