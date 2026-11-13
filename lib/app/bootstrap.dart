@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
+import 'package:forge_remote_config/forge_remote_config.dart';
 
 import '../features/body/body_module.dart';
 import '../features/account/account_module.dart';
@@ -31,7 +32,20 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
   WidgetsFlutterBinding.ensureInitialized();
   final telemetry = await initFirebase(options: options, env: env);
   await AccountModule.clearDeletedAccountCache();
+  const RemoteConfigModule(
+    defaults: SubscriptionModule.remoteConfigDefaults,
+    backend: FirebaseRemoteConfigBackend(
+      // Debug builds pick up a console change on the second launch after it.
+      minimumFetchInterval: kReleaseMode
+          ? Duration(hours: 12)
+          : Duration(minutes: 1),
+    ),
+  ).register(sl);
+  // Local only (the fetch runs in the background), alongside the restore. A
+  // failure is logged and leaves the defaults.
+  final remoteConfig = sl<RemoteConfigRepository>().initialize();
   await telemetry.restore(FirebaseAuth.instance.currentUser?.uid);
+  await remoteConfig;
   sl.registerSingleton<AppEnv>(env);
   registerModules([
     const AuthModule(guestStart: true),

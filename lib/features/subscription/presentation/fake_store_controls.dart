@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 
-import 'paywall_layout.dart';
+import '../domain/paywall_layout.dart';
 
 /// Debug builds on the fake store only: steers the fake and picks the
 /// paywall layout for device checks. Developer tooling, so its text is not
@@ -11,7 +11,7 @@ class FakeStoreControls extends StatefulWidget {
   const FakeStoreControls(this.store, {super.key, required this.paywallLayout});
 
   final FakePurchasesRepository store;
-  final PaywallLayoutChoice paywallLayout;
+  final PaywallLayoutOverride paywallLayout;
 
   @override
   State<FakeStoreControls> createState() => _FakeStoreControlsState();
@@ -55,9 +55,10 @@ class _FakeStoreControlsState extends State<FakeStoreControls> {
       ),
       ListTile(
         title: const Text('Paywall layout'),
-        trailing: DropdownButton<PaywallLayout>(
+        trailing: DropdownButton<PaywallLayout?>(
           value: widget.paywallLayout.layout,
           items: const [
+            DropdownMenuItem(child: Text('Remote Config')),
             DropdownMenuItem(
               value: PaywallLayout.list,
               child: Text('A: plan list'),
@@ -67,11 +68,8 @@ class _FakeStoreControlsState extends State<FakeStoreControls> {
               child: Text('B: plan cards'),
             ),
           ],
-          onChanged: (layout) {
-            if (layout != null) {
-              setState(() => widget.paywallLayout.layout = layout);
-            }
-          },
+          onChanged: (layout) =>
+              setState(() => widget.paywallLayout.layout = layout),
         ),
       ),
     ],

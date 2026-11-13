@@ -2,8 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_it/get_it.dart';
 import 'package:get_workout/features/subscription/data/unavailable_purchases_repository.dart';
-import 'package:get_workout/features/subscription/presentation/paywall_layout.dart';
+import 'package:forge_core/forge_core.dart';
+import 'package:forge_remote_config/forge_remote_config.dart';
+import 'package:get_workout/features/subscription/domain/paywall_layout.dart';
+import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
+
+class MockTelemetry extends Mock implements Telemetry {}
 
 void main() {
   late GetIt sl;
@@ -32,9 +38,26 @@ void main() {
     expect(SubscriptionModule.debugControls(sl), isNotNull);
   });
 
-  test('the paywall shows layout A until users are assigned', () {
+  test('the paywall reads its layout from Remote Config; a debug build '
+      'overrides it', () async {
+    const RemoteConfigModule(
+      defaults: SubscriptionModule.remoteConfigDefaults,
+      backend: FakeRemoteConfigBackend(),
+    ).register(sl);
+    sl.registerSingleton<Telemetry>(MockTelemetry());
     const SubscriptionModule(backend: FakeBackend(fakePlans)).register(sl);
 
-    expect(sl<PaywallLayoutChoice>().layout, PaywallLayout.list);
+    Future<PaywallLayout> layout() async {
+      final cubit = sl<PremiumPaywallCubit>();
+      await cubit.close();
+      return cubit.layout;
+    }
+
+    expect(await layout(), PaywallLayout.list);
+    sl<FakeRemoteConfigRepository>().values[paywallLayoutKey] = 'b';
+    expect(await layout(), PaywallLayout.cards);
+    // Tests run as a debug build.
+    sl<PaywallLayoutOverride>().layout = PaywallLayout.list;
+    expect(await layout(), PaywallLayout.list);
   });
 }
