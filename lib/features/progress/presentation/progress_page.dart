@@ -9,7 +9,6 @@ import '../../../app/router.dart';
 import '../../../core/first_weekday.dart';
 import '../../../core/sparkline.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../body/domain/measurement_summary.dart';
 import '../../body/presentation/body_list_cubit.dart';
 import '../../body/presentation/body_text.dart';
 import '../../cardio/presentation/cardio_list_cubit.dart';
@@ -128,7 +127,6 @@ class _ProgressViewState extends State<_ProgressView> {
                 ],
               ),
             ),
-            const _CompareTile(),
           ],
         ),
       ),
@@ -642,38 +640,6 @@ class _StepsProgress extends StatelessWidget {
           LinearProgressIndicator(value: progress.fraction),
         ],
       ),
-    );
-  }
-}
-
-/// Opens the newest measurement day compared with the previous one; off,
-/// saying why, until there are two.
-class _CompareTile extends StatelessWidget {
-  const _CompareTile();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return BlocSelector<BodyListCubit, BodyListState, (bool, String?)>(
-      selector: (state) => (
-        state.status == BodyListStatus.ready,
-        newestComparable(state.entries)?.id,
-      ),
-      builder: (context, selected) {
-        final (ready, id) = selected;
-        return ListTile(
-          leading: const Icon(Icons.compare),
-          title: Text(l10n.progressCompare),
-          subtitle: ready && id == null
-              ? Text(l10n.progressCompareNeedsTwo)
-              : null,
-          trailing: const Icon(Icons.chevron_right),
-          enabled: id != null,
-          onTap: id == null
-              ? null
-              : () => context.go(Routes.bodyEntryCompare(id)),
-        );
-      },
     );
   }
 }

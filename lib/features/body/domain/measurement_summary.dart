@@ -28,11 +28,6 @@ List<BodyEntry> comparableDays(List<BodyEntry> entries) => [
       entry,
 ];
 
-/// The newest of [comparableDays]; null with fewer than two measurement
-/// days.
-BodyEntry? newestComparable(List<BodyEntry> entries) =>
-    comparableDays(entries).firstOrNull;
-
 /// What an entry is compared with.
 sealed class Baseline extends Equatable {
   const Baseline();

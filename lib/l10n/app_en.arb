@@ -294,8 +294,6 @@
   "progressCalendar": "Calendar",
   "progressSteps": "Steps",
   "progressBody": "Body",
-  "progressCompare": "Compare measurement days",
-  "progressCompareNeedsTwo": "Needs two measurement days",
   "progressBodyFat": "{percent} body fat · measured {date}",
   "@progressBodyFat": {"placeholders": {"percent": {"type": "String"}, "date": {"type": "String"}}},
   "progressWorkoutsThisMonth": "{count, plural, =0{No workouts this month} =1{1 workout this month} other{{count} workouts this month}}",

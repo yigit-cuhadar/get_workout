@@ -62,13 +62,6 @@ void main() {
       expect(baselineCandidates(entries, oldest), isEmpty);
     });
 
-    test('the newest comparable day needs an earlier one', () {
-      expect(newestComparable(entries), newest);
-      expect(newestComparable([log, oldest]), isNull);
-      expect(newestComparable([newest, log]), isNull);
-      expect(newestComparable(const []), isNull);
-    });
-
     test('previous, first and a chosen day', () {
       const find = FindBaseline();
 
