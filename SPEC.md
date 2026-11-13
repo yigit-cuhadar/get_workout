@@ -617,8 +617,8 @@ from the earlier FitLab app.
   bar, "Generate a program" above the question, the answer near the
   thumb, Next or "Create my program" at the bottom; Back on the first
   question leaves). The preview: split and summary, the uncovered muscles
-  as a card, a Weekly sets card with each target muscle as a bar over the
-  10-20 band (`VolumeBandBar`) and "x of target", then the days as the
+  as a card, a Weekly sets card with each target muscle as a plain bar
+  filled to its own target (full once met) and "x of target", then the days as the
   program page's day cards (`ProgramDayCard`, without ▶), the first open
   and again after Regenerate; Regenerate and Save fixed at the bottom.
 - **Steps**: read-only from Apple Health / Health Connect through

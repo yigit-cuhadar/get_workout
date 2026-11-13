@@ -12,7 +12,6 @@ import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_day_section.dart';
 import '../domain/generator_answers.dart';
 import '../domain/program_generator.dart';
-import '../../volume/presentation/volume_charts.dart';
 import 'generator_preview_cubit.dart';
 import 'generator_text.dart';
 
@@ -161,8 +160,8 @@ class _Program extends StatelessWidget {
   }
 }
 
-/// Each target muscle's weekly sets as a bar over the reference band, and
-/// against its target for these answers.
+/// Each target muscle's weekly sets as a bar filled towards its own target
+/// for these answers.
 class _WeeklySets extends StatelessWidget {
   const _WeeklySets(this.program);
 
@@ -171,7 +170,6 @@ class _WeeklySets extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scale = volumeScale(program.weeklySets.values);
     return Card(
       margin: EdgeInsets.zero,
       child: Column(
@@ -190,9 +188,11 @@ class _WeeklySets extends StatelessWidget {
               title: Text(l10n.muscleName(muscle)),
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: Gap.sm),
-                child: VolumeBandBar(
-                  sets: program.weeklySets[muscle] ?? 0,
-                  scale: scale,
+                child: LinearProgressIndicator(
+                  value: ((program.weeklySets[muscle] ?? 0) / target).clamp(
+                    0,
+                    1,
+                  ),
                 ),
               ),
               trailing: Text(
