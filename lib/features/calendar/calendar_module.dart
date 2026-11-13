@@ -12,7 +12,7 @@ class CalendarModule implements FeatureModule {
   @override
   void register(GetIt sl) {
     sl
-      // One per calendar page; the parameter is the locale's first weekday.
+      // One per calendar page; the parameter is the app's first weekday.
       ..registerFactoryParam<CalendarCubit, int, void>(
         (firstWeekday, _) => CalendarCubit(
           firstWeekday: firstWeekday,

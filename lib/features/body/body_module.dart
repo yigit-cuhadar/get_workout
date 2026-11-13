@@ -108,7 +108,7 @@ class BodyModule implements FeatureModule {
           deleteEntry: sl(),
         ),
       )
-      // One per Body page; the parameter is the locale's first weekday.
+      // One per Body page; the parameter is the app's first weekday.
       ..registerFactoryParam<BodyChartCubit, int, void>(
         (firstWeekday, _) => BodyChartCubit(
           firstWeekday: firstWeekday,

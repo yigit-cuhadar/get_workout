@@ -75,8 +75,12 @@ extension ProgramText on AppLocalizations {
   String weekdayLong(int weekday) =>
       DateFormat.EEEE(localeName).format(DateTime(2024, 1, weekday));
 
-  String weekdayList(List<int> weekdays) =>
-      weekdays.map(weekdayShort).join(listSeparator);
+  /// [weekdays] in the order of a week starting on [firstWeekday].
+  String weekdayList(List<int> weekdays, int firstWeekday) =>
+      weekdaysFrom(firstWeekday)
+          .where(weekdays.contains)
+          .map(weekdayShort)
+          .join(listSeparator);
 
   String planDate(CalendarDate date) =>
       DateFormat.MMMEd(localeName).format(date.toLocalDateTime());

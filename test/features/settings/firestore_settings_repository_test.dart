@@ -109,6 +109,52 @@ void main() {
     expect(await repository.watchSettings('u1').first, settings);
   });
 
+  group('week start', () {
+    test('is stored as a code and read back', () async {
+      for (final start in [
+        WeekStart.monday,
+        WeekStart.sunday,
+        WeekStart.saturday,
+      ]) {
+        final settings = defaults.copyWith(weekStart: start);
+        await repository.saveSettings('u1', settings);
+        expect(
+          ((await user().get()).data()!['settings'] as Map)['weekStart'],
+          start.name,
+        );
+        expect(await repository.watchSettings('u1').first, settings);
+      }
+    });
+
+    test('automatic is not stored', () async {
+      await user().set({
+        'settings': {'weekStart': 'sunday'},
+      });
+
+      await repository.saveSettings('u1', defaults);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored.containsKey('weekStart'), isFalse);
+      expect(
+        (await repository.watchSettings('u1').first).weekStart,
+        WeekStart.automatic,
+      );
+    });
+
+    test('missing, unknown or malformed reads as automatic', () async {
+      for (final raw in [null, 'friday', 'automatic', 1]) {
+        await user().set({
+          'settings': {'weekStart': raw},
+        });
+        expect(
+          (await repository.watchSettings('u1').first).weekStart,
+          WeekStart.automatic,
+          reason: '$raw',
+        );
+      }
+    });
+  });
+
   group('reminders', () {
     test('are stored and read back', () async {
       final settings = defaults.copyWith(

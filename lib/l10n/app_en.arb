@@ -117,6 +117,8 @@
   "settingsRestNotify": "Notify when rest is over",
   "settingsRestNotifyDenied": "Notifications are off for GetWorkout. Turn them on in the system settings.",
   "settingsTheme": "Theme",
+  "settingsWeekStart": "Week starts on",
+  "weekStartAutomatic": "Automatic",
   "settingsSaveFailed": "Couldn't save settings. Try again",
   "unitKg": "kg",
   "unitLb": "lb",

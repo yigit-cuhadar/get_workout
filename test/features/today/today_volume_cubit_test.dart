@@ -230,4 +230,26 @@ void main() {
       ready(const [], start: d(2026, 11, 15)),
     ],
   );
+
+  blocTest<TodayVolumeCubit, TodayVolumeState>(
+    'follows a new first weekday, the same one changes nothing',
+    build: build,
+    act: (cubit) async {
+      users.add(alice);
+      await pumpEventQueue();
+      week('u1', sunday).add([squats]);
+      await pumpEventQueue();
+      cubit.changeFirstWeekday(DateTime.sunday);
+      cubit.changeFirstWeekday(DateTime.monday);
+      await pumpEventQueue();
+      // The Sunday week no longer counts.
+      week('u1', sunday).add(const []);
+      week('u1', d(2026, 11, 9)).add([squats]);
+    },
+    expect: () => [
+      ready([squats]),
+      TodayVolumeState(weekStart: d(2026, 11, 9)),
+      ready([squats], start: d(2026, 11, 9)),
+    ],
+  );
 }

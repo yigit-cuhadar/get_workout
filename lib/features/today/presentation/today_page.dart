@@ -5,7 +5,6 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
-import '../../../core/first_weekday.dart';
 import '../../../core/text_length.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calculators/presentation/calculator_list.dart';
@@ -17,6 +16,7 @@ import '../../programs/domain/program_editing.dart';
 import '../../programs/presentation/missed_day_prompt.dart';
 import '../../programs/presentation/program_list_cubit.dart';
 import '../../programs/presentation/program_text.dart';
+import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../steps/domain/steps.dart';
 import '../../volume/domain/weekly_volume.dart';
@@ -39,9 +39,8 @@ class TodayPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firstWeekday = MaterialLocalizations.of(context).firstWeekday;
+    final firstWeekday = context.watchFirstWeekday();
     return MultiBlocProvider(
-      key: ValueKey(firstWeekday),
       providers: [
         // Train's, so both show the same plan.
         BlocProvider.value(value: sl<ProgramListCubit>()),
@@ -49,7 +48,14 @@ class TodayPage extends StatelessWidget {
         BlocProvider(create: (_) => sl<TodayVolumeCubit>(param1: firstWeekday)),
         BlocProvider(create: (_) => sl<TodayStepsCubit>()),
       ],
-      child: const _TodayView(),
+      child: FirstWeekdayListener(
+        created: firstWeekday,
+        onChanged: (context, firstWeekday) {
+          context.read<TodayWeekCubit>().changeFirstWeekday(firstWeekday);
+          context.read<TodayVolumeCubit>().changeFirstWeekday(firstWeekday);
+        },
+        child: const _TodayView(),
+      ),
     );
   }
 }

@@ -330,18 +330,69 @@ void main() {
 
     test('a week starts on Monday at local midnight', () {
       // Wednesday 11 Nov 2026.
-      expect(weekStart(DateTime(2026, 11, 11, 18, 30)), DateTime(2026, 11, 9));
-      expect(weekStart(DateTime(2026, 11, 9)), DateTime(2026, 11, 9));
+      expect(
+        weekStart(DateTime(2026, 11, 11, 18, 30), DateTime.monday),
+        DateTime(2026, 11, 9),
+      );
+      expect(
+        weekStart(DateTime(2026, 11, 9), DateTime.monday),
+        DateTime(2026, 11, 9),
+      );
       // Sunday belongs to the week that began six days earlier.
-      expect(weekStart(DateTime(2026, 11, 15, 23, 59)), DateTime(2026, 11, 9));
+      expect(
+        weekStart(DateTime(2026, 11, 15, 23, 59), DateTime.monday),
+        DateTime(2026, 11, 9),
+      );
+    });
+
+    test('a week starts on the first weekday given', () {
+      // Wednesday 11 Nov 2026.
+      final wednesday = DateTime(2026, 11, 11, 18, 30);
+      expect(weekStart(wednesday, DateTime.sunday), DateTime(2026, 11, 8));
+      expect(weekStart(wednesday, DateTime.saturday), DateTime(2026, 11, 7));
+      expect(
+        weekStart(DateTime(2026, 11, 8, 7), DateTime.sunday),
+        DateTime(2026, 11, 8),
+      );
+      expect(
+        weekStart(DateTime(2026, 11, 15, 7), DateTime.sunday),
+        DateTime(2026, 11, 15),
+      );
+    });
+
+    test('a Sunday joins the next week when weeks start on Sunday', () {
+      final sessions = [
+        at(DateTime(2026, 11, 16, 8)),
+        at(DateTime(2026, 11, 15, 8)),
+        at(DateTime(2026, 11, 14, 8)),
+      ];
+      expect(groupByWeek(sessions, DateTime.monday).map((w) => w.start), [
+        DateTime(2026, 11, 16),
+        DateTime(2026, 11, 9),
+      ]);
+      expect(groupByWeek(sessions, DateTime.sunday).map((w) => w.start), [
+        DateTime(2026, 11, 15),
+        DateTime(2026, 11, 8),
+      ]);
+      final chart = lastWeeks(
+        sessions,
+        DateTime.sunday,
+        now: DateTime(2026, 11, 16, 12),
+      );
+      expect(chart.last.start, DateTime(2026, 11, 15));
+      expect(chart.last.sessions, hasLength(2));
+      expect(chart[chart.length - 2].sessions, hasLength(1));
     });
 
     test('the week across New Year is one week', () {
       // Monday 29 Dec 2025 starts ISO week 1 of 2026.
       final start = DateTime(2025, 12, 29);
-      expect(weekStart(DateTime(2025, 12, 31, 20)), start);
-      expect(weekStart(DateTime(2026, 1, 4, 10)), start);
-      expect(weekStart(DateTime(2026, 1, 5)), DateTime(2026, 1, 5));
+      expect(weekStart(DateTime(2025, 12, 31, 20), DateTime.monday), start);
+      expect(weekStart(DateTime(2026, 1, 4, 10), DateTime.monday), start);
+      expect(
+        weekStart(DateTime(2026, 1, 5), DateTime.monday),
+        DateTime(2026, 1, 5),
+      );
     });
 
     test('groupByWeek keeps order and totals each week', () {
@@ -352,7 +403,7 @@ void main() {
         at(DateTime(2025, 12, 21, 8), minutes: 60, km: 10),
       ];
 
-      final weeks = groupByWeek(sessions);
+      final weeks = groupByWeek(sessions, DateTime.monday);
 
       expect(weeks.map((w) => w.start), [
         DateTime(2026, 1, 5),
@@ -370,7 +421,7 @@ void main() {
         at(DateTime(2026, 1, 5, 8)),
         at(DateTime(2026, 1, 5, 7), km: 2.5),
         at(DateTime(2025, 12, 29, 8)),
-      ]);
+      ], DateTime.monday);
 
       expect(weeks.first.distanceKm, 6.5);
       expect(weeks.last.distanceKm, isNull);
@@ -387,7 +438,7 @@ void main() {
         at(DateTime(2025, 10, 1), minutes: 99),
       ];
 
-      final weeks = lastWeeks(sessions, now: now);
+      final weeks = lastWeeks(sessions, DateTime.monday, now: now);
 
       expect(weeks, hasLength(12));
       expect(weeks.last.start, DateTime(2026, 1, 5));
@@ -407,7 +458,7 @@ void main() {
         DateTime(2026, 4, 15, 12),
         DateTime(2026, 11, 20, 12),
       ]) {
-        final weeks = lastWeeks(const [], now: now);
+        final weeks = lastWeeks(const [], DateTime.monday, now: now);
         for (final week in weeks) {
           expect(week.start.weekday, DateTime.monday, reason: '${week.start}');
           expect(week.start.hour, 0, reason: '${week.start}');
@@ -433,7 +484,7 @@ void main() {
         at(DateTime(2026, 3, 8, 3, 30), minutes: 40),
       ];
 
-      final weeks = lastWeeks(sessions, now: now);
+      final weeks = lastWeeks(sessions, DateTime.monday, now: now);
 
       expect(weeks.last.start, DateTime(2026, 3, 30));
       expect(weeks.last.duration, const Duration(minutes: 20));

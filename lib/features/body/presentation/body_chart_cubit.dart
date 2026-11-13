@@ -94,7 +94,7 @@ class BodyChartState extends Equatable {
 /// this never asks for access. Weeks start on ISO weekday [firstWeekday].
 class BodyChartCubit extends Cubit<BodyChartState> {
   BodyChartCubit({
-    required this.firstWeekday,
+    required this._firstWeekday,
     required this._body,
     required WatchAuthUser watchAuthUser,
     required WatchPremium watchPremium,
@@ -119,7 +119,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
     _publish();
   }
 
-  final int firstWeekday;
+  int _firstWeekday;
   final BodyListCubit _body;
   final LoadBodyChart _loadChoice;
   final SaveBodyChart _saveChoice;
@@ -199,6 +199,14 @@ class BodyChartCubit extends Cubit<BodyChartState> {
     _publish();
   }
 
+  /// Starts the weeks of the bars on [firstWeekday] from now on, reading
+  /// them again.
+  void changeFirstWeekday(int firstWeekday) {
+    if (firstWeekday == _firstWeekday) return;
+    _firstWeekday = firstWeekday;
+    _publish();
+  }
+
   /// Reads the steps again, e.g. as the app comes back with today's grown.
   void refreshSteps() {
     _rereadSteps = true;
@@ -273,7 +281,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
     final oldestEntry = body.entries.lastOrNull?.date;
     _followSets(
       shown.contains(BodySeries.weeklySets)
-          ? chartWeeks(rangeStart ?? earliestDate, now, firstWeekday)
+          ? chartWeeks(rangeStart ?? earliestDate, now, _firstWeekday)
           : null,
     );
     _readSteps(
@@ -284,7 +292,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
                       ? oldestEntry
                       : yearBack),
               now,
-              firstWeekday,
+              _firstWeekday,
             )
           : null,
       now,
@@ -311,7 +319,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
           else
             ?lines[series]!.firstOrNull?.date,
     ]);
-    final weeks = start == null ? null : chartWeeks(start, now, firstWeekday);
+    final weeks = start == null ? null : chartWeeks(start, now, _firstWeekday);
     final hasBars = weeks != null && shown.any((series) => series.isBar);
     final from = hasBars ? weeks.first.toLocalDateTime() : start;
     emit(
@@ -419,7 +427,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
             return;
         }
       }
-      _steps = weeklyStepAverages(days, firstWeekday, now: now);
+      _steps = weeklyStepAverages(days, _firstWeekday, now: now);
       _publish();
     }());
   }

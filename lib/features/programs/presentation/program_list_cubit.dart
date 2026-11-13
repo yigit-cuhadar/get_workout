@@ -135,7 +135,8 @@ class ProgramListState extends Equatable {
 }
 
 /// The programs and the active program of whoever is signed in, with this
-/// week's plan. Resets to loading on every user change, so a previous
+/// week's plan from the app's first weekday (see [changeFirstWeekday]).
+/// Resets to loading on every user change, so a previous
 /// user's programs are never shown.
 class ProgramListCubit extends Cubit<ProgramListState> {
   ProgramListCubit({
@@ -184,6 +185,10 @@ class ProgramListCubit extends Cubit<ProgramListState> {
 
   /// The program and week the completed days are followed for.
   (String, CalendarDate)? _completedFor;
+
+  /// One for the whole app, made without a context: Monday until the app
+  /// calls [changeFirstWeekday].
+  int _firstWeekday = DateTime.monday;
 
   CalendarDate get _today => CalendarDate.of(_clock());
 
@@ -236,6 +241,14 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     _emitReady();
   }
 
+  /// Starts the week of the plan on [firstWeekday] from now on.
+  void changeFirstWeekday(int firstWeekday) {
+    if (firstWeekday == _firstWeekday) return;
+    _firstWeekday = firstWeekday;
+    _followCompleted();
+    _emitReady();
+  }
+
   void _follow({bool keepNotices = true}) {
     _cancel();
     _programs = null;
@@ -263,7 +276,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
   void _followCompleted() {
     final uid = _uid;
     final active = _active;
-    final week = _today.weekStart;
+    final week = _today.startOfWeek(_firstWeekday);
     final key = active == null ? null : (active.programId, week);
     if (key == _completedFor) return;
     _completedFor = key;
@@ -318,7 +331,13 @@ class ProgramListCubit extends Cubit<ProgramListState> {
         status: ProgramListStatus.ready,
         programs: programs,
         active: active,
-        weekPlan: schedule?.weekPlan(today, completed: _completed) ?? const [],
+        weekPlan:
+            schedule?.weekPlan(
+              today,
+              firstWeekday: _firstWeekday,
+              completed: _completed,
+            ) ??
+            const [],
         finished: finished,
         nextDate: finished ? null : schedule?.upcoming(today).firstOrNull?.date,
         missed: missed

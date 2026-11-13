@@ -7,10 +7,10 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/bar_chart.dart';
-import '../../../core/first_weekday.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../settings/domain/user_settings.dart';
+import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/steps.dart';
 import 'steps_cubit.dart';
@@ -247,7 +247,7 @@ class _StepsState extends State<_Steps> {
     final goal = context.select(
       (SettingsCubit cubit) => cubit.state.settings.stepGoal,
     );
-    final firstWeekday = MaterialLocalizations.of(context).firstWeekday;
+    final firstWeekday = context.watchFirstWeekday();
     final locale = l10n.localeName;
     final days = _month ? history.days : history.week(firstWeekday);
     final title = _month

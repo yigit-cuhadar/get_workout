@@ -5,6 +5,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
+import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/reminder_settings_changes.dart';
 import 'notifications_cubit.dart';
@@ -81,7 +82,7 @@ class ReminderSettingsTiles extends StatelessWidget {
           ),
           _PickTile(
             title: l10n.settingsReminderDay,
-            values: const [1, 2, 3, 4, 5, 6, 7],
+            values: weekdaysFrom(context.watchFirstWeekday()),
             selected: measurement.from?.weekday ?? DateTime.now().weekday,
             labelOf: l10n.weekdayLong,
             onChanged: (weekday) => update(

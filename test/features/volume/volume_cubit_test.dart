@@ -395,4 +395,57 @@ void main() {
       ready(thisMonday, const []),
     ],
   );
+
+  group('a new first weekday', () {
+    blocTest<VolumeCubit, VolumeState>(
+      'moves the current week to the new current week',
+      build: build,
+      act: (cubit) async {
+        users.add(member);
+        await pumpEventQueue();
+        range('u1', thisMonday).add([squats]);
+        await pumpEventQueue();
+        cubit.changeFirstWeekday(DateTime.monday);
+        cubit.changeFirstWeekday(DateTime.sunday);
+        await pumpEventQueue();
+        range('u1', thisSunday).add([squats]);
+      },
+      expect: () => [
+        ready(thisMonday, [squats]),
+        VolumeState(week: thisSunday, thisWeek: thisSunday),
+        VolumeState(
+          week: thisSunday,
+          thisWeek: thisSunday,
+          status: VolumeStatus.ready,
+          weeks: weeksOf(thisSunday, [squats]),
+        ),
+      ],
+    );
+
+    blocTest<VolumeCubit, VolumeState>(
+      'moves an earlier week to the one sharing most of its days',
+      build: build,
+      act: (cubit) async {
+        users.add(member);
+        await pumpEventQueue();
+        cubit.previousWeek();
+        await pumpEventQueue();
+        cubit.changeFirstWeekday(DateTime.saturday);
+        await pumpEventQueue();
+      },
+      verify: (cubit) {
+        // Monday 2 to Sunday 8 becomes Saturday 31 October to Friday 6.
+        expect(cubit.state.week, d(2026, 10, 31));
+        expect(cubit.state.thisWeek, d(2026, 11, 7));
+        expect(cubit.state.status, VolumeStatus.loading);
+        verify(
+          () => workouts.watchWorkoutsBetween(
+            'u1',
+            from: d(2026, 10, 31),
+            to: d(2026, 11, 6),
+          ),
+        ).called(1);
+      },
+    );
+  });
 }

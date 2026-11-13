@@ -95,11 +95,17 @@ void main() {
     });
 
     test('starts its week on Monday, also across month and year ends', () {
-      expect(d(2026, 11, 11).weekStart, d(2026, 11, 9));
-      expect(d(2026, 11, 9).weekStart, d(2026, 11, 9));
-      expect(d(2026, 11, 15).weekStart, d(2026, 11, 9));
-      expect(d(2026, 12, 3).weekStart, d(2026, 11, 30));
-      expect(d(2027, 1, 3).weekStart, d(2026, 12, 28));
+      expect(d(2026, 11, 11).startOfWeek(DateTime.monday), d(2026, 11, 9));
+      expect(d(2026, 11, 9).startOfWeek(DateTime.monday), d(2026, 11, 9));
+      expect(d(2026, 11, 15).startOfWeek(DateTime.monday), d(2026, 11, 9));
+      expect(d(2026, 12, 3).startOfWeek(DateTime.monday), d(2026, 11, 30));
+      expect(d(2027, 1, 3).startOfWeek(DateTime.monday), d(2026, 12, 28));
+    });
+
+    test('lists the weekdays of a week in its order', () {
+      expect(weekdaysFrom(DateTime.monday), [1, 2, 3, 4, 5, 6, 7]);
+      expect(weekdaysFrom(DateTime.sunday), [7, 1, 2, 3, 4, 5, 6]);
+      expect(weekdaysFrom(DateTime.saturday), [6, 7, 1, 2, 3, 4, 5]);
     });
 
     test('starts its week on any weekday a locale uses', () {
@@ -285,11 +291,26 @@ void main() {
   });
 
   group('weekPlan', () {
+    test('covers the week from the first weekday given', () {
+      final plan = schedule(active(nextDate: d(2026, 11, 16)));
+      // Sunday 15 November ends a Monday week and starts a Sunday one.
+      expect(
+        plan.weekPlan(d(2026, 11, 15), firstWeekday: DateTime.monday),
+        isEmpty,
+      );
+      expect(plan.weekPlan(d(2026, 11, 15), firstWeekday: DateTime.sunday), [
+        planned(d(2026, 11, 16), 0),
+        planned(d(2026, 11, 18), 1),
+        planned(d(2026, 11, 20), 2),
+      ]);
+    });
+
     test('marks done days and plans the rest of the week', () {
       final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
       expect(
         plan.weekPlan(
           d(2026, 11, 11),
+          firstWeekday: DateTime.monday,
           completed: [CompletedDay(date: d(2026, 11, 9), dayIndex: 0)],
         ),
         [
@@ -302,7 +323,7 @@ void main() {
 
     test('a missed day shows once; the same day is planned from today', () {
       final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
-      expect(plan.weekPlan(d(2026, 11, 12)), [
+      expect(plan.weekPlan(d(2026, 11, 12), firstWeekday: DateTime.monday), [
         missed(d(2026, 11, 11), 1),
         planned(d(2026, 11, 13), 1),
       ]);
@@ -311,12 +332,12 @@ void main() {
     test('no later day is planned before the missed one', () {
       // Mon/Wed/Fri, day 0 missed on Monday, looked at on Friday.
       final plan = schedule(active(nextDate: d(2026, 11, 9)));
-      expect(plan.weekPlan(d(2026, 11, 13)), [
+      expect(plan.weekPlan(d(2026, 11, 13), firstWeekday: DateTime.monday), [
         missed(d(2026, 11, 9), 0),
         planned(d(2026, 11, 13), 0),
       ]);
       // On Thursday, a rest day, the missed day waits for Friday.
-      expect(plan.weekPlan(d(2026, 11, 12)), [
+      expect(plan.weekPlan(d(2026, 11, 12), firstWeekday: DateTime.monday), [
         missed(d(2026, 11, 9), 0),
         planned(d(2026, 11, 13), 0),
       ]);
@@ -324,12 +345,14 @@ void main() {
 
     test('today is planned, not missed', () {
       final plan = schedule(active(nextDate: d(2026, 11, 13)));
-      expect(plan.weekPlan(d(2026, 11, 13)), [planned(d(2026, 11, 13), 0)]);
+      expect(plan.weekPlan(d(2026, 11, 13), firstWeekday: DateTime.monday), [
+        planned(d(2026, 11, 13), 0),
+      ]);
     });
 
     test('a day missed last week is planned again this week', () {
       final plan = schedule(active(nextDayIndex: 2, nextDate: d(2026, 11, 6)));
-      expect(plan.weekPlan(d(2026, 11, 11)), [
+      expect(plan.weekPlan(d(2026, 11, 11), firstWeekday: DateTime.monday), [
         planned(d(2026, 11, 11), 2),
         planned(d(2026, 11, 13), 0),
       ]);
@@ -340,7 +363,9 @@ void main() {
         active(weekdays: const [3], nextDate: d(2026, 11, 11)),
         dayCount: 1,
       );
-      expect(plan.weekPlan(d(2026, 11, 10)), [planned(d(2026, 11, 11), 0)]);
+      expect(plan.weekPlan(d(2026, 11, 10), firstWeekday: DateTime.monday), [
+        planned(d(2026, 11, 11), 0),
+      ]);
     });
 
     test('done days outside the week are left out', () {
@@ -348,6 +373,7 @@ void main() {
       expect(
         plan.weekPlan(
           d(2026, 11, 15),
+          firstWeekday: DateTime.monday,
           completed: [
             CompletedDay(date: d(2026, 11, 8), dayIndex: 1),
             CompletedDay(date: d(2026, 11, 13), dayIndex: 2),
@@ -362,7 +388,7 @@ void main() {
         active(weekdays: const [1, 4], nextDate: d(2026, 11, 30)),
         dayCount: 2,
       );
-      expect(plan.weekPlan(d(2026, 12, 1)), [
+      expect(plan.weekPlan(d(2026, 12, 1), firstWeekday: DateTime.monday), [
         missed(d(2026, 11, 30), 0),
         planned(d(2026, 12, 3), 0),
       ]);
@@ -379,6 +405,7 @@ void main() {
       expect(
         plan.weekPlan(
           d(2026, 12, 31),
+          firstWeekday: DateTime.monday,
           completed: [CompletedDay(date: d(2026, 12, 29), dayIndex: 0)],
         ),
         [
@@ -394,7 +421,7 @@ void main() {
         active(weekdays: const [6, 7], nextDate: d(2026, 10, 24)),
         dayCount: 2,
       );
-      expect(plan.weekPlan(d(2026, 10, 25)), [
+      expect(plan.weekPlan(d(2026, 10, 25), firstWeekday: DateTime.monday), [
         missed(d(2026, 10, 24), 0),
         planned(d(2026, 10, 25), 0),
       ]);
@@ -405,11 +432,18 @@ void main() {
     test('a day done twice on one date shows once', () {
       final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
       final twice = CompletedDay(date: d(2026, 11, 9), dayIndex: 0);
-      expect(plan.weekPlan(d(2026, 11, 11), completed: [twice, twice]), [
-        done(d(2026, 11, 9), 0),
-        planned(d(2026, 11, 11), 1),
-        planned(d(2026, 11, 13), 2),
-      ]);
+      expect(
+        plan.weekPlan(
+          d(2026, 11, 11),
+          firstWeekday: DateTime.monday,
+          completed: [twice, twice],
+        ),
+        [
+          done(d(2026, 11, 9), 0),
+          planned(d(2026, 11, 11), 1),
+          planned(d(2026, 11, 13), 2),
+        ],
+      );
     });
 
     test('a planned day done on its date shows only as done', () {
@@ -418,6 +452,7 @@ void main() {
       expect(
         plan.weekPlan(
           d(2026, 11, 11),
+          firstWeekday: DateTime.monday,
           completed: [CompletedDay(date: d(2026, 11, 11), dayIndex: 0)],
         ),
         [done(d(2026, 11, 11), 0), planned(d(2026, 11, 13), 1)],
@@ -430,6 +465,7 @@ void main() {
       expect(
         plan.weekPlan(
           d(2026, 11, 12),
+          firstWeekday: DateTime.monday,
           completed: [CompletedDay(date: d(2026, 11, 11), dayIndex: 1)],
         ),
         [done(d(2026, 11, 11), 1), planned(d(2026, 11, 13), 1)],
@@ -441,6 +477,7 @@ void main() {
       expect(
         plan.weekPlan(
           d(2026, 11, 11),
+          firstWeekday: DateTime.monday,
           completed: [CompletedDay(date: d(2026, 11, 11), dayIndex: 2)],
         ),
         [
@@ -670,10 +707,16 @@ void main() {
     });
 
     test('the plan of the last week stops at the end', () {
-      expect(twoWeeks(d(2026, 11, 23)).weekPlan(d(2026, 11, 23)), [
-        planned(d(2026, 11, 23), 0),
-      ]);
-      expect(twoWeeks(d(2026, 11, 25)).weekPlan(d(2026, 11, 25)), isEmpty);
+      expect(
+        twoWeeks(d(2026, 11, 23))
+            .weekPlan(d(2026, 11, 23), firstWeekday: DateTime.monday),
+        [planned(d(2026, 11, 23), 0)],
+      );
+      expect(
+        twoWeeks(d(2026, 11, 25))
+            .weekPlan(d(2026, 11, 25), firstWeekday: DateTime.monday),
+        isEmpty,
+      );
     });
 
     test('without a length a program never finishes', () {

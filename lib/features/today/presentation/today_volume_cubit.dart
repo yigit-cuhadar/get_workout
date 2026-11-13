@@ -33,16 +33,17 @@ class TodayVolumeState extends Equatable {
 
 /// This week's sets per muscle of whoever is signed in, for the Today
 /// card: `WatchWeeklyVolume` with one week, never the trend. Weeks start
-/// on ISO weekday [firstWeekday], as the locale does. Follows the library
+/// on ISO weekday [firstWeekday], the app's. Follows the library
 /// like the volume page; drops everything on a user change.
 class TodayVolumeCubit extends Cubit<TodayVolumeState> {
   TodayVolumeCubit({
-    required this.firstWeekday,
+    required int firstWeekday,
     required WatchAuthUser watchAuthUser,
     required this._watchVolume,
     required ExerciseCatalogueCubit catalogue,
     DateTime Function()? clock,
-  }) : _clock = clock ?? DateTime.now,
+  }) : _firstWeekday = firstWeekday,
+       _clock = clock ?? DateTime.now,
        super(TodayVolumeState(weekStart: _weekStart(firstWeekday, clock))) {
     _muscles = _musclesOf(catalogue.state);
     _catalogueSubscription = catalogue.stream.listen((state) {
@@ -58,7 +59,8 @@ class TodayVolumeCubit extends Cubit<TodayVolumeState> {
         });
   }
 
-  final int firstWeekday;
+  int _firstWeekday;
+  int get firstWeekday => _firstWeekday;
   final WatchWeeklyVolume _watchVolume;
   final DateTime Function() _clock;
   late final StreamSubscription<ExerciseCatalogueState> _catalogueSubscription;
@@ -90,7 +92,14 @@ class TodayVolumeCubit extends Cubit<TodayVolumeState> {
 
   /// Follows the new week once the current one has ended.
   void refreshNow() {
-    if (_weekStart(firstWeekday, _clock) != state.weekStart) _follow();
+    if (_weekStart(_firstWeekday, _clock) != state.weekStart) _follow();
+  }
+
+  /// Starts the week on [firstWeekday] from now on.
+  void changeFirstWeekday(int firstWeekday) {
+    if (firstWeekday == _firstWeekday) return;
+    _firstWeekday = firstWeekday;
+    _follow();
   }
 
   /// Follows the week again after a failure.
@@ -104,7 +113,7 @@ class TodayVolumeCubit extends Cubit<TodayVolumeState> {
     unawaited(_volumeSubscription?.cancel());
     _volumeSubscription = null;
     final generation = ++_generation;
-    final weekStart = _weekStart(firstWeekday, _clock);
+    final weekStart = _weekStart(_firstWeekday, _clock);
     final loading = TodayVolumeState(weekStart: weekStart);
     final kept =
         keep &&

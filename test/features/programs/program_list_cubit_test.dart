@@ -345,6 +345,46 @@ void main() {
     ).called(1),
   );
 
+  blocTest<ProgramListCubit, ProgramListState>(
+    'plans the week from a new first weekday with its done days',
+    build: build,
+    act: (cubit) async {
+      await signIn(member);
+      programs['u1']!.add([upperLower]);
+      actives['u1']!.add(active);
+      await pumpEventQueue();
+      // Sunday 15 November: the last day of a Monday week.
+      now = DateTime(2026, 11, 15, 8);
+      cubit.refreshNow();
+      cubit.changeFirstWeekday(DateTime.sunday);
+      await pumpEventQueue();
+      completed.add(const []);
+    },
+    verify: (cubit) {
+      // The Sunday week starts today; the missed Thursday shows no more.
+      expect(cubit.state.weekPlan, [
+        PlannedDay(
+          date: CalendarDate(2026, 11, 16),
+          dayIndex: 1,
+          status: PlannedStatus.planned,
+        ),
+        PlannedDay(
+          date: CalendarDate(2026, 11, 19),
+          dayIndex: 0,
+          status: PlannedStatus.planned,
+        ),
+      ]);
+      verify(
+        () => completedDays.watch(
+          'u1',
+          'p1',
+          from: CalendarDate(2026, 11, 15),
+          to: CalendarDate(2026, 11, 21),
+        ),
+      ).called(1);
+    },
+  );
+
   group('a missed day', () {
     // Thursday's day 1 was missed; today is Friday 13 November.
     setUp(() => now = DateTime(2026, 11, 13, 8));

@@ -15,7 +15,7 @@ class TodayModule implements FeatureModule {
   @override
   void register(GetIt sl) {
     sl
-      // One per Today page; the parameter is the locale's first weekday.
+      // One per Today page; the parameter is the app's first weekday.
       ..registerFactoryParam<TodayWeekCubit, int, void>(
         (firstWeekday, _) => TodayWeekCubit(
           firstWeekday: firstWeekday,

@@ -13,6 +13,24 @@ enum ThemePreference { system, light, dark }
 /// (RIR) whichever is shown; see `EffortScaleSteps`.
 enum EffortScale { byFeel, rir, rpe }
 
+/// The first day of the week everywhere in the app (`settings.weekStart`).
+enum WeekStart {
+  /// The phone's: the locale's first day of the week.
+  automatic,
+  monday,
+  sunday,
+  saturday;
+
+  /// The first day of the week as an ISO weekday (1 Monday to 7 Sunday);
+  /// [localeFirstWeekday] when [automatic].
+  int firstWeekday(int localeFirstWeekday) => switch (this) {
+    automatic => localeFirstWeekday,
+    monday => DateTime.monday,
+    sunday => DateTime.sunday,
+    saturday => DateTime.saturday,
+  };
+}
+
 /// A first-use tip the app shows once (`settings.seenTips`).
 enum Tip {
   /// After the first set is ticked: effort can be logged.
@@ -354,6 +372,7 @@ class UserSettings extends Equatable {
     required this.lengthUnit,
     this.themePreference = ThemePreference.system,
     this.effortScale = EffortScale.byFeel,
+    this.weekStart = WeekStart.automatic,
     this.restTimer = const RestTimerSettings(),
     this.warmups = const WarmupSettings(),
     this.seenTips = const {},
@@ -380,6 +399,7 @@ class UserSettings extends Equatable {
   final LengthUnit lengthUnit;
   final ThemePreference themePreference;
   final EffortScale effortScale;
+  final WeekStart weekStart;
   final RestTimerSettings restTimer;
 
   /// Which warm-up sets exercises logged with a weight and reps start with
@@ -445,6 +465,7 @@ class UserSettings extends Equatable {
     LengthUnit? lengthUnit,
     ThemePreference? themePreference,
     EffortScale? effortScale,
+    WeekStart? weekStart,
     RestTimerSettings? restTimer,
     WarmupSettings? warmups,
     Set<Tip>? seenTips,
@@ -459,6 +480,7 @@ class UserSettings extends Equatable {
     lengthUnit: lengthUnit ?? this.lengthUnit,
     themePreference: themePreference ?? this.themePreference,
     effortScale: effortScale ?? this.effortScale,
+    weekStart: weekStart ?? this.weekStart,
     restTimer: restTimer ?? this.restTimer,
     warmups: warmups ?? this.warmups,
     seenTips: seenTips ?? this.seenTips,
@@ -477,6 +499,7 @@ class UserSettings extends Equatable {
     lengthUnit: lengthUnit,
     themePreference: themePreference,
     effortScale: effortScale,
+    weekStart: weekStart,
     restTimer: restTimer,
     warmups: warmups,
     seenTips: seenTips,
@@ -492,6 +515,7 @@ class UserSettings extends Equatable {
     lengthUnit,
     themePreference,
     effortScale,
+    weekStart,
     restTimer,
     warmups,
     seenTips,

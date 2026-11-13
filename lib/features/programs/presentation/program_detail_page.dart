@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../settings/presentation/first_weekday.dart';
 import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
 import '../domain/program_schedule.dart';
@@ -184,7 +185,10 @@ class _ProgramDetailView extends StatelessWidget {
                         children: [
                           Text(
                             l10n.programActiveOn(
-                              l10n.weekdayList(active.weekdays),
+                              l10n.weekdayList(
+                                active.weekdays,
+                                context.watchFirstWeekday(),
+                              ),
                             ),
                           ),
                           if (active.weekdays.length != program.days.length)

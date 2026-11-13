@@ -521,4 +521,24 @@ void main() {
     expect(cubit.state.writeRejected, isFalse);
     await cubit.close();
   });
+
+  test('a new first weekday lists again up to the end of its week', () async {
+    final cubit = await signedIn();
+    await emit('u1 null null', page([11, 9]));
+    expect(cubit.state.status, CalendarListStatus.ready);
+
+    cubit.changeFirstWeekday(DateTime.monday);
+    expect(cubit.state.status, CalendarListStatus.ready);
+
+    cubit.changeFirstWeekday(DateTime.saturday);
+    expect(cubit.state.status, CalendarListStatus.loading);
+    await pumpEventQueue();
+    await answerUser('u1');
+    await emit('u1 null null', page([11, 9]));
+    expect(cubit.state.status, CalendarListStatus.ready);
+    // Saturday 7 to Friday 13 November.
+    expect(cardioRanges.keys, contains('u1 2026-11-07 2026-11-13'));
+    expect(ids(cubit), ['w11', 'w9']);
+    await cubit.close();
+  });
 }

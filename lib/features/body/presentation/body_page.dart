@@ -9,10 +9,10 @@ import 'package:intl/intl.dart';
 
 import '../../../app/router.dart';
 import '../../../core/chart_geometry.dart';
-import '../../../core/first_weekday.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../profile/presentation/profile_cubit.dart';
 import '../../settings/domain/user_settings.dart';
+import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../strength/domain/strength.dart';
 import '../../strength/presentation/strength_text.dart';
@@ -41,14 +41,19 @@ class BodyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Read here: a provider's create may not listen to the localizations.
-    final firstWeekday = MaterialLocalizations.of(context).firstWeekday;
+    final firstWeekday = context.watchFirstWeekday();
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: sl<BodyListCubit>()),
         BlocProvider(create: (_) => sl<BodyChartCubit>(param1: firstWeekday)),
         BlocProvider(create: (_) => sl<MeasurementSummaryCubit>(param1: null)),
       ],
-      child: _BodyView(compareAfter: compareAfter),
+      child: FirstWeekdayListener(
+        created: firstWeekday,
+        onChanged: (context, firstWeekday) =>
+            context.read<BodyChartCubit>().changeFirstWeekday(firstWeekday),
+        child: _BodyView(compareAfter: compareAfter),
+      ),
     );
   }
 }

@@ -22,6 +22,7 @@ import '../features/exercises/presentation/favorites_cubit.dart';
 import '../features/notifications/data/notification_payloads.dart';
 import '../features/notifications/presentation/notifications_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
+import '../features/settings/presentation/first_weekday.dart';
 import '../features/settings/presentation/settings_cubit.dart';
 import '../features/workout/domain/workout_usecases.dart';
 import '../features/workout/presentation/active_workout_cubit.dart';
@@ -182,6 +183,14 @@ class _AppState extends State<App> {
               ThemePreference.dark => ThemeMode.dark,
             },
             routerConfig: _router,
+            // The one place below the localizations for app-wide cubits.
+            builder: (context, child) => FirstWeekdayListener(
+              created: null,
+              onChanged: (context, firstWeekday) => context
+                  .read<ProgramListCubit>()
+                  .changeFirstWeekday(firstWeekday),
+              child: child!,
+            ),
           ),
         ),
       ),

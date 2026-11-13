@@ -348,6 +348,24 @@ void main() {
       expect(cubit.state.failed, isEmpty);
       verify(() => volume(any())).called(1);
     });
+
+    test('are read again for weeks from a new first weekday', () async {
+      await start();
+      await cubit.toggle(BodySeries.weeklySets);
+      await pumpEventQueue();
+      cubit.changeFirstWeekday(DateTime.monday);
+      await pumpEventQueue();
+      verify(() => volume(any())).called(1);
+
+      cubit.changeFirstWeekday(DateTime.sunday);
+      await pumpEventQueue();
+
+      final query =
+          verify(() => volume(captureAny())).captured.single as VolumeQuery;
+      expect(query.lastWeek, CalendarDate(2026, 11, 8));
+      expect(cubit.state.from, DateTime(2026, 8, 16));
+      expect(cubit.state.to, DateTime(2026, 11, 15));
+    });
   });
 
   group('Premium', () {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../settings/presentation/first_weekday.dart';
+import '../domain/calendar_date.dart';
 import 'program_text.dart';
 
 /// Asks for exactly [count] training weekdays, starting from [initial].
@@ -48,7 +50,7 @@ class _WeekdayDialogState extends State<_WeekdayDialog> {
         spacing: Gap.sm,
         runSpacing: Gap.xs,
         children: [
-          for (var weekday = 1; weekday <= 7; weekday++)
+          for (final weekday in weekdaysFrom(context.watchFirstWeekday()))
             FilterChip(
               label: Text(l10n.weekdayShort(weekday)),
               selected: _selected.contains(weekday),
