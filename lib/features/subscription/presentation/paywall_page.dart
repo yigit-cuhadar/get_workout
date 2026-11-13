@@ -7,6 +7,7 @@ import 'package:forge_ui/forge_ui.dart';
 import '../../../app/legal_links.dart';
 import '../../../core/open_link.dart';
 import '../../../l10n/app_localizations.dart';
+import 'paywall_layout.dart';
 import 'premium_paywall_cubit.dart';
 import 'subscription_text.dart';
 
@@ -18,12 +19,14 @@ class PaywallPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocProvider<PaywallCubit>(
     create: (_) => sl<PremiumPaywallCubit>()..load(),
-    child: const _PaywallView(),
+    child: _PaywallView(sl<PaywallLayoutChoice>().layout),
   );
 }
 
 class _PaywallView extends StatefulWidget {
-  const _PaywallView();
+  const _PaywallView(this.layout);
+
+  final PaywallLayout layout;
 
   @override
   State<_PaywallView> createState() => _PaywallViewState();
@@ -115,7 +118,7 @@ class _PaywallViewState extends State<_PaywallView> {
               retryLabel: l10n.retry,
               onRetry: state.isBusy ? null : context.read<PaywallCubit>().load,
             ),
-            _ => _Offer(state),
+            _ => _Offer(state, layout: widget.layout),
           },
         ),
         bottomNavigationBar: const SafeArea(child: _Footer()),
@@ -125,16 +128,15 @@ class _PaywallViewState extends State<_PaywallView> {
 }
 
 class _Offer extends StatelessWidget {
-  const _Offer(this.state);
+  const _Offer(this.state, {required this.layout});
 
   final PaywallState state;
+  final PaywallLayout layout;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final cubit = context.read<PaywallCubit>();
-    final selected = state.selected;
     return ListView(
       padding: const EdgeInsets.all(Gap.md),
       children: [
@@ -152,72 +154,157 @@ class _Offer extends StatelessWidget {
           ),
         const SizedBox(height: Gap.md),
         RadioGroup<Plan>(
-          groupValue: selected,
+          groupValue: state.selected,
           onChanged: (plan) {
-            if (plan != null && !state.isBusy) cubit.select(plan);
+            if (plan != null && !state.isBusy) {
+              context.read<PaywallCubit>().select(plan);
+            }
           },
-          child: Column(
-            children: [
-              for (final plan in state.plans)
-                RadioListTile<Plan>(
-                  value: plan,
-                  enabled: !state.isBusy,
-                  title: Text(l10n.planName(plan)),
-                  subtitle: Text(l10n.planOffer(plan)),
-                ),
-            ],
-          ),
+          child: switch (layout) {
+            PaywallLayout.list => _PlanList(state),
+            PaywallLayout.cards => _PlanCards(state),
+          },
         ),
-        const SizedBox(height: Gap.md),
-        if (selected != null) ...[
-          ForgeButton(
-            label: l10n.purchaseButton(selected),
-            loading: state.status == PaywallStatus.purchasing,
-            onPressed: state.isBusy ? null : cubit.purchase,
-          ),
-          const SizedBox(height: Gap.md),
-          for (final terms in l10n.purchaseTerms(selected)) ...[
-            Text(terms, style: theme.textTheme.bodySmall),
-            const SizedBox(height: Gap.sm),
-          ],
-        ],
       ],
     );
   }
 }
 
-/// Restore and the legal links, on every state of the paywall.
+/// Layout A: one row per plan, its whole offer on the row.
+class _PlanList extends StatelessWidget {
+  const _PlanList(this.state);
+
+  final PaywallState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      children: [
+        for (final plan in state.plans)
+          RadioListTile<Plan>(
+            value: plan,
+            enabled: !state.isBusy,
+            title: Text(l10n.planName(plan)),
+            subtitle: Text(l10n.planOffer(plan)),
+          ),
+      ],
+    );
+  }
+}
+
+/// Layout B: one card per plan, side by side, the price standing out.
+class _PlanCards extends StatelessWidget {
+  const _PlanCards(this.state);
+
+  final PaywallState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: Gap.sm,
+        children: [
+          for (final plan in state.plans)
+            Expanded(
+              child: Card(
+                margin: EdgeInsets.zero,
+                clipBehavior: Clip.antiAlias,
+                color: plan == state.selected ? colors.primaryContainer : null,
+                child: InkWell(
+                  onTap: state.isBusy
+                      ? null
+                      : () => context.read<PaywallCubit>().select(plan),
+                  child: Padding(
+                    padding: const EdgeInsets.all(Gap.sm),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Radio<Plan>(value: plan, enabled: !state.isBusy),
+                        Text(
+                          l10n.planName(plan),
+                          style: theme.textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: Gap.xs),
+                        Text(plan.price, style: theme.textTheme.titleLarge),
+                        for (final line in l10n.planCardLines(plan))
+                          Text(line, style: theme.textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The selected plan's purchase button and terms over restore and the legal
+/// links; restore and the links on every state of the paywall.
 class _Footer extends StatelessWidget {
   const _Footer();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final cubit = context.read<PaywallCubit>();
     final state = context.watch<PaywallCubit>().state;
+    final selected = state.loadFailure == null ? state.selected : null;
     final canRestore =
         state.status == PaywallStatus.ready ||
         state.status == PaywallStatus.loadFailed;
-    return Wrap(
-      alignment: WrapAlignment.center,
-      children: [
-        TextButton(
-          onPressed: canRestore ? context.read<PaywallCubit>().restore : null,
-          child: state.status == PaywallStatus.restoring
-              ? const SizedBox.square(
-                  dimension: Gap.md,
-                  child: CircularProgressIndicator(),
-                )
-              : Text(l10n.paywallRestore),
-        ),
-        TextButton(
-          onPressed: () => _open(context, LegalLinks.terms),
-          child: Text(l10n.paywallTerms),
-        ),
-        TextButton(
-          onPressed: () => _open(context, LegalLinks.privacy),
-          child: Text(l10n.paywallPrivacy),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (selected != null) ...[
+            ForgeButton(
+              label: l10n.purchaseButton(selected),
+              loading: state.status == PaywallStatus.purchasing,
+              onPressed: state.isBusy ? null : cubit.purchase,
+            ),
+            for (final terms in l10n.purchaseTerms(selected)) ...[
+              const SizedBox(height: Gap.sm),
+              Text(
+                terms,
+                style: theme.textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ],
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: [
+              TextButton(
+                onPressed: canRestore ? cubit.restore : null,
+                child: state.status == PaywallStatus.restoring
+                    ? const SizedBox.square(
+                        dimension: Gap.md,
+                        child: CircularProgressIndicator(),
+                      )
+                    : Text(l10n.paywallRestore),
+              ),
+              TextButton(
+                onPressed: () => _open(context, LegalLinks.terms),
+                child: Text(l10n.paywallTerms),
+              ),
+              TextButton(
+                onPressed: () => _open(context, LegalLinks.privacy),
+                child: Text(l10n.paywallPrivacy),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

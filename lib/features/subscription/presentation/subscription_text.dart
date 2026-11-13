@@ -19,6 +19,18 @@ extension SubscriptionText on AppLocalizations {
     PlanPeriod.lifetime => paywallOnce(plan.price),
   };
 
+  /// Under the price on the paywall's plan card: the period, then any free
+  /// trial and paid intro price.
+  List<String> planCardLines(Plan plan) => [
+    switch (plan.period) {
+      PlanPeriod.monthly => everyMonths(1),
+      PlanPeriod.yearly => everyYears(1),
+      PlanPeriod.lifetime => paywallCardOnce,
+    },
+    if (plan.trial case final trial?) paywallCardTrial(offerPeriod(trial)),
+    if (plan.intro case final intro?) introOffer(intro),
+  ];
+
   /// `7 days free, then $39.99 per year`, with any paid intro price
   /// between, or just the price.
   String planOffer(Plan plan) {
@@ -101,7 +113,7 @@ extension SubscriptionText on AppLocalizations {
     _ => errorGeneric,
   };
 
-  /// The Profile tab's Premium row.
+  /// The state line of the Profile tab's Premium card.
   String subscriptionSummary(SubscriptionSummary summary) => switch (summary) {
     SubscriptionChecking() => premiumRowChecking,
     SubscriptionFree() => premiumRowFree,

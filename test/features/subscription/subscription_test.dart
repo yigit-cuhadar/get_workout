@@ -98,6 +98,19 @@ void main() {
       expect(l10n.purchaseButton(yearly), 'Start free trial');
     });
 
+    test('a plan card states the period, then the trial', () {
+      expect(l10n.planCardLines(monthly), ['per month']);
+      expect(l10n.planCardLines(yearly), ['per year', '7 days free']);
+      const lifetime = Plan(
+        id: 'l',
+        period: PlanPeriod.lifetime,
+        price: r'$79.99',
+        priceAmount: 79.99,
+        currencyCode: 'USD',
+      );
+      expect(l10n.planCardLines(lifetime), ['once']);
+    });
+
     test('discloses the trial and the auto-renewal', () {
       final terms = l10n.purchaseTerms(yearly);
       expect(terms.first, contains(r'Free for 7 days, then $39.99 per year'));
@@ -125,6 +138,10 @@ void main() {
           r'$0.99 per month for 3 months, then $4.99 per month',
         );
         expect(l10n.purchaseButton(intro), r'Start for $0.99');
+        expect(l10n.planCardLines(intro), [
+          'per month',
+          r'$0.99 per month for 3 months',
+        ]);
         final terms = l10n.purchaseTerms(intro);
         expect(terms.first, contains(r'Introductory price: $0.99 per month'));
         expect(terms.first, contains(r'costs $4.99 per month'));

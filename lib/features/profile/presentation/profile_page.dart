@@ -7,10 +7,11 @@ import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../account/presentation/privacy_section.dart';
 import '../../settings/presentation/settings_section.dart';
-import '../../subscription/presentation/premium_tile.dart';
+import '../../subscription/presentation/premium_card.dart';
 import 'profile_cubit.dart';
 
-/// The Profile tab: the account, Premium, profile and calculators rows, then
+/// The Profile tab: the account row, the Premium card, the profile and
+/// calculators rows, then
 /// the settings, privacy and any [debugSection].
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key, this.debugSection});
@@ -43,7 +44,7 @@ class ProfilePage extends StatelessWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.go(Routes.account),
             ),
-            const PremiumTile(),
+            const PremiumCard(),
             ListTile(
               leading: const Icon(Icons.person_outline),
               title: Text(l10n.profileDetails),

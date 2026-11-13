@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_it/get_it.dart';
 import 'package:get_workout/features/subscription/data/unavailable_purchases_repository.dart';
+import 'package:get_workout/features/subscription/presentation/paywall_layout.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
 
 void main() {
@@ -29,5 +30,11 @@ void main() {
 
     expect(sl<PurchasesRepository>(), isA<FakePurchasesRepository>());
     expect(SubscriptionModule.debugControls(sl), isNotNull);
+  });
+
+  test('the paywall shows layout A until users are assigned', () {
+    const SubscriptionModule(backend: FakeBackend(fakePlans)).register(sl);
+
+    expect(sl<PaywallLayoutChoice>().layout, PaywallLayout.list);
   });
 }

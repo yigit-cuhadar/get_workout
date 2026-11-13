@@ -84,6 +84,7 @@ import 'package:get_workout/features/settings/domain/settings_repository.dart';
 import 'package:get_workout/features/settings/domain/settings_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
+import 'package:get_workout/features/subscription/presentation/paywall_layout.dart';
 import 'package:get_workout/features/subscription/presentation/paywall_page.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
@@ -490,6 +491,7 @@ void main() {
     registerTodayStandIns();
     registerBodyListStandIn();
     registerProgressStandIns();
+    sl.registerLazySingleton(PaywallLayoutChoice.new);
     sl.registerFactory(
       () => PremiumPaywallCubit(
         getOffering: GetOffering(store),
@@ -1926,12 +1928,14 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('the row does nothing while the status is unknown', (
+    testWidgets('the card offers nothing while the status is unknown', (
       tester,
     ) async {
       await startAsGuest(tester);
       await tapTab(tester, 'Profile');
       expect(find.text('Checking…'), findsOneWidget);
+      expect(find.text('Get Premium'), findsNothing);
+      expect(find.text('Manage subscription'), findsNothing);
 
       await tester.tap(find.text('GetWorkout Premium'));
       await tester.pumpAndSettle();
@@ -1941,9 +1945,9 @@ void main() {
 
     testWidgets('a free user starts the yearly trial', (tester) async {
       await openProfileAsFreeGuest(tester);
-      expect(find.text('Free'), findsOneWidget);
+      expect(find.text('You are on Free'), findsOneWidget);
 
-      await tapVisible(tester, 'GetWorkout Premium');
+      await tapVisible(tester, 'Get Premium');
       expect(find.byType(PaywallPage), findsOneWidget);
       expect(find.text(r'$4.99 per month'), findsOneWidget);
       expect(find.text(r'7 days free, then $39.99 per year'), findsOneWidget);
@@ -1958,12 +1962,29 @@ void main() {
       expect(find.textContaining('Free trial until'), findsOneWidget);
     });
 
+    testWidgets('layout B shows the plans as cards', (tester) async {
+      await openProfileAsFreeGuest(tester);
+      sl<PaywallLayoutChoice>().layout = PaywallLayout.cards;
+
+      await tapVisible(tester, 'Get Premium');
+      expect(find.text(r'$4.99'), findsOneWidget);
+      expect(find.text(r'$39.99'), findsOneWidget);
+      expect(find.text('7 days free'), findsOneWidget);
+      expect(find.text(r'7 days free, then $39.99 per year'), findsNothing);
+
+      await tester.ensureVisible(find.text('Monthly'));
+      await tester.pump();
+      await tester.tap(find.text('Monthly'));
+      await tester.pump();
+      expect(find.text('Subscribe'), findsOneWidget);
+    });
+
     testWidgets('a restore after a failed load keeps the load message', (
       tester,
     ) async {
       await openProfileAsFreeGuest(tester);
       store.failure = const NetworkFailure();
-      await tapVisible(tester, 'GetWorkout Premium');
+      await tapVisible(tester, 'Get Premium');
       expect(find.text('No internet connection'), findsOneWidget);
 
       store.failure = null;
@@ -1978,7 +1999,7 @@ void main() {
       tester,
     ) async {
       await openProfileAsFreeGuest(tester);
-      await tapVisible(tester, 'GetWorkout Premium');
+      await tapVisible(tester, 'Get Premium');
       store.failure = const PurchaseFailure(PurchaseFailureReason.pending);
 
       await tapVisible(tester, 'Start free trial');
@@ -1999,6 +2020,7 @@ void main() {
       unawaited(store.purchase(fakePlans.first));
       await tester.pumpAndSettle();
       expect(find.textContaining('Premium, renews'), findsOneWidget);
+      expect(find.text('Manage subscription'), findsOneWidget);
 
       unawaited(router.push(Routes.paywall));
       await tester.pumpAndSettle();

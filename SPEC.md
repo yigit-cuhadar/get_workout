@@ -125,7 +125,26 @@ from the earlier FitLab app.
 - **Paywall**: full-screen `/paywall`, yearly selected by default, prices as
   the store gives them, trial shown only when the plan carries one, restore
   and legal links always visible. Terms and privacy URLs live in
-  `lib/app/legal_links.dart`; placeholders until the pages exist.
+  `lib/app/legal_links.dart`; placeholders until the pages exist. Layout
+  (UX pass, 2026-11-13, owner's pick): the intro and the three benefits
+  scroll; the selected plan's purchase button and its terms, then Restore,
+  Terms and Privacy, are fixed at the bottom. Two plan layouts are kept for
+  an A/B test, the rest of the page shared: A lists the plans as rows (name,
+  whole offer), B shows one card per plan side by side (name, the store's
+  price, its period, then any trial or intro price), as many cards as the
+  store offers (two today). `PaywallLayout` (`PaywallLayoutChoice`, read
+  only by `PaywallPage`) is A for everyone until users are assigned to an
+  arm (open question); debug builds on the fake switch it with the
+  "Paywall layout" row among the Fake store rows, in memory until restart.
+- **Profile tab** (UX pass, 2026-11-13, owner's pick): one page, top to
+  bottom: the account row, the Premium card, Your profile, Calculators,
+  then the settings groups (Units, Workout, Reminders, Appearance), Privacy
+  and, in debug builds on the fake, the Fake store rows. The Premium card
+  (`PremiumCard`, primary container) names Premium, the user's state
+  (checking, free, trial, renews, ends, lifetime, payment problem) and in
+  one line what Premium brings; a free user gets "Get Premium" (the
+  paywall), a subscriber "Manage subscription" (the store's manage page),
+  and nothing while the status is unknown. Restore stays on the paywall.
 - **Backend**: Blaze plan. Cloud Functions are used only where a client cannot
   be trusted or cannot do the job: RevenueCat webhook, account deletion,
   sending push announcements. The program generator runs on device.
@@ -1855,8 +1874,8 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Onboarding, birth year — a wheel showing the year only
 - [x] Steps — today as a ring, the daily goal edited in place (steps of 100, tap the number to type), one chart switching between this week and the last 30 days
 - [x] Workout summary — one prominent card with the name and four stats, records below, Done and Save as program at the bottom
-- [ ] Profile — every setting on one page in groups; Premium is a distinct card with Get Premium
-- [ ] Paywall — two layouts kept for an A/B test: plans as a list, plans as three cards side by side
+- [x] Profile — every setting on one page in groups; Premium is a distinct card with Get Premium
+- [x] Paywall — two layouts kept for an A/B test: plans as a list, plans as three cards side by side
 - [x] Program detail — a summary card (state, weekdays, length, Change days, Stop), days collapse
 - [ ] Program builder — stays as built: day chips, sets and reps in a sheet
 - [x] Exercise detail — model with main and secondary muscles, a table of facts (equipment, level, mechanic, pattern, sides, logged as, also called), Setup and How to do it as numbered steps, Common mistakes, Safety and Cues each as their own card, Note, then one Similar exercises list tagged Alternative or Variation. One Add button in the app bar (workout or program). The Records and progress row leaves this page; the strength page stays reachable from Progress
@@ -1873,6 +1892,9 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 
 ## Open questions
 
+- How are users assigned to paywall layout A or B? There is no A/B
+  service yet (Remote Config, analytics events); until the owner decides,
+  everyone sees A.
 - Google sign-in is offered next to email (`socialProviders` in
   `lib/app/router.dart`); both providers are enabled in both Firebase
   projects. It runs through Firebase Auth's browser flow, so iOS returns

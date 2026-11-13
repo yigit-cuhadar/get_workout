@@ -9,6 +9,7 @@ import 'package:get_it/get_it.dart';
 import '../programs/domain/premium_status.dart' as programs;
 import 'data/unavailable_purchases_repository.dart';
 import 'presentation/fake_store_controls.dart';
+import 'presentation/paywall_layout.dart';
 import 'presentation/premium.dart';
 import 'presentation/premium_paywall_cubit.dart';
 import 'presentation/purchaser_session.dart';
@@ -60,10 +61,11 @@ class SubscriptionModule implements FeatureModule {
 
   final PurchasesBackend? backend;
 
-  /// The fake store's controls in a debug build running on the fake.
+  /// The fake store's controls, with the paywall layout's, in a debug build
+  /// running on the fake.
   static Widget? debugControls(GetIt sl) =>
       kDebugMode && sl.isRegistered<FakePurchasesRepository>()
-      ? FakeStoreControls(sl())
+      ? FakeStoreControls(sl(), paywallLayout: sl())
       : null;
 
   /// The programs feature's premium status: the entitlement's.
@@ -101,6 +103,7 @@ class SubscriptionModule implements FeatureModule {
         () => PurchaserSession(watchAuthUser: sl(), entitlement: sl()),
         dispose: (session) => session.cancel(),
       )
+      ..registerLazySingleton(PaywallLayoutChoice.new)
       ..registerFactory(
         () => PremiumPaywallCubit(
           getOffering: sl(),
