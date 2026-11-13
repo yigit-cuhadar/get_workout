@@ -85,32 +85,28 @@ void main() {
       expect(l10n.setToDo(warmed, 1), 'Bench Press · Warm-up 2 of 2');
     });
 
-    test('the effort row names the set it asks about', () {
+    test('the effort question and row name the set', () {
       final w = workout('w', [
         bench,
         exercise('Squat', [lift(100, 5)]),
       ]);
       const selected = (exercise: 0, set: 3);
       expect(
-        l10n.effortQuestion(EffortScale.byFeel, w, (
-          exercise: 0,
-          set: 1,
-        ), selected),
-        'How hard was set 1?',
+        l10n.effortDoneText(w, (exercise: 0, set: 1), selected, WeightUnit.kg),
+        'Set 1 done · 80 kg × 8',
       );
       expect(
-        l10n.effortQuestion(EffortScale.rir, w, (
-          exercise: 0,
-          set: 2,
-        ), selected),
-        'How many more reps could you have done in drop set 2?',
+        l10n.effortDoneText(w, (exercise: 0, set: 2), selected, WeightUnit.kg),
+        'Drop set 2 done · 80 kg × 8',
       );
       expect(
-        l10n.effortQuestion(EffortScale.rpe, w, (
-          exercise: 1,
-          set: 0,
-        ), selected),
-        'How hard was Squat set 1, from 1 to 10?',
+        l10n.effortDoneText(w, (exercise: 1, set: 0), selected, WeightUnit.kg),
+        'Squat · Set 1 done · 100 kg × 5',
+      );
+      expect(l10n.effortQuestion(EffortScale.byFeel), 'How hard was it?');
+      expect(
+        l10n.effortRowQuestion(EffortScale.rir, bench, 1),
+        'Set 1 · how many more reps could you have done?',
       );
     });
 

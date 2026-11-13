@@ -141,23 +141,26 @@ class _Position implements Groupable<_Position> {
   _Position withGroup(String? group) => _Position(index, group);
 }
 
-/// The set whose effort the set bar asks for, always a done working set
-/// (warm-ups are not rated): the selected set when it is done, else
-/// [ticked], the set ticked last until another is picked, while it is
-/// still done; else none.
-SetRef? effortSet(Workout? workout, SetSelection? selection, SetRef? ticked) {
-  bool rated(SetRef ref) {
-    final set = workout?.exercises
-        .elementAtOrNull(ref.exercise)
-        ?.sets
-        .elementAtOrNull(ref.set);
-    return set != null && set.done && !set.isWarmup;
-  }
+/// Whether [ref] is a done working set of [workout]: one that has an
+/// effort (warm-ups are not rated).
+bool _rated(Workout? workout, SetRef ref) {
+  final set = workout?.exercises
+      .elementAtOrNull(ref.exercise)
+      ?.sets
+      .elementAtOrNull(ref.set);
+  return set != null && set.done && !set.isWarmup;
+}
 
+/// The set the set bar asks the effort of, in place of the selected set's
+/// values: [asking] (the working set just ticked) while it is still done.
+SetRef? questionSet(Workout? workout, SetRef? asking) =>
+    asking != null && _rated(workout, asking) ? asking : null;
+
+/// The set whose effort row the set bar shows under its values: the
+/// selected set when it is done and not a warm-up; never an undone set.
+SetRef? effortRowSet(Workout? workout, SetSelection? selection) {
   final index = selection?.set;
-  if (selection != null && index != null) {
-    final selected = (exercise: selection.exercise, set: index);
-    if (rated(selected)) return selected;
-  }
-  return ticked != null && rated(ticked) ? ticked : null;
+  if (selection == null || index == null) return null;
+  final ref = (exercise: selection.exercise, set: index);
+  return _rated(workout, ref) ? ref : null;
 }

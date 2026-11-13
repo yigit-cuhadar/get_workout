@@ -55,7 +55,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.savingProgram = false,
     this.savedProgramId,
     this.picked,
-    this.ticked,
+    this.asking,
     this.warmupsAdded = false,
     this.weightUnit,
   });
@@ -98,14 +98,11 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   @override
   final SetSelection? picked;
   @override
-  final SetRef? ticked;
+  final SetRef? asking;
 
   /// Warm-ups were added to this workout automatically, which its tip
   /// tells.
   final bool warmupsAdded;
-
-  @override
-  bool get offersTips => true;
 
   /// The user's, which warm-ups are suggested in (see [suggestedValues]);
   /// null until their settings arrive, and warm-ups suggest no ramp.
@@ -152,7 +149,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     bool? savingProgram,
     String? Function()? savedProgramId,
     SetSelection? Function()? picked,
-    SetRef? Function()? ticked,
+    SetRef? Function()? asking,
     bool? warmupsAdded,
     WeightUnit? Function()? weightUnit,
   }) => ActiveWorkoutState(
@@ -170,7 +167,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
         ? savedProgramId()
         : this.savedProgramId,
     picked: picked != null ? picked() : this.picked,
-    ticked: ticked != null ? ticked() : this.ticked,
+    asking: asking != null ? asking() : this.asking,
     warmupsAdded: warmupsAdded ?? this.warmupsAdded,
     weightUnit: weightUnit != null ? weightUnit() : this.weightUnit,
   );
@@ -189,7 +186,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     savingProgram,
     savedProgramId,
     picked,
-    ticked,
+    asking,
     warmupsAdded,
     weightUnit,
   ];
@@ -792,7 +789,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       status: WorkoutStatus.active,
       rest: () => _restAfterEdit(workout, changed, movesSets: movesSets),
       picked: select == null ? state.picked : select(changed),
-      keepTicked: !movesSets,
+      keepQuestion: !movesSets,
     );
     _keep();
   }
@@ -803,12 +800,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     state.copyWith(
       picked: () => picked,
       invalidSet: () => null,
-      ticked: picked == state.selection ? null : () => null,
+      asking: () => null,
     ),
   );
 
   @override
-  void emitTicked(SetRef? ticked) => emit(state.copyWith(ticked: () => ticked));
+  bool get asksEffort => true;
+
+  @override
+  void emitAsking(SetRef? asking) => emit(state.copyWith(asking: () => asking));
 
   @override
   void noteWarmupsAdded() {
@@ -848,7 +848,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     required WorkoutStatus status,
     Rest? Function()? rest,
     SetSelection? picked,
-    bool keepTicked = false,
+    bool keepQuestion = false,
     bool? warmupsAdded,
   }) {
     emit(
@@ -858,7 +858,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         rest: rest,
         invalidSet: () => null,
         picked: () => picked,
-        ticked: keepTicked ? null : () => null,
+        asking: keepQuestion ? null : () => null,
         warmupsAdded: warmupsAdded,
       ),
     );
@@ -922,6 +922,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   @override
   Future<void> close() async {
+    // Nothing may be asked while closing.
+    pauseAsking();
     _retry?.cancel();
     await _userSubscription.cancel();
     await _settingsSubscription?.cancel();

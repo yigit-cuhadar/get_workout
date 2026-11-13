@@ -8,20 +8,28 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/effort.dart';
 import 'workout_text.dart';
 
-/// A "?" opening [WorkoutHelpSheet]. Needs [SettingsCubit] above it.
+/// A "?" opening [WorkoutHelpSheet], calling [onOpen] and, once it is
+/// closed, [onClosed]. Needs [SettingsCubit] above it.
 class WorkoutHelpButton extends StatelessWidget {
-  const WorkoutHelpButton({super.key});
+  const WorkoutHelpButton({super.key, this.onOpen, this.onClosed});
+
+  final VoidCallback? onOpen;
+  final VoidCallback? onClosed;
 
   @override
   Widget build(BuildContext context) => IconButton(
     tooltip: AppLocalizations.of(context).workoutHelp,
     icon: const Icon(Icons.help_outline),
-    onPressed: () => showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (_) => const WorkoutHelpSheet(),
-    ),
+    onPressed: () async {
+      onOpen?.call();
+      await showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (_) => const WorkoutHelpSheet(),
+      );
+      onClosed?.call();
+    },
   );
 }
 
