@@ -1127,80 +1127,103 @@ void main() {
     });
   });
 
-  group('Add to program without programs', () {
-    Future<void> createProgram(WidgetTester tester) async {
-      await startAsGuest(tester);
-      router.go(Routes.exercise('squat'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Add'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Add to program'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Create program'));
-      await tester.pumpAndSettle();
-      expect(find.byType(ProgramBuilderPage), findsOneWidget);
-      expect(front(), Routes.exerciseProgramNew);
-      expect(selectedTab(tester), 2);
-    }
+  // From an exercise in either tab the builder opens above it, in that tab,
+  // with its own picker, and returns to it.
+  for (final (:tab, :name, :exercise, :builder, :picker) in [
+    (
+      tab: 2,
+      name: 'Exercises',
+      exercise: Routes.exercise('squat'),
+      builder: Routes.exerciseProgramNew,
+      picker: '${Routes.exerciseProgramNew}/pick',
+    ),
+    (
+      tab: 1,
+      name: 'Programs',
+      exercise: Routes.catalogueExercise('c1', 'squat'),
+      builder: Routes.programNew,
+      picker: '${Routes.programs}/pick',
+    ),
+  ]) {
+    group('Add to program without programs, in $name', () {
+      Future<void> createProgram(WidgetTester tester) async {
+        await startAsGuest(tester);
+        router.go(exercise);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add to program'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Create program'));
+        await tester.pumpAndSettle();
+        expect(find.byType(ProgramBuilderPage), findsOneWidget);
+        expect(front(), builder);
+        expect(selectedTab(tester), tab);
+      }
 
-    void expectBackOnTheExercise(WidgetTester tester) {
-      expect(find.byType(ProgramBuilderPage), findsNothing);
-      expect(find.byType(ExerciseDetailPage), findsOneWidget);
-      expect(selectedTab(tester), 2);
-      expect(path(), Routes.exercise('squat'));
-    }
+      void expectBackOnTheExercise(WidgetTester tester) {
+        expect(find.byType(ProgramBuilderPage), findsNothing);
+        expect(find.byType(ExerciseDetailPage), findsOneWidget);
+        expect(selectedTab(tester), tab);
+        expect(path(), exercise);
+      }
 
-    testWidgets('leaving the builder returns to the exercise', (tester) async {
-      await createProgram(tester);
+      testWidgets('leaving the builder returns to the exercise', (
+        tester,
+      ) async {
+        await createProgram(tester);
 
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
 
-      expectBackOnTheExercise(tester);
+        expectBackOnTheExercise(tester);
+      });
+
+      testWidgets('saving the program returns to the exercise', (tester) async {
+        await createProgram(tester);
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Program name'),
+          'Push',
+        );
+        await tester.tap(find.text('Add exercises'));
+        await tester.pumpAndSettle();
+        // The picker too stays in the tab.
+        expect(front(), picker);
+        expect(selectedTab(tester), tab);
+        await tester.tap(find.text('Back Squat'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add 1'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Save'));
+        await tester.pumpAndSettle();
+
+        verify(() => programs.createProgram('u1', any())).called(1);
+        expectBackOnTheExercise(tester);
+      });
+
+      testWidgets('leaving with changes asks once, then returns', (
+        tester,
+      ) async {
+        await createProgram(tester);
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Program name'),
+          'Push',
+        );
+        // The page refuses to pop from the next frame on.
+        await tester.pump();
+
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        expect(find.text('Discard changes?'), findsOneWidget);
+        await tester.tap(find.text('Discard'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Discard changes?'), findsNothing);
+        expectBackOnTheExercise(tester);
+      });
     });
-
-    testWidgets('saving the program returns to the exercise', (tester) async {
-      await createProgram(tester);
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Program name'),
-        'Push',
-      );
-      await tester.tap(find.text('Add exercises'));
-      await tester.pumpAndSettle();
-      // The picker too stays in the Exercises tab.
-      expect(front(), startsWith('${Routes.exerciseProgramNew}/pick'));
-      expect(selectedTab(tester), 2);
-      await tester.tap(find.text('Back Squat'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Add 1'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Save'));
-      await tester.pumpAndSettle();
-
-      verify(() => programs.createProgram('u1', any())).called(1);
-      expectBackOnTheExercise(tester);
-    });
-
-    testWidgets('leaving with changes asks once, then returns', (tester) async {
-      await createProgram(tester);
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Program name'),
-        'Push',
-      );
-      // The page refuses to pop from the next frame on.
-      await tester.pump();
-
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Discard changes?'), findsOneWidget);
-      await tester.tap(find.text('Discard'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Discard changes?'), findsNothing);
-      expectBackOnTheExercise(tester);
-    });
-  });
+  }
 
   group('custom exercise form with changes', () {
     Future<void> fillIn(WidgetTester tester) async {

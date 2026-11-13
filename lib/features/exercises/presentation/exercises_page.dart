@@ -53,9 +53,9 @@ class _ExercisesViewState extends State<_ExercisesView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final query = context.select((LibraryCubit library) => library.state.query);
-    // Favourites, equipment and custom exercises change only on this tab's
-    // pages, which all sit above this one, so their failures are reported
-    // once, here.
+    // Equipment and custom exercises change on this tab's pages, favourites
+    // also on a ready-made program's exercise pages in Programs; their
+    // failures are reported once, here, while this tab has been opened.
     return MultiBlocListener(
       listeners: [
         BlocListener<FavoritesCubit, FavoritesState>(

@@ -982,9 +982,10 @@ from the earlier FitLab app.
   (`ExercisesPage`, the model under a search box, `/exercises/...`: the list,
   exercise pages, custom exercises; see Exercise list) are two branches of
   the shell, each with its own stack, kept alive like the others and built
-  the first time it shows; there is no segmented control any more. A page
-  of one tab never opens in the other: "Add to program" pushes the builder
-  in the tab it is in (see Program page). Starting a workout stays on Programs
+  the first time it shows; there is no segmented control any more. "Add
+  to program" pushes the builder in the tab its exercise is in (see
+  Program page); a custom exercise's edit form opens in the Exercises tab
+  from wherever its page is (also above the workout or the calendar). Starting a workout stays on Programs
   (and Today). Every location kept its path (the merged Train tab already
   used `/programs` and `/exercises`, and no notification payload or stored
   route ever held a Train path), so nothing needs a redirect. The active
@@ -1042,7 +1043,7 @@ from the earlier FitLab app.
   every pick made from questions and grey-box wireframes and asked for each
   screen to be designed afresh as simple mock-ups with variants, judged on
   repetition, clutter, what the eye misses and what makes a user give up.
-  Until a screen is picked again, the app as built is the baseline: four
+  Until a screen is picked again, the app as built is the baseline:
   five tabs (Navigation), the Exercises tab and list (Exercise list).
   Picks are recorded here per screen as they are made.
 - **Workouts on the device**: per user one JSON file
