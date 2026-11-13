@@ -547,6 +547,20 @@ from the earlier FitLab app.
   `SubscriptionModule.showPaywall`. The program cubits follow that status,
   so a page updates by itself once the paywall grants premium; pages get
   the premium action from their page widget, never from `sl`.
+- **Ready-made programs page** (UX pass, 2026-11-13, variant B): the
+  filters as chips under the app bar, scrolling sideways: "Fits my
+  equipment" (toggles in place; while the equipment is unknown it opens
+  the sheet, which says why), then for Level, Days per week, Goal and
+  Equipment each chosen value as a removable chip (removing it turns that
+  value off) or, with none chosen, the filter's name; a chip opens the
+  filters sheet, as does the filter action in the app bar (badged while
+  filtering). While filtering, "n filters on" (each chosen value counts
+  one, `CatalogueFilter.activeCount`) and Clear. Then "Recommended for you"
+  (hidden while filtering) and "All programs", each program a card
+  (`CatalogueProgramCard`, also on the post-onboarding suggestion): name
+  with Free, Premium or the lock, the facts as tags (level, goal, days a
+  week, length, equipment profile, session time) and "Matches your ..."
+  where it applies. The filters sheet is unchanged.
 - **Copies of premium programs** (decided by the user, 2026-11-11): a copy
   of a premium ready-made program is marked `premium: true` and keeps the
   mark through edits and duplicates. Without premium it stays visible and
@@ -1922,7 +1936,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [ ] Program builder — stays as built: day chips, sets and reps in a sheet
 - [x] Exercise detail — model with main and secondary muscles, a table of facts (equipment, level, mechanic, pattern, sides, logged as, also called), Setup and How to do it as numbered steps, Common mistakes, Safety and Cues each as their own card, Note, then one Similar exercises list tagged Alternative or Variation. One Add button in the app bar (workout or program). The Records and progress row leaves this page; the strength page stays reachable from Progress
 - [x] Workout detail (history) — the summary card of the workout summary (date, program link, four stats), the workout note as its own card, sets as a table per exercise
-- [ ] Ready-made programs — cards with tags; the filters show as chips above the list and open the filters sheet
+- [x] Ready-made programs — cards with tags; the filters show as chips above the list and open the filters sheet
 - [ ] Generator — questions use the onboarding question layout; the preview shows weekly sets as bars and days that collapse, Regenerate and Save fixed at the bottom
 - [x] Cardio — this week's summary on top, the 12-week chart, sessions by week; Log cardio is a full-width button fixed at the bottom
 - [ ] Weekly volume — stays as built with one body model, the legend and the muscle bars

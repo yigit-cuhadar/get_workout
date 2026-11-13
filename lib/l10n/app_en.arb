@@ -724,6 +724,8 @@
   "catalogueReasonEquipment": "equipment",
   "catalogueFilters": "Filters",
   "catalogueClearFilters": "Clear",
+  "catalogueFiltersOn": "{count, plural, =1{1 filter on} other{{count} filters on}}",
+  "@catalogueFiltersOn": {"placeholders": {"count": {"type": "int"}}},
   "catalogueFiltersDone": "Done",
   "catalogueFilterLevel": "Level",
   "catalogueFilterDays": "Days per week",

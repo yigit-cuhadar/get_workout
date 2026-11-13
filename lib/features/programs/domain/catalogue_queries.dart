@@ -24,12 +24,16 @@ class CatalogueFilter extends Equatable {
 
   /// Whether the filter leaves anything out for someone owning [owned]
   /// (null while unknown).
-  bool isActive(Set<Equipment>? owned) =>
-      levels.isNotEmpty ||
-      daysPerWeek.isNotEmpty ||
-      goals.isNotEmpty ||
-      profiles.isNotEmpty ||
-      (fitsMyEquipment && owned != null);
+  bool isActive(Set<Equipment>? owned) => activeCount(owned) > 0;
+
+  /// The values chosen, each one filter, for someone owning [owned] (null
+  /// while unknown).
+  int activeCount(Set<Equipment>? owned) =>
+      levels.length +
+      daysPerWeek.length +
+      goals.length +
+      profiles.length +
+      (fitsMyEquipment && owned != null ? 1 : 0);
 
   /// [owned] is the user's equipment, null when unknown.
   bool matches(CatalogueProgram program, Set<Equipment>? owned) =>

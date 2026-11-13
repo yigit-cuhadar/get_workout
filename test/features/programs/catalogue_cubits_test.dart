@@ -306,10 +306,12 @@ void main() {
         await pumpEventQueue();
 
         expect(catalogue.state.filtering, isFalse);
+        expect(catalogue.state.filterCount, 0);
 
         owned.add({Equipment.dumbbell, Equipment.bench});
         await pumpEventQueue();
         expect(catalogue.state.filtering, isTrue);
+        expect(catalogue.state.filterCount, 1);
       },
     );
 
