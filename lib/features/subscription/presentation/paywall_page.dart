@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
@@ -7,19 +9,32 @@ import 'package:forge_ui/forge_ui.dart';
 import '../../../app/legal_links.dart';
 import '../../../core/open_link.dart';
 import '../../../l10n/app_localizations.dart';
-import 'paywall_layout.dart';
+import '../domain/paywall_layout.dart';
 import 'premium_paywall_cubit.dart';
 import 'subscription_text.dart';
 
 /// The Premium paywall. Pops with true once the user has Premium, also when
 /// they already had it on opening.
-class PaywallPage extends StatelessWidget {
+class PaywallPage extends StatefulWidget {
   const PaywallPage({super.key});
 
   @override
-  Widget build(BuildContext context) => BlocProvider<PaywallCubit>(
-    create: (_) => sl<PremiumPaywallCubit>()..load(),
-    child: _PaywallView(sl<PaywallLayoutChoice>().layout),
+  State<PaywallPage> createState() => _PaywallPageState();
+}
+
+class _PaywallPageState extends State<PaywallPage> {
+  final _cubit = sl<PremiumPaywallCubit>()..load();
+
+  @override
+  void dispose() {
+    unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => BlocProvider<PaywallCubit>.value(
+    value: _cubit,
+    child: _PaywallView(_cubit.layout),
   );
 }
 

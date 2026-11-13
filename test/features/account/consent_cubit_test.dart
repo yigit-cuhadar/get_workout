@@ -54,6 +54,12 @@ class TrackedTelemetry implements Telemetry {
 
   @override
   Future<Result<void>> forget(String uid) => _track(_telemetry.forget(uid));
+
+  @override
+  Future<void> logEvent(
+    String name, [
+    Map<String, Object> parameters = const {},
+  ]) => _telemetry.logEvent(name, parameters);
 }
 
 /// The cubit over the real [FirebaseTelemetry], with the Firebase SDKs

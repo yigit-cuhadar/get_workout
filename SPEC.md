@@ -134,11 +134,32 @@ from the earlier FitLab app.
   an A/B test, the rest of the page shared: A lists the plans as rows (name,
   whole offer), B shows one card per plan side by side (name, the store's
   price, its period, then any trial or intro price), as many cards as the
-  store offers (two today). `PaywallLayout` (`PaywallLayoutChoice`, read
-  only by `PaywallPage`) is A for everyone for now. Assignment will be
-  Firebase Remote Config + A/B Testing (owner's call, 2026-11-13), wired in
-  a follow-up branch, not built yet; debug builds on the fake switch it with the
-  "Paywall layout" row among the Fake store rows, in memory until restart.
+  store offers (two today).
+- **Paywall A/B test** (Firebase Remote Config + A/B Testing, owner's call,
+  2026-11-13; `forge_remote_config`): the Remote Config string
+  `paywall_layout` picks the layout, `a` (list) or `b` (cards); the app's
+  default is `a`, and an empty or unknown value is A too
+  (`GetPaywallLayout`). `bootstrap` registers it on Firebase in every
+  build, against the build's project (fetched at most every 12 h in
+  release, every minute otherwise); tests use the fake. Startup activates
+  what an earlier launch fetched, alongside the telemetry restore, and
+  fetches the next values in the background, so the layout is stable for a
+  whole session, a new install sees A in its first session and its arm
+  from the second, and a failure only leaves the defaults. The paywall
+  reads the layout once, when it opens (`PremiumPaywallCubit.layout`).
+  Debug builds on the fake store override it with the "Paywall layout" row
+  among the Fake store rows (Remote Config, A or B; in memory until
+  restart); release builds do not register the override. Events, through
+  `Telemetry.logEvent` (`forge_core`): `paywall_view` {`layout`: `a`|`b`}
+  once per paywall open, when the plans first show (not on a failed load):
+  the experiment's activation event; `paywall_purchase` {`plan`: the
+  store's product id, `layout`} on each purchase or trial start that
+  granted Premium on the paywall: the goal. A pending purchase approved
+  later and a restore are not counted. Events follow the analytics consent
+  below, so only prod release builds, for signed-in users (guests
+  included) who agreed to share usage data, are counted. The Remote
+  Config parameter and the experiment are set up in the console, not by
+  the app.
 - **Profile tab** (UX pass, 2026-11-13, owner's pick): one page, top to
   bottom: the account row, the Premium card, Your profile, Calculators,
   then the settings groups (Units, Workout, Reminders, Appearance), Privacy
@@ -1889,7 +1910,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Steps — today as a ring, the daily goal edited in place (steps of 100, tap the number to type), one chart switching between this week and the last 30 days
 - [x] Workout summary — one prominent card with the name and four stats, records below, Done and Save as program at the bottom
 - [x] Profile — every setting on one page in groups; Premium is a distinct card with Get Premium
-- [x] Paywall — two layouts kept for an A/B test: plans as a list, plans as cards side by side
+- [x] Paywall — two layouts kept for an A/B test: plans as a list, plans as cards side by side; Remote Config `paywall_layout` assigns them
 - [x] Program detail — a summary card (state, weekdays, length, Change days, Stop), days collapse
 - [ ] Program builder — stays as built: day chips, sets and reps in a sheet
 - [x] Exercise detail — model with main and secondary muscles, a table of facts (equipment, level, mechanic, pattern, sides, logged as, also called), Setup and How to do it as numbered steps, Common mistakes, Safety and Cues each as their own card, Note, then one Similar exercises list tagged Alternative or Variation. One Add button in the app bar (workout or program). The Records and progress row leaves this page; the strength page stays reachable from Progress

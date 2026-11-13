@@ -8,8 +8,9 @@ import 'package:get_it/get_it.dart';
 
 import '../programs/domain/premium_status.dart' as programs;
 import 'data/unavailable_purchases_repository.dart';
+import 'domain/paywall_layout.dart';
+import 'domain/subscription_usecases.dart';
 import 'presentation/fake_store_controls.dart';
-import 'presentation/paywall_layout.dart';
 import 'presentation/premium.dart';
 import 'presentation/premium_paywall_cubit.dart';
 import 'presentation/purchaser_session.dart';
@@ -55,11 +56,17 @@ const fakePlans = [
 
 /// Registers purchases on [backend] (null: unavailable), the session that
 /// keeps the store's user in step with the signed-in user, and the paywall.
-/// Needs `AuthModule`.
+/// Needs `AuthModule`, `AccountModule` (telemetry) and a
+/// `RemoteConfigRepository` with [remoteConfigDefaults].
 class SubscriptionModule implements FeatureModule {
   const SubscriptionModule({required this.backend});
 
   final PurchasesBackend? backend;
+
+  /// The Remote Config keys this feature reads, with their defaults.
+  static const remoteConfigDefaults = <String, Object>{
+    paywallLayoutKey: paywallLayoutDefault,
+  };
 
   /// The fake store's controls, with the paywall layout's, in a debug build
   /// running on the fake.
@@ -103,13 +110,24 @@ class SubscriptionModule implements FeatureModule {
         () => PurchaserSession(watchAuthUser: sl(), entitlement: sl()),
         dispose: (session) => session.cancel(),
       )
-      ..registerLazySingleton(PaywallLayoutChoice.new)
+      ..registerFactory(
+        () => GetPaywallLayout(
+          sl(),
+          kDebugMode ? sl<PaywallLayoutOverride>() : null,
+        ),
+      )
+      ..registerFactory(() => LogPaywallView(sl()))
+      ..registerFactory(() => LogPaywallPurchase(sl()))
       ..registerFactory(
         () => PremiumPaywallCubit(
           getOffering: sl(),
           purchasePlan: sl(),
           restorePurchases: sl(),
+          getLayout: sl(),
+          logView: sl(),
+          logPurchase: sl(),
         ),
       );
+    if (kDebugMode) sl.registerLazySingleton(PaywallLayoutOverride.new);
   }
 }

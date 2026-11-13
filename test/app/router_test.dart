@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
+import 'package:forge_remote_config/forge_remote_config.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/router.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise.dart';
@@ -83,7 +84,7 @@ import 'package:get_workout/features/settings/domain/settings_repository.dart';
 import 'package:get_workout/features/settings/domain/settings_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
-import 'package:get_workout/features/subscription/presentation/paywall_layout.dart';
+import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
 import 'package:get_workout/features/subscription/presentation/paywall_page.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
@@ -190,6 +191,10 @@ void main() {
   late BodyModelCubit bodyModel;
   late StreamController<List<Exercise>> exerciseFeed;
   late FakePurchasesRepository store;
+  late FakeRemoteConfigRepository remoteConfig;
+
+  /// Receives the paywall's events.
+  late MockTelemetry paywallTelemetry;
   late EntitlementCubit entitlement;
   late MockProgramRepository programs;
 
@@ -221,6 +226,7 @@ void main() {
     registerFallbackValue(const UserProfile());
     registerFallbackValue(<ProfileField>{});
     registerFallbackValue(<Equipment>{});
+    registerFallbackValue(<String, Object>{});
   });
 
   late DeletionUnderway deletionUnderway;
@@ -490,12 +496,20 @@ void main() {
     registerTodayStandIns();
     registerBodyListStandIn();
     registerProgressStandIns();
-    sl.registerLazySingleton(PaywallLayoutChoice.new);
+    remoteConfig = FakeRemoteConfigRepository(
+      SubscriptionModule.remoteConfigDefaults,
+    );
+    paywallTelemetry = MockTelemetry();
+    when(() => paywallTelemetry.logEvent(any(), any()))
+        .thenAnswer((_) async {});
     sl.registerFactory(
       () => PremiumPaywallCubit(
         getOffering: GetOffering(store),
         purchasePlan: PurchasePlan(store),
         restorePurchases: RestorePurchases(store),
+        getLayout: GetPaywallLayout(remoteConfig),
+        logView: LogPaywallView(paywallTelemetry),
+        logPurchase: LogPaywallPurchase(paywallTelemetry),
       ),
     );
   }
@@ -2040,11 +2054,19 @@ void main() {
       expect(find.byType(PaywallPage), findsNothing);
       expect(find.text('Welcome to Premium!'), findsOneWidget);
       expect(find.textContaining('Free trial until'), findsOneWidget);
+      verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'a'}))
+          .called(1);
+      verify(
+        () => paywallTelemetry.logEvent('paywall_purchase', {
+          'plan': 'premium_yearly',
+          'layout': 'a',
+        }),
+      ).called(1);
     });
 
     testWidgets('layout B shows the plans as cards', (tester) async {
       await openProfileAsFreeGuest(tester);
-      sl<PaywallLayoutChoice>().layout = PaywallLayout.cards;
+      remoteConfig.values['paywall_layout'] = 'b';
 
       await tapVisible(tester, 'Get Premium');
       expect(find.text(r'$4.99'), findsOneWidget);
@@ -2057,6 +2079,8 @@ void main() {
       await tester.tap(find.text('Monthly'));
       await tester.pump();
       expect(find.text('Subscribe'), findsOneWidget);
+      verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'b'}))
+          .called(1);
     });
 
     testWidgets('with large text the whole paywall scrolls', (tester) async {
