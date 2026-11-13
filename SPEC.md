@@ -1079,7 +1079,13 @@ from the earlier FitLab app.
   celebrates none.
 - **Workout summary**: duration ("< 1 min" under a minute), volume (weight ×
   reps of the working sets of `weight_reps` and `weighted_bodyweight`;
-  assistance is no load), working sets and exercises.
+  assistance is no load), working sets and exercises. Layout (UX pass,
+  2026-11-13, owner's pick): one prominent card (`WorkoutSummaryCard`,
+  shared with the workout page of the history) with "Workout done", the
+  name and the four totals two by two; then the celebration and the new
+  records in a card, each its exercise over what it is and its value; then
+  the note that the program was not moved on, when so; Done and Save as
+  program (not for a program's workout) fixed at the bottom.
 - **Stats update**: stats are computed from what the device knows at
   finishing, the server's when it answers for all of them within 2 s, else
   the cache's
@@ -1103,7 +1109,15 @@ from the earlier FitLab app.
   Rows carry no records mark: it would need every exercise's stats. The
   workout page names exercises from the catalogue (custom ones included),
   else by the name stored with the workout (retired and deleted ones); a
-  program that no longer exists shows as deleted.
+  program that no longer exists shows as deleted. The workout page (UX
+  pass, 2026-11-13, owner's pick): the name, Edit and Delete in the app
+  bar; the summary card with the start date and time, the program as a
+  link (or "From a program you deleted") and the four totals; the waiting
+  to sync note; the workout note as its own card; then a card per exercise
+  (group letter, name, exercise note) with a table of its sets: Set (as
+  `setLabel`), the value columns of its logging type (weight in the unit
+  with its field label, reps, time) and Effort (on the chosen scale, then
+  the set note); each drop is a row under its set, named in the last column.
 - **Strength**: Progress → Strength lists the exercises with stats (the
   whole `exerciseStats` collection, live), most recently trained first
   (`last.date`, else the latest history point), searched by catalogue name,
@@ -1772,13 +1786,13 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Body with Compare — two views, Overview (one chart with up to three series picked from weight, body fat, fat mass, lean mass, each measurement, weekly sets and daily steps, plus a target weight line; Log weight, Measurement day, history) and Compare (Previous / First / Other date, photos slider with poses, body fat, all changes, target weight)
 - [x] Onboarding, birth year — a wheel showing the year only
 - [x] Steps — today as a ring, the daily goal edited in place (steps of 100, tap the number to type), one chart switching between this week and the last 30 days
-- [ ] Workout summary — one prominent card with the name and four stats, records below, Done and Save as program at the bottom
+- [x] Workout summary — one prominent card with the name and four stats, records below, Done and Save as program at the bottom
 - [ ] Profile — every setting on one page in groups; Premium is a distinct card with Get Premium
 - [ ] Paywall — two layouts kept for an A/B test: plans as a list, plans as three cards side by side
 - [ ] Program detail — a summary card (state, weekdays, length, Change days, Stop), days collapse
 - [ ] Program builder — stays as built: day chips, sets and reps in a sheet
 - [ ] Exercise detail — model with main and secondary muscles, a table of facts (equipment, level, mechanic, pattern, sides, logged as, also called), Setup and How to do it as numbered steps, Common mistakes, Safety and Cues each as their own card, Note, then one Similar exercises list tagged Alternative or Variation. One Add button in the app bar (workout or program). The Records and progress row leaves this page; the strength page stays reachable from Progress
-- [ ] Workout detail (history) — the summary card of the workout summary (date, program link, four stats), the workout note as its own card, sets as a table per exercise
+- [x] Workout detail (history) — the summary card of the workout summary (date, program link, four stats), the workout note as its own card, sets as a table per exercise
 - [ ] Ready-made programs — cards with tags; the filters show as chips above the list and open the filters sheet
 - [ ] Generator — questions use the onboarding question layout; the preview shows weekly sets as bars and days that collapse, Regenerate and Save fixed at the bottom
 - [x] Cardio — this week's summary on top, the 12-week chart, sessions by week; Log cardio is a full-width button fixed at the bottom

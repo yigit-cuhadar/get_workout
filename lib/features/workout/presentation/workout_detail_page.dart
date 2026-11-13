@@ -9,13 +9,12 @@ import '../../../l10n/app_localizations.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/presentation/program_list_cubit.dart';
-import '../../programs/presentation/program_text.dart';
-import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/exercise_stats.dart';
 import '../domain/workout.dart';
 import 'workout_detail_cubit.dart';
 import 'workout_editor_view.dart';
+import 'workout_summary_card.dart';
 import 'workout_text.dart';
 
 /// A stored workout as it was logged, with its totals; it can be edited or
@@ -129,70 +128,44 @@ class _Workout extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final dates = MaterialLocalizations.of(context);
-    final settings = context.select(
-      (SettingsCubit cubit) => cubit.state.settings,
-    );
-    final unit = settings.weightUnit;
-    final summary = summarizeWorkout(workout, const []);
     final start = workout.startedAt;
-    final program = _programLine(context, l10n);
+    final note = workout.note;
     return ListView(
-      padding: const EdgeInsets.only(bottom: Gap.xl),
+      padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.xl),
       children: [
         if (state.status == WorkoutDetailStatus.deleting)
           const LinearProgressIndicator(),
-        if (state.pending)
-          ListTile(
-            leading: const Icon(Icons.cloud_upload_outlined),
-            title: Text(l10n.historySyncing),
+        const SizedBox(height: Gap.sm),
+        WorkoutSummaryCard(
+          summary: summarizeWorkout(workout, const []),
+          caption:
+              '${dates.formatMediumDate(start)} · '
+              '${dates.formatTimeOfDay(TimeOfDay.fromDateTime(start))}',
+          program: _program(context, l10n),
+        ),
+        if (state.pending) ...[
+          const SizedBox(height: Gap.sm),
+          Card(
+            margin: EdgeInsets.zero,
+            child: ListTile(
+              leading: const Icon(Icons.cloud_upload_outlined),
+              title: Text(l10n.historySyncing),
+            ),
           ),
-        ListTile(
-          title: Text(l10n.historyStarted),
-          trailing: Text(
-            '${dates.formatMediumDate(start)} '
-            '${dates.formatTimeOfDay(TimeOfDay.fromDateTime(start))}',
+        ],
+        if (note != null) ...[
+          const SizedBox(height: Gap.sm),
+          Card(
+            margin: EdgeInsets.zero,
+            child: ListTile(
+              title: Text(l10n.workoutNote, style: theme.textTheme.titleSmall),
+              subtitle: Text(note),
+            ),
           ),
-        ),
-        if (program != null)
-          ListTile(leading: const Icon(Icons.event_note), title: program),
-        ListTile(
-          title: Text(l10n.workoutDuration),
-          trailing: Text(l10n.durationMinutes(summary.duration)),
-        ),
-        ListTile(
-          title: Text(l10n.workoutVolume),
-          trailing: Text(l10n.weightText(summary.volumeKg, unit)),
-        ),
-        ListTile(
-          title: Text(l10n.workoutSets),
-          trailing: Text('${summary.setCount}'),
-        ),
-        ListTile(
-          title: Text(l10n.workoutExercises),
-          trailing: Text('${summary.exerciseCount}'),
-        ),
-        if (workout.note case final note?)
-          ListTile(title: Text(l10n.workoutNote), subtitle: Text(note)),
+        ],
         for (final exercise in workout.exercises) ...[
-          const Divider(),
-          ListTile(
-            leading: exercise.group == null
-                ? null
-                : CircleAvatar(child: Text(exercise.group!)),
-            title: Text(
-              _name(context, exercise),
-              style: theme.textTheme.titleMedium,
-            ),
-            subtitle: exercise.note == null ? null : Text(exercise.note!),
-          ),
-          for (final (i, set) in exercise.sets.indexed)
-            _SetLine(
-              exercise: exercise,
-              index: i,
-              set: set,
-              unit: unit,
-              effort: settings.effortScale,
-            ),
+          const SizedBox(height: Gap.sm),
+          _ExerciseCard(exercise: exercise, name: _name(context, exercise)),
         ],
       ],
     );
@@ -211,65 +184,95 @@ class _Workout extends StatelessWidget {
   }
 
   /// The program it came from, once the programs are known.
-  Widget? _programLine(BuildContext context, AppLocalizations l10n) {
+  Widget? _program(BuildContext context, AppLocalizations l10n) {
     final id = workout.programId;
     final programs = context.watch<ProgramListCubit>().state;
     if (id == null || programs.status != ProgramListStatus.ready) return null;
     final program = programs.program(id);
     return program == null
         ? Text(l10n.historyProgramDeleted)
-        : InkWell(
-            onTap: () => context.go(Routes.program(id)),
-            child: Text(l10n.historyFromProgram(program.name)),
+        : ActionChip(
+            label: Text(l10n.historyFromProgram(program.name)),
+            onPressed: () => context.go(Routes.program(id)),
           );
   }
 }
 
-/// One set as logged: its kind, values, failure, effort and note, then its
-/// drops.
-class _SetLine extends StatelessWidget {
-  const _SetLine({
-    required this.exercise,
-    required this.index,
-    required this.set,
-    required this.unit,
-    required this.effort,
-  });
+/// An exercise as logged: its group letter, name and note over a table of
+/// its sets, each drop on its own row under its set.
+class _ExerciseCard extends StatelessWidget {
+  const _ExerciseCard({required this.exercise, required this.name});
 
   final WorkoutExercise exercise;
-  final int index;
-  final WorkoutSet set;
-  final WeightUnit unit;
-  final EffortScale effort;
+  final String name;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final settings = context.select(
+      (SettingsCubit cubit) => cubit.state.settings,
+    );
+    final unit = settings.weightUnit;
     final type = exercise.loggingType;
-    final details = [
-      l10n.setText(set, type, unit),
-      ?l10n.effortText(set, effort),
-      ?set.note,
-    ];
-    return ListTile(
-      dense: true,
-      leading: Text(l10n.setLabel(exercise, index)),
-      title: Text(details.join(' · ')),
-      subtitle: set.drops.isEmpty
-          ? null
-          : Text(
-              [
-                for (final (d, drop) in set.drops.indexed)
-                  l10n.historyDropLine(
-                    l10n.workoutDrop(d + 1),
-                    l10n.setText(
-                      WorkoutSet(weightKg: drop.weightKg, reps: drop.reps),
-                      type,
-                      unit,
-                    ),
-                  ),
-              ].join('\n'),
+    final note = exercise.note;
+    final group = exercise.group;
+    final columns = l10n.setColumns(type, unit);
+    TableRow row(List<String> cells, {TextStyle? style}) => TableRow(
+      children: [
+        for (final cell in cells)
+          Padding(
+            padding: const EdgeInsets.only(right: Gap.md, bottom: Gap.xs),
+            child: Text(cell, style: style),
+          ),
+      ],
+    );
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, Gap.xs, 0, Gap.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ListTile(
+              leading: group == null ? null : CircleAvatar(child: Text(group)),
+              title: Text(name, style: theme.textTheme.titleMedium),
+              subtitle: note == null ? null : Text(note),
             ),
+            if (exercise.sets.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+                child: Table(
+                  defaultColumnWidth: const IntrinsicColumnWidth(),
+                  columnWidths: {columns.length - 1: const FlexColumnWidth()},
+                  children: [
+                    row(columns, style: theme.textTheme.labelMedium),
+                    for (final (i, set) in exercise.sets.indexed) ...[
+                      row([
+                        l10n.setLabel(exercise, i),
+                        ...l10n.setValues(set, type, unit),
+                        l10n.setRemark(set, settings.effortScale),
+                      ]),
+                      for (final (d, drop) in set.drops.indexed)
+                        row([
+                          '',
+                          ...l10n.setValues(
+                            WorkoutSet(
+                              weightKg: drop.weightKg,
+                              reps: drop.reps,
+                            ),
+                            type,
+                            unit,
+                          ),
+                          l10n.workoutDrop(d + 1),
+                        ]),
+                    ],
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

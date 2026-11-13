@@ -12,7 +12,6 @@ import '../../exercises/domain/exercise.dart';
 import '../../../core/max_length_formatter.dart';
 import '../../../core/text_length.dart';
 import '../../programs/domain/program.dart';
-import '../../programs/presentation/program_text.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/workout.dart';
@@ -25,6 +24,7 @@ import 'rest_timer_cubit.dart';
 import 'set_bar.dart';
 import 'workout_editor_view.dart';
 import 'workout_help.dart';
+import 'workout_summary_card.dart';
 import 'workout_text.dart';
 
 /// The workout in progress, full screen above the tabs; back minimizes it
@@ -314,61 +314,74 @@ class _Summary extends StatelessWidget {
       (SettingsCubit cubit) => cubit.state.settings.weightUnit,
     );
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.workoutDoneTitle),
-        automaticallyImplyLeading: false,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(Gap.md),
-        children: [
-          Text(workout.name, style: theme.textTheme.titleLarge),
-          if (summary.records.isNotEmpty) ...[
-            const SizedBox(height: Gap.lg),
-            _Celebration(count: summary.records.length),
-          ],
-          const SizedBox(height: Gap.md),
-          ListTile(
-            title: Text(l10n.workoutDuration),
-            trailing: Text(l10n.durationMinutes(summary.duration)),
-          ),
-          ListTile(
-            title: Text(l10n.workoutVolume),
-            trailing: Text(l10n.weightText(summary.volumeKg, unit)),
-          ),
-          ListTile(
-            title: Text(l10n.workoutSets),
-            trailing: Text('${summary.setCount}'),
-          ),
-          ListTile(
-            title: Text(l10n.workoutExercises),
-            trailing: Text('${summary.exerciseCount}'),
-          ),
-          if (summary.programUnknown)
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: Text(l10n.workoutProgramUnknown),
+      body: SafeArea(
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.all(Gap.md),
+          children: [
+            WorkoutSummaryCard(
+              summary: summary,
+              caption: l10n.workoutDoneTitle,
+              title: workout.name,
             ),
-          for (final record in summary.records)
-            ListTile(
-              leading: Icon(
-                Icons.emoji_events,
-                color: theme.colorScheme.primary,
+            if (summary.records.isNotEmpty) ...[
+              const SizedBox(height: Gap.lg),
+              _Celebration(count: summary.records.length),
+              const SizedBox(height: Gap.sm),
+              Card(
+                margin: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    for (final record in summary.records)
+                      ListTile(
+                        leading: Icon(
+                          Icons.emoji_events,
+                          color: theme.colorScheme.primary,
+                        ),
+                        title: Text(record.name),
+                        subtitle: Text(l10n.recordText(record, unit)),
+                      ),
+                  ],
+                ),
               ),
-              title: Text(l10n.recordText(record, unit)),
-            ),
-          const SizedBox(height: Gap.lg),
-          if (!workout.isFromProgram) ...[
-            OutlinedButton.icon(
-              icon: const Icon(Icons.bookmark_add_outlined),
-              label: Text(l10n.workoutSaveAsProgram),
-              onPressed: state.savingProgram || state.savedProgramId != null
-                  ? null
-                  : () => _saveAsProgram(context, workout.name),
-            ),
-            const SizedBox(height: Gap.sm),
+            ],
+            if (summary.programUnknown) ...[
+              const SizedBox(height: Gap.sm),
+              Card(
+                margin: EdgeInsets.zero,
+                child: ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: Text(l10n.workoutProgramUnknown),
+                ),
+              ),
+            ],
           ],
-          ForgeButton(label: l10n.libraryDone, onPressed: cubit.summaryShown),
-        ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(Gap.md),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ForgeButton(
+                label: l10n.libraryDone,
+                onPressed: cubit.summaryShown,
+              ),
+              if (!workout.isFromProgram) ...[
+                const SizedBox(height: Gap.sm),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.bookmark_add_outlined),
+                  label: Text(l10n.workoutSaveAsProgram),
+                  onPressed: state.savingProgram || state.savedProgramId != null
+                      ? null
+                      : () => _saveAsProgram(context, workout.name),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
