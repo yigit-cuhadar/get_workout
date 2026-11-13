@@ -109,11 +109,13 @@ class ConsentCubit extends Cubit<ConsentState> {
     }
   }
 
-  /// Applied through the consent stream, which Firestore's local cache
+  /// For the user who was asked ([ConsentState.uid]); dropped once another
+  /// user is signed in. Applied through the consent stream, which Firestore's local cache
   /// answers at once; only a failure is emitted here.
   Future<void> answer(bool consent) async {
     final uid = _uid;
-    if (uid == null) return;
+    // The session changed while the user was being asked.
+    if (uid == null || uid != state.uid) return;
     final result = await _saveConsent((uid: uid, consent: consent));
     if (result.failureOrNull case final failure? when !isClosed) {
       emit(

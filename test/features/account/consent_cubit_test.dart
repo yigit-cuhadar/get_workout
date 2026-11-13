@@ -354,10 +354,25 @@ void main() {
     build: () => build(),
     act: (cubit) async {
       await signIn(guestA);
+      await answer('a', null);
       await cubit.answer(true);
     },
     verify: (_) => verify(() => consents.saveConsent('a', true)).called(1),
   );
+
+  test('an answer given after the user changed is not saved', () async {
+    final cubit = build();
+    await signIn(guestA);
+    await answer('a', null);
+    // A dialog asked A; B signs in before the answer comes.
+    await signIn(guestB);
+    await cubit.answer(true);
+    await signIn(null);
+    await cubit.answer(true);
+
+    verifyNever(() => consents.saveConsent(any(), any()));
+    await cubit.close();
+  });
 
   blocTest<ConsentCubit, ConsentState>(
     'a failed save is reported and the answer stays as stored',
