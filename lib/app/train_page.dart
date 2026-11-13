@@ -76,10 +76,14 @@ class _TrainPageState extends State<TrainPage> {
                   if (!_shown.contains(view))
                     const SizedBox.shrink()
                   else
-                    switch (view) {
-                      TrainView.program => const ProgramsPage(),
-                      TrainView.exercises => const ExercisesPage(),
-                    },
+                    // A hidden view's heroes do not fly.
+                    HeroMode(
+                      enabled: view == widget.view,
+                      child: switch (view) {
+                        TrainView.program => const ProgramsPage(),
+                        TrainView.exercises => const ExercisesPage(),
+                      },
+                    ),
               ],
             ),
           ),

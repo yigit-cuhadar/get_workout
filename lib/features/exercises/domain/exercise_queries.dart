@@ -253,24 +253,21 @@ final _plainLetters = {
     for (final char in accented.split('')) char: plain,
 };
 
-/// The exercises of a muscle, as the muscle sheet lists them.
+/// The exercises of a muscle, split as the list shows them for one muscle.
 typedef MuscleExercises = ({List<Exercise> main, List<Exercise> alsoWorks});
 
-/// The [catalogue]'s exercises working [muscle]: [MuscleExercises.main] has
-/// it as a main muscle, [MuscleExercises.alsoWorks] only as a secondary one.
-/// Each by popularity.
-MuscleExercises exercisesWorking(Muscle muscle, Iterable<Exercise> catalogue) {
+/// The [exercises] working [muscle]: [MuscleExercises.main] has it as a main
+/// muscle, [MuscleExercises.alsoWorks] only as a secondary one. Each keeps
+/// the order of [exercises].
+MuscleExercises exercisesWorking(Muscle muscle, Iterable<Exercise> exercises) {
   final main = <Exercise>[];
   final alsoWorks = <Exercise>[];
-  for (final exercise in catalogue) {
+  for (final exercise in exercises) {
     if (exercise.mainMuscles.contains(muscle)) {
       main.add(exercise);
     } else if (exercise.secondaryMuscles.contains(muscle)) {
       alsoWorks.add(exercise);
     }
   }
-  return (
-    main: main..sort(compareByPopularity),
-    alsoWorks: alsoWorks..sort(compareByPopularity),
-  );
+  return (main: main, alsoWorks: alsoWorks);
 }

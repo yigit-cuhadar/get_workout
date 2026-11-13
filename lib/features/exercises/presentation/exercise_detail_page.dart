@@ -1,9 +1,6 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,12 +10,11 @@ import '../../programs/presentation/add_to_program.dart';
 import '../../programs/presentation/add_to_program_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
 import '../domain/exercise.dart';
-import '../domain/muscle_meshes.dart';
-import 'body_model_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
 import 'exercise_detail_cubit.dart';
 import 'vocabulary_labels.dart';
 import 'widgets/exercise_tile.dart';
+import 'widgets/muscle_preview.dart';
 
 class ExerciseDetailPage extends StatelessWidget {
   const ExerciseDetailPage({
@@ -171,7 +167,7 @@ class _DetailBody extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final exercise = detail.exercise;
     final text = exercise.localized(context);
-    final colors = _MuscleColors.of(context);
+    final colors = MuscleColors.of(context);
     String numbered(int index, String line) =>
         l10n.stepNumbered(index + 1, line);
     String bulleted(int _, String line) => l10n.stepBullet(line);
@@ -190,7 +186,12 @@ class _DetailBody extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: Gap.md),
             child: Text(l10n.detailAliases(l10n.inlineList(text.aliases))),
           ),
-        _MusclePreview(exercise),
+        // Leaves the muscles and the first facts in view below it.
+        MusclePreview(
+          main: exercise.mainMuscles,
+          secondary: exercise.secondaryMuscles,
+          heightRatio: 1 / 3,
+        ),
         ListTile(
           leading: Icon(Icons.circle, color: colors.main),
           title: Text(l10n.detailMainMuscles),
@@ -271,109 +272,6 @@ class _DetailBody extends StatelessWidget {
         ExerciseTile(exercise, route: exerciseRoute),
     ],
   ];
-}
-
-/// The model from the front and from the back side by side, with the worked
-/// muscles coloured. Neither view takes gestures, so the page scrolls over
-/// them.
-class _MusclePreview extends StatefulWidget {
-  const _MusclePreview(this.exercise);
-
-  final Exercise exercise;
-
-  @override
-  State<_MusclePreview> createState() => _MusclePreviewState();
-}
-
-class _MusclePreviewState extends State<_MusclePreview> {
-  /// Share of the screen height the model takes, leaving the muscles and the
-  /// first facts in view below it.
-  static const _heightRatio = 1 / 3;
-
-  // A viewer without a controller faces the front.
-  final _back = ModelViewerController(yaw: math.pi);
-
-  @override
-  void initState() {
-    super.initState();
-    context.read<BodyModelCubit>().load();
-  }
-
-  @override
-  void dispose() {
-    _back.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final colors = _MuscleColors.of(context);
-    final exercise = widget.exercise;
-    final state = context.watch<BodyModelCubit>().state;
-    final partColors = {
-      for (final muscle in exercise.secondaryMuscles)
-        for (final mesh in muscle.meshNames) mesh: colors.secondary,
-      for (final muscle in exercise.mainMuscles)
-        for (final mesh in muscle.meshNames) mesh: colors.main,
-    };
-    Widget side(String label, Model3D model, {ModelViewerController? camera}) =>
-        Expanded(
-          child: Column(
-            children: [
-              Expanded(
-                child: ModelViewer(
-                  model: model,
-                  controller: camera,
-                  interactive: false,
-                  partColors: partColors,
-                ),
-              ),
-              Text(label),
-            ],
-          ),
-        );
-    return SizedBox(
-      height: MediaQuery.sizeOf(context).height * _heightRatio,
-      child: switch (state) {
-        BodyModelLoading() => const LoadingView(),
-        BodyModelFailed() => Center(child: Text(l10n.modelLoadFailed)),
-        BodyModelReady(:final model) => Semantics(
-          label: l10n.detailModelLabel(
-            l10n.muscleNames([
-              ...exercise.mainMuscles,
-              ...exercise.secondaryMuscles,
-            ]),
-          ),
-          image: true,
-          excludeSemantics: true,
-          child: Row(
-            children: [
-              side(l10n.detailFront, model),
-              side(l10n.detailBack, model, camera: _back),
-            ],
-          ),
-        ),
-      },
-    );
-  }
-}
-
-/// Main muscles in the primary colour, secondary ones in a lighter tone of it.
-class _MuscleColors {
-  const _MuscleColors(this.main, this.secondary);
-
-  factory _MuscleColors.of(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final hsl = HSLColor.fromColor(primary);
-    return _MuscleColors(
-      primary,
-      hsl.withLightness(hsl.lightness + (1 - hsl.lightness) * 0.55).toColor(),
-    );
-  }
-
-  final Color main;
-  final Color secondary;
 }
 
 class _Fact extends StatelessWidget {

@@ -11,8 +11,6 @@ import 'equipment_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
 import 'favorites_cubit.dart';
 
-enum LibraryView { body, list }
-
 /// The filters of the list. Within one criterion any selected value matches;
 /// every criterion must match.
 class LibraryFilter extends Equatable {
@@ -65,77 +63,49 @@ class LibraryFilter extends Equatable {
 
 class LibraryState extends Equatable {
   const LibraryState({
-    this.view = LibraryView.body,
     this.query = '',
     this.filter = const LibraryFilter(),
     this.sort = ExerciseSort.popularity,
     this.results = const [],
     this.equipmentChosen = false,
-    this.selectedMuscle,
     this.muscleExercises,
   });
 
-  final LibraryView view;
   final String query;
   final LibraryFilter filter;
   final ExerciseSort sort;
 
-  /// The list view's exercises: the catalogue searched, filtered and sorted.
+  /// The catalogue searched, filtered and sorted.
   final List<Exercise> results;
 
   /// Whether the user has picked their equipment; until then the page asks
   /// them to, before turning [LibraryFilter.onlyDoable] on.
   final bool equipmentChosen;
 
-  /// The muscle picked on the model, whose sheet is open.
-  final Muscle? selectedMuscle;
-
-  /// The exercises of [selectedMuscle]; null when none is selected.
+  /// [results] split by the muscle filtered for, while exactly one is;
+  /// otherwise null.
   final MuscleExercises? muscleExercises;
 
-  LibraryState copyWith({
-    LibraryView? view,
-    String? query,
-    LibraryFilter? filter,
-    ExerciseSort? sort,
-    List<Exercise>? results,
-    bool? equipmentChosen,
-    Muscle? Function()? selectedMuscle,
-    MuscleExercises? Function()? muscleExercises,
-  }) => LibraryState(
-    view: view ?? this.view,
-    query: query ?? this.query,
-    filter: filter ?? this.filter,
-    sort: sort ?? this.sort,
-    results: results ?? this.results,
-    equipmentChosen: equipmentChosen ?? this.equipmentChosen,
-    selectedMuscle: selectedMuscle != null
-        ? selectedMuscle()
-        : this.selectedMuscle,
-    muscleExercises: muscleExercises != null
-        ? muscleExercises()
-        : this.muscleExercises,
-  );
+  /// The one muscle filtered for, or null.
+  Muscle? get muscle =>
+      filter.muscles.length == 1 ? filter.muscles.single : null;
 
   @override
   List<Object?> get props => [
-    view,
     query,
     filter,
     sort,
     results,
     equipmentChosen,
-    selectedMuscle,
     // Records compare their lists by identity; these compare by content.
     muscleExercises?.main,
     muscleExercises?.alsoWorks,
   ];
 }
 
-/// Browsing the catalogue: the view, search, filters and sort of the list,
-/// and the muscle picked on the model. Follows the app-wide catalogue,
-/// favourites and equipment, so results stay current as they change. A
-/// change of user starts browsing afresh; only the view is kept.
+/// Browsing the catalogue: search, filters and sort. Follows the app-wide
+/// catalogue, favourites and equipment, so results stay current as they
+/// change. A change of user starts browsing afresh.
 class LibraryCubit extends Cubit<LibraryState> {
   LibraryCubit({
     required WatchAuthUser watchAuthUser,
@@ -188,9 +158,14 @@ class LibraryCubit extends Cubit<LibraryState> {
     _recompute();
   }
 
-  void setView(LibraryView view) => emit(state.copyWith(view: view));
-
   void setQuery(String query) => _recompute(query: query);
+
+  /// Browses [muscle], picked on the model: the muscle filter becomes it
+  /// alone and the search is cleared; the other filters and the sort stay.
+  void openMuscle(Muscle muscle) => _recompute(
+    query: '',
+    filter: state.filter.copyWith(muscles: {muscle}),
+  );
 
   void setSort(ExerciseSort sort) => _recompute(sort: sort);
 
@@ -231,30 +206,23 @@ class LibraryCubit extends Cubit<LibraryState> {
     sort: ExerciseSort.popularity,
   );
 
-  /// Opens (or with null, closes) the sheet of [muscle].
-  void selectMuscle(Muscle? muscle) => emit(
-    state.copyWith(
-      selectedMuscle: () => muscle,
-      muscleExercises: () =>
-          muscle == null ? null : exercisesWorking(muscle, _catalogue),
-    ),
-  );
-
   void _recompute({String? query, LibraryFilter? filter, ExerciseSort? sort}) {
     final nextFilter = filter ?? state.filter;
     final owned = _owned;
     final nextQuery = query ?? state.query;
     final nextSort = sort ?? state.sort;
-    final muscle = state.selectedMuscle;
+    final results = _results(nextQuery, nextFilter, nextSort, owned);
+    final muscles = nextFilter.muscles;
     emit(
-      state.copyWith(
+      LibraryState(
         query: nextQuery,
         filter: nextFilter,
         sort: nextSort,
-        results: _results(nextQuery, nextFilter, nextSort, owned),
+        results: results,
         equipmentChosen: owned != null,
-        muscleExercises: () =>
-            muscle == null ? null : exercisesWorking(muscle, _catalogue),
+        muscleExercises: muscles.length == 1
+            ? exercisesWorking(muscles.single, results)
+            : null,
       ),
     );
   }

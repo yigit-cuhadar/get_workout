@@ -862,15 +862,15 @@ from the earlier FitLab app.
 - **Navigation**: four tabs, Today / Train / Progress / Profile. Train
   (`lib/app/train_page.dart`, in `app` because it composes two features'
   first pages) has two views under a segmented control: "My program"
-  (`ProgramsPage`, at `/programs`) and "Exercises" (`ExercisesPage`, with
-  its own Body/List switch and the + for a custom exercise, at
-  `/exercises`). Every location stays as it was: both route trees live in
+  (`ProgramsPage`, at `/programs`) and "Exercises" (`ExercisesPage`, the
+  model under a search box, at `/exercises`; see Exercise list). Every
+  location stays as it was: both route trees live in
   Train's one branch (one stack), so `/programs/...` and `/exercises/...`
   open inside Train, and the switch is a `go` to the other view's
   location. Both locations build their page with `TrainPage.pageKey`, so
   the navigator updates the one page in place: a view is built the first
   time it shows and then kept (an `IndexedStack`), the model never loads
-  again and the list keeps its place. The tab opens on the view it last
+  again. The tab opens on the view it last
   showed, "My program" at first. The active workout is full-screen and can
   be minimized to a bar above the tabs. A `go` (a link, a notification
   tap) replaces its tab's stack (Train's for either view, via
@@ -884,6 +884,31 @@ from the earlier FitLab app.
   changes (an edit left as it opened, a page that saved), other tabs'
   stacks, pushes and tab switches are left alone. Back and the guard share
   one prompt per page, so nothing asks twice.
+- **Exercise list**: the Exercises view is the interactive model (rotate,
+  zoom, Front/Back, tap a muscle, or press and slide across muscles with
+  its name and a haptic tick) under a search box. The box is an entry, not
+  a field: it shows the current search and opens the one exercise list
+  page (`LibraryPage`, `/exercises/list`, declared before `:id`, inside
+  Train's stack), pushed above the view so back returns to the model as it
+  was. The list page holds search, filters, sort, the count, favourite
+  stars and, in its app bar only, the + for a custom exercise; opened from
+  the box its search field takes focus. A muscle on the model opens the
+  same page at `/exercises/list?muscle=<code>`, without the keyboard. The
+  box and the page's search field are one Hero (drawn as the box in
+  flight, so no second text field takes focus meanwhile); a muscle's push
+  flies it too. State: the list page and the view share the app-wide
+  `LibraryCubit`, so search, filters and sort last while the app runs (a
+  user change resets them). Opening a muscle makes it the only muscle
+  filter and clears the search; the other filters and the sort stay, and
+  their chips show. A list filtered to exactly one muscle, however that
+  filter was set, starts with a small front/back strip of the model with
+  that muscle coloured (the exercise page's `MusclePreview`) and its name,
+  then splits the results into "Main" and "Also works", each in the
+  list's order, so search, filters and sort apply inside them. Removing
+  the muscle's chip, or adding a second muscle, gives the plain list.
+  Leaving the page restores nothing: the filter stays for the next visit.
+  The program builder's picker (`ExercisePickerPage`) uses the same list
+  widget with its own cubit and no strip or sections.
 - **UX pass** (2026-11-13, owner's call): before the design phase the
   structure and flows are reworked with the default theme, as ordinary
   features (Group 10). Subscription stays open meanwhile; the paywall's
