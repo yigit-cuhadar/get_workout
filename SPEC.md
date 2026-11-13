@@ -1705,7 +1705,7 @@ Group 9, launch readiness
 - [x] Account — delete account, privacy policy link, analytics consent
 
 Group 10, UX pass (see Decisions; each flow's layout is picked by the owner from wireframe variants before it is built)
-- [ ] Navigation — four tabs (Today / Train / Progress / Profile), Programs and Exercises merged, quick actions moved to their tabs — every existing screen is still reachable
+- [x] Navigation — four tabs (Today / Train / Progress / Profile), Programs and Exercises merged, quick actions moved to their tabs — every existing screen is still reachable
 - [ ] Train, exercises view — model with a search box; one list page with search, filters, sort and +, opened by the box or filtered by a tapped muscle with its model strip
 - [ ] Today — next workout, week strip, heat-map model with muscle detail, steps card
 - [ ] Progress — data cards; history inside the calendar; one page per exercise with its statistics
