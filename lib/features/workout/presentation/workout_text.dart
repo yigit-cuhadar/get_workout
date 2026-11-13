@@ -23,15 +23,29 @@ extension WorkoutText on AppLocalizations {
     };
   }
 
-  /// Set [set] of [exercise] as the one to do now, e.g. `Bench Press · set
-  /// 2 of 3`, out of the working sets; a warm-up without the count.
+  /// Set [set] of [exercise] as the one to do now, its kind in words:
+  /// `Bench Press · set 2 of 3`, `Bench Press · Drop set 2 of 3` (out of
+  /// the working sets), `Bench Press · Warm-up 1 of 2` (out of the
+  /// warm-ups), or `Bench Press · Warm-up` for the only one.
   String setToDo(WorkoutExercise exercise, int set) {
-    final label = setLabel(exercise, set);
-    if (exercise.sets[set].isWarmup) {
-      return workoutLockScreenWarmup(exercise.name, label);
+    final sets = exercise.sets;
+    final type = sets[set].type;
+    final before = sets.take(set + 1);
+    if (type == SetType.warmup) {
+      final warmups = sets.where((s) => s.isWarmup).length;
+      return warmups == 1
+          ? workoutSetToDoWarmup(exercise.name)
+          : workoutSetToDoWarmupOf(
+              exercise.name,
+              before.where((s) => s.isWarmup).length,
+              warmups,
+            );
     }
-    final working = exercise.sets.where((s) => !s.isWarmup).length;
-    return workoutLockScreenCurrent(exercise.name, label, working);
+    final number = before.where((s) => !s.isWarmup).length;
+    final working = sets.where((s) => !s.isWarmup).length;
+    return type == SetType.drop
+        ? workoutSetToDoDrop(exercise.name, number, working)
+        : workoutLockScreenCurrent(exercise.name, '$number', working);
   }
 
   /// A lifted weight in [unit] for a text field, as
@@ -101,6 +115,29 @@ extension WorkoutText on AppLocalizations {
     SetType.normal => workoutSetNormal,
     SetType.warmup => workoutSetWarmup,
     SetType.drop => workoutSetDrop,
+  };
+
+  /// What a set of [type] is, in one line.
+  String setTypeHint(SetType type) => switch (type) {
+    SetType.normal => workoutSetNormalHint,
+    SetType.warmup => workoutSetWarmupHint,
+    SetType.drop => workoutSetDropHint,
+  };
+
+  /// What [step] of [scale] means in words, e.g. `1 rep left`.
+  String effortStepMeaning(EffortStep step, EffortScale scale) {
+    if (step.failed) return helpFailed;
+    if (effortStepHint(step, scale) case final hint?) return hint;
+    return step.rir >= WorkoutLimits.maxRir
+        ? helpRepsLeftPlus(WorkoutLimits.maxRir)
+        : helpRepsLeft(step.rir);
+  }
+
+  /// What the effort chips of [scale] ask.
+  String effortQuestion(EffortScale scale) => switch (scale) {
+    EffortScale.byFeel => effortQuestionFeel,
+    EffortScale.rir => effortQuestionRir,
+    EffortScale.rpe => effortQuestionRpe,
   };
 
   /// [step] as a choice of [scale] shows it: `Easy`, `4` (RIR), `6` (RPE),

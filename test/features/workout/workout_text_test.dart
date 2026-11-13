@@ -71,9 +71,17 @@ void main() {
       );
     });
 
-    test('the set to do now counts working sets only', () {
+    test('the set to do now names its kind and counts its own kind', () {
       expect(l10n.setToDo(bench, 3), 'Bench Press · set 3 of 3');
-      expect(l10n.setToDo(bench, 0), 'Bench Press · set W');
+      expect(l10n.setToDo(bench, 2), 'Bench Press · Drop set 2 of 3');
+      expect(l10n.setToDo(bench, 0), 'Bench Press · Warm-up');
+      final warmed = bench.copyWith(
+        sets: [
+          lift(20, 8, type: SetType.warmup),
+          ...bench.sets,
+        ],
+      );
+      expect(l10n.setToDo(warmed, 1), 'Bench Press · Warm-up 2 of 2');
     });
   });
 
