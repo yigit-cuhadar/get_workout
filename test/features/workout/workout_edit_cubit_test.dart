@@ -273,16 +273,13 @@ void main() {
       await cubit.close();
     });
 
-    test('a reload starts over on the selection, keeps the set view', () async {
+    test('a reload starts over on the selection', () async {
       final cubit = await editing();
-      cubit
-        ..toggleSetView()
-        ..addSet(0, SetType.normal);
+      cubit.addSet(0, SetType.normal);
       stored.add((workout: legs.copyWith(name: 'Theirs'), pending: false));
       await pumpEventQueue();
       cubit.reload();
       expect(cubit.state.picked, isNull);
-      expect(cubit.state.setView, SetView.selectedSet);
       await cubit.close();
     });
   });

@@ -13,16 +13,6 @@ import '../domain/set_selection.dart';
 import '../domain/workout.dart';
 import '../domain/workout_editing.dart' as editing;
 
-/// How the open exercise shows its sets. Two are tried for now; one goes
-/// once the owner has picked.
-enum SetView {
-  /// A bubble per set.
-  bubbles,
-
-  /// The selected set only, with arrows to the others.
-  selectedSet,
-}
-
 /// What the exercise cards and the set bar show of a workout being edited.
 abstract interface class EditedWorkout {
   Workout? get workout;
@@ -30,8 +20,6 @@ abstract interface class EditedWorkout {
   /// The open exercise and selected set as last picked or moved by an edit;
   /// null follows the next set to do. See [EditedSelection.selection].
   SetSelection? get picked;
-
-  SetView get setView;
 
   /// The stats of the workout's exercises that have arrived.
   Map<String, ExerciseStats?> get stats;
@@ -66,8 +54,8 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     SetSelection? Function(Workout after)? select,
   });
 
-  /// Emits the state with [picked] or [setView] changed where given.
-  void emitSelection({SetSelection? Function()? picked, SetView? setView});
+  /// Emits the state with [picked] as the selection.
+  void emitPicked(SetSelection? picked);
 
   /// Ticks the set done, or unticks it.
   void toggleDone(SetRef ref);
@@ -78,30 +66,15 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   /// Keyed by set and drop (null for the set's own weight).
   final _retyped = RetypedWeights<(SetRef, int?)>();
 
-  void toggleSetView() => emitSelection(
-    setView: state.setView == SetView.bubbles
-        ? SetView.selectedSet
-        : SetView.bubbles,
-  );
-
   void selectSet(SetRef ref) {
-    if (hasSet(ref)) emitSelection(picked: () => ref);
+    if (hasSet(ref)) emitPicked(ref);
   }
 
   /// Opens exercise [index]: see [openedExercise].
   void openExercise(int index) {
     final workout = state.workout;
     if (workout != null && _has(workout.exercises, index)) {
-      emitSelection(picked: () => openedExercise(workout, index));
-    }
-  }
-
-  /// Moves the selection [by] sets within its exercise.
-  void stepSet(int by) {
-    final workout = state.workout;
-    final current = state.selection;
-    if (workout != null && current != null) {
-      emitSelection(picked: () => stepSelection(workout, current, by));
+      emitPicked(openedExercise(workout, index));
     }
   }
 
@@ -152,6 +125,18 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
       movesSets: true,
       select: (_) => selectionAfterExerciseMoved(before, current, from, to),
     );
+  }
+
+  /// Moves the exercise or group that is block [from] of
+  /// [grouping.groupBlocks] so it becomes block [to].
+  void moveBlock(int from, int to) {
+    final exercises = state.workout?.exercises;
+    if (exercises == null) return;
+    final blocks = grouping.groupBlocks(exercises);
+    if (!_has(blocks, from) || !_has(blocks, to)) return;
+    // A block's first exercise moved onto another block's first exercise
+    // moves it whole, before or after that block.
+    moveExercise(blocks[from].$1, blocks[to].$1);
   }
 
   void linkWithNext(int index) => _editExercises(
@@ -227,16 +212,37 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
       _editSet(ref, (set, _) => set.copyWith(durationS: () => _whole(text)));
 
   /// Leaving [SetType.drop] removes the drops; only rep-based exercises have
-  /// drop sets.
-  void setType(SetRef ref, SetType type) => _editSet(
-    ref,
-    (set, loggingType) => type == SetType.drop && !loggingType.logsReps
-        ? set
-        : set.copyWith(
-            type: type,
-            drops: type == SetType.drop ? set.drops : const [],
-          ),
-  );
+  /// drop sets. A set that becomes or stops being a warm-up moves where
+  /// [editing.retypedSetPosition] puts it, the selection following it.
+  void setType(SetRef ref, SetType type) {
+    final exercise = state.workout?.exercises.elementAtOrNull(ref.exercise);
+    final set = exercise?.sets.elementAtOrNull(ref.set);
+    if (exercise == null ||
+        set == null ||
+        set.type == type ||
+        (type == SetType.drop && !exercise.loggingType.logsReps)) {
+      return;
+    }
+    final changed = _checked(
+      set.copyWith(
+        type: type,
+        drops: type == SetType.drop ? set.drops : const [],
+      ),
+      exercise.loggingType,
+    );
+    final to = editing.retypedSetPosition(exercise, ref.set, type);
+    final current = state.selection;
+    _editExercise(
+      ref.exercise,
+      (e) => e.copyWith(
+        sets: [...e.sets]
+          ..removeAt(ref.set)
+          ..insert(to, changed),
+      ),
+      movesSets: to != ref.set,
+      select: (_) => selectionAfterSetMoved(current, ref, to),
+    );
+  }
 
   /// Blank removes it.
   void setSetNote(SetRef ref, String text) =>
@@ -338,12 +344,14 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     final set = exercise?.sets.elementAtOrNull(ref.set);
     if (exercise == null || set == null) return;
     final type = exercise.loggingType;
-    var changed = change(set, type);
-    if (changed.done && validateSet(changed, type).isNotEmpty) {
-      changed = changed.copyWith(done: false);
-    }
-    _replaceSet(ref, changed);
+    _replaceSet(ref, _checked(change(set, type), type));
   }
+
+  /// [set], no longer done when it is not valid for [type].
+  static WorkoutSet _checked(WorkoutSet set, LoggingType type) =>
+      set.done && validateSet(set, type).isNotEmpty
+      ? set.copyWith(done: false)
+      : set;
 
   void _editExercise(
     int index,

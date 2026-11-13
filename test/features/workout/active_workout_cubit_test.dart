@@ -842,18 +842,69 @@ void main() {
       await cubit.close();
     });
 
-    test('opening an exercise and stepping through its sets', () async {
+    test('a set made a warm-up moves before the working sets', () async {
+      final cubit = await withSquat();
+      List<SetType> types() => [
+        for (final s in cubit.state.workout!.exercises[0].sets) s.type,
+      ];
+      cubit
+        ..addSet(0, SetType.drop)
+        ..selectSet((exercise: 0, set: 2))
+        ..addDrop((exercise: 0, set: 2))
+        ..setType((exercise: 0, set: 2), SetType.warmup);
+      expect(types(), [SetType.warmup, SetType.normal, SetType.normal]);
+      expect(cubit.state.workout!.exercises[0].sets[0].drops, isEmpty);
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      // Another set picked: it moves along as the warm-up passes it.
+      cubit
+        ..selectSet((exercise: 0, set: 1))
+        ..setType((exercise: 0, set: 2), SetType.warmup);
+      expect(types(), [SetType.warmup, SetType.warmup, SetType.normal]);
+      expect(cubit.state.selection, (exercise: 0, set: 2));
+      // A warm-up made a working set becomes the first of them.
+      cubit.setType((exercise: 0, set: 0), SetType.normal);
+      expect(types(), [SetType.warmup, SetType.normal, SetType.normal]);
+      expect(cubit.state.selection, (exercise: 0, set: 2));
+      // Normal and drop sets stay in place.
+      cubit.setType((exercise: 0, set: 1), SetType.drop);
+      expect(types(), [SetType.warmup, SetType.drop, SetType.normal]);
+      await cubit.close();
+    });
+
+    test('a card moves whole and the selection follows it', () async {
+      final cubit = await withSquat();
+      cubit
+        ..addExercises([bench, plank], 'en')
+        ..linkWithNext(0)
+        ..selectSet((exercise: 1, set: 0));
+      List<String> ids() => [
+        for (final e in cubit.state.workout!.exercises) e.exerciseId,
+      ];
+      // Blocks: [squat, bench] as a superset, then plank.
+      cubit.moveBlock(0, 1);
+      expect(ids(), ['plank', 'squat', 'bench']);
+      expect(cubit.state.workout!.exercises.map((e) => e.group), [
+        null,
+        'A',
+        'A',
+      ]);
+      expect(cubit.state.selection, (exercise: 2, set: 0));
+      cubit.moveBlock(1, 0);
+      expect(ids(), ['squat', 'bench', 'plank']);
+      expect(cubit.state.selection, (exercise: 1, set: 0));
+      cubit.moveBlock(0, 2);
+      expect(ids(), ['squat', 'bench', 'plank']);
+      await cubit.close();
+    });
+
+    test('opening an exercise selects its first set to do', () async {
       final cubit = await withSquat();
       cubit
         ..addExercises([bench], 'en')
         ..openExercise(1);
       expect(cubit.state.selection, (exercise: 1, set: 0));
-      cubit
-        ..openExercise(0)
-        ..stepSet(1);
-      expect(cubit.state.selection, (exercise: 0, set: 1));
-      cubit.stepSet(1);
-      expect(cubit.state.selection, (exercise: 0, set: 1));
+      cubit.openExercise(0);
+      expect(cubit.state.selection, (exercise: 0, set: 0));
       await cubit.close();
     });
 
@@ -880,13 +931,10 @@ void main() {
       await cubit.close();
     });
 
-    test('the set view toggles and stays for the next workout', () async {
+    test('the next workout starts with nothing picked', () async {
       final cubit = await withSquat();
-      expect(cubit.state.setView, SetView.bubbles);
-      cubit.toggleSetView();
-      expect(cubit.state.setView, SetView.selectedSet);
+      cubit.selectSet((exercise: 0, set: 1));
       await cubit.discard();
-      expect(cubit.state.setView, SetView.selectedSet);
       expect(cubit.state.picked, isNull);
       await cubit.close();
     });
@@ -1203,11 +1251,12 @@ void main() {
 
     test('a warm-up leaves the running rest alone', () async {
       final cubit = await withSquat();
+      // The first set made a warm-up stays where it is.
       cubit
-        ..toggleDone(first)
-        ..setType(second, SetType.warmup)
-        ..toggleDone(second);
-      expect(cubit.state.rest, Rest(endsAt: restEnd, after: first));
+        ..setType(first, SetType.warmup)
+        ..toggleDone(second)
+        ..toggleDone(first);
+      expect(cubit.state.rest, Rest(endsAt: restEnd, after: second));
       await cubit.close();
     });
 

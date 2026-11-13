@@ -54,7 +54,6 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.savingProgram = false,
     this.savedProgramId,
     this.picked,
-    this.setView = SetView.bubbles,
   });
 
   final WorkoutStatus status;
@@ -94,10 +93,6 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
 
   @override
   final SetSelection? picked;
-
-  /// Kept from one workout to the next while the app runs.
-  @override
-  final SetView setView;
 
   /// A workout is in progress (or being finished), so another cannot start.
   /// An empty one is not ([Workout.isEmpty]): it is not kept, shows nowhere
@@ -139,7 +134,6 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     bool? savingProgram,
     String? Function()? savedProgramId,
     SetSelection? Function()? picked,
-    SetView? setView,
   }) => ActiveWorkoutState(
     status: status ?? this.status,
     workout: workout != null ? workout() : this.workout,
@@ -155,7 +149,6 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
         ? savedProgramId()
         : this.savedProgramId,
     picked: picked != null ? picked() : this.picked,
-    setView: setView ?? this.setView,
   );
 
   @override
@@ -172,7 +165,6 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     savingProgram,
     savedProgramId,
     picked,
-    setView,
   ];
 }
 
@@ -285,7 +277,6 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     emit(
       ActiveWorkoutState(
         status: uid == null ? WorkoutStatus.none : WorkoutStatus.loading,
-        setView: state.setView,
       ),
     );
     if (uid == null) return;
@@ -675,7 +666,6 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       ActiveWorkoutState(
         status: WorkoutStatus.none,
         localUnreadable: state.localUnreadable,
-        setView: state.setView,
       ),
     );
     unawaited(_sync(uid));
@@ -735,14 +725,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   /// A new pick drops the message of a set that could not be ticked.
   @override
-  void emitSelection({SetSelection? Function()? picked, SetView? setView}) =>
-      emit(
-        state.copyWith(
-          picked: picked,
-          setView: setView,
-          invalidSet: picked == null ? null : () => null,
-        ),
-      );
+  void emitPicked(SetSelection? picked) =>
+      emit(state.copyWith(picked: () => picked, invalidSet: () => null));
 
   /// The rest once an edit made [after] of [before]: a set ticked done
   /// starts the rest [restAfterTick] gives, replacing the running one;

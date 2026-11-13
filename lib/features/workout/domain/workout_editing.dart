@@ -49,6 +49,18 @@ int newSetPosition(WorkoutExercise exercise, SetType type) =>
     ? exercise.sets.lastIndexWhere((set) => set.isWarmup) + 1
     : exercise.sets.length;
 
+/// Where set [index] of [exercise] goes once it is of [type]: one that
+/// becomes or stops being a warm-up moves to where the other sets' warm-ups
+/// end, so warm-ups stay before the working sets as [newSetPosition] adds
+/// them (a warm-up made a working set becomes the first one); any other
+/// change leaves it in place.
+int retypedSetPosition(WorkoutExercise exercise, int index, SetType type) {
+  final sets = exercise.sets;
+  if (sets[index].isWarmup == (type == SetType.warmup)) return index;
+  final others = [...sets]..removeAt(index);
+  return others.lastIndexWhere((set) => set.isWarmup) + 1;
+}
+
 /// A workout of day [dayIndex] of [program], its items as goals. Items whose
 /// exercise is not in [catalogue] (deleted or retired) are left out.
 Workout workoutFromProgramDay({

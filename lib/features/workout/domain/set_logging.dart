@@ -23,6 +23,12 @@ enum SetIssue {
 extension LoggingTypeSets on LoggingType {
   bool get logsReps => !isDurationBased;
 
+  /// The kinds its sets can be: drop sets only for rep-based types.
+  List<SetType> get setTypes => [
+    for (final type in SetType.values)
+      if (type != SetType.drop || logsReps) type,
+  ];
+
   /// Bodyweight types: an empty weight means none added (or no assistance).
   bool get weightOptional =>
       this == LoggingType.weightedBodyweight ||

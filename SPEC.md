@@ -750,9 +750,19 @@ from the earlier FitLab app.
 - **Workout screen**: shared by the workout in progress and editing a
   stored or past workout. One card per exercise, or per superset/circuit;
   only the card of the selected set is open (name, goal, last time, note,
-  an info button to the exercise's detail page, the menu), the others show
-  "Squat · 1/3" with the menu still there, and tapping one opens it on its
-  first undone set, else its last. The selection is presentation state in
+  the menu, whose "Exercise details" opens the exercise's detail page), the
+  others show "Squat · 1/3" with the menu still there, and tapping one
+  opens it on its first undone set, else its last. Holding an exercise's
+  header (not its menu) as long as a long press collapses every card to its
+  one-line exercises, the held line scrolled back under the finger; 100 ms
+  later the drag starts and the card (a superset or circuit as one, never
+  split or dropped inside another) follows the finger; once dropped
+  (`moveBlock`, `grouping.moveItem`) the cards open again with the same set
+  selected. Collapsing is local state of the cards; the drag uses
+  `SliverReorderableList`, its proxy a freshly built one-line card with the
+  page's providers re-provided. Screen readers get "Move up" / "Move down"
+  actions on the headers. The workout note and "Add exercise" stay below,
+  not draggable. The selection is presentation state in
   the editor cubit (`SetSelection`, `set_selection.dart`): until something
   is picked it is the next set to do (`nextSet`, which knows supersets),
   else the first exercise; ticking moves it to the next set to do (the
@@ -762,24 +772,28 @@ from the earlier FitLab app.
   sets and exercises keeps it on its set or exercise (removing the selected
   set selects the one that took its place, else the one before; removing its
   exercise falls back to the next set to do); skipping the rest leaves it.
-  Two set views exist for now, switched by an app-bar button, until the
-  owner picks one and the other is deleted (`SetView`; in memory, kept from
-  one workout to the next while the app runs; the edit page has its own,
-  starting with bubbles): **bubbles** (a wrapping row of round bubbles, a
-  warm-up dashed with "W", a drop set "2D", done ones ticked, the selected
-  one in the theme's selected colours, a "+" bubble; a group stacks one row
-  per exercise, labelled A1, A2, warm-ups first, then one column per round
-  with the round's bubbles joined) and **selected set** ("Squat · set 2 of
-  3", a warm-up "Squat · set W", last time's set, arrows within the exercise,
-  "Add set"). Adding a set asks Normal / Warm-up / Drop set (a drop set
-  only for rep-based exercises); a warm-up goes after the existing
-  warm-ups, other sets at the end, all empty with the usual suggestions as
-  hints. The **set bar** sits at the bottom of the page above the rest
+  The open card shows its sets as **bubbles** (the owner's pick; the
+  "selected set only" view was tried and deleted): a wrapping row of round
+  bubbles, a warm-up dashed with "W", a drop set "2D", done ones ticked, the
+  selected one in the theme's selected colours, a "+" bubble; a group
+  stacks one row per exercise, labelled A1, A2, warm-ups first, then one
+  column per round with the round's bubbles joined. Tapping a bubble
+  selects its set; long-pressing it opens a menu at the bubble with "Change
+  to …" for the other set types it can be and "Remove set" (also custom
+  screen-reader actions), the same as the bar's "more" sheet. Adding a set
+  asks Normal / Warm-up / Drop set (a drop set only for rep-based
+  exercises); a warm-up goes after the existing warm-ups, other sets at the
+  end, all empty with the usual suggestions as hints. Changing a set's type
+  keeps warm-ups first: a set made a warm-up moves to after the other
+  warm-ups, a warm-up made a working set becomes the first working set,
+  normal and drop sets stay in place (`retypedSetPosition`); the selection
+  follows the moved set, and a running rest forgets the set it followed as
+  for any move. The **set bar** sits at the bottom of the page above the rest
   strip and the safe area; while the keyboard is up the rest strip steps
   aside (still mounted) so the bar sits right on the keyboard, the list
-  above shrinks and stays scrollable, and the selected bubble or set is
+  above shrinks and stays scrollable, and the selected bubble is
   scrolled into view. It shows the selected set ("Squat · set 2 of 3", last
-  time in the bubbles view, the set note), its fields by logging type with
+  time, the set note), its fields by logging type with
   the suggestion as hint, a drop set's drops (edit, remove, add) right
   under them, the effort steps, the tick (which needs no keyboard and starts
   the rest as before) and a "more" sheet for the set type, note and

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/max_length_formatter.dart';
 import '../../../l10n/app_localizations.dart';
@@ -34,50 +33,6 @@ Future<bool> confirmChoice(
     ),
   );
   return confirmed == true;
-}
-
-/// The exercises of the workout [editor] edits by name, reordered by
-/// dragging; groups move as one.
-class ReorderSheet extends StatelessWidget {
-  const ReorderSheet({super.key, required this.editor});
-
-  final WorkoutEditor<EditedWorkout> editor;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return BlocBuilder<WorkoutEditor<EditedWorkout>, EditedWorkout>(
-      bloc: editor,
-      buildWhen: (previous, current) =>
-          previous.workout?.exercises != current.workout?.exercises,
-      builder: (context, state) {
-        final exercises = state.workout?.exercises ?? const [];
-        return SafeArea(
-          child: ReorderableListView.builder(
-            shrinkWrap: true,
-            buildDefaultDragHandles: false,
-            itemCount: exercises.length,
-            onReorderItem: editor.moveExercise,
-            itemBuilder: (context, index) {
-              final exercise = exercises[index];
-              return ListTile(
-                key: ValueKey(index),
-                leading: ReorderableDragStartListener(
-                  index: index,
-                  child: Icon(
-                    Icons.drag_handle,
-                    semanticLabel: l10n.programReorder,
-                  ),
-                ),
-                title: Text(exercise.name),
-                trailing: exercise.group == null ? null : Text(exercise.group!),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
 }
 
 /// A multi-line note that applies every change at once.
@@ -136,12 +91,11 @@ Future<void> addSetOfKind(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          for (final type in SetType.values)
-            if (type != SetType.drop || exercise.loggingType.logsReps)
-              ListTile(
-                title: Text(l10n.setTypeLabel(type)),
-                onTap: () => Navigator.pop(context, type),
-              ),
+          for (final type in exercise.loggingType.setTypes)
+            ListTile(
+              title: Text(l10n.setTypeLabel(type)),
+              onTap: () => Navigator.pop(context, type),
+            ),
         ],
       ),
     ),

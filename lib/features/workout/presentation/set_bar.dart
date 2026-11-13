@@ -146,9 +146,7 @@ class SetBar extends StatelessWidget {
     final set = exercise.sets[ref.set];
     final type = exercise.loggingType;
     final hint = state.suggestion(ref);
-    final previous = state.setView == SetView.bubbles
-        ? state.lastTime(ref)
-        : null;
+    final previous = state.lastTime(ref);
     final details = [
       if (previous != null)
         l10n.workoutLastTimeSet(l10n.setWithUnitText(previous, type, unit)),
@@ -426,13 +424,12 @@ class _SetOptions extends StatelessWidget {
                 Wrap(
                   spacing: Gap.sm,
                   children: [
-                    for (final type in SetType.values)
-                      if (type != SetType.drop || exercise.loggingType.logsReps)
-                        ChoiceChip(
-                          label: Text(l10n.setTypeLabel(type)),
-                          selected: set.type == type,
-                          onSelected: (_) => editor.setType(ref, type),
-                        ),
+                    for (final type in exercise.loggingType.setTypes)
+                      ChoiceChip(
+                        label: Text(l10n.setTypeLabel(type)),
+                        selected: set.type == type,
+                        onSelected: (_) => editor.setType(ref, type),
+                      ),
                   ],
                 ),
                 TextFormField(
@@ -464,22 +461,4 @@ class _SetOptions extends StatelessWidget {
       },
     );
   }
-}
-
-/// Switches between the two ways the open exercise shows its sets; see
-/// [SetView].
-class SetViewToggle extends StatelessWidget {
-  const SetViewToggle(this.view, {super.key, required this.onPressed});
-
-  final SetView view;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: AppLocalizations.of(context).workoutSetsView,
-    isSelected: view == SetView.selectedSet,
-    icon: const Icon(Icons.bubble_chart_outlined),
-    selectedIcon: const Icon(Icons.view_carousel_outlined),
-    onPressed: onPressed,
-  );
 }

@@ -107,6 +107,20 @@ void main() {
     expect(newSetPosition(exercise('squat', []), SetType.warmup), 0);
   });
 
+  test('a set that becomes or stops being a warm-up moves to their end', () {
+    final warmup = lift(40, 10, type: SetType.warmup);
+    final sets = exercise('squat', [warmup, lift(100, 5), lift(100, 5)]);
+    expect(retypedSetPosition(sets, 2, SetType.warmup), 1);
+    expect(retypedSetPosition(sets, 1, SetType.warmup), 1);
+    expect(retypedSetPosition(sets, 0, SetType.normal), 0);
+    expect(retypedSetPosition(sets, 2, SetType.drop), 2);
+    expect(retypedSetPosition(sets, 0, SetType.warmup), 0);
+    final warmed = exercise('squat', [warmup, warmup, lift(100, 5)]);
+    expect(retypedSetPosition(warmed, 0, SetType.drop), 1);
+    final working = exercise('squat', [lift(100, 5), lift(100, 5)]);
+    expect(retypedSetPosition(working, 1, SetType.warmup), 0);
+  });
+
   test('finishWorkout keeps done sets and drops empty exercises', () {
     final draft = workout('w1', [
       exercise('squat', [lift(100, 5), lift(100, 5, done: false)], group: 'A'),
