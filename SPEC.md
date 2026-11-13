@@ -1716,7 +1716,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [ ] Paywall — two layouts kept for an A/B test: plans as a list, plans as three cards side by side
 - [ ] Program detail — a summary card (state, weekdays, length, Change days, Stop), days collapse
 - [ ] Program builder — stays as built: day chips, sets and reps in a sheet
-- [ ] Exercise detail — layout not picked yet
+- [ ] Exercise detail — model with main and secondary muscles, a table of facts (equipment, level, mechanic, pattern, sides, logged as, also called), Setup and How to do it as numbered steps, Common mistakes, Safety and Cues each as their own card, Note, then one Similar exercises list tagged Alternative or Variation. One Add button in the app bar (workout or program). The Records and progress row leaves this page; the strength page stays reachable from Progress
 - [ ] Further screens — listed here as the owner picks them
 
 ## Design
