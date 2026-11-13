@@ -4,13 +4,13 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
 
-import '../../../core/first_weekday.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/muscle_meshes.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/body_model_cubit.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
+import '../../settings/presentation/first_weekday.dart';
 import '../../subscription/presentation/premium.dart';
 import '../domain/weekly_volume.dart';
 import 'volume_charts.dart';
@@ -25,11 +25,15 @@ class VolumePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firstWeekday = MaterialLocalizations.of(context).firstWeekday;
+    final firstWeekday = context.watchFirstWeekday();
     return BlocProvider(
-      key: ValueKey(firstWeekday),
       create: (_) => sl<VolumeCubit>(param1: firstWeekday),
-      child: const _VolumeView(),
+      child: FirstWeekdayListener(
+        created: firstWeekday,
+        onChanged: (context, firstWeekday) =>
+            context.read<VolumeCubit>().changeFirstWeekday(firstWeekday),
+        child: const _VolumeView(),
+      ),
     );
   }
 }

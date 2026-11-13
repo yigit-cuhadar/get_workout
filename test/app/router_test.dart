@@ -353,6 +353,7 @@ void main() {
       );
     sl.registerLazySingleton(
       () => ProgramListCubit(
+        firstWeekday: DateTime.monday,
         watchAuthUser: WatchAuthUser(programAuth),
         watchPrograms: WatchPrograms(programs),
         watchActiveProgram: WatchActiveProgram(programs),

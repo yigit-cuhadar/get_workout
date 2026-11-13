@@ -36,15 +36,18 @@ class CardioListState extends Equatable {
   /// user, then call [CardioListCubit.rejectionShown].
   final bool writeRejected;
 
-  CardioListState copyWith({List<CardioWeek>? chart, bool? writeRejected}) =>
-      CardioListState(
-        status: status,
-        sessions: sessions,
-        weeks: weeks,
-        chart: chart ?? this.chart,
-        failure: failure,
-        writeRejected: writeRejected ?? this.writeRejected,
-      );
+  CardioListState copyWith({
+    List<CardioWeek>? weeks,
+    List<CardioWeek>? chart,
+    bool? writeRejected,
+  }) => CardioListState(
+    status: status,
+    sessions: sessions,
+    weeks: weeks ?? this.weeks,
+    chart: chart ?? this.chart,
+    failure: failure,
+    writeRejected: writeRejected ?? this.writeRejected,
+  );
 
   @override
   List<Object?> get props => [
@@ -57,10 +60,12 @@ class CardioListState extends Equatable {
   ];
 }
 
-/// The cardio sessions of whoever is signed in. Resets to loading on every
-/// user change, so a previous user's sessions are never shown.
+/// The cardio sessions of whoever is signed in, by week from the app's first
+/// weekday (see [changeFirstWeekday]). Resets to loading on every user
+/// change, so a previous user's sessions are never shown.
 class CardioListCubit extends Cubit<CardioListState> {
   CardioListCubit({
+    required this._firstWeekday,
     required WatchAuthUser watchAuthUser,
     required this._watchSessions,
     required WatchRejectedCardioWrites watchRejectedWrites,
@@ -83,6 +88,9 @@ class CardioListCubit extends Cubit<CardioListState> {
   StreamSubscription<List<CardioSession>>? _sessionsSubscription;
   String? _uid;
 
+  int _firstWeekday;
+  int get firstWeekday => _firstWeekday;
+
   void _onUser(String? uid) {
     _uid = uid;
     _follow();
@@ -94,10 +102,27 @@ class CardioListCubit extends Cubit<CardioListState> {
   void rejectionShown() => emit(state.copyWith(writeRejected: false));
 
   /// Moves the 12-week chart to the current week, e.g. after the app was in
-  /// the background over a Monday.
+  /// the background over the first day of a week.
   void refreshNow() {
     if (state.status != CardioListStatus.ready) return;
-    emit(state.copyWith(chart: lastWeeks(state.sessions, now: _clock())));
+    emit(
+      state.copyWith(
+        chart: lastWeeks(state.sessions, _firstWeekday, now: _clock()),
+      ),
+    );
+  }
+
+  /// Starts the weeks on [firstWeekday] from now on.
+  void changeFirstWeekday(int firstWeekday) {
+    if (firstWeekday == _firstWeekday) return;
+    _firstWeekday = firstWeekday;
+    if (state.status != CardioListStatus.ready) return;
+    emit(
+      state.copyWith(
+        weeks: groupByWeek(state.sessions, firstWeekday),
+        chart: lastWeeks(state.sessions, firstWeekday, now: _clock()),
+      ),
+    );
   }
 
   void _follow() {
@@ -112,8 +137,8 @@ class CardioListCubit extends Cubit<CardioListState> {
               CardioListState(
                 status: CardioListStatus.ready,
                 sessions: sessions,
-                weeks: groupByWeek(sessions),
-                chart: lastWeeks(sessions, now: _clock()),
+                weeks: groupByWeek(sessions, _firstWeekday),
+                chart: lastWeeks(sessions, _firstWeekday, now: _clock()),
                 writeRejected: state.writeRejected,
               ),
             ),

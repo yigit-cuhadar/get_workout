@@ -123,12 +123,14 @@ class ProgramSchedule {
     }
   }
 
-  /// The plan of [today]'s week, Monday to Sunday; see [plan].
+  /// The plan of [today]'s week, starting on ISO weekday [firstWeekday];
+  /// see [plan].
   List<PlannedDay> weekPlan(
     CalendarDate today, {
+    required int firstWeekday,
     List<CompletedDay> completed = const [],
   }) {
-    final start = today.weekStart;
+    final start = today.startOfWeek(firstWeekday);
     return plan(today, from: start, to: start.addDays(6), completed: completed);
   }
 

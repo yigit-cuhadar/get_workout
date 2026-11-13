@@ -51,18 +51,19 @@ class VolumeState extends Equatable {
 /// The weekly sets per muscle of whoever is signed in, one week at a time,
 /// with Premium together with the [trendWeeks] ending with it (read again
 /// when Premium comes or goes). Weeks start on ISO weekday [firstWeekday],
-/// as the locale does. Starts at the current week and never goes past it.
+/// the app's. Starts at the current week and never goes past it.
 /// Follows the library, so muscles changed there count at once; drops
 /// everything on a user change.
 class VolumeCubit extends Cubit<VolumeState> {
   VolumeCubit({
-    required this.firstWeekday,
+    required int firstWeekday,
     required WatchAuthUser watchAuthUser,
     required this._watchVolume,
     required ExerciseCatalogueCubit catalogue,
     required WatchPremium watchPremium,
     DateTime Function()? clock,
-  }) : _clock = clock ?? DateTime.now,
+  }) : _firstWeekday = firstWeekday,
+       _clock = clock ?? DateTime.now,
        super(_initial(firstWeekday, clock ?? DateTime.now)) {
     _muscles = _musclesOf(catalogue.state);
     _catalogueSubscription = catalogue.stream.listen((state) {
@@ -86,7 +87,7 @@ class VolumeCubit extends Cubit<VolumeState> {
         });
   }
 
-  final int firstWeekday;
+  int _firstWeekday;
   final WatchWeeklyVolume _watchVolume;
   final DateTime Function() _clock;
   late final StreamSubscription<ExerciseCatalogueState> _catalogueSubscription;
@@ -126,13 +127,30 @@ class VolumeCubit extends Cubit<VolumeState> {
     if (state.hasNext) _show(state.week.addDays(DateTime.daysPerWeek));
   }
 
+  /// Starts the weeks on [firstWeekday] from now on, showing the current
+  /// week if it was shown, else the one sharing most days with the week
+  /// shown.
+  void changeFirstWeekday(int firstWeekday) {
+    if (firstWeekday == _firstWeekday) return;
+    _firstWeekday = firstWeekday;
+    final thisWeek = CalendarDate.of(_clock()).startOfWeek(firstWeekday);
+    final week = state.isThisWeek
+        ? thisWeek
+        : state.week.addDays(3).startOfWeek(firstWeekday);
+    _follow(
+      week: week.isAfter(thisWeek) ? thisWeek : week,
+      thisWeek: thisWeek,
+      keep: false,
+    );
+  }
+
   /// Follows the workouts again after a failure.
   void retry() {
     if (state.status == VolumeStatus.failure) _follow(keep: false);
   }
 
   void _show(CalendarDate week) {
-    final thisWeek = CalendarDate.of(_clock()).startOfWeek(firstWeekday);
+    final thisWeek = CalendarDate.of(_clock()).startOfWeek(_firstWeekday);
     _follow(week: week.isAfter(thisWeek) ? thisWeek : week, thisWeek: thisWeek);
   }
 

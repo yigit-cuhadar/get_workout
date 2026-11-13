@@ -13,6 +13,48 @@ enum ThemePreference { system, light, dark }
 /// (RIR) whichever is shown; see `EffortScaleSteps`.
 enum EffortScale { byFeel, rir, rpe }
 
+/// The first day of the week everywhere in the app (`settings.weekStart`).
+enum WeekStart {
+  /// The phone's, from its region (which may give Friday too).
+  automatic,
+  monday,
+  sunday,
+  saturday;
+
+  /// The first day of the week as an ISO weekday (1 Monday to 7 Sunday);
+  /// [phoneFirstWeekday] when [automatic].
+  int firstWeekday(int phoneFirstWeekday) => switch (this) {
+    automatic => phoneFirstWeekday,
+    monday => DateTime.monday,
+    sunday => DateTime.sunday,
+    saturday => DateTime.saturday,
+  };
+}
+
+/// The first day of the week in region [countryCode] (ISO 3166, e.g.
+/// `TR`) as an ISO weekday: Monday unless CLDR lists another.
+int regionFirstWeekday(String countryCode) {
+  final region = countryCode.toUpperCase();
+  if (_sundayRegions.contains(region)) return DateTime.sunday;
+  if (_saturdayRegions.contains(region)) return DateTime.saturday;
+  if (_fridayRegions.contains(region)) return DateTime.friday;
+  return DateTime.monday;
+}
+
+// CLDR 49 supplemental weekData firstDay ("001", the default, is Monday).
+const _sundayRegions = {
+  'AG', 'AS', 'BD', 'BR', 'BS', 'BT', 'BW', 'BZ', 'CA', 'CO', 'DM', 'DO', //
+  'ET', 'GT', 'GU', 'HK', 'HN', 'ID', 'IL', 'IN', 'IS', 'JM', 'JP', 'KE', //
+  'KH', 'KR', 'LA', 'MH', 'MM', 'MO', 'MT', 'MX', 'MZ', 'NI', 'NP', 'PA', //
+  'PE', 'PH', 'PK', 'PR', 'PT', 'PY', 'SA', 'SG', 'SV', 'TH', 'TT', 'TW', //
+  'UM', 'US', 'VE', 'VI', 'WS', 'YE', 'ZA', 'ZW', //
+};
+const _saturdayRegions = {
+  'AF', 'BH', 'DJ', 'DZ', 'EG', 'IQ', 'IR', 'JO', 'KW', 'LY', 'OM', 'QA', //
+  'SD', 'SY', //
+};
+const _fridayRegions = {'MV'};
+
 /// A first-use tip the app shows once (`settings.seenTips`).
 enum Tip {
   /// After the first set is ticked: effort can be logged.
@@ -354,6 +396,7 @@ class UserSettings extends Equatable {
     required this.lengthUnit,
     this.themePreference = ThemePreference.system,
     this.effortScale = EffortScale.byFeel,
+    this.weekStart = WeekStart.automatic,
     this.restTimer = const RestTimerSettings(),
     this.warmups = const WarmupSettings(),
     this.seenTips = const {},
@@ -380,6 +423,7 @@ class UserSettings extends Equatable {
   final LengthUnit lengthUnit;
   final ThemePreference themePreference;
   final EffortScale effortScale;
+  final WeekStart weekStart;
   final RestTimerSettings restTimer;
 
   /// Which warm-up sets exercises logged with a weight and reps start with
@@ -445,6 +489,7 @@ class UserSettings extends Equatable {
     LengthUnit? lengthUnit,
     ThemePreference? themePreference,
     EffortScale? effortScale,
+    WeekStart? weekStart,
     RestTimerSettings? restTimer,
     WarmupSettings? warmups,
     Set<Tip>? seenTips,
@@ -459,6 +504,7 @@ class UserSettings extends Equatable {
     lengthUnit: lengthUnit ?? this.lengthUnit,
     themePreference: themePreference ?? this.themePreference,
     effortScale: effortScale ?? this.effortScale,
+    weekStart: weekStart ?? this.weekStart,
     restTimer: restTimer ?? this.restTimer,
     warmups: warmups ?? this.warmups,
     seenTips: seenTips ?? this.seenTips,
@@ -477,6 +523,7 @@ class UserSettings extends Equatable {
     lengthUnit: lengthUnit,
     themePreference: themePreference,
     effortScale: effortScale,
+    weekStart: weekStart,
     restTimer: restTimer,
     warmups: warmups,
     seenTips: seenTips,
@@ -492,6 +539,7 @@ class UserSettings extends Equatable {
     lengthUnit,
     themePreference,
     effortScale,
+    weekStart,
     restTimer,
     warmups,
     seenTips,

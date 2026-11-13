@@ -71,14 +71,15 @@ class CalendarState extends Equatable {
 /// starts the weeks. Resets on every user change.
 class CalendarCubit extends Cubit<CalendarState> {
   CalendarCubit({
-    required this.firstWeekday,
+    required int firstWeekday,
     required WatchAuthUser watchAuthUser,
     required this._watchWorkouts,
     required this._watchCardio,
     required this._watchPrograms,
     required this._watchActiveProgram,
     DateTime Function()? clock,
-  }) : _clock = clock ?? DateTime.now,
+  }) : _firstWeekday = firstWeekday,
+       _clock = clock ?? DateTime.now,
        super(
          _shown(
            selected: CalendarDate.of((clock ?? DateTime.now)()),
@@ -93,7 +94,7 @@ class CalendarCubit extends Cubit<CalendarState> {
         .listen(_onUser);
   }
 
-  final int firstWeekday;
+  int _firstWeekday;
   final WatchWorkoutsBetween _watchWorkouts;
   final WatchCardioBetween _watchCardio;
   final WatchPrograms _watchPrograms;
@@ -145,12 +146,20 @@ class CalendarCubit extends Cubit<CalendarState> {
       final month = addMonths(state.month, steps);
       _show(monthOf(today) == month ? today : month, expanded: true);
     } else {
-      final week = state.selected.startOfWeek(firstWeekday).addDays(7 * steps);
+      final week = state.selected.startOfWeek(_firstWeekday).addDays(7 * steps);
       _show(
-        today.startOfWeek(firstWeekday) == week ? today : week,
+        today.startOfWeek(_firstWeekday) == week ? today : week,
         expanded: false,
       );
     }
+  }
+
+  /// Starts the weeks on [firstWeekday] from now on, keeping the date
+  /// selected.
+  void changeFirstWeekday(int firstWeekday) {
+    if (firstWeekday == _firstWeekday) return;
+    _firstWeekday = firstWeekday;
+    _show(state.selected, expanded: state.expanded);
   }
 
   /// Shows the full month of the selected date, or only its week.
@@ -170,7 +179,7 @@ class CalendarCubit extends Cubit<CalendarState> {
         selected: selected,
         today: _today,
         expanded: expanded,
-        firstWeekday: firstWeekday,
+        firstWeekday: _firstWeekday,
       );
 
   void _show(CalendarDate selected, {required bool expanded}) {

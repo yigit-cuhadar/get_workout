@@ -230,6 +230,35 @@ from the earlier FitLab app.
   it today, moves it to the next training weekday or skips it; the week
   plan shows it once, on its date. A program with a length ends that many
   weeks after its start date.
+- **Week start** (owner, 2026-11-13): the whole app uses one first day of
+  the week: the calendar, the Today and Progress week strips, weekly
+  volume, Cardio (summary, 12-week chart, week headers, Progress card), the
+  Body chart's weekly bars and step averages, the Steps "This week" chart,
+  the program week plan (and so the done days the workout reminders know),
+  and the order of weekdays in the program day picker, "Active · ..." and
+  the measurement reminder's day. Settings → Appearance → "Week starts on":
+  Automatic (default, shown as "Automatic (Monday)" with the day it gives),
+  Monday, Sunday or Saturday (`settings.weekStart`, written only when not
+  automatic). Automatic is the phone's region, not the app's language
+  (English only, so Sunday for everyone): the device locale
+  (`PlatformDispatcher.locale`, followed on change). With a region, CLDR's
+  weekData `firstDay` for it (CLDR 49, a const table in
+  `regionFirstWeekday`; unlisted regions Monday): `en_TR`, `tr_TR`,
+  `en_GB` Monday, `en_US` Sunday, `ar_EG` Saturday, `MV` Friday (only
+  Automatic can give Friday). Without a region, the language in intl's
+  bundled date symbols (`dateTimeSymbolMap()`, `FIRSTDAYOFWEEK`, 0 =
+  Monday), else Monday. `WeekStart.firstWeekday`
+  resolves the setting against it; widgets read it in `build` with
+  `context.watchFirstWeekday()` and pass it to the cubits they create,
+  which follow a change while alive through `FirstWeekdayListener`
+  (`changeFirstWeekday`). The app-wide `ProgramListCubit` and
+  `CardioListCubit` are created with the value of that moment
+  (`currentFirstWeekday`) and told of changes by the app and by the
+  pages showing them. A new week start moves the program week plan once
+  the new week's done days arrive, keeping the known ones meanwhile, and
+  not while the list shows a failure. Only views change: stored dates,
+  program weekdays and schedules, `nextDate` and program lengths (counted
+  from the start date) never depend on it.
 - **Effort scale**: optional per set, picked in the set bar (picking the
   chosen step again clears it). Settings → "Effort per set": By feel
   (default), RIR or RPE; there is no "Off" (`settings.effortScale` codes
@@ -495,8 +524,8 @@ from the earlier FitLab app.
   `forge_health`; never stored, so `firestore.rules` is unchanged. The
   platform store in every build on iOS and Android; the fake only in debug
   and profile builds on other platforms. The Steps page (Progress tab)
-  reads the last 30 days in one call and derives today and the week (the
-  locale's first weekday) from it; it reloads on app resume and on pull,
+  reads the last 30 days in one call and derives today and the week (from the
+  app's first weekday, see Week start) from it; it reloads on app resume and on pull,
   never by polling. Access: unless already granted, a one-screen
   explanation comes first and the system is asked only after "Continue";
   that the user was asked is remembered on the device (a marker file in
@@ -1191,7 +1220,7 @@ from the earlier FitLab app.
 - **Calendar**: Progress → Calendar is one scrolling page (UX pass,
   2026-11-13): a card with this week's strip, which opens to the month
   (previous / next; tapping a date of a neighbouring month opens that
-  month), weeks starting on the locale's first day, then one list by day
+  month), weeks starting on the app's first weekday (see Week start), then one list by day
   that also holds the workout history. The card follows its dates plus six
   days on each side live: workouts and cardio by local start date, a range
   on one field, so no composite index. The list runs from the end of this
@@ -1224,9 +1253,9 @@ from the earlier FitLab app.
   then the sessions under a header per week (with its minutes), newest
   first; a session opens its edit form. Log cardio is a full-width button
   fixed at the bottom once the list has loaded, the empty page included,
-  which then shows only its message. Weeks start on Monday here, for the
-  summary, the chart and the list alike, as on the Progress card; the
-  calendar and weekly volume start them on the locale's first weekday.
+  which then shows only its message. Weeks start on the app's first
+  weekday (see Week start), for the summary, the chart and the list alike,
+  as on the Progress card.
   The list follows the 500 newest sessions.
 - **Starting a workout**: Train's "My program" and Today start the next
   day, a program's page any of its days, "My program" also an empty
@@ -1401,10 +1430,8 @@ from the earlier FitLab app.
   weak-linked).
 - **Weekly volume**: Progress → Weekly volume shows one week, the current
   one first; earlier weeks are free to browse, later than the current one
-  never. A week starts on the locale's first weekday
-  (`MaterialLocalizations.firstDayOfWeekIndex`, `CalendarDate.startOfWeek`);
-  with English as the only language that is Sunday, while the program
-  week plan and the cardio chart keep Monday. A workout belongs to the
+  never. A week starts on the app's first weekday (see Week start,
+  `CalendarDate.startOfWeek`). A workout belongs to the
   week of the local date it started, like a program day, so a daylight
   saving change never moves it. Counting is the programs' own
   (`muscleSets` in `exercises/domain/muscle_volume.dart`) over done sets
@@ -1487,8 +1514,7 @@ from the earlier FitLab app.
   catalogue, the generator and "Start empty workout" (the app never calls
   it "free": users read that as "at no cost"). Week strip: the
   calendar's `calendarEntries` and marks over the current week from the
-  locale's first weekday (Sunday in English, like weekly volume, unlike
-  the program week plan), drawn by `MonthGrid` as one week; the strip and
+  app's first weekday (see Week start), drawn by `MonthGrid` as one week; the strip and
   every day open the calendar, which has no route for a given date. No
   quick actions: an empty workout starts from "My program", cardio is
   logged under Progress → Cardio, a past workout is added on the
@@ -1602,7 +1628,9 @@ reader has an active entitlement.
 
 **`users/{uid}`**: `profile` (goal, level, daysPerWeek, equipment[], sex,
 birthYear, heightCm, weightKg, targetWeightKg), `settings` (units,
-effortScale, restTimer, warmups (autoWarmups for older versions), seenTips[],
+effortScale, weekStart (`monday` \| `sunday` \| `saturday`; absent, or a
+value this version does not know, is automatic), restTimer, warmups
+(autoWarmups for older versions), seenTips[],
 bar and plates, stepGoal,
 reminder times,
 trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,

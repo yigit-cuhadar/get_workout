@@ -59,6 +59,7 @@ void main() {
   });
 
   CardioListCubit build() => CardioListCubit(
+    firstWeekday: DateTime.monday,
     watchAuthUser: WatchAuthUser(auth),
     watchSessions: WatchCardioSessions(cardio),
     watchRejectedWrites: WatchRejectedCardioWrites(cardio),
@@ -68,8 +69,8 @@ void main() {
   CardioListState ready(List<CardioSession> sessions) => CardioListState(
     status: CardioListStatus.ready,
     sessions: sessions,
-    weeks: groupByWeek(sessions),
-    chart: lastWeeks(sessions, now: now),
+    weeks: groupByWeek(sessions, DateTime.monday),
+    chart: lastWeeks(sessions, DateTime.monday, now: now),
   );
 
   test('starts loading', () {
@@ -229,4 +230,58 @@ void main() {
     act: (cubit) => cubit.refreshNow(),
     expect: () => const <CardioListState>[],
   );
+
+  group('the first weekday', () {
+    final sundayWalk = CardioSession(
+      id: 'c',
+      type: CardioType.outdoorRun,
+      date: DateTime(2026, 11, 8, 9),
+      duration: const Duration(minutes: 20),
+    );
+    final sessions = [guestRun, sundayWalk, memberRide];
+
+    CardioListState readyFrom(int firstWeekday) => CardioListState(
+      status: CardioListStatus.ready,
+      sessions: sessions,
+      weeks: groupByWeek(sessions, firstWeekday),
+      chart: lastWeeks(sessions, firstWeekday, now: now),
+    );
+
+    blocTest<CardioListCubit, CardioListState>(
+      'regroups the weeks and the chart when it changes',
+      build: build,
+      act: (cubit) async {
+        users.add(member);
+        await pumpEventQueue();
+        stored['u1']!.add(sessions);
+        await pumpEventQueue();
+        cubit.changeFirstWeekday(DateTime.monday);
+        cubit.changeFirstWeekday(DateTime.sunday);
+      },
+      expect: () => [readyFrom(DateTime.monday), readyFrom(DateTime.sunday)],
+      verify: (cubit) {
+        // Sunday 8 November now opens this week instead of ending the last.
+        expect(cubit.state.weeks.first.start, DateTime(2026, 11, 8));
+        expect(cubit.state.weeks.first.sessions, [guestRun, sundayWalk]);
+        expect(cubit.state.chart.last.duration, const Duration(minutes: 50));
+      },
+    );
+
+    blocTest<CardioListCubit, CardioListState>(
+      'given at creation, groups the sessions by it',
+      build: () => CardioListCubit(
+        firstWeekday: DateTime.sunday,
+        watchAuthUser: WatchAuthUser(auth),
+        watchSessions: WatchCardioSessions(cardio),
+        watchRejectedWrites: WatchRejectedCardioWrites(cardio),
+        clock: () => now,
+      ),
+      act: (cubit) async {
+        users.add(member);
+        await pumpEventQueue();
+        stored['u1']!.add(sessions);
+      },
+      expect: () => [readyFrom(DateTime.sunday)],
+    );
+  });
 }

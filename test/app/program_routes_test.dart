@@ -177,6 +177,7 @@ void main() {
       ..registerSingleton(PremiumPrompt((_) {}))
       ..registerLazySingleton(
         () => ProgramListCubit(
+          firstWeekday: DateTime.monday,
           watchAuthUser: WatchAuthUser(sessionAuth),
           watchPrograms: WatchPrograms(repository),
           watchActiveProgram: WatchActiveProgram(repository),

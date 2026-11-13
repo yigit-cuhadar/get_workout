@@ -4,6 +4,8 @@ import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
+import 'package:get_workout/features/settings/domain/user_settings.dart';
+import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_steps_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_volume_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_week_cubit.dart';
@@ -19,6 +21,9 @@ class _StepsCubit extends MockCubit<TodayStepsState>
 
 class _EntitlementCubit extends MockCubit<EntitlementState>
     implements EntitlementCubit {}
+
+class _SettingsCubit extends MockCubit<SettingsState>
+    implements SettingsCubit {}
 
 class _ProgramListCubit extends MockCubit<ProgramListState>
     implements ProgramListCubit {}
@@ -65,6 +70,15 @@ void registerTodayStandIns() {
 /// provides it; after [registerTodayStandIns] or the test's own.
 BlocProvider<ProgramListCubit> programList() =>
     BlocProvider.value(value: sl<ProgramListCubit>());
+
+/// The device defaults as the app's settings, for pages that read them
+/// (the first weekday) in tests that do not test settings.
+BlocProvider<SettingsCubit> defaultSettings() {
+  final cubit = _SettingsCubit();
+  when(() => cubit.state)
+      .thenReturn(SettingsState(UserSettings.defaultsFor(null)));
+  return BlocProvider<SettingsCubit>.value(value: cubit);
+}
 
 /// A premium status that stays unknown, for Today's generator button in
 /// tests without purchases.

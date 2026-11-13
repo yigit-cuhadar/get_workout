@@ -48,6 +48,7 @@ void registerProgressStandIns() {
   if (!sl.isRegistered<CardioListCubit>()) {
     final cardio = _CardioListCubit();
     when(() => cardio.state).thenReturn(const CardioListState());
+    when(() => cardio.firstWeekday).thenReturn(DateTime.sunday);
     sl.registerSingleton<CardioListCubit>(cardio);
   }
 }

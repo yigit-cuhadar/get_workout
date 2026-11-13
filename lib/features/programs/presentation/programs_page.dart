@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../generator/presentation/generator_entry.dart';
+import '../../settings/presentation/first_weekday.dart';
 import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
 import '../domain/program_schedule.dart';
@@ -93,7 +94,10 @@ class _Programs extends StatelessWidget {
             locked: access == ProgramAccess.locked,
             subtitle: state.finished
                 ? l10n.programFinished
-                : l10n.weekdayList(state.active!.weekdays),
+                : l10n.weekdayList(
+                    state.active!.weekdays,
+                    context.watchFirstWeekday(),
+                  ),
           ),
           // Locked, it opens the paywall instead.
           if (state.nextDayIndex case final day?)

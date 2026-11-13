@@ -27,7 +27,7 @@ class TodayWeekState extends Equatable {
 
   final CalendarDate today;
 
-  /// The seven dates of [today]'s week, from the locale's first weekday.
+  /// The seven dates of [today]'s week, from the app's first weekday.
   final List<CalendarDate> days;
   final TodayWeekStatus status;
 
@@ -43,18 +43,19 @@ class TodayWeekState extends Equatable {
 
 /// The current week of whoever is signed in, as the calendar shows it:
 /// workouts and cardio done, the active program's days planned or missed.
-/// Weeks start on ISO weekday [firstWeekday], as the locale does. Resets
+/// Weeks start on ISO weekday [firstWeekday], the app's. Resets
 /// on every user change.
 class TodayWeekCubit extends Cubit<TodayWeekState> {
   TodayWeekCubit({
-    required this.firstWeekday,
+    required int firstWeekday,
     required WatchAuthUser watchAuthUser,
     required this._watchWorkouts,
     required this._watchCardio,
     required this._watchPrograms,
     required this._watchActiveProgram,
     DateTime Function()? clock,
-  }) : _clock = clock ?? DateTime.now,
+  }) : _firstWeekday = firstWeekday,
+       _clock = clock ?? DateTime.now,
        super(_initial(firstWeekday, clock ?? DateTime.now)) {
     _userSubscription = watchAuthUser()
         .map((user) => user?.id)
@@ -65,7 +66,8 @@ class TodayWeekCubit extends Cubit<TodayWeekState> {
         });
   }
 
-  final int firstWeekday;
+  int _firstWeekday;
+  int get firstWeekday => _firstWeekday;
   final WatchWorkoutsBetween _watchWorkouts;
   final WatchCardioBetween _watchCardio;
   final WatchPrograms _watchPrograms;
@@ -95,7 +97,7 @@ class TodayWeekCubit extends Cubit<TodayWeekState> {
   /// app slept over midnight; a snapshot arriving after the week ended
   /// moves to the new week too.
   void refreshNow() {
-    final now = _initial(firstWeekday, _clock);
+    final now = _initial(_firstWeekday, _clock);
     if (now.today == state.today) return;
     if (now.days.first != state.days.first ||
         state.status == TodayWeekStatus.failure) {
@@ -103,6 +105,13 @@ class TodayWeekCubit extends Cubit<TodayWeekState> {
     } else {
       _emitReady();
     }
+  }
+
+  /// Starts the week on [firstWeekday] from now on.
+  void changeFirstWeekday(int firstWeekday) {
+    if (firstWeekday == _firstWeekday) return;
+    _firstWeekday = firstWeekday;
+    _follow();
   }
 
   /// Follows the week again after a failure.
@@ -117,7 +126,7 @@ class TodayWeekCubit extends Cubit<TodayWeekState> {
     _programs = null;
     _active = null;
     _activeKnown = false;
-    final loading = _initial(firstWeekday, _clock);
+    final loading = _initial(_firstWeekday, _clock);
     if (state != loading) emit(loading);
     final uid = _uid;
     if (uid == null) return;
@@ -173,7 +182,7 @@ class TodayWeekCubit extends Cubit<TodayWeekState> {
     }
     final today = CalendarDate.of(_clock());
     // The week ended since it was followed: follow the new one instead.
-    if (today.startOfWeek(firstWeekday) != state.days.first) return _follow();
+    if (today.startOfWeek(_firstWeekday) != state.days.first) return _follow();
     final active = _active;
     final days = state.days;
     emit(

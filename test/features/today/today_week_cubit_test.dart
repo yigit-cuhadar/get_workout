@@ -336,4 +336,33 @@ void main() {
       expect(cubit.state.entries, isEmpty);
     },
   );
+
+  blocTest<TodayWeekCubit, TodayWeekState>(
+    'follows a new first weekday, the same one changes nothing',
+    build: build,
+    act: (cubit) async {
+      await load(alice, done: [upper], activeProgram: active);
+      final ready = cubit.state;
+      cubit.changeFirstWeekday(DateTime.sunday);
+      expect(cubit.state, ready);
+      cubit.changeFirstWeekday(DateTime.monday);
+      expect(cubit.state.status, TodayWeekStatus.loading);
+      expect(cubit.firstWeekday, DateTime.monday);
+      await load(alice, from: d(2026, 11, 9), done: [upper]);
+    },
+    verify: (cubit) {
+      expect(cubit.state.status, TodayWeekStatus.ready);
+      expect(cubit.state.days, [
+        for (var i = 0; i < 7; i++) d(2026, 11, 9).addDays(i),
+      ]);
+      verify(
+        () => workouts.watchWorkoutsBetween(
+          'u1',
+          from: d(2026, 11, 9),
+          to: d(2026, 11, 15),
+        ),
+      ).called(1);
+      expect(marksOn(cubit, d(2026, 11, 9)), [CalendarMark.workout]);
+    },
+  );
 }

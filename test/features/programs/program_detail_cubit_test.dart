@@ -89,6 +89,7 @@ void main() {
     ).thenAnswer((_) async => const Ok(null));
     premium = FakePremium();
     list = ProgramListCubit(
+      firstWeekday: DateTime.monday,
       watchAuthUser: WatchAuthUser(auth),
       watchPrograms: WatchPrograms(repository),
       watchActiveProgram: WatchActiveProgram(repository),

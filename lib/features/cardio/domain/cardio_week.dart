@@ -2,11 +2,12 @@ import 'package:forge_core/forge_core.dart';
 
 import 'cardio_session.dart';
 
-/// The sessions of one week, which runs from Monday 00:00 local time.
+/// The sessions of one week, which runs from 00:00 local time of its first
+/// day.
 class CardioWeek extends Equatable {
   const CardioWeek(this.start, this.sessions);
 
-  /// Local midnight of the week's Monday.
+  /// Local midnight of the week's first day.
   final DateTime start;
   final List<CardioSession> sessions;
 
@@ -23,19 +24,27 @@ class CardioWeek extends Equatable {
   List<Object?> get props => [start, sessions];
 }
 
-/// Local midnight of the Monday of [time]'s week. Built from calendar fields,
-/// so a daylight saving change inside the week does not shift it.
-DateTime weekStart(DateTime time) {
+/// Local midnight of the first day of [time]'s week, for weeks starting on
+/// ISO weekday [firstWeekday] (1 Monday to 7 Sunday). Built from calendar
+/// fields, so a daylight saving change inside the week does not shift it.
+DateTime weekStart(DateTime time, int firstWeekday) {
   final local = time.toLocal();
-  return DateTime(local.year, local.month, local.day - (local.weekday - 1));
+  return DateTime(
+    local.year,
+    local.month,
+    local.day - (local.weekday - firstWeekday) % DateTime.daysPerWeek,
+  );
 }
 
-/// The weeks that have sessions, newest first; [sessions] must be sorted
-/// newest first and keep that order within each week.
-List<CardioWeek> groupByWeek(List<CardioSession> sessions) {
+/// The weeks that have sessions, newest first, starting on ISO weekday
+/// [firstWeekday]; [sessions] must be sorted newest first and keep that
+/// order within each week.
+List<CardioWeek> groupByWeek(List<CardioSession> sessions, int firstWeekday) {
   final weeks = <DateTime, List<CardioSession>>{};
   for (final session in sessions) {
-    weeks.putIfAbsent(weekStart(session.date), () => []).add(session);
+    weeks
+        .putIfAbsent(weekStart(session.date, firstWeekday), () => [])
+        .add(session);
   }
   return [
     for (final MapEntry(:key, :value) in weeks.entries) CardioWeek(key, value),
@@ -43,20 +52,21 @@ List<CardioWeek> groupByWeek(List<CardioSession> sessions) {
 }
 
 /// The [count] weeks up to and including [now]'s, oldest first, empty weeks
-/// included.
+/// included, starting on ISO weekday [firstWeekday].
 List<CardioWeek> lastWeeks(
-  List<CardioSession> sessions, {
+  List<CardioSession> sessions,
+  int firstWeekday, {
   required DateTime now,
   int count = 12,
 }) {
-  final current = weekStart(now);
+  final current = weekStart(now, firstWeekday);
   final starts = [
     for (var i = count - 1; i >= 0; i--)
       DateTime(current.year, current.month, current.day - 7 * i),
   ];
   final byWeek = {for (final start in starts) start: <CardioSession>[]};
   for (final session in sessions) {
-    byWeek[weekStart(session.date)]?.add(session);
+    byWeek[weekStart(session.date, firstWeekday)]?.add(session);
   }
   return [for (final start in starts) CardioWeek(start, byWeek[start]!)];
 }

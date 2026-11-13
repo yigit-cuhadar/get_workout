@@ -26,9 +26,6 @@ class CalendarDate extends Equatable implements Comparable<CalendarDate> {
 
   CalendarDate addDays(int days) => CalendarDate(year, month, day + days);
 
-  /// The Monday of this date's week.
-  CalendarDate get weekStart => startOfWeek(DateTime.monday);
-
   /// The first day of this date's week, for weeks starting on ISO weekday
   /// [firstWeekday] (1 Monday to 7 Sunday), as locales differ.
   CalendarDate startOfWeek(int firstWeekday) =>
@@ -72,3 +69,10 @@ class CalendarDate extends Equatable implements Comparable<CalendarDate> {
   @override
   String toString() => toIso();
 }
+
+/// The seven ISO weekdays in the order of a week starting on ISO weekday
+/// [firstWeekday].
+List<int> weekdaysFrom(int firstWeekday) => [
+  for (var i = 0; i < DateTime.daysPerWeek; i++)
+    (firstWeekday - 1 + i) % DateTime.daysPerWeek + 1,
+];

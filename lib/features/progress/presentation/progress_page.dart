@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/router.dart';
-import '../../../core/first_weekday.dart';
 import '../../../core/sparkline.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../body/presentation/body_list_cubit.dart';
@@ -15,6 +14,7 @@ import '../../cardio/presentation/cardio_list_cubit.dart';
 import '../../cardio/presentation/cardio_text.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/presentation/program_text.dart';
+import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../steps/domain/steps.dart';
 import '../../today/presentation/today_steps_cubit.dart';
@@ -36,13 +36,13 @@ class ProgressPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firstWeekday = MaterialLocalizations.of(context).firstWeekday;
+    final firstWeekday = context.watchFirstWeekday();
+    final cardio = sl<CardioListCubit>();
     return MultiBlocProvider(
-      key: ValueKey(firstWeekday),
       providers: [
         // The app's shared lists, as their pages show them.
         BlocProvider.value(value: sl<BodyListCubit>()),
-        BlocProvider.value(value: sl<CardioListCubit>()),
+        BlocProvider.value(value: cardio),
         // Today's, so both tabs show the same week.
         BlocProvider(create: (_) => sl<ProgressBodyCubit>()),
         BlocProvider(create: (_) => sl<TodayWeekCubit>(param1: firstWeekday)),
@@ -51,7 +51,19 @@ class ProgressPage extends StatelessWidget {
         BlocProvider(create: (_) => sl<ProgressStrengthCubit>()),
         BlocProvider(create: (_) => sl<TodayStepsCubit>()),
       ],
-      child: const _ProgressView(),
+      child: FirstWeekdayListener(
+        created: firstWeekday,
+        onChanged: (context, firstWeekday) {
+          context.read<TodayWeekCubit>().changeFirstWeekday(firstWeekday);
+          context.read<TodayVolumeCubit>().changeFirstWeekday(firstWeekday);
+        },
+        child: FirstWeekdayListener(
+          created: cardio.firstWeekday,
+          onChanged: (context, firstWeekday) =>
+              context.read<CardioListCubit>().changeFirstWeekday(firstWeekday),
+          child: const _ProgressView(),
+        ),
+      ),
     );
   }
 }

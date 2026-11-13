@@ -113,7 +113,7 @@ class _CardioRange {
 /// user change.
 class CalendarListCubit extends Cubit<CalendarListState> {
   CalendarListCubit({
-    required this.firstWeekday,
+    required this._firstWeekday,
     required WatchAuthUser watchAuthUser,
     required this._watchHistory,
     required this._watchWorkouts,
@@ -133,7 +133,7 @@ class CalendarListCubit extends Cubit<CalendarListState> {
     );
   }
 
-  final int firstWeekday;
+  int _firstWeekday;
   final WatchHistory _watchHistory;
   final WatchWorkoutsBetween _watchWorkouts;
   final WatchCardioBetween _watchCardio;
@@ -182,6 +182,14 @@ class CalendarListCubit extends Cubit<CalendarListState> {
   void reveal(CalendarDate? date) {
     _revealed = date;
     _publish();
+  }
+
+  /// Starts the weeks on [firstWeekday] from now on: the list ends with
+  /// another date, so it is read again.
+  void changeFirstWeekday(int firstWeekday) {
+    if (firstWeekday == _firstWeekday) return;
+    _firstWeekday = firstWeekday;
+    _restart();
   }
 
   /// Loads the next older page, once the last one is full.
@@ -297,7 +305,7 @@ class CalendarListCubit extends Cubit<CalendarListState> {
     // While the last page loads, it is still to come.
     final more = last?.more ?? true;
     final today = CalendarDate.of(_clock());
-    final weekStart = today.startOfWeek(firstWeekday);
+    final weekStart = today.startOfWeek(_firstWeekday);
     final end = weekStart.addDays(6);
     final start = listStart(workouts, more: more, weekStart: weekStart);
     _readCardio(uid, start, end);

@@ -66,6 +66,7 @@ void main() {
           BlocProvider<ActiveWorkoutCubit>.value(value: cubit),
           unknownPremium(),
           programList(),
+          defaultSettings(),
         ],
         child: MaterialApp.router(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

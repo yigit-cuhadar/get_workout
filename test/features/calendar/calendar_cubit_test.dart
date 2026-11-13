@@ -451,4 +451,46 @@ void main() {
     expect(cubit.state.entries, isEmpty);
     await cubit.close();
   });
+
+  test('a new first weekday keeps the date and, in its month, the '
+      'entries', () async {
+    final cubit = build();
+    await signIn(alice);
+    await deliver();
+    final entries = cubit.state.entries;
+
+    cubit.changeFirstWeekday(DateTime.sunday);
+    expect(cubit.state.weeks, [week(d(2026, 11, 8))]);
+    expect(cubit.state.selected, today);
+    expect(cubit.state.status, CalendarStatus.ready);
+    expect(cubit.state.entries, entries);
+
+    cubit.expand(true);
+    expect(cubit.state.weeks.first, week(d(2026, 11, 1)));
+    cubit.changeFirstWeekday(DateTime.saturday);
+    expect(cubit.state.weeks.first, week(d(2026, 10, 31)));
+    expect(cubit.state.status, CalendarStatus.ready);
+    await cubit.close();
+  });
+
+  test('a new first weekday moving the week to another month loads '
+      'it', () async {
+    final cubit = build();
+    await signIn(alice);
+    await deliver();
+    // Sunday 1 November ends the Monday week that starts in October.
+    cubit.select(d(2026, 11, 1));
+    expect(cubit.state.month, d(2026, 10, 1));
+    await pumpEventQueue();
+    await deliver(month: 'u1 2026-09-25');
+
+    cubit.changeFirstWeekday(DateTime.sunday);
+    expect(cubit.state.weeks, [week(d(2026, 11, 1))]);
+    expect(cubit.state.month, d(2026, 11, 1));
+    expect(cubit.state.status, CalendarStatus.loading);
+    await pumpEventQueue();
+    await deliver();
+    expect(cubit.state.status, CalendarStatus.ready);
+    await cubit.close();
+  });
 }

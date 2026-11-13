@@ -5,12 +5,12 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
-import '../../../core/first_weekday.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../cardio/presentation/cardio_text.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program_schedule.dart';
 import '../../programs/presentation/program_text.dart';
+import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../workout/domain/exercise_stats.dart';
 import '../../workout/presentation/start_workout.dart';
@@ -29,7 +29,7 @@ class CalendarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firstWeekday = MaterialLocalizations.of(context).firstWeekday;
+    final firstWeekday = context.watchFirstWeekday();
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => sl<CalendarCubit>(param1: firstWeekday)),
@@ -37,7 +37,14 @@ class CalendarPage extends StatelessWidget {
           create: (_) => sl<CalendarListCubit>(param1: firstWeekday),
         ),
       ],
-      child: const _CalendarView(),
+      child: FirstWeekdayListener(
+        created: firstWeekday,
+        onChanged: (context, firstWeekday) {
+          context.read<CalendarCubit>().changeFirstWeekday(firstWeekday);
+          context.read<CalendarListCubit>().changeFirstWeekday(firstWeekday);
+        },
+        child: const _CalendarView(),
+      ),
     );
   }
 }

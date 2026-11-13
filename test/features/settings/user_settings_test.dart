@@ -30,6 +30,21 @@ void main() {
     );
   });
 
+  group('week start', () {
+    test('is automatic by default', () {
+      expect(UserSettings.defaultsFor('US').weekStart, WeekStart.automatic);
+    });
+
+    test('automatic follows the locale, a chosen day overrides it', () {
+      for (final locale in [DateTime.monday, DateTime.sunday, 6]) {
+        expect(WeekStart.automatic.firstWeekday(locale), locale);
+        expect(WeekStart.monday.firstWeekday(locale), DateTime.monday);
+        expect(WeekStart.sunday.firstWeekday(locale), DateTime.sunday);
+        expect(WeekStart.saturday.firstWeekday(locale), DateTime.saturday);
+      }
+    });
+  });
+
   group('bar and plates', () {
     double lb(double pounds) => pounds * kgPerLb;
 
@@ -84,6 +99,7 @@ void main() {
     test('withStandardEquipment drops only the custom equipment', () {
       final custom = imperial.copyWith(
         themePreference: ThemePreference.dark,
+        weekStart: WeekStart.monday,
         stepGoal: 6000,
         customBarWeightKg: 15,
         customPlates: const [Plate(weightKg: 10, pairs: 3)],
@@ -92,6 +108,7 @@ void main() {
         custom.withStandardEquipment(),
         imperial.copyWith(
           themePreference: ThemePreference.dark,
+          weekStart: WeekStart.monday,
           stepGoal: 6000,
         ),
       );

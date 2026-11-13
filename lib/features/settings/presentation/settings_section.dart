@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../notifications/presentation/reminder_settings_tiles.dart';
+import '../../programs/presentation/program_text.dart';
 import '../../workout/presentation/rest_timer_cubit.dart';
 import '../domain/user_settings.dart';
+import 'first_weekday.dart';
 import 'settings_cubit.dart';
 import 'warmup_settings_page.dart';
 
@@ -28,6 +30,7 @@ class SettingsSection extends StatelessWidget {
         final cubit = context.read<SettingsCubit>();
         final settings = state.settings;
         final rest = settings.restTimer;
+        final phoneFirstWeekday = context.watchDeviceFirstWeekday();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -109,6 +112,21 @@ class SettingsSection extends StatelessWidget {
               },
               onChanged: (theme) =>
                   cubit.update(settings.copyWith(themePreference: theme)),
+            ),
+            _ChoiceTile(
+              title: l10n.settingsWeekStart,
+              values: WeekStart.values,
+              selected: settings.weekStart,
+              labelOf: (start) => switch (start) {
+                WeekStart.automatic => l10n.weekStartAutomatic(
+                  l10n.weekdayLong(phoneFirstWeekday),
+                ),
+                WeekStart.monday => l10n.weekdayLong(DateTime.monday),
+                WeekStart.sunday => l10n.weekdayLong(DateTime.sunday),
+                WeekStart.saturday => l10n.weekdayLong(DateTime.saturday),
+              },
+              onChanged: (start) =>
+                  cubit.update(settings.copyWith(weekStart: start)),
             ),
           ],
         );

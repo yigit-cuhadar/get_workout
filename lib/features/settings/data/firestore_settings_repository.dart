@@ -32,6 +32,13 @@ class FirestoreSettingsRepository implements SettingsRepository {
     EffortScale.rir: 'rir',
     EffortScale.rpe: 'rpe',
   };
+
+  /// [WeekStart.automatic] is stored as no value.
+  static const _weekStartCodes = {
+    WeekStart.monday: 'monday',
+    WeekStart.sunday: 'sunday',
+    WeekStart.saturday: 'saturday',
+  };
   static const _schemeCodes = {
     WarmupScheme.off: 'off',
     WarmupScheme.light: 'light',
@@ -89,6 +96,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
       effortScale: map['effortScale'] == 'off'
           ? EffortScale.byFeel
           : _decode(_effortCodes, map['effortScale'], defaults.effortScale),
+      weekStart: _decode(_weekStartCodes, map['weekStart'], defaults.weekStart),
       restTimer: _restTimer(map['restTimer']),
       warmups: _warmups(map['warmups'], map['autoWarmups']),
       seenTips: _tips(map['seenTips']),
@@ -101,9 +109,9 @@ class FirestoreSettingsRepository implements SettingsRepository {
     );
   }
 
-  /// The bar, plates and tracked measurements are written only while
-  /// customised; deleting them returns the user to the default. Seen tips
-  /// are only ever added, by [markTipSeen].
+  /// The week start, bar, plates and tracked measurements are written only
+  /// while chosen or customised; deleting them returns the user to the
+  /// default. Seen tips are only ever added, by [markTipSeen].
   @override
   Future<Result<void>> markTipSeen(String uid, Tip tip) => guard(
     () => _user(uid).set({
@@ -119,6 +127,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
     'lengthUnit': _lengthCodes[settings.lengthUnit],
     'themeMode': _themeCodes[settings.themePreference],
     'effortScale': _effortCodes[settings.effortScale],
+    'weekStart': _weekStartCodes[settings.weekStart] ?? FieldValue.delete(),
     'restTimer': {
       'enabled': settings.restTimer.enabled,
       'defaultS': settings.restTimer.defaultS,

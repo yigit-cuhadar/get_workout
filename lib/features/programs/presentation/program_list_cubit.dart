@@ -135,10 +135,12 @@ class ProgramListState extends Equatable {
 }
 
 /// The programs and the active program of whoever is signed in, with this
-/// week's plan. Resets to loading on every user change, so a previous
+/// week's plan from the app's first weekday (see [changeFirstWeekday]).
+/// Resets to loading on every user change, so a previous
 /// user's programs are never shown.
 class ProgramListCubit extends Cubit<ProgramListState> {
   ProgramListCubit({
+    required this._firstWeekday,
     required WatchAuthUser watchAuthUser,
     required this._watchPrograms,
     required this._watchActiveProgram,
@@ -184,6 +186,9 @@ class ProgramListCubit extends Cubit<ProgramListState> {
 
   /// The program and week the completed days are followed for.
   (String, CalendarDate)? _completedFor;
+
+  int _firstWeekday;
+  int get firstWeekday => _firstWeekday;
 
   CalendarDate get _today => CalendarDate.of(_clock());
 
@@ -236,6 +241,16 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     _emitReady();
   }
 
+  /// Starts the week of the plan on [firstWeekday] from now on. The plan
+  /// moves once the new week's done days arrive; after a failure, once
+  /// followed again.
+  void changeFirstWeekday(int firstWeekday) {
+    if (firstWeekday == _firstWeekday) return;
+    _firstWeekday = firstWeekday;
+    if (state.status == ProgramListStatus.failure) return;
+    _followCompleted();
+  }
+
   void _follow({bool keepNotices = true}) {
     _cancel();
     _programs = null;
@@ -263,13 +278,15 @@ class ProgramListCubit extends Cubit<ProgramListState> {
   void _followCompleted() {
     final uid = _uid;
     final active = _active;
-    final week = _today.weekStart;
+    final week = _today.startOfWeek(_firstWeekday);
     final key = active == null ? null : (active.programId, week);
     if (key == _completedFor) return;
+    // Another week of the same program keeps the done days known, which
+    // the plan only counts within its week, until its own arrive.
+    if (key?.$1 != _completedFor?.$1) _completed = const [];
     _completedFor = key;
     unawaited(_completedSubscription?.cancel());
     _completedSubscription = null;
-    _completed = const [];
     if (uid == null || active == null) return;
     _completedSubscription =
         _watchCompletedDays((
@@ -318,7 +335,13 @@ class ProgramListCubit extends Cubit<ProgramListState> {
         status: ProgramListStatus.ready,
         programs: programs,
         active: active,
-        weekPlan: schedule?.weekPlan(today, completed: _completed) ?? const [],
+        weekPlan:
+            schedule?.weekPlan(
+              today,
+              firstWeekday: _firstWeekday,
+              completed: _completed,
+            ) ??
+            const [],
         finished: finished,
         nextDate: finished ? null : schedule?.upcoming(today).firstOrNull?.date,
         missed: missed

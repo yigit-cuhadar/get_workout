@@ -13,7 +13,7 @@ class VolumeModule implements FeatureModule {
   void register(GetIt sl) {
     sl
       ..registerFactory(() => WatchWeeklyVolume(sl()))
-      // One per volume page; the parameter is the locale's first weekday.
+      // One per volume page; the parameter is the app's first weekday.
       ..registerFactoryParam<VolumeCubit, int, void>(
         (firstWeekday, _) => VolumeCubit(
           firstWeekday: firstWeekday,
