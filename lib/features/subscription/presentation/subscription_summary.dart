@@ -35,7 +35,7 @@ final class SubscriptionFree extends SubscriptionSummary {
   const SubscriptionFree();
 }
 
-/// The rest offer the store's manage page.
+/// The rest but [SubscriptionLifetime] offer the store's manage page.
 final class SubscriptionBillingIssue extends SubscriptionSummary {
   const SubscriptionBillingIssue();
 }

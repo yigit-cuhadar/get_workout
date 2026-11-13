@@ -104,27 +104,101 @@ class _PaywallViewState extends State<_PaywallView> {
       ],
       child: Scaffold(
         appBar: AppBar(title: Text(l10n.premiumTitle)),
-        body: BlocBuilder<PaywallCubit, PaywallState>(
-          // A restore after a failed load keeps the load's message; the
-          // footer shows the restore in progress.
-          builder: (context, state) => switch (state) {
-            PaywallState(status: PaywallStatus.loading) => const LoadingView(),
-            PaywallState(:final loadFailure?) => ErrorView(
-              message: switch (loadFailure) {
-                PurchaseFailure() ||
-                NetworkFailure() => l10n.purchaseError(loadFailure),
-                _ => l10n.paywallLoadFailed,
-              },
-              retryLabel: l10n.retry,
-              onRetry: state.isBusy ? null : context.read<PaywallCubit>().load,
-            ),
-            _ => _Offer(state, layout: widget.layout),
-          },
+        body: SafeArea(
+          top: false,
+          child: BlocBuilder<PaywallCubit, PaywallState>(
+            // A restore after a failed load keeps the load's message; the
+            // footer shows the restore in progress.
+            builder: (context, state) => switch (state) {
+              PaywallState(status: PaywallStatus.loading) => const _PinOrScroll(
+                fill: LoadingView(),
+              ),
+              PaywallState(:final loadFailure?) => _PinOrScroll(
+                fill: ErrorView(
+                  message: switch (loadFailure) {
+                    PurchaseFailure() ||
+                    NetworkFailure() => l10n.purchaseError(loadFailure),
+                    _ => l10n.paywallLoadFailed,
+                  },
+                  retryLabel: l10n.retry,
+                  onRetry: state.isBusy
+                      ? null
+                      : context.read<PaywallCubit>().load,
+                ),
+              ),
+              _ => _PinOrScroll(offer: _Offer(state, layout: widget.layout)),
+            },
+          ),
         ),
-        bottomNavigationBar: const SafeArea(child: _Footer()),
       ),
     );
   }
+}
+
+/// The page above [_Footer]. The footer is pinned to the bottom while it
+/// takes at most half the height; taller (large text), the whole page
+/// scrolls as one, the footer last, so every plan and link stays reachable.
+class _PinOrScroll extends StatefulWidget {
+  const _PinOrScroll({this.offer, this.fill});
+
+  /// Scrolls above a pinned footer.
+  final Widget? offer;
+
+  /// Fills the room above a pinned footer.
+  final Widget? fill;
+
+  @override
+  State<_PinOrScroll> createState() => _PinOrScrollState();
+}
+
+class _PinOrScrollState extends State<_PinOrScroll> {
+  final _footer = GlobalKey();
+  bool _pinned = false;
+  double _height = 0;
+
+  /// Runs after layout, when the footer's height is known; starts unpinned
+  /// so the first frame never overflows.
+  void _measure() {
+    if (!mounted) return;
+    final footer = _footer.currentContext?.size?.height;
+    if (footer == null) return;
+    final pinned = footer <= _height / 2;
+    if (pinned != _pinned) setState(() => _pinned = pinned);
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      _height = constraints.maxHeight;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+      final footer = NotificationListener<SizeChangedLayoutNotification>(
+        onNotification: (_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+          return true;
+        },
+        child: SizeChangedLayoutNotifier(
+          child: KeyedSubtree(key: _footer, child: const _Footer()),
+        ),
+      );
+      final offer = widget.offer;
+      final fill = widget.fill;
+      if (_pinned) {
+        return Column(
+          children: [
+            Expanded(child: fill ?? ListView(children: [?offer])),
+            footer,
+          ],
+        );
+      }
+      return ListView(
+        children: [
+          ?offer,
+          if (fill != null) SizedBox(height: _height / 2, child: fill),
+          footer,
+        ],
+      );
+    },
+  );
 }
 
 class _Offer extends StatelessWidget {
@@ -137,35 +211,38 @@ class _Offer extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return ListView(
+    return Padding(
       padding: const EdgeInsets.all(Gap.md),
-      children: [
-        Text(l10n.paywallIntro, style: theme.textTheme.titleMedium),
-        const SizedBox(height: Gap.sm),
-        for (final benefit in [
-          l10n.paywallBenefitGenerator,
-          l10n.paywallBenefitPrograms,
-          l10n.paywallBenefitStats,
-        ])
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.check, color: theme.colorScheme.primary),
-            title: Text(benefit),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.paywallIntro, style: theme.textTheme.titleMedium),
+          const SizedBox(height: Gap.sm),
+          for (final benefit in [
+            l10n.paywallBenefitGenerator,
+            l10n.paywallBenefitPrograms,
+            l10n.paywallBenefitStats,
+          ])
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.check, color: theme.colorScheme.primary),
+              title: Text(benefit),
+            ),
+          const SizedBox(height: Gap.md),
+          RadioGroup<Plan>(
+            groupValue: state.selected,
+            onChanged: (plan) {
+              if (plan != null && !state.isBusy) {
+                context.read<PaywallCubit>().select(plan);
+              }
+            },
+            child: switch (layout) {
+              PaywallLayout.list => _PlanList(state),
+              PaywallLayout.cards => _PlanCards(state),
+            },
           ),
-        const SizedBox(height: Gap.md),
-        RadioGroup<Plan>(
-          groupValue: state.selected,
-          onChanged: (plan) {
-            if (plan != null && !state.isBusy) {
-              context.read<PaywallCubit>().select(plan);
-            }
-          },
-          child: switch (layout) {
-            PaywallLayout.list => _PlanList(state),
-            PaywallLayout.cards => _PlanCards(state),
-          },
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -256,12 +333,12 @@ class _Footer extends StatelessWidget {
     final theme = Theme.of(context);
     final cubit = context.read<PaywallCubit>();
     final state = context.watch<PaywallCubit>().state;
-    final selected = state.loadFailure == null ? state.selected : null;
+    final selected = state.selected;
     final canRestore =
         state.status == PaywallStatus.ready ||
         state.status == PaywallStatus.loadFailed;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, 0),
+      padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, Gap.sm),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

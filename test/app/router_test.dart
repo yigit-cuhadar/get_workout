@@ -1979,6 +1979,38 @@ void main() {
       expect(find.text('Subscribe'), findsOneWidget);
     });
 
+    testWidgets('with large text the whole paywall scrolls', (tester) async {
+      tester.view
+        ..physicalSize = const Size(375, 667)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await openProfileAsFreeGuest(tester);
+      tester.platformDispatcher.textScaleFactorTestValue = 3;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await tapVisible(tester, 'Get Premium');
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Monthly'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Monthly'));
+      await tester.pumpAndSettle();
+      final page = find.byType(Scrollable).last;
+      await tester.scrollUntilVisible(
+        find.text('Subscribe'),
+        200,
+        scrollable: page,
+      );
+      await tester.scrollUntilVisible(
+        find.text('Restore purchases'),
+        200,
+        scrollable: page,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Restore purchases'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('No purchases to restore'), findsOneWidget);
+    });
+
     testWidgets('a restore after a failed load keeps the load message', (
       tester,
     ) async {

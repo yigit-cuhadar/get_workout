@@ -11,7 +11,8 @@ import 'subscription_text.dart';
 
 /// The Profile tab's Premium card: what Premium is and the user's state, with
 /// Get Premium (the paywall) for a free user and the store's manage page for
-/// a subscriber; no action while the status is unknown.
+/// a subscriber; no action while the status is unknown or for Premium with
+/// no expiry.
 class PremiumCard extends StatelessWidget {
   const PremiumCard({super.key});
 
@@ -65,7 +66,9 @@ class PremiumCard extends StatelessWidget {
                 style: theme.textTheme.bodyMedium?.copyWith(color: foreground),
               ),
               switch (summary) {
-                SubscriptionChecking() => const SizedBox.shrink(),
+                // Lifetime or granted Premium has no subscription to manage.
+                SubscriptionChecking() ||
+                SubscriptionLifetime() => const SizedBox.shrink(),
                 SubscriptionFree() => Padding(
                   padding: const EdgeInsets.only(top: Gap.md),
                   child: ForgeButton(
