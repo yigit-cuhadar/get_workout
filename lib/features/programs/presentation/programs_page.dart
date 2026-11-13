@@ -14,9 +14,10 @@ import 'missed_day_prompt.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
 
-/// The Programs tab: the ways into the ready-made programs, the generator
-/// and the builder, the active program with this week's plan, then the
-/// other programs.
+/// Train's "My program" view: the active program with this week's plan,
+/// then the ways into the ready-made programs, the generator and the
+/// builder and an empty workout, then the other programs. The page around
+/// it gives the app bar.
 class ProgramsPage extends StatelessWidget {
   const ProgramsPage({super.key});
 
@@ -59,18 +60,15 @@ class _ProgramsViewState extends State<_ProgramsView> {
     // A refused write is told by the shell's ProgramWritesNotice, a failed
     // missed-day choice by its prompt.
     return BlocBuilder<ProgramListCubit, ProgramListState>(
-      builder: (context, state) => Scaffold(
-        appBar: AppBar(title: Text(l10n.tabPrograms)),
-        body: switch (state.status) {
-          ProgramListStatus.loading => const LoadingView(),
-          ProgramListStatus.failure => ErrorView(
-            message: l10n.programsLoadFailed,
-            retryLabel: l10n.retry,
-            onRetry: _cubit.retry,
-          ),
-          ProgramListStatus.ready => _Programs(state),
-        },
-      ),
+      builder: (context, state) => switch (state.status) {
+        ProgramListStatus.loading => const LoadingView(),
+        ProgramListStatus.failure => ErrorView(
+          message: l10n.programsLoadFailed,
+          retryLabel: l10n.retry,
+          onRetry: _cubit.retry,
+        ),
+        ProgramListStatus.ready => _Programs(state),
+      },
     );
   }
 }
@@ -88,26 +86,6 @@ class _Programs extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(bottom: Gap.md),
       children: [
-        ListTile(
-          leading: const Icon(Icons.auto_awesome_outlined),
-          title: Text(l10n.catalogueTitle),
-          subtitle: Text(l10n.catalogueEntryInfo),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.go(Routes.catalogue),
-        ),
-        const GeneratorEntry(),
-        ListTile(
-          leading: const Icon(Icons.add),
-          title: Text(l10n.programNew),
-          subtitle: Text(l10n.programNewInfo),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.go(Routes.programNew),
-        ),
-        if (state.programs.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(Gap.md),
-            child: Text(l10n.programsEmpty),
-          ),
         if (active != null) ...[
           _Header(l10n.programActive),
           _ProgramTile(
@@ -157,6 +135,31 @@ class _Programs extends StatelessWidget {
               _WeekPlan(program: active, plan: state.weekPlan),
           ],
         ],
+        ListTile(
+          leading: const Icon(Icons.auto_awesome_outlined),
+          title: Text(l10n.catalogueTitle),
+          subtitle: Text(l10n.catalogueEntryInfo),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go(Routes.catalogue),
+        ),
+        const GeneratorEntry(),
+        ListTile(
+          leading: const Icon(Icons.add),
+          title: Text(l10n.programNew),
+          subtitle: Text(l10n.programNewInfo),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go(Routes.programNew),
+        ),
+        ListTile(
+          leading: const Icon(Icons.play_arrow),
+          title: Text(l10n.workoutStartEmpty),
+          onTap: () => startFreeWorkout(context),
+        ),
+        if (state.programs.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(Gap.md),
+            child: Text(l10n.programsEmpty),
+          ),
         if (others.isNotEmpty) ...[
           _Header(active == null ? l10n.programsMine : l10n.programsOther),
           for (final program in others)

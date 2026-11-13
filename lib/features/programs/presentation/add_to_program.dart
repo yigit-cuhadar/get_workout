@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -45,7 +47,16 @@ Future<void> addToProgram(
         ],
       ),
     );
-    if (create == true && context.mounted) context.go(Routes.programNew);
+    if (create == true && context.mounted) {
+      // In Train the builder opens above this page and returns to it, so
+      // the exercise can be added; elsewhere it opens in Train, leaving this
+      // page to its own tab (or the workout's bar).
+      if (isInTrain(GoRouterState.of(context).matchedLocation)) {
+        unawaited(context.push(Routes.programNewReturning));
+      } else {
+        context.go(Routes.programNew);
+      }
+    }
     return;
   }
   final program = await _pick<Program>(

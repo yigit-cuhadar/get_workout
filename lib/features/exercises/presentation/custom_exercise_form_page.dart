@@ -5,6 +5,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/max_length_formatter.dart';
+import '../../../core/unsaved_changes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/custom_exercise.dart';
 import '../domain/exercise.dart';
@@ -102,126 +103,161 @@ class _FormViewState extends State<_FormView> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return BlocConsumer<CustomExerciseFormCubit, CustomExerciseFormState>(
-      listenWhen: (previous, current) => previous.status != current.status,
-      listener: (context, state) {
-        switch (state.status) {
-          case CustomExerciseFormStatus.saved ||
-              CustomExerciseFormStatus.closed:
-            context.pop();
-          case CustomExerciseFormStatus.saveFailed:
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(_failureText(l10n, state.failure))),
-            );
-          default:
-        }
-      },
-      builder: (context, state) {
-        String? error(CustomExerciseIssue issue) =>
-            state.issues.contains(issue) ? l10n.customIssueText(issue) : null;
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              _cubit.isEditing ? l10n.customEditTitle : l10n.customNew,
-            ),
-            // In the app bar, so the keyboard closing never moves it from
-            // under the finger.
-            actions: [
-              TextButton(
-                onPressed: state.isSaving ? null : _cubit.save,
-                child: Text(l10n.customSave),
-              ),
-            ],
-          ),
-          body: ListView(
-            padding: const EdgeInsets.symmetric(vertical: Gap.md),
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: TextField(
-                  controller: _name,
-                  textCapitalization: TextCapitalization.words,
-                  inputFormatters: [
-                    maxLengthFormatter(CustomExerciseLimits.maxNameLength),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: l10n.customName,
-                    errorText:
-                        error(CustomExerciseIssue.nameMissing) ??
-                        error(CustomExerciseIssue.nameTooLong),
-                  ),
-                  onChanged: _cubit.setName,
+    return UnsavedChangesGuard(
+      hasChanges: () => _cubit.hasChanges,
+      confirmDiscard: _confirmDiscard,
+      child: BlocConsumer<CustomExerciseFormCubit, CustomExerciseFormState>(
+        listenWhen: (previous, current) => previous.status != current.status,
+        listener: (context, state) {
+          switch (state.status) {
+            case CustomExerciseFormStatus.saved ||
+                CustomExerciseFormStatus.closed:
+              context.pop();
+            case CustomExerciseFormStatus.saveFailed:
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(_failureText(l10n, state.failure))),
+              );
+            default:
+          }
+        },
+        builder: (context, state) {
+          String? error(CustomExerciseIssue issue) =>
+              state.issues.contains(issue) ? l10n.customIssueText(issue) : null;
+          return PopScope(
+            canPop: !_cubit.hasChanges,
+            onPopInvokedWithResult: (didPop, _) async {
+              if (didPop) return;
+              if (await UnsavedChangesGuard.ask(context) && context.mounted) {
+                context.pop();
+              }
+            },
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  _cubit.isEditing ? l10n.customEditTitle : l10n.customNew,
                 ),
-              ),
-              const SizedBox(height: Gap.md),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: DropdownButtonFormField<LoggingType>(
-                  initialValue: state.loggingType,
-                  decoration: InputDecoration(
-                    labelText: l10n.customLoggingType,
+                // In the app bar, so the keyboard closing never moves it from
+                // under the finger.
+                actions: [
+                  TextButton(
+                    onPressed: state.isSaving ? null : _cubit.save,
+                    child: Text(l10n.customSave),
                   ),
-                  items: [
-                    for (final type in LoggingType.values)
-                      DropdownMenuItem(
-                        value: type,
-                        child: Text(l10n.loggingTypeName(type)),
-                      ),
-                  ],
-                  onChanged: (type) => _cubit.setLoggingType(type!),
-                ),
-              ),
-              ChoiceSection(
-                title: l10n.customMainMuscles,
-                values: Muscle.values,
-                selected: state.mainMuscles,
-                labelOf: l10n.muscleName,
-                onToggle: _cubit.toggleMainMuscle,
-                error:
-                    error(CustomExerciseIssue.mainMusclesMissing) ??
-                    error(CustomExerciseIssue.musclesRepeated),
-              ),
-              ChoiceSection(
-                title: l10n.customSecondaryMuscles,
-                values: [
-                  for (final muscle in Muscle.values)
-                    if (!state.mainMuscles.contains(muscle)) muscle,
                 ],
-                selected: state.secondaryMuscles,
-                labelOf: l10n.muscleName,
-                onToggle: _cubit.toggleSecondaryMuscle,
               ),
-              ChoiceSection(
-                title: l10n.customEquipment,
-                values: Equipment.values,
-                selected: state.equipment,
-                labelOf: l10n.equipmentName,
-                onToggle: _cubit.toggleEquipment,
-                error: error(CustomExerciseIssue.equipmentInvalid),
-              ),
-              const SizedBox(height: Gap.md),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: TextField(
-                  controller: _note,
-                  minLines: 1,
-                  maxLines: 4,
-                  textCapitalization: TextCapitalization.sentences,
-                  inputFormatters: [
-                    maxLengthFormatter(CustomExerciseLimits.maxNoteLength),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: l10n.customNote,
-                    errorText: error(CustomExerciseIssue.noteTooLong),
+              body: ListView(
+                padding: const EdgeInsets.symmetric(vertical: Gap.md),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+                    child: TextField(
+                      controller: _name,
+                      textCapitalization: TextCapitalization.words,
+                      inputFormatters: [
+                        maxLengthFormatter(CustomExerciseLimits.maxNameLength),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: l10n.customName,
+                        errorText:
+                            error(CustomExerciseIssue.nameMissing) ??
+                            error(CustomExerciseIssue.nameTooLong),
+                      ),
+                      onChanged: _cubit.setName,
+                    ),
                   ),
-                  onChanged: _cubit.setNote,
-                ),
+                  const SizedBox(height: Gap.md),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+                    child: DropdownButtonFormField<LoggingType>(
+                      initialValue: state.loggingType,
+                      decoration: InputDecoration(
+                        labelText: l10n.customLoggingType,
+                      ),
+                      items: [
+                        for (final type in LoggingType.values)
+                          DropdownMenuItem(
+                            value: type,
+                            child: Text(l10n.loggingTypeName(type)),
+                          ),
+                      ],
+                      onChanged: (type) => _cubit.setLoggingType(type!),
+                    ),
+                  ),
+                  ChoiceSection(
+                    title: l10n.customMainMuscles,
+                    values: Muscle.values,
+                    selected: state.mainMuscles,
+                    labelOf: l10n.muscleName,
+                    onToggle: _cubit.toggleMainMuscle,
+                    error:
+                        error(CustomExerciseIssue.mainMusclesMissing) ??
+                        error(CustomExerciseIssue.musclesRepeated),
+                  ),
+                  ChoiceSection(
+                    title: l10n.customSecondaryMuscles,
+                    values: [
+                      for (final muscle in Muscle.values)
+                        if (!state.mainMuscles.contains(muscle)) muscle,
+                    ],
+                    selected: state.secondaryMuscles,
+                    labelOf: l10n.muscleName,
+                    onToggle: _cubit.toggleSecondaryMuscle,
+                  ),
+                  ChoiceSection(
+                    title: l10n.customEquipment,
+                    values: Equipment.values,
+                    selected: state.equipment,
+                    labelOf: l10n.equipmentName,
+                    onToggle: _cubit.toggleEquipment,
+                    error: error(CustomExerciseIssue.equipmentInvalid),
+                  ),
+                  const SizedBox(height: Gap.md),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+                    child: TextField(
+                      controller: _note,
+                      minLines: 1,
+                      maxLines: 4,
+                      textCapitalization: TextCapitalization.sentences,
+                      inputFormatters: [
+                        maxLengthFormatter(CustomExerciseLimits.maxNoteLength),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: l10n.customNote,
+                        errorText: error(CustomExerciseIssue.noteTooLong),
+                      ),
+                      onChanged: _cubit.setNote,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
-      },
+            ),
+          );
+        },
+      ),
     );
+  }
+
+  Future<bool> _confirmDiscard() async {
+    final l10n = AppLocalizations.of(context);
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.programDiscardTitle),
+        content: Text(l10n.customDiscardBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.programKeepEditing),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.programDiscard),
+          ),
+        ],
+      ),
+    );
+    return discard ?? false;
   }
 
   static String _failureText(AppLocalizations l10n, Failure? failure) =>

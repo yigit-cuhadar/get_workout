@@ -125,6 +125,15 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
 
   bool get isEditing => _initial?.id != null;
 
+  /// Inputs a navigation away would lose; none once saved or closed.
+  bool get hasChanges =>
+      !state.isDone &&
+      state.copyWith(
+            issues: const {},
+            status: CustomExerciseFormStatus.editing,
+          ) !=
+          _initialState(_initial);
+
   static CustomExerciseFormState _initialState(CustomExercise? exercise) =>
       exercise == null
       ? const CustomExerciseFormState()

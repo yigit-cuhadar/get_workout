@@ -31,9 +31,8 @@ import 'today_steps_cubit.dart';
 import 'today_volume_cubit.dart';
 import 'today_week_cubit.dart';
 
-/// The Today tab: the next workout, this week, quick actions and this
-/// week's volume, each card on its own data, so one failing leaves the
-/// others.
+/// The Today tab: the next workout, this week, this week's volume and
+/// steps, each card on its own data, so one failing leaves the others.
 class TodayPage extends StatelessWidget {
   const TodayPage({super.key});
 
@@ -43,7 +42,7 @@ class TodayPage extends StatelessWidget {
     return MultiBlocProvider(
       key: ValueKey(firstWeekday),
       providers: [
-        // The Programs tab's, so both show the same plan.
+        // Train's, so both show the same plan.
         BlocProvider.value(value: sl<ProgramListCubit>()),
         BlocProvider(create: (_) => sl<TodayWeekCubit>(param1: firstWeekday)),
         BlocProvider(create: (_) => sl<TodayVolumeCubit>(param1: firstWeekday)),
@@ -68,7 +67,6 @@ class _TodayViewState extends State<_TodayView> {
   static const _cards = [
     _NextWorkoutCard(),
     _WeekCard(),
-    _QuickActionsCard(),
     _VolumeCard(),
     _StepsCard(),
   ];
@@ -420,42 +418,6 @@ class _WeekCard extends StatelessWidget {
               retryLabel: l10n.retry,
               onRetry: context.read<TodayWeekCubit>().retry,
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickActionsCard extends StatelessWidget {
-  const _QuickActionsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return _TodayCard(
-      title: l10n.todayQuickTitle,
-      child: Column(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.play_arrow),
-            title: Text(l10n.workoutStartEmpty),
-            onTap: () => startFreeWorkout(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.directions_run),
-            title: Text(l10n.cardioLog),
-            onTap: () => context.go(Routes.cardioNew),
-          ),
-          ListTile(
-            leading: const Icon(Icons.history),
-            title: Text(l10n.historyAddPast),
-            onTap: () => context.go(Routes.historyNew),
-          ),
-          ListTile(
-            leading: const Icon(Icons.calculate_outlined),
-            title: Text(l10n.calculatorsTitle),
-            onTap: () => context.go(Routes.calculators),
-          ),
         ],
       ),
     );

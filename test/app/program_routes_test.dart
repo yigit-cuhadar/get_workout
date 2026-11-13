@@ -280,7 +280,7 @@ void main() {
       tester,
       find.descendant(
         of: find.byType(NavigationBar),
-        matching: find.text('Programs'),
+        matching: find.text('Train'),
       ),
     );
     expect(find.byType(ProgramsPage), findsOneWidget);
@@ -380,11 +380,11 @@ void main() {
     expect(find.byType(ProgramsPage), findsOneWidget);
   });
 
-  Future<void> reselectPrograms(WidgetTester tester) => tap(
+  Future<void> reselectTrain(WidgetTester tester) => tap(
     tester,
     find.descendant(
       of: find.byType(NavigationBar),
-      matching: find.text('Programs'),
+      matching: find.text('Train'),
     ),
   );
 
@@ -402,16 +402,49 @@ void main() {
     // The page refuses to pop from the next frame on.
     await tester.pump();
 
-    await reselectPrograms(tester);
+    await reselectTrain(tester);
     expect(find.text('Discard changes?'), findsOneWidget);
     await tap(tester, find.text('Keep editing'));
     expect(find.byType(ProgramBuilderPage), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Leg Day 2'), findsOneWidget);
 
-    await reselectPrograms(tester);
+    await reselectTrain(tester);
     await tap(tester, find.text('Discard'));
     expect(find.byType(ProgramBuilderPage), findsNothing);
     expect(find.byType(ProgramDetailPage), findsOneWidget);
+  });
+
+  testWidgets('a link to the Exercises view brings the builder with changes '
+      'up and asks; keeping them stays', (tester) async {
+    await start(tester);
+    await openPrograms(tester);
+    await tap(tester, find.text('New program'));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Program name'),
+      'Push',
+    );
+    await tester.pump();
+    await tap(
+      tester,
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Today'),
+      ),
+    );
+
+    // The Exercises view shares the builder's stack, so going there drops it.
+    router.go(Routes.exercises);
+    await tester.pumpAndSettle();
+    expect(find.text('Discard changes?'), findsOneWidget);
+    expect(find.byType(ProgramBuilderPage), findsOneWidget);
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      1,
+    );
+    await tap(tester, find.text('Keep editing'));
+
+    expect(path(), Routes.programNew);
+    expect(find.widgetWithText(TextField, 'Push'), findsOneWidget);
   });
 
   testWidgets('reselecting the tab without changes returns to its first page', (
@@ -422,7 +455,7 @@ void main() {
     await tap(tester, find.text('Leg Day'));
     await tap(tester, find.byTooltip('Edit'));
 
-    await reselectPrograms(tester);
+    await reselectTrain(tester);
 
     expect(find.text('Discard changes?'), findsNothing);
     expect(find.byType(ProgramBuilderPage), findsNothing);

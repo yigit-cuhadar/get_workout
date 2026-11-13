@@ -23,22 +23,28 @@ import 'program_text.dart';
 
 /// Creates a program, or edits program [programId].
 class ProgramBuilderPage extends StatelessWidget {
-  const ProgramBuilderPage({super.key, this.programId});
+  const ProgramBuilderPage({super.key, this.programId, this.returns = false});
 
   final String? programId;
+
+  /// Pushed above the page it was opened from: saving or closing returns
+  /// there instead of opening the new program or the programs.
+  final bool returns;
 
   @override
   Widget build(BuildContext context) {
     final unit = context.read<SettingsCubit>().state.settings.weightUnit;
     return BlocProvider(
       create: (_) => sl<ProgramBuilderCubit>(param1: programId, param2: unit),
-      child: const _BuilderView(),
+      child: _BuilderView(returns: returns),
     );
   }
 }
 
 class _BuilderView extends StatelessWidget {
-  const _BuilderView();
+  const _BuilderView({required this.returns});
+
+  final bool returns;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +71,9 @@ class _BuilderView extends StatelessWidget {
             return;
           }
           switch (state.status) {
-            case ProgramBuilderStatus.saved when cubit.isEditing:
+            case ProgramBuilderStatus.saved when cubit.isEditing || returns:
+              context.pop();
+            case ProgramBuilderStatus.closed when returns:
               context.pop();
             case ProgramBuilderStatus.saved:
               context.go(Routes.program(state.savedId!, created: true));
