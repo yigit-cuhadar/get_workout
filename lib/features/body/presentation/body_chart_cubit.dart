@@ -19,7 +19,7 @@ class BodyChartState extends Equatable {
     this.shown = const [BodySeries.weight],
     this.targetLine = true,
     this.stepsReadable = false,
-    this.premium = false,
+    this.premium,
     this.from,
     this.to,
     this.points = const {},
@@ -37,9 +37,9 @@ class BodyChartState extends Equatable {
   /// Whether daily steps can be read here, so offered.
   final bool stepsReadable;
 
-  /// Whether the user is known to have Premium, which the training series
-  /// need.
-  final bool premium;
+  /// Whether the user has Premium, which the training series need; null
+  /// while not known, when they are neither locked nor read.
+  final bool? premium;
 
   /// The time the chart spans: from its first day (see [chartStart]) to
   /// now, widened to whole weeks while bars show. Null while there is
@@ -65,8 +65,9 @@ class BodyChartState extends Equatable {
       if (series != BodySeries.dailySteps || stepsReadable) series,
   ];
 
-  /// Whether picking [series] needs Premium first.
-  bool locked(BodySeries series) => series.isBar && !premium;
+  /// Whether picking [series] needs Premium first: only once the user is
+  /// known not to have it.
+  bool locked(BodySeries series) => series.isBar && premium == false;
 
   Map<BodySeries, ChartAxis> get axes => chartAxes(shown);
 
@@ -107,7 +108,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
        super(const BodyChartState()) {
     _bodySubscription = _body.stream.listen((_) => _publish());
     _premiumSubscription = watchPremium().listen((premium) {
-      _premium = premium ?? false;
+      _premium = premium;
       _publish();
     });
     _userSubscription = watchAuthUser()
@@ -130,7 +131,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
   late final StreamSubscription<String?> _userSubscription;
   StreamSubscription<List<SeriesPoint>>? _setsSubscription;
   String? _uid;
-  bool _premium = false;
+  bool? _premium;
   bool _stepsReadable = false;
 
   /// The user's choice as last made, kept even before it is stored; null
@@ -143,16 +144,21 @@ class BodyChartCubit extends Cubit<BodyChartState> {
   /// when that changes. Steps are the device's, whoever is signed in.
   ({String uid, _Weeks weeks})? _setsKey;
   _Weeks? _stepsWeeks;
+
+  /// Counts the step reads started; only the latest one applies.
+  int _stepsRead = 0;
+
+  /// Read the steps again even for the same weeks.
+  bool _rereadSteps = false;
   List<SeriesPoint>? _sets;
   List<SeriesPoint>? _steps;
   bool _setsFailed = false;
   bool _stepsFailed = false;
 
-  /// Shows [series] too, or no longer; see [toggleSeries]. Builds on the
-  /// choice as last made, also while hidden series are part of it.
+  /// Shows [series] too, or no longer; see [toggleSeries].
   Future<void> toggle(BodySeries series) async {
     if (!_loaded) return;
-    final chosen = _choice?.series ?? _defaultSeries();
+    final chosen = _chosen();
     final next = toggleSeries(chosen, series, visible: _visible);
     if (identical(next, chosen)) return;
     await _choose(
@@ -160,14 +166,24 @@ class BodyChartCubit extends Cubit<BodyChartState> {
     );
   }
 
+  /// Shows [series] too, never taking it away: e.g. once Premium unlocked
+  /// it, which the stored choice may already hold.
+  Future<void> add(BodySeries series) async {
+    if (!_loaded || _chosen().contains(series)) return;
+    await toggle(series);
+  }
+
   Future<void> showTargetLine(bool show) async {
     if (!_loaded) return;
-    await _choose(
-      BodyChartChoice(
-        series: _choice?.series ?? _defaultSeries(),
-        targetLine: show,
-      ),
-    );
+    await _choose(BodyChartChoice(series: _chosen(), targetLine: show));
+  }
+
+  /// The choice as last made, hidden series included. While none of it
+  /// shows, the chart shows the default, which a change then builds on.
+  List<BodySeries> _chosen() {
+    final stored = _choice?.series ?? const <BodySeries>[];
+    if (stored.any(_visible)) return stored;
+    return [...stored, ..._defaultSeries()];
   }
 
   /// Reads [series] again after it failed.
@@ -176,7 +192,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
       case BodySeries.weeklySets:
         _setsKey = null;
       case BodySeries.dailySteps:
-        _stepsWeeks = null;
+        _rereadSteps = true;
       default:
         return;
     }
@@ -185,7 +201,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
 
   /// Reads the steps again, e.g. as the app comes back with today's grown.
   void refreshSteps() {
-    _stepsWeeks = null;
+    _rereadSteps = true;
     _publish();
   }
 
@@ -196,7 +212,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
 
   bool _visible(BodySeries series) =>
       (series != BodySeries.dailySteps || _stepsReadable) &&
-      (!series.isBar || _premium);
+      (!series.isBar || _premium == true);
 
   List<BodySeries> _defaultSeries() => shownSeries(
     null,
@@ -376,23 +392,24 @@ class BodyChartCubit extends Cubit<BodyChartState> {
             );
   }
 
-  /// Reads the daily steps of [weeks] up to [now], once per weeks; a read
-  /// for other weeks, or none, stops between its spans.
+  /// Reads the daily steps of [wanted] up to [now], once per weeks unless
+  /// asked again; only the latest read applies, an older one stops between
+  /// its spans. Other weeks drop the steps read for the last ones.
   void _readSteps(_Weeks? wanted, DateTime now) {
     final weeks = _stepsReadable ? wanted : null;
-    if (weeks == _stepsWeeks) return;
+    if (weeks == _stepsWeeks && !_rereadSteps) return;
+    if (weeks != _stepsWeeks) _steps = null;
     _stepsWeeks = weeks;
+    _rereadSteps = false;
     _stepsFailed = false;
-    if (weeks == null) {
-      _steps = null;
-      return;
-    }
+    final read = ++_stepsRead;
+    if (weeks == null) return;
     unawaited(() async {
       final days = <DailySteps>[];
       for (final span in stepSpans(weeks.first.toLocalDateTime(), now)) {
-        final read = await _getDailySteps(span);
-        if (isClosed || weeks != _stepsWeeks) return;
-        switch (read) {
+        final result = await _getDailySteps(span);
+        if (isClosed || read != _stepsRead) return;
+        switch (result) {
           case Ok(:final value):
             days.addAll(value);
           case Err(:final failure):

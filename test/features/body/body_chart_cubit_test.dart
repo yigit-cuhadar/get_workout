@@ -352,6 +352,71 @@ void main() {
 
   group('Premium', () {
     test(
+      'while unknown, training series are neither locked nor read',
+      () async {
+        stored.choices['u1'] = const BodyChartChoice(
+          series: [BodySeries.weeklySets, BodySeries.waist],
+        );
+
+        await start(isPremium: null);
+
+        expect(cubit.state.premium, isNull);
+        expect(cubit.state.locked(BodySeries.weeklySets), isFalse);
+        expect(cubit.state.shown, [BodySeries.waist]);
+        verifyNever(() => volume(any()));
+      },
+    );
+
+    test('unlocking only adds, also when Premium came first', () async {
+      stored.choices['u1'] = const BodyChartChoice(
+        series: [BodySeries.weeklySets, BodySeries.weight],
+      );
+      await start(isPremium: false);
+      expect(cubit.state.shown, [BodySeries.weight]);
+
+      // The purchase arrives before the paywall closes.
+      premium.controller.add(true);
+      await pumpEventQueue();
+      await cubit.add(BodySeries.weeklySets);
+
+      expect(cubit.state.shown, [BodySeries.weeklySets, BodySeries.weight]);
+      expect(stored.saved, isEmpty);
+
+      await cubit.add(BodySeries.dailySteps);
+      expect(cubit.state.shown, [
+        BodySeries.weeklySets,
+        BodySeries.weight,
+        BodySeries.dailySteps,
+      ]);
+    });
+
+    test(
+      'with only hidden series stored, a change builds on the default',
+      () async {
+        stored.choices['u1'] = const BodyChartChoice(
+          series: [BodySeries.weeklySets],
+        );
+        await bodyIs(
+          BodyListState(
+            status: BodyListStatus.ready,
+            entries: [recent, old],
+            bodyFat: const {'r': 18},
+          ),
+        );
+        await start(isPremium: false);
+        expect(cubit.state.shown, [BodySeries.weight, BodySeries.bodyFat]);
+
+        await cubit.toggle(BodySeries.bodyFat);
+
+        expect(cubit.state.shown, [BodySeries.weight]);
+        // The hidden one stays stored.
+        expect(stored.choices['u1']!.series, [
+          BodySeries.weeklySets,
+          BodySeries.weight,
+        ]);
+      },
+    );
+    test(
       'a free user sees the training series locked and never reads them',
       () async {
         stored.choices['u1'] = const BodyChartChoice(
@@ -504,6 +569,35 @@ void main() {
       // The 12 weeks were read; nothing more of All.
       expect(health.reads, [DateTime(2023, 1, 2), DateTime(2026, 8, 17)]);
       expect(cubit.state.points[BodySeries.dailySteps], hasLength(13));
+    });
+
+    test('only the latest read applies, also back to the same range', () async {
+      final all = BodyListState(
+        status: BodyListStatus.ready,
+        entries: [
+          recent,
+          BodyEntry(id: 'a', date: DateTime(2023, 1, 2), weightKg: 90),
+        ],
+        range: StrengthRange.all,
+      );
+      await bodyIs(all);
+      stored.choices['u1'] = const BodyChartChoice(
+        series: [BodySeries.dailySteps],
+      );
+      health.gate = Completer<void>();
+      await start();
+
+      await bodyIs(ready);
+      // The 12 weeks' steps are gone with their weeks.
+      expect(cubit.state.loading, {BodySeries.dailySteps});
+      await bodyIs(all);
+      health.gate!.complete();
+      await pumpEventQueue();
+
+      // Three reads started; the two superseded stopped after one span, the
+      // last read all four.
+      expect(health.reads, hasLength(6));
+      expect(cubit.state.loading, isEmpty);
     });
 
     test('are read again when asked, e.g. back in the app', () async {

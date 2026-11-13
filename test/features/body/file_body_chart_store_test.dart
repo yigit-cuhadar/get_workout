@@ -33,6 +33,17 @@ void main() {
     expect((await store.load('u2')).valueOrNull, isNull);
   });
 
+  test('quick saves run one at a time; the last one wins', () async {
+    const first = BodyChartChoice(series: [BodySeries.waist]);
+    const second = BodyChartChoice(series: [BodySeries.waist, BodySeries.hips]);
+
+    final saves = [store.save('u1', first), store.save('u1', second)];
+    expect((await Future.wait(saves)).every((result) => result.isOk), isTrue);
+
+    expect((await store.load('u1')).valueOrNull, second);
+    expect(File('${file('u1').path}.partial').existsSync(), isFalse);
+  });
+
   test('unknown codes are dropped', () async {
     file('u1')
       ..parent.createSync(recursive: true)

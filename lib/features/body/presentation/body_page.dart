@@ -580,6 +580,8 @@ class _AddSheet extends StatelessWidget {
                     title: Text(l10n.seriesName(series)),
                     subtitle: _hint(l10n, series),
                     trailing: const Icon(Icons.lock_outline),
+                    // As an unticked one: nothing to add past the most.
+                    enabled: shown.length < BodySeries.maxShown,
                     onTap: () => _unlock(context, series),
                   )
                 else if (series.group == group)
@@ -618,7 +620,7 @@ class _AddSheet extends StatelessWidget {
   /// A training series asks for Premium first, as the ranges do.
   static Future<void> _unlock(BuildContext context, BodySeries series) async {
     final cubit = context.read<BodyChartCubit>();
-    if (await context.requirePremium()) await cubit.toggle(series);
+    if (await context.requirePremium()) await cubit.add(series);
   }
 }
 

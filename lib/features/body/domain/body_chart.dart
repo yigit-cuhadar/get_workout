@@ -9,8 +9,8 @@ import 'body_entry.dart';
 /// Where a series is listed when picking what the chart shows.
 enum BodySeriesGroup { body, measurements, training }
 
-/// What the Body chart can show. [code] is its key in
-/// `settings.bodyChart.series`.
+/// What the Body chart can show. [code] is its key in the stored choice;
+/// see [BodyChartStore].
 enum BodySeries {
   weight('weight', BodySeriesGroup.body),
   bodyFat('bodyFat', BodySeriesGroup.body),

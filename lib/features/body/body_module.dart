@@ -73,7 +73,7 @@ class BodyModule implements FeatureModule {
       )
       ..registerLazySingleton(() => BodyPhotoSync(sl(), sl(), sl(), sl()))
       ..registerLazySingleton<BodyChartStore>(
-        () => const FileBodyChartStore(getApplicationSupportDirectory),
+        () => FileBodyChartStore(getApplicationSupportDirectory),
       )
       ..registerFactory(() => LoadBodyChart(sl()))
       ..registerFactory(() => SaveBodyChart(sl()))

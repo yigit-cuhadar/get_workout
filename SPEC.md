@@ -596,10 +596,14 @@ from the earlier FitLab app.
   its own scale; tapping a point shows the values of that date. Weekly
   sets and daily steps are Premium (owner, 2026-11-13): locked in the
   sheet, never read for a free user, and a stored choice of them is hidden,
-  not deleted. The choice is kept on the device only (owner, 2026-11-13),
+  not deleted. Hidden series do not count toward the three; when Premium
+  returns, the first three in stored order show. While Premium is not yet
+  known they are neither locked nor read. The choice is kept on the device only (owner, 2026-11-13),
   one JSON file per user in the app support directory, so there is no
   data model field and a new device starts from the default (weight, and
-  body fat once an entry has one). Compare: the measurement summary's
+  body fat once an entry has one). An unreadable choice file counts as not
+  chosen. Under "All", daily steps go back to the oldest body entry or one
+  year, whichever is older. Compare: the measurement summary's
   comparison with Previous / First / Other date. `series_chart.dart` is
   generic; move it to `forge_ui` when that package is next changed.
 - **Body fat** (derived, never stored): US Navy, through the calculators'
@@ -1723,7 +1727,7 @@ Group 8, body and extras
 - [x] Cardio — log, list, detail, weekly chart
 - [x] Steps — health permission, today, week and 30-day chart, daily goal
 - [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
-- [x] Measurement summary — one summary/compare screen (baseline choice, body fat and lean mass, changes, target estimate, photo slider), opened after saving a measurement day, from a day's page and from Progress; where-to-measure hints; body-fat box unticks; one waist mapping for body fat and calculators
+- [x] Measurement summary — one summary/compare screen (baseline choice, body fat and lean mass, changes, target estimate, photo slider), opened after saving a measurement day, and as Compare on the Body page and from a measurement day's page; where-to-measure hints; body-fat box unticks; one waist mapping for body fat and calculators
 
 Group 9, launch readiness
 - [x] Onboarding — nine questions, suggested free program
