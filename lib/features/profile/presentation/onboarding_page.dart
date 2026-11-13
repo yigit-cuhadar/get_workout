@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
@@ -34,6 +35,7 @@ class OnboardingPage extends StatelessWidget {
         uid: uid,
         initial: context.read<ProfileCubit>().state.profile,
         completeOnboarding: sl(),
+        skipped: sl(),
       ),
       child: const _OnboardingView(),
     );
@@ -47,6 +49,11 @@ class _OnboardingView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ProfileFormCubit>();
+    // Someone signed in to an account (also a guest just linked to one) has
+    // nothing to sign in to.
+    final guest = context.select(
+      (AuthCubit auth) => auth.user?.isAnonymous ?? true,
+    );
     return BlocConsumer<ProfileFormCubit, ProfileFormState>(
       listenWhen: (previous, current) =>
           current.status != previous.status ||
@@ -116,7 +123,7 @@ class _OnboardingView extends StatelessWidget {
                           ),
                         // Nothing is stored before this, so a returning user
                         // leaves no profile behind on the guest.
-                        if (state.step == 0)
+                        if (guest && state.step == 0)
                           TextButton(
                             onPressed: submitted
                                 ? null

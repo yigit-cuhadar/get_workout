@@ -32,6 +32,14 @@ class ProfileState extends Equatable {
   /// cleared with [ProfileCubit.rejectionShown].
   final bool writeRejected;
 
+  /// The app is past onboarding for [uid]: the profile records it
+  /// completed, or could not be read (the user is never trapped).
+  bool get pastOnboarding => switch (status) {
+    ProfileStatus.loading => false,
+    ProfileStatus.unavailable => true,
+    ProfileStatus.loaded => profile.onboardingCompleted,
+  };
+
   @override
   List<Object?> get props => [uid, status, profile, writeRejected];
 }

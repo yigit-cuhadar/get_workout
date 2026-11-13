@@ -17,6 +17,7 @@ import '../features/exercises/presentation/body_model_cubit.dart';
 import '../features/exercises/presentation/equipment_cubit.dart';
 import '../features/exercises/presentation/exercise_catalogue_cubit.dart';
 import '../features/profile/presentation/profile_cubit.dart';
+import '../features/profile/presentation/profile_form_cubit.dart';
 import '../features/programs/presentation/program_list_cubit.dart';
 import '../features/exercises/presentation/favorites_cubit.dart';
 import '../features/notifications/data/notification_payloads.dart';
@@ -43,6 +44,7 @@ class _AppState extends State<App> {
     sl<AuthCubit>(),
     sl<ProfileCubit>(),
     deletionUnderway: sl<DeletionUnderway>(),
+    skippedOnboarding: sl<SkippedOnboarding>(),
     profileDebugSection: SubscriptionModule.debugControls(sl),
   );
   late final AppLifecycleListener _lifecycle;

@@ -37,6 +37,7 @@ import '../features/profile/domain/user_profile.dart';
 import '../features/profile/presentation/onboarding_page.dart';
 import '../features/profile/presentation/profile_cubit.dart';
 import '../features/profile/presentation/profile_details_page.dart';
+import '../features/profile/presentation/profile_form_cubit.dart';
 import '../features/profile/presentation/profile_page.dart';
 import '../features/programs/presentation/catalogue_detail_page.dart';
 import '../features/programs/presentation/catalogue_page.dart';
@@ -69,8 +70,8 @@ abstract final class Routes {
   /// onboarding is still needed.
   static const onboardingSignIn = '$onboarding/sign-in';
 
-  /// Where finishing or skipping onboarding lands: a suggested program,
-  /// which goes on to Today.
+  /// Where finishing onboarding lands: a suggested program, which goes on
+  /// to Today. Skipping it lands on Today.
   static const afterOnboarding = '/suggested-program';
 
   static const today = '/today';
@@ -252,11 +253,13 @@ const socialProviders = [SocialProvider.google];
 /// onboarding until the profile records it as completed.
 /// [profileDebugSection] ends the Profile tab in debug builds. While
 /// [deletionUnderway], nobody is moved: the deleted profile must not open
-/// onboarding before the user is signed out.
+/// onboarding before the user is signed out. A user in [skippedOnboarding]
+/// gets no program suggested.
 GoRouter buildRouter(
   AuthCubit auth,
   ProfileCubit profile, {
   ValueListenable<bool>? deletionUnderway,
+  SkippedOnboarding? skippedOnboarding,
   Widget? profileDebugSection,
 }) {
   // Who onboarding was last shown to.
@@ -308,9 +311,11 @@ GoRouter buildRouter(
           }(),
           // Includes a profile that could not be read: never trap the user.
           // Signing in from onboarding to an account already onboarded is
-          // no onboarding done here.
+          // no onboarding done here, nor is skipping it.
           _ProfileGate.ready =>
-            atOnboarding && user.id == onboardingUid
+            atOnboarding &&
+                    user.id == onboardingUid &&
+                    skippedOnboarding?.uid != user.id
                 ? Routes.afterOnboarding
                 : atGate || atOnboarding
                 ? Routes.home
@@ -652,14 +657,8 @@ enum _ProfileGate { pending, onboarding, ready }
 /// profile of anyone else (the cubit has not caught up yet) is pending.
 _ProfileGate _profileGate(ProfileState state, {String? uid}) {
   if (uid != null && state.uid != uid) return _ProfileGate.pending;
-  return switch (state.status) {
-    ProfileStatus.loading => _ProfileGate.pending,
-    ProfileStatus.unavailable => _ProfileGate.ready,
-    ProfileStatus.loaded =>
-      state.profile.onboardingCompleted
-          ? _ProfileGate.ready
-          : _ProfileGate.onboarding,
-  };
+  if (state.status == ProfileStatus.loading) return _ProfileGate.pending;
+  return state.pastOnboarding ? _ProfileGate.ready : _ProfileGate.onboarding;
 }
 
 ProfileField? _field(GoRouterState state) =>

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
@@ -18,6 +20,7 @@ class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
 void main() {
   late MockProfileRepository profiles;
   late MockUserLibraryRepository library;
+  late SkippedOnboarding skipped;
 
   setUpAll(() {
     registerFallbackValue(const UserProfile());
@@ -28,6 +31,7 @@ void main() {
   setUp(() {
     profiles = MockProfileRepository();
     library = MockUserLibraryRepository();
+    skipped = SkippedOnboarding();
     when(() => library.saveEquipment(any(), any()))
         .thenAnswer((_) async => const Ok(null));
     when(() => profiles.completeOnboarding(any(), any()))
@@ -44,6 +48,7 @@ void main() {
           profiles,
           SaveOwnedEquipment(library),
         ),
+        skipped: skipped,
         now: () => DateTime(2026, 11, 11),
       );
 
@@ -247,6 +252,33 @@ void main() {
           const UserProfile(goal: Goal.loseFat, level: Level.advanced),
         ),
       ).called(1);
+    });
+
+    test(
+      'skipping is recorded for the user, before the save returns',
+      () async {
+        final saving = Completer<Result<void>>();
+        when(() => profiles.completeOnboarding(any(), any()))
+            .thenAnswer((_) => saving.future);
+        final cubit = onboarding();
+
+        final skipping = cubit.skip();
+
+        expect(skipped.uid, 'u1');
+        saving.complete(const Ok(null));
+        await skipping;
+      },
+    );
+
+    test('finishing after a skip is no skip', () async {
+      skipped.uid = 'u1';
+      final cubit = onboarding(complete);
+
+      await goTo(cubit, null);
+      await cubit.next();
+
+      expect(cubit.state.status, ProfileFormStatus.submitted);
+      expect(skipped.uid, isNull);
     });
 
     test('skipping leaves out an invalid entry', () async {
