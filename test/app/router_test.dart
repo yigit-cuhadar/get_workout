@@ -9,6 +9,7 @@ import 'package:get_workout/features/progress/presentation/progress_page.dart';
 import 'package:get_workout/features/progress/presentation/progress_strength_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
@@ -44,6 +45,9 @@ import 'package:get_workout/features/account/presentation/consent_cubit.dart';
 import 'package:get_workout/features/account/presentation/delete_account_cubit.dart';
 import 'package:get_workout/features/body/domain/body_repository.dart';
 import 'package:get_workout/features/body/domain/body_usecases.dart';
+import 'package:get_workout/features/body/presentation/body_entry_page.dart';
+import 'package:get_workout/features/body/presentation/body_page.dart';
+import 'package:get_workout/features/body/presentation/measurement_summary_cubit.dart';
 import 'package:get_workout/features/calculators/calculators_module.dart';
 import 'package:get_workout/features/calculators/presentation/body_fat_page.dart';
 import 'package:get_workout/features/calculators/presentation/body_indices_page.dart';
@@ -117,6 +121,9 @@ class MockConsentRepository extends Mock implements ConsentRepository {}
 class MockTelemetry extends Mock implements Telemetry {}
 
 class MockBodyRepository extends Mock implements BodyRepository {}
+
+class _SummaryStandIn extends MockCubit<MeasurementSummaryState>
+    implements MeasurementSummaryCubit {}
 
 class MockExerciseRepository extends Mock implements ExerciseRepository {}
 
@@ -1276,6 +1283,31 @@ void main() {
     await tapTab(tester, 'Profile');
 
     expect(find.byType(PlatesPage), findsOneWidget);
+  });
+
+  testWidgets('Compare opens the one Body page, not another above the day', (
+    tester,
+  ) async {
+    final summary = _SummaryStandIn();
+    when(() => summary.state).thenReturn(const MeasurementSummaryState());
+    sl.registerFactoryParam<MeasurementSummaryCubit, String?, void>(
+      (_, _) => summary,
+    );
+    await startAsGuest(tester);
+    router.go(Routes.bodyEntry('d1'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BodyEntryPage), findsOneWidget);
+
+    router.go(Routes.bodyEntryCompare('d1'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BodyPage, skipOffstage: false), findsOneWidget);
+    expect(find.byType(BodyEntryPage, skipOffstage: false), findsNothing);
+    verify(() => summary.chooseAfter('d1')).called(1);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(BodyPage, skipOffstage: false), findsNothing);
   });
 
   group('onboarding', () {

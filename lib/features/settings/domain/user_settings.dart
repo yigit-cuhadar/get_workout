@@ -1,6 +1,5 @@
 import 'package:forge_core/forge_core.dart';
 
-import '../../body/domain/body_chart.dart';
 import '../../body/domain/body_entry.dart';
 import '../../programs/domain/calendar_date.dart';
 
@@ -354,7 +353,6 @@ class UserSettings extends Equatable {
     this.customBarWeightKg,
     this.customPlates,
     this.customTrackedMeasurements,
-    this.bodyChart,
   });
 
   /// Imperial for the countries that use it day to day, metric elsewhere.
@@ -398,10 +396,6 @@ class UserSettings extends Equatable {
   /// What a measurement day asks for, once the user has chosen; until
   /// then a default that depends on the profile's sex.
   final Set<BodyMeasurement>? customTrackedMeasurements;
-
-  /// What the Body chart shows, once the user has chosen; until then a
-  /// default that depends on their entries.
-  final BodyChartChoice? bodyChart;
 
   double get barWeightKg => customBarWeightKg ?? defaultBarWeightKg(weightUnit);
 
@@ -450,7 +444,6 @@ class UserSettings extends Equatable {
     double? customBarWeightKg,
     List<Plate>? customPlates,
     Set<BodyMeasurement>? customTrackedMeasurements,
-    BodyChartChoice? bodyChart,
   }) => UserSettings(
     weightUnit: weightUnit ?? this.weightUnit,
     lengthUnit: lengthUnit ?? this.lengthUnit,
@@ -466,7 +459,6 @@ class UserSettings extends Equatable {
     customPlates: customPlates ?? this.customPlates,
     customTrackedMeasurements:
         customTrackedMeasurements ?? this.customTrackedMeasurements,
-    bodyChart: bodyChart ?? this.bodyChart,
   );
 
   /// Drops the custom bar and plates, back to the standard set of the unit.
@@ -482,7 +474,6 @@ class UserSettings extends Equatable {
     customTrackedMeasurements: customTrackedMeasurements,
     workoutReminder: workoutReminder,
     measurementReminder: measurementReminder,
-    bodyChart: bodyChart,
   );
 
   @override
@@ -500,6 +491,5 @@ class UserSettings extends Equatable {
     customBarWeightKg,
     customPlates,
     customTrackedMeasurements,
-    bodyChart,
   ];
 }

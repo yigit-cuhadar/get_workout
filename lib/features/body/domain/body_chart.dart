@@ -70,11 +70,12 @@ enum BodySeries {
   }
 }
 
-/// What the user picked for the Body chart (`settings.bodyChart`).
+/// What the user picked for the Body chart, kept on the device per user;
+/// see [BodyChartStore].
 class BodyChartChoice extends Equatable {
   const BodyChartChoice({required this.series, this.targetLine = true});
 
-  /// In the order picked.
+  /// In the order picked; some may not show now (see [shownSeries]).
   final List<BodySeries> series;
 
   /// Whether the target weight shows as a line while weight is shown.
@@ -84,35 +85,54 @@ class BodyChartChoice extends Equatable {
   List<Object?> get props => [series, targetLine];
 }
 
+/// The Body chart choice of each user on this device; a new device starts
+/// from the default.
+abstract interface class BodyChartStore {
+  /// Null until the user has chosen.
+  Future<Result<BodyChartChoice?>> load(String uid);
+
+  Future<Result<void>> save(String uid, BodyChartChoice choice);
+}
+
+/// The earliest date an entry or a workout can have; "All" reads from it.
+final earliestDate = DateTime(2000);
+
 /// What the chart shows under [choice], null until the user picks: weight,
-/// with body fat once [hasBodyFat]. Daily steps only where they are
-/// [stepsReadable]; at most [BodySeries.maxShown]; a choice left with none
-/// gives the default.
+/// with body fat once [hasBodyFat]. Only the series [visible] now (daily
+/// steps where they can be read, the training series with Premium); the
+/// others stay chosen. At most [BodySeries.maxShown]; a choice showing
+/// none gives the default.
 List<BodySeries> shownSeries(
   BodyChartChoice? choice, {
   required bool hasBodyFat,
-  required bool stepsReadable,
+  required bool Function(BodySeries series) visible,
 }) {
   final shown = {
     for (final series in choice?.series ?? const <BodySeries>[])
-      if (series != BodySeries.dailySteps || stepsReadable) series,
+      if (visible(series)) series,
   }.take(BodySeries.maxShown).toList();
   if (shown.isNotEmpty) return shown;
   return [BodySeries.weight, if (hasBodyFat) BodySeries.bodyFat];
 }
 
-/// [shown] with [series] taken away, or added at the end; unchanged when
-/// that would leave none or more than [BodySeries.maxShown].
-List<BodySeries> toggleSeries(List<BodySeries> shown, BodySeries series) {
-  if (shown.contains(series)) {
-    return shown.length == 1
-        ? shown
-        : [
-            for (final other in shown)
-              if (other != series) other,
-          ];
+/// [chosen] with [series] taken away, or added at the end. Counted are
+/// only the series [visible] now: none is added past
+/// [BodySeries.maxShown] of them and the last is not taken away. A chosen
+/// series that does not show now stays: tapping it means wanting it.
+List<BodySeries> toggleSeries(
+  List<BodySeries> chosen,
+  BodySeries series, {
+  required bool Function(BodySeries series) visible,
+}) {
+  final shown = chosen.where(visible).length;
+  if (chosen.contains(series)) {
+    if (!visible(series) || shown == 1) return chosen;
+    return [
+      for (final other in chosen)
+        if (other != series) other,
+    ];
   }
-  return shown.length >= BodySeries.maxShown ? shown : [...shown, series];
+  return shown >= BodySeries.maxShown ? chosen : [...chosen, series];
 }
 
 /// Which value axis a series is read on.
@@ -152,18 +172,17 @@ class SeriesPoint extends Equatable {
 }
 
 /// The first day the chart shows: [range]'s start, or for
-/// [StrengthRange.all] the day of the oldest of [entries] (newest first);
-/// null then without entries.
+/// [StrengthRange.all] the day of the earliest of [oldest], the oldest
+/// value of each series shown; null then without any.
 DateTime? chartStart(
   StrengthRange range,
-  List<BodyEntry> entries,
   DateTime now,
+  Iterable<DateTime> oldest,
 ) {
   if (range.start(now) case final start?) return start;
-  final oldest = entries.lastOrNull?.date;
-  return oldest == null
-      ? null
-      : CalendarDate.of(oldest.toLocal()).toLocalDateTime();
+  if (oldest.isEmpty) return null;
+  final first = oldest.reduce((a, b) => a.isBefore(b) ? a : b);
+  return CalendarDate.of(first.toLocal()).toLocalDateTime();
 }
 
 /// The values of line [series] (not [BodySeries.isBar]) of [entries]
@@ -255,19 +274,56 @@ List<SeriesPoint> weeklySetTotals(List<WeekVolume> weeks) => [
 ];
 
 /// The average steps a day of each week of [days] (oldest first), weeks
-/// starting on ISO weekday [firstWeekday]; a week averages the days the
-/// health store gave, so the current one counts up to today.
-List<SeriesPoint> weeklyStepAverages(List<DailySteps> days, int firstWeekday) {
-  final byWeek = <CalendarDate, List<int>>{};
+/// starting on ISO weekday [firstWeekday], over the days the health store
+/// gave. Today, still under way, counts only while it is the week's only
+/// day.
+List<SeriesPoint> weeklyStepAverages(
+  List<DailySteps> days,
+  int firstWeekday, {
+  required DateTime now,
+}) {
+  final today = CalendarDate.of(now);
+  final byWeek = <CalendarDate, List<DailySteps>>{};
   for (final day in days) {
     final week = CalendarDate.of(day.day).startOfWeek(firstWeekday);
-    (byWeek[week] ??= []).add(day.count);
+    (byWeek[week] ??= []).add(day);
   }
   return [
-    for (final MapEntry(key: week, value: counts) in byWeek.entries)
-      SeriesPoint(
-        week.toLocalDateTime(),
-        counts.reduce((a, b) => a + b) / counts.length,
-      ),
+    for (final MapEntry(key: week, value: all) in byWeek.entries)
+      SeriesPoint(week.toLocalDateTime(), _average(all, today)),
+  ];
+}
+
+double _average(List<DailySteps> days, CalendarDate today) {
+  final done = [
+    for (final day in days)
+      if (CalendarDate.of(day.day) != today) day.count,
+  ];
+  if (done.isEmpty) return days.last.count.toDouble();
+  return done.reduce((a, b) => a + b) / done.length;
+}
+
+/// The value of each of [shown] at the chart position [milliseconds] (since
+/// the epoch, as the chart places them): a line's point on that very
+/// moment, a bar's week around it.
+List<(BodySeries, SeriesPoint)> pointsAt(
+  List<BodySeries> shown,
+  Map<BodySeries, List<SeriesPoint>> points,
+  int milliseconds,
+) {
+  bool at(BodySeries series, SeriesPoint point) {
+    final start = point.date.millisecondsSinceEpoch;
+    if (!series.isBar) return start == milliseconds;
+    final end = point.date
+        .add(const Duration(days: DateTime.daysPerWeek))
+        .millisecondsSinceEpoch;
+    return start <= milliseconds && milliseconds < end;
+  }
+
+  return [
+    for (final series in shown)
+      if (points[series]?.where((point) => at(series, point)).firstOrNull
+          case final point?)
+        (series, point),
   ];
 }

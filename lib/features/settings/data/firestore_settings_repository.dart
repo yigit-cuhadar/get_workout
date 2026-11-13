@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 
-import '../../body/domain/body_chart.dart';
 import '../../body/domain/body_entry.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../domain/settings_repository.dart';
@@ -99,12 +98,11 @@ class FirestoreSettingsRepository implements SettingsRepository {
       customBarWeightKg: _barWeight(map['barWeightKg']),
       customPlates: _plates(map['plates']),
       customTrackedMeasurements: _measurements(map['trackedMeasurements']),
-      bodyChart: _bodyChart(map['bodyChart']),
     );
   }
 
-  /// The bar, plates, tracked measurements and Body chart are written only
-  /// while customised; deleting them returns the user to the default. Seen tips
+  /// The bar, plates and tracked measurements are written only while
+  /// customised; deleting them returns the user to the default. Seen tips
   /// are only ever added, by [markTipSeen].
   @override
   Future<Result<void>> markTipSeen(String uid, Tip tip) => guard(
@@ -160,29 +158,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
             ?.map((measurement) => measurement.code)
             .toList() ??
         FieldValue.delete(),
-    'bodyChart': switch (settings.bodyChart) {
-      final chart? => {
-        'series': [for (final series in chart.series) series.code],
-        'targetLine': chart.targetLine,
-      },
-      null => FieldValue.delete(),
-    },
   };
-
-  /// Unknown codes are dropped; anything but a map reads as not chosen, a
-  /// missing switch as on.
-  static BodyChartChoice? _bodyChart(Object? raw) {
-    if (raw is! Map) return null;
-    final series = raw['series'];
-    final targetLine = raw['targetLine'];
-    return BodyChartChoice(
-      series: [
-        if (series is List)
-          for (final code in series) ?BodySeries.fromCode(code),
-      ],
-      targetLine: targetLine is bool ? targetLine : true,
-    );
-  }
 
   /// Unknown codes are dropped; anything but a list reads as not chosen.
   static Set<BodyMeasurement>? _measurements(Object? raw) => raw is List

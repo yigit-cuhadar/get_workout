@@ -139,7 +139,10 @@ abstract final class Routes {
   static String bodySummary(String id) =>
       '$body/summary/${Uri.encodeComponent(id)}';
   static String bodyEntry(String id) => '$body/${Uri.encodeComponent(id)}';
-  static String bodyEntryCompare(String id) => '${bodyEntry(id)}/compare';
+
+  /// The Body page on Compare, measurement day [id] the later one.
+  static String bodyEntryCompare(String id) =>
+      '$body?compare=${Uri.encodeQueryComponent(id)}';
   static String bodyEntryWeight(String id) => '${bodyEntry(id)}/weight';
   static String bodyEntryMeasure(String id) => '${bodyEntry(id)}/measure';
 
@@ -579,7 +582,11 @@ GoRouter buildRouter(
               GoRoute(path: 'steps', builder: (_, _) => const StepsPage()),
               GoRoute(
                 path: 'body',
-                builder: (_, _) => const BodyPage(),
+                // One page whatever the query, so a link to Compare reuses
+                // the one there.
+                builder: (_, state) => BodyPage(
+                  compareAfter: state.uri.queryParameters['compare'],
+                ),
                 routes: [
                   // Before ':id', which would match these too; entry ids
                   // are Firestore auto ids.
@@ -612,12 +619,6 @@ GoRouter buildRouter(
                         builder: (_, state) => MeasurementDayEditPage(
                           id: state.pathParameters['id']!,
                         ),
-                      ),
-                      // The Body page on Compare, this day the later one.
-                      GoRoute(
-                        path: 'compare',
-                        builder: (_, state) =>
-                            BodyPage(compareAfter: state.pathParameters['id']),
                       ),
                     ],
                   ),

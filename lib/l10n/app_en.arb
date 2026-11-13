@@ -1324,6 +1324,8 @@
   "bodyTargetReached": "Target: {weight} · reached",
   "@bodyTargetReached": {"placeholders": {"weight": {"type": "String"}}},
   "bodyChartEmpty": "Nothing to show in this range yet.",
+  "bodySeriesFailed": "Couldn't load {series}.",
+  "@bodySeriesFailed": {"placeholders": {"series": {"type": "String"}}},
   "bodyOlderLocked": "See your older results with Premium",
   "bodyChartAdd": "Add",
   "bodyChartRemove": "Remove {series}",

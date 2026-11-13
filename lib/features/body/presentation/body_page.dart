@@ -29,11 +29,13 @@ import 'series_chart.dart';
 
 /// Two views of the user's body: Overview (the chart, the two ways to log,
 /// then every entry, newest first) and Compare (two measurement days).
-/// Each keeps its state while the other shows.
+/// Each keeps its state while the other shows. There is one Body page: a
+/// link to Compare updates the one there.
 class BodyPage extends StatelessWidget {
   const BodyPage({super.key, this.compareAfter});
 
-  /// Opens on Compare with this measurement day as the later one.
+  /// Shows Compare with this measurement day as the later one, also when
+  /// it comes later to a page already open.
   final String? compareAfter;
 
   @override
@@ -45,30 +47,57 @@ class BodyPage extends StatelessWidget {
           param1: MaterialLocalizations.of(context).firstWeekday,
         ),
       ),
-      BlocProvider(
-        create: (_) {
-          final cubit = sl<MeasurementSummaryCubit>(param1: null);
-          if (compareAfter case final id?) cubit.chooseAfter(id);
-          return cubit;
-        },
-      ),
+      BlocProvider(create: (_) => sl<MeasurementSummaryCubit>(param1: null)),
     ],
-    child: _BodyView(compare: compareAfter != null),
+    child: _BodyView(compareAfter: compareAfter),
   );
 }
 
 class _BodyView extends StatefulWidget {
-  const _BodyView({required this.compare});
+  const _BodyView({required this.compareAfter});
 
-  /// Whether it opens on Compare.
-  final bool compare;
+  final String? compareAfter;
 
   @override
   State<_BodyView> createState() => _BodyViewState();
 }
 
 class _BodyViewState extends State<_BodyView> {
-  late bool _compare = widget.compare;
+  late bool _compare = widget.compareAfter != null;
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.compareAfter case final id?) {
+      context.read<MeasurementSummaryCubit>().chooseAfter(id);
+    }
+    // Today's steps have grown meanwhile.
+    _lifecycle = AppLifecycleListener(
+      onResume: () => context.read<BodyChartCubit>().refreshSteps(),
+    );
+  }
+
+  @override
+  void didUpdateWidget(_BodyView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final id = widget.compareAfter;
+    if (id == null || id == oldWidget.compareAfter) return;
+    context.read<MeasurementSummaryCubit>().chooseAfter(id);
+    setState(() => _compare = true);
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  void _show(bool compare) {
+    setState(() => _compare = compare);
+    // The link that opened Compare is done; following it again works.
+    if (widget.compareAfter != null) context.go(Routes.body);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,8 +134,7 @@ class _BodyViewState extends State<_BodyView> {
                     ButtonSegment(value: true, label: Text(l10n.bodyCompare)),
                   ],
                   selected: {_compare},
-                  onSelectionChanged: (selection) =>
-                      setState(() => _compare = selection.single),
+                  onSelectionChanged: (selection) => _show(selection.single),
                 ),
               ),
               Expanded(
@@ -255,6 +283,10 @@ class _SeriesLook {
     colors.secondaryContainer,
   ];
 
+  /// The colour of [series], the [index]th on the chart, as drawn.
+  static Color color(ColorScheme colors, int index, BodySeries series) =>
+      (series.isBar ? barColors(colors) : lineColors(colors))[index];
+
   /// [value] as the chart plots it.
   double shown(BodySeries series, double value) => switch (series) {
     BodySeries.weight ||
@@ -305,12 +337,17 @@ class _ChartCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final colors = _SeriesLook.lineColors(theme.colorScheme);
     final look = _SeriesLook(
       l10n,
       context.select((SettingsCubit cubit) => cubit.state.settings),
     );
-    return BlocBuilder<BodyChartCubit, BodyChartState>(
+    return BlocConsumer<BodyChartCubit, BodyChartState>(
+      listenWhen: (_, current) => current.saveFailed,
+      listener: (context, _) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.bodySaveFailed)));
+        context.read<BodyChartCubit>().saveFailureShown();
+      },
       builder: (context, chart) {
         final cubit = context.read<BodyChartCubit>();
         final empty = chart.points.values.every((points) => points.isEmpty);
@@ -327,7 +364,7 @@ class _ChartCard extends StatelessWidget {
                     InputChip(
                       avatar: Icon(
                         series.isBar ? Icons.bar_chart : Icons.show_chart,
-                        color: colors[i],
+                        color: _SeriesLook.color(theme.colorScheme, i, series),
                       ),
                       label: Text(
                         l10n.bodyChartValue(
@@ -353,11 +390,25 @@ class _ChartCard extends StatelessWidget {
                   ),
                 ],
               ),
+              for (final series in chart.failed)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    l10n.bodySeriesFailed(l10n.seriesName(series)),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  trailing: TextButton(
+                    onPressed: () => cubit.retry(series),
+                    child: Text(l10n.retry),
+                  ),
+                ),
               const SizedBox(height: Gap.sm),
-              if (empty)
-                Text(l10n.bodyChartEmpty, style: theme.textTheme.bodyMedium)
+              if (!empty)
+                _Chart(chart, look)
+              else if (chart.loading.isNotEmpty)
+                const LoadingView()
               else
-                _Chart(chart, look),
+                Text(l10n.bodyChartEmpty, style: theme.textTheme.bodyMedium),
               const SizedBox(height: Gap.sm),
               _RangePicker(state.range),
               if (state.olderLocked) ...[
@@ -388,8 +439,6 @@ class _Chart extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final locale = l10n.localeName;
     final colorScheme = Theme.of(context).colorScheme;
-    final lineColors = _SeriesLook.lineColors(colorScheme);
-    final barColors = _SeriesLook.barColors(colorScheme);
     final targetKg = context.select(
       (ProfileCubit cubit) => cubit.state.profile.targetWeightKg,
     );
@@ -419,7 +468,7 @@ class _Chart extends StatelessWidget {
           for (final (j, point) in points.indexed)
             (x: x(point.date), y: values[j]),
         ],
-        color: series.isBar ? barColors[i] : lineColors[i],
+        color: _SeriesLook.color(colorScheme, i, series),
         ticks: range.isEmpty
             ? const []
             : niceTicks(
@@ -438,28 +487,22 @@ class _Chart extends StatelessWidget {
       );
     }
 
-    /// The values of every series on the tapped day, or in its week.
-    String selection(double value) {
-      final tapped = date(value);
-      bool at(BodySeries series, SeriesPoint point) => series.isBar
-          ? !tapped.isBefore(point.date) &&
-                tapped.isBefore(point.date.add(week))
-          : point.date == tapped;
-      return l10n.bodyPoint(
-        [
-          for (final series in chart.shown)
-            if (chart.points[series]
-                    ?.where((point) => at(series, point))
-                    .firstOrNull
-                case final point?)
-              l10n.bodyChartValue(
-                l10n.seriesName(series),
-                look.value(series, point),
-              ),
-        ].join(' · '),
-        DateFormat.yMMMd(locale).format(tapped),
-      );
-    }
+    /// The values of every series at the tapped point: on its day, or in
+    /// its week.
+    String selection(double value) => l10n.bodyPoint(
+      [
+        for (final (series, point) in pointsAt(
+          chart.shown,
+          chart.points,
+          value.round(),
+        ))
+          l10n.bodyChartValue(
+            l10n.seriesName(series),
+            look.value(series, point),
+          ),
+      ].join(' · '),
+      DateFormat.yMMMd(locale).format(date(value)),
+    );
 
     return SeriesChart(
       xMin: x(from),
@@ -532,7 +575,14 @@ class _AddSheet extends StatelessWidget {
                 ),
               ),
               for (final series in state.available)
-                if (series.group == group)
+                if (series.group == group && state.locked(series))
+                  ListTile(
+                    title: Text(l10n.seriesName(series)),
+                    subtitle: _hint(l10n, series),
+                    trailing: const Icon(Icons.lock_outline),
+                    onTap: () => _unlock(context, series),
+                  )
+                else if (series.group == group)
                   CheckboxListTile(
                     value: shown.contains(series),
                     // The last one stays; none is added past the most.
@@ -543,11 +593,7 @@ class _AddSheet extends StatelessWidget {
                         ? (_) => cubit.toggle(series)
                         : null,
                     title: Text(l10n.seriesName(series)),
-                    subtitle: switch (series) {
-                      BodySeries.weeklySets => Text(l10n.bodyWeeklySetsHint),
-                      BodySeries.dailySteps => Text(l10n.bodyDailyStepsHint),
-                      _ => null,
-                    },
+                    subtitle: _hint(l10n, series),
                   ),
             ],
             SwitchListTile(
@@ -560,6 +606,19 @@ class _AddSheet extends StatelessWidget {
         );
       },
     );
+  }
+
+  static Widget? _hint(AppLocalizations l10n, BodySeries series) =>
+      switch (series) {
+        BodySeries.weeklySets => Text(l10n.bodyWeeklySetsHint),
+        BodySeries.dailySteps => Text(l10n.bodyDailyStepsHint),
+        _ => null,
+      };
+
+  /// A training series asks for Premium first, as the ranges do.
+  static Future<void> _unlock(BuildContext context, BodySeries series) async {
+    final cubit = context.read<BodyChartCubit>();
+    if (await context.requirePremium()) await cubit.toggle(series);
   }
 }
 

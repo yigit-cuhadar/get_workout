@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_workout/features/body/domain/body_chart.dart';
 import 'package:get_workout/features/body/domain/body_entry.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/settings/data/firestore_settings_repository.dart';
@@ -483,59 +482,6 @@ void main() {
       expect(
         (await repository.watchSettings('u1').first).customTrackedMeasurements,
         {BodyMeasurement.waist},
-      );
-    });
-  });
-
-  group('body chart', () {
-    test('is stored as codes and read back', () async {
-      final settings = defaults.copyWith(
-        bodyChart: const BodyChartChoice(
-          series: [BodySeries.thigh, BodySeries.weeklySets],
-          targetLine: false,
-        ),
-      );
-
-      await repository.saveSettings('u1', settings);
-
-      final stored = (await user().get()).data()!['settings'] as Map;
-      expect(stored['bodyChart'], {
-        'series': ['thigh', 'weeklySets'],
-        'targetLine': false,
-      });
-      expect(await repository.watchSettings('u1').first, settings);
-    });
-
-    test('not chosen is not stored', () async {
-      await user().set({
-        'settings': {
-          'bodyChart': {
-            'series': ['weight'],
-          },
-        },
-      });
-
-      await repository.saveSettings('u1', defaults);
-
-      final stored = (await user().get()).data()!['settings'] as Map;
-      expect(stored.containsKey('bodyChart'), isFalse);
-    });
-
-    test('malformed reads as not chosen, unknown codes are dropped', () async {
-      await user().set({
-        'settings': {'bodyChart': 'weight'},
-      });
-      expect((await repository.watchSettings('u1').first).bodyChart, isNull);
-      await user().set({
-        'settings': {
-          'bodyChart': {
-            'series': ['waist', 'wingspan', 3],
-          },
-        },
-      });
-      expect(
-        (await repository.watchSettings('u1').first).bodyChart,
-        const BodyChartChoice(series: [BodySeries.waist]),
       );
     });
   });

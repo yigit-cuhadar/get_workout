@@ -24,25 +24,28 @@ void main() {
   });
 
   group('shown series', () {
+    bool all(BodySeries _) => true;
+    bool noSteps(BodySeries series) => series != BodySeries.dailySteps;
+
     test('default to weight, with body fat once there is some', () {
-      expect(shownSeries(null, hasBodyFat: false, stepsReadable: true), [
+      expect(shownSeries(null, hasBodyFat: false, visible: all), [
         BodySeries.weight,
       ]);
-      expect(shownSeries(null, hasBodyFat: true, stepsReadable: true), [
+      expect(shownSeries(null, hasBodyFat: true, visible: all), [
         BodySeries.weight,
         BodySeries.bodyFat,
       ]);
     });
 
-    test('follow the choice, without steps that cannot be read', () {
+    test('follow the choice, leaving out what does not show now', () {
       const choice = BodyChartChoice(
         series: [BodySeries.dailySteps, BodySeries.thigh],
       );
-      expect(shownSeries(choice, hasBodyFat: true, stepsReadable: true), [
+      expect(shownSeries(choice, hasBodyFat: true, visible: all), [
         BodySeries.dailySteps,
         BodySeries.thigh,
       ]);
-      expect(shownSeries(choice, hasBodyFat: true, stepsReadable: false), [
+      expect(shownSeries(choice, hasBodyFat: true, visible: noSteps), [
         BodySeries.thigh,
       ]);
     });
@@ -57,7 +60,7 @@ void main() {
           BodySeries.neck,
         ],
       );
-      expect(shownSeries(many, hasBodyFat: false, stepsReadable: false), [
+      expect(shownSeries(many, hasBodyFat: false, visible: all), [
         BodySeries.waist,
         BodySeries.hips,
         BodySeries.chest,
@@ -66,7 +69,7 @@ void main() {
         shownSeries(
           const BodyChartChoice(series: [BodySeries.dailySteps]),
           hasBodyFat: false,
-          stepsReadable: false,
+          visible: noSteps,
         ),
         [BodySeries.weight],
       );
@@ -74,17 +77,44 @@ void main() {
 
     test('toggle adds at the end and removes, never past three or to none', () {
       const shown = [BodySeries.weight, BodySeries.bodyFat];
-      expect(toggleSeries(shown, BodySeries.weeklySets), [
+      expect(toggleSeries(shown, BodySeries.weeklySets, visible: all), [
         BodySeries.weight,
         BodySeries.bodyFat,
         BodySeries.weeklySets,
       ]);
-      expect(toggleSeries(shown, BodySeries.weight), [BodySeries.bodyFat]);
-      const full = [BodySeries.weight, BodySeries.bodyFat, BodySeries.waist];
-      expect(toggleSeries(full, BodySeries.hips), full);
-      expect(toggleSeries([BodySeries.weight], BodySeries.weight), [
-        BodySeries.weight,
+      expect(toggleSeries(shown, BodySeries.weight, visible: all), [
+        BodySeries.bodyFat,
       ]);
+      const full = [BodySeries.weight, BodySeries.bodyFat, BodySeries.waist];
+      expect(toggleSeries(full, BodySeries.hips, visible: all), full);
+      expect(
+        toggleSeries([BodySeries.weight], BodySeries.weight, visible: all),
+        [BodySeries.weight],
+      );
+    });
+
+    test('toggle keeps chosen series that do not show now', () {
+      const chosen = [
+        BodySeries.dailySteps,
+        BodySeries.weight,
+        BodySeries.waist,
+      ];
+      expect(toggleSeries(chosen, BodySeries.thigh, visible: noSteps), [
+        ...chosen,
+        BodySeries.thigh,
+      ]);
+      expect(
+        toggleSeries(chosen, BodySeries.dailySteps, visible: noSteps),
+        chosen,
+      );
+      expect(
+        toggleSeries(
+          [BodySeries.dailySteps, BodySeries.weight],
+          BodySeries.weight,
+          visible: noSteps,
+        ),
+        [BodySeries.dailySteps, BodySeries.weight],
+      );
     });
   });
 
@@ -177,15 +207,17 @@ void main() {
   group('time', () {
     final now = DateTime(2026, 11, 12, 9);
 
-    test('all starts on the day of the oldest entry', () {
-      final entries = [
-        BodyEntry(id: 'b', date: DateTime(2026, 5, 2, 18)),
-        BodyEntry(id: 'a', date: DateTime(2025, 3, 4, 7)),
-      ];
-      expect(chartStart(StrengthRange.all, entries, now), DateTime(2025, 3, 4));
-      expect(chartStart(StrengthRange.all, const [], now), isNull);
+    test('all starts on the day of the oldest value shown', () {
       expect(
-        chartStart(StrengthRange.weeks12, const [], now),
+        chartStart(StrengthRange.all, now, [
+          DateTime(2026, 5, 2, 18),
+          DateTime(2025, 3, 4, 7),
+        ]),
+        DateTime(2025, 3, 4),
+      );
+      expect(chartStart(StrengthRange.all, now, const []), isNull);
+      expect(
+        chartStart(StrengthRange.weeks12, now, [DateTime(2020)]),
         StrengthRange.weeks12.start(now),
       );
     });
@@ -235,17 +267,43 @@ void main() {
     );
   });
 
-  test('daily steps average per week over the days given', () {
+  test('daily steps average per week over the days done', () {
+    final days = [
+      DailySteps(DateTime(2026, 11, 1), 4000), // a Sunday
+      DailySteps(DateTime(2026, 11, 2), 6000),
+      DailySteps(DateTime(2026, 11, 3), 9000),
+      DailySteps(DateTime(2026, 11, 4), 500), // today, under way
+    ];
+    final now = DateTime(2026, 11, 4, 8);
+    expect(weeklyStepAverages(days, DateTime.monday, now: now), [
+      SeriesPoint(DateTime(2026, 10, 26), 4000),
+      SeriesPoint(DateTime(2026, 11, 2), 7500),
+    ]);
+    // Today alone counts as it is.
     expect(
-      weeklyStepAverages([
-        DailySteps(DateTime(2026, 11, 1), 4000), // a Sunday
-        DailySteps(DateTime(2026, 11, 2), 6000),
-        DailySteps(DateTime(2026, 11, 3), 9000),
-      ], DateTime.monday),
-      [
-        SeriesPoint(DateTime(2026, 10, 26), 4000),
-        SeriesPoint(DateTime(2026, 11, 2), 7500),
-      ],
+      weeklyStepAverages(
+        [DailySteps(DateTime(2026, 11, 2), 700)],
+        DateTime.monday,
+        now: DateTime(2026, 11, 2, 9),
+      ),
+      [SeriesPoint(DateTime(2026, 11, 2), 700)],
     );
+  });
+
+  test('a tapped position finds each series\' value, to the microsecond', () {
+    // Firestore keeps microseconds; the chart places points in ms.
+    final logged = DateTime(2026, 11, 3, 7, 30, 0, 123, 456);
+    final points = {
+      BodySeries.weight: [SeriesPoint(logged, 80)],
+      BodySeries.waist: [SeriesPoint(DateTime(2026, 11, 1), 84)],
+      BodySeries.weeklySets: [SeriesPoint(DateTime(2026, 11, 2), 12)],
+    };
+    final shown = points.keys.toList();
+    final at = logged.millisecondsSinceEpoch.toDouble().round();
+
+    expect(pointsAt(shown, points, at), [
+      (BodySeries.weight, SeriesPoint(logged, 80)),
+      (BodySeries.weeklySets, SeriesPoint(DateTime(2026, 11, 2), 12)),
+    ]);
   });
 }
