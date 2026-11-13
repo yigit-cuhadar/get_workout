@@ -93,8 +93,9 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   /// The live exercises by id, for alternatives.
   Map<String, Exercise> get knownExercises;
 
-  /// Whether exercises added or swapped in start [withWarmups].
-  bool get addsWarmups;
+  /// The warm-ups exercises added or swapped in start with (see
+  /// [warmedUp]); null for none.
+  WarmupSettings? get warmupSettings;
 
   /// Keyed by set and drop (null for the set's own weight).
   final _retyped = RetypedWeights<(SetRef, int?)>();
@@ -162,10 +163,14 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     final before = state.workout;
     final current = state.selection;
     final room = WorkoutLimits.maxExercises - (before?.exercises.length ?? 0);
-    final added = [
+    final fresh = [
       for (final exercise in exercises.take(room))
-        _warmedUp(editing.exerciseFor(exercise, language)),
+        editing.exerciseFor(exercise, language),
     ];
+    final settings = warmupSettings;
+    final added = settings == null
+        ? fresh
+        : warmedUpAll(fresh, before?.exercises ?? const [], settings);
     _editExercises(
       (list) => [...list, ...added],
       select: (after) => before == null
@@ -196,7 +201,14 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     if (before == null || !canEdit) return;
     final swapped = editing.swapExercise(before, exercise, language);
     final kept = withoutUnusedWarmups(before, swapped);
-    final fitted = before.doneSets.isEmpty ? _warmedUp(kept) : kept;
+    final settings = warmupSettings;
+    final fitted = before.doneSets.isEmpty && settings != null
+        ? warmedUp(
+            kept,
+            state.workout!.exercises.take(index).toList(),
+            settings,
+          )
+        : kept;
     final resized = fitted.sets.length != swapped.sets.length;
     final current = state.selection;
     _retyped.clear();
@@ -210,9 +222,6 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     );
     if (fitted.sets.length > kept.sets.length) noteWarmupsAdded();
   }
-
-  WorkoutExercise _warmedUp(WorkoutExercise exercise) =>
-      addsWarmups ? withWarmups(exercise) : exercise;
 
   /// [to] is where the exercise lands; see [grouping.moveItem].
   void moveExercise(int from, int to) {

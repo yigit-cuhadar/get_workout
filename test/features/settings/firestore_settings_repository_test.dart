@@ -93,6 +93,11 @@ void main() {
         'themeMode': 'dark',
         'effortScale': 'rpe',
         'restTimer': {'enabled': true, 'defaultS': 90},
+        'warmups': {
+          'scheme': 'standard',
+          'custom': <Object?>[],
+          'scope': 'every',
+        },
         'autoWarmups': true,
         'stepGoal': 10000,
         'reminders': {
@@ -227,14 +232,92 @@ void main() {
   });
 
   group('automatic warm-ups and tips', () {
-    test('the switch is stored and read back', () async {
-      final settings = defaults.copyWith(autoWarmups: false);
+    test(
+      'the scheme, custom sets and scope are stored and read back',
+      () async {
+        final settings = defaults.copyWith(
+          warmups: const WarmupSettings(
+            scheme: WarmupScheme.custom,
+            custom: [WarmupStep(45, 10), WarmupStep(70, 3)],
+            scope: WarmupScope.firstPerMuscle,
+          ),
+        );
 
-      await repository.saveSettings('u1', settings);
+        await repository.saveSettings('u1', settings);
 
+        final stored = (await user().get()).data()!['settings'] as Map;
+        expect(stored['warmups'], {
+          'scheme': 'custom',
+          'custom': [
+            {'percent': 45, 'reps': 10},
+            {'percent': 70, 'reps': 3},
+          ],
+          'scope': 'firstPerMuscle',
+        });
+        // Older app versions read the switch.
+        expect(stored['autoWarmups'], true);
+        expect(await repository.watchSettings('u1').first, settings);
+      },
+    );
+
+    test('off is written as the old switch off', () async {
+      await repository.saveSettings(
+        'u1',
+        defaults.copyWith(
+          warmups: const WarmupSettings(scheme: WarmupScheme.off),
+        ),
+      );
       final stored = (await user().get()).data()!['settings'] as Map;
       expect(stored['autoWarmups'], false);
-      expect(await repository.watchSettings('u1').first, settings);
+    });
+
+    test('the old switch reads as standard or off', () async {
+      await user().set({
+        'settings': {'autoWarmups': true},
+      });
+      expect(
+        (await repository.watchSettings('u1').first).warmups,
+        const WarmupSettings(),
+      );
+      await user().set({
+        'settings': {'autoWarmups': false},
+      });
+      expect(
+        (await repository.watchSettings('u1').first).warmups.scheme,
+        WarmupScheme.off,
+      );
+    });
+
+    test('malformed custom sets are dropped or clamped', () async {
+      await user().set({
+        'settings': {
+          'warmups': {
+            'scheme': 'custom',
+            'custom': [
+              {'percent': 5, 'reps': 40},
+              {'percent': 'half'},
+              for (var i = 0; i < 6; i++) {'percent': 60, 'reps': 3},
+            ],
+            'scope': 'nearby',
+          },
+        },
+      });
+      final warmups = (await repository.watchSettings('u1').first).warmups;
+      expect(warmups.custom.first, const WarmupStep(10, 20));
+      expect(warmups.custom, hasLength(WarmupLimits.maxSets));
+      expect(warmups.scope, WarmupScope.every);
+    });
+
+    test('custom without sets reads as standard', () async {
+      await user().set({
+        'settings': {
+          'warmups': {'scheme': 'custom', 'custom': <Object?>[]},
+        },
+      });
+      expect(
+        (await repository.watchSettings('u1').first).warmups.scheme,
+        WarmupScheme.standard,
+      );
     });
 
     test('tips seen are added one by one, others kept', () async {
@@ -263,7 +346,7 @@ void main() {
         'settings': {'weightUnit': 'kg'},
       });
       final settings = await repository.watchSettings('u1').first;
-      expect(settings.autoWarmups, isTrue);
+      expect(settings.warmups, const WarmupSettings());
       expect(settings.seenTips, isEmpty);
     });
 
@@ -275,7 +358,7 @@ void main() {
         },
       });
       final settings = await repository.watchSettings('u1').first;
-      expect(settings.autoWarmups, isTrue);
+      expect(settings.warmups, const WarmupSettings());
       expect(settings.seenTips, {Tip.setTypes});
     });
   });
@@ -401,6 +484,11 @@ void main() {
         'themeMode': 'system',
         'effortScale': 'feel',
         'restTimer': {'enabled': true, 'defaultS': 90},
+        'warmups': {
+          'scheme': 'standard',
+          'custom': <Object?>[],
+          'scope': 'every',
+        },
         'autoWarmups': true,
         'stepGoal': 10000,
         'reminders': {

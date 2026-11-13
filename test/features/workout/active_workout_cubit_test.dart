@@ -75,7 +75,7 @@ void main() {
     weightUnit: WeightUnit.kg,
     lengthUnit: LengthUnit.cm,
     restTimer: RestTimerSettings(defaultS: 75),
-    autoWarmups: false,
+    warmups: WarmupSettings(scheme: WarmupScheme.off),
   );
   final saved = workout('w0', [
     exercise('squat', [lift(100, 5)]),
@@ -191,6 +191,7 @@ void main() {
     Workout? draft,
     LocalWorkouts? local,
     bool warmups = false,
+    WarmupSettings warmupSettings = const WarmupSettings(),
     WeightUnit unit = WeightUnit.kg,
     bool settingsArrive = true,
   }) async {
@@ -204,7 +205,9 @@ void main() {
       UserSettings(
         weightUnit: unit,
         lengthUnit: LengthUnit.cm,
-        autoWarmups: warmups,
+        warmups: warmups
+            ? warmupSettings
+            : const WarmupSettings(scheme: WarmupScheme.off),
       ),
     );
     await pumpEventQueue();
@@ -736,6 +739,23 @@ void main() {
       // The warm-up typed into stays, as an empty set of the new type.
       expect(types(cubit, 0), [SetType.warmup, SetType.normal, SetType.normal]);
       expect(cubit.state.selection, (exercise: 0, set: 0));
+      await cubit.close();
+    });
+
+    test('the scheme and scope chosen decide them', () async {
+      final cubit = await signedIn(
+        warmups: true,
+        warmupSettings: const WarmupSettings(
+          scheme: WarmupScheme.full,
+          scope: WarmupScope.firstPerMuscle,
+        ),
+      );
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      expect(types(cubit, 0).where((t) => t == SetType.warmup), hasLength(3));
+      // The fixtures all work the quads, which the squat warmed up.
+      cubit.addExercises([squat, bench], 'en');
+      expect(types(cubit, 1), [SetType.normal]);
+      expect(types(cubit, 2), [SetType.normal]);
       await cubit.close();
     });
 

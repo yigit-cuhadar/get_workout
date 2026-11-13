@@ -7,6 +7,7 @@ import '../../../core/grouping.dart';
 import '../../programs/domain/program_editing.dart';
 import '../../programs/domain/program_schedule.dart';
 import 'exercise_stats.dart';
+import '../../settings/domain/user_settings.dart';
 import 'set_logging.dart';
 import 'warmups.dart';
 import 'workout.dart';
@@ -63,8 +64,9 @@ int retypedSetPosition(WorkoutExercise exercise, int index, SetType type) {
 }
 
 /// A workout of day [dayIndex] of [program], its items as goals, each
-/// exercise [withWarmups] when [warmups]. Items whose exercise is not in
-/// [catalogue] (deleted or retired) are left out.
+/// exercise [warmedUp] under [warmups] in day order (none without).
+/// Items whose exercise is not in [catalogue] (deleted or retired) are
+/// left out.
 Workout workoutFromProgramDay({
   required String id,
   required DateTime startedAt,
@@ -73,21 +75,25 @@ Workout workoutFromProgramDay({
   required int dayIndex,
   required Map<String, Exercise> catalogue,
   required String language,
-  required bool warmups,
+  required WarmupSettings? warmups,
 }) => Workout(
   id: id,
   startedAt: startedAt,
   programId: program.id,
   dayIndex: dayIndex,
   name: name,
-  exercises: relabelGroups([
+  exercises: relabelGroups(switch ([
     for (final item in program.days[dayIndex].items)
       if (catalogue[item.exerciseId] case final exercise?)
-        switch (exerciseFor(exercise, language, goal: item)) {
-          final added when warmups => withWarmups(added),
-          final added => added,
-        },
-  ]),
+        exerciseFor(exercise, language, goal: item),
+  ]) {
+    final exercises when warmups != null => warmedUpAll(
+      exercises,
+      const [],
+      warmups,
+    ),
+    final exercises => exercises,
+  }),
 );
 
 /// [current] doing [replacement] instead, in the same place and group. Its

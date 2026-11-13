@@ -1,6 +1,5 @@
 import '../../exercises/domain/vocabulary.dart';
 import '../../programs/domain/program.dart';
-import '../../settings/domain/user_settings.dart';
 import 'warmups.dart';
 import 'workout.dart';
 
@@ -106,30 +105,35 @@ WorkoutSet? lastTimeSet(
 /// value comes from the first that has it: the closest done set of the same
 /// type before it in this workout, the same set last time (see
 /// [lastTimeSet]), the program's target (the bottom of its rep range). A
-/// warm-up only follows the warm-up before it; with [warmupUnit], a warm-up
-/// of an exercise that [takesWarmups] is instead [rampedWarmup] from the
-/// first working set's weight (as entered, else as suggested), once that
-/// is known.
+/// warm-up only follows the warm-up before it; with [ramp], a warm-up of
+/// an exercise that [takesWarmups] is instead [rampedWarmup] by its
+/// position from the first working set's weight (as entered, else as
+/// suggested), once that is known.
 SetValues suggestedValues(
   WorkoutExercise exercise,
   int index,
   List<WorkoutSet> lastSets, {
-  WeightUnit? warmupUnit,
+  WarmupRamp? ramp,
 }) {
   final set = exercise.sets.elementAtOrNull(index);
   if (set == null) return (weightKg: null, reps: null, durationS: null);
   final first = exercise.sets.indexWhere((s) => !s.isWarmup);
   if (set.isWarmup &&
-      warmupUnit != null &&
+      ramp != null &&
       takesWarmups(exercise.loggingType) &&
       first >= 0) {
     final working =
         exercise.sets[first].weightKg ??
         suggestedValues(exercise, first, lastSets).weightKg;
     final position = exercise.sets.take(index).where((s) => s.isWarmup);
-    final ramp = rampedWarmup(position.length, working, warmupUnit);
-    if (ramp != null) {
-      return (weightKg: ramp.weightKg, reps: ramp.reps, durationS: null);
+    final ramped = rampedWarmup(
+      position.length,
+      working,
+      ramp.unit,
+      ramp.steps,
+    );
+    if (ramped != null) {
+      return (weightKg: ramped.weightKg, reps: ramped.reps, durationS: null);
     }
   }
   final previous = exercise.sets

@@ -141,6 +141,121 @@ class RestTimerSettings extends Equatable {
   List<Object?> get props => [enabled, defaultS, notify];
 }
 
+/// One automatic warm-up set: [percent] of the first working set's weight
+/// for [reps].
+class WarmupStep extends Equatable {
+  const WarmupStep(this.percent, this.reps);
+
+  final int percent;
+  final int reps;
+
+  @override
+  List<Object?> get props => [percent, reps];
+}
+
+/// Limits of a custom warm-up scheme.
+abstract final class WarmupLimits {
+  static const maxSets = 5;
+  static const minPercent = 10;
+  static const maxPercent = 95;
+  static const minReps = 1;
+  static const maxReps = 20;
+}
+
+/// What keeps a warm-up step from being kept.
+enum WarmupStepIssue { percentOutOfRange, repsOutOfRange }
+
+/// Why [step] is not within [WarmupLimits]; empty when it is.
+Set<WarmupStepIssue> validateWarmupStep(WarmupStep step) => {
+  if (step.percent < WarmupLimits.minPercent ||
+      step.percent > WarmupLimits.maxPercent)
+    WarmupStepIssue.percentOutOfRange,
+  if (step.reps < WarmupLimits.minReps || step.reps > WarmupLimits.maxReps)
+    WarmupStepIssue.repsOutOfRange,
+};
+
+/// Which warm-up sets exercises start with (`settings.warmups.scheme`).
+enum WarmupScheme {
+  off([]),
+  light([WarmupStep(60, 6)]),
+  standard([WarmupStep(50, 8), WarmupStep(75, 4)]),
+  full([WarmupStep(40, 8), WarmupStep(60, 5), WarmupStep(80, 2)]),
+
+  /// [WarmupSettings.custom].
+  custom([]);
+
+  const WarmupScheme(this.presetSteps);
+
+  /// A preset's sets; none for [off] and [custom].
+  final List<WarmupStep> presetSteps;
+}
+
+/// Which exercises get warm-ups (`settings.warmups.scope`).
+enum WarmupScope {
+  every,
+
+  /// Only an exercise whose main muscle no earlier exercise of the workout
+  /// has.
+  firstPerMuscle,
+}
+
+/// The automatic warm-up sets (`settings.warmups`).
+class WarmupSettings extends Equatable {
+  const WarmupSettings({
+    this.scheme = WarmupScheme.standard,
+    this.custom = const [],
+    this.scope = WarmupScope.every,
+  });
+
+  final WarmupScheme scheme;
+
+  /// The custom sets in the order entered, 1 to [WarmupLimits.maxSets],
+  /// each within [WarmupLimits]; kept while another scheme is chosen.
+  final List<WarmupStep> custom;
+  final WarmupScope scope;
+
+  /// The sets added to an exercise; none when off.
+  List<WarmupStep> get steps =>
+      scheme == WarmupScheme.custom ? custom : scheme.presetSteps;
+
+  /// The sets warm-ups follow by position for their suggestions; off,
+  /// warm-ups added by hand follow the standard ones.
+  List<WarmupStep> get rampSteps =>
+      steps.isEmpty ? WarmupScheme.standard.presetSteps : steps;
+
+  /// Custom, starting from the current sets when there is no custom yet.
+  WarmupSettings toCustom() => WarmupSettings(
+    scheme: WarmupScheme.custom,
+    custom: custom.isEmpty ? rampSteps : custom,
+    scope: scope,
+  );
+
+  WarmupSettings copyWith({
+    WarmupScheme? scheme,
+    List<WarmupStep>? custom,
+    WarmupScope? scope,
+  }) => WarmupSettings(
+    scheme: scheme ?? this.scheme,
+    custom: custom ?? this.custom,
+    scope: scope ?? this.scope,
+  );
+
+  @override
+  List<Object?> get props => [scheme, custom, scope];
+}
+
+/// The set "Add warm-up set" appends after [steps]: midway from the last
+/// one to 90 % (on 5 %), half its reps; 50 % × 8 for the first.
+WarmupStep nextWarmupStep(List<WarmupStep> steps) {
+  final last = steps.lastOrNull;
+  if (last == null) return const WarmupStep(50, 8);
+  final percent = (((last.percent + 90) / 2) / 5).round() * 5;
+  return WarmupStep(
+    percent.clamp(WarmupLimits.minPercent, WarmupLimits.maxPercent),
+    (last.reps ~/ 2).clamp(WarmupLimits.minReps, WarmupLimits.maxReps),
+  );
+}
+
 /// A local time of day, in minutes after midnight, for reminders.
 abstract final class ReminderTime {
   static const max = 24 * 60 - 1;
@@ -224,7 +339,7 @@ class UserSettings extends Equatable {
     this.themePreference = ThemePreference.system,
     this.effortScale = EffortScale.byFeel,
     this.restTimer = const RestTimerSettings(),
-    this.autoWarmups = true,
+    this.warmups = const WarmupSettings(),
     this.seenTips = const {},
     this.stepGoal = StepGoal.standard,
     this.workoutReminder = const WorkoutReminderSettings(),
@@ -251,9 +366,9 @@ class UserSettings extends Equatable {
   final EffortScale effortScale;
   final RestTimerSettings restTimer;
 
-  /// Whether exercises logged with a weight and reps start with two warm-up
-  /// sets in a workout in progress; see `withWarmups`.
-  final bool autoWarmups;
+  /// Which warm-up sets exercises logged with a weight and reps start with
+  /// in a workout in progress, and which exercises; see `warmedUp`.
+  final WarmupSettings warmups;
 
   /// The first-use tips dismissed, or no longer needed as the user did
   /// what they tell.
@@ -315,7 +430,7 @@ class UserSettings extends Equatable {
     ThemePreference? themePreference,
     EffortScale? effortScale,
     RestTimerSettings? restTimer,
-    bool? autoWarmups,
+    WarmupSettings? warmups,
     Set<Tip>? seenTips,
     int? stepGoal,
     WorkoutReminderSettings? workoutReminder,
@@ -329,7 +444,7 @@ class UserSettings extends Equatable {
     themePreference: themePreference ?? this.themePreference,
     effortScale: effortScale ?? this.effortScale,
     restTimer: restTimer ?? this.restTimer,
-    autoWarmups: autoWarmups ?? this.autoWarmups,
+    warmups: warmups ?? this.warmups,
     seenTips: seenTips ?? this.seenTips,
     stepGoal: stepGoal ?? this.stepGoal,
     workoutReminder: workoutReminder ?? this.workoutReminder,
@@ -347,7 +462,7 @@ class UserSettings extends Equatable {
     themePreference: themePreference,
     effortScale: effortScale,
     restTimer: restTimer,
-    autoWarmups: autoWarmups,
+    warmups: warmups,
     seenTips: seenTips,
     stepGoal: stepGoal,
     customTrackedMeasurements: customTrackedMeasurements,
@@ -362,7 +477,7 @@ class UserSettings extends Equatable {
     themePreference,
     effortScale,
     restTimer,
-    autoWarmups,
+    warmups,
     seenTips,
     stepGoal,
     workoutReminder,

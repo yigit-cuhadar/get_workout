@@ -2,31 +2,60 @@ import '../../exercises/domain/vocabulary.dart';
 import '../../settings/domain/user_settings.dart';
 import 'workout.dart';
 
-/// The automatic warm-ups, lightest first: the share of the first working
-/// set's weight each lifts, and its reps. Warm-ups past the last repeat it.
-const warmupRamp = [(share: 0.5, reps: 8), (share: 0.75, reps: 4)];
+/// What warm-up suggestions follow: the user's unit and the sets of their
+/// scheme ([WarmupSettings.rampSteps]).
+typedef WarmupRamp = ({WeightUnit unit, List<WarmupStep> steps});
 
 /// Whether exercises of [type] start with automatic warm-ups: only those
 /// lifting a load for reps. Bodyweight ones (added weight or assistance
 /// included) and timed ones do not.
 bool takesWarmups(LoggingType type) => type == LoggingType.weightReps;
 
-/// [exercise] starting with the warm-ups of [warmupRamp], all empty: when
-/// [takesWarmups], it has no warm-up yet and they fit in
-/// [WorkoutLimits.maxSets].
-WorkoutExercise withWarmups(WorkoutExercise exercise) {
+/// [exercise] as it enters a workout whose exercises [before] it are
+/// [before], starting with one empty warm-up per set of [settings]' scheme:
+/// when [takesWarmups], it has no warm-up yet, they fit in
+/// [WorkoutLimits.maxSets], and with [WarmupScope.firstPerMuscle] no
+/// exercise before it has its main muscle (the first of its main muscles;
+/// one without is a group of its own).
+WorkoutExercise warmedUp(
+  WorkoutExercise exercise,
+  List<WorkoutExercise> before,
+  WarmupSettings settings,
+) {
+  final steps = settings.steps;
   final sets = exercise.sets;
-  if (!takesWarmups(exercise.loggingType) ||
+  if (steps.isEmpty ||
+      !takesWarmups(exercise.loggingType) ||
       sets.any((set) => set.isWarmup) ||
-      sets.length + warmupRamp.length > WorkoutLimits.maxSets) {
+      sets.length + steps.length > WorkoutLimits.maxSets) {
+    return exercise;
+  }
+  final muscle = exercise.mainMuscles.firstOrNull;
+  if (settings.scope == WarmupScope.firstPerMuscle &&
+      muscle != null &&
+      before.any((e) => e.mainMuscles.firstOrNull == muscle)) {
     return exercise;
   }
   return exercise.copyWith(
     sets: [
-      for (final _ in warmupRamp) const WorkoutSet(type: SetType.warmup),
+      for (final _ in steps) const WorkoutSet(type: SetType.warmup),
       ...sets,
     ],
   );
+}
+
+/// [exercises] entering a workout after [before], each [warmedUp] against
+/// the ones before it, in order.
+List<WorkoutExercise> warmedUpAll(
+  List<WorkoutExercise> exercises,
+  List<WorkoutExercise> before,
+  WarmupSettings settings,
+) {
+  final result = <WorkoutExercise>[];
+  for (final exercise in exercises) {
+    result.add(warmedUp(exercise, [...before, ...result], settings));
+  }
+  return result;
 }
 
 /// [swapped], made from [before] by `swapExercise`, without the warm-ups
@@ -54,22 +83,24 @@ double warmupStepKg(WeightUnit unit) => unit.toKg(switch (unit) {
 });
 
 /// Warm-up [position] (0 for the first) of an exercise whose first working
-/// set lifts [workingKg], as [warmupRamp] has it: its share of the weight
-/// rounded to [warmupStepKg] in [unit], never below one step nor above
-/// [workingKg]. Null while [workingKg] is unknown or 0.
+/// set lifts [workingKg], as [steps] have it (past the last, the last): its
+/// share of the weight rounded to [warmupStepKg] in [unit], never below one
+/// step nor above [workingKg]. Null while [workingKg] is unknown or 0, or
+/// without [steps].
 ({double weightKg, int reps})? rampedWarmup(
   int position,
   double? workingKg,
   WeightUnit unit,
+  List<WarmupStep> steps,
 ) {
-  if (workingKg == null || !(workingKg > 0)) return null;
-  final ramp = warmupRamp[position.clamp(0, warmupRamp.length - 1)];
-  final step = unit.fromKg(warmupStepKg(unit));
+  if (workingKg == null || !(workingKg > 0) || steps.isEmpty) return null;
+  final step = steps[position.clamp(0, steps.length - 1)];
+  final unitStep = unit.fromKg(warmupStepKg(unit));
   final working = unit.fromKg(workingKg);
-  final rounded = (working * ramp.share / step).round() * step;
-  final weight = rounded < step ? step : rounded;
+  final rounded = (working * step.percent / 100 / unitStep).round() * unitStep;
+  final weight = rounded < unitStep ? unitStep : rounded;
   return (
     weightKg: weight > working ? workingKg : unit.toKg(weight),
-    reps: ramp.reps,
+    reps: step.reps,
   );
 }

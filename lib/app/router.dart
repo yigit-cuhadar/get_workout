@@ -47,6 +47,7 @@ import '../features/programs/presentation/program_builder_page.dart';
 import '../features/programs/presentation/program_detail_page.dart';
 import '../features/programs/presentation/programs_page.dart';
 import '../features/progress/presentation/progress_page.dart';
+import '../features/settings/presentation/warmup_settings_page.dart';
 import '../features/steps/presentation/steps_page.dart';
 import '../features/strength/presentation/exercise_strength_page.dart';
 import '../features/strength/presentation/strength_list_page.dart';
@@ -167,6 +168,9 @@ abstract final class Routes {
   static const accountAuth = '$account/auth';
   static const accountSignIn = '$accountAuth?mode=sign-in';
   static const accountDelete = '$account/delete';
+
+  /// The automatic warm-up sets, from the settings.
+  static const warmupSettings = '$profile/warmups';
 
   static const profileDetails = '$profile/details';
   static String profileQuestion(ProfileField field) =>
@@ -618,6 +622,10 @@ GoRouter buildRouter(
                     builder: (_, _) => const DeleteAccountPage(),
                   ),
                 ],
+              ),
+              GoRoute(
+                path: 'warmups',
+                builder: (_, _) => const WarmupSettingsPage(),
               ),
               GoRoute(
                 path: 'details',

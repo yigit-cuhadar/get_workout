@@ -32,6 +32,17 @@ class FirestoreSettingsRepository implements SettingsRepository {
     EffortScale.rir: 'rir',
     EffortScale.rpe: 'rpe',
   };
+  static const _schemeCodes = {
+    WarmupScheme.off: 'off',
+    WarmupScheme.light: 'light',
+    WarmupScheme.standard: 'standard',
+    WarmupScheme.full: 'full',
+    WarmupScheme.custom: 'custom',
+  };
+  static const _scopeCodes = {
+    WarmupScope.every: 'every',
+    WarmupScope.firstPerMuscle: 'firstPerMuscle',
+  };
   static const _tipCodes = {
     Tip.effort: 'effort',
     Tip.setTypes: 'setTypes',
@@ -79,10 +90,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
           ? EffortScale.byFeel
           : _decode(_effortCodes, map['effortScale'], defaults.effortScale),
       restTimer: _restTimer(map['restTimer']),
-      autoWarmups: switch (map['autoWarmups']) {
-        final bool on => on,
-        _ => defaults.autoWarmups,
-      },
+      warmups: _warmups(map['warmups'], map['autoWarmups']),
       seenTips: _tips(map['seenTips']),
       stepGoal: _stepGoal(map['stepGoal']),
       workoutReminder: _workoutReminder(map['reminders']),
@@ -116,7 +124,16 @@ class FirestoreSettingsRepository implements SettingsRepository {
       'defaultS': settings.restTimer.defaultS,
       'notify': ?settings.restTimer.notify,
     },
-    'autoWarmups': settings.autoWarmups,
+    'warmups': {
+      'scheme': _schemeCodes[settings.warmups.scheme],
+      'custom': [
+        for (final step in settings.warmups.custom)
+          {'percent': step.percent, 'reps': step.reps},
+      ],
+      'scope': _scopeCodes[settings.warmups.scope],
+    },
+    // What app versions before the schemes read.
+    'autoWarmups': settings.warmups.scheme != WarmupScheme.off,
     'stepGoal': settings.stepGoal,
     'reminders': {
       'workout': {
@@ -147,6 +164,40 @@ class FirestoreSettingsRepository implements SettingsRepository {
   static Set<BodyMeasurement>? _measurements(Object? raw) => raw is List
       ? {for (final code in raw) ?BodyMeasurement.fromCode(code)}
       : null;
+
+  /// The warm-up settings; without them (written before schemes), the old
+  /// switch [legacy]: off reads as off, on or missing as the defaults.
+  /// Malformed custom sets are dropped and values clamped; a custom scheme
+  /// left without sets reads as standard.
+  WarmupSettings _warmups(Object? raw, Object? legacy) {
+    final fallback = defaults.warmups;
+    if (raw is! Map) {
+      return legacy == false
+          ? fallback.copyWith(scheme: WarmupScheme.off)
+          : fallback;
+    }
+    final custom = [
+      if (raw['custom'] case final List<Object?> entries)
+        for (final entry in entries)
+          if (entry case {'percent': final num percent, 'reps': final num reps}
+              when percent.isFinite && reps.isFinite)
+            WarmupStep(
+              percent.round().clamp(
+                WarmupLimits.minPercent,
+                WarmupLimits.maxPercent,
+              ),
+              reps.round().clamp(WarmupLimits.minReps, WarmupLimits.maxReps),
+            ),
+    ].take(WarmupLimits.maxSets).toList();
+    final scheme = _decode(_schemeCodes, raw['scheme'], fallback.scheme);
+    return WarmupSettings(
+      scheme: scheme == WarmupScheme.custom && custom.isEmpty
+          ? WarmupScheme.standard
+          : scheme,
+      custom: custom,
+      scope: _decode(_scopeCodes, raw['scope'], fallback.scope),
+    );
+  }
 
   /// Unknown codes are dropped; anything but a list reads as none seen.
   static Set<Tip> _tips(Object? raw) => raw is List

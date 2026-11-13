@@ -4,6 +4,7 @@ import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_validation.dart';
+import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_editing.dart';
 
@@ -46,7 +47,7 @@ void main() {
       dayIndex: 0,
       catalogue: catalogue,
       language: 'en',
-      warmups: false,
+      warmups: null,
     );
 
     test('copies the exercises with their goals and empty sets', () {
@@ -70,7 +71,7 @@ void main() {
         dayIndex: 0,
         catalogue: catalogue,
         language: 'en',
-        warmups: true,
+        warmups: const WarmupSettings(),
       );
       expect(warmed.exercises.map((e) => e.sets.length), [6, 5, 3]);
       expect(warmed.exercises.first.sets.take(2).map((s) => s.type), [

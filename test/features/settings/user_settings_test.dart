@@ -190,4 +190,62 @@ void main() {
       }
     });
   });
+
+  group('warm-up settings', () {
+    test('each scheme has its sets; off has none but ramps as standard', () {
+      List<WarmupStep> steps(WarmupScheme scheme) =>
+          WarmupSettings(scheme: scheme).steps;
+      expect(steps(WarmupScheme.off), isEmpty);
+      expect(steps(WarmupScheme.light), [const WarmupStep(60, 6)]);
+      expect(steps(WarmupScheme.standard), [
+        const WarmupStep(50, 8),
+        const WarmupStep(75, 4),
+      ]);
+      expect(steps(WarmupScheme.full), [
+        const WarmupStep(40, 8),
+        const WarmupStep(60, 5),
+        const WarmupStep(80, 2),
+      ]);
+      expect(
+        const WarmupSettings(scheme: WarmupScheme.off).rampSteps,
+        steps(WarmupScheme.standard),
+      );
+    });
+
+    test('custom starts from the scheme chosen, then keeps its own', () {
+      const full = WarmupSettings(scheme: WarmupScheme.full);
+      expect(full.toCustom().steps, WarmupScheme.full.presetSteps);
+      const own = WarmupSettings(custom: [WarmupStep(30, 10)]);
+      expect(own.toCustom().steps, [const WarmupStep(30, 10)]);
+      expect(
+        const WarmupSettings(scheme: WarmupScheme.off).toCustom().steps,
+        WarmupScheme.standard.presetSteps,
+      );
+    });
+
+    test('a set is checked against the limits', () {
+      expect(validateWarmupStep(const WarmupStep(10, 1)), isEmpty);
+      expect(validateWarmupStep(const WarmupStep(95, 20)), isEmpty);
+      expect(validateWarmupStep(const WarmupStep(9, 21)), {
+        WarmupStepIssue.percentOutOfRange,
+        WarmupStepIssue.repsOutOfRange,
+      });
+      expect(validateWarmupStep(const WarmupStep(96, 0)), {
+        WarmupStepIssue.percentOutOfRange,
+        WarmupStepIssue.repsOutOfRange,
+      });
+    });
+
+    test('an added set goes midway to 90 % with half the reps', () {
+      expect(nextWarmupStep(const []), const WarmupStep(50, 8));
+      expect(
+        nextWarmupStep(const [WarmupStep(50, 8), WarmupStep(75, 4)]),
+        const WarmupStep(85, 2),
+      );
+      expect(
+        nextWarmupStep(const [WarmupStep(95, 1)]),
+        const WarmupStep(95, 1),
+      );
+    });
+  });
 }
