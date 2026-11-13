@@ -865,6 +865,29 @@ from the earlier FitLab app.
   changes (an edit left as it opened, a page that saved), other tabs'
   stacks, pushes and tab switches are left alone. Back and the guard share
   one prompt per page, so nothing asks twice.
+- **UX pass** (2026-11-13, owner's call): before the design phase the
+  structure and flows are reworked with the default theme, as ordinary
+  features (Group 10). Subscription stays open meanwhile; the paywall's
+  layout is part of the pass. No feature is removed, only moved. Target
+  navigation, replacing the five tabs above once built:
+  - **Today**: next workout, week strip, the body model as a heat map of
+    this week's sets, steps card. No quick actions card and no weight card.
+  - **Train**: Programs and Exercises merged, two views. "My program"
+    (active program, its days, other programs: catalogue, generator, new;
+    start an empty workout) and "Exercises" (model, list, search, filters,
+    sort, favourites, custom exercises). A muscle's exercise list opens under
+    the model, which stays visible.
+  - **Progress**: data cards instead of a menu. Calendar (workout history
+    joins it: detail, edit, delete, add a past workout), strength, body
+    (weight, measurement days, photos, compare), cardio, step history.
+  - **Profile**: account (guests see a create-account card first), Premium,
+    profile answers, settings, calculators.
+  - **Heat map**: one continuous ramp by weekly sets per muscle, neutral
+    when untrained, deepest at 20 sets and above; secondary muscles count
+    half as today. The 10-20 band is no longer on the model; it stays in
+    the detail a muscle opens (sets and the band bar).
+  - **One page per exercise**: instructions and its statistics (records,
+    e1RM chart) together; Progress links to the same page.
 - **Workouts on the device**: per user one JSON file
   (`workouts_<uid>.json` in the app's private support directory, versioned)
   holds the workout in progress, finished workouts the server has not
@@ -1633,6 +1656,14 @@ Group 9, launch readiness
 - [x] Notifications — workout and measurement reminders, FCM announcements
 - [ ] Subscription — paywall, RevenueCat, entitlement checks, restore
 - [x] Account — delete account, privacy policy link, analytics consent
+
+Group 10, UX pass (see Decisions; each flow's layout is picked by the owner from wireframe variants before it is built)
+- [ ] Navigation — four tabs (Today / Train / Progress / Profile), Programs and Exercises merged, quick actions moved to their tabs — every existing screen is still reachable
+- [ ] Today — next workout, week strip, heat-map model with muscle detail, steps card
+- [ ] Progress — data cards; history inside the calendar; one page per exercise with its statistics
+- [ ] Onboarding — short enough that nobody quits; the rest asked when first needed
+- [ ] Workout screen — set entry, rest and effort without crowding; summary shows records and the model
+- [ ] Paywall — layout only; RevenueCat stays with Subscription
 
 ## Design
 
