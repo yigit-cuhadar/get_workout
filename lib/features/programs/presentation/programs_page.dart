@@ -15,9 +15,10 @@ import 'missed_day_prompt.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
 
-/// Train's "My program" view: the active program with this week's plan,
-/// then the ways into the ready-made programs, the generator and the
-/// builder and an empty workout, then the other programs. The page around
+/// Train's "My program" view: the active program's card with the next
+/// workout and this week's days, then the ways into the ready-made
+/// programs, the generator and the builder and an empty workout, then the
+/// other programs. The page around
 /// it gives the app bar.
 class ProgramsPage extends StatelessWidget {
   const ProgramsPage({super.key});
@@ -81,36 +82,145 @@ class _Programs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final active = state.activeProgram;
     final others = state.otherPrograms;
-    final access = active == null ? null : state.access(active);
     return ListView(
-      padding: const EdgeInsets.only(bottom: Gap.md),
+      padding: const EdgeInsets.all(Gap.md),
       children: [
-        if (active != null) ...[
-          _Header(l10n.programActive),
-          _ProgramTile(
-            active,
-            locked: access == ProgramAccess.locked,
-            subtitle: state.finished
-                ? l10n.programFinished
-                : l10n.weekdayList(
-                    state.active!.weekdays,
-                    context.watchFirstWeekday(),
-                  ),
+        if (state.activeProgram != null) ...[
+          _ActiveProgramCard(state),
+          const SizedBox(height: Gap.md),
+        ],
+        Card(
+          margin: EdgeInsets.zero,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.auto_awesome_outlined),
+                title: Text(l10n.catalogueTitle),
+                subtitle: Text(l10n.catalogueEntryInfo),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.go(Routes.catalogue),
+              ),
+              const GeneratorEntry(),
+              ListTile(
+                leading: const Icon(Icons.add),
+                title: Text(l10n.programNew),
+                subtitle: Text(l10n.programNewInfo),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.go(Routes.programNew),
+              ),
+              ListTile(
+                leading: const Icon(Icons.play_arrow),
+                title: Text(l10n.workoutStartEmpty),
+                onTap: () => startFreeWorkout(context),
+              ),
+            ],
           ),
+        ),
+        if (state.programs.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: Gap.md),
+            child: Text(l10n.programsEmpty),
+          ),
+        if (others.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, Gap.lg, 0, Gap.sm),
+            child: Text(
+              state.activeProgram == null
+                  ? l10n.programsMine
+                  : l10n.programsOther,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
+          Card(
+            margin: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (final program in others)
+                  _ProgramTile(
+                    program,
+                    locked: state.access(program) == ProgramAccess.locked,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// The active program: its name, which opens it, where it stands, the next
+/// workout with the one Start of a program day here, a missed day's prompt
+/// and this week's days with their state.
+class _ActiveProgramCard extends StatelessWidget {
+  const _ActiveProgramCard(this.state);
+  final ProgramListState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final program = state.activeProgram!;
+    final access = state.access(program);
+    final weeks = program.lengthWeeks;
+    final week = state.week;
+    final progress = state.finished
+        ? l10n.programFinished
+        : [
+            if (week != null)
+              weeks == null
+                  ? l10n.programWeekNumber(week)
+                  : l10n.programWeekOf(week, weeks),
+            l10n.weekdayList(
+              state.active!.weekdays,
+              context.watchFirstWeekday(),
+            ),
+          ].join(' · ');
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ListTile(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.programActive,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                Text(program.name, style: theme.textTheme.titleMedium),
+              ],
+            ),
+            subtitle: Text(progress),
+            trailing: access == ProgramAccess.locked
+                ? Icon(
+                    Icons.lock_outline,
+                    semanticLabel: l10n.catalogueLockedLabel,
+                  )
+                : const Icon(Icons.chevron_right),
+            onTap: () => context.go(Routes.program(program.id!)),
+          ),
+          if (!state.finished && weeks != null && week != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+              child: LinearProgressIndicator(value: week / weeks),
+            ),
           // Locked, it opens the paywall instead.
           if (state.nextDayIndex case final day?)
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Gap.md,
-                vertical: Gap.sm,
-              ),
+              padding: const EdgeInsets.fromLTRB(Gap.md, Gap.md, Gap.md, 0),
               child: ForgeButton(
                 label: l10n.workoutStartDay(
-                  l10n.dayName(active.days[day], day),
+                  l10n.dayName(program.days[day], day),
                 ),
-                onPressed: () => startProgramDay(context, active, day),
+                onPressed: () => startProgramDay(context, program, day),
               ),
             ),
           // Kept, not stopped: it carries on once premium is back.
@@ -130,83 +240,41 @@ class _Programs extends StatelessWidget {
           else ...[
             if (state.missed case final missed?)
               MissedDayPrompt(
-                program: active,
+                program: program,
                 missed: missed,
                 moveDate: state.moveDate!,
                 busy: state.resolving,
               ),
-            if (!state.finished)
-              _WeekPlan(program: active, plan: state.weekPlan),
+            if (!state.finished) ...[
+              const SizedBox(height: Gap.sm),
+              _WeekPlan(state),
+            ],
+            const SizedBox(height: Gap.sm),
           ],
         ],
-        ListTile(
-          leading: const Icon(Icons.auto_awesome_outlined),
-          title: Text(l10n.catalogueTitle),
-          subtitle: Text(l10n.catalogueEntryInfo),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.go(Routes.catalogue),
-        ),
-        const GeneratorEntry(),
-        ListTile(
-          leading: const Icon(Icons.add),
-          title: Text(l10n.programNew),
-          subtitle: Text(l10n.programNewInfo),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.go(Routes.programNew),
-        ),
-        ListTile(
-          leading: const Icon(Icons.play_arrow),
-          title: Text(l10n.workoutStartEmpty),
-          onTap: () => startFreeWorkout(context),
-        ),
-        if (state.programs.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(Gap.md),
-            child: Text(l10n.programsEmpty),
-          ),
-        if (others.isNotEmpty) ...[
-          _Header(active == null ? l10n.programsMine : l10n.programsOther),
-          for (final program in others)
-            _ProgramTile(
-              program,
-              locked: state.access(program) == ProgramAccess.locked,
-            ),
-        ],
-      ],
+      ),
     );
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => ListTile(
-    dense: true,
-    title: Text(text, style: Theme.of(context).textTheme.titleSmall),
-  );
-}
-
 class _ProgramTile extends StatelessWidget {
-  const _ProgramTile(this.program, {required this.locked, this.subtitle});
+  const _ProgramTile(this.program, {required this.locked});
 
   final Program program;
   final bool locked;
-  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final weeks = program.lengthWeeks;
-    final details = [
-      l10n.programDayCount(program.days.length),
-      if (weeks != null) l10n.programWeekCount(weeks),
-    ].join(' · ');
     return ListTile(
       title: Text(program.name),
-      subtitle: Text(subtitle == null ? details : '$subtitle\n$details'),
-      isThreeLine: subtitle != null,
+      subtitle: Text(
+        [
+          l10n.programDayCount(program.days.length),
+          if (weeks != null) l10n.programWeekCount(weeks),
+        ].join(' · '),
+      ),
       trailing: locked
           ? Icon(Icons.lock_outline, semanticLabel: l10n.catalogueLockedLabel)
           : const Icon(Icons.chevron_right),
@@ -215,26 +283,30 @@ class _ProgramTile extends StatelessWidget {
   }
 }
 
-/// This week, one row per planned or done program day.
+/// This week's planned and done days of the active program, each with its
+/// state; none starts, the next workout above does.
 class _WeekPlan extends StatelessWidget {
-  const _WeekPlan({required this.program, required this.plan});
-
-  final Program program;
-  final List<PlannedDay> plan;
+  const _WeekPlan(this.state);
+  final ProgramListState state;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final program = state.activeProgram!;
+    final plan = state.weekPlan;
     if (plan.isEmpty) {
       return ListTile(dense: true, title: Text(l10n.programWeekEmpty));
     }
+    bool isNext(PlannedDay day) =>
+        day.status == PlannedStatus.planned &&
+        day.dayIndex == state.nextDayIndex &&
+        day.date == state.nextDate;
     return Column(
       children: [
         for (final day in plan)
           ListTile(
             dense: true,
-            leading: Text(l10n.weekdayShort(day.date.weekday)),
             title: Text(
               day.dayIndex < program.days.length
                   ? l10n.dayName(program.days[day.dayIndex], day.dayIndex)
@@ -251,6 +323,12 @@ class _WeekPlan extends StatelessWidget {
                 Icons.error_outline,
                 color: theme.colorScheme.error,
                 semanticLabel: l10n.programDayMissed,
+              ),
+              PlannedStatus.planned when isNext(day) => Text(
+                l10n.programDayNext,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
               ),
               PlannedStatus.planned => Icon(
                 Icons.schedule,

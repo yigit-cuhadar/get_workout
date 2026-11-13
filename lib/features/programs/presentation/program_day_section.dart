@@ -11,29 +11,53 @@ import '../domain/program.dart';
 import '../domain/program_editing.dart';
 import 'program_text.dart';
 
-/// One day of a program, read-only: its name, estimate and [action] if
-/// any, then its exercises. With [onExerciseTap], an exercise of the
-/// library opens.
+/// One day of a program, read-only: its name and estimate, then its
+/// exercises. With [onExerciseTap], an exercise of the library opens.
 class ProgramDaySection extends StatelessWidget {
   const ProgramDaySection({
     super.key,
     required this.day,
     required this.index,
     this.onExerciseTap,
-    this.action,
   });
 
   final ProgramDay day;
   final int index;
   final ValueChanged<String>? onExerciseTap;
 
-  /// Something to do with this day, e.g. start it.
-  final Widget? action;
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Divider(),
+        ListTile(
+          title: Text(
+            l10n.dayName(day, index),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          subtitle: day.items.isEmpty
+              ? null
+              : Text(l10n.estimateText(estimateDay(day))),
+        ),
+        ProgramDayItems(day: day, onExerciseTap: onExerciseTap),
+      ],
+    );
+  }
+}
+
+/// A program day's exercises, one row each, with sets, rest and group.
+/// With [onExerciseTap], an exercise of the library opens.
+class ProgramDayItems extends StatelessWidget {
+  const ProgramDayItems({super.key, required this.day, this.onExerciseTap});
+
+  final ProgramDay day;
+  final ValueChanged<String>? onExerciseTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final unit = context.select(
       (SettingsCubit cubit) => cubit.state.settings.weightUnit,
     );
@@ -49,17 +73,6 @@ class ProgramDaySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Divider(),
-        ListTile(
-          title: Text(
-            l10n.dayName(day, index),
-            style: theme.textTheme.titleMedium,
-          ),
-          subtitle: day.items.isEmpty
-              ? null
-              : Text(l10n.estimateText(estimateDay(day))),
-          trailing: action,
-        ),
         for (final (i, item) in day.items.indexed)
           ListTile(
             dense: true,

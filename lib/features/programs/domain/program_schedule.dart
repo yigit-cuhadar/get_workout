@@ -92,6 +92,16 @@ class ProgramSchedule {
     return CalendarDate.of(active.startedAt.toLocal()).addDays(weeks * 7);
   }
 
+  /// The program's week [today] falls in, counted in whole weeks from the
+  /// date it was started (as [end] is), from 1 and at most [lengthWeeks].
+  int week(CalendarDate today) {
+    final started = CalendarDate.of(active.startedAt.toLocal());
+    final week = today.daysSince(started) ~/ 7 + 1;
+    final weeks = lengthWeeks;
+    if (week < 1) return 1;
+    return weeks != null && week > weeks ? weeks : week;
+  }
+
   /// Whether the program is over: the next day could only fall on or after
   /// [end].
   bool isFinished(CalendarDate today) {

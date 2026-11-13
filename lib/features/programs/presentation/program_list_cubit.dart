@@ -20,6 +20,7 @@ class ProgramListState extends Equatable {
     this.active,
     this.weekPlan = const [],
     this.finished = false,
+    this.week,
     this.nextDate,
     this.missed,
     this.moveDate,
@@ -43,6 +44,10 @@ class ProgramListState extends Equatable {
 
   /// The active program has run its length.
   final bool finished;
+
+  /// The active program's week as of today, from 1 (see
+  /// [ProgramSchedule.week]); null without an active program.
+  final int? week;
 
   /// The date [nextDayIndex] is planned for as of today: the first of the
   /// program's upcoming days, so a missed day falls on today or the next
@@ -104,6 +109,7 @@ class ProgramListState extends Equatable {
     active: active,
     weekPlan: weekPlan,
     finished: finished,
+    week: week,
     nextDate: nextDate,
     missed: missed,
     moveDate: moveDate,
@@ -123,6 +129,7 @@ class ProgramListState extends Equatable {
     active,
     weekPlan,
     finished,
+    week,
     nextDate,
     missed,
     moveDate,
@@ -343,6 +350,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
             ) ??
             const [],
         finished: finished,
+        week: schedule?.week(today),
         nextDate: finished ? null : schedule?.upcoming(today).firstOrNull?.date,
         missed: missed
             ? PlannedDay(

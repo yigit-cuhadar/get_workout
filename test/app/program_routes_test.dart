@@ -309,6 +309,9 @@ void main() {
 
     await tap(tester, find.text('Leg Day'));
     expect(find.byType(ProgramDetailPage), findsOneWidget);
+    // Not active, so no day is open.
+    expect(find.text('Back Squat'), findsNothing);
+    await tap(tester, find.text('Legs'));
     expect(find.text('Back Squat'), findsOneWidget);
     expect(path(), Routes.program('p1'));
 
@@ -495,7 +498,7 @@ void main() {
     programs.add([stored]);
     await tester.pumpAndSettle();
     expect(find.text('Leg Day'), findsOneWidget);
-    expect(find.text('Back Squat'), findsOneWidget);
+    expect(find.text('Legs'), findsOneWidget);
   });
 
   testWidgets('the name field stops at the limit validation uses', (

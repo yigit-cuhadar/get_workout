@@ -212,12 +212,31 @@ from the earlier FitLab app.
   Firestore rules validate the top-level fields only (`name`, `days` count,
   `origin`); the app validates days and items. Items whose exercise's
   logging type changed are fitted to the new type when the builder loads
-  them, and the user is told. Train's "My program" view shows the active
-  program first (its schedule, Start and this week's days), then four
-  rows, the same with or without programs: ready-made programs, the
-  generator, "New program" (the builder) and "Start empty workout"; then
-  the other programs. Without an active program the rows come first; no
-  floating button. "Add to program" on an exercise without programs opens
+  them, and the user is told. Train's "My program" view (UX pass,
+  2026-11-13, variant A) shows the active program first as one card: "Active
+  program" and its name (opening its page, a lock when it is a locked
+  premium copy), "Week n of N · <weekdays>" ("Week n" without a length,
+  "Finished" once it ran its length; weeks count from the start date, as
+  the length does, `ProgramSchedule.week`) with a progress bar when it has
+  a length, the next workout's Start <day> (the one Start of a program day
+  in this view), the locked notice or the missed-day prompt, then this
+  week's days by date, each Done, Missed, Next or planned, without Start;
+  another day than the next starts from its card on the program page. Then
+  one card with four rows, the same with or without programs: ready-made
+  programs, the generator (locked without premium), "New program" (the
+  builder) and "Start empty workout"; then the other programs ("Your
+  programs" without an active one) with their days and length. Without an
+  active program the rows come first; no floating button.
+- **Program page** (UX pass, 2026-11-13, variant B): Edit and a menu with
+  Duplicate and Delete in the app bar; a summary card with the state
+  (Active, Not active or Finished), length and day count, the weekdays and
+  a days mismatch warning while active, then Start program, or Change days
+  and Stop, or the premium lock (Start locked, or the active copy locked
+  with Stop still allowed); then one card per day with its exercise count
+  and estimate, ▶ to start that day (the premium gate for a locked copy)
+  and a toggle that shows its exercises. Which days are open is the page's
+  view state, never stored: the next day while the program is active,
+  none otherwise. "Add to program" on an exercise without programs opens
   the builder: inside Train it is pushed above the exercise and saving or
   leaving returns there (`Routes.programNewReturning`), so the exercise
   can be added; from a workout or the history it opens in Train as before. In the builder, Add
@@ -235,7 +254,8 @@ from the earlier FitLab app.
   volume, Cardio (summary, 12-week chart, week headers, Progress card), the
   Body chart's weekly bars and step averages, the Steps "This week" chart,
   the program week plan (and so the done days the workout reminders know),
-  and the order of weekdays in the program day picker, "Active · ..." and
+  and the order of weekdays in the program day picker, the weekdays of the
+  My program card and the program page, and
   the measurement reminder's day. Settings → Appearance → "Week starts on":
   Automatic (default, shown as "Automatic (Monday)" with the day it gives),
   Monday, Sunday or Saturday (`settings.weekStart`, written only when not
@@ -1822,7 +1842,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Train, exercises view — model with a search box; one list page with search, filters, sort and +, opened by the box or filtered by a tapped muscle
 - [x] Onboarding — a welcome page, then one question per page, all nine mandatory: goal, level, days, equipment, sex, birth year, height, weight, target weight. Choice questions are a list anchored to the bottom; number questions use a ruler
 - [x] Today — week card, one prominent workout card with the only Start of a program day, sets this week for four muscles with the total, a calculators card with a chip per calculator, then steps with the goal and a bar
-- [ ] Train, My program — the day list has no Start; Ready-made, Generate, New program and Start empty workout stay
+- [x] Train, My program — the day list has no Start; Ready-made, Generate, New program and Start empty workout stay
 - [x] Workout, set entry — minus/plus steppers; tapping the number types it
 - [x] Workout, rest — after a set the panel asks the effort (four options in a grid plus Failed, one line of explanation each, Skip) above a slim timer bar; the RPE scale uses the same layout with RPE 6 or less, 7, 8, 9, 10 and Failed. Once answered only the timer bar shows (time, +15 s, Skip); the next set's entry appears when the rest ends or is skipped
 - [x] Progress — one small widget per area, each opening its page: Body (last weight, curve, last body fat, Log weight, Measurement day), the calendar week, weekly volume, strength, cardio, steps with a bar
@@ -1833,7 +1853,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Workout summary — one prominent card with the name and four stats, records below, Done and Save as program at the bottom
 - [ ] Profile — every setting on one page in groups; Premium is a distinct card with Get Premium
 - [ ] Paywall — two layouts kept for an A/B test: plans as a list, plans as three cards side by side
-- [ ] Program detail — a summary card (state, weekdays, length, Change days, Stop), days collapse
+- [x] Program detail — a summary card (state, weekdays, length, Change days, Stop), days collapse
 - [ ] Program builder — stays as built: day chips, sets and reps in a sheet
 - [x] Exercise detail — model with main and secondary muscles, a table of facts (equipment, level, mechanic, pattern, sides, logged as, also called), Setup and How to do it as numbered steps, Common mistakes, Safety and Cues each as their own card, Note, then one Similar exercises list tagged Alternative or Variation. One Add button in the app bar (workout or program). The Records and progress row leaves this page; the strength page stays reachable from Progress
 - [x] Workout detail (history) — the summary card of the workout summary (date, program link, four stats), the workout note as its own card, sets as a table per exercise

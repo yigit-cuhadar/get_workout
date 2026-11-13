@@ -10,7 +10,9 @@ import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/presentation/first_weekday.dart';
 import '../../workout/presentation/start_workout.dart';
+import '../domain/active_program.dart';
 import '../domain/program.dart';
+import '../domain/program_editing.dart';
 import '../domain/program_schedule.dart';
 import 'program_detail_cubit.dart';
 import 'premium_prompt.dart';
@@ -19,8 +21,10 @@ import 'program_list_cubit.dart';
 import 'program_text.dart';
 import 'weekday_dialog.dart';
 
-/// One program: its days and exercises, and starting, stopping, editing,
-/// duplicating and deleting it. Taken from the shared list, so it opens at
+/// One program: a summary card with its state, length and weekdays and
+/// starting, rescheduling or stopping it, then its days, which open to their
+/// exercises and start any day; editing, duplicating and deleting it in the
+/// app bar. Taken from the shared list, so it opens at
 /// once from the list and also works from a bare link.
 class ProgramDetailPage extends StatefulWidget {
   const ProgramDetailPage({super.key, required this.id, this.created = false});
@@ -165,89 +169,24 @@ class _ProgramDetailView extends StatelessWidget {
             ],
           ),
           body: ListView(
-            padding: const EdgeInsets.symmetric(vertical: Gap.md),
+            padding: const EdgeInsets.all(Gap.md),
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: active == null && access == ProgramAccess.locked
-                    ? PremiumLock(
-                        message: l10n.programLockedStart,
-                        prompt: premium,
-                      )
-                    : active == null
-                    ? ForgeButton(
-                        label: l10n.programStart,
-                        loading: busy || access == ProgramAccess.waiting,
-                        onPressed: () => _start(context),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            l10n.programActiveOn(
-                              l10n.weekdayList(
-                                active.weekdays,
-                                context.watchFirstWeekday(),
-                              ),
-                            ),
-                          ),
-                          if (active.weekdays.length != program.days.length)
-                            Text(
-                              l10n.programDaysMismatch(program.days.length),
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                            ),
-                          const SizedBox(height: Gap.sm),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed:
-                                      busy || access != ProgramAccess.open
-                                      ? null
-                                      : () => _changeWeekdays(
-                                          context,
-                                          active.weekdays,
-                                        ),
-                                  child: Text(l10n.programChangeDays),
-                                ),
-                              ),
-                              const SizedBox(width: Gap.sm),
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: busy ? null : cubit.stop,
-                                  child: Text(l10n.programStop),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (access == ProgramAccess.locked) ...[
-                            const SizedBox(height: Gap.sm),
-                            PremiumLock(
-                              message: l10n.programLockedActive,
-                              prompt: premium,
-                            ),
-                          ],
-                        ],
-                      ),
+              _Summary(
+                program: program,
+                active: active,
+                finished: active != null && list.finished,
+                access: access,
+                busy: busy,
+                premium: premium,
+                onStart: () => _start(context),
+                onChangeDays: () => _changeWeekdays(context, active!.weekdays),
               ),
-              if (program.lengthWeeks case final weeks?)
-                ListTile(title: Text(l10n.programWeekCount(weeks))),
-              for (final (index, day) in program.days.indexed)
-                ProgramDaySection(
-                  day: day,
-                  index: index,
-                  // Locked, it opens the paywall instead.
-                  action: day.items.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: l10n.workoutStartThisDay,
-                          icon: const Icon(Icons.play_arrow),
-                          onPressed: () =>
-                              startProgramDay(context, program, index),
-                        ),
-                ),
+              const SizedBox(height: Gap.md),
+              _Days(
+                program: program,
+                // Open where the user is in the program.
+                next: active == null ? null : list.nextDayIndex,
+              ),
             ],
           ),
         );
@@ -326,4 +265,202 @@ class _ProgramDetailView extends StatelessWidget {
     );
     if (confirmed == true) await cubit.delete();
   }
+}
+
+/// Where the program stands and what can be done with it: its state, its
+/// length and days, the weekdays it runs on while active, then Start, or
+/// Change days and Stop, or why it is locked.
+class _Summary extends StatelessWidget {
+  const _Summary({
+    required this.program,
+    required this.active,
+    required this.finished,
+    required this.access,
+    required this.busy,
+    required this.premium,
+    required this.onStart,
+    required this.onChangeDays,
+  });
+
+  final Program program;
+
+  /// Its schedule, when it is the active program.
+  final ActiveProgram? active;
+  final bool finished;
+  final ProgramAccess access;
+  final bool busy;
+  final PremiumPrompt premium;
+  final VoidCallback onStart;
+  final VoidCallback onChangeDays;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final cubit = context.read<ProgramDetailCubit>();
+    final active = this.active;
+    final weeks = program.lengthWeeks;
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(Gap.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    active == null
+                        ? l10n.programStateInactive
+                        : finished
+                        ? l10n.programFinished
+                        : l10n.programStateActive,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
+                Text(
+                  [
+                    if (weeks != null) l10n.programWeekCount(weeks),
+                    l10n.programDayCount(program.days.length),
+                  ].join(' · '),
+                ),
+              ],
+            ),
+            if (active != null) ...[
+              const SizedBox(height: Gap.xs),
+              Text(
+                l10n.weekdayList(active.weekdays, context.watchFirstWeekday()),
+              ),
+              if (active.weekdays.length != program.days.length)
+                Text(
+                  l10n.programDaysMismatch(program.days.length),
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+            ],
+            const SizedBox(height: Gap.md),
+            if (active == null && access == ProgramAccess.locked)
+              PremiumLock(message: l10n.programLockedStart, prompt: premium)
+            else if (active == null)
+              ForgeButton(
+                label: l10n.programStart,
+                loading: busy || access == ProgramAccess.waiting,
+                onPressed: onStart,
+              )
+            else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: busy || access != ProgramAccess.open
+                          ? null
+                          : onChangeDays,
+                      child: Text(l10n.programChangeDays),
+                    ),
+                  ),
+                  const SizedBox(width: Gap.sm),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: busy ? null : cubit.stop,
+                      child: Text(l10n.programStop),
+                    ),
+                  ),
+                ],
+              ),
+              if (access == ProgramAccess.locked) ...[
+                const SizedBox(height: Gap.sm),
+                PremiumLock(message: l10n.programLockedActive, prompt: premium),
+              ],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The program's days as cards that open to their exercises; any day with
+/// exercises starts from its card. Which are open is this page's own view
+/// state, the [next] day at first.
+class _Days extends StatefulWidget {
+  const _Days({required this.program, required this.next});
+
+  final Program program;
+  final int? next;
+
+  @override
+  State<_Days> createState() => _DaysState();
+}
+
+class _DaysState extends State<_Days> {
+  late final _open = {?widget.next};
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final program = widget.program;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (index, day) in program.days.indexed) ...[
+          if (index > 0) const SizedBox(height: Gap.sm),
+          Card(
+            margin: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ListTile(
+                  title: Text(
+                    l10n.dayName(day, index),
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  subtitle: day.items.isEmpty
+                      ? null
+                      : Text(
+                          l10n.programDaySummary(
+                            day.items.length,
+                            l10n.estimateText(estimateDay(day)),
+                          ),
+                        ),
+                  trailing: day.items.isEmpty
+                      ? null
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Locked, it opens the paywall instead.
+                            IconButton(
+                              tooltip: l10n.workoutStartThisDay,
+                              icon: const Icon(Icons.play_arrow),
+                              onPressed: () =>
+                                  startProgramDay(context, program, index),
+                            ),
+                            IconButton(
+                              tooltip: _open.contains(index)
+                                  ? l10n.programDayHide
+                                  : l10n.programDayShow,
+                              icon: Icon(
+                                _open.contains(index)
+                                    ? Icons.expand_less
+                                    : Icons.expand_more,
+                              ),
+                              onPressed: () => _toggle(index),
+                            ),
+                          ],
+                        ),
+                  onTap: day.items.isEmpty ? null : () => _toggle(index),
+                ),
+                if (_open.contains(index)) ProgramDayItems(day: day),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  void _toggle(int index) => setState(() {
+    if (!_open.remove(index)) _open.add(index);
+  });
 }
