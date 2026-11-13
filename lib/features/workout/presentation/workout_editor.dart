@@ -26,8 +26,12 @@ abstract interface class EditedWorkout {
 
   /// The working set just ticked whose effort the set bar asks, until it
   /// is answered or skipped, any set is picked, sets move, or
-  /// [effortQuestionTime] passes; see [questionSet].
+  /// [effortQuestionTime] passes; see [questionSet] and [restQuestionSet].
   SetRef? get asking;
+
+  /// Whether the tick of [asking] started a rest, so the rest strip asks
+  /// for as long as it runs; see [restStartedBy].
+  bool get askingWithRest;
 
   /// The stats of the workout's exercises that have arrived.
   Map<String, ExerciseStats?> get stats;
@@ -48,7 +52,8 @@ extension EditedSelection on EditedWorkout {
 
   /// The set the set bar asks the effort of instead of showing the selected
   /// set; see [questionSet].
-  SetRef? get questionRef => questionSet(workout, asking);
+  SetRef? get questionRef =>
+      questionSet(workout, asking, withRest: askingWithRest);
 
   /// The set whose effort row shows under the selected set's values; see
   /// [effortRowSet].
@@ -101,18 +106,19 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   final _retyped = RetypedWeights<(SetRef, int?)>();
 
   /// How long the set bar asks the effort of a set just ticked when left
-  /// alone.
-  static const effortQuestionTime = Duration(seconds: 10);
+  /// alone, when its tick started no rest.
+  static const effortQuestionTime = Duration(seconds: 20);
 
   /// Ends the effort question after [effortQuestionTime].
   Timer? _questionTimer;
 
-  /// Asks the effort of [ref], or of none, for [effortQuestionTime].
+  /// Asks the effort of [ref], or of none: with the rest its tick started,
+  /// else in the bar for [effortQuestionTime].
   void _ask(SetRef? ref) {
     _questionTimer?.cancel();
     _questionTimer = null;
     if (state.asking != ref) emitAsking(ref);
-    if (ref != null) {
+    if (ref != null && !state.askingWithRest) {
       _questionTimer = Timer(effortQuestionTime, () {
         if (!isClosed && state.asking == ref) emitAsking(null);
       });

@@ -192,6 +192,33 @@ extension WorkoutText on AppLocalizations {
         : effortDoneTitleOf(exercise.name, set, values);
   }
 
+  /// The rest strip's question about set [asked] of [workout] just done,
+  /// with its values in [unit]: `Set 1 · 80 kg × 8 — how hard?`, its
+  /// exercise first when it is not the [selected] one.
+  String effortStripQuestion(
+    EffortScale scale,
+    Workout workout,
+    SetRef asked,
+    SetSelection? selected,
+    WeightUnit unit,
+  ) {
+    final exercise = workout.exercises[asked.exercise];
+    final name = ratedSetName(exercise, asked.set);
+    final values = setWithUnitText(
+      exercise.sets[asked.set],
+      exercise.loggingType,
+      unit,
+    );
+    final set = selected?.exercise == asked.exercise
+        ? effortStripSet(name, values)
+        : effortStripSetOf(exercise.name, name, values);
+    return switch (scale) {
+      EffortScale.byFeel => effortStripFeel(set),
+      EffortScale.rir => effortStripRir(set),
+      EffortScale.rpe => effortStripRpe(set),
+    };
+  }
+
   /// The progress of [exercise] in working sets, e.g. `Squat · 1/3`, as
   /// "of N" counts them everywhere.
   String exerciseProgress(WorkoutExercise exercise) => workoutExerciseProgress(

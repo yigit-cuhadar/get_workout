@@ -56,6 +56,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.savedProgramId,
     this.picked,
     this.asking,
+    this.askingWithRest = false,
     this.warmupsAdded = false,
     this.weightUnit,
     this.warmupSteps = const [],
@@ -100,6 +101,8 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   final SetSelection? picked;
   @override
   final SetRef? asking;
+  @override
+  final bool askingWithRest;
 
   /// Warm-ups were added to this workout automatically, which its tip
   /// tells.
@@ -158,6 +161,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     String? Function()? savedProgramId,
     SetSelection? Function()? picked,
     SetRef? Function()? asking,
+    bool? askingWithRest,
     bool? warmupsAdded,
     WeightUnit? Function()? weightUnit,
     List<WarmupStep>? warmupSteps,
@@ -177,6 +181,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
         : this.savedProgramId,
     picked: picked != null ? picked() : this.picked,
     asking: asking != null ? asking() : this.asking,
+    askingWithRest: askingWithRest ?? this.askingWithRest,
     warmupsAdded: warmupsAdded ?? this.warmupsAdded,
     weightUnit: weightUnit != null ? weightUnit() : this.weightUnit,
     warmupSteps: warmupSteps ?? this.warmupSteps,
@@ -197,6 +202,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     savedProgramId,
     picked,
     asking,
+    askingWithRest,
     warmupsAdded,
     weightUnit,
     warmupSteps,
@@ -813,13 +819,14 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     _keep();
   }
 
-  /// A new pick drops the message of a set that could not be ticked.
+  /// A new pick drops the message of a set that could not be ticked, and
+  /// the effort question in the bar; the rest strip's stays.
   @override
   void emitPicked(SetSelection? picked) => emit(
     state.copyWith(
       picked: () => picked,
       invalidSet: () => null,
-      asking: () => null,
+      asking: state.askingWithRest ? null : () => null,
     ),
   );
 
@@ -827,7 +834,22 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   bool get asksEffort => true;
 
   @override
-  void emitAsking(SetRef? asking) => emit(state.copyWith(asking: () => asking));
+  void emitAsking(SetRef? asking) => emit(
+    state.copyWith(
+      asking: () => asking,
+      askingWithRest:
+          asking != null && restStartedBy(state.rest, asking, _clock()),
+    ),
+  );
+
+  /// The set the rest strip asks the effort of now; see [restQuestionSet].
+  SetRef? get restQuestionRef => restQuestionSet(
+    state.workout,
+    state.asking,
+    withRest: state.askingWithRest,
+    rest: state.rest,
+    now: _clock(),
+  );
 
   @override
   void noteWarmupsAdded() {

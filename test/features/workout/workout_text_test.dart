@@ -105,6 +105,26 @@ void main() {
       );
       expect(l10n.effortQuestion(EffortScale.byFeel), 'How hard was it?');
       expect(
+        l10n.effortStripQuestion(
+          EffortScale.byFeel,
+          w,
+          (exercise: 0, set: 1),
+          selected,
+          WeightUnit.kg,
+        ),
+        'Set 1 · 80 kg × 8 — how hard?',
+      );
+      expect(
+        l10n.effortStripQuestion(
+          EffortScale.rir,
+          w,
+          (exercise: 1, set: 0),
+          selected,
+          WeightUnit.kg,
+        ),
+        'Squat · Set 1 · 100 kg × 5 — reps left?',
+      );
+      expect(
         l10n.effortRowQuestion(EffortScale.rir, bench, 1),
         'Set 1 · how many more reps could you have done?',
       );

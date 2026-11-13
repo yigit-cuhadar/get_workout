@@ -172,3 +172,8 @@ List<int> _working(WorkoutExercise exercise) => [
   for (final (j, set) in exercise.sets.indexed)
     if (!set.isWarmup) j,
 ];
+
+/// Whether [rest] is the one ticking [asked] started at [now]: its effort
+/// is then asked in the rest strip for as long as that rest.
+bool restStartedBy(Rest? rest, SetRef asked, DateTime now) =>
+    rest != null && rest.after == asked && rest.runsAt(now);

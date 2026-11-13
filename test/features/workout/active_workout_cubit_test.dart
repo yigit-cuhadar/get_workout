@@ -772,62 +772,171 @@ void main() {
   group('effort', () {
     const first = (exercise: 0, set: 0);
     const second = (exercise: 0, set: 1);
+    const noRest = UserSettings(
+      weightUnit: WeightUnit.kg,
+      lengthUnit: LengthUnit.cm,
+      restTimer: RestTimerSettings(enabled: false),
+      warmups: WarmupSettings(scheme: WarmupScheme.off),
+    );
 
-    Future<ActiveWorkoutCubit> withSquat({bool warmups = false}) async {
+    /// A workout of [legs] (its squat rests 90 s), its rest timer on or off.
+    Future<ActiveWorkoutCubit> withSquat({
+      bool warmups = false,
+      bool rests = true,
+    }) async {
       final cubit = await signedIn(warmups: warmups);
+      if (!rests) {
+        settings.add(noRest);
+        await pumpEventQueue();
+      }
       await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
       return cubit;
     }
 
-    test('a tick asks about that set; picking a step stores it', () async {
-      final cubit = await withSquat();
-      expect(cubit.state.questionRef, isNull);
-      cubit.toggleDone(first);
-      // The next set is selected underneath; the bar asks about the first.
-      expect(cubit.state.selection, (exercise: 0, set: 1));
-      expect(cubit.state.questionRef, first);
-      cubit.setEffort(first, const EffortStep.reserve(2));
-      final sets = cubit.state.workout!.exercises[0].sets;
-      expect((sets[0].rir, sets[1].rir), (2, null));
-      // The bar is back on the next set, which shows no effort row.
-      expect(cubit.state.questionRef, isNull);
-      expect(cubit.state.effortRowRef, isNull);
-      await cubit.close();
+    group('with a rest, in the rest strip', () {
+      test('asks about that set while the bar shows the next', () async {
+        final cubit = await withSquat();
+        cubit.toggleDone(first);
+        expect(cubit.state.rest?.after, first);
+        expect(cubit.restQuestionRef, first);
+        expect(cubit.state.questionRef, isNull);
+        expect(cubit.state.selection, second);
+        await cubit.close();
+      });
+
+      test('an answer lands on that set and ends it', () async {
+        final cubit = await withSquat();
+        cubit
+          ..toggleDone(first)
+          ..setEffort(first, const EffortStep.reserve(2));
+        final sets = cubit.state.workout!.exercises[0].sets;
+        expect((sets[0].rir, sets[1].rir), (2, null));
+        expect(cubit.restQuestionRef, isNull);
+        expect(cubit.state.rest, isNotNull);
+        await cubit.close();
+      });
+
+      test('it goes with the rest: run out or skipped', () async {
+        final cubit = await withSquat();
+        cubit.toggleDone(first);
+        clock = clock.add(const Duration(seconds: 91));
+        expect(cubit.restQuestionRef, isNull);
+        clock = now;
+        expect(cubit.restQuestionRef, first);
+        cubit.skipRest();
+        expect(cubit.restQuestionRef, isNull);
+        await cubit.close();
+      });
+
+      test('+15 s keeps it as long', () async {
+        final cubit = await withSquat();
+        cubit
+          ..toggleDone(first)
+          ..extendRest();
+        clock = clock.add(const Duration(seconds: 100));
+        expect(cubit.restQuestionRef, first);
+        await cubit.close();
+      });
+
+      test('picking another set or exercise keeps it', () async {
+        final cubit = await withSquat();
+        cubit
+          ..addExercises([bench], 'en')
+          ..toggleDone(first)
+          ..selectSet((exercise: 1, set: 0))
+          ..openExercise(0);
+        expect(cubit.restQuestionRef, first);
+        await cubit.close();
+      });
+
+      test('another tick replaces it; moving sets ends it', () async {
+        final cubit = await withSquat();
+        cubit
+          ..toggleDone(first)
+          ..toggleDone(second);
+        expect(cubit.restQuestionRef, second);
+        cubit.addSet(0, SetType.warmup);
+        expect(cubit.restQuestionRef, isNull);
+        await cubit.close();
+      });
+
+      test('unticking the set ends it', () async {
+        final cubit = await withSquat();
+        cubit
+          ..toggleDone(first)
+          ..toggleDone(first);
+        expect(cubit.restQuestionRef, isNull);
+        await cubit.close();
+      });
     });
 
-    test('skip ends it, the set keeps no effort', () async {
-      final cubit = await withSquat();
-      cubit
-        ..toggleDone(first)
-        ..skipEffort();
-      expect(cubit.state.questionRef, isNull);
-      expect(cubit.state.workout!.exercises[0].sets[0].rir, isNull);
-      await cubit.close();
-    });
+    group('without a rest, in the bar', () {
+      test('asks about that set; skip or a pick ends it', () async {
+        final cubit = await withSquat(rests: false);
+        cubit.toggleDone(first);
+        expect(cubit.state.rest, isNull);
+        expect(cubit.state.questionRef, first);
+        expect(cubit.restQuestionRef, isNull);
+        cubit.skipEffort();
+        expect(cubit.state.questionRef, isNull);
+        cubit
+          ..toggleDone(second)
+          ..selectSet(first);
+        expect(cubit.state.questionRef, isNull);
+        await cubit.close();
+      });
 
-    test('a pick of any set or exercise ends it', () async {
-      final cubit = await withSquat();
-      cubit
-        ..addExercises([bench], 'en')
-        ..toggleDone(first)
-        ..selectSet(second);
-      expect(cubit.state.questionRef, isNull);
-      cubit
-        ..toggleDone(second)
-        ..openExercise(0);
-      expect(cubit.state.questionRef, isNull);
-      // A selected done set shows its effort row instead.
-      expect(cubit.state.effortRowRef, second);
-      await cubit.close();
-    });
+      test('mid-round in a superset no rest starts: the bar asks', () async {
+        final cubit = await withSquat();
+        cubit
+          ..addExercises([bench], 'en')
+          ..linkWithNext(0)
+          ..toggleDone(first);
+        expect(cubit.state.rest, isNull);
+        expect(cubit.state.questionRef, first);
+        await cubit.close();
+      });
 
-    test('sets moving end it', () async {
-      final cubit = await withSquat();
-      cubit
-        ..toggleDone(first)
-        ..addSet(0, SetType.warmup);
-      expect(cubit.state.questionRef, isNull);
-      await cubit.close();
+      test('it ends after the fallback, later when touched or in help', () {
+        fakeAsync((async) {
+          late ActiveWorkoutCubit cubit;
+          unawaited(withSquat(rests: false).then((built) => cubit = built));
+          async.elapse(const Duration(seconds: 1));
+          cubit.toggleDone(first);
+          const time = WorkoutEditor.effortQuestionTime;
+          async.elapse(time - const Duration(seconds: 1));
+          cubit.keepAsking();
+          async.elapse(time - const Duration(seconds: 1));
+          expect(cubit.state.questionRef, first);
+          cubit.pauseAsking();
+          async.elapse(time * 3);
+          expect(cubit.state.questionRef, first);
+          cubit.keepAsking();
+          async.elapse(time);
+          expect(cubit.state.questionRef, isNull);
+          unawaited(cubit.close());
+          async.flushMicrotasks();
+        });
+      });
+
+      test("an earlier question's time never ends a later one", () {
+        fakeAsync((async) {
+          late ActiveWorkoutCubit cubit;
+          unawaited(withSquat(rests: false).then((built) => cubit = built));
+          async.elapse(const Duration(seconds: 1));
+          cubit
+            ..toggleDone(first)
+            ..skipEffort();
+          async.elapse(const Duration(seconds: 5));
+          cubit.toggleDone(second);
+          async.elapse(
+            WorkoutEditor.effortQuestionTime - const Duration(seconds: 4),
+          );
+          expect(cubit.state.questionRef, second);
+          unawaited(cubit.close());
+          async.flushMicrotasks();
+        });
+      });
     });
 
     test('a warm-up is never asked about', () async {
@@ -835,6 +944,7 @@ void main() {
       cubit.toggleDone(first);
       expect(cubit.state.workout!.exercises[0].sets[0].isWarmup, isTrue);
       expect(cubit.state.questionRef, isNull);
+      expect(cubit.restQuestionRef, isNull);
       await cubit.close();
     });
 
@@ -853,46 +963,10 @@ void main() {
       },
     );
 
-    test('the help pauses the timeout until it closes', () {
-      fakeAsync((async) {
-        late ActiveWorkoutCubit cubit;
-        unawaited(withSquat().then((built) => cubit = built));
-        async.elapse(const Duration(seconds: 1));
-        cubit
-          ..toggleDone(first)
-          ..pauseAsking();
-        async.elapse(const Duration(minutes: 1));
-        expect(cubit.state.questionRef, first);
-        cubit.keepAsking();
-        async.elapse(WorkoutEditor.effortQuestionTime);
-        expect(cubit.state.questionRef, isNull);
-        unawaited(cubit.close());
-        async.flushMicrotasks();
-      });
-    });
-
-    test("an earlier question's time never ends a later one", () {
-      fakeAsync((async) {
-        late ActiveWorkoutCubit cubit;
-        unawaited(withSquat().then((built) => cubit = built));
-        async.elapse(const Duration(seconds: 1));
-        cubit
-          ..toggleDone(first)
-          ..skipEffort();
-        async.elapse(const Duration(seconds: 5));
-        cubit.toggleDone(second);
-        // Ten seconds after the first tick.
-        async.elapse(const Duration(seconds: 6));
-        expect(cubit.state.questionRef, second);
-        unawaited(cubit.close());
-        async.flushMicrotasks();
-      });
-    });
-
     test('nothing is emitted once closed', () {
       fakeAsync((async) {
         late ActiveWorkoutCubit cubit;
-        unawaited(withSquat().then((built) => cubit = built));
+        unawaited(withSquat(rests: false).then((built) => cubit = built));
         async.elapse(const Duration(seconds: 1));
         cubit.toggleDone(first);
         async.flushMicrotasks();
@@ -904,30 +978,6 @@ void main() {
         emitted.clear();
         async.elapse(WorkoutEditor.effortQuestionTime * 2);
         expect(emitted, isEmpty);
-        expect(
-          async.pendingTimers.where(
-            (t) => t.duration == WorkoutEditor.effortQuestionTime,
-          ),
-          isEmpty,
-        );
-      });
-    });
-
-    test('it ends by itself, later when the bar is touched', () {
-      fakeAsync((async) {
-        late ActiveWorkoutCubit cubit;
-        unawaited(withSquat().then((built) => cubit = built));
-        async.elapse(const Duration(seconds: 1));
-        cubit.toggleDone(first);
-        const time = WorkoutEditor.effortQuestionTime;
-        async.elapse(time - const Duration(seconds: 1));
-        cubit.keepAsking();
-        async.elapse(time - const Duration(seconds: 1));
-        expect(cubit.state.questionRef, first);
-        async.elapse(const Duration(seconds: 1));
-        expect(cubit.state.questionRef, isNull);
-        unawaited(cubit.close());
-        async.flushMicrotasks();
       });
     });
   });

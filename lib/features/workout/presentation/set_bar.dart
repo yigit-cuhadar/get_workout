@@ -384,7 +384,7 @@ class _EffortRow extends StatelessWidget {
             const WorkoutHelpButton(),
           ],
         ),
-        _EffortChoice(
+        EffortChoice(
           scale: scale,
           chosen: scale.stepOf(exercise.sets[rated.set]),
           onChosen: (step) {
@@ -471,7 +471,7 @@ class _EffortQuestion extends StatelessWidget {
                 ),
               ],
             ),
-            _EffortChoice(
+            EffortChoice(
               scale: scale,
               chosen: scale.stepOf(set),
               onChosen: (step) {
@@ -500,8 +500,9 @@ class _EffortQuestion extends StatelessWidget {
 
 /// The steps of [scale] in a row, [chosen] selected; picking the chosen
 /// one again clears it.
-class _EffortChoice extends StatelessWidget {
-  const _EffortChoice({
+class EffortChoice extends StatelessWidget {
+  const EffortChoice({
+    super.key,
     required this.scale,
     required this.chosen,
     required this.onChosen,

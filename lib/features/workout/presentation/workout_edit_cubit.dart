@@ -78,6 +78,9 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
   @override
   SetRef? get asking => null;
 
+  @override
+  bool get askingWithRest => false;
+
   /// A stored workout has nothing to compare with, so no last time is shown.
   @override
   Map<String, ExerciseStats?> get stats => const {};

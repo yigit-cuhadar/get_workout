@@ -238,24 +238,38 @@ from the earlier FitLab app.
   Effort is only stored and shown (bar, workout detail); nothing else uses
   it yet, and the help says just that. Effort is only asked about a DONE
   working set; warm-ups are never rated. Right after a working set is
-  ticked in the workout in progress, the set bar BECOMES the question
-  (`questionSet`, `asking` in the editor state): "Set 1 done · 80 kg × 8"
-  ("Drop set 2 done · …", the exercise first when the selection has moved
-  to another one: "Squat · Set 3 done · 100 kg × 5"), the scale's question
-  ("How hard was it?", "How many more reps could you have done?", "How
-  hard was it, from 1 to 10?") with the "?" help, the steps with Failed,
-  and Skip; no fields and no tick, so nothing is logged to the wrong set,
-  and the keyboard is already closed by the tick. The rest strip stays
-  below and the rest starts as before. The bar returns to the next set
-  when a step is picked (stored on that set), Skip is tapped, any set is
-  picked or an exercise opened, an edit moves sets, or after
-  `WorkoutEditor.effortQuestionTime` (10 s) untouched; any touch on the
-  question restarts that time, and it waits while the help is open (the
-  timer lives in the editor cubit and stops as it closes). The question
-  never shows while edits are refused (finishing), and an answer refused
-  then leaves it open. Editing a past workout never asks on a tick. A selected
-  done set shows its effort row under its values, named: "Set 1 · how hard
-  was it?" (`effortRowSet`); an undone set never has one.
+  ticked in the workout in progress it is asked in one of two places:
+  - **Its tick started a rest** (`restStartedBy`, `askingWithRest`): in
+    the rest strip, under the countdown with +15 s and Skip, one line
+    naming the set with its values and the scale's short question ("Set 1
+    · 80 kg × 8 — how hard?", "… — reps left?", "… — RPE?", the exercise
+    first when the selection is on another one), the "?" help and the
+    steps with Failed; no Skip of its own. The set bar meanwhile shows the
+    next set as usual, so its weight can be set during the rest. It lasts
+    as long as that rest (`restQuestionSet`: the rest still that set's and
+    running, so "+15 s" extends it): gone when the rest runs out or is
+    skipped, when a step is picked (stored on that set; the countdown
+    stays), another set is ticked (its own question replaces it), the set
+    is unticked, removed or moved, or the workout finishes. Picking
+    another set or opening an exercise leaves it. Opening the help changes
+    nothing; a rest ending meanwhile leaves the sheet open and the
+    question gone. The strip, and so the question, steps aside while the
+    keyboard is up.
+  - **It started none** (rest timer off, a set mid-round in a superset):
+    the set bar becomes the question (`questionSet`): "Set 1 done · 80 kg
+    × 8" ("Drop set 2 done · …", the exercise first when the selection
+    moved on: "Squat · Set 3 done · 100 kg × 5"), the scale's question
+    ("How hard was it?", "How many more reps could you have done?", "How
+    hard was it, from 1 to 10?") with the "?" help, the steps with Failed,
+    and Skip; no fields and no tick, the keyboard already closed by the
+    tick. The bar returns to the next set when a step is picked, Skip is
+    tapped, any set is picked or an exercise opened, an edit moves sets,
+    or after `WorkoutEditor.effortQuestionTime` (20 s) untouched; any
+    touch restarts that time and it waits while the help is open.
+  Neither shows while edits are refused (finishing), and an answer refused
+  then leaves it open. Editing a past workout never asks on a tick. A
+  selected done set shows its effort row under its values, named: "Set 1 ·
+  how hard was it?" (`effortRowSet`); an undone set never has one.
 - **Automatic warm-up sets**: Settings → "Automatic warm-up sets" (its
   row shows e.g. "Standard · Every exercise") opens a page
   (`/profile/warmups`) with:
@@ -331,9 +345,10 @@ from the earlier FitLab app.
   and drop sets.
 - **First-use tips**: three inline banners (Material `MaterialBanner`,
   never modal), each with "Got it", none until the user's settings have
-  arrived: effort, inside the effort question the first time (under the
-  steps, scrolling, so Skip and the steps stay in view), until it is
-  dismissed, an effort is picked or the question skipped; set types, at the top of the add-set sheet, until a
+  arrived: effort, inside the effort question the first time, in the
+  rest strip or the bar (under the steps, so the countdown, Skip and the
+  steps stay in view), until it is dismissed, an effort is picked or the
+  question skipped; set types, at the top of the add-set sheet, until a
   type is picked there; automatic warm-ups, at the top of the workout in
   progress once warm-ups were added to it automatically
   (`warmupsAdded`), until the setting is changed. Dismissing or using the
