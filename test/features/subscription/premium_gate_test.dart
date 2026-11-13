@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 void main() {
   late FakePurchasesRepository store;
   late EntitlementCubit entitlement;
+  late GoRouter router;
   bool? allowed;
 
   setUp(() {
@@ -33,41 +34,54 @@ void main() {
 
   tearDown(() => entitlement.close());
 
-  Future<void> pump(WidgetTester tester) => tester.pumpWidget(
-    BlocProvider.value(
-      value: entitlement,
-      child: MaterialApp.router(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: GoRouter(
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (context, _) => Scaffold(
-                body: TextButton(
-                  onPressed: () async =>
-                      allowed = await context.requirePremium(),
-                  child: const Text('Open'),
-                ),
-              ),
+  Future<void> pump(WidgetTester tester) {
+    router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, _) => Scaffold(
+            body: TextButton(
+              onPressed: () async => allowed = await context.requirePremium(),
+              child: const Text('Open'),
             ),
-            GoRoute(
-              path: Routes.paywall,
-              builder: (context, _) => Scaffold(
-                body: TextButton(
+          ),
+        ),
+        GoRoute(
+          path: Routes.paywall,
+          builder: (context, _) => Scaffold(
+            body: Column(
+              children: [
+                TextButton(
                   onPressed: () async {
                     await store.purchase(fakePlans.first);
                     if (context.mounted) context.pop(true);
                   },
                   child: const Text('Buy'),
                 ),
-              ),
+                // The result before the entitlement has caught up.
+                TextButton(
+                  onPressed: () => context.pop(true),
+                  child: const Text('Unlocked'),
+                ),
+              ],
             ),
-          ],
+          ),
+        ),
+        GoRoute(path: '/elsewhere', builder: (_, _) => const Text('Elsewhere')),
+      ],
+    );
+    addTearDown(router.dispose);
+    return tester.pumpWidget(
+      BlocProvider.value(
+        value: entitlement,
+        child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
         ),
       ),
-    ),
-  );
+    );
+  }
 
   Future<void> tap(WidgetTester tester, String text) async {
     await tester.tap(find.text(text));
@@ -148,6 +162,7 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
+    expect(find.text('Buy'), findsOneWidget);
     expect(allowed, isFalse);
 
     tester.state<NavigatorState>(find.byType(Navigator)).pop();
@@ -155,5 +170,39 @@ void main() {
 
     expect(find.text('Buy'), findsNothing);
     expect(find.text('Open'), findsOneWidget);
+  });
+
+  testWidgets('the result it pops with is returned', (tester) async {
+    await pump(tester);
+    await tester.runAsync(() => entitlement.identify('u1'));
+    await tester.pumpAndSettle();
+
+    await tap(tester, 'Open');
+    await tap(tester, 'Unlocked');
+
+    expect(entitlement.isActive, isFalse);
+    expect(allowed, isTrue);
+  });
+
+  testWidgets('removed by a go, it is not allowed and opens again', (
+    tester,
+  ) async {
+    await pump(tester);
+    await tester.runAsync(() => entitlement.identify('u1'));
+    await tester.pumpAndSettle();
+
+    await tap(tester, 'Open');
+    router.go('/elsewhere');
+    await tester.pumpAndSettle();
+    expect(find.text('Buy'), findsNothing);
+    expect(allowed, isFalse);
+
+    router.go('/');
+    await tester.pumpAndSettle();
+    allowed = null;
+    await tap(tester, 'Open');
+
+    expect(find.text('Buy'), findsOneWidget);
+    expect(allowed, isNull);
   });
 }

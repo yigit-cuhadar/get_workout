@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_purchases/forge_purchases.dart';
@@ -72,7 +74,7 @@ extension PremiumGate on BuildContext {
     _paywallOpen[router] = true;
     final bool? unlocked;
     try {
-      unlocked = await router.push<bool>(Routes.paywall);
+      unlocked = await _pushPaywall(router);
     } finally {
       _paywallOpen[router] = false;
     }
@@ -81,5 +83,44 @@ extension PremiumGate on BuildContext {
   }
 }
 
-/// One paywall at a time per router, whoever asks for it.
+/// One paywall at a time per router, whoever asks for it: true from the
+/// call until the paywall has left the page stack.
 final _paywallOpen = Expando<bool>();
+
+/// Pushes the paywall on [router] and completes once it has left the page
+/// stack: with its result when popped, with null when a `go` (a
+/// notification tap, a tab switch, a redirect) removed it, which never
+/// completes the push itself.
+Future<bool?> _pushPaywall(GoRouter router) {
+  final delegate = router.routerDelegate;
+  final closed = Completer<bool?>();
+  void close(FutureOr<bool?> result) {
+    if (!closed.isCompleted) closed.complete(result);
+  }
+
+  ImperativeRouteMatch? shown;
+  void track() {
+    final match = _paywallIn(delegate.currentConfiguration);
+    if (match != null) {
+      shown = match;
+    } else if (shown case final gone?) {
+      // A pop completes the push before the page leaves the stack.
+      close(
+        gone.completer.isCompleted
+            ? gone.completer.future.then((result) => result as bool?)
+            : null,
+      );
+    }
+  }
+
+  delegate.addListener(track);
+  // Also completes a push that was redirected and never showed the paywall.
+  unawaited(router.push<bool>(Routes.paywall).then(close));
+  return closed.future.whenComplete(() => delegate.removeListener(track));
+}
+
+/// The paywall's page in [stack], or null while it is not open.
+ImperativeRouteMatch? _paywallIn(RouteMatchList stack) => stack.matches
+    .whereType<ImperativeRouteMatch>()
+    .where((match) => match.matchedLocation == Routes.paywall)
+    .lastOrNull;
