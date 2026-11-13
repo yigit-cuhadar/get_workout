@@ -94,7 +94,6 @@ void main() {
         'effortScale': 'rpe',
         'restTimer': {'enabled': true, 'defaultS': 90},
         'autoWarmups': true,
-        'seenTips': <String>[],
         'stepGoal': 10000,
         'reminders': {
           'workout': {'enabled': false, 'minute': 480},
@@ -228,18 +227,35 @@ void main() {
   });
 
   group('automatic warm-ups and tips', () {
-    test('are stored and read back', () async {
-      final settings = defaults.copyWith(
-        autoWarmups: false,
-        seenTips: {Tip.effort, Tip.autoWarmups},
-      );
+    test('the switch is stored and read back', () async {
+      final settings = defaults.copyWith(autoWarmups: false);
 
       await repository.saveSettings('u1', settings);
 
       final stored = (await user().get()).data()!['settings'] as Map;
       expect(stored['autoWarmups'], false);
-      expect(stored['seenTips'], ['effort', 'autoWarmups']);
       expect(await repository.watchSettings('u1').first, settings);
+    });
+
+    test('tips seen are added one by one, others kept', () async {
+      await user().set({
+        'settings': {
+          'seenTips': ['later'],
+        },
+      });
+
+      await repository.markTipSeen('u1', Tip.effort);
+      await repository.markTipSeen('u1', Tip.setTypes);
+      await repository.markTipSeen('u1', Tip.effort);
+      // A whole save leaves them alone.
+      await repository.saveSettings('u1', defaults);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored['seenTips'], ['later', 'effort', 'setTypes']);
+      expect((await repository.watchSettings('u1').first).seenTips, {
+        Tip.effort,
+        Tip.setTypes,
+      });
     });
 
     test('missing ones read as warm-ups on and no tip seen', () async {
@@ -386,7 +402,6 @@ void main() {
         'effortScale': 'feel',
         'restTimer': {'enabled': true, 'defaultS': 90},
         'autoWarmups': true,
-        'seenTips': <String>[],
         'stepGoal': 10000,
         'reminders': {
           'workout': {'enabled': false, 'minute': 480},

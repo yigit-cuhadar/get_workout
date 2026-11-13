@@ -101,8 +101,9 @@ class _ActiveWorkout extends StatelessWidget {
     final cubit = context.read<ActiveWorkoutCubit>();
     final workout = state.workout!;
     final finishing = state.status == WorkoutStatus.finishing;
-    final settings = context.select(
-      (SettingsCubit cubit) => cubit.state.settings,
+    final seen = context.select(
+      (SettingsCubit cubit) =>
+          cubit.state.loaded ? cubit.state.settings.seenTips : null,
     );
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
@@ -155,11 +156,7 @@ class _ActiveWorkout extends StatelessWidget {
               SliverList.list(
                 children: [
                   if (finishing) const LinearProgressIndicator(),
-                  if (autoWarmupsTipDue(
-                    workout,
-                    settings.seenTips,
-                    autoWarmups: settings.autoWarmups,
-                  ))
+                  if (autoWarmupsTipDue(seen, added: state.warmupsAdded))
                     TipBanner(
                       text: l10n.tipAutoWarmups,
                       onDismiss: () => context.read<SettingsCubit>().tipSeen(

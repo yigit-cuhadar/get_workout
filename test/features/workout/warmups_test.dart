@@ -42,6 +42,29 @@ void main() {
     });
   });
 
+  group('withoutUnusedWarmups', () {
+    final squat = exercise('squat', [
+      warmup,
+      lift(40, 8, type: SetType.warmup),
+      const WorkoutSet(),
+    ]);
+
+    test('drops untouched warm-ups for an exercise that takes none', () {
+      final plank = squat.copyWith(
+        loggingType: LoggingType.duration,
+        sets: const [warmup, warmup, WorkoutSet()],
+      );
+      expect(withoutUnusedWarmups(squat, plank).sets, const [
+        warmup,
+        WorkoutSet(),
+      ]);
+    });
+
+    test('keeps them for one that takes warm-ups', () {
+      expect(withoutUnusedWarmups(squat, squat), squat);
+    });
+  });
+
   group('rampedWarmup', () {
     test('half the weight for 8, then three quarters for 4', () {
       expect(rampedWarmup(0, 100, WeightUnit.kg), (weightKg: 50, reps: 8));

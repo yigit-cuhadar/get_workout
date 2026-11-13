@@ -94,7 +94,18 @@ class FirestoreSettingsRepository implements SettingsRepository {
   }
 
   /// The bar, plates and tracked measurements are written only while
-  /// customised; deleting them returns the user to the default.
+  /// customised; deleting them returns the user to the default. Seen tips
+  /// are only ever added, by [markTipSeen].
+  @override
+  Future<Result<void>> markTipSeen(String uid, Tip tip) => guard(
+    () => _user(uid).set({
+      'settings': {
+        'seenTips': FieldValue.arrayUnion([_tipCodes[tip]]),
+      },
+    }, SetOptions(merge: true)),
+    mapper: mapFirebaseError,
+  );
+
   static Map<String, Object?> _toMap(UserSettings settings) => {
     'weightUnit': _weightCodes[settings.weightUnit],
     'lengthUnit': _lengthCodes[settings.lengthUnit],
@@ -106,7 +117,6 @@ class FirestoreSettingsRepository implements SettingsRepository {
       'notify': ?settings.restTimer.notify,
     },
     'autoWarmups': settings.autoWarmups,
-    'seenTips': [for (final tip in settings.seenTips) _tipCodes[tip]],
     'stepGoal': settings.stepGoal,
     'reminders': {
       'workout': {

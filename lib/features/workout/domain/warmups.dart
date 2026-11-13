@@ -29,6 +29,23 @@ WorkoutExercise withWarmups(WorkoutExercise exercise) {
   );
 }
 
+/// [swapped], made from [before] by `swapExercise`, without the warm-ups
+/// still untouched in [before] (nothing entered, not done) when it does not
+/// [takesWarmups]: they were there for the exercise swapped out.
+WorkoutExercise withoutUnusedWarmups(
+  WorkoutExercise before,
+  WorkoutExercise swapped,
+) {
+  if (takesWarmups(swapped.loggingType)) return swapped;
+  const untouched = WorkoutSet(type: SetType.warmup);
+  return swapped.copyWith(
+    sets: [
+      for (final (i, set) in swapped.sets.indexed)
+        if (before.sets.elementAtOrNull(i) != untouched) set,
+    ],
+  );
+}
+
 /// The steps a warm-up's weight is rounded to in [unit], in kg: 2.5 kg or
 /// 5 lb.
 double warmupStepKg(WeightUnit unit) => unit.toKg(switch (unit) {

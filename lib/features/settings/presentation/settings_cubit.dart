@@ -8,16 +8,20 @@ import '../domain/settings_usecases.dart';
 import '../domain/user_settings.dart';
 
 class SettingsState extends Equatable {
-  const SettingsState(this.settings, {this.failure});
+  const SettingsState(this.settings, {this.failure, this.loaded = false});
 
   final UserSettings settings;
+
+  /// The signed-in user's own settings have arrived; until then [settings]
+  /// are the device defaults, and no first-use tip shows.
+  final bool loaded;
 
   /// Set when the last update failed; [settings] then still hold the values
   /// from before it.
   final Failure? failure;
 
   @override
-  List<Object?> get props => [settings, failure];
+  List<Object?> get props => [settings, failure, loaded];
 }
 
 /// App-wide settings of whoever is signed in. Shows the device defaults until
@@ -27,6 +31,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     required WatchAuthUser watchAuthUser,
     required this._watchSettings,
     required this._updateSettings,
+    required this._markTipSeen,
     required this._defaults,
   }) : super(SettingsState(_defaults)) {
     _userSubscription = watchAuthUser()
@@ -37,6 +42,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   final WatchSettings _watchSettings;
   final UpdateSettings _updateSettings;
+  final MarkTipSeen _markTipSeen;
 
   /// Shown, and the base for updates, until a user's own settings arrive.
   final UserSettings _defaults;
@@ -53,7 +59,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     _settingsSubscription = uid == null
         ? null
         : _watchSettings(uid).listen(
-            (settings) => emit(SettingsState(settings)),
+            (settings) => emit(SettingsState(settings, loaded: true)),
             // The repository logs it; the last known settings stay in use.
             onError: (Object _) {},
           );
@@ -67,15 +73,25 @@ class SettingsCubit extends Cubit<SettingsState> {
     final result = await _updateSettings((uid: uid, settings: settings));
     final failure = result.failureOrNull;
     if (failure != null && !isClosed) {
-      emit(SettingsState(state.settings, failure: failure));
+      emit(
+        SettingsState(state.settings, failure: failure, loaded: state.loaded),
+      );
     }
   }
 
-  /// Notes that [tip] needs showing no more.
+  /// Notes that [tip] needs showing no more, once the user's settings are
+  /// known; it shows up through the settings stream.
   Future<void> tipSeen(Tip tip) async {
-    final settings = state.settings;
-    if (settings.seenTips.contains(tip)) return;
-    await update(settings.copyWith(seenTips: {...settings.seenTips, tip}));
+    final uid = _uid;
+    if (uid == null || !state.loaded) return;
+    if (state.settings.seenTips.contains(tip)) return;
+    final result = await _markTipSeen((uid: uid, tip: tip));
+    final failure = result.failureOrNull;
+    if (failure != null && !isClosed) {
+      emit(
+        SettingsState(state.settings, failure: failure, loaded: state.loaded),
+      );
+    }
   }
 
   @override

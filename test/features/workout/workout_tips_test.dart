@@ -1,70 +1,65 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
-import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_tips.dart';
 
-import 'fixtures.dart';
-
 void main() {
-  const warmup = WorkoutSet(type: SetType.warmup);
+  const set = (exercise: 0, set: 1);
 
   group('effort', () {
-    test('due once a set is ticked', () {
-      final fresh = workout('w', [
-        exercise('squat', const [WorkoutSet()]),
-      ]);
-      expect(effortTipDue(fresh, const {}), isFalse);
-      final ticked = workout('w', [
-        exercise('squat', [lift(100, 5)]),
-      ]);
-      expect(effortTipDue(ticked, const {}), isTrue);
-    });
-
-    test('not once seen or once an effort is logged', () {
-      final ticked = workout('w', [
-        exercise('squat', [lift(100, 5)]),
-      ]);
-      expect(effortTipDue(ticked, const {Tip.effort}), isFalse);
-      final rated = workout('w', [
-        exercise('squat', [lift(100, 5), const WorkoutSet(rir: 2)]),
-      ]);
-      expect(effortTipDue(rated, const {}), isFalse);
-      final failed = workout('w', [
-        exercise('squat', [lift(100, 5), const WorkoutSet(toFailure: true)]),
-      ]);
-      expect(effortTipDue(failed, const {}), isFalse);
-    });
-  });
-
-  test('set types: due until seen', () {
-    expect(setTypesTipDue(const {}), isTrue);
-    expect(setTypesTipDue(const {Tip.setTypes}), isFalse);
-  });
-
-  group('automatic warm-ups', () {
-    final warmed = workout('w', [
-      exercise('squat', const [warmup, WorkoutSet()]),
-    ]);
-
-    test('due while on and a weighted exercise has a warm-up', () {
-      expect(autoWarmupsTipDue(warmed, const {}, autoWarmups: true), isTrue);
-      expect(autoWarmupsTipDue(warmed, const {}, autoWarmups: false), isFalse);
+    test('due with the row about the set just ticked', () {
       expect(
-        autoWarmupsTipDue(warmed, const {Tip.autoWarmups}, autoWarmups: true),
+        effortTipDue(const {}, offered: true, asked: set, ticked: set),
+        isTrue,
+      );
+    });
+
+    test('not about a selected done set, nor without the row', () {
+      expect(
+        effortTipDue(
+          const {},
+          offered: true,
+          asked: set,
+          ticked: (exercise: 0, set: 0),
+        ),
+        isFalse,
+      );
+      expect(
+        effortTipDue(const {}, offered: true, asked: null, ticked: set),
         isFalse,
       );
     });
 
-    test('not for other exercises or without warm-ups', () {
-      final cold = workout('w', [
-        exercise('squat', const [WorkoutSet()]),
-      ]);
-      expect(autoWarmupsTipDue(cold, const {}, autoWarmups: true), isFalse);
-      final timed = workout('w', [
-        exercise('plank', const [warmup], type: LoggingType.duration),
-      ]);
-      expect(autoWarmupsTipDue(timed, const {}, autoWarmups: true), isFalse);
+    test('not once seen, while settings are unknown, or where not offered', () {
+      expect(
+        effortTipDue(
+          const {Tip.effort},
+          offered: true,
+          asked: set,
+          ticked: set,
+        ),
+        isFalse,
+      );
+      expect(
+        effortTipDue(null, offered: true, asked: set, ticked: set),
+        isFalse,
+      );
+      expect(
+        effortTipDue(const {}, offered: false, asked: set, ticked: set),
+        isFalse,
+      );
     });
+  });
+
+  test('set types: due until seen, once settings are known', () {
+    expect(setTypesTipDue(const {}), isTrue);
+    expect(setTypesTipDue(const {Tip.setTypes}), isFalse);
+    expect(setTypesTipDue(null), isFalse);
+  });
+
+  test('automatic warm-ups: due only once they were added', () {
+    expect(autoWarmupsTipDue(const {}, added: true), isTrue);
+    expect(autoWarmupsTipDue(const {}, added: false), isFalse);
+    expect(autoWarmupsTipDue(const {Tip.autoWarmups}, added: true), isFalse);
+    expect(autoWarmupsTipDue(null, added: true), isFalse);
   });
 }

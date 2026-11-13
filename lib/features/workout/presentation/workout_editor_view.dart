@@ -99,7 +99,8 @@ Future<void> addSetOfKind(
     builder: (context) {
       final l10n = AppLocalizations.of(context);
       final seen = context.select(
-        (SettingsCubit cubit) => cubit.state.settings.seenTips,
+        (SettingsCubit cubit) =>
+            cubit.state.loaded ? cubit.state.settings.seenTips : null,
       );
       return SafeArea(
         child: SingleChildScrollView(

@@ -68,13 +68,11 @@ class SettingsSection extends StatelessWidget {
               title: Text(l10n.settingsAutoWarmups),
               subtitle: Text(l10n.settingsAutoWarmupsOn),
               value: settings.autoWarmups,
-              // Its tip has nothing left to tell.
-              onChanged: (on) => cubit.update(
-                settings.copyWith(
-                  autoWarmups: on,
-                  seenTips: {...settings.seenTips, Tip.autoWarmups},
-                ),
-              ),
+              onChanged: (on) {
+                cubit.update(settings.copyWith(autoWarmups: on));
+                // Its tip has nothing left to tell.
+                cubit.tipSeen(Tip.autoWarmups);
+              },
             ),
             SwitchListTile(
               title: Text(l10n.settingsRestTimer),

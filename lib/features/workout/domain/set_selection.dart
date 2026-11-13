@@ -140,3 +140,24 @@ class _Position implements Groupable<_Position> {
   @override
   _Position withGroup(String? group) => _Position(index, group);
 }
+
+/// The set whose effort the set bar asks for, always a done working set
+/// (warm-ups are not rated): the selected set when it is done, else
+/// [ticked], the set ticked last until another is picked, while it is
+/// still done; else none.
+SetRef? effortSet(Workout? workout, SetSelection? selection, SetRef? ticked) {
+  bool rated(SetRef ref) {
+    final set = workout?.exercises
+        .elementAtOrNull(ref.exercise)
+        ?.sets
+        .elementAtOrNull(ref.set);
+    return set != null && set.done && !set.isWarmup;
+  }
+
+  final index = selection?.set;
+  if (selection != null && index != null) {
+    final selected = (exercise: selection.exercise, set: index);
+    if (rated(selected)) return selected;
+  }
+  return ticked != null && rated(ticked) ? ticked : null;
+}

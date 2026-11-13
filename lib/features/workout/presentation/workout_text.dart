@@ -9,6 +9,7 @@ import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/effort.dart';
 import '../domain/exercise_stats.dart';
+import '../domain/set_selection.dart';
 import '../domain/workout.dart';
 
 extension WorkoutText on AppLocalizations {
@@ -47,6 +48,11 @@ extension WorkoutText on AppLocalizations {
         ? workoutSetToDoDrop(exercise.name, number, working)
         : workoutLockScreenCurrent(exercise.name, '$number', working);
   }
+
+  /// After a rest, set [set] of [exercise] as [setToDo] names it, e.g.
+  /// `Next: Bench Press · Warm-up 1 of 2`.
+  String restNextText(WorkoutExercise exercise, int set) =>
+      restNotificationNext(setToDo(exercise, set));
 
   /// A lifted weight in [unit] for a text field, as
   /// [WeightUnitConversion.shown] shows it: up to two decimals, no trailing
@@ -133,12 +139,38 @@ extension WorkoutText on AppLocalizations {
         : helpRepsLeft(step.rir);
   }
 
-  /// What the effort chips of [scale] ask.
-  String effortQuestion(EffortScale scale) => switch (scale) {
-    EffortScale.byFeel => effortQuestionFeel,
-    EffortScale.rir => effortQuestionRir,
-    EffortScale.rpe => effortQuestionRpe,
-  };
+  /// What the effort row of [scale] asks about set [asked] of [workout],
+  /// e.g. `How hard was set 2?`, naming its exercise when it is not the
+  /// [selected] one: `How hard was Squat drop set 3?`.
+  String effortQuestion(
+    EffortScale scale,
+    Workout workout,
+    SetRef asked,
+    SetSelection? selected,
+  ) {
+    final exercise = workout.exercises[asked.exercise];
+    final sets = exercise.sets;
+    final number = sets.take(asked.set + 1).where((s) => !s.isWarmup).length;
+    final name = sets[asked.set].type == SetType.drop
+        ? effortDropSetName(number)
+        : effortSetName(number);
+    final set = selected?.exercise == asked.exercise
+        ? name
+        : effortOtherExerciseSet(exercise.name, name);
+    return switch (scale) {
+      EffortScale.byFeel => effortQuestionFeel(set),
+      EffortScale.rir => effortQuestionRir(set),
+      EffortScale.rpe => effortQuestionRpe(set),
+    };
+  }
+
+  /// The progress of [exercise] in working sets, e.g. `Squat · 1/3`, as
+  /// "of N" counts them everywhere.
+  String exerciseProgress(WorkoutExercise exercise) => workoutExerciseProgress(
+    exercise.name,
+    workingSets(exercise.sets).length,
+    exercise.sets.where((s) => !s.isWarmup).length,
+  );
 
   /// [step] as a choice of [scale] shows it: `Easy`, `4` (RIR), `6` (RPE),
   /// `Failed`.

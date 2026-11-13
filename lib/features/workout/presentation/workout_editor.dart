@@ -22,6 +22,13 @@ abstract interface class EditedWorkout {
   /// null follows the next set to do. See [EditedSelection.selection].
   SetSelection? get picked;
 
+  /// The set ticked last, until another is picked or sets move; see
+  /// [effortSet].
+  SetRef? get ticked;
+
+  /// Whether first-use tips show here.
+  bool get offersTips;
+
   /// The stats of the workout's exercises that have arrived.
   Map<String, ExerciseStats?> get stats;
 
@@ -38,6 +45,9 @@ abstract interface class EditedWorkout {
 extension EditedSelection on EditedWorkout {
   /// What is open and selected now; see [resolveSelection].
   SetSelection? get selection => resolveSelection(workout, picked);
+
+  /// The set the effort row asks about; see [effortSet].
+  SetRef? get effortRef => effortSet(workout, selection, ticked);
 }
 
 /// Editing a workout's exercises and sets, shared by the workout in
@@ -58,8 +68,15 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   /// Whether [edit] changes the workout now.
   bool get canEdit;
 
-  /// Emits the state with [picked] as the selection.
+  /// Emits the state with [picked] as the selection; picking another set
+  /// than the selected one forgets [EditedWorkout.ticked].
   void emitPicked(SetSelection? picked);
+
+  /// Emits the state with [ticked] as [EditedWorkout.ticked].
+  void emitTicked(SetRef? ticked);
+
+  /// Notes that warm-ups were added to the workout automatically.
+  void noteWarmupsAdded();
 
   /// Ticks the set done, or unticks it.
   void toggleDone(SetRef ref);
@@ -93,19 +110,22 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   bool addExercises(List<Exercise> exercises, String language) {
     final before = state.workout;
     final current = state.selection;
+    final room = WorkoutLimits.maxExercises - (before?.exercises.length ?? 0);
+    final added = [
+      for (final exercise in exercises.take(room))
+        _warmedUp(editing.exerciseFor(exercise, language)),
+    ];
     _editExercises(
-      (list) => [
-        ...list,
-        for (final exercise in exercises.take(
-          WorkoutLimits.maxExercises - list.length,
-        ))
-          _warmedUp(editing.exerciseFor(exercise, language)),
-      ],
+      (list) => [...list, ...added],
       select: (after) => before == null
           ? null
           : selectionAfterExercisesAdded(before, after, current),
     );
-    return state.workout?.exercises.length != before?.exercises.length;
+    final changed = state.workout?.exercises.length != before?.exercises.length;
+    if (changed && added.any((e) => e.sets.any((set) => set.isWarmup))) {
+      noteWarmupsAdded();
+    }
+    return changed;
   }
 
   void removeExercise(int index) {
@@ -117,23 +137,27 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     );
   }
 
-  /// One without a done set gets warm-ups as one added would, opening on
-  /// the first of them.
+  /// Its untouched warm-ups go when the new exercise takes none (see
+  /// [withoutUnusedWarmups]); one without a done set gets warm-ups as one
+  /// added would. When that changes its sets, it opens on its first undone.
   void swapExercise(int index, Exercise exercise, String language) {
     final before = state.workout?.exercises.elementAtOrNull(index);
-    if (before == null) return;
+    if (before == null || !canEdit) return;
     final swapped = editing.swapExercise(before, exercise, language);
-    final warmed = before.doneSets.isEmpty ? _warmedUp(swapped) : swapped;
+    final kept = withoutUnusedWarmups(before, swapped);
+    final fitted = before.doneSets.isEmpty ? _warmedUp(kept) : kept;
+    final resized = fitted.sets.length != swapped.sets.length;
     final current = state.selection;
     _retyped.clear();
     _editExercise(
       index,
-      (_) => warmed,
-      movesSets: warmed != swapped,
-      select: (after) => warmed != swapped && current?.exercise == index
+      (_) => fitted,
+      movesSets: resized,
+      select: (after) => resized && current?.exercise == index
           ? openedExercise(after, index)
           : current,
     );
+    if (fitted.sets.length > kept.sets.length) noteWarmupsAdded();
   }
 
   WorkoutExercise _warmedUp(WorkoutExercise exercise) =>
@@ -272,9 +296,11 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   void setSetNote(SetRef ref, String text) =>
       _editSet(ref, (set, _) => set.copyWith(note: () => _note(text)));
 
-  /// Null clears it.
-  void setEffort(SetRef ref, EffortStep? step) =>
-      _editSet(ref, (set, _) => set.withEffort(step));
+  /// Null clears it. Answers the effort row about the set just ticked.
+  void setEffort(SetRef ref, EffortStep? step) {
+    _editSet(ref, (set, _) => set.withEffort(step));
+    if (state.ticked == ref) emitTicked(null);
+  }
 
   void addDrop(SetRef ref) => _editSet(
     ref,
@@ -328,11 +354,16 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
 
   /// Puts [toggled] (see [toggledSet]) in the place of [ref]; ticked done,
   /// the next set to do is selected, see [selectionAfterTick], else [ref].
-  void applyToggled(SetRef ref, WorkoutSet toggled) => _replaceSet(
-    ref,
-    toggled,
-    select: (after) => toggled.done ? selectionAfterTick(after, ref) : ref,
-  );
+  /// A set ticked done becomes [EditedWorkout.ticked].
+  void applyToggled(SetRef ref, WorkoutSet toggled) {
+    if (!canEdit) return;
+    _replaceSet(
+      ref,
+      toggled,
+      select: (after) => toggled.done ? selectionAfterTick(after, ref) : ref,
+    );
+    emitTicked(toggled.done ? ref : null);
+  }
 
   void _replaceSet(
     SetRef ref,

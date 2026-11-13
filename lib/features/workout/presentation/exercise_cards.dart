@@ -445,13 +445,7 @@ class _ExerciseHeader extends StatelessWidget {
     } else {
       tile = ListTile(
         leading: _groupLeading(exercises, index),
-        title: Text(
-          l10n.workoutExerciseProgress(
-            exercise.name,
-            exercise.doneSets.length,
-            exercise.sets.length,
-          ),
-        ),
+        title: Text(l10n.exerciseProgress(exercise)),
         onTap: () => editor.openExercise(index),
       );
     }

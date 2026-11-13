@@ -28,11 +28,13 @@ class SettingsModule implements FeatureModule {
       )
       ..registerFactory(() => WatchSettings(sl()))
       ..registerFactory(() => UpdateSettings(sl()))
+      ..registerFactory(() => MarkTipSeen(sl()))
       ..registerLazySingleton(
         () => SettingsCubit(
           watchAuthUser: sl(),
           watchSettings: sl(),
           updateSettings: sl(),
+          markTipSeen: sl(),
           defaults: defaults,
         ),
       );

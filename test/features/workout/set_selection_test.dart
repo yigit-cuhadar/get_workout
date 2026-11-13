@@ -295,4 +295,42 @@ void main() {
       );
     });
   });
+
+  group('effortSet', () {
+    final w = workout('w', [
+      exercise('squat', [
+        lift(40, 8, type: SetType.warmup),
+        lift(100, 5),
+        lift(100, 5, done: false),
+      ]),
+    ]);
+
+    test('the selected set when it is done', () {
+      expect(effortSet(w, (exercise: 0, set: 1), null), (exercise: 0, set: 1));
+    });
+
+    test('else the set just ticked, while it is done', () {
+      expect(effortSet(w, (exercise: 0, set: 2), (exercise: 0, set: 1)), (
+        exercise: 0,
+        set: 1,
+      ));
+      expect(
+        effortSet(w, (exercise: 0, set: 2), (exercise: 0, set: 2)),
+        isNull,
+      );
+      expect(effortSet(w, (exercise: 0, set: 2), null), isNull);
+    });
+
+    test('never a warm-up or a set that is gone', () {
+      expect(effortSet(w, (exercise: 0, set: 0), null), isNull);
+      expect(
+        effortSet(w, (exercise: 0, set: 2), (exercise: 0, set: 0)),
+        isNull,
+      );
+      expect(
+        effortSet(w, (exercise: 0, set: 2), (exercise: 3, set: 0)),
+        isNull,
+      );
+    });
+  });
 }

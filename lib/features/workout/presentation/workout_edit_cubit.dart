@@ -48,6 +48,7 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     this.issue,
     this.failure,
     this.picked,
+    this.ticked,
   });
 
   final WorkoutEditStatus status;
@@ -72,6 +73,12 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
 
   @override
   final SetSelection? picked;
+  @override
+  final SetRef? ticked;
+
+  /// The user knows what they logged; tips are for the workout in progress.
+  @override
+  bool get offersTips => false;
 
   /// A stored workout has nothing to compare with, so no last time is shown.
   @override
@@ -92,6 +99,7 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     WorkoutChangeIssue? Function()? issue,
     Failure? Function()? failure,
     SetSelection? Function()? picked,
+    SetRef? Function()? ticked,
   }) => WorkoutEditState(
     status: status ?? this.status,
     workout: workout ?? this.workout,
@@ -100,6 +108,7 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     issue: issue != null ? issue() : this.issue,
     failure: failure != null ? failure() : this.failure,
     picked: picked != null ? picked() : this.picked,
+    ticked: ticked != null ? ticked() : this.ticked,
   );
 
   @override
@@ -111,6 +120,7 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     issue,
     failure,
     picked,
+    ticked,
   ];
 }
 
@@ -310,6 +320,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
         workout: changed,
         invalidSet: () => null,
         picked: select == null ? null : () => select(changed),
+        ticked: movesSets ? () => null : null,
       ),
     );
   }
@@ -320,8 +331,20 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
 
   /// A new pick drops the message of a set that could not be ticked.
   @override
-  void emitPicked(SetSelection? picked) =>
-      emit(state.copyWith(picked: () => picked, invalidSet: () => null));
+  void emitPicked(SetSelection? picked) => emit(
+    state.copyWith(
+      picked: () => picked,
+      invalidSet: () => null,
+      ticked: picked == state.selection ? null : () => null,
+    ),
+  );
+
+  @override
+  void emitTicked(SetRef? ticked) => emit(state.copyWith(ticked: () => ticked));
+
+  /// Never: see [addsWarmups].
+  @override
+  void noteWarmupsAdded() {}
 
   /// Ticks the set done, its empty values taken from the sets before it;
   /// one that still lacks values stays undone and is marked as

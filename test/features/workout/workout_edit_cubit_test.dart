@@ -262,6 +262,14 @@ void main() {
       await cubit.close();
     });
 
+    test('the effort row asks about the selected done set, no tips', () async {
+      final cubit = await editing();
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      expect(cubit.state.effortRef, (exercise: 0, set: 0));
+      expect(cubit.state.offersTips, isFalse);
+      await cubit.close();
+    });
+
     test('exercises added to a past workout get no warm-ups', () async {
       final cubit = await editing();
       cubit.addExercises([move('row')], 'en');

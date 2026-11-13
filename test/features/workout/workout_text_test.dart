@@ -84,6 +84,47 @@ void main() {
       );
       expect(l10n.setToDo(warmed, 1), 'Bench Press · Warm-up 2 of 2');
     });
+
+    test('the effort row names the set it asks about', () {
+      final w = workout('w', [
+        bench,
+        exercise('Squat', [lift(100, 5)]),
+      ]);
+      const selected = (exercise: 0, set: 3);
+      expect(
+        l10n.effortQuestion(EffortScale.byFeel, w, (
+          exercise: 0,
+          set: 1,
+        ), selected),
+        'How hard was set 1?',
+      );
+      expect(
+        l10n.effortQuestion(EffortScale.rir, w, (
+          exercise: 0,
+          set: 2,
+        ), selected),
+        'How many more reps could you have done in drop set 2?',
+      );
+      expect(
+        l10n.effortQuestion(EffortScale.rpe, w, (
+          exercise: 1,
+          set: 0,
+        ), selected),
+        'How hard was Squat set 1, from 1 to 10?',
+      );
+    });
+
+    test('progress counts working sets only', () {
+      expect(l10n.exerciseProgress(bench), 'Bench Press · 2/3');
+    });
+
+    test('after a rest the next set is named as the set to do', () {
+      expect(l10n.restNextText(bench, 0), 'Next: Bench Press · Warm-up');
+      expect(
+        l10n.restNextText(bench, 2),
+        'Next: Bench Press · Drop set 2 of 3',
+      );
+    });
   });
 
   test('each effort step says what it means on its scale', () {
@@ -106,7 +147,6 @@ void main() {
       l10n.effortStepMeaning(const EffortStep.reserve(1), EffortScale.byFeel),
       '1 left',
     );
-    expect(l10n.effortQuestion(EffortScale.byFeel), 'How hard was this set?');
   });
 
   group('a weight typed in the other unit shows rounded', () {

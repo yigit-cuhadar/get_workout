@@ -84,6 +84,7 @@ void main() {
       watchAuthUser: WatchAuthUser(idle),
       watchSettings: WatchSettings(settingsRepository),
       updateSettings: UpdateSettings(settingsRepository),
+      markTipSeen: MarkTipSeen(settingsRepository),
       defaults: UserSettings.defaultsFor(null),
     );
     // Onboarding is covered by the router tests; this user has done it.

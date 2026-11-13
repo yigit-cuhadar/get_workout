@@ -119,6 +119,7 @@ void main() {
       watchAuthUser: WatchAuthUser(idle),
       watchSettings: WatchSettings(settingsRepository),
       updateSettings: UpdateSettings(settingsRepository),
+      markTipSeen: MarkTipSeen(settingsRepository),
       defaults: UserSettings.defaultsFor(null),
     );
     final exercises = MockExerciseRepository();

@@ -55,7 +55,9 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.savingProgram = false,
     this.savedProgramId,
     this.picked,
-    this.weightUnit = WeightUnit.kg,
+    this.ticked,
+    this.warmupsAdded = false,
+    this.weightUnit,
   });
 
   final WorkoutStatus status;
@@ -95,9 +97,19 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
 
   @override
   final SetSelection? picked;
+  @override
+  final SetRef? ticked;
 
-  /// The user's, which warm-ups are suggested in; see [suggestedValues].
-  final WeightUnit weightUnit;
+  /// Warm-ups were added to this workout automatically, which its tip
+  /// tells.
+  final bool warmupsAdded;
+
+  @override
+  bool get offersTips => true;
+
+  /// The user's, which warm-ups are suggested in (see [suggestedValues]);
+  /// null until their settings arrive, and warm-ups suggest no ramp.
+  final WeightUnit? weightUnit;
 
   /// A workout is in progress (or being finished), so another cannot start.
   /// An empty one is not ([Workout.isEmpty]): it is not kept, shows nowhere
@@ -140,7 +152,9 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     bool? savingProgram,
     String? Function()? savedProgramId,
     SetSelection? Function()? picked,
-    WeightUnit? weightUnit,
+    SetRef? Function()? ticked,
+    bool? warmupsAdded,
+    WeightUnit? Function()? weightUnit,
   }) => ActiveWorkoutState(
     status: status ?? this.status,
     workout: workout != null ? workout() : this.workout,
@@ -156,7 +170,9 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
         ? savedProgramId()
         : this.savedProgramId,
     picked: picked != null ? picked() : this.picked,
-    weightUnit: weightUnit ?? this.weightUnit,
+    ticked: ticked != null ? ticked() : this.ticked,
+    warmupsAdded: warmupsAdded ?? this.warmupsAdded,
+    weightUnit: weightUnit != null ? weightUnit() : this.weightUnit,
   );
 
   @override
@@ -173,6 +189,8 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     savingProgram,
     savedProgramId,
     picked,
+    ticked,
+    warmupsAdded,
     weightUnit,
   ];
 }
@@ -235,10 +253,14 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   /// The signed-in user's, as they arrive.
   RestTimerSettings _restTimer = const RestTimerSettings();
-  bool _autoWarmups = _defaultAutoWarmups;
 
-  /// [UserSettings.autoWarmups] until the user's own arrive.
-  static const _defaultAutoWarmups = true;
+  /// The user's settings once they arrived; until then no warm-up is added
+  /// automatically.
+  UserSettings? _settings;
+
+  /// Completes with the user's first settings, or null when they cannot
+  /// be read.
+  var _settingsReady = Completer<UserSettings?>();
   final _statsSubscriptions = <String, StreamSubscription<ExerciseStats?>>{};
   String? _uid;
 
@@ -267,7 +289,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   static const catalogueWait = Duration(seconds: 10);
 
   @override
-  bool get addsWarmups => _autoWarmups;
+  bool get addsWarmups => _settings?.autoWarmups ?? false;
 
   @override
   Map<String, Exercise> get knownExercises => switch (_catalogue.state) {
@@ -283,19 +305,24 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     _stopStats();
     unawaited(_settingsSubscription?.cancel());
     _restTimer = const RestTimerSettings();
-    _autoWarmups = _defaultAutoWarmups;
+    _settings = null;
+    final ready = _settingsReady = Completer<UserSettings?>();
     _settingsSubscription = uid == null
         ? null
         : _watchSettings(uid).listen(
             (settings) {
+              _settings = settings;
               _restTimer = settings.restTimer;
-              _autoWarmups = settings.autoWarmups;
+              if (!ready.isCompleted) ready.complete(settings);
               if (settings.weightUnit != state.weightUnit) {
-                emit(state.copyWith(weightUnit: settings.weightUnit));
+                emit(state.copyWith(weightUnit: () => settings.weightUnit));
               }
             },
-            // The settings feature logs it; the last known ones stay.
-            onError: (Object _) {},
+            // The settings feature logs it; the last known ones stay, and
+            // without any no warm-up is added.
+            onError: (Object _) {
+              if (!ready.isCompleted) ready.complete(null);
+            },
           );
     emit(
       ActiveWorkoutState(
@@ -358,7 +385,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       name: name,
       exercises: [
         switch (editing.exerciseFor(exercise, language)) {
-          final added when _autoWarmups => withWarmups(added),
+          final added when addsWarmups => withWarmups(added),
           final added => added,
         },
       ],
@@ -408,6 +435,13 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         return notStarted;
       }
     }
+    // Whether to add warm-ups is the user's choice: wait for it.
+    final settings =
+        _settings ??
+        await _settingsReady.future.timeout(
+          catalogueWait,
+          onTimeout: () => null,
+        );
     if (isClosed) return notStarted;
     final catalogue = knownExercises;
     final started = _start(
@@ -419,7 +453,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         dayIndex: dayIndex,
         catalogue: catalogue,
         language: language,
-        warmups: _autoWarmups,
+        warmups: settings?.autoWarmups ?? false,
       ),
       allowEmpty: false,
     );
@@ -442,7 +476,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     if (uid == null || _local == null || !open) return false;
     final workout = build(_newWorkoutId(uid), _clock());
     if (!allowEmpty && workout.exercises.isEmpty) return false;
-    _emitWorkout(workout, status: WorkoutStatus.active);
+    _emitWorkout(
+      workout,
+      status: WorkoutStatus.active,
+      // A new workout has warm-ups only when they were added to it.
+      warmupsAdded: workout.exercises.any((e) => e.sets.any((s) => s.isWarmup)),
+    );
     _keep();
     return true;
   }
@@ -753,14 +792,28 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       status: WorkoutStatus.active,
       rest: () => _restAfterEdit(workout, changed, movesSets: movesSets),
       picked: select == null ? state.picked : select(changed),
+      keepTicked: !movesSets,
     );
     _keep();
   }
 
   /// A new pick drops the message of a set that could not be ticked.
   @override
-  void emitPicked(SetSelection? picked) =>
-      emit(state.copyWith(picked: () => picked, invalidSet: () => null));
+  void emitPicked(SetSelection? picked) => emit(
+    state.copyWith(
+      picked: () => picked,
+      invalidSet: () => null,
+      ticked: picked == state.selection ? null : () => null,
+    ),
+  );
+
+  @override
+  void emitTicked(SetRef? ticked) => emit(state.copyWith(ticked: () => ticked));
+
+  @override
+  void noteWarmupsAdded() {
+    if (!state.warmupsAdded) emit(state.copyWith(warmupsAdded: true));
+  }
 
   /// The rest once an edit made [after] of [before]: a set ticked done
   /// starts the rest [restAfterTick] gives, replacing the running one;
@@ -795,6 +848,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     required WorkoutStatus status,
     Rest? Function()? rest,
     SetSelection? picked,
+    bool keepTicked = false,
+    bool? warmupsAdded,
   }) {
     emit(
       state.copyWith(
@@ -803,6 +858,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         rest: rest,
         invalidSet: () => null,
         picked: () => picked,
+        ticked: keepTicked ? null : () => null,
+        warmupsAdded: warmupsAdded,
       ),
     );
     _followStats();

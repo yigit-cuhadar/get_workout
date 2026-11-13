@@ -20,3 +20,14 @@ class UpdateSettings implements UseCase<void, SettingsUpdate> {
   Future<Result<void>> call(SettingsUpdate params) =>
       _repository.saveSettings(params.uid, params.settings);
 }
+
+typedef TipSeen = ({String uid, Tip tip});
+
+class MarkTipSeen implements UseCase<void, TipSeen> {
+  const MarkTipSeen(this._repository);
+  final SettingsRepository _repository;
+
+  @override
+  Future<Result<void>> call(TipSeen params) =>
+      _repository.markTipSeen(params.uid, params.tip);
+}
