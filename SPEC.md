@@ -924,8 +924,9 @@ from the earlier FitLab app.
   layout is part of the pass. No feature is removed, only moved. Target
   per tab (the four tabs themselves are built, see Navigation; the rest
   is built by the later Group 10 items):
-  - **Today**: next workout, week strip, the body model as a heat map of
-    this week's sets, steps card. No quick actions card and no weight card.
+  - **Today**: next workout, week strip, the "Sets this week" muscle bars,
+    steps card, as it is now. No quick actions card, no weight card and no
+    model: the owner dropped the heat-map body on 2026-11-13.
   - **Train**: Programs and Exercises merged, two views. "My program"
     (active program, its days, other programs: catalogue, generator, new;
     start an empty workout) and "Exercises". The Exercises view is the
@@ -940,10 +941,6 @@ from the earlier FitLab app.
     (weight, measurement days, photos, compare), cardio, step history.
   - **Profile**: account (guests see a create-account card first), Premium,
     profile answers, settings, calculators.
-  - **Heat map**: one continuous ramp by weekly sets per muscle, neutral
-    when untrained, deepest at 20 sets and above; secondary muscles count
-    half as today. The 10-20 band is no longer on the model; it stays in
-    the detail a muscle opens (sets and the band bar).
   - **One page per exercise**: instructions and its statistics (records,
     e1RM chart) together; Progress links to the same page.
   - **Onboarding**: a welcome with the model, then four questions (goal,
@@ -1740,8 +1737,8 @@ Group 9, launch readiness
 
 Group 10, UX pass (see Decisions; each flow's layout is picked by the owner from wireframe variants before it is built)
 - [x] Navigation — four tabs (Today / Train / Progress / Profile), Programs and Exercises merged, quick actions moved to their tabs — every existing screen is still reachable
-- [ ] Train, exercises view — model with a search box; one list page with search, filters, sort and +, opened by the box or filtered by a tapped muscle with its model strip
-- [ ] Today — next workout, week strip, heat-map model with muscle detail, steps card
+- [ ] Train, exercises view — model with a search box; one list page with search, filters, sort and +, opened by the box or filtered by a tapped muscle
+- [x] Today — stays as it is after Navigation (next workout, week strip, muscle bars, steps card); the heat-map model was dropped
 - [ ] Progress — data cards; history inside the calendar; one page per exercise with its statistics
 - [ ] Onboarding — short enough that nobody quits; the rest asked when first needed
 - [ ] Workout screen — set entry, rest and effort without crowding; summary shows records and the model
