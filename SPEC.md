@@ -1636,7 +1636,33 @@ Group 9, launch readiness
 
 ## Design
 
-<!-- Filled in the design phase, after every feature is ticked. -->
+Started on 2026-11-13 at the owner's request with Subscription still open;
+the paywall is designed in this phase and wired to RevenueCat later. The
+owner picks every direction from boards of variants; the current screens are
+only a sketch and may be restructured.
+
+- **Mood**: plain, calm, modern, premium. Premium means quiet: generous
+  whitespace, large titles, no decoration, no shadows or gradients.
+- **Platform feel**: our own design language on both platforms. Material stays
+  underneath for accessibility and input behaviour, but nothing that reads as
+  Android survives: no ripple, elevation tint, pill tab indicator, FAB,
+  Material icons or underlined fields. iOS keeps native back-swipe and scroll
+  physics.
+- **Themes**: light and dark, following the system; designed light first.
+- **Motion**: only where it means something (set logged, rest timer, record,
+  page transitions).
+- **Colour**: cool neutrals with ink text and one cobalt accent (light
+  `#2f5bea`, dark `#6f8fff`). Primary buttons are accent-filled.
+- **Type**: Geist.
+- **Shape**: soft corners (cards 16-18, buttons 12-14); set bubbles stay
+  round.
+- **Surfaces**: white cards with a hairline border on a faintly grey page.
+- **Components**: classic full-width tab bar with icon and label; set bubbles
+  filled with a check when done and the values under the bubble; set bar with
+  minus/plus steppers (tap the number to type) and a wide log button; rest
+  timer as a slim strip with a progress line; secondary buttons in the soft
+  accent tint; lists as one grouped card with hairlines; a segmented control
+  for 2-4 options and chips when there are more.
 
 ## Open questions
 
