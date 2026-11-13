@@ -1708,7 +1708,15 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [ ] Workout, rest — after a set the panel asks the effort (four options in a grid plus Failed, one line of explanation each, Skip) above a slim timer bar; the RPE scale uses the same layout with RPE 6 or less, 7, 8, 9, 10 and Failed. Once answered only the timer bar shows (time, +15 s, Skip); the next set's entry appears when the rest ends or is skipped
 - [ ] Progress — one small widget per area, each opening its page: Body (last weight, curve, last body fat, Log weight, Measurement day), the calendar week, weekly volume, strength, cardio, steps with a bar
 - [ ] Calendar with workout history — one page: a week strip that opens to the month, then one list by day with workouts, cardio, planned days (with Start) and missed days, Show older workouts; Add past workout in the app bar. Workout history as its own page goes away
-- [ ] Body with Compare — two views, Overview (weight, body fat, Log weight, Measurement day, history) and Compare (Previous / First / Other date, photos slider with poses, body fat, all changes, target weight)
+- [ ] Body with Compare — two views, Overview (one chart with up to three series picked from weight, body fat, fat mass, lean mass, each measurement, weekly sets and daily steps, plus a target weight line; Log weight, Measurement day, history) and Compare (Previous / First / Other date, photos slider with poses, body fat, all changes, target weight)
+- [ ] Onboarding, birth year — a wheel showing the year only
+- [ ] Steps — today as a ring, the daily goal edited in place (steps of 100, tap the number to type), one chart switching between this week and the last 30 days
+- [ ] Workout summary — one prominent card with the name and four stats, records below, Done and Save as program at the bottom
+- [ ] Profile — every setting on one page in groups; Premium is a distinct card with Get Premium
+- [ ] Paywall — two layouts kept for an A/B test: plans as a list, plans as three cards side by side
+- [ ] Program detail — a summary card (state, weekdays, length, Change days, Stop), days collapse
+- [ ] Program builder — stays as built: day chips, sets and reps in a sheet
+- [ ] Exercise detail — layout not picked yet
 - [ ] Further screens — listed here as the owner picks them
 
 ## Design
