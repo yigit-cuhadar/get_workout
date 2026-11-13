@@ -888,6 +888,15 @@ from the earlier FitLab app.
     the detail a muscle opens (sets and the band bar).
   - **One page per exercise**: instructions and its statistics (records,
     e1RM chart) together; Progress links to the same page.
+  - **Onboarding**: a welcome with the model, then four questions (goal,
+    level, days a week, equipment as the five presets), one per screen,
+    advancing on the tap; then the suggested program with its days, worked
+    muscles and weekday choice on one screen, whose button starts it and
+    lands on Today. No summary screen. One "Skip", which lands on Today with
+    a "find your program" card. Sex, birth year, height, weight and target
+    weight are asked where first needed (calculators, body). Analytics
+    consent is asked after the first finished workout, notifications at the
+    first rest as today.
 - **Workouts on the device**: per user one JSON file
   (`workouts_<uid>.json` in the app's private support directory, versioned)
   holds the workout in progress, finished workouts the server has not
