@@ -616,8 +616,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_auth"
-      ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
-      resolved-ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
+      ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
+      resolved-ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -625,8 +625,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_camera"
-      ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
-      resolved-ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
+      ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
+      resolved-ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -634,8 +634,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_core"
-      ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
-      resolved-ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
+      ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
+      resolved-ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -643,8 +643,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_firebase"
-      ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
-      resolved-ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
+      ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
+      resolved-ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -652,8 +652,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_health"
-      ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
-      resolved-ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
+      ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
+      resolved-ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -661,8 +661,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_model_viewer"
-      ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
-      resolved-ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
+      ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
+      resolved-ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.1"
@@ -670,8 +670,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_notifications"
-      ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
-      resolved-ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
+      ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
+      resolved-ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -679,8 +679,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_purchases"
-      ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
-      resolved-ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
+      ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
+      resolved-ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -688,8 +688,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_ui"
-      ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
-      resolved-ref: "12b4259b52555b1cc2e184acf25aa124105e3c1d"
+      ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
+      resolved-ref: "18c00c8c0806db29ef75729028d058df91e69f5d"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"

@@ -8,15 +8,13 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../../settings/presentation/settings_cubit.dart';
-import '../domain/user_profile.dart';
 import 'profile_cubit.dart';
 import 'profile_form_cubit.dart';
 import 'profile_questions.dart';
 
-/// The first-run questions, one per screen, then a summary. The router shows
-/// it until the profile records completion, and moves on by itself once it
-/// does; this page never navigates away.
+/// A welcome, then the first-run questions, one per screen. The router
+/// shows it until the profile records completion, and moves on by itself
+/// once it does; this page never navigates away.
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
 
@@ -35,7 +33,6 @@ class OnboardingPage extends StatelessWidget {
         uid: uid,
         initial: context.read<ProfileCubit>().state.profile,
         completeOnboarding: sl(),
-        skipped: sl(),
       ),
       child: const _OnboardingView(),
     );
@@ -49,11 +46,6 @@ class _OnboardingView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ProfileFormCubit>();
-    // Someone signed in to an account (also a guest just linked to one) has
-    // nothing to sign in to.
-    final guest = context.select(
-      (AuthCubit auth) => auth.user?.isAnonymous ?? true,
-    );
     return BlocConsumer<ProfileFormCubit, ProfileFormState>(
       listenWhen: (previous, current) =>
           current.status != previous.status ||
@@ -69,68 +61,46 @@ class _OnboardingView extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        final question = state.question;
-        final count = state.questions.length;
+        if (state.welcome) return const _Welcome();
         final submitted = state.status == ProfileFormStatus.submitted;
         return PopScope(
-          canPop: state.step == 0,
+          canPop: false,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) cubit.back();
           },
           child: Scaffold(
             appBar: AppBar(
               automaticallyImplyLeading: false,
-              leading: state.step > 0
-                  ? BackButton(onPressed: submitted ? null : cubit.back)
-                  : null,
-              title: question == null
-                  ? null
-                  : Text(l10n.onboardingProgress(state.step + 1, count)),
+              leading: BackButton(onPressed: submitted ? null : cubit.back),
+              title: _Progress(step: state.step, count: state.questions.length),
               actions: [
-                if (question != null)
-                  TextButton(
-                    onPressed: submitted ? null : cubit.skip,
-                    child: Text(l10n.onboardingSkip),
+                Padding(
+                  padding: const EdgeInsets.only(right: Gap.md),
+                  child: Text(
+                    l10n.onboardingProgress(
+                      state.step + 1,
+                      state.questions.length,
+                    ),
                   ),
+                ),
               ],
             ),
             body: SafeArea(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  LinearProgressIndicator(value: state.step / count),
                   Expanded(
-                    child: question == null
-                        ? _Summary(state.answers)
-                        : ProfileQuestion(question, key: ValueKey(question)),
+                    child: ProfileQuestion(
+                      state.question,
+                      key: ValueKey(state.question),
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(Gap.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ForgeButton(
-                          label: question == null
-                              ? l10n.onboardingStart
-                              : l10n.onboardingNext,
-                          loading: submitted,
-                          onPressed: state.canContinue ? cubit.next : null,
-                        ),
-                        if (state.canSkipQuestion)
-                          TextButton(
-                            onPressed: submitted ? null : cubit.skipQuestion,
-                            child: Text(l10n.onboardingSkipQuestion),
-                          ),
-                        // Nothing is stored before this, so a returning user
-                        // leaves no profile behind on the guest.
-                        if (guest && state.step == 0)
-                          TextButton(
-                            onPressed: submitted
-                                ? null
-                                : () => context.go(Routes.onboardingSignIn),
-                            child: Text(l10n.accountHaveOne),
-                          ),
-                      ],
+                    child: ForgeButton(
+                      label: l10n.onboardingNext,
+                      loading: submitted,
+                      onPressed: state.canContinue ? cubit.next : null,
                     ),
                   ),
                 ],
@@ -143,34 +113,86 @@ class _OnboardingView extends StatelessWidget {
   }
 }
 
-/// The answers to confirm before starting.
-class _Summary extends StatelessWidget {
-  const _Summary(this.answers);
+/// One segment per question, those up to [step] filled.
+class _Progress extends StatelessWidget {
+  const _Progress({required this.step, required this.count});
 
-  final UserProfile answers;
+  final int step;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      for (var i = 0; i < count; i++) ...[
+        if (i > 0) const SizedBox(width: Gap.xs),
+        Expanded(child: LinearProgressIndicator(value: i <= step ? 1 : 0)),
+      ],
+    ],
+  );
+}
+
+class _Welcome extends StatelessWidget {
+  const _Welcome();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final settings = context.select((SettingsCubit c) => c.state.settings);
-    return ListView(
-      padding: const EdgeInsets.all(Gap.md),
-      children: [
-        Text(l10n.onboardingSummaryTitle, style: theme.textTheme.headlineSmall),
-        const SizedBox(height: Gap.sm),
-        Text(l10n.onboardingSummaryInfo, style: theme.textTheme.bodyMedium),
-        const SizedBox(height: Gap.md),
-        for (final field in ProfileField.values)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.fieldName(field)),
-            trailing: Text(
-              l10n.answerText(answers, field, settings) ??
-                  l10n.profileNotAnswered,
+    // Someone signed in to an account (also a guest just linked to one) has
+    // nothing to sign in to.
+    final guest = context.select(
+      (AuthCubit auth) => auth.user?.isAnonymous ?? true,
+    );
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(Gap.md),
+                children: [
+                  const SizedBox(height: Gap.xl),
+                  Text(
+                    l10n.onboardingWelcomeTitle,
+                    style: theme.textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: Gap.md),
+                  for (final (icon, text) in [
+                    (Icons.calendar_month, l10n.onboardingWelcomeProgram),
+                    (Icons.check, l10n.onboardingWelcomeLog),
+                    (Icons.show_chart, l10n.onboardingWelcomeProgress),
+                  ])
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(icon),
+                      title: Text(text),
+                    ),
+                ],
+              ),
             ),
-          ),
-      ],
+            Padding(
+              padding: const EdgeInsets.all(Gap.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ForgeButton(
+                    label: l10n.onboardingGetStarted,
+                    onPressed: context.read<ProfileFormCubit>().start,
+                  ),
+                  // Nothing is stored before the last question, so a
+                  // returning user leaves no profile behind on the guest.
+                  if (guest)
+                    TextButton(
+                      onPressed: () => context.go(Routes.onboardingSignIn),
+                      child: Text(l10n.accountHaveOne),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

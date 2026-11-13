@@ -25,8 +25,8 @@ enum ProfileField {
   weight,
   targetWeight;
 
-  /// A personal question: onboarding lets the user skip it on its own, and
-  /// editing may clear it. The others need an answer to continue.
+  /// A personal question: editing may clear it. Onboarding needs every
+  /// answer, and editing needs one for the others.
   bool get optional => switch (this) {
     sex || birthYear || height || weight || targetWeight => true,
     goal || level || daysPerWeek || equipment => false,
@@ -60,8 +60,7 @@ abstract final class ProfileLimits {
 }
 
 /// What the user told us about themselves. Every answer is optional until
-/// given; [onboardingCompletedAt] is set once onboarding is finished or
-/// skipped.
+/// given; [onboardingCompletedAt] is set once onboarding is finished.
 class UserProfile extends Equatable {
   const UserProfile({
     this.goal,

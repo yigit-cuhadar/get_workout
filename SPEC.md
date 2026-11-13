@@ -430,8 +430,7 @@ from the earlier FitLab app.
   unless the user is known to have premium. After onboarding the best
   free recommendation is offered (use it, browse, or Today); with none, or
   the catalogue offline, onboarding lands on Today, and so does signing in
-  from onboarding to an account already onboarded, and skipping onboarding
-  ("Skip for now"), which suggests nothing.
+  from onboarding to an account already onboarded.
   `ProgramsModule` takes the premium status and the premium action as
   parameters, so programs never import the subscription feature; bootstrap
   passes `SubscriptionModule.premiumStatus` (the app-level
@@ -749,15 +748,17 @@ from the earlier FitLab app.
   access as a parameter so `npm test` (lint, build, `node --test`) runs
   without an emulator; CI runs it. Deploying is the Architect's step
   (`firebase deploy --only functions --project <id>`), never an agent's.
-- **Onboarding questions**: goal, level, days per week and equipment need
-  an answer to continue. The personal questions (sex, birth year, height,
-  weight, target weight) can each be skipped with "Skip this question";
-  "Skip for now" still ends onboarding with whatever was answered, and
-  lands on Today with no program suggested (the skip is remembered in
-  memory only; a later start with a completed profile never suggests).
-  "I already have an account" shows on the first question for a guest
-  only: once signed in to an account (also a guest just linked to one) it
-  is gone.
+- **Onboarding questions** (UX pass, 2026-11-13): a welcome page, then one
+  question per page, all nine needing an answer: goal, level, days per
+  week, equipment, sex, birth year, height, weight, target weight. There
+  is no skipping and no closing summary; Next on the last question ends
+  onboarding. Height and the two weights are picked on a ruler
+  (`RulerPicker`, forge_ui) or typed by tapping the value; the birth year
+  on a wheel. A ruler has to start somewhere (170 cm, 70 kg, age 30), so a
+  number question counts as answered when it shows; the target weight
+  follows the weight until the user picks one. "I already have an
+  account" shows on the welcome page for a guest only. In "Your profile"
+  the five personal answers can still be removed with "Clear answer".
 - **Birth year**: a plausibility range (age 13-100), not an age gate. An
   implausible year is only not accepted as an answer; nothing is blocked.
 - **Custom exercises**: ordinary exercises everywhere the catalogue is

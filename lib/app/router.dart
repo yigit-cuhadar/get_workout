@@ -38,7 +38,6 @@ import '../features/profile/domain/user_profile.dart';
 import '../features/profile/presentation/onboarding_page.dart';
 import '../features/profile/presentation/profile_cubit.dart';
 import '../features/profile/presentation/profile_details_page.dart';
-import '../features/profile/presentation/profile_form_cubit.dart';
 import '../features/profile/presentation/profile_page.dart';
 import '../features/programs/presentation/catalogue_detail_page.dart';
 import '../features/programs/presentation/catalogue_page.dart';
@@ -273,13 +272,11 @@ const socialProviders = [SocialProvider.google];
 /// onboarding until the profile records it as completed.
 /// [profileDebugSection] ends the Profile tab in debug builds. While
 /// [deletionUnderway], nobody is moved: the deleted profile must not open
-/// onboarding before the user is signed out. A user in [skippedOnboarding]
-/// gets no program suggested.
+/// onboarding before the user is signed out.
 GoRouter buildRouter(
   AuthCubit auth,
   ProfileCubit profile, {
   ValueListenable<bool>? deletionUnderway,
-  SkippedOnboarding? skippedOnboarding,
   Widget? profileDebugSection,
 }) {
   // Who onboarding was last shown to.
@@ -334,11 +331,9 @@ GoRouter buildRouter(
           }(),
           // Includes a profile that could not be read: never trap the user.
           // Signing in from onboarding to an account already onboarded is
-          // no onboarding done here, nor is skipping it.
+          // no onboarding done here.
           _ProfileGate.ready =>
-            atOnboarding &&
-                    user.id == onboardingUid &&
-                    skippedOnboarding?.uid != user.id
+            atOnboarding && user.id == onboardingUid
                 ? Routes.afterOnboarding
                 : atGate || atOnboarding
                 ? Routes.home
