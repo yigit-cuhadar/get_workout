@@ -27,6 +27,9 @@ import 'package:get_workout/features/exercises/presentation/exercise_detail_page
 import 'package:get_workout/features/exercises/presentation/exercises_page.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/library_page.dart';
+import 'package:get_workout/features/exercises/presentation/widgets/body_view.dart';
+import 'package:get_workout/features/exercises/presentation/widgets/library_list_view.dart';
 import 'package:get_workout/features/account/presentation/account_page.dart';
 import 'package:get_workout/features/account/domain/account_usecases.dart';
 import 'package:get_workout/features/account/domain/consent_repository.dart';
@@ -137,6 +140,26 @@ const _squat = Exercise(
   defaultRestS: 120,
   popularity: 1,
   l10n: {'en': ExerciseText(name: 'Back Squat')},
+);
+
+/// Works the quads as a secondary muscle.
+const _splitSquat = Exercise(
+  id: 'split_squat',
+  loggingType: LoggingType.weightReps,
+  mechanic: Mechanic.compound,
+  laterality: Laterality.unilateral,
+  level: Level.beginner,
+  force: Force.push,
+  movementPattern: MovementPattern.lunge,
+  position: Position.standing,
+  equipment: [],
+  mainMuscles: [Muscle.glute],
+  secondaryMuscles: [Muscle.quads],
+  family: 'split_squat',
+  familyRank: 1,
+  defaultRestS: 90,
+  popularity: 2,
+  l10n: {'en': ExerciseText(name: 'Split Squat')},
 );
 
 void main() {
@@ -522,6 +545,23 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// The exercise list, through the Exercises view's search box.
+  Future<void> openList(WidgetTester tester) async {
+    await openExercises(tester);
+    await tester.tap(find.byType(LibrarySearchEntry));
+    await tester.pumpAndSettle();
+  }
+
+  /// The location of the page in front of Train's stack.
+  String front() =>
+      openLocations(router.routerDelegate.currentConfiguration).last;
+
+  bool searchFocused(WidgetTester tester) => tester
+      .state<EditableTextState>(find.byType(EditableText, skipOffstage: false))
+      .widget
+      .focusNode
+      .hasFocus;
+
   String path() => router.routerDelegate.currentConfiguration.uri.path;
 
   int selectedTab(WidgetTester tester) =>
@@ -641,11 +681,8 @@ void main() {
     tester,
   ) async {
     await startAsGuest(tester);
-    await openExercises(tester);
-    expect(find.byType(ExercisesPage), findsOneWidget);
+    await openList(tester);
 
-    await tester.tap(find.text('List'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Back Squat'));
     await tester.pumpAndSettle();
 
@@ -654,20 +691,244 @@ void main() {
     expect(find.byType(NavigationBar), findsOneWidget);
   });
 
-  testWidgets('the Exercises view remembers the list view and returns to it', (
-    tester,
-  ) async {
-    await startAsGuest(tester);
-    await openExercises(tester);
-    await tester.tap(find.text('List'));
-    await tester.pumpAndSettle();
-    router.go(Routes.exercise('squat'));
-    await tester.pumpAndSettle();
+  group('exercise list', () {
+    LibraryState library() => sl<LibraryCubit>().state;
+    List<String> ids(List<Exercise> exercises) => [
+      for (final exercise in exercises) exercise.id,
+    ];
 
-    await tapTab(tester, 'Train');
+    Future<void> startWithSplitSquat(WidgetTester tester) async {
+      holdCatalogue = true;
+      await startAsGuest(tester);
+      exerciseFeed.add([_squat, _splitSquat]);
+      await openExercises(tester);
+    }
 
-    expect(find.byType(ExerciseDetailPage), findsNothing);
-    expect(find.text('1 exercise'), findsOneWidget);
+    testWidgets('the search box opens it inside Train, searching; back '
+        'returns to the Exercises view', (tester) async {
+      await startAsGuest(tester);
+      await openExercises(tester);
+      expect(find.byTooltip('New custom exercise'), findsNothing);
+
+      await tester.tap(find.byType(LibrarySearchEntry));
+      await tester.pumpAndSettle();
+      expect(find.byType(LibraryPage), findsOneWidget);
+      expect(front(), Routes.exerciseList);
+      expect(selectedTab(tester), 1);
+      expect(searchFocused(tester), isTrue);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.byType(LibraryPage), findsNothing);
+      expect(find.byType(ExercisesPage), findsOneWidget);
+      expect(path(), Routes.exercises);
+    });
+
+    testWidgets('keeps the search for the next time it opens', (tester) async {
+      await startAsGuest(tester);
+      await openList(tester);
+      await tester.enterText(find.byType(TextField), 'squat');
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(LibrarySearchEntry),
+          matching: find.text('squat'),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.byType(LibrarySearchEntry));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextField, 'squat'), findsOneWidget);
+    });
+
+    testWidgets('a muscle opens it filtered, in main and also-works '
+        'sections, without the keyboard', (tester) async {
+      await startWithSplitSquat(tester);
+
+      unawaited(router.push(Routes.exerciseListOf(Muscle.quads)));
+      await tester.pumpAndSettle();
+
+      expect(front(), Routes.exerciseList);
+      expect(selectedTab(tester), 1);
+      expect(searchFocused(tester), isFalse);
+      expect(library().filter.muscles, {Muscle.quads});
+      expect(ids(library().muscleExercises!.main), ['squat']);
+      expect(ids(library().muscleExercises!.alsoWorks), ['split_squat']);
+      expect(find.text('Main'), findsOneWidget);
+      expect(find.text('Also works'), findsOneWidget);
+
+      // The muscle's chip.
+      await tester.tap(find.byTooltip('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(library().filter.muscles, isEmpty);
+      expect(find.text('Main'), findsNothing);
+      expect(find.text('Also works'), findsNothing);
+      expect(find.text('Back Squat'), findsOneWidget);
+      expect(find.text('Split Squat'), findsOneWidget);
+    });
+
+    testWidgets('a muscle visit clears the search and takes its muscle '
+        'along when it ends, so the box opens without it', (tester) async {
+      await startAsGuest(tester);
+      await openList(tester);
+      await tester.enterText(find.byType(TextField), 'bench');
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      unawaited(router.push(Routes.exerciseListOf(Muscle.quads)));
+      await tester.pumpAndSettle();
+      expect(library().query, '');
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(library().filter.muscles, isEmpty);
+      expect(
+        find.descendant(
+          of: find.byType(LibrarySearchEntry),
+          matching: find.text('bench'),
+        ),
+        findsNothing,
+      );
+      await tester.tap(find.byType(LibrarySearchEntry));
+      await tester.pumpAndSettle();
+      expect(library().filter.muscles, isEmpty);
+      expect(find.text('Main'), findsNothing);
+    });
+
+    testWidgets('a muscle filter the user changed outlives the visit', (
+      tester,
+    ) async {
+      await startWithSplitSquat(tester);
+      unawaited(router.push(Routes.exerciseListOf(Muscle.quads)));
+      await tester.pumpAndSettle();
+
+      sl<LibraryCubit>().toggleMuscle(Muscle.glute);
+      await tester.pumpAndSettle();
+      expect(find.text('Main'), findsNothing);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(library().filter.muscles, {Muscle.quads, Muscle.glute});
+    });
+
+    testWidgets('one muscle picked by hand gives no sections', (tester) async {
+      await startWithSplitSquat(tester);
+      await tester.tap(find.byType(LibrarySearchEntry));
+      await tester.pumpAndSettle();
+
+      sl<LibraryCubit>().toggleMuscle(Muscle.quads);
+      await tester.pumpAndSettle();
+
+      expect(library().muscle, Muscle.quads);
+      expect(find.text('Main'), findsNothing);
+      expect(find.text('Split Squat'), findsOneWidget);
+    });
+
+    testWidgets('a link to another muscle updates the open page', (
+      tester,
+    ) async {
+      await startWithSplitSquat(tester);
+      router.go(Routes.exerciseListOf(Muscle.quads));
+      await tester.pumpAndSettle();
+
+      router.go(Routes.exerciseListOf(Muscle.glute));
+      await tester.pumpAndSettle();
+      expect(find.byType(LibraryPage), findsOneWidget);
+      expect(library().filter.muscles, {Muscle.glute});
+      expect(ids(library().muscleExercises!.main), ['split_squat']);
+      expect(find.text('Main'), findsOneWidget);
+
+      router.go(Routes.exerciseList);
+      await tester.pumpAndSettle();
+      expect(find.byType(LibraryPage), findsOneWidget);
+      expect(library().filter.muscles, isEmpty);
+      expect(find.text('Main'), findsNothing);
+    });
+
+    testWidgets('one gesture on the model opens one page', (tester) async {
+      await startAsGuest(tester);
+      await openExercises(tester);
+      final model = tester.element(find.byType(BodyView));
+
+      openMuscleList(model, Muscle.quads);
+      await tester.pump();
+      // A second tap, or a slide ending, while the list comes in.
+      openMuscleList(model, Muscle.glute);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LibraryPage), findsOneWidget);
+      expect(library().filter.muscles, {Muscle.quads});
+    });
+
+    testWidgets('is not taken for an exercise id', (tester) async {
+      await startAsGuest(tester);
+
+      router.go(Routes.exerciseList);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LibraryPage), findsOneWidget);
+      expect(find.byType(ExerciseDetailPage), findsNothing);
+      expect(selectedTab(tester), 1);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.byType(ExercisesPage), findsOneWidget);
+    });
+
+    testWidgets('selecting Train again ends a muscle visit', (tester) async {
+      await startAsGuest(tester);
+      await openExercises(tester);
+      unawaited(router.push(Routes.exerciseListOf(Muscle.quads)));
+      await tester.pumpAndSettle();
+
+      await tapTab(tester, 'Train');
+
+      expect(find.byType(LibraryPage), findsNothing);
+      expect(find.byType(ExercisesPage), findsOneWidget);
+      expect(library().filter.muscles, isEmpty);
+    });
+
+    testWidgets('selecting Train again returns to the Exercises view', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      await openList(tester);
+      await tester.tap(find.text('Back Squat'));
+      await tester.pumpAndSettle();
+
+      await tapTab(tester, 'Train');
+
+      expect(find.byType(ExerciseDetailPage), findsNothing);
+      expect(find.byType(LibraryPage), findsNothing);
+      expect(find.byType(ExercisesPage), findsOneWidget);
+      expect(path(), Routes.exercises);
+    });
+
+    testWidgets('its + opens a new custom exercise inside the tab, whose '
+        'changes are asked about on back', (tester) async {
+      await startAsGuest(tester);
+      await openList(tester);
+
+      await tester.tap(find.byTooltip('New custom exercise'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CustomExerciseNewPage), findsOneWidget);
+      expect(front(), Routes.customExerciseNew);
+      expect(find.byType(NavigationBar), findsOneWidget);
+
+      await tester.enterText(find.widgetWithText(TextField, 'Name'), 'Sled');
+      await tester.pump();
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.text('Discard changes?'), findsOneWidget);
+      await tester.tap(find.text('Discard'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CustomExerciseNewPage), findsNothing);
+      expect(find.byType(LibraryPage), findsOneWidget);
+    });
   });
 
   group('Train', () {
@@ -715,6 +976,7 @@ void main() {
       await startAsGuest(tester);
       final pages = {
         Routes.exercise('squat'): ExerciseDetailPage,
+        Routes.exerciseList: LibraryPage,
         Routes.customExerciseNew: CustomExerciseNewPage,
         Routes.catalogue: CataloguePage,
       };
@@ -923,22 +1185,6 @@ void main() {
 
     expect(find.byType(ExerciseDetailPage), findsOneWidget);
     expect(find.text('This exercise is no longer available.'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
-  });
-
-  testWidgets('the list view opens a new custom exercise inside the tab', (
-    tester,
-  ) async {
-    await startAsGuest(tester);
-    await openExercises(tester);
-    expect(find.byTooltip('New custom exercise'), findsNothing);
-    await tester.tap(find.text('List'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byTooltip('New custom exercise'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(CustomExerciseNewPage), findsOneWidget);
     expect(find.byType(NavigationBar), findsOneWidget);
   });
 

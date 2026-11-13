@@ -5,6 +5,7 @@ import 'package:forge_ui/forge_ui.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/exercise.dart';
 import '../../domain/exercise_queries.dart';
+import '../../domain/vocabulary.dart';
 import '../library_cubit.dart';
 import '../vocabulary_labels.dart';
 import 'exercise_tile.dart';
@@ -16,9 +17,22 @@ import 'filter_sheet.dart';
 /// Each result is an [ExerciseTile] opening its detail, or what [tileBuilder]
 /// builds, e.g. to select exercises instead.
 class LibraryListView extends StatefulWidget {
-  const LibraryListView({super.key, this.tileBuilder});
+  const LibraryListView({
+    super.key,
+    this.tileBuilder,
+    this.focusSearch = false,
+    this.sectionsFor,
+  });
 
   final Widget Function(BuildContext context, Exercise exercise)? tileBuilder;
+
+  /// Whether the search field takes focus once the page's route is in.
+  final bool focusSearch;
+
+  /// While this is the only muscle filtered, the results split into the
+  /// exercises working it as a main muscle and those working it as a
+  /// secondary one.
+  final Muscle? sectionsFor;
 
   @override
   State<LibraryListView> createState() => _LibraryListViewState();
@@ -29,8 +43,37 @@ class _LibraryListViewState extends State<LibraryListView> {
     text: context.read<LibraryCubit>().state.query,
   );
 
+  /// Whether the search field may take focus: the page's route is in, so
+  /// the keyboard comes up once, after any transition and Hero flight.
+  var _routeIn = false;
+
+  /// The route animation awaited for [_routeIn].
+  Animation<double>? _entering;
+  var _watching = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!widget.focusSearch || _watching) return;
+    _watching = true;
+    final animation = ModalRoute.of(context)?.animation;
+    if (animation == null || animation.isCompleted) {
+      _routeIn = true;
+    } else {
+      _entering = animation..addStatusListener(_onEntering);
+    }
+  }
+
+  void _onEntering(AnimationStatus status) {
+    if (!status.isCompleted) return;
+    _entering?.removeStatusListener(_onEntering);
+    _entering = null;
+    setState(() => _routeIn = true);
+  }
+
   @override
   void dispose() {
+    _entering?.removeStatusListener(_onEntering);
     _search.dispose();
     super.dispose();
   }
@@ -53,24 +96,30 @@ class _LibraryListViewState extends State<LibraryListView> {
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _search,
-                      onChanged: library.setQuery,
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        labelText: l10n.librarySearch,
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: state.query.isEmpty
-                            ? null
-                            : IconButton(
-                                tooltip: MaterialLocalizations.of(context)
-                                    .deleteButtonTooltip,
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _search.clear();
-                                  library.setQuery('');
-                                },
-                              ),
+                    child: LibrarySearchHero(
+                      child: TextField(
+                        // A new field once the route is in, autofocusing
+                        // then.
+                        key: ValueKey(_routeIn),
+                        autofocus: _routeIn,
+                        controller: _search,
+                        onChanged: library.setQuery,
+                        textInputAction: TextInputAction.search,
+                        decoration: InputDecoration(
+                          labelText: l10n.librarySearch,
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: state.query.isEmpty
+                              ? null
+                              : IconButton(
+                                  tooltip: MaterialLocalizations.of(context)
+                                      .deleteButtonTooltip,
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _search.clear();
+                                    library.setQuery('');
+                                  },
+                                ),
+                        ),
                       ),
                     ),
                   ),
@@ -114,20 +163,111 @@ class _LibraryListViewState extends State<LibraryListView> {
               ),
             ),
             Expanded(
-              child: results.isEmpty
-                  ? EmptyView(message: l10n.libraryNoResults)
-                  : ListView.builder(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      itemCount: results.length,
-                      itemBuilder: (context, index) =>
-                          widget.tileBuilder?.call(context, results[index]) ??
-                          ExerciseTile(results[index], showFavorite: true),
-                    ),
+              child: switch (state.muscleExercises) {
+                _ when results.isEmpty => EmptyView(
+                  message: l10n.libraryNoResults,
+                ),
+                final sections?
+                    when widget.sectionsFor != null &&
+                        state.muscle == widget.sectionsFor =>
+                  _Sections(sections, tile: _tile),
+                _ => ListView.builder(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  itemCount: results.length,
+                  itemBuilder: (context, index) =>
+                      _tile(context, results[index]),
+                ),
+              },
             ),
           ],
         );
       },
+    );
+  }
+
+  Widget _tile(BuildContext context, Exercise exercise) =>
+      widget.tileBuilder?.call(context, exercise) ??
+      ExerciseTile(exercise, showFavorite: true);
+}
+
+/// The results of one muscle under "Main" and "Also works".
+class _Sections extends StatelessWidget {
+  const _Sections(this.sections, {required this.tile});
+
+  final MuscleExercises sections;
+  final Widget Function(BuildContext context, Exercise exercise) tile;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    List<Widget> section(String title, List<Exercise> exercises) => [
+      if (exercises.isNotEmpty) ...[
+        Semantics(
+          header: true,
+          child: ListTile(dense: true, title: Text(title)),
+        ),
+        for (final exercise in exercises) tile(context, exercise),
+      ],
+    ];
+    return ListView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      children: [
+        ...section(l10n.libraryMuscleMain, sections.main),
+        ...section(l10n.libraryMuscleAlsoWorks, sections.alsoWorks),
+      ],
+    );
+  }
+}
+
+/// The search field flying between the Exercises view's
+/// [LibrarySearchEntry] and the list page. In flight it is drawn as the
+/// entry; the page's field takes focus only once its route is in.
+class LibrarySearchHero extends StatelessWidget {
+  const LibrarySearchHero({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Hero(
+    tag: LibrarySearchHero,
+    flightShuttleBuilder: (_, _, _, from, _) =>
+        LibrarySearchEntry(query: from.read<LibraryCubit>().state.query),
+    child: child,
+  );
+}
+
+/// Looks like the list's search field showing [query]; [onTap] opens it.
+class LibrarySearchEntry extends StatelessWidget {
+  const LibrarySearchEntry({super.key, required this.query, this.onTap});
+
+  final String query;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Material(
+      type: MaterialType.transparency,
+      child: Semantics(
+        button: true,
+        child: InkWell(
+          onTap: onTap,
+          child: InputDecorator(
+            isEmpty: query.isEmpty,
+            decoration: InputDecoration(
+              labelText: l10n.librarySearch,
+              prefixIcon: const Icon(Icons.search),
+            ),
+            child: Text(
+              query,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

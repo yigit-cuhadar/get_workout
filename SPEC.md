@@ -862,15 +862,15 @@ from the earlier FitLab app.
 - **Navigation**: four tabs, Today / Train / Progress / Profile. Train
   (`lib/app/train_page.dart`, in `app` because it composes two features'
   first pages) has two views under a segmented control: "My program"
-  (`ProgramsPage`, at `/programs`) and "Exercises" (`ExercisesPage`, with
-  its own Body/List switch and the + for a custom exercise, at
-  `/exercises`). Every location stays as it was: both route trees live in
+  (`ProgramsPage`, at `/programs`) and "Exercises" (`ExercisesPage`, the
+  model under a search box, at `/exercises`; see Exercise list). Every
+  location stays as it was: both route trees live in
   Train's one branch (one stack), so `/programs/...` and `/exercises/...`
   open inside Train, and the switch is a `go` to the other view's
   location. Both locations build their page with `TrainPage.pageKey`, so
   the navigator updates the one page in place: a view is built the first
   time it shows and then kept (an `IndexedStack`), the model never loads
-  again and the list keeps its place. The tab opens on the view it last
+  again. The tab opens on the view it last
   showed, "My program" at first. The active workout is full-screen and can
   be minimized to a bar above the tabs. A `go` (a link, a notification
   tap) replaces its tab's stack (Train's for either view, via
@@ -884,32 +884,63 @@ from the earlier FitLab app.
   changes (an edit left as it opened, a page that saved), other tabs'
   stacks, pushes and tab switches are left alone. Back and the guard share
   one prompt per page, so nothing asks twice.
+- **Exercise list**: the Exercises view is the interactive model (rotate,
+  zoom, Front/Back, tap a muscle, or press and slide across muscles with
+  its name and a haptic tick) under a search box. The box is an entry, not
+  a field: it shows the current search and opens the one exercise list
+  page (`LibraryPage`, `/exercises/list`, declared before `:id`, inside
+  Train's stack, an explicit `MaterialPage` because go_router's default
+  page for `builder` routes has no transition here), pushed above the view
+  so back returns to the model as it was. The list page holds search,
+  filters, sort, the count, favourite stars and, in its app bar only, the
+  + for a custom exercise; there is no model on it. Opened from the box,
+  its search field takes focus once the page's route animation has
+  completed (one keyboard request, after the transition). The box and the
+  page's search field are one Hero, drawn as the box in flight. One
+  gesture on the model opens one page: a muscle opens nothing while a page
+  already covers the view. A muscle opens the same page at
+  `/exercises/list?muscle=<code>`, without the keyboard. State: the list
+  page and the view share the app-wide `LibraryCubit`, so search text, the
+  filters set in the filter sheet and the sort last while the app runs (a
+  user change resets them). A muscle chosen on the model belongs to that
+  visit, held only by the page's location (its `muscle` parameter; the
+  cubit holds the filter, nothing else): arriving makes it the only muscle
+  filter and clears the search, the other filters and the sort staying;
+  leaving the page (back, re-selecting Train, a `go` elsewhere) or a link
+  to another muscle over it takes that muscle filter away again, unless
+  the user already removed or changed the muscle filter, which then stays
+  as they left it. So the box always opens without a model-chosen muscle.
+  While the page's muscle is the only muscle filtered, the list shows its
+  chip and two sections, "Main" and "Also works", each in the list's
+  order, so search, filters and sort apply inside them; removing the chip
+  or adding another muscle gives the plain list, and one muscle picked by
+  hand in the filter sheet is a plain filtered list. Every exercise list
+  in the app is this widget (`LibraryListView`); the exercise picker
+  (`ExercisePickerPage`, for programs, the generator, the workout and
+  workout history) uses it with its own cubit and no sections.
 - **UX pass** (2026-11-13, owner's call): before the design phase the
   structure and flows are reworked with the default theme, as ordinary
   features (Group 10). Subscription stays open meanwhile; the paywall's
   layout is part of the pass. No feature is removed, only moved. Target
   per tab (the four tabs themselves are built, see Navigation; the rest
   is built by the later Group 10 items):
-  - **Today**: next workout, week strip, the body model as a heat map of
-    this week's sets, steps card. No quick actions card and no weight card.
+  - **Today**: next workout, week strip, the "Sets this week" muscle bars,
+    steps card, as it is now. No quick actions card, no weight card and no
+    model: the owner dropped the heat-map body on 2026-11-13.
   - **Train**: Programs and Exercises merged, two views. "My program"
     (active program, its days, other programs: catalogue, generator, new;
     start an empty workout) and "Exercises". The Exercises view is the
     model with a search box above it and no Body/List switch. The box opens,
     with an animation, the one exercise list page: search, filters, sort,
     favourites, and the + for a custom exercise in its app bar (nowhere
-    else). Tapping a muscle opens the same page filtered to it, with a small
-    strip of the model showing that muscle at the top and the list in two
-    sections, main and secondary.
+    else). Tapping a muscle opens the same page filtered to it: the
+    muscle's removable chip and the list in two sections, main and
+    secondary. No model on the list page.
   - **Progress**: data cards instead of a menu. Calendar (workout history
     joins it: detail, edit, delete, add a past workout), strength, body
     (weight, measurement days, photos, compare), cardio, step history.
   - **Profile**: account (guests see a create-account card first), Premium,
     profile answers, settings, calculators.
-  - **Heat map**: one continuous ramp by weekly sets per muscle, neutral
-    when untrained, deepest at 20 sets and above; secondary muscles count
-    half as today. The 10-20 band is no longer on the model; it stays in
-    the detail a muscle opens (sets and the band bar).
   - **One page per exercise**: instructions and its statistics (records,
     e1RM chart) together; Progress links to the same page.
   - **Onboarding**: a welcome with the model, then four questions (goal,
@@ -1705,9 +1736,9 @@ Group 9, launch readiness
 - [x] Account — delete account, privacy policy link, analytics consent
 
 Group 10, UX pass (see Decisions; each flow's layout is picked by the owner from wireframe variants before it is built)
-- [ ] Navigation — four tabs (Today / Train / Progress / Profile), Programs and Exercises merged, quick actions moved to their tabs — every existing screen is still reachable
-- [ ] Train, exercises view — model with a search box; one list page with search, filters, sort and +, opened by the box or filtered by a tapped muscle with its model strip
-- [ ] Today — next workout, week strip, heat-map model with muscle detail, steps card
+- [x] Navigation — four tabs (Today / Train / Progress / Profile), Programs and Exercises merged, quick actions moved to their tabs — every existing screen is still reachable
+- [ ] Train, exercises view — model with a search box; one list page with search, filters, sort and +, opened by the box or filtered by a tapped muscle
+- [x] Today — stays as it is after Navigation (next workout, week strip, muscle bars, steps card); the heat-map model was dropped
 - [ ] Progress — data cards; history inside the calendar; one page per exercise with its statistics
 - [ ] Onboarding — short enough that nobody quits; the rest asked when first needed
 - [ ] Workout screen — set entry, rest and effort without crowding; summary shows records and the model

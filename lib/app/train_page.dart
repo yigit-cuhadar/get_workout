@@ -13,7 +13,7 @@ enum TrainView { program, exercises }
 /// as two views of one page. Each view has its own location, so links and
 /// back keep working; both locations show this page under [pageKey], so the
 /// navigator updates it in place and the other view keeps its state (the
-/// body model is not loaded again, the list keeps its place).
+/// body model is not loaded again).
 class TrainPage extends StatefulWidget {
   const TrainPage({super.key, required this.view});
 
@@ -76,10 +76,14 @@ class _TrainPageState extends State<TrainPage> {
                   if (!_shown.contains(view))
                     const SizedBox.shrink()
                   else
-                    switch (view) {
-                      TrainView.program => const ProgramsPage(),
-                      TrainView.exercises => const ExercisesPage(),
-                    },
+                    // A hidden view's heroes do not fly.
+                    HeroMode(
+                      enabled: view == widget.view,
+                      child: switch (view) {
+                        TrainView.program => const ProgramsPage(),
+                        TrainView.exercises => const ExercisesPage(),
+                      },
+                    ),
               ],
             ),
           ),

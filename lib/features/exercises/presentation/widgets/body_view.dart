@@ -5,17 +5,26 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/muscle_meshes.dart';
 import '../../domain/vocabulary.dart';
 import '../body_model_cubit.dart';
-import '../library_cubit.dart';
 import '../vocabulary_labels.dart';
-import 'muscle_sheet.dart';
+
+/// Opens the exercise list for [muscle] above the page of [context], unless
+/// a page already covers it: a second tap, or a slide ending, while the
+/// list is coming in or open opens nothing more.
+void openMuscleList(BuildContext context, Muscle muscle) {
+  if (ModalRoute.isCurrentOf(context) ?? true) {
+    context.push(Routes.exerciseListOf(muscle));
+  }
+}
 
 /// The body model: tap a muscle, or press and slide across muscles, to open
-/// its exercises.
+/// the exercise list filtered to it.
 class BodyView extends StatefulWidget {
   const BodyView({super.key});
 
@@ -56,11 +65,8 @@ class _BodyViewState extends State<BodyView> {
     if (part != null) _open(muscleOfMesh(part));
   }
 
-  Future<void> _open(Muscle? muscle) async {
-    if (muscle == null) return;
-    final library = context.read<LibraryCubit>()..selectMuscle(muscle);
-    await showMuscleSheet(context);
-    library.selectMuscle(null);
+  void _open(Muscle? muscle) {
+    if (muscle != null) openMuscleList(context, muscle);
   }
 
   @override
@@ -82,10 +88,6 @@ class _BodyViewState extends State<BodyView> {
   Widget _viewer(BuildContext context, Model3D model) {
     final l10n = AppLocalizations.of(context);
     final colors = Theme.of(context).colorScheme;
-    final selected = context.select(
-      (LibraryCubit library) => library.state.selectedMuscle,
-    );
-    final shown = _scrubbed ?? selected;
     final scrubbed = _scrubbed;
     return Stack(
       children: [
@@ -94,7 +96,7 @@ class _BodyViewState extends State<BodyView> {
             model: model,
             controller: _camera,
             partColors: {
-              for (final mesh in shown?.meshNames ?? const <String>[])
+              for (final mesh in scrubbed?.meshNames ?? const <String>[])
                 mesh: colors.primary,
             },
             selectable: (part) => muscleOfMesh(part) != null,

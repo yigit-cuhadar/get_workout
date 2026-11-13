@@ -27,7 +27,9 @@ import '../features/calculators/presentation/macros_page.dart';
 import '../features/calculators/presentation/one_rep_max_page.dart';
 import '../features/calculators/presentation/plates_page.dart';
 import '../features/exercises/presentation/custom_exercise_form_page.dart';
+import '../features/exercises/domain/vocabulary.dart';
 import '../features/exercises/presentation/exercise_detail_page.dart';
+import '../features/exercises/presentation/library_page.dart';
 import '../features/generator/domain/generator_answers.dart';
 import '../features/notifications/data/notification_payloads.dart';
 import '../features/generator/presentation/generator_page.dart';
@@ -108,8 +110,13 @@ abstract final class Routes {
   static const exercises = '/exercises';
   static String exercise(String id) => '$exercises/${Uri.encodeComponent(id)}';
 
-  /// No exercise id is `new`: catalogue ids start with `ex_`, custom ones
-  /// with `custom_`.
+  /// The exercise list above the Exercises view. No exercise id is `list`
+  /// or `new`: catalogue ids start with `ex_`, custom ones with `custom_`.
+  static const exerciseList = '$exercises/list';
+
+  /// [exerciseList] browsing [muscle].
+  static String exerciseListOf(Muscle muscle) =>
+      '$exerciseList?muscle=${muscle.code}';
   static const customExerciseNew = '$exercises/new';
   static String customExerciseEdit(String id) => '${exercise(id)}/edit';
   static const progress = '/progress';
@@ -477,7 +484,21 @@ GoRouter buildRouter(
               _train(
                 TrainView.exercises,
                 routes: [
-                  // Before ':id', which would match 'new' too.
+                  // Before ':id', which would match these too.
+                  GoRoute(
+                    path: 'list',
+                    // A MaterialPage, for a transition the search box's Hero
+                    // flies in: go_router's default page for `builder`
+                    // routes has none here.
+                    pageBuilder: (_, state) => MaterialPage(
+                      key: state.pageKey,
+                      child: LibraryPage(
+                        muscle: Muscle.values.byCode(
+                          state.uri.queryParameters['muscle'],
+                        ),
+                      ),
+                    ),
+                  ),
                   GoRoute(
                     path: 'new',
                     builder: (_, _) => const CustomExerciseNewPage(),

@@ -489,13 +489,13 @@ void main() {
     final squat = exercise('squat', main: [Muscle.quads]);
     final catalogue = [dip, squat, pushdown, bench, closeGrip];
 
-    test('splits main from also-works, each by popularity', () {
+    test('splits main from also-works, each in the given order', () {
       final triceps = exercisesWorking(Muscle.triceps, catalogue);
-      expect(ids(triceps.main), ['close_grip', 'pushdown', 'dip']);
+      expect(ids(triceps.main), ['dip', 'pushdown', 'close_grip']);
       expect(ids(triceps.alsoWorks), ['bench']);
 
       final pec = exercisesWorking(Muscle.pec, catalogue);
-      expect(ids(pec.main), ['bench', 'dip']);
+      expect(ids(pec.main), ['dip', 'bench']);
       expect(ids(pec.alsoWorks), ['close_grip']);
     });
 

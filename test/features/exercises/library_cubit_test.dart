@@ -118,9 +118,8 @@ void main() {
 
   List<String> results(LibraryCubit cubit) => ids(cubit.state.results);
 
-  test('starts on the body with every exercise by popularity', () {
+  test('starts with every exercise by popularity', () {
     final cubit = build();
-    expect(cubit.state.view, LibraryView.body);
     expect(results(cubit), ['bench_press', 'push_up', 'squat', 'curl']);
     expect(cubit.state.equipmentChosen, isFalse);
   });
@@ -132,11 +131,6 @@ void main() {
       initialState: const CatalogueLoading(),
     );
     expect(build().state.results, isEmpty);
-  });
-
-  test('the view is kept', () {
-    final cubit = build()..setView(LibraryView.list);
-    expect(cubit.state.view, LibraryView.list);
   });
 
   group('search', () {
@@ -274,7 +268,6 @@ void main() {
     const member = AuthUser(id: 'u1', email: 'a@b.co');
 
     LibraryCubit browsing() => build()
-      ..setView(LibraryView.list)
       ..setQuery('b')
       ..setSort(ExerciseSort.alphabetical)
       ..toggleMuscle(Muscle.pec)
@@ -289,8 +282,7 @@ void main() {
       expect(cubit.state.sort, ExerciseSort.popularity);
       expect(cubit.state.filter, const LibraryFilter());
       expect(results(cubit), ['bench_press', 'push_up', 'squat', 'curl']);
-      // The view is a preference of the device, not of the user.
-      expect(cubit.state.view, LibraryView.list);
+      expect(cubit.state.muscleExercises, isNull);
     }
 
     test('resets search, sort and every filter', () async {
@@ -311,7 +303,6 @@ void main() {
       equipmentChanges.add(const EquipmentState({Equipment.barbell}));
       await pumpEventQueue();
       cubit
-        ..setView(LibraryView.list)
         ..setQuery('b')
         ..setOnlyDoable(true);
 
@@ -373,30 +364,119 @@ void main() {
     });
   });
 
-  group('muscle selection', () {
-    test('groups the exercises of the muscle, and clears', () {
-      final cubit = build()..selectMuscle(Muscle.triceps);
-      expect(cubit.state.selectedMuscle, Muscle.triceps);
-      expect(cubit.state.muscleExercises!.main, isEmpty);
-      expect(ids(cubit.state.muscleExercises!.alsoWorks), ['bench_press']);
-
-      cubit.selectMuscle(null);
-      expect(cubit.state.selectedMuscle, isNull);
-      expect(cubit.state.muscleExercises, isNull);
+  group('one muscle', () {
+    test('opening it makes it the only muscle and clears the search', () {
+      final cubit = build()
+        ..setQuery('curl')
+        ..toggleMuscle(Muscle.biceps)
+        ..toggleMuscle(Muscle.quads)
+        ..openMuscle(Muscle.triceps);
+      expect(cubit.state.query, '');
+      expect(cubit.state.filter.muscles, {Muscle.triceps});
+      expect(cubit.state.muscle, Muscle.triceps);
+      expect(results(cubit), ['bench_press']);
     });
 
-    test('ignores the list filters', () {
+    test('opening it keeps the other filters and the sort', () {
       final cubit = build()
+        ..setSort(ExerciseSort.alphabetical)
+        ..toggleLevel(Level.intermediate)
+        ..openMuscle(Muscle.pec);
+      expect(cubit.state.sort, ExerciseSort.alphabetical);
+      expect(cubit.state.filter.levels, {Level.intermediate});
+      expect(results(cubit), ['bench_press']);
+    });
+
+    test('splits the results into main and also-works', () {
+      final cubit = build()..openMuscle(Muscle.triceps);
+      expect(cubit.state.muscleExercises!.main, isEmpty);
+      expect(ids(cubit.state.muscleExercises!.alsoWorks), ['bench_press']);
+    });
+
+    test('the sections follow search and sort', () async {
+      // Least popular, but second from A to Z.
+      final fly = exercise(
+        'fly',
+        name: 'Cable Fly',
+        popularity: 9,
+        main: [Muscle.pec],
+      );
+      final cubit = build();
+      catalogueChanges.add(CatalogueReady([..._all, fly]));
+      await pumpEventQueue();
+      cubit.openMuscle(Muscle.pec);
+      expect(ids(cubit.state.muscleExercises!.main), [
+        'bench_press',
+        'push_up',
+        'fly',
+      ]);
+
+      cubit.setSort(ExerciseSort.alphabetical);
+      expect(ids(cubit.state.muscleExercises!.main), [
+        'bench_press',
+        'fly',
+        'push_up',
+      ]);
+
+      cubit.setQuery('push');
+      expect(ids(cubit.state.muscleExercises!.main), ['push_up']);
+    });
+
+    test('leaving it takes its filter away and keeps the rest', () {
+      final cubit = build()
+        ..setSort(ExerciseSort.alphabetical)
+        ..toggleLevel(Level.intermediate)
+        ..openMuscle(Muscle.pec)
+        ..setQuery('bench')
+        ..leaveMuscle(Muscle.pec);
+      expect(cubit.state.filter.muscles, isEmpty);
+      expect(cubit.state.filter.levels, {Level.intermediate});
+      expect(cubit.state.sort, ExerciseSort.alphabetical);
+      expect(cubit.state.query, 'bench');
+    });
+
+    test('leaving it keeps a muscle filter the user changed', () {
+      final cubit = build()
+        ..openMuscle(Muscle.pec)
         ..toggleMuscle(Muscle.quads)
-        ..selectMuscle(Muscle.pec);
+        ..leaveMuscle(Muscle.pec);
+      expect(cubit.state.filter.muscles, {Muscle.pec, Muscle.quads});
+
+      cubit
+        ..openMuscle(Muscle.pec)
+        ..toggleMuscle(Muscle.pec)
+        ..toggleMuscle(Muscle.biceps)
+        ..leaveMuscle(Muscle.pec);
+      expect(cubit.state.filter.muscles, {Muscle.biceps});
+    });
+
+    test('a filter of the muscle set by hand splits the same way', () {
+      final cubit = build()..toggleMuscle(Muscle.pec);
+      expect(cubit.state.muscle, Muscle.pec);
       expect(ids(cubit.state.muscleExercises!.main), [
         'bench_press',
         'push_up',
       ]);
     });
 
-    test('follows catalogue changes while open', () async {
-      final cubit = build()..selectMuscle(Muscle.pec);
+    test('removing it, or adding another, gives the plain list', () {
+      final cubit = build()
+        ..openMuscle(Muscle.pec)
+        ..toggleMuscle(Muscle.quads);
+      expect(cubit.state.muscle, isNull);
+      expect(cubit.state.muscleExercises, isNull);
+      expect(results(cubit), ['bench_press', 'push_up', 'squat']);
+
+      cubit
+        ..toggleMuscle(Muscle.quads)
+        ..toggleMuscle(Muscle.pec);
+      expect(cubit.state.filter.muscles, isEmpty);
+      expect(cubit.state.muscleExercises, isNull);
+      expect(results(cubit), hasLength(4));
+    });
+
+    test('the sections follow catalogue changes', () async {
+      final cubit = build()..openMuscle(Muscle.pec);
       catalogueChanges.add(CatalogueReady([_pushUp]));
       await pumpEventQueue();
       expect(ids(cubit.state.muscleExercises!.main), ['push_up']);
@@ -492,24 +572,24 @@ void main() {
     });
 
     blocTest<LibraryCubit, LibraryState>(
-      'show in favourites and on the muscle sheet',
+      'show in favourites',
       build: build,
       act: (cubit) async {
         favoriteChanges.add(const FavoritesState({'custom_band'}));
         await pumpEventQueue();
-        cubit
-          ..setOnlyFavorites(true)
-          ..selectMuscle(Muscle.pec);
+        cubit.setOnlyFavorites(true);
       },
-      verify: (cubit) {
-        expect(results(cubit), ['custom_band']);
-        expect(ids(cubit.state.muscleExercises!.main), [
-          'custom_band',
-          'bench_press',
-          'push_up',
-        ]);
-        expect(ids(cubit.state.muscleExercises!.alsoWorks), ['custom_plank']);
-      },
+      verify: (cubit) => expect(results(cubit), ['custom_band']),
     );
+
+    test('show in a muscle\'s sections', () {
+      final cubit = build()..openMuscle(Muscle.pec);
+      expect(ids(cubit.state.muscleExercises!.main), [
+        'custom_band',
+        'bench_press',
+        'push_up',
+      ]);
+      expect(ids(cubit.state.muscleExercises!.alsoWorks), ['custom_plank']);
+    });
   });
 }
