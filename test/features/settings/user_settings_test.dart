@@ -248,4 +248,27 @@ void main() {
       );
     });
   });
+
+  group('StepGoal', () {
+    test('minus and plus move by 100 within the limits', () {
+      expect(StepGoal.stepped(8000, 1), 8100);
+      expect(StepGoal.stepped(8000, -1), 7900);
+      expect(StepGoal.stepped(StepGoal.min, -1), StepGoal.min);
+      expect(StepGoal.stepped(StepGoal.max, 1), StepGoal.max);
+    });
+
+    test('a typed goal lands on the nearest 100', () {
+      expect(StepGoal.typed(8000), 8000);
+      expect(StepGoal.typed(8049), 8000);
+      expect(StepGoal.typed(8050), 8100);
+      expect(StepGoal.typed(StepGoal.min), StepGoal.min);
+      expect(StepGoal.typed(StepGoal.max), StepGoal.max);
+    });
+
+    test('a typed goal outside the limits is refused', () {
+      expect(StepGoal.typed(999), isNull);
+      expect(StepGoal.typed(50001), isNull);
+      expect(StepGoal.typed(0), isNull);
+    });
+  });
 }

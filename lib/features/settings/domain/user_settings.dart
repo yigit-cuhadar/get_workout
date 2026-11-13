@@ -332,8 +332,18 @@ abstract final class StepGoal {
   static const min = 1000;
   static const max = 50000;
 
-  /// The editor moves in these steps.
-  static const step = 500;
+  /// The editor's minus and plus move in these steps.
+  static const step = 100;
+
+  /// [goal] moved [steps] steps up (or down when negative), kept within
+  /// the limits.
+  static int stepped(int goal, int steps) =>
+      (goal + steps * step).clamp(min, max);
+
+  /// A typed goal on the nearest step, or null outside the limits.
+  static int? typed(int value) => value < min || value > max
+      ? null
+      : ((value / step).round() * step).clamp(min, max);
 }
 
 /// The user's app preferences. Values are always stored metric; these only

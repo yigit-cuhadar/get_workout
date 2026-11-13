@@ -504,10 +504,22 @@ from the earlier FitLab app.
   Health Connect" and "Ask again"; a missing Health Connect offers its
   store page. On iOS a month of zeros shows a hint to allow access in
   Settings, never a denial. A failed request shows on the explanation or
-  refusal screen; a failed refresh keeps the steps and says so. The goal is `settings.stepGoal`, 10,000 by
-  default, 1,000-50,000 in steps of 500, edited on the page through
-  `SettingsCubit`. `GetTodaySteps` (today vs goal) is registered for the
-  Today card. Both charts are `BarChart`s with the goal as a line. The
+  refusal screen; a failed refresh keeps the steps and says so. The page:
+  a today card with a ring around the count ("of" the goal) beside what
+  is left or "Goal reached", and under them a full-width "Daily goal" row
+  edited in place; the zero hint; then one
+  card with a This week / Last 30 days switch (kept only while the page is
+  open, week first), a `BarChart` with the goal as a line, and under it the
+  daily average and "Goal reached n of m days" over the chart's days
+  before today (today's partial day and days to come left out, as on Body;
+  hidden on a period's first day). The goal is `settings.stepGoal`, 10,000
+  by default, 1,000-50,000; minus and plus move it by 100, and tapping the
+  number types it (the dialog opens with it selected): a whole number
+  within the limits, saved on the nearest 100, else the dialog says the
+  range. Each change saves at once through `SettingsCubit` (no Save); the
+  row shows and steps from the last pick until its write comes back, so
+  quick taps all count, and drops it when a save fails. `GetTodaySteps` (today vs goal) is registered
+  for the Today card. The
   steps domain imports `forge_health` whole, platform code included; once
   the package exposes a domain-only library (next forge tag), import that
   instead.
@@ -1759,7 +1771,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Calendar with workout history — one page: a week strip that opens to the month, then one list by day with workouts, cardio, planned days (with Start) and missed days, Show older workouts; Add past workout in the app bar. Workout history as its own page goes away
 - [x] Body with Compare — two views, Overview (one chart with up to three series picked from weight, body fat, fat mass, lean mass, each measurement, weekly sets and daily steps, plus a target weight line; Log weight, Measurement day, history) and Compare (Previous / First / Other date, photos slider with poses, body fat, all changes, target weight)
 - [x] Onboarding, birth year — a wheel showing the year only
-- [ ] Steps — today as a ring, the daily goal edited in place (steps of 100, tap the number to type), one chart switching between this week and the last 30 days
+- [x] Steps — today as a ring, the daily goal edited in place (steps of 100, tap the number to type), one chart switching between this week and the last 30 days
 - [ ] Workout summary — one prominent card with the name and four stats, records below, Done and Save as program at the bottom
 - [ ] Profile — every setting on one page in groups; Premium is a distinct card with Get Premium
 - [ ] Paywall — two layouts kept for an A/B test: plans as a list, plans as three cards side by side
