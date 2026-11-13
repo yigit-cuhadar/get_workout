@@ -45,6 +45,8 @@ final class DetailReady extends ExerciseDetailState {
   });
 
   final Exercise exercise;
+
+  /// None of them is also one of [variations]; one list shows both.
   final List<Exercise> alternatives;
   final List<Exercise> variations;
 
@@ -162,15 +164,12 @@ class ExerciseDetailCubit extends Cubit<ExerciseDetailState> {
           ? const DetailNotFound()
           : const DetailLoading();
     }
+    // Unknown equipment counts as bodyweight only.
+    final similar = similarTo(exercise, catalogue, owned: _owned ?? const {});
     return DetailReady(
       exercise,
-      // Unknown equipment counts as bodyweight only.
-      alternatives: alternativesFor(
-        exercise,
-        catalogue,
-        owned: _owned ?? const {},
-      ),
-      variations: variationsOf(exercise, catalogue),
+      alternatives: similar.alternatives,
+      variations: similar.variations,
     );
   }
 
