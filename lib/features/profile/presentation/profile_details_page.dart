@@ -96,8 +96,6 @@ class _QuestionForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ProfileFormCubit>();
-    // Only a stored answer is worth clearing.
-    final stored = context.select((ProfileCubit c) => c.state.profile);
     return BlocListener<ProfileFormCubit, ProfileFormState>(
       listenWhen: (previous, current) =>
           current.status == ProfileFormStatus.submitted &&
@@ -125,11 +123,6 @@ class _QuestionForm extends StatelessWidget {
                       label: l10n.save,
                       onPressed: state.canContinue ? cubit.next : null,
                     ),
-                    if (state.canClear && stored.answered(state.question))
-                      TextButton(
-                        onPressed: cubit.clear,
-                        child: Text(l10n.profileClearAnswer),
-                      ),
                   ],
                 ),
               ),

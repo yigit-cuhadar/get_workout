@@ -291,17 +291,6 @@ void main() {
       await finishing;
       verify(() => profiles.completeOnboarding(any(), any())).called(1);
     });
-
-    test('clear does nothing in onboarding', () async {
-      final cubit = onboarding(complete);
-      await goTo(cubit, ProfileField.sex);
-      expect(cubit.state.canClear, isFalse);
-
-      await cubit.clear();
-
-      expect(cubit.state.answers, complete);
-      expect(cubit.state.status, ProfileFormStatus.editing);
-    });
   });
 
   group('answers', () {
@@ -459,27 +448,6 @@ void main() {
         edit(ProfileField.targetWeight, stored).state.answers.targetWeightKg,
         70,
       );
-    });
-
-    test('a stored personal answer can be cleared, which submits it', () async {
-      final cubit = edit(ProfileField.height, stored.copyWith(heightCm: 182));
-      expect(cubit.state.answers.heightCm, 182);
-      expect(cubit.state.canClear, isTrue);
-
-      await cubit.clear();
-
-      expect(cubit.state.status, ProfileFormStatus.submitted);
-      expect(cubit.state.answers, stored);
-    });
-
-    test('a training answer cannot be cleared', () async {
-      final cubit = edit(ProfileField.goal, stored);
-      expect(cubit.state.canClear, isFalse);
-
-      await cubit.clear();
-
-      expect(cubit.state.status, ProfileFormStatus.editing);
-      expect(cubit.state.answers, stored);
     });
 
     test('an unanswered personal question needs an answer to save', () async {

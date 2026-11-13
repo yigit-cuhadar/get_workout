@@ -758,7 +758,7 @@ from the earlier FitLab app.
   number question counts as answered when it shows; the target weight
   follows the weight until the user picks one. "I already have an
   account" shows on the welcome page for a guest only. In "Your profile"
-  the five personal answers can still be removed with "Clear answer".
+  every answer can be changed but not removed.
 - **Birth year**: a plausibility range (age 13-100), not an age gate. An
   implausible year is only not accepted as an answer; nothing is blocked.
 - **Custom exercises**: ordinary exercises everywhere the catalogue is

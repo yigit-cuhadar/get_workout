@@ -23,14 +23,7 @@ enum ProfileField {
   birthYear,
   height,
   weight,
-  targetWeight;
-
-  /// A personal question: editing may clear it. Onboarding needs every
-  /// answer, and editing needs one for the others.
-  bool get optional => switch (this) {
-    sex || birthYear || height || weight || targetWeight => true,
-    goal || level || daysPerWeek || equipment => false,
-  };
+  targetWeight,
 }
 
 /// Sane ranges of the answers. Weights and lengths are metric.

@@ -61,15 +61,5 @@ void main() {
       );
       expect(answered.equipment, {Equipment.dumbbell});
     });
-
-    test('the personal questions are optional, the training ones not', () {
-      expect(ProfileField.values.where((field) => field.optional), [
-        ProfileField.sex,
-        ProfileField.birthYear,
-        ProfileField.height,
-        ProfileField.weight,
-        ProfileField.targetWeight,
-      ]);
-    });
   });
 }
