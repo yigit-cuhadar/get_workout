@@ -94,6 +94,7 @@ void main() {
   });
 
   ProgramListCubit build() => ProgramListCubit(
+    firstWeekday: DateTime.monday,
     watchAuthUser: WatchAuthUser(auth),
     watchPrograms: WatchPrograms(repository),
     watchActiveProgram: WatchActiveProgram(repository),
@@ -343,6 +344,71 @@ void main() {
         to: CalendarDate(2026, 11, 22),
       ),
     ).called(1),
+  );
+
+  blocTest<ProgramListCubit, ProgramListState>(
+    'a new first weekday after a failure keeps the failure',
+    build: build,
+    act: (cubit) async {
+      await signIn(member);
+      programs['u1']!.add([upperLower]);
+      actives['u1']!.add(active);
+      await pumpEventQueue();
+      programs['u1']!.addError(const PermissionFailure());
+      await pumpEventQueue();
+      cubit.changeFirstWeekday(DateTime.sunday);
+      await pumpEventQueue();
+    },
+    skip: 2,
+    expect: () => <ProgramListState>[],
+    verify: (cubit) {
+      expect(cubit.state.status, ProgramListStatus.failure);
+      expect(cubit.firstWeekday, DateTime.sunday);
+      // Only the done days of the first load were asked for.
+      verify(
+        () => completedDays.watch(
+          any(),
+          any(),
+          from: any(named: 'from'),
+          to: any(named: 'to'),
+        ),
+      ).called(1);
+    },
+  );
+
+  blocTest<ProgramListCubit, ProgramListState>(
+    'a new first weekday keeps the done days until the new week\'s arrive',
+    build: build,
+    act: (cubit) async {
+      await signIn(member);
+      programs['u1']!.add([upperLower]);
+      actives['u1']!.add(active);
+      await pumpEventQueue();
+      final monday = CompletedDay(date: CalendarDate(2026, 11, 9), dayIndex: 0);
+      completed.add([monday]);
+      await pumpEventQueue();
+      cubit.changeFirstWeekday(DateTime.sunday);
+      await pumpEventQueue();
+      // Anything replanning before they arrive keeps the known ones.
+      programs['u1']!.add([upperLower]);
+      await pumpEventQueue();
+      completed.add([monday]);
+    },
+    skip: 2,
+    // The Sunday week's plan is the Monday week's here: nothing changes on
+    // screen, not even for a moment without the done Monday.
+    expect: () => <ProgramListState>[],
+    verify: (cubit) {
+      expect(cubit.state.weekPlan.first.status, PlannedStatus.done);
+      verify(
+        () => completedDays.watch(
+          'u1',
+          'p1',
+          from: CalendarDate(2026, 11, 8),
+          to: CalendarDate(2026, 11, 14),
+        ),
+      ).called(1);
+    },
   );
 
   blocTest<ProgramListCubit, ProgramListState>(

@@ -59,6 +59,7 @@ void main() {
   });
 
   CardioListCubit build() => CardioListCubit(
+    firstWeekday: DateTime.monday,
     watchAuthUser: WatchAuthUser(auth),
     watchSessions: WatchCardioSessions(cardio),
     watchRejectedWrites: WatchRejectedCardioWrites(cardio),
@@ -267,10 +268,15 @@ void main() {
     );
 
     blocTest<CardioListCubit, CardioListState>(
-      'given before the sessions arrive, groups them by it',
-      build: build,
+      'given at creation, groups the sessions by it',
+      build: () => CardioListCubit(
+        firstWeekday: DateTime.sunday,
+        watchAuthUser: WatchAuthUser(auth),
+        watchSessions: WatchCardioSessions(cardio),
+        watchRejectedWrites: WatchRejectedCardioWrites(cardio),
+        clock: () => now,
+      ),
       act: (cubit) async {
-        cubit.changeFirstWeekday(DateTime.sunday);
         users.add(member);
         await pumpEventQueue();
         stored['u1']!.add(sessions);

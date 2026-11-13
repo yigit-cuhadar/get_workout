@@ -20,15 +20,18 @@ class CardioListPage extends StatelessWidget {
   const CardioListPage({super.key});
 
   @override
-  Widget build(BuildContext context) => BlocProvider.value(
-    value: sl<CardioListCubit>(),
-    child: FirstWeekdayListener(
-      created: null,
-      onChanged: (context, firstWeekday) =>
-          context.read<CardioListCubit>().changeFirstWeekday(firstWeekday),
-      child: const _CardioListView(),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final cubit = sl<CardioListCubit>();
+    return BlocProvider.value(
+      value: cubit,
+      child: FirstWeekdayListener(
+        created: cubit.firstWeekday,
+        onChanged: (context, firstWeekday) =>
+            context.read<CardioListCubit>().changeFirstWeekday(firstWeekday),
+        child: const _CardioListView(),
+      ),
+    );
+  }
 }
 
 class _CardioListView extends StatefulWidget {

@@ -65,6 +65,7 @@ class CardioListState extends Equatable {
 /// change, so a previous user's sessions are never shown.
 class CardioListCubit extends Cubit<CardioListState> {
   CardioListCubit({
+    required this._firstWeekday,
     required WatchAuthUser watchAuthUser,
     required this._watchSessions,
     required WatchRejectedCardioWrites watchRejectedWrites,
@@ -87,9 +88,8 @@ class CardioListCubit extends Cubit<CardioListState> {
   StreamSubscription<List<CardioSession>>? _sessionsSubscription;
   String? _uid;
 
-  /// One for the whole app, made without a context: Monday until the first
-  /// page showing it calls [changeFirstWeekday].
-  int _firstWeekday = DateTime.monday;
+  int _firstWeekday;
+  int get firstWeekday => _firstWeekday;
 
   void _onUser(String? uid) {
     _uid = uid;

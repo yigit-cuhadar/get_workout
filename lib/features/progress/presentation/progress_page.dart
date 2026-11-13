@@ -37,11 +37,12 @@ class ProgressPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firstWeekday = context.watchFirstWeekday();
+    final cardio = sl<CardioListCubit>();
     return MultiBlocProvider(
       providers: [
         // The app's shared lists, as their pages show them.
         BlocProvider.value(value: sl<BodyListCubit>()),
-        BlocProvider.value(value: sl<CardioListCubit>()),
+        BlocProvider.value(value: cardio),
         // Today's, so both tabs show the same week.
         BlocProvider(create: (_) => sl<ProgressBodyCubit>()),
         BlocProvider(create: (_) => sl<TodayWeekCubit>(param1: firstWeekday)),
@@ -57,7 +58,7 @@ class ProgressPage extends StatelessWidget {
           context.read<TodayVolumeCubit>().changeFirstWeekday(firstWeekday);
         },
         child: FirstWeekdayListener(
-          created: null,
+          created: cardio.firstWeekday,
           onChanged: (context, firstWeekday) =>
               context.read<CardioListCubit>().changeFirstWeekday(firstWeekday),
           child: const _ProgressView(),

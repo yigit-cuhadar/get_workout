@@ -138,6 +138,7 @@ void main() {
       equipment: equipmentCubit,
     );
     list = ProgramListCubit(
+      firstWeekday: DateTime.monday,
       watchAuthUser: WatchAuthUser(auth),
       watchPrograms: WatchPrograms(programRepository),
       watchActiveProgram: WatchActiveProgram(programRepository),

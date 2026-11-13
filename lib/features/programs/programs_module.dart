@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 
 import '../exercises/presentation/library_cubit.dart';
 import '../settings/domain/user_settings.dart';
+import '../settings/presentation/first_weekday.dart';
 import 'data/firestore_catalogue_repository.dart';
 import 'data/firestore_program_repository.dart';
 import 'data/no_completed_days.dart';
@@ -80,6 +81,7 @@ class ProgramsModule implements FeatureModule {
       // One list for the whole app: the tab and the program pages share it.
       ..registerLazySingleton(
         () => ProgramListCubit(
+          firstWeekday: currentFirstWeekday(sl()),
           watchAuthUser: sl(),
           watchPrograms: sl(),
           watchActiveProgram: sl(),

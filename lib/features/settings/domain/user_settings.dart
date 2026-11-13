@@ -15,16 +15,16 @@ enum EffortScale { byFeel, rir, rpe }
 
 /// The first day of the week everywhere in the app (`settings.weekStart`).
 enum WeekStart {
-  /// The phone's: the locale's first day of the week.
+  /// The phone's, from its region.
   automatic,
   monday,
   sunday,
   saturday;
 
   /// The first day of the week as an ISO weekday (1 Monday to 7 Sunday);
-  /// [localeFirstWeekday] when [automatic].
-  int firstWeekday(int localeFirstWeekday) => switch (this) {
-    automatic => localeFirstWeekday,
+  /// [phoneFirstWeekday] when [automatic].
+  int firstWeekday(int phoneFirstWeekday) => switch (this) {
+    automatic => phoneFirstWeekday,
     monday => DateTime.monday,
     sunday => DateTime.sunday,
     saturday => DateTime.saturday,

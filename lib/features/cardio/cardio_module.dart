@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_it/get_it.dart';
 
+import '../settings/presentation/first_weekday.dart';
 import 'data/firestore_cardio_repository.dart';
 import 'domain/cardio_repository.dart';
 import 'domain/cardio_session.dart';
@@ -27,6 +28,7 @@ class CardioModule implements FeatureModule {
       // One list for the whole app: the list and the session pages share it.
       ..registerLazySingleton(
         () => CardioListCubit(
+          firstWeekday: currentFirstWeekday(sl()),
           watchAuthUser: sl(),
           watchSessions: sl(),
           watchRejectedWrites: sl(),

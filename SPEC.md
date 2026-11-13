@@ -237,18 +237,26 @@ from the earlier FitLab app.
   the program week plan (and so the done days the workout reminders know),
   and the order of weekdays in the program day picker, "Active · ..." and
   the measurement reminder's day. Settings → Appearance → "Week starts on":
-  Automatic (default: the locale's first weekday, as
-  `MaterialLocalizations.firstDayOfWeekIndex` gives it, so Sunday while
-  English is the only language), Monday, Sunday or Saturday
-  (`settings.weekStart`, written only when not automatic).
-  `WeekStart.firstWeekday` resolves it; widgets read it in `build` with
+  Automatic (default, shown as "Automatic (Monday)" with the day it gives),
+  Monday, Sunday or Saturday (`settings.weekStart`, written only when not
+  automatic). Automatic is the phone's region, not the app's language
+  (English only, so Sunday for everyone): the device locale
+  (`PlatformDispatcher.locale`, followed on change) looked up in intl's
+  bundled date symbols (`dateTimeSymbolMap()`, `FIRSTDAYOFWEEK`, 0 =
+  Monday): language and region (`tr_TR`, `en_GB`: Monday; `en_US`:
+  Sunday), else the language (`ar_SA`, `fa_IR`: Saturday; `en_TR`: Sunday,
+  as intl has no English-in-Turkey), else Monday. `WeekStart.firstWeekday`
+  resolves the setting against it; widgets read it in `build` with
   `context.watchFirstWeekday()` and pass it to the cubits they create,
   which follow a change while alive through `FirstWeekdayListener`
-  (`changeFirstWeekday`); the app-wide `ProgramListCubit` is told in
-  `MaterialApp.builder`, the shared `CardioListCubit` by the pages showing
-  it. Only views change: stored dates, program weekdays and schedules,
-  `nextDate` and program lengths (counted from the start date) never
-  depend on it.
+  (`changeFirstWeekday`). The app-wide `ProgramListCubit` and
+  `CardioListCubit` are created with the value of that moment
+  (`currentFirstWeekday`) and told of changes by the app and by the
+  pages showing them. A new week start moves the program week plan once
+  the new week's done days arrive, keeping the known ones meanwhile, and
+  not while the list shows a failure. Only views change: stored dates,
+  program weekdays and schedules, `nextDate` and program lengths (counted
+  from the start date) never depend on it.
 - **Effort scale**: optional per set, picked in the set bar (picking the
   chosen step again clears it). Settings → "Effort per set": By feel
   (default), RIR or RPE; there is no "Off" (`settings.effortScale` codes

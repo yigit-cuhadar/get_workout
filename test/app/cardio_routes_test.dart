@@ -108,6 +108,7 @@ void main() {
     sl
       ..registerLazySingleton(
         () => CardioListCubit(
+          firstWeekday: DateTime.monday,
           watchAuthUser: WatchAuthUser(sessionAuth),
           watchSessions: WatchCardioSessions(cardio),
           watchRejectedWrites: WatchRejectedCardioWrites(cardio),

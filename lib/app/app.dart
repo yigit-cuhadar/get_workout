@@ -165,31 +165,32 @@ class _AppState extends State<App> {
         // follows it from the start.
         BlocProvider.value(value: sl<ProgramListCubit>()),
       ],
-      child: BlocListener<RestTimerCubit, RestTimerState>(
-        listenWhen: (previous, current) =>
-            current.phase == RestPhase.over && previous.phase != current.phase,
-        listener: (_, _) => unawaited(HapticFeedback.heavyImpact()),
-        child: BlocSelector<SettingsCubit, SettingsState, ThemePreference>(
-          selector: (state) => state.settings.themePreference,
-          builder: (context, theme) => MaterialApp.router(
-            onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            theme: ForgeTheme.light(),
-            darkTheme: ForgeTheme.dark(),
-            themeMode: switch (theme) {
-              ThemePreference.system => ThemeMode.system,
-              ThemePreference.light => ThemeMode.light,
-              ThemePreference.dark => ThemeMode.dark,
-            },
-            routerConfig: _router,
-            // The one place below the localizations for app-wide cubits.
-            builder: (context, child) => FirstWeekdayListener(
-              created: null,
-              onChanged: (context, firstWeekday) => context
-                  .read<ProgramListCubit>()
-                  .changeFirstWeekday(firstWeekday),
-              child: child!,
+      child: DeviceFirstWeekday(
+        child: FirstWeekdayListener(
+          created: sl<ProgramListCubit>().firstWeekday,
+          onChanged: (context, firstWeekday) =>
+              context.read<ProgramListCubit>().changeFirstWeekday(firstWeekday),
+          child: BlocListener<RestTimerCubit, RestTimerState>(
+            listenWhen: (previous, current) =>
+                current.phase == RestPhase.over &&
+                previous.phase != current.phase,
+            listener: (_, _) => unawaited(HapticFeedback.heavyImpact()),
+            child: BlocSelector<SettingsCubit, SettingsState, ThemePreference>(
+              selector: (state) => state.settings.themePreference,
+              builder: (context, theme) => MaterialApp.router(
+                onGenerateTitle: (context) =>
+                    AppLocalizations.of(context).appTitle,
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                theme: ForgeTheme.light(),
+                darkTheme: ForgeTheme.dark(),
+                themeMode: switch (theme) {
+                  ThemePreference.system => ThemeMode.system,
+                  ThemePreference.light => ThemeMode.light,
+                  ThemePreference.dark => ThemeMode.dark,
+                },
+                routerConfig: _router,
+              ),
             ),
           ),
         ),

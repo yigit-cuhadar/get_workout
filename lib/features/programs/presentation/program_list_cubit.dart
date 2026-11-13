@@ -140,6 +140,7 @@ class ProgramListState extends Equatable {
 /// user's programs are never shown.
 class ProgramListCubit extends Cubit<ProgramListState> {
   ProgramListCubit({
+    required this._firstWeekday,
     required WatchAuthUser watchAuthUser,
     required this._watchPrograms,
     required this._watchActiveProgram,
@@ -186,9 +187,8 @@ class ProgramListCubit extends Cubit<ProgramListState> {
   /// The program and week the completed days are followed for.
   (String, CalendarDate)? _completedFor;
 
-  /// One for the whole app, made without a context: Monday until the app
-  /// calls [changeFirstWeekday].
-  int _firstWeekday = DateTime.monday;
+  int _firstWeekday;
+  int get firstWeekday => _firstWeekday;
 
   CalendarDate get _today => CalendarDate.of(_clock());
 
@@ -241,12 +241,14 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     _emitReady();
   }
 
-  /// Starts the week of the plan on [firstWeekday] from now on.
+  /// Starts the week of the plan on [firstWeekday] from now on. The plan
+  /// moves once the new week's done days arrive; after a failure, once
+  /// followed again.
   void changeFirstWeekday(int firstWeekday) {
     if (firstWeekday == _firstWeekday) return;
     _firstWeekday = firstWeekday;
+    if (state.status == ProgramListStatus.failure) return;
     _followCompleted();
-    _emitReady();
   }
 
   void _follow({bool keepNotices = true}) {
@@ -279,10 +281,12 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     final week = _today.startOfWeek(_firstWeekday);
     final key = active == null ? null : (active.programId, week);
     if (key == _completedFor) return;
+    // Another week of the same program keeps the done days known, which
+    // the plan only counts within its week, until its own arrive.
+    if (key?.$1 != _completedFor?.$1) _completed = const [];
     _completedFor = key;
     unawaited(_completedSubscription?.cancel());
     _completedSubscription = null;
-    _completed = const [];
     if (uid == null || active == null) return;
     _completedSubscription =
         _watchCompletedDays((
