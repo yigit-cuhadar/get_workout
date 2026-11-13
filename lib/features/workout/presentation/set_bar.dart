@@ -592,9 +592,9 @@ class _EffortQuestion extends StatelessWidget {
   }
 }
 
-/// The steps of [scale] two by two, each with what it means in one line,
-/// [chosen] selected; the last one alone takes the whole row. Picking the
-/// chosen one again clears it.
+/// The steps of [scale], each with what it means in one line, [chosen]
+/// selected: two by two (one left alone takes the whole row), then Failed
+/// on a row of its own. Picking the chosen one again clears it.
 class EffortGrid extends StatelessWidget {
   const EffortGrid({
     super.key,
@@ -609,7 +609,10 @@ class EffortGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final steps = scale.steps;
+    final steps = [
+      for (final step in scale.steps)
+        if (!step.failed) step,
+    ];
     return Column(
       spacing: Gap.sm,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -628,6 +631,7 @@ class EffortGrid extends StatelessWidget {
             )
           else
             _option(context, steps[i]),
+        _option(context, EffortStep.failure),
       ],
     );
   }

@@ -173,12 +173,17 @@ WorkoutSet? completeSet(
 /// A stepper's [steps] (−1 or +1) applied to a lifted weight of [kg], or
 /// of [hint] while it is empty, else of none: moved by its unit's
 /// [WeightUnitConversion.weightStep] from the weight as [unit] shows it,
-/// kept from 0 to [WorkoutLimits.maxWeightKg].
+/// to hundredths as fields show them, kept from 0 to
+/// [WorkoutLimits.maxWeightKg].
 double steppedWeightKg(double? kg, double? hint, int steps, WeightUnit unit) {
   final shown = unit.shownFromKg(kg ?? hint ?? 0);
-  final stepped = unit.toKg(shown + steps * unit.weightStep);
+  final hundredths = ((shown + steps * unit.weightStep) * 100).round();
+  final stepped = unit.toKg(hundredths / 100);
   return stepped.clamp(0, WorkoutLimits.maxWeightKg);
 }
+
+/// What the seconds stepper moves a set's duration by.
+const durationStepS = 5;
 
 /// A stepper's [steps] (−1 or +1) applied to reps or seconds of [value],
 /// or of [hint] while it is empty, else of none: kept from 1 to [max].

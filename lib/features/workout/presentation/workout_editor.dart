@@ -355,15 +355,15 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     ),
   );
 
-  /// Moves the seconds by [steps], from the suggestion while they are
-  /// empty; see [steppedCount].
+  /// Moves the seconds by [steps] times [durationStepS], from the
+  /// suggestion while they are empty; see [steppedCount].
   void stepDuration(SetRef ref, int steps) => _editSet(
     ref,
     (set, _) => set.copyWith(
       durationS: () => steppedCount(
         set.durationS,
         state.suggestion(ref).durationS,
-        steps,
+        steps * durationStepS,
         WorkoutLimits.maxDurationS,
       ),
     ),

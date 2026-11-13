@@ -121,9 +121,7 @@ class _ActiveWorkout extends StatelessWidget {
       (SettingsCubit cubit) =>
           cubit.state.loaded ? cubit.state.settings.seenTips : null,
     );
-    final resting = context.select(
-      (RestTimerCubit timer) => timer.state.phase == RestPhase.running,
-    );
+    final phase = context.select((RestTimerCubit timer) => timer.state.phase);
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) unawaited(cubit.leave());
@@ -168,7 +166,10 @@ class _ActiveWorkout extends StatelessWidget {
         body: SetBarLayout(
           state: state,
           editor: cubit,
-          entry: !(state.entryWaitsForRest && resting),
+          entry: showsSetEntry(
+            entryWaitsForRest: state.entryWaitsForRest,
+            phase: phase,
+          ),
           below: const RestBelowBar(child: RestStrip()),
           content: CustomScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,

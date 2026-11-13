@@ -20,6 +20,14 @@ enum RestPhase {
   over,
 }
 
+/// Whether the set bar shows its selected set's values: not while
+/// [entryWaitsForRest] (see [ActiveWorkoutState.entryWaitsForRest]) and
+/// the rest runs ([phase]).
+bool showsSetEntry({
+  required bool entryWaitsForRest,
+  required RestPhase phase,
+}) => !entryWaitsForRest || phase != RestPhase.running;
+
 class RestTimerState extends Equatable {
   const RestTimerState({
     this.phase = RestPhase.none,

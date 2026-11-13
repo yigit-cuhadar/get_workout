@@ -230,6 +230,11 @@ void main() {
       expect(steppedWeightKg(lb.toKg(135), null, 1, kg), 63.5);
     });
 
+    test('a weight steps to hundredths, without float drift', () {
+      expect(steppedWeightKg(0.28, null, 1, WeightUnit.kg), 2.78);
+      expect(steppedWeightKg(2.78, null, -1, WeightUnit.kg), 0.28);
+    });
+
     test('an empty weight starts from the suggestion, else from none', () {
       expect(steppedWeightKg(null, 100, 1, WeightUnit.kg), 102.5);
       expect(steppedWeightKg(null, null, 1, WeightUnit.kg), 2.5);

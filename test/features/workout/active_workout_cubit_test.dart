@@ -907,6 +907,18 @@ void main() {
         await cubit.close();
       });
 
+      test('after the last set to do, that set stays in the bar', () async {
+        final cubit = await withSquat();
+        cubit
+          ..toggleDone(first)
+          ..setEffort(first, const EffortStep.reserve(2))
+          ..toggleDone(second);
+        expect(cubit.state.rest?.after, second);
+        expect(cubit.state.selection, second);
+        expect(cubit.state.entryWaitsForRest, isFalse);
+        await cubit.close();
+      });
+
       test('a set ticked again keeps its effort and is not asked', () async {
         final cubit = await withSquat();
         cubit
@@ -1148,13 +1160,18 @@ void main() {
       await cubit.close();
     });
 
-    test('seconds step by one', () async {
+    test('seconds step by 5, never below 1', () async {
+      const plankSet = (exercise: 1, set: 0);
       final cubit = await withSquat();
       cubit
         ..addExercises([plank], 'en')
-        ..stepDuration((exercise: 1, set: 0), 1)
-        ..stepDuration((exercise: 1, set: 0), 1);
-      expect(cubit.state.workout!.exercises[1].sets[0].durationS, 2);
+        ..stepDuration(plankSet, 1)
+        ..stepDuration(plankSet, 1);
+      expect(cubit.state.workout!.exercises[1].sets[0].durationS, 10);
+      cubit
+        ..setDuration(plankSet, '3')
+        ..stepDuration(plankSet, -1);
+      expect(cubit.state.workout!.exercises[1].sets[0].durationS, 1);
       await cubit.close();
     });
 

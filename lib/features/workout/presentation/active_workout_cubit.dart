@@ -105,9 +105,11 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   @override
   final bool askingWithRest;
 
-  /// The last tick started the rest, so the next set's values wait until
-  /// that rest is over: while it runs, the set bar shows nothing but the
-  /// effort question. Picking a set or adding one shows it at once.
+  /// The last tick started the rest and left a set to do, so that set's
+  /// values wait until the rest is over (see [showsSetEntry]): while it
+  /// runs, the set bar shows nothing but the effort question. Picking a
+  /// set or adding one shows it at once. After the workout's last set the
+  /// bar keeps showing that done set.
   final bool entryWaitsForRest;
 
   /// Warm-ups were added to this workout automatically, which its tip
@@ -845,7 +847,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       rest: () => rest,
       picked: select == null ? state.picked : select(changed),
       keepQuestion: !movesSets,
-      entryWaitsForRest: started || state.entryWaitsForRest,
+      entryWaitsForRest: started
+          ? nextSet(changed, null) != null
+          : state.entryWaitsForRest,
     );
     _keep();
   }

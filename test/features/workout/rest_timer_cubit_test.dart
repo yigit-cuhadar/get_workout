@@ -202,6 +202,29 @@ void main() {
     return done;
   }
 
+  group('the set entry beside the rest', () {
+    test('hides while the rest a tick started runs', () {
+      expect(
+        showsSetEntry(entryWaitsForRest: true, phase: RestPhase.running),
+        isFalse,
+      );
+    });
+
+    test('shows once the rest is over or skipped', () {
+      for (final phase in [RestPhase.over, RestPhase.none]) {
+        expect(showsSetEntry(entryWaitsForRest: true, phase: phase), isTrue);
+      }
+    });
+
+    test('shows during a rest kept from before a relaunch', () {
+      // A relaunch leaves nothing waiting; see the workout cubit's tests.
+      expect(
+        showsSetEntry(entryWaitsForRest: false, phase: RestPhase.running),
+        isTrue,
+      );
+    });
+  });
+
   group('countdown', () {
     test('counts down to the end, says it is over, then hides', () {
       run((async, cubit) {
