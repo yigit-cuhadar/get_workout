@@ -47,7 +47,7 @@ class ProgramsModule implements FeatureModule {
   static CompletedDays nothingDone(GetIt _) => const NoCompletedDays();
 
   /// The exercise picker's own [LibraryCubit], so picking never changes the
-  /// Exercises tab's search and filters.
+  /// Exercises view's search and filters.
   static const pickerLibrary = 'exercisePicker';
 
   @override

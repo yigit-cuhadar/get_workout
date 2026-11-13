@@ -24,23 +24,23 @@ void main() {
   group('drops', () {
     test('going elsewhere in the same tab drops the page', () {
       expect(
-        UnsavedChanges.drops(Routes.program('p1'), Routes.programNew),
+        UnsavedChanges().drops(Routes.program('p1'), Routes.programNew),
         isTrue,
       );
       expect(
-        UnsavedChanges.drops(Routes.programs, Routes.programEdit('p1')),
+        UnsavedChanges().drops(Routes.programs, Routes.programEdit('p1')),
         isTrue,
       );
-      expect(UnsavedChanges.drops(Routes.today, '/today/x'), isTrue);
+      expect(UnsavedChanges().drops(Routes.today, '/today/x'), isTrue);
     });
 
     test('going to the page or past it keeps it', () {
       expect(
-        UnsavedChanges.drops(Routes.programNew, Routes.programNew),
+        UnsavedChanges().drops(Routes.programNew, Routes.programNew),
         isFalse,
       );
       expect(
-        UnsavedChanges.drops(
+        UnsavedChanges().drops(
           Routes.historyEdit('w1'),
           Routes.historyWorkout('w1'),
         ),
@@ -50,18 +50,33 @@ void main() {
 
     test('a page whose path only starts the same is dropped', () {
       expect(
-        UnsavedChanges.drops('${Routes.programNew}x', Routes.programNew),
+        UnsavedChanges().drops('${Routes.programNew}x', Routes.programNew),
         isTrue,
       );
     });
 
     test('another tab keeps its own stack', () {
-      expect(UnsavedChanges.drops(Routes.calendar, Routes.programNew), isFalse);
       expect(
-        UnsavedChanges.drops(Routes.profileDetails, Routes.bodyMeasureNew),
+        UnsavedChanges().drops(Routes.calendar, Routes.programNew),
         isFalse,
       );
-      expect(UnsavedChanges.drops('/profiles', Routes.profileDetails), isFalse);
+      expect(
+        UnsavedChanges().drops(Routes.profileDetails, Routes.bodyMeasureNew),
+        isFalse,
+      );
+      expect(
+        UnsavedChanges().drops('/profiles', Routes.profileDetails),
+        isFalse,
+      );
+    });
+
+    test('a tab under several first segments is one stack', () {
+      final unsaved = UnsavedChanges(sharedTabs: {'/b': '/a'});
+      expect(unsaved.drops('/b', '/a/edit'), isTrue);
+      expect(unsaved.drops('/b/x', '/a/edit'), isTrue);
+      expect(unsaved.drops('/a', '/b/edit'), isTrue);
+      expect(unsaved.drops('/c', '/a/edit'), isFalse);
+      expect(UnsavedChanges().drops('/b', '/a/edit'), isFalse);
     });
   });
 

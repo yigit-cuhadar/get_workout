@@ -8,6 +8,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/router.dart';
+import 'package:get_workout/app/train_page.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise.dart';
@@ -56,6 +57,7 @@ import 'package:get_workout/features/programs/domain/program_repository.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/programs/data/no_completed_days.dart';
 import 'package:get_workout/features/programs/presentation/catalogue_detail_cubit.dart';
+import 'package:get_workout/features/programs/presentation/catalogue_page.dart';
 import 'package:get_workout/features/programs/presentation/premium_prompt.dart';
 import 'package:get_workout/features/programs/presentation/program_catalogue_cubit.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
@@ -470,6 +472,18 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Train's Exercises view.
+  Future<void> openExercises(WidgetTester tester) async {
+    await tapTab(tester, 'Train');
+    await tester.tap(find.text('Exercises'));
+    await tester.pumpAndSettle();
+  }
+
+  String path() => router.routerDelegate.currentConfiguration.uri.path;
+
+  int selectedTab(WidgetTester tester) =>
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex;
+
   Future<void> openAccount(WidgetTester tester) async {
     await tapTab(tester, 'Profile');
     await tester.tap(find.text('Create account or sign in'));
@@ -527,13 +541,13 @@ void main() {
     expect(find.text('a@b.co'), findsOneWidget);
   });
 
-  testWidgets('a started session lands on Today with five tabs', (
+  testWidgets('a started session lands on Today with four tabs', (
     tester,
   ) async {
     await startAsGuest(tester);
 
     expect(find.byType(TodayPage), findsOneWidget);
-    expect(find.byType(NavigationDestination), findsNWidgets(5));
+    expect(find.byType(NavigationDestination), findsNWidgets(4));
   });
 
   testWidgets('tabs switch and keep their own stack', (tester) async {
@@ -541,7 +555,7 @@ void main() {
     await openAccount(tester);
     expect(find.byType(AccountPage), findsOneWidget);
 
-    await tapTab(tester, 'Programs');
+    await tapTab(tester, 'Train');
     expect(find.byType(ProgramsPage), findsOneWidget);
     expect(find.byType(AccountPage), findsNothing);
 
@@ -572,7 +586,7 @@ void main() {
 
   testWidgets('the root location opens Today', (tester) async {
     await startAsGuest(tester);
-    await tapTab(tester, 'Programs');
+    await tapTab(tester, 'Train');
 
     router.go('/');
     await tester.pumpAndSettle();
@@ -580,11 +594,11 @@ void main() {
     expect(find.byType(TodayPage), findsOneWidget);
   });
 
-  testWidgets('an exercise opens its detail inside the Exercises tab', (
+  testWidgets('an exercise opens its detail inside the Train tab', (
     tester,
   ) async {
     await startAsGuest(tester);
-    await tapTab(tester, 'Exercises');
+    await openExercises(tester);
     expect(find.byType(ExercisesPage), findsOneWidget);
 
     await tester.tap(find.text('List'));
@@ -597,20 +611,126 @@ void main() {
     expect(find.byType(NavigationBar), findsOneWidget);
   });
 
-  testWidgets('the Exercises tab remembers the list view and returns to it', (
+  testWidgets('the Exercises view remembers the list view and returns to it', (
     tester,
   ) async {
     await startAsGuest(tester);
-    await tapTab(tester, 'Exercises');
+    await openExercises(tester);
     await tester.tap(find.text('List'));
     await tester.pumpAndSettle();
     router.go(Routes.exercise('squat'));
     await tester.pumpAndSettle();
 
-    await tapTab(tester, 'Exercises');
+    await tapTab(tester, 'Train');
 
     expect(find.byType(ExerciseDetailPage), findsNothing);
     expect(find.text('1 exercise'), findsOneWidget);
+  });
+
+  group('Train', () {
+    testWidgets('opens on My program, its views at their own locations', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+
+      await tapTab(tester, 'Train');
+      expect(find.byType(ProgramsPage), findsOneWidget);
+      expect(find.byType(ExercisesPage), findsNothing);
+      expect(path(), Routes.programs);
+
+      await tester.tap(find.text('Exercises'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ExercisesPage), findsOneWidget);
+      expect(find.byType(ProgramsPage), findsNothing);
+      expect(path(), Routes.exercises);
+
+      await tester.tap(find.text('My program'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ProgramsPage), findsOneWidget);
+      expect(path(), Routes.programs);
+    });
+
+    testWidgets('each location lands on Train in its view', (tester) async {
+      await startAsGuest(tester);
+
+      router.go(Routes.exercises);
+      await tester.pumpAndSettle();
+      expect(selectedTab(tester), 1);
+      expect(find.byType(ExercisesPage), findsOneWidget);
+
+      router.go(Routes.today);
+      await tester.pumpAndSettle();
+      router.go(Routes.programs);
+      await tester.pumpAndSettle();
+      expect(selectedTab(tester), 1);
+      expect(find.byType(ProgramsPage), findsOneWidget);
+    });
+
+    testWidgets('deep locations of both views open inside Train', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      final pages = {
+        Routes.exercise('squat'): ExerciseDetailPage,
+        Routes.customExerciseNew: CustomExerciseNewPage,
+        Routes.catalogue: CataloguePage,
+      };
+
+      for (final MapEntry(key: location, value: page) in pages.entries) {
+        router.go(Routes.today);
+        await tester.pumpAndSettle();
+        router.go(location);
+        await tester.pumpAndSettle();
+        expect(find.byType(page), findsOneWidget, reason: location);
+        expect(selectedTab(tester), 1, reason: location);
+      }
+    });
+
+    testWidgets('switching views keeps both views and the page', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      await openExercises(tester);
+      Element element(Type type) =>
+          tester.element(find.byType(type, skipOffstage: false));
+      final train = element(TrainPage);
+      final exercises = element(ExercisesPage);
+
+      await tester.tap(find.text('My program'));
+      await tester.pumpAndSettle();
+      final programs = element(ProgramsPage);
+      // Kept, only out of sight.
+      expect(element(ExercisesPage), same(exercises));
+      expect(find.byType(ExercisesPage), findsNothing);
+
+      router.go(Routes.exercises);
+      await tester.pumpAndSettle();
+      expect(element(TrainPage), same(train));
+      expect(element(ExercisesPage), same(exercises));
+      expect(element(ProgramsPage), same(programs));
+      expect(find.byType(ExercisesPage), findsOneWidget);
+    });
+
+    testWidgets('a view is built only once it shows', (tester) async {
+      await startAsGuest(tester);
+      await tapTab(tester, 'Train');
+
+      expect(find.byType(ExercisesPage, skipOffstage: false), findsNothing);
+    });
+
+    testWidgets('a page above a view leaves with the view switched', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      router.go(Routes.exercise('squat'));
+      await tester.pumpAndSettle();
+
+      router.go(Routes.programs);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ExerciseDetailPage), findsNothing);
+      expect(find.byType(ProgramsPage), findsOneWidget);
+    });
   });
 
   testWidgets('an unknown exercise id shows not found', (tester) async {
@@ -628,7 +748,7 @@ void main() {
     tester,
   ) async {
     await startAsGuest(tester);
-    await tapTab(tester, 'Exercises');
+    await openExercises(tester);
     expect(find.byTooltip('New custom exercise'), findsNothing);
     await tester.tap(find.text('List'));
     await tester.pumpAndSettle();
@@ -1516,8 +1636,6 @@ void main() {
         );
     }
 
-    String path() => router.routerDelegate.currentConfiguration.uri.path;
-
     Future<void> back(WidgetTester tester) async {
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
@@ -1550,7 +1668,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(StrengthListPage), findsOneWidget);
 
-      await tapTab(tester, 'Exercises');
+      await tapTab(tester, 'Train');
       router.go(Routes.exercise('squat'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
@@ -1566,7 +1684,7 @@ void main() {
       await tester.tap(find.text('Records and progress'));
       await tester.pumpAndSettle();
 
-      // Pushed above the exercise, in the Exercises tab.
+      // Pushed above the exercise, in the Train tab.
       expect(find.byType(ExerciseStrengthPage), findsOneWidget);
       expect(find.byType(NavigationBar), findsOneWidget);
       expect(path(), Routes.exercise('squat'));

@@ -19,6 +19,13 @@ abstract interface class UnsavedPage {
 /// The open pages with unsaved changes, so that a navigation which would
 /// drop one asks first. Pages join through [UnsavedChangesGuard].
 class UnsavedChanges {
+  UnsavedChanges({this.sharedTabs = const {}});
+
+  /// Tabs whose stack is another's, by first location: one tab's pages
+  /// under several first path segments (`{'/b': '/a'}` puts `/b/...` in
+  /// the tab of `/a/...`).
+  final Map<String, String> sharedTabs;
+
   final _pages = <UnsavedPage>{};
 
   void add(UnsavedPage page) => _pages.add(page);
@@ -60,10 +67,15 @@ class UnsavedChanges {
       .firstOrNull;
 
   /// Whether going to [target] drops the page at [page]. Each tab keeps its
-  /// own stack under its first path segment; going into a tab replaces its
-  /// stack with [target]'s pages, keeping those on the way to it.
-  static bool drops(String target, String page) {
-    String tab(String path) => Uri.parse(path).pathSegments.firstOrNull ?? '';
+  /// own stack under its first path segment (or several, see [sharedTabs]);
+  /// going into a tab replaces its stack with [target]'s pages, keeping
+  /// those on the way to it.
+  bool drops(String target, String page) {
+    String tab(String path) {
+      final first = '/${Uri.parse(path).pathSegments.firstOrNull ?? ''}';
+      return sharedTabs[first] ?? first;
+    }
+
     return tab(target) == tab(page) &&
         target != page &&
         !target.startsWith('$page/');

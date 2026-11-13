@@ -41,8 +41,8 @@ class NextProgramDay extends NextWorkout {
   List<Object?> get props => [program, dayIndex, date, access];
 }
 
-/// The active [program]'s next day was [missed]; it is resolved as on the
-/// Programs tab, or started anyway.
+/// The active [program]'s next day was [missed]; it is resolved as in
+/// Train's "My program", or started anyway.
 class MissedProgramDay extends NextWorkout {
   const MissedProgramDay({
     required this.program,
@@ -93,7 +93,7 @@ ActiveWorkoutView activeWorkoutViewOf(ActiveWorkoutState state) => (
 );
 
 /// The next workout: the one in progress in [active] (an empty one is not),
-/// else derived only from what the Programs tab shows in [state]; null
+/// else derived only from what "My program" shows in [state]; null
 /// until it is known: while the workout in progress is looked for (Start
 /// could otherwise show for a day already running), while the list loads,
 /// and while the premium status of a premium copy is (a missed day could

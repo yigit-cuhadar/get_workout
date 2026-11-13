@@ -853,10 +853,22 @@ from the earlier FitLab app.
   Messages carry the Android channel `workout`, APNs `sound: default`, and
   a time to live of 3 days (Android `ttl`, `apns-expiration`), so a dated
   announcement is dropped rather than arriving weeks late.
-- **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
-  / Progress / Profile. The active workout is full-screen and can be minimized
-  to a bar above the tabs. A `go` (a link, a notification tap) replaces
-  its tab's stack; a page there with unsaved changes (program builder,
+- **Navigation**: four tabs, Today / Train / Progress / Profile. Train
+  (`lib/app/train_page.dart`, in `app` because it composes two features'
+  first pages) has two views under a segmented control: "My program"
+  (`ProgramsPage`, at `/programs`) and "Exercises" (`ExercisesPage`, with
+  its own Body/List switch and the + for a custom exercise, at
+  `/exercises`). Every location stays as it was: both route trees live in
+  Train's one branch (one stack), so `/programs/...` and `/exercises/...`
+  open inside Train, and the switch is a `go` to the other view's
+  location. Both locations build their page with `TrainPage.pageKey`, so
+  the navigator updates the one page in place: a view is built the first
+  time it shows and then kept (an `IndexedStack`), the model never loads
+  again and the list keeps its place. The tab opens on the view it last
+  showed, "My program" at first. The active workout is full-screen and can
+  be minimized to a bar above the tabs. A `go` (a link, a notification
+  tap) replaces its tab's stack (Train's for either view, via
+  `UnsavedChanges.sharedTabs`); a page there with unsaved changes (program builder,
   workout edit, measurement day) is never dropped silently. One router
   guard (`onEnter`, `lib/core/unsaved_changes.dart`) brings that page up
   (its tab, the workout or paywall above the tabs put away, the workout
@@ -1134,9 +1146,10 @@ from the earlier FitLab app.
   shows. `MonthGrid` (`lib/features/calendar/presentation/month_grid.dart`)
   is generic except for `CalendarDate`; move it to `forge_ui`, taking
   `DateTime` dates, when that package is next changed.
-- **Starting a workout**: the Programs and Today tabs start the next day,
-  a program's page any of its days, the Today tab also a free workout,
-  and an exercise's page adds it to the workout in progress or, after
+- **Starting a workout**: Train's "My program" and Today start the next
+  day, a program's page any of its days, "My program" also an empty
+  workout (Today only while there is no program day to do), and an
+  exercise's page adds it to the workout in progress or, after
   asking, starts one with it. A program day waits until the user's custom
   exercises are loaded; exercises really gone are left out and the user is
   told how many. Starting while a workout is in progress asks to resume it
@@ -1375,18 +1388,18 @@ from the earlier FitLab app.
   looked for, the card shows only its title, never Start.
   Otherwise, with an active program the card's headline is that program,
   labelled "Active program" and opening its page, its next day below;
-  without one it is titled "Next workout". It uses the Programs tab's own
+  without one it is titled "Next workout". It uses "My program"'s own
   `ProgramListCubit` (one instance), so
   both show the same plan; the next day with its exercise count and
   estimate, the date it is planned for (`ProgramListState.nextDate`, the
   first of `ProgramSchedule.upcoming`) and Start through
-  `startProgramDay`. A missed day shows the Programs tab's
+  `startProgramDay`. A missed day shows "My program"'s
   `MissedDayPrompt`, only while the program is open, as there; a failed
   choice is reported by the prompt that made it, so the two tabs never
   both do, and a write the server refuses later by the one
   `ProgramWritesNotice` in the shell, whichever tab is open. While the
   premium status of a premium copy is unknown the card shows only its
-  title, as the Programs tab waits, so a missed day never shows as a
+  title, as "My program" waits, so a missed day never shows as a
   planned one with Start. A locked premium copy shows its day, locked,
   with Start opening the paywall. Without a program, or once it finished: the
   catalogue, the generator and "Start empty workout" (the app never calls
@@ -1394,10 +1407,10 @@ from the earlier FitLab app.
   calendar's `calendarEntries` and marks over the current week from the
   locale's first weekday (Sunday in English, like weekly volume, unlike
   the program week plan), drawn by `MonthGrid` as one week; the strip and
-  every day open the calendar, which has no route for a given date. Quick
-  actions: a free workout, log cardio, add a past workout, the
-  calculators (a row, not a card listing all six, which would crowd the
-  tab; it opens the list under Profile, which keeps its own row). Volume
+  every day open the calendar, which has no route for a given date. No
+  quick actions: an empty workout starts from "My program", cardio is
+  logged under Progress → Cardio, a past workout is added on the history
+  page and the calculators open from Profile. Volume
   card: `WatchWeeklyVolume` with one week, never the trend, whatever the
   user's premium: the trained muscles counted in, below and above the
   band and the three most trained as band bars; it opens Weekly volume,

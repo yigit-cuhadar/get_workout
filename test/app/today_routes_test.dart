@@ -59,15 +59,12 @@ CalendarDate d(int year, int month, int day) => CalendarDate(year, month, day);
 const _targets = [
   Routes.calendar,
   Routes.volume,
-  Routes.cardioNew,
-  Routes.historyNew,
   Routes.catalogue,
   Routes.programGenerator,
   '/programs/p1',
   Routes.workout,
   Routes.paywall,
   Routes.steps,
-  Routes.calculators,
 ];
 
 /// Two seconds of frames, enough for a route transition or a snack bar
@@ -338,8 +335,7 @@ void main() {
 
       expect(find.text('Next workout'), findsOneWidget);
       expect(find.text('Active program'), findsNothing);
-      // The card's button, before the quick action of the same name.
-      await tap(tester, find.text('Start empty workout').first);
+      await tap(tester, find.text('Start empty workout'));
 
       verify(() => workout.startFree('Workout')).called(1);
       expectAt(Routes.workout);
@@ -360,41 +356,6 @@ void main() {
     await tap(tester, find.text('10'));
 
     expectAt(Routes.calendar);
-  });
-
-  group('quick actions', () {
-    testWidgets('start a free workout', (tester) async {
-      await start(tester, programs: planned);
-
-      await tap(tester, find.text('Start empty workout'));
-
-      verify(() => workout.startFree('Workout')).called(1);
-      expectAt(Routes.workout);
-    });
-
-    testWidgets('log cardio', (tester) async {
-      await start(tester, programs: planned);
-
-      await tap(tester, find.text('Log cardio'));
-
-      expectAt(Routes.cardioNew);
-    });
-
-    testWidgets('add a past workout', (tester) async {
-      await start(tester, programs: planned);
-
-      await tap(tester, find.text('Add past workout'));
-
-      expectAt(Routes.historyNew);
-    });
-
-    testWidgets('open the calculators', (tester) async {
-      await start(tester, programs: planned);
-
-      await tap(tester, find.text('Calculators'));
-
-      expectAt(Routes.calculators);
-    });
   });
 
   testWidgets('the volume card sums up the week and opens weekly volume', (
