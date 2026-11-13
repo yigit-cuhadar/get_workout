@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/first_weekday.dart';
+import '../../../core/text_length.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calendar/presentation/calendar_marks.dart';
 import '../../calendar/presentation/month_grid.dart';
@@ -22,6 +23,8 @@ import '../../steps/domain/steps.dart';
 import '../../volume/domain/weekly_volume.dart';
 import '../../volume/presentation/volume_charts.dart';
 import '../../volume/presentation/volume_text.dart';
+import '../../workout/domain/workout.dart';
+import '../../workout/presentation/active_workout_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
 import 'next_workout.dart';
 import 'today_steps_cubit.dart';
@@ -115,23 +118,26 @@ class _TodayViewState extends State<_TodayView> {
   );
 }
 
-/// A card with a [title] row, which opens [onOpen] when given.
+/// A card with a [title] row, under its [label] when given, which opens
+/// [onOpen] when given.
 class _TodayCard extends StatelessWidget {
   const _TodayCard({
     required this.title,
     required this.child,
-    this.subtitle,
+    this.label,
     this.onOpen,
   });
 
   final String title;
-  final String? subtitle;
+  final String? label;
   final VoidCallback? onOpen;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = this.subtitle;
+    final label = this.label;
+    final theme = Theme.of(context);
+    final titleText = Text(title, style: theme.textTheme.titleMedium);
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
@@ -141,11 +147,20 @@ class _TodayCard extends StatelessWidget {
           Semantics(
             header: true,
             child: ListTile(
-              title: Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              subtitle: subtitle == null ? null : Text(subtitle),
+              title: label == null
+                  ? titleText
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        titleText,
+                      ],
+                    ),
               trailing: onOpen == null ? null : const Icon(Icons.chevron_right),
               onTap: onOpen,
             ),
@@ -174,15 +189,31 @@ class _NextWorkoutCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<ProgramListCubit>().state;
-    final next = nextWorkoutOf(state);
+    final next = nextWorkoutOf(
+      state,
+      context.select(
+        (ActiveWorkoutCubit cubit) => activeWorkoutViewOf(cubit.state),
+      ),
+      // As startProgramDay names it.
+      startName: (program, dayIndex) => cutToLength(
+        l10n.workoutProgramDayName(
+          program.name,
+          l10n.dayName(program.days[dayIndex], dayIndex),
+        ),
+        WorkoutLimits.maxNameLength,
+      ),
+    );
+    if (next case WorkoutInProgress()) return _WorkoutInProgressCard(next);
     final program = switch (next) {
       NextProgramDay(:final program) ||
       MissedProgramDay(:final program) => program,
       _ => null,
     };
+    // With an active program it is the headline, opening the program; its
+    // next day follows.
     return _TodayCard(
-      title: l10n.todayNextTitle,
-      subtitle: program?.name,
+      label: program == null ? null : l10n.todayActiveProgram,
+      title: program?.name ?? l10n.todayNextTitle,
       onOpen: program == null
           ? null
           : () => context.go(Routes.program(program.id!)),
@@ -192,7 +223,8 @@ class _NextWorkoutCard extends StatelessWidget {
           retryLabel: l10n.retry,
           onRetry: context.read<ProgramListCubit>().retry,
         ),
-        null => const _Loading(),
+        // A workout in progress has its own card, above.
+        null || WorkoutInProgress() => const _Loading(),
         NoProgramDay(:final finished) => _NoProgramDay(finished),
         NextProgramDay(
           :final program,
@@ -232,6 +264,42 @@ class _NextWorkoutCard extends StatelessWidget {
             ],
           ),
       },
+    );
+  }
+}
+
+/// The workout in progress in place of the next one: its name, the program
+/// day it was started from, and the way back into it, as the workout bar.
+class _WorkoutInProgressCard extends StatelessWidget {
+  const _WorkoutInProgressCard(this.next);
+  final WorkoutInProgress next;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    void open() => context.push(Routes.workout);
+    return _TodayCard(
+      label: l10n.todayWorkoutInProgress,
+      title: next.name,
+      onOpen: open,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if ((next.program, next.dayIndex) case (
+            final program?,
+            final dayIndex?,
+          ))
+            ListTile(
+              leading: const Icon(Icons.fitness_center),
+              title: Text(l10n.dayName(program.days[dayIndex], dayIndex)),
+              subtitle: Text(program.name),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
+            child: ForgeButton(label: l10n.todayResumeWorkout, onPressed: open),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -39,42 +39,42 @@ dependencies:
   forge_core:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: af2aa16c499c2e5e3fe39ee1557afd8f627de691
+      ref: f825ef01074293236a08ba8c522e5fc2aaa89ef0
       path: packages/forge_core
   forge_model_viewer:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: af2aa16c499c2e5e3fe39ee1557afd8f627de691
+      ref: f825ef01074293236a08ba8c522e5fc2aaa89ef0
       path: packages/forge_model_viewer
   forge_ui:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: af2aa16c499c2e5e3fe39ee1557afd8f627de691
+      ref: f825ef01074293236a08ba8c522e5fc2aaa89ef0
       path: packages/forge_ui
   forge_firebase:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: af2aa16c499c2e5e3fe39ee1557afd8f627de691
+      ref: f825ef01074293236a08ba8c522e5fc2aaa89ef0
       path: packages/forge_firebase
   forge_auth:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: af2aa16c499c2e5e3fe39ee1557afd8f627de691
+      ref: f825ef01074293236a08ba8c522e5fc2aaa89ef0
       path: packages/forge_auth
   forge_purchases:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: af2aa16c499c2e5e3fe39ee1557afd8f627de691
+      ref: f825ef01074293236a08ba8c522e5fc2aaa89ef0
       path: packages/forge_purchases
   forge_notifications:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: af2aa16c499c2e5e3fe39ee1557afd8f627de691
+      ref: f825ef01074293236a08ba8c522e5fc2aaa89ef0
       path: packages/forge_notifications
   forge_health:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: af2aa16c499c2e5e3fe39ee1557afd8f627de691
+      ref: f825ef01074293236a08ba8c522e5fc2aaa89ef0
       path: packages/forge_health
   cloud_firestore: ^7.1.0
   firebase_auth: ^7.0.1
@@ -89,10 +89,7 @@ dependencies:
   firebase_storage: ^14.0.1
   image: ^4.12.0
   cloud_functions: ^7.0.1
-  firebase_analytics: ^13.0.1
-  firebase_crashlytics: ^6.0.1
   firebase_messaging: ^17.0.1
-  flutter_local_notifications: ^23.0.1
 
 dependency_overrides:
   # 0.11.1 patched for the iPhone 17 front camera; see the top of
@@ -116,6 +113,8 @@ dev_dependencies:
   mocktail: ^1.0.5
   crypto: ^3.0.8
   url_launcher_platform_interface: ^2.3.2
+  firebase_analytics: ^13.0.1
+  firebase_crashlytics: ^6.0.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

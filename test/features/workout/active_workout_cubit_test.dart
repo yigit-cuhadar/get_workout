@@ -16,12 +16,14 @@ import 'package:get_workout/features/programs/presentation/program_list_cubit.da
 import 'package:get_workout/features/settings/domain/settings_repository.dart';
 import 'package:get_workout/features/settings/domain/settings_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
+import 'package:get_workout/features/workout/domain/effort.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/rest.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
+import 'package:get_workout/features/workout/presentation/workout_editor.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../fake_time.dart';
@@ -252,7 +254,7 @@ void main() {
       expect(cubit.state.localUnreadable, isTrue);
       cubit.localUnreadableShown();
       expect(cubit.state.localUnreadable, isFalse);
-      expect(cubit.startFree('Workout'), isTrue);
+      expect(cubit.startWith(squat, 'Workout', 'en'), isTrue);
       await pumpEventQueue();
       expect(kept()!.name, 'Workout');
       await cubit.close();
@@ -293,13 +295,90 @@ void main() {
   });
 
   group('start', () {
-    test('an empty workout is kept at once', () async {
+    test('a free workout is in progress only while it has exercises', () async {
       final cubit = await signedIn();
       expect(cubit.startFree('Workout'), isTrue);
-      final expected = Workout(id: 'w1', startedAt: now, name: 'Workout');
-      expect(cubit.state.workout, expected);
+      final empty = Workout(id: 'w1', startedAt: now, name: 'Workout');
+      expect(cubit.state.status, WorkoutStatus.active);
+      expect(cubit.state.workout, empty);
+      expect(cubit.state.inProgress, isFalse);
       await pumpEventQueue();
-      expect(kept(), expected);
+      expect(kept(), isNull);
+
+      cubit.addExercises([squat], 'en');
+      expect(cubit.state.inProgress, isTrue);
+      await pumpEventQueue();
+      expect(kept()!.exerciseIds, ['squat']);
+
+      // Empty again: no exercise, so nothing logged either.
+      cubit.removeExercise(0);
+      expect(cubit.state.inProgress, isFalse);
+      await pumpEventQueue();
+      expect(kept(), isNull);
+      await cubit.close();
+    });
+
+    test('a program day is in progress at once', () async {
+      final cubit = await signedIn();
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      expect(cubit.state.inProgress, isTrue);
+      await pumpEventQueue();
+      expect(kept()!.exerciseIds, ['squat']);
+      await cubit.close();
+    });
+
+    test('leaving an empty workout ends it, never kept or stored', () async {
+      final cubit = await signedIn();
+      cubit.startFree('Workout');
+      await cubit.leave();
+      expect(cubit.state.status, WorkoutStatus.none);
+      expect(cubit.state.workout, isNull);
+      await pumpEventQueue();
+      for (final local in verify(
+        () => store.save('u1', captureAny()),
+      ).captured.cast<LocalWorkouts>()) {
+        expect(local.draft, isNull);
+      }
+      verifyNever(
+        () => repository.saveWorkout(
+          any(),
+          any(),
+          any(),
+          advance: any(named: 'advance'),
+        ),
+      );
+      await cubit.close();
+    });
+
+    test('leaving a workout in progress keeps it', () async {
+      final cubit = await signedIn(draft: saved);
+      await cubit.leave();
+      expect(cubit.state.status, WorkoutStatus.active);
+      expect(cubit.state.workout, saved);
+      await cubit.close();
+    });
+
+    test('an empty workout never blocks starting another', () async {
+      final cubit = await signedIn();
+      when(() => repository.newWorkoutId(any())).thenReturn('w2');
+      cubit.startFree('Workout');
+      when(() => repository.newWorkoutId(any())).thenReturn('w3');
+      expect(
+        await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en'),
+        (started: true, skipped: 1),
+      );
+      expect(cubit.state.workout!.id, 'w3');
+      expect(cubit.state.inProgress, isTrue);
+      await cubit.close();
+    });
+
+    test('an empty workout kept by an older version is none', () async {
+      final cubit = await signedIn(
+        draft: Workout(id: 'w0', startedAt: now, name: 'Workout'),
+      );
+      expect(cubit.state.status, WorkoutStatus.none);
+      expect(cubit.state.workout, isNull);
+      expect(cubit.startFree('Workout'), isTrue);
       await cubit.close();
     });
 
@@ -546,7 +625,7 @@ void main() {
       cubit
         ..startFree('Workout')
         ..addExercises([bench], 'en')
-        ..addSet(0)
+        ..addSet(0, SetType.normal)
         ..setWeight(first, '60', WeightUnit.kg)
         ..setReps(first, '8')
         ..toggleDone(first);
@@ -567,15 +646,14 @@ void main() {
         ..addDrop(first)
         ..setDropWeight(first, 0, '80', WeightUnit.kg)
         ..setDropReps(first, 0, '6')
-        ..setToFailure(first, true)
-        ..setRir(first, 1)
+        ..setEffort(first, EffortStep.failure)
         ..setSetNote(first, 'Grip slipped');
       expect(
         cubit.state.workout!.exercises.first.sets.first,
         const WorkoutSet(
           type: SetType.drop,
           toFailure: true,
-          rir: 1,
+          rir: 0,
           note: 'Grip slipped',
           drops: [Drop(weightKg: 80, reps: 6)],
         ),
@@ -600,7 +678,7 @@ void main() {
 
     test('sets are added and removed', () async {
       final cubit = await withSquat();
-      cubit.addSet(0);
+      cubit.addSet(0, SetType.normal);
       expect(cubit.state.workout!.exercises.first.sets, hasLength(3));
       cubit.removeSet((exercise: 0, set: 1));
       expect(cubit.state.workout!.exercises.first.sets, hasLength(2));
@@ -654,6 +732,162 @@ void main() {
       await pumpEventQueue();
       expect(stats['squat']!.hasListener, isFalse);
       expect(stats['bench']!.hasListener, isTrue);
+      await cubit.close();
+    });
+  });
+
+  group('selection', () {
+    Future<ActiveWorkoutCubit> withSquat() async {
+      final cubit = await signedIn();
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      return cubit;
+    }
+
+    test('starts on the next set to do, a tick moves it on', () async {
+      final cubit = await withSquat();
+      cubit.addExercises([bench], 'en');
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      cubit.toggleDone((exercise: 0, set: 0));
+      expect(cubit.state.selection, (exercise: 0, set: 1));
+      // The exercise's last set opens the next one.
+      cubit.toggleDone((exercise: 0, set: 1));
+      expect(cubit.state.selection, (exercise: 1, set: 0));
+      // Unticking keeps the set selected.
+      cubit
+        ..selectSet((exercise: 0, set: 1))
+        ..toggleDone((exercise: 0, set: 1));
+      expect(cubit.state.selection, (exercise: 0, set: 1));
+      await cubit.close();
+    });
+
+    test('a set that cannot be ticked stays selected', () async {
+      final cubit = await signedIn();
+      cubit
+        ..startFree('Workout')
+        ..addExercises([bench], 'en')
+        ..toggleDone((exercise: 0, set: 0));
+      expect(cubit.state.invalidSet, (exercise: 0, set: 0));
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      await cubit.close();
+    });
+
+    test('a superset moves round by round', () async {
+      final cubit = await withSquat();
+      cubit
+        ..addExercises([bench], 'en')
+        ..linkWithNext(0)
+        ..setWeight((exercise: 1, set: 0), '60', WeightUnit.kg)
+        ..setReps((exercise: 1, set: 0), '8')
+        ..addSet(1, SetType.normal)
+        ..toggleDone((exercise: 0, set: 0));
+      expect(cubit.state.selection, (exercise: 1, set: 0));
+      cubit.toggleDone((exercise: 1, set: 0));
+      expect(cubit.state.selection, (exercise: 0, set: 1));
+      await cubit.close();
+    });
+
+    test(
+      'an added set is selected; a warm-up goes before working sets',
+      () async {
+        final cubit = await withSquat();
+        cubit.addSet(0, SetType.drop);
+        expect(cubit.state.workout!.exercises[0].sets[2].type, SetType.drop);
+        expect(cubit.state.selection, (exercise: 0, set: 2));
+        cubit.addSet(0, SetType.warmup);
+        expect(cubit.state.workout!.exercises[0].sets.map((s) => s.type), [
+          SetType.warmup,
+          SetType.normal,
+          SetType.normal,
+          SetType.drop,
+        ]);
+        expect(cubit.state.selection, (exercise: 0, set: 0));
+        cubit.addSet(0, SetType.warmup);
+        expect(cubit.state.workout!.exercises[0].sets[1].type, SetType.warmup);
+        expect(cubit.state.selection, (exercise: 0, set: 1));
+        await cubit.close();
+      },
+    );
+
+    test('duration exercises get a normal set for a drop set', () async {
+      final cubit = await signedIn();
+      cubit
+        ..startFree('Workout')
+        ..addExercises([plank], 'en')
+        ..addSet(0, SetType.drop);
+      expect(cubit.state.workout!.exercises[0].sets.map((s) => s.type), [
+        SetType.normal,
+        SetType.normal,
+      ]);
+      await cubit.close();
+    });
+
+    test('removing sets and exercises, and moving, keep it in place', () async {
+      final cubit = await withSquat();
+      cubit
+        ..addExercises([bench, plank], 'en')
+        ..openExercise(2);
+      expect(cubit.state.selection, (exercise: 2, set: 0));
+      cubit.moveExercise(2, 0);
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      cubit.removeExercise(1);
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      cubit
+        ..addSet(1, SetType.normal)
+        ..selectSet((exercise: 1, set: 1))
+        ..removeSet((exercise: 1, set: 0));
+      expect(cubit.state.selection, (exercise: 1, set: 0));
+      // Its own exercise removed: the next set to do.
+      cubit.removeExercise(1);
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      await cubit.close();
+    });
+
+    test('opening an exercise and stepping through its sets', () async {
+      final cubit = await withSquat();
+      cubit
+        ..addExercises([bench], 'en')
+        ..openExercise(1);
+      expect(cubit.state.selection, (exercise: 1, set: 0));
+      cubit
+        ..openExercise(0)
+        ..stepSet(1);
+      expect(cubit.state.selection, (exercise: 0, set: 1));
+      cubit.stepSet(1);
+      expect(cubit.state.selection, (exercise: 0, set: 1));
+      await cubit.close();
+    });
+
+    test('skipping the rest keeps the selection', () async {
+      final cubit = await withSquat();
+      cubit.toggleDone((exercise: 0, set: 0));
+      final selected = cubit.state.selection;
+      cubit.skipRest();
+      expect(cubit.state.selection, selected);
+      await cubit.close();
+    });
+
+    test('effort is stored as reps in reserve, failure as before', () async {
+      final cubit = await withSquat();
+      const first = (exercise: 0, set: 0);
+      cubit.setEffort(first, const EffortStep.reserve(2));
+      expect(cubit.state.workout!.exercises[0].sets[0].rir, 2);
+      cubit.setEffort(first, EffortStep.failure);
+      final set = cubit.state.workout!.exercises[0].sets[0];
+      expect((set.rir, set.toFailure), (0, true));
+      cubit.setEffort(first, null);
+      final cleared = cubit.state.workout!.exercises[0].sets[0];
+      expect((cleared.rir, cleared.toFailure), (null, false));
+      await cubit.close();
+    });
+
+    test('the set view toggles and stays for the next workout', () async {
+      final cubit = await withSquat();
+      expect(cubit.state.setView, SetView.bubbles);
+      cubit.toggleSetView();
+      expect(cubit.state.setView, SetView.selectedSet);
+      await cubit.discard();
+      expect(cubit.state.setView, SetView.selectedSet);
+      expect(cubit.state.picked, isNull);
       await cubit.close();
     });
   });
@@ -1014,6 +1248,20 @@ void main() {
       // The squat set, now the second exercise's, no longer ends it.
       cubit.toggleDone((exercise: 1, set: 0));
       expect(cubit.state.rest, Rest(endsAt: restEnd));
+      await cubit.close();
+    });
+
+    test('removing the last exercise ends the rest', () async {
+      final cubit = await signedIn();
+      cubit
+        ..startWith(squat, 'Workout', 'en')
+        ..setWeight(first, '100', WeightUnit.kg)
+        ..setReps(first, '5')
+        ..toggleDone(first);
+      expect(cubit.state.rest, isNotNull);
+      cubit.removeExercise(0);
+      expect(cubit.state.inProgress, isFalse);
+      expect(cubit.state.rest, isNull);
       await cubit.close();
     });
 

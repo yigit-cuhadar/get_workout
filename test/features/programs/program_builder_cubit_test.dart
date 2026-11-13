@@ -127,8 +127,10 @@ void main() {
       final cubit = await build();
       cubit.setName('Push');
       expect(cubit.state.dirty, isTrue);
+      expect(cubit.hasChanges, isTrue);
       cubit.setName('');
       expect(cubit.state.dirty, isFalse);
+      expect(cubit.hasChanges, isFalse);
     });
 
     test('a blank length is none, a number is weeks', () async {
@@ -308,6 +310,29 @@ void main() {
       expect(cubit.state.day!.items[0].targetKg, closeTo(10.206, 0.001));
       cubit.setTarget(0, '');
       expect(cubit.state.day!.items[0].targetKg, isNull);
+    });
+
+    test('a target typed back as shown keeps the stored kg', () async {
+      when(() => repository.getProgram('u1', 'p1')).thenAnswer(
+        (_) async => Ok(
+          Program(
+            id: 'p1',
+            name: 'Old',
+            days: [
+              ProgramDay(items: [item('a', targetKg: 80)]),
+            ],
+          ),
+        ),
+      );
+      final cubit = await build(programId: 'p1', unit: WeightUnit.lb);
+      // 80 kg shows as 176 lb.
+      cubit
+        ..setTarget(0, '17')
+        ..setTarget(0, '176');
+      expect(cubit.state.day!.items[0].targetKg, 80);
+      expect(cubit.state.dirty, isFalse);
+      cubit.setTarget(0, '177');
+      expect(cubit.state.day!.items[0].targetKg, WeightUnit.lb.toKg(177));
     });
 
     test('supersets, circuits, moves and removals', () async {
@@ -606,10 +631,13 @@ void main() {
 
   test('closes when the user changes and then ignores edits', () async {
     final cubit = await filled(['a']);
+    expect(cubit.hasChanges, isTrue);
     when(() => auth.currentUser).thenReturn(null);
     users.add(const AuthUser(id: 'g2', isAnonymous: true));
     await pumpEventQueue();
     expect(cubit.state.status, ProgramBuilderStatus.closed);
+    // Leaving a closed builder asks nothing.
+    expect(cubit.hasChanges, isFalse);
     final closed = cubit.state;
     cubit.setName('Other');
     await cubit.save();

@@ -117,6 +117,23 @@ void main() {
     await cubit.close();
   });
 
+  test('a new day names its id once saved, for its summary; an edited one '
+      'does not', () async {
+    final cubit = build()..setWeight('80');
+    await cubit.next();
+    expect(cubit.savedNewId, isNull);
+    await skipAll(cubit);
+    expect(cubit.state.status, MeasurementDayStatus.saved);
+    expect(cubit.savedNewId, 'id1');
+    await cubit.close();
+
+    final edit = build(initial: world.repository.entries['id1']);
+    await skipAll(edit);
+    expect(edit.state.status, MeasurementDayStatus.saved);
+    expect(edit.savedNewId, isNull);
+    await edit.close();
+  });
+
   test('a retaken or skipped picture, and those left, are removed', () async {
     final cubit = build();
     for (var i = 0; i < 3; i++) {
@@ -185,6 +202,31 @@ void main() {
 
     expect(world.repository.calls, ['add id1', 'add id1']);
     expect(cubit.state.status, MeasurementDayStatus.saved);
+    await cubit.close();
+  });
+
+  test('has changes once something is entered, until saved', () async {
+    final cubit = build();
+    expect(cubit.hasChanges, isFalse);
+
+    cubit.setWeight('80');
+    expect(cubit.hasChanges, isTrue);
+
+    await cubit.next();
+    await skipAll(cubit);
+    expect(cubit.state.status, MeasurementDayStatus.saved);
+    expect(cubit.hasChanges, isFalse);
+    await cubit.close();
+  });
+
+  test('has no changes once closed', () async {
+    final cubit = build()..setWeight('80');
+
+    users.add(null);
+    await pumpEventQueue();
+
+    expect(cubit.state.status, MeasurementDayStatus.closed);
+    expect(cubit.hasChanges, isFalse);
     await cubit.close();
   });
 
@@ -337,6 +379,43 @@ void main() {
       },
       photos: const {PhotoPose.back: keptBack},
     );
+
+    test('an untouched entry has no changes', () async {
+      final cubit = build(initial: initial);
+      expect(cubit.hasChanges, isFalse);
+
+      await cubit.next();
+      expect(cubit.hasChanges, isFalse);
+      await cubit.close();
+    });
+
+    test(
+      'a changed or cleared value is a change; typing it back is none',
+      () async {
+        final cubit = build(initial: initial);
+        final weight = cubit.state.weight;
+
+        cubit.setWeight('81');
+        expect(cubit.hasChanges, isTrue);
+        cubit.setWeight(weight);
+        expect(cubit.hasChanges, isFalse);
+
+        cubit.setWeight('');
+        expect(cubit.hasChanges, isTrue);
+        await cubit.close();
+      },
+    );
+
+    test('clearing a stored measurement is a change', () async {
+      final cubit = build(initial: initial);
+      await cubit.skip();
+      // The neck, the entry's own step after the weight.
+      expect(cubit.state.step, const MeasurementStep(BodyMeasurement.neck));
+
+      cubit.setMeasurement(BodyMeasurement.neck, '');
+      expect(cubit.hasChanges, isTrue);
+      await cubit.close();
+    });
 
     test(
       "skipping every step keeps all the entry's values and photos",

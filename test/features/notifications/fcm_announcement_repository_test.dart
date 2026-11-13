@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 import 'package:get_workout/features/notifications/data/fcm_announcement_repository.dart';
-import 'package:get_workout/features/notifications/data/notification_taps.dart';
+import 'package:get_workout/features/notifications/data/notification_payloads.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockMessaging extends Mock implements FirebaseMessaging {}
@@ -19,7 +19,7 @@ void main() {
   late StreamController<RemoteMessage> messages;
   late StreamController<RemoteMessage> opened;
   late NotificationTaps taps;
-  late List<NotificationTarget> tapped;
+  late List<String?> tapped;
   late FcmAnnouncementRepository repository;
 
   setUp(() {
@@ -29,7 +29,7 @@ void main() {
     opened = StreamController();
     taps = NotificationTaps();
     tapped = [];
-    taps.listen(tapped.add);
+    taps.stream.listen(tapped.add);
     when(() => messaging.getInitialMessage()).thenAnswer((_) async => null);
     when(() => messaging.getAPNSToken()).thenAnswer((_) async => null);
     when(() => messaging.setAutoInitEnabled(any())).thenAnswer((_) async {});
@@ -140,8 +140,8 @@ void main() {
     await pumpEventQueue();
 
     expect(tapped, [
-      NotificationTarget.announcement,
-      NotificationTarget.announcement,
+      NotificationPayloads.announcement,
+      NotificationPayloads.announcement,
     ]);
   });
 

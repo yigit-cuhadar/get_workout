@@ -4,7 +4,6 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/account/domain/account_repository.dart';
 import 'package:get_workout/features/account/domain/account_usecases.dart';
-import 'package:get_workout/features/account/domain/consent_repository.dart';
 import 'package:get_workout/features/account/presentation/delete_account_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -23,6 +22,7 @@ void main() {
     code: recentLoginRequiredCode,
   );
   const wrongPassword = AuthFailure('wrong', code: 'invalid-credential');
+  const noPassword = AuthFailure('no password', code: noPasswordCode);
 
   late MockAuthRepository auth;
   late MockAccountRepository account;
@@ -49,7 +49,7 @@ void main() {
       heldAtCall.add(underway.value);
       return const Ok(null);
     });
-    when(() => account.reauthenticate(any()))
+    when(() => auth.reauthenticate(any()))
         .thenAnswer((_) async => const Ok(null));
     when(() => account.signOut()).thenAnswer((_) async => const Ok(null));
     when(() => local.clear(any())).thenAnswer((_) async => const Ok(null));
@@ -61,7 +61,7 @@ void main() {
   DeleteAccountCubit build() => DeleteAccountCubit(
     getCurrentUser: GetCurrentUser(auth),
     deleteAccount: DeleteUserAccount(account, local, telemetry),
-    reauthenticate: Reauthenticate(account),
+    reauthenticate: Reauthenticate(auth),
     underway: underway,
     releaseWorkouts: (uid) async => workouts.add('release $uid'),
     resumeWorkouts: () async => workouts.add('resume'),
@@ -168,7 +168,7 @@ void main() {
     },
     expect: () => [deleting, needsPassword, deleting, done],
     verify: (_) {
-      verify(() => account.reauthenticate('secret')).called(1);
+      verify(() => auth.reauthenticate('secret')).called(1);
       verify(() => account.deleteAccount()).called(2);
     },
   );
@@ -177,7 +177,7 @@ void main() {
     'a wrong password asks again and deletes nothing',
     setUp: () {
       failWith(recentLogin);
-      when(() => account.reauthenticate(any()))
+      when(() => auth.reauthenticate(any()))
           .thenAnswer((_) async => const Err(wrongPassword));
     },
     build: build,
@@ -193,6 +193,27 @@ void main() {
         DeleteStatus.needsPassword,
         failure: wrongPassword,
       ),
+    ],
+    verify: (_) => verify(() => account.deleteAccount()).called(1),
+  );
+
+  blocTest<DeleteAccountCubit, DeleteAccountState>(
+    'a user without a password is not asked again and deletes nothing',
+    setUp: () {
+      failWith(recentLogin);
+      when(() => auth.reauthenticate(any()))
+          .thenAnswer((_) async => const Err(noPassword));
+    },
+    build: build,
+    act: (cubit) async {
+      await cubit.delete();
+      await cubit.confirmPassword('secret');
+    },
+    expect: () => [
+      deleting,
+      needsPassword,
+      deleting,
+      const DeleteAccountState(DeleteStatus.failed, failure: noPassword),
     ],
     verify: (_) => verify(() => account.deleteAccount()).called(1),
   );

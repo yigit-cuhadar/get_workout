@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/max_length_formatter.dart';
+import '../../../core/unsaved_changes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
@@ -43,91 +44,95 @@ class _BuilderView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<ProgramBuilderCubit>();
-    return BlocConsumer<ProgramBuilderCubit, ProgramBuilderState>(
-      listenWhen: (previous, current) =>
-          previous.status != current.status || current.adjusted.isNotEmpty,
-      listener: (context, state) {
-        if (state.adjusted.isNotEmpty) {
-          final names = [
-            for (final id in state.adjusted)
-              state.exercises[id]?.localized(context).name ?? id,
-          ];
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.programAdjusted(l10n.inlineList(names))),
-            ),
-          );
-          cubit.adjustedShown();
-          return;
-        }
-        switch (state.status) {
-          case ProgramBuilderStatus.saved when cubit.isEditing:
-            context.pop();
-          case ProgramBuilderStatus.saved:
-            context.go(Routes.program(state.savedId!, created: true));
-          case ProgramBuilderStatus.closed:
-            context.go(Routes.programs);
-          case ProgramBuilderStatus.saveFailed:
+    return UnsavedChangesGuard(
+      hasChanges: () => cubit.hasChanges,
+      confirmDiscard: () => _confirmDiscard(context),
+      child: BlocConsumer<ProgramBuilderCubit, ProgramBuilderState>(
+        listenWhen: (previous, current) =>
+            previous.status != current.status || current.adjusted.isNotEmpty,
+        listener: (context, state) {
+          if (state.adjusted.isNotEmpty) {
+            final names = [
+              for (final id in state.adjusted)
+                state.exercises[id]?.localized(context).name ?? id,
+            ];
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                  state.failure is NetworkFailure
-                      ? l10n.errorNetwork
-                      : l10n.programSaveFailed,
-                ),
+                content: Text(l10n.programAdjusted(l10n.inlineList(names))),
               ),
             );
-          default:
-        }
-      },
-      builder: (context, state) {
-        final catalogue = context.watch<ExerciseCatalogueCubit>().state;
-        final ready =
-            state.status != ProgramBuilderStatus.loading &&
-            catalogue is CatalogueReady;
-        return PopScope(
-          canPop: !state.dirty,
-          onPopInvokedWithResult: (didPop, _) async {
-            if (didPop) return;
-            if (await _confirmDiscard(context) && context.mounted) {
-              Navigator.of(context).pop();
-            }
-          },
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text(
-                cubit.isEditing ? l10n.programEditTitle : l10n.programNew,
-              ),
-              actions: [
-                if (ready)
-                  TextButton(
-                    onPressed: state.isBusy ? null : cubit.save,
-                    child: Text(l10n.programSave),
+            cubit.adjustedShown();
+            return;
+          }
+          switch (state.status) {
+            case ProgramBuilderStatus.saved when cubit.isEditing:
+              context.pop();
+            case ProgramBuilderStatus.saved:
+              context.go(Routes.program(state.savedId!, created: true));
+            case ProgramBuilderStatus.closed:
+              context.go(Routes.programs);
+            case ProgramBuilderStatus.saveFailed:
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    state.failure is NetworkFailure
+                        ? l10n.errorNetwork
+                        : l10n.programSaveFailed,
                   ),
-              ],
-            ),
-            body: switch (state.status) {
-              ProgramBuilderStatus.notFound => EmptyView(
-                message: l10n.programNotFound,
-              ),
-              ProgramBuilderStatus.loadFailed => ErrorView(
-                message: l10n.programsLoadFailed,
-                retryLabel: l10n.retry,
-                onRetry: cubit.load,
-              ),
-              _ => switch (catalogue) {
-                CatalogueFailed() => ErrorView(
-                  message: l10n.libraryLoadFailed,
-                  retryLabel: l10n.retry,
-                  onRetry: context.read<ExerciseCatalogueCubit>().retry,
                 ),
-                _ when !ready => const LoadingView(),
-                _ => const _Form(),
-              },
+              );
+            default:
+          }
+        },
+        builder: (context, state) {
+          final catalogue = context.watch<ExerciseCatalogueCubit>().state;
+          final ready =
+              state.status != ProgramBuilderStatus.loading &&
+              catalogue is CatalogueReady;
+          return PopScope(
+            canPop: !state.dirty,
+            onPopInvokedWithResult: (didPop, _) async {
+              if (didPop) return;
+              if (await UnsavedChangesGuard.ask(context) && context.mounted) {
+                Navigator.of(context).pop();
+              }
             },
-          ),
-        );
-      },
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  cubit.isEditing ? l10n.programEditTitle : l10n.programNew,
+                ),
+                actions: [
+                  if (ready)
+                    TextButton(
+                      onPressed: state.isBusy ? null : cubit.save,
+                      child: Text(l10n.programSave),
+                    ),
+                ],
+              ),
+              body: switch (state.status) {
+                ProgramBuilderStatus.notFound => EmptyView(
+                  message: l10n.programNotFound,
+                ),
+                ProgramBuilderStatus.loadFailed => ErrorView(
+                  message: l10n.programsLoadFailed,
+                  retryLabel: l10n.retry,
+                  onRetry: cubit.load,
+                ),
+                _ => switch (catalogue) {
+                  CatalogueFailed() => ErrorView(
+                    message: l10n.libraryLoadFailed,
+                    retryLabel: l10n.retry,
+                    onRetry: context.read<ExerciseCatalogueCubit>().retry,
+                  ),
+                  _ when !ready => const LoadingView(),
+                  _ => const _Form(),
+                },
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -170,11 +175,37 @@ class _FormState extends State<_Form> {
     text: _cubit.state.program.lengthWeeks?.toString() ?? '',
   );
 
+  /// The name field of the day last added, which takes the focus once;
+  /// opening the builder or switching days never does. A fresh node per
+  /// added day: moving a focused node to the next field would leave it
+  /// focused without a keyboard.
+  FocusNode? _newDayName;
+  Key? _newDayKey;
+
   @override
   void dispose() {
     _name.dispose();
     _weeks.dispose();
+    _newDayName?.dispose();
     super.dispose();
+  }
+
+  /// A new field per day, so it shows that day's name.
+  static Key _dayKey(ProgramBuilderState state) =>
+      ValueKey('day-${state.selectedDay}-${state.program.days.length}');
+
+  void _addDay() {
+    final days = _cubit.state.program.days.length;
+    _cubit.addDay();
+    if (_cubit.state.program.days.length == days) return;
+    final previous = _newDayName;
+    final node = _newDayName = FocusNode();
+    _newDayKey = _dayKey(_cubit.state);
+    // The new day's field is built, and the previous one's gone, by then.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      previous?.dispose();
+      if (mounted) node.requestFocus();
+    });
   }
 
   @override
@@ -184,6 +215,7 @@ class _FormState extends State<_Form> {
     final validation = state.validation;
     final day = state.day!;
     final dayIndex = state.selectedDay;
+    final dayKey = _dayKey(state);
     final items = day.items;
     String? programError(Set<ProgramIssue> issues) => validation.program
         .where(issues.contains)
@@ -260,7 +292,7 @@ class _FormState extends State<_Form> {
                 ActionChip(
                   avatar: const Icon(Icons.add),
                   label: Text(l10n.programAddDay),
-                  onPressed: state.canAddDay ? _cubit.addDay : null,
+                  onPressed: state.canAddDay ? _addDay : null,
                 ),
               ],
             ),
@@ -270,8 +302,8 @@ class _FormState extends State<_Form> {
               children: [
                 Expanded(
                   child: TextFormField(
-                    // A new field per day, so it shows that day's name.
-                    key: ValueKey('day-$dayIndex-${state.program.days.length}'),
+                    key: dayKey,
+                    focusNode: dayKey == _newDayKey ? _newDayName : null,
                     initialValue: day.name,
                     textCapitalization: TextCapitalization.sentences,
                     inputFormatters: [
@@ -548,7 +580,7 @@ class _ItemEditorState extends State<_ItemEditor> {
   String _targetText() {
     final kg = _item.targetKg;
     if (kg == null) return '';
-    final value = _cubit.weightUnit.fromKg(kg);
+    final value = _cubit.weightUnit.shownFromKg(kg);
     final fixed = value.toStringAsFixed(2);
     return fixed.replaceFirst(RegExp(r'\.?0+$'), '');
   }

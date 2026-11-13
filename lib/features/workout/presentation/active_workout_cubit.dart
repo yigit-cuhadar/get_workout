@@ -13,6 +13,7 @@ import '../../settings/domain/user_settings.dart';
 import '../domain/exercise_stats.dart';
 import '../domain/rest.dart';
 import '../domain/set_logging.dart';
+import '../domain/set_selection.dart';
 import '../domain/workout.dart';
 import '../domain/workout_editing.dart' as editing;
 import '../domain/workout_repository.dart';
@@ -25,6 +26,9 @@ enum WorkoutStatus {
 
   /// No workout in progress.
   none,
+
+  /// A workout is open; it is in progress only once it is not empty (see
+  /// [ActiveWorkoutState.inProgress]).
   active,
   finishing,
 
@@ -49,6 +53,8 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.localUnreadable = false,
     this.savingProgram = false,
     this.savedProgramId,
+    this.picked,
+    this.setView = SetView.bubbles,
   });
 
   final WorkoutStatus status;
@@ -86,9 +92,19 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   /// The program the finished workout was saved as.
   final String? savedProgramId;
 
+  @override
+  final SetSelection? picked;
+
+  /// Kept from one workout to the next while the app runs.
+  @override
+  final SetView setView;
+
   /// A workout is in progress (or being finished), so another cannot start.
+  /// An empty one is not ([Workout.isEmpty]): it is not kept, shows nowhere
+  /// and another simply replaces it.
   bool get inProgress =>
-      status == WorkoutStatus.active || status == WorkoutStatus.finishing;
+      (status == WorkoutStatus.active || status == WorkoutStatus.finishing) &&
+      !(workout?.isEmpty ?? true);
 
   /// The working sets of the exercise's latest workout.
   List<WorkoutSet> _lastSets(int exercise) {
@@ -122,6 +138,8 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     bool? localUnreadable,
     bool? savingProgram,
     String? Function()? savedProgramId,
+    SetSelection? Function()? picked,
+    SetView? setView,
   }) => ActiveWorkoutState(
     status: status ?? this.status,
     workout: workout != null ? workout() : this.workout,
@@ -136,6 +154,8 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     savedProgramId: savedProgramId != null
         ? savedProgramId()
         : this.savedProgramId,
+    picked: picked != null ? picked() : this.picked,
+    setView: setView ?? this.setView,
   );
 
   @override
@@ -151,6 +171,8 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     localUnreadable,
     savingProgram,
     savedProgramId,
+    picked,
+    setView,
   ];
 }
 
@@ -263,6 +285,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     emit(
       ActiveWorkoutState(
         status: uid == null ? WorkoutStatus.none : WorkoutStatus.loading,
+        setView: state.setView,
       ),
     );
     if (uid == null) return;
@@ -271,7 +294,11 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       return;
     }
     // Set aside by the store; what is kept from now on starts empty.
-    final local = result.valueOrNull ?? const LocalWorkouts();
+    final kept = result.valueOrNull ?? const LocalWorkouts();
+    // An empty one kept by an older version is no workout in progress.
+    final local = kept.draft?.isEmpty ?? false
+        ? kept.copyWith(draft: () => null, rest: () => null)
+        : kept;
     _local = local;
     if (result.failureOrNull case final failure?) {
       Log.e('workout', 'kept workouts unreadable: ${failure.message}');
@@ -304,7 +331,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   }
 
   /// Starts an empty workout named [name]; false while another is in
-  /// progress.
+  /// progress. It is not in progress itself until an exercise is added.
   bool startFree(String name) =>
       _start((id, now) => Workout(id: id, startedAt: now, name: name));
 
@@ -389,14 +416,23 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     bool allowEmpty = true,
   }) {
     final uid = _uid;
-    if (uid == null || _local == null || state.status != WorkoutStatus.none) {
-      return false;
-    }
+    final open =
+        state.status == WorkoutStatus.none ||
+        (state.status == WorkoutStatus.active && !state.inProgress);
+    if (uid == null || _local == null || !open) return false;
     final workout = build(_newWorkoutId(uid), _clock());
     if (!allowEmpty && workout.exercises.isEmpty) return false;
     _emitWorkout(workout, status: WorkoutStatus.active);
     _keep();
     return true;
+  }
+
+  /// Ends the open workout when the user leaves it while it is empty; one
+  /// in progress stays, minimized.
+  Future<void> leave() async {
+    if (state.status == WorkoutStatus.active && !state.inProgress) {
+      await discard();
+    }
   }
 
   /// Throws the workout in progress away.
@@ -420,7 +456,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       emit(state.copyWith(invalidSet: () => ref));
       return;
     }
-    replaceSet(ref, toggled);
+    applyToggled(ref, toggled);
   }
 
   /// Adds [restExtension] to the running rest.
@@ -639,6 +675,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       ActiveWorkoutState(
         status: WorkoutStatus.none,
         localUnreadable: state.localUnreadable,
+        setView: state.setView,
       ),
     );
     unawaited(_sync(uid));
@@ -681,6 +718,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   void edit(
     Workout Function(Workout workout) change, {
     bool movesSets = false,
+    SetSelection? Function(Workout after)? select,
   }) {
     final workout = state.workout;
     if (state.status != WorkoutStatus.active || workout == null) return;
@@ -690,9 +728,21 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       changed,
       status: WorkoutStatus.active,
       rest: () => _restAfterEdit(workout, changed, movesSets: movesSets),
+      picked: select == null ? state.picked : select(changed),
     );
     _keep();
   }
+
+  /// A new pick drops the message of a set that could not be ticked.
+  @override
+  void emitSelection({SetSelection? Function()? picked, SetView? setView}) =>
+      emit(
+        state.copyWith(
+          picked: picked,
+          setView: setView,
+          invalidSet: picked == null ? null : () => null,
+        ),
+      );
 
   /// The rest once an edit made [after] of [before]: a set ticked done
   /// starts the rest [restAfterTick] gives, replacing the running one;
@@ -720,10 +770,13 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     return state.rest?.followEdit(after, movesSets: movesSets);
   }
 
+  /// [picked] is null, the next set to do, for a workout that did not
+  /// come from an edit.
   void _emitWorkout(
     Workout? workout, {
     required WorkoutStatus status,
     Rest? Function()? rest,
+    SetSelection? picked,
   }) {
     emit(
       state.copyWith(
@@ -731,6 +784,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         workout: () => workout,
         rest: rest,
         invalidSet: () => null,
+        picked: () => picked,
       ),
     );
     _followStats();

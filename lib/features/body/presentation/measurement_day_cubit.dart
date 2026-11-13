@@ -205,6 +205,7 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
        _uid = getCurrentUser()?.id,
        _clock = clock ?? DateTime.now,
        super(_initialState(setup)) {
+    _start = state;
     _userSubscription = watchAuthUser()
         .map((user) => user?.id)
         .distinct()
@@ -225,11 +226,45 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
   final String? _uid;
   late final StreamSubscription<String?> _userSubscription;
 
+  /// What [hasChanges] compares against.
+  late final MeasurementDayState _start;
+
   /// Fixed at the first save, so a retry saves the same entry.
   String? _entryId;
   DateTime? _date;
 
   bool get isEditing => _initial != null;
+
+  /// The values differ from those the flow opened with (none for a new
+  /// day), or a picture was taken; nothing once it saved or closed.
+  bool get hasChanges => switch (state.status) {
+    MeasurementDayStatus.saved || MeasurementDayStatus.closed => false,
+    _ =>
+      state.weight != _start.weight ||
+          state.newPhotos.isNotEmpty ||
+          !_sameEntered(state.measurements, _start.measurements),
+  };
+
+  /// Whether [a] and [b] hold the same non-empty texts; an emptied field of
+  /// a new day is nothing entered.
+  static bool _sameEntered(
+    Map<BodyMeasurement, String> a,
+    Map<BodyMeasurement, String> b,
+  ) {
+    Map<BodyMeasurement, String> entered(Map<BodyMeasurement, String> map) =>
+        {...map}..removeWhere((_, text) => text.isEmpty);
+    final left = entered(a);
+    final right = entered(b);
+    return left.length == right.length &&
+        left.entries.every((entry) => right[entry.key] == entry.value);
+  }
+
+  /// The id of the new entry once saved, for its summary; null before, and
+  /// when editing.
+  String? get savedNewId =>
+      state.status == MeasurementDayStatus.saved && !isEditing
+      ? _entryId
+      : null;
 
   static MeasurementDayState _initialState(MeasurementDaySetup setup) {
     final initial = setup.initial;

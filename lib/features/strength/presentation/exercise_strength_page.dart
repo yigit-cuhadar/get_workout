@@ -208,7 +208,7 @@ class _E1rmChart extends StatelessWidget {
       pointLabel: (index) {
         final point = points[index];
         return l10n.strengthPoint(
-          l10n.weightText(unit.toKg(point.value), unit),
+          l10n.estimatedWeightText(unit.toKg(point.value), unit),
           DateFormat.yMMMd(locale).format(point.date),
         );
       },

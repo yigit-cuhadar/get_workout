@@ -138,6 +138,39 @@ void main() {
       expect(tracked, {BodyMeasurement.chest, neck, waist, hips});
       expect(tracksBodyFat(tracked, sex: Sex.female, heightCm: 165), isTrue);
     });
+
+    test('unticking body fat drops only what is not standard', () {
+      final man = withBodyFat(BodyMeasurement.standard, Sex.male);
+      expect(withoutBodyFat(man, Sex.male), BodyMeasurement.standard);
+
+      final woman = withBodyFat(BodyMeasurement.standard, Sex.female);
+      final off = withoutBodyFat(woman, Sex.female);
+      expect(off, BodyMeasurement.standard);
+      expect(tracksBodyFat(off, sex: Sex.female, heightCm: 165), isFalse);
+
+      // Kept: a man's waist and hips are not his body-fat measurements.
+      expect(withoutBodyFat({neck, abdomen, waist, hips}, Sex.male), {
+        waist,
+        hips,
+      });
+    });
+
+    test('unticking body fat changes nothing when none of its measurements '
+        'is tracked only for it', () {
+      final tracked = {waist, hips, BodyMeasurement.chest};
+      expect(withoutBodyFat(tracked, Sex.female), tracked);
+    });
+  });
+
+  test('the formula\'s waist is the abdomen for men, the waist for women, '
+      'and both formulas use it', () {
+    expect(navyWaist(Sex.male), abdomen);
+    expect(navyWaist(Sex.female), waist);
+    for (final sex in Sex.values) {
+      expect(bodyFatMeasurements(sex), contains(navyWaist(sex)));
+    }
+    expect(bodyFatMeasurements(Sex.male), {neck, abdomen});
+    expect(bodyFatMeasurements(Sex.female), {neck, waist, hips});
   });
 
   test('pairedMeasurements groups both sides of a pair, in order', () {

@@ -7,6 +7,7 @@ import 'package:forge_core/forge_core.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
+import '../../settings/domain/retyped_weights.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/program.dart';
 import '../../../core/grouping.dart' as editing;
@@ -198,12 +199,18 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
   /// What [ProgramBuilderState.dirty] compares against.
   Program _initial = _empty;
   bool _submitted = false;
+
+  /// Target fields by selected day and item.
+  final _retyped = RetypedWeights<(int, int)>();
   bool _fittedCatalogue = false;
   bool _fittedCustom = false;
 
   static const _empty = Program(name: '', days: [ProgramDay()]);
 
   bool get isEditing => programId != null;
+
+  /// Changes a navigation away would lose; none once the builder closed.
+  bool get hasChanges => state.dirty && !_closed;
 
   bool get _closed => state.status == ProgramBuilderStatus.closed;
 
@@ -330,6 +337,7 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
 
   /// The moved day stays selected.
   void moveDay(int from, int to) {
+    _retyped.clear();
     final days = [...state.program.days];
     if (from < 0 || from >= days.length || to < 0 || to >= days.length) {
       return;
@@ -340,6 +348,7 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
 
   /// A program keeps at least one day.
   void deleteDay(int index) {
+    _retyped.clear();
     final days = [...state.program.days];
     if (days.length <= 1 || index < 0 || index >= days.length) return;
     days.removeAt(index);
@@ -403,17 +412,18 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
   void setRest(int index, String text) =>
       _editItem(index, (item) => item.copyWith(restS: _whole(text) ?? 0));
 
-  /// In [weightUnit]; blank removes the target.
-  void setTarget(int index, String text) {
-    final value = double.tryParse(text.trim().replaceAll(',', '.'));
-    _editItem(
-      index,
-      (item) => item.copyWith(
-        targetKg: () =>
-            value == null || !value.isFinite ? null : weightUnit.toKg(value),
+  /// In [weightUnit]; blank removes the target. See [RetypedWeights].
+  void setTarget(int index, String text) => _editItem(
+    index,
+    (item) => item.copyWith(
+      targetKg: () => _retyped.kg(
+        (state.selectedDay, index),
+        text,
+        weightUnit,
+        item.targetKg,
       ),
-    );
-  }
+    ),
+  );
 
   Future<void> save() async {
     if (!state.canResolve ||
@@ -482,14 +492,21 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
     );
   }
 
-  void _editItems(List<ProgramItem> Function(List<ProgramItem> items) change) =>
-      _editDay(
-        state.selectedDay,
-        (day) => day.copyWith(items: change(day.items)),
-      );
+  /// Changes the selected day's list of items, so items may move.
+  void _editItems(List<ProgramItem> Function(List<ProgramItem> items) change) {
+    _retyped.clear();
+    _changeItems(change);
+  }
+
+  void _changeItems(
+    List<ProgramItem> Function(List<ProgramItem> items) change,
+  ) => _editDay(
+    state.selectedDay,
+    (day) => day.copyWith(items: change(day.items)),
+  );
 
   void _editItem(int index, ProgramItem Function(ProgramItem item) change) =>
-      _editItems(
+      _changeItems(
         (items) => [
           for (final (i, item) in items.indexed)
             i == index ? change(item) : item,

@@ -273,8 +273,9 @@ class _DetailBody extends StatelessWidget {
   ];
 }
 
-/// The model, not interactive, with the worked muscles coloured and a
-/// front/back switch.
+/// The model from the front and from the back side by side, with the worked
+/// muscles coloured. Neither view takes gestures, so the page scrolls over
+/// them.
 class _MusclePreview extends StatefulWidget {
   const _MusclePreview(this.exercise);
 
@@ -284,15 +285,13 @@ class _MusclePreview extends StatefulWidget {
   State<_MusclePreview> createState() => _MusclePreviewState();
 }
 
-enum _Side { front, back }
-
 class _MusclePreviewState extends State<_MusclePreview> {
   /// Share of the screen height the model takes, leaving the muscles and the
   /// first facts in view below it.
   static const _heightRatio = 1 / 3;
 
-  final _camera = ModelViewerController();
-  var _side = _Side.front;
+  // A viewer without a controller faces the front.
+  final _back = ModelViewerController(yaw: math.pi);
 
   @override
   void initState() {
@@ -302,13 +301,8 @@ class _MusclePreviewState extends State<_MusclePreview> {
 
   @override
   void dispose() {
-    _camera.dispose();
+    _back.dispose();
     super.dispose();
-  }
-
-  void _turn(_Side side) {
-    setState(() => _side = side);
-    _camera.animateTo(side == _Side.front ? 0 : math.pi, 0, 1);
   }
 
   @override
@@ -317,41 +311,50 @@ class _MusclePreviewState extends State<_MusclePreview> {
     final colors = _MuscleColors.of(context);
     final exercise = widget.exercise;
     final state = context.watch<BodyModelCubit>().state;
-    return Column(
-      children: [
-        SizedBox(
-          height: MediaQuery.sizeOf(context).height * _heightRatio,
-          child: switch (state) {
-            BodyModelLoading() => const LoadingView(),
-            BodyModelFailed() => Center(child: Text(l10n.modelLoadFailed)),
-            BodyModelReady(:final model) => ModelViewer(
-              model: model,
-              controller: _camera,
-              interactive: false,
-              partColors: {
-                for (final muscle in exercise.secondaryMuscles)
-                  for (final mesh in muscle.meshNames) mesh: colors.secondary,
-                for (final muscle in exercise.mainMuscles)
-                  for (final mesh in muscle.meshNames) mesh: colors.main,
-              },
-              semanticLabel: l10n.detailModelLabel(
-                l10n.muscleNames([
-                  ...exercise.mainMuscles,
-                  ...exercise.secondaryMuscles,
-                ]),
+    final partColors = {
+      for (final muscle in exercise.secondaryMuscles)
+        for (final mesh in muscle.meshNames) mesh: colors.secondary,
+      for (final muscle in exercise.mainMuscles)
+        for (final mesh in muscle.meshNames) mesh: colors.main,
+    };
+    Widget side(String label, Model3D model, {ModelViewerController? camera}) =>
+        Expanded(
+          child: Column(
+            children: [
+              Expanded(
+                child: ModelViewer(
+                  model: model,
+                  controller: camera,
+                  interactive: false,
+                  partColors: partColors,
+                ),
               ),
-            ),
-          },
+              Text(label),
+            ],
+          ),
+        );
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * _heightRatio,
+      child: switch (state) {
+        BodyModelLoading() => const LoadingView(),
+        BodyModelFailed() => Center(child: Text(l10n.modelLoadFailed)),
+        BodyModelReady(:final model) => Semantics(
+          label: l10n.detailModelLabel(
+            l10n.muscleNames([
+              ...exercise.mainMuscles,
+              ...exercise.secondaryMuscles,
+            ]),
+          ),
+          image: true,
+          excludeSemantics: true,
+          child: Row(
+            children: [
+              side(l10n.detailFront, model),
+              side(l10n.detailBack, model, camera: _back),
+            ],
+          ),
         ),
-        SegmentedButton<_Side>(
-          segments: [
-            ButtonSegment(value: _Side.front, label: Text(l10n.detailFront)),
-            ButtonSegment(value: _Side.back, label: Text(l10n.detailBack)),
-          ],
-          selected: {_side},
-          onSelectionChanged: (selection) => _turn(selection.single),
-        ),
-      ],
+      },
     );
   }
 }

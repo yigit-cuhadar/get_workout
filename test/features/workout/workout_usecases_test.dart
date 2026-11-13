@@ -10,6 +10,7 @@ import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/workout/data/firestore_workout_repository.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
+import 'package:get_workout/features/workout/domain/workout_lock_screen.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:mocktail/mocktail.dart';
@@ -19,6 +20,8 @@ import 'fixtures.dart';
 class MockWorkoutRepository extends Mock implements WorkoutRepository {}
 
 class MockProgramRepository extends Mock implements ProgramRepository {}
+
+class MockWorkoutLockScreen extends Mock implements WorkoutLockScreen {}
 
 void main() {
   final monday = DateTime(2026, 11, 9, 18);
@@ -388,6 +391,39 @@ void main() {
         isA<ValidationFailure>(),
       );
       verifyNever(() => programs.updateProgram(any(), any()));
+    });
+  });
+
+  group('lock screen', () {
+    late MockWorkoutLockScreen lockScreen;
+    final shown = LockScreenWorkout(
+      name: 'Legs',
+      startedAt: wednesday,
+      current: 'Squat · set 2 of 3',
+    );
+
+    setUp(() => lockScreen = MockWorkoutLockScreen());
+
+    test('showing passes the workout and its result on', () async {
+      when(() => lockScreen.show(shown))
+          .thenAnswer((_) async => const Err(UnknownFailure('off')));
+      final result = await ShowWorkoutOnLockScreen(lockScreen)(shown);
+      expect(result.failureOrNull, isA<UnknownFailure>());
+      verify(() => lockScreen.show(shown)).called(1);
+    });
+
+    test('clearing clears', () async {
+      when(lockScreen.clear).thenAnswer((_) async => const Ok(null));
+      final result = await ClearWorkoutFromLockScreen(lockScreen)(
+        const NoParams(),
+      );
+      expect(result.isOk, isTrue);
+      verify(lockScreen.clear).called(1);
+    });
+
+    test('taps are the lock screen\'s', () async {
+      when(lockScreen.taps).thenAnswer((_) => Stream.value(null));
+      expect(await WatchLockScreenTaps(lockScreen)().length, 1);
     });
   });
 }

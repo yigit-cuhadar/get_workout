@@ -2,16 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/unsaved_changes.dart';
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
-import '../features/body/presentation/body_compare_page.dart';
 import '../features/body/presentation/body_entry_page.dart';
 import '../features/body/presentation/body_page.dart';
 import '../features/body/presentation/measurement_day_page.dart';
+import '../features/body/presentation/measurement_summary_page.dart';
 import '../features/body/presentation/weight_form_page.dart';
 import '../features/account/presentation/delete_account_page.dart';
 import '../features/calendar/presentation/calendar_page.dart';
@@ -28,7 +30,7 @@ import '../features/exercises/presentation/custom_exercise_form_page.dart';
 import '../features/exercises/presentation/exercise_detail_page.dart';
 import '../features/exercises/presentation/exercises_page.dart';
 import '../features/generator/domain/generator_answers.dart';
-import '../features/notifications/data/notification_taps.dart';
+import '../features/notifications/data/notification_payloads.dart';
 import '../features/generator/presentation/generator_page.dart';
 import '../features/generator/presentation/generator_preview_page.dart';
 import '../features/profile/domain/user_profile.dart';
@@ -125,8 +127,10 @@ abstract final class Routes {
   static const body = '$progress/body';
   static const bodyWeightNew = '$body/weight';
   static const bodyMeasureNew = '$body/measure';
-  static const bodyCompare = '$body/compare';
+  static String bodySummary(String id) =>
+      '$body/summary/${Uri.encodeComponent(id)}';
   static String bodyEntry(String id) => '$body/${Uri.encodeComponent(id)}';
+  static String bodyEntryCompare(String id) => '${bodyEntry(id)}/compare';
   static String bodyEntryWeight(String id) => '${bodyEntry(id)}/weight';
   static String bodyEntryMeasure(String id) => '${bodyEntry(id)}/measure';
 
@@ -139,6 +143,10 @@ abstract final class Routes {
   static String historyWorkout(String id) =>
       '$history/${Uri.encodeComponent(id)}';
   static String historyEdit(String id) => '${historyWorkout(id)}/edit';
+
+  /// An exercise's detail page above a workout being edited.
+  static String historyExercise(String id) =>
+      '$history/exercises/${Uri.encodeComponent(id)}';
   static const profile = '/profile';
 
   /// The workout in progress, full screen above the tabs; push it so going
@@ -148,6 +156,10 @@ abstract final class Routes {
   /// [exercisePicker] above the workout.
   static String workoutPicker({required int max, required bool multiple}) =>
       '$workout/pick?max=$max&multiple=$multiple';
+
+  /// An exercise's detail page above the workout.
+  static String workoutExercise(String id) =>
+      '$workout/exercises/${Uri.encodeComponent(id)}';
   static const account = '$profile/account';
 
   /// Opens in sign-up mode; [accountSignIn] opens it in sign-in mode.
@@ -183,19 +195,51 @@ bool isPastStart(String location) =>
     location != Routes.onboarding &&
     !location.startsWith('${Routes.onboarding}/');
 
-/// Where a tap on a notification about [target] leads from [location], or
-/// null to stay: a workout reminder leaves the workout in progress in front.
-String? notificationDestination(NotificationTarget target, String location) =>
+/// The locations of the pages open in [stack], bottom first: those gone to
+/// and those pushed above them, so the one in front is last. The stack's
+/// own `uri` misses the pushed ones.
+List<String> openLocations(RouteMatchList stack) {
+  final open = <String>[];
+  void visit(List<RouteMatchBase> matches) {
+    for (final match in matches) {
+      switch (match) {
+        case ShellRouteMatch():
+          visit(match.matches);
+        case RouteMatch():
+          open.add(match.matchedLocation);
+      }
+    }
+  }
+
+  visit(stack.matches);
+  return open;
+}
+
+/// Whether the workout page, or one above it, is among the [open] pages.
+bool _workoutOpen(List<String> open) => open.any(
+  (location) =>
+      location == Routes.workout || location.startsWith('${Routes.workout}/'),
+);
+
+/// Where a tap on a notification about [target] leads with the [open]
+/// pages (see [openLocations]), or null to stay: a workout reminder leaves
+/// the workout in progress open, wherever it is in the stack.
+String? notificationDestination(NotificationTarget target, List<String> open) =>
     switch (target) {
-      NotificationTarget.workout =>
-        location == Routes.workout || location.startsWith('${Routes.workout}/')
-            ? null
-            : Routes.today,
+      NotificationTarget.workout => _workoutOpen(open) ? null : Routes.today,
       NotificationTarget.announcement => Routes.today,
       // A new measurement day, unless one is already open.
       NotificationTarget.measurement =>
-        location == Routes.bodyMeasureNew ? null : Routes.bodyMeasureNew,
+        open.contains(Routes.bodyMeasureNew) ? null : Routes.bodyMeasureNew,
     };
+
+/// Where a tap on the workout's lock-screen activity or notification leads
+/// with the [open] pages: the workout, pushed like from its bar so going
+/// back minimizes it, or null to stay: it is open already (also under a
+/// page pushed above it), or no workout is in progress any more (one left
+/// behind), where the tap only opens the app.
+String? lockScreenDestination(List<String> open, {required bool inProgress}) =>
+    !inProgress || _workoutOpen(open) ? null : Routes.workout;
 
 /// The sign-in providers offered next to email. Apple joins once the app is
 /// signed by a paid Apple Developer team (the Sign in with Apple
@@ -217,8 +261,10 @@ GoRouter buildRouter(
 }) {
   // Who onboarding was last shown to.
   String? onboardingUid;
+  final unsavedChanges = UnsavedChanges();
   return GoRouter(
     initialLocation: Routes.splash,
+    onEnter: unsavedChanges.onEnter,
     // Refresh only when the redirect can change. A refresh re-parses the
     // current location; if it lands while a page pops itself on the same
     // auth change (AuthPage.onSignedIn), it restores that page. A pending
@@ -313,7 +359,10 @@ GoRouter buildRouter(
       GoRoute(
         path: Routes.workout,
         builder: (_, _) => const WorkoutPage(),
-        routes: [GoRoute(path: 'pick', builder: (_, state) => _picker(state))],
+        routes: [
+          GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+          _workoutExercise(Routes.workoutExercise),
+        ],
       ),
       GoRoute(
         path: Routes.paywall,
@@ -321,7 +370,10 @@ GoRouter buildRouter(
             const MaterialPage(fullscreenDialog: true, child: PaywallPage()),
       ),
       StatefulShellRoute.indexedStack(
-        builder: (_, _, shell) => AppShell(shell: shell),
+        builder: (_, _, shell) => RepositoryProvider.value(
+          value: unsavedChanges,
+          child: AppShell(shell: shell),
+        ),
         branches: [
           _tab(Routes.today, const TodayPage()),
           _tab(
@@ -474,9 +526,13 @@ GoRouter buildRouter(
                     path: 'measure',
                     builder: (_, _) => const MeasurementDayNewPage(),
                   ),
+                  // Right after a new measurement day is saved.
                   GoRoute(
-                    path: 'compare',
-                    builder: (_, _) => const BodyComparePage(),
+                    path: 'summary/:id',
+                    builder: (_, state) => MeasurementSummaryPage(
+                      id: state.pathParameters['id']!,
+                      compare: false,
+                    ),
                   ),
                   GoRoute(
                     path: ':id',
@@ -494,6 +550,13 @@ GoRouter buildRouter(
                           id: state.pathParameters['id']!,
                         ),
                       ),
+                      GoRoute(
+                        path: 'compare',
+                        builder: (_, state) => MeasurementSummaryPage(
+                          id: state.pathParameters['id']!,
+                          compare: true,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -508,6 +571,7 @@ GoRouter buildRouter(
                     builder: (_, _) => const WorkoutEditPage(),
                   ),
                   GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+                  _workoutExercise(Routes.historyExercise),
                   GoRoute(
                     path: ':id',
                     builder: (_, state) =>
@@ -609,6 +673,18 @@ ExercisePickerPage _picker(GoRouterState state) {
     multiple: query['multiple'] == 'true',
   );
 }
+
+/// An exercise's detail page pushed above a workout (in progress or being
+/// edited), so going back returns to it; [exerciseRoute] is where it opens
+/// other exercises.
+GoRoute _workoutExercise(String Function(String id) exerciseRoute) => GoRoute(
+  path: 'exercises/:exerciseId',
+  builder: (_, state) => ExerciseDetailPage(
+    exerciseId: state.pathParameters['exerciseId']!,
+    exerciseRoute: exerciseRoute,
+  ),
+  routes: [_exerciseStrength((state) => state.pathParameters['exerciseId']!)],
+);
 
 /// An exercise's strength page above its detail page, in the tab
 /// showing that, so going back returns to the exercise.

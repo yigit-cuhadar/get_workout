@@ -183,15 +183,40 @@ from the earlier FitLab app.
 - **3D model**: our own renderer, written in Dart, built first because it is
   the riskiest part. Source model has 37 meshes: 19 muscle groups (left/right
   split except abdominal and oblique) plus the body. A female model with the
-  same mesh names is required before release; the user supplies it.
-- **Units**: stored metric. kg/lb and cm/in chosen by the user.
+  same mesh names is required before release; the user supplies it. The
+  exercise page shows it twice, front and back side by side with the worked
+  muscles coloured, both fixed (`interactive: false`, the back through a
+  camera at yaw π) so the page scrolls over them; two CPU-rendered viewers
+  share one parsed model and paint once. The Exercises tab's model stays
+  interactive.
+- **Units**: stored metric. kg/lb and cm/in chosen by the user. A single
+  lifted weight is shown through `WeightUnit.shown`: within two decimals
+  (the precision weight fields show; 1e-8 hundredths of tolerance, the
+  nearest other-unit weights being 4e-6 off: 538.92 lb, 244.45 kg) it was
+  typed in this unit and shows as typed; otherwise it was typed in the other
+  unit and shows rounded, to whole lb (80 kg → 176 lb) or half kg (45 lb →
+  20.5 kg), or to two decimals when that would show a positive weight as 0.
+  Display only: fields store what is typed, converted to kg; an untouched
+  field stores nothing, and typing back the number a field showed keeps its
+  stored kg (`RetypedWeights`, in the workout editor and the program
+  builder). Set rows and drops, previous and suggested values, workout
+  detail, heaviest-weight records and program targets use it. The estimated
+  1RM is computed, so it always shows rounded the same way
+  (`estimatedFromKg`: records, the strength chart and its labels); volume,
+  body weight and the calculators (results of typed inputs) keep their own
+  formatting. A weight typed with more than two decimals is taken for the
+  other unit's and shows rounded.
 - **Programs**: a name of 1-60 characters, 1-7 days, day names of at most
   40 characters, 1-20 exercises per day, an optional length of 1-52 weeks;
   lengths count UTF-16 code units in the fields and in validation. The
   Firestore rules validate the top-level fields only (`name`, `days` count,
   `origin`); the app validates days and items. Items whose exercise's
   logging type changed are fitted to the new type when the builder loads
-  them, and the user is told.
+  them, and the user is told. The Programs tab opens with three rows, the
+  same with or without programs: ready-made programs, the generator and
+  "New program" (the builder); no floating button. In the builder, Add
+  day selects the new day and focuses its name; opening the builder or
+  switching days never takes the focus.
 - **Schedule**: `activeProgram.nextDate` is a calendar date stored as a
   `YYYY-MM-DD` string, so it is the same date in every time zone, and
   `startedAt` is a device-clock timestamp because starting a program must
@@ -199,9 +224,17 @@ from the earlier FitLab app.
   it today, moves it to the next training weekday or skips it; the week
   plan shows it once, on its date. A program with a length ends that many
   weeks after its start date.
-- **Effort scale**: optional per set, off by default. RIR by default, worded
-  plainly ("How many more reps could you do?"); RPE selectable. Stored as RIR
-  (`rpe = 10 - rir`).
+- **Effort scale**: optional per set, picked in the set bar (picking the
+  chosen step again clears it). Settings → "Effort per set": By feel
+  (default), RIR or RPE; there is no "Off" (`settings.effortScale` codes
+  `feel`, `rir`, `rpe`; the older `off` reads as by feel). Every scale is
+  stored the same way, as RIR (`rpe = 10 - rir`): by feel Easy ("4+ reps
+  left") stores 4, Moderate ("2–3 left") 2, Hard ("1 left") 1, Max ("0
+  left") 0, and a stored RIR shows as Easy from 4, Moderate at 2-3, Hard at
+  1, Max at 0. Every scale ends with "Failed" (the last rep was attempted
+  and not completed), stored as `toFailure` with RIR 0; there is no separate
+  failure switch, and any set with `toFailure` shows Failed whatever its
+  RIR. Effort shows in the chosen scale everywhere (bar, workout detail).
 - **1RM**: Epley, `weight * (1 + reps / 30)`; sets above 12 reps are ignored.
 - **Volume**: each completed working set counts 1 for every main muscle and
   0.5 for every secondary muscle. Warm-up sets do not count. A drop set counts
@@ -383,8 +416,8 @@ from the earlier FitLab app.
   device that no entry names, the queue does not know and are older than
   ten minutes are removed: those of a save stored but never written, or
   refused while the app was closed. Nothing in the feature reports to
-  analytics or crash reporting itself: `Log.e` goes to
-  `FirebaseTelemetry`'s hook, which follows the consent; nothing is
+  analytics or crash reporting itself: `Log.e` goes to Crashlytics through
+  `initFirebase`'s hook, which follows the consent; nothing is
   uploaded or fetched while signed out. A
   photo can be retaken, not removed alone. `storage.rules`: owner only,
   `image/jpeg`, under 5 MB, file names `(front|right|left|back)-<digits>.jpg`.
@@ -397,7 +430,8 @@ from the earlier FitLab app.
   prefilled; skipping a step keeps the stored value (a value typed there
   is dropped), and only an emptied field with Next clears one; an entry's
   own measurements stay steps even if no longer tracked; a value left as
-  shown keeps its stored metric value exactly. The flow loads the
+  shown keeps its stored metric value exactly. Leaving the flow asks first
+  when a value differs from how it opened or a picture was taken. The flow loads the
   previous photos itself, so it works when opened first (e.g. from a
   reminder).
   `settings.trackedMeasurements` is a list of codes (`neck`, `shoulders`,
@@ -422,9 +456,15 @@ from the earlier FitLab app.
   entry has one), in each history row, on the entry and as a change in
   compare, with one decimal. "Measurements to track" has a "Body fat"
   box: ticked exactly while all its measurements are tracked (nothing
-  stored); ticking it ticks them, and it is stopped by unticking one of
-  them (marked "Part of body fat"); without the sex or height it links to
-  the profile details instead.
+  stored); ticking it ticks them (marked "Part of body fat"), unticking it
+  unticks those not in the standard set (men: neck and abdomen; women:
+  neck), keeping the rest; if none would change it stays ticked and says
+  to untick one of them. Without the sex or height it links to the
+  profile details instead. Which measurement is the formula's waist
+  (`navyWaist`: abdomen for men, waist for women) is one mapping, used by
+  `entryBodyFat` and by the calculators' prefill (`knownBodyValues`; no
+  waist is prefilled while the sex is unknown). Each measurement step
+  shows a one-line hint of where to put the tape (ARB `bodyHint*`).
 - **Camera orientation**: `GhostCamera` holds the screen in portrait while
   it shows and locks the capture to portrait. The iPhone 17 family's
   Center Stage front camera is mounted differently; `camera_avfoundation`
@@ -444,48 +484,86 @@ from the earlier FitLab app.
   step of slack lets the limits as shown pass (66.1 and 661.4 lb, 3.9 in).
   The weight chart is a `LineChart` with the strength ranges: 12 weeks
   free, longer Premium (confirmed by the user); the profile's
-  target weight shows with the distance to go. Compare: any two entries,
-  the oldest and newest first, values with the change and photos per pose
-  side by side. Saving or deleting an entry sets `profile.weightKg` to
+  target weight shows with the distance to go. Comparing is the
+  measurement summary (below). Saving or deleting an entry sets `profile.weightKg` to
   the weight of the most recent dated entry that has one, through the
   profile's `UpdateProfile` (calculators and the target distance use it);
   with no such entry the profile weight is left. Firestore rules validate
   `bodyEntries` (date timestamp, numeric `weightKg`, `measurements` and
   `photos` maps whose known keys hold numbers and strings).
+- **Measurement summary** (`lib/features/body`, planned with the owner):
+  one screen, `MeasurementSummaryPage`, titled "Measurement summary" at
+  `/progress/body/summary/:id` (opened in place of the flow right after a
+  new measurement day is saved; never after an edit) and "Compare" at
+  `/progress/body/:id/compare` (a measurement day's page, when it has an
+  earlier one, and Progress → "Compare measurement days", the newest
+  measurement day, off with "Needs two measurement days" until there are
+  two). The app-bar compare icon and the old compare page are gone; no
+  sharing or export. A measurement day is an entry with measurements or
+  photos (quick weight logs are not, as for the reminders). The baseline
+  is one of the measurement days dated before the entry: the previous
+  one by default, "First" (the oldest) or any of them from a list ("Other
+  date"); the chips show only with two or more. A chosen day that is
+  deleted or moves after the entry falls back to the previous day. Order:
+  the dates; body fat, fat mass and lean mass (from each day's own
+  weight; fat and lean mass need the later day's weight) with changes,
+  or one line on what is missing (sex/height with a link to the profile,
+  the measurements, or values the formula rejects); every value either
+  day has (weight, measurements, pairs on one row, a missing side a dash)
+  before → after with the difference, differences in the primary colour
+  whatever their sign; the target (hidden without a target weight or a
+  weight that day): distance, and an estimated date at the rate between
+  the two days, given only when the target is not reached (within
+  0.05 kg), the earlier day has a weight, the days are at least 7 days
+  apart, the weight moved toward the target, and the date is between now
+  and 2 years from now; then the photos of one pose (chips of the poses
+  either day has) on a before/after slider, the earlier left of a bar the
+  user drags, both photos filling the same 3:4 area (cover), a missing
+  one as a note on its half; photos of the shown pose are fetched from
+  the backup when missing. Without an earlier measurement day the same
+  screen shows the day alone: its date with "No earlier measurement day
+  to compare with yet.", values without before or change ("Values"),
+  body fat without change, the target without an estimate, and the
+  photo of the pose without a slider. The domain model
+  (`MeasurementSummary`, `measurement_summary.dart`) does every number;
+  `FindBaseline` picks the baseline; `MeasurementSummaryCubit` follows the
+  entries and the profile itself. The slider is `forge_ui`'s
+  `BeforeAfterSlider`.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk).
-- **Analytics consent** (`lib/features/account`): `settings.analyticsConsent`
-  of each user, guests included (a guest has a uid and a user document;
-  linking keeps it, signing in to an existing account takes that account's
-  answer). Consent is per user, never per device. Null is not answered,
-  which collects nothing. Analytics and Crashlytics start off natively
-  (Info.plist, AndroidManifest.xml) and collect only in prod release
-  builds, for the signed-in user, after their yes; never the advertising
-  ID, Android ID or IDFV, and no ad personalisation signals (the `AD_ID`
-  permission is removed). The app replaces `forge_firebase`'s
-  `initFirebase` (which turns collection on at start) with
-  `FirebaseTelemetry.start`: same error routing, plus the answer the user
-  signed in at launch last gave on this device (one file per uid in app
-  support). Whenever the signed-in user changes or is unknown, collection
-  goes off until that user's stored answer is read, and stays off when the
-  read fails. `ConsentCubit` (app-wide) applies each answer as it arrives;
-  changes run one at a time and the latest wins. A yes first deletes the
-  crash reports recorded before it and is saved last, so a failure never
-  leaves a saved yes. Asked once the server (not a cached copy, which may
-  predate an answer from another device) says there is no answer, in a
-  dialog over the tabs only while they are the top route (never over
-  onboarding, the workout, the paywall or another dialog), with two equal
-  choices and no dismissing; changed with the switch under Profile →
-  Privacy. The settings feature leaves the field alone: its writes merge,
-  and `UserSettings` does not carry it.
+- **Analytics consent** (`lib/features/account`):
+  `settings.analyticsConsent` of each user, guests included (a guest has a
+  uid and a user document; linking keeps it, signing in to an existing
+  account takes that account's answer). Consent is per user, never per
+  device. Null is not answered, which collects nothing. Analytics and
+  Crashlytics start off natively (Info.plist, AndroidManifest.xml) and
+  collect only in prod release builds, for the signed-in user, after their
+  yes; never the advertising ID, Android ID or IDFV, and no ad
+  personalisation signals (the `AD_ID` permission is removed). At start,
+  collection is what the last applied answer left (the SDKs keep it), or
+  the native default (off) on a fresh install; `forge_firebase`'s
+  `initFirebase` does not change it, and `FirebaseTelemetry.restore` then
+  applies the answer the user signed in at launch last gave on this device
+  (one file per uid in app support). Whenever the signed-in user changes
+  or is unknown, collection goes off until that user's stored answer is
+  read, and stays off when the read fails. `ConsentCubit` (app-wide)
+  applies each answer as it arrives; changes run one at a time and the
+  latest wins. A yes first deletes the crash reports recorded before it
+  and is saved last, so a failure never leaves a saved yes. Asked once the
+  server (not a cached copy, which may predate an answer from another
+  device) says there is no answer, in a dialog over the tabs only while
+  they are the top route (never over onboarding, the workout, the paywall
+  or another dialog), with two equal choices and no dismissing; changed
+  with the switch under Profile → Privacy. The settings feature leaves the
+  field alone: its writes merge, and `UserSettings` does not carry it.
 - **Privacy policy link**: Profile → Privacy, in the browser.
   `LegalLinks.privacyUrl` (`lib/app/legal_links.dart`) is the one place the
   address is written; the Android build reads it from that line into
   `R.string.privacy_policy_url` for Health Connect's
   `PrivacyPolicyActivity`.
-- **Deleting an account**: Account → "Delete account" ("Delete my data" for
-  a guest), set apart in the error colour, opens a page saying what is
+- **Deleting an account**: Account → "Delete account" ("Delete my data"
+  for a guest), set apart in the error colour, opens a page saying what is
   deleted from the servers right away (profile and settings, programs,
   workouts, records, custom exercises, cardio, body entries and photos,
   the sign-in), what is cleared on this device at once and that the
@@ -497,21 +575,24 @@ from the earlier FitLab app.
   writes are sent (10 s at most; offline fails with nothing asked or
   deleted); the callable `deleteAccount` deletes. For an account with a
   credential it wants a sign-in from the last 5 minutes, else the app asks
-  for the password (email only; Google and Apple are not offered yet) and
-  tries again. A guest is deleted the same way, without that check. Once
-  the server deleted the data, still signed in (so nothing of the next
-  guest is touched), the app removes the user's kept workouts file
-  (unreadable copies too), cancels every scheduled notification, records
-  no consent for them and resets the analytics id and unsent crash
-  reports, and marks Firestore's offline copy, which is cleared
-  (`clearPersistence`) at the next start before Firestore is used; then it
-  signs out and a new guest starts at onboarding. A local leftover is
-  logged, not reported. If only the sign-in is left (the function's
-  `details.reason` says so) the user stays held on the page, which offers
-  only "Try again". A function not deployed or not callable answers
-  `not-found` / `permission-denied`, shown as "deleting accounts isn't
-  available yet", never as done; anything else that failed before the
-  data went gives the workout back.
+  for the password (`forge_auth`'s `Reauthenticate`) and tries again. A
+  user without a password (Google only) is still asked for one once;
+  `Reauthenticate` then fails with `noPasswordCode` and the app tells them
+  to sign in again, which renews the sign-in. Skipping the dialog for them
+  needs the sign-in methods on `AuthUser` (forge task). A guest is deleted
+  the same way, without that check. Once the server deleted the data,
+  still signed in (so nothing of the next guest is touched), the app
+  removes the user's kept workouts file (unreadable copies too), cancels
+  every scheduled notification, records no consent for them and resets the
+  analytics id and unsent crash reports, and marks Firestore's offline
+  copy, which is cleared (`clearPersistence`) at the next start before
+  Firestore is used; then it signs out and a new guest starts at
+  onboarding. A local leftover is logged, not reported. If only the
+  sign-in is left (the function's `details.reason` says so) the user stays
+  held on the page, which offers only "Try again". A function not deployed
+  or not callable answers `not-found` / `permission-denied`, shown as
+  "deleting accounts isn't available yet", never as done; anything else
+  that failed before the data went gives the workout back.
 - **Cloud Functions** (`functions/`): TypeScript, Node 22, 2nd gen, all in
   `europe-west1` (`src/config.ts`, set once with `setGlobalOptions`; the
   app's one Dart constant `functionsRegion` in
@@ -557,9 +638,11 @@ from the earlier FitLab app.
   or fail, or the premium status of a premium copy is unknown, they are
   left as they are, except that a reminder turned off is always cleared. Only the next
   day is named ("Upper · Push Pull"); later ones name the program, as they
-  are due only if the user keeps to the plan. Measurement: the next four
-  of the series, skipping dates that already have a measurement day (a
-  body entry with measurements or photos; quick weight logs do not count),
+  are due only if the user keeps to the plan. Measurement: one for each
+  of the next four occurrences of the series except dates that already
+  have a measurement day (a body entry with measurements or photos; quick
+  weight logs do not count), so a measured one leaves three and the ids
+  stay distinct, as `Notifications.sync` requires; the dates are
   followed live through `WatchMeasuredDates`; while they load the
   measurement reminders are left as they are. Horizon: reminders are only
   planned while the app runs, so a user who does not open the app for
@@ -569,12 +652,13 @@ from the earlier FitLab app.
   weekday or cadence changes nothing, another weekday restarts the series
   on that day's next date (`reminder_settings_changes.dart`). Both are pure planners (`reminder_plan.dart`);
   `NotificationsCubit` plans again on every program list, settings or
-  measurement-day change, on every user change and on resume, and a repository diffs
-  against what is pending by payload (time and a hash of the text), so
-  equal ones stay. While the user's settings or programs load nothing is
+  measurement-day change, on every user change and on resume, and
+  `forge_notifications`' `Notifications.sync` diffs each kind's id range
+  against what is pending (by a signature of time, text and alarm mode),
+  so equal ones stay. While the user's settings or programs load nothing is
   touched, so a start never drops reminders; a change of user or signing
-  out drops them at once. Ids: rest 1, rest countdown 2 (Android, lock
-  screen), workout 100-127 (by date), measurement 200-203 (by
+  out drops them at once. Ids: rest 1, and on the lock screen (Android)
+  rest countdown 2 and workout in progress 3, workout 100-127 (by date), measurement 200-203 (by
   occurrence), announcement in front 300. Reminders do not ask
   for exact alarms on Android (they may fire up to an hour late). Taps:
   a workout reminder opens Today, a measurement reminder a new measurement
@@ -625,12 +709,16 @@ from the earlier FitLab app.
   announcement is dropped rather than arriving weeks late.
 - **Navigation**: five tabs, Today / Programs / Exercises (center, the model)
   / Progress / Profile. The active workout is full-screen and can be minimized
-  to a bar above the tabs. Known limitation, to fix app-wide later: a link
-  that `context.go`es into another tab replaces that tab's stack, so a page
-  open there with unsaved changes (e.g. a program or workout being edited)
-  is dropped without its discard prompt. The pattern predates the Today
-  tab, which adds seven such links (program, catalogue, calendar, log
-  cardio, add a past workout, weekly volume, steps).
+  to a bar above the tabs. A `go` (a link, a notification tap) replaces
+  its tab's stack; a page there with unsaved changes (program builder,
+  workout edit, measurement day) is never dropped silently. One router
+  guard (`onEnter`, `lib/core/unsaved_changes.dart`) brings that page up
+  (its tab, the workout or paywall above the tabs put away, the workout
+  staying in its bar) and asks with the page's own discard prompt: keep
+  editing stays there, discard makes the navigation again. Pages without
+  changes (an edit left as it opened, a page that saved), other tabs'
+  stacks, pushes and tab switches are left alone. Back and the guard share
+  one prompt per page, so nothing asks twice.
 - **Workouts on the device**: per user one JSON file
   (`workouts_<uid>.json` in the app's private support directory, versioned)
   holds the workout in progress, finished workouts the server has not
@@ -663,9 +751,52 @@ from the earlier FitLab app.
   program target (weight, bottom of the rep range, duration). A warm-up only
   follows the warm-up before it. A done set edited into an invalid one is
   unticked. A weighted or assisted bodyweight set without a weight has none
-  added. Effort is a whole number: RIR 0-5 (5 means 5+) or RPE 10-5. Sets
+  added. Effort is a whole number: RIR 0-5 (5 means 5+) or RPE 10-5, see
+  Effort scale. Sets
   take a note of up to 200 characters. Durations are typed in seconds; a
   minutes and seconds input is left to the design phase.
+- **Workout screen**: shared by the workout in progress and editing a
+  stored or past workout. One card per exercise, or per superset/circuit;
+  only the card of the selected set is open (name, goal, last time, note,
+  an info button to the exercise's detail page, the menu), the others show
+  "Squat · 1/3" with the menu still there, and tapping one opens it on its
+  first undone set, else its last. The selection is presentation state in
+  the editor cubit (`SetSelection`, `set_selection.dart`): until something
+  is picked it is the next set to do (`nextSet`, which knows supersets),
+  else the first exercise; ticking moves it to the next set to do (the
+  exercise's last set opens the next exercise with undone sets, a finished
+  round of a group goes to the next round's first exercise), unticking or
+  an invalid tick keeps it; an added set is selected; removing or moving
+  sets and exercises keeps it on its set or exercise (removing the selected
+  set selects the one that took its place, else the one before; removing its
+  exercise falls back to the next set to do); skipping the rest leaves it.
+  Two set views exist for now, switched by an app-bar button, until the
+  owner picks one and the other is deleted (`SetView`; in memory, kept from
+  one workout to the next while the app runs; the edit page has its own,
+  starting with bubbles): **bubbles** (a wrapping row of round bubbles, a
+  warm-up dashed with "W", a drop set "2D", done ones ticked, the selected
+  one in the theme's selected colours, a "+" bubble; a group stacks one row
+  per exercise, labelled A1, A2, warm-ups first, then one column per round
+  with the round's bubbles joined) and **selected set** ("Squat · set 2 of
+  3", a warm-up "Squat · set W", last time's set, arrows within the exercise,
+  "Add set"). Adding a set asks Normal / Warm-up / Drop set (a drop set
+  only for rep-based exercises); a warm-up goes after the existing
+  warm-ups, other sets at the end, all empty with the usual suggestions as
+  hints. The **set bar** sits at the bottom of the page above the rest
+  strip and the safe area; while the keyboard is up the rest strip steps
+  aside (still mounted) so the bar sits right on the keyboard, the list
+  above shrinks and stays scrollable, and the selected bubble or set is
+  scrolled into view. It shows the selected set ("Squat · set 2 of 3", last
+  time in the bubbles view, the set note), its fields by logging type with
+  the suggestion as hint, a drop set's drops (edit, remove, add) right
+  under them, the effort steps, the tick (which needs no keyboard and starts
+  the rest as before) and a "more" sheet for the set type, note and
+  removal; an invalid tick's message shows in it. Sets are named
+  everywhere by `setLabel` and `setToDo` (W, 1, 2D; "of N" counts working
+  sets), the same as the lock screen and the rest notification. The exercise detail page
+  opens above the workout (`/workout/exercises/:id`, and
+  `/progress/history/exercises/:id` above the edit page), so back returns
+  to the workout as it was.
 - **Records**: heaviest weight (every type with a weight except assisted),
   best e1RM and best set volume (`weight_reps`, `weighted_bodyweight` on the
   added weight), most reps (rep types), longest duration (duration types).
@@ -783,12 +914,23 @@ from the earlier FitLab app.
   is generic except for `CalendarDate`; move it to `forge_ui`, taking
   `DateTime` dates, when that package is next changed.
 - **Starting a workout**: the Programs and Today tabs start the next day,
-  a program's page any of its days, the Today tab also an empty workout,
+  a program's page any of its days, the Today tab also a free workout,
   and an exercise's page adds it to the workout in progress or, after
   asking, starts one with it. A program day waits until the user's custom
   exercises are loaded; exercises really gone are left out and the user is
   told how many. Starting while a workout is in progress asks to resume it
   or discard it.
+- **Empty workout**: a workout with no exercise (`Workout.isEmpty`; with
+  none there is no set, ticked or not, and a note alone does not count) is
+  open but not in progress (`ActiveWorkoutState.inProgress`): no bar in the
+  shell, not kept in the local file (an empty one kept by an older version
+  is dropped on load), no rest (`Rest.followEdit` ends it), never stored,
+  and starting another simply replaces it. Leaving its page (back or
+  minimize) ends it through `ActiveWorkoutCubit.leave`, and Discard or
+  Finish end it, all without asking. A free workout starts empty and is in
+  progress from its first exercise; a program day (or an exercise's page)
+  starts with exercises, so it is in progress at once; removing the last
+  exercise makes any workout empty again.
 - **Add to program**: an exercise's page appends it, with the default
   targets, to a day of one of the user's programs through the program's
   validation; a full day cannot be picked, and without programs it offers to
@@ -846,48 +988,100 @@ from the earlier FitLab app.
   Android, for exact alarms (without them the notification falls back to
   an inexact alarm, possibly late). The rest notification has id 1 on one
   Android channel, `workout` ("Workout", high importance).
-- **Rest on the lock screen**: while a rest runs and `settings.restTimer`
-  is enabled, the lock screen shows it counting down, drawn by the system
-  so it ticks without the app (`RestTimerCubit` through
-  `ShowRestOnLockScreen` / `ClearRestFromLockScreen`; `RestLockScreen`
-  with an iOS and an Android adapter). Title "Rest", the next set as in
-  the rest notification (none when nothing is left). Shown when a rest
-  starts (also one restored at app start), replaced on +15 s or a new
-  rest, removed when it is over in front, skipped, unticked, the workout
-  finished or discarded, the user changes or signs out, or the rest timer
-  is turned off; one left from an earlier run is removed at start. It is
-  silent whatever `notify` says: the end is announced by the rest
-  notification (id 1) alone, so nothing alerts twice.
-  Android: an ongoing notification, id 2, on its own channel `rest`
-  ("Rest timer", default importance, no sound or vibration; lower
-  importances count as silent and may be hidden on the lock screen), with
-  a system chronometer counting down to the end and a timeout at the end,
-  so the system removes it even with the app killed; replaced in place,
-  never updated per second; asks for promotion to a Live Update (Android
-  16 status bar chip, `POST_PROMOTED_NOTIFICATIONS`). A separate id from
-  the end alert because that one is scheduled only while the app hides
-  and cancelled when it shows, and the countdown stays across both. It
-  needs the notification permission and never asks for it: without it
-  nothing shows, and it shows at once when the user allows notifications
-  mid-rest. A show or removal that fails (also iOS with Live Activities
-  off, or before the app may start one) does not count as done: the next
-  second of the countdown tries again. No foreground service: nothing has to run until the end
-  (the chronometer and timeout are the system's), and a service would
-  need a declared type and Play review; the cost is that from Android 14
-  the user can swipe it away while unlocked, until the next change.
-  iOS (16.2+, below that nothing shows): a Live Activity from the
-  `RestTimer` widget extension (lock screen, Dynamic Island), started by
-  the app in front through `AppDelegate.swift`
-  (`getworkout/rest_activity`), updated and ended while the app runs; its
-  texts come from the app. No push updates (no APNs yet), so the app
-  cannot end it while suspended: its stale date is the rest's end, after
-  which it shows "Rest over" until the app runs again (then removed) or
-  iOS removes it (ended after 8 h, kept on the lock screen up to 4 h
-  more: 12 h at most). Users can turn Live Activities off per app; then
-  nothing shows. No App Group: the app's own ActivityKit bridge passes
-  the content, so the `live_activities` plugin (App Group, iOS 16.1
-  minimum for the whole app) is not used, and the app keeps iOS 15
-  (ActivityKit weak-linked).
+- **Workout on the lock screen**: the workout in progress is on the lock
+  screen, drawn by the system so its times run without the app
+  (`RestTimerCubit` through `ShowWorkoutOnLockScreen` /
+  `ClearWorkoutFromLockScreen`; `WorkoutLockScreen` with an iOS and an
+  Android adapter). It follows `ActiveWorkoutState.inProgress`: shown from
+  the first exercise (an empty workout shows nothing) until the workout is
+  finished or discarded, or the user changes or signs out; kept while
+  finishing. Nothing is shown or removed until the workout is loaded at
+  start, then one left from an earlier run is updated to the workout in
+  progress or removed. A running rest is shown instead of the workout while
+  `settings.restTimer` is enabled (the workout itself shows whatever that
+  setting says). Rest: title "Rest" and the next set as in the rest
+  notification (none when nothing is left); workout: its name, the elapsed
+  time since `startedAt`, and the set to do now ("Bench Press · set 2 of
+  3", "Bench Press · set W" for a warm-up; none when every set is done).
+  Sets are named as the workout page's set column names them (`setLabel`:
+  W for a warm-up, else the number among the working sets, 2D for a drop
+  set; "of N" counts working sets), in the rest notification too. The set
+  to do now is the next one (`nextSet`) after the set ticked last in this
+  run of the app, whatever became of its rest (skipped, or none with the
+  rest timer off), forgotten when that set is unticked or no longer done
+  after an edit; after a restart, after the kept rest's set. The rest is
+  replaced on +15 s or a new rest and turns back into the workout when it
+  is over, skipped or unticked. It is silent whatever `notify` says: the
+  end is announced by the rest notification (id 1) alone, so nothing
+  alerts twice. A show or removal that fails (also iOS with Live
+  Activities off, or before the app may start one) is logged once and the
+  same content is not tried again until the app shows again; content that
+  changes is tried at once.
+  Android: ongoing, silent notifications on their own channel `rest`
+  ("Workout in progress"; the id is from when it showed rests only;
+  default importance, no sound or vibration; lower importances count as
+  silent and may be hidden on the lock screen), whose system chronometers
+  run without the app, one at a time: the workout, id 3 (title its name,
+  text the set to do now, counting up from `startedAt`;
+  `Notifications.showStopwatch`), or during a rest the rest, id 2 (title
+  "Rest", the next set, counting down, with a timeout at the end so the
+  system removes it even with the app killed; `showCountdown`). When a
+  rest starts the workout is taken off and scheduled back for the rest's
+  end (`scheduleStopwatch`, exact when the device allows exact alarms,
+  else possibly late, with nothing shown meanwhile but never a stale
+  countdown), so it returns while the app is suspended or killed; under
+  its own id because a notification replaced as the countdown times out
+  could be removed with it, so the two never race. +15 s replaces both;
+  a rest cut short (skip, untick, rest timer off) drops the scheduled one
+  and shows the workout at once; once the rest is over in front the app
+  does the same. Both are replaced in place, never updated per second
+  (posted again only when what they show changes), and ask for promotion
+  to a Live Update (Android 16 status bar chip,
+  `POST_PROMOTED_NOTIFICATIONS`). A tap opens the app with payload
+  `active-workout`, handled like the iOS Live Activity's tap (below). A
+  separate id from the end alert (1) because that one is scheduled only
+  while the app hides and cancelled when it shows, and these stay across
+  both. They need the notification permission and never ask for it:
+  without it nothing shows, and they show at once when the user allows
+  notifications mid-rest. They are ongoing, so they cannot be dismissed on
+  the lock screen; no foreground service (nothing has to run: the
+  chronometers, timeout and alarm are the system's, and a service would
+  need a declared type and Play review), so from Android 14 the user can
+  swipe them away while unlocked, until the next change.
+  iOS (16.2+, below that nothing shows): one Live Activity for the whole
+  workout from the `RestTimer` widget extension (target and bundle id kept
+  from when it showed rests only; `WorkoutActivityAttributes`,
+  `WorkoutLiveActivity`), started by the app in front through
+  `AppDelegate.swift` (`getworkout/workout_activity`), updated and ended
+  while the app runs; its texts come from the app. Lock screen and Dynamic
+  Island (compact, minimal, expanded) show the same two modes: the
+  workout (dumbbell, name, elapsed time counted up by the system, the set
+  to do now) or the rest (timer, "Rest", countdown, the next set). No push
+  updates (no APNs yet), so the app cannot change it while suspended: the
+  content state carries the rest with its end, the activity's stale date
+  is that end, and the widget draws the rest only while it is not stale
+  and its end is ahead, so at the end the system redraws it as the workout
+  by itself; the app replaces it with the workout once it runs again.
+  Outside a rest it has no stale date. iOS ends an activity after 8 h
+  (kept on the lock screen up to 4 h more); the next update the app makes
+  in front then starts a new one, as it does after the user swiped it
+  away. Users can turn Live Activities off per app; then nothing shows.
+  A tap on it (lock screen and every Dynamic Island presentation, in both
+  modes) opens the app with `getworkout://workout` (its widgetURL; the
+  `getworkout` scheme next to Google sign-in's in `CFBundleURLTypes`).
+  The Runner takes that URL itself as a scene delegate
+  (`WorkoutActivityTaps`) and keeps it until Dart takes it, so a tap that
+  launched the app is not lost; Flutter's own deep linking is off
+  (`FlutterDeepLinkingEnabled` false; the app has no other deep links).
+  The tap joins the notification taps' path in `App`: kept until the app
+  is past its start and the workout is loaded, then the workout page is
+  pushed through the router as from the minimized workout bar (so the
+  unsaved-changes guard sees it), unless it is open already or no workout
+  is in progress (an activity left behind), where the tap only opens the
+  app. No App Group: the app's own ActivityKit bridge passes the content,
+  so the `live_activities` plugin (App Group, iOS 16.1 minimum for the
+  whole app) is not used, and the app keeps iOS 15 (ActivityKit
+  weak-linked).
 - **Weekly volume**: Progress → Weekly volume shows one week, the current
   one first; earlier weeks are free to browse, later than the current one
   never. A week starts on the locale's first weekday
@@ -931,15 +1125,36 @@ from the earlier FitLab app.
   moderate, 6 active, by the levels' wording). Units, bar and plates come
   from settings as before. 1RM and the macros' calories stay empty (no
   single source); the goal and target weight map onto no calculator
-  input. Values are shown to one decimal in the user's unit, with no hint
-  of their source (the calculators have no helper-text pattern). They are
+  input. A known number shows as a tile (`KnownNumberField`), not a field:
+  its name, the value to one decimal in the user's unit and, for a value
+  from the body log, "Measured <date>" (the entry's date; body fat takes
+  the oldest of its circumferences'; the year only when not this one).
+  Profile values (height, age, a profile-only weight) have no date.
+  The tile has an edit icon; tapping it turns it into the normal field,
+  focused, holding the value; it stays a field (the cubit's `known` map
+  drops it). Focusing a field before the values arrive counts as editing
+  it, so a late value never replaces it. Both the waist and the abdomen
+  are known; the body fat calculator shows the one for the selected sex
+  (abdomen for men, waist for women), or an empty field, unless the user
+  typed or started editing it. Sex and activity stay selectors: they
+  already show the known choice. They are
   starting values only: nothing is written back. They load once when a
   calculator opens; a value arriving late fills only inputs the user has
   not changed (even one they cleared stays empty). A source that cannot
   be read adds nothing.
 - **Today tab** (`lib/features/today`): a scrolling list of independent
   cards, each on its own data, so one failing leaves the others. Next
-  workout: the Programs tab's own `ProgramListCubit` (one instance), so
+  workout: while a workout is in progress (`ActiveWorkoutState.inProgress`,
+  so not an empty one) the card is that workout, labelled "Workout in
+  progress", with "Resume workout", which opens it like the workout bar
+  and never starts another. A workout stores no day name, so its program
+  day shows only while that day would still give it its name (not since
+  renamed, moved or deleted). While the workout in progress is still
+  looked for, the card shows only its title, never Start.
+  Otherwise, with an active program the card's headline is that program,
+  labelled "Active program" and opening its page, its next day below;
+  without one it is titled "Next workout". It uses the Programs tab's own
+  `ProgramListCubit` (one instance), so
   both show the same plan; the next day with its exercise count and
   estimate, the date it is planned for (`ProgramListState.nextDate`, the
   first of `ProgramSchedule.upcoming`) and Start through
@@ -952,12 +1167,13 @@ from the earlier FitLab app.
   title, as the Programs tab waits, so a missed day never shows as a
   planned one with Start. A locked premium copy shows its day, locked,
   with Start opening the paywall. Without a program, or once it finished: the
-  catalogue, the generator and "Start empty workout". Week strip: the
+  catalogue, the generator and "Start empty workout" (the app never calls
+  it "free": users read that as "at no cost"). Week strip: the
   calendar's `calendarEntries` and marks over the current week from the
   locale's first weekday (Sunday in English, like weekly volume, unlike
   the program week plan), drawn by `MonthGrid` as one week; the strip and
   every day open the calendar, which has no route for a given date. Quick
-  actions: start an empty workout, log cardio, add a past workout, the
+  actions: a free workout, log cardio, add a past workout, the
   calculators (a row, not a card listing all six, which would crowd the
   tab; it opens the list under Profile, which keeps its own row). Volume
   card: `WatchWeeklyVolume` with one week, never the trend, whatever the
@@ -1208,9 +1424,11 @@ Group 4, programs
 
 Group 5, workout
 - [x] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery
-- [x] Free workout — start empty, save as program at the end
+- [x] Workout screen redesign — one exercise open at a time, set bar, bubbles or selected-set view (temporary toggle), effort by feel / RIR / RPE with Failed, exercise details from the workout, add set by kind
+- [x] Free workout — start empty (not in progress until an exercise is added), save as program at the end
 - [x] Rest timer — auto start, +15 s, skip, notification
 - [x] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification
+- [ ] Workout on the lock screen — iOS Live Activity and Android ongoing notifications for the whole workout (workout and rest modes, tap opens it)
 - [x] Finish and summary — records with a short celebration, `exerciseStats` update
 - [x] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
 
@@ -1229,6 +1447,7 @@ Group 8, body and extras
 - [x] Cardio — log, list, detail, weekly chart
 - [x] Steps — health permission, today, week and 30-day chart, daily goal
 - [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
+- [ ] Measurement summary — one summary/compare screen (baseline choice, body fat and lean mass, changes, target estimate, photo slider), opened after saving a measurement day, from a day's page and from Progress; where-to-measure hints; body-fat box unticks; one waist mapping for body fat and calculators
 
 Group 9, launch readiness
 - [x] Onboarding — nine questions, suggested free program
@@ -1282,17 +1501,6 @@ Group 9, launch readiness
   deployed: the Architect deploys `functions/` to dev, checks deletion on a
   device (including the "not available" message before the deploy), then
   prod.
-- Accepted deviation, to be removed by two forge tasks (the app then uses
-  the packages and drops its workarounds):
-  - **forge_firebase**: `initFirebase` must not enable Analytics or
-    Crashlytics by default; it needs a consent-aware start (collection off
-    until the app applies a user's answer). Until then the app must never
-    call the current `initFirebase`, from `bootstrap.dart` or any other
-    entry point, including the future FCM background handler; it uses
-    `FirebaseTelemetry.start` instead (comment in `bootstrap.dart`).
-  - **forge_auth**: re-authentication with the password in
-    `AuthRepository` (and use cases); until then
-    `CallableAccountRepository.reauthenticate` calls Firebase Auth itself.
 - Female body model with the same mesh names: the user supplies it before release.
 - `revenueCatWebhook` is written and unit-tested, not deployed or tried
   against RevenueCat. Deploying all of `functions/` needs its secret: an
@@ -1338,8 +1546,44 @@ Group 9, launch readiness
   `POST_PROMOTED_NOTIFICATIONS` on Android. A device build needs the
   extension's App ID under the team (automatic signing); untestable until
   the Apple Developer account: behaviour on a real device while
-  suspended. Needs `forge_notifications` with `showCountdown` and
-  channels at init merged and tagged, and every forge `ref` moved to it.
+  suspended.
+- Workout on the lock screen (iOS), not built yet: the two widget files
+  were renamed (`WorkoutActivityAttributes.swift`,
+  `WorkoutLiveActivity.swift`, same entries in `project.pbxproj`), and the
+  Swift was only type-checked with `swiftc` against the simulator SDK and
+  Flutter.framework. Check on the simulator: it starts with the first
+  exercise (not for an empty workout) and ends on finish and discard; the
+  elapsed time runs on the lock screen and in the Dynamic Island; a rest
+  shows its countdown and turns back into the workout at its end with the
+  app in the background (the stale-date redraw) and in front, on skip and
+  on +15 s; relaunching with a workout in progress keeps one activity
+  (none duplicated) and without one removes the old; a tap in each
+  presentation and mode opens the workout page, also from its minimized
+  bar, from another tab with unsaved changes (no prompt: it is pushed),
+  and from a killed app (the launch URL reaches `WorkoutActivityTaps`
+  through the late-registered scene delegate); with no workout in
+  progress a tap only opens the app, and with the workout page open (also
+  under the exercise picker or the paywall) it stays as it is; Google
+  sign-in still returns to the app; the clocks fit at 1:00:00 in every
+  presentation without squeezing the labels. An activity started by an older build (`RestActivityAttributes`)
+  is no longer seen by the app and stays until iOS ends it; only matters
+  for a device that had one running across the update.
+- Workout on the lock screen (Android), not built yet; it needs
+  `forge_notifications`' `showStopwatch` / `scheduleStopwatch` (forge
+  branch `feat/ongoing-stopwatch-notification`, to be tagged and pinned).
+  Check on the emulator: the notification appears with the first exercise
+  and counts up from the start; a rest replaces it with the countdown and
+  the next set, and the workout comes back at the end with the app in
+  front, in the background and killed (with and without exact alarms
+  allowed), and at once on skip; +15 s moves both; finish, discard and
+  sign-out remove it and nothing comes back later; relaunching with a
+  workout in progress shows it once (no duplicate) and without one
+  removes it; it makes no sound, cannot be swiped away on the lock
+  screen, and is promoted to a status bar chip on Android 16; a tap in
+  both modes opens the workout page (also from a killed app), and with
+  no workout in progress only opens the app; the channel shows as
+  "Workout in progress" in the system settings (renamed from "Rest
+  timer").
 - Release blocker: the Terms of Use and Privacy Policy links in
   `lib/app/legal_links.dart` are placeholders; publish the pages and
   replace them (Android picks up `privacyUrl` by itself).
@@ -1378,17 +1622,19 @@ Group 9, launch readiness
   FCM's fallback channel before); check that one sent to a fresh install
   shows on `workout`. Check foreground display and taps on both
   platforms, and that the admin web build still loads (the plugin
-  registers a web part).
-- Forge tasks; the app's own versions are an accepted deviation for the
-  notifications PR, to be replaced once these exist:
-  - `forge_notifications`: a diff sync of an id range against the pending
-    notifications (the app's `DeviceNotificationRepository.syncReminders`
-    with payload signatures); a tap stream that buffers the launch tap
-    (the app's `NotificationTaps`); opening the app's notification
-    settings (the app calls `flutter_local_notifications` directly).
-    Done: channels created at init, and a second (countdown) channel.
-  - The Live Activity bridge (`AppDelegate.swift`'s `RestActivity` and a
-    generic attributes type) could move to a package with a native iOS
+  registers a web part). Since forge v0.7.0 reminders sync through
+  `Notifications.sync`, whose signatures differ from the app's former
+  ones, so every pending reminder is rescheduled once at the first start
+  after the upgrade; check that they still fire and open their tab.
+  `Notifications.openSettings` (the reminder tiles' "open settings") is
+  not verified on either platform yet.
+- Forge tasks; the app's own versions are accepted deviations, to be
+  replaced once these exist:
+  - `forge_auth`: the user's sign-in methods on `AuthUser`, so account
+    deletion asks only a user with a password for it and tells a Google
+    or Apple only user to sign in again straight away.
+  - The Live Activity bridge (`AppDelegate.swift`'s `WorkoutActivity`,
+    `WorkoutActivityTaps` and a generic attributes type) could move to a package with a native iOS
     plugin once a second app needs one; the widget views stay in the app.
   - A messaging addition (to `forge_notifications` or a new package):
     following a topic per language with leaving the others, foreground

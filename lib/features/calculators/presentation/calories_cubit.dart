@@ -17,6 +17,7 @@ class CaloriesState extends Equatable {
     this.weight = '',
     this.height = '',
     this.age = '',
+    this.known = const {},
     this.result,
   });
 
@@ -28,6 +29,9 @@ class CaloriesState extends Equatable {
   final String height;
   final String age;
 
+  /// The number inputs still holding the known value.
+  final Map<CalculatorInput, KnownInput> known;
+
   /// Null until every input is filled in.
   final Calculation<CalorieEstimate>? result;
 
@@ -37,22 +41,30 @@ class CaloriesState extends Equatable {
     String? weight,
     String? height,
     String? age,
+    Map<CalculatorInput, KnownInput>? known,
   }) => CaloriesState(
     sex: sex ?? this.sex,
     activity: activity ?? this.activity,
     weight: weight ?? this.weight,
     height: height ?? this.height,
     age: age ?? this.age,
+    known: known ?? this.known,
   );
 
   @override
-  List<Object?> get props => [sex, activity, weight, height, age, result];
+  List<Object?> get props => [
+    sex,
+    activity,
+    weight,
+    height,
+    age,
+    known,
+    result,
+  ];
 }
 
-enum _Input { sex, activity, weight, height, age }
-
 /// Starts from what the app knows of the user; a value arriving late fills
-/// only the inputs the user has not changed.
+/// only the inputs the user has not changed or started editing.
 class CaloriesCubit extends Cubit<CaloriesState> {
   CaloriesCubit(
     this._estimate,
@@ -67,7 +79,9 @@ class CaloriesCubit extends Cubit<CaloriesState> {
   final EstimateCalories _estimate;
   final WeightUnit weightUnit;
   final LengthUnit lengthUnit;
-  final _changed = <_Input>{};
+  final _changed = <CalculatorInput>{};
+  var _sexChanged = false;
+  var _activityChanged = false;
 
   Future<void> _prefill(
     GetCurrentUser getCurrentUser,
@@ -77,47 +91,61 @@ class CaloriesCubit extends Cubit<CaloriesState> {
     if (uid == null) return;
     final known = await getKnownValues(uid);
     if (isClosed) return;
-    T? fill<T>(_Input input, T? value) =>
-        _changed.contains(input) ? null : value;
+    final knownInputs = {...state.known};
+    String? number(CalculatorInput input, String? text, [DateTime? date]) {
+      if (_changed.contains(input) || text == null) return null;
+      knownInputs[input] = KnownInput(date);
+      return text;
+    }
+
     _calculate(
       state._with(
-        sex: fill(_Input.sex, known.sex),
-        activity: fill(_Input.activity, known.activity),
-        weight: fill(
-          _Input.weight,
+        sex: _sexChanged ? null : known.sex,
+        activity: _activityChanged ? null : known.activity,
+        weight: number(
+          CalculatorInput.bodyWeight,
           knownText(known.weightKg, weightUnit.fromKg),
+          known.weightDate,
         ),
-        height: fill(
-          _Input.height,
+        height: number(
+          CalculatorInput.height,
           knownText(known.heightCm, lengthUnit.fromCm),
         ),
-        age: fill(_Input.age, known.ageYears?.toString()),
+        age: number(CalculatorInput.age, known.ageYears?.toString()),
+        known: knownInputs,
       ),
     );
   }
 
+  /// The user started editing [input]: it is a plain field from now on,
+  /// which known values leave alone.
+  void edit(CalculatorInput input) {
+    _changed.add(input);
+    _calculate(state._with(known: {...state.known}..remove(input)));
+  }
+
   void sexChanged(Sex sex) {
-    _changed.add(_Input.sex);
+    _sexChanged = true;
     _calculate(state._with(sex: sex));
   }
 
   void activityChanged(ActivityLevel activity) {
-    _changed.add(_Input.activity);
+    _activityChanged = true;
     _calculate(state._with(activity: activity));
   }
 
   void weightChanged(String text) {
-    _changed.add(_Input.weight);
+    _changed.add(CalculatorInput.bodyWeight);
     _calculate(state._with(weight: text));
   }
 
   void heightChanged(String text) {
-    _changed.add(_Input.height);
+    _changed.add(CalculatorInput.height);
     _calculate(state._with(height: text));
   }
 
   void ageChanged(String text) {
-    _changed.add(_Input.age);
+    _changed.add(CalculatorInput.age);
     _calculate(state._with(age: text));
   }
 
@@ -128,6 +156,7 @@ class CaloriesCubit extends Cubit<CaloriesState> {
       weight: inputs.weight,
       height: inputs.height,
       age: inputs.age,
+      known: inputs.known,
       result: _result(inputs),
     ),
   );

@@ -9,9 +9,9 @@ enum LengthUnit { cm, inch }
 
 enum ThemePreference { system, light, dark }
 
-/// How effort is asked for per set, if at all. Always stored as reps in
-/// reserve (RIR); RPE is shown as `10 - RIR`.
-enum EffortScale { off, rir, rpe }
+/// How a set's effort is shown and picked. Always stored as reps in reserve
+/// (RIR) whichever is shown; see `EffortScaleSteps`.
+enum EffortScale { byFeel, rir, rpe }
 
 const kgPerLb = 0.45359237;
 const cmPerInch = 2.54;
@@ -26,6 +26,41 @@ extension WeightUnitConversion on WeightUnit {
     WeightUnit.kg => kg,
     WeightUnit.lb => kg / kgPerLb,
   };
+
+  /// A lifted weight stored as [kg], as the user sees it in this unit: see
+  /// [shown].
+  double shownFromKg(double kg) => shown(fromKg(kg));
+
+  /// A lifted weight in this unit as the user sees it. Within two decimals
+  /// (the precision weight fields show) it was typed in this unit and shows
+  /// as typed; otherwise it was typed in the other unit and shows rounded,
+  /// to whole lb or to half kg, or to two decimals when that rounding would
+  /// show a weight as 0. Only for display: fields store what is typed,
+  /// converted to kg.
+  double shown(double value) {
+    final hundredths = value * 100;
+    final grid = hundredths.round() / 100;
+    // A kg round trip drifts at most 3e-11 hundredths up to 1000 kg; the
+    // nearest a two-decimal weight in the other unit comes is 4e-6
+    // (538.92 lb, 244.45 kg).
+    if ((hundredths - hundredths.round()).abs() < 1e-8) return grid;
+    return _rounded(value);
+  }
+
+  /// An estimated one-rep max stored as [kg], as the user sees it: computed,
+  /// never typed, so always rounded as [shown] rounds.
+  double estimatedFromKg(double kg) => _rounded(fromKg(kg));
+
+  /// Whole lb or half kg; two decimals when that would show a weight as 0.
+  double _rounded(double value) {
+    final rounded = switch (this) {
+      WeightUnit.kg => (value * 2).round() / 2,
+      WeightUnit.lb => value.roundToDouble(),
+    };
+    if (rounded != 0 || value <= 0) return rounded;
+    final hundredths = (value * 100).round() / 100;
+    return hundredths > 0 ? hundredths : 0.01;
+  }
 }
 
 extension LengthUnitConversion on LengthUnit {
@@ -175,7 +210,7 @@ class UserSettings extends Equatable {
     required this.weightUnit,
     required this.lengthUnit,
     this.themePreference = ThemePreference.system,
-    this.effortScale = EffortScale.off,
+    this.effortScale = EffortScale.byFeel,
     this.restTimer = const RestTimerSettings(),
     this.stepGoal = StepGoal.standard,
     this.workoutReminder = const WorkoutReminderSettings(),

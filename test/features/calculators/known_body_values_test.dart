@@ -132,12 +132,18 @@ void main() {
           entry(
             'e3',
             DateTime(2026, 11, 10),
-            measurements: {BodyMeasurement.waist: 84, BodyMeasurement.chest: 1},
+            measurements: {
+              BodyMeasurement.abdomen: 84,
+              BodyMeasurement.chest: 1,
+            },
           ),
           entry(
             'e2',
             DateTime(2026, 11, 3),
-            measurements: {BodyMeasurement.waist: 86, BodyMeasurement.hips: 98},
+            measurements: {
+              BodyMeasurement.abdomen: 86,
+              BodyMeasurement.hips: 98,
+            },
           ),
           entry(
             'e1',
@@ -150,7 +156,7 @@ void main() {
       final known = await getKnownValues('u1');
 
       expect(known.neckCm, 39);
-      expect(known.waistCm, 84);
+      expect(known.abdomenCm, 84);
       expect(known.hipCm, 98);
       expect(
         known.bodyFatPercent,
@@ -227,13 +233,136 @@ void main() {
           entry(
             'e1',
             DateTime(2026, 11, 3),
-            measurements: {BodyMeasurement.neck: 45, BodyMeasurement.waist: 44},
+            measurements: {
+              BodyMeasurement.neck: 45,
+              BodyMeasurement.abdomen: 44,
+            },
           ),
         ]),
       );
       final known = await getKnownValues('u1');
       expect(known.bodyFatPercent, isNull);
       expect(known.neckCm, 45);
+    });
+
+    test('both waists are known whatever the sex; the formula\'s is the '
+        'abdomen for men, the waist for women', () async {
+      given(
+        entries: Stream.value([
+          entry(
+            'e2',
+            DateTime(2026, 11, 10),
+            measurements: {BodyMeasurement.abdomen: 84},
+          ),
+          entry(
+            'e1',
+            DateTime(2026, 11, 3),
+            measurements: {
+              BodyMeasurement.waist: 76,
+              BodyMeasurement.abdomen: 85,
+            },
+          ),
+        ]),
+      );
+
+      final known = await getKnownValues('u1');
+
+      expect(known.waistCm, 76);
+      expect(known.waistDate, DateTime(2026, 11, 3));
+      expect(known.abdomenCm, 84);
+      expect(known.abdomenDate, DateTime(2026, 11, 10));
+      expect(known.navyWaistFor(Sex.male), (
+        cm: 84.0,
+        date: DateTime(2026, 11, 10),
+      ));
+      expect(known.navyWaistFor(Sex.female), (
+        cm: 76.0,
+        date: DateTime(2026, 11, 3),
+      ));
+      expect(const KnownBodyValues(waistCm: 76).navyWaistFor(Sex.male), isNull);
+    });
+
+    test('each value from the body log carries its entry\'s date; the '
+        'profile\'s carry none', () async {
+      given(
+        profile: Stream.value(man),
+        entries: Stream.value([
+          entry(
+            'e3',
+            DateTime(2026, 11, 10),
+            measurements: {BodyMeasurement.abdomen: 84},
+          ),
+          entry('e2', DateTime(2026, 11, 3), weightKg: 80.4),
+          entry(
+            'e1',
+            DateTime(2026, 9, 1),
+            measurements: {BodyMeasurement.neck: 39, BodyMeasurement.hips: 98},
+          ),
+        ]),
+      );
+
+      final known = await getKnownValues('u1');
+
+      expect(known.weightDate, DateTime(2026, 11, 3));
+      expect(known.neckDate, DateTime(2026, 9, 1));
+      expect(known.abdomenDate, DateTime(2026, 11, 10));
+      expect(known.hipDate, DateTime(2026, 9, 1));
+      // As recent as its oldest measurement.
+      expect(known.bodyFatDate, DateTime(2026, 9, 1));
+
+      given(profile: Stream.value(man));
+      final fromProfile = await getKnownValues('u1');
+      expect(fromProfile.weightKg, 82);
+      expect(fromProfile.weightDate, isNull);
+    });
+
+    test('a man\'s body fat date ignores the hips; a woman\'s counts '
+        'them', () async {
+      Stream<List<BodyEntry>> measured() => Stream.value([
+        entry(
+          'e2',
+          DateTime(2026, 11, 10),
+          measurements: {
+            BodyMeasurement.neck: 36,
+            BodyMeasurement.waist: 72,
+            BodyMeasurement.abdomen: 84,
+          },
+        ),
+        entry(
+          'e1',
+          DateTime(2026, 8, 1),
+          measurements: {BodyMeasurement.hips: 96},
+        ),
+      ]);
+      given(profile: Stream.value(man), entries: measured());
+      expect((await getKnownValues('u1')).bodyFatDate, DateTime(2026, 11, 10));
+
+      given(
+        profile: Stream.value(
+          const UserProfile(sex: Sex.female, heightCm: 165),
+        ),
+        entries: measured(),
+      );
+      expect((await getKnownValues('u1')).bodyFatDate, DateTime(2026, 8, 1));
+    });
+
+    test('no body fat, no body fat date', () async {
+      given(
+        profile: Stream.value(man),
+        entries: Stream.value([
+          entry(
+            'e1',
+            DateTime(2026, 11, 3),
+            measurements: {BodyMeasurement.neck: 39},
+          ),
+        ]),
+      );
+
+      final known = await getKnownValues('u1');
+
+      expect(known.neckDate, DateTime(2026, 11, 3));
+      expect(known.bodyFatPercent, isNull);
+      expect(known.bodyFatDate, isNull);
     });
 
     test('nothing known leaves every value empty', () async {
@@ -249,7 +378,10 @@ void main() {
           entry('e1', DateTime(2026, 11, 3), weightKg: 80),
         ]),
       );
-      expect(await getKnownValues('u1'), const KnownBodyValues(weightKg: 80));
+      expect(
+        await getKnownValues('u1'),
+        KnownBodyValues(weightKg: 80, weightDate: DateTime(2026, 11, 3)),
+      );
 
       given(
         profile: Stream.value(man),

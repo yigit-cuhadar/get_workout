@@ -4,11 +4,10 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:get_workout/features/account/data/firebase_telemetry.dart';
+import 'package:forge_firebase/forge_firebase.dart';
 import 'package:get_workout/features/account/domain/account_usecases.dart';
 import 'package:get_workout/features/account/domain/consent_repository.dart';
 import 'package:get_workout/features/account/presentation/consent_cubit.dart';
@@ -21,6 +20,40 @@ class MockConsentRepository extends Mock implements ConsentRepository {}
 class MockAnalytics extends Mock implements FirebaseAnalytics {}
 
 class MockCrashlytics extends Mock implements FirebaseCrashlytics {}
+
+/// [FirebaseTelemetry] keeping every result it returned, so a test can wait
+/// until each change asked of it has run.
+class TrackedTelemetry implements Telemetry {
+  TrackedTelemetry(this._telemetry);
+
+  final FirebaseTelemetry _telemetry;
+  final _running = <Future<Result<void>>>[];
+
+  Future<Result<void>> _track(Future<Result<void>> result) {
+    _running.add(result);
+    return result;
+  }
+
+  /// Completes once every change asked for so far, and any asked for while
+  /// waiting, has run.
+  Future<void> get settled async {
+    while (_running.isNotEmpty) {
+      final running = List.of(_running);
+      _running.clear();
+      await Future.wait(running);
+    }
+  }
+
+  @override
+  Future<Result<void>> follow(String? uid) => _track(_telemetry.follow(uid));
+
+  @override
+  Future<Result<void>> apply(String uid, bool consent) =>
+      _track(_telemetry.apply(uid, consent));
+
+  @override
+  Future<Result<void>> forget(String uid) => _track(_telemetry.forget(uid));
+}
 
 /// The cubit over the real [FirebaseTelemetry], with the Firebase SDKs
 /// recording whether they collect, so these check what is collected.
@@ -73,16 +106,7 @@ void main() {
     when(() => crashlytics.deleteUnsentReports()).thenAnswer((_) async {});
   });
 
-  // start() routes errors to Crashlytics; give them back.
-  final flutterError = FlutterError.onError;
-  final platformError = PlatformDispatcher.instance.onError;
-  final logError = Log.onError;
-  tearDown(() {
-    FlutterError.onError = flutterError;
-    PlatformDispatcher.instance.onError = platformError;
-    Log.onError = logError;
-    directory.deleteSync(recursive: true);
-  });
+  tearDown(() => directory.deleteSync(recursive: true));
 
   FirebaseTelemetry telemetry() => FirebaseTelemetry(
     allowed: true,
@@ -92,8 +116,8 @@ void main() {
   );
 
   /// The telemetry the cubit drives.
-  late FirebaseTelemetry subject;
-  setUp(() => subject = telemetry());
+  late TrackedTelemetry subject;
+  setUp(() => subject = TrackedTelemetry(telemetry()));
 
   ConsentCubit build() => ConsentCubit(
     watchAuthUser: WatchAuthUser(auth),
@@ -169,9 +193,9 @@ void main() {
     await signIn(guestB);
     await cubit.close();
 
-    await telemetry().start('b');
+    await telemetry().restore('b');
     expect(collecting, isFalse);
-    await telemetry().start('a');
+    await telemetry().restore('a');
     expect(collecting, isTrue);
   });
 
@@ -198,7 +222,7 @@ void main() {
 
       await subject.forget('a');
       expect(collecting, isFalse);
-      await subject.start('a');
+      await telemetry().restore('a');
       expect(collecting, isFalse);
       await cubit.close();
     },
@@ -240,7 +264,7 @@ void main() {
     expect(collecting, isFalse);
     verifyNever(() => analytics.setAnalyticsCollectionEnabled(true));
     // Nor is the overtaken yes saved for the next start.
-    await telemetry().start('a');
+    await telemetry().restore('a');
     expect(collecting, isFalse);
     await cubit.close();
   });

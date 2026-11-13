@@ -43,8 +43,9 @@ class Rest extends Equatable {
 
   /// This rest once an edit made [after]: unlinked when the edit
   /// [movesSets] (its set may now be elsewhere), else ended when its set
-  /// is no longer done.
+  /// is no longer done. An empty workout has no rest.
   Rest? followEdit(Workout after, {required bool movesSets}) {
+    if (after.isEmpty) return null;
     final at = this.after;
     if (at == null) return this;
     if (movesSets) return detached();
@@ -59,18 +60,27 @@ class Rest extends Equatable {
   List<Object?> get props => [endsAt, after];
 }
 
-/// The set [after] has ticked done that [before] had not, if the edit did
-/// nothing else to the workout's shape.
-SetRef? newlyDone(Workout before, Workout after) {
+/// Whether [before] and [after] have the same exercises in the same order
+/// with as many sets each, so a set's place means the same set in both.
+bool sameShape(Workout before, Workout after) {
   final old = before.exercises;
   final now = after.exercises;
-  if (old.length != now.length) return null;
+  if (old.length != now.length) return false;
   for (var i = 0; i < now.length; i++) {
     if (old[i].exerciseId != now[i].exerciseId ||
         old[i].sets.length != now[i].sets.length) {
-      return null;
+      return false;
     }
   }
+  return true;
+}
+
+/// The set [after] has ticked done that [before] had not, if the edit did
+/// nothing else to the workout's shape.
+SetRef? newlyDone(Workout before, Workout after) {
+  if (!sameShape(before, after)) return null;
+  final old = before.exercises;
+  final now = after.exercises;
   for (var i = 0; i < now.length; i++) {
     for (var j = 0; j < now[i].sets.length; j++) {
       if (now[i].sets[j].done && !old[i].sets[j].done) {

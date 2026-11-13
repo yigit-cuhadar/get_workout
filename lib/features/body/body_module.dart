@@ -19,8 +19,10 @@ import 'domain/body_photo_sync.dart';
 import 'domain/body_photos.dart';
 import 'domain/body_repository.dart';
 import 'domain/body_usecases.dart';
+import 'domain/measurement_summary.dart';
 import 'presentation/body_list_cubit.dart';
 import 'presentation/measurement_day_cubit.dart';
+import 'presentation/measurement_summary_cubit.dart';
 import 'presentation/weight_form_cubit.dart';
 
 /// Registers the weight log and measurement days. Needs `AuthModule` for
@@ -82,6 +84,7 @@ class BodyModule implements FeatureModule {
       ..registerFactory(() => SyncProfileWeight(sl(), sl(), sl()))
       ..registerFactory(() => SaveBodyEntry(sl(), sl(), sl(), sl()))
       ..registerFactory(() => DeleteBodyEntry(sl(), sl(), sl(), sl()))
+      ..registerFactory(() => const FindBaseline())
       // One list for the whole app: every body page shares it.
       ..registerLazySingleton(
         () => BodyListCubit(
@@ -105,6 +108,17 @@ class BodyModule implements FeatureModule {
           watchAuthUser: sl(),
           unit: unit,
           initial: entry,
+        ),
+      )
+      // The id of the entry summed up.
+      ..registerFactoryParam<MeasurementSummaryCubit, String, void>(
+        (id, _) => MeasurementSummaryCubit(
+          afterId: id,
+          watchAuthUser: sl(),
+          watchEntries: sl(),
+          watchProfile: sl(),
+          findBaseline: sl(),
+          restorePhoto: sl(),
         ),
       )
       ..registerFactoryParam<MeasurementDayCubit, MeasurementDaySetup, void>(

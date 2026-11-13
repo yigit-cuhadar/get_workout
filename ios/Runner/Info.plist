@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<!-- Analytics and Crashlytics collect nothing until the user agrees;
-	     the app turns them on (FirebaseTelemetry). -->
+	     the app turns them on (forge_firebase's FirebaseTelemetry). -->
 	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
 	<false/>
 	<key>FirebaseCrashlyticsCollectionEnabled</key>
@@ -49,16 +49,28 @@
 				<string>app-1-451944630151-ios-47442e4cd12c53d0ca7522</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>com.getworkout.app.workout</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>getworkout</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>NSCameraUsageDescription</key>
 	<string>GetWorkout uses the camera for your progress photos. They stay private in the app and are never saved to your photo library.</string>
-	<!-- The running rest on the lock screen (RestTimer extension). -->
+	<!-- The workout in progress on the lock screen (RestTimer extension). -->
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>GetWorkout reads your step count to show your daily steps against your goal. It never stores or shares them.</string>
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

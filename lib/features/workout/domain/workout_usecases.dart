@@ -10,6 +10,7 @@ import '../../programs/domain/program_usecases.dart';
 import 'exercise_stats.dart';
 import 'workout.dart';
 import 'workout_editing.dart';
+import 'workout_lock_screen.dart';
 import 'workout_repository.dart';
 
 typedef StatsRef = ({String uid, String exerciseId});
@@ -225,4 +226,29 @@ class SaveWorkoutAsProgram implements UseCase<String, WorkoutAsProgram> {
         key: value.loggingType,
     },
   ));
+}
+
+class ShowWorkoutOnLockScreen implements UseCase<void, LockScreenWorkout> {
+  const ShowWorkoutOnLockScreen(this._lockScreen);
+  final WorkoutLockScreen _lockScreen;
+
+  @override
+  Future<Result<void>> call(LockScreenWorkout params) =>
+      _lockScreen.show(params);
+}
+
+class ClearWorkoutFromLockScreen implements UseCase<void, NoParams> {
+  const ClearWorkoutFromLockScreen(this._lockScreen);
+  final WorkoutLockScreen _lockScreen;
+
+  @override
+  Future<Result<void>> call(NoParams params) => _lockScreen.clear();
+}
+
+/// Taps on the workout's lock-screen activity; for one listener.
+class WatchLockScreenTaps {
+  const WatchLockScreenTaps(this._lockScreen);
+  final WorkoutLockScreen _lockScreen;
+
+  Stream<void> call() => _lockScreen.taps();
 }
