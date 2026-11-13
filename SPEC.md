@@ -1559,7 +1559,7 @@ Group 8, body and extras
 - [x] Cardio — log, list, detail, weekly chart
 - [x] Steps — health permission, today, week and 30-day chart, daily goal
 - [x] Calculators — calories (Mifflin-St Jeor), body fat (US Navy), 1RM, plates, macros, BMI and FFMI
-- [ ] Measurement summary — one summary/compare screen (baseline choice, body fat and lean mass, changes, target estimate, photo slider), opened after saving a measurement day, from a day's page and from Progress; where-to-measure hints; body-fat box unticks; one waist mapping for body fat and calculators
+- [x] Measurement summary — one summary/compare screen (baseline choice, body fat and lean mass, changes, target estimate, photo slider), opened after saving a measurement day, from a day's page and from Progress; where-to-measure hints; body-fat box unticks; one waist mapping for body fat and calculators
 
 Group 9, launch readiness
 - [x] Onboarding — nine questions, suggested free program
