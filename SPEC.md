@@ -453,7 +453,7 @@ from the earlier FitLab app.
   `files/users/` and `files/body_photo_backup.json`, everything else is
   backed up as before; iOS sets `isExcludedFromBackup` on the photos'
   folder (`getworkout/backup_exclusion` channel in `AppDelegate.swift`).
-  Taken with the `camera` plugin (`GhostCamera` in `lib/core`, the previous
+  Taken with the `camera` plugin (`GhostCamera` from `forge_camera`, the previous
   photo of the pose at 35% over the live preview, mirrored with a mirrored
   front-camera preview; back camera first, a switch button), then stored
   shrunk (longest side 1600 px, JPEG 85, turned upright, metadata such as
@@ -1594,7 +1594,7 @@ Group 9, launch readiness
   bucket; the orphaned-guest cleanup must do the same.
 - Body feature, not yet run on a device: the camera permission prompt and
   denial text, the ghost's alignment (front-camera previews are mirrored,
-  saved photos are not; `mirrorGhost` in `ghost_camera.dart`), retake,
+  saved photos are not; `mirrorGhost` in `forge_camera`), retake,
   background upload and restore against the dev bucket, the iOS backup
   exclusion channel. Android manifest drops the camera plugin's
   RECORD_AUDIO and WRITE_EXTERNAL_STORAGE and makes the camera optional
@@ -1605,10 +1605,6 @@ Group 9, launch readiness
   flutter/flutter#196204, after checking the iPhone 17 front camera with
   it. Until then do not bump `camera` past what 0.11.1 satisfies without
   re-copying the new release and re-applying the `PATCH` lines.
-- Forge task, a recorded deviation from "generic goes in a package":
-  `GhostCamera` (`lib/core/ghost_camera.dart`, free of app code) stays in
-  the app for this feature; move it into a forge package with widget tests
-  for capture, camera switch and the unavailable state.
 - The projects are on the Blaze plan. `deleteAccount` is written but not
   deployed: the Architect deploys `functions/` to dev, checks deletion on a
   device (including the "not available" message before the deploy), then
