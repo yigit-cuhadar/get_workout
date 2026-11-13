@@ -235,8 +235,12 @@ from the earlier FitLab app.
   with Stop still allowed); then one card per day with its exercise count
   and estimate, ▶ to start that day (the premium gate for a locked copy)
   and a toggle that shows its exercises. Which days are open is the page's
-  view state, never stored: the next day while the program is active,
-  none otherwise. "Add to program" on an exercise without programs opens
+  view state, never stored: the next day while the program is active, the
+  first day while it is not; again from there once its days change (an
+  edit may move them), and the next day opens once it moves on, e.g. on
+  Start. The mismatch warning is hidden once the program finished. Each
+  program id gets its own page (keyed in the router), so a copy opened
+  from Duplicate never acts on the original. "Add to program" on an exercise without programs opens
   the builder: inside Train it is pushed above the exercise and saving or
   leaving returns there (`Routes.programNewReturning`), so the exercise
   can be added; from a workout or the history it opens in Train as before. In the builder, Add

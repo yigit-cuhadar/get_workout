@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
@@ -184,8 +185,9 @@ class _ProgramDetailView extends StatelessWidget {
               const SizedBox(height: Gap.md),
               _Days(
                 program: program,
-                // Open where the user is in the program.
-                next: active == null ? null : list.nextDayIndex,
+                // Where the user is in the program; the start of one not
+                // running.
+                open: active == null ? 0 : list.nextDayIndex,
               ),
             ],
           ),
@@ -332,7 +334,7 @@ class _Summary extends StatelessWidget {
               Text(
                 l10n.weekdayList(active.weekdays, context.watchFirstWeekday()),
               ),
-              if (active.weekdays.length != program.days.length)
+              if (!finished && active.weekdays.length != program.days.length)
                 Text(
                   l10n.programDaysMismatch(program.days.length),
                   style: TextStyle(color: theme.colorScheme.error),
@@ -381,19 +383,31 @@ class _Summary extends StatelessWidget {
 
 /// The program's days as cards that open to their exercises; any day with
 /// exercises starts from its card. Which are open is this page's own view
-/// state, the [next] day at first.
+/// state: the [open] day at first, again once the days change (an edit may
+/// have moved them), and added when [open] moves on, e.g. once the program
+/// starts.
 class _Days extends StatefulWidget {
-  const _Days({required this.program, required this.next});
+  const _Days({required this.program, required this.open});
 
   final Program program;
-  final int? next;
+  final int? open;
 
   @override
   State<_Days> createState() => _DaysState();
 }
 
 class _DaysState extends State<_Days> {
-  late final _open = {?widget.next};
+  late var _open = {?widget.open};
+
+  @override
+  void didUpdateWidget(_Days oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!listEquals(oldWidget.program.days, widget.program.days)) {
+      _open = {?widget.open};
+    } else if (widget.open case final open? when open != oldWidget.open) {
+      _open.add(open);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
