@@ -920,51 +920,14 @@ from the earlier FitLab app.
   workout history) uses it with its own cubit and no sections.
 - **UX pass** (2026-11-13, owner's call): before the design phase the
   structure and flows are reworked with the default theme, as ordinary
-  features (Group 10). Subscription stays open meanwhile; the paywall's
-  layout is part of the pass. No feature is removed, only moved. Target
-  per tab (the four tabs themselves are built, see Navigation; the rest
-  is built by the later Group 10 items):
-  - **Today**: next workout, week strip, the "Sets this week" muscle bars,
-    steps card, as it is now. No quick actions card, no weight card and no
-    model: the owner dropped the heat-map body on 2026-11-13.
-  - **Train**: Programs and Exercises merged, two views. "My program"
-    (active program, its days, other programs: catalogue, generator, new;
-    start an empty workout) and "Exercises". The Exercises view is the
-    model with a search box above it and no Body/List switch. The box opens,
-    with an animation, the one exercise list page: search, filters, sort,
-    favourites, and the + for a custom exercise in its app bar (nowhere
-    else). Tapping a muscle opens the same page filtered to it: the
-    muscle's removable chip and the list in two sections, main and
-    secondary. No model on the list page.
-  - **Progress**: data cards instead of a menu. Calendar (workout history
-    joins it: detail, edit, delete, add a past workout), strength, body
-    (weight, measurement days, photos, compare), cardio, step history.
-  - **Profile**: account (guests see a create-account card first), Premium,
-    profile answers, settings, calculators.
-  - **One page per exercise**: instructions and its statistics (records,
-    e1RM chart) together; Progress links to the same page.
-  - **Onboarding**: a welcome with the model, then four questions (goal,
-    level, days a week, equipment as the five presets), one per screen,
-    advancing on the tap; then the suggested program with its days, worked
-    muscles and weekday choice on one screen, whose button starts it and
-    lands on Today. No summary screen. One "Skip", which lands on Today with
-    a "find your program" card. Sex, birth year, height, weight and target
-    weight are asked where first needed (calculators, body). Analytics
-    consent is asked after the first finished workout, notifications at the
-    first rest as today.
-  - **Workout screen**: today's structure stays (one exercise open, set
-    bubbles, the panel at the bottom). The panel does one job at a time: set
-    entry, or the rest with a large countdown and the effort question under
-    it. A done bubble shows its values under it. Weight and reps have minus
-    and plus steppers; tapping the number opens the keyboard. The set bar's
-    own menu goes (set type and removal stay on the bubble's long-press).
-    Tips appear one at a time. The summary shows the workout's records and
-    its worked muscles on the model.
-  - **Paywall**: full-screen as today. Its top shows the feature the user
-    came from (generator: a sample program; charts: the long chart), the
-    other benefits in one line; opened from Profile it shows all three.
-    Two plan cards, yearly preselected, with the saving computed from the
-    store's prices. Trial and renewal text, terms, privacy and restore stay.
+  features (Group 10). Subscription stays open meanwhile. No feature is
+  removed without the owner saying so. On 2026-11-13 the owner withdrew
+  every pick made from questions and grey-box wireframes and asked for each
+  screen to be designed afresh as simple mock-ups with variants, judged on
+  repetition, clutter, what the eye misses and what makes a user give up.
+  Until a screen is picked again, the app as built is the baseline: four
+  tabs and Train (Navigation), the exercises view and list (Exercise list).
+  Picks are recorded here per screen as they are made.
 - **Workouts on the device**: per user one JSON file
   (`workouts_<uid>.json` in the app's private support directory, versioned)
   holds the workout in progress, finished workouts the server has not
@@ -1735,14 +1698,31 @@ Group 9, launch readiness
 - [ ] Subscription — paywall, RevenueCat, entitlement checks, restore
 - [x] Account — delete account, privacy policy link, analytics consent
 
-Group 10, UX pass (see Decisions; each flow's layout is picked by the owner from wireframe variants before it is built)
+Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-up variants before it is built)
 - [x] Navigation — four tabs (Today / Train / Progress / Profile), Programs and Exercises merged, quick actions moved to their tabs — every existing screen is still reachable
-- [ ] Train, exercises view — model with a search box; one list page with search, filters, sort and +, opened by the box or filtered by a tapped muscle
-- [x] Today — stays as it is after Navigation (next workout, week strip, muscle bars, steps card); the heat-map model was dropped
-- [ ] Progress — data cards; history inside the calendar; one page per exercise with its statistics
-- [ ] Onboarding — short enough that nobody quits; the rest asked when first needed
-- [ ] Workout screen — set entry, rest and effort without crowding; summary shows records and the model
-- [ ] Paywall — layout only; RevenueCat stays with Subscription
+- [x] Train, exercises view — model with a search box; one list page with search, filters, sort and +, opened by the box or filtered by a tapped muscle
+- [ ] Onboarding — a welcome page, then one question per page, all nine mandatory: goal, level, days, equipment, sex, birth year, height, weight, target weight. Choice questions are a list anchored to the bottom; number questions use a ruler
+- [ ] Today — week card, one prominent workout card with the only Start of a program day, sets this week for four muscles with the total, a calculators card with a chip per calculator, then steps with the goal and a bar
+- [ ] Train, My program — the day list has no Start; Ready-made, Generate, New program and Start empty workout stay
+- [ ] Workout, set entry — minus/plus steppers; tapping the number types it
+- [ ] Workout, rest — after a set the panel asks the effort (four options in a grid plus Failed, one line of explanation each, Skip) above a slim timer bar; the RPE scale uses the same layout with RPE 6 or less, 7, 8, 9, 10 and Failed. Once answered only the timer bar shows (time, +15 s, Skip); the next set's entry appears when the rest ends or is skipped
+- [ ] Progress — one small widget per area, each opening its page: Body (last weight, curve, last body fat, Log weight, Measurement day), the calendar week, weekly volume, strength, cardio, steps with a bar
+- [ ] Calendar with workout history — one page: a week strip that opens to the month, then one list by day with workouts, cardio, planned days (with Start) and missed days, Show older workouts; Add past workout in the app bar. Workout history as its own page goes away
+- [ ] Body with Compare — two views, Overview (one chart with up to three series picked from weight, body fat, fat mass, lean mass, each measurement, weekly sets and daily steps, plus a target weight line; Log weight, Measurement day, history) and Compare (Previous / First / Other date, photos slider with poses, body fat, all changes, target weight)
+- [ ] Onboarding, birth year — a wheel showing the year only
+- [ ] Steps — today as a ring, the daily goal edited in place (steps of 100, tap the number to type), one chart switching between this week and the last 30 days
+- [ ] Workout summary — one prominent card with the name and four stats, records below, Done and Save as program at the bottom
+- [ ] Profile — every setting on one page in groups; Premium is a distinct card with Get Premium
+- [ ] Paywall — two layouts kept for an A/B test: plans as a list, plans as three cards side by side
+- [ ] Program detail — a summary card (state, weekdays, length, Change days, Stop), days collapse
+- [ ] Program builder — stays as built: day chips, sets and reps in a sheet
+- [ ] Exercise detail — model with main and secondary muscles, a table of facts (equipment, level, mechanic, pattern, sides, logged as, also called), Setup and How to do it as numbered steps, Common mistakes, Safety and Cues each as their own card, Note, then one Similar exercises list tagged Alternative or Variation. One Add button in the app bar (workout or program). The Records and progress row leaves this page; the strength page stays reachable from Progress
+- [ ] Workout detail (history) — the summary card of the workout summary (date, program link, four stats), the workout note as its own card, sets as a table per exercise
+- [ ] Ready-made programs — cards with tags; the filters show as chips above the list and open the filters sheet
+- [ ] Generator — questions use the onboarding question layout; the preview shows weekly sets as bars and days that collapse, Regenerate and Save fixed at the bottom
+- [ ] Cardio — this week's summary on top, the 12-week chart, sessions by week; Log cardio is a full-width button fixed at the bottom
+- [ ] Weekly volume — stays as built with one body model, the legend and the muscle bars
+- [ ] Remaining pages (strength, calculators, account, sign-in with the Google mark on its button, your profile, warm-up settings, cardio form, workout edit, ready-made program page) keep their structure; their look is settled in the design phase
 
 ## Design
 
