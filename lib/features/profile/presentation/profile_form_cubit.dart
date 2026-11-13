@@ -20,8 +20,8 @@ class ProfileFormState extends Equatable {
     required this.questions,
     required this.answers,
     required this.onboarding,
+    this.welcome = false,
     this.step = 0,
-    this.invalid = const {},
     this.status = ProfileFormStatus.editing,
     this.failure,
   });
@@ -29,50 +29,43 @@ class ProfileFormState extends Equatable {
   /// Asked one per step, in this order.
   final List<ProfileField> questions;
 
-  /// All questions and a summary; otherwise one question being edited.
+  /// A welcome, then all questions; otherwise one question being edited.
   final bool onboarding;
 
-  /// Index into [questions]; [questions].length is the closing summary.
+  /// Onboarding shows its welcome instead of a question.
+  final bool welcome;
+
+  /// Index into [questions].
   final int step;
 
   /// Only valid answers, always metric.
   final UserProfile answers;
-
-  /// Questions whose entry is not a valid answer; they have none in
-  /// [answers] and block moving on.
-  final Set<ProfileField> invalid;
   final ProfileFormStatus status;
 
   /// Set when saving failed; the answers stay for another try.
   final Failure? failure;
 
-  /// Null on the summary.
-  ProfileField? get question =>
-      step < questions.length ? questions[step] : null;
+  ProfileField get question => questions[step];
 
-  bool get canContinue {
-    final question = this.question;
-    if (question == null) return true;
-    if (invalid.contains(question)) return false;
-    // Onboarding skips a personal question with [ProfileFormCubit.skipQuestion]
-    // instead; editing saves an empty one as cleared.
-    return answers.answered(question) || (!onboarding && question.optional);
-  }
+  bool get last => step == questions.length - 1;
 
-  bool get canSkipQuestion => onboarding && (question?.optional ?? false);
+  bool get canContinue => welcome || answers.answered(question);
+
+  /// Editing a personal question can remove its answer.
+  bool get canClear => !onboarding && question.optional;
 
   ProfileFormState copyWith({
+    bool? welcome,
     int? step,
     UserProfile? answers,
-    Set<ProfileField>? invalid,
     ProfileFormStatus? status,
     Failure? failure,
   }) => ProfileFormState(
     questions: questions,
     onboarding: onboarding,
+    welcome: welcome ?? this.welcome,
     step: step ?? this.step,
     answers: answers ?? this.answers,
-    invalid: invalid ?? this.invalid,
     status: status ?? this.status,
     failure: failure,
   );
@@ -81,40 +74,34 @@ class ProfileFormState extends Equatable {
   List<Object?> get props => [
     questions,
     onboarding,
+    welcome,
     step,
     answers,
-    invalid,
     status,
     failure,
   ];
 }
 
-/// Who last ended onboarding with "Skip for now" in this run of the app.
-/// The router then lands them on Today instead of suggesting a program.
-/// Not stored: at the next start a completed profile goes to Today anyway.
-class SkippedOnboarding {
-  String? uid;
-}
-
-/// The profile questions as a form, in the user's units. Onboarding asks all
-/// of them and closes with a summary; editing asks one and saves it alone.
+/// The profile questions as a form. Onboarding opens with a welcome and
+/// asks all of them; editing asks one and saves it alone.
+///
+/// A number question is answered as soon as it shows: its ruler or wheel
+/// has to start somewhere, and a user already there just moves on.
 class ProfileFormCubit extends Cubit<ProfileFormState> {
-  /// Every question, then the summary. Finishing or skipping completes
-  /// onboarding with whatever was answered; skipping is recorded in
-  /// [skipped].
+  /// The welcome, then every question. Next on the last one completes
+  /// onboarding with the answers.
   ProfileFormCubit.onboarding({
     required String uid,
     required UserProfile initial,
     required CompleteOnboarding completeOnboarding,
-    required SkippedOnboarding skipped,
     this._now = DateTime.now,
   }) : _save = ((answers) => completeOnboarding((uid: uid, answers: answers))),
-       _markSkipped = ((skip) => skipped.uid = skip ? uid : null),
        super(
          ProfileFormState(
            questions: ProfileField.values,
            answers: initial,
            onboarding: true,
+           welcome: true,
          ),
        );
 
@@ -126,20 +113,25 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     required UserProfile initial,
     this._now = DateTime.now,
   }) : _save = null,
-       _markSkipped = null,
        super(
          ProfileFormState(
            questions: [field],
            answers: initial,
            onboarding: false,
          ),
-       );
+       ) {
+    _prefill();
+  }
 
   final DateTime Function() _now;
   final Future<Result<void>> Function(UserProfile answers)? _save;
-  final void Function(bool skipped)? _markSkipped;
 
-  /// The birth years [enterBirthYear] accepts this year.
+  /// Where the rulers and the wheel start without an answer.
+  static const _startHeightCm = 170.0;
+  static const _startWeightKg = 70.0;
+  static const _startAge = 30;
+
+  /// The birth years [setBirthYear] accepts this year.
   ({int min, int max}) get birthYearRange {
     final year = _now().year;
     return (min: year - ProfileLimits.maxAge, max: year - ProfileLimits.minAge);
@@ -166,96 +158,110 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     _answer(state.answers.copyWith(equipment: owned));
   }
 
-  void enterBirthYear(String text) => _enter(
-    ProfileField.birthYear,
-    _parse(text),
-    (year) =>
-        year == year.roundToDouble() &&
-            ProfileLimits.birthYear(year.toInt(), currentYear: _now().year)
-        ? state.answers.copyWith(birthYear: year.toInt())
-        : null,
-  );
-
-  void enterHeight(String text, LengthUnit unit) =>
-      _enter(ProfileField.height, _parse(text), (value) {
-        final cm = unit.toCm(value);
-        return ProfileLimits.heightCm(cm)
-            ? state.answers.copyWith(heightCm: cm)
-            : null;
-      });
-
-  void enterWeight(String text, WeightUnit unit) =>
-      _enter(ProfileField.weight, _parse(text), (value) {
-        final kg = unit.toKg(value);
-        return ProfileLimits.weightKg(kg)
-            ? state.answers.copyWith(weightKg: kg)
-            : null;
-      });
-
-  void enterTargetWeight(String text, WeightUnit unit) =>
-      _enter(ProfileField.targetWeight, _parse(text), (value) {
-        final kg = unit.toKg(value);
-        return ProfileLimits.weightKg(kg)
-            ? state.answers.copyWith(targetWeightKg: kg)
-            : null;
-      });
-
-  /// The unit of [field] changed and its entry restarts from the answer,
-  /// shown in the new unit; an invalid entry is dropped.
-  void unitChanged(ProfileField field) {
-    if (state.invalid.contains(field)) {
-      emit(state.copyWith(invalid: {...state.invalid}..remove(field)));
+  /// Ignores a year outside [birthYearRange].
+  void setBirthYear(int year) {
+    if (ProfileLimits.birthYear(year, currentYear: _now().year)) {
+      _answer(state.answers.copyWith(birthYear: year));
     }
   }
 
-  /// To the next question, to the summary after the last one, or, without
-  /// a summary, saves.
+  /// Whether [value] in [unit] is a valid height; only then is it the
+  /// answer. Likewise for the weights below.
+  bool setHeight(double value, LengthUnit unit) {
+    final cm = unit.toCm(value);
+    if (!ProfileLimits.heightCm(cm)) return false;
+    _answer(state.answers.copyWith(heightCm: cm));
+    return true;
+  }
+
+  bool setWeight(double value, WeightUnit unit) {
+    final kg = unit.toKg(value);
+    if (!ProfileLimits.weightKg(kg)) return false;
+    _answer(state.answers.copyWith(weightKg: kg));
+    return true;
+  }
+
+  bool setTargetWeight(double value, WeightUnit unit) {
+    final kg = unit.toKg(value);
+    if (!ProfileLimits.weightKg(kg)) return false;
+    _answer(state.answers.copyWith(targetWeightKg: kg));
+    return true;
+  }
+
+  /// Typed entries: whether [text] is a valid answer, which it then is.
+  bool enterHeight(String text, LengthUnit unit) =>
+      _enter(text, (value) => setHeight(value, unit));
+
+  bool enterWeight(String text, WeightUnit unit) =>
+      _enter(text, (value) => setWeight(value, unit));
+
+  bool enterTargetWeight(String text, WeightUnit unit) =>
+      _enter(text, (value) => setTargetWeight(value, unit));
+
+  /// From the welcome to the first question.
+  void start() {
+    if (state.welcome) _show(step: 0);
+  }
+
+  /// To the next question or, on the last one, saves.
   Future<void> next() async {
-    if (state.status != ProfileFormStatus.editing || !state.canContinue) {
+    if (state.status != ProfileFormStatus.editing ||
+        state.welcome ||
+        !state.canContinue) {
       return;
     }
-    final last = state.onboarding
-        ? state.questions.length
-        : state.questions.length - 1;
-    if (state.step < last) return emit(state.copyWith(step: state.step + 1));
+    if (!state.last) return _show(step: state.step + 1);
     await _submit();
   }
 
+  /// To the previous question, or from the first one to the welcome.
   void back() {
-    if (state.step > 0 && state.status == ProfileFormStatus.editing) {
+    if (state.status != ProfileFormStatus.editing || state.welcome) return;
+    if (state.step > 0) {
       emit(state.copyWith(step: state.step - 1));
+    } else if (state.onboarding) {
+      emit(state.copyWith(welcome: true));
     }
   }
 
-  /// Ends onboarding now with the answers given so far.
-  Future<void> skip() async {
-    if (state.onboarding && state.status == ProfileFormStatus.editing) {
-      await _submit(skipped: true);
+  /// Removes the answer being edited and saves that.
+  Future<void> clear() async {
+    if (!state.canClear || state.status != ProfileFormStatus.editing) return;
+    emit(state.copyWith(answers: state.answers.without(state.question)));
+    await _submit();
+  }
+
+  void _show({required int step}) {
+    emit(state.copyWith(welcome: false, step: step));
+    _prefill();
+  }
+
+  /// Answers a number question that shows unanswered with where its input
+  /// starts. A target weight starts at the body weight: keeping it.
+  void _prefill() {
+    final answers = state.answers;
+    if (answers.answered(state.question)) return;
+    switch (state.question) {
+      case ProfileField.birthYear:
+        _answer(answers.copyWith(birthYear: _now().year - _startAge));
+      case ProfileField.height:
+        _answer(answers.copyWith(heightCm: _startHeightCm));
+      case ProfileField.weight:
+        _answer(answers.copyWith(weightKg: _startWeightKg));
+      case ProfileField.targetWeight:
+        _answer(
+          answers.copyWith(targetWeightKg: answers.weightKg ?? _startWeightKg),
+        );
+      case ProfileField.goal ||
+          ProfileField.level ||
+          ProfileField.daysPerWeek ||
+          ProfileField.equipment ||
+          ProfileField.sex:
+        break;
     }
   }
 
-  /// Leaves a personal question unanswered and moves on.
-  void skipQuestion() {
-    final question = state.question;
-    if (!state.canSkipQuestion ||
-        question == null ||
-        state.status != ProfileFormStatus.editing) {
-      return;
-    }
-    emit(
-      state.copyWith(
-        step: state.step + 1,
-        answers: state.answers.without(question),
-        invalid: {...state.invalid}..remove(question),
-      ),
-    );
-  }
-
-  Future<void> _submit({bool skipped = false}) async {
-    // Before saving: the completed profile reaches the router from
-    // Firestore's local cache before the save returns, or never returns
-    // while offline.
-    _markSkipped?.call(skipped);
+  Future<void> _submit() async {
     emit(state.copyWith(status: ProfileFormStatus.submitted));
     final save = _save;
     if (save == null) return;
@@ -267,36 +273,19 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
 
   void _answer(UserProfile answers) => emit(state.copyWith(answers: answers));
 
-  /// [value] is null for an empty entry, NaN for one that is not a number.
-  /// [accept] gives the answers with a valid value, or null.
-  void _enter(
-    ProfileField field,
-    double? value,
-    UserProfile? Function(double value) accept,
-  ) {
-    final accepted = value == null || value.isNaN ? null : accept(value);
-    final invalid = {...state.invalid}..remove(field);
-    if (value != null && accepted == null) invalid.add(field);
-    emit(
-      state.copyWith(
-        answers: accepted ?? state.answers.without(field),
-        invalid: invalid,
-      ),
-    );
+  bool _enter(String text, bool Function(double value) accept) {
+    final value = _parse(text);
+    return value != null && accept(value);
   }
 
   /// Far beyond every limit, far below where conversions lose meaning.
   static const _absurd = 1e6;
 
-  /// Null when empty; NaN, which every limit rejects, when not a plain
-  /// number: "Infinity", "NaN", overflowing exponents and digit strings.
+  /// Null when not a plain number: empty, "Infinity", "NaN", overflowing
+  /// exponents and digit strings.
   static double? _parse(String text) {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty) return null;
-    final value = double.tryParse(trimmed.replaceAll(',', '.'));
-    if (value == null || !value.isFinite || value.abs() > _absurd) {
-      return double.nan;
-    }
+    final value = double.tryParse(text.trim().replaceAll(',', '.'));
+    if (value == null || !value.isFinite || value.abs() > _absurd) return null;
     return value;
   }
 }

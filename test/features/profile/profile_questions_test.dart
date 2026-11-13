@@ -54,4 +54,50 @@ void main() {
       }
     });
   });
+
+  group('rulerRange', () {
+    test('metric limits are whole steps already', () {
+      expect(
+        rulerRange(
+          ProfileLimits.minHeightCm,
+          ProfileLimits.maxHeightCm,
+          LengthUnit.cm.fromCm,
+          1,
+        ),
+        (min: 100.0, max: 250.0),
+      );
+      final weight = rulerRange(
+        ProfileLimits.minWeightKg,
+        ProfileLimits.maxWeightKg,
+        WeightUnit.kg.fromKg,
+        0.1,
+      );
+      expect(weight.min, closeTo(30, 1e-9));
+      expect(weight.max, closeTo(300, 1e-9));
+    });
+
+    test('imperial limits are rounded inwards to a step, and accepted', () {
+      final height = rulerRange(
+        ProfileLimits.minHeightCm,
+        ProfileLimits.maxHeightCm,
+        LengthUnit.inch.fromCm,
+        1,
+      );
+      expect(height, (min: 40.0, max: 98.0));
+      final weight = rulerRange(
+        ProfileLimits.minWeightKg,
+        ProfileLimits.maxWeightKg,
+        WeightUnit.lb.fromKg,
+        0.1,
+      );
+      expect(weight.min, closeTo(66.2, 1e-9));
+      expect(weight.max, closeTo(661.3, 1e-9));
+      for (final inches in [height.min, height.max]) {
+        expect(ProfileLimits.heightCm(LengthUnit.inch.toCm(inches)), isTrue);
+      }
+      for (final pounds in [weight.min, weight.max]) {
+        expect(ProfileLimits.weightKg(WeightUnit.lb.toKg(pounds)), isTrue);
+      }
+    });
+  });
 }

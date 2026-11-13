@@ -51,7 +51,6 @@ import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:get_workout/features/profile/presentation/onboarding_page.dart';
 import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:get_workout/features/profile/presentation/profile_details_page.dart';
-import 'package:get_workout/features/profile/presentation/profile_form_cubit.dart';
 import 'package:get_workout/features/profile/presentation/profile_page.dart';
 import 'package:get_workout/features/programs/domain/catalogue_program.dart';
 import 'package:get_workout/features/programs/domain/catalogue_repository.dart';
@@ -184,6 +183,16 @@ void main() {
   var holdCatalogue = false;
   late GoRouter router;
   final onboarded = UserProfile(onboardingCompletedAt: DateTime(2026));
+
+  /// Every choice answered, so onboarding goes through on Next alone; the
+  /// number questions answer themselves.
+  const choicesAnswered = UserProfile(
+    goal: Goal.loseFat,
+    level: Level.beginner,
+    daysPerWeek: 3,
+    equipment: {},
+    sex: Sex.female,
+  );
 
   /// The ready-made programs; none unless a test sets them.
   var readyMade = <CatalogueProgram>[];
@@ -440,7 +449,6 @@ void main() {
       ..registerFactory(
         () => CompleteOnboarding(profiles, SaveOwnedEquipment(userLibrary)),
       )
-      ..registerLazySingleton(SkippedOnboarding.new)
       ..registerFactory(
         () => UpdateProfile(profiles, SaveOwnedEquipment(userLibrary)),
       );
@@ -515,7 +523,6 @@ void main() {
           auth,
           profile,
           deletionUnderway: deletionUnderway,
-          skippedOnboarding: sl(),
         ),
       ),
     ),
@@ -526,6 +533,16 @@ void main() {
     await pumpApp(tester);
     users.add(guest);
     await tester.pumpAndSettle();
+  }
+
+  /// From the welcome through every question, each already answered.
+  Future<void> finishOnboarding(WidgetTester tester) async {
+    await tester.tap(find.text('Get started'));
+    await tester.pumpAndSettle();
+    for (var i = 0; i < ProfileField.values.length; i++) {
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+    }
   }
 
   Future<void> tapTab(WidgetTester tester, String label) async {
@@ -1306,45 +1323,6 @@ void main() {
       expect(find.byType(OnboardingPage), findsOneWidget);
     });
 
-    testWidgets('skipping completes onboarding and lands on Today, with '
-        'no program suggested', (tester) async {
-      readyMade = [
-        card(
-          'pr_free',
-          goal: Goal.loseFat,
-          equipment: const [Equipment.bodyweight],
-          profile: EquipmentProfile.bodyweight,
-        ),
-      ];
-      storedProfile = const UserProfile();
-      await startAsGuest(tester);
-      // Answers the free program fits, which finishing would suggest.
-      when(() => profiles.completeOnboarding(any(), any())).thenAnswer((_) {
-        profileStream.add(
-          storedProfile = UserProfile(
-            goal: Goal.loseFat,
-            onboardingCompletedAt: DateTime(2026),
-          ),
-        );
-        return Future.value(const Ok(null));
-      });
-
-      await tester.tap(find.text('Lose fat'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Skip for now'));
-      await tester.pumpAndSettle();
-
-      verify(
-        () => profiles.completeOnboarding(
-          'u1',
-          const UserProfile(goal: Goal.loseFat),
-        ),
-      ).called(1);
-      expect(find.byType(TodayPage), findsOneWidget);
-      expect(find.byType(OnboardingPage), findsNothing);
-      expect(find.byType(ProgramSuggestionPage), findsNothing);
-    });
-
     testWidgets('a fitting free program is suggested after onboarding', (
       tester,
     ) async {
@@ -1357,12 +1335,7 @@ void main() {
         ),
         card('pr_paid', premium: true, goal: Goal.loseFat, order: 2),
       ];
-      storedProfile = const UserProfile(
-        goal: Goal.loseFat,
-        level: Level.beginner,
-        daysPerWeek: 3,
-        equipment: {},
-      );
+      storedProfile = choicesAnswered;
       await startAsGuest(tester);
       when(() => profiles.completeOnboarding(any(), any())).thenAnswer((_) {
         profileStream.add(
@@ -1374,17 +1347,7 @@ void main() {
         return Future.value(const Ok(null));
       });
 
-      // Through every question to the summary, and finished there.
-      for (var i = 0; i < 4; i++) {
-        await tester.tap(find.text('Next'));
-        await tester.pumpAndSettle();
-      }
-      for (var i = 0; i < 5; i++) {
-        await tester.tap(find.text('Skip this question'));
-        await tester.pumpAndSettle();
-      }
-      await tester.tap(find.text('Start training'));
-      await tester.pumpAndSettle();
+      await finishOnboarding(tester);
 
       expect(find.byType(ProgramSuggestionPage), findsOneWidget);
       expect(find.text('Program pr_free'), findsOneWidget);
@@ -1400,17 +1363,28 @@ void main() {
     ) async {
       storedProfile = const UserProfile();
       await startAsGuest(tester);
-      expect(find.text('Question 1 of 9'), findsOneWidget);
+      await tester.tap(find.text('Get started'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 / 9'), findsOneWidget);
+
+      // Nothing to skip: Next waits for an answer.
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 / 9'), findsOneWidget);
 
       await tester.tap(find.text('Build muscle'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
-      expect(find.text('Question 2 of 9'), findsOneWidget);
+      expect(find.text('2 / 9'), findsOneWidget);
 
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
-      expect(find.text('Question 1 of 9'), findsOneWidget);
+      expect(find.text('1 / 9'), findsOneWidget);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.text('Get started'), findsOneWidget);
     });
 
     testWidgets('a retried guest start ends the splash for the new guest', (
@@ -1477,7 +1451,7 @@ void main() {
     testWidgets('a profile stream that dies on onboarding does not trap', (
       tester,
     ) async {
-      storedProfile = const UserProfile();
+      storedProfile = choicesAnswered;
       await startAsGuest(tester);
 
       profileStream.addError(const NetworkFailure());
@@ -1485,8 +1459,7 @@ void main() {
       expect(find.byType(OnboardingPage), findsOneWidget);
 
       // Completing follows the profile again at once and moves on.
-      await tester.tap(find.text('Skip for now'));
-      await tester.pumpAndSettle();
+      await finishOnboarding(tester);
 
       expect(find.byType(TodayPage), findsOneWidget);
       expect(find.byType(OnboardingPage), findsNothing);
@@ -1495,7 +1468,7 @@ void main() {
     testWidgets('a deep link waits behind onboarding, which lands on Today', (
       tester,
     ) async {
-      storedProfile = const UserProfile();
+      storedProfile = choicesAnswered;
       setUpAuth();
       await pumpApp(tester);
       router.go(Routes.exercise('squat'));
@@ -1511,8 +1484,7 @@ void main() {
       expect(find.byType(OnboardingPage), findsOneWidget);
       expect(find.byType(ExerciseDetailPage), findsNothing);
 
-      await tester.tap(find.text('Skip for now'));
-      await tester.pumpAndSettle();
+      await finishOnboarding(tester);
 
       expect(find.byType(TodayPage), findsOneWidget);
       expect(find.byType(OnboardingPage), findsNothing);
@@ -1554,7 +1526,7 @@ void main() {
 
       expect(find.byType(OnboardingPage), findsOneWidget);
       expect(find.byType(AuthPage), findsNothing);
-      expect(find.text('Question 1 of 9'), findsOneWidget);
+      expect(find.text('Get started'), findsOneWidget);
       // Signed in already.
       expect(find.text('I already have an account'), findsNothing);
     });
@@ -1572,29 +1544,6 @@ void main() {
 
       expect(find.byType(OnboardingPage), findsOneWidget);
       expect(find.text('I already have an account'), findsNothing);
-    });
-
-    testWidgets('a personal question can be skipped on its own', (
-      tester,
-    ) async {
-      storedProfile = const UserProfile(
-        goal: Goal.loseFat,
-        level: Level.beginner,
-        daysPerWeek: 3,
-        equipment: {},
-      );
-      await startAsGuest(tester);
-      for (var i = 0; i < 4; i++) {
-        expect(find.text('Skip this question'), findsNothing);
-        await tester.tap(find.text('Next'));
-        await tester.pumpAndSettle();
-      }
-      expect(find.text('Question 5 of 9'), findsOneWidget);
-
-      await tester.tap(find.text('Skip this question'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Question 6 of 9'), findsOneWidget);
     });
 
     testWidgets('linking the guest does not bring onboarding back', (
@@ -1714,13 +1663,12 @@ void main() {
       expect(find.byType(NavigationBar), findsOneWidget);
       expect(dialog, findsNothing);
 
-      profileStream.add(const UserProfile());
+      profileStream.add(choicesAnswered);
       await tester.pumpAndSettle();
       expect(find.byType(OnboardingPage), findsOneWidget);
       expect(dialog, findsNothing);
 
-      await tester.tap(find.text('Skip for now'));
-      await tester.pumpAndSettle();
+      await finishOnboarding(tester);
       expect(find.byType(TodayPage), findsOneWidget);
       expect(dialog, findsOneWidget);
 
@@ -1754,21 +1702,32 @@ void main() {
     ) async {
       storedProfile = const UserProfile();
       await startAsGuest(tester);
+      await tester.tap(find.text('Get started'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Lose fat'));
       await tester.pumpAndSettle();
 
+      storedProfile = choicesAnswered;
       users.add(other);
       await tester.pump();
       // Never an endless loader: the new user's profile arrives.
       await tester.pumpAndSettle();
       expect(find.byType(OnboardingPage), findsOneWidget);
-      expect(find.text('Question 1 of 9'), findsOneWidget);
+      expect(find.text('Get started'), findsOneWidget);
 
-      await tester.tap(find.text('Skip for now'));
-      await tester.pumpAndSettle();
+      await finishOnboarding(tester);
 
-      verify(() => profiles.completeOnboarding('u2', const UserProfile()))
-          .called(1);
+      verify(
+        () => profiles.completeOnboarding(
+          'u2',
+          choicesAnswered.copyWith(
+            birthYear: DateTime.now().year - 30,
+            heightCm: 170,
+            weightKg: 70,
+            targetWeightKg: 70,
+          ),
+        ),
+      ).called(1);
       verifyNever(() => profiles.completeOnboarding('u1', any()));
       expect(find.byType(TodayPage), findsOneWidget);
     });

@@ -82,16 +82,30 @@ extension ProfileLabels on AppLocalizations {
     LengthUnit.inch => unitIn,
   };
 
+  /// [cm] in centimetres, or in feet and inches.
+  String heightText(double cm, LengthUnit unit) {
+    final value = unit.fromCm(cm);
+    return switch (unit) {
+      LengthUnit.cm => profileValueWithUnit(formatProfileNumber(value), unitCm),
+      LengthUnit.inch => () {
+        final inches = (value * 10).round() / 10;
+        final feet = inches ~/ 12;
+        return profileFeetInches(feet, formatProfileNumber(inches - feet * 12));
+      }(),
+    };
+  }
+
+  String weightText(double kg, WeightUnit unit) => profileValueWithUnit(
+    formatProfileNumber(unit.fromKg(kg)),
+    weightUnitName(unit),
+  );
+
   /// The answer to [field] in [settings]' units, or null when unanswered.
   String? answerText(
     UserProfile profile,
     ProfileField field,
     UserSettings settings,
   ) {
-    String weight(double? kg) => profileValueWithUnit(
-      formatProfileNumber(settings.weightUnit.fromKg(kg!)),
-      weightUnitName(settings.weightUnit),
-    );
     if (!profile.answered(field)) return null;
     return switch (field) {
       ProfileField.goal => goalName(profile.goal!),
@@ -102,12 +116,12 @@ extension ProfileLabels on AppLocalizations {
       ),
       ProfileField.sex => sexName(profile.sex!),
       ProfileField.birthYear => '${profile.birthYear}',
-      ProfileField.height => profileValueWithUnit(
-        formatProfileNumber(settings.lengthUnit.fromCm(profile.heightCm!)),
-        lengthUnitName(settings.lengthUnit),
+      ProfileField.height => heightText(profile.heightCm!, settings.lengthUnit),
+      ProfileField.weight => weightText(profile.weightKg!, settings.weightUnit),
+      ProfileField.targetWeight => weightText(
+        profile.targetWeightKg!,
+        settings.weightUnit,
       ),
-      ProfileField.weight => weight(profile.weightKg),
-      ProfileField.targetWeight => weight(profile.targetWeightKg),
     };
   }
 }
@@ -124,9 +138,26 @@ String formatProfileNumber(double value) => NumberFormat('0.#').format(value);
 ) =>
     (min: (toUnit(min) * 10).ceil() / 10, max: (toUnit(max) * 10).floor() / 10);
 
+/// The metric range [min]..[max] in a display unit as a ruler in steps of
+/// [step], rounded inwards so every tick is accepted.
+({double min, double max}) rulerRange(
+  double min,
+  double max,
+  double Function(double metric) toUnit,
+  double step,
+) {
+  // Keeps a bound that is a whole step from being lost to rounding.
+  const hair = 1e-6;
+  return (
+    min: (toUnit(min) / step - hair).ceil() * step,
+    max: (toUnit(max) / step + hair).floor() * step,
+  );
+}
+
 /// One question of the profile, answered into the [ProfileFormCubit] above
-/// it. Heights and weights are entered in the units of [SettingsCubit]; their
-/// unit switch changes that setting.
+/// it: the question at the top and its answer at the bottom, near the
+/// thumb. Heights and weights are entered in the units of [SettingsCubit];
+/// their unit switch changes that setting.
 class ProfileQuestion extends StatelessWidget {
   const ProfileQuestion(this.field, {super.key});
 
@@ -137,58 +168,91 @@ class ProfileQuestion extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final info = l10n.questionInfo(field);
-    return ListView(
-      padding: const EdgeInsets.all(Gap.md),
-      children: [
-        Text(l10n.question(field), style: theme.textTheme.headlineSmall),
-        if (info != null) ...[
-          const SizedBox(height: Gap.sm),
-          Text(info, style: theme.textTheme.bodyMedium),
-        ],
-        const SizedBox(height: Gap.md),
-        BlocBuilder<ProfileFormCubit, ProfileFormState>(
-          builder: (context, state) => switch (field) {
-            ProfileField.goal => _Choice(
-              values: Goal.values,
-              selected: state.answers.goal,
-              title: l10n.goalName,
-              onChanged: context.read<ProfileFormCubit>().setGoal,
-            ),
-            ProfileField.level => _Choice(
-              values: Level.values,
-              selected: state.answers.level,
-              title: l10n.levelName,
-              subtitle: l10n.levelInfo,
-              onChanged: context.read<ProfileFormCubit>().setLevel,
-            ),
-            ProfileField.daysPerWeek => _Choice(
-              values: [
-                for (
-                  var days = ProfileLimits.minDaysPerWeek;
-                  days <= ProfileLimits.maxDaysPerWeek;
-                  days++
-                )
-                  days,
-              ],
-              selected: state.answers.daysPerWeek,
-              title: l10n.profileDays,
-              onChanged: context.read<ProfileFormCubit>().setDaysPerWeek,
-            ),
-            ProfileField.equipment => _EquipmentAnswer(state.answers.equipment),
-            ProfileField.sex => _Choice(
-              values: Sex.values,
-              selected: state.answers.sex,
-              title: l10n.sexName,
-              onChanged: context.read<ProfileFormCubit>().setSex,
-            ),
-            ProfileField.birthYear => _BirthYearAnswer(state),
-            ProfileField.height => _HeightAnswer(state),
-            ProfileField.weight ||
-            ProfileField.targetWeight => _WeightAnswer(field, state),
-          },
-        ),
+    final header = [
+      Text(l10n.question(field), style: theme.textTheme.headlineSmall),
+      if (info != null) ...[
+        const SizedBox(height: Gap.sm),
+        Text(info, style: theme.textTheme.bodyMedium),
       ],
+      const SizedBox(height: Gap.md),
+    ];
+    final answer = BlocBuilder<ProfileFormCubit, ProfileFormState>(
+      builder: (context, state) => switch (field) {
+        ProfileField.goal => _Choice(
+          values: Goal.values,
+          selected: state.answers.goal,
+          title: l10n.goalName,
+          onChanged: context.read<ProfileFormCubit>().setGoal,
+        ),
+        ProfileField.level => _Choice(
+          values: Level.values,
+          selected: state.answers.level,
+          title: l10n.levelName,
+          subtitle: l10n.levelInfo,
+          onChanged: context.read<ProfileFormCubit>().setLevel,
+        ),
+        ProfileField.daysPerWeek => _Choice(
+          values: [
+            for (
+              var days = ProfileLimits.minDaysPerWeek;
+              days <= ProfileLimits.maxDaysPerWeek;
+              days++
+            )
+              days,
+          ],
+          selected: state.answers.daysPerWeek,
+          title: l10n.profileDays,
+          onChanged: context.read<ProfileFormCubit>().setDaysPerWeek,
+        ),
+        ProfileField.equipment => _EquipmentAnswer(state.answers.equipment),
+        ProfileField.sex => _Choice(
+          values: Sex.values,
+          selected: state.answers.sex,
+          title: l10n.sexName,
+          onChanged: context.read<ProfileFormCubit>().setSex,
+        ),
+        ProfileField.birthYear => _BirthYearAnswer(state.answers.birthYear),
+        ProfileField.height => _HeightAnswer(state.answers.heightCm),
+        ProfileField.weight => _WeightAnswer(field, state.answers.weightKg),
+        ProfileField.targetWeight => _WeightAnswer(
+          field,
+          state.answers.targetWeightKg,
+        ),
+      },
     );
+    const padding = EdgeInsets.all(Gap.md);
+    return switch (field) {
+      // Lists scroll when taller than the page, and sit at its bottom when
+      // not.
+      ProfileField.goal ||
+      ProfileField.level ||
+      ProfileField.daysPerWeek ||
+      ProfileField.equipment ||
+      ProfileField.sex => CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: padding,
+            sliver: SliverFillRemaining(
+              hasScrollBody: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [...header, const Spacer(), answer],
+              ),
+            ),
+          ),
+        ],
+      ),
+      ProfileField.birthYear ||
+      ProfileField.height ||
+      ProfileField.weight ||
+      ProfileField.targetWeight => Padding(
+        padding: padding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [...header, const Spacer(), answer],
+        ),
+      ),
+    };
   }
 }
 
@@ -267,32 +331,65 @@ class _EquipmentAnswer extends StatelessWidget {
   }
 }
 
-class _BirthYearAnswer extends StatelessWidget {
-  const _BirthYearAnswer(this.state);
+/// A wheel of the years [ProfileFormCubit.birthYearRange] allows.
+class _BirthYearAnswer extends StatefulWidget {
+  const _BirthYearAnswer(this.year);
 
-  final ProfileFormState state;
+  /// Answered as soon as the question shows.
+  final int? year;
+
+  @override
+  State<_BirthYearAnswer> createState() => _BirthYearAnswerState();
+}
+
+class _BirthYearAnswerState extends State<_BirthYearAnswer> {
+  static const _itemExtent = Gap.xl + Gap.sm;
+  static const _visibleItems = 5;
+
+  late final _range = context.read<ProfileFormCubit>().birthYearRange;
+  late final _controller = FixedExtentScrollController(
+    initialItem: ((widget.year ?? _range.max) - _range.min).clamp(
+      0,
+      _range.max - _range.min,
+    ),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final style = Theme.of(context).textTheme.headlineSmall;
     final cubit = context.read<ProfileFormCubit>();
-    final range = cubit.birthYearRange;
-    return _NumberEntry(
-      label: l10n.profileBirthYear,
-      initialValue: state.answers.birthYear?.toString() ?? '',
-      wholeNumber: true,
-      errorText: state.invalid.contains(ProfileField.birthYear)
-          ? l10n.profileYearOutOfRange(range.min, range.max)
-          : null,
-      onChanged: cubit.enterBirthYear,
+    return SizedBox(
+      height: _itemExtent * _visibleItems,
+      child: ListWheelScrollView.useDelegate(
+        controller: _controller,
+        itemExtent: _itemExtent,
+        physics: const FixedExtentScrollPhysics(),
+        overAndUnderCenterOpacity: 0.5,
+        onSelectedItemChanged: (index) {
+          HapticFeedback.selectionClick();
+          cubit.setBirthYear(_range.min + index);
+        },
+        childDelegate: ListWheelChildBuilderDelegate(
+          childCount: _range.max - _range.min + 1,
+          builder: (context, index) =>
+              Center(child: Text('${_range.min + index}', style: style)),
+        ),
+      ),
     );
   }
 }
 
 class _HeightAnswer extends StatelessWidget {
-  const _HeightAnswer(this.state);
+  const _HeightAnswer(this.cm);
 
-  final ProfileFormState state;
+  /// Answered as soon as the question shows.
+  final double? cm;
 
   @override
   Widget build(BuildContext context) {
@@ -300,48 +397,63 @@ class _HeightAnswer extends StatelessWidget {
     final cubit = context.read<ProfileFormCubit>();
     final settings = context.select((SettingsCubit c) => c.state.settings);
     final unit = settings.lengthUnit;
-    final cm = state.answers.heightCm;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _UnitSwitch<LengthUnit>(
-          values: LengthUnit.values,
-          selected: unit,
-          label: l10n.lengthUnitName,
-          onChanged: (unit) {
-            context.read<SettingsCubit>().update(
-              settings.copyWith(lengthUnit: unit),
-            );
-            cubit.unitChanged(ProfileField.height);
-          },
+    final cm = this.cm;
+    if (cm == null) return const SizedBox.shrink();
+    final value = unit.fromCm(cm);
+    final range = rulerRange(
+      ProfileLimits.minHeightCm,
+      ProfileLimits.maxHeightCm,
+      unit.fromCm,
+      1,
+    );
+    return _NumberAnswer(
+      unitSwitch: _UnitSwitch<LengthUnit>(
+        values: LengthUnit.values,
+        selected: unit,
+        label: (unit) => switch (unit) {
+          LengthUnit.cm => l10n.unitCm,
+          LengthUnit.inch => l10n.unitFtIn,
+        },
+        onChanged: (unit) => context.read<SettingsCubit>().update(
+          settings.copyWith(lengthUnit: unit),
         ),
-        _NumberEntry(
-          key: ValueKey(unit),
-          label: l10n.calcHeight(l10n.lengthUnitName(unit)),
-          initialValue: cm == null ? '' : formatProfileNumber(unit.fromCm(cm)),
-          errorText: state.invalid.contains(ProfileField.height)
-              ? _outOfRange(
-                  l10n,
-                  displayRange(
-                    ProfileLimits.minHeightCm,
-                    ProfileLimits.maxHeightCm,
-                    unit.fromCm,
-                  ),
-                )
-              : null,
-          onChanged: (text) => cubit.enterHeight(text, unit),
+      ),
+      text: l10n.heightText(cm, unit),
+      ruler: RulerPicker(
+        key: ValueKey(unit),
+        min: range.min,
+        max: range.max,
+        step: 1,
+        value: value,
+        onChanged: (value) => cubit.setHeight(value, unit),
+      ),
+      entry: (
+        label: l10n.calcHeight(l10n.lengthUnitName(unit)),
+        initialValue: formatProfileNumber(value),
+        error: _outOfRange(
+          l10n,
+          displayRange(
+            ProfileLimits.minHeightCm,
+            ProfileLimits.maxHeightCm,
+            unit.fromCm,
+          ),
         ),
-      ],
+        enter: (text) => cubit.enterHeight(text, unit),
+      ),
     );
   }
 }
 
 /// The body weight or the target weight.
 class _WeightAnswer extends StatelessWidget {
-  const _WeightAnswer(this.field, this.state);
+  const _WeightAnswer(this.field, this.kg);
 
   final ProfileField field;
-  final ProfileFormState state;
+
+  /// Answered as soon as the question shows.
+  final double? kg;
+
+  static const _step = 0.1;
 
   @override
   Widget build(BuildContext context) {
@@ -350,43 +462,53 @@ class _WeightAnswer extends StatelessWidget {
     final settings = context.select((SettingsCubit c) => c.state.settings);
     final unit = settings.weightUnit;
     final target = field == ProfileField.targetWeight;
-    final kg = target ? state.answers.targetWeightKg : state.answers.weightKg;
+    final kg = this.kg;
+    if (kg == null) return const SizedBox.shrink();
+    final value = unit.fromKg(kg);
     final unitName = l10n.weightUnitName(unit);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _UnitSwitch<WeightUnit>(
-          values: WeightUnit.values,
-          selected: unit,
-          label: l10n.weightUnitName,
-          onChanged: (unit) {
-            context.read<SettingsCubit>().update(
-              settings.copyWith(weightUnit: unit),
-            );
-            cubit.unitChanged(field);
-          },
+    final range = rulerRange(
+      ProfileLimits.minWeightKg,
+      ProfileLimits.maxWeightKg,
+      unit.fromKg,
+      _step,
+    );
+    return _NumberAnswer(
+      unitSwitch: _UnitSwitch<WeightUnit>(
+        values: WeightUnit.values,
+        selected: unit,
+        label: l10n.weightUnitName,
+        onChanged: (unit) => context.read<SettingsCubit>().update(
+          settings.copyWith(weightUnit: unit),
         ),
-        _NumberEntry(
-          key: ValueKey(unit),
-          label: target
-              ? l10n.calcTargetWeight(unitName)
-              : l10n.calcBodyWeight(unitName),
-          initialValue: kg == null ? '' : formatProfileNumber(unit.fromKg(kg)),
-          errorText: state.invalid.contains(field)
-              ? _outOfRange(
-                  l10n,
-                  displayRange(
-                    ProfileLimits.minWeightKg,
-                    ProfileLimits.maxWeightKg,
-                    unit.fromKg,
-                  ),
-                )
-              : null,
-          onChanged: (text) => target
-              ? cubit.enterTargetWeight(text, unit)
-              : cubit.enterWeight(text, unit),
+      ),
+      text: l10n.weightText(kg, unit),
+      ruler: RulerPicker(
+        key: ValueKey(unit),
+        min: range.min,
+        max: range.max,
+        step: _step,
+        value: value,
+        onChanged: (value) => target
+            ? cubit.setTargetWeight(value, unit)
+            : cubit.setWeight(value, unit),
+      ),
+      entry: (
+        label: target
+            ? l10n.calcTargetWeight(unitName)
+            : l10n.calcBodyWeight(unitName),
+        initialValue: formatProfileNumber(value),
+        error: _outOfRange(
+          l10n,
+          displayRange(
+            ProfileLimits.minWeightKg,
+            ProfileLimits.maxWeightKg,
+            unit.fromKg,
+          ),
         ),
-      ],
+        enter: (text) => target
+            ? cubit.enterTargetWeight(text, unit)
+            : cubit.enterWeight(text, unit),
+      ),
     );
   }
 }
@@ -396,6 +518,61 @@ String _outOfRange(AppLocalizations l10n, ({double min, double max}) range) =>
       formatProfileNumber(range.min),
       formatProfileNumber(range.max),
     );
+
+/// What typing a number answer needs: [enter] tells whether the text was
+/// accepted, and [error] is shown when not.
+typedef _Entry = ({
+  String label,
+  String initialValue,
+  String error,
+  bool Function(String text) enter,
+});
+
+/// A unit switch, the value in large type, which opens a field to type it,
+/// and a ruler to drag.
+class _NumberAnswer extends StatelessWidget {
+  const _NumberAnswer({
+    required this.unitSwitch,
+    required this.text,
+    required this.ruler,
+    required this.entry,
+  });
+
+  final Widget unitSwitch;
+  final String text;
+  final Widget ruler;
+  final _Entry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Center(child: unitSwitch),
+        const SizedBox(height: Gap.md),
+        Center(
+          child: TextButton(
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => _EntryDialog(entry),
+            ),
+            child: Text(text, style: theme.textTheme.displaySmall),
+          ),
+        ),
+        const SizedBox(height: Gap.sm),
+        ruler,
+        const SizedBox(height: Gap.sm),
+        Text(
+          l10n.profileRulerHint,
+          style: theme.textTheme.bodySmall,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+}
 
 class _UnitSwitch<T> extends StatelessWidget {
   const _UnitSwitch({
@@ -411,43 +588,31 @@ class _UnitSwitch<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: Gap.md),
-    child: SegmentedButton<T>(
-      segments: [
-        for (final value in values)
-          ButtonSegment(value: value, label: Text(label(value))),
-      ],
-      selected: {selected},
-      onSelectionChanged: (selection) => onChanged(selection.single),
-    ),
+  Widget build(BuildContext context) => SegmentedButton<T>(
+    segments: [
+      for (final value in values)
+        ButtonSegment(value: value, label: Text(label(value))),
+    ],
+    selected: {selected},
+    onSelectionChanged: (selection) => onChanged(selection.single),
   );
 }
 
-/// A number input that reports every change. Its text starts from
-/// [initialValue]; give it a new key to restart it.
-class _NumberEntry extends StatefulWidget {
-  const _NumberEntry({
-    super.key,
-    required this.label,
-    required this.initialValue,
-    required this.onChanged,
-    this.errorText,
-    this.wholeNumber = false,
-  });
+/// Types a number answer; closes once it is accepted.
+class _EntryDialog extends StatefulWidget {
+  const _EntryDialog(this.entry);
 
-  final String label;
-  final String initialValue;
-  final ValueChanged<String> onChanged;
-  final String? errorText;
-  final bool wholeNumber;
+  final _Entry entry;
 
   @override
-  State<_NumberEntry> createState() => _NumberEntryState();
+  State<_EntryDialog> createState() => _EntryDialogState();
 }
 
-class _NumberEntryState extends State<_NumberEntry> {
-  late final _controller = TextEditingController(text: widget.initialValue);
+class _EntryDialogState extends State<_EntryDialog> {
+  late final _controller = TextEditingController(
+    text: widget.entry.initialValue,
+  );
+  String? _error;
 
   @override
   void dispose() {
@@ -455,23 +620,41 @@ class _NumberEntryState extends State<_NumberEntry> {
     super.dispose();
   }
 
+  void _submit() {
+    if (widget.entry.enter(_controller.text)) {
+      Navigator.of(context).pop();
+    } else {
+      setState(() => _error = widget.entry.error);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => TextField(
-    controller: _controller,
-    autofocus: true,
-    onChanged: widget.onChanged,
-    keyboardType: TextInputType.numberWithOptions(decimal: !widget.wholeNumber),
-    // Plain numbers only; the length fits every valid answer.
-    inputFormatters: [
-      widget.wholeNumber
-          ? FilteringTextInputFormatter.digitsOnly
-          : FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-      LengthLimitingTextInputFormatter(widget.wholeNumber ? 4 : 6),
-    ],
-    decoration: InputDecoration(
-      labelText: widget.label,
-      errorText: widget.errorText,
-      errorMaxLines: 3,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        // Plain numbers only; the length fits every valid answer.
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+          LengthLimitingTextInputFormatter(6),
+        ],
+        onSubmitted: (_) => _submit(),
+        decoration: InputDecoration(
+          labelText: widget.entry.label,
+          errorText: _error,
+          errorMaxLines: 3,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.cancel),
+        ),
+        TextButton(onPressed: _submit, child: Text(l10n.save)),
+      ],
+    );
+  }
 }
