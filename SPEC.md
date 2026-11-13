@@ -1950,7 +1950,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Profile — every setting on one page in groups; Premium is a distinct card with Get Premium
 - [x] Paywall — two layouts kept for an A/B test: plans as a list, plans as cards side by side; Remote Config `paywall_layout` assigns them
 - [x] Program detail — a summary card (state, weekdays, length, Change days, Stop), days collapse
-- [ ] Program builder — stays as built: day chips, sets and reps in a sheet
+- [x] Program builder — stays as built: day chips, sets and reps in a sheet
 - [x] Exercise detail — model with main and secondary muscles, a table of facts (equipment, level, mechanic, pattern, sides, logged as, also called), Setup and How to do it as numbered steps, Common mistakes, Safety and Cues each as their own card, Note, then one Similar exercises list tagged Alternative or Variation. One Add button in the app bar (workout or program). The Records and progress row leaves this page; the strength page stays reachable from Progress
 - [x] Workout detail (history) — the summary card of the workout summary (date, program link, four stats), the workout note as its own card, sets as a table per exercise
 - [x] Ready-made programs — cards with tags; the filters show as chips above the list and open the filters sheet
