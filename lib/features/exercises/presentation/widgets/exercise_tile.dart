@@ -10,8 +10,8 @@ import '../vocabulary_labels.dart';
 
 /// A row opening the exercise's detail page at [route]: name, main muscles
 /// and equipment, marked when custom, with a favourite star when
-/// [showFavorite], else [tag] at its end. With [onSelect] it shows a checkbox for [selected] and
-/// selects instead.
+/// [showFavorite], else [tag] at its end. With [onSelect] it shows a
+/// checkbox for [selected] and selects instead.
 class ExerciseTile extends StatelessWidget {
   const ExerciseTile(
     this.exercise, {

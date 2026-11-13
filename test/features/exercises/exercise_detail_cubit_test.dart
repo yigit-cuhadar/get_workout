@@ -111,12 +111,6 @@ void main() {
     expect(ids(state.variations), ['dumbbell_bench']);
   });
 
-  test('an alternative of the same family shows as a variation only', () {
-    final state = build('bench').state as DetailReady;
-    expect(ids(state.alternatives), isNot(contains('dumbbell_bench')));
-    expect(ids(state.variations), contains('dumbbell_bench'));
-  });
-
   blocTest<ExerciseDetailCubit, ExerciseDetailState>(
     "alternatives follow the user's equipment",
     build: () => build('bench'),

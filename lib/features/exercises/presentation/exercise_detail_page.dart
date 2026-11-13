@@ -243,16 +243,7 @@ class _DetailBody extends StatelessWidget {
           _Section(
             title: l10n.detailMistakes,
             icon: Icons.close,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final mistake in text.mistakes)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: Gap.xs),
-                    child: Text(l10n.stepBullet(mistake)),
-                  ),
-              ],
-            ),
+            child: _Bullets(text.mistakes),
           ),
         if (text.safety case final safety?)
           _Section(
@@ -261,14 +252,7 @@ class _DetailBody extends StatelessWidget {
             child: Text(safety),
           ),
         if (text.cues.isNotEmpty)
-          _Section(
-            title: l10n.detailCues,
-            child: Wrap(
-              spacing: Gap.sm,
-              runSpacing: Gap.sm,
-              children: [for (final cue in text.cues) Chip(label: Text(cue))],
-            ),
-          ),
+          _Section(title: l10n.detailCues, child: _Bullets(text.cues)),
         if (exercise.note case final note? when note.isNotEmpty)
           _Section(title: l10n.detailNote, child: Text(note)),
         if (detail.alternatives.isNotEmpty || detail.variations.isNotEmpty) ...[
@@ -370,6 +354,28 @@ class _Facts extends StatelessWidget {
                 child: Text(value, style: valueStyle),
               ),
             ],
+          ),
+      ],
+    );
+  }
+}
+
+/// One line per item, each marked with a bullet.
+class _Bullets extends StatelessWidget {
+  const _Bullets(this.items);
+
+  final List<String> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final item in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: Gap.xs),
+            child: Text(l10n.stepBullet(item)),
           ),
       ],
     );

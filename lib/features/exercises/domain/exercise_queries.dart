@@ -179,6 +179,24 @@ List<Exercise> variationsOf(Exercise exercise, Iterable<Exercise> catalogue) {
   });
 }
 
+/// [exercise]'s alternatives and variations for one list: an alternative of
+/// the same family is left to the variations, so none is listed twice.
+({List<Exercise> alternatives, List<Exercise> variations}) similarTo(
+  Exercise exercise,
+  Iterable<Exercise> catalogue, {
+  required Set<Equipment> owned,
+}) {
+  final variations = variationsOf(exercise, catalogue);
+  final variationIds = {for (final variation in variations) variation.id};
+  return (
+    alternatives: [
+      for (final other in alternativesFor(exercise, catalogue, owned: owned))
+        if (!variationIds.contains(other.id)) other,
+    ],
+    variations: variations,
+  );
+}
+
 /// Custom exercises first, by name, as the user's own are what they look
 /// for most; then popularity. Ties go by id, so the order is the same every
 /// time.

@@ -463,6 +463,23 @@ void main() {
     });
   });
 
+  group('similarTo', () {
+    test('an alternative of the same family is a variation only', () {
+      final bench = exercise('bench', family: 'bench_press', familyRank: 2);
+      final dumbbell = exercise('dumbbell', family: 'bench_press');
+      final machine = exercise('machine', family: 'machine_press');
+
+      final similar = similarTo(bench, [
+        bench,
+        dumbbell,
+        machine,
+      ], owned: const {});
+
+      expect(ids(similar.alternatives), ['machine']);
+      expect(ids(similar.variations), ['dumbbell']);
+    });
+  });
+
   group('exercisesWorking', () {
     final bench = exercise(
       'bench',
