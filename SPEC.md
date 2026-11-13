@@ -1701,7 +1701,15 @@ Group 9, launch readiness
 Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-up variants before it is built)
 - [x] Navigation — four tabs (Today / Train / Progress / Profile), Programs and Exercises merged, quick actions moved to their tabs — every existing screen is still reachable
 - [x] Train, exercises view — model with a search box; one list page with search, filters, sort and +, opened by the box or filtered by a tapped muscle
-- [ ] Screens picked from mock-ups — listed here as the owner picks them
+- [ ] Onboarding — a welcome page, then one question per page, all nine mandatory: goal, level, days, equipment, sex, birth year, height, weight, target weight. Choice questions are a list anchored to the bottom; number questions use a ruler
+- [ ] Today — week card, one prominent workout card with the only Start of a program day, sets this week for four muscles with the total, a calculators card with a chip per calculator, then steps with the goal and a bar
+- [ ] Train, My program — the day list has no Start; Ready-made, Generate, New program and Start empty workout stay
+- [ ] Workout, set entry — minus/plus steppers; tapping the number types it
+- [ ] Workout, rest — after a set the panel asks the effort (four options in a grid plus Failed, one line of explanation each, Skip) above a slim timer bar; the RPE scale uses the same layout with RPE 6 or less, 7, 8, 9, 10 and Failed. Once answered only the timer bar shows (time, +15 s, Skip); the next set's entry appears when the rest ends or is skipped
+- [ ] Progress — one small widget per area, each opening its page: Body (last weight, curve, last body fat, Log weight, Measurement day), the calendar week, weekly volume, strength, cardio, steps with a bar
+- [ ] Calendar with workout history — Workout history merges into the calendar page; layout not picked yet
+- [ ] Body with Compare — Compare moves inside the Body page; layout not picked yet
+- [ ] Further screens — listed here as the owner picks them
 
 ## Design
 
