@@ -21,7 +21,6 @@ import 'domain/workout_lock_screen.dart';
 import 'domain/workout_repository.dart';
 import 'domain/workout_usecases.dart';
 import 'presentation/active_workout_cubit.dart';
-import 'presentation/history_list_cubit.dart';
 import 'presentation/rest_timer_cubit.dart';
 import 'presentation/workout_text.dart';
 import 'presentation/workout_detail_cubit.dart';
@@ -137,15 +136,6 @@ class WorkoutModule implements FeatureModule {
       ..registerFactory(() => WatchStoredWorkout(sl()))
       ..registerFactory(() => WatchRejectedWorkoutEdits(sl()))
       ..registerFactory(() => SaveWorkoutChange(sl()))
-      // One per history page. The workout pages open above it, so it is
-      // there to report their refused edits.
-      ..registerFactory(
-        () => HistoryListCubit(
-          watchAuthUser: sl(),
-          watchHistory: sl(),
-          watchRejectedEdits: sl(),
-        ),
-      )
       ..registerFactoryParam<WorkoutDetailCubit, String, void>(
         (id, _) => WorkoutDetailCubit(
           id: id,

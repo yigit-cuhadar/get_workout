@@ -136,7 +136,7 @@ class _Strength extends StatelessWidget {
               l10n.recordValue(kind, record.value, unit),
               style: theme.textTheme.titleSmall,
             ),
-            onTap: () => context.push(Routes.historyWorkout(record.workoutId)),
+            onTap: () => context.push(Routes.calendarWorkout(record.workoutId)),
           ),
       ],
     );

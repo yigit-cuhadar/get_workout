@@ -53,7 +53,6 @@ import '../features/strength/presentation/strength_list_page.dart';
 import '../features/subscription/presentation/paywall_page.dart';
 import '../features/today/presentation/today_page.dart';
 import '../features/volume/presentation/volume_page.dart';
-import '../features/workout/presentation/history_page.dart';
 import '../features/workout/presentation/workout_detail_page.dart';
 import '../features/workout/presentation/workout_edit_page.dart';
 import '../features/workout/presentation/workout_page.dart';
@@ -122,7 +121,6 @@ abstract final class Routes {
   static const cardio = '$progress/cardio';
   static const cardioNew = '$cardio/new';
   static String cardioSession(String id) => '$cardio/$id';
-  static const history = '$progress/history';
   static const steps = '$progress/steps';
   static const volume = '$progress/volume';
   static const strength = '$progress/$strengthSegment';
@@ -146,18 +144,20 @@ abstract final class Routes {
   static String bodyEntryMeasure(String id) => '${bodyEntry(id)}/measure';
 
   /// Adds a past workout.
-  static const historyNew = '$history/new';
+  static const calendarWorkoutNew = '$calendar/new';
 
   /// [exercisePicker] above a workout being edited.
-  static String historyPicker({required int max, required bool multiple}) =>
-      '$history/pick?max=$max&multiple=$multiple';
-  static String historyWorkout(String id) =>
-      '$history/${Uri.encodeComponent(id)}';
-  static String historyEdit(String id) => '${historyWorkout(id)}/edit';
+  static String calendarPicker({required int max, required bool multiple}) =>
+      '$calendar/pick?max=$max&multiple=$multiple';
+
+  /// A finished workout, above the calendar.
+  static String calendarWorkout(String id) =>
+      '$calendar/${Uri.encodeComponent(id)}';
+  static String calendarWorkoutEdit(String id) => '${calendarWorkout(id)}/edit';
 
   /// An exercise's detail page above a workout being edited.
-  static String historyExercise(String id) =>
-      '$history/exercises/${Uri.encodeComponent(id)}';
+  static String calendarExercise(String id) =>
+      '$calendar/exercises/${Uri.encodeComponent(id)}';
   static const profile = '/profile';
 
   /// The workout in progress, full screen above the tabs; push it so going
@@ -554,6 +554,27 @@ GoRouter buildRouter(
               GoRoute(
                 path: 'calendar',
                 builder: (_, _) => const CalendarPage(),
+                routes: [
+                  // Before ':id', which would match these too.
+                  GoRoute(
+                    path: 'new',
+                    builder: (_, _) => const WorkoutEditPage(),
+                  ),
+                  GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+                  _workoutExercise(Routes.calendarExercise),
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) =>
+                        WorkoutDetailPage(id: state.pathParameters['id']!),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (_, state) =>
+                            WorkoutEditPage(id: state.pathParameters['id']),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               GoRoute(path: 'steps', builder: (_, _) => const StepsPage()),
               GoRoute(
@@ -600,31 +621,6 @@ GoRouter buildRouter(
                           id: state.pathParameters['id']!,
                           compare: true,
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              GoRoute(
-                path: 'history',
-                builder: (_, _) => const HistoryPage(),
-                routes: [
-                  // Before ':id', which would match these too.
-                  GoRoute(
-                    path: 'new',
-                    builder: (_, _) => const WorkoutEditPage(),
-                  ),
-                  GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
-                  _workoutExercise(Routes.historyExercise),
-                  GoRoute(
-                    path: ':id',
-                    builder: (_, state) =>
-                        WorkoutDetailPage(id: state.pathParameters['id']!),
-                    routes: [
-                      GoRoute(
-                        path: 'edit',
-                        builder: (_, state) =>
-                            WorkoutEditPage(id: state.pathParameters['id']),
                       ),
                     ],
                   ),

@@ -129,6 +129,7 @@ void main() {
     final auth = MockAuthRepository();
     when(auth.watchUser).thenAnswer((_) => users.stream);
     return CalendarCubit(
+      firstWeekday: DateTime.monday,
       watchAuthUser: WatchAuthUser(auth),
       watchWorkouts: WatchWorkoutsBetween(workouts),
       watchCardio: WatchCardioBetween(cardio),
@@ -160,13 +161,76 @@ void main() {
     await pumpEventQueue();
   }
 
-  test('starts on this month, today selected, loading', () {
+  List<CalendarDate> week(CalendarDate start) => [
+    for (var i = 0; i < 7; i++) start.addDays(i),
+  ];
+
+  test('starts on this week, today selected, loading', () {
     final cubit = build();
+    expect(cubit.state.expanded, isFalse);
+    expect(cubit.state.weeks, [week(d(2026, 11, 9))]);
     expect(cubit.state.month, d(2026, 11, 1));
+    expect(cubit.state.period, d(2026, 11, 1));
     expect(cubit.state.selected, today);
     expect(cubit.state.today, today);
     expect(cubit.state.status, CalendarStatus.loading);
     unawaited(cubit.close());
+  });
+
+  test(
+    'moves by week, today selected in its own, else the first day',
+    () async {
+      final cubit = build();
+      await signIn(alice);
+      await deliver();
+
+      cubit.move(1);
+      expect(cubit.state.weeks, [week(d(2026, 11, 16))]);
+      expect(cubit.state.selected, d(2026, 11, 16));
+      // Still November's dates: nothing to load.
+      expect(cubit.state.status, CalendarStatus.ready);
+
+      cubit.move(-1);
+      expect(cubit.state.selected, today);
+
+      // The week of 26 October loads October, which has its dates.
+      cubit.move(-2);
+      expect(cubit.state.weeks, [week(d(2026, 10, 26))]);
+      expect(cubit.state.selected, d(2026, 10, 26));
+      expect(cubit.state.month, d(2026, 10, 1));
+      expect(cubit.state.status, CalendarStatus.loading);
+      await pumpEventQueue();
+      expect(workoutStreams, contains('u1 2026-09-25'));
+
+      // Another date of the week keeps it, though the month named changes.
+      await deliver(month: 'u1 2026-09-25');
+      cubit.select(d(2026, 11, 1));
+      expect(cubit.state.month, d(2026, 10, 1));
+      expect(cubit.state.period, d(2026, 11, 1));
+      expect(cubit.state.status, CalendarStatus.ready);
+      await cubit.close();
+    },
+  );
+
+  test('opens to the month of the selected date and back', () async {
+    final cubit = build();
+    await signIn(alice);
+    await deliver();
+    cubit.move(1);
+
+    cubit.expand(true);
+    expect(cubit.state.expanded, isTrue);
+    expect(cubit.state.weeks, hasLength(6));
+    expect(cubit.state.weeks.first, week(d(2026, 10, 26)));
+    expect(cubit.state.selected, d(2026, 11, 16));
+    expect(cubit.state.status, CalendarStatus.ready);
+
+    cubit.select(d(2026, 11, 26));
+    cubit.expand(false);
+    expect(cubit.state.weeks, [week(d(2026, 11, 23))]);
+    expect(cubit.state.selected, d(2026, 11, 26));
+    expect(cubit.state.status, CalendarStatus.ready);
+    await cubit.close();
   });
 
   test('loads the dates the month shows', () async {
@@ -234,7 +298,9 @@ void main() {
     await signIn(alice);
     await deliver();
 
-    cubit.showMonth(1);
+    cubit
+      ..expand(true)
+      ..move(1);
     expect(cubit.state.month, d(2026, 12, 1));
     expect(cubit.state.selected, d(2026, 12, 1));
     expect(cubit.state.status, CalendarStatus.loading);
@@ -257,7 +323,7 @@ void main() {
       WorkoutEntry(lastOfNovember),
     ]);
 
-    cubit.showMonth(-1);
+    cubit.move(-1);
     expect(cubit.state.selected, today);
     await cubit.close();
   });
@@ -266,6 +332,7 @@ void main() {
     final cubit = build();
     await signIn(alice);
     await deliver();
+    cubit.expand(true);
 
     cubit.select(d(2026, 11, 3));
     expect(cubit.state.selected, d(2026, 11, 3));
@@ -307,7 +374,9 @@ void main() {
 
     programStreams.clear();
     activeStreams.clear();
-    cubit.showMonth(1);
+    cubit
+      ..expand(true)
+      ..move(1);
     await pumpEventQueue();
     await deliver(month: 'u1 2026-11-25', activeProgram: active);
     expect(cubit.state.status, CalendarStatus.ready);
@@ -327,7 +396,9 @@ void main() {
 
       programStreams.clear();
       activeStreams.clear();
-      cubit.showMonth(1);
+      cubit
+        ..expand(true)
+        ..move(1);
       await pumpEventQueue();
       await deliver(month: 'u1 2026-11-25', sessions: []);
       expect(cubit.state.status, CalendarStatus.ready);
@@ -366,7 +437,9 @@ void main() {
     final cubit = build();
     await signIn(alice);
     await deliver(activeProgram: active);
-    cubit.showMonth(1);
+    cubit
+      ..expand(true)
+      ..move(1);
 
     await signIn(bob);
     expect(cubit.state.month, d(2026, 11, 1));
