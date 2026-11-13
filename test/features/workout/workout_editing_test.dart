@@ -46,6 +46,7 @@ void main() {
       dayIndex: 0,
       catalogue: catalogue,
       language: 'en',
+      warmups: false,
     );
 
     test('copies the exercises with their goals and empty sets', () {
@@ -58,6 +59,26 @@ void main() {
       expect(squat.sets, List.filled(4, const WorkoutSet()));
       expect(squat.goal!.targetKg, 100);
       expect(squat.goal!.group, isNull);
+    });
+
+    test('with warm-ups, weighted exercises start with two', () {
+      final warmed = workoutFromProgramDay(
+        id: 'w1',
+        startedAt: start,
+        name: 'Legs · A',
+        program: legs,
+        dayIndex: 0,
+        catalogue: catalogue,
+        language: 'en',
+        warmups: true,
+      );
+      expect(warmed.exercises.map((e) => e.sets.length), [6, 5, 3]);
+      expect(warmed.exercises.first.sets.take(2).map((s) => s.type), [
+        SetType.warmup,
+        SetType.warmup,
+      ]);
+      // The plank is timed.
+      expect(warmed.exercises.last.sets.any((s) => s.isWarmup), isFalse);
     });
 
     test('leaves out unavailable exercises and relabels groups', () {
@@ -105,6 +126,20 @@ void main() {
     expect(newSetPosition(warmed, SetType.warmup), 2);
     expect(newSetPosition(warmed, SetType.drop), 3);
     expect(newSetPosition(exercise('squat', []), SetType.warmup), 0);
+  });
+
+  test('a set that becomes or stops being a warm-up moves to their end', () {
+    final warmup = lift(40, 10, type: SetType.warmup);
+    final sets = exercise('squat', [warmup, lift(100, 5), lift(100, 5)]);
+    expect(retypedSetPosition(sets, 2, SetType.warmup), 1);
+    expect(retypedSetPosition(sets, 1, SetType.warmup), 1);
+    expect(retypedSetPosition(sets, 0, SetType.normal), 0);
+    expect(retypedSetPosition(sets, 2, SetType.drop), 2);
+    expect(retypedSetPosition(sets, 0, SetType.warmup), 0);
+    final warmed = exercise('squat', [warmup, warmup, lift(100, 5)]);
+    expect(retypedSetPosition(warmed, 0, SetType.drop), 1);
+    final working = exercise('squat', [lift(100, 5), lift(100, 5)]);
+    expect(retypedSetPosition(working, 1, SetType.warmup), 0);
   });
 
   test('finishWorkout keeps done sets and drops empty exercises', () {

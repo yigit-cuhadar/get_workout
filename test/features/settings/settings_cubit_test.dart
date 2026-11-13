@@ -29,7 +29,10 @@ void main() {
   late StreamController<AuthUser?> users;
   late Map<String, StreamController<UserSettings>> stored;
 
-  setUpAll(() => registerFallbackValue(defaults));
+  setUpAll(() {
+    registerFallbackValue(defaults);
+    registerFallbackValue(Tip.effort);
+  });
 
   setUp(() {
     auth = MockAuthRepository();
@@ -51,6 +54,7 @@ void main() {
     watchAuthUser: WatchAuthUser(auth),
     watchSettings: WatchSettings(settings),
     updateSettings: UpdateSettings(settings),
+    markTipSeen: MarkTipSeen(settings),
     defaults: defaults,
   );
 
@@ -74,9 +78,9 @@ void main() {
       stored['g1']!.add(defaults);
     },
     expect: () => [
-      SettingsState(pounds),
+      SettingsState(pounds, loaded: true),
       const SettingsState(defaults),
-      SettingsState(dark),
+      SettingsState(dark, loaded: true),
     ],
     verify: (_) => expect(stored['g1']!.hasListener, isFalse),
   );
@@ -100,7 +104,10 @@ void main() {
         cubit.state.settings.copyWith(themePreference: ThemePreference.dark),
       );
     },
-    expect: () => [SettingsState(pounds), const SettingsState(defaults)],
+    expect: () => [
+      SettingsState(pounds, loaded: true),
+      const SettingsState(defaults),
+    ],
     verify: (_) => verify(() => settings.saveSettings('u1', dark)).called(1),
   );
 
@@ -114,7 +121,10 @@ void main() {
       await pumpEventQueue();
       users.add(null);
     },
-    expect: () => [SettingsState(pounds), const SettingsState(defaults)],
+    expect: () => [
+      SettingsState(pounds, loaded: true),
+      const SettingsState(defaults),
+    ],
   );
 
   blocTest<SettingsCubit, SettingsState>(
@@ -159,8 +169,8 @@ void main() {
       await cubit.update(dark);
     },
     expect: () => [
-      SettingsState(pounds),
-      SettingsState(pounds, failure: failure),
+      SettingsState(pounds, loaded: true),
+      SettingsState(pounds, failure: failure, loaded: true),
     ],
   );
 
@@ -174,7 +184,7 @@ void main() {
         ..add(pounds)
         ..addError(const PermissionFailure());
     },
-    expect: () => [SettingsState(pounds)],
+    expect: () => [SettingsState(pounds, loaded: true)],
   );
 
   blocTest<SettingsCubit, SettingsState>(
@@ -183,5 +193,31 @@ void main() {
     act: (cubit) => cubit.update(dark),
     expect: () => const <SettingsState>[],
     verify: (_) => verifyNever(() => settings.saveSettings(any(), any())),
+  );
+
+  blocTest<SettingsCubit, SettingsState>(
+    'a tip seen is marked once, never before the settings arrive',
+    setUp: () =>
+        when(() => settings.markTipSeen(any(), any()))
+            .thenAnswer((_) async => const Ok(null)),
+    build: build,
+    act: (cubit) async {
+      users.add(member);
+      await pumpEventQueue();
+      // Nothing known yet: no write over what is stored.
+      await cubit.tipSeen(Tip.setTypes);
+      stored['u1']!.add(defaults.copyWith(seenTips: {Tip.effort}));
+      await pumpEventQueue();
+      await cubit.tipSeen(Tip.effort);
+      await cubit.tipSeen(Tip.setTypes);
+    },
+    expect: () => [
+      SettingsState(defaults.copyWith(seenTips: {Tip.effort}), loaded: true),
+    ],
+    verify: (_) {
+      verify(() => settings.markTipSeen('u1', Tip.setTypes)).called(1);
+      verifyNever(() => settings.markTipSeen('u1', Tip.effort));
+      verifyNever(() => settings.saveSettings(any(), any()));
+    },
   );
 }

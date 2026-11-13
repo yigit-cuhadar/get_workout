@@ -48,7 +48,7 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     this.issue,
     this.failure,
     this.picked,
-    this.setView = SetView.bubbles,
+    this.ticked,
   });
 
   final WorkoutEditStatus status;
@@ -74,7 +74,11 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
   @override
   final SetSelection? picked;
   @override
-  final SetView setView;
+  final SetRef? ticked;
+
+  /// The user knows what they logged; tips are for the workout in progress.
+  @override
+  bool get offersTips => false;
 
   /// A stored workout has nothing to compare with, so no last time is shown.
   @override
@@ -95,7 +99,7 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     WorkoutChangeIssue? Function()? issue,
     Failure? Function()? failure,
     SetSelection? Function()? picked,
-    SetView? setView,
+    SetRef? Function()? ticked,
   }) => WorkoutEditState(
     status: status ?? this.status,
     workout: workout ?? this.workout,
@@ -104,7 +108,7 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     issue: issue != null ? issue() : this.issue,
     failure: failure != null ? failure() : this.failure,
     picked: picked != null ? picked() : this.picked,
-    setView: setView ?? this.setView,
+    ticked: ticked != null ? ticked() : this.ticked,
   );
 
   @override
@@ -116,7 +120,7 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     issue,
     failure,
     picked,
-    setView,
+    ticked,
   ];
 }
 
@@ -284,13 +288,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     }
     _original = _start = latest;
     _latest = null;
-    emit(
-      WorkoutEditState(
-        status: WorkoutEditStatus.editing,
-        workout: latest,
-        setView: state.setView,
-      ),
-    );
+    emit(WorkoutEditState(status: WorkoutEditStatus.editing, workout: latest));
   }
 
   /// Starts over after loading failed.
@@ -301,6 +299,10 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     }
   }
 
+  @override
+  bool get canEdit =>
+      state.status == WorkoutEditStatus.editing && state.workout != null;
+
   /// Applies [change] while editing; no reference to a set is kept here,
   /// so [movesSets] does not matter.
   @override
@@ -310,7 +312,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     SetSelection? Function(Workout after)? select,
   }) {
     final workout = state.workout;
-    if (state.status != WorkoutEditStatus.editing || workout == null) return;
+    if (!canEdit || workout == null) return;
     final changed = change(workout);
     if (changed == workout) return;
     emit(
@@ -318,20 +320,31 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
         workout: changed,
         invalidSet: () => null,
         picked: select == null ? null : () => select(changed),
+        ticked: movesSets ? () => null : null,
       ),
     );
   }
 
+  /// A past workout is logged as it was done.
+  @override
+  bool get addsWarmups => false;
+
   /// A new pick drops the message of a set that could not be ticked.
   @override
-  void emitSelection({SetSelection? Function()? picked, SetView? setView}) =>
-      emit(
-        state.copyWith(
-          picked: picked,
-          setView: setView,
-          invalidSet: picked == null ? null : () => null,
-        ),
-      );
+  void emitPicked(SetSelection? picked) => emit(
+    state.copyWith(
+      picked: () => picked,
+      invalidSet: () => null,
+      ticked: picked == state.selection ? null : () => null,
+    ),
+  );
+
+  @override
+  void emitTicked(SetRef? ticked) => emit(state.copyWith(ticked: () => ticked));
+
+  /// Never: see [addsWarmups].
+  @override
+  void noteWarmupsAdded() {}
 
   /// Ticks the set done, its empty values taken from the sets before it;
   /// one that still lacks values stays undone and is marked as

@@ -109,9 +109,9 @@ class WorkoutModule implements FeatureModule {
               title: l10n.restOver,
               body: next == null
                   ? l10n.restNotificationBack
-                  : l10n.restNotificationNext(
-                      workout.exercises[next.exercise].name,
-                      l10n.setLabel(workout.exercises[next.exercise], next.set),
+                  : l10n.restNextText(
+                      workout.exercises[next.exercise],
+                      next.set,
                     ),
             );
           },
@@ -127,10 +127,7 @@ class WorkoutModule implements FeatureModule {
             return (
               current: l10n.setToDo(exercise, next.set),
               rest: rest,
-              afterRest: l10n.restNotificationNext(
-                exercise.name,
-                l10n.setLabel(exercise, next.set),
-              ),
+              afterRest: l10n.restNextText(exercise, next.set),
             );
           },
         ),

@@ -74,6 +74,7 @@ void main() {
     weightUnit: WeightUnit.kg,
     lengthUnit: LengthUnit.cm,
     restTimer: RestTimerSettings(defaultS: 75),
+    autoWarmups: false,
   );
   final saved = workout('w0', [
     exercise('squat', [lift(100, 5)]),
@@ -182,15 +183,29 @@ void main() {
   }
 
   /// A cubit signed in as [user] with [local] kept, settled.
+  /// Without [warmups], settings arrive as the defaults but with no
+  /// automatic warm-ups, so sets stay where the tests put them.
   Future<ActiveWorkoutCubit> signedIn({
     AuthUser user = alice,
     Workout? draft,
     LocalWorkouts? local,
+    bool warmups = false,
+    WeightUnit unit = WeightUnit.kg,
+    bool settingsArrive = true,
   }) async {
     when(() => store.load(user.id))
         .thenAnswer((_) async => Ok(local ?? LocalWorkouts(draft: draft)));
     final cubit = build();
     users.add(user);
+    await pumpEventQueue();
+    if (!settingsArrive) return cubit;
+    settings.add(
+      UserSettings(
+        weightUnit: unit,
+        lengthUnit: LengthUnit.cm,
+        autoWarmups: warmups,
+      ),
+    );
     await pumpEventQueue();
     return cubit;
   }
@@ -562,6 +577,230 @@ void main() {
     });
   });
 
+  group('automatic warm-ups', () {
+    Future<ActiveWorkoutCubit> warmedSquat({
+      WeightUnit unit = WeightUnit.kg,
+    }) async {
+      final cubit = await signedIn(warmups: true, unit: unit);
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      return cubit;
+    }
+
+    List<SetType> types(ActiveWorkoutCubit cubit, int exercise) => [
+      for (final s in cubit.state.workout!.exercises[exercise].sets) s.type,
+    ];
+
+    test('a program day starts with two before the working sets', () async {
+      final cubit = await warmedSquat();
+      expect(types(cubit, 0), [
+        SetType.warmup,
+        SetType.warmup,
+        SetType.normal,
+        SetType.normal,
+      ]);
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      await cubit.close();
+    });
+
+    test('they suggest a ramp to the first working set', () async {
+      final cubit = await warmedSquat();
+      // The goal's 100 kg.
+      expect(cubit.state.suggestion((exercise: 0, set: 0)), (
+        weightKg: 50.0,
+        reps: 8,
+        durationS: null,
+      ));
+      expect(cubit.state.suggestion((exercise: 0, set: 1)).weightKg, 75);
+      // Typing the working weight moves them; ticking stores them.
+      cubit.setWeight((exercise: 0, set: 2), '120', WeightUnit.kg);
+      expect(cubit.state.suggestion((exercise: 0, set: 1)).weightKg, 90);
+      cubit.toggleDone((exercise: 0, set: 0));
+      final done = cubit.state.workout!.exercises[0].sets[0];
+      expect((done.weightKg, done.reps, done.done), (60, 8, true));
+      await cubit.close();
+    });
+
+    test('in pounds they round to 5 lb', () async {
+      final cubit = await warmedSquat(unit: WeightUnit.lb);
+      cubit.setWeight((exercise: 0, set: 2), '225', WeightUnit.lb);
+      final kg = cubit.state.suggestion((exercise: 0, set: 0)).weightKg!;
+      expect(WeightUnit.lb.fromKg(kg), closeTo(115, 1e-9));
+      await cubit.close();
+    });
+
+    test('exercises added or swapped in get them, timed ones not', () async {
+      final cubit = await warmedSquat();
+      cubit.addExercises([bench, plank], 'en');
+      expect(types(cubit, 1), [SetType.warmup, SetType.warmup, SetType.normal]);
+      expect(types(cubit, 2), [SetType.normal]);
+      cubit
+        ..selectSet((exercise: 2, set: 0))
+        ..swapExercise(2, bench, 'en');
+      expect(types(cubit, 2), [SetType.warmup, SetType.warmup, SetType.normal]);
+      expect(cubit.state.selection, (exercise: 2, set: 0));
+      await cubit.close();
+    });
+
+    test('none for an exercise swapped after a done set', () async {
+      final cubit = await signedIn(warmups: true);
+      cubit
+        ..startFree('Workout')
+        ..addExercises([plank], 'en')
+        ..setDuration((exercise: 0, set: 0), '30')
+        ..toggleDone((exercise: 0, set: 0))
+        ..swapExercise(0, bench, 'en');
+      expect(types(cubit, 0), [SetType.normal]);
+      await cubit.close();
+    });
+
+    test('an empty workout started with an exercise gets them', () async {
+      final cubit = await signedIn(warmups: true);
+      cubit.startWith(bench, 'Workout', 'en');
+      expect(types(cubit, 0), [SetType.warmup, SetType.warmup, SetType.normal]);
+      await cubit.close();
+    });
+
+    test('they are noted as added, for their tip', () async {
+      final cubit = await warmedSquat();
+      expect(cubit.state.warmupsAdded, isTrue);
+      await cubit.discard();
+      settings.add(userSettings);
+      await pumpEventQueue();
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      expect(cubit.state.warmupsAdded, isFalse);
+      await cubit.close();
+    });
+
+    test('a program day waits for settings arriving late', () async {
+      final cubit = await signedIn(settingsArrive: false);
+      expect(cubit.state.weightUnit, isNull);
+      final started = cubit.startProgramDay(
+        legs,
+        0,
+        name: 'Legs',
+        language: 'en',
+      );
+      await pumpEventQueue();
+      settings.add(
+        const UserSettings(
+          weightUnit: WeightUnit.lb,
+          lengthUnit: LengthUnit.cm,
+        ),
+      );
+      expect((await started).started, isTrue);
+      expect(types(cubit, 0).take(2), [SetType.warmup, SetType.warmup]);
+      expect(cubit.state.weightUnit, WeightUnit.lb);
+      await cubit.close();
+    });
+
+    test('settings that cannot be read add none', () async {
+      final cubit = await signedIn(settingsArrive: false);
+      // Before they arrive, an added exercise gets none, and nothing is
+      // rounded in a unit not known yet.
+      cubit
+        ..startFree('Workout')
+        ..addExercises([bench], 'en');
+      expect(types(cubit, 0), [SetType.normal]);
+      await cubit.discard();
+      final started = cubit.startProgramDay(
+        legs,
+        0,
+        name: 'Legs',
+        language: 'en',
+      );
+      await pumpEventQueue();
+      settings.addError(const PermissionFailure());
+      expect((await started).started, isTrue);
+      expect(types(cubit, 0), [SetType.normal, SetType.normal]);
+      await cubit.close();
+    });
+
+    test('a ramp needs the unit: none before settings arrive', () async {
+      final cubit = await signedIn(settingsArrive: false);
+      cubit.startFree('Workout');
+      // A warm-up added by hand, before a 100 kg set.
+      cubit
+        ..addExercises([bench], 'en')
+        ..setWeight((exercise: 0, set: 0), '100', WeightUnit.kg)
+        ..addSet(0, SetType.warmup);
+      expect(cubit.state.suggestion((exercise: 0, set: 0)).weightKg, isNull);
+      await cubit.close();
+    });
+
+    test('swapped to a timed exercise, untouched warm-ups go', () async {
+      final cubit = await warmedSquat();
+      cubit
+        ..setWeight((exercise: 0, set: 1), '60', WeightUnit.kg)
+        ..swapExercise(0, plank, 'en');
+      // The warm-up typed into stays, as an empty set of the new type.
+      expect(types(cubit, 0), [SetType.warmup, SetType.normal, SetType.normal]);
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      await cubit.close();
+    });
+
+    test('turned off, none are added', () async {
+      final cubit = await signedIn();
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      cubit.addExercises([bench], 'en');
+      expect(types(cubit, 0), [SetType.normal, SetType.normal]);
+      expect(types(cubit, 1), [SetType.normal]);
+      await cubit.close();
+    });
+  });
+
+  group('effort', () {
+    Future<ActiveWorkoutCubit> withSquat({bool warmups = false}) async {
+      final cubit = await signedIn(warmups: warmups);
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      return cubit;
+    }
+
+    test('is asked about the set just ticked, and lands on it', () async {
+      final cubit = await withSquat();
+      expect(cubit.state.effortRef, isNull);
+      cubit.toggleDone((exercise: 0, set: 0));
+      // The next set is selected; the row still asks about the first.
+      expect(cubit.state.selection, (exercise: 0, set: 1));
+      expect(cubit.state.effortRef, (exercise: 0, set: 0));
+      cubit.setEffort((exercise: 0, set: 0), const EffortStep.reserve(2));
+      final sets = cubit.state.workout!.exercises[0].sets;
+      expect((sets[0].rir, sets[1].rir), (2, null));
+      // Answered: no row while the selected set is not done.
+      expect(cubit.state.effortRef, isNull);
+      await cubit.close();
+    });
+
+    test(
+      'follows the next tick, and goes when another set is picked',
+      () async {
+        final cubit = await withSquat();
+        cubit
+          ..addExercises([bench], 'en')
+          ..toggleDone((exercise: 0, set: 0))
+          ..toggleDone((exercise: 0, set: 1));
+        expect(cubit.state.selection, (exercise: 1, set: 0));
+        expect(cubit.state.effortRef, (exercise: 0, set: 1));
+        // Picking the selected set again keeps it.
+        cubit.selectSet((exercise: 1, set: 0));
+        expect(cubit.state.effortRef, (exercise: 0, set: 1));
+        // A selected done set is asked about itself.
+        cubit.selectSet((exercise: 0, set: 0));
+        expect(cubit.state.effortRef, (exercise: 0, set: 0));
+        // Back on the undone set, the tick is forgotten.
+        cubit.selectSet((exercise: 1, set: 0));
+        expect(cubit.state.effortRef, isNull);
+        await cubit.close();
+      },
+    );
+
+    test('is never asked about a warm-up', () async {
+      final cubit = await withSquat(warmups: true);
+      cubit.toggleDone((exercise: 0, set: 0));
+      expect(cubit.state.effortRef, isNull);
+      await cubit.close();
+    });
+  });
+
   group('editing', () {
     const first = (exercise: 0, set: 0);
 
@@ -842,18 +1081,69 @@ void main() {
       await cubit.close();
     });
 
-    test('opening an exercise and stepping through its sets', () async {
+    test('a set made a warm-up moves before the working sets', () async {
+      final cubit = await withSquat();
+      List<SetType> types() => [
+        for (final s in cubit.state.workout!.exercises[0].sets) s.type,
+      ];
+      cubit
+        ..addSet(0, SetType.drop)
+        ..selectSet((exercise: 0, set: 2))
+        ..addDrop((exercise: 0, set: 2))
+        ..setType((exercise: 0, set: 2), SetType.warmup);
+      expect(types(), [SetType.warmup, SetType.normal, SetType.normal]);
+      expect(cubit.state.workout!.exercises[0].sets[0].drops, isEmpty);
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      // Another set picked: it moves along as the warm-up passes it.
+      cubit
+        ..selectSet((exercise: 0, set: 1))
+        ..setType((exercise: 0, set: 2), SetType.warmup);
+      expect(types(), [SetType.warmup, SetType.warmup, SetType.normal]);
+      expect(cubit.state.selection, (exercise: 0, set: 2));
+      // A warm-up made a working set becomes the first of them.
+      cubit.setType((exercise: 0, set: 0), SetType.normal);
+      expect(types(), [SetType.warmup, SetType.normal, SetType.normal]);
+      expect(cubit.state.selection, (exercise: 0, set: 2));
+      // Normal and drop sets stay in place.
+      cubit.setType((exercise: 0, set: 1), SetType.drop);
+      expect(types(), [SetType.warmup, SetType.drop, SetType.normal]);
+      await cubit.close();
+    });
+
+    test('a card moves whole and the selection follows it', () async {
+      final cubit = await withSquat();
+      cubit
+        ..addExercises([bench, plank], 'en')
+        ..linkWithNext(0)
+        ..selectSet((exercise: 1, set: 0));
+      List<String> ids() => [
+        for (final e in cubit.state.workout!.exercises) e.exerciseId,
+      ];
+      // Blocks: [squat, bench] as a superset, then plank.
+      cubit.moveBlock(0, 1);
+      expect(ids(), ['plank', 'squat', 'bench']);
+      expect(cubit.state.workout!.exercises.map((e) => e.group), [
+        null,
+        'A',
+        'A',
+      ]);
+      expect(cubit.state.selection, (exercise: 2, set: 0));
+      cubit.moveBlock(1, 0);
+      expect(ids(), ['squat', 'bench', 'plank']);
+      expect(cubit.state.selection, (exercise: 1, set: 0));
+      cubit.moveBlock(0, 2);
+      expect(ids(), ['squat', 'bench', 'plank']);
+      await cubit.close();
+    });
+
+    test('opening an exercise selects its first set to do', () async {
       final cubit = await withSquat();
       cubit
         ..addExercises([bench], 'en')
         ..openExercise(1);
       expect(cubit.state.selection, (exercise: 1, set: 0));
-      cubit
-        ..openExercise(0)
-        ..stepSet(1);
-      expect(cubit.state.selection, (exercise: 0, set: 1));
-      cubit.stepSet(1);
-      expect(cubit.state.selection, (exercise: 0, set: 1));
+      cubit.openExercise(0);
+      expect(cubit.state.selection, (exercise: 0, set: 0));
       await cubit.close();
     });
 
@@ -880,13 +1170,10 @@ void main() {
       await cubit.close();
     });
 
-    test('the set view toggles and stays for the next workout', () async {
+    test('the next workout starts with nothing picked', () async {
       final cubit = await withSquat();
-      expect(cubit.state.setView, SetView.bubbles);
-      cubit.toggleSetView();
-      expect(cubit.state.setView, SetView.selectedSet);
+      cubit.selectSet((exercise: 0, set: 1));
       await cubit.discard();
-      expect(cubit.state.setView, SetView.selectedSet);
       expect(cubit.state.picked, isNull);
       await cubit.close();
     });
@@ -1201,13 +1488,25 @@ void main() {
       await cubit.close();
     });
 
-    test('a warm-up leaves the running rest alone', () async {
+    test('a type change that moves the ticked set forgets it', () async {
       final cubit = await withSquat();
       cubit
-        ..toggleDone(first)
-        ..setType(second, SetType.warmup)
-        ..toggleDone(second);
-      expect(cubit.state.rest, Rest(endsAt: restEnd, after: first));
+        ..toggleDone(second)
+        ..setType(second, SetType.warmup);
+      // The ticked set is now the first; the rest runs on without it.
+      expect(cubit.state.workout!.exercises[0].sets[0].done, isTrue);
+      expect(cubit.state.rest, Rest(endsAt: restEnd));
+      await cubit.close();
+    });
+
+    test('a warm-up leaves the running rest alone', () async {
+      final cubit = await withSquat();
+      // The first set made a warm-up stays where it is.
+      cubit
+        ..setType(first, SetType.warmup)
+        ..toggleDone(second)
+        ..toggleDone(first);
+      expect(cubit.state.rest, Rest(endsAt: restEnd, after: second));
       await cubit.close();
     });
 

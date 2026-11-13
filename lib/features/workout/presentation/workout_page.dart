@@ -14,13 +14,16 @@ import '../../../core/text_length.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/presentation/settings_cubit.dart';
+import '../../settings/domain/user_settings.dart';
 import '../domain/workout.dart';
+import '../domain/workout_tips.dart';
 import 'active_workout_cubit.dart';
 import 'elapsed_text.dart';
 import 'exercise_cards.dart';
 import 'rest_strip.dart';
 import 'set_bar.dart';
 import 'workout_editor_view.dart';
+import 'workout_help.dart';
 import 'workout_text.dart';
 
 /// The workout in progress, full screen above the tabs; back minimizes it
@@ -85,7 +88,7 @@ class WorkoutPage extends StatelessWidget {
   }
 }
 
-enum _WorkoutAction { reorder, discard }
+enum _WorkoutAction { discard }
 
 /// The exercises above the set bar, then the rest; see [SetBarLayout].
 class _ActiveWorkout extends StatelessWidget {
@@ -98,6 +101,10 @@ class _ActiveWorkout extends StatelessWidget {
     final cubit = context.read<ActiveWorkoutCubit>();
     final workout = state.workout!;
     final finishing = state.status == WorkoutStatus.finishing;
+    final seen = context.select(
+      (SettingsCubit cubit) =>
+          cubit.state.loaded ? cubit.state.settings.seenTips : null,
+    );
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) unawaited(cubit.leave());
@@ -120,7 +127,6 @@ class _ActiveWorkout extends StatelessWidget {
             ],
           ),
           actions: [
-            SetViewToggle(state.setView, onPressed: cubit.toggleSetView),
             TextButton(
               onPressed: finishing ? null : () => _finish(context),
               child: Text(l10n.workoutFinish),
@@ -129,15 +135,9 @@ class _ActiveWorkout extends StatelessWidget {
               tooltip: l10n.workoutMenu,
               enabled: !finishing,
               onSelected: (action) => switch (action) {
-                _WorkoutAction.reorder => _reorder(context),
                 _WorkoutAction.discard => _discard(context),
               },
               itemBuilder: (_) => [
-                if (workout.exercises.length > 1)
-                  PopupMenuItem(
-                    value: _WorkoutAction.reorder,
-                    child: Text(l10n.workoutReorder),
-                  ),
                 PopupMenuItem(
                   value: _WorkoutAction.discard,
                   child: Text(l10n.workoutDiscard),
@@ -150,40 +150,61 @@ class _ActiveWorkout extends StatelessWidget {
           state: state,
           editor: cubit,
           below: const RestBelowBar(child: RestStrip()),
-          content: ListView(
+          content: CustomScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.only(bottom: Gap.xl),
-            children: [
-              if (finishing) const LinearProgressIndicator(),
-              if (workout.exercises.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(Gap.md),
-                  child: Text(l10n.workoutEmpty, textAlign: TextAlign.center),
-                ),
+            slivers: [
+              SliverList.list(
+                children: [
+                  if (finishing) const LinearProgressIndicator(),
+                  if (autoWarmupsTipDue(seen, added: state.warmupsAdded))
+                    TipBanner(
+                      text: l10n.tipAutoWarmups,
+                      onDismiss: () => context.read<SettingsCubit>().tipSeen(
+                        Tip.autoWarmups,
+                      ),
+                    ),
+                  if (workout.exercises.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(Gap.md),
+                      child: Text(
+                        l10n.workoutEmpty,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                ],
+              ),
               ExerciseCards(
                 state: state,
                 editor: cubit,
                 picker: Routes.workoutPicker,
                 exerciseRoute: Routes.workoutExercise,
               ),
-              Padding(
-                padding: const EdgeInsets.all(Gap.md),
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.programAddExercises),
-                  onPressed:
-                      workout.exercises.length >= WorkoutLimits.maxExercises
-                      ? null
-                      : () => _addExercises(context, workout),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: NoteField(
-                  initial: workout.note,
-                  label: l10n.workoutNote,
-                  maxLength: WorkoutLimits.maxNoteLength,
-                  onChanged: cubit.setNote,
+              SliverPadding(
+                padding: const EdgeInsets.only(bottom: Gap.xl),
+                sliver: SliverList.list(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(Gap.md),
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.programAddExercises),
+                        onPressed:
+                            workout.exercises.length >=
+                                WorkoutLimits.maxExercises
+                            ? null
+                            : () => _addExercises(context, workout),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+                      child: NoteField(
+                        initial: workout.note,
+                        label: l10n.workoutNote,
+                        maxLength: WorkoutLimits.maxNoteLength,
+                        onChanged: cubit.setNote,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -254,16 +275,6 @@ class _ActiveWorkout extends StatelessWidget {
         )) {
       await cubit.discard();
     }
-  }
-
-  void _reorder(BuildContext context) {
-    final cubit = context.read<ActiveWorkoutCubit>();
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (_) => ReorderSheet(editor: cubit),
-    );
   }
 }
 

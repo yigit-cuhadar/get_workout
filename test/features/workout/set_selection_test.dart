@@ -135,16 +135,46 @@ void main() {
     });
   });
 
-  test('stepping stays within the exercise', () {
-    final w = workout('w', [
-      exercise('squat', [todo(), todo(), todo()]),
-      exercise('bench', [todo()]),
-    ]);
-    const middle = (exercise: 0, set: 1);
-    expect(stepSelection(w, middle, 1), (exercise: 0, set: 2));
-    expect(stepSelection(w, middle, -1), (exercise: 0, set: 0));
-    expect(stepSelection(w, (exercise: 0, set: 2), 1), (exercise: 0, set: 2));
-    expect(stepSelection(w, (exercise: 0, set: 0), -1), (exercise: 0, set: 0));
+  group('after moving a set', () {
+    const moved = (exercise: 0, set: 3);
+
+    test('the moved set is followed', () {
+      expect(selectionAfterSetMoved((exercise: 0, set: 3), moved, 1), (
+        exercise: 0,
+        set: 1,
+      ));
+    });
+
+    test('sets it passes shift, others stay', () {
+      expect(selectionAfterSetMoved((exercise: 0, set: 1), moved, 1), (
+        exercise: 0,
+        set: 2,
+      ));
+      expect(selectionAfterSetMoved((exercise: 0, set: 0), moved, 1), (
+        exercise: 0,
+        set: 0,
+      ));
+      expect(selectionAfterSetMoved((exercise: 0, set: 4), moved, 1), (
+        exercise: 0,
+        set: 4,
+      ));
+      expect(
+        selectionAfterSetMoved((exercise: 0, set: 2), (exercise: 0, set: 0), 2),
+        (exercise: 0, set: 1),
+      );
+    });
+
+    test('another exercise or no set is left alone', () {
+      expect(selectionAfterSetMoved((exercise: 1, set: 1), moved, 0), (
+        exercise: 1,
+        set: 1,
+      ));
+      expect(selectionAfterSetMoved((exercise: 0, set: null), moved, 0), (
+        exercise: 0,
+        set: null,
+      ));
+      expect(selectionAfterSetMoved(null, moved, 0), isNull);
+    });
   });
 
   group('after removing a set', () {
@@ -262,6 +292,44 @@ void main() {
       expect(
         selectionAfterExercisesAdded(before, after, (exercise: 0, set: 0)),
         (exercise: 0, set: 0),
+      );
+    });
+  });
+
+  group('effortSet', () {
+    final w = workout('w', [
+      exercise('squat', [
+        lift(40, 8, type: SetType.warmup),
+        lift(100, 5),
+        lift(100, 5, done: false),
+      ]),
+    ]);
+
+    test('the selected set when it is done', () {
+      expect(effortSet(w, (exercise: 0, set: 1), null), (exercise: 0, set: 1));
+    });
+
+    test('else the set just ticked, while it is done', () {
+      expect(effortSet(w, (exercise: 0, set: 2), (exercise: 0, set: 1)), (
+        exercise: 0,
+        set: 1,
+      ));
+      expect(
+        effortSet(w, (exercise: 0, set: 2), (exercise: 0, set: 2)),
+        isNull,
+      );
+      expect(effortSet(w, (exercise: 0, set: 2), null), isNull);
+    });
+
+    test('never a warm-up or a set that is gone', () {
+      expect(effortSet(w, (exercise: 0, set: 0), null), isNull);
+      expect(
+        effortSet(w, (exercise: 0, set: 2), (exercise: 0, set: 0)),
+        isNull,
+      );
+      expect(
+        effortSet(w, (exercise: 0, set: 2), (exercise: 3, set: 0)),
+        isNull,
       );
     });
   });

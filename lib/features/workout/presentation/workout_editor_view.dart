@@ -1,11 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/max_length_formatter.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/set_logging.dart';
+import '../../settings/domain/user_settings.dart';
+import '../../settings/presentation/settings_cubit.dart';
 import '../domain/workout.dart';
+import '../domain/workout_tips.dart';
 import 'workout_editor.dart';
+import 'workout_help.dart';
 import 'workout_text.dart';
 
 /// Asks [title] with [body]; true when the user picks [confirm].
@@ -34,50 +40,6 @@ Future<bool> confirmChoice(
     ),
   );
   return confirmed == true;
-}
-
-/// The exercises of the workout [editor] edits by name, reordered by
-/// dragging; groups move as one.
-class ReorderSheet extends StatelessWidget {
-  const ReorderSheet({super.key, required this.editor});
-
-  final WorkoutEditor<EditedWorkout> editor;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return BlocBuilder<WorkoutEditor<EditedWorkout>, EditedWorkout>(
-      bloc: editor,
-      buildWhen: (previous, current) =>
-          previous.workout?.exercises != current.workout?.exercises,
-      builder: (context, state) {
-        final exercises = state.workout?.exercises ?? const [];
-        return SafeArea(
-          child: ReorderableListView.builder(
-            shrinkWrap: true,
-            buildDefaultDragHandles: false,
-            itemCount: exercises.length,
-            onReorderItem: editor.moveExercise,
-            itemBuilder: (context, index) {
-              final exercise = exercises[index];
-              return ListTile(
-                key: ValueKey(index),
-                leading: ReorderableDragStartListener(
-                  index: index,
-                  child: Icon(
-                    Icons.drag_handle,
-                    semanticLabel: l10n.programReorder,
-                  ),
-                ),
-                title: Text(exercise.name),
-                trailing: exercise.group == null ? null : Text(exercise.group!),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
 }
 
 /// A multi-line note that applies every change at once.
@@ -120,31 +82,58 @@ class _NoteFieldState extends State<NoteField> {
 }
 
 /// Asks which kind of set to add to exercise [index] of the workout
-/// [editor] edits, and adds it; one tap each.
+/// [editor] edits, each with what it is, and adds it; one tap each. The
+/// first time, a tip tells what the kinds are. Needs [SettingsCubit] above.
 Future<void> addSetOfKind(
   BuildContext context,
   WorkoutEditor<EditedWorkout> editor,
   int index,
 ) async {
-  final l10n = AppLocalizations.of(context);
   final exercise = editor.state.workout?.exercises.elementAtOrNull(index);
   if (exercise == null) return;
+  final settings = context.read<SettingsCubit>();
   final type = await showModalBottomSheet<SetType>(
     context: context,
     showDragHandle: true,
-    builder: (context) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final type in SetType.values)
-            if (type != SetType.drop || exercise.loggingType.logsReps)
+    isScrollControlled: true,
+    builder: (context) {
+      final l10n = AppLocalizations.of(context);
+      final seen = context.select(
+        (SettingsCubit cubit) =>
+            cubit.state.loaded ? cubit.state.settings.seenTips : null,
+      );
+      return SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               ListTile(
-                title: Text(l10n.setTypeLabel(type)),
-                onTap: () => Navigator.pop(context, type),
+                title: Text(
+                  l10n.workoutAddSet,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                trailing: const WorkoutHelpButton(),
               ),
-        ],
-      ),
-    ),
+              if (setTypesTipDue(seen))
+                TipBanner(
+                  text: l10n.tipSetTypes,
+                  onDismiss: () => settings.tipSeen(Tip.setTypes),
+                ),
+              for (final type in exercise.loggingType.setTypes)
+                ListTile(
+                  title: Text(l10n.setTypeLabel(type)),
+                  subtitle: Text(l10n.setTypeHint(type)),
+                  onTap: () => Navigator.pop(context, type),
+                ),
+            ],
+          ),
+        ),
+      );
+    },
   );
-  if (type != null) editor.addSet(index, type);
+  if (type == null) return;
+  // Picking a kind is what the tip was for.
+  unawaited(settings.tipSeen(Tip.setTypes));
+  editor.addSet(index, type);
 }

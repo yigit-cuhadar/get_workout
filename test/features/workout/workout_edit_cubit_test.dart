@@ -262,6 +262,50 @@ void main() {
       await cubit.close();
     });
 
+    test('the effort row asks about the selected done set, no tips', () async {
+      final cubit = await editing();
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      expect(cubit.state.effortRef, (exercise: 0, set: 0));
+      expect(cubit.state.offersTips, isFalse);
+      await cubit.close();
+    });
+
+    test('exercises added to a past workout get no warm-ups', () async {
+      final cubit = await editing();
+      cubit.addExercises([move('row')], 'en');
+      expect(cubit.state.workout!.exercises.last.sets, const [WorkoutSet()]);
+      await cubit.close();
+    });
+
+    test('a set made a warm-up moves first, the selection with it', () async {
+      final cubit = await editing();
+      cubit
+        ..addSet(0, SetType.normal)
+        ..setType((exercise: 0, set: 1), SetType.warmup);
+      expect(cubit.state.workout!.exercises[0].sets.map((s) => s.type), [
+        SetType.warmup,
+        SetType.normal,
+      ]);
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      await cubit.close();
+    });
+
+    test('a card moves whole, the selection with it', () async {
+      final cubit = await editing();
+      cubit
+        ..addExercises([move('row'), move('curl')], 'en')
+        ..linkWithNext(1)
+        ..selectSet((exercise: 0, set: 0))
+        ..moveBlock(0, 1);
+      expect(cubit.state.workout!.exercises.map((e) => e.exerciseId), [
+        'row',
+        'curl',
+        'squat',
+      ]);
+      expect(cubit.state.selection, (exercise: 2, set: 0));
+      await cubit.close();
+    });
+
     test('a new pick clears the message of a set not ticked', () async {
       final cubit = await editing();
       cubit
@@ -273,16 +317,13 @@ void main() {
       await cubit.close();
     });
 
-    test('a reload starts over on the selection, keeps the set view', () async {
+    test('a reload starts over on the selection', () async {
       final cubit = await editing();
-      cubit
-        ..toggleSetView()
-        ..addSet(0, SetType.normal);
+      cubit.addSet(0, SetType.normal);
       stored.add((workout: legs.copyWith(name: 'Theirs'), pending: false));
       await pumpEventQueue();
       cubit.reload();
       expect(cubit.state.picked, isNull);
-      expect(cubit.state.setView, SetView.selectedSet);
       await cubit.close();
     });
   });

@@ -93,6 +93,7 @@ void main() {
         'themeMode': 'dark',
         'effortScale': 'rpe',
         'restTimer': {'enabled': true, 'defaultS': 90},
+        'autoWarmups': true,
         'stepGoal': 10000,
         'reminders': {
           'workout': {'enabled': false, 'minute': 480},
@@ -225,6 +226,60 @@ void main() {
     });
   });
 
+  group('automatic warm-ups and tips', () {
+    test('the switch is stored and read back', () async {
+      final settings = defaults.copyWith(autoWarmups: false);
+
+      await repository.saveSettings('u1', settings);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored['autoWarmups'], false);
+      expect(await repository.watchSettings('u1').first, settings);
+    });
+
+    test('tips seen are added one by one, others kept', () async {
+      await user().set({
+        'settings': {
+          'seenTips': ['later'],
+        },
+      });
+
+      await repository.markTipSeen('u1', Tip.effort);
+      await repository.markTipSeen('u1', Tip.setTypes);
+      await repository.markTipSeen('u1', Tip.effort);
+      // A whole save leaves them alone.
+      await repository.saveSettings('u1', defaults);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored['seenTips'], ['later', 'effort', 'setTypes']);
+      expect((await repository.watchSettings('u1').first).seenTips, {
+        Tip.effort,
+        Tip.setTypes,
+      });
+    });
+
+    test('missing ones read as warm-ups on and no tip seen', () async {
+      await user().set({
+        'settings': {'weightUnit': 'kg'},
+      });
+      final settings = await repository.watchSettings('u1').first;
+      expect(settings.autoWarmups, isTrue);
+      expect(settings.seenTips, isEmpty);
+    });
+
+    test('malformed ones read as the defaults, unknown tips dropped', () async {
+      await user().set({
+        'settings': {
+          'autoWarmups': 'no',
+          'seenTips': ['setTypes', 'later', 3],
+        },
+      });
+      final settings = await repository.watchSettings('u1').first;
+      expect(settings.autoWarmups, isTrue);
+      expect(settings.seenTips, {Tip.setTypes});
+    });
+  });
+
   group('step goal', () {
     test('is stored and read back', () async {
       final settings = defaults.copyWith(stepGoal: 7500);
@@ -346,6 +401,7 @@ void main() {
         'themeMode': 'system',
         'effortScale': 'feel',
         'restTimer': {'enabled': true, 'defaultS': 90},
+        'autoWarmups': true,
         'stepGoal': 10000,
         'reminders': {
           'workout': {'enabled': false, 'minute': 480},

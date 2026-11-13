@@ -235,6 +235,74 @@ from the earlier FitLab app.
   and not completed), stored as `toFailure` with RIR 0; there is no separate
   failure switch, and any set with `toFailure` shows Failed whatever its
   RIR. Effort shows in the chosen scale everywhere (bar, workout detail).
+  Effort is only stored and shown (bar, workout detail); nothing else uses
+  it yet, and the help says just that. Effort is only asked about a DONE
+  working set (`effortSet`): the set bar's effort row is about the
+  selected set when it is done (showing its stored effort; picking it
+  again clears it), else about the set just ticked (`ticked` in the editor
+  state), even though the selection has moved on to the next set, until it
+  is answered, another set is ticked, another set is picked, or sets move;
+  with neither there is no effort row. Warm-ups are never rated. The row
+  names its set: "How hard was set 1?", "How many more reps could you have
+  done in drop set 2?", "How hard was Squat set 3, from 1 to 10?" (the
+  exercise named when it is not the selected one).
+- **Automatic warm-up sets**: Settings → "Automatic warm-up sets", on by
+  default, also for users who never set it (`settings.autoWarmups`, a
+  missing value reads as on). While on, an exercise logged with a weight
+  and reps (`weight_reps` only: weighted and assisted bodyweight, reps-only
+  and timed exercises get none) starts with two empty warm-ups before its
+  working sets (`withWarmups`) when it enters a workout in progress: a
+  program day started, an exercise added (also to an empty workout, and
+  "start with this exercise"), or swapped in while none of its sets is done
+  (the selection then opens its first warm-up). Swapped for an exercise
+  that takes none, its untouched warm-ups (nothing entered, not done) go
+  (`withoutUnusedWarmups`). The choice and the unit are the user's own
+  settings: a program day waits for them (up to the catalogue wait); while
+  they have not arrived, or cannot be read, nothing gets warm-ups and
+  warm-ups suggest no ramp (never a ramp in a unit not known yet). Never on a past workout
+  (edited or added by hand), never to exercises already in the workout
+  when the setting changes, and none when the exercise already has a
+  warm-up or the two would pass the set limit. There is no "repeat a
+  workout" yet; a workout saved as a program starts as a program day.
+  The warm-ups' values are suggestions, like any set's: warm-up 1 is 50 %
+  of the first working set's weight × 8, warm-up 2 (and any later one)
+  75 % × 4 (`warmupRamp`, `rampedWarmup`), W being that set's weight as
+  typed, else as suggested; rounded to 2.5 kg or 5 lb in the user's unit,
+  never below one step nor above W (a fixed step: the plate inventory is
+  not consulted). They follow W until typed over or ticked; while W is
+  unknown (or 0) they fall back to the usual warm-up rule (the warm-up
+  before it), normally empty. In the workout in progress this ramp applies
+  to every warm-up of a `weight_reps` exercise, added automatically or
+  not; editing a past workout keeps the plain rule. Warm-ups keep their
+  meaning everywhere (no stats, volume, records or "of N", no rest).
+- **Explanations for beginners**: each set type has a one-line description
+  under its name in the add-set sheet and the bubble's long-press menu
+  (Normal "A regular working set.", Warm-up "A lighter set to get ready.
+  Not counted in your stats.", Drop set "Finish the set, then lower the
+  weight and keep going without rest."). The set bar asks the scale's
+  question about the set it asks about above the effort chips (see Effort
+  scale) and, for a warm-up or drop set, shows its description (one line,
+  the rest in the help) under the title, which names the kind in words (`setToDo`: "Bench Press · Warm-up
+  1 of 2", "· Warm-up" for the only one, "· Drop set 2 of 3"; the lock
+  screen and rest notification follow). An "Explain" (?) button next to
+  the question and in the add-set sheet opens one scrolling help sheet:
+  what effort is and what the app does with it, every step of the user's
+  scale and what it means, Failed, warm-up sets (with the automatic ramp)
+  and drop sets.
+- **First-use tips**: three inline banners (Material `MaterialBanner`,
+  never modal), each with "Got it", none until the user's settings have
+  arrived: effort, with the effort row about a set just ticked, in the
+  workout in progress only (not when editing a past workout), until an
+  effort is picked; set types, at the top of the add-set sheet, until a
+  type is picked there; automatic warm-ups, at the top of the workout in
+  progress once warm-ups were added to it automatically
+  (`warmupsAdded`), until the setting is changed. Dismissing or using the
+  thing marks it seen for good, in `settings.seenTips` (codes `effort`,
+  `setTypes`, `autoWarmups`; the app has no local flag store, and this
+  follows the user across devices). Tips are only ever added to that list,
+  field by field (`arrayUnion`), never written with the other settings, so
+  two devices and codes from newer versions are kept. Which tip is due is
+  pure logic (`workout_tips.dart`).
 - **1RM**: Epley, `weight * (1 + reps / 30)`; sets above 12 reps are ignored.
 - **Volume**: each completed working set counts 1 for every main muscle and
   0.5 for every secondary muscle. Warm-up sets do not count. A drop set counts
@@ -769,9 +837,26 @@ from the earlier FitLab app.
 - **Workout screen**: shared by the workout in progress and editing a
   stored or past workout. One card per exercise, or per superset/circuit;
   only the card of the selected set is open (name, goal, last time, note,
-  an info button to the exercise's detail page, the menu), the others show
-  "Squat · 1/3" with the menu still there, and tapping one opens it on its
-  first undone set, else its last. The selection is presentation state in
+  the menu, whose "Exercise details" opens the exercise's detail page), the
+  others show "Squat · 1/3" (working sets only, as "of N" counts them)
+  with the menu still there, and tapping one
+  opens it on its first undone set, else its last. Holding an exercise's
+  header (not its menu) as long as a long press collapses every card to its
+  one-line exercises, the held line scrolled back under the finger; only
+  once that is laid out does the drag start (the header's recognizer waits
+  for the cards to open its gate), so the dragged card and its gap are one
+  line, and the card (a superset or circuit as one, never split or dropped
+  inside another) follows the finger; once dropped (`moveBlock`,
+  `grouping.moveItem`) the cards open again with the same set selected.
+  Moving first scrolls instead; every pointer end (lift, cancel, the app
+  leaving) ends it, and the cards expand when the drop is applied or at the
+  latest 500 ms after the finger lifts. Headers cannot be held while cards
+  are collapsed (a drop still landing) or while edits are refused (saving,
+  finishing). Collapsing is local state of the cards; the drag uses
+  `SliverReorderableList`, its proxy a freshly built one-line card with the
+  page's providers re-provided. Screen readers get "Move up" / "Move down"
+  actions on the headers. The workout note and "Add exercise" stay below,
+  not draggable. The selection is presentation state in
   the editor cubit (`SetSelection`, `set_selection.dart`): until something
   is picked it is the next set to do (`nextSet`, which knows supersets),
   else the first exercise; ticking moves it to the next set to do (the
@@ -781,27 +866,31 @@ from the earlier FitLab app.
   sets and exercises keeps it on its set or exercise (removing the selected
   set selects the one that took its place, else the one before; removing its
   exercise falls back to the next set to do); skipping the rest leaves it.
-  Two set views exist for now, switched by an app-bar button, until the
-  owner picks one and the other is deleted (`SetView`; in memory, kept from
-  one workout to the next while the app runs; the edit page has its own,
-  starting with bubbles): **bubbles** (a wrapping row of round bubbles, a
-  warm-up dashed with "W", a drop set "2D", done ones ticked, the selected
-  one in the theme's selected colours, a "+" bubble; a group stacks one row
-  per exercise, labelled A1, A2, warm-ups first, then one column per round
-  with the round's bubbles joined) and **selected set** ("Squat · set 2 of
-  3", a warm-up "Squat · set W", last time's set, arrows within the exercise,
-  "Add set"). Adding a set asks Normal / Warm-up / Drop set (a drop set
-  only for rep-based exercises); a warm-up goes after the existing
-  warm-ups, other sets at the end, all empty with the usual suggestions as
-  hints. The **set bar** sits at the bottom of the page above the rest
+  The open card shows its sets as **bubbles** (the owner's pick; the
+  "selected set only" view was tried and deleted): a wrapping row of round
+  bubbles, a warm-up dashed with "W", a drop set "2D", done ones ticked, the
+  selected one in the theme's selected colours, a "+" bubble; a group
+  stacks one row per exercise, labelled A1, A2, warm-ups first, then one
+  column per round with the round's bubbles joined. Tapping a bubble
+  selects its set; long-pressing it opens a menu at the bubble with "Change
+  to …" for the other set types it can be and "Remove set" (also custom
+  screen-reader actions), the same as the bar's "more" sheet. Adding a set
+  asks Normal / Warm-up / Drop set (a drop set only for rep-based
+  exercises); a warm-up goes after the existing warm-ups, other sets at the
+  end, all empty with the usual suggestions as hints. Changing a set's type
+  keeps warm-ups first: a set made a warm-up moves to after the other
+  warm-ups, a warm-up made a working set becomes the first working set,
+  normal and drop sets stay in place (`retypedSetPosition`); the selection
+  follows the moved set, and a running rest forgets the set it followed as
+  for any move. The **set bar** sits at the bottom of the page above the rest
   strip and the safe area; while the keyboard is up the rest strip steps
   aside (still mounted) so the bar sits right on the keyboard, the list
-  above shrinks and stays scrollable, and the selected bubble or set is
+  above shrinks and stays scrollable, and the selected bubble is
   scrolled into view. It shows the selected set ("Squat · set 2 of 3", last
-  time in the bubbles view, the set note), its fields by logging type with
+  time, the set note), its fields by logging type with
   the suggestion as hint, a drop set's drops (edit, remove, add) right
   under them, the effort steps, the tick (which needs no keyboard and starts
-  the rest as before) and a "more" sheet for the set type, note and
+  the rest as before) and a "more" sheet (following the selection, so a type change that moves the set keeps it on that set) for the set type, note and
   removal; an invalid tick's message shows in it. Sets are named
   everywhere by `setLabel` and `setToDo` (W, 1, 2D; "of N" counts working
   sets), the same as the lock screen and the rest notification. The exercise detail page
@@ -1013,10 +1102,11 @@ from the earlier FitLab app.
   setting says). Rest: title "Rest" and the next set as in the rest
   notification (none when nothing is left); workout: its name, the elapsed
   time since `startedAt`, and the set to do now ("Bench Press · set 2 of
-  3", "Bench Press · set W" for a warm-up; none when every set is done).
-  Sets are named as the workout page's set column names them (`setLabel`:
-  W for a warm-up, else the number among the working sets, 2D for a drop
-  set; "of N" counts working sets), in the rest notification too. The set
+  3", "Bench Press · Warm-up 1 of 2", "Bench Press · Drop set 2 of 3", as
+  `setToDo` names it; none when every set is done). The rest notification
+  and the lock screen's line after the rest name the next set the same
+  way ("Next: Bench Press · set 2 of 3"; `restNextText`). The set column
+  names sets by `setLabel` (W, 1, 2D). The set
   to do now is the next one (`nextSet`) after the set ticked last in this
   run of the app, whatever became of its rest (skipped, or none with the
   rest timer off), forgotten when that set is unticked or no longer done
@@ -1296,7 +1386,8 @@ reader has an active entitlement.
 
 **`users/{uid}`**: `profile` (goal, level, daysPerWeek, equipment[], sex,
 birthYear, heightCm, weightKg, targetWeightKg), `settings` (units,
-effortScale, restTimer, bar and plates, stepGoal, reminder times,
+effortScale, restTimer, autoWarmups, seenTips[], bar and plates, stepGoal,
+reminder times,
 trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
 `activeProgram` (`programId`, `weekdays[]` ISO 1-7, `nextDayIndex`,
 `nextDate` `YYYY-MM-DD`, `startedAt` device-clock timestamp).
@@ -1435,7 +1526,7 @@ Group 4, programs
 
 Group 5, workout
 - [x] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery
-- [x] Workout screen redesign — one exercise open at a time, set bar, bubbles or selected-set view (temporary toggle), effort by feel / RIR / RPE with Failed, exercise details from the workout, add set by kind
+- [x] Workout screen redesign — one exercise open at a time, set bar, set bubbles (long-press for type and removal), exercise cards reordered by holding a header, effort by feel / RIR / RPE with Failed, exercise details from the workout, add set by kind
 - [x] Free workout — start empty (not in progress until an exercise is added), save as program at the end
 - [x] Rest timer — auto start, +15 s, skip, notification
 - [x] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification

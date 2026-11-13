@@ -1,19 +1,22 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../domain/set_logging.dart';
 import '../domain/workout.dart';
 import 'keep_visible.dart';
 import 'workout_editor.dart';
 import 'workout_editor_view.dart';
 import 'workout_text.dart';
 
-/// [SetView.bubbles]: the sets of exercises [start] to [end] (one, or a
-/// superset or circuit) as bubbles. One exercise wraps its bubbles; a group
-/// stacks a row per exercise, led by its [groupItemLabel], the warm-ups
-/// first, then each round in a column, a round's bubbles joined.
+/// The sets of exercises [start] to [end] (one, or a superset or circuit)
+/// as bubbles. One exercise wraps its bubbles; a group stacks a row per
+/// exercise, led by its [groupItemLabel], the warm-ups first, then each
+/// round in a column, a round's bubbles joined. Tapping a bubble selects
+/// its set; long-pressing it offers the other set types and removal.
 class SetBubbles extends StatelessWidget {
   const SetBubbles({
     super.key,
@@ -155,18 +158,54 @@ class _SetBubble extends StatelessWidget {
     final selected =
         selection?.exercise == ref.exercise && selection?.set == ref.set;
     final style = theme.textTheme.labelLarge;
-    final bubble = _Bubble(
-      label: l10n.setBubbleLabel(exercise, ref.set),
-      selected: selected,
-      done: set.done,
-      dashed: set.isWarmup,
-      onTap: () => editor.selectSet(ref),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(l10n.setLabel(exercise, ref.set), style: style),
-          if (set.done) Icon(Icons.check, size: style?.fontSize),
-        ],
+    // The same as the set bar's options: see WorkoutEditor.setType.
+    final actions = [
+      for (final type in exercise.loggingType.setTypes)
+        if (type != set.type)
+          (
+            label: l10n.workoutChangeSetType(l10n.setTypeLabel(type)),
+            hint: l10n.setTypeHint(type),
+            run: () => editor.setType(ref, type),
+          ),
+      (
+        label: l10n.workoutRemoveSet,
+        hint: null,
+        run: () => editor.removeSet(ref),
+      ),
+    ];
+    final bubble = MenuAnchor(
+      menuChildren: [
+        for (final action in actions)
+          MenuItemButton(
+            onPressed: action.run,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(action.label),
+                if (action.hint case final hint?)
+                  Text(hint, style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+      ],
+      builder: (context, menu, _) => _Bubble(
+        label: l10n.setBubbleLabel(exercise, ref.set),
+        selected: selected,
+        done: set.done,
+        dashed: set.isWarmup,
+        onTap: () => editor.selectSet(ref),
+        onLongPress: menu.open,
+        actions: {
+          for (final action in actions)
+            CustomSemanticsAction(label: action.label): action.run,
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.setLabel(exercise, ref.set), style: style),
+            if (set.done) Icon(Icons.check, size: style?.fontSize),
+          ],
+        ),
       ),
     );
     return selected ? KeepVisible(child: bubble) : bubble;
@@ -204,12 +243,15 @@ double bubbleSize(BuildContext context) => math.max(
 );
 
 /// A round button of [bubbleSize], outlined, dashed or filled as selected
-/// or done.
+/// or done. [actions], also offered by [onLongPress], reach screen readers
+/// as custom actions.
 class _Bubble extends StatelessWidget {
   const _Bubble({
     required this.label,
     required this.onTap,
     required this.child,
+    this.onLongPress,
+    this.actions,
     this.selected = false,
     this.done = false,
     this.dashed = false,
@@ -217,6 +259,8 @@ class _Bubble extends StatelessWidget {
 
   final String label;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final Map<CustomSemanticsAction, VoidCallback>? actions;
   final Widget child;
   final bool selected;
   final bool done;
@@ -231,6 +275,8 @@ class _Bubble extends StatelessWidget {
       selected: selected,
       enabled: onTap != null,
       label: label,
+      onTap: onTap,
+      customSemanticsActions: actions,
       excludeSemantics: true,
       child: SizedBox.square(
         dimension: bubbleSize(context),
@@ -246,6 +292,7 @@ class _Bubble extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onTap,
+              onLongPress: onLongPress,
               child: Center(child: child),
             ),
           ),

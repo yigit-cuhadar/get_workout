@@ -13,6 +13,18 @@ enum ThemePreference { system, light, dark }
 /// (RIR) whichever is shown; see `EffortScaleSteps`.
 enum EffortScale { byFeel, rir, rpe }
 
+/// A first-use tip the app shows once (`settings.seenTips`).
+enum Tip {
+  /// After the first set is ticked: effort can be logged.
+  effort,
+
+  /// In the add-set sheet: what the set types are.
+  setTypes,
+
+  /// Once a workout has automatic warm-ups: they can be turned off.
+  autoWarmups,
+}
+
 const kgPerLb = 0.45359237;
 const cmPerInch = 2.54;
 
@@ -212,6 +224,8 @@ class UserSettings extends Equatable {
     this.themePreference = ThemePreference.system,
     this.effortScale = EffortScale.byFeel,
     this.restTimer = const RestTimerSettings(),
+    this.autoWarmups = true,
+    this.seenTips = const {},
     this.stepGoal = StepGoal.standard,
     this.workoutReminder = const WorkoutReminderSettings(),
     this.measurementReminder = const MeasurementReminderSettings(),
@@ -236,6 +250,14 @@ class UserSettings extends Equatable {
   final ThemePreference themePreference;
   final EffortScale effortScale;
   final RestTimerSettings restTimer;
+
+  /// Whether exercises logged with a weight and reps start with two warm-up
+  /// sets in a workout in progress; see `withWarmups`.
+  final bool autoWarmups;
+
+  /// The first-use tips dismissed, or no longer needed as the user did
+  /// what they tell.
+  final Set<Tip> seenTips;
 
   /// Steps a day, within [StepGoal.min] and [StepGoal.max].
   final int stepGoal;
@@ -293,6 +315,8 @@ class UserSettings extends Equatable {
     ThemePreference? themePreference,
     EffortScale? effortScale,
     RestTimerSettings? restTimer,
+    bool? autoWarmups,
+    Set<Tip>? seenTips,
     int? stepGoal,
     WorkoutReminderSettings? workoutReminder,
     MeasurementReminderSettings? measurementReminder,
@@ -305,6 +329,8 @@ class UserSettings extends Equatable {
     themePreference: themePreference ?? this.themePreference,
     effortScale: effortScale ?? this.effortScale,
     restTimer: restTimer ?? this.restTimer,
+    autoWarmups: autoWarmups ?? this.autoWarmups,
+    seenTips: seenTips ?? this.seenTips,
     stepGoal: stepGoal ?? this.stepGoal,
     workoutReminder: workoutReminder ?? this.workoutReminder,
     measurementReminder: measurementReminder ?? this.measurementReminder,
@@ -321,6 +347,8 @@ class UserSettings extends Equatable {
     themePreference: themePreference,
     effortScale: effortScale,
     restTimer: restTimer,
+    autoWarmups: autoWarmups,
+    seenTips: seenTips,
     stepGoal: stepGoal,
     customTrackedMeasurements: customTrackedMeasurements,
     workoutReminder: workoutReminder,
@@ -334,6 +362,8 @@ class UserSettings extends Equatable {
     themePreference,
     effortScale,
     restTimer,
+    autoWarmups,
+    seenTips,
     stepGoal,
     workoutReminder,
     measurementReminder,

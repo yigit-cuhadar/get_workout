@@ -32,6 +32,11 @@ class FirestoreSettingsRepository implements SettingsRepository {
     EffortScale.rir: 'rir',
     EffortScale.rpe: 'rpe',
   };
+  static const _tipCodes = {
+    Tip.effort: 'effort',
+    Tip.setTypes: 'setTypes',
+    Tip.autoWarmups: 'autoWarmups',
+  };
 
   @override
   Stream<UserSettings> watchSettings(String uid) =>
@@ -74,6 +79,11 @@ class FirestoreSettingsRepository implements SettingsRepository {
           ? EffortScale.byFeel
           : _decode(_effortCodes, map['effortScale'], defaults.effortScale),
       restTimer: _restTimer(map['restTimer']),
+      autoWarmups: switch (map['autoWarmups']) {
+        final bool on => on,
+        _ => defaults.autoWarmups,
+      },
+      seenTips: _tips(map['seenTips']),
       stepGoal: _stepGoal(map['stepGoal']),
       workoutReminder: _workoutReminder(map['reminders']),
       measurementReminder: _measurementReminder(map['reminders']),
@@ -84,7 +94,18 @@ class FirestoreSettingsRepository implements SettingsRepository {
   }
 
   /// The bar, plates and tracked measurements are written only while
-  /// customised; deleting them returns the user to the default.
+  /// customised; deleting them returns the user to the default. Seen tips
+  /// are only ever added, by [markTipSeen].
+  @override
+  Future<Result<void>> markTipSeen(String uid, Tip tip) => guard(
+    () => _user(uid).set({
+      'settings': {
+        'seenTips': FieldValue.arrayUnion([_tipCodes[tip]]),
+      },
+    }, SetOptions(merge: true)),
+    mapper: mapFirebaseError,
+  );
+
   static Map<String, Object?> _toMap(UserSettings settings) => {
     'weightUnit': _weightCodes[settings.weightUnit],
     'lengthUnit': _lengthCodes[settings.lengthUnit],
@@ -95,6 +116,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
       'defaultS': settings.restTimer.defaultS,
       'notify': ?settings.restTimer.notify,
     },
+    'autoWarmups': settings.autoWarmups,
     'stepGoal': settings.stepGoal,
     'reminders': {
       'workout': {
@@ -125,6 +147,14 @@ class FirestoreSettingsRepository implements SettingsRepository {
   static Set<BodyMeasurement>? _measurements(Object? raw) => raw is List
       ? {for (final code in raw) ?BodyMeasurement.fromCode(code)}
       : null;
+
+  /// Unknown codes are dropped; anything but a list reads as none seen.
+  static Set<Tip> _tips(Object? raw) => raw is List
+      ? {
+          for (final MapEntry(:key, :value) in _tipCodes.entries)
+            if (raw.contains(value)) key,
+        }
+      : const {};
 
   /// Anything missing or of the wrong type reads as the default; the
   /// duration is clamped to the limits.

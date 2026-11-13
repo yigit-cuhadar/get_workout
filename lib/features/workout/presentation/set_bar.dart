@@ -11,8 +11,10 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/effort.dart';
 import '../domain/set_logging.dart';
 import '../domain/workout.dart';
+import '../domain/workout_tips.dart';
 import 'number_cell.dart';
 import 'workout_editor.dart';
+import 'workout_help.dart';
 import 'workout_text.dart';
 
 /// A page logging a workout: [content] above, and at the bottom the
@@ -134,9 +136,9 @@ class SetBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final settings = context.select(
-      (SettingsCubit cubit) => cubit.state.settings,
-    );
+    final settingsState = context.select((SettingsCubit cubit) => cubit.state);
+    final settings = settingsState.settings;
+    final seen = settingsState.loaded ? settings.seenTips : null;
     final unit = settings.weightUnit;
     final selection = state.selection;
     final index = selection?.set;
@@ -146,9 +148,7 @@ class SetBar extends StatelessWidget {
     final set = exercise.sets[ref.set];
     final type = exercise.loggingType;
     final hint = state.suggestion(ref);
-    final previous = state.setView == SetView.bubbles
-        ? state.lastTime(ref)
-        : null;
+    final previous = state.lastTime(ref);
     final details = [
       if (previous != null)
         l10n.workoutLastTimeSet(l10n.setWithUnitText(previous, type, unit)),
@@ -172,6 +172,13 @@ class SetBar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (set.type != SetType.normal)
+                      Text(
+                        l10n.setTypeHint(set.type),
+                        style: theme.textTheme.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     if (details.isNotEmpty)
                       Text(
                         details.join(' · '),
@@ -189,7 +196,7 @@ class SetBar extends StatelessWidget {
                   context: context,
                   showDragHandle: true,
                   isScrollControlled: true,
-                  builder: (_) => _SetOptions(ref: ref, editor: editor),
+                  builder: (_) => _SetOptions(editor: editor),
                 ),
               ),
             ],
@@ -259,11 +266,18 @@ class SetBar extends StatelessWidget {
                       unit: unit,
                       editor: editor,
                     ),
-                  _EffortChoice(
-                    scale: settings.effortScale,
-                    chosen: settings.effortScale.stepOf(set),
-                    onChosen: (step) => editor.setEffort(ref, step),
-                  ),
+                  if (state.effortRef case final asked?)
+                    _EffortRow(
+                      asked: asked,
+                      state: state,
+                      editor: editor,
+                      tip: effortTipDue(
+                        seen,
+                        offered: state.offersTips,
+                        asked: asked,
+                        ticked: state.ticked,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -335,6 +349,64 @@ class _Drops extends StatelessWidget {
   }
 }
 
+/// The effort of done set [asked] (see [effortSet]): which set it asks
+/// about, the help, the steps, and the first time its [tip].
+class _EffortRow extends StatelessWidget {
+  const _EffortRow({
+    required this.asked,
+    required this.state,
+    required this.editor,
+    required this.tip,
+  });
+
+  final SetRef asked;
+  final EditedWorkout state;
+  final WorkoutEditor<EditedWorkout> editor;
+  final bool tip;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final settings = context.read<SettingsCubit>();
+    final scale = context.select(
+      (SettingsCubit cubit) => cubit.state.settings.effortScale,
+    );
+    final workout = state.workout!;
+    final set = workout.exercises[asked.exercise].sets[asked.set];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (tip)
+          TipBanner(
+            text: l10n.tipEffort,
+            onDismiss: () => settings.tipSeen(Tip.effort),
+          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.effortQuestion(scale, workout, asked, state.selection),
+                style: theme.textTheme.labelLarge,
+              ),
+            ),
+            const WorkoutHelpButton(),
+          ],
+        ),
+        _EffortChoice(
+          scale: scale,
+          chosen: scale.stepOf(set),
+          onChosen: (step) {
+            editor.setEffort(asked, step);
+            // Used, so its tip has nothing left to tell.
+            settings.tipSeen(Tip.effort);
+          },
+        ),
+      ],
+    );
+  }
+}
+
 /// The steps of [scale] in a row, [chosen] selected; picking the chosen
 /// one again clears it.
 class _EffortChoice extends StatelessWidget {
@@ -351,13 +423,11 @@ class _EffortChoice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         spacing: Gap.xs,
         children: [
-          Text(l10n.workoutEffort, style: theme.textTheme.labelLarge),
           for (final step in scale.steps)
             ChoiceChip(
               showCheckmark: false,
@@ -394,11 +464,12 @@ class _StepLabel extends StatelessWidget {
   }
 }
 
-/// A set's kind, note and removal; every change applies at once.
+/// The selected set's kind, note and removal; every change applies at
+/// once. It follows the selection, which follows the set when a change of
+/// kind moves it.
 class _SetOptions extends StatelessWidget {
-  const _SetOptions({required this.ref, required this.editor});
+  const _SetOptions({required this.editor});
 
-  final SetRef ref;
   final WorkoutEditor<EditedWorkout> editor;
 
   @override
@@ -408,9 +479,12 @@ class _SetOptions extends StatelessWidget {
     return BlocBuilder<WorkoutEditor<EditedWorkout>, EditedWorkout>(
       bloc: editor,
       builder: (context, state) {
-        final exercise = state.workout?.exercises.elementAtOrNull(ref.exercise);
-        final set = exercise?.sets.elementAtOrNull(ref.set);
-        if (exercise == null || set == null) return const SizedBox.shrink();
+        final selection = state.selection;
+        final index = selection?.set;
+        if (selection == null || index == null) return const SizedBox.shrink();
+        final ref = (exercise: selection.exercise, set: index);
+        final exercise = state.workout!.exercises[ref.exercise];
+        final set = exercise.sets[ref.set];
         return SafeArea(
           top: false,
           child: Padding(
@@ -426,16 +500,16 @@ class _SetOptions extends StatelessWidget {
                 Wrap(
                   spacing: Gap.sm,
                   children: [
-                    for (final type in SetType.values)
-                      if (type != SetType.drop || exercise.loggingType.logsReps)
-                        ChoiceChip(
-                          label: Text(l10n.setTypeLabel(type)),
-                          selected: set.type == type,
-                          onSelected: (_) => editor.setType(ref, type),
-                        ),
+                    for (final type in exercise.loggingType.setTypes)
+                      ChoiceChip(
+                        label: Text(l10n.setTypeLabel(type)),
+                        selected: set.type == type,
+                        onSelected: (_) => editor.setType(ref, type),
+                      ),
                   ],
                 ),
                 TextFormField(
+                  key: ValueKey(ref),
                   initialValue: set.note,
                   maxLines: null,
                   textCapitalization: TextCapitalization.sentences,
@@ -464,22 +538,4 @@ class _SetOptions extends StatelessWidget {
       },
     );
   }
-}
-
-/// Switches between the two ways the open exercise shows its sets; see
-/// [SetView].
-class SetViewToggle extends StatelessWidget {
-  const SetViewToggle(this.view, {super.key, required this.onPressed});
-
-  final SetView view;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: AppLocalizations.of(context).workoutSetsView,
-    isSelected: view == SetView.selectedSet,
-    icon: const Icon(Icons.bubble_chart_outlined),
-    selectedIcon: const Icon(Icons.view_carousel_outlined),
-    onPressed: onPressed,
-  );
 }

@@ -9,6 +9,7 @@ import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/effort.dart';
 import '../domain/exercise_stats.dart';
+import '../domain/set_selection.dart';
 import '../domain/workout.dart';
 
 extension WorkoutText on AppLocalizations {
@@ -23,16 +24,35 @@ extension WorkoutText on AppLocalizations {
     };
   }
 
-  /// Set [set] of [exercise] as the one to do now, e.g. `Bench Press · set
-  /// 2 of 3`, out of the working sets; a warm-up without the count.
+  /// Set [set] of [exercise] as the one to do now, its kind in words:
+  /// `Bench Press · set 2 of 3`, `Bench Press · Drop set 2 of 3` (out of
+  /// the working sets), `Bench Press · Warm-up 1 of 2` (out of the
+  /// warm-ups), or `Bench Press · Warm-up` for the only one.
   String setToDo(WorkoutExercise exercise, int set) {
-    final label = setLabel(exercise, set);
-    if (exercise.sets[set].isWarmup) {
-      return workoutLockScreenWarmup(exercise.name, label);
+    final sets = exercise.sets;
+    final type = sets[set].type;
+    final before = sets.take(set + 1);
+    if (type == SetType.warmup) {
+      final warmups = sets.where((s) => s.isWarmup).length;
+      return warmups == 1
+          ? workoutSetToDoWarmup(exercise.name)
+          : workoutSetToDoWarmupOf(
+              exercise.name,
+              before.where((s) => s.isWarmup).length,
+              warmups,
+            );
     }
-    final working = exercise.sets.where((s) => !s.isWarmup).length;
-    return workoutLockScreenCurrent(exercise.name, label, working);
+    final number = before.where((s) => !s.isWarmup).length;
+    final working = sets.where((s) => !s.isWarmup).length;
+    return type == SetType.drop
+        ? workoutSetToDoDrop(exercise.name, number, working)
+        : workoutLockScreenCurrent(exercise.name, '$number', working);
   }
+
+  /// After a rest, set [set] of [exercise] as [setToDo] names it, e.g.
+  /// `Next: Bench Press · Warm-up 1 of 2`.
+  String restNextText(WorkoutExercise exercise, int set) =>
+      restNotificationNext(setToDo(exercise, set));
 
   /// A lifted weight in [unit] for a text field, as
   /// [WeightUnitConversion.shown] shows it: up to two decimals, no trailing
@@ -102,6 +122,55 @@ extension WorkoutText on AppLocalizations {
     SetType.warmup => workoutSetWarmup,
     SetType.drop => workoutSetDrop,
   };
+
+  /// What a set of [type] is, in one line.
+  String setTypeHint(SetType type) => switch (type) {
+    SetType.normal => workoutSetNormalHint,
+    SetType.warmup => workoutSetWarmupHint,
+    SetType.drop => workoutSetDropHint,
+  };
+
+  /// What [step] of [scale] means in words, e.g. `1 rep left`.
+  String effortStepMeaning(EffortStep step, EffortScale scale) {
+    if (step.failed) return helpFailed;
+    if (effortStepHint(step, scale) case final hint?) return hint;
+    return step.rir >= WorkoutLimits.maxRir
+        ? helpRepsLeftPlus(WorkoutLimits.maxRir)
+        : helpRepsLeft(step.rir);
+  }
+
+  /// What the effort row of [scale] asks about set [asked] of [workout],
+  /// e.g. `How hard was set 2?`, naming its exercise when it is not the
+  /// [selected] one: `How hard was Squat drop set 3?`.
+  String effortQuestion(
+    EffortScale scale,
+    Workout workout,
+    SetRef asked,
+    SetSelection? selected,
+  ) {
+    final exercise = workout.exercises[asked.exercise];
+    final sets = exercise.sets;
+    final number = sets.take(asked.set + 1).where((s) => !s.isWarmup).length;
+    final name = sets[asked.set].type == SetType.drop
+        ? effortDropSetName(number)
+        : effortSetName(number);
+    final set = selected?.exercise == asked.exercise
+        ? name
+        : effortOtherExerciseSet(exercise.name, name);
+    return switch (scale) {
+      EffortScale.byFeel => effortQuestionFeel(set),
+      EffortScale.rir => effortQuestionRir(set),
+      EffortScale.rpe => effortQuestionRpe(set),
+    };
+  }
+
+  /// The progress of [exercise] in working sets, e.g. `Squat · 1/3`, as
+  /// "of N" counts them everywhere.
+  String exerciseProgress(WorkoutExercise exercise) => workoutExerciseProgress(
+    exercise.name,
+    workingSets(exercise.sets).length,
+    exercise.sets.where((s) => !s.isWarmup).length,
+  );
 
   /// [step] as a choice of [scale] shows it: `Easy`, `4` (RIR), `6` (RPE),
   /// `Failed`.

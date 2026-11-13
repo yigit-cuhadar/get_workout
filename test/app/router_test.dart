@@ -217,6 +217,7 @@ void main() {
       watchAuthUser: WatchAuthUser(settingsAuth),
       watchSettings: WatchSettings(settingsRepository),
       updateSettings: UpdateSettings(settingsRepository),
+      markTipSeen: MarkTipSeen(settingsRepository),
       defaults: UserSettings.defaultsFor(null),
     );
     // The library runs on a fixed catalogue with no user data and a model

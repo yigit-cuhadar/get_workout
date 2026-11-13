@@ -42,12 +42,23 @@ SetSelection openedExercise(Workout workout, int index) {
 SetSelection selectionAfterTick(Workout workout, SetRef ticked) =>
     nextSet(workout, ticked) ?? ticked;
 
-/// [current] moved [by] sets within its exercise, stopping at either end.
-SetSelection stepSelection(Workout workout, SetSelection current, int by) {
-  final set = current.set;
-  if (set == null) return current;
-  final count = workout.exercises[current.exercise].sets.length;
-  return (exercise: current.exercise, set: (set + by).clamp(0, count - 1));
+/// After set [moved] was moved to position [to] of its exercise: [current]
+/// where its set went.
+SetSelection? selectionAfterSetMoved(
+  SetSelection? current,
+  SetRef moved,
+  int to,
+) {
+  final set = current?.set;
+  if (current == null || set == null || current.exercise != moved.exercise) {
+    return current;
+  }
+  if (set == moved.set) return (exercise: current.exercise, set: to);
+  final without = set > moved.set ? set - 1 : set;
+  return (
+    exercise: current.exercise,
+    set: without >= to ? without + 1 : without,
+  );
 }
 
 /// After set [removed] was removed: [current] where it moved to, or, when
@@ -128,4 +139,25 @@ class _Position implements Groupable<_Position> {
 
   @override
   _Position withGroup(String? group) => _Position(index, group);
+}
+
+/// The set whose effort the set bar asks for, always a done working set
+/// (warm-ups are not rated): the selected set when it is done, else
+/// [ticked], the set ticked last until another is picked, while it is
+/// still done; else none.
+SetRef? effortSet(Workout? workout, SetSelection? selection, SetRef? ticked) {
+  bool rated(SetRef ref) {
+    final set = workout?.exercises
+        .elementAtOrNull(ref.exercise)
+        ?.sets
+        .elementAtOrNull(ref.set);
+    return set != null && set.done && !set.isWarmup;
+  }
+
+  final index = selection?.set;
+  if (selection != null && index != null) {
+    final selected = (exercise: selection.exercise, set: index);
+    if (rated(selected)) return selected;
+  }
+  return ticked != null && rated(ticked) ? ticked : null;
 }

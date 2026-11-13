@@ -4,6 +4,7 @@ import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/presentation/program_text.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
+import 'package:get_workout/features/workout/domain/effort.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/presentation/workout_text.dart';
@@ -71,10 +72,81 @@ void main() {
       );
     });
 
-    test('the set to do now counts working sets only', () {
+    test('the set to do now names its kind and counts its own kind', () {
       expect(l10n.setToDo(bench, 3), 'Bench Press · set 3 of 3');
-      expect(l10n.setToDo(bench, 0), 'Bench Press · set W');
+      expect(l10n.setToDo(bench, 2), 'Bench Press · Drop set 2 of 3');
+      expect(l10n.setToDo(bench, 0), 'Bench Press · Warm-up');
+      final warmed = bench.copyWith(
+        sets: [
+          lift(20, 8, type: SetType.warmup),
+          ...bench.sets,
+        ],
+      );
+      expect(l10n.setToDo(warmed, 1), 'Bench Press · Warm-up 2 of 2');
     });
+
+    test('the effort row names the set it asks about', () {
+      final w = workout('w', [
+        bench,
+        exercise('Squat', [lift(100, 5)]),
+      ]);
+      const selected = (exercise: 0, set: 3);
+      expect(
+        l10n.effortQuestion(EffortScale.byFeel, w, (
+          exercise: 0,
+          set: 1,
+        ), selected),
+        'How hard was set 1?',
+      );
+      expect(
+        l10n.effortQuestion(EffortScale.rir, w, (
+          exercise: 0,
+          set: 2,
+        ), selected),
+        'How many more reps could you have done in drop set 2?',
+      );
+      expect(
+        l10n.effortQuestion(EffortScale.rpe, w, (
+          exercise: 1,
+          set: 0,
+        ), selected),
+        'How hard was Squat set 1, from 1 to 10?',
+      );
+    });
+
+    test('progress counts working sets only', () {
+      expect(l10n.exerciseProgress(bench), 'Bench Press · 2/3');
+    });
+
+    test('after a rest the next set is named as the set to do', () {
+      expect(l10n.restNextText(bench, 0), 'Next: Bench Press · Warm-up');
+      expect(
+        l10n.restNextText(bench, 2),
+        'Next: Bench Press · Drop set 2 of 3',
+      );
+    });
+  });
+
+  test('each effort step says what it means on its scale', () {
+    expect(
+      [
+        for (final step in EffortScale.rir.steps)
+          l10n.effortStepMeaning(step, EffortScale.rir),
+      ],
+      [
+        '5 or more reps left',
+        '4 reps left',
+        '3 reps left',
+        '2 reps left',
+        '1 rep left',
+        'No reps left',
+        "You tried the last rep and couldn't finish it.",
+      ],
+    );
+    expect(
+      l10n.effortStepMeaning(const EffortStep.reserve(1), EffortScale.byFeel),
+      '1 left',
+    );
   });
 
   group('a weight typed in the other unit shows rounded', () {
