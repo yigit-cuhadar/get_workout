@@ -23,7 +23,12 @@ import 'program_text.dart';
 
 /// Creates a program, or edits program [programId].
 class ProgramBuilderPage extends StatelessWidget {
-  const ProgramBuilderPage({super.key, this.programId, this.returns = false});
+  const ProgramBuilderPage({
+    super.key,
+    this.programId,
+    this.returns = false,
+    this.picker = Routes.exercisePicker,
+  });
 
   final String? programId;
 
@@ -31,20 +36,24 @@ class ProgramBuilderPage extends StatelessWidget {
   /// there instead of opening the new program or the programs.
   final bool returns;
 
+  /// The exercise picker above this page, in its tab.
+  final String Function({required int max, required bool multiple}) picker;
+
   @override
   Widget build(BuildContext context) {
     final unit = context.read<SettingsCubit>().state.settings.weightUnit;
     return BlocProvider(
       create: (_) => sl<ProgramBuilderCubit>(param1: programId, param2: unit),
-      child: _BuilderView(returns: returns),
+      child: _BuilderView(returns: returns, picker: picker),
     );
   }
 }
 
 class _BuilderView extends StatelessWidget {
-  const _BuilderView({required this.returns});
+  const _BuilderView({required this.returns, required this.picker});
 
   final bool returns;
+  final String Function({required int max, required bool multiple}) picker;
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +143,7 @@ class _BuilderView extends StatelessWidget {
                     onRetry: context.read<ExerciseCatalogueCubit>().retry,
                   ),
                   _ when !ready => const LoadingView(),
-                  _ => const _Form(),
+                  _ => _Form(picker: picker),
                 },
               },
             ),
@@ -170,7 +179,9 @@ class _BuilderView extends StatelessWidget {
 /// The program's fields and days, then the selected day's items, which
 /// reorder by dragging.
 class _Form extends StatefulWidget {
-  const _Form();
+  const _Form({required this.picker});
+
+  final String Function({required int max, required bool multiple}) picker;
 
   @override
   State<_Form> createState() => _FormState();
@@ -361,14 +372,14 @@ class _FormState extends State<_Form> {
 
   Future<void> _addExercises(ProgramBuilderState state) async {
     final picked = await context.push<List<Exercise>>(
-      Routes.exercisePicker(max: state.freeSlots, multiple: true),
+      widget.picker(max: state.freeSlots, multiple: true),
     );
     if (picked != null && picked.isNotEmpty) _cubit.addExercises(picked);
   }
 
   Future<void> _replace(int index) async {
     final picked = await context.push<List<Exercise>>(
-      Routes.exercisePicker(max: 1, multiple: false),
+      widget.picker(max: 1, multiple: false),
     );
     if (picked != null && picked.isNotEmpty) {
       _cubit.replaceExercise(index, picked.single);

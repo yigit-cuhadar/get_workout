@@ -29,6 +29,7 @@ import '../features/calculators/presentation/plates_page.dart';
 import '../features/exercises/presentation/custom_exercise_form_page.dart';
 import '../features/exercises/domain/vocabulary.dart';
 import '../features/exercises/presentation/exercise_detail_page.dart';
+import '../features/exercises/presentation/exercises_page.dart';
 import '../features/exercises/presentation/library_page.dart';
 import '../features/generator/domain/generator_answers.dart';
 import '../features/notifications/data/notification_payloads.dart';
@@ -45,6 +46,7 @@ import '../features/programs/presentation/exercise_picker_page.dart';
 import '../features/programs/presentation/program_suggestion_page.dart';
 import '../features/programs/presentation/program_builder_page.dart';
 import '../features/programs/presentation/program_detail_page.dart';
+import '../features/programs/presentation/programs_page.dart';
 import '../features/progress/presentation/progress_page.dart';
 import '../features/settings/presentation/warmup_settings_page.dart';
 import '../features/steps/presentation/steps_page.dart';
@@ -58,7 +60,6 @@ import '../features/workout/presentation/workout_edit_page.dart';
 import '../features/workout/presentation/workout_page.dart';
 import '../l10n/app_localizations.dart';
 import 'app_shell.dart';
-import 'train_page.dart';
 
 abstract final class Routes {
   static const splash = '/splash';
@@ -78,8 +79,8 @@ abstract final class Routes {
   static const programs = '/programs';
   static const programNew = '$programs/new';
 
-  /// [programNew] pushed above a page in Train, which saving or leaving it
-  /// returns to.
+  /// [programNew] pushed above a page in the Programs tab, which saving or
+  /// leaving it returns to.
   static const programNewReturning = '$programNew?return=true';
   static const catalogue = '$programs/catalogue';
   static const programGenerator = '$programs/generate';
@@ -90,7 +91,7 @@ abstract final class Routes {
   static String catalogueProgram(String id) =>
       '$catalogue/${Uri.encodeComponent(id)}';
 
-  /// An exercise of a ready-made program, opened inside the Train tab.
+  /// An exercise of a ready-made program, opened inside the Programs tab.
   static String catalogueExercise(String programId, String exerciseId) =>
       '${catalogueProgram(programId)}/exercises/'
       '${Uri.encodeComponent(exerciseId)}';
@@ -108,8 +109,9 @@ abstract final class Routes {
   static const exercises = '/exercises';
   static String exercise(String id) => '$exercises/${Uri.encodeComponent(id)}';
 
-  /// The exercise list above the Exercises view. No exercise id is `list`
-  /// or `new`: catalogue ids start with `ex_`, custom ones with `custom_`.
+  /// The exercise list above the Exercises tab's first page. No exercise id
+  /// is `list`, `new` or `new-program`: catalogue ids start with `ex_`,
+  /// custom ones with `custom_`.
   static const exerciseList = '$exercises/list';
 
   /// [exerciseList] browsing [muscle].
@@ -117,6 +119,16 @@ abstract final class Routes {
       '$exerciseList?muscle=${muscle.code}';
   static const customExerciseNew = '$exercises/new';
   static String customExerciseEdit(String id) => '${exercise(id)}/edit';
+
+  /// [programNew] pushed above a page in the Exercises tab, which saving or
+  /// leaving it returns to.
+  static const exerciseProgramNew = '$exercises/new-program';
+
+  /// [exercisePicker] above [exerciseProgramNew].
+  static String exerciseProgramPicker({
+    required int max,
+    required bool multiple,
+  }) => '$exerciseProgramNew/pick?max=$max&multiple=$multiple';
   static const progress = '/progress';
   static const cardio = '$progress/cardio';
   static const cardioNew = '$cardio/new';
@@ -227,11 +239,16 @@ List<String> openLocations(RouteMatchList stack) {
   return open;
 }
 
-/// Whether [location] is in the Train tab, under either of its views.
-bool isInTrain(String location) => [
-  Routes.programs,
-  Routes.exercises,
-].any((root) => location == root || location.startsWith('$root/'));
+/// The program builder to push above the page at [location], in its tab,
+/// so that saving or leaving it returns there: in the Programs or the
+/// Exercises tab. Null elsewhere (above a workout, in another tab), where
+/// the builder opens in the Programs tab instead.
+String? returningProgramNew(String location) {
+  bool under(String root) => location == root || location.startsWith('$root/');
+  if (under(Routes.programs)) return Routes.programNewReturning;
+  if (under(Routes.exercises)) return Routes.exerciseProgramNew;
+  return null;
+}
 
 /// Whether the workout page, or one above it, is among the [open] pages.
 bool _workoutOpen(List<String> open) => open.any(
@@ -279,10 +296,7 @@ GoRouter buildRouter(
 }) {
   // Who onboarding was last shown to.
   String? onboardingUid;
-  // Train's two views share one stack.
-  final unsavedChanges = UnsavedChanges(
-    sharedTabs: const {Routes.exercises: Routes.programs},
-  );
+  final unsavedChanges = UnsavedChanges();
   return GoRouter(
     initialLocation: Routes.splash,
     onEnter: unsavedChanges.onEnter,
@@ -397,117 +411,122 @@ GoRouter buildRouter(
         ),
         branches: [
           _tab(Routes.today, const TodayPage()),
-          // Train: the programs' and the exercises' routes in one stack,
-          // their first pages as the views of one TrainPage.
-          StatefulShellBranch(
+          _tab(
+            Routes.programs,
+            const ProgramsPage(),
             routes: [
-              _train(
-                TrainView.program,
+              // Before ':id', which would match these too.
+              GoRoute(
+                path: 'new',
+                builder: (_, state) => ProgramBuilderPage(
+                  returns: state.uri.queryParameters['return'] == 'true',
+                ),
+              ),
+              GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+              GoRoute(
+                path: 'generate',
+                builder: (_, _) => const GeneratorPage(),
                 routes: [
-                  // Before ':id', which would match these too.
                   GoRoute(
-                    path: 'new',
-                    builder: (_, state) => ProgramBuilderPage(
-                      returns: state.uri.queryParameters['return'] == 'true',
+                    path: 'preview',
+                    redirect: (_, state) => state.extra is GeneratorAnswers
+                        ? null
+                        : Routes.programGenerator,
+                    builder: (_, state) => GeneratorPreviewPage(
+                      answers: state.extra! as GeneratorAnswers,
                     ),
                   ),
-                  GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
-                  GoRoute(
-                    path: 'generate',
-                    builder: (_, _) => const GeneratorPage(),
-                    routes: [
-                      GoRoute(
-                        path: 'preview',
-                        redirect: (_, state) => state.extra is GeneratorAnswers
-                            ? null
-                            : Routes.programGenerator,
-                        builder: (_, state) => GeneratorPreviewPage(
-                          answers: state.extra! as GeneratorAnswers,
-                        ),
-                      ),
-                    ],
-                  ),
-                  GoRoute(
-                    path: 'catalogue',
-                    builder: (_, _) => const CataloguePage(),
-                    routes: [
-                      GoRoute(
-                        path: ':id',
-                        builder: (_, state) => CatalogueDetailPage(
-                          id: state.pathParameters['id']!,
-                        ),
-                        routes: [
-                          GoRoute(
-                            path: 'exercises/:exerciseId',
-                            builder: (_, state) => ExerciseDetailPage(
-                              exerciseId: state.pathParameters['exerciseId']!,
-                              exerciseRoute: (exerciseId) =>
-                                  Routes.catalogueExercise(
-                                    state.pathParameters['id']!,
-                                    exerciseId,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'catalogue',
+                builder: (_, _) => const CataloguePage(),
+                routes: [
                   GoRoute(
                     path: ':id',
-                    builder: (_, state) => ProgramDetailPage(
-                      // Another program, e.g. a copy just made from this
-                      // page, gets a page of its own, not this one's state.
-                      key: ValueKey(state.pathParameters['id']),
-                      id: state.pathParameters['id']!,
-                      created: state.uri.queryParameters['created'] == 'true',
-                    ),
+                    builder: (_, state) =>
+                        CatalogueDetailPage(id: state.pathParameters['id']!),
                     routes: [
                       GoRoute(
-                        path: 'edit',
-                        builder: (_, state) => ProgramBuilderPage(
-                          programId: state.pathParameters['id'],
+                        path: 'exercises/:exerciseId',
+                        builder: (_, state) => ExerciseDetailPage(
+                          exerciseId: state.pathParameters['exerciseId']!,
+                          exerciseRoute: (exerciseId) =>
+                              Routes.catalogueExercise(
+                                state.pathParameters['id']!,
+                                exerciseId,
+                              ),
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
-              _train(
-                TrainView.exercises,
+              GoRoute(
+                path: ':id',
+                builder: (_, state) => ProgramDetailPage(
+                  // Another program, e.g. a copy just made from this
+                  // page, gets a page of its own, not this one's state.
+                  key: ValueKey(state.pathParameters['id']),
+                  id: state.pathParameters['id']!,
+                  created: state.uri.queryParameters['created'] == 'true',
+                ),
                 routes: [
-                  // Before ':id', which would match these too.
                   GoRoute(
-                    path: 'list',
-                    // A MaterialPage, for a transition the search box's Hero
-                    // flies in: go_router's default page for `builder`
-                    // routes has none here.
-                    pageBuilder: (_, state) => MaterialPage(
-                      key: state.pageKey,
-                      child: LibraryPage(
-                        muscle: Muscle.values.byCode(
-                          state.uri.queryParameters['muscle'],
-                        ),
-                      ),
+                    path: 'edit',
+                    builder: (_, state) => ProgramBuilderPage(
+                      programId: state.pathParameters['id'],
                     ),
                   ),
-                  GoRoute(
-                    path: 'new',
-                    builder: (_, _) => const CustomExerciseNewPage(),
+                ],
+              ),
+            ],
+          ),
+          _tab(
+            Routes.exercises,
+            const ExercisesPage(),
+            routes: [
+              // Before ':id', which would match these too.
+              GoRoute(
+                path: 'list',
+                // A MaterialPage, for a transition the search box's Hero
+                // flies in: go_router's default page for `builder`
+                // routes has none here.
+                pageBuilder: (_, state) => MaterialPage(
+                  key: state.pageKey,
+                  child: LibraryPage(
+                    muscle: Muscle.values.byCode(
+                      state.uri.queryParameters['muscle'],
+                    ),
                   ),
+                ),
+              ),
+              GoRoute(
+                path: 'new',
+                builder: (_, _) => const CustomExerciseNewPage(),
+              ),
+              GoRoute(
+                path: 'new-program',
+                builder: (_, _) => const ProgramBuilderPage(
+                  returns: true,
+                  picker: Routes.exerciseProgramPicker,
+                ),
+                routes: [
+                  GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+                ],
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (_, state) => ExerciseDetailPage(
+                  exerciseId: state.pathParameters['id']!,
+                  exerciseRoute: Routes.exercise,
+                ),
+                routes: [
                   GoRoute(
-                    path: ':id',
-                    builder: (_, state) => ExerciseDetailPage(
+                    path: 'edit',
+                    builder: (_, state) => CustomExerciseEditPage(
                       exerciseId: state.pathParameters['id']!,
-                      exerciseRoute: Routes.exercise,
                     ),
-                    routes: [
-                      GoRoute(
-                        path: 'edit',
-                        builder: (_, state) => CustomExerciseEditPage(
-                          exerciseId: state.pathParameters['id']!,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -715,18 +734,6 @@ GoRoute _workoutExercise(String Function(String id) exerciseRoute) => GoRoute(
 
 GoRoute _page(String path, Widget page) =>
     GoRoute(path: path, builder: (_, _) => page);
-
-/// A view of the Train tab at its location. Both views share
-/// [TrainPage.pageKey], so going from one to the other updates the page in
-/// place.
-GoRoute _train(TrainView view, {required List<RouteBase> routes}) => GoRoute(
-  path: TrainPage.location(view),
-  pageBuilder: (_, _) => MaterialPage(
-    key: TrainPage.pageKey,
-    child: TrainPage(view: view),
-  ),
-  routes: routes,
-);
 
 StatefulShellBranch _tab(
   String path,

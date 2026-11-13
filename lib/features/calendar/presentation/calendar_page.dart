@@ -420,7 +420,7 @@ class _CardioTile extends StatelessWidget {
 }
 
 /// A program day not done yet. A planned one starts like the program's own
-/// ▶; a missed one is resolved in Train's "My program".
+/// ▶; a missed one is resolved in the Programs tab.
 class _PlanTile extends StatelessWidget {
   const _PlanTile(this.entry);
   final PlanEntry entry;

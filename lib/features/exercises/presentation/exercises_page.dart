@@ -13,9 +13,9 @@ import 'library_cubit.dart';
 import 'widgets/body_view.dart';
 import 'widgets/library_list_view.dart';
 
-/// Train's "Exercises" view: the body model under a search box. The box
-/// opens the exercise list page, a muscle opens it filtered to
-/// that muscle. The page around it gives the app bar.
+/// The Exercises tab's first page: the body model under a search box. The
+/// box opens the exercise list page, a muscle opens it filtered to that
+/// muscle.
 class ExercisesPage extends StatelessWidget {
   const ExercisesPage({super.key});
 
@@ -26,7 +26,10 @@ class ExercisesPage extends StatelessWidget {
       BlocProvider.value(value: sl<LibraryCubit>()),
       BlocProvider.value(value: sl<CustomWriteRejectionsCubit>()),
     ],
-    child: const _ExercisesView(),
+    child: Scaffold(
+      appBar: AppBar(title: Text(AppLocalizations.of(context).tabExercises)),
+      body: const _ExercisesView(),
+    ),
   );
 }
 
@@ -50,7 +53,7 @@ class _ExercisesViewState extends State<_ExercisesView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final query = context.select((LibraryCubit library) => library.state.query);
-    // Favourites, equipment and custom exercises change only on this view's
+    // Favourites, equipment and custom exercises change only on this tab's
     // pages, which all sit above this one, so their failures are reported
     // once, here.
     return MultiBlocListener(

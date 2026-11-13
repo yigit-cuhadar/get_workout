@@ -12,7 +12,7 @@ import 'library_cubit.dart';
 import 'widgets/library_list_view.dart';
 
 /// The exercise list: search, filters, sort, favourites and the + for a
-/// custom exercise, on the browsing state the Exercises view shares.
+/// custom exercise, on the browsing state the Exercises tab shares.
 ///
 /// Opened for a [muscle] picked on the model (the location's `muscle`), it
 /// browses that muscle for this visit: the muscle becomes the filter, the

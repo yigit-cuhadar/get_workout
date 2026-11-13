@@ -6,9 +6,9 @@ import '../features/programs/presentation/program_writes_notice.dart';
 import '../features/workout/presentation/workout_bar.dart';
 import '../l10n/app_localizations.dart';
 
-/// The four tabs, with the minimized workout above them. Each branch keeps
-/// its own stack; tapping the open tab returns it to its first page (Train's
-/// in the view it shows), the way back would, so a page that refuses to pop
+/// The five tabs, with the minimized workout above them. Each branch keeps
+/// its own stack; tapping the open tab returns it to its first page, the
+/// way back would, so a page that refuses to pop
 /// (e.g. with unsaved changes) can ask first and stop it.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.shell});
@@ -35,8 +35,12 @@ class AppShell extends StatelessWidget {
                 label: l10n.tabToday,
               ),
               NavigationDestination(
+                icon: const Icon(Icons.event_note_outlined),
+                label: l10n.tabPrograms,
+              ),
+              NavigationDestination(
                 icon: const Icon(Icons.fitness_center),
-                label: l10n.tabTrain,
+                label: l10n.tabExercises,
               ),
               NavigationDestination(
                 icon: const Icon(Icons.insights_outlined),

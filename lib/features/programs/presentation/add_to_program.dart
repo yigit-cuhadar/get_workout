@@ -48,11 +48,15 @@ Future<void> addToProgram(
       ),
     );
     if (create == true && context.mounted) {
-      // In Train the builder opens above this page and returns to it, so
-      // the exercise can be added; elsewhere it opens in Train, leaving this
-      // page to its own tab (or the workout's bar).
-      if (isInTrain(GoRouterState.of(context).matchedLocation)) {
-        unawaited(context.push(Routes.programNewReturning));
+      // In the Programs or Exercises tab the builder opens above this page
+      // and returns to it, so the exercise can be added; elsewhere it opens
+      // in the Programs tab, leaving this page to its own tab (or the
+      // workout's bar).
+      final returning = returningProgramNew(
+        GoRouterState.of(context).matchedLocation,
+      );
+      if (returning != null) {
+        unawaited(context.push(returning));
       } else {
         context.go(Routes.programNew);
       }

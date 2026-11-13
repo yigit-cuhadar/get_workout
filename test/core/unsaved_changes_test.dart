@@ -23,7 +23,7 @@ class _Page implements UnsavedPage {
 void main() {
   group('drops', () {
     // Every tab under its own first segment.
-    final separate = UnsavedChanges(sharedTabs: const {});
+    final separate = UnsavedChanges();
 
     test('going elsewhere in the same tab drops the page', () {
       expect(separate.drops(Routes.program('p1'), Routes.programNew), isTrue);
@@ -58,19 +58,26 @@ void main() {
       expect(separate.drops('/profiles', Routes.profileDetails), isFalse);
     });
 
-    test('a tab under several first segments is one stack', () {
-      final unsaved = UnsavedChanges(sharedTabs: {'/b': '/a'});
-      expect(unsaved.drops('/b', '/a/edit'), isTrue);
-      expect(unsaved.drops('/b/x', '/a/edit'), isTrue);
-      expect(unsaved.drops('/a', '/b/edit'), isTrue);
-      expect(unsaved.drops('/c', '/a/edit'), isFalse);
-      expect(separate.drops('/b', '/a/edit'), isFalse);
+    test('the Programs and Exercises tabs keep their own stacks', () {
+      expect(separate.drops(Routes.exerciseList, Routes.programNew), isFalse);
+      expect(
+        separate.drops(Routes.programs, Routes.exerciseProgramNew),
+        isFalse,
+      );
+      expect(
+        separate.drops(Routes.exerciseList, Routes.exerciseProgramNew),
+        isTrue,
+      );
+      expect(
+        separate.drops(Routes.catalogue, Routes.customExerciseNew),
+        isFalse,
+      );
     });
   });
 
   group('droppedBy', () {
     test('finds the page with changes that a location drops', () {
-      final unsaved = UnsavedChanges(sharedTabs: const {});
+      final unsaved = UnsavedChanges();
       final builder = _Page(Routes.programNew);
       final measure = _Page(Routes.bodyMeasureNew);
       unsaved
@@ -84,7 +91,7 @@ void main() {
     });
 
     test('skips pages without changes', () {
-      final unsaved = UnsavedChanges(sharedTabs: const {});
+      final unsaved = UnsavedChanges();
       final builder = _Page(Routes.programNew, hasUnsavedChanges: false);
       unsaved.add(builder);
 
@@ -94,7 +101,7 @@ void main() {
     });
 
     test('forgets a removed page', () {
-      final unsaved = UnsavedChanges(sharedTabs: const {});
+      final unsaved = UnsavedChanges();
       final builder = _Page(Routes.programNew);
       unsaved
         ..add(builder)
@@ -112,7 +119,7 @@ void main() {
     Future<void> pumpApp(WidgetTester tester) async {
       dirty = ValueNotifier(false);
       prompts = 0;
-      final unsaved = UnsavedChanges(sharedTabs: const {});
+      final unsaved = UnsavedChanges();
       router = GoRouter(
         initialLocation: '/a',
         onEnter: unsaved.onEnter,
