@@ -3,11 +3,10 @@ import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/workout/domain/workout_tips.dart';
 
 void main() {
-  test('effort: due with the question, once settings are known', () {
-    expect(effortTipDue(const {}, asking: true), isTrue);
-    expect(effortTipDue(const {}, asking: false), isFalse);
-    expect(effortTipDue(const {Tip.effort}, asking: true), isFalse);
-    expect(effortTipDue(null, asking: true), isFalse);
+  test('effort: due until seen, once settings are known', () {
+    expect(effortTipDue(const {}), isTrue);
+    expect(effortTipDue(const {Tip.effort}), isFalse);
+    expect(effortTipDue(null), isFalse);
   });
 
   test('set types: due until seen, once settings are known', () {

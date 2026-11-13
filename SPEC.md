@@ -250,8 +250,10 @@ from the earlier FitLab app.
   when a step is picked (stored on that set), Skip is tapped, any set is
   picked or an exercise opened, an edit moves sets, or after
   `WorkoutEditor.effortQuestionTime` (10 s) untouched; any touch on the
-  question restarts that time (the timer lives in the editor cubit and
-  ends with it). Editing a past workout never asks on a tick. A selected
+  question restarts that time, and it waits while the help is open (the
+  timer lives in the editor cubit and stops as it closes). The question
+  never shows while edits are refused (finishing), and an answer refused
+  then leaves it open. Editing a past workout never asks on a tick. A selected
   done set shows its effort row under its values, named: "Set 1 · how hard
   was it?" (`effortRowSet`); an undone set never has one.
 - **Automatic warm-up sets**: Settings → "Automatic warm-up sets", on by

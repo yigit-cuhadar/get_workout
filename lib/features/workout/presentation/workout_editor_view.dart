@@ -108,6 +108,12 @@ Future<void> addSetOfKind(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              ListTile(
+                title: Text(
+                  l10n.workoutAddSet,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
               if (setTypesTipDue(seen))
                 TipBanner(
                   text: l10n.tipSetTypes,

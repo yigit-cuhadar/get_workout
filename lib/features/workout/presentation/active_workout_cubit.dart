@@ -789,7 +789,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       status: WorkoutStatus.active,
       rest: () => _restAfterEdit(workout, changed, movesSets: movesSets),
       picked: select == null ? state.picked : select(changed),
-      keepAsking: !movesSets,
+      keepQuestion: !movesSets,
     );
     _keep();
   }
@@ -848,7 +848,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     required WorkoutStatus status,
     Rest? Function()? rest,
     SetSelection? picked,
-    bool keepAsking = false,
+    bool keepQuestion = false,
     bool? warmupsAdded,
   }) {
     emit(
@@ -858,7 +858,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         rest: rest,
         invalidSet: () => null,
         picked: () => picked,
-        asking: keepAsking ? null : () => null,
+        asking: keepQuestion ? null : () => null,
         warmupsAdded: warmupsAdded,
       ),
     );
@@ -922,6 +922,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   @override
   Future<void> close() async {
+    // Nothing may be asked while closing.
+    pauseAsking();
     _retry?.cancel();
     await _userSubscription.cancel();
     await _settingsSubscription?.cancel();

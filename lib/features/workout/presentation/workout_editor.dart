@@ -125,6 +125,13 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     if (asking != null) _ask(asking);
   }
 
+  /// The effort question waits, e.g. while its help is open, until
+  /// [keepAsking].
+  void pauseAsking() {
+    _questionTimer?.cancel();
+    _questionTimer = null;
+  }
+
   /// Leaves the effort question unanswered.
   void skipEffort() => _ask(null);
 
@@ -340,8 +347,10 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   void setSetNote(SetRef ref, String text) =>
       _editSet(ref, (set, _) => set.copyWith(note: () => _note(text)));
 
-  /// Null clears it. Answers the effort question about [ref].
+  /// Null clears it. Answers the effort question about [ref], once the
+  /// edit is taken.
   void setEffort(SetRef ref, EffortStep? step) {
+    if (!canEdit) return;
     _editSet(ref, (set, _) => set.withEffort(step));
     if (state.asking == ref) _ask(null);
   }

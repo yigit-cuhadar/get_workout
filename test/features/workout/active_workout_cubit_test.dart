@@ -818,6 +818,81 @@ void main() {
       await cubit.close();
     });
 
+    test(
+      'an answer while finishing is refused and keeps the question',
+      () async {
+        final cubit = await withSquat();
+        cubit.toggleDone(first);
+        final finishing = cubit.finish();
+        expect(cubit.state.status, WorkoutStatus.finishing);
+        cubit.setEffort(first, const EffortStep.reserve(2));
+        expect(cubit.state.asking, first);
+        expect(cubit.state.workout!.exercises[0].sets[0].rir, isNull);
+        await finishing;
+        await cubit.close();
+      },
+    );
+
+    test('the help pauses the timeout until it closes', () {
+      fakeAsync((async) {
+        late ActiveWorkoutCubit cubit;
+        unawaited(withSquat().then((built) => cubit = built));
+        async.elapse(const Duration(seconds: 1));
+        cubit
+          ..toggleDone(first)
+          ..pauseAsking();
+        async.elapse(const Duration(minutes: 1));
+        expect(cubit.state.questionRef, first);
+        cubit.keepAsking();
+        async.elapse(WorkoutEditor.effortQuestionTime);
+        expect(cubit.state.questionRef, isNull);
+        unawaited(cubit.close());
+        async.flushMicrotasks();
+      });
+    });
+
+    test("an earlier question's time never ends a later one", () {
+      fakeAsync((async) {
+        late ActiveWorkoutCubit cubit;
+        unawaited(withSquat().then((built) => cubit = built));
+        async.elapse(const Duration(seconds: 1));
+        cubit
+          ..toggleDone(first)
+          ..skipEffort();
+        async.elapse(const Duration(seconds: 5));
+        cubit.toggleDone(second);
+        // Ten seconds after the first tick.
+        async.elapse(const Duration(seconds: 6));
+        expect(cubit.state.questionRef, second);
+        unawaited(cubit.close());
+        async.flushMicrotasks();
+      });
+    });
+
+    test('nothing is emitted once closed', () {
+      fakeAsync((async) {
+        late ActiveWorkoutCubit cubit;
+        unawaited(withSquat().then((built) => cubit = built));
+        async.elapse(const Duration(seconds: 1));
+        cubit.toggleDone(first);
+        async.flushMicrotasks();
+        final emitted = <ActiveWorkoutState>[];
+        cubit.stream.listen(emitted.add);
+        unawaited(cubit.close());
+        async.flushMicrotasks();
+        // Closing itself may still clear the stats.
+        emitted.clear();
+        async.elapse(WorkoutEditor.effortQuestionTime * 2);
+        expect(emitted, isEmpty);
+        expect(
+          async.pendingTimers.where(
+            (t) => t.duration == WorkoutEditor.effortQuestionTime,
+          ),
+          isEmpty,
+        );
+      });
+    });
+
     test('it ends by itself, later when the bar is touched', () {
       fakeAsync((async) {
         late ActiveWorkoutCubit cubit;

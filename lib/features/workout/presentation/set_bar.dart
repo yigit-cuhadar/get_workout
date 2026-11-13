@@ -20,8 +20,9 @@ import 'workout_text.dart';
 /// A page logging a workout: [content] above, and at the bottom the
 /// [SetBar], then [below] it (e.g. the rest), then the safe area, on one
 /// surface. The bottom takes at most [maxBottomShare] of the page (of what
-/// the keyboard leaves); the bar's drops and effort scroll beyond that,
-/// its title, values and tick always show.
+/// the keyboard leaves); the bar's drops and effort row scroll beyond
+/// that, its title, values and tick always show (as the effort question's
+/// set, Skip and steps do, its tip scrolling).
 class SetBarLayout extends StatelessWidget {
   const SetBarLayout({
     super.key,
@@ -141,12 +142,13 @@ class SetBar extends StatelessWidget {
     final settings = settingsState.settings;
     final seen = settingsState.loaded ? settings.seenTips : null;
     final unit = settings.weightUnit;
-    if (state.questionRef case final asked?) {
+    // Not while edits are refused (finishing): an answer would be lost.
+    if (state.questionRef case final asked? when editor.canEdit) {
       return _EffortQuestion(
         asked: asked,
         state: state,
         editor: editor,
-        tip: effortTipDue(seen, asking: true),
+        tip: effortTipDue(seen),
       );
     }
     final selection = state.selection;
@@ -463,7 +465,10 @@ class _EffortQuestion extends StatelessWidget {
                     style: theme.textTheme.labelLarge,
                   ),
                 ),
-                const WorkoutHelpButton(),
+                WorkoutHelpButton(
+                  onOpen: editor.pauseAsking,
+                  onClosed: editor.keepAsking,
+                ),
               ],
             ),
             _EffortChoice(
