@@ -366,19 +366,24 @@ class _BirthYearAnswerState extends State<_BirthYearAnswer> {
     final cubit = context.read<ProfileFormCubit>();
     return SizedBox(
       height: _itemExtent * _visibleItems,
-      child: ListWheelScrollView.useDelegate(
-        controller: _controller,
-        itemExtent: _itemExtent,
-        physics: const FixedExtentScrollPhysics(),
-        overAndUnderCenterOpacity: 0.5,
-        onSelectedItemChanged: (index) {
-          HapticFeedback.selectionClick();
-          cubit.setBirthYear(_range.min + index);
-        },
-        childDelegate: ListWheelChildBuilderDelegate(
-          childCount: _range.max - _range.min + 1,
-          builder: (context, index) =>
-              Center(child: Text('${_range.min + index}', style: style)),
+      // Kept from the page: the app bar would take the wheel's scrolling
+      // for content scrolling under it.
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (_) => true,
+        child: ListWheelScrollView.useDelegate(
+          controller: _controller,
+          itemExtent: _itemExtent,
+          physics: const FixedExtentScrollPhysics(),
+          overAndUnderCenterOpacity: 0.5,
+          onSelectedItemChanged: (index) {
+            HapticFeedback.selectionClick();
+            cubit.setBirthYear(_range.min + index);
+          },
+          childDelegate: ListWheelChildBuilderDelegate(
+            childCount: _range.max - _range.min + 1,
+            builder: (context, index) =>
+                Center(child: Text('${_range.min + index}', style: style)),
+          ),
         ),
       ),
     );
@@ -562,7 +567,10 @@ class _NumberAnswer extends StatelessWidget {
           ),
         ),
         const SizedBox(height: Gap.sm),
-        ruler,
+        NotificationListener<ScrollNotification>(
+          onNotification: (_) => true,
+          child: ruler,
+        ),
         const SizedBox(height: Gap.sm),
         Text(
           l10n.profileRulerHint,
