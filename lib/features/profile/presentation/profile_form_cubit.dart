@@ -96,6 +96,8 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     required CompleteOnboarding completeOnboarding,
     this._now = DateTime.now,
   }) : _save = ((answers) => completeOnboarding((uid: uid, answers: answers))),
+       _storedBirthYear = initial.birthYear,
+       _targetSet = initial.answered(ProfileField.targetWeight),
        super(
          ProfileFormState(
            questions: ProfileField.values,
@@ -113,6 +115,8 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     required UserProfile initial,
     this._now = DateTime.now,
   }) : _save = null,
+       _storedBirthYear = initial.birthYear,
+       _targetSet = initial.answered(ProfileField.targetWeight),
        super(
          ProfileFormState(
            questions: [field],
@@ -126,15 +130,28 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
   final DateTime Function() _now;
   final Future<Result<void>> Function(UserProfile answers)? _save;
 
+  /// The year already given, kept selectable when it has since left the
+  /// plausible range, so the wheel never shows one year and saves another.
+  final int? _storedBirthYear;
+
+  /// Whether the target weight is the user's own; until then it follows
+  /// the body weight.
+  bool _targetSet;
+
   /// Where the rulers and the wheel start without an answer.
   static const _startHeightCm = 170.0;
   static const _startWeightKg = 70.0;
   static const _startAge = 30;
 
-  /// The birth years [setBirthYear] accepts this year.
+  /// The birth years [setBirthYear] accepts: those plausible this year and
+  /// the one already given.
   ({int min, int max}) get birthYearRange {
     final year = _now().year;
-    return (min: year - ProfileLimits.maxAge, max: year - ProfileLimits.minAge);
+    final min = year - ProfileLimits.maxAge;
+    final max = year - ProfileLimits.minAge;
+    final stored = _storedBirthYear;
+    if (stored == null) return (min: min, max: max);
+    return (min: stored < min ? stored : min, max: stored > max ? stored : max);
   }
 
   void setGoal(Goal goal) => _answer(state.answers.copyWith(goal: goal));
@@ -160,7 +177,8 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
 
   /// Ignores a year outside [birthYearRange].
   void setBirthYear(int year) {
-    if (ProfileLimits.birthYear(year, currentYear: _now().year)) {
+    if (year == _storedBirthYear ||
+        ProfileLimits.birthYear(year, currentYear: _now().year)) {
       _answer(state.answers.copyWith(birthYear: year));
     }
   }
@@ -184,6 +202,7 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
   bool setTargetWeight(double value, WeightUnit unit) {
     final kg = unit.toKg(value);
     if (!ProfileLimits.weightKg(kg)) return false;
+    _targetSet = true;
     _answer(state.answers.copyWith(targetWeightKg: kg));
     return true;
   }
@@ -237,9 +256,15 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
   }
 
   /// Answers a number question that shows unanswered with where its input
-  /// starts. A target weight starts at the body weight: keeping it.
+  /// starts. A target weight the user has not set is the body weight, as
+  /// it is now: keeping it.
   void _prefill() {
     final answers = state.answers;
+    if (state.question == ProfileField.targetWeight && !_targetSet) {
+      return _answer(
+        answers.copyWith(targetWeightKg: answers.weightKg ?? _startWeightKg),
+      );
+    }
     if (answers.answered(state.question)) return;
     switch (state.question) {
       case ProfileField.birthYear:
@@ -248,11 +273,8 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
         _answer(answers.copyWith(heightCm: _startHeightCm));
       case ProfileField.weight:
         _answer(answers.copyWith(weightKg: _startWeightKg));
-      case ProfileField.targetWeight:
-        _answer(
-          answers.copyWith(targetWeightKg: answers.weightKg ?? _startWeightKg),
-        );
       case ProfileField.goal ||
+          ProfileField.targetWeight ||
           ProfileField.level ||
           ProfileField.daysPerWeek ||
           ProfileField.equipment ||

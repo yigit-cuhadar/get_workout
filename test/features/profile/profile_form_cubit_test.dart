@@ -163,6 +163,36 @@ void main() {
       expect(cubit.state.answers.targetWeightKg, 82.5);
     });
 
+    test(
+      'a target weight follows the body weight until the user sets it',
+      () async {
+        final cubit = onboarding(
+          complete
+              .without(ProfileField.weight)
+              .without(ProfileField.targetWeight),
+        );
+        await goTo(cubit, ProfileField.targetWeight);
+        expect(cubit.state.answers.targetWeightKg, 70);
+
+        cubit.back();
+        cubit.setWeight(90, WeightUnit.kg);
+        await cubit.next();
+        expect(cubit.state.answers.targetWeightKg, 90);
+
+        cubit.setTargetWeight(85, WeightUnit.kg);
+        cubit.back();
+        cubit.setWeight(95, WeightUnit.kg);
+        await cubit.next();
+        expect(cubit.state.answers.targetWeightKg, 85);
+      },
+    );
+
+    test('a stored target weight is the user\'s own', () async {
+      final cubit = onboarding(complete.without(ProfileField.weight));
+      await goTo(cubit, ProfileField.targetWeight);
+      expect(cubit.state.answers.targetWeightKg, 75);
+    });
+
     test('a stored number answer is kept', () async {
       final cubit = onboarding(complete);
       await goTo(cubit, ProfileField.targetWeight);
@@ -319,6 +349,23 @@ void main() {
       expect(cubit.birthYearRange, (min: 1926, max: 2013));
     });
 
+    test('a stored birth year outside the range stays selectable', () async {
+      // Plausible when given, too young by this year's range.
+      final cubit = edit(
+        ProfileField.birthYear,
+        const UserProfile(birthYear: 2015),
+      );
+      expect(cubit.birthYearRange, (min: 1926, max: 2015));
+      expect(cubit.state.answers.birthYear, 2015);
+
+      cubit
+        ..setBirthYear(2013)
+        ..setBirthYear(2015);
+      expect(cubit.state.answers.birthYear, 2015);
+      cubit.setBirthYear(2014);
+      expect(cubit.state.answers.birthYear, 2015);
+    });
+
     test('heights and weights are converted to metric', () {
       final cubit = onboarding()
         ..setHeight(70, LengthUnit.inch)
@@ -414,14 +461,15 @@ void main() {
       );
     });
 
-    test('a personal answer can be cleared, which submits it', () async {
-      final cubit = edit(ProfileField.targetWeight, stored);
+    test('a stored personal answer can be cleared, which submits it', () async {
+      final cubit = edit(ProfileField.height, stored.copyWith(heightCm: 182));
+      expect(cubit.state.answers.heightCm, 182);
       expect(cubit.state.canClear, isTrue);
 
       await cubit.clear();
 
       expect(cubit.state.status, ProfileFormStatus.submitted);
-      expect(cubit.state.answers, const UserProfile(goal: Goal.loseFat));
+      expect(cubit.state.answers, stored);
     });
 
     test('a training answer cannot be cleared', () async {

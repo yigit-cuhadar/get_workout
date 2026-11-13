@@ -60,8 +60,7 @@ abstract final class ProfileLimits {
 }
 
 /// What the user told us about themselves. Every answer is optional until
-/// given; [onboardingCompletedAt] is set once onboarding is finished or
-/// skipped.
+/// given; [onboardingCompletedAt] is set once onboarding is finished.
 class UserProfile extends Equatable {
   const UserProfile({
     this.goal,
