@@ -108,4 +108,34 @@ void main() {
       StepsAccess.undetermined,
     ]);
   });
+
+  group('StepsSummary', () {
+    // Thursday 12 November 2026 is today; the week starts on Monday 9.
+    final today = DateTime(2026, 11, 12, 15);
+    final week = [
+      DailySteps(DateTime(2026, 11, 9), 9000),
+      DailySteps(DateTime(2026, 11, 10), 7000),
+      DailySteps(DateTime(2026, 11, 11), 8001),
+      DailySteps(DateTime(2026, 11, 12), 20000),
+      DailySteps(DateTime(2026, 11, 13), 0),
+    ];
+
+    test('the days before today: average and goal reached', () {
+      expect(
+        StepsSummary.before(today, week, goal: 8000),
+        const StepsSummary(days: 3, average: 8000, reached: 2),
+      );
+    });
+
+    test('reached counts a day exactly at the goal', () {
+      expect(StepsSummary.before(today, week, goal: 9000).reached, 1);
+    });
+
+    test('none over on the first day of the period', () {
+      expect(
+        StepsSummary.before(today, week.sublist(3), goal: 8000),
+        const StepsSummary(days: 0, average: 0, reached: 0),
+      );
+    });
+  });
 }

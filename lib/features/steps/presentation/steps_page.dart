@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_health/forge_health.dart';
@@ -219,7 +220,9 @@ class _InlineFailure extends StatelessWidget {
   }
 }
 
-class _Steps extends StatelessWidget {
+/// Today as a ring with the goal edited in place, the access hint, and one
+/// chart that switches between this week and the last 30 days.
+class _Steps extends StatefulWidget {
   const _Steps({
     required this.history,
     required this.accessHint,
@@ -231,104 +234,256 @@ class _Steps extends StatelessWidget {
   final VoidCallback onOpenSettings;
 
   @override
+  State<_Steps> createState() => _StepsState();
+}
+
+class _StepsState extends State<_Steps> {
+  bool _month = false;
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final history = widget.history;
     final goal = context.select(
       (SettingsCubit cubit) => cubit.state.settings.stepGoal,
     );
     final firstWeekday = MaterialLocalizations.of(context).firstWeekday;
     final locale = l10n.localeName;
-    Widget title(String text) => Padding(
-      padding: const EdgeInsets.fromLTRB(Gap.md, Gap.lg, Gap.md, 0),
-      child: Text(text, style: theme.textTheme.titleMedium),
-    );
+    final days = _month ? history.days : history.week(firstWeekday);
+    final title = _month
+        ? l10n.stepsLastDays(stepHistoryDays)
+        : l10n.stepsThisWeek;
     return RefreshIndicator(
       onRefresh: context.read<StepsCubit>().load,
       child: ListView(
         // Pull-to-refresh also when everything fits.
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: Gap.xl),
+        padding: const EdgeInsets.all(Gap.md),
         children: [
           _Today(
             progress: StepGoalProgress(steps: history.today, goal: goal),
           ),
-          if (accessHint)
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: Text(l10n.stepsZeroHint),
-              subtitle: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TextButton(
-                  onPressed: onOpenSettings,
-                  child: Text(l10n.stepsOpenSettings),
+          if (widget.accessHint)
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: Text(l10n.stepsZeroHint),
+                subtitle: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton(
+                    onPressed: widget.onOpenSettings,
+                    child: Text(l10n.stepsOpenSettings),
+                  ),
                 ),
               ),
             ),
-          title(l10n.stepsThisWeek),
-          _StepsChart(
-            title: l10n.stepsThisWeek,
-            days: history.week(firstWeekday),
-            goal: goal,
-            dayLabel: DateFormat.E(locale),
-          ),
-          title(l10n.stepsLastDays(stepHistoryDays)),
-          _StepsChart(
-            title: l10n.stepsLastDays(stepHistoryDays),
-            days: history.days,
-            goal: goal,
-            dayLabel: DateFormat.MMMd(locale),
-          ),
-          const SizedBox(height: Gap.md),
-          ListTile(
-            leading: const Icon(Icons.flag_outlined),
-            title: Text(l10n.stepsGoal),
-            trailing: Text(l10n.stepsGoalValue(goal)),
-            onTap: () => _editGoal(context, goal),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(Gap.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SegmentedButton<bool>(
+                    showSelectedIcon: false,
+                    segments: [
+                      ButtonSegment(
+                        value: false,
+                        label: Text(l10n.stepsThisWeek),
+                      ),
+                      ButtonSegment(
+                        value: true,
+                        label: Text(l10n.stepsLastDays(stepHistoryDays)),
+                      ),
+                    ],
+                    selected: {_month},
+                    onSelectionChanged: (selection) =>
+                        setState(() => _month = selection.single),
+                  ),
+                  const SizedBox(height: Gap.md),
+                  _StepsChart(
+                    title: title,
+                    days: days,
+                    goal: goal,
+                    dayLabel: _month
+                        ? DateFormat.MMMd(locale)
+                        : DateFormat.E(locale),
+                  ),
+                  if (history.days.lastOrNull case final today?)
+                    _Summary(StepsSummary.before(today.day, days, goal: goal)),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
-
-  static Future<void> _editGoal(BuildContext context, int goal) async {
-    final settings = context.read<SettingsCubit>();
-    final chosen = await showDialog<int>(
-      context: context,
-      builder: (_) => _GoalDialog(goal),
-    );
-    if (chosen == null) return;
-    await settings.update(settings.state.settings.copyWith(stepGoal: chosen));
-  }
 }
 
+/// Today's steps as a ring around the count, what is left to the goal, and
+/// the goal with minus and plus; tapping it types it.
 class _Today extends StatelessWidget {
   const _Today({required this.progress});
   final StepGoalProgress progress;
+
+  /// Wide enough for the count in the ring's middle.
+  static const _ring = Gap.xl * 4;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(Gap.md),
+    final number = NumberFormat.decimalPattern(l10n.localeName);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(Gap.md),
+        child: Row(
+          children: [
+            Semantics(
+              label:
+                  '${l10n.stepsCount(progress.steps)} '
+                  '${l10n.stepsOfGoal(progress.goal)}',
+              excludeSemantics: true,
+              child: SizedBox.square(
+                dimension: _ring,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CircularProgressIndicator(
+                      value: progress.fraction,
+                      strokeWidth: Gap.sm,
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
+                    ),
+                    Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            number.format(progress.steps),
+                            style: theme.textTheme.headlineSmall,
+                          ),
+                          Text(
+                            l10n.stepsOfGoal(progress.goal),
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: Gap.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.stepsToday, style: theme.textTheme.titleMedium),
+                  Text(
+                    progress.reached
+                        ? l10n.stepsGoalReached
+                        : l10n.stepsToGo(progress.remaining),
+                  ),
+                  const SizedBox(height: Gap.sm),
+                  Text(l10n.stepsGoal, style: theme.textTheme.labelMedium),
+                  _GoalEditor(progress.goal),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The daily goal between minus and plus, which move it by [StepGoal.step]
+/// within the limits; tapping the number types it.
+class _GoalEditor extends StatelessWidget {
+  const _GoalEditor(this.goal);
+  final int goal;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final number = NumberFormat.decimalPattern(l10n.localeName);
+    return Row(
+      children: [
+        IconButton(
+          tooltip: l10n.stepsGoalLower(StepGoal.step),
+          icon: const Icon(Icons.remove),
+          onPressed: goal > StepGoal.min
+              ? () => _save(context, StepGoal.stepped(goal, -1))
+              : null,
+        ),
+        Expanded(
+          child: Tooltip(
+            message: l10n.stepsGoalType,
+            child: TextButton(
+              onPressed: () => _type(context),
+              child: Text(
+                number.format(goal),
+                style: theme.textTheme.titleMedium,
+              ),
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: l10n.stepsGoalRaise(StepGoal.step),
+          icon: const Icon(Icons.add),
+          onPressed: goal < StepGoal.max
+              ? () => _save(context, StepGoal.stepped(goal, 1))
+              : null,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _type(BuildContext context) async {
+    final typed = await showDialog<int>(
+      context: context,
+      builder: (_) => _GoalDialog(goal),
+    );
+    if (typed != null && context.mounted) await _save(context, typed);
+  }
+
+  static Future<void> _save(BuildContext context, int goal) {
+    final settings = context.read<SettingsCubit>();
+    return settings.update(settings.state.settings.copyWith(stepGoal: goal));
+  }
+}
+
+/// The daily average and the days the goal was reached, over the days of
+/// the chart that are over; nothing while none is.
+class _Summary extends StatelessWidget {
+  const _Summary(this.summary);
+  final StepsSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    if (summary.days == 0) return const SizedBox.shrink();
+    Widget stat(String label, String value) => Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.stepsToday, style: theme.textTheme.titleMedium),
-          const SizedBox(height: Gap.sm),
-          Text(
-            l10n.stepsCount(progress.steps),
-            style: theme.textTheme.headlineMedium,
-          ),
-          Text(l10n.stepsOfGoal(progress.goal)),
-          const SizedBox(height: Gap.sm),
-          LinearProgressIndicator(value: progress.fraction),
-          const SizedBox(height: Gap.sm),
-          Text(
-            progress.reached
-                ? l10n.stepsGoalReached
-                : l10n.stepsToGo(progress.remaining),
+          Text(label, style: theme.textTheme.bodySmall),
+          Text(value, style: theme.textTheme.titleMedium),
+        ],
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: Gap.md),
+      child: Row(
+        children: [
+          stat(l10n.stepsAverage, l10n.stepsCount(summary.average)),
+          const SizedBox(width: Gap.md),
+          stat(
+            l10n.stepsGoalReached,
+            l10n.stepsReachedDays(summary.reached, summary.days),
           ),
         ],
       ),
@@ -359,26 +514,24 @@ class _StepsChart extends StatelessWidget {
     final fullDate = DateFormat.MMMEd(l10n.localeName);
     String dayText(DailySteps day) =>
         l10n.stepsOnDay(fullDate.format(day.day), l10n.stepsCount(day.count));
-    return Padding(
-      padding: const EdgeInsets.all(Gap.md),
-      child: BarChart(
-        values: [for (final day in days) day.count.toDouble()],
-        xLabel: (index) => dayLabel.format(days[index].day),
-        yLabel: axis.format,
-        yPrecision: 1,
-        barLabel: (index) => dayText(days[index]),
-        semanticLabel: l10n.stepsChartLabel(
-          title,
-          l10n.stepsGoalValue(goal),
-          l10n.inlineList(days.map(dayText)),
-        ),
-        target: goal.toDouble(),
+    return BarChart(
+      values: [for (final day in days) day.count.toDouble()],
+      xLabel: (index) => dayLabel.format(days[index].day),
+      yLabel: axis.format,
+      yPrecision: 1,
+      barLabel: (index) => dayText(days[index]),
+      semanticLabel: l10n.stepsChartLabel(
+        title,
+        l10n.stepsGoalValue(goal),
+        l10n.inlineList(days.map(dayText)),
       ),
+      target: goal.toDouble(),
     );
   }
 }
 
-/// Picks a daily goal between the limits, in steps of [StepGoal.step].
+/// Types the daily goal; a number within the limits is taken on the
+/// nearest step.
 class _GoalDialog extends StatefulWidget {
   const _GoalDialog(this.initial);
   final int initial;
@@ -388,36 +541,48 @@ class _GoalDialog extends StatefulWidget {
 }
 
 class _GoalDialogState extends State<_GoalDialog> {
-  late int _goal = widget.initial;
+  late final _controller = TextEditingController(text: '${widget.initial}');
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final goal = switch (int.tryParse(_controller.text)) {
+      final value? => StepGoal.typed(value),
+      null => null,
+    };
+    if (goal != null) return Navigator.pop(context, goal);
+    final l10n = AppLocalizations.of(context);
+    setState(() => _error = l10n.stepsGoalRange(StepGoal.min, StepGoal.max));
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     return AlertDialog(
       title: Text(l10n.stepsGoal),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(l10n.stepsGoalValue(_goal), style: theme.textTheme.titleLarge),
-          Slider(
-            value: _goal.toDouble(),
-            min: StepGoal.min.toDouble(),
-            max: StepGoal.max.toDouble(),
-            divisions: (StepGoal.max - StepGoal.min) ~/ StepGoal.step,
-            onChanged: (value) => setState(() => _goal = value.round()),
-          ),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        keyboardType: TextInputType.number,
+        // Whole numbers only; five digits hold the largest goal.
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(5),
         ],
+        onSubmitted: (_) => _submit(),
+        decoration: InputDecoration(errorText: _error, errorMaxLines: 2),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(l10n.cancel),
         ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, _goal),
-          child: Text(l10n.save),
-        ),
+        FilledButton(onPressed: _submit, child: Text(l10n.save)),
       ],
     );
   }

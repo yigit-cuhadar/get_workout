@@ -85,6 +85,42 @@ class StepsHistory extends Equatable {
   List<Object?> get props => [days];
 }
 
+/// The days of a chart that are over: the daily average and on how many
+/// the goal was reached. Today's partial day and the days still to come
+/// are left out, so [days] is 0 on the first day of a week.
+class StepsSummary extends Equatable {
+  const StepsSummary({
+    required this.days,
+    required this.average,
+    required this.reached,
+  });
+
+  factory StepsSummary.before(
+    DateTime today,
+    List<DailySteps> period, {
+    required int goal,
+  }) {
+    final end = CalendarDate.of(today);
+    final past = [
+      for (final day in period)
+        if (CalendarDate.of(day.day).isBefore(end)) day.count,
+    ];
+    final total = past.fold(0, (sum, count) => sum + count);
+    return StepsSummary(
+      days: past.length,
+      average: past.isEmpty ? 0 : (total / past.length).round(),
+      reached: past.where((count) => count >= goal).length,
+    );
+  }
+
+  final int days;
+  final int average;
+  final int reached;
+
+  @override
+  List<Object?> get props => [days, average, reached];
+}
+
 /// Whether to say where to allow access next to the counts: HealthKit
 /// reads a refusal as zero, so all zero with [access] unknown may be one.
 /// Never claims that access was refused.
