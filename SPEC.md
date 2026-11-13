@@ -1607,7 +1607,7 @@ Group 5, workout
 - [x] Free workout — start empty (not in progress until an exercise is added), save as program at the end
 - [x] Rest timer — auto start, +15 s, skip, notification
 - [x] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification
-- [ ] Workout on the lock screen — iOS Live Activity and Android ongoing notifications for the whole workout (workout and rest modes, tap opens it)
+- [x] Workout on the lock screen — iOS Live Activity and Android ongoing notifications for the whole workout (workout and rest modes, tap opens it)
 - [x] Finish and summary — records with a short celebration, `exerciseStats` update
 - [x] History — list, workout detail, edit, delete, add a past workout; stats rebuilt
 
