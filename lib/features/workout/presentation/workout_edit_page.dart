@@ -229,8 +229,8 @@ class _Form extends StatelessWidget {
           ExerciseCards(
             state: state,
             editor: cubit,
-            picker: Routes.historyPicker,
-            exerciseRoute: Routes.historyExercise,
+            picker: Routes.calendarPicker,
+            exerciseRoute: Routes.calendarExercise,
           ),
           SliverPadding(
             padding: const EdgeInsets.only(bottom: Gap.xl),
@@ -278,7 +278,7 @@ class _Form extends StatelessWidget {
     final cubit = context.read<WorkoutEditCubit>();
     final language = Localizations.localeOf(context).languageCode;
     final picked = await context.push<List<Exercise>>(
-      Routes.historyPicker(
+      Routes.calendarPicker(
         max: WorkoutLimits.maxExercises - workout.exercises.length,
         multiple: true,
       ),

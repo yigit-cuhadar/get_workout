@@ -1035,7 +1035,7 @@ from the earlier FitLab app.
   everywhere by `setLabel` and `setToDo` (W, 1, 2D; "of N" counts working
   sets), the same as the lock screen and the rest notification. The exercise detail page
   opens above the workout (`/workout/exercises/:id`, and
-  `/progress/history/exercises/:id` above the edit page), so back returns
+  `/progress/calendar/exercises/:id` above the edit page), so back returns
   to the workout as it was.
 - **Records**: heaviest weight (every type with a weight except assisted),
   best e1RM and best set volume (`weight_reps`, `weighted_bodyweight` on the
@@ -1062,9 +1062,10 @@ from the earlier FitLab app.
   not seen; offline it waits until the device is online. A rebuild that an
   edit or a finish of the same user crossed is done again, so the last
   stats write always comes from a read after every change.
-- **History**: Progress → Workout history lists finished workouts newest
-  first, 20 per page, while its page is open. The first five pages are live
-  listeners (cache first, so they work offline); older pages are read once.
+- **History**: the calendar's list (see Calendar) holds the finished
+  workouts, newest first, 20 per page, while its page is open. The first
+  five pages are live listeners (cache first, so they work offline); older
+  pages are read once.
   A page gets a fixed end (`endAtDocument`) once the page after it
   (`startAfterDocument`) loads, so pages never skip or repeat a workout.
   Rows carry no records mark: it would need every exercise's stats. The
@@ -1127,16 +1128,24 @@ from the earlier FitLab app.
   progress. A save from before the app restarted has lost that answer, so
   only then does absence on the server count as refused. A refused edit or delete is undone by
   Firestore together with its stats (one batch) and reported on the
-  history list.
+  calendar.
 - **Program progress**: doing another day of the active program shows it as
   done but leaves the schedule. Done days are read from workouts by date
   only, so no composite index is needed.
-- **Calendar**: Progress → Calendar shows one month (previous / next;
-  tapping a date of a neighbouring month opens that month), weeks starting
-  on the locale's first day. It follows the month's dates plus six days on
-  each side (every date its first and last week can show) live: workouts
-  and cardio by local start date, a range on one field, so no composite
-  index. A date is marked for a workout done, cardio done, a program day
+- **Calendar**: Progress → Calendar is one scrolling page (UX pass,
+  2026-11-13): a card with this week's strip, which opens to the month
+  (previous / next; tapping a date of a neighbouring month opens that
+  month), weeks starting on the locale's first day, then one list by day
+  that also holds the workout history. The card follows its dates plus six
+  days on each side live: workouts and cardio by local start date, a range
+  on one field, so no composite index. The list runs from the end of this
+  week back to the oldest workout loaded, newest first, with workouts,
+  cardio (read once per range of dates listed), program days planned (with
+  Start) and missed; "Show older workouts" loads the next page. A tapped
+  date the list shows scrolls into view, listed even when empty; one it
+  does not show (a future week, or older than what is loaded) is read on
+  its own and shown as a section above the list. "Past workout" is an
+  app-bar action. A date is marked for a workout done, cardio done, a program day
   planned and a program day missed. Planned days come from
   `ProgramSchedule.plan`, the week plan's logic over any range: a program
   day done (a workout of the active program and that day, on that local
@@ -1148,7 +1157,7 @@ from the earlier FitLab app.
   missed (resolved in the My program view, not started here) and again where
   it is planned now. A planned day starts through `startProgramDay`, so a
   locked premium copy's days show but open the paywall. A workout opens
-  its history page, a cardio session its page (which finds only the 500
+  its page under the calendar, a cardio session its page (which finds only the 500
   newest sessions). If the programs cannot be read, what was done still
   shows. `MonthGrid` (`lib/features/calendar/presentation/month_grid.dart`)
   is generic except for `CalendarDate`; move it to `forge_ui`, taking
@@ -1416,8 +1425,8 @@ from the earlier FitLab app.
   the program week plan), drawn by `MonthGrid` as one week; the strip and
   every day open the calendar, which has no route for a given date. No
   quick actions: an empty workout starts from "My program", cardio is
-  logged under Progress → Cardio, a past workout is added on the history
-  page and the calculators open from Profile. Volume
+  logged under Progress → Cardio, a past workout is added on the
+  calendar and the calculators open from Profile. Volume
   card: `WatchWeeklyVolume` with one week, never the trend, whatever the
   user's premium: the trained muscles counted in, below and above the
   band and the three most trained as band bars; it opens Weekly volume,
@@ -1708,7 +1717,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Workout, set entry — minus/plus steppers; tapping the number types it
 - [x] Workout, rest — after a set the panel asks the effort (four options in a grid plus Failed, one line of explanation each, Skip) above a slim timer bar; the RPE scale uses the same layout with RPE 6 or less, 7, 8, 9, 10 and Failed. Once answered only the timer bar shows (time, +15 s, Skip); the next set's entry appears when the rest ends or is skipped
 - [ ] Progress — one small widget per area, each opening its page: Body (last weight, curve, last body fat, Log weight, Measurement day), the calendar week, weekly volume, strength, cardio, steps with a bar
-- [ ] Calendar with workout history — one page: a week strip that opens to the month, then one list by day with workouts, cardio, planned days (with Start) and missed days, Show older workouts; Add past workout in the app bar. Workout history as its own page goes away
+- [x] Calendar with workout history — one page: a week strip that opens to the month, then one list by day with workouts, cardio, planned days (with Start) and missed days, Show older workouts; Add past workout in the app bar. Workout history as its own page goes away
 - [ ] Body with Compare — two views, Overview (one chart with up to three series picked from weight, body fat, fat mass, lean mass, each measurement, weekly sets and daily steps, plus a target weight line; Log weight, Measurement day, history) and Compare (Previous / First / Other date, photos slider with poses, body fat, all changes, target weight)
 - [x] Onboarding, birth year — a wheel showing the year only
 - [ ] Steps — today as a ring, the daily goal edited in place (steps of 100, tap the number to type), one chart switching between this week and the last 30 days

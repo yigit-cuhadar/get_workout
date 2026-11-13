@@ -34,7 +34,10 @@ void main() {
     test('going to the page or past it keeps it', () {
       expect(separate.drops(Routes.programNew, Routes.programNew), isFalse);
       expect(
-        separate.drops(Routes.historyEdit('w1'), Routes.historyWorkout('w1')),
+        separate.drops(
+          Routes.calendarWorkoutEdit('w1'),
+          Routes.calendarWorkout('w1'),
+        ),
         isFalse,
       );
     });
@@ -75,7 +78,7 @@ void main() {
         ..add(measure);
 
       expect(unsaved.droppedBy(Routes.program('p1')), builder);
-      expect(unsaved.droppedBy(Routes.historyNew), measure);
+      expect(unsaved.droppedBy(Routes.calendarWorkoutNew), measure);
       expect(unsaved.droppedBy(Routes.today), isNull);
       expect(unsaved.droppedBy(Routes.bodyMeasureNew), isNull);
     });

@@ -22,7 +22,7 @@ void main() {
       Routes.today,
       Routes.profile,
       Routes.workout,
-      Routes.history,
+      Routes.calendar,
     ]) {
       expect(isPastStart(location), isTrue, reason: location);
     }

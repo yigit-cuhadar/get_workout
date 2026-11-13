@@ -19,38 +19,59 @@ enum CalendarStatus { loading, ready, failure }
 class CalendarState extends Equatable {
   const CalendarState({
     required this.month,
+    required this.weeks,
     required this.selected,
     required this.today,
+    this.expanded = false,
     this.status = CalendarStatus.loading,
     this.entries = const {},
     this.failure,
   });
 
-  /// The first day of the month shown.
+  /// The first day of the month loaded: the one shown when [expanded], else
+  /// the month of the week's first day.
   final CalendarDate month;
 
-  /// The date whose entries are listed.
+  /// The rows shown, each seven dates: the month's (see `monthWeeks`) when
+  /// [expanded], else the selected date's week.
+  final List<List<CalendarDate>> weeks;
+
+  /// The full month shows, not one week.
+  final bool expanded;
   final CalendarDate selected;
   final CalendarDate today;
   final CalendarStatus status;
 
   /// By date; see [calendarEntries]. Covers the dates of the month's
-  /// [monthRange], so the days of the months around it shown in its first
-  /// and last week have theirs too.
+  /// [monthRange], so every date of [weeks] has its own.
   final Map<CalendarDate, List<CalendarEntry>> entries;
   final Failure? failure;
+
+  /// The month named above the dates: the selected date's in a week.
+  CalendarDate get period => expanded ? month : monthOf(selected);
 
   List<CalendarEntry> entriesOn(CalendarDate date) => entries[date] ?? const [];
 
   @override
-  List<Object?> get props => [month, selected, today, status, entries, failure];
+  List<Object?> get props => [
+    month,
+    weeks,
+    expanded,
+    selected,
+    today,
+    status,
+    entries,
+    failure,
+  ];
 }
 
-/// One month of the calendar of whoever is signed in: their finished
-/// workouts, cardio sessions and the active program's days not done yet,
-/// followed live while the month is shown. Resets on every user change.
+/// The calendar of whoever is signed in, one week or one month at a time:
+/// their finished workouts, cardio sessions and the active program's days
+/// not done yet, followed live for the month loaded. [firstWeekday] (ISO)
+/// starts the weeks. Resets on every user change.
 class CalendarCubit extends Cubit<CalendarState> {
   CalendarCubit({
+    required this.firstWeekday,
     required WatchAuthUser watchAuthUser,
     required this._watchWorkouts,
     required this._watchCardio,
@@ -58,13 +79,21 @@ class CalendarCubit extends Cubit<CalendarState> {
     required this._watchActiveProgram,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now,
-       super(_initial(CalendarDate.of((clock ?? DateTime.now)()))) {
+       super(
+         _shown(
+           selected: CalendarDate.of((clock ?? DateTime.now)()),
+           today: CalendarDate.of((clock ?? DateTime.now)()),
+           expanded: false,
+           firstWeekday: firstWeekday,
+         ),
+       ) {
     _userSubscription = watchAuthUser()
         .map((user) => user?.id)
         .distinct()
         .listen(_onUser);
   }
 
+  final int firstWeekday;
   final WatchWorkoutsBetween _watchWorkouts;
   final WatchCardioBetween _watchCardio;
   final WatchPrograms _watchPrograms;
@@ -86,30 +115,77 @@ class CalendarCubit extends Cubit<CalendarState> {
 
   CalendarDate get _today => CalendarDate.of(_clock());
 
-  static CalendarState _initial(CalendarDate today) =>
-      CalendarState(month: monthOf(today), selected: today, today: today);
-
-  /// Shows the month [months] after the one shown, before it when negative,
-  /// with today selected when it falls in it, else its first day.
-  void showMonth(int months) {
-    final today = _today;
-    final month = addMonths(state.month, months);
-    final selected = monthOf(today) == month ? today : month;
-    emit(CalendarState(month: month, selected: selected, today: today));
-    _followNewMonth();
+  /// [selected] in a week or, [expanded], in its month, loading.
+  static CalendarState _shown({
+    required CalendarDate selected,
+    required CalendarDate today,
+    required bool expanded,
+    required int firstWeekday,
+  }) {
+    final week = selected.startOfWeek(firstWeekday);
+    final month = monthOf(expanded ? selected : week);
+    return CalendarState(
+      month: month,
+      weeks: expanded
+          ? monthWeeks(month, firstWeekday: firstWeekday)
+          : [
+              [for (var i = 0; i < 7; i++) week.addDays(i)],
+            ],
+      expanded: expanded,
+      selected: selected,
+      today: today,
+    );
   }
 
-  /// Lists [date]'s entries; a date of another month also shows its month.
-  void select(CalendarDate date) {
-    if (monthOf(date) != state.month) {
-      emit(CalendarState(month: monthOf(date), selected: date, today: _today));
+  /// Shows the week or month [steps] after the one shown, before it when
+  /// negative, with today selected when it falls in it, else its first day.
+  void move(int steps) {
+    final today = _today;
+    if (state.expanded) {
+      final month = addMonths(state.month, steps);
+      _show(monthOf(today) == month ? today : month, expanded: true);
+    } else {
+      final week = state.selected.startOfWeek(firstWeekday).addDays(7 * steps);
+      _show(
+        today.startOfWeek(firstWeekday) == week ? today : week,
+        expanded: false,
+      );
+    }
+  }
+
+  /// Shows the full month of the selected date, or only its week.
+  void expand(bool expanded) => _show(state.selected, expanded: expanded);
+
+  /// Selects [date]; one of another month shows that month.
+  void select(CalendarDate date) => _show(date, expanded: state.expanded);
+
+  /// Follows the month again after a failure.
+  void retry() {
+    emit(_loading(state.selected, expanded: state.expanded));
+    _followUser();
+  }
+
+  CalendarState _loading(CalendarDate selected, {required bool expanded}) =>
+      _shown(
+        selected: selected,
+        today: _today,
+        expanded: expanded,
+        firstWeekday: firstWeekday,
+      );
+
+  void _show(CalendarDate selected, {required bool expanded}) {
+    final shown = _loading(selected, expanded: expanded);
+    if (shown.month != state.month) {
+      emit(shown);
       _followNewMonth();
       return;
     }
     emit(
       CalendarState(
-        month: state.month,
-        selected: date,
+        month: shown.month,
+        weeks: shown.weeks,
+        expanded: expanded,
+        selected: selected,
         today: state.today,
         status: state.status,
         entries: state.entries,
@@ -118,21 +194,9 @@ class CalendarCubit extends Cubit<CalendarState> {
     );
   }
 
-  /// Follows the month again after a failure.
-  void retry() {
-    emit(
-      CalendarState(
-        month: state.month,
-        selected: state.selected,
-        today: _today,
-      ),
-    );
-    _followUser();
-  }
-
   void _onUser(String? uid) {
     _uid = uid;
-    emit(_initial(_today));
+    emit(_loading(_today, expanded: false));
     _followUser();
   }
 
@@ -213,6 +277,8 @@ class CalendarCubit extends Cubit<CalendarState> {
     emit(
       CalendarState(
         month: state.month,
+        weeks: state.weeks,
+        expanded: state.expanded,
         selected: state.selected,
         today: today,
         status: CalendarStatus.ready,
@@ -237,6 +303,8 @@ class CalendarCubit extends Cubit<CalendarState> {
     emit(
       CalendarState(
         month: state.month,
+        weeks: state.weeks,
+        expanded: state.expanded,
         selected: state.selected,
         today: state.today,
         status: CalendarStatus.failure,

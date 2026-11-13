@@ -76,7 +76,7 @@ class _DetailView extends StatelessWidget {
                   tooltip: l10n.historyEdit,
                   icon: const Icon(Icons.edit_outlined),
                   onPressed: state.canChange
-                      ? () => context.go(Routes.historyEdit(workout.id))
+                      ? () => context.go(Routes.calendarWorkoutEdit(workout.id))
                       : null,
                 ),
                 IconButton(
