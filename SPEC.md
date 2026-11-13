@@ -505,17 +505,20 @@ from the earlier FitLab app.
   store page. On iOS a month of zeros shows a hint to allow access in
   Settings, never a denial. A failed request shows on the explanation or
   refusal screen; a failed refresh keeps the steps and says so. The page:
-  a today card with a ring around the count ("of" the goal), what is left
-  or "Goal reached", and the goal edited in place; the zero hint; then one
+  a today card with a ring around the count ("of" the goal) beside what
+  is left or "Goal reached", and under them a full-width "Daily goal" row
+  edited in place; the zero hint; then one
   card with a This week / Last 30 days switch (kept only while the page is
   open, week first), a `BarChart` with the goal as a line, and under it the
   daily average and "Goal reached n of m days" over the chart's days
   before today (today's partial day and days to come left out, as on Body;
   hidden on a period's first day). The goal is `settings.stepGoal`, 10,000
   by default, 1,000-50,000; minus and plus move it by 100, and tapping the
-  number types it: a whole number within the limits, saved on the nearest
-  100, else the dialog says the range. Each change saves at once through
-  `SettingsCubit` (no Save). `GetTodaySteps` (today vs goal) is registered
+  number types it (the dialog opens with it selected): a whole number
+  within the limits, saved on the nearest 100, else the dialog says the
+  range. Each change saves at once through `SettingsCubit` (no Save); the
+  row shows and steps from the last pick until its write comes back, so
+  quick taps all count, and drops it when a save fails. `GetTodaySteps` (today vs goal) is registered
   for the Today card. The
   steps domain imports `forge_health` whole, platform code included; once
   the package exposes a domain-only library (next forge tag), import that

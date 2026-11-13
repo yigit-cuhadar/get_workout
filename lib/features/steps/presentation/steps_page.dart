@@ -337,60 +337,63 @@ class _Today extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(Gap.md),
-        child: Row(
+        child: Column(
           children: [
-            Semantics(
-              label:
-                  '${l10n.stepsCount(progress.steps)} '
-                  '${l10n.stepsOfGoal(progress.goal)}',
-              excludeSemantics: true,
-              child: SizedBox.square(
-                dimension: _ring,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CircularProgressIndicator(
-                      value: progress.fraction,
-                      strokeWidth: Gap.sm,
-                      backgroundColor:
-                          theme.colorScheme.surfaceContainerHighest,
-                    ),
-                    Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            number.format(progress.steps),
-                            style: theme.textTheme.headlineSmall,
+            Row(
+              children: [
+                Semantics(
+                  label:
+                      '${l10n.stepsCount(progress.steps)} '
+                      '${l10n.stepsOfGoal(progress.goal)}',
+                  excludeSemantics: true,
+                  child: SizedBox.square(
+                    dimension: _ring,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CircularProgressIndicator(
+                          value: progress.fraction,
+                          strokeWidth: Gap.sm,
+                          backgroundColor:
+                              theme.colorScheme.surfaceContainerHighest,
+                        ),
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                number.format(progress.steps),
+                                style: theme.textTheme.headlineSmall,
+                              ),
+                              Text(
+                                l10n.stepsOfGoal(progress.goal),
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
                           ),
-                          Text(
-                            l10n.stepsOfGoal(progress.goal),
-                            style: theme.textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: Gap.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.stepsToday, style: theme.textTheme.titleMedium),
-                  Text(
-                    progress.reached
-                        ? l10n.stepsGoalReached
-                        : l10n.stepsToGo(progress.remaining),
                   ),
-                  const SizedBox(height: Gap.sm),
-                  Text(l10n.stepsGoal, style: theme.textTheme.labelMedium),
-                  _GoalEditor(progress.goal),
-                ],
-              ),
+                ),
+                const SizedBox(width: Gap.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.stepsToday, style: theme.textTheme.titleMedium),
+                      Text(
+                        progress.reached
+                            ? l10n.stepsGoalReached
+                            : l10n.stepsToGo(progress.remaining),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: Gap.sm),
+            _GoalEditor(progress.goal),
           ],
         ),
       ),
@@ -398,60 +401,112 @@ class _Today extends StatelessWidget {
   }
 }
 
-/// The daily goal between minus and plus, which move it by [StepGoal.step]
-/// within the limits; tapping the number types it.
-class _GoalEditor extends StatelessWidget {
+/// "Daily goal" with the goal between minus and plus, which move it by
+/// [StepGoal.step] within the limits; tapping the number types it. Each
+/// change saves at once.
+class _GoalEditor extends StatefulWidget {
   const _GoalEditor(this.goal);
+
+  /// The saved goal.
   final int goal;
+
+  @override
+  State<_GoalEditor> createState() => _GoalEditorState();
+}
+
+class _GoalEditorState extends State<_GoalEditor> {
+  /// The goal last picked, until the saved one catches up: settings change
+  /// only when the write comes back, so quick taps step from this.
+  int? _picked;
+
+  /// Whether [_picked] was not written: it equalled the saved goal when
+  /// picked, while an earlier pick was still on its way, so
+  /// [SettingsCubit.update] took it for no change.
+  bool _unwritten = false;
+
+  int get _goal => _picked ?? widget.goal;
+
+  @override
+  void didUpdateWidget(_GoalEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.goal == oldWidget.goal) return;
+    if (widget.goal == _picked) {
+      _picked = null;
+      _unwritten = false;
+    } else if (_picked case final picked? when _unwritten) {
+      _unwritten = false;
+      _write(picked);
+    }
+  }
+
+  void _pick(int goal) {
+    setState(() => _picked = goal);
+    final settings = context.read<SettingsCubit>();
+    _unwritten = goal == settings.state.settings.stepGoal;
+    if (!_unwritten) _write(goal);
+  }
+
+  void _write(int goal) {
+    final settings = context.read<SettingsCubit>();
+    settings.update(settings.state.settings.copyWith(stepGoal: goal));
+  }
+
+  Future<void> _type() async {
+    final typed = await showDialog<int>(
+      context: context,
+      builder: (_) => _GoalDialog(_goal),
+    );
+    if (typed != null && mounted) _pick(typed);
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final number = NumberFormat.decimalPattern(l10n.localeName);
-    return Row(
-      children: [
-        IconButton(
-          tooltip: l10n.stepsGoalLower(StepGoal.step),
-          icon: const Icon(Icons.remove),
-          onPressed: goal > StepGoal.min
-              ? () => _save(context, StepGoal.stepped(goal, -1))
-              : null,
-        ),
-        Expanded(
-          child: Tooltip(
+    final goal = _goal;
+    // A failed save leaves the saved goal as it was.
+    return BlocListener<SettingsCubit, SettingsState>(
+      listenWhen: (previous, current) =>
+          current.failure != null && current.failure != previous.failure,
+      listener: (_, _) => setState(() {
+        _picked = null;
+        _unwritten = false;
+      }),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(l10n.stepsGoal, style: theme.textTheme.titleSmall),
+          ),
+          IconButton(
+            tooltip: l10n.stepsGoalLower(StepGoal.step),
+            icon: const Icon(Icons.remove),
+            onPressed: goal > StepGoal.min
+                ? () => _pick(StepGoal.stepped(goal, -1))
+                : null,
+          ),
+          Tooltip(
             message: l10n.stepsGoalType,
             child: TextButton(
-              onPressed: () => _type(context),
+              onPressed: _type,
               child: Text(
                 number.format(goal),
                 style: theme.textTheme.titleMedium,
+                maxLines: 1,
+                softWrap: false,
               ),
             ),
           ),
-        ),
-        IconButton(
-          tooltip: l10n.stepsGoalRaise(StepGoal.step),
-          icon: const Icon(Icons.add),
-          onPressed: goal < StepGoal.max
-              ? () => _save(context, StepGoal.stepped(goal, 1))
-              : null,
-        ),
-      ],
+          IconButton(
+            tooltip: l10n.stepsGoalRaise(StepGoal.step),
+            icon: const Icon(Icons.add),
+            onPressed: goal < StepGoal.max
+                ? () => _pick(StepGoal.stepped(goal, 1))
+                : null,
+          ),
+        ],
+      ),
     );
-  }
-
-  Future<void> _type(BuildContext context) async {
-    final typed = await showDialog<int>(
-      context: context,
-      builder: (_) => _GoalDialog(goal),
-    );
-    if (typed != null && context.mounted) await _save(context, typed);
-  }
-
-  static Future<void> _save(BuildContext context, int goal) {
-    final settings = context.read<SettingsCubit>();
-    return settings.update(settings.state.settings.copyWith(stepGoal: goal));
   }
 }
 
@@ -541,7 +596,16 @@ class _GoalDialog extends StatefulWidget {
 }
 
 class _GoalDialogState extends State<_GoalDialog> {
-  late final _controller = TextEditingController(text: '${widget.initial}');
+  /// Selected, so typing replaces it.
+  late final _controller = TextEditingController.fromValue(
+    TextEditingValue(
+      text: '${widget.initial}',
+      selection: TextSelection(
+        baseOffset: 0,
+        extentOffset: '${widget.initial}'.length,
+      ),
+    ),
+  );
   String? _error;
 
   @override
