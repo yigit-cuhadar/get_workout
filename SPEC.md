@@ -237,7 +237,9 @@ from the earlier FitLab app.
   stored the same way, as RIR (`rpe = 10 - rir`): by feel Easy ("4+ reps
   left") stores 4, Moderate ("2–3 left") 2, Hard ("1 left") 1, Max ("0
   left") 0, and a stored RIR shows as Easy from 4, Moderate at 2-3, Hard at
-  1, Max at 0. Every scale ends with "Failed" (the last rep was attempted
+  1, Max at 0. RIR offers 5+ down to 0; RPE offers "RPE 6 or less"
+  (stores RIR 4, and a stored RIR of 5 shows as it), then 7 to 10, so RPE 5
+  is no longer a choice (UX pass, 2026-11-13). Every scale ends with "Failed" (the last rep was attempted
   and not completed), stored as `toFailure` with RIR 0; there is no separate
   failure switch, and any set with `toFailure` shows Failed whatever its
   RIR. Effort shows in the chosen scale everywhere (bar, workout detail).
@@ -961,7 +963,7 @@ from the earlier FitLab app.
   program target (weight, bottom of the rep range, duration). A warm-up only
   follows the warm-up before it. A done set edited into an invalid one is
   unticked. A weighted or assisted bodyweight set without a weight has none
-  added. Effort is a whole number: RIR 0-5 (5 means 5+) or RPE 10-5, see
+  added. Effort is a whole number: RIR 0-5 (5 means 5+) or RPE 10 down to "6 or less", see
   Effort scale. Sets
   take a note of up to 200 characters. Durations are typed in seconds; a
   minutes and seconds input is left to the design phase.
