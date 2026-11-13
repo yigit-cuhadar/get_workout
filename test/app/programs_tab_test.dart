@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/app/router.dart';
-import 'package:get_workout/app/train_page.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
+import 'package:get_workout/features/programs/presentation/programs_page.dart';
 import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -28,8 +28,8 @@ void main() {
 
   tearDown(sl.reset);
 
-  /// Train on My program, with no programs unless given; the workout is a stub saying
-  /// where it is, so this tests Train's links, not the workout page.
+  /// The Programs tab, with no programs unless given; the workout is a stub
+  /// saying where it is, so this tests the tab's links, not the workout page.
   Future<void> start(
     WidgetTester tester, {
     ActiveWorkoutState state = const ActiveWorkoutState(
@@ -49,10 +49,7 @@ void main() {
     final router = GoRouter(
       initialLocation: Routes.programs,
       routes: [
-        GoRoute(
-          path: Routes.programs,
-          builder: (_, _) => const TrainPage(view: TrainView.program),
-        ),
+        GoRoute(path: Routes.programs, builder: (_, _) => const ProgramsPage()),
         GoRoute(
           path: Routes.workout,
           builder: (_, _) => const Scaffold(body: Text('at workout')),
@@ -83,9 +80,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('My program starts an empty workout and opens it', (
-    tester,
-  ) async {
+  testWidgets('Programs starts an empty workout and opens it', (tester) async {
     await start(tester);
 
     await tap(tester, find.text('Start empty workout'));

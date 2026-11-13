@@ -42,7 +42,7 @@ class TodayPage extends StatelessWidget {
     final firstWeekday = context.watchFirstWeekday();
     return MultiBlocProvider(
       providers: [
-        // Train's, so both show the same plan.
+        // The Programs tab's, so both show the same plan.
         BlocProvider.value(value: sl<ProgramListCubit>()),
         BlocProvider(create: (_) => sl<TodayWeekCubit>(param1: firstWeekday)),
         BlocProvider(create: (_) => sl<TodayVolumeCubit>(param1: firstWeekday)),

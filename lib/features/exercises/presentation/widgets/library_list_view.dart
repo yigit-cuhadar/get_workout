@@ -220,7 +220,7 @@ class _Sections extends StatelessWidget {
   }
 }
 
-/// The search field flying between the Exercises view's
+/// The search field flying between the Exercises tab's
 /// [LibrarySearchEntry] and the list page. In flight it is drawn as the
 /// entry; the page's field takes focus only once its route is in.
 class LibrarySearchHero extends StatelessWidget {

@@ -283,7 +283,7 @@ void main() {
       tester,
       find.descendant(
         of: find.byType(NavigationBar),
-        matching: find.text('Train'),
+        matching: find.text('Programs'),
       ),
     );
     expect(find.byType(ProgramsPage), findsOneWidget);
@@ -384,11 +384,11 @@ void main() {
     expect(find.byType(ProgramsPage), findsOneWidget);
   });
 
-  Future<void> reselectTrain(WidgetTester tester) => tap(
+  Future<void> reselectPrograms(WidgetTester tester) => tap(
     tester,
     find.descendant(
       of: find.byType(NavigationBar),
-      matching: find.text('Train'),
+      matching: find.text('Programs'),
     ),
   );
 
@@ -406,19 +406,19 @@ void main() {
     // The page refuses to pop from the next frame on.
     await tester.pump();
 
-    await reselectTrain(tester);
+    await reselectPrograms(tester);
     expect(find.text('Discard changes?'), findsOneWidget);
     await tap(tester, find.text('Keep editing'));
     expect(find.byType(ProgramBuilderPage), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Leg Day 2'), findsOneWidget);
 
-    await reselectTrain(tester);
+    await reselectPrograms(tester);
     await tap(tester, find.text('Discard'));
     expect(find.byType(ProgramBuilderPage), findsNothing);
     expect(find.byType(ProgramDetailPage), findsOneWidget);
   });
 
-  testWidgets('a link to the Exercises view brings the builder with changes '
+  testWidgets('a link into the Programs tab brings the builder with changes '
       'up and asks; keeping them stays', (tester) async {
     await start(tester);
     await openPrograms(tester);
@@ -436,8 +436,8 @@ void main() {
       ),
     );
 
-    // The Exercises view shares the builder's stack, so going there drops it.
-    router.go(Routes.exercises);
+    // Going to the tab's first page drops the builder above it.
+    router.go(Routes.programs);
     await tester.pumpAndSettle();
     expect(find.text('Discard changes?'), findsOneWidget);
     expect(find.byType(ProgramBuilderPage), findsOneWidget);
@@ -459,7 +459,7 @@ void main() {
     await tap(tester, find.text('Leg Day'));
     await tap(tester, find.byTooltip('Edit'));
 
-    await reselectTrain(tester);
+    await reselectPrograms(tester);
 
     expect(find.text('Discard changes?'), findsNothing);
     expect(find.byType(ProgramBuilderPage), findsNothing);

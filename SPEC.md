@@ -211,7 +211,7 @@ from the earlier FitLab app.
   exercise page shows it twice, front and back side by side with the worked
   muscles coloured, both fixed (`interactive: false`, the back through a
   camera at yaw π) so the page scrolls over them; two CPU-rendered viewers
-  share one parsed model and paint once. The Exercises view's model stays
+  share one parsed model and paint once. The Exercises tab's model stays
   interactive.
 - **Units**: stored metric. kg/lb and cm/in chosen by the user. A single
   lifted weight is shown through `WeightUnit.shown`: within two decimals
@@ -236,7 +236,7 @@ from the earlier FitLab app.
   Firestore rules validate the top-level fields only (`name`, `days` count,
   `origin`); the app validates days and items. Items whose exercise's
   logging type changed are fitted to the new type when the builder loads
-  them, and the user is told. Train's "My program" view (UX pass,
+  them, and the user is told. The Programs tab (UX pass,
   2026-11-13, variant A) shows the active program first as one card: "Active
   program" and its name (opening its page, a lock when it is a locked
   premium copy), "Week n of N · <weekdays>" ("Week n" without a length,
@@ -265,9 +265,12 @@ from the earlier FitLab app.
   Start. The mismatch warning is hidden once the program finished. Each
   program id gets its own page (keyed in the router), so a copy opened
   from Duplicate never acts on the original. "Add to program" on an exercise without programs opens
-  the builder: inside Train it is pushed above the exercise and saving or
-  leaving returns there (`Routes.programNewReturning`), so the exercise
-  can be added; from a workout or the history it opens in Train as before. In the builder, Add
+  the builder: inside the Programs or the Exercises tab it is pushed above
+  the exercise in that tab, and saving or leaving returns there
+  (`Routes.programNewReturning` in Programs, `Routes.exerciseProgramNew`
+  with its own picker in Exercises; `returningProgramNew` picks), so the
+  exercise can be added; from a workout or the history it opens in the
+  Programs tab as before. In the builder, Add
   day selects the new day and focuses its name; opening the builder or
   switching days never takes the focus.
 - **Schedule**: `activeProgram.nextDate` is a calendar date stored as a
@@ -283,7 +286,7 @@ from the earlier FitLab app.
   Body chart's weekly bars and step averages, the Steps "This week" chart,
   the program week plan (and so the done days the workout reminders know),
   and the order of weekdays in the program day picker, the weekdays of the
-  My program card and the program page, and
+  Programs tab's active program card and the program page, and
   the measurement reminder's day. Settings → Appearance → "Week starts on":
   Automatic (default, shown as "Automatic (Monday)" with the day it gives),
   Monday, Sunday or Saturday (`settings.weekStart`, written only when not
@@ -498,7 +501,7 @@ from the earlier FitLab app.
   validation and opens the copy, which is started like any own program;
   when a copy from the same `sourceId` exists, it is offered first. An
   exercise opened from a ready-made program opens its alternatives and
-  variations inside Train. Recommended for you: never a program
+  variations inside the Programs tab. Recommended for you: never a program
   above the user's level (beginner while unanswered) or needing equipment
   they lack (a program fits when the user owns all its primary `equipment`
   or all of its equipment profile; an unknown code or a missing list is
@@ -521,10 +524,10 @@ from the earlier FitLab app.
   of a premium ready-made program is marked `premium: true` and keeps the
   mark through edits and duplicates. Without premium it stays visible and
   readable but cannot be started, rescheduled or trained; an active one
-  shows as locked in the My program view and is not stopped, so it resumes
+  shows as locked in the Programs tab and is not stopped, so it resumes
   when premium returns. While the premium status is unknown these actions
   wait. `programAccess` is the one check, also for starting a workout
-  from such a program (Start <day> in the My program view, ▶ per day on the
+  from such a program (Start <day> in the Programs tab, ▶ per day on the
   program page): locked opens the paywall and starts only if premium was
   bought; `ActiveWorkoutCubit` refuses it too. A workout in progress from
   it can always be finished; free workouts are never gated. The gate is client-side only: the copy lives in the user's
@@ -565,9 +568,9 @@ from the earlier FitLab app.
   Saved as the user's own (`origin: generated`, "<split>, <n> days", days
   "Upper A", ...), editable like any other and never marked `premium`:
   Premium gates the generator, not the programs it made. Its entry is on
-  the My program view for everyone, locked when free, and opens through
+  the Programs tab for everyone, locked when free, and opens through
   `requirePremium()`; it is a feature of its own, so the programs feature
-  still never imports the subscription one (the view only shows its entry).
+  still never imports the subscription one (the tab only shows its entry).
 - **Steps**: read-only from Apple Health / Health Connect through
   `forge_health`; never stored, so `firestore.rules` is unchanged. The
   platform store in every build on iOS and Android; the fake only in debug
@@ -969,22 +972,27 @@ from the earlier FitLab app.
   Messages carry the Android channel `workout`, APNs `sound: default`, and
   a time to live of 3 days (Android `ttl`, `apns-expiration`), so a dated
   announcement is dropped rather than arriving weeks late.
-- **Navigation**: four tabs, Today / Train / Progress / Profile. Train
-  (`lib/app/train_page.dart`, in `app` because it composes two features'
-  first pages) has two views under a segmented control: "My program"
-  (`ProgramsPage`, at `/programs`) and "Exercises" (`ExercisesPage`, the
-  model under a search box, at `/exercises`; see Exercise list). Every
-  location stays as it was: both route trees live in
-  Train's one branch (one stack), so `/programs/...` and `/exercises/...`
-  open inside Train, and the switch is a `go` to the other view's
-  location. Both locations build their page with `TrainPage.pageKey`, so
-  the navigator updates the one page in place: a view is built the first
-  time it shows and then kept (an `IndexedStack`), the model never loads
-  again. The tab opens on the view it last
-  showed, "My program" at first. The active workout is full-screen and can
-  be minimized to a bar above the tabs. A `go` (a link, a notification
-  tap) replaces its tab's stack (Train's for either view, via
-  `UnsavedChanges.sharedTabs`); a page there with unsaved changes
+- **Navigation** (owner, 2026-11-13): five tabs, Today / Programs /
+  Exercises / Progress / Profile, in a Material `NavigationBar` (icons
+  `today_outlined`, `event_note_outlined`, `fitness_center`,
+  `insights_outlined`, `person_outline`; five labels fit a 375 pt phone).
+  Programs (`ProgramsPage`, `/programs/...`: the active program, the week,
+  the missed-day prompt, Ready-made, Generate, New program, Start empty
+  workout, the user's programs, and every page they open) and Exercises
+  (`ExercisesPage`, the model under a search box, `/exercises/...`: the list,
+  exercise pages, custom exercises; see Exercise list) are two branches of
+  the shell, each with its own stack, kept alive like the others and built
+  the first time it shows; there is no segmented control any more. "Add
+  to program" pushes the builder in the tab its exercise is in (see
+  Program page); a custom exercise's edit form opens in the Exercises tab
+  from wherever its page is (also above the workout or the calendar). Starting a workout stays on Programs
+  (and Today). Every location kept its path (the merged Train tab already
+  used `/programs` and `/exercises`, and no notification payload or stored
+  route ever held a Train path), so nothing needs a redirect. The active
+  workout is full-screen and can be minimized to a bar above the tabs.
+  Tapping the open tab returns it to its first page the way back would. A
+  `go` (a link, a notification tap) replaces its tab's stack (each tab is
+  its first path segment); a page there with unsaved changes
   (program builder, custom exercise form, workout edit, measurement day)
   is never dropped silently. One router
   guard (`onEnter`, `lib/core/unsaved_changes.dart`) brings that page up
@@ -994,13 +1002,13 @@ from the earlier FitLab app.
   changes (an edit left as it opened, a page that saved), other tabs'
   stacks, pushes and tab switches are left alone. Back and the guard share
   one prompt per page, so nothing asks twice.
-- **Exercise list**: the Exercises view is the interactive model (rotate,
+- **Exercise list**: the Exercises tab opens on the interactive model (rotate,
   zoom, Front/Back, tap a muscle, or press and slide across muscles with
   its name and a haptic tick) under a search box. The box is an entry, not
   a field: it shows the current search and opens the one exercise list
   page (`LibraryPage`, `/exercises/list`, declared before `:id`, inside
-  Train's stack, an explicit `MaterialPage` because go_router's default
-  page for `builder` routes has no transition here), pushed above the view
+  the Exercises tab's stack, an explicit `MaterialPage` because go_router's default
+  page for `builder` routes has no transition here), pushed above the model
   so back returns to the model as it was. The list page holds search,
   filters, sort, the count, favourite stars and, in its app bar only, the
   + for a custom exercise; there is no model on it. Opened from the box,
@@ -1008,15 +1016,15 @@ from the earlier FitLab app.
   completed (one keyboard request, after the transition). The box and the
   page's search field are one Hero, drawn as the box in flight. One
   gesture on the model opens one page: a muscle opens nothing while a page
-  already covers the view. A muscle opens the same page at
+  already covers the model. A muscle opens the same page at
   `/exercises/list?muscle=<code>`, without the keyboard. State: the list
-  page and the view share the app-wide `LibraryCubit`, so search text, the
+  page and the model's page share the app-wide `LibraryCubit`, so search text, the
   filters set in the filter sheet and the sort last while the app runs (a
   user change resets them). A muscle chosen on the model belongs to that
   visit, held only by the page's location (its `muscle` parameter; the
   cubit holds the filter, nothing else): arriving makes it the only muscle
   filter and clears the search, the other filters and the sort staying;
-  leaving the page (back, re-selecting Train, a `go` elsewhere) or a link
+  leaving the page (back, re-selecting Exercises, a `go` elsewhere) or a link
   to another muscle over it takes that muscle filter away again, unless
   the user already removed or changed the muscle filter, which then stays
   as they left it. So the box always opens without a model-chosen muscle.
@@ -1035,8 +1043,8 @@ from the earlier FitLab app.
   every pick made from questions and grey-box wireframes and asked for each
   screen to be designed afresh as simple mock-ups with variants, judged on
   repetition, clutter, what the eye misses and what makes a user give up.
-  Until a screen is picked again, the app as built is the baseline: four
-  tabs and Train (Navigation), the exercises view and list (Exercise list).
+  Until a screen is picked again, the app as built is the baseline:
+  five tabs (Navigation), the Exercises tab and list (Exercise list).
   Picks are recorded here per screen as they are made.
 - **Workouts on the device**: per user one JSON file
   (`workouts_<uid>.json` in the app's private support directory, versioned)
@@ -1298,11 +1306,11 @@ from the earlier FitLab app.
   `ProgramSchedule.plan`, the week plan's logic over any range: a program
   day done (a workout of the active program and that day, on that local
   date) shows only as its workout, and a day done twice on one date shows
-  once, in the My program view too. A next day done on its date without the
+  once, in the Programs tab too. A next day done on its date without the
   program moving on (it was not loaded at finishing) is done, not planned
-  or missed, here and in the My program view, whose missed-day prompt knows
+  or missed, here and in the Programs tab, whose missed-day prompt knows
   only this week's done days. The missed next day shows on its date as
-  missed (resolved in the My program view, not started here) and again where
+  missed (resolved in the Programs tab, not started here) and again where
   it is planned now. A planned day starts through `startProgramDay`, so a
   locked premium copy's days show but open the paywall. A workout opens
   its page under the calendar, a cardio session its page (which finds only the 500
@@ -1320,8 +1328,8 @@ from the earlier FitLab app.
   weekday (see Week start), for the summary, the chart and the list alike,
   as on the Progress card.
   The list follows the 500 newest sessions.
-- **Starting a workout**: Train's "My program" and Today start the next
-  day, a program's page any of its days, "My program" also an empty
+- **Starting a workout**: the Programs tab and Today start the next
+  day, a program's page any of its days, the Programs tab also an empty
   workout (Today only while there is no program day to do), and an
   exercise's page adds it to the workout in progress or, after
   asking, starts one with it. A program day waits until the user's custom
@@ -1560,18 +1568,18 @@ from the earlier FitLab app.
   looked for, the card shows only its title, never Start.
   Otherwise, with an active program the card's headline is that program,
   labelled "Active program" and opening its page, its next day below;
-  without one it is titled "Next workout". It uses "My program"'s own
+  without one it is titled "Next workout". It uses the Programs tab's own
   `ProgramListCubit` (one instance), so
   both show the same plan; the next day with its exercise count and
   estimate, the date it is planned for (`ProgramListState.nextDate`, the
   first of `ProgramSchedule.upcoming`) and Start through
-  `startProgramDay`. A missed day shows "My program"'s
+  `startProgramDay`. A missed day shows the Programs tab's
   `MissedDayPrompt`, only while the program is open, as there; a failed
   choice is reported by the prompt that made it, so the two tabs never
   both do, and a write the server refuses later by the one
   `ProgramWritesNotice` in the shell, whichever tab is open. While the
   premium status of a premium copy is unknown the card shows only its
-  title, as "My program" waits, so a missed day never shows as a
+  title, as the Programs tab waits, so a missed day never shows as a
   planned one with Start. A locked premium copy shows its day, locked,
   with Start opening the paywall. Without a program, or once it finished: the
   catalogue, the generator and "Start empty workout" (the app never calls
@@ -1579,7 +1587,7 @@ from the earlier FitLab app.
   calendar's `calendarEntries` and marks over the current week from the
   app's first weekday (see Week start), drawn by `MonthGrid` as one week; the strip and
   every day open the calendar, which has no route for a given date. No
-  quick actions: an empty workout starts from "My program", cardio is
+  quick actions: an empty workout starts from the Programs tab, cardio is
   logged under Progress → Cardio, a past workout is added on the
   calendar and the calculators open from Profile. Volume
   card: `WatchWeeklyVolume` with one week, never the trend, whatever the
@@ -1871,6 +1879,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Onboarding — a welcome page, then one question per page, all nine mandatory: goal, level, days, equipment, sex, birth year, height, weight, target weight. Choice questions are a list anchored to the bottom; number questions use a ruler
 - [x] Today — week card, one prominent workout card with the only Start of a program day, sets this week for four muscles with the total, a calculators card with a chip per calculator, then steps with the goal and a bar
 - [x] Train, My program — the day list has no Start; Ready-made, Generate, New program and Start empty workout stay
+- [x] Programs and Exercises tabs — five tabs (Today / Programs / Exercises / Progress / Profile), Train and its segmented control gone; each tab its own stack, workouts start from Programs, every location and link lands as before
 - [x] Workout, set entry — minus/plus steppers; tapping the number types it
 - [x] Workout, rest — after a set the panel asks the effort (four options in a grid plus Failed, one line of explanation each, Skip) above a slim timer bar; the RPE scale uses the same layout with RPE 6 or less, 7, 8, 9, 10 and Failed. Once answered only the timer bar shows (time, +15 s, Skip); the next set's entry appears when the rest ends or is skipped
 - [x] Progress — one small widget per area, each opening its page: Body (last weight, curve, last body fat, Log weight, Measurement day), the calendar week, weekly volume, strength, cardio, steps with a bar

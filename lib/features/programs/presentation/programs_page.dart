@@ -15,18 +15,20 @@ import 'missed_day_prompt.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
 
-/// Train's "My program" view: the active program's card with the next
+/// The Programs tab's first page: the active program's card with the next
 /// workout and this week's days, then the ways into the ready-made
 /// programs, the generator and the builder and an empty workout, then the
-/// other programs. The page around
-/// it gives the app bar.
+/// other programs.
 class ProgramsPage extends StatelessWidget {
   const ProgramsPage({super.key});
 
   @override
   Widget build(BuildContext context) => BlocProvider.value(
     value: sl<ProgramListCubit>(),
-    child: const _ProgramsView(),
+    child: Scaffold(
+      appBar: AppBar(title: Text(AppLocalizations.of(context).tabPrograms)),
+      body: const _ProgramsView(),
+    ),
   );
 }
 
