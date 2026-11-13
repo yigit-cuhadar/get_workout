@@ -487,16 +487,11 @@ GoRouter buildRouter(
                   // Before ':id', which would match these too.
                   GoRoute(
                     path: 'list',
-                    // A short fade, the owner's choice over the platform's
-                    // slide; the search box's Hero flies during it.
-                    pageBuilder: (_, state) => CustomTransitionPage(
+                    // A MaterialPage, for a transition the search box's Hero
+                    // flies in: go_router's default page for `builder`
+                    // routes has none here.
+                    pageBuilder: (_, state) => MaterialPage(
                       key: state.pageKey,
-                      transitionDuration: const Duration(milliseconds: 150),
-                      reverseTransitionDuration: const Duration(
-                        milliseconds: 150,
-                      ),
-                      transitionsBuilder: (_, animation, _, child) =>
-                          FadeTransition(opacity: animation, child: child),
                       child: LibraryPage(
                         muscle: Muscle.values.byCode(
                           state.uri.queryParameters['muscle'],
