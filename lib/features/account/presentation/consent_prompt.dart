@@ -4,13 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../profile/presentation/profile_cubit.dart';
 import 'consent_cubit.dart';
 
-/// Asks for analytics consent once the server says the signed-in user has
-/// not answered: two equal choices, no dismissing. Wraps the tabs and asks
-/// only while they are the top route, never over onboarding, the workout,
-/// the paywall or another dialog; it asks once they are on top again.
-/// Needs [ConsentCubit] above it.
+/// Whether to ask [consent]'s user now: the server says they have not
+/// answered, and the app is past onboarding for that same user. The tabs
+/// stay up while a new user's profile loads (after signing out, deleting
+/// the account or switching accounts), and that user may be on their way
+/// to onboarding.
+bool consentDue(ConsentState consent, ProfileState profile) =>
+    consent.unanswered && consent.uid == profile.uid && profile.pastOnboarding;
+
+/// Asks for analytics consent once [consentDue]: two equal choices, no
+/// dismissing. Wraps the tabs and asks only while they are the top route,
+/// never over onboarding, the workout, the paywall or another dialog; it
+/// asks once they are on top again. Needs [ConsentCubit] and [ProfileCubit]
+/// above it.
 class ConsentPrompt extends StatefulWidget {
   const ConsentPrompt({super.key, required this.child});
 
@@ -35,13 +44,18 @@ class _ConsentPromptState extends State<ConsentPrompt> {
     if (ModalRoute.of(context)?.isCurrent ?? true) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        unawaited(_askIfUnanswered(context.read<ConsentCubit>().state));
+        unawaited(_askIfDue());
       });
     }
   }
 
-  Future<void> _askIfUnanswered(ConsentState state) async {
-    if (!mounted || _open || _answered || !state.unanswered) return;
+  Future<void> _askIfDue() async {
+    if (!mounted || _open || _answered) return;
+    final due = consentDue(
+      context.read<ConsentCubit>().state,
+      context.read<ProfileCubit>().state,
+    );
+    if (!due) return;
     if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
     _open = true;
     final cubit = context.read<ConsentCubit>();
@@ -76,17 +90,26 @@ class _ConsentPromptState extends State<ConsentPrompt> {
   }
 
   @override
-  Widget build(BuildContext context) =>
+  Widget build(BuildContext context) => MultiBlocListener(
+    listeners: [
       BlocListener<ConsentCubit, ConsentState>(
         listenWhen: (previous, current) =>
             current.unanswered != previous.unanswered,
         listener: (_, state) {
           if (state.unanswered) {
-            unawaited(_askIfUnanswered(state));
+            unawaited(_askIfDue());
           } else {
             _answered = false;
           }
         },
-        child: widget.child,
-      );
+      ),
+      BlocListener<ProfileCubit, ProfileState>(
+        listenWhen: (previous, current) =>
+            current.uid != previous.uid ||
+            current.pastOnboarding != previous.pastOnboarding,
+        listener: (_, _) => unawaited(_askIfDue()),
+      ),
+    ],
+    child: widget.child,
+  );
 }

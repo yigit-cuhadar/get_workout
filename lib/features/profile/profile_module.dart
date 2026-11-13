@@ -6,6 +6,7 @@ import 'data/firestore_profile_repository.dart';
 import 'domain/profile_repository.dart';
 import 'domain/profile_usecases.dart';
 import 'presentation/profile_cubit.dart';
+import 'presentation/profile_form_cubit.dart';
 
 /// Registers the profile and onboarding. Needs `AuthModule` for the current
 /// user and `ExercisesModule`, whose use case saves the equipment.
@@ -21,6 +22,7 @@ class ProfileModule implements FeatureModule {
       ..registerFactory(() => WatchProfile(sl()))
       ..registerFactory(() => UpdateProfile(sl(), sl()))
       ..registerFactory(() => CompleteOnboarding(sl(), sl()))
+      ..registerLazySingleton(SkippedOnboarding.new)
       ..registerLazySingleton(
         () => ProfileCubit(
           watchAuthUser: sl(),

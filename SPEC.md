@@ -289,7 +289,8 @@ from the earlier FitLab app.
   unless the user is known to have premium. After onboarding the best
   free recommendation is offered (use it, browse, or Today); with none, or
   the catalogue offline, onboarding lands on Today, and so does signing in
-  from onboarding to an account already onboarded.
+  from onboarding to an account already onboarded, and skipping onboarding
+  ("Skip for now"), which suggests nothing.
   `ProgramsModule` takes the premium status and the premium action as
   parameters, so programs never import the subscription feature; bootstrap
   passes `SubscriptionModule.premiumStatus` (the app-level
@@ -552,9 +553,14 @@ from the earlier FitLab app.
   latest wins. A yes first deletes the crash reports recorded before it
   and is saved last, so a failure never leaves a saved yes. Asked once the
   server (not a cached copy, which may predate an answer from another
-  device) says there is no answer, in a dialog over the tabs only while
-  they are the top route (never over onboarding, the workout, the paywall
-  or another dialog), with two equal choices and no dismissing; changed
+  device) says there is no answer and the same user's profile is past
+  onboarding (never while a new user's profile loads in the tabs after
+  signing out, deleting the account or switching accounts), in a dialog
+  over the tabs only while they are the top route (never over onboarding,
+  the workout, the paywall or another dialog), with two equal choices and
+  no dismissing. While an account is being deleted (`DeletionUnderway`)
+  its consent is not followed, so the deleted document neither asks nor
+  records an answer; a deletion that failed follows it again. Changed
   with the switch under Profile → Privacy. The settings feature leaves the
   field alone: its writes merge, and `UserSettings` does not carry it.
 - **Privacy policy link**: Profile → Privacy, in the browser.
@@ -605,7 +611,12 @@ from the earlier FitLab app.
 - **Onboarding questions**: goal, level, days per week and equipment need
   an answer to continue. The personal questions (sex, birth year, height,
   weight, target weight) can each be skipped with "Skip this question";
-  "Skip for now" still ends onboarding with whatever was answered.
+  "Skip for now" still ends onboarding with whatever was answered, and
+  lands on Today with no program suggested (the skip is remembered in
+  memory only; a later start with a completed profile never suggests).
+  "I already have an account" shows on the first question for a guest
+  only: once signed in to an account (also a guest just linked to one) it
+  is gone.
 - **Birth year**: a plausibility range (age 13-100), not an age gate. An
   implausible year is only not accepted as an answer; nothing is blocked.
 - **Custom exercises**: ordinary exercises everywhere the catalogue is

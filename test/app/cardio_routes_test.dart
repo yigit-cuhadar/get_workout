@@ -130,6 +130,8 @@ void main() {
           BlocProvider.value(value: auth),
           BlocProvider.value(value: settings),
           answeredConsent(),
+          // For the shell's consent prompt.
+          BlocProvider.value(value: profile),
           programList(),
           unknownPremium(),
           noWorkout(),
