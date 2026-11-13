@@ -14,6 +14,7 @@ void main() {
   late FakePurchasesRepository store;
   late FakeRemoteConfigRepository config;
   late MockTelemetry telemetry;
+  late bool premium;
 
   setUpAll(() => registerFallbackValue(<String, Object>{}));
 
@@ -22,6 +23,7 @@ void main() {
       SubscriptionModule.remoteConfigDefaults,
     );
     telemetry = MockTelemetry();
+    premium = false;
     when(() => telemetry.logEvent(any(), any())).thenAnswer((_) async {});
   });
 
@@ -34,6 +36,7 @@ void main() {
       getLayout: GetPaywallLayout(config),
       logView: LogPaywallView(telemetry),
       logPurchase: LogPaywallPurchase(telemetry),
+      isPremium: () => premium,
     );
   }
 
@@ -85,6 +88,16 @@ void main() {
     await cubit.close();
   });
 
+  test('logs no view for a subscriber', () async {
+    premium = true;
+    final cubit = build(fakePlans);
+    await cubit.load();
+
+    expect(cubit.state.status, PaywallStatus.ready);
+    verifyNever(() => telemetry.logEvent('paywall_view', any()));
+    await cubit.close();
+  });
+
   test('logs a purchase with its plan and the layout', () async {
     final cubit = build(fakePlans);
     await store.configure();
@@ -94,7 +107,7 @@ void main() {
     expect(cubit.state.outcome, PaywallOutcome.purchased);
     verify(
       () => telemetry.logEvent('paywall_purchase', {
-        'plan': 'premium_yearly',
+        'plan': 'yearly',
         'layout': 'a',
       }),
     ).called(1);

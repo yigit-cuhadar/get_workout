@@ -510,6 +510,7 @@ void main() {
         getLayout: GetPaywallLayout(remoteConfig),
         logView: LogPaywallView(paywallTelemetry),
         logPurchase: LogPaywallPurchase(paywallTelemetry),
+        isPremium: () => entitlement.isActive,
       ),
     );
   }
@@ -2058,7 +2059,7 @@ void main() {
           .called(1);
       verify(
         () => paywallTelemetry.logEvent('paywall_purchase', {
-          'plan': 'premium_yearly',
+          'plan': 'yearly',
           'layout': 'a',
         }),
       ).called(1);
@@ -2163,6 +2164,7 @@ void main() {
 
       expect(find.byType(PaywallPage), findsNothing);
       expect(find.text('You have Premium.'), findsOneWidget);
+      verifyNever(() => paywallTelemetry.logEvent('paywall_view', any()));
     });
   });
 

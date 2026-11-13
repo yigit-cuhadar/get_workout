@@ -126,6 +126,7 @@ class SubscriptionModule implements FeatureModule {
           getLayout: sl(),
           logView: sl(),
           logPurchase: sl(),
+          isPremium: () => sl<EntitlementCubit>().isActive,
         ),
       );
     if (kDebugMode) sl.registerLazySingleton(PaywallLayoutOverride.new);

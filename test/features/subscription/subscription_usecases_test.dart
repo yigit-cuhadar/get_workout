@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_remote_config/forge_remote_config.dart';
 import 'package:get_workout/features/subscription/domain/paywall_layout.dart';
 import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
@@ -65,13 +66,13 @@ void main() {
 
     test('a purchase carries the plan and the layout', () async {
       await LogPaywallPurchase(telemetry)(
-        planId: 'premium_yearly',
+        plan: PlanPeriod.yearly,
         layout: PaywallLayout.list,
       );
 
       verify(
         () => telemetry.logEvent('paywall_purchase', {
-          'plan': 'premium_yearly',
+          'plan': 'yearly',
           'layout': 'a',
         }),
       ).called(1);

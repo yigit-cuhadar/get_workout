@@ -1,4 +1,5 @@
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_remote_config/forge_remote_config.dart';
 
 import 'paywall_layout.dart';
@@ -30,14 +31,17 @@ class LogPaywallView {
 }
 
 /// The A/B test's goal: a plan bought, or its trial started, on the
-/// paywall.
+/// paywall. The plan is its period, the same on both stores (their product
+/// ids differ).
 class LogPaywallPurchase {
   const LogPaywallPurchase(this._telemetry);
   final Telemetry _telemetry;
 
-  Future<void> call({required String planId, required PaywallLayout layout}) =>
-      _telemetry.logEvent('paywall_purchase', {
-        'plan': planId,
-        'layout': layout.code,
-      });
+  Future<void> call({
+    required PlanPeriod plan,
+    required PaywallLayout layout,
+  }) => _telemetry.logEvent('paywall_purchase', {
+    'plan': plan.name,
+    'layout': layout.code,
+  });
 }
