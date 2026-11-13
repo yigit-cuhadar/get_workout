@@ -905,6 +905,11 @@ from the earlier FitLab app.
     own menu goes (set type and removal stay on the bubble's long-press).
     Tips appear one at a time. The summary shows the workout's records and
     its worked muscles on the model.
+  - **Paywall**: full-screen as today. Its top shows the feature the user
+    came from (generator: a sample program; charts: the long chart), the
+    other benefits in one line; opened from Profile it shows all three.
+    Two plan cards, yearly preselected, with the saving computed from the
+    store's prices. Trial and renewal text, terms, privacy and restore stay.
 - **Workouts on the device**: per user one JSON file
   (`workouts_<uid>.json` in the app's private support directory, versioned)
   holds the workout in progress, finished workouts the server has not
