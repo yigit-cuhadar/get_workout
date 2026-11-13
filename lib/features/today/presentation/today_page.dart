@@ -8,8 +8,6 @@ import '../../../app/router.dart';
 import '../../../core/first_weekday.dart';
 import '../../../core/text_length.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../calendar/presentation/calendar_marks.dart';
-import '../../calendar/presentation/month_grid.dart';
 import '../../calculators/presentation/calculator_list.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../generator/presentation/generator_entry.dart';
@@ -31,6 +29,7 @@ import 'next_workout.dart';
 import 'today_steps_cubit.dart';
 import 'today_volume_cubit.dart';
 import 'today_week_cubit.dart';
+import 'week_strip.dart';
 
 /// The Today tab: this week, the next workout, this week's volume, the
 /// calculators and steps, each card on its own data, so one failing leaves
@@ -444,37 +443,11 @@ class _WeekCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final state = context.watch<TodayWeekCubit>().state;
     void open() => context.go(Routes.calendar);
     return _TodayCard(
-      title: l10n.todayWeekTitle,
+      title: AppLocalizations.of(context).todayWeekTitle,
       onOpen: open,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // While loading the dates show without marks, as on the calendar.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Gap.sm, 0, Gap.sm, Gap.sm),
-            child: MonthGrid(
-              weeks: [state.days],
-              selected: state.today,
-              today: state.today,
-              onSelected: (_) => open(),
-              marks: (date) =>
-                  calendarMarkIcons(context, state.entriesOn(date)),
-              semanticLabel: (date) =>
-                  calendarDayLabel(context, date, state.entriesOn(date)),
-            ),
-          ),
-          if (state.status == TodayWeekStatus.failure)
-            ErrorView(
-              message: l10n.todayWeekLoadFailed,
-              retryLabel: l10n.retry,
-              onRetry: context.read<TodayWeekCubit>().retry,
-            ),
-        ],
-      ),
+      child: WeekStrip(onOpen: open),
     );
   }
 }

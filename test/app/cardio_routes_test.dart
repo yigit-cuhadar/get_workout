@@ -32,6 +32,7 @@ import 'package:mocktail/mocktail.dart';
 import 'answered_consent.dart';
 import 'body_stand_in.dart';
 import 'no_workout.dart';
+import 'progress_stand_ins.dart';
 import 'today_stand_ins.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
@@ -124,6 +125,7 @@ void main() {
       );
     registerTodayStandIns();
     registerBodyListStandIn();
+    registerProgressStandIns();
 
     await tester.pumpWidget(
       MultiBlocProvider(
@@ -175,6 +177,19 @@ void main() {
     sessions.add(list);
     await tap(tester, tab('Progress'));
     expect(find.byType(ProgressPage), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Cardio'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(ProgressPage),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    // Built is not on screen: it may still be under the navigation bar.
+    await tester.ensureVisible(find.text('Cardio'));
+    await tester.pumpAndSettle();
     await tap(tester, find.text('Cardio'));
   }
 

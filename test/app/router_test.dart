@@ -96,6 +96,7 @@ import '../features/programs/fixtures.dart' show FixedPremium, card;
 import 'answered_consent.dart';
 import 'body_stand_in.dart';
 import 'no_workout.dart';
+import 'progress_stand_ins.dart';
 import 'today_stand_ins.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
@@ -474,6 +475,7 @@ void main() {
     );
     registerTodayStandIns();
     registerBodyListStandIn();
+    registerProgressStandIns();
     sl.registerFactory(
       () => PremiumPaywallCubit(
         getOffering: GetOffering(store),
