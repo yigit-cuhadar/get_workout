@@ -1082,8 +1082,9 @@ from the earlier FitLab app.
   assistance is no load), working sets and exercises. Layout (UX pass,
   2026-11-13, owner's pick): one prominent card (`WorkoutSummaryCard`,
   shared with the workout page of the history) with "Workout done", the
-  name and the four totals two by two; then the celebration and the new
-  records in a card, each its exercise over what it is and its value; then
+  name and the four totals two by two; then the celebration (trophy and
+  count), above a card of the new records, each its exercise over what it
+  is and its value; then
   the note that the program was not moved on, when so; Done and Save as
   program (not for a program's workout) fixed at the bottom.
 - **Stats update**: stats are computed from what the device knows at

@@ -86,6 +86,24 @@ void main() {
       ]);
     });
 
+    test('every row, a drop row too, fills every column', () {
+      for (final type in LoggingType.values) {
+        final columns = l10n.setColumns(type, kg).length;
+        expect(
+          l10n.setValues(const WorkoutSet(), type, kg).length + 2,
+          columns,
+        );
+        // Drop rows are built from a set of the drop's weight and reps.
+        expect(
+          l10n
+                  .setValues(const WorkoutSet(weightKg: 20, reps: 6), type, kg)
+                  .length +
+              2,
+          columns,
+        );
+      }
+    });
+
     test('fills one value per column, leaving out a missing weight', () {
       expect(l10n.setValues(lift(60, 8), LoggingType.weightReps, kg), [
         '60',
