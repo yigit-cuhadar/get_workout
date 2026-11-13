@@ -39,18 +39,18 @@ class BodyPage extends StatelessWidget {
   final String? compareAfter;
 
   @override
-  Widget build(BuildContext context) => MultiBlocProvider(
-    providers: [
-      BlocProvider.value(value: sl<BodyListCubit>()),
-      BlocProvider(
-        create: (context) => sl<BodyChartCubit>(
-          param1: MaterialLocalizations.of(context).firstWeekday,
-        ),
-      ),
-      BlocProvider(create: (_) => sl<MeasurementSummaryCubit>(param1: null)),
-    ],
-    child: _BodyView(compareAfter: compareAfter),
-  );
+  Widget build(BuildContext context) {
+    // Read here: a provider's create may not listen to the localizations.
+    final firstWeekday = MaterialLocalizations.of(context).firstWeekday;
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: sl<BodyListCubit>()),
+        BlocProvider(create: (_) => sl<BodyChartCubit>(param1: firstWeekday)),
+        BlocProvider(create: (_) => sl<MeasurementSummaryCubit>(param1: null)),
+      ],
+      child: _BodyView(compareAfter: compareAfter),
+    );
+  }
 }
 
 class _BodyView extends StatefulWidget {
