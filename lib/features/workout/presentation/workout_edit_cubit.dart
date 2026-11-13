@@ -310,6 +310,10 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     );
   }
 
+  /// A past workout is logged as it was done.
+  @override
+  bool get addsWarmups => false;
+
   /// A new pick drops the message of a set that could not be ticked.
   @override
   void emitPicked(SetSelection? picked) =>

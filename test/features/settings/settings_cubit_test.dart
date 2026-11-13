@@ -184,4 +184,28 @@ void main() {
     expect: () => const <SettingsState>[],
     verify: (_) => verifyNever(() => settings.saveSettings(any(), any())),
   );
+
+  blocTest<SettingsCubit, SettingsState>(
+    'a tip seen is saved once',
+    setUp: () =>
+        when(() => settings.saveSettings(any(), any()))
+            .thenAnswer((_) async => const Ok(null)),
+    build: build,
+    act: (cubit) async {
+      users.add(member);
+      await pumpEventQueue();
+      stored['u1']!.add(defaults.copyWith(seenTips: {Tip.effort}));
+      await pumpEventQueue();
+      await cubit.tipSeen(Tip.effort);
+      await cubit.tipSeen(Tip.setTypes);
+    },
+    skip: 1,
+    expect: () => const <SettingsState>[],
+    verify: (_) => expect(
+      verify(() => settings.saveSettings('u1', captureAny())).captured,
+      [
+        defaults.copyWith(seenTips: {Tip.effort, Tip.setTypes}),
+      ],
+    ),
+  );
 }

@@ -8,6 +8,7 @@ import '../../programs/domain/program_editing.dart';
 import '../../programs/domain/program_schedule.dart';
 import 'exercise_stats.dart';
 import 'set_logging.dart';
+import 'warmups.dart';
 import 'workout.dart';
 
 /// [exercise] as a workout exercise named in [language], in [goal]'s group:
@@ -61,8 +62,9 @@ int retypedSetPosition(WorkoutExercise exercise, int index, SetType type) {
   return others.lastIndexWhere((set) => set.isWarmup) + 1;
 }
 
-/// A workout of day [dayIndex] of [program], its items as goals. Items whose
-/// exercise is not in [catalogue] (deleted or retired) are left out.
+/// A workout of day [dayIndex] of [program], its items as goals, each
+/// exercise [withWarmups] when [warmups]. Items whose exercise is not in
+/// [catalogue] (deleted or retired) are left out.
 Workout workoutFromProgramDay({
   required String id,
   required DateTime startedAt,
@@ -71,6 +73,7 @@ Workout workoutFromProgramDay({
   required int dayIndex,
   required Map<String, Exercise> catalogue,
   required String language,
+  required bool warmups,
 }) => Workout(
   id: id,
   startedAt: startedAt,
@@ -80,7 +83,10 @@ Workout workoutFromProgramDay({
   exercises: relabelGroups([
     for (final item in program.days[dayIndex].items)
       if (catalogue[item.exerciseId] case final exercise?)
-        exerciseFor(exercise, language, goal: item),
+        switch (exerciseFor(exercise, language, goal: item)) {
+          final added when warmups => withWarmups(added),
+          final added => added,
+        },
   ]),
 );
 

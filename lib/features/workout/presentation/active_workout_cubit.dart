@@ -14,6 +14,7 @@ import '../domain/exercise_stats.dart';
 import '../domain/rest.dart';
 import '../domain/set_logging.dart';
 import '../domain/set_selection.dart';
+import '../domain/warmups.dart';
 import '../domain/workout.dart';
 import '../domain/workout_editing.dart' as editing;
 import '../domain/workout_repository.dart';
@@ -54,6 +55,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.savingProgram = false,
     this.savedProgramId,
     this.picked,
+    this.weightUnit = WeightUnit.kg,
   });
 
   final WorkoutStatus status;
@@ -94,6 +96,9 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   @override
   final SetSelection? picked;
 
+  /// The user's, which warm-ups are suggested in; see [suggestedValues].
+  final WeightUnit weightUnit;
+
   /// A workout is in progress (or being finished), so another cannot start.
   /// An empty one is not ([Workout.isEmpty]): it is not kept, shows nowhere
   /// and another simply replaces it.
@@ -119,6 +124,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     workout!.exercises[ref.exercise],
     ref.set,
     _lastSets(ref.exercise),
+    warmupUnit: weightUnit,
   );
 
   ActiveWorkoutState copyWith({
@@ -134,6 +140,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     bool? savingProgram,
     String? Function()? savedProgramId,
     SetSelection? Function()? picked,
+    WeightUnit? weightUnit,
   }) => ActiveWorkoutState(
     status: status ?? this.status,
     workout: workout != null ? workout() : this.workout,
@@ -149,6 +156,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
         ? savedProgramId()
         : this.savedProgramId,
     picked: picked != null ? picked() : this.picked,
+    weightUnit: weightUnit ?? this.weightUnit,
   );
 
   @override
@@ -165,6 +173,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     savingProgram,
     savedProgramId,
     picked,
+    weightUnit,
   ];
 }
 
@@ -226,6 +235,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   /// The signed-in user's, as they arrive.
   RestTimerSettings _restTimer = const RestTimerSettings();
+  bool _autoWarmups = _defaultAutoWarmups;
+
+  /// [UserSettings.autoWarmups] until the user's own arrive.
+  static const _defaultAutoWarmups = true;
   final _statsSubscriptions = <String, StreamSubscription<ExerciseStats?>>{};
   String? _uid;
 
@@ -254,6 +267,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   static const catalogueWait = Duration(seconds: 10);
 
   @override
+  bool get addsWarmups => _autoWarmups;
+
+  @override
   Map<String, Exercise> get knownExercises => switch (_catalogue.state) {
     CatalogueReady(:final exercises) => {for (final e in exercises) e.id: e},
     _ => const {},
@@ -267,10 +283,17 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     _stopStats();
     unawaited(_settingsSubscription?.cancel());
     _restTimer = const RestTimerSettings();
+    _autoWarmups = _defaultAutoWarmups;
     _settingsSubscription = uid == null
         ? null
         : _watchSettings(uid).listen(
-            (settings) => _restTimer = settings.restTimer,
+            (settings) {
+              _restTimer = settings.restTimer;
+              _autoWarmups = settings.autoWarmups;
+              if (settings.weightUnit != state.weightUnit) {
+                emit(state.copyWith(weightUnit: settings.weightUnit));
+              }
+            },
             // The settings feature logs it; the last known ones stay.
             onError: (Object _) {},
           );
@@ -333,7 +356,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       id: id,
       startedAt: now,
       name: name,
-      exercises: [editing.exerciseFor(exercise, language)],
+      exercises: [
+        switch (editing.exerciseFor(exercise, language)) {
+          final added when _autoWarmups => withWarmups(added),
+          final added => added,
+        },
+      ],
     ),
   );
 
@@ -391,6 +419,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         dayIndex: dayIndex,
         catalogue: catalogue,
         language: language,
+        warmups: _autoWarmups,
       ),
       allowEmpty: false,
     );
@@ -666,6 +695,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       ActiveWorkoutState(
         status: WorkoutStatus.none,
         localUnreadable: state.localUnreadable,
+        weightUnit: state.weightUnit,
       ),
     );
     unawaited(_sync(uid));

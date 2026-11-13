@@ -262,6 +262,13 @@ void main() {
       await cubit.close();
     });
 
+    test('exercises added to a past workout get no warm-ups', () async {
+      final cubit = await editing();
+      cubit.addExercises([move('row')], 'en');
+      expect(cubit.state.workout!.exercises.last.sets, const [WorkoutSet()]);
+      await cubit.close();
+    });
+
     test('a new pick clears the message of a set not ticked', () async {
       final cubit = await editing();
       cubit

@@ -46,6 +46,7 @@ void main() {
       dayIndex: 0,
       catalogue: catalogue,
       language: 'en',
+      warmups: false,
     );
 
     test('copies the exercises with their goals and empty sets', () {
@@ -58,6 +59,26 @@ void main() {
       expect(squat.sets, List.filled(4, const WorkoutSet()));
       expect(squat.goal!.targetKg, 100);
       expect(squat.goal!.group, isNull);
+    });
+
+    test('with warm-ups, weighted exercises start with two', () {
+      final warmed = workoutFromProgramDay(
+        id: 'w1',
+        startedAt: start,
+        name: 'Legs · A',
+        program: legs,
+        dayIndex: 0,
+        catalogue: catalogue,
+        language: 'en',
+        warmups: true,
+      );
+      expect(warmed.exercises.map((e) => e.sets.length), [6, 5, 3]);
+      expect(warmed.exercises.first.sets.take(2).map((s) => s.type), [
+        SetType.warmup,
+        SetType.warmup,
+      ]);
+      // The plank is timed.
+      expect(warmed.exercises.last.sets.any((s) => s.isWarmup), isFalse);
     });
 
     test('leaves out unavailable exercises and relabels groups', () {

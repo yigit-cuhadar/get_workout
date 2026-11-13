@@ -90,6 +90,8 @@
   "effortRpe": "RPE (1-10)",
   "settingsRestTimer": "Rest timer",
   "settingsRestTimerOn": "Starts when you tick a set",
+  "settingsAutoWarmups": "Automatic warm-up sets",
+  "settingsAutoWarmupsOn": "Two lighter sets before each exercise done with a weight and reps.",
   "settingsRestDefault": "Default rest",
   "settingsRestNotify": "Notify when rest is over",
   "settingsRestNotifyDenied": "Notifications are off for GetWorkout. Turn them on in the system settings.",

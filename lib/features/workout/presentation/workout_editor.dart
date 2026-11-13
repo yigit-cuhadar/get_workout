@@ -11,6 +11,7 @@ import '../domain/exercise_stats.dart';
 import '../domain/set_logging.dart';
 import '../domain/set_selection.dart';
 import '../domain/workout.dart';
+import '../domain/warmups.dart';
 import '../domain/workout_editing.dart' as editing;
 
 /// What the exercise cards and the set bar show of a workout being edited.
@@ -63,6 +64,9 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   /// The live exercises by id, for alternatives.
   Map<String, Exercise> get knownExercises;
 
+  /// Whether exercises added or swapped in start [withWarmups].
+  bool get addsWarmups;
+
   /// Keyed by set and drop (null for the set's own weight).
   final _retyped = RetypedWeights<(SetRef, int?)>();
 
@@ -92,7 +96,7 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
         for (final exercise in exercises.take(
           WorkoutLimits.maxExercises - list.length,
         ))
-          editing.exerciseFor(exercise, language),
+          _warmedUp(editing.exerciseFor(exercise, language)),
       ],
       select: (after) => before == null
           ? null
@@ -110,10 +114,27 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     );
   }
 
+  /// One without a done set gets warm-ups as one added would, opening on
+  /// the first of them.
   void swapExercise(int index, Exercise exercise, String language) {
+    final before = state.workout?.exercises.elementAtOrNull(index);
+    if (before == null) return;
+    final swapped = editing.swapExercise(before, exercise, language);
+    final warmed = before.doneSets.isEmpty ? _warmedUp(swapped) : swapped;
+    final current = state.selection;
     _retyped.clear();
-    _editExercise(index, (e) => editing.swapExercise(e, exercise, language));
+    _editExercise(
+      index,
+      (_) => warmed,
+      movesSets: warmed != swapped,
+      select: (after) => warmed != swapped && current?.exercise == index
+          ? openedExercise(after, index)
+          : current,
+    );
   }
+
+  WorkoutExercise _warmedUp(WorkoutExercise exercise) =>
+      addsWarmups ? withWarmups(exercise) : exercise;
 
   /// [to] is where the exercise lands; see [grouping.moveItem].
   void moveExercise(int from, int to) {

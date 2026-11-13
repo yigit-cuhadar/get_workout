@@ -71,6 +71,13 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
   }
 
+  /// Notes that [tip] needs showing no more.
+  Future<void> tipSeen(Tip tip) async {
+    final settings = state.settings;
+    if (settings.seenTips.contains(tip)) return;
+    await update(settings.copyWith(seenTips: {...settings.seenTips, tip}));
+  }
+
   @override
   Future<void> close() async {
     await _userSubscription.cancel();
