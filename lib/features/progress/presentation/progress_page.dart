@@ -577,7 +577,7 @@ class _CardioCard extends StatelessWidget {
                 l10n.cardioMinutesOf(week.duration),
                 style: theme.textTheme.headlineSmall,
               ),
-              Text(l10n.progressCardioSessions(week.sessions.length)),
+              Text(l10n.cardioSessions(week.sessions.length)),
             ],
           ),
         ),

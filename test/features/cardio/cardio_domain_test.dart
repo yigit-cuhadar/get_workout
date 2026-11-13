@@ -364,6 +364,19 @@ void main() {
       expect(weeks[1].sessions, hasLength(2));
     });
 
+    test('a week totals the distance of the sessions that have one', () {
+      final weeks = groupByWeek([
+        at(DateTime(2026, 1, 6, 8), km: 4),
+        at(DateTime(2026, 1, 5, 8)),
+        at(DateTime(2026, 1, 5, 7), km: 2.5),
+        at(DateTime(2025, 12, 29, 8)),
+      ]);
+
+      expect(weeks.first.distanceKm, 6.5);
+      expect(weeks.last.distanceKm, isNull);
+      expect(CardioWeek(DateTime(2026, 1, 5), const []).distanceKm, isNull);
+    });
+
     test('lastWeeks gives 12 weeks oldest first, empty ones included', () {
       final now = DateTime(2026, 1, 8, 12);
       final sessions = [

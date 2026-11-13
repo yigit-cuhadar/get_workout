@@ -8,11 +8,13 @@ import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/cardio_session.dart';
+import '../domain/cardio_week.dart';
 import 'cardio_list_cubit.dart';
 import 'cardio_text.dart';
 import 'weekly_cardio_chart.dart';
 
-/// The weekly chart, then every session grouped by week.
+/// This week's summary, the 12-week chart, then every session grouped by
+/// week; Log cardio stays at the bottom.
 class CardioListPage extends StatelessWidget {
   const CardioListPage({super.key});
 
@@ -61,17 +63,9 @@ class _CardioListViewState extends State<_CardioListView> {
         _cubit.rejectionShown();
       },
       builder: (context, state) {
-        final hasSessions = state.sessions.isNotEmpty;
-        void log() => context.go(Routes.cardioNew);
+        final ready = state.status == CardioListStatus.ready;
         return Scaffold(
           appBar: AppBar(title: Text(l10n.cardioTitle)),
-          floatingActionButton: hasSessions
-              ? FloatingActionButton.extended(
-                  onPressed: log,
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.cardioLog),
-                )
-              : null,
           body: switch (state.status) {
             CardioListStatus.loading => const LoadingView(),
             CardioListStatus.failure => ErrorView(
@@ -79,19 +73,30 @@ class _CardioListViewState extends State<_CardioListView> {
               retryLabel: l10n.retry,
               onRetry: _cubit.retry,
             ),
-            CardioListStatus.ready when !hasSessions => EmptyView(
+            CardioListStatus.ready when state.sessions.isEmpty => EmptyView(
               message: l10n.cardioEmpty,
-              action: ForgeButton(label: l10n.cardioLog, onPressed: log),
             ),
             CardioListStatus.ready => _Sessions(state),
           },
+          bottomNavigationBar: ready
+              ? SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(Gap.md),
+                    child: ForgeButton(
+                      label: l10n.cardioLog,
+                      onPressed: () => context.go(Routes.cardioNew),
+                    ),
+                  ),
+                )
+              : null,
         );
       },
     );
   }
 }
 
-/// The chart, then a header and the sessions of each week, built lazily.
+/// The summary and the chart, then a header and the sessions of each week,
+/// built lazily.
 class _Sessions extends StatelessWidget {
   const _Sessions(this.state);
   final CardioListState state;
@@ -101,6 +106,7 @@ class _Sessions extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final dates = MaterialLocalizations.of(context);
     final rows = <WidgetBuilder>[
+      (_) => _ThisWeek(state.chart.last),
       (_) => Padding(
         padding: const EdgeInsets.all(Gap.md),
         child: WeeklyCardioChart(weeks: state.chart),
@@ -144,6 +150,37 @@ class _SessionTile extends StatelessWidget {
       title: Text(l10n.typeName(session.type)),
       subtitle: Text(details.join(' · ')),
       onTap: () => context.go(Routes.cardioSession(session.id!)),
+    );
+  }
+}
+
+/// Minutes, sessions and distance of the current week, the chart's last.
+class _ThisWeek extends StatelessWidget {
+  const _ThisWeek(this.week);
+  final CardioWeek week;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final unit = context.select(
+      (SettingsCubit cubit) => distanceUnitFor(cubit.state.settings.lengthUnit),
+    );
+    final distance = week.distanceKm;
+    return ListTile(
+      title: Text(l10n.cardioThisWeek),
+      subtitle: Text(
+        l10n.cardioMinutesOf(week.duration),
+        style: theme.textTheme.headlineSmall,
+      ),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(l10n.cardioSessions(week.sessions.length)),
+          if (distance != null) Text(l10n.distanceText(distance, unit)),
+        ],
+      ),
     );
   }
 }

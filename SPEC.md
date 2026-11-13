@@ -1191,6 +1191,16 @@ from the earlier FitLab app.
   shows. `MonthGrid` (`lib/features/calendar/presentation/month_grid.dart`)
   is generic except for `CalendarDate`; move it to `forge_ui`, taking
   `DateTime` dates, when that package is next changed.
+- **Cardio**: Progress → Cardio is one scrolling page (UX pass,
+  2026-11-13): this week's minutes, sessions and distance (in the user's
+  unit, only when a session has one) on top, the 12-week minutes chart,
+  then the sessions under a header per week (with its minutes), newest
+  first; a session opens its edit form. Log cardio is a full-width button
+  fixed at the bottom once the list has loaded, the empty page included,
+  which then shows only its message. Weeks start on Monday here, for the
+  summary, the chart and the list alike, as on the Progress card; the
+  calendar and weekly volume start them on the locale's first weekday.
+  The list follows the 500 newest sessions.
 - **Starting a workout**: Train's "My program" and Today start the next
   day, a program's page any of its days, "My program" also an empty
   workout (Today only while there is no program day to do), and an
@@ -1759,7 +1769,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [ ] Workout detail (history) — the summary card of the workout summary (date, program link, four stats), the workout note as its own card, sets as a table per exercise
 - [ ] Ready-made programs — cards with tags; the filters show as chips above the list and open the filters sheet
 - [ ] Generator — questions use the onboarding question layout; the preview shows weekly sets as bars and days that collapse, Regenerate and Save fixed at the bottom
-- [ ] Cardio — this week's summary on top, the 12-week chart, sessions by week; Log cardio is a full-width button fixed at the bottom
+- [x] Cardio — this week's summary on top, the 12-week chart, sessions by week; Log cardio is a full-width button fixed at the bottom
 - [ ] Weekly volume — stays as built with one body model, the legend and the muscle bars
 - [ ] Remaining pages (strength, calculators, account, sign-in with the Google mark on its button, your profile, warm-up settings, cardio form, workout edit, ready-made program page) keep their structure; their look is settled in the design phase
 
