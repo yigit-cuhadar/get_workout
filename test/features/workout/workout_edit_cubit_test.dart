@@ -262,6 +262,35 @@ void main() {
       await cubit.close();
     });
 
+    test('a set made a warm-up moves first, the selection with it', () async {
+      final cubit = await editing();
+      cubit
+        ..addSet(0, SetType.normal)
+        ..setType((exercise: 0, set: 1), SetType.warmup);
+      expect(cubit.state.workout!.exercises[0].sets.map((s) => s.type), [
+        SetType.warmup,
+        SetType.normal,
+      ]);
+      expect(cubit.state.selection, (exercise: 0, set: 0));
+      await cubit.close();
+    });
+
+    test('a card moves whole, the selection with it', () async {
+      final cubit = await editing();
+      cubit
+        ..addExercises([move('row'), move('curl')], 'en')
+        ..linkWithNext(1)
+        ..selectSet((exercise: 0, set: 0))
+        ..moveBlock(0, 1);
+      expect(cubit.state.workout!.exercises.map((e) => e.exerciseId), [
+        'row',
+        'curl',
+        'squat',
+      ]);
+      expect(cubit.state.selection, (exercise: 2, set: 0));
+      await cubit.close();
+    });
+
     test('a new pick clears the message of a set not ticked', () async {
       final cubit = await editing();
       cubit

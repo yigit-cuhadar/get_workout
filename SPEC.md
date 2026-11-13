@@ -773,11 +773,17 @@ from the earlier FitLab app.
   others show "Squat · 1/3" with the menu still there, and tapping one
   opens it on its first undone set, else its last. Holding an exercise's
   header (not its menu) as long as a long press collapses every card to its
-  one-line exercises, the held line scrolled back under the finger; 100 ms
-  later the drag starts and the card (a superset or circuit as one, never
-  split or dropped inside another) follows the finger; once dropped
-  (`moveBlock`, `grouping.moveItem`) the cards open again with the same set
-  selected. Collapsing is local state of the cards; the drag uses
+  one-line exercises, the held line scrolled back under the finger; only
+  once that is laid out does the drag start (the header's recognizer waits
+  for the cards to open its gate), so the dragged card and its gap are one
+  line, and the card (a superset or circuit as one, never split or dropped
+  inside another) follows the finger; once dropped (`moveBlock`,
+  `grouping.moveItem`) the cards open again with the same set selected.
+  Moving first scrolls instead; every pointer end (lift, cancel, the app
+  leaving) ends it, and the cards expand when the drop is applied or at the
+  latest 500 ms after the finger lifts. Headers cannot be held while cards
+  are collapsed (a drop still landing) or while edits are refused (saving,
+  finishing). Collapsing is local state of the cards; the drag uses
   `SliverReorderableList`, its proxy a freshly built one-line card with the
   page's providers re-provided. Screen readers get "Move up" / "Move down"
   actions on the headers. The workout note and "Add exercise" stay below,
@@ -815,7 +821,7 @@ from the earlier FitLab app.
   time, the set note), its fields by logging type with
   the suggestion as hint, a drop set's drops (edit, remove, add) right
   under them, the effort steps, the tick (which needs no keyboard and starts
-  the rest as before) and a "more" sheet for the set type, note and
+  the rest as before) and a "more" sheet (following the selection, so a type change that moves the set keeps it on that set) for the set type, note and
   removal; an invalid tick's message shows in it. Sets are named
   everywhere by `setLabel` and `setToDo` (W, 1, 2D; "of N" counts working
   sets), the same as the lock screen and the rest notification. The exercise detail page
@@ -1449,7 +1455,7 @@ Group 4, programs
 
 Group 5, workout
 - [x] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery
-- [x] Workout screen redesign — one exercise open at a time, set bar, bubbles or selected-set view (temporary toggle), effort by feel / RIR / RPE with Failed, exercise details from the workout, add set by kind
+- [x] Workout screen redesign — one exercise open at a time, set bar, set bubbles (long-press for type and removal), exercise cards reordered by holding a header, effort by feel / RIR / RPE with Failed, exercise details from the workout, add set by kind
 - [x] Free workout — start empty (not in progress until an exercise is added), save as program at the end
 - [x] Rest timer — auto start, +15 s, skip, notification
 - [x] Rest timer on the lock screen — iOS Live Activity, Android ongoing notification

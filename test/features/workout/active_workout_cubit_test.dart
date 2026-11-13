@@ -1249,6 +1249,17 @@ void main() {
       await cubit.close();
     });
 
+    test('a type change that moves the ticked set forgets it', () async {
+      final cubit = await withSquat();
+      cubit
+        ..toggleDone(second)
+        ..setType(second, SetType.warmup);
+      // The ticked set is now the first; the rest runs on without it.
+      expect(cubit.state.workout!.exercises[0].sets[0].done, isTrue);
+      expect(cubit.state.rest, Rest(endsAt: restEnd));
+      await cubit.close();
+    });
+
     test('a warm-up leaves the running rest alone', () async {
       final cubit = await withSquat();
       // The first set made a warm-up stays where it is.

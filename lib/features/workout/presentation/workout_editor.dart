@@ -54,6 +54,9 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     SetSelection? Function(Workout after)? select,
   });
 
+  /// Whether [edit] changes the workout now.
+  bool get canEdit;
+
   /// Emits the state with [picked] as the selection.
   void emitPicked(SetSelection? picked);
 
