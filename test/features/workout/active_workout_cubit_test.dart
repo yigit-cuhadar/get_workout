@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
@@ -749,55 +750,90 @@ void main() {
   });
 
   group('effort', () {
+    const first = (exercise: 0, set: 0);
+    const second = (exercise: 0, set: 1);
+
     Future<ActiveWorkoutCubit> withSquat({bool warmups = false}) async {
       final cubit = await signedIn(warmups: warmups);
       await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
       return cubit;
     }
 
-    test('is asked about the set just ticked, and lands on it', () async {
+    test('a tick asks about that set; picking a step stores it', () async {
       final cubit = await withSquat();
-      expect(cubit.state.effortRef, isNull);
-      cubit.toggleDone((exercise: 0, set: 0));
-      // The next set is selected; the row still asks about the first.
+      expect(cubit.state.questionRef, isNull);
+      cubit.toggleDone(first);
+      // The next set is selected underneath; the bar asks about the first.
       expect(cubit.state.selection, (exercise: 0, set: 1));
-      expect(cubit.state.effortRef, (exercise: 0, set: 0));
-      cubit.setEffort((exercise: 0, set: 0), const EffortStep.reserve(2));
+      expect(cubit.state.questionRef, first);
+      cubit.setEffort(first, const EffortStep.reserve(2));
       final sets = cubit.state.workout!.exercises[0].sets;
       expect((sets[0].rir, sets[1].rir), (2, null));
-      // Answered: no row while the selected set is not done.
-      expect(cubit.state.effortRef, isNull);
+      // The bar is back on the next set, which shows no effort row.
+      expect(cubit.state.questionRef, isNull);
+      expect(cubit.state.effortRowRef, isNull);
       await cubit.close();
     });
 
-    test(
-      'follows the next tick, and goes when another set is picked',
-      () async {
-        final cubit = await withSquat();
-        cubit
-          ..addExercises([bench], 'en')
-          ..toggleDone((exercise: 0, set: 0))
-          ..toggleDone((exercise: 0, set: 1));
-        expect(cubit.state.selection, (exercise: 1, set: 0));
-        expect(cubit.state.effortRef, (exercise: 0, set: 1));
-        // Picking the selected set again keeps it.
-        cubit.selectSet((exercise: 1, set: 0));
-        expect(cubit.state.effortRef, (exercise: 0, set: 1));
-        // A selected done set is asked about itself.
-        cubit.selectSet((exercise: 0, set: 0));
-        expect(cubit.state.effortRef, (exercise: 0, set: 0));
-        // Back on the undone set, the tick is forgotten.
-        cubit.selectSet((exercise: 1, set: 0));
-        expect(cubit.state.effortRef, isNull);
-        await cubit.close();
-      },
-    );
-
-    test('is never asked about a warm-up', () async {
-      final cubit = await withSquat(warmups: true);
-      cubit.toggleDone((exercise: 0, set: 0));
-      expect(cubit.state.effortRef, isNull);
+    test('skip ends it, the set keeps no effort', () async {
+      final cubit = await withSquat();
+      cubit
+        ..toggleDone(first)
+        ..skipEffort();
+      expect(cubit.state.questionRef, isNull);
+      expect(cubit.state.workout!.exercises[0].sets[0].rir, isNull);
       await cubit.close();
+    });
+
+    test('a pick of any set or exercise ends it', () async {
+      final cubit = await withSquat();
+      cubit
+        ..addExercises([bench], 'en')
+        ..toggleDone(first)
+        ..selectSet(second);
+      expect(cubit.state.questionRef, isNull);
+      cubit
+        ..toggleDone(second)
+        ..openExercise(0);
+      expect(cubit.state.questionRef, isNull);
+      // A selected done set shows its effort row instead.
+      expect(cubit.state.effortRowRef, second);
+      await cubit.close();
+    });
+
+    test('sets moving end it', () async {
+      final cubit = await withSquat();
+      cubit
+        ..toggleDone(first)
+        ..addSet(0, SetType.warmup);
+      expect(cubit.state.questionRef, isNull);
+      await cubit.close();
+    });
+
+    test('a warm-up is never asked about', () async {
+      final cubit = await withSquat(warmups: true);
+      cubit.toggleDone(first);
+      expect(cubit.state.workout!.exercises[0].sets[0].isWarmup, isTrue);
+      expect(cubit.state.questionRef, isNull);
+      await cubit.close();
+    });
+
+    test('it ends by itself, later when the bar is touched', () {
+      fakeAsync((async) {
+        late ActiveWorkoutCubit cubit;
+        unawaited(withSquat().then((built) => cubit = built));
+        async.elapse(const Duration(seconds: 1));
+        cubit.toggleDone(first);
+        const time = WorkoutEditor.effortQuestionTime;
+        async.elapse(time - const Duration(seconds: 1));
+        cubit.keepAsking();
+        async.elapse(time - const Duration(seconds: 1));
+        expect(cubit.state.questionRef, first);
+        async.elapse(const Duration(seconds: 1));
+        expect(cubit.state.questionRef, isNull);
+        unawaited(cubit.close());
+        async.flushMicrotasks();
+      });
     });
   });
 

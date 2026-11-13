@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/grouping.dart' as grouping;
@@ -22,12 +24,10 @@ abstract interface class EditedWorkout {
   /// null follows the next set to do. See [EditedSelection.selection].
   SetSelection? get picked;
 
-  /// The set ticked last, until another is picked or sets move; see
-  /// [effortSet].
-  SetRef? get ticked;
-
-  /// Whether first-use tips show here.
-  bool get offersTips;
+  /// The working set just ticked whose effort the set bar asks, until it
+  /// is answered or skipped, any set is picked, sets move, or
+  /// [effortQuestionTime] passes; see [questionSet].
+  SetRef? get asking;
 
   /// The stats of the workout's exercises that have arrived.
   Map<String, ExerciseStats?> get stats;
@@ -46,8 +46,13 @@ extension EditedSelection on EditedWorkout {
   /// What is open and selected now; see [resolveSelection].
   SetSelection? get selection => resolveSelection(workout, picked);
 
-  /// The set the effort row asks about; see [effortSet].
-  SetRef? get effortRef => effortSet(workout, selection, ticked);
+  /// The set the set bar asks the effort of instead of showing the selected
+  /// set; see [questionSet].
+  SetRef? get questionRef => questionSet(workout, asking);
+
+  /// The set whose effort row shows under the selected set's values; see
+  /// [effortRowSet].
+  SetRef? get effortRowRef => effortRowSet(workout, selection);
 }
 
 /// Editing a workout's exercises and sets, shared by the workout in
@@ -68,12 +73,16 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   /// Whether [edit] changes the workout now.
   bool get canEdit;
 
-  /// Emits the state with [picked] as the selection; picking another set
-  /// than the selected one forgets [EditedWorkout.ticked].
+  /// Emits the state with [picked] as the selection; any pick ends the
+  /// effort question ([EditedWorkout.asking]).
   void emitPicked(SetSelection? picked);
 
-  /// Emits the state with [ticked] as [EditedWorkout.ticked].
-  void emitTicked(SetRef? ticked);
+  /// Whether ticking a working set asks its effort; see
+  /// [EditedWorkout.asking].
+  bool get asksEffort;
+
+  /// Emits the state with [asking] as [EditedWorkout.asking].
+  void emitAsking(SetRef? asking);
 
   /// Notes that warm-ups were added to the workout automatically.
   void noteWarmupsAdded();
@@ -89,6 +98,41 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
 
   /// Keyed by set and drop (null for the set's own weight).
   final _retyped = RetypedWeights<(SetRef, int?)>();
+
+  /// How long the set bar asks the effort of a set just ticked when left
+  /// alone.
+  static const effortQuestionTime = Duration(seconds: 10);
+
+  /// Ends the effort question after [effortQuestionTime].
+  Timer? _questionTimer;
+
+  /// Asks the effort of [ref], or of none, for [effortQuestionTime].
+  void _ask(SetRef? ref) {
+    _questionTimer?.cancel();
+    _questionTimer = null;
+    if (state.asking != ref) emitAsking(ref);
+    if (ref != null) {
+      _questionTimer = Timer(effortQuestionTime, () {
+        if (!isClosed && state.asking == ref) emitAsking(null);
+      });
+    }
+  }
+
+  /// The user is answering the effort question: it waits another
+  /// [effortQuestionTime].
+  void keepAsking() {
+    final asking = state.asking;
+    if (asking != null) _ask(asking);
+  }
+
+  /// Leaves the effort question unanswered.
+  void skipEffort() => _ask(null);
+
+  @override
+  Future<void> close() {
+    _questionTimer?.cancel();
+    return super.close();
+  }
 
   void selectSet(SetRef ref) {
     if (hasSet(ref)) emitPicked(ref);
@@ -296,10 +340,10 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   void setSetNote(SetRef ref, String text) =>
       _editSet(ref, (set, _) => set.copyWith(note: () => _note(text)));
 
-  /// Null clears it. Answers the effort row about the set just ticked.
+  /// Null clears it. Answers the effort question about [ref].
   void setEffort(SetRef ref, EffortStep? step) {
     _editSet(ref, (set, _) => set.withEffort(step));
-    if (state.ticked == ref) emitTicked(null);
+    if (state.asking == ref) _ask(null);
   }
 
   void addDrop(SetRef ref) => _editSet(
@@ -354,7 +398,7 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
 
   /// Puts [toggled] (see [toggledSet]) in the place of [ref]; ticked done,
   /// the next set to do is selected, see [selectionAfterTick], else [ref].
-  /// A set ticked done becomes [EditedWorkout.ticked].
+  /// A working set ticked done is asked its effort where [asksEffort].
   void applyToggled(SetRef ref, WorkoutSet toggled) {
     if (!canEdit) return;
     _replaceSet(
@@ -362,7 +406,7 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
       toggled,
       select: (after) => toggled.done ? selectionAfterTick(after, ref) : ref,
     );
-    emitTicked(toggled.done ? ref : null);
+    _ask(asksEffort && toggled.done && !toggled.isWarmup ? ref : null);
   }
 
   void _replaceSet(

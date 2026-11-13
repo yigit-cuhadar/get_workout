@@ -139,29 +139,57 @@ extension WorkoutText on AppLocalizations {
         : helpRepsLeft(step.rir);
   }
 
-  /// What the effort row of [scale] asks about set [asked] of [workout],
-  /// e.g. `How hard was set 2?`, naming its exercise when it is not the
-  /// [selected] one: `How hard was Squat drop set 3?`.
-  String effortQuestion(
+  /// Set [index] of [exercise] by its kind and number among the working
+  /// sets, e.g. `Set 2`, `Drop set 3`.
+  String ratedSetName(WorkoutExercise exercise, int index) {
+    final sets = exercise.sets;
+    final number = sets.take(index + 1).where((s) => !s.isWarmup).length;
+    return sets[index].type == SetType.drop
+        ? effortDropSetName(number)
+        : effortSetName(number);
+  }
+
+  /// What the effort question of [scale] asks about the set just done.
+  String effortQuestion(EffortScale scale) => switch (scale) {
+    EffortScale.byFeel => effortQuestionFeel,
+    EffortScale.rir => effortQuestionRir,
+    EffortScale.rpe => effortQuestionRpe,
+  };
+
+  /// What the effort row of [scale] asks about selected done set [index]
+  /// of [exercise], e.g. `Set 1 · how hard was it?`.
+  String effortRowQuestion(
     EffortScale scale,
+    WorkoutExercise exercise,
+    int index,
+  ) {
+    final set = ratedSetName(exercise, index);
+    return switch (scale) {
+      EffortScale.byFeel => effortRowFeel(set),
+      EffortScale.rir => effortRowRir(set),
+      EffortScale.rpe => effortRowRpe(set),
+    };
+  }
+
+  /// The effort question's title for set [asked] of [workout] just done,
+  /// with its values in [unit]: `Set 1 done · 80 kg × 8`, its exercise
+  /// first when it is not the [selected] one.
+  String effortDoneText(
     Workout workout,
     SetRef asked,
     SetSelection? selected,
+    WeightUnit unit,
   ) {
     final exercise = workout.exercises[asked.exercise];
-    final sets = exercise.sets;
-    final number = sets.take(asked.set + 1).where((s) => !s.isWarmup).length;
-    final name = sets[asked.set].type == SetType.drop
-        ? effortDropSetName(number)
-        : effortSetName(number);
-    final set = selected?.exercise == asked.exercise
-        ? name
-        : effortOtherExerciseSet(exercise.name, name);
-    return switch (scale) {
-      EffortScale.byFeel => effortQuestionFeel(set),
-      EffortScale.rir => effortQuestionRir(set),
-      EffortScale.rpe => effortQuestionRpe(set),
-    };
+    final set = ratedSetName(exercise, asked.set);
+    final values = setWithUnitText(
+      exercise.sets[asked.set],
+      exercise.loggingType,
+      unit,
+    );
+    return selected?.exercise == asked.exercise
+        ? effortDoneTitle(set, values)
+        : effortDoneTitleOf(exercise.name, set, values);
   }
 
   /// The progress of [exercise] in working sets, e.g. `Squat · 1/3`, as

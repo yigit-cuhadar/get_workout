@@ -124,8 +124,9 @@ class _RestBelowBarState extends State<RestBelowBar>
 }
 
 /// The selected set of the workout [editor] edits: which one it is, its
-/// values with the suggestion as hint, its drops, its effort, its options
-/// and the tick; nothing while no set is selected.
+/// values with the suggestion as hint, its drops, its effort when it is
+/// done, its options and the tick; nothing while no set is selected. Right
+/// after a working set is ticked it is [_EffortQuestion] instead.
 class SetBar extends StatelessWidget {
   const SetBar({super.key, required this.state, required this.editor});
 
@@ -140,6 +141,14 @@ class SetBar extends StatelessWidget {
     final settings = settingsState.settings;
     final seen = settingsState.loaded ? settings.seenTips : null;
     final unit = settings.weightUnit;
+    if (state.questionRef case final asked?) {
+      return _EffortQuestion(
+        asked: asked,
+        state: state,
+        editor: editor,
+        tip: effortTipDue(seen, asking: true),
+      );
+    }
     final selection = state.selection;
     final index = selection?.set;
     if (selection == null || index == null) return const SizedBox.shrink();
@@ -266,18 +275,8 @@ class SetBar extends StatelessWidget {
                       unit: unit,
                       editor: editor,
                     ),
-                  if (state.effortRef case final asked?)
-                    _EffortRow(
-                      asked: asked,
-                      state: state,
-                      editor: editor,
-                      tip: effortTipDue(
-                        seen,
-                        offered: state.offersTips,
-                        asked: asked,
-                        ticked: state.ticked,
-                      ),
-                    ),
+                  if (state.effortRowRef case final rated?)
+                    _EffortRow(rated: rated, state: state, editor: editor),
                 ],
               ),
             ),
@@ -349,10 +348,59 @@ class _Drops extends StatelessWidget {
   }
 }
 
-/// The effort of done set [asked] (see [effortSet]): which set it asks
-/// about, the help, the steps, and the first time its [tip].
+/// The effort of the selected set [rated], which is done: which set it
+/// is, the help, and the steps.
 class _EffortRow extends StatelessWidget {
   const _EffortRow({
+    required this.rated,
+    required this.state,
+    required this.editor,
+  });
+
+  final SetRef rated;
+  final EditedWorkout state;
+  final WorkoutEditor<EditedWorkout> editor;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scale = context.select(
+      (SettingsCubit cubit) => cubit.state.settings.effortScale,
+    );
+    final exercise = state.workout!.exercises[rated.exercise];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.effortRowQuestion(scale, exercise, rated.set),
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
+            const WorkoutHelpButton(),
+          ],
+        ),
+        _EffortChoice(
+          scale: scale,
+          chosen: scale.stepOf(exercise.sets[rated.set]),
+          onChosen: (step) {
+            editor.setEffort(rated, step);
+            context.read<SettingsCubit>().tipSeen(Tip.effort);
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// The bar while it asks the effort of [asked], the working set just
+/// ticked: the set and its values, the question with the help, the steps,
+/// Skip, and the first time its [tip]. No field or tick, so nothing is
+/// logged to the wrong set; any touch keeps the question from timing out.
+class _EffortQuestion extends StatelessWidget {
+  const _EffortQuestion({
     required this.asked,
     required this.state,
     required this.editor,
@@ -369,40 +417,78 @@ class _EffortRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final settings = context.read<SettingsCubit>();
-    final scale = context.select(
-      (SettingsCubit cubit) => cubit.state.settings.effortScale,
+    final current = context.select(
+      (SettingsCubit cubit) => cubit.state.settings,
     );
+    final scale = current.effortScale;
     final workout = state.workout!;
     final set = workout.exercises[asked.exercise].sets[asked.set];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (tip)
-          TipBanner(
-            text: l10n.tipEffort,
-            onDismiss: () => settings.tipSeen(Tip.effort),
-          ),
-        Row(
+    return Listener(
+      onPointerDown: (_) => editor.keepAsking(),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.xs, Gap.sm),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Text(
-                l10n.effortQuestion(scale, workout, asked, state.selection),
-                style: theme.textTheme.labelLarge,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.effortDoneText(
+                      workout,
+                      asked,
+                      state.selection,
+                      current.weightUnit,
+                    ),
+                    style: theme.textTheme.titleSmall,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    editor.skipEffort();
+                    settings.tipSeen(Tip.effort);
+                  },
+                  child: Text(l10n.effortSkip),
+                ),
+              ],
             ),
-            const WorkoutHelpButton(),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.effortQuestion(scale),
+                    style: theme.textTheme.labelLarge,
+                  ),
+                ),
+                const WorkoutHelpButton(),
+              ],
+            ),
+            _EffortChoice(
+              scale: scale,
+              chosen: scale.stepOf(set),
+              onChosen: (step) {
+                editor.setEffort(asked, step);
+                // Used, so its tip has nothing left to tell.
+                settings.tipSeen(Tip.effort);
+              },
+            ),
+            if (tip)
+              // Below the steps and scrolling, so it never pushes them or
+              // Skip out of the bar's share of the page.
+              Flexible(
+                child: SingleChildScrollView(
+                  child: TipBanner(
+                    text: l10n.tipEffort,
+                    onDismiss: () => settings.tipSeen(Tip.effort),
+                  ),
+                ),
+              ),
           ],
         ),
-        _EffortChoice(
-          scale: scale,
-          chosen: scale.stepOf(set),
-          onChosen: (step) {
-            editor.setEffort(asked, step);
-            // Used, so its tip has nothing left to tell.
-            settings.tipSeen(Tip.effort);
-          },
-        ),
-      ],
+      ),
     );
   }
 }

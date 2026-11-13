@@ -48,7 +48,6 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     this.issue,
     this.failure,
     this.picked,
-    this.ticked,
   });
 
   final WorkoutEditStatus status;
@@ -73,12 +72,10 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
 
   @override
   final SetSelection? picked;
-  @override
-  final SetRef? ticked;
 
-  /// The user knows what they logged; tips are for the workout in progress.
+  /// Never: see [WorkoutEditCubit.asksEffort].
   @override
-  bool get offersTips => false;
+  SetRef? get asking => null;
 
   /// A stored workout has nothing to compare with, so no last time is shown.
   @override
@@ -99,7 +96,6 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     WorkoutChangeIssue? Function()? issue,
     Failure? Function()? failure,
     SetSelection? Function()? picked,
-    SetRef? Function()? ticked,
   }) => WorkoutEditState(
     status: status ?? this.status,
     workout: workout ?? this.workout,
@@ -108,7 +104,6 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     issue: issue != null ? issue() : this.issue,
     failure: failure != null ? failure() : this.failure,
     picked: picked != null ? picked() : this.picked,
-    ticked: ticked != null ? ticked() : this.ticked,
   );
 
   @override
@@ -120,7 +115,6 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
     issue,
     failure,
     picked,
-    ticked,
   ];
 }
 
@@ -320,7 +314,6 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
         workout: changed,
         invalidSet: () => null,
         picked: select == null ? null : () => select(changed),
-        ticked: movesSets ? () => null : null,
       ),
     );
   }
@@ -331,16 +324,16 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
 
   /// A new pick drops the message of a set that could not be ticked.
   @override
-  void emitPicked(SetSelection? picked) => emit(
-    state.copyWith(
-      picked: () => picked,
-      invalidSet: () => null,
-      ticked: picked == state.selection ? null : () => null,
-    ),
-  );
+  void emitPicked(SetSelection? picked) =>
+      emit(state.copyWith(picked: () => picked, invalidSet: () => null));
+
+  /// All of a past workout is logged after the fact: ticking asks nothing,
+  /// a selected done set shows its effort row.
+  @override
+  bool get asksEffort => false;
 
   @override
-  void emitTicked(SetRef? ticked) => emit(state.copyWith(ticked: () => ticked));
+  void emitAsking(SetRef? asking) {}
 
   /// Never: see [addsWarmups].
   @override

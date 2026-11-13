@@ -237,15 +237,23 @@ from the earlier FitLab app.
   RIR. Effort shows in the chosen scale everywhere (bar, workout detail).
   Effort is only stored and shown (bar, workout detail); nothing else uses
   it yet, and the help says just that. Effort is only asked about a DONE
-  working set (`effortSet`): the set bar's effort row is about the
-  selected set when it is done (showing its stored effort; picking it
-  again clears it), else about the set just ticked (`ticked` in the editor
-  state), even though the selection has moved on to the next set, until it
-  is answered, another set is ticked, another set is picked, or sets move;
-  with neither there is no effort row. Warm-ups are never rated. The row
-  names its set: "How hard was set 1?", "How many more reps could you have
-  done in drop set 2?", "How hard was Squat set 3, from 1 to 10?" (the
-  exercise named when it is not the selected one).
+  working set; warm-ups are never rated. Right after a working set is
+  ticked in the workout in progress, the set bar BECOMES the question
+  (`questionSet`, `asking` in the editor state): "Set 1 done · 80 kg × 8"
+  ("Drop set 2 done · …", the exercise first when the selection has moved
+  to another one: "Squat · Set 3 done · 100 kg × 5"), the scale's question
+  ("How hard was it?", "How many more reps could you have done?", "How
+  hard was it, from 1 to 10?") with the "?" help, the steps with Failed,
+  and Skip; no fields and no tick, so nothing is logged to the wrong set,
+  and the keyboard is already closed by the tick. The rest strip stays
+  below and the rest starts as before. The bar returns to the next set
+  when a step is picked (stored on that set), Skip is tapped, any set is
+  picked or an exercise opened, an edit moves sets, or after
+  `WorkoutEditor.effortQuestionTime` (10 s) untouched; any touch on the
+  question restarts that time (the timer lives in the editor cubit and
+  ends with it). Editing a past workout never asks on a tick. A selected
+  done set shows its effort row under its values, named: "Set 1 · how hard
+  was it?" (`effortRowSet`); an undone set never has one.
 - **Automatic warm-up sets**: Settings → "Automatic warm-up sets", on by
   default, also for users who never set it (`settings.autoWarmups`, a
   missing value reads as on). While on, an exercise logged with a weight
@@ -279,21 +287,21 @@ from the earlier FitLab app.
   under its name in the add-set sheet and the bubble's long-press menu
   (Normal "A regular working set.", Warm-up "A lighter set to get ready.
   Not counted in your stats.", Drop set "Finish the set, then lower the
-  weight and keep going without rest."). The set bar asks the scale's
-  question about the set it asks about above the effort chips (see Effort
-  scale) and, for a warm-up or drop set, shows its description (one line,
+  weight and keep going without rest."). The set bar shows the
+  effort question or row (see Effort scale) and, for a warm-up or drop set,
+  its description (one line,
   the rest in the help) under the title, which names the kind in words (`setToDo`: "Bench Press · Warm-up
   1 of 2", "· Warm-up" for the only one, "· Drop set 2 of 3"; the lock
   screen and rest notification follow). An "Explain" (?) button next to
-  the question and in the add-set sheet opens one scrolling help sheet:
+  the effort question and row opens one scrolling help sheet:
   what effort is and what the app does with it, every step of the user's
   scale and what it means, Failed, warm-up sets (with the automatic ramp)
   and drop sets.
 - **First-use tips**: three inline banners (Material `MaterialBanner`,
   never modal), each with "Got it", none until the user's settings have
-  arrived: effort, with the effort row about a set just ticked, in the
-  workout in progress only (not when editing a past workout), until an
-  effort is picked; set types, at the top of the add-set sheet, until a
+  arrived: effort, inside the effort question the first time (under the
+  steps, scrolling, so Skip and the steps stay in view), until it is
+  dismissed, an effort is picked or the question skipped; set types, at the top of the add-set sheet, until a
   type is picked there; automatic warm-ups, at the top of the workout in
   progress once warm-ups were added to it automatically
   (`warmupsAdded`), until the setting is changed. Dismissing or using the

@@ -108,13 +108,6 @@ Future<void> addSetOfKind(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ListTile(
-                title: Text(
-                  l10n.workoutAddSet,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                trailing: const WorkoutHelpButton(),
-              ),
               if (setTypesTipDue(seen))
                 TipBanner(
                   text: l10n.tipSetTypes,

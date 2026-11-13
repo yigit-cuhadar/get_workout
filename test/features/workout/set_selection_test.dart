@@ -296,7 +296,7 @@ void main() {
     });
   });
 
-  group('effortSet', () {
+  group('effort', () {
     final w = workout('w', [
       exercise('squat', [
         lift(40, 8, type: SetType.warmup),
@@ -305,32 +305,19 @@ void main() {
       ]),
     ]);
 
-    test('the selected set when it is done', () {
-      expect(effortSet(w, (exercise: 0, set: 1), null), (exercise: 0, set: 1));
+    test('the question asks about a done working set only', () {
+      expect(questionSet(w, (exercise: 0, set: 1)), (exercise: 0, set: 1));
+      expect(questionSet(w, null), isNull);
+      expect(questionSet(w, (exercise: 0, set: 0)), isNull);
+      expect(questionSet(w, (exercise: 0, set: 2)), isNull);
+      expect(questionSet(w, (exercise: 3, set: 0)), isNull);
     });
 
-    test('else the set just ticked, while it is done', () {
-      expect(effortSet(w, (exercise: 0, set: 2), (exercise: 0, set: 1)), (
-        exercise: 0,
-        set: 1,
-      ));
-      expect(
-        effortSet(w, (exercise: 0, set: 2), (exercise: 0, set: 2)),
-        isNull,
-      );
-      expect(effortSet(w, (exercise: 0, set: 2), null), isNull);
-    });
-
-    test('never a warm-up or a set that is gone', () {
-      expect(effortSet(w, (exercise: 0, set: 0), null), isNull);
-      expect(
-        effortSet(w, (exercise: 0, set: 2), (exercise: 0, set: 0)),
-        isNull,
-      );
-      expect(
-        effortSet(w, (exercise: 0, set: 2), (exercise: 3, set: 0)),
-        isNull,
-      );
+    test('the effort row is the selected set when it is done', () {
+      expect(effortRowSet(w, (exercise: 0, set: 1)), (exercise: 0, set: 1));
+      expect(effortRowSet(w, (exercise: 0, set: 2)), isNull);
+      expect(effortRowSet(w, (exercise: 0, set: 0)), isNull);
+      expect(effortRowSet(w, (exercise: 0, set: null)), isNull);
     });
   });
 }
