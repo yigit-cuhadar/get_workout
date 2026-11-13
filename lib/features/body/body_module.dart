@@ -20,15 +20,17 @@ import 'domain/body_photos.dart';
 import 'domain/body_repository.dart';
 import 'domain/body_usecases.dart';
 import 'domain/measurement_summary.dart';
+import 'presentation/body_chart_cubit.dart';
 import 'presentation/body_list_cubit.dart';
 import 'presentation/measurement_day_cubit.dart';
 import 'presentation/measurement_summary_cubit.dart';
 import 'presentation/weight_form_cubit.dart';
 
 /// Registers the weight log and measurement days. Needs `AuthModule` for
-/// the current user, `ProgramsModule` for `WatchPremium` and
-/// `ProfileModule`, whose use cases keep the profile weight and give the
-/// sex and height for body fat.
+/// the current user, `ProgramsModule` for `WatchPremium`, `ProfileModule`,
+/// whose use cases keep the profile weight and give the sex and height for
+/// body fat, and for the chart `SettingsModule`, `VolumeModule`,
+/// `StepsModule` and `HealthModule`.
 class BodyModule implements FeatureModule {
   const BodyModule();
 
@@ -99,6 +101,18 @@ class BodyModule implements FeatureModule {
           deleteEntry: sl(),
         ),
       )
+      // One per Body page; the parameter is the locale's first weekday.
+      ..registerFactoryParam<BodyChartCubit, int, void>(
+        (firstWeekday, _) => BodyChartCubit(
+          firstWeekday: firstWeekday,
+          body: sl(),
+          settings: sl(),
+          watchAuthUser: sl(),
+          watchVolume: sl(),
+          getStepsAccess: sl(),
+          getDailySteps: sl(),
+        ),
+      )
       // The entry edited (null: a new log) and the weight unit.
       ..registerFactoryParam<WeightFormCubit, BodyEntry?, WeightUnit>(
         (entry, unit) => WeightFormCubit(
@@ -110,8 +124,9 @@ class BodyModule implements FeatureModule {
           initial: entry,
         ),
       )
-      // The id of the entry summed up.
-      ..registerFactoryParam<MeasurementSummaryCubit, String, void>(
+      // The id of the entry summed up; null to choose it, the newest
+      // comparable by default.
+      ..registerFactoryParam<MeasurementSummaryCubit, String?, void>(
         (id, _) => MeasurementSummaryCubit(
           afterId: id,
           watchAuthUser: sl(),

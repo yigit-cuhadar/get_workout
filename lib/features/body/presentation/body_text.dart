@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/user_settings.dart';
+import '../domain/body_chart.dart';
 import '../domain/body_entry.dart';
 import '../domain/body_validation.dart';
 
@@ -88,6 +89,23 @@ extension BodyText on AppLocalizations {
   String measurementGroupName(List<BodyMeasurement> group) => group.length == 1
       ? measurementName(group.single)
       : bodyPairName(measurementPairName(group.first));
+
+  /// A series of the Body chart; a pair of measurements as [measurementGroupName].
+  String seriesName(BodySeries series) => switch (series) {
+    BodySeries.weight => bodyWeightTitle,
+    BodySeries.bodyFat => bodyFatTitle,
+    BodySeries.fatMass => bodyFatMass,
+    BodySeries.leanMass => bodyLeanMass,
+    BodySeries.weeklySets => bodyWeeklySets,
+    BodySeries.dailySteps => bodyDailySteps,
+    _ => measurementGroupName(series.measurements),
+  };
+
+  String seriesGroupName(BodySeriesGroup group) => switch (group) {
+    BodySeriesGroup.body => bodyChartGroupBody,
+    BodySeriesGroup.measurements => bodyChartGroupMeasurements,
+    BodySeriesGroup.training => bodyChartGroupTraining,
+  };
 
   /// A body fat percentage, always with one decimal.
   String bodyFat(double percent) => bodyFatValue(_oneDecimal(percent));

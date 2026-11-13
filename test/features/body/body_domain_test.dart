@@ -101,13 +101,21 @@ void main() {
       ]);
     });
 
-    test('tells whether weights lie before the range', () {
+    test('tells whether entries lie before the range', () {
       expect(
-        hasWeightBefore(entries, range: StrengthRange.weeks12, now: now),
+        hasEntryBefore(entries, range: StrengthRange.weeks12, now: now),
         isTrue,
       );
       expect(
-        hasWeightBefore(entries, range: StrengthRange.all, now: now),
+        hasEntryBefore(
+          entries.sublist(0, 2),
+          range: StrengthRange.weeks12,
+          now: now,
+        ),
+        isFalse,
+      );
+      expect(
+        hasEntryBefore(entries, range: StrengthRange.all, now: now),
         isFalse,
       );
     });

@@ -19,15 +19,19 @@ List<BodyEntry> baselineCandidates(List<BodyEntry> entries, BodyEntry after) =>
           entry,
     ];
 
-/// The newest measurement day of [entries] (newest first) that has an
-/// earlier one to be compared with; null with fewer than two.
-BodyEntry? newestComparable(List<BodyEntry> entries) {
-  final newest = entries.where(isMeasurementDay).firstOrNull;
-  if (newest == null || baselineCandidates(entries, newest).isEmpty) {
-    return null;
-  }
-  return newest;
-}
+/// The measurement days of [entries] (newest first) that have an earlier
+/// one to be compared with, newest first; empty with fewer than two.
+List<BodyEntry> comparableDays(List<BodyEntry> entries) => [
+  for (final entry in entries)
+    if (isMeasurementDay(entry) &&
+        baselineCandidates(entries, entry).isNotEmpty)
+      entry,
+];
+
+/// The newest of [comparableDays]; null with fewer than two measurement
+/// days.
+BodyEntry? newestComparable(List<BodyEntry> entries) =>
+    comparableDays(entries).firstOrNull;
 
 /// What an entry is compared with.
 sealed class Baseline extends Equatable {

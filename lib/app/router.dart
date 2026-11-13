@@ -594,10 +594,8 @@ GoRouter buildRouter(
                   // Right after a new measurement day is saved.
                   GoRoute(
                     path: 'summary/:id',
-                    builder: (_, state) => MeasurementSummaryPage(
-                      id: state.pathParameters['id']!,
-                      compare: false,
-                    ),
+                    builder: (_, state) =>
+                        MeasurementSummaryPage(id: state.pathParameters['id']!),
                   ),
                   GoRoute(
                     path: ':id',
@@ -615,12 +613,11 @@ GoRouter buildRouter(
                           id: state.pathParameters['id']!,
                         ),
                       ),
+                      // The Body page on Compare, this day the later one.
                       GoRoute(
                         path: 'compare',
-                        builder: (_, state) => MeasurementSummaryPage(
-                          id: state.pathParameters['id']!,
-                          compare: true,
-                        ),
+                        builder: (_, state) =>
+                            BodyPage(compareAfter: state.pathParameters['id']),
                       ),
                     ],
                   ),

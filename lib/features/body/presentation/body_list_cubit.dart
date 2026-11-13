@@ -21,11 +21,8 @@ class BodyListState extends Equatable {
     this.entries = const [],
     this.photoFiles = const {},
     this.range = StrengthRange.free,
-    this.points = const [],
     this.olderLocked = false,
     this.bodyFat = const {},
-    this.bodyFatPoints = const [],
-    this.bodyFatOlderLocked = false,
     this.writeRejected = false,
   });
 
@@ -41,22 +38,13 @@ class BodyListState extends Equatable {
   /// The chart's range: the one chosen, as far as Premium allows.
   final StrengthRange range;
 
-  /// The weights in [range], oldest first.
-  final List<WeightPoint> points;
-
-  /// A free user has weights from before [StrengthRange.free]; tell them
+  /// A free user has entries from before [StrengthRange.free]; tell them
   /// they are behind Premium.
   final bool olderLocked;
 
   /// The body fat of every entry it can be estimated for, by entry id,
   /// from the profile's sex and height; never stored.
   final Map<String, double> bodyFat;
-
-  /// The body fats in [range], oldest first.
-  final List<BodyFatPoint> bodyFatPoints;
-
-  /// As [olderLocked], for body fat.
-  final bool bodyFatOlderLocked;
 
   /// The server refused a save or delete that already looked done; tell the
   /// user, then call [BodyListCubit.rejectionShown].
@@ -73,11 +61,8 @@ class BodyListState extends Equatable {
     entries: entries,
     photoFiles: photoFiles ?? this.photoFiles,
     range: range,
-    points: points,
     olderLocked: olderLocked,
     bodyFat: bodyFat,
-    bodyFatPoints: bodyFatPoints,
-    bodyFatOlderLocked: bodyFatOlderLocked,
     writeRejected: writeRejected ?? this.writeRejected,
   );
 
@@ -87,17 +72,15 @@ class BodyListState extends Equatable {
     entries,
     photoFiles,
     range,
-    points,
     olderLocked,
     bodyFat,
-    bodyFatPoints,
-    bodyFatOlderLocked,
     writeRejected,
   ];
 }
 
-/// The body entries of whoever is signed in, followed live, with the weight
-/// and body-fat charts; body fat follows the profile's sex and height. Starts over on every user change. Ranges beyond
+/// The body entries of whoever is signed in, followed live, with their
+/// body fat, which follows the profile's sex and height, and the range of
+/// the Body chart. Starts over on every user change. Ranges beyond
 /// [StrengthRange.free] show only while the user is known to have Premium;
 /// the page asks for Premium before choosing one.
 class BodyListCubit extends Cubit<BodyListState> {
@@ -221,31 +204,20 @@ class BodyListCubit extends Cubit<BodyListState> {
     }
     final now = _clock();
     final range = _chosen.allowed(_premium);
-    final bodyFat = bodyFatByEntry(
-      entries,
-      sex: _profile?.sex,
-      heightCm: _profile?.heightCm,
-    );
     emit(
       BodyListState(
         status: BodyListStatus.ready,
         entries: entries,
         photoFiles: state.photoFiles,
         range: range,
-        points: weightSeries(entries, range: range, now: now),
         olderLocked:
             _premium == false &&
-            hasWeightBefore(entries, range: StrengthRange.free, now: now),
-        bodyFat: bodyFat,
-        bodyFatPoints: bodyFatSeries(entries, bodyFat, range: range, now: now),
-        bodyFatOlderLocked:
-            _premium == false &&
-            hasBodyFatBefore(
-              entries,
-              bodyFat,
-              range: StrengthRange.free,
-              now: now,
-            ),
+            hasEntryBefore(entries, range: StrengthRange.free, now: now),
+        bodyFat: bodyFatByEntry(
+          entries,
+          sex: _profile?.sex,
+          heightCm: _profile?.heightCm,
+        ),
         writeRejected: state.writeRejected,
       ),
     );
