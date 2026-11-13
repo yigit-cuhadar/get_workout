@@ -99,13 +99,32 @@ void main() {
           // No longer in the library: no name.
           const StrengthTile(exerciseId: 'ex_retired', e1rmKg: 50),
         ],
+        trained: true,
       ),
     );
     verify(() => repository.watchAllStats('u1')).called(1);
     await cubit.close();
   });
 
-  test('ready and empty before any e1RM', () async {
+  test('trained without an e1RM: ready, empty, and says so', () async {
+    final cubit = build();
+    await signIn(alice);
+    await show({
+      'plank': ExerciseStats(
+        history: [HistoryPoint(date: DateTime(2026, 11, 1), workoutId: 'w')],
+      ),
+    });
+    expect(
+      cubit.state,
+      const ProgressStrengthState(
+        status: ProgressStrengthStatus.ready,
+        trained: true,
+      ),
+    );
+    await cubit.close();
+  });
+
+  test('ready and empty before any workout', () async {
     final cubit = build();
     await signIn(alice);
     await show(const {});

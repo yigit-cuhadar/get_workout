@@ -29,13 +29,19 @@ List<StrengthHighlight> strengthHighlights(
   ];
 }
 
-/// [strengthHighlights] of user [String], again on every change.
+/// A user's [strengthHighlights], and whether they have trained at all.
+typedef StrengthHighlights = ({List<StrengthHighlight> top, bool trained});
+
+/// [StrengthHighlights] of user [String], again on every change.
 class WatchStrengthHighlights {
   const WatchStrengthHighlights(this._repository);
   final WorkoutRepository _repository;
 
-  Stream<List<StrengthHighlight>> call(String uid) =>
-      _repository.watchAllStats(uid).map(strengthHighlights);
+  Stream<StrengthHighlights> call(String uid) => _repository
+      .watchAllStats(uid)
+      .map(
+        (stats) => (top: strengthHighlights(stats), trained: stats.isNotEmpty),
+      );
 }
 
 /// [uid]'s finished workouts in the month of [day], counted.

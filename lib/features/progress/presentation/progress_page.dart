@@ -26,6 +26,7 @@ import '../../volume/domain/weekly_volume.dart';
 import '../../volume/presentation/volume_charts.dart';
 import '../../volume/presentation/volume_text.dart';
 import '../domain/body_snapshot.dart';
+import 'progress_body_cubit.dart';
 import 'progress_month_cubit.dart';
 import 'progress_strength_cubit.dart';
 
@@ -44,6 +45,7 @@ class ProgressPage extends StatelessWidget {
         BlocProvider.value(value: sl<BodyListCubit>()),
         BlocProvider.value(value: sl<CardioListCubit>()),
         // Today's, so both tabs show the same week.
+        BlocProvider(create: (_) => sl<ProgressBodyCubit>()),
         BlocProvider(create: (_) => sl<TodayWeekCubit>(param1: firstWeekday)),
         BlocProvider(create: (_) => sl<ProgressMonthCubit>()),
         BlocProvider(create: (_) => sl<TodayVolumeCubit>(param1: firstWeekday)),
@@ -84,6 +86,7 @@ class _ProgressViewState extends State<_ProgressView> {
   }
 
   void _refreshNow() {
+    context.read<ProgressBodyCubit>().refreshNow();
     context.read<TodayWeekCubit>().refreshNow();
     context.read<ProgressMonthCubit>().refreshNow();
     context.read<TodayVolumeCubit>().refreshNow();
@@ -237,17 +240,9 @@ class _BodyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final (status, empty, snapshot) = context.select(
-      (BodyListCubit cubit) => (
-        cubit.state.status,
-        cubit.state.entries.isEmpty,
-        bodySnapshot(
-          cubit.state.entries,
-          cubit.state.bodyFat,
-          now: DateTime.now(),
-        ),
-      ),
-    );
+    final ProgressBodyState(:status, :empty, :snapshot) = context
+        .watch<ProgressBodyCubit>()
+        .state;
     return _ProgressCard(
       title: l10n.progressBody,
       onOpen: () => context.go(Routes.body),
@@ -257,7 +252,7 @@ class _BodyCard extends StatelessWidget {
         BodyListStatus.failure => ErrorView(
           message: l10n.bodyLoadFailed,
           retryLabel: l10n.retry,
-          onRetry: context.read<BodyListCubit>().retry,
+          onRetry: context.read<ProgressBodyCubit>().retry,
         ),
         BodyListStatus.ready => Padding(
           padding: _bodyPadding,
@@ -328,10 +323,10 @@ class _LogButtons extends StatelessWidget {
       children: [
         ForgeButton(
           label: l10n.bodyLogWeight,
-          onPressed: () => context.go(Routes.bodyWeightNew),
+          onPressed: () => context.push(Routes.bodyWeightNew),
         ),
         OutlinedButton(
-          onPressed: () => context.go(Routes.bodyMeasureNew),
+          onPressed: () => context.push(Routes.bodyMeasureNew),
           child: Text(l10n.bodyMeasurementDay),
         ),
       ],
@@ -354,17 +349,14 @@ class _CalendarCard extends StatelessWidget {
           ? l10n.progressWorkoutsThisMonth(month.workouts)
           : null,
       onOpen: open,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          WeekStrip(onOpen: open),
-          if (month.status == ProgressMonthStatus.failure)
-            ErrorView(
-              message: l10n.todayWeekLoadFailed,
-              retryLabel: l10n.retry,
-              onRetry: context.read<ProgressMonthCubit>().retry,
-            ),
-        ],
+      // A month that failed shows no count; it shares the week's cause,
+      // whose retry also retries the month.
+      child: WeekStrip(
+        onOpen: open,
+        onRetry: () {
+          context.read<TodayWeekCubit>().retry();
+          context.read<ProgressMonthCubit>().retry();
+        },
       ),
     );
   }
@@ -471,7 +463,9 @@ class _StrengthCard extends StatelessWidget {
         ),
         ProgressStrengthStatus.ready when state.tiles.isEmpty => Padding(
           padding: _bodyPadding,
-          child: Text(l10n.strengthEmpty),
+          child: Text(
+            state.trained ? l10n.progressStrengthNoE1rm : l10n.strengthEmpty,
+          ),
         ),
         ProgressStrengthStatus.ready => Padding(
           padding: _bodyPadding,
@@ -511,7 +505,7 @@ class _StrengthTile extends StatelessWidget {
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.go(Routes.strengthExercise(tile.exerciseId)),
+        onTap: () => context.push(Routes.strengthExercise(tile.exerciseId)),
         child: Padding(
           padding: const EdgeInsets.all(Gap.sm),
           child: Column(
@@ -542,9 +536,13 @@ class _CardioAndSteps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Until steps are known to be readable here, cardio takes the row, so
+    // nothing moves on a device without a health store.
     final steps = context.select(
-      (TodayStepsCubit cubit) =>
-          cubit.state.status != TodayStepsStatus.unavailable,
+      (TodayStepsCubit cubit) => switch (cubit.state.status) {
+        TodayStepsStatus.loading || TodayStepsStatus.unavailable => false,
+        _ => true,
+      },
     );
     if (!steps) return const _CardioCard();
     return const IntrinsicHeight(

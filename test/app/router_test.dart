@@ -1,5 +1,12 @@
 import 'dart:async';
 
+import 'package:bloc_test/bloc_test.dart';
+import 'package:get_workout/features/body/domain/body_entry.dart';
+import 'package:get_workout/features/body/presentation/weight_form_cubit.dart';
+import 'package:get_workout/features/body/presentation/weight_form_page.dart';
+import 'package:get_workout/features/progress/domain/progress_usecases.dart';
+import 'package:get_workout/features/progress/presentation/progress_page.dart';
+import 'package:get_workout/features/progress/presentation/progress_strength_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -1984,6 +1991,11 @@ void main() {
             date: yesterday,
             workoutId: 'w1',
           ),
+          RecordKind.bestE1rm: StatRecord(
+            value: 112,
+            date: yesterday,
+            workoutId: 'w1',
+          ),
         },
         history: [
           HistoryPoint(date: yesterday, workoutId: 'w1', bestE1rmKg: 112),
@@ -1997,6 +2009,14 @@ void main() {
       when(() => workouts.watchWorkout(any(), any()))
           .thenAnswer((_) => Stream.value(null));
       sl
+        ..unregister<ProgressStrengthCubit>()
+        ..registerFactory(
+          () => ProgressStrengthCubit(
+            watchAuthUser: WatchAuthUser(strengthAuth),
+            watchHighlights: WatchStrengthHighlights(workouts),
+            catalogue: catalogue,
+          ),
+        )
         ..registerFactory(
           () => StrengthListCubit(
             watchAuthUser: WatchAuthUser(strengthAuth),
@@ -2047,6 +2067,35 @@ void main() {
 
       await back(tester);
       expect(find.byType(StrengthListPage), findsOneWidget);
+    });
+
+    testWidgets('a Progress tile opens its exercise above Progress', (
+      tester,
+    ) async {
+      await startAsGuest(tester);
+      registerStrength();
+      await tapTab(tester, 'Progress');
+      await tester.scrollUntilVisible(
+        find.text('Back Squat'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(ProgressPage),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.ensureVisible(find.text('Back Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Back Squat'));
+      await tester.pumpAndSettle();
+      // Pushed above Progress, whose location stays.
+      expect(find.byType(ExerciseStrengthPage), findsOneWidget);
+      expect(path(), Routes.progress);
+
+      await back(tester);
+      expect(find.byType(ProgressPage), findsOneWidget);
+      expect(path(), Routes.progress);
     });
 
     testWidgets('records and progress opens above the exercise and leaves '
@@ -2104,4 +2153,31 @@ void main() {
       expect(path(), Routes.strength);
     });
   });
+
+  testWidgets('Log weight opens above Progress, and Back returns to it', (
+    tester,
+  ) async {
+    await startAsGuest(tester);
+    sl.registerFactoryParam<WeightFormCubit, BodyEntry?, WeightUnit>((_, _) {
+      final cubit = _WeightFormCubit();
+      when(() => cubit.state).thenReturn(WeightFormState(date: DateTime(2026)));
+      when(() => cubit.isEditing).thenReturn(false);
+      return cubit;
+    });
+    await tapTab(tester, 'Progress');
+
+    await tester.tap(find.text('Log weight'));
+    await tester.pumpAndSettle();
+    // Pushed above Progress, whose location stays.
+    expect(find.byType(WeightNewPage), findsOneWidget);
+    expect(path(), Routes.progress);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProgressPage), findsOneWidget);
+    expect(path(), Routes.progress);
+  });
 }
+
+class _WeightFormCubit extends MockCubit<WeightFormState>
+    implements WeightFormCubit {}

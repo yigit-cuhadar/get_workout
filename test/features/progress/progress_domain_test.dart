@@ -91,9 +91,10 @@ void main() {
       }),
     );
 
-    expect(await WatchStrengthHighlights(repository)('u1').first, [
-      (exerciseId: 'squat', e1rmKg: 100.0),
-    ]);
+    final (:top, :trained) = await WatchStrengthHighlights(repository)('u1')
+        .first;
+    expect(top, [(exerciseId: 'squat', e1rmKg: 100.0)]);
+    expect(trained, isTrue);
   });
 
   test(

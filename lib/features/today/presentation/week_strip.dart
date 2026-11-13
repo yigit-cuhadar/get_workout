@@ -9,11 +9,13 @@ import 'today_week_cubit.dart';
 
 /// The [TodayWeekCubit]'s week as one calendar row, each day opening
 /// [onOpen]; while loading the dates show without marks, as on the
-/// calendar, and a failure offers a retry below.
+/// calendar, and a failure offers a retry below: [onRetry], or the week's
+/// own.
 class WeekStrip extends StatelessWidget {
-  const WeekStrip({super.key, required this.onOpen});
+  const WeekStrip({super.key, required this.onOpen, this.onRetry});
 
   final VoidCallback onOpen;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +40,7 @@ class WeekStrip extends StatelessWidget {
           ErrorView(
             message: l10n.todayWeekLoadFailed,
             retryLabel: l10n.retry,
-            onRetry: context.read<TodayWeekCubit>().retry,
+            onRetry: onRetry ?? context.read<TodayWeekCubit>().retry,
           ),
       ],
     );

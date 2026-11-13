@@ -33,6 +33,7 @@ class ProgressStrengthState extends Equatable {
   const ProgressStrengthState({
     this.status = ProgressStrengthStatus.loading,
     this.tiles = const [],
+    this.trained = false,
   });
 
   final ProgressStrengthStatus status;
@@ -40,8 +41,11 @@ class ProgressStrengthState extends Equatable {
   /// Most recently trained first.
   final List<StrengthTile> tiles;
 
+  /// The user has finished a workout, whether or not [tiles] has any.
+  final bool trained;
+
   @override
-  List<Object?> get props => [status, tiles];
+  List<Object?> get props => [status, tiles, trained];
 }
 
 /// The [strengthHighlights] of whoever is signed in, named from the
@@ -77,9 +81,9 @@ class ProgressStrengthCubit extends Cubit<ProgressStrengthState> {
   }
 
   final ExerciseCatalogueCubit _catalogue;
-  late final UserStreamFollower<List<StrengthHighlight>> _follower;
+  late final UserStreamFollower<StrengthHighlights> _follower;
   late final StreamSubscription<ExerciseCatalogueState> _catalogueSubscription;
-  List<StrengthHighlight>? _highlights;
+  StrengthHighlights? _highlights;
   bool _failed = false;
 
   void retry() {
@@ -102,7 +106,7 @@ class ProgressStrengthCubit extends Cubit<ProgressStrengthState> {
       for (final exercise in catalogue.exercises) exercise.id: exercise,
     };
     // A custom exercise is not known to be gone before those load.
-    if (highlights.any(
+    if (highlights.top.any(
       (h) => !known.containsKey(h.exerciseId) && !catalogue.knows(h.exerciseId),
     )) {
       return emit(const ProgressStrengthState());
@@ -111,13 +115,14 @@ class ProgressStrengthCubit extends Cubit<ProgressStrengthState> {
       ProgressStrengthState(
         status: ProgressStrengthStatus.ready,
         tiles: [
-          for (final (:exerciseId, :e1rmKg) in highlights)
+          for (final (:exerciseId, :e1rmKg) in highlights.top)
             StrengthTile(
               exerciseId: exerciseId,
               e1rmKg: e1rmKg,
               exercise: known[exerciseId],
             ),
         ],
+        trained: highlights.trained,
       ),
     );
   }
