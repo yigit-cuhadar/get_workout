@@ -507,6 +507,22 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     return true;
   }
 
+  /// The workout page opened, anew after it was left: what the user picked
+  /// before goes, so the next set to do is selected, and so does a question
+  /// left in the bar (its tick started no rest); one in the rest strip
+  /// stays with its rest.
+  void pageOpened() {
+    final dropsQuestion = state.asking != null && !state.askingWithRest;
+    if (state.picked == null && !dropsQuestion) return;
+    emit(
+      state.copyWith(
+        picked: () => null,
+        invalidSet: () => null,
+        asking: dropsQuestion ? () => null : null,
+      ),
+    );
+  }
+
   /// Ends the open workout when the user leaves it while it is empty; one
   /// in progress stays, minimized.
   Future<void> leave() async {

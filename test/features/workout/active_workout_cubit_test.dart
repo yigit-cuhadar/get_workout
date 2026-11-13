@@ -939,6 +939,39 @@ void main() {
       });
     });
 
+    test('opening the page again selects the next set to do', () async {
+      final cubit = await withSquat();
+      cubit
+        ..addExercises([bench], 'en')
+        ..openExercise(1);
+      expect(cubit.state.selection, (exercise: 1, set: 0));
+      cubit.pageOpened();
+      expect(cubit.state.picked, isNull);
+      expect(cubit.state.selection, first);
+      await cubit.close();
+    });
+
+    test('opening the page again drops a question in the bar only', () async {
+      final bar = await withSquat(rests: false);
+      bar.toggleDone(first);
+      expect(bar.state.questionRef, first);
+      bar.pageOpened();
+      expect(bar.state.questionRef, isNull);
+      expect(bar.state.selection, second);
+      await bar.close();
+    });
+
+    test(
+      'a question with a running rest survives the page reopening',
+      () async {
+        final cubit = await withSquat();
+        cubit.toggleDone(first);
+        cubit.pageOpened();
+        expect(cubit.restQuestionRef, first);
+        await cubit.close();
+      },
+    );
+
     test('a warm-up is never asked about', () async {
       final cubit = await withSquat(warmups: true);
       cubit.toggleDone(first);
