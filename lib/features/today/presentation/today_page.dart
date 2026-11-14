@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_ui/forge_ui.dart' hide WeekStrip;
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/text_length.dart';
+import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calculators/presentation/calculator_list.dart';
+import '../../calendar/presentation/calendar_marks.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../generator/presentation/generator_entry.dart';
 import '../../programs/domain/calendar_date.dart';
@@ -29,7 +31,6 @@ import 'next_workout.dart';
 import 'today_steps_cubit.dart';
 import 'today_volume_cubit.dart';
 import 'today_week_cubit.dart';
-import 'week_strip.dart';
 
 /// The Today tab: this week, the next workout, this week's volume, the
 /// calculators and steps, each card on its own data, so one failing leaves
@@ -260,26 +261,10 @@ class _WorkoutCard extends StatelessWidget {
           program,
           dayIndex,
           date: date,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (access == ProgramAccess.locked)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.lock_outline),
-                      const SizedBox(width: Gap.sm),
-                      Expanded(child: Text(l10n.programLockedActive)),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: Gap.md),
-            ],
-          ),
+          locked: access == ProgramAccess.locked,
         ),
       MissedProgramDay(:final program, :final missed, :final moveDate) =>
-        _ProgramDayCard(
+        _MissedDayCard(
           program,
           missed.dayIndex,
           busy: state.resolving,
@@ -290,26 +275,27 @@ class _WorkoutCard extends StatelessWidget {
             busy: state.resolving,
           ),
         ),
+      null when state.status != ProgramListStatus.failure =>
+        FeaturedCard.loading(eyebrow: l10n.todayNextTitle),
       _ => _TodayCard(
         prominent: true,
         title: l10n.todayNextTitle,
         child: switch (next) {
-          null when state.status == ProgramListStatus.failure => ErrorView(
+          NoProgramDay(:final finished) => _NoProgramDay(finished),
+          _ => ErrorView(
             title: l10n.programsLoadFailed,
             message: l10n.loadFailedDetail,
             retryLabel: l10n.retry,
             onRetry: context.read<ProgramListCubit>().retry,
           ),
-          NoProgramDay(:final finished) => _NoProgramDay(finished),
-          _ => const _Loading(),
         },
       ),
     };
   }
 }
 
-/// The workout in progress in place of the next one: its name, the program
-/// day it was started from, and the way back into it, as the workout bar.
+/// The workout in progress in place of the next one, and the way back
+/// into it, as the workout bar.
 class _WorkoutInProgressCard extends StatelessWidget {
   const _WorkoutInProgressCard(this.next);
   final WorkoutInProgress next;
@@ -318,50 +304,73 @@ class _WorkoutInProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     void open() => context.push(Routes.workout);
-    return _TodayCard(
-      prominent: true,
-      label: l10n.todayWorkoutInProgress,
+    return FeaturedCard(
+      form: FeaturedCardForm.block,
+      eyebrow: l10n.todayWorkoutInProgress,
       title: next.name,
-      onOpen: open,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if ((next.program, next.dayIndex) case (
-            final program?,
-            final dayIndex?,
-          ))
-            ListTile(
-              leading: const Icon(Icons.fitness_center),
-              title: Text(l10n.dayName(program.days[dayIndex], dayIndex)),
-              subtitle: Text(program.name),
-            ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
-            child: ForgeButton(label: l10n.todayResumeWorkout, onPressed: open),
-          ),
-        ],
-      ),
+      action: FeaturedAction(l10n.todayResumeWorkout, open),
+      onTap: open,
     );
   }
 }
 
 /// A program day under its program's name, which opens the program: its
-/// size, Start, which goes through the premium gate for a locked copy and
-/// asks first while a workout is in progress, then [child].
+/// size and date, and Start, which goes through the premium gate for a
+/// [locked] copy and asks first while a workout is in progress.
 class _ProgramDayCard extends StatelessWidget {
   const _ProgramDayCard(
     this.program,
     this.dayIndex, {
+    required this.date,
+    required this.locked,
+  });
+
+  final Program program;
+  final int dayIndex;
+  final CalendarDate? date;
+  final bool locked;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final day = program.days[dayIndex];
+    final name = l10n.dayName(day, dayIndex);
+    final date = this.date;
+    return FeaturedCard(
+      form: FeaturedCardForm.block,
+      eyebrow: program.name,
+      locked: locked,
+      title: name,
+      line: FeaturedLine(
+        l10n.todayDaySummary(
+          day.items.length,
+          l10n.estimateText(estimateDay(day)),
+        ),
+        data: date == null ? null : l10n.planDate(date),
+      ),
+      note: locked ? l10n.programLockedActive : null,
+      action: FeaturedAction(
+        l10n.workoutStartDay(name),
+        () => startProgramDay(context, program, dayIndex),
+        locked: locked,
+      ),
+      onTap: () => context.go(Routes.program(program.id!)),
+    );
+  }
+}
+
+/// A missed program day under its program's name, which opens the program:
+/// its size, Start, then [child].
+class _MissedDayCard extends StatelessWidget {
+  const _MissedDayCard(
+    this.program,
+    this.dayIndex, {
     required this.child,
-    this.date,
     this.busy = false,
   });
 
   final Program program;
   final int dayIndex;
-
-  /// When it is planned; a missed day says so itself.
-  final CalendarDate? date;
 
   /// While true the card does not open the program: a tap on a button that
   /// is disabled meanwhile would otherwise fall through to the card.
@@ -373,7 +382,6 @@ class _ProgramDayCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final day = program.days[dayIndex];
     final name = l10n.dayName(day, dayIndex);
-    final date = this.date;
     return _TodayCard(
       prominent: true,
       label: program.name,
@@ -390,7 +398,6 @@ class _ProgramDayCard extends StatelessWidget {
                 l10n.estimateText(estimateDay(day)),
               ),
             ),
-            trailing: date == null ? null : Text(l10n.planDate(date)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: Gap.md),
@@ -443,18 +450,45 @@ class _NoProgramDay extends StatelessWidget {
   }
 }
 
-/// This week as one calendar row; it, and every day of it, opens the
-/// calendar, which has no route for a given date.
+/// This week as day circles; every day of it opens the calendar, which has
+/// no route for a given date. While loading the dates show without marks,
+/// and a failure offers a retry below.
 class _WeekCard extends StatelessWidget {
   const _WeekCard();
 
   @override
   Widget build(BuildContext context) {
-    void open() => context.go(Routes.calendar);
-    return _TodayCard(
-      title: AppLocalizations.of(context).todayWeekTitle,
-      onOpen: open,
-      child: WeekStrip(onOpen: open),
+    final l10n = AppLocalizations.of(context);
+    final state = context.watch<TodayWeekCubit>().state;
+    final letters = MaterialLocalizations.of(context).narrowWeekdays;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: Gap.sm,
+      children: [
+        WeekStrip(
+          title: l10n.todayWeekTitle,
+          days: [
+            for (final date in state.days)
+              WeekStripDay(
+                // Index 0 is Sunday, ISO weekday 7.
+                weekday: letters[date.weekday % 7],
+                number: '${date.day}',
+                state: calendarDayState(
+                  state.entriesOn(date),
+                  today: date == state.today,
+                ),
+              ),
+          ],
+          onDayTap: (_) => context.go(Routes.calendar),
+        ),
+        if (state.status == TodayWeekStatus.failure)
+          ErrorView(
+            title: l10n.todayWeekLoadFailed,
+            message: l10n.loadFailedDetail,
+            retryLabel: l10n.retry,
+            onRetry: context.read<TodayWeekCubit>().retry,
+          ),
+      ],
     );
   }
 }

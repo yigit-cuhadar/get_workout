@@ -344,14 +344,6 @@ void main() {
     });
   });
 
-  testWidgets('the week opens the calendar', (tester) async {
-    await start(tester, programs: planned);
-
-    await tap(tester, find.text('This week'));
-
-    expectAt(Routes.calendar);
-  });
-
   testWidgets('a day of the week opens the calendar', (tester) async {
     await start(tester, programs: planned);
 

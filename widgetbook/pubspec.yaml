@@ -13,6 +13,11 @@ dependencies:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
       ref: 36dc12b63ecddd92635577706c937288bc3fd3e2
       path: packages/forge_ui
+  forge_model_viewer:
+    git:
+      url: https://github.com/yigit-cuhadar/MobileAppForge.git
+      ref: 36dc12b63ecddd92635577706c937288bc3fd3e2
+      path: packages/forge_model_viewer
   get_workout:
     path: ..
   widgetbook: ^3.25.0
