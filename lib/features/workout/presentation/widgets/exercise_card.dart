@@ -204,11 +204,7 @@ class ExerciseCard extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 spacing: 6,
                                 children: [
-                                  _name(
-                                    context,
-                                    item,
-                                    muted: item.allDone && item.letter == null,
-                                  ),
+                                  _name(context, item, muted: item.allDone),
                                   _Bar(item.progress),
                                 ],
                               ),

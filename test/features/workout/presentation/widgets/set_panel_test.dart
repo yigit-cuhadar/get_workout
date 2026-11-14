@@ -10,6 +10,7 @@ const _labels = SetPanelLabels(
   options: 'Set options',
   addDrop: 'Add drop',
   removeDrop: 'Remove drop',
+  plates: 'Plates',
 );
 
 Future<void> _pump(WidgetTester tester, SetPanel panel) => tester.pumpWidget(
@@ -68,6 +69,40 @@ void main() {
     );
     await tester.tap(plus.last);
     expect(weights.last, 85);
+  });
+
+  testWidgets('the plate button opens the breakdown; none without it', (
+    tester,
+  ) async {
+    BuildContext? at;
+    Future<void> pump({required bool plates}) => _pump(
+      tester,
+      SetPanel(
+        title: 'Bench Press · set 3 of 4',
+        details: const [],
+        labels: _labels,
+        values: [_value(82.5, 'kg'), _value(8, 'reps')],
+        onPlates: plates ? (button) => at = button : null,
+        onOptions: () {},
+        onLog: () {},
+      ),
+    );
+    await pump(plates: false);
+    expect(find.bySemanticsLabel('Plates'), findsNothing);
+    await pump(plates: true);
+    final button = find.bySemanticsLabel('Plates');
+    expect(tester.getSize(button), const Size.square(44));
+    // Between the weight and the reps.
+    expect(
+      tester.getCenter(button).dx,
+      greaterThan(tester.getCenter(find.byType(StepperField).first).dx),
+    );
+    expect(
+      tester.getCenter(button).dx,
+      lessThan(tester.getCenter(find.byType(StepperField).last).dx),
+    );
+    await tester.tap(button);
+    expect(at, isNotNull);
   });
 
   testWidgets('a missing value rings its field, says why, Log set off', (

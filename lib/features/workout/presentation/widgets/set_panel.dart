@@ -48,6 +48,7 @@ class SetPanelLabels {
     required this.options,
     required this.addDrop,
     required this.removeDrop,
+    required this.plates,
   });
 
   final String log;
@@ -55,13 +56,17 @@ class SetPanelLabels {
   final String options;
   final String addDrop;
   final String removeDrop;
+
+  /// The plate button's name for a screen reader.
+  final String plates;
 }
 
 /// The set entry fixed at the bottom of the workout screen: which set it
 /// is ([title]) with its [details] (the last time) under it and a ⋯ menu,
 /// its [values] as pill steppers (one full width, or two), a drop set's
 /// [drops] right under them with Add drop, a done set's [effort], and Log
-/// set, or Done once the set is done.
+/// set, or Done once the set is done. With [onPlates], a plate button
+/// beside the first value (the weight) opens its plate breakdown.
 ///
 /// [SetPanel.showing] is the same panel showing something else in place of
 /// the entry: after Log set the effort question, then the rest countdown.
@@ -78,6 +83,7 @@ class SetPanel extends StatelessWidget {
     this.drops,
     this.onAddDrop,
     this.effort,
+    this.onPlates,
   }) : child = null;
 
   const SetPanel.showing({super.key, required Widget this.child})
@@ -90,7 +96,8 @@ class SetPanel extends StatelessWidget {
       done = false,
       drops = null,
       onAddDrop = null,
-      effort = null;
+      effort = null,
+      onPlates = null;
 
   final String? title;
   final List<String>? details;
@@ -108,6 +115,10 @@ class SetPanel extends StatelessWidget {
   /// Null when no more drops can be added.
   final VoidCallback? onAddDrop;
   final Widget? effort;
+
+  /// Opens the plate breakdown under the button whose context it is given;
+  /// null hides the button.
+  final ValueChanged<BuildContext>? onPlates;
   final Widget? child;
 
   @override
@@ -200,7 +211,7 @@ class SetPanel extends StatelessWidget {
             ),
           ],
         ),
-        _values(values!),
+        _values(context, values!),
         if (middle.isNotEmpty)
           Flexible(
             child: SingleChildScrollView(
@@ -223,10 +234,46 @@ class SetPanel extends StatelessWidget {
     );
   }
 
-  Widget _values(List<SetPanelValue> values) => Row(
+  Widget _values(BuildContext context, List<SetPanelValue> values) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     spacing: 10,
-    children: [for (final value in values) Expanded(child: _field(value))],
+    children: [
+      for (final (i, value) in values.indexed) ...[
+        Expanded(child: _field(value)),
+        if (i == 0)
+          if (onPlates case final onPlates?) _platesButton(context, onPlates),
+      ],
+    ],
+  );
+
+  /// Ink-muted, no fill, 44px square, centred on the 50px pill.
+  Widget _platesButton(
+    BuildContext context,
+    ValueChanged<BuildContext> onPlates,
+  ) => Padding(
+    padding: const EdgeInsets.symmetric(
+      vertical: (StepperField.height - ForgeTheme.tapMin) / 2,
+    ),
+    child: Semantics(
+      button: true,
+      label: labels!.plates,
+      excludeSemantics: true,
+      child: Builder(
+        builder: (button) => InkResponse(
+          onTap: () => onPlates(button),
+          child: SizedBox.square(
+            dimension: ForgeTheme.tapMin,
+            child: Center(
+              child: ForgeIcon(
+                ForgeIcons.fitnessCenter,
+                size: 20,
+                color: ForgeStyle.of(context).colors.inkMuted,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
   );
 
   Widget _field(SetPanelValue value) => StepperField(

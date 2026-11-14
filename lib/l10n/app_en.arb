@@ -915,6 +915,7 @@
   "setPanelDone": "Done",
   "setPanelReps": "reps",
   "setPanelSeconds": "s",
+  "setPanelPlates": "Plates",
   "setPanelAdded": "{unit} added",
   "@setPanelAdded": {"description": "Under a weighted bodyweight set's weight, e.g. kg added.", "placeholders": {"unit": {"type": "String"}}},
   "setPanelAssist": "{unit} assist",

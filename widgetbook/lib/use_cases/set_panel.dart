@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/features/workout/presentation/widgets/set_panel.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
@@ -9,6 +10,7 @@ const _labels = SetPanelLabels(
   options: 'Set options',
   addDrop: 'Add drop',
   removeDrop: 'Remove drop',
+  plates: 'Plates',
 );
 
 SetPanelValue _value(
@@ -132,4 +134,22 @@ Widget setPanelDone(BuildContext context) => _panel(
 Widget setPanelShowing(BuildContext context) => const Align(
   alignment: Alignment.bottomCenter,
   child: SetPanel.showing(child: Text('EffortQuestion or RestPanel')),
+);
+
+@widgetbook.UseCase(name: 'Plate breakdown', type: SetPanel)
+Widget setPanelPlates(BuildContext context) => Align(
+  alignment: Alignment.bottomCenter,
+  child: SetPanel(
+    title: 'Bench Press · set 3 of 4',
+    details: const ['Last time: 80 kg × 8'],
+    values: [_kg(82.5), _value(8, 'reps')],
+    labels: _labels,
+    onPlates: (button) => showForgeInfo(
+      context: button,
+      title: '82.5 kg',
+      facts: const [('Bar', '20 kg'), ('Each side', '25 + 5 + 1.25 kg')],
+    ),
+    onOptions: () {},
+    onLog: () {},
+  ),
 );

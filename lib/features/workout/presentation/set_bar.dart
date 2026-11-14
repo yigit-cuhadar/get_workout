@@ -265,6 +265,7 @@ class SetBar extends StatelessWidget {
         options: l10n.workoutSetOptions,
         addDrop: l10n.workoutAddDrop,
         removeDrop: l10n.workoutRemoveDrop,
+        plates: l10n.setPanelPlates,
       ),
       onOptions: () => showModalBottomSheet<void>(
         context: context,
