@@ -7,6 +7,7 @@ import '../domain/calculation.dart';
 import '../domain/calories.dart';
 import 'body_fat_cubit.dart';
 import 'calculator_widgets.dart';
+import 'widgets/calculator_result.dart';
 
 class BodyFatPage extends StatelessWidget {
   const BodyFatPage({super.key});
@@ -78,8 +79,8 @@ class BodyFatPage extends StatelessWidget {
                   ),
                 if (problem != null) InputProblem(problem),
                 if (state.result case Calculated(:final value))
-                  ResultTile(
-                    label: l10n.calcBodyFatResult,
+                  CalculatorResult(
+                    caption: l10n.calcBodyFatResult,
                     value: l10n.calcPercent(format.number(value, decimals: 1)),
                   ),
               ],

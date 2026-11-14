@@ -6,15 +6,17 @@ import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import 'active_workout_cubit.dart';
 import 'elapsed_text.dart';
-import 'rest_strip.dart';
+import 'rest_timer_cubit.dart';
+import 'widgets/workout_bar.dart';
+import 'workout_text.dart';
 
-/// The minimized workout, above the tab bar on every tab while one is in
-/// progress or its summary waits, with the time since it started or the
-/// rest's time left; tapping it opens the workout. Also tells
-/// the user when a workout refused by the server is back in progress, or
-/// kept workouts could not be read.
-class WorkoutBar extends StatelessWidget {
-  const WorkoutBar({super.key});
+/// The minimized workout, a [WorkoutBar] above the tab bar on every tab
+/// while one is in progress or its summary waits, with the time since it
+/// started or the rest's time left; tapping it opens the workout. Also
+/// tells the user when a workout refused by the server is back in
+/// progress, or kept workouts could not be read.
+class RunningWorkoutBar extends StatelessWidget {
+  const RunningWorkoutBar({super.key});
 
   @override
   Widget build(BuildContext context) =>
@@ -51,19 +53,34 @@ class WorkoutBar extends StatelessWidget {
               workout != null &&
               (state.inProgress || state.status == WorkoutStatus.finished);
           if (!shown) return const SizedBox.shrink();
-          final theme = Theme.of(context);
-          return Material(
-            color: theme.colorScheme.secondaryContainer,
-            child: ListTile(
-              dense: true,
-              leading: const Icon(Icons.fitness_center),
-              title: Text(workout.name, maxLines: 1),
-              subtitle: state.status == WorkoutStatus.finished
-                  ? Text(AppLocalizations.of(context).workoutBarFinished)
-                  : RestOrElse(idle: ElapsedText(since: workout.startedAt)),
-              trailing: const Icon(Icons.keyboard_arrow_up),
-              onTap: () => context.push(Routes.workout),
-            ),
+          final l10n = AppLocalizations.of(context);
+          Widget bar(String detail) => WorkoutBar(
+            name: workout.name,
+            detail: detail,
+            onTap: () => context.push(Routes.workout),
+          );
+          if (state.status == WorkoutStatus.finished) {
+            return bar(l10n.workoutBarFinished);
+          }
+          return BlocBuilder<RestTimerCubit, RestTimerState>(
+            buildWhen: (previous, current) =>
+                previous.phase != current.phase ||
+                previous.remainingS != current.remainingS,
+            builder: (context, rest) => switch (rest.phase) {
+              RestPhase.none => EverySecond(
+                builder: (_) => bar(
+                  l10n.elapsedText(
+                    DateTime.now().difference(workout.startedAt),
+                  ),
+                ),
+              ),
+              RestPhase.running => bar(
+                l10n.restRemaining(
+                  l10n.elapsedText(Duration(seconds: rest.remainingS)),
+                ),
+              ),
+              RestPhase.over => bar(l10n.restOver),
+            },
           );
         },
       );

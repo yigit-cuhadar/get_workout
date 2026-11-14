@@ -12,6 +12,35 @@ const _defaultDurationS = 30;
 /// For a custom exercise, which has no default rest of its own.
 const fallbackRestS = 90;
 
+/// [items] with [change] applied to the item at [index] and, when it is in
+/// a superset or circuit, to every item of its group, which keeps the
+/// group's rounds and rest in step.
+List<ProgramItem> editInGroup(
+  List<ProgramItem> items,
+  int index,
+  ProgramItem Function(ProgramItem item) change,
+) {
+  final (start, end) = groupRange(items, index);
+  return [
+    for (final (i, item) in items.indexed)
+      i >= start && i < end ? change(item) : item,
+  ];
+}
+
+/// [items] with the group of the item at [index] in step: every item takes
+/// the first one's sets (the rounds) and the last one's rest (the rest
+/// after the group).
+List<ProgramItem> alignGroup(List<ProgramItem> items, int index) {
+  final (start, end) = groupRange(items, index);
+  final sets = items[start].sets;
+  final restS = items[end - 1].restS;
+  return editInGroup(
+    items,
+    index,
+    (item) => item.copyWith(sets: sets, restS: restS),
+  );
+}
+
 /// A new item for [exercise]: 3 sets of 8-12 reps, or of 30 s for duration
 /// exercises, resting the exercise's default rest, or 90 s for a custom one.
 ProgramItem defaultItem(Exercise exercise) {

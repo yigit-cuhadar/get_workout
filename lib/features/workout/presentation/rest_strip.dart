@@ -1,83 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../domain/rest.dart';
 import 'active_workout_cubit.dart';
 import 'rest_timer_cubit.dart';
+import 'widgets/rest_panel.dart';
+import 'workout_editor.dart';
 import 'workout_text.dart';
 
-/// The running rest below the workout, in one slim line: the time left,
-/// +15 s and Skip rest; then briefly "Rest over"; nothing otherwise. The
-/// effort question about the set just ticked is the set bar's, above it.
-/// Asks once whether to notify when a rest is over. Only this rebuilds as
-/// the seconds pass.
+/// The running rest at the bottom of the workout as a [RestPanel]: the
+/// time left, the set that comes next, +15 s and Skip rest; then briefly
+/// "Rest over"; nothing otherwise, nor while the effort question about
+/// the set just ticked shows (it carries the rest's line itself). Asks
+/// once whether to notify when a rest is over. Only this rebuilds as the
+/// seconds pass.
 class RestStrip extends StatelessWidget {
   const RestStrip({super.key});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final colors = Theme.of(context).colorScheme;
+    final asking = context.select(
+      (ActiveWorkoutCubit cubit) =>
+          cubit.state.questionRef != null && cubit.canEdit,
+    );
     return BlocConsumer<RestTimerCubit, RestTimerState>(
       listenWhen: (previous, current) =>
           current.askNotify && !previous.askNotify,
       listener: (context, _) => _askNotify(context),
       buildWhen: (previous, current) =>
           previous.phase != current.phase ||
-          previous.remainingS != current.remainingS,
+          previous.remainingS != current.remainingS ||
+          previous.totalS != current.totalS,
       builder: (context, state) {
+        if (asking || state.phase == RestPhase.none) {
+          return const SizedBox.shrink();
+        }
         final workout = context.read<ActiveWorkoutCubit>();
-        final line = switch (state.phase) {
-          RestPhase.none => null,
-          RestPhase.running => Row(
-            children: [
-              const Icon(Icons.timer_outlined),
-              const SizedBox(width: Gap.sm),
-              Expanded(
-                child: Text(
-                  l10n.restRemaining(
-                    l10n.elapsedText(Duration(seconds: state.remainingS)),
-                  ),
+        final next = _next(l10n, workout.state);
+        // What does not fit the rest's share of the page scrolls.
+        return SingleChildScrollView(
+          child: state.phase == RestPhase.over
+              ? RestPanel.over(
+                  time: l10n.elapsedText(Duration.zero),
+                  next: next,
+                )
+              : RestPanel(
+                  time: l10n.elapsedText(Duration(seconds: state.remainingS)),
+                  progress: state.progress,
+                  next: next,
+                  onAddTime: workout.extendRest,
+                  onSkip: workout.skipRest,
                 ),
-              ),
-              TextButton(
-                onPressed: workout.extendRest,
-                child: Text(l10n.restAdd(restExtension.inSeconds)),
-              ),
-              TextButton(
-                onPressed: workout.skipRest,
-                child: Text(l10n.restSkip),
-              ),
-            ],
-          ),
-          RestPhase.over => Row(
-            children: [
-              const Icon(Icons.timer_off_outlined),
-              const SizedBox(width: Gap.sm),
-              Expanded(child: Text(l10n.restOver)),
-            ],
-          ),
-        };
-        if (line == null) return const SizedBox.shrink();
-        return Material(
-          color: colors.secondaryContainer,
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                Gap.md,
-                Gap.xs,
-                Gap.xs,
-                Gap.xs,
-              ),
-              child: line,
-            ),
-          ),
         );
       },
     );
+  }
+
+  /// The set to do after the rest, e.g. "Next: Bench Press · set 4 of 4",
+  /// or that none is left.
+  static String _next(AppLocalizations l10n, ActiveWorkoutState state) {
+    final workout = state.workout;
+    final next = workout == null ? null : nextSet(workout, state.rest?.after);
+    if (workout == null || next == null) return l10n.restPanelAllSetsDone;
+    return l10n.restNextText(workout.exercises[next.exercise], next.set);
   }
 
   Future<void> _askNotify(BuildContext context) async {
@@ -101,32 +88,5 @@ class RestStrip extends StatelessWidget {
       ),
     );
     await cubit.answerNotify(allow: allow ?? false);
-  }
-}
-
-/// The rest's time left, or "Rest over", for the minimized workout; [idle]
-/// when no rest runs.
-class RestOrElse extends StatelessWidget {
-  const RestOrElse({super.key, required this.idle});
-
-  final Widget idle;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return BlocBuilder<RestTimerCubit, RestTimerState>(
-      buildWhen: (previous, current) =>
-          previous.phase != current.phase ||
-          previous.remainingS != current.remainingS,
-      builder: (context, state) => switch (state.phase) {
-        RestPhase.none => idle,
-        RestPhase.running => Text(
-          l10n.restRemaining(
-            l10n.elapsedText(Duration(seconds: state.remainingS)),
-          ),
-        ),
-        RestPhase.over => Text(l10n.restOver),
-      },
-    );
   }
 }

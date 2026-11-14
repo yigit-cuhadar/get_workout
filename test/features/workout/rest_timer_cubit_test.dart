@@ -174,8 +174,11 @@ void main() {
         async.flushMicrotasks();
       });
 
-  RestTimerState running(int seconds) =>
-      RestTimerState(phase: RestPhase.running, remainingS: seconds);
+  RestTimerState running(int seconds, {int? of}) => RestTimerState(
+    phase: RestPhase.running,
+    remainingS: seconds,
+    totalS: of ?? seconds,
+  );
 
   void verifyScheduled(DateTime at, {String body = 'squat 2'}) =>
       verify(() => notifications.schedule(at, title: 'Rest over', body: body))
@@ -235,7 +238,7 @@ void main() {
         async.elapse(const Duration(milliseconds: 1));
         expect(cubit.state, running(90));
         async.elapse(const Duration(seconds: 1));
-        expect(cubit.state, running(89));
+        expect(cubit.state, running(89, of: 90));
         async.elapse(const Duration(seconds: 89));
         expect(cubit.state.phase, RestPhase.over);
         async.elapse(RestTimerCubit.overFor);
@@ -249,7 +252,7 @@ void main() {
         emitRest(Rest(endsAt: end, after: first));
         async.elapse(const Duration(seconds: 10));
         emitRest(Rest(endsAt: end.add(restExtension), after: first));
-        expect(cubit.state, running(65));
+        expect(cubit.state, running(65, of: 75));
       });
     });
 
@@ -269,7 +272,7 @@ void main() {
         emitRest(Rest(endsAt: start.add(const Duration(seconds: 65))));
         expect(cubit.state, running(60));
         async.elapse(RestTimerCubit.overFor);
-        expect(cubit.state, running(57));
+        expect(cubit.state, running(57, of: 60));
       });
     });
 

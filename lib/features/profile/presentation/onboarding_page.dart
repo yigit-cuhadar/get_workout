@@ -6,7 +6,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
-import '../../../core/question_page.dart';
+import '../../../core/widgets/onboarding_question.dart';
 
 import '../../../l10n/app_localizations.dart';
 import 'profile_cubit.dart';
@@ -69,23 +69,17 @@ class _OnboardingView extends StatelessWidget {
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) cubit.back();
           },
-          child: QuestionScaffold(
+          child: OnboardingQuestion(
             step: state.step,
             count: state.questions.length,
-            progress: l10n.questionProgress(
-              state.step + 1,
-              state.questions.length,
-            ),
             onBack: submitted ? null : cubit.back,
             body: ProfileQuestion(
               state.question,
               key: ValueKey(state.question),
             ),
-            action: ForgeButton(
-              label: l10n.onboardingNext,
-              loading: submitted,
-              onPressed: state.canContinue ? cubit.next : null,
-            ),
+            actionLabel: l10n.onboardingNext,
+            loading: submitted,
+            onAction: state.canContinue ? cubit.next : null,
           ),
         );
       },

@@ -5,7 +5,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
-import '../../../core/question_page.dart';
+import '../../../core/widgets/onboarding_question.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/domain/vocabulary.dart';
@@ -87,29 +87,24 @@ class _QuestionsViewState extends State<_QuestionsView> {
         final count = GeneratorStep.values.length;
         // The route itself always pops (tab re-tap, back swipe, Back on the
         // first question); Back steps back through the questions.
-        return QuestionScaffold(
+        return OnboardingQuestion(
           step: step,
           count: count,
-          progress: l10n.questionProgress(step + 1, count),
           onBack: step == 0 ? null : cubit.back,
-          body: QuestionLayout(
+          body: OnboardingQuestionBody(
             key: ValueKey(state.step),
-            caption: l10n.generatorTitle,
             title: l10n.generatorQuestion(state.step),
             info: l10n.generatorQuestionInfo(state.step),
             answer: _Answer(state),
           ),
-          action: state.isLast
-              ? ForgeButton(
-                  label: l10n.generatorCreate,
-                  onPressed: state.answered && answers != null && !_previewing
-                      ? () => _preview(answers)
-                      : null,
-                )
-              : ForgeButton(
-                  label: l10n.generatorNext,
-                  onPressed: state.answered ? cubit.next : null,
-                ),
+          actionLabel: state.isLast ? l10n.generatorCreate : l10n.generatorNext,
+          onAction: !state.answered
+              ? null
+              : !state.isLast
+              ? cubit.next
+              : answers != null && !_previewing
+              ? () => _preview(answers)
+              : null,
         );
       },
     );
@@ -127,20 +122,20 @@ class _Answer extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<GeneratorQuestionsCubit>();
     return switch (state.step) {
-      GeneratorStep.goal => ChoiceAnswer(
+      GeneratorStep.goal => OnboardingChoices(
         values: Goal.values,
         selected: state.goal,
         title: l10n.goalName,
         onChanged: cubit.setGoal,
       ),
-      GeneratorStep.level => ChoiceAnswer(
+      GeneratorStep.level => OnboardingChoices(
         values: Level.values,
         selected: state.level,
         title: l10n.levelName,
         subtitle: l10n.levelInfo,
         onChanged: cubit.setLevel,
       ),
-      GeneratorStep.days => ChoiceAnswer(
+      GeneratorStep.days => OnboardingChoices(
         values: [
           for (
             var days = GeneratorLimits.minDays;
@@ -153,7 +148,7 @@ class _Answer extends StatelessWidget {
         title: l10n.profileDays,
         onChanged: cubit.setDays,
       ),
-      GeneratorStep.session => ChoiceAnswer(
+      GeneratorStep.session => OnboardingChoices(
         values: GeneratorLimits.sessionMinutes,
         selected: state.sessionMinutes,
         title: l10n.generatorMinutes,
@@ -178,14 +173,14 @@ class _Answer extends StatelessWidget {
         onToggle: cubit.toggleFocus,
       ),
       GeneratorStep.excluded => _ExcludedAnswer(state.excluded),
-      GeneratorStep.easyArea => ChoiceAnswer<EasyArea?>(
+      GeneratorStep.easyArea => OnboardingChoices<EasyArea?>(
         values: const [null, ...EasyArea.values],
         selected: state.easyArea,
         title: (area) =>
             area == null ? l10n.generatorAreaNone : l10n.easyAreaName(area),
         onChanged: cubit.setEasyArea,
       ),
-      GeneratorStep.split => ChoiceAnswer<TrainingSplit?>(
+      GeneratorStep.split => OnboardingChoices<TrainingSplit?>(
         values: const [null, ...TrainingSplit.values],
         selected: state.split,
         title: (split) =>

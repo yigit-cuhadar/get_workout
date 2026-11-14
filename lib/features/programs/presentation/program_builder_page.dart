@@ -19,6 +19,7 @@ import '../../../core/grouping.dart';
 import '../domain/program_editing.dart';
 import '../domain/program_validation.dart';
 import 'program_builder_cubit.dart';
+import 'widgets/builder_row.dart';
 import 'program_text.dart';
 
 /// Creates a program, or edits program [programId].
@@ -248,128 +249,150 @@ class _FormState extends State<_Form> {
       ProgramIssue.noDays,
       ProgramIssue.tooManyDays,
     });
-    return ReorderableListView.builder(
-      buildDefaultDragHandles: false,
-      padding: const EdgeInsets.only(bottom: Gap.xl),
-      // The dragged row is rebuilt in the navigator's overlay, above this
-      // page's cubit, which the row reads.
-      proxyDecorator: (child, _, _) => BlocProvider.value(
-        value: _cubit,
-        child: Material(elevation: 4, child: child),
-      ),
-      header: Padding(
-        padding: const EdgeInsets.all(Gap.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _name,
-              textCapitalization: TextCapitalization.sentences,
-              inputFormatters: [
-                maxLengthFormatter(ProgramLimits.maxNameLength),
-              ],
-              decoration: InputDecoration(
-                labelText: l10n.programName,
-                errorText: programError({
-                  ProgramIssue.nameMissing,
-                  ProgramIssue.nameTooLong,
-                }),
-              ),
-              onChanged: _cubit.setName,
-            ),
-            const SizedBox(height: Gap.sm),
-            TextField(
-              controller: _weeks,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(2),
-              ],
-              decoration: InputDecoration(
-                labelText: l10n.programLength,
-                helperText: l10n.programLengthHelp,
-                errorText: programError({ProgramIssue.lengthWeeksOutOfRange}),
-              ),
-              onChanged: _cubit.setLengthWeeks,
-            ),
-            const SizedBox(height: Gap.md),
-            Wrap(
-              spacing: Gap.sm,
-              runSpacing: Gap.xs,
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(Gap.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final (i, other) in state.program.days.indexed)
-                  ChoiceChip(
-                    label: Text(l10n.dayName(other, i)),
-                    selected: i == dayIndex,
-                    avatar:
-                        validation.dayIssues(i).isNotEmpty ||
-                            validation.items.keys.any((ref) => ref.day == i)
-                        ? Icon(
-                            Icons.error_outline,
-                            color: Theme.of(context).colorScheme.error,
-                          )
-                        : null,
-                    onSelected: (_) => _cubit.selectDay(i),
+                TextField(
+                  controller: _name,
+                  textCapitalization: TextCapitalization.sentences,
+                  inputFormatters: [
+                    maxLengthFormatter(ProgramLimits.maxNameLength),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: l10n.programName,
+                    errorText: programError({
+                      ProgramIssue.nameMissing,
+                      ProgramIssue.nameTooLong,
+                    }),
                   ),
-                ActionChip(
-                  avatar: const Icon(Icons.add),
-                  label: Text(l10n.programAddDay),
-                  onPressed: state.canAddDay ? _addDay : null,
+                  onChanged: _cubit.setName,
                 ),
-              ],
-            ),
-            if (daysError != null) _ErrorText(daysError),
-            const SizedBox(height: Gap.md),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    key: dayKey,
-                    focusNode: dayKey == _newDayKey ? _newDayName : null,
-                    initialValue: day.name,
-                    textCapitalization: TextCapitalization.sentences,
-                    inputFormatters: [
-                      maxLengthFormatter(ProgramLimits.maxDayNameLength),
-                    ],
-                    decoration: InputDecoration(
-                      labelText: l10n.programDayName,
-                      hintText: l10n.programDayDefault(dayIndex + 1),
-                      helperText: day.items.isEmpty
-                          ? null
-                          : l10n.estimateText(estimateDay(day)),
-                      errorText: dayIssues.contains(DayIssue.nameTooLong)
-                          ? l10n.dayIssueText(DayIssue.nameTooLong)
-                          : null,
+                const SizedBox(height: Gap.sm),
+                TextField(
+                  controller: _weeks,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(2),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: l10n.programLength,
+                    helperText: l10n.programLengthHelp,
+                    errorText: programError({
+                      ProgramIssue.lengthWeeksOutOfRange,
+                    }),
+                  ),
+                  onChanged: _cubit.setLengthWeeks,
+                ),
+                const SizedBox(height: Gap.md),
+                Wrap(
+                  spacing: Gap.sm,
+                  runSpacing: Gap.xs,
+                  children: [
+                    for (final (i, other) in state.program.days.indexed)
+                      ChoiceChip(
+                        label: Text(l10n.dayName(other, i)),
+                        selected: i == dayIndex,
+                        avatar:
+                            validation.dayIssues(i).isNotEmpty ||
+                                validation.items.keys.any((ref) => ref.day == i)
+                            ? Icon(
+                                Icons.error_outline,
+                                color: Theme.of(context).colorScheme.error,
+                              )
+                            : null,
+                        onSelected: (_) => _cubit.selectDay(i),
+                      ),
+                    ActionChip(
+                      avatar: const Icon(Icons.add),
+                      label: Text(l10n.programAddDay),
+                      onPressed: state.canAddDay ? _addDay : null,
                     ),
-                    onChanged: (name) => _cubit.renameDay(dayIndex, name),
-                  ),
+                  ],
                 ),
-                _DayMenu(index: dayIndex, count: state.program.days.length),
+                if (daysError != null) _ErrorText(daysError),
+                const SizedBox(height: Gap.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        key: dayKey,
+                        focusNode: dayKey == _newDayKey ? _newDayName : null,
+                        initialValue: day.name,
+                        textCapitalization: TextCapitalization.sentences,
+                        inputFormatters: [
+                          maxLengthFormatter(ProgramLimits.maxDayNameLength),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: l10n.programDayName,
+                          hintText: l10n.programDayDefault(dayIndex + 1),
+                          helperText: day.items.isEmpty
+                              ? null
+                              : l10n.estimateText(estimateDay(day)),
+                          errorText: dayIssues.contains(DayIssue.nameTooLong)
+                              ? l10n.dayIssueText(DayIssue.nameTooLong)
+                              : null,
+                        ),
+                        onChanged: (name) => _cubit.renameDay(dayIndex, name),
+                      ),
+                    ),
+                    _DayMenu(index: dayIndex, count: state.program.days.length),
+                  ],
+                ),
+                for (final issue in dayIssues)
+                  if (issue != DayIssue.nameTooLong)
+                    _ErrorText(l10n.dayIssueText(issue)),
               ],
             ),
-            for (final issue in dayIssues)
-              if (issue != DayIssue.nameTooLong)
-                _ErrorText(l10n.dayIssueText(issue)),
-          ],
+          ),
         ),
-      ),
-      footer: Padding(
-        padding: const EdgeInsets.all(Gap.md),
-        child: OutlinedButton.icon(
-          icon: const Icon(Icons.add),
-          label: Text(l10n.programAddExercises),
-          onPressed: state.freeSlots > 0 ? () => _addExercises(state) : null,
+        if (items.isNotEmpty)
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+            sliver: BuilderCard(
+              sliver: SliverReorderableList(
+                itemCount: items.length,
+                onReorderItem: _cubit.moveItem,
+                // The dragged row is rebuilt in the navigator's overlay,
+                // above this page's cubit, which the row reads.
+                proxyDecorator: (child, index, _) => BlocProvider.value(
+                  value: _cubit,
+                  child: _ItemTile(
+                    index: index,
+                    items: items,
+                    state: state,
+                    onReplace: () => _replace(index),
+                    lifted: true,
+                  ),
+                ),
+                itemBuilder: (context, index) => _ItemTile(
+                  key: ObjectKey(items[index]),
+                  index: index,
+                  items: items,
+                  state: state,
+                  onReplace: () => _replace(index),
+                ),
+              ),
+            ),
+          ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(Gap.md, Gap.md, Gap.md, Gap.xl),
+          sliver: SliverToBoxAdapter(
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.add),
+              label: Text(l10n.programAddExercises),
+              onPressed: state.freeSlots > 0
+                  ? () => _addExercises(state)
+                  : null,
+            ),
+          ),
         ),
-      ),
-      itemCount: items.length,
-      onReorderItem: _cubit.moveItem,
-      itemBuilder: (context, index) => _ItemTile(
-        key: ObjectKey(items[index]),
-        index: index,
-        items: items,
-        state: state,
-        onReplace: () => _replace(index),
-      ),
+      ],
     );
   }
 
@@ -449,8 +472,11 @@ class _DayMenu extends StatelessWidget {
   }
 }
 
-enum _ItemAction { edit, replace, link, ungroup, remove }
-
+/// An item of the day as a [BuilderRow]: its values as chips, which open
+/// the item's editor, and its actions in the ⋯ menu. A superset's rows
+/// show the rest only on the last, a circuit's only reps or time, with
+/// the group's rest (and a circuit's rounds) in the header above the
+/// first.
 class _ItemTile extends StatelessWidget {
   const _ItemTile({
     super.key,
@@ -458,90 +484,98 @@ class _ItemTile extends StatelessWidget {
     required this.items,
     required this.state,
     required this.onReplace,
+    this.lifted = false,
   });
 
   final int index;
   final List<ProgramItem> items;
   final ProgramBuilderState state;
   final VoidCallback onReplace;
+  final bool lifted;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final cubit = context.read<ProgramBuilderCubit>();
     final item = items[index];
     final exercise = state.exercises[item.exerciseId];
     final unavailable = state.isUnavailable(item);
     final issues = state.validation.itemIssues(state.selectedDay, index);
-    final group = item.group;
     final (start, end) = groupRange(items, index);
+    final size = end - start;
+    final grouped = item.group != null;
+    final circuit = grouped && size > 2;
     final canLink = canLinkWithNext(items, index);
-    return ListTile(
-      leading: ReorderableDragStartListener(
-        index: index,
-        child: Icon(Icons.drag_handle, semanticLabel: l10n.programReorder),
+    void edit() => unavailable ? onReplace() : _edit(context);
+    String rest(int seconds) => l10n.restClock(seconds);
+    final last = items[end - 1];
+    final work = switch (item.durationS) {
+      final seconds? => BuilderValue(
+        label: l10n.builderRowTime,
+        value: l10n.programSeconds(seconds),
+        onTap: edit,
       ),
-      title: Text(
-        exercise == null
-            ? l10n.programExerciseUnavailable
-            : exercise.localized(context).name,
-        style: unavailable ? TextStyle(color: theme.colorScheme.error) : null,
+      null => BuilderValue(
+        label: l10n.builderRowReps,
+        value: l10n.itemReps(item),
+        onTap: edit,
       ),
-      subtitle: Text(
-        [
-          [
-            l10n.itemSummary(item, cubit.weightUnit),
-            l10n.programRest(item.restS),
-            if (group != null) l10n.groupLabel(group, end - start),
-          ].join(' · '),
-          for (final issue in issues)
-            if (issue != ItemIssue.exerciseUnavailable)
-              l10n.itemIssueText(issue),
-          if (unavailable) l10n.programUnavailableHelp,
-        ].join('\n'),
-      ),
-      isThreeLine: issues.isNotEmpty || unavailable,
-      onTap: unavailable ? onReplace : () => _edit(context),
-      trailing: PopupMenuButton<_ItemAction>(
-        tooltip: l10n.programItemActions,
-        onSelected: (action) => switch (action) {
-          _ItemAction.edit => _edit(context),
-          _ItemAction.replace => onReplace(),
-          _ItemAction.link => cubit.linkWithNext(index),
-          _ItemAction.ungroup => cubit.ungroup(index),
-          _ItemAction.remove => cubit.removeItem(index),
-        },
-        itemBuilder: (_) => [
-          if (!unavailable)
-            PopupMenuItem(
-              value: _ItemAction.edit,
-              child: Text(l10n.programEditItem),
-            ),
-          PopupMenuItem(
-            value: _ItemAction.replace,
-            child: Text(l10n.programReplaceExercise),
+    };
+    return BuilderRow(
+      index: index,
+      name: exercise == null
+          ? l10n.programExerciseUnavailable
+          : exercise.localized(context).name,
+      values: [
+        if (!circuit)
+          BuilderValue(
+            label: l10n.builderRowSets,
+            value: '${item.sets}',
+            onTap: edit,
           ),
-          if (canLink)
-            PopupMenuItem(
-              value: _ItemAction.link,
-              child: Text(
-                linkedSize(items, index) == 2
-                    ? l10n.programMakeSuperset
-                    : l10n.programMakeCircuit,
-              ),
-            ),
-          if (group != null)
-            PopupMenuItem(
-              value: _ItemAction.ungroup,
-              child: Text(l10n.programUngroup),
-            ),
-          PopupMenuItem(
-            value: _ItemAction.remove,
-            child: Text(l10n.programRemoveItem),
+        work,
+        if (!grouped || (!circuit && index == end - 1))
+          BuilderValue(
+            label: l10n.builderRowRest,
+            value: rest(item.restS),
+            onTap: edit,
           ),
-        ],
-      ),
+      ],
+      divided: index > 0 && !(grouped && index > start),
+      grouped: grouped,
+      groupHeader: !grouped || index != start
+          ? null
+          : circuit
+          ? l10n.builderRowCircuit(item.sets, rest(last.restS))
+          : l10n.builderRowSuperset(rest(last.restS)),
+      lifted: lifted,
+      issues: [
+        for (final issue in issues)
+          if (issue != ItemIssue.exerciseUnavailable) l10n.itemIssueText(issue),
+        if (unavailable) l10n.programUnavailableHelp,
+      ],
+      menu: [
+        if (!unavailable)
+          ForgeMenuItem(label: l10n.programEditItem, onTap: edit),
+        ForgeMenuItem(label: l10n.programReplaceExercise, onTap: onReplace),
+        if (canLink)
+          ForgeMenuItem(
+            label: linkedSize(items, index) == 2
+                ? l10n.programMakeSuperset
+                : l10n.programMakeCircuit,
+            onTap: () => cubit.linkWithNext(index),
+          ),
+        if (grouped)
+          ForgeMenuItem(
+            label: l10n.programUngroup,
+            onTap: () => cubit.ungroup(index),
+          ),
+        ForgeMenuItem(
+          label: l10n.programRemoveItem,
+          onTap: () => cubit.removeItem(index),
+          destructive: true,
+        ),
+      ],
     );
   }
 

@@ -6,17 +6,33 @@ import '../../../l10n/app_localizations.dart';
 import 'workout_text.dart';
 
 /// The time since [since], counting every second.
-class ElapsedText extends StatefulWidget {
+class ElapsedText extends StatelessWidget {
   const ElapsedText({super.key, required this.since, this.style});
 
   final DateTime since;
   final TextStyle? style;
 
   @override
-  State<ElapsedText> createState() => _ElapsedTextState();
+  Widget build(BuildContext context) => EverySecond(
+    builder: (context) => Text(
+      AppLocalizations.of(context)
+          .elapsedText(DateTime.now().difference(since)),
+      style: style,
+    ),
+  );
 }
 
-class _ElapsedTextState extends State<ElapsedText> {
+/// Builds with [builder] again every second.
+class EverySecond extends StatefulWidget {
+  const EverySecond({super.key, required this.builder});
+
+  final WidgetBuilder builder;
+
+  @override
+  State<EverySecond> createState() => _EverySecondState();
+}
+
+class _EverySecondState extends State<EverySecond> {
   late final Timer _timer;
 
   @override
@@ -32,9 +48,5 @@ class _ElapsedTextState extends State<ElapsedText> {
   }
 
   @override
-  Widget build(BuildContext context) => Text(
-    AppLocalizations.of(context)
-        .elapsedText(DateTime.now().difference(widget.since)),
-    style: widget.style,
-  );
+  Widget build(BuildContext context) => widget.builder(context);
 }
