@@ -409,6 +409,20 @@ Decisions (the canvases they were drawn on are deleted):
   screen-sized cards and the Forge sample pages that repeat their cards
   removed, ExerciseCard one card, Forge rules and the hand-kept component
   tables gone from GetWorkout's rules, looks live only in the studios.
+- Açık kararlar (2026-11-15): the measurement-day camera is the app's own
+  PoseCamera component (forge_camera stays the engine); the splash and its
+  "Couldn't start" state are a Forge SplashScreen component; the macros
+  calculator uses a new Forge Slider; the plate breakdown is Menu's info form
+  (a floating card of facts, closed by tapping outside); a multi-series
+  chart's target line takes its series' colour, dashed, labelled "Target";
+  Today's missed day hides Start until it is answered; progress photo poses
+  are Front, Right side, Left side, Back.
+- Çelişkiler (2026-11-15), where the studio and these notes disagreed: the
+  paywall keeps three layouts (A/B/C); the lock screen has +15 s and Skip on
+  the right during a rest only; a cardio session opens a detail first; the
+  set type menu lists the three types with the current one ticked; loading
+  is shimmering grey bars in every component that loads; the step goal is
+  typed in place. The feature notes above say each in its place.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push A is done that
   day).
 
@@ -702,14 +716,16 @@ the feature you are about to touch, and keep it true when you change it.
   scroll; the selected plan's purchase button and its terms, then Restore,
   Terms and Privacy, are fixed at the bottom while they take at most half
   the page's height; taller (large text), the whole page scrolls as one in
-  that order. Two plan layouts are kept for
-  an A/B test, the rest of the page shared: A lists the plans as rows (name,
+  that order. Three plan layouts are kept for
+  an A/B/C test, the rest of the page shared: A lists the plans as rows (name,
   whole offer), B shows one card per plan side by side (name, the store's
   price, its period, then any trial or intro price), as many cards as the
-  store offers (two today).
+  store offers (two today), C shows one plan (yearly) with its benefits and
+  "Or monthly, <price>" under it (owner's pick, Çelişkiler, 2026-11-15).
 - **Paywall A/B test** (Firebase Remote Config + A/B Testing, owner's call,
   2026-11-13; `forge_remote_config`): the Remote Config string
-  `paywall_layout` picks the layout, `a` (list) or `b` (cards); the app's
+  `paywall_layout` picks the layout, `a` (list), `b` (cards) or `c` (one
+  plan); the app's
   default is `a`, and an empty or unknown value is A too
   (`GetPaywallLayout`). `bootstrap` registers it on Firebase in every
   build, against the build's project (fetched at most every 12 h in
@@ -1355,8 +1371,9 @@ the feature you are about to touch, and keep it true when you change it.
   selected one in the theme's selected colours, a "+" bubble; a group
   stacks one row per exercise, labelled A1, A2, warm-ups first, then one
   column per round with the round's bubbles joined. Tapping a bubble
-  selects its set; long-pressing it opens a menu at the bubble with "Change
-  to …" for the other set types it can be and "Remove set" (also custom
+  selects its set; long-pressing it opens a menu at the bubble listing
+  Warm-up, Working and Drop set (the ones it can be) with the current one
+  ticked, then "Remove set" (owner's pick, Çelişkiler, 2026-11-15; also custom
   screen-reader actions), the same as the bar's "more" sheet. Adding a set
   asks Normal / Warm-up / Drop set (a drop set only for rep-based
   exercises); a warm-up goes after the existing warm-ups, other sets at the
@@ -1627,7 +1644,10 @@ the feature you are about to touch, and keep it true when you change it.
   (kept on the lock screen up to 4 h more); the next update the app makes
   in front then starts a new one, as it does after the user swiped it
   away. Users can turn Live Activities off per app; then nothing shows.
-  A tap on it (lock screen and every Dynamic Island presentation, in both
+  During a rest it carries +15 s and Skip on the right (owner's pick,
+  Çelişkiler, 2026-11-15; App Intents, iOS 17; Android notification actions);
+  logging a set and Finish stay in the app. Elsewhere, a tap on it (lock
+  screen and every Dynamic Island presentation, in both
   modes) opens the app with `getworkout://workout` (its widgetURL; the
   `getworkout` scheme next to Google sign-in's in `CFBundleURLTypes`).
   The Runner takes that URL itself as a scene delegate
@@ -1760,7 +1780,9 @@ the feature you are about to touch, and keep it true when you change it.
   estimate, the date it is planned for (`ProgramListState.nextDate`, the
   first of `ProgramSchedule.upcoming`) and Start through
   `startProgramDay`. A missed day shows the Programs tab's
-  `MissedDayPrompt`, only while the program is open, as there; a failed
+  `MissedDayPrompt` inside the card instead of Start: Start comes back once
+  the missed day is answered (Do it today, Move or Skip; owner's pick,
+  Açık kararlar, 2026-11-15), only while the program is open, as there; a failed
   choice is reported by the prompt that made it, so the two tabs never
   both do, and a write the server refuses later by the one
   `ProgramWritesNotice` in the shell, whichever tab is open. While the
@@ -1784,8 +1806,9 @@ the feature you are about to touch, and keep it true when you change it.
   Steps page. Today only checks access and never asks the system: not
   asked here yet, refused or Health Connect missing show one line, "See
   your steps", that opens the Steps page to set it up; a device without a
-  health store shows no card. Cards show only their title while loading
-  (the cache answers at once; no spinner on the home tab); cubits move to
+  health store shows no card. Cards show their title and shimmering grey
+  bars while loading (owner's pick, Çelişkiler, 2026-11-15); no spinner on
+  the home tab; cubits move to
   the new day and week when the app resumes, and the week strip also when
   a snapshot arrives after the week ended; steps are read again on
   resume.
@@ -1895,7 +1918,9 @@ the feature you are about to touch, and keep it true when you change it.
   2026-11-13): this week's minutes, sessions and distance (in the user's
   unit, only when a session has one) on top, the 12-week minutes chart,
   then the sessions under a header per week (with its minutes), newest
-  first; a session opens its edit form. Log cardio is a full-width button
+  first; a session opens its detail (type, date, duration, distance, pace,
+  calories, note) with Edit and Delete (owner's pick, Çelişkiler,
+  2026-11-15). Log cardio is a full-width button
   fixed at the bottom once the list has loaded, the empty page included,
   which then shows only its message. Weeks start on the app's first
   weekday (see Week start), for the summary, the chart and the list alike,
@@ -2106,9 +2131,9 @@ the feature you are about to touch, and keep it true when you change it.
   before today (today's partial day and days to come left out, as on Body;
   hidden on a period's first day). The goal is `settings.stepGoal`, 10,000
   by default, 1,000-50,000; minus and plus move it by 100, and tapping the
-  number types it (the dialog opens with it selected): a whole number
-  within the limits, saved on the nearest 100, else the dialog says the
-  range. Each change saves at once through `SettingsCubit` (no Save); the
+  number types it in place as in every StepperField (owner's pick,
+  Çelişkiler, 2026-11-15): a whole number within the limits, saved on the
+  nearest 100, else the range shows under it. Each change saves at once through `SettingsCubit` (no Save); the
   row shows and steps from the last pick until its write comes back, so
   quick taps all count, and drops it when a save fails. `GetTodaySteps` (today vs goal) is registered
   for the Today card. The
