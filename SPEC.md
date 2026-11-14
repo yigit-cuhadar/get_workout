@@ -364,7 +364,53 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 
 ## Design
 
-<!-- Filled in the design phase, after every feature is ticked. -->
+How anything looks lives only in the two studios; a design change is made
+there, never here. The studio rules (tags, build check, components chosen
+before drawing) are in AGENTS.md › Design studios.
+- GetWorkout Studio https://claude.ai/artifact/PuK5WUbeyhVHMxA6THNDC2: the
+  app's presets, rules, components and every screen with its states. Its
+  saved settings download as tokens.json, which `lib/app/theme.dart` follows.
+- MobileAppForge Studio https://claude.ai/artifact/6G4XXrCwoijEmEcFhNQDCU:
+  the shared Forge components, drawn once; each card is that component's rule.
+
+Decisions (the canvases they were drawn on are deleted):
+- Colours stay muted. Loud directions (scoreboard, soft, night, block) and the
+  Stone preset were rejected; black is not a default accent.
+- Three presets (Slate, Measure, Graphite) are kept until the app is finished,
+  then one ships; Slate until then. Users only choose Light / Dark / System
+  (Profile › Appearance). 2026-11-15: the Cobalt & Graphite preview made
+  outside the studio was dropped and its branches deleted.
+- Forge owns the theme engine (`ForgePreset` → `ForgeTheme`), type scale,
+  controls, cards and feedback states; the app keeps what is about its product
+  (set bubbles, set panel, exercise cards, the meaning of calendar marks).
+- Every widget with more than one reasonable look was picked by the owner on
+  a variants canvas; StepperField takes the workout screen's look.
+- Review additions (owner's picks): restored program states (no active
+  program, finished, Premium ended), the Front / Back toggle, exercise stars,
+  favourites, Setup and Safety, own notes, workout minimize, the exercise ⋯
+  menu, Add exercise and the workout note, circuits, reminder rows, Strength
+  ranges (1 year / All Premium), cardio session detail, the steps
+  no-permission state, the workout edit page, Estimate body fat. New: the
+  rest-day card, Duplicate program and day, the program's weekly sets, "Fits
+  you" and a recommended row, the progress photo reminder, rest sound and
+  vibration, bar and plates, keep screen on, Connected apps, the progression
+  hint, plate breakdown, per-exercise rest, summary compared with last time,
+  calendar filter and moving a planned day, the Body 7-day average, cardio
+  from the health app, Measurement day as three steps, onboarding
+  notification and health permission steps, generator swap / keep per
+  exercise, Today while a workout runs, the ready-made program page, Add past
+  workout, the paywall's three layouts and the sign-in page.
+- Rounds of picks, applied in both studios: loose parts placed as components;
+  consistency (calendar circles, set type menu, featured card, muscle model
+  forms, Save placement, +15 s, effort tag); Bileşen uyumu and Kalan
+  uyumsuzluklar (screens follow their components); the Exercise picker page;
+  Forge independence (2026-11-15); Forge components drawn once, listed in
+  GetWorkout Studio with links (2026-11-15); Tekrarlar (2026-11-15):
+  screen-sized cards and the Forge sample pages that repeat their cards
+  removed, ExerciseCard one card, Forge rules and the hand-kept component
+  tables gone from GetWorkout's rules, looks live only in the studios.
+- Sample dates follow November 2026 (Nov 13 is a Friday; Push A is done that
+  day).
 
 ## Open questions
 
