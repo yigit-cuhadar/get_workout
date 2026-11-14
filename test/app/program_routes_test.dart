@@ -86,6 +86,12 @@ void main() {
 
   // Created inside each test so stream events run in the test's fake zone.
   Future<void> start(WidgetTester tester) async {
+    // Today, under the tab, shows its next workout's shimmering skeleton
+    // until the programs arrive, which the tests hold back; still, it
+    // settles.
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
     final authRepository = MockAuthRepository();
     users = StreamController<AuthUser?>();
     when(authRepository.watchUser).thenAnswer((_) => users.stream);
