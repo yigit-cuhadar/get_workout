@@ -385,18 +385,26 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
   void moveItem(int from, int to) =>
       _editItems((items) => editing.moveItem(items, from, to));
 
+  /// The joined items take the group's first sets and last rest; see
+  /// [editing.alignGroup].
   void linkWithNext(int index) => _editItems(
     (items) => editing.canLinkWithNext(items, index)
-        ? editing.linkWithNext(items, index)
+        ? editing.alignGroup(editing.linkWithNext(items, index), index)
         : items,
   );
 
   void ungroup(int index) =>
       _editItems((items) => editing.ungroup(items, index));
 
-  /// A blank or unreadable count reads as 0, which is invalid.
-  void setSets(int index, String text) =>
-      _editItem(index, (item) => item.copyWith(sets: _whole(text) ?? 0));
+  /// A blank or unreadable count reads as 0, which is invalid. In a
+  /// superset or circuit it is the rounds, set on every item of the group.
+  void setSets(int index, String text) => _changeItems(
+    (items) => editing.editInGroup(
+      items,
+      index,
+      (item) => item.copyWith(sets: _whole(text) ?? 0),
+    ),
+  );
 
   void setRepMin(int index, String text) =>
       _editItem(index, (item) => item.copyWith(repMin: () => _whole(text)));
@@ -408,9 +416,15 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
   void setDuration(int index, String text) =>
       _editItem(index, (item) => item.copyWith(durationS: () => _whole(text)));
 
-  /// In seconds; blank is no rest.
-  void setRest(int index, String text) =>
-      _editItem(index, (item) => item.copyWith(restS: _whole(text) ?? 0));
+  /// In seconds; blank is no rest. In a superset or circuit it is the rest
+  /// after the group, set on every item of it.
+  void setRest(int index, String text) => _changeItems(
+    (items) => editing.editInGroup(
+      items,
+      index,
+      (item) => item.copyWith(restS: _whole(text) ?? 0),
+    ),
+  );
 
   /// In [weightUnit]; blank removes the target. See [RetypedWeights].
   void setTarget(int index, String text) => _editItem(

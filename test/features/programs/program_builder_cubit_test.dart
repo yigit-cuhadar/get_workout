@@ -359,6 +359,54 @@ void main() {
     });
   });
 
+  group('a superset or circuit keeps its items in step', () {
+    List<(int, int)> setsAndRest(ProgramBuilderCubit cubit) => [
+      for (final i in cubit.state.day!.items) (i.sets, i.restS),
+    ];
+
+    test('joining aligns them to the first sets and the last rest', () async {
+      final cubit = await filled(['a', 'b', 'c', 'd']);
+      cubit
+        ..setSets(0, '4')
+        ..setRest(0, '120')
+        ..setSets(1, '2')
+        ..setRest(1, '60')
+        ..setSets(2, '5')
+        ..setRest(2, '45');
+
+      cubit.linkWithNext(0);
+      expect(setsAndRest(cubit).take(3), [(4, 60), (4, 60), (5, 45)]);
+      cubit.linkWithNext(1);
+      expect(setsAndRest(cubit).take(3), [(4, 45), (4, 45), (4, 45)]);
+    });
+
+    test('sets and rest typed on one item apply to the group', () async {
+      final cubit = await filled(['a', 'b', 'c']);
+      cubit
+        ..linkWithNext(0)
+        ..setSets(1, '5')
+        ..setRest(0, '75');
+      expect(setsAndRest(cubit), [(5, 75), (5, 75), (3, 90)]);
+    });
+
+    test('reps stay each item\'s own', () async {
+      final cubit = await filled(['a', 'b']);
+      cubit
+        ..linkWithNext(0)
+        ..setRepMin(0, '5');
+      expect(cubit.state.day!.items[0].repMin, 5);
+      expect(cubit.state.day!.items[1].repMin, isNot(5));
+    });
+
+    test('an item on its own changes alone', () async {
+      final cubit = await filled(['a', 'b']);
+      cubit
+        ..setSets(0, '5')
+        ..setRest(0, '30');
+      expect(setsAndRest(cubit)[1], isNot((5, 30)));
+    });
+  });
+
   group('saving', () {
     test('a valid new program is created with its name trimmed', () async {
       final cubit = await filled(['a']);

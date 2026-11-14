@@ -60,7 +60,8 @@ class BuilderRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final groupHeader = this.groupHeader;
     final row = Container(
-      padding: const EdgeInsets.fromLTRB(10, 12, 12, 12),
+      // The chips' tap band takes the bottom padding but its last 2px.
+      padding: const EdgeInsets.fromLTRB(10, 12, 12, 12 - _ValueChip.band),
       decoration: BoxDecoration(
         color: lifted ? colors.surface : null,
         borderRadius: lifted ? BorderRadius.circular(style.radii.lg) : null,
@@ -94,7 +95,6 @@ class BuilderRow extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: Gap.xs,
               children: [
                 Text(
                   name,
@@ -104,7 +104,6 @@ class BuilderRow extends StatelessWidget {
                 ),
                 Wrap(
                   spacing: 6,
-                  runSpacing: 6,
                   children: [for (final value in values) _ValueChip(value)],
                 ),
                 for (final issue in issues)
@@ -167,10 +166,15 @@ class BuilderRow extends StatelessWidget {
   }
 }
 
+/// A value chip drawn 24px tall that takes taps across a 44px band, as
+/// Forge's controls do.
 class _ValueChip extends StatelessWidget {
   const _ValueChip(this.value);
 
   final BuilderValue value;
+
+  static const double height = 24;
+  static const double band = (ForgeTheme.tapMin - height) / 2;
 
   @override
   Widget build(BuildContext context) {
@@ -181,26 +185,32 @@ class _ValueChip extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: value.onTap,
-        child: Container(
-          height: 24,
-          padding: const EdgeInsets.symmetric(horizontal: Gap.sm),
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.all(Radius.circular(6)),
-            border: Border.all(color: colors.line),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: Gap.xs,
-            children: [
-              Text(
-                value.label,
-                style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                  fontWeight: FontWeight.w400,
-                  color: colors.inkMuted,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: band),
+          child: Container(
+            height: height,
+            padding: const EdgeInsets.symmetric(horizontal: Gap.sm),
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.all(Radius.circular(6)),
+              border: Border.all(color: colors.line),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: Gap.xs,
+              children: [
+                Text(
+                  value.label,
+                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: colors.inkMuted,
+                  ),
                 ),
-              ),
-              Text(value.value, style: style.data.copyWith(color: colors.ink)),
-            ],
+                Text(
+                  value.value,
+                  style: style.data.copyWith(color: colors.ink),
+                ),
+              ],
+            ),
           ),
         ),
       ),

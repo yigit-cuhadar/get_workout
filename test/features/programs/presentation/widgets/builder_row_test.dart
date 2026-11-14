@@ -100,6 +100,38 @@ void main() {
     expect(rules, hasLength(2));
   });
 
+  testWidgets('a chip is drawn 24px and takes taps across 44px', (
+    tester,
+  ) async {
+    var taps = 0;
+    await pumpComponent(
+      tester,
+      list([
+        BuilderRow(
+          index: 0,
+          name: 'Bench Press',
+          values: [
+            BuilderValue(label: 'Sets', value: '4', onTap: () => taps++),
+          ],
+          menu: const [],
+          divided: false,
+        ),
+      ]),
+    );
+
+    final chip = find.ancestor(
+      of: find.text('Sets'),
+      matching: find.byWidgetPredicate(
+        (w) => w is Container && w.constraints?.maxHeight == 24,
+      ),
+    );
+    expect(tester.getSize(chip).height, 24);
+    final rect = tester.getRect(chip);
+    await tester.tapAt(rect.topCenter - const Offset(0, 9));
+    await tester.tapAt(rect.bottomCenter + const Offset(0, 9));
+    expect(taps, 2);
+  });
+
   testWidgets('the issues show under the chips', (tester) async {
     await pumpComponent(
       tester,
