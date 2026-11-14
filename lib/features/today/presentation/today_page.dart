@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_ui/forge_ui.dart';
+import 'package:forge_ui/forge_ui.dart' hide WeekStrip;
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
@@ -295,7 +295,8 @@ class _WorkoutCard extends StatelessWidget {
         title: l10n.todayNextTitle,
         child: switch (next) {
           null when state.status == ProgramListStatus.failure => ErrorView(
-            message: l10n.programsLoadFailed,
+            title: l10n.programsLoadFailed,
+            message: l10n.loadFailedDetail,
             retryLabel: l10n.retry,
             onRetry: context.read<ProgramListCubit>().retry,
           ),
@@ -477,7 +478,8 @@ class _VolumeCard extends StatelessWidget {
       onOpen: () => context.go(Routes.volume),
       child: switch ((state.status, week)) {
         (TodayVolumeStatus.failure, _) => ErrorView(
-          message: l10n.volumeLoadFailed,
+          title: l10n.volumeLoadFailed,
+          message: l10n.loadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: context.read<TodayVolumeCubit>().retry,
         ),
@@ -587,7 +589,8 @@ class _StepsCard extends StatelessWidget {
           onTap: open,
         ),
         (TodayStepsStatus.failure, _) => ErrorView(
-          message: l10n.stepsLoadFailed,
+          title: l10n.stepsLoadFailed,
+          message: l10n.stepsLoadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: () => context.read<TodayStepsCubit>().load(
             context.read<SettingsCubit>().state.settings.stepGoal,

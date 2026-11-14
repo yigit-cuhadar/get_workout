@@ -129,16 +129,19 @@ class _BuilderView extends StatelessWidget {
               ),
               body: switch (state.status) {
                 ProgramBuilderStatus.notFound => EmptyView(
+                  title: l10n.programNotFoundTitle,
                   message: l10n.programNotFound,
                 ),
                 ProgramBuilderStatus.loadFailed => ErrorView(
-                  message: l10n.programsLoadFailed,
+                  title: l10n.programsLoadFailed,
+                  message: l10n.loadFailedDetail,
                   retryLabel: l10n.retry,
                   onRetry: cubit.load,
                 ),
                 _ => switch (catalogue) {
                   CatalogueFailed() => ErrorView(
-                    message: l10n.libraryLoadFailed,
+                    title: l10n.libraryLoadFailed,
+                    message: l10n.loadFailedDetail,
                     retryLabel: l10n.retry,
                     onRetry: context.read<ExerciseCatalogueCubit>().retry,
                   ),

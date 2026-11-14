@@ -100,11 +100,15 @@ class _DetailView extends StatelessWidget {
         body: switch (state) {
           DetailLoading() || DetailDeleted() => const LoadingView(),
           DetailFailed() => ErrorView(
-            message: l10n.libraryLoadFailed,
+            title: l10n.libraryLoadFailed,
+            message: l10n.loadFailedDetail,
             retryLabel: l10n.retry,
             onRetry: context.read<ExerciseCatalogueCubit>().retry,
           ),
-          DetailNotFound() => EmptyView(message: l10n.detailNotFound),
+          DetailNotFound() => EmptyView(
+            title: l10n.detailNotFoundTitle,
+            message: l10n.detailNotFound,
+          ),
           DetailReady() => _DetailBody(state, exerciseRoute),
         },
       ),
@@ -464,7 +468,14 @@ class _MusclePreviewState extends State<_MusclePreview> {
     return SizedBox(
       height: MediaQuery.sizeOf(context).height * _heightRatio,
       child: switch (state) {
-        BodyModelLoading() => const LoadingView(),
+        // The skeletons are taller than the band on a short screen.
+        BodyModelLoading() => const ClipRect(
+          child: OverflowBox(
+            alignment: Alignment.topCenter,
+            maxHeight: double.infinity,
+            child: LoadingView(),
+          ),
+        ),
         BodyModelFailed() => Center(child: Text(l10n.modelLoadFailed)),
         BodyModelReady(:final model) => Semantics(
           label: l10n.detailModelLabel(

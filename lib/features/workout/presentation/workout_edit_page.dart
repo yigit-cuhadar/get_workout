@@ -98,13 +98,16 @@ class _EditView extends StatelessWidget {
               ),
               body: switch (state.status) {
                 WorkoutEditStatus.missing => EmptyView(
+                  title: l10n.historyNotFoundTitle,
                   message: l10n.historyNotFound,
                 ),
                 WorkoutEditStatus.syncing => EmptyView(
-                  message: l10n.historySyncing,
+                  title: l10n.historySyncingTitle,
+                  message: l10n.historySyncingDetail,
                 ),
                 WorkoutEditStatus.failure => ErrorView(
-                  message: l10n.historyLoadFailed,
+                  title: l10n.historyLoadFailed,
+                  message: l10n.loadFailedDetail,
                   retryLabel: l10n.retry,
                   onRetry: cubit.retry,
                 ),

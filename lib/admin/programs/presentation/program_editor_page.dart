@@ -73,8 +73,10 @@ class _EditorView extends StatelessWidget {
           return Scaffold(
             appBar: AppBar(),
             body: ErrorView(
+              title: "Couldn't load the program",
               message: failureMessage(state.failure!),
               onRetry: cubit.reload,
+              retryLabel: 'Retry',
             ),
           );
         }

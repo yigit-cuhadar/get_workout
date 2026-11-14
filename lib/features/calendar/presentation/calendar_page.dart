@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_ui/forge_ui.dart';
+import 'package:forge_ui/forge_ui.dart' hide MonthGrid;
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
@@ -187,7 +187,8 @@ class _CalendarViewState extends State<_CalendarView> {
       CalendarListStatus.failure => [
         fill(
           ErrorView(
-            message: l10n.historyLoadFailed,
+            title: l10n.historyLoadFailed,
+            message: l10n.loadFailedDetail,
             retryLabel: l10n.retry,
             onRetry: cubit.retry,
           ),
@@ -196,11 +197,14 @@ class _CalendarViewState extends State<_CalendarView> {
       CalendarListStatus.ready when state.isEmpty => [
         fill(
           EmptyView(
-            message: l10n.historyEmpty,
-            action: ForgeButton(
-              label: l10n.workoutStartWorkout,
-              onPressed: () => startFreeWorkout(context),
-            ),
+            title: l10n.historyEmpty,
+            message: l10n.historyEmptyDetail,
+            actions: [
+              ForgeButton(
+                label: l10n.workoutStartWorkout,
+                onPressed: () => startFreeWorkout(context),
+              ),
+            ],
           ),
         ),
       ],
@@ -300,7 +304,8 @@ class _PeriodCard extends StatelessWidget {
             ),
             if (state.status == CalendarStatus.failure)
               ErrorView(
-                message: l10n.calendarLoadFailed,
+                title: l10n.calendarLoadFailed,
+                message: l10n.loadFailedDetail,
                 retryLabel: l10n.retry,
                 onRetry: context.read<CalendarCubit>().retry,
               ),

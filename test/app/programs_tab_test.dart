@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/app/router.dart';
+import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
@@ -66,6 +67,9 @@ void main() {
           defaultSettings(),
         ],
         child: MaterialApp.router(
+          theme: ThemeData(
+            extensions: AppPreset.shipped.lightTheme().extensions.values,
+          ),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           routerConfig: router,

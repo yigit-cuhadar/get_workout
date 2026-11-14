@@ -75,15 +75,18 @@ class _CatalogueDetailView extends StatelessWidget {
             appBar: AppBar(),
             body: switch (state.status) {
               CatalogueDetailStatus.notFound => EmptyView(
+                title: l10n.programNotFoundTitle,
                 message: l10n.catalogueNotFound,
               ),
               CatalogueDetailStatus.offline => ErrorView(
-                message: l10n.catalogueOffline,
+                title: l10n.offlineTitle,
+                message: l10n.catalogueDetailOffline,
                 retryLabel: l10n.retry,
                 onRetry: cubit.retry,
               ),
               CatalogueDetailStatus.failure => ErrorView(
-                message: l10n.catalogueLoadFailed,
+                title: l10n.catalogueLoadFailed,
+                message: l10n.loadFailedDetail,
                 retryLabel: l10n.retry,
                 onRetry: cubit.retry,
               ),

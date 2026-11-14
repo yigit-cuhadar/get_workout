@@ -88,12 +88,16 @@ class _ProgramDetailPageState extends State<ProgramDetailPage> {
           body: switch (state.status) {
             ProgramListStatus.loading => const LoadingView(),
             ProgramListStatus.failure => ErrorView(
-              message: l10n.programsLoadFailed,
+              title: l10n.programsLoadFailed,
+              message: l10n.loadFailedDetail,
               retryLabel: l10n.retry,
               onRetry: context.read<ProgramListCubit>().retry,
             ),
             ProgramListStatus.ready when _waiting => const LoadingView(),
-            ProgramListStatus.ready => EmptyView(message: l10n.programNotFound),
+            ProgramListStatus.ready => EmptyView(
+              title: l10n.programNotFoundTitle,
+              message: l10n.programNotFound,
+            ),
           },
         );
       },

@@ -84,7 +84,8 @@ class _StepsViewState extends State<_StepsView> {
   Widget _body(BuildContext context, StepsState state) {
     final l10n = AppLocalizations.of(context);
     final failed = ErrorView(
-      message: l10n.stepsLoadFailed,
+      title: l10n.stepsLoadFailed,
+      message: l10n.stepsLoadFailedDetail,
       retryLabel: l10n.retry,
       onRetry: _cubit.load,
     );
@@ -96,41 +97,48 @@ class _StepsViewState extends State<_StepsView> {
     return switch (state.access) {
       null => const LoadingView(),
       StepsAccess.unsupported => EmptyView(
+        title: l10n.stepsUnsupportedTitle,
         message: l10n.stepsUnsupported,
-        action: inlineFailure,
+        actions: [?inlineFailure],
       ),
       StepsAccess.notInstalled => EmptyView(
+        title: l10n.stepsNotInstalledTitle,
         message: l10n.stepsNotInstalled,
-        action: Column(
-          children: [
-            ?inlineFailure,
-            FilledButton(
-              onPressed: state.busy ? null : () => _openSettings(context),
-              child: Text(l10n.stepsGetHealthConnect),
-            ),
-          ],
-        ),
+        actions: [
+          Column(
+            children: [
+              ?inlineFailure,
+              FilledButton(
+                onPressed: state.busy ? null : () => _openSettings(context),
+                child: Text(l10n.stepsGetHealthConnect),
+              ),
+            ],
+          ),
+        ],
       ),
       StepsAccess.explain => _Explanation(
         busy: state.busy,
         failure: inlineFailure,
       ),
       StepsAccess.denied => EmptyView(
+        title: l10n.stepsDeniedTitle,
         message: l10n.stepsDenied,
-        action: Column(
-          children: [
-            ?inlineFailure,
-            FilledButton(
-              onPressed: state.busy ? null : () => _openSettings(context),
-              child: Text(l10n.stepsOpenHealthConnect),
-            ),
-            const SizedBox(height: Gap.sm),
-            TextButton(
-              onPressed: state.busy ? null : _cubit.allow,
-              child: Text(l10n.stepsAskAgain),
-            ),
-          ],
-        ),
+        actions: [
+          Column(
+            children: [
+              ?inlineFailure,
+              FilledButton(
+                onPressed: state.busy ? null : () => _openSettings(context),
+                child: Text(l10n.stepsOpenHealthConnect),
+              ),
+              const SizedBox(height: Gap.sm),
+              TextButton(
+                onPressed: state.busy ? null : _cubit.allow,
+                child: Text(l10n.stepsAskAgain),
+              ),
+            ],
+          ),
+        ],
       ),
       StepsAccess.granted ||
       StepsAccess.undetermined when history == null => const LoadingView(),

@@ -55,11 +55,13 @@ class _StrengthListViewState extends State<_StrengthListView> {
         body: switch (state.status) {
           StrengthListStatus.loading => const LoadingView(),
           StrengthListStatus.failure => ErrorView(
-            message: l10n.strengthLoadFailed,
+            title: l10n.strengthLoadFailed,
+            message: l10n.loadFailedDetail,
             retryLabel: l10n.retry,
             onRetry: cubit.retry,
           ),
           StrengthListStatus.ready when state.trainedCount == 0 => EmptyView(
+            title: l10n.strengthEmptyTitle,
             message: l10n.strengthEmpty,
           ),
           StrengthListStatus.ready => Column(
@@ -90,7 +92,10 @@ class _StrengthListViewState extends State<_StrengthListView> {
               ),
               Expanded(
                 child: state.items.isEmpty
-                    ? EmptyView(message: l10n.strengthNoResults)
+                    ? EmptyView(
+                        title: l10n.strengthNoResultsTitle,
+                        message: l10n.strengthNoResults,
+                      )
                     : ListView.builder(
                         itemCount: state.items.length,
                         itemBuilder: (context, index) =>

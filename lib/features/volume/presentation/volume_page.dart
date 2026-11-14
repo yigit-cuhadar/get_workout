@@ -57,7 +57,8 @@ class _VolumeView extends StatelessWidget {
             // keeps its camera and nothing flashes.
             child: switch (state.status) {
               VolumeStatus.failure => ErrorView(
-                message: l10n.volumeLoadFailed,
+                title: l10n.volumeLoadFailed,
+                message: l10n.loadFailedDetail,
                 retryLabel: l10n.retry,
                 onRetry: cubit.retry,
               ),

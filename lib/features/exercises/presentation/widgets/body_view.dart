@@ -76,7 +76,8 @@ class _BodyViewState extends State<BodyView> {
       builder: (context, state) => switch (state) {
         BodyModelLoading() => const LoadingView(),
         BodyModelFailed() => ErrorView(
-          message: l10n.modelLoadFailed,
+          title: l10n.modelLoadFailedTitle,
+          message: l10n.loadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: context.read<BodyModelCubit>().load,
         ),

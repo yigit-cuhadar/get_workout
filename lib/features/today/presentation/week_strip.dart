@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:forge_ui/forge_ui.dart';
+import 'package:forge_ui/forge_ui.dart' hide MonthGrid;
 
 import '../../../l10n/app_localizations.dart';
 import '../../calendar/presentation/calendar_marks.dart';
@@ -38,7 +38,8 @@ class WeekStrip extends StatelessWidget {
         ),
         if (state.status == TodayWeekStatus.failure)
           ErrorView(
-            message: l10n.todayWeekLoadFailed,
+            title: l10n.todayWeekLoadFailed,
+            message: l10n.loadFailedDetail,
             retryLabel: l10n.retry,
             onRetry: onRetry ?? context.read<TodayWeekCubit>().retry,
           ),

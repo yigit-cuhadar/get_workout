@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:forge_ui/forge_ui.dart';
+import 'package:forge_ui/forge_ui.dart' hide TipBanner;
 
 import '../../../core/max_length_formatter.dart';
 import '../../../l10n/app_localizations.dart';

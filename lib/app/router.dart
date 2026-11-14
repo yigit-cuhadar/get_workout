@@ -365,7 +365,8 @@ GoRouter buildRouter(
           final l10n = AppLocalizations.of(context);
           return Scaffold(
             body: ErrorView(
-              message: l10n.startFailed,
+              title: l10n.startFailed,
+              message: l10n.loadFailedDetail,
               retryLabel: l10n.retry,
               onRetry: auth.retryGuestSignIn,
             ),

@@ -12,6 +12,7 @@ import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/user_profile.dart';
 import 'profile_form_cubit.dart';
+import 'ruler_picker.dart';
 
 /// Display names of the profile answers. Level and equipment names come
 /// from [VocabularyLabels].

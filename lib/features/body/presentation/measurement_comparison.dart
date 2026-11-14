@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:forge_ui/forge_ui.dart';
+import 'package:forge_ui/forge_ui.dart' hide BeforeAfterSlider;
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
@@ -12,6 +12,7 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/body_entry.dart';
 import '../domain/entry_body_fat.dart';
 import '../domain/measurement_summary.dart';
+import 'before_after_slider.dart';
 import 'body_photo.dart';
 import 'body_text.dart';
 import 'measurement_summary_cubit.dart';
@@ -33,19 +34,24 @@ class MeasurementComparison extends StatelessWidget {
       builder: (context, state) => switch (state.status) {
         MeasurementSummaryStatus.loading => const LoadingView(),
         MeasurementSummaryStatus.failure => ErrorView(
-          message: l10n.bodyLoadFailed,
+          title: l10n.bodyLoadFailed,
+          message: l10n.loadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: context.read<MeasurementSummaryCubit>().retry,
         ),
         MeasurementSummaryStatus.notFound => EmptyView(
+          title: l10n.bodyNotFoundTitle,
           message: l10n.bodyNotFound,
         ),
         MeasurementSummaryStatus.nothingToCompare => EmptyView(
+          title: l10n.bodySummaryAloneTitle,
           message: l10n.bodySummaryAlone,
-          action: OutlinedButton(
-            onPressed: () => context.go(Routes.bodyMeasureNew),
-            child: Text(l10n.bodyMeasurementDay),
-          ),
+          actions: [
+            OutlinedButton(
+              onPressed: () => context.go(Routes.bodyMeasureNew),
+              child: Text(l10n.bodyMeasurementDay),
+            ),
+          ],
         ),
         MeasurementSummaryStatus.ready => _Summary(state, compare: compare),
       },

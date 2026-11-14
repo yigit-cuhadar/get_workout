@@ -64,16 +64,20 @@ class _PreviewView extends StatelessWidget {
         body: switch (state.status) {
           PreviewStatus.loading => const LoadingView(),
           PreviewStatus.libraryFailed => ErrorView(
-            message: l10n.libraryLoadFailed,
+            title: l10n.libraryLoadFailed,
+            message: l10n.loadFailedDetail,
             retryLabel: l10n.retry,
             onRetry: cubit.retry,
           ),
           PreviewStatus.impossible => EmptyView(
+            title: l10n.generatorIssueTitle,
             message: l10n.generationIssueText(state.issue!),
-            action: OutlinedButton(
-              onPressed: () => context.pop(),
-              child: Text(l10n.generatorChangeAnswers),
-            ),
+            actions: [
+              OutlinedButton(
+                onPressed: () => context.pop(),
+                child: Text(l10n.generatorChangeAnswers),
+              ),
+            ],
           ),
           PreviewStatus.ready => _Program(
             program: state.program!,

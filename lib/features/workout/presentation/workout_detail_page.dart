@@ -88,10 +88,12 @@ class _DetailView extends StatelessWidget {
           ),
           body: switch (state.status) {
             WorkoutDetailStatus.missing => EmptyView(
+              title: l10n.historyNotFoundTitle,
               message: l10n.historyNotFound,
             ),
             WorkoutDetailStatus.failure when workout == null => ErrorView(
-              message: l10n.historyLoadFailed,
+              title: l10n.historyLoadFailed,
+              message: l10n.loadFailedDetail,
               retryLabel: l10n.retry,
               onRetry: cubit.retry,
             ),

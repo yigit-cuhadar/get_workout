@@ -9,6 +9,7 @@ import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/app/router.dart';
+import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/exercises/domain/exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
 import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
@@ -245,6 +246,9 @@ void main() {
           BlocProvider.value(value: profile),
         ],
         child: MaterialApp.router(
+          theme: ThemeData(
+            extensions: AppPreset.shipped.lightTheme().extensions.values,
+          ),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           routerConfig: router = buildRouter(auth, profile),

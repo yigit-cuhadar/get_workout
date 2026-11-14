@@ -130,15 +130,15 @@ class _PaywallViewState extends State<_PaywallView> {
               ),
               PaywallState(:final loadFailure?) => _PinOrScroll(
                 fill: ErrorView(
+                  title: l10n.paywallLoadFailedTitle,
                   message: switch (loadFailure) {
                     PurchaseFailure() ||
                     NetworkFailure() => l10n.purchaseError(loadFailure),
                     _ => l10n.paywallLoadFailed,
                   },
                   retryLabel: l10n.retry,
-                  onRetry: state.isBusy
-                      ? null
-                      : context.read<PaywallCubit>().load,
+                  // Ignored while a purchase or restore is under way.
+                  onRetry: context.read<PaywallCubit>().load,
                 ),
               ),
               _ => _PinOrScroll(offer: _Offer(state, layout: widget.layout)),

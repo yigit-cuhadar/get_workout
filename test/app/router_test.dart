@@ -16,6 +16,7 @@ import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_remote_config/forge_remote_config.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/router.dart';
+import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise.dart';
@@ -549,6 +550,9 @@ void main() {
         BlocProvider.value(value: entitlement),
       ],
       child: MaterialApp.router(
+        theme: ThemeData(
+          extensions: AppPreset.shipped.lightTheme().extensions.values,
+        ),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router = buildRouter(
@@ -625,7 +629,7 @@ void main() {
     await tester.tap(find.text('Create account'));
     await tester.pumpAndSettle();
     expect(find.byType(AuthPage), findsOneWidget);
-    await tester.enterText(find.byType(TextFormField).first, 'a@b.co');
+    await tester.enterText(find.byType(TextField).first, 'a@b.co');
   }
 
   testWidgets('the auth page closes once the guest is upgraded', (
@@ -1941,10 +1945,7 @@ void main() {
       profileStream.addError(const NetworkFailure());
       await tester.pump();
       await tester.pump();
-      expect(
-        find.text("Couldn't load your profile. Check your connection."),
-        findsOneWidget,
-      );
+      expect(find.text("Couldn't load your profile"), findsOneWidget);
 
       storedProfile = onboarded;
       await tester.tap(find.text('Retry'));
@@ -1995,12 +1996,12 @@ void main() {
     await startAsGuest(tester);
 
     router.go(Routes.exercise('squat'));
-    // A spinner never settles, so pump frames by hand.
+    // A loader never settles, so pump frames by hand.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.byType(ExerciseDetailPage), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(LoadingView), findsOneWidget);
     expect(find.text('This exercise is no longer available.'), findsNothing);
 
     exerciseFeed.add([_squat]);

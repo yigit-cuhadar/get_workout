@@ -165,6 +165,7 @@ class _LibraryListViewState extends State<LibraryListView> {
             Expanded(
               child: switch (state.muscleExercises) {
                 _ when results.isEmpty => EmptyView(
+                  title: l10n.libraryNoResultsTitle,
                   message: l10n.libraryNoResults,
                 ),
                 final sections?

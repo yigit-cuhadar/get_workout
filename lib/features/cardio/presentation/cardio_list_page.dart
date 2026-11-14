@@ -78,12 +78,14 @@ class _CardioListViewState extends State<_CardioListView> {
           body: switch (state.status) {
             CardioListStatus.loading => const LoadingView(),
             CardioListStatus.failure => ErrorView(
-              message: l10n.cardioLoadFailed,
+              title: l10n.cardioLoadFailed,
+              message: l10n.loadFailedDetail,
               retryLabel: l10n.retry,
               onRetry: _cubit.retry,
             ),
             CardioListStatus.ready when state.sessions.isEmpty => EmptyView(
-              message: l10n.cardioEmpty,
+              title: l10n.cardioEmpty,
+              message: l10n.cardioEmptyDetail,
             ),
             CardioListStatus.ready => _Sessions(state),
           },

@@ -363,7 +363,10 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
                   ghostFile: state.ghosts[pose],
                   captureLabel: l10n.bodyTakePhoto,
                   switchLabel: l10n.bodySwitchCamera,
-                  unavailableText: l10n.bodyCameraUnavailable,
+                  startingTitle: l10n.bodyCameraStartingTitle,
+                  startingDetail: l10n.bodyCameraStartingDetail,
+                  unavailableTitle: l10n.bodyCameraUnavailableTitle,
+                  unavailableDetail: l10n.bodyCameraUnavailable,
                   onCaptured: (file) {
                     setState(() => _retaking = false);
                     _cubit.photoTaken(file);
