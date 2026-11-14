@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../../core/widgets/plate_calculator.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/calculation.dart';
 import '../domain/plates.dart';
 import 'calculator_format.dart';
+import 'calculator_input.dart';
 import 'calculator_widgets.dart';
 import 'plates_cubit.dart';
 
@@ -52,7 +54,12 @@ class PlatesPage extends StatelessWidget {
                   ),
                 ),
                 if (state.result case Calculated(:final value))
-                  _Load(value, format),
+                  _Load(
+                    value,
+                    format,
+                    target: format.weightUnit.toKg(readNumber(state.target)!),
+                    barKg: state.barKg,
+                  ),
                 const Divider(),
                 _Equipment(state, format),
               ],
@@ -64,37 +71,44 @@ class PlatesPage extends StatelessWidget {
   }
 }
 
+/// The load as a [PlateCalculator]; the closest one below the [target]
+/// (in kg) when the plates can't make it.
 class _Load extends StatelessWidget {
-  const _Load(this.load, this.format);
+  const _Load(
+    this.load,
+    this.format, {
+    required this.target,
+    required this.barKg,
+  });
 
   final PlateLoad load;
   final CalculatorFormat format;
+  final double target;
+  final double barKg;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = format.l10n;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(l10n.calcPerSide, style: Theme.of(context).textTheme.titleSmall),
-        if (load.perSide.isEmpty)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.calcBarOnly),
-          ),
-        for (final plate in load.perSide)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              l10n.calcPlateCount(
-                plate.count,
-                format.weight(plate.weightKg, maxDecimals: 2),
-              ),
-            ),
-          ),
-        ResultTile(label: l10n.calcTotal, value: format.weight(load.totalKg)),
-        if (!load.exact) CalculatorNote(l10n.calcClosestBelow),
-      ],
+    final plates = [
+      for (final plate in load.perSide)
+        PlateStack(
+          kg: plate.weightKg,
+          weight: format.weight(plate.weightKg, maxDecimals: 2),
+          short: format.weightNumber(plate.weightKg, maxDecimals: 2),
+          count: plate.count,
+        ),
+    ];
+    if (!load.exact) {
+      return PlateCalculator.closest(
+        target: format.weight(target),
+        closest: format.weight(load.totalKg),
+        plates: plates,
+      );
+    }
+    return PlateCalculator(
+      target: format.weight(load.totalKg),
+      bar: format.weight(barKg),
+      plates: plates,
+      perSide: format.weight((load.totalKg - barKg) / 2, maxDecimals: 2),
     );
   }
 }

@@ -15,18 +15,25 @@ extension ProgramText on AppLocalizations {
 
   /// `3 × 8–12`, `3 × 10` or `3 × 45 s`, with the target weight if any.
   String itemSummary(ProgramItem item, WeightUnit unit) {
-    final min = item.repMin;
-    final max = item.repMax;
     final duration = item.durationS;
-    final work = duration != null
-        ? programSeconds(duration)
-        : min == null || max == null || min == max
-        ? '${min ?? max ?? ''}'
-        : programRepRange(min, max);
+    final work = duration != null ? programSeconds(duration) : itemReps(item);
     final target = item.targetKg;
     final sets = programSetsTimes(item.sets, work);
     return target == null ? sets : '$sets · ${liftedWeightText(target, unit)}';
   }
+
+  /// The reps of [item]: `8` or `6–8`.
+  String itemReps(ProgramItem item) {
+    final min = item.repMin;
+    final max = item.repMax;
+    return min == null || max == null || min == max
+        ? '${min ?? max ?? ''}'
+        : programRepRange(min, max);
+  }
+
+  /// A rest of [seconds] on a clock: `1:30`.
+  String restClock(int seconds) =>
+      '${seconds ~/ 60}:${'${seconds % 60}'.padLeft(2, '0')}';
 
   /// A total (volume), to one decimal.
   String weightText(double kg, WeightUnit unit) =>

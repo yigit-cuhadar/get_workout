@@ -15,6 +15,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_remote_config/forge_remote_config.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:get_workout/core/widgets/onboarding_question.dart';
 import 'package:get_workout/app/router.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise.dart';
@@ -176,6 +177,10 @@ const _splitSquat = Exercise(
   popularity: 2,
   l10n: {'en': ExerciseText(name: 'Split Squat')},
 );
+
+/// The question an [OnboardingQuestion] shows, from 1.
+int questionOnScreen(WidgetTester tester) =>
+    tester.widget<StepProgress>(find.byType(StepProgress)).current;
 
 void main() {
   const guest = AuthUser(id: 'u1', isAnonymous: true);
@@ -1507,24 +1512,24 @@ void main() {
       await startAsGuest(tester);
       await tester.tap(find.text('Get started'));
       await tester.pumpAndSettle();
-      expect(find.text('1 / 9'), findsOneWidget);
+      expect(questionOnScreen(tester), 1);
 
       // Nothing to skip: Next waits for an answer.
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
-      expect(find.text('1 / 9'), findsOneWidget);
+      expect(questionOnScreen(tester), 1);
 
       await tester.tap(find.text('Build muscle'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
-      expect(find.text('2 / 9'), findsOneWidget);
+      expect(questionOnScreen(tester), 2);
 
-      await tester.tap(find.byType(BackButton));
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
-      expect(find.text('1 / 9'), findsOneWidget);
+      expect(questionOnScreen(tester), 1);
 
-      await tester.tap(find.byType(BackButton));
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
       expect(find.text('Get started'), findsOneWidget);
     });
@@ -1887,8 +1892,10 @@ void main() {
       expect(find.byType(ProfileQuestionPage), findsOneWidget);
       expect(
         tester
-            .widget<RadioGroup<Goal>>(find.byType(RadioGroup<Goal>))
-            .groupValue,
+            .widget<OnboardingChoices<Goal>>(
+              find.byType(OnboardingChoices<Goal>),
+            )
+            .selected,
         Goal.generalFitness,
       );
 

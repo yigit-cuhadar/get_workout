@@ -12,7 +12,10 @@ import '../domain/effort.dart';
 import '../domain/set_logging.dart';
 import '../domain/workout.dart';
 import '../domain/workout_tips.dart';
+import 'active_workout_cubit.dart';
 import 'number_cell.dart';
+import 'rest_timer_cubit.dart';
+import 'widgets/effort_question.dart';
 import 'workout_editor.dart';
 import 'workout_help.dart';
 import 'workout_text.dart';
@@ -485,10 +488,10 @@ class _EffortRow extends StatelessWidget {
 }
 
 /// The bar while it asks the effort of [asked], the working set just
-/// ticked: which set and its values, the help, Skip, the steps in an
-/// [EffortGrid], and the first time its [tip]. No field or tick, so
-/// nothing is logged to the wrong set; any touch keeps the question from
-/// timing out.
+/// ticked, as an [EffortQuestion]: with the rest's line on top while the
+/// rest its tick started runs, and the first time its [tip] under it. No
+/// field or tick, so nothing is logged to the wrong set; any touch keeps
+/// the question from timing out. Picking the chosen step again clears it.
 class _EffortQuestion extends StatelessWidget {
   const _EffortQuestion({
     required this.asked,
@@ -505,7 +508,6 @@ class _EffortQuestion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final settings = context.read<SettingsCubit>();
     final current = context.select(
       (SettingsCubit cubit) => cubit.state.settings,
@@ -513,151 +515,90 @@ class _EffortQuestion extends StatelessWidget {
     final scale = current.effortScale;
     final workout = state.workout!;
     final exercise = workout.exercises[asked.exercise];
+    final steps = scale.steps;
+    final chosen = scale.stepOf(exercise.sets[asked.set]);
+    final values = l10n.effortAskValues(
+      workout,
+      asked,
+      state.selection,
+      current.weightUnit,
+    );
+    final options = [
+      for (final step in steps)
+        EffortOption(
+          label: l10n.effortStepLabel(step, scale),
+          meaning: l10n.effortStepMeaning(step, scale),
+        ),
+    ];
+    void pick(int index) {
+      final step = steps[index];
+      editor.setEffort(asked, step == chosen ? null : step);
+      // Used, so its tip has nothing left to tell.
+      settings.tipSeen(Tip.effort);
+    }
+
     return Listener(
       onPointerDown: (_) => editor.keepAsking(),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.xs, Gap.sm),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.effortAskTitle(scale, exercise, asked.set),
-                        style: theme.textTheme.titleSmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        l10n.effortAskValues(
-                          workout,
-                          asked,
-                          state.selection,
-                          current.weightUnit,
-                        ),
-                        style: theme.textTheme.bodySmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+      child: BlocBuilder<RestTimerCubit, RestTimerState>(
+        buildWhen: (previous, current) =>
+            previous.phase != current.phase ||
+            previous.remainingS != current.remainingS ||
+            previous.totalS != current.totalS,
+        builder: (context, rest) {
+          final resting =
+              state.askingWithRest && rest.phase == RestPhase.running;
+          final question = EffortQuestion(
+            question: resting
+                ? l10n.effortAskTitle(scale, exercise, asked.set)
+                : l10n.effortQuestionText(scale),
+            values: resting
+                ? values
+                : l10n.effortDoneValues(
+                    workout,
+                    asked,
+                    state.selection,
+                    current.weightUnit,
                   ),
-                ),
-                WorkoutHelpButton(
-                  onOpen: editor.pauseAsking,
-                  onClosed: editor.keepAsking,
-                ),
-                TextButton(
-                  onPressed: () {
-                    editor.skipEffort();
-                    settings.tipSeen(Tip.effort);
-                  },
-                  child: Text(l10n.effortSkip),
-                ),
-              ],
-            ),
-            const SizedBox(height: Gap.sm),
-            // Scrolling, so the set and Skip stay in the bar's share of
-            // the page.
-            Flexible(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: Gap.sm),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      EffortGrid(
-                        scale: scale,
-                        chosen: scale.stepOf(exercise.sets[asked.set]),
-                        onChosen: (step) {
-                          editor.setEffort(asked, step);
-                          // Used, so its tip has nothing left to tell.
-                          settings.tipSeen(Tip.effort);
-                        },
-                      ),
-                      if (tip)
-                        TipBanner(
-                          text: l10n.tipEffort,
-                          onDismiss: () => settings.tipSeen(Tip.effort),
-                        ),
-                    ],
-                  ),
-                ),
+            options: options,
+            selected: chosen == null ? null : steps.indexOf(chosen),
+            onSelected: pick,
+            onSkip: () {
+              editor.skipEffort();
+              settings.tipSeen(Tip.effort);
+            },
+            onHelp: () async {
+              editor.pauseAsking();
+              await openWorkoutHelp(context);
+              editor.keepAsking();
+            },
+            rest: resting ? _rest(context, rest) : null,
+          );
+          if (!tip) return question;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Flexible(child: question),
+              TipBanner(
+                text: l10n.tipEffort,
+                onDismiss: () => settings.tipSeen(Tip.effort),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     );
   }
-}
 
-/// The steps of [scale], each with what it means in one line, [chosen]
-/// selected: two by two (one left alone takes the whole row), then Failed
-/// on a row of its own. Picking the chosen one again clears it.
-class EffortGrid extends StatelessWidget {
-  const EffortGrid({
-    super.key,
-    required this.scale,
-    required this.chosen,
-    required this.onChosen,
-  });
-
-  final EffortScale scale;
-  final EffortStep? chosen;
-  final ValueChanged<EffortStep?> onChosen;
-
-  @override
-  Widget build(BuildContext context) {
-    final steps = [
-      for (final step in scale.steps)
-        if (!step.failed) step,
-    ];
-    return Column(
-      spacing: Gap.sm,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (var i = 0; i < steps.length; i += 2)
-          if (i + 1 < steps.length)
-            IntrinsicHeight(
-              child: Row(
-                spacing: Gap.sm,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: _option(context, steps[i])),
-                  Expanded(child: _option(context, steps[i + 1])),
-                ],
-              ),
-            )
-          else
-            _option(context, steps[i]),
-        _option(context, EffortStep.failure),
-      ],
+  EffortRest _rest(BuildContext context, RestTimerState rest) {
+    final workout = context.read<ActiveWorkoutCubit>();
+    return EffortRest(
+      time: AppLocalizations.of(context)
+          .elapsedText(Duration(seconds: rest.remainingS)),
+      progress: rest.progress,
+      onAddTime: workout.extendRest,
+      onSkip: workout.skipRest,
     );
-  }
-
-  Widget _option(BuildContext context, EffortStep step) {
-    final l10n = AppLocalizations.of(context);
-    final selected = step == chosen;
-    final content = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(l10n.effortStepLabel(step, scale)),
-        Text(
-          l10n.effortStepMeaning(step, scale),
-          style: Theme.of(context).textTheme.labelSmall,
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-    void pick() => onChosen(selected ? null : step);
-    return selected
-        ? FilledButton.tonal(onPressed: pick, child: content)
-        : OutlinedButton(onPressed: pick, child: content);
   }
 }
 

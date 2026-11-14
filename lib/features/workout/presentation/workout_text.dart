@@ -207,6 +207,33 @@ extension WorkoutText on AppLocalizations {
         : effortAskValuesOf(exercise.name, values);
   }
 
+  /// The effort question of [scale] asked while no rest runs, under the
+  /// set it is about ([effortDoneValues]), e.g. `How hard was it?`.
+  String effortQuestionText(EffortScale scale) => switch (scale) {
+    EffortScale.byFeel => effortQuestionFeel,
+    EffortScale.rir => effortQuestionRir,
+    EffortScale.rpe => effortQuestionRpe,
+  };
+
+  /// Set [asked] of [workout] as done, over the effort question asked
+  /// while no rest runs, in [unit]: `Set 1 done · 82.5 kg × 8`, its
+  /// exercise first when it is not the [selected] one.
+  String effortDoneValues(
+    Workout workout,
+    SetRef asked,
+    SetSelection? selected,
+    WeightUnit unit,
+  ) {
+    final exercise = workout.exercises[asked.exercise];
+    final done = effortQuestionDone(
+      ratedSetName(exercise, asked.set),
+      setWithUnitText(exercise.sets[asked.set], exercise.loggingType, unit),
+    );
+    return selected?.exercise == asked.exercise
+        ? done
+        : effortAskValuesOf(exercise.name, done);
+  }
+
   /// The progress of [exercise] in working sets, e.g. `Squat · 1/3`, as
   /// "of N" counts them everywhere.
   String exerciseProgress(WorkoutExercise exercise) => workoutExerciseProgress(

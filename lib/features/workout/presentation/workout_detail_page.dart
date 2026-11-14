@@ -7,11 +7,13 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
+import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/presentation/program_list_cubit.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/exercise_stats.dart';
 import '../domain/workout.dart';
+import 'widgets/set_table.dart';
 import 'workout_detail_cubit.dart';
 import 'workout_editor_view.dart';
 import 'workout_summary_card.dart';
@@ -165,9 +167,15 @@ class _Workout extends StatelessWidget {
             ),
           ),
         ],
-        for (final exercise in workout.exercises) ...[
+        for (final (i, exercise) in workout.exercises.indexed) ...[
           const SizedBox(height: Gap.sm),
-          _ExerciseCard(exercise: exercise, name: _name(context, exercise)),
+          _ExerciseCard(
+            exercise: exercise,
+            name: _name(context, exercise),
+            group: exercise.group == null
+                ? null
+                : groupItemLabel(workout.exercises, i),
+          ),
         ],
       ],
     );
@@ -200,81 +208,50 @@ class _Workout extends StatelessWidget {
   }
 }
 
-/// An exercise as logged: its group letter, name and note over a table of
-/// its sets, each drop on its own row under its set.
+/// An exercise as logged, as a [SetTable]: its group letter, name, logging
+/// type (when not weight and reps) and note over a row per set, each drop
+/// on its own row under its set.
 class _ExerciseCard extends StatelessWidget {
-  const _ExerciseCard({required this.exercise, required this.name});
+  const _ExerciseCard({
+    required this.exercise,
+    required this.name,
+    required this.group,
+  });
 
   final WorkoutExercise exercise;
   final String name;
+  final String? group;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final settings = context.select(
       (SettingsCubit cubit) => cubit.state.settings,
     );
     final unit = settings.weightUnit;
     final type = exercise.loggingType;
-    final note = exercise.note;
-    final group = exercise.group;
-    final columns = l10n.setColumns(type, unit);
-    TableRow row(List<String> cells, {TextStyle? style}) => TableRow(
-      children: [
-        for (final cell in cells)
-          Padding(
-            padding: const EdgeInsets.only(right: Gap.md, bottom: Gap.xs),
-            child: Text(cell, style: style),
+    return SetTable(
+      name: name,
+      group: group,
+      type: type == LoggingType.weightReps ? null : l10n.loggingTypeName(type),
+      note: exercise.note,
+      rows: [
+        for (final (i, set) in exercise.sets.indexed)
+          SetTableRow(
+            label: l10n.setLabel(exercise, i),
+            values: l10n.setWithUnitText(set, type, unit),
+            effort: l10n.effortText(set, settings.effortScale),
+            note: set.note,
+            drops: [
+              for (final drop in set.drops)
+                l10n.setWithUnitText(
+                  WorkoutSet(weightKg: drop.weightKg, reps: drop.reps),
+                  type,
+                  unit,
+                ),
+            ],
           ),
       ],
-    );
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(0, Gap.xs, 0, Gap.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ListTile(
-              leading: group == null ? null : CircleAvatar(child: Text(group)),
-              title: Text(name, style: theme.textTheme.titleMedium),
-              subtitle: note == null ? null : Text(note),
-            ),
-            if (exercise.sets.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: Table(
-                  defaultColumnWidth: const IntrinsicColumnWidth(),
-                  columnWidths: {columns.length - 1: const FlexColumnWidth()},
-                  children: [
-                    row(columns, style: theme.textTheme.labelMedium),
-                    for (final (i, set) in exercise.sets.indexed) ...[
-                      row([
-                        l10n.setLabel(exercise, i),
-                        ...l10n.setValues(set, type, unit),
-                        l10n.setRemark(set, settings.effortScale),
-                      ]),
-                      for (final (d, drop) in set.drops.indexed)
-                        row([
-                          '',
-                          ...l10n.setValues(
-                            WorkoutSet(
-                              weightKg: drop.weightKg,
-                              reps: drop.reps,
-                            ),
-                            type,
-                            unit,
-                          ),
-                          l10n.workoutDrop(d + 1),
-                        ]),
-                    ],
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

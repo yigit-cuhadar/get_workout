@@ -32,6 +32,7 @@ class RestTimerState extends Equatable {
   const RestTimerState({
     this.phase = RestPhase.none,
     this.remainingS = 0,
+    this.totalS = 0,
     this.askNotify = false,
   });
 
@@ -40,22 +41,31 @@ class RestTimerState extends Equatable {
   /// Whole seconds left, rounded up, while [RestPhase.running].
   final int remainingS;
 
+  /// The whole rest in seconds while [RestPhase.running], "+15 s"
+  /// included, so the part already passed can be shown.
+  final int totalS;
+
   /// Ask whether to notify when a rest is over, then answer with
   /// [RestTimerCubit.answerNotify].
   final bool askNotify;
 
+  /// How much of the running rest has passed, from 0 to 1.
+  double get progress => totalS == 0 ? 0 : 1 - remainingS / totalS;
+
   RestTimerState copyWith({
     RestPhase? phase,
     int? remainingS,
+    int? totalS,
     bool? askNotify,
   }) => RestTimerState(
     phase: phase ?? this.phase,
     remainingS: remainingS ?? this.remainingS,
+    totalS: totalS ?? this.totalS,
     askNotify: askNotify ?? this.askNotify,
   );
 
   @override
-  List<Object?> get props => [phase, remainingS, askNotify];
+  List<Object?> get props => [phase, remainingS, totalS, askNotify];
 }
 
 /// The notification's text for a rest of [workout] after which [next]
@@ -136,6 +146,10 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   late WorkoutStatus _status;
   Rest? _rest;
 
+  /// [RestTimerState.totalS] of the running rest; null until its first
+  /// tick.
+  int? _restTotalS;
+
   /// The workout as last seen, to tell which set was ticked.
   Workout? _seen;
 
@@ -189,6 +203,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
       _syncLockScreen();
       return;
     }
+    _restTotalS = _totalAfter(_rest, workout.rest);
     _rest = workout.rest;
     _generation++;
     unawaited(_cancelNotification());
@@ -209,7 +224,13 @@ class RestTimerCubit extends Cubit<RestTimerState> {
       final left = rest.endsAt.difference(now);
       final seconds = (left.inMicroseconds / Duration.microsecondsPerSecond)
           .ceil();
-      emit(state.copyWith(phase: RestPhase.running, remainingS: seconds));
+      emit(
+        state.copyWith(
+          phase: RestPhase.running,
+          remainingS: seconds,
+          totalS: _restTotalS ??= seconds,
+        ),
+      );
       // Again when the shown second changes.
       _timer = Timer(left - Duration(seconds: seconds - 1), _tick);
       _syncLockScreen();
@@ -224,6 +245,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
       state.copyWith(
         phase: over ? RestPhase.over : RestPhase.none,
         remainingS: 0,
+        totalS: 0,
       ),
     );
     if (over) {
@@ -233,6 +255,22 @@ class RestTimerCubit extends Cubit<RestTimerState> {
       );
     }
     _syncLockScreen();
+  }
+
+  /// The whole of [next] once it replaces [previous]: the same rest moved
+  /// later (+15 s, or unlinked from its set) keeps its start; any other
+  /// counts from its first tick (null).
+  int? _totalAfter(Rest? previous, Rest? next) {
+    final total = _restTotalS;
+    if (total == null ||
+        previous == null ||
+        next == null ||
+        state.phase != RestPhase.running ||
+        (next.after != previous.after && next.after != null) ||
+        next.endsAt.isBefore(previous.endsAt)) {
+      return null;
+    }
+    return total + next.endsAt.difference(previous.endsAt).inSeconds;
   }
 
   /// Puts the workout in progress, or its running rest, on the lock

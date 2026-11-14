@@ -22,16 +22,20 @@ class WorkoutHelpButton extends StatelessWidget {
     icon: const Icon(Icons.help_outline),
     onPressed: () async {
       onOpen?.call();
-      await showModalBottomSheet<void>(
-        context: context,
-        showDragHandle: true,
-        isScrollControlled: true,
-        builder: (_) => const WorkoutHelpSheet(),
-      );
+      await openWorkoutHelp(context);
       onClosed?.call();
     },
   );
 }
+
+/// Opens [WorkoutHelpSheet]; done once it is closed.
+Future<void> openWorkoutHelp(BuildContext context) =>
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => const WorkoutHelpSheet(),
+    );
 
 /// What effort is and each step of the user's scale means, what failed
 /// means, and what warm-up and drop sets are; one sheet that scrolls.
