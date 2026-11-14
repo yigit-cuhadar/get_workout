@@ -540,6 +540,28 @@ Decisions (the canvases they were drawn on are deleted):
   with the app (Google Fonts, OFL); all three presets are in code behind a
   debug-only picker in Profile; Measure and Graphite keep the 1px card line
   in dark too, Slate's dark cards stay a tonal fill.
+- Building the components (owner's picks, 2026-11-14 to 15), drawn in the
+  studios: the set panel's weight is typed on a tap and a plate button
+  beside it (barbell exercises only) opens the plate breakdown; a done set's
+  effort has no Skip, and the no-rest effort question one Skip; a card's
+  count includes warm-ups; a collapsed group with every set done keeps its
+  letter with a muted name; a lifted card leaves an empty gap; a superset or
+  circuit keeps its items in step (one rounds count, one rest after the
+  group); every plate has its own size and a muted competition colour (25
+  red, 20 blue, 15 yellow, 10 green, 5 white, 2.5 red, 1.25 grey; pounds take
+  their kilo match; a weight between two plates takes the heavier), an
+  accepted exception to muted colours like Measure; "Fits you" is Forge's
+  record tag; the exercise list's star stays a button on every row; muscles
+  over 20 weekly sets get a 2px danger outline outside the edge; one mark per
+  day (workout > cardio > today > missed or planned; today with a finished
+  workout keeps its ring); Weekly volume has no Front / Back toggle; the
+  measurement camera keeps the preview's aspect ratio, its top line reads
+  "Front · match last photo" (first time "Front · first photo") and "1 / 4",
+  camera access off offers Open settings and Skip photo, no camera offers
+  Skip photo; the program's weekly sets card uses the compact band. Error
+  and empty states the boards don't draw keep interim texts until the
+  screen step draws them; the plate breakdown's undrawn cases and the
+  camera's Close or Skip are drawn and asked there.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
