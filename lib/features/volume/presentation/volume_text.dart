@@ -10,9 +10,9 @@ extension VolumeText on AppLocalizations {
       volumeSets(sets, NumberFormat.decimalPattern(localeName).format(sets));
 
   String zoneLabel(VolumeZone zone) => switch (zone) {
-    VolumeZone.below => volumeBelow(VolumeBand.min),
-    VolumeZone.within => volumeWithin(VolumeBand.min, VolumeBand.max),
-    VolumeZone.above => volumeAbove(VolumeBand.max),
+    VolumeZone.below => volumeBelow(VolumeRange.min),
+    VolumeZone.within => volumeWithin(VolumeRange.min, VolumeRange.max),
+    VolumeZone.above => volumeAbove(VolumeRange.max),
   };
 }
 

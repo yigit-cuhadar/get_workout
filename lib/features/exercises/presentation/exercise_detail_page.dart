@@ -1,19 +1,16 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/widgets/muscle_model.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../programs/presentation/add_to_program.dart';
 import '../../programs/presentation/add_to_program_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
 import '../domain/exercise.dart';
-import '../domain/muscle_meshes.dart';
 import 'body_model_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
 import 'exercise_detail_cubit.dart';
@@ -189,7 +186,6 @@ class _DetailBody extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final exercise = detail.exercise;
     final text = exercise.localized(context);
-    final colors = _MuscleColors.of(context);
     // A custom exercise has none of these but the logging type and equipment.
     final facts = [
       if (exercise.equipment.isNotEmpty)
@@ -223,18 +219,10 @@ class _DetailBody extends StatelessWidget {
               child: Chip(label: Text(l10n.customLabel)),
             ),
           ),
-        _MusclePreview(exercise),
-        ListTile(
-          leading: Icon(Icons.circle, color: colors.main),
-          title: Text(l10n.detailMainMuscles),
-          subtitle: Text(l10n.muscleNames(exercise.mainMuscles)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+          child: _MusclePreview(exercise),
         ),
-        if (exercise.secondaryMuscles.isNotEmpty)
-          ListTile(
-            leading: Icon(Icons.circle, color: colors.secondary),
-            title: Text(l10n.detailSecondaryMuscles),
-            subtitle: Text(l10n.muscleNames(exercise.secondaryMuscles)),
-          ),
         _Section(child: _Facts(facts)),
         if (text.setup.isNotEmpty)
           _Section(title: l10n.detailSetup, child: _NumberedSteps(text.setup)),
@@ -418,13 +406,6 @@ class _MusclePreview extends StatefulWidget {
 }
 
 class _MusclePreviewState extends State<_MusclePreview> {
-  /// Share of the screen height the model takes, leaving the muscles and the
-  /// first facts in view below it.
-  static const _heightRatio = 1 / 3;
-
-  // A viewer without a controller faces the front.
-  final _back = ModelViewerController(yaw: math.pi);
-
   @override
   void initState() {
     super.initState();
@@ -432,87 +413,20 @@ class _MusclePreviewState extends State<_MusclePreview> {
   }
 
   @override
-  void dispose() {
-    _back.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final colors = _MuscleColors.of(context);
     final exercise = widget.exercise;
-    final state = context.watch<BodyModelCubit>().state;
-    final partColors = {
-      for (final muscle in exercise.secondaryMuscles)
-        for (final mesh in muscle.meshNames) mesh: colors.secondary,
-      for (final muscle in exercise.mainMuscles)
-        for (final mesh in muscle.meshNames) mesh: colors.main,
+    return switch (context.watch<BodyModelCubit>().state) {
+      BodyModelLoading() => const LoadingView(),
+      BodyModelFailed() => Center(child: Text(l10n.modelLoadFailed)),
+      BodyModelReady(:final model) => MuscleModelPair(
+        model: model,
+        title: l10n.muscleModelWorked,
+        main: exercise.mainMuscles,
+        secondary: exercise.secondaryMuscles,
+      ),
     };
-    Widget side(String label, Model3D model, {ModelViewerController? camera}) =>
-        Expanded(
-          child: Column(
-            children: [
-              Expanded(
-                child: ModelViewer(
-                  model: model,
-                  controller: camera,
-                  interactive: false,
-                  partColors: partColors,
-                ),
-              ),
-              Text(label),
-            ],
-          ),
-        );
-    return SizedBox(
-      height: MediaQuery.sizeOf(context).height * _heightRatio,
-      child: switch (state) {
-        // The skeletons are taller than the band on a short screen.
-        BodyModelLoading() => const ClipRect(
-          child: OverflowBox(
-            alignment: Alignment.topCenter,
-            maxHeight: double.infinity,
-            child: LoadingView(),
-          ),
-        ),
-        BodyModelFailed() => Center(child: Text(l10n.modelLoadFailed)),
-        BodyModelReady(:final model) => Semantics(
-          label: l10n.detailModelLabel(
-            l10n.muscleNames([
-              ...exercise.mainMuscles,
-              ...exercise.secondaryMuscles,
-            ]),
-          ),
-          image: true,
-          excludeSemantics: true,
-          child: Row(
-            children: [
-              side(l10n.detailFront, model),
-              side(l10n.detailBack, model, camera: _back),
-            ],
-          ),
-        ),
-      },
-    );
   }
-}
-
-/// Main muscles in the primary colour, secondary ones in a lighter tone of it.
-class _MuscleColors {
-  const _MuscleColors(this.main, this.secondary);
-
-  factory _MuscleColors.of(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final hsl = HSLColor.fromColor(primary);
-    return _MuscleColors(
-      primary,
-      hsl.withLightness(hsl.lightness + (1 - hsl.lightness) * 0.55).toColor(),
-    );
-  }
-
-  final Color main;
-  final Color secondary;
 }
 
 class _Header extends StatelessWidget {

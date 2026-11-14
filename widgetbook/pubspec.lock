@@ -699,7 +699,7 @@ packages:
     source: git
     version: "0.1.0"
   forge_model_viewer:
-    dependency: transitive
+    dependency: "direct main"
     description:
       path: "packages/forge_model_viewer"
       ref: "36dc12b63ecddd92635577706c937288bc3fd3e2"
