@@ -4,30 +4,30 @@ import 'package:get_workout/features/workout/presentation/widgets/effort_questio
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
 const _byFeel = [
-  EffortOption(label: 'Easy', meaning: '4+ reps left'),
-  EffortOption(label: 'Moderate', meaning: '2–3 reps left'),
-  EffortOption(label: 'Hard', meaning: '1 rep left'),
-  EffortOption(label: 'Max', meaning: 'No reps left'),
-  EffortOption(label: 'Failed', meaning: 'last rep missed'),
+  ChoiceOption(label: 'Easy', hint: '4+ reps left'),
+  ChoiceOption(label: 'Moderate', hint: '2–3 reps left'),
+  ChoiceOption(label: 'Hard', hint: '1 rep left'),
+  ChoiceOption(label: 'Max', hint: 'No reps left'),
+  ChoiceOption(label: 'Failed', hint: 'last rep missed'),
 ];
 
 const _rir = [
-  EffortOption(label: '5+', meaning: '5 or more reps left'),
-  EffortOption(label: '4', meaning: '4 reps left'),
-  EffortOption(label: '3', meaning: '3 reps left'),
-  EffortOption(label: '2', meaning: '2 reps left'),
-  EffortOption(label: '1', meaning: '1 rep left'),
-  EffortOption(label: '0', meaning: 'No reps left'),
-  EffortOption(label: 'Failed', meaning: 'last rep missed'),
+  ChoiceOption(label: '5+', hint: '5 or more reps left'),
+  ChoiceOption(label: '4', hint: '4 reps left'),
+  ChoiceOption(label: '3', hint: '3 reps left'),
+  ChoiceOption(label: '2', hint: '2 reps left'),
+  ChoiceOption(label: '1', hint: '1 rep left'),
+  ChoiceOption(label: '0', hint: 'No reps left'),
+  ChoiceOption(label: 'Failed', hint: 'last rep missed'),
 ];
 
 const _rpe = [
-  EffortOption(label: 'RPE 6 or less', meaning: '4+ reps left'),
-  EffortOption(label: 'RPE 7', meaning: '3 reps left'),
-  EffortOption(label: 'RPE 8', meaning: '2 reps left'),
-  EffortOption(label: 'RPE 9', meaning: '1 rep left'),
-  EffortOption(label: 'RPE 10', meaning: 'No reps left'),
-  EffortOption(label: 'Failed', meaning: 'last rep missed'),
+  ChoiceOption(label: 'RPE 6 or less', hint: '4+ reps left'),
+  ChoiceOption(label: 'RPE 7', hint: '3 reps left'),
+  ChoiceOption(label: 'RPE 8', hint: '2 reps left'),
+  ChoiceOption(label: 'RPE 9', hint: '1 rep left'),
+  ChoiceOption(label: 'RPE 10', hint: 'No reps left'),
+  ChoiceOption(label: 'Failed', hint: 'last rep missed'),
 ];
 
 final _rest = EffortRest(
@@ -109,7 +109,7 @@ class _Question extends StatefulWidget {
 
   final String question;
   final String values;
-  final List<EffortOption> options;
+  final List<ChoiceOption> options;
   final EffortRest? rest;
   final int? selected;
 

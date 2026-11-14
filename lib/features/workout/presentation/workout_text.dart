@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../core/grouping.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../calculators/domain/plates.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_text.dart';
@@ -14,6 +15,23 @@ import '../domain/set_selection.dart';
 import '../domain/workout.dart';
 
 extension WorkoutText on AppLocalizations {
+  /// The plates on each side of the bar in the plate breakdown, heaviest
+  /// first, each plate on its own: `25 + 25 + 1.25 kg`; a dash for none.
+  String platesEachSideText(List<PlateCount> perSide, WeightUnit unit) {
+    if (perSide.isEmpty) return '—';
+    final number = NumberFormat.decimalPattern(localeName)
+      ..maximumFractionDigits = 2;
+    final plates = [
+      for (final plate in perSide)
+        for (var i = 0; i < plate.count; i++)
+          number.format(unit.fromKg(plate.weightKg)),
+    ].join(' + ');
+    return switch (unit) {
+      WeightUnit.kg => programWeightKg(plates),
+      WeightUnit.lb => programWeightLb(plates),
+    };
+  }
+
   /// Set [set] of [exercise] as the set column labels it: a warm-up as
   /// such, else its number among the working sets, marked for a drop set.
   String setLabel(WorkoutExercise exercise, int set) {

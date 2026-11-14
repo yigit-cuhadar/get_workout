@@ -26,14 +26,16 @@ SetPanelValue _value(
   double? value,
   String unit, {
   ValueChanged<double?>? onChanged,
-  String? error,
+  bool signed = false,
+  bool invalid = false,
 }) => SetPanelValue(
   value: value,
   unit: unit,
   step: unit == 'kg' ? 2.5 : 1,
   min: 0,
   onChanged: onChanged ?? (_) {},
-  error: error,
+  signed: signed,
+  invalid: invalid,
 );
 
 void main() {
@@ -69,6 +71,27 @@ void main() {
     );
     await tester.tap(plus.last);
     expect(weights.last, 85);
+    // The tick before Log set.
+    expect(
+      tester.widget<ForgeButton>(find.byType(ForgeButton)).leadingIcon,
+      ForgeIcons.check,
+    );
+  });
+
+  testWidgets('a load added to the body shows its sign', (tester) async {
+    await _pump(
+      tester,
+      SetPanel(
+        title: 'Pull-up · set 2 of 3',
+        details: const [],
+        labels: _labels,
+        values: [_value(10, 'kg added', signed: true), _value(6, 'reps')],
+        onOptions: () {},
+        onLog: () {},
+      ),
+    );
+    expect(find.text('+10'), findsOneWidget);
+    expect(find.text('6'), findsOneWidget);
   });
 
   testWidgets('the plate button opens the breakdown; none without it', (
@@ -114,15 +137,28 @@ void main() {
         title: 'Bench Press · set 3 of 4',
         details: const [],
         labels: _labels,
-        values: [
-          _value(null, 'kg', error: "Enter the set's values first."),
-          _value(8, 'reps'),
-        ],
+        values: [_value(null, 'kg', invalid: true), _value(8, 'reps')],
+        error: "Enter the set's values first.",
         onOptions: () {},
         onLog: null,
       ),
     );
-    expect(find.text("Enter the set's values first."), findsOneWidget);
+    // Under the row of fields, not under one of them.
+    final error = find.widgetWithText(
+      StepperFieldError,
+      "Enter the set's values first.",
+    );
+    expect(error, findsOneWidget);
+    expect(
+      tester.getTopLeft(error).dx,
+      tester.getTopLeft(find.byType(StepperField).first).dx,
+    );
+    expect(
+      tester.getTopLeft(error).dy,
+      greaterThan(tester.getBottomLeft(find.byType(StepperField).last).dy),
+    );
+    final fields = tester.widgetList<StepperField>(find.byType(StepperField));
+    expect(fields.map((field) => field.invalid), [true, false]);
     final log = tester.widget<ForgeButton>(find.byType(ForgeButton).last);
     expect(log.onPressed, isNull);
   });
@@ -174,11 +210,31 @@ void main() {
       ),
     );
     expect(find.text('Drop 2'), findsOneWidget);
-    expect(find.byType(StepperField), findsNWidgets(6));
-    await tester.tap(find.bySemanticsLabel('Remove drop').last);
+    final fields = tester.widgetList<StepperField>(find.byType(StepperField));
+    expect(fields.map((field) => field.compact), [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+    ]);
+    // A drop row keeps the compact fields' height.
+    final remove = find.bySemanticsLabel('Remove drop');
+    expect(tester.getSize(remove.first), const Size(30, 32));
+    await tester.tap(remove.last);
+    // Its band reaches past the drawn box.
+    await tester.tapAt(tester.getTopRight(remove.first) + const Offset(6, 0));
     await tester.tap(find.text('Add drop'));
-    expect(removed, [1]);
+    expect(removed, [1, 0]);
     expect(added, 1);
+    final addDrop = tester.widget<ForgeButton>(
+      find.widgetWithText(ForgeButton, 'Add drop'),
+    );
+    expect(
+      (addDrop.leadingIcon, addDrop.variant, addDrop.size),
+      (ForgeIcons.add, ForgeButtonVariant.text, ForgeButtonSize.small),
+    );
   });
 
   testWidgets('showing: something else in place of the entry', (tester) async {

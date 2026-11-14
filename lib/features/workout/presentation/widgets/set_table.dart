@@ -238,7 +238,11 @@ class _Row extends StatelessWidget {
             ),
           ),
           if (row.record)
-            ForgeTag(l10n.setTableRecord, kind: ForgeTagKind.record),
+            ForgeTag(
+              l10n.setTableRecord,
+              kind: ForgeTagKind.record,
+              icon: ForgeIcons.emojiEvents,
+            ),
           ForgeTag(row.effort ?? '—'),
         ],
       ),
@@ -298,13 +302,9 @@ class _DropRow extends StatelessWidget {
                 style: style.data.copyWith(fontSize: 13, color: muted),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 7),
-              child: Text(
-                AppLocalizations.of(context).workoutDrop(number),
-                style: Theme.of(context).textTheme.labelSmall!
-                    .copyWith(fontWeight: FontWeight.w600, color: muted),
-              ),
+            ForgeTag(
+              AppLocalizations.of(context).workoutDrop(number),
+              kind: ForgeTagKind.plain,
             ),
           ],
         ),
@@ -376,83 +376,16 @@ class _EditRow extends StatelessWidget {
           _Bubble(row.label),
           for (final (i, input) in row.inputs.indexed) ...[
             if (i > 0) times,
-            _ValueBox(input),
+            ForgeNumberField.compact(
+              label: input.label,
+              width: input.wide ? 70 : 50,
+              controller: input.controller,
+              onChanged: input.onChanged,
+            ),
           ],
           const Spacer(),
           ForgeTag(row.effort ?? '—'),
         ],
-      ),
-    );
-  }
-}
-
-/// A set's value in a small box: mono, right-aligned, a line-strong
-/// outline that turns accent while typing.
-// TextField's compact number form, drawn here until Forge has one this
-// small and without a unit.
-class _ValueBox extends StatefulWidget {
-  const _ValueBox(this.input);
-
-  final SetTableInput input;
-
-  @override
-  State<_ValueBox> createState() => _ValueBoxState();
-}
-
-class _ValueBoxState extends State<_ValueBox> {
-  final _focus = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    _focus.addListener(() => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _focus.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final style = ForgeStyle.of(context);
-    final colors = style.colors;
-    final input = widget.input;
-    final typing = _focus.hasFocus;
-    final value = style.data.copyWith(fontSize: 14, color: colors.ink);
-    return GestureDetector(
-      onTap: _focus.requestFocus,
-      child: Container(
-        width: input.wide ? 70 : 50,
-        height: 34,
-        alignment: Alignment.centerRight,
-        padding: EdgeInsets.symmetric(horizontal: Gap.sm - (typing ? 1 : 0)),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: const BorderRadius.all(
-            Radius.circular(ForgeRadii.button),
-          ),
-          border: Border.all(
-            color: typing ? colors.accent : colors.lineStrong,
-            width: typing ? 2 : 1,
-          ),
-        ),
-        child: Semantics(
-          label: input.label,
-          child: TextField(
-            controller: input.controller,
-            focusNode: _focus,
-            onChanged: input.onChanged,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textAlign: TextAlign.end,
-            style: value,
-            decoration: InputDecoration.collapsed(
-              hintText: '—',
-              hintStyle: value.copyWith(color: colors.inkSubtle),
-            ),
-          ),
-        ),
       ),
     );
   }

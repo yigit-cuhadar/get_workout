@@ -27,7 +27,8 @@ import 'presentation/workout_detail_cubit.dart';
 import 'presentation/workout_edit_cubit.dart';
 
 /// Registers the workout feature. Needs `AuthModule`, `SettingsModule`,
-/// `NotificationsModule`, `ExercisesModule` and `ProgramsModule`, which
+/// `NotificationsModule`, `ExercisesModule`, `CalculatorsModule` (the
+/// plate breakdown) and `ProgramsModule`, which
 /// takes [completedDays] for its plan.
 class WorkoutModule implements FeatureModule {
   const WorkoutModule();
@@ -91,6 +92,7 @@ class WorkoutModule implements FeatureModule {
           programs: sl(),
           catalogue: sl(),
           watchSettings: sl(),
+          loadPlates: sl(),
         ),
       )
       ..registerLazySingleton(

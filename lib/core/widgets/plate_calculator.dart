@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../../app/theme.dart';
 import '../../l10n/app_localizations.dart';
 
 /// One plate size on each side of the bar: its weight in kg ([kg], which
@@ -29,7 +30,7 @@ class PlateStack {
 /// [target]: the [closest] load below it, why, and its plates.
 /// [PlateCalculator.compact] is the small box over the set panel: the
 /// [target], the load per side, the plates as tags and the [bar].
-/// Plates differ by size and tone, never by hue.
+/// Every plate is drawn in its own size and colour ([PlateLook]).
 class PlateCalculator extends StatelessWidget {
   const PlateCalculator({
     super.key,
@@ -175,6 +176,7 @@ class PlateCalculator extends StatelessWidget {
             painter: _BarPainter(
               plates: plates,
               colors: colors,
+              plateColors: GwColors.of(context),
               label: style.data.copyWith(fontSize: 10, color: colors.inkMuted),
             ),
           ),
@@ -206,17 +208,45 @@ class PlateCalculator extends StatelessWidget {
   }
 }
 
-/// How a plate of [kg] is drawn: the heavier, the wider, taller and
-/// darker.
-({double width, double height, Color tone}) _plateLook(
-  double kg,
-  ForgePalette colors,
-) => switch (kg) {
-  >= 20 => (width: 16, height: 120, tone: colors.ink),
-  >= 10 => (width: 12, height: 84, tone: colors.inkMuted),
-  >= 2.5 => (width: 8, height: 60, tone: colors.lineStrong),
-  _ => (width: 6, height: 44, tone: colors.lineStrong),
-};
+/// How a plate is drawn: each kilo plate its own size (w × h) and muted
+/// competition colour. Any other plate, pound plates included, is drawn
+/// as the kilo plate nearest its weight (55 lb as 25, 45 lb as 20, 35 lb
+/// as 15, 25 lb as 10, 10 lb as 5, 5 lb as 2.5, 2.5 lb as 1.25); halfway
+/// between two, as the heavier.
+enum PlateLook {
+  kg25(25, 16, 120),
+  kg20(20, 16, 108),
+  kg15(15, 14, 96),
+  kg10(10, 12, 84),
+  kg5(5, 10, 68),
+  kg2p5(2.5, 8, 56),
+  kg1p25(1.25, 6, 44);
+
+  const PlateLook(this.kg, this.width, this.height);
+
+  final double kg;
+  final double width;
+  final double height;
+
+  /// The look of a plate weighing [kg].
+  static PlateLook of(double kg) => values.reduce(
+    (nearest, look) =>
+        (look.kg - kg).abs() < (nearest.kg - kg).abs() ? look : nearest,
+  );
+
+  Color color(GwColors colors) => switch (this) {
+    kg25 => colors.plate25,
+    kg20 => colors.plate20,
+    kg15 => colors.plate15,
+    kg10 => colors.plate10,
+    kg5 => colors.plate5,
+    kg2p5 => colors.plate2p5,
+    kg1p25 => colors.plate1p25,
+  };
+
+  /// The white plate's line-strong edge; null for the others.
+  Color? edge(ForgePalette colors) => this == kg5 ? colors.lineStrong : null;
+}
 
 class _Card extends StatelessWidget {
   const _Card({
@@ -288,7 +318,8 @@ class _PlateRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final look = _plateLook(plate.kg, ForgeStyle.of(context).colors);
+    final look = PlateLook.of(plate.kg);
+    final edge = look.edge(ForgeStyle.of(context).colors);
     return SizedBox(
       height: height,
       child: Row(
@@ -298,8 +329,9 @@ class _PlateRow extends StatelessWidget {
             width: look.width,
             height: 22,
             decoration: BoxDecoration(
-              color: look.tone,
+              color: look.color(GwColors.of(context)),
               borderRadius: const BorderRadius.all(Radius.circular(3)),
+              border: edge == null ? null : Border.all(color: edge),
             ),
           ),
           Expanded(child: Text(plate.weight, style: style)),
@@ -320,11 +352,13 @@ class _BarPainter extends CustomPainter {
   _BarPainter({
     required this.plates,
     required this.colors,
+    required this.plateColors,
     required this.label,
   });
 
   final List<PlateStack> plates;
   final ForgePalette colors;
+  final GwColors plateColors;
   final TextStyle label;
 
   static const width = 280.0;
@@ -335,23 +369,48 @@ class _BarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.scale(size.width / width);
-    void rect(double x, double y, double w, double h, double r, Color color) =>
+    void rect(
+      double x,
+      double y,
+      double w,
+      double h,
+      double r,
+      Color color, {
+      Color? edge,
+    }) {
+      final shape = RRect.fromRectAndRadius(
+        Rect.fromLTWH(x, y, w, h),
+        Radius.circular(r),
+      );
+      canvas.drawRRect(shape, Paint()..color = color);
+      if (edge != null) {
         canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromLTWH(x, y, w, h),
-            Radius.circular(r),
-          ),
-          Paint()..color = color,
+          shape.deflate(0.5),
+          Paint()
+            ..color = edge
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1,
         );
+      }
+    }
+
     rect(0, 66, 40, 8, 2, colors.lineStrong);
     rect(36, 56, 8, 28, 2, colors.lineStrong);
     rect(44, 66, 230, 8, 2, colors.surfaceSunken);
     var x = 48.0;
     var labelEnd = double.negativeInfinity;
     for (final plate in plates) {
-      final look = _plateLook(plate.kg, colors);
+      final look = PlateLook.of(plate.kg);
       for (var i = 0; i < plate.count; i++) {
-        rect(x, _axis - look.height / 2, look.width, look.height, 3, look.tone);
+        rect(
+          x,
+          _axis - look.height / 2,
+          look.width,
+          look.height,
+          3,
+          look.color(plateColors),
+          edge: look.edge(colors),
+        );
         final centre = x + look.width / 2;
         final painter = TextPainter(
           text: TextSpan(text: plate.short, style: label),
@@ -384,5 +443,6 @@ class _BarPainter extends CustomPainter {
   bool shouldRepaint(_BarPainter oldDelegate) =>
       oldDelegate.plates != plates ||
       oldDelegate.colors != colors ||
+      oldDelegate.plateColors != plateColors ||
       oldDelegate.label != label;
 }

@@ -30,6 +30,7 @@ void main() {
       find.widgetWithText(ForgeTag, 'record'),
     );
     expect(record.kind, ForgeTagKind.record);
+    expect(record.icon, ForgeIcons.emojiEvents);
   });
 
   testWidgets('drops, notes, the type and the group letter', (tester) async {
@@ -63,6 +64,10 @@ void main() {
     ]) {
       expect(find.text(text), findsOneWidget, reason: text);
     }
+    final drop = tester.widget<ForgeTag>(
+      find.widgetWithText(ForgeTag, 'Drop 1'),
+    );
+    expect(drop.kind, ForgeTagKind.plain);
     // Under its set's values.
     expect(
       tester.getTopLeft(find.text('60 kg × 8')).dx,
@@ -114,7 +119,10 @@ void main() {
       ),
     );
 
-    expect(find.byType(TextField), findsNWidgets(2));
+    final boxes = tester
+        .widgetList<ForgeNumberField>(find.byType(ForgeNumberField))
+        .map((box) => (box.unit, box.boxSize));
+    expect(boxes, [(null, const Size(70, 34)), (null, const Size(50, 34))]);
     expect(find.text('Moderate'), findsOneWidget);
     await tester.enterText(find.byType(TextField).first, '82.5');
     expect(typed, ['82.5']);

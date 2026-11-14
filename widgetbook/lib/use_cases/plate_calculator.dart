@@ -45,3 +45,24 @@ Widget compactPlateCalculator(BuildContext context) => _page(
     ],
   ),
 );
+
+@widgetbook.UseCase(
+  name: 'Every plate in its size and colour',
+  type: PlateCalculator,
+)
+Widget everyPlatePlateCalculator(BuildContext context) => _page(
+  const PlateCalculator(
+    target: '177.5 kg',
+    bar: '20 kg',
+    plates: [
+      PlateStack(kg: 25, weight: '25 kg', short: '25', count: 1),
+      PlateStack(kg: 20, weight: '20 kg', short: '20', count: 1),
+      PlateStack(kg: 15, weight: '15 kg', short: '15', count: 1),
+      PlateStack(kg: 10, weight: '10 kg', short: '10', count: 1),
+      PlateStack(kg: 5, weight: '5 kg', short: '5', count: 1),
+      PlateStack(kg: 2.5, weight: '2.5 kg', short: '2.5', count: 1),
+      PlateStack(kg: 1.25, weight: '1.25 kg', short: '1.25', count: 1),
+    ],
+    perSide: '78.75 kg',
+  ),
+);

@@ -18,19 +18,25 @@ SetPanelValue _value(
   String unit, {
   double step = 1,
   double? hint,
-  String? error,
+  bool signed = false,
+  bool invalid = false,
 }) => SetPanelValue(
   value: value,
   unit: unit,
   step: step,
   min: 0,
   hint: hint,
-  error: error,
+  signed: signed,
+  invalid: invalid,
   onChanged: (_) {},
 );
 
-SetPanelValue _kg(double? kg, {String unit = 'kg', String? error}) =>
-    _value(kg, unit, step: 2.5, error: error);
+SetPanelValue _kg(
+  double? kg, {
+  String unit = 'kg',
+  bool signed = false,
+  bool invalid = false,
+}) => _value(kg, unit, step: 2.5, signed: signed, invalid: invalid);
 
 Widget _panel(
   String title,
@@ -39,6 +45,7 @@ Widget _panel(
   List<SetPanelDrop>? drops,
   bool done = false,
   bool off = false,
+  String? error,
   Widget? effort,
 }) => Align(
   alignment: Alignment.bottomCenter,
@@ -47,6 +54,7 @@ Widget _panel(
     details: [last],
     values: values,
     labels: _labels,
+    error: error,
     drops: drops,
     onAddDrop: drops == null ? null : () {},
     done: done,
@@ -73,8 +81,9 @@ Widget setPanel(BuildContext context) => _panel(
 Widget setPanelMissing(BuildContext context) => _panel(
   'Bench Press · set 3 of 4',
   'Last time: 80 kg × 8',
-  [_kg(null, error: "Enter the set's values first."), _value(8, 'reps')],
+  [_kg(null, invalid: true), _value(8, 'reps')],
   off: true,
+  error: "Enter the set's values first.",
 );
 
 @widgetbook.UseCase(name: 'Reps only', type: SetPanel)
@@ -89,7 +98,7 @@ Widget setPanelDuration(BuildContext context) =>
 Widget setPanelWeighted(BuildContext context) => _panel(
   'Pull-up · set 2 of 3',
   'Last time: +10 kg × 6',
-  [_kg(10, unit: 'kg added'), _value(6, 'reps')],
+  [_kg(10, unit: 'kg added', signed: true), _value(6, 'reps')],
 );
 
 @widgetbook.UseCase(name: 'Assisted bodyweight', type: SetPanel)

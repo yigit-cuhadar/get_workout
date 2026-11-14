@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../../../../core/widgets/tap_band.dart';
+
 /// One value of a set in a [SetPanel], shown as a [StepperField].
 class SetPanelValue {
   const SetPanelValue({
@@ -11,7 +13,8 @@ class SetPanelValue {
     this.hint,
     this.min,
     this.max,
-    this.error,
+    this.signed = false,
+    this.invalid = false,
   });
 
   final double? value;
@@ -22,8 +25,11 @@ class SetPanelValue {
   final double? min;
   final double? max;
 
-  /// Rings the field in danger and says what to do under it.
-  final String? error;
+  /// Marks a value above zero with "+", as for a load added to the body.
+  final bool signed;
+
+  /// Rings the field in danger; the panel's error says what to do.
+  final bool invalid;
 }
 
 /// A drop of a drop set: its [label] ("Drop 1"), its values and removing
@@ -65,8 +71,10 @@ class SetPanelLabels {
 /// is ([title]) with its [details] (the last time) under it and a ⋯ menu,
 /// its [values] as pill steppers (one full width, or two), a drop set's
 /// [drops] right under them with Add drop, a done set's [effort], and Log
-/// set, or Done once the set is done. With [onPlates], a plate button
-/// beside the first value (the weight) opens its plate breakdown.
+/// set, or Done once the set is done. An [error] says under the values
+/// what to do about the [SetPanelValue.invalid] ones. With [onPlates], a
+/// plate button beside the first value (the weight) opens its plate
+/// breakdown.
 ///
 /// [SetPanel.showing] is the same panel showing something else in place of
 /// the entry: after Log set the effort question, then the rest countdown.
@@ -79,6 +87,7 @@ class SetPanel extends StatelessWidget {
     required SetPanelLabels this.labels,
     required VoidCallback this.onOptions,
     required this.onLog,
+    this.error,
     this.done = false,
     this.drops,
     this.onAddDrop,
@@ -93,6 +102,7 @@ class SetPanel extends StatelessWidget {
       labels = null,
       onOptions = null,
       onLog = null,
+      error = null,
       done = false,
       drops = null,
       onAddDrop = null,
@@ -107,6 +117,7 @@ class SetPanel extends StatelessWidget {
 
   /// Null turns Log set off, until the missing values are filled.
   final VoidCallback? onLog;
+  final String? error;
   final bool done;
 
   /// Null unless it is a drop set.
@@ -126,14 +137,17 @@ class SetPanel extends StatelessWidget {
     final style = ForgeStyle.of(context);
     final colors = style.colors;
     final radius = Radius.circular(style.radii.lg);
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.vertical(top: radius),
-        border: Border.all(color: colors.line),
+    // The drops' remove icons take taps past the padding.
+    return TapBandArea(
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.vertical(top: radius),
+          border: Border.all(color: colors.line),
+        ),
+        padding: const EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, 20),
+        child: child ?? _entry(context),
       ),
-      padding: const EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, 20),
-      child: child ?? _entry(context),
     );
   }
 
@@ -154,6 +168,7 @@ class SetPanel extends StatelessWidget {
             onPressed: onAddDrop,
             variant: ForgeButtonVariant.text,
             size: ForgeButtonSize.small,
+            leadingIcon: ForgeIcons.add,
           ),
         ),
       ],
@@ -212,6 +227,7 @@ class SetPanel extends StatelessWidget {
           ],
         ),
         _values(context, values!),
+        if (error case final error?) StepperFieldError(error),
         if (middle.isNotEmpty)
           Flexible(
             child: SingleChildScrollView(
@@ -225,6 +241,7 @@ class SetPanel extends StatelessWidget {
         ForgeButton(
           label: done ? labels.done : labels.log,
           onPressed: onLog,
+          leadingIcon: ForgeIcons.check,
           variant: done
               ? ForgeButtonVariant.secondary
               : ForgeButtonVariant.primary,
@@ -239,7 +256,7 @@ class SetPanel extends StatelessWidget {
     spacing: 10,
     children: [
       for (final (i, value) in values.indexed) ...[
-        Expanded(child: _field(value)),
+        Expanded(child: _field(value, compact: false)),
         if (i == 0)
           if (onPlates case final onPlates?) _platesButton(context, onPlates),
       ],
@@ -276,7 +293,7 @@ class SetPanel extends StatelessWidget {
     ),
   );
 
-  Widget _field(SetPanelValue value) => StepperField(
+  Widget _field(SetPanelValue value, {required bool compact}) => StepperField(
     value: value.value,
     unit: value.unit,
     step: value.step,
@@ -284,7 +301,9 @@ class SetPanel extends StatelessWidget {
     hint: value.hint,
     min: value.min,
     max: value.max,
-    errorText: value.error,
+    signed: value.signed,
+    invalid: value.invalid,
+    compact: compact,
   );
 
   Widget _drop(BuildContext context, SetPanelDrop drop) {
@@ -300,16 +319,23 @@ class SetPanel extends StatelessWidget {
                 .copyWith(fontWeight: FontWeight.w400, color: colors.inkMuted),
           ),
         ),
-        for (final value in drop.values) Expanded(child: _field(value)),
-        Semantics(
-          button: true,
-          label: labels!.removeDrop,
-          excludeSemantics: true,
-          child: InkResponse(
-            onTap: drop.onRemove,
-            child: SizedBox.square(
-              dimension: ForgeTheme.tapMin,
-              child: Center(
+        for (final value in drop.values)
+          Expanded(child: _field(value, compact: true)),
+        // Drawn in a 30 × 32 box, the icon 9px in, so the row keeps the
+        // compact fields' 40px; its band reaches past the panel's padding.
+        TapBand(
+          child: Semantics(
+            button: true,
+            label: labels!.removeDrop,
+            excludeSemantics: true,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: drop.onRemove,
+              child: Container(
+                width: 30,
+                height: 32,
+                padding: const EdgeInsets.only(left: 9),
+                alignment: AlignmentDirectional.centerStart,
                 child: ForgeIcon(
                   ForgeIcons.close,
                   size: 18,

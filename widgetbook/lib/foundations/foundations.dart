@@ -39,6 +39,13 @@ class Foundations extends StatelessWidget {
       'band-below': band.bandBelow,
       'band-in': band.bandIn,
       'band-over': band.bandOver,
+      'plate-25': band.plate25,
+      'plate-20': band.plate20,
+      'plate-15': band.plate15,
+      'plate-10': band.plate10,
+      'plate-5': band.plate5,
+      'plate-2-5': band.plate2p5,
+      'plate-1-25': band.plate1p25,
     };
     final type = {
       'hero 30/34': text.headlineMedium,

@@ -166,6 +166,7 @@ class _ActiveWorkout extends StatelessWidget {
         body: SetBarLayout(
           state: state,
           editor: cubit,
+          loadPlates: cubit.loadPlates,
           entry: showsSetEntry(
             entryWaitsForRest: state.entryWaitsForRest,
             phase: phase,

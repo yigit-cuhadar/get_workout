@@ -4,6 +4,8 @@ import 'package:forge_ui/forge_ui.dart' hide TipBanner;
 
 import '../../../core/max_length_formatter.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../calculators/domain/calculation.dart';
+import '../../calculators/domain/plates.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_text.dart';
@@ -21,8 +23,17 @@ import 'workout_help.dart';
 import 'widgets/set_panel.dart';
 import 'workout_text.dart';
 
+/// What to load on the bar for a set's weight: see
+/// [ActiveWorkoutCubit.loadPlates].
+typedef PlateLoader = Calculation<PlateLoad> Function(
+  double targetKg, {
+  required double barKg,
+  required List<Plate> plates,
+});
+
 /// A page logging a workout: [content] above, and at the bottom the
-/// [SetBar] (its set's values only while [entry]), then [below] it (e.g.
+/// [SetBar] (its set's values only while [entry], its plate breakdown
+/// with [loadPlates]), then [below] it (e.g.
 /// the rest) and the safe area on the surface. The bottom takes at most
 /// [maxBottomShare] of the page (of what the keyboard leaves); the bar's
 /// drops and effort row scroll beyond that, its title, values and tick
@@ -36,6 +47,7 @@ class SetBarLayout extends StatelessWidget {
     required this.editor,
     this.entry = true,
     this.below,
+    this.loadPlates,
   });
 
   final Widget content;
@@ -43,6 +55,7 @@ class SetBarLayout extends StatelessWidget {
   final WorkoutEditor<EditedWorkout> editor;
   final bool entry;
   final Widget? below;
+  final PlateLoader? loadPlates;
 
   static const maxBottomShare = 0.6;
 
@@ -65,7 +78,12 @@ class SetBarLayout extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Flexible(
-                  child: SetBar(state: state, editor: editor, entry: entry),
+                  child: SetBar(
+                    state: state,
+                    editor: editor,
+                    entry: entry,
+                    loadPlates: loadPlates,
+                  ),
                 ),
                 ColoredBox(
                   color: ForgeStyle.of(context).colors.surface,
@@ -159,19 +177,23 @@ class _RestBelowBarState extends State<RestBelowBar>
 /// drops, its effort when it is done, its options and the tick; nothing
 /// while no set is selected or not [entry]. Right after a working set is
 /// ticked it shows [_EffortQuestion] instead. A tick refused for missing
-/// values turns Log set off and says so under the empty field until the
-/// set can be ticked.
+/// values turns Log set off, rings the empty fields and says so under
+/// them until the set can be ticked. With [loadPlates], the weight of a
+/// barbell-style set (weight × reps or time) has a plate button showing
+/// its breakdown on the user's bar and plates.
 class SetBar extends StatelessWidget {
   const SetBar({
     super.key,
     required this.state,
     required this.editor,
     this.entry = true,
+    this.loadPlates,
   });
 
   final EditedWorkout state;
   final WorkoutEditor<EditedWorkout> editor;
   final bool entry;
+  final PlateLoader? loadPlates;
 
   @override
   Widget build(BuildContext context) {
@@ -209,8 +231,7 @@ class SetBar extends StatelessWidget {
     ];
     final blocked =
         !set.done && state.invalidSet == ref && editor.toggledSet(ref) == null;
-    // The message goes under the first empty field without a hint, else
-    // under the first field.
+    // Each empty field without a hint is ringed; with none such, the first.
     final weightMissing =
         type.logsWeight &&
         !type.weightOptional &&
@@ -219,9 +240,9 @@ class SetBar extends StatelessWidget {
     final countMissing = type.isDurationBased
         ? set.durationS == null && hint.durationS == null
         : set.reps == null && hint.reps == null;
-    final weightError =
+    final weightInvalid =
         blocked && type.logsWeight && (weightMissing || !countMissing);
-    final error = l10n.workoutSetInvalid;
+    final countInvalid = blocked && (countMissing || !weightInvalid);
     final values = [
       if (type.logsWeight)
         _weight(
@@ -231,7 +252,7 @@ class SetBar extends StatelessWidget {
           set.weightKg,
           hint.weightKg,
           (text) => editor.setWeight(ref, text, unit),
-          error: weightError ? error : null,
+          invalid: weightInvalid,
         ),
       if (type.isDurationBased)
         _count(
@@ -242,7 +263,7 @@ class SetBar extends StatelessWidget {
           durationStepS,
           WorkoutLimits.maxDurationS,
           (text) => editor.setDuration(ref, text),
-          error: blocked && !weightError ? error : null,
+          invalid: countInvalid,
         )
       else
         _count(
@@ -253,7 +274,7 @@ class SetBar extends StatelessWidget {
           1,
           WorkoutLimits.maxReps,
           (text) => editor.setReps(ref, text),
-          error: blocked && !weightError ? error : null,
+          invalid: countInvalid,
         ),
     ];
     return SetPanel(
@@ -277,6 +298,7 @@ class SetBar extends StatelessWidget {
         builder: (_) => _SetOptions(editor: editor),
       ),
       values: values,
+      error: blocked ? l10n.workoutSetInvalid : null,
       drops: set.type == SetType.drop
           ? [
               for (final (d, drop) in set.drops.indexed)
@@ -318,6 +340,51 @@ class SetBar extends StatelessWidget {
             ),
       done: set.done,
       onLog: blocked ? null : () => _toggle(context, ref),
+      onPlates: switch ((loadPlates, set.weightKg ?? hint.weightKg)) {
+        (final loadPlates?, final kg?)
+            when type == LoggingType.weightReps ||
+                type == LoggingType.weightDuration =>
+          (button) => _showPlates(button, loadPlates, kg, settings),
+        _ => null,
+      },
+    );
+  }
+
+  /// The plate breakdown of [kg] under the plate [button]: the weight, the
+  /// bar, the plates on each side, and the closest load when the plates
+  /// can't make it.
+  void _showPlates(
+    BuildContext button,
+    PlateLoader loadPlates,
+    double kg,
+    UserSettings settings,
+  ) {
+    final l10n = AppLocalizations.of(button);
+    final unit = settings.weightUnit;
+    final barKg = settings.barWeightKg;
+    final load = switch (loadPlates(
+      kg,
+      barKg: barKg,
+      plates: settings.plates,
+    )) {
+      Calculated(:final value) => value,
+      _ => null,
+    };
+    showForgeInfo(
+      context: button,
+      title: l10n.liftedWeightText(kg, unit),
+      facts: [
+        (l10n.calcBar, l10n.liftedWeightText(barKg, unit)),
+        (
+          l10n.plateCalculatorEachSide,
+          l10n.platesEachSideText(load?.perSide ?? const [], unit),
+        ),
+        if (load != null && !load.exact)
+          (
+            l10n.plateCalculatorClosest,
+            l10n.liftedWeightText(load.totalKg, unit),
+          ),
+      ],
     );
   }
 
@@ -330,7 +397,7 @@ class SetBar extends StatelessWidget {
     double? kg,
     double? hintKg,
     ValueChanged<String> onChanged, {
-    String? error,
+    bool invalid = false,
   }) {
     final label = l10n.weightUnitLabel(unit);
     return SetPanelValue(
@@ -344,7 +411,8 @@ class SetBar extends StatelessWidget {
       step: unit.weightStep,
       min: 0,
       max: unit.shownFromKg(WorkoutLimits.maxWeightKg),
-      error: error,
+      signed: type == LoggingType.weightedBodyweight,
+      invalid: invalid,
       onChanged: (value) =>
           onChanged(value == null ? '' : l10n.numberField(value)),
     );
@@ -359,7 +427,7 @@ class SetBar extends StatelessWidget {
     int step,
     int max,
     ValueChanged<String> onChanged, {
-    String? error,
+    bool invalid = false,
   }) => SetPanelValue(
     value: value?.toDouble(),
     hint: hint?.toDouble(),
@@ -367,7 +435,7 @@ class SetBar extends StatelessWidget {
     step: step.toDouble(),
     min: 1,
     max: max.toDouble(),
-    error: error,
+    invalid: invalid,
     onChanged: (value) =>
         onChanged(value == null ? '' : l10n.numberField(value)),
   );
@@ -463,9 +531,9 @@ class _EffortQuestion extends StatelessWidget {
     );
     final options = [
       for (final step in steps)
-        EffortOption(
+        ChoiceOption(
           label: l10n.effortStepLabel(step, scale),
-          meaning: l10n.effortStepMeaning(step, scale),
+          hint: l10n.effortStepMeaning(step, scale),
         ),
     ];
     void pick(int index) {

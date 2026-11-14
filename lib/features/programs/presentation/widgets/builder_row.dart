@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../../../../core/widgets/tap_band.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// One value chip of a [BuilderRow]: what it is ([label]: Sets, Reps, Time,
@@ -60,8 +61,7 @@ class BuilderRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final groupHeader = this.groupHeader;
     final row = Container(
-      // The chips' tap band takes the bottom padding but its last 2px.
-      padding: const EdgeInsets.fromLTRB(10, 12, 12, 12 - _ValueChip.band),
+      padding: const EdgeInsets.fromLTRB(10, 12, 12, 12),
       decoration: BoxDecoration(
         color: lifted ? colors.surface : null,
         borderRadius: lifted ? BorderRadius.circular(style.radii.lg) : null,
@@ -95,6 +95,7 @@ class BuilderRow extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: Gap.xs,
               children: [
                 Text(
                   name,
@@ -104,6 +105,7 @@ class BuilderRow extends StatelessWidget {
                 ),
                 Wrap(
                   spacing: 6,
+                  runSpacing: 6,
                   children: [for (final value in values) _ValueChip(value)],
                 ),
                 for (final issue in issues)
@@ -138,7 +140,11 @@ class BuilderRow extends StatelessWidget {
         ],
       ),
     );
-    final scaled = lifted ? Transform.scale(scale: 1.02, child: row) : row;
+    // The chips take taps across a 44px band around them.
+    final banded = TapBandArea(child: row);
+    final scaled = lifted
+        ? Transform.scale(scale: 1.02, child: banded)
+        : banded;
     if (!grouped) return scaled;
     return Container(
       decoration: BoxDecoration(
@@ -166,27 +172,25 @@ class BuilderRow extends StatelessWidget {
   }
 }
 
-/// A value chip drawn 24px tall that takes taps across a 44px band, as
-/// Forge's controls do.
+/// A value chip drawn 24px tall; its row's [TapBandArea] gives it a 44px
+/// tap band, as Forge's controls have.
 class _ValueChip extends StatelessWidget {
   const _ValueChip(this.value);
 
   final BuilderValue value;
 
   static const double height = 24;
-  static const double band = (ForgeTheme.tapMin - height) / 2;
 
   @override
   Widget build(BuildContext context) {
     final style = ForgeStyle.of(context);
     final colors = style.colors;
-    return Semantics(
-      button: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: value.onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: band),
+    return TapBand(
+      child: Semantics(
+        button: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: value.onTap,
           child: Container(
             height: height,
             padding: const EdgeInsets.symmetric(horizontal: Gap.sm),

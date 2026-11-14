@@ -127,9 +127,56 @@ void main() {
     );
     expect(tester.getSize(chip).height, 24);
     final rect = tester.getRect(chip);
+    // The band leaves the layout as drawn: 4px under the name, 12px over
+    // the row's end.
+    expect(rect.top - tester.getRect(find.text('Bench Press')).bottom, 4);
+    final row = tester.getRect(find.byType(BuilderRow));
+    expect(row.bottom - rect.bottom, 12);
     await tester.tapAt(rect.topCenter - const Offset(0, 9));
     await tester.tapAt(rect.bottomCenter + const Offset(0, 9));
     expect(taps, 2);
+    await tester.tapAt(rect.bottomCenter + const Offset(0, 11));
+    expect(taps, 2);
+  });
+
+  testWidgets('where two bands meet, the nearer chip takes the tap', (
+    tester,
+  ) async {
+    final edited = <String>[];
+    await pumpComponent(
+      tester,
+      Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: 300,
+          child: list([
+            BuilderRow(
+              index: 0,
+              name: 'Bench Press',
+              values: [
+                for (final label in ['Sets', 'Reps', 'Rest'])
+                  BuilderValue(
+                    label: label,
+                    value: '10',
+                    onTap: () => edited.add(label),
+                  ),
+              ],
+              menu: const [],
+              divided: false,
+            ),
+          ]),
+        ),
+      ),
+    );
+
+    // Two lines: Sets and Reps, then Rest under Sets.
+    final sets = tester.getRect(find.text('Sets'));
+    final rest = tester.getRect(find.text('Rest'));
+    expect(rest.top, greaterThan(sets.bottom));
+    final gapMiddle = (sets.bottom + rest.top) / 2;
+    await tester.tapAt(Offset(sets.center.dx, gapMiddle - 4));
+    await tester.tapAt(Offset(rest.center.dx, gapMiddle + 4));
+    expect(edited, ['Sets', 'Rest']);
   });
 
   testWidgets('the issues show under the chips', (tester) async {

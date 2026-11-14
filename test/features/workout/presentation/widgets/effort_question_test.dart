@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/features/workout/presentation/widgets/effort_question.dart';
 import 'package:get_workout/features/workout/presentation/widgets/rest_panel.dart';
 
@@ -7,11 +8,11 @@ import '../../../../component_harness.dart';
 
 void main() {
   const byFeel = [
-    EffortOption(label: 'Easy', meaning: '4+ reps left'),
-    EffortOption(label: 'Moderate', meaning: '2–3 reps left'),
-    EffortOption(label: 'Hard', meaning: '1 rep left'),
-    EffortOption(label: 'Max', meaning: 'No reps left'),
-    EffortOption(label: 'Failed', meaning: 'last rep missed'),
+    ChoiceOption(label: 'Easy', hint: '4+ reps left'),
+    ChoiceOption(label: 'Moderate', hint: '2–3 reps left'),
+    ChoiceOption(label: 'Hard', hint: '1 rep left'),
+    ChoiceOption(label: 'Max', hint: 'No reps left'),
+    ChoiceOption(label: 'Failed', hint: 'last rep missed'),
   ];
 
   Widget question({
@@ -50,8 +51,9 @@ void main() {
         isInMutuallyExclusiveGroup: true,
         hasCheckedState: true,
         isChecked: true,
-        isButton: true,
+        isFocusable: true,
         hasTapAction: true,
+        hasFocusAction: true,
         label: 'Moderate\n2–3 reps left',
       ),
     );
