@@ -12,12 +12,12 @@ import 'volume_text.dart';
 
 /// The sets a chart reaches at least, so the band always shows with room
 /// above it.
-const _minScale = VolumeBand.max * 1.25;
+const _minScale = VolumeRange.max * 1.25;
 
 /// The top of a scale holding every value of [sets].
 double volumeScale(Iterable<double> sets) => sets.fold(_minScale, math.max);
 
-/// One muscle's weekly sets as a bar over the [VolumeBand], on a scale up
+/// One muscle's weekly sets as a bar over the [VolumeRange], on a scale up
 /// to [scale].
 class VolumeBandBar extends StatelessWidget {
   const VolumeBandBar({super.key, required this.sets, required this.scale});
@@ -71,7 +71,7 @@ class _BandBarPainter extends CustomPainter {
     final edge = Paint()
       ..color = band
       ..strokeWidth = size.height / 4;
-    for (final end in [VolumeBand.min, VolumeBand.max]) {
+    for (final end in [VolumeRange.min, VolumeRange.max]) {
       canvas.drawLine(
         Offset(x(end), -size.height / 2),
         Offset(x(end), size.height * 1.5),
@@ -89,7 +89,7 @@ class _BandBarPainter extends CustomPainter {
       old.bar != bar;
 }
 
-/// Weekly sets as bars, oldest week first, with the [VolumeBand] shaded
+/// Weekly sets as bars, oldest week first, with the [VolumeRange] shaded
 /// behind them.
 class VolumeTrendChart extends StatelessWidget {
   const VolumeTrendChart({
@@ -144,7 +144,7 @@ class _TrendPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     double y(num value) => size.height * (1 - value / scale);
     canvas.drawRect(
-      Rect.fromLTRB(0, y(VolumeBand.max), size.width, y(VolumeBand.min)),
+      Rect.fromLTRB(0, y(VolumeRange.max), size.width, y(VolumeRange.min)),
       Paint()..color = band,
     );
     if (sets.isEmpty) return;

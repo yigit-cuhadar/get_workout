@@ -10,8 +10,8 @@ import '../favorites_cubit.dart';
 import '../vocabulary_labels.dart';
 
 /// An exercise as an [ExerciseRow] opening its detail page at [route]:
-/// name, main muscles and equipment, a Custom tag when custom, a star when
-/// [showFavorite] and it is a favourite, else [tag] at its end. With
+/// name, main muscles and equipment, a Custom tag when custom, a star
+/// toggling the favourite when [showFavorite], else [tag] at its end. With
 /// [onSelect] it is the picker's row for [selected] and selects instead.
 class ExerciseTile extends StatelessWidget {
   const ExerciseTile(
@@ -57,6 +57,9 @@ class ExerciseTile extends StatelessWidget {
             name: name,
             detail: detail,
             favorite: favorite,
+            onFavorite: showFavorite
+                ? () => context.read<FavoritesCubit>().toggle(exercise.id)
+                : null,
             custom: exercise.isCustom,
             relation: tag,
             onTap: () => context.push(route(exercise.id)),
@@ -64,7 +67,6 @@ class ExerciseTile extends StatelessWidget {
         : ExerciseRow.pick(
             name: name,
             detail: detail,
-            favorite: favorite,
             custom: exercise.isCustom,
             selected: selected,
             onTap: onSelect,

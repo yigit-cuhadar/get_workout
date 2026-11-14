@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_ui/forge_ui.dart';
+import 'package:forge_ui/forge_ui.dart' hide WeekStrip;
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
@@ -9,7 +9,6 @@ import '../../../core/text_length.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calculators/presentation/calculator_list.dart';
-import '../../calendar/presentation/calendar_marks.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../generator/presentation/generator_entry.dart';
 import '../../programs/domain/calendar_date.dart';
@@ -31,6 +30,7 @@ import 'next_workout.dart';
 import 'today_steps_cubit.dart';
 import 'today_volume_cubit.dart';
 import 'today_week_cubit.dart';
+import 'week_strip.dart';
 
 /// The Today tab: this week, the next workout, this week's volume, the
 /// calculators and steps, each card on its own data, so one failing leaves
@@ -450,45 +450,18 @@ class _NoProgramDay extends StatelessWidget {
   }
 }
 
-/// This week as day circles; every day of it opens the calendar, which has
-/// no route for a given date. While loading the dates show without marks,
-/// and a failure offers a retry below.
+/// This week as one calendar row; it, and every day of it, opens the
+/// calendar, which has no route for a given date.
 class _WeekCard extends StatelessWidget {
   const _WeekCard();
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final state = context.watch<TodayWeekCubit>().state;
-    final letters = MaterialLocalizations.of(context).narrowWeekdays;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: Gap.sm,
-      children: [
-        WeekStrip(
-          title: l10n.todayWeekTitle,
-          days: [
-            for (final date in state.days)
-              WeekStripDay(
-                // Index 0 is Sunday, ISO weekday 7.
-                weekday: letters[date.weekday % 7],
-                number: '${date.day}',
-                state: calendarDayState(
-                  state.entriesOn(date),
-                  today: date == state.today,
-                ),
-              ),
-          ],
-          onDayTap: (_) => context.go(Routes.calendar),
-        ),
-        if (state.status == TodayWeekStatus.failure)
-          ErrorView(
-            title: l10n.todayWeekLoadFailed,
-            message: l10n.loadFailedDetail,
-            retryLabel: l10n.retry,
-            onRetry: context.read<TodayWeekCubit>().retry,
-          ),
-      ],
+    void open() => context.go(Routes.calendar);
+    return _TodayCard(
+      title: AppLocalizations.of(context).todayWeekTitle,
+      onOpen: open,
+      child: WeekStrip(onOpen: open),
     );
   }
 }

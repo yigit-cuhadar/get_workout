@@ -1516,7 +1516,6 @@
   "@bodyTargetEstimate": {"placeholders": {"date": {"type": "String"}}},
   "bodyPhotos": "Photos",
 
-  "exerciseRowFavorite": "Favourite",
   "programCardRecommended": "Recommended for you",
   "programCardFits": "Fits you",
   "restDayCardEyebrow": "Rest day",

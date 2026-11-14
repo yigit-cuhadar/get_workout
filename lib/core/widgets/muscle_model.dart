@@ -24,7 +24,8 @@ Map<String, Color> muscleMeshColors(Map<Muscle, Color> colors) => {
 /// Weekly volume), in a framed panel with Front / Back in its corner. A
 /// tap on a muscle, or a slide across muscles and its release, opens it
 /// through [onOpen]; while sliding, the muscle under the finger shows in
-/// a bar at the bottom. Muscles in [colors] are painted so.
+/// a bar at the bottom. Muscles in [colors] are painted so. With [sides]
+/// Front / Back sit in the corner.
 class MuscleModel extends StatefulWidget {
   const MuscleModel({
     super.key,
@@ -32,10 +33,11 @@ class MuscleModel extends StatefulWidget {
     required ValueChanged<Muscle> this.onOpen,
     required String this.semanticLabel,
     this.colors = const {},
+    this.sides = true,
   }) : onRetry = null;
 
   /// The model loads: a shimmering figure.
-  const MuscleModel.loading({super.key})
+  const MuscleModel.loading({super.key, this.sides = true})
     : model = null,
       onOpen = null,
       semanticLabel = null,
@@ -45,7 +47,8 @@ class MuscleModel extends StatefulWidget {
   /// The model could not load: the error and Retry; the page around it
   /// keeps working.
   const MuscleModel.failed({super.key, required VoidCallback this.onRetry})
-    : model = null,
+    : sides = false,
+      model = null,
       onOpen = null,
       semanticLabel = null,
       colors = const {};
@@ -55,6 +58,7 @@ class MuscleModel extends StatefulWidget {
   final String? semanticLabel;
   final Map<Muscle, Color> colors;
   final VoidCallback? onRetry;
+  final bool sides;
 
   @override
   State<MuscleModel> createState() => _MuscleModelState();
@@ -136,7 +140,7 @@ class _MuscleModelState extends State<MuscleModel> {
               semanticLabel: widget.semanticLabel,
             ),
           ),
-          Positioned(top: 10, right: 10, child: segments),
+          if (widget.sides) Positioned(top: 10, right: 10, child: segments),
           if (scrubbed != null)
             Positioned(
               left: 12,
@@ -159,11 +163,14 @@ class _MuscleModelState extends State<MuscleModel> {
       content = Stack(
         children: [
           const Center(child: _SkeletonFigure()),
-          Positioned(
-            top: 10,
-            right: 10,
-            child: IgnorePointer(child: Opacity(opacity: 0.5, child: segments)),
-          ),
+          if (widget.sides)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: IgnorePointer(
+                child: Opacity(opacity: 0.5, child: segments),
+              ),
+            ),
         ],
       );
     }

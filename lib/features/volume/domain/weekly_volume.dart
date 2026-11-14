@@ -10,21 +10,21 @@ typedef ExerciseMuscles = ({List<Muscle> main, List<Muscle> secondary});
 
 /// The reference band of weekly sets per muscle (SPEC.md, "Volume"). It
 /// judges any week of any user, so it does not depend on their level.
-abstract final class VolumeBand {
+abstract final class VolumeRange {
   static const min = 10;
   static const max = 20;
 }
 
-/// Where a muscle's weekly sets fall against [VolumeBand], both ends
+/// Where a muscle's weekly sets fall against [VolumeRange], both ends
 /// inside.
 enum VolumeZone {
   below,
   within,
   above;
 
-  static VolumeZone of(double sets) => sets < VolumeBand.min
+  static VolumeZone of(double sets) => sets < VolumeRange.min
       ? below
-      : sets > VolumeBand.max
+      : sets > VolumeRange.max
       ? above
       : within;
 }

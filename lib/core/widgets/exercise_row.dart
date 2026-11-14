@@ -4,15 +4,17 @@ import 'package:forge_ui/forge_ui.dart';
 import '../../l10n/app_localizations.dart';
 
 /// An exercise in the library, a picker or a Similar list: its [name] with
-/// a star when a [favorite] and a Custom tag when [custom], its [detail]
-/// ("muscle · equipment") under it, a [relation] tag (Alternative,
-/// Variation) and a chevron. [onTap] opens it.
+/// a Custom tag when [custom], its [detail] ("muscle · equipment") under
+/// it, a [relation] tag (Alternative, Variation) and a chevron. [onTap]
+/// opens it. With [onFavorite] a star at its end, filled when a
+/// [favorite], toggles the favourite.
 class ExerciseRow extends StatelessWidget {
   const ExerciseRow({
     super.key,
     required this.name,
     required this.detail,
     this.favorite = false,
+    this.onFavorite,
     this.custom = false,
     this.relation,
     required this.onTap,
@@ -24,15 +26,17 @@ class ExerciseRow extends StatelessWidget {
     super.key,
     required this.name,
     required this.detail,
-    this.favorite = false,
     this.custom = false,
     required bool this.selected,
     required this.onTap,
-  }) : relation = null;
+  }) : relation = null,
+       favorite = false,
+       onFavorite = null;
 
   final String name;
   final String detail;
   final bool favorite;
+  final VoidCallback? onFavorite;
   final bool custom;
   final String? relation;
   final bool? selected;
@@ -74,15 +78,6 @@ class ExerciseRow extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (favorite)
-                    ForgeIcon(
-                      ForgeIcons.star,
-                      size: 14,
-                      filled: true,
-                      color: p.accent,
-                      semanticLabel: AppLocalizations.of(context)
-                          .exerciseRowFavorite,
-                    ),
                   if (custom)
                     ForgeTag(AppLocalizations.of(context).customLabel),
                 ],
@@ -97,6 +92,8 @@ class ExerciseRow extends StatelessWidget {
           ),
         ),
         if (relation != null) ForgeTag(relation),
+        if (onFavorite case final onFavorite?)
+          _Star(favorite: favorite, onTap: onFavorite),
         if (selected == null)
           ForgeIcon(ForgeIcons.chevronRight, size: 18, color: p.inkMuted),
       ],
@@ -124,5 +121,40 @@ class ExerciseRow extends StatelessWidget {
       );
     }
     return result;
+  }
+}
+
+/// The favourite toggle: a star over a 44px target, filled when [favorite].
+class _Star extends StatelessWidget {
+  const _Star({required this.favorite, required this.onTap});
+
+  final bool favorite;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = ForgeStyle.of(context).colors;
+    final l10n = AppLocalizations.of(context);
+    return Semantics(
+      container: true,
+      button: true,
+      toggled: favorite,
+      label: favorite ? l10n.favoriteRemove : l10n.favoriteAdd,
+      child: InkResponse(
+        onTap: onTap,
+        radius: ForgeTheme.tapMin / 2,
+        child: SizedBox.square(
+          dimension: ForgeTheme.tapMin,
+          child: Center(
+            child: ForgeIcon(
+              ForgeIcons.star,
+              size: 20,
+              filled: favorite,
+              color: favorite ? p.accent : p.inkMuted,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

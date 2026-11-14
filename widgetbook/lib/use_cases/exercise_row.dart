@@ -15,21 +15,29 @@ Widget libraryRows(BuildContext context) => _card([
     name: context.knobs.string(label: 'Name', initialValue: 'Bench Press'),
     detail: 'Chest · Barbell',
     favorite: context.knobs.boolean(label: 'Favourite'),
+    onFavorite: () {},
     onTap: () {},
   ),
   ExerciseRow(
     name: 'Incline Dumbbell Press',
     detail: 'Chest · Dumbbell',
     favorite: true,
+    onFavorite: () {},
     onTap: () {},
   ),
   ExerciseRow(
     name: 'Cable Hip Abduction',
     detail: 'Glutes · Cable',
     custom: true,
+    onFavorite: () {},
     onTap: () {},
   ),
-  ExerciseRow(name: 'Pull-up', detail: 'Back · Bodyweight', onTap: () {}),
+  ExerciseRow(
+    name: 'Pull-up',
+    detail: 'Back · Bodyweight',
+    onFavorite: () {},
+    onTap: () {},
+  ),
 ]);
 
 @widgetbook.UseCase(name: 'Picker', type: ExerciseRow)

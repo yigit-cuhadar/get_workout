@@ -13,35 +13,61 @@ void main() {
     tester,
   ) async {
     var opened = 0;
+    var toggled = 0;
     await pumpComponent(
       tester,
       ExerciseRow(
         name: 'Cable Hip Abduction',
         detail: 'Glutes · Cable',
         favorite: true,
+        onFavorite: () => toggled++,
         custom: true,
         onTap: () => opened++,
       ),
     );
 
     expect(find.text('Glutes · Cable'), findsOneWidget);
-    expect(find.byWidgetPredicate(isStar), findsOneWidget);
-    expect(
-      tester.getSemantics(
-        find.descendant(
-          of: find.byType(ExerciseRow),
-          matching: find.byType(InkWell),
-        ),
-      ),
-      isSemantics(
-        label: 'Cable Hip Abduction\nFavourite\nCustom\nGlutes · Cable',
-      ),
-    );
     expect(find.widgetWithText(ForgeTag, 'Custom'), findsOneWidget);
     expect(find.byType(ForgeCheckbox), findsNothing);
 
     await tester.tap(find.text('Cable Hip Abduction'));
-    expect(opened, 1);
+    expect((opened, toggled), (1, 0));
+  });
+
+  testWidgets('the star toggles the favourite across a 44px target', (
+    tester,
+  ) async {
+    var favorite = false;
+    var opened = 0;
+    await pumpComponent(
+      tester,
+      StatefulBuilder(
+        builder: (context, setState) => ExerciseRow(
+          name: 'Bench Press',
+          detail: 'Chest · Barbell',
+          favorite: favorite,
+          onFavorite: () => setState(() => favorite = !favorite),
+          onTap: () => opened++,
+        ),
+      ),
+    );
+    ForgeIcon star() =>
+        tester.widget<ForgeIcon>(find.byWidgetPredicate(isStar));
+
+    expect(star().filled, isFalse);
+    expect(find.bySemanticsLabel('Add to favourites'), findsOneWidget);
+
+    // The edge of the target, away from the icon.
+    final centre = tester.getCenter(find.byWidgetPredicate(isStar));
+    await tester.tapAt(centre + const Offset(0, 20));
+    await tester.pump();
+    expect(star().filled, isTrue);
+    expect(find.bySemanticsLabel('Remove from favourites'), findsOneWidget);
+    expect(opened, 0);
+
+    await tester.tap(find.byWidgetPredicate(isStar));
+    await tester.pump();
+    expect(star().filled, isFalse);
   });
 
   testWidgets('a similar exercise carries its relation', (tester) async {

@@ -40,6 +40,7 @@ Widget muscleModelHeat(BuildContext context) => _panel(
       model: model,
       onOpen: (_) {},
       semanticLabel: 'Body model',
+      sides: false,
       colors: muscleHeatColors(ForgeStyle.of(context).colors, const {
         Muscle.pec: 14,
         Muscle.frontDelt: 22,

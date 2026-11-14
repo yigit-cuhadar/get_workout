@@ -42,6 +42,22 @@ void main() {
     expect(front(), isTrue);
   });
 
+  testWidgets('without sides there is no Front / Back', (tester) async {
+    await pumpComponent(
+      tester,
+      framed(
+        MuscleModel(
+          model: body,
+          onOpen: (_) {},
+          semanticLabel: 'Body',
+          sides: false,
+        ),
+      ),
+    );
+
+    expect(find.byType(ForgeSegmentedControl<bool>), findsNothing);
+  });
+
   testWidgets('a tap on a muscle opens it', (tester) async {
     final opened = <Muscle>[];
     await pumpComponent(
