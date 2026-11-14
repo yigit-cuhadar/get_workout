@@ -29,7 +29,8 @@ class _ProgramListCubit extends MockCubit<ProgramListState>
     implements ProgramListCubit {}
 
 /// Registers the Today tab's cubits as stand-ins, for tests that land on
-/// Today without testing it: the week and volume stay loading (no
+/// Today without testing it: the week is ready and empty (its loading
+/// skeleton shimmers, which never settles), the volume stays loading (no
 /// spinner), steps have no health store, and the program list, unless
 /// the test has its own, is ready and empty.
 void registerTodayStandIns() {
@@ -41,6 +42,7 @@ void registerTodayStandIns() {
         TodayWeekState(
           today: monday,
           days: [for (var i = 0; i < 7; i++) monday.addDays(i)],
+          status: TodayWeekStatus.ready,
         ),
       );
       return cubit;

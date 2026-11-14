@@ -28,7 +28,14 @@ Map<Muscle, Color> muscleHeatColors(ForgePalette p, Map<Muscle, num> sets) => {
     if (count > 0) muscle: muscleHeatColor(p, count),
 };
 
-/// Small front and back models painted by weekly [sets], side by side.
+/// The trained muscles of [sets] over [muscleHeatFull], ringed in danger.
+Set<Muscle> muscleHeatOver(Map<Muscle, num> sets) => {
+  for (final MapEntry(key: muscle, value: count) in sets.entries)
+    if (count > muscleHeatFull) muscle,
+};
+
+/// Small front and back models painted by weekly [sets], side by side;
+/// a muscle over [muscleHeatFull] sets is ringed in danger.
 class MuscleHeatPair extends StatelessWidget {
   const MuscleHeatPair({super.key, required this.model, required this.sets});
 
@@ -42,6 +49,7 @@ class MuscleHeatPair extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = ForgeStyle.of(context).colors;
     final colors = muscleMeshColors(muscleHeatColors(p, sets));
+    final outlined = muscleMeshes(muscleHeatOver(sets));
     final base = Color.lerp(p.surface, p.lineStrong, 0.35)!;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -56,6 +64,7 @@ class MuscleHeatPair extends StatelessWidget {
               back: back,
               base: base,
               colors: colors,
+              outlined: outlined,
             ),
           ),
       ],

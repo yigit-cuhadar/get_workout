@@ -42,8 +42,13 @@ void main() {
   test('today is the ink ring unless something was done', () {
     expect(state(const [], today: true), DayState.today);
     expect(state([plan(PlannedStatus.planned)], today: true), DayState.today);
+    expect(state([plan(PlannedStatus.missed)], today: true), DayState.today);
     expect(state([run], today: true), DayState.light);
-    expect(state([done], today: true), DayState.done);
+  });
+
+  test('a workout today is done inside the ink ring', () {
+    expect(state([done], today: true), DayState.todayDone);
+    expect(state([run, done], today: true), DayState.todayDone);
   });
 
   test('a workout outweighs cardio and the plan', () {

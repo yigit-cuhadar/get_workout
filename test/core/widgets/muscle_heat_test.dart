@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/core/widgets/muscle_heat.dart';
+import 'package:get_workout/features/exercises/domain/muscle_meshes.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:forge_ui/forge_ui.dart';
 
@@ -44,11 +45,45 @@ void main() {
     }
   });
 
+  test('only muscles over 20 sets are outlined', () {
+    expect(
+      muscleHeatOver({Muscle.pec: 20, Muscle.frontDelt: 22, Muscle.lat: 4}),
+      {Muscle.frontDelt},
+    );
+  });
+
+  testWidgets('a muscle over 20 keeps full accent with a danger outline', (
+    tester,
+  ) async {
+    final body = await tester.runAsync(
+      () => Model3D.fromGlb(
+        File('assets/models/body_male.glb').readAsBytesSync(),
+      ),
+    );
+    await pumpComponent(
+      tester,
+      MuscleHeatPair(
+        model: body!,
+        sets: const {Muscle.pec: 14, Muscle.frontDelt: 22},
+      ),
+    );
+
+    for (final viewer in tester.widgetList<ModelViewer>(
+      find.byType(ModelViewer),
+    )) {
+      expect(viewer.partColors['front_delt_left'], p.accent);
+      expect(viewer.outlinedParts, Muscle.frontDelt.meshNames.toSet());
+      expect(viewer.outlineColor, p.danger);
+      expect(viewer.outlineWidth, 2);
+    }
+  });
+
   testWidgets('the legend labels the ramp', (tester) async {
     await pumpComponent(tester, const MuscleHeatLegend());
 
     for (final text in ['0', '10', '20 sets']) {
       expect(find.text(text), findsOneWidget);
     }
+    expect(find.text('An outline marks over 20 sets.'), findsOneWidget);
   });
 }

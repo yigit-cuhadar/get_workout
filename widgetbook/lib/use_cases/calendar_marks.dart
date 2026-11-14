@@ -49,6 +49,23 @@ Widget calendarMarksWeeks(BuildContext context) => SingleChildScrollView(
   ),
 );
 
+@widgetbook.UseCase(
+  name: 'CalendarMarks · today with a workout',
+  type: WeekStrip,
+)
+Widget calendarMarksTodayDone(BuildContext context) => Padding(
+  padding: const EdgeInsets.all(Gap.md),
+  child: _week('This week', 9, const [
+    DayState.done,
+    DayState.light,
+    DayState.missed,
+    DayState.light,
+    DayState.todayDone,
+    DayState.planned,
+    DayState.none,
+  ]),
+);
+
 @widgetbook.UseCase(name: 'CalendarMarks · month', type: MonthGrid)
 Widget calendarMarksMonth(BuildContext context) => SingleChildScrollView(
   padding: const EdgeInsets.all(Gap.md),

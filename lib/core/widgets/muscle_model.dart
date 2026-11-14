@@ -20,12 +20,18 @@ Map<String, Color> muscleMeshColors(Map<Muscle, Color> colors) => {
     for (final mesh in muscle.meshNames) mesh: color,
 };
 
+/// Every mesh of [muscles].
+Set<String> muscleMeshes(Iterable<Muscle> muscles) => {
+  for (final muscle in muscles) ...muscle.meshNames,
+};
+
 /// The one rotatable body model where muscles are explored (Exercises,
 /// Weekly volume), in a framed panel with Front / Back in its corner. A
 /// tap on a muscle, or a slide across muscles and its release, opens it
 /// through [onOpen]; while sliding, the muscle under the finger shows in
-/// a bar at the bottom. Muscles in [colors] are painted so. With [sides]
-/// Front / Back sit in the corner.
+/// a bar at the bottom. Muscles in [colors] are painted so, those in
+/// [outlined] ringed in danger. With [sides] Front / Back sit in the
+/// corner.
 class MuscleModel extends StatefulWidget {
   const MuscleModel({
     super.key,
@@ -33,6 +39,7 @@ class MuscleModel extends StatefulWidget {
     required ValueChanged<Muscle> this.onOpen,
     required String this.semanticLabel,
     this.colors = const {},
+    this.outlined = const {},
     this.sides = true,
   }) : onRetry = null;
 
@@ -42,6 +49,7 @@ class MuscleModel extends StatefulWidget {
       onOpen = null,
       semanticLabel = null,
       colors = const {},
+      outlined = const {},
       onRetry = null;
 
   /// The model could not load: the error and Retry; the page around it
@@ -51,12 +59,14 @@ class MuscleModel extends StatefulWidget {
       model = null,
       onOpen = null,
       semanticLabel = null,
-      colors = const {};
+      colors = const {},
+      outlined = const {};
 
   final Model3D? model;
   final ValueChanged<Muscle>? onOpen;
   final String? semanticLabel;
   final Map<Muscle, Color> colors;
+  final Set<Muscle> outlined;
   final VoidCallback? onRetry;
   final bool sides;
 
@@ -133,6 +143,8 @@ class _MuscleModelState extends State<MuscleModel> {
                 ...muscleMeshColors(widget.colors),
                 ...muscleMeshColors({?scrubbed: p.accent}),
               },
+              outlinedParts: muscleMeshes(widget.outlined),
+              outlineColor: p.danger,
               selectable: (part) => muscleOfMesh(part) != null,
               onPartTap: _open,
               onScrub: _onScrub,
@@ -379,7 +391,8 @@ class MuscleModelPair extends StatelessWidget {
 }
 
 /// The model held still, facing the front or the [back], in [base] with
-/// a colour per mesh in [colors].
+/// a colour per mesh in [colors] and the meshes in [outlined] ringed in
+/// danger.
 class StillMuscleModel extends StatefulWidget {
   const StillMuscleModel({
     super.key,
@@ -387,12 +400,14 @@ class StillMuscleModel extends StatefulWidget {
     required this.back,
     required this.base,
     required this.colors,
+    this.outlined = const {},
   });
 
   final Model3D model;
   final bool back;
   final Color base;
   final Map<String, Color> colors;
+  final Set<String> outlined;
 
   @override
   State<StillMuscleModel> createState() => _StillMuscleModelState();
@@ -414,5 +429,7 @@ class _StillMuscleModelState extends State<StillMuscleModel> {
     interactive: false,
     baseColor: widget.base,
     partColors: widget.colors,
+    outlinedParts: widget.outlined,
+    outlineColor: ForgeStyle.of(context).colors.danger,
   );
 }
