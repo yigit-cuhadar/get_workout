@@ -343,7 +343,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Train, My program — the day list has no Start; Ready-made, Generate, New program and Start empty workout stay
 - [x] Programs and Exercises tabs — five tabs (Today / Programs / Exercises / Progress / Profile), Train and its segmented control gone; each tab its own stack, workouts start from Programs, every location and link lands as before
 - [x] Workout, set entry — minus/plus steppers; tapping the number types it
-- [x] Workout, rest — after a set the panel asks the effort (four options in a grid plus Failed, one line of explanation each, Skip) above a slim timer bar; the RPE scale uses the same layout with RPE 6 or less, 7, 8, 9, 10 and Failed. Once answered only the timer bar shows (time, +15 s, Skip); the next set's entry appears when the rest ends or is skipped
+- [x] Workout, rest — after a set the panel asks the effort (four options in a grid plus Failed, one line of explanation each, Skip) above a slim timer bar; the RPE scale uses the same layout with RPE 6 or less, 7, 8, 9, 10 and Failed. Once answered only the timer bar shows (time, +15 s, Skip); the next set's entry appears when the rest ends or is skipped. Superseded by the owner's design pick (see Design): the effort is asked in the set panel as rows with their meaning, a thin rest line above, then the panel becomes the countdown (+15 s, Skip rest)
 - [x] Progress — one small widget per area, each opening its page: Body (last weight, curve, last body fat, Log weight, Measurement day), the calendar week, weekly volume, strength, cardio, steps with a bar
 - [x] Calendar with workout history — one page: a week strip that opens to the month, then one list by day with workouts, cardio, planned days (with Start) and missed days, Show older workouts; Add past workout in the app bar. Workout history as its own page goes away
 - [x] Body with Compare — two views, Overview (one chart with up to three series picked from weight, body fat, fat mass, lean mass, each measurement, weekly sets and daily steps, plus a target weight line; Log weight, Measurement day, history) and Compare (Previous / First / Other date, photos slider with poses, body fat, all changes, target weight)
@@ -423,7 +423,94 @@ Decisions (the canvases they were drawn on are deleted):
   set type menu lists the three types with the current one ticked; loading
   is shimmering grey bars in every component that loads; the step goal is
   typed in place. The feature notes above say each in its place.
-- Sample dates follow November 2026 (Nov 13 is a Friday; Push A is done that
+- Görünüm kararları (2026-11-15): Retry is Button's outline form (40px) everywhere;
+  every app bar has a centred 17px title, tab roots included; the selected tab
+  is a heavier line icon with a bold label; buttons are 40px / 14px and the
+  full-width primary at a page's bottom 48px / 15px; the Premium tag is filled
+  with a lock everywhere; locked controls stay full colour with a lock and open
+  the paywall; effort answers are rows with their meaning everywhere, also when
+  editing a done set; choice pickers open as bottom sheets (time: the system
+  picker; confirmations stay dialogs); Restore's result is a snackbar and a
+  success closes the paywall. The Measure preset keeps its saturated colours
+  (an accepted exception to muted colours).
+- Feature and flow decisions made during the design phase (owner's picks,
+  2026-11-13 to 15). They supersede older feature notes and the code, which
+  will be changed to match; the studio draws each:
+  - Today: the week strip card, the next workout as a featured block (the
+    only Start of a program day), sets this week (four muscles and the total),
+    a calculators card (a chip per calculator), steps; a rest-day card (next
+    day, suggestions) on rest days; while a workout runs, Resume in the
+    featured block and the workout bar above the tabs.
+  - Programs: the active program in a header band (week, progress, Start,
+    this week's days Done / Missed / Next / Planned) with the missed-day
+    prompt inside it under the missed row (Do it today, Move, Skip); "No
+    active program" is an outline suggestion as on Today; finished and
+    Premium-ended states; Duplicate in ⋯; the program's weekly sets.
+  - Program page: Edit and ⋯ (Duplicate, Delete) in the app bar; state,
+    weekdays, next day, progress, Start, Change days, Stop; days open and close.
+  - Ready-made programs: search, filter chips (four or fewer as a chip bar,
+    more as the filter sheet; active ones removable), the count, programs as
+    list rows with the Premium lock; "Fits you" tags and a recommended row.
+    The ready-made program page: tags, summary rows, weekly sets, days, Start
+    this program, Duplicate in ⋯, Get Premium to start when locked.
+  - Program builder: name, day chips with + Day, a day menu (Rename,
+    Duplicate, Delete day), builder rows in one card, Add exercise, circuits;
+    Save in the app bar.
+  - Exercises: the search pill over the body model with a Front / Back
+    toggle; a tap or a slide's release opens the list at once. The list:
+    active filters as removable chips with Clear all, count and sort on one
+    line, Main / Also works tabs from a muscle, A–Z as one list, stars.
+  - Exercise picker: the exercise list itself with square checkboxes, chosen
+    rows tinted, the count and "Add n exercises" in a bottom bar, "Create
+    custom exercise" on no match. Swap from the workout is the same page in
+    single choice: Similar first (Alternative / Variation), a tap swaps, a
+    note says logged sets stay.
+  - Exercise detail: front and back models, facts table, Setup and How to do
+    it as numbered steps, Common mistakes, Safety, Cues, own note, Similar;
+    favourite and Add in the app bar.
+  - Workout: elapsed time and Finish in the header; one exercise card open at
+    a time; set bubbles (done filled without a tick); the long-press set type
+    menu; after Log set the set panel asks the effort as rows, then becomes
+    the countdown (+15 s, Skip rest), with no rest strip on the workout
+    screen; the progression hint; the plate breakdown on tapping the weight;
+    the exercise ⋯ (swap, details, note, rest time, warm-up, remove); Add
+    exercise and the workout note at the end; minimize to the workout bar;
+    per-exercise rest.
+  - Summary: one featured block with 2 × 2 stats compared with last time,
+    records, a small front and back model of the muscles worked, Done and
+    Save as program at the bottom, no tab bar.
+  - Calendar: the month card always open, day rows with a date box (Start on
+    a planned day, "Do it today" on a missed one), This week and Earlier, Show
+    older workouts, + (Add past workout) in the app bar, All / Workouts /
+    Cardio filter, moving a planned day.
+  - Body: Overview (three boxes, the multi-series chart with chips and the
+    target line, the 7-day average, Log weight, Measurement day, history) and
+    Compare (photo slider with poses first, Previous / First / Other date,
+    changes, the target estimate).
+  - Measurement day: three steps (weight, measurements, photos) with Back /
+    Next and a saved summary; Estimate body fat; the pose camera with the
+    last photo as a ghost.
+  - Weekly volume: week selector, one rotatable model painted by weekly sets
+    (one accent ramp, an outline over 20), muscle bars against 10–20, the
+    12-week trend on the page (Premium).
+  - Strength: the exercise picked with a list row; records as rows;
+    sessions.
+  - Cardio: the week's summary in a header band, the 12-week chart,
+    sessions by week, Log cardio fixed at the bottom; sessions from the
+    health app.
+  - Steps: a large ring, the daily goal as a pill stepper, one chart
+    switching This week / Last 30 days with the goal line.
+  - Forms: a form that edits something has Save in the top bar; an action
+    that ends or starts a flow is a full-width button at the bottom.
+  - Onboarding: a welcome page (logo, title, three numbered benefits, Get
+    started, "I already have an account"), one question per page with
+    Continue, notification and health permission steps, the result with a
+    recommended free program.
+  - Profile: a plain header, Premium as an outline card, Your profile and
+    Calculators, setting groups; reminder rows, rest sound and vibration, bar
+    and plates, keep screen on, Connected apps; Appearance as a segmented
+    control.
+- Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
 ## Open questions
@@ -866,7 +953,8 @@ the feature you are about to touch, and keep it true when you change it.
   paywall), a subscriber (trial, renewing, ending, payment problem) "Manage
   subscription" (the store's manage page); lifetime or granted Premium (no
   expiry, nothing to manage) and an unknown status get no action. Restore
-  stays on the paywall.
+  reports its result in a snackbar and, on success, closes the paywall
+  (owner's pick, 2026-11-15).
 - **Units**: stored metric. kg/lb and cm/in chosen by the user. A single
   lifted weight is shown through `WeightUnit.shown`: within two decimals
   (the precision weight fields show; 1e-8 hundredths of tolerance, the
@@ -1187,7 +1275,9 @@ the feature you are about to touch, and keep it true when you change it.
   filters sheet, as does the filter action in the app bar (badged while
   filtering). While filtering, "n filters on" (each chosen value counts
   one, `CatalogueFilter.activeCount`) and Clear. Then "Recommended for you"
-  (hidden while filtering) and "All programs", each program a card
+  (hidden while filtering) and "All programs", each program a list row
+  (ProgramCard's row form, owner's pick; the card form stays for single
+  suggestions)
   (`CatalogueProgramCard`, also on the post-onboarding suggestion): name
   with Free, Premium or the lock, the facts as tags (level, goal, days a
   week, length, equipment profile, session time) and "Matches your ..."
@@ -1367,7 +1457,7 @@ the feature you are about to touch, and keep it true when you change it.
   runs, as the minimized bar shows that rest. The edit page is unaffected.
   The open card shows its sets as **bubbles** (the owner's pick; the
   "selected set only" view was tried and deleted): a wrapping row of round
-  bubbles, a warm-up dashed with "W", a drop set "2D", done ones ticked, the
+  bubbles, a warm-up dashed with "W", a drop set "2D", done ones filled without a tick (owner's pick), the
   selected one in the theme's selected colours, a "+" bubble; a group
   stacks one row per exercise, labelled A1, A2, warm-ups first, then one
   column per round with the round's bubbles joined. Tapping a bubble
@@ -1413,7 +1503,12 @@ the feature you are about to touch, and keep it true when you change it.
   Effort is only stored and shown (bar, workout detail); nothing else uses
   it yet, and the help says just that. Effort is only asked about a DONE
   working set; warm-ups are never rated. Right after a working set is
-  ticked in the workout in progress it is asked in one of two places:
+  ticked in the workout in progress it is asked in one of two places
+  (owner's design pick, superseding both places below: it is asked in the
+  set panel as rows with their one-line meaning while the rest runs as a
+  thin line above; once answered or skipped the panel becomes the large
+  countdown with +15 s and Skip rest, and the next set's entry returns when
+  it ends; the rest strip is not on the workout screen):
   - **Its tick started a rest** (`restStartedBy`, `askingWithRest`): in
     the rest strip, under the countdown with +15 s and Skip, one line
     naming the set with its values and the scale's short question ("Set 1
@@ -1795,12 +1890,14 @@ the feature you are about to touch, and keep it true when you change it.
   calendar's `calendarEntries` and marks over the current week from the
   app's first weekday (see Week start), drawn by `MonthGrid` as one week; the strip and
   every day open the calendar, which has no route for a given date. No
-  quick actions: an empty workout starts from the Programs tab, cardio is
-  logged under Progress → Cardio, a past workout is added on the
-  calendar and the calculators open from Profile. Volume
+  quick actions besides a calculators card (a chip per calculator) and,
+  on a rest day, the rest-day card's suggestions (owner's picks): an empty
+  workout starts from the Programs tab, cardio is logged under Progress →
+  Cardio, a past workout is added on the calendar. Volume
   card: `WatchWeeklyVolume` with one week, never the trend, whatever the
   user's premium: the trained muscles counted in, below and above the
-  band and the three most trained as band bars; it opens Weekly volume,
+  band and the four most trained as band bars with the week's total
+  (owner's pick); it opens Weekly volume,
   and has no model. Steps card: `GetTodaySteps` against
   `settings.stepGoal` (read again when the goal changes), opening the
   Steps page. Today only checks access and never asks the system: not
@@ -1843,7 +1940,7 @@ the feature you are about to touch, and keep it true when you change it.
   program moving on (it was not loaded at finishing) is done, not planned
   or missed, here and in the Programs tab, whose missed-day prompt knows
   only this week's done days. The missed next day shows on its date as
-  missed (resolved in the Programs tab, not started here) and again where
+  missed, with "Do it today" on its row (owner's pick), and again where
   it is planned now. A planned day starts through `startProgramDay`, so a
   locked premium copy's days show but open the paywall. A workout opens
   its page under the calendar, a cardio session its page (which finds only the 500
@@ -1865,8 +1962,9 @@ the feature you are about to touch, and keep it true when you change it.
   ones (custom exercises included), else, for a retired or deleted one,
   those stored with the workout. Each muscle is judged against 10-20 sets
   whatever the user's level: below, within (both ends inside) or above, in
-  the theme's tertiary, primary and error colours on the model and the
-  bars; a muscle with no sets keeps the body's colour. Tapping a muscle
+  the band colours on the bars; the model is painted by weekly sets on one
+  accent ramp with a danger outline over 20 (owner's pick); a muscle with no
+  sets keeps the body's colour. Tapping a muscle
   lists the exercises and workouts that gave it sets. The 12-week trend
   (the week shown and the 11 before it) is Premium, a locked row opening
   the paywall otherwise. Only Premium reads those 12 weeks (again when
