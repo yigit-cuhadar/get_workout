@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +9,6 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 import 'package:forge_purchases/forge_purchases.dart';
-import 'package:forge_ui/forge_ui.dart';
 
 import '../features/body/body_module.dart';
 import '../features/account/presentation/consent_cubit.dart';
@@ -30,7 +30,9 @@ import '../features/workout/presentation/rest_timer_cubit.dart';
 import '../features/subscription/presentation/purchaser_session.dart';
 import '../features/subscription/subscription_module.dart';
 import '../l10n/app_localizations.dart';
+import 'preset_picker.dart';
 import 'router.dart';
+import 'theme.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -40,11 +42,20 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
+  final _preset = ValueNotifier(AppPreset.shipped);
   late final _router = buildRouter(
     sl<AuthCubit>(),
     sl<ProfileCubit>(),
     deletionUnderway: sl<DeletionUnderway>(),
-    profileDebugSection: SubscriptionModule.debugControls(sl),
+    profileDebugSection: kDebugMode
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PresetPicker(_preset),
+              ?SubscriptionModule.debugControls(sl),
+            ],
+          )
+        : null,
   );
   late final AppLifecycleListener _lifecycle;
   late final StreamSubscription<String?> _taps;
@@ -141,6 +152,7 @@ class _AppState extends State<App> {
     _router.routerDelegate.removeListener(_openTapped);
     _lifecycle.dispose();
     _router.dispose();
+    _preset.dispose();
     super.dispose();
   }
 
@@ -177,19 +189,23 @@ class _AppState extends State<App> {
             listener: (_, _) => unawaited(HapticFeedback.heavyImpact()),
             child: BlocSelector<SettingsCubit, SettingsState, ThemePreference>(
               selector: (state) => state.settings.themePreference,
-              builder: (context, theme) => MaterialApp.router(
-                onGenerateTitle: (context) =>
-                    AppLocalizations.of(context).appTitle,
-                localizationsDelegates: AppLocalizations.localizationsDelegates,
-                supportedLocales: AppLocalizations.supportedLocales,
-                theme: ForgeTheme.light(),
-                darkTheme: ForgeTheme.dark(),
-                themeMode: switch (theme) {
-                  ThemePreference.system => ThemeMode.system,
-                  ThemePreference.light => ThemeMode.light,
-                  ThemePreference.dark => ThemeMode.dark,
-                },
-                routerConfig: _router,
+              builder: (context, theme) => ValueListenableBuilder(
+                valueListenable: _preset,
+                builder: (context, preset, _) => MaterialApp.router(
+                  onGenerateTitle: (context) =>
+                      AppLocalizations.of(context).appTitle,
+                  localizationsDelegates:
+                      AppLocalizations.localizationsDelegates,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  theme: preset.lightTheme(),
+                  darkTheme: preset.darkTheme(),
+                  themeMode: switch (theme) {
+                    ThemePreference.system => ThemeMode.system,
+                    ThemePreference.light => ThemeMode.light,
+                    ThemePreference.dark => ThemeMode.dark,
+                  },
+                  routerConfig: _router,
+                ),
               ),
             ),
           ),

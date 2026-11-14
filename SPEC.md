@@ -363,7 +363,7 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Remaining pages (strength, calculators, account, sign-in with the Google mark on its button, your profile, warm-up settings, cardio form, workout edit, ready-made program page) keep their structure; their look is settled in the design phase
 
 Group 11, design in code (the owner's plan; the studios are the target, see Design)
-- [ ] Theme — `ForgePreset` → `ForgeTheme` in forge_ui with the studio's colours, type scale, radii and borders, light and dark; Slate, Measure and Graphite all in code, switched by a dev-only picker in Profile, prod ships the one picked at the end; fonts bundled; the studio's own line icons (not an icon package), with the heavier form for the selected tab — `lib/app/theme.dart` swaps in and screens change without edits
+- [x] Theme — `ForgePreset` → `ForgeTheme` in forge_ui with the studio's colours, type scale, radii and borders, light and dark; Slate, Measure and Graphite all in code, switched by a dev-only picker in Profile, prod ships the one picked at the end; fonts bundled; the studio's own line icons (not an icon package), with the heavier form for the selected tab — `lib/app/theme.dart` swaps in and screens change without edits
 - [ ] Forge components — the MobileAppForge Studio cards built in forge_ui with every form and state on their card, widget tests for their behaviour; merged and tagged before the app uses them
 - [ ] App components — the GetWorkout Studio components in the app, every state on their card
 - [ ] Key screens — Today, Workout and Programs with every state on their boards, approved by the owner before the rest
@@ -534,6 +534,12 @@ Decisions (the canvases they were drawn on are deleted):
     Calculators, setting groups; reminder rows, rest sound and vibration, bar
     and plates, keep screen on, Connected apps; Appearance as a segmented
     control.
+- Moving the design into Flutter (owner's picks, 2026-11-14): each icon has
+  one drawing in the studios (the named set, else the most used one) and the
+  app draws that set, not an icon package; the presets' fonts are bundled
+  with the app (Google Fonts, OFL); all three presets are in code behind a
+  debug-only picker in Profile; Measure and Graphite keep the 1px card line
+  in dark too, Slate's dark cards stay a tonal fill.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/account/presentation/consent_prompt.dart';
@@ -31,23 +32,43 @@ class AppShell extends StatelessWidget {
                 : shell.goBranch(index),
             destinations: [
               NavigationDestination(
-                icon: const Icon(Icons.today_outlined),
+                icon: const ForgeIcon(ForgeIcons.today),
+                selectedIcon: const ForgeIcon(
+                  ForgeIcons.today,
+                  weight: ForgeIcon.selectedWeight,
+                ),
                 label: l10n.tabToday,
               ),
               NavigationDestination(
-                icon: const Icon(Icons.event_note_outlined),
+                icon: const ForgeIcon(ForgeIcons.description),
+                selectedIcon: const ForgeIcon(
+                  ForgeIcons.description,
+                  weight: ForgeIcon.selectedWeight,
+                ),
                 label: l10n.tabPrograms,
               ),
               NavigationDestination(
-                icon: const Icon(Icons.fitness_center),
+                icon: const ForgeIcon(ForgeIcons.fitnessCenter),
+                selectedIcon: const ForgeIcon(
+                  ForgeIcons.fitnessCenter,
+                  weight: ForgeIcon.selectedWeight,
+                ),
                 label: l10n.tabExercises,
               ),
               NavigationDestination(
-                icon: const Icon(Icons.insights_outlined),
+                icon: const ForgeIcon(ForgeIcons.barChart),
+                selectedIcon: const ForgeIcon(
+                  ForgeIcons.barChart,
+                  weight: ForgeIcon.selectedWeight,
+                ),
                 label: l10n.tabProgress,
               ),
               NavigationDestination(
-                icon: const Icon(Icons.person_outline),
+                icon: const ForgeIcon(ForgeIcons.person),
+                selectedIcon: const ForgeIcon(
+                  ForgeIcons.person,
+                  weight: ForgeIcon.selectedWeight,
+                ),
                 label: l10n.tabProfile,
               ),
             ],
