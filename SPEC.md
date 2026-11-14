@@ -389,7 +389,7 @@ Decisions (the canvases they were drawn on are deleted):
   program, finished, Premium ended), the Front / Back toggle, exercise stars,
   favourites, Setup and Safety, own notes, workout minimize, the exercise ⋯
   menu, Add exercise and the workout note, circuits, reminder rows, Strength
-  ranges (1 year / All Premium), cardio session detail, the steps
+  ranges (12 weeks free; 6 months, 1 year and All Premium), cardio session detail, the steps
   no-permission state, the workout edit page, Estimate body fat. New: the
   rest-day card, Duplicate program and day, the program's weekly sets, "Fits
   you" and a recommended row, the progress photo reminder, rest sound and
@@ -433,6 +433,14 @@ Decisions (the canvases they were drawn on are deleted):
   picker; confirmations stay dialogs); Restore's result is a snackbar and a
   success closes the paywall. The Measure preset keeps its saturated colours
   (an accepted exception to muted colours).
+- Asked afterwards (2026-11-15), where the studio had been changed without
+  the owner: the program page's ⋯ holds Edit, Duplicate and Delete; a
+  program workout's summary also offers Save as program; Delete account opens
+  its page, then a dialog; the custom exercise detail has no history card;
+  Strength ranges are 12 weeks free and 6 months, 1 year, All Premium; the
+  effort question keeps its own Skip; the onboarding health step says the app
+  reads steps and cardio sessions and writes nothing; while one sign-in runs
+  the other options are disabled; catalogue programs are list rows.
 - Feature and flow decisions made during the design phase (owner's picks,
   2026-11-13 to 15). They supersede older feature notes and the code, which
   will be changed to match; the studio draws each:
@@ -446,7 +454,7 @@ Decisions (the canvases they were drawn on are deleted):
     prompt inside it under the missed row (Do it today, Move, Skip); "No
     active program" is an outline suggestion as on Today; finished and
     Premium-ended states; Duplicate in ⋯; the program's weekly sets.
-  - Program page: Edit and ⋯ (Duplicate, Delete) in the app bar; state,
+  - Program page: ⋯ (Edit, Duplicate, Delete) in the app bar; state,
     weekdays, next day, progress, Start, Change days, Stop; days open and close.
   - Ready-made programs: search, filter chips (four or fewer as a chip bar,
     more as the filter sheet; active ones removable), the count, programs as
@@ -1187,8 +1195,9 @@ the feature you are about to touch, and keep it true when you change it.
   builder) and "Start empty workout"; then the other programs ("Your
   programs" without an active one) with their days and length. Without an
   active program the rows come first; no floating button.
-- **Program page** (UX pass, 2026-11-13, variant B): Edit and a menu with
-  Duplicate and Delete in the app bar; a summary card with the state
+- **Program page** (UX pass, 2026-11-13, variant B; Edit moved into the
+  menu by the owner on 2026-11-15): a menu with Edit, Duplicate and Delete
+  in the app bar; a summary card with the state
   (Active, Not active or Finished), length and day count, the weekdays and
   a days mismatch warning while active, then Start program, or Change days
   and Stop, or the premium lock (Start locked, or the active copy locked
@@ -1365,7 +1374,8 @@ the feature you are about to touch, and keep it true when you change it.
   targets, to a day of one of the user's programs through the program's
   validation; a full day cannot be picked, and without programs it offers to
   create one.
-- **Save as program**: a free workout becomes a one-day program of the
+- **Save as program** (offered on a program workout's summary too, owner's
+  pick 2026-11-15): a workout becomes a one-day program of the
   user's own: its working sets, the rep range done or the longest duration,
   the heaviest weight (least assistance) as target, the exercise's default
   rest (90 s for a custom one). Exercises no longer in the library are left
@@ -1514,7 +1524,7 @@ the feature you are about to touch, and keep it true when you change it.
     naming the set with its values and the scale's short question ("Set 1
     · 80 kg × 8 — how hard?", "… — reps left?", "… — RPE?", the exercise
     first when the selection is on another one), the "?" help and the
-    steps with Failed; no Skip of its own. The set bar meanwhile shows the
+    steps with Failed, and its own Skip (owner's pick, 2026-11-15). The set bar meanwhile shows the
     next set as usual, so its weight can be set during the rest. It lasts
     as long as that rest (`restQuestionSet`: the rest still that set's and
     running, so "+15 s" extends it): gone when the rest runs out or is
