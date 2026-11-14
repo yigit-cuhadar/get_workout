@@ -32,6 +32,14 @@ jobs:
           for tz in Europe/Berlin America/New_York; do
             TZ=$tz flutter test test/features/cardio/cardio_domain_test.dart test/features/programs/program_schedule_test.dart test/features/steps
           done
+      - name: Widgetbook generates, analyzes and builds
+        working-directory: widgetbook
+        run: |
+          flutter pub get
+          dart run build_runner build -d
+          dart format --output=none --set-exit-if-changed lib
+          flutter analyze
+          flutter build web
   functions:
     runs-on: ubuntu-latest
     timeout-minutes: 10

@@ -39,52 +39,52 @@ dependencies:
   forge_core:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: fe1f2cdf35c14f7de2b24f3bdec9ce7f826d4d76
+      ref: 2dc5a6ce86457732bc13efcf62c7b8bbe1b88cd7
       path: packages/forge_core
   forge_camera:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: fe1f2cdf35c14f7de2b24f3bdec9ce7f826d4d76
+      ref: 2dc5a6ce86457732bc13efcf62c7b8bbe1b88cd7
       path: packages/forge_camera
   forge_model_viewer:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: fe1f2cdf35c14f7de2b24f3bdec9ce7f826d4d76
+      ref: 2dc5a6ce86457732bc13efcf62c7b8bbe1b88cd7
       path: packages/forge_model_viewer
   forge_ui:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: fe1f2cdf35c14f7de2b24f3bdec9ce7f826d4d76
+      ref: 2dc5a6ce86457732bc13efcf62c7b8bbe1b88cd7
       path: packages/forge_ui
   forge_firebase:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: fe1f2cdf35c14f7de2b24f3bdec9ce7f826d4d76
+      ref: 2dc5a6ce86457732bc13efcf62c7b8bbe1b88cd7
       path: packages/forge_firebase
   forge_auth:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: fe1f2cdf35c14f7de2b24f3bdec9ce7f826d4d76
+      ref: 2dc5a6ce86457732bc13efcf62c7b8bbe1b88cd7
       path: packages/forge_auth
   forge_purchases:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: fe1f2cdf35c14f7de2b24f3bdec9ce7f826d4d76
+      ref: 2dc5a6ce86457732bc13efcf62c7b8bbe1b88cd7
       path: packages/forge_purchases
   forge_notifications:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: fe1f2cdf35c14f7de2b24f3bdec9ce7f826d4d76
+      ref: 2dc5a6ce86457732bc13efcf62c7b8bbe1b88cd7
       path: packages/forge_notifications
   forge_health:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: fe1f2cdf35c14f7de2b24f3bdec9ce7f826d4d76
+      ref: 2dc5a6ce86457732bc13efcf62c7b8bbe1b88cd7
       path: packages/forge_health
   forge_remote_config:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: fe1f2cdf35c14f7de2b24f3bdec9ce7f826d4d76
+      ref: 2dc5a6ce86457732bc13efcf62c7b8bbe1b88cd7
       path: packages/forge_remote_config
   cloud_firestore: ^7.1.0
   firebase_auth: ^7.0.1
@@ -138,6 +138,25 @@ flutter:
   uses-material-design: true
   assets:
     - assets/models/
+
+  # The Measure preset's families; Slate and Graphite use forge_ui's Geist.
+  fonts:
+    - family: InstrumentSans
+      fonts:
+        - asset: assets/fonts/InstrumentSans-Regular.ttf
+        - asset: assets/fonts/InstrumentSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/InstrumentSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/InstrumentSans-Bold.ttf
+          weight: 700
+    - family: IBMPlexMono
+      fonts:
+        - asset: assets/fonts/IBMPlexMono-Regular.ttf
+        - asset: assets/fonts/IBMPlexMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexMono-SemiBold.ttf
+          weight: 600
 
   # To add assets to your application, add an assets section, like this:
   # assets:
