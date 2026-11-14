@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_ui/forge_ui.dart' hide WeekStrip;
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/text_length.dart';
 import '../../../core/widgets/featured_card.dart';
+import '../../../core/widgets/volume_band.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calculators/presentation/calculator_list.dart';
-import '../../exercises/presentation/vocabulary_labels.dart';
+import '../../calendar/presentation/calendar_marks.dart';
 import '../../generator/presentation/generator_entry.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
@@ -22,7 +23,6 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../../steps/domain/steps.dart';
 import '../../volume/domain/weekly_volume.dart';
 import '../../volume/presentation/volume_charts.dart';
-import '../../volume/presentation/volume_text.dart';
 import '../../workout/domain/workout.dart';
 import '../../workout/presentation/active_workout_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
@@ -30,7 +30,6 @@ import 'next_workout.dart';
 import 'today_steps_cubit.dart';
 import 'today_volume_cubit.dart';
 import 'today_week_cubit.dart';
-import 'week_strip.dart';
 
 /// The Today tab: this week, the next workout, this week's volume, the
 /// calculators and steps, each card on its own data, so one failing leaves
@@ -450,19 +449,47 @@ class _NoProgramDay extends StatelessWidget {
   }
 }
 
-/// This week as one calendar row; it, and every day of it, opens the
-/// calendar, which has no route for a given date.
+/// This week as day circles in a SectionCard; it, and every day of it,
+/// opens the calendar, which has no route for a given date.
 class _WeekCard extends StatelessWidget {
   const _WeekCard();
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final weekdays = MaterialLocalizations.of(context).narrowWeekdays;
+    final state = context.watch<TodayWeekCubit>().state;
     void open() => context.go(Routes.calendar);
-    return _TodayCard(
-      title: AppLocalizations.of(context).todayWeekTitle,
-      onOpen: open,
-      child: WeekStrip(onOpen: open),
-    );
+    final title = l10n.todayWeekTitle;
+    return switch (state.status) {
+      TodayWeekStatus.loading => SectionCard.loading(title: title, onTap: open),
+      TodayWeekStatus.failure => SectionCard.error(
+        title: title,
+        onTap: open,
+        message: l10n.todayWeekLoadFailed,
+        retryLabel: l10n.retry,
+        onRetry: context.read<TodayWeekCubit>().retry,
+      ),
+      TodayWeekStatus.ready => SectionCard(
+        title: title,
+        onTap: open,
+        child: WeekStrip.plain(
+          days: [
+            for (final date in state.days)
+              WeekStripDay(
+                // Index 0 is Sunday, ISO weekday 7.
+                weekday: weekdays[date.weekday % 7],
+                number: '${date.day}',
+                state: calendarDayState(
+                  state.entriesOn(date),
+                  today: date == state.today,
+                ),
+              ),
+          ],
+          onDayTap: (_) => open(),
+        ),
+      ),
+    };
   }
 }
 
@@ -522,14 +549,11 @@ class _WeekVolume extends StatelessWidget {
         children: [
           for (final muscle in week.musclesBySets.take(_topMuscles))
             if (week.setsOf(muscle) > 0) ...[
-              Row(
-                children: [
-                  Expanded(child: Text(l10n.muscleName(muscle))),
-                  Text(l10n.setsText(week.setsOf(muscle))),
-                ],
+              VolumeBand(
+                muscle: muscle,
+                sets: week.setsOf(muscle),
+                scale: scale,
               ),
-              const SizedBox(height: Gap.xs),
-              VolumeBandBar(sets: week.setsOf(muscle), scale: scale),
               const SizedBox(height: Gap.sm),
             ],
           Text(

@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:forge_camera/forge_camera.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +21,7 @@ import 'body_entry_page.dart';
 import 'body_input.dart';
 import 'body_text.dart';
 import 'measurement_day_cubit.dart';
+import 'widgets/pose_camera.dart';
 
 /// A new measurement day.
 class MeasurementDayNewPage extends StatelessWidget {
@@ -351,38 +351,29 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final file = state.photoFile(pose);
+    if (file == null || _retaking) {
+      return PoseCamera(
+        key: ValueKey(pose),
+        pose: l10n.poseName(pose),
+        step: pose.index + 1,
+        total: PhotoPose.values.length,
+        ghostFile: state.ghosts[pose],
+        onCaptured: (file) {
+          setState(() => _retaking = false);
+          _cubit.photoTaken(file);
+        },
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(l10n.poseName(pose), style: theme.textTheme.headlineSmall),
         const SizedBox(height: Gap.sm),
-        Expanded(
-          child: file == null || _retaking
-              ? GhostCamera(
-                  key: ValueKey(pose),
-                  ghostFile: state.ghosts[pose],
-                  captureLabel: l10n.bodyTakePhoto,
-                  switchLabel: l10n.bodySwitchCamera,
-                  startingTitle: l10n.bodyCameraStartingTitle,
-                  startingDetail: l10n.bodyCameraStartingDetail,
-                  unavailableTitle: l10n.bodyCameraUnavailableTitle,
-                  unavailableDetail: l10n.bodyCameraUnavailable,
-                  onCaptured: (file) {
-                    setState(() => _retaking = false);
-                    _cubit.photoTaken(file);
-                  },
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(child: Image.file(File(file))),
-                    TextButton.icon(
-                      onPressed: () => setState(() => _retaking = true),
-                      icon: const Icon(Icons.refresh),
-                      label: Text(l10n.bodyRetake),
-                    ),
-                  ],
-                ),
+        Expanded(child: Image.file(File(file))),
+        TextButton.icon(
+          onPressed: () => setState(() => _retaking = true),
+          icon: const Icon(Icons.refresh),
+          label: Text(l10n.bodyRetake),
         ),
       ],
     );

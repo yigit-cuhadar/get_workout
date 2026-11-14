@@ -6,12 +6,15 @@ import '../../programs/domain/calendar_date.dart';
 import '../domain/calendar_month.dart';
 
 /// GetWorkout's meaning of Forge's day circle, the same in WeekStrip and
-/// MonthGrid: a workout is done, cardio light, a passed program day
-/// without its workout missed, a program day ahead planned, and a [today]
-/// without a workout or cardio the thick ink ring. No dots.
+/// MonthGrid: a workout is done (on [today] also ringed in ink), cardio
+/// light, a passed program day without its workout missed, a program day
+/// ahead planned, and a [today] without a workout or cardio the thick ink
+/// ring. No dots.
 DayState calendarDayState(List<CalendarEntry> entries, {required bool today}) {
   final marks = calendarMarks(entries);
-  if (marks.contains(CalendarMark.workout)) return DayState.done;
+  if (marks.contains(CalendarMark.workout)) {
+    return today ? DayState.todayDone : DayState.done;
+  }
   if (marks.contains(CalendarMark.cardio)) return DayState.light;
   if (today) return DayState.today;
   if (marks.contains(CalendarMark.missed)) return DayState.missed;

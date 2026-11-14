@@ -58,6 +58,27 @@ void main() {
     expect(find.byType(ForgeSegmentedControl<bool>), findsNothing);
   });
 
+  testWidgets('outlined muscles are ringed in danger', (tester) async {
+    await pumpComponent(
+      tester,
+      framed(
+        MuscleModel(
+          model: body,
+          onOpen: (_) {},
+          semanticLabel: 'Body',
+          outlined: const {Muscle.abdominal},
+        ),
+      ),
+    );
+
+    final viewer = tester.widget<ModelViewer>(find.byType(ModelViewer));
+    final danger = ForgeStyle.of(tester.element(find.byType(ModelViewer)))
+        .colors
+        .danger;
+    expect(viewer.outlinedParts, {'abdominal'});
+    expect(viewer.outlineColor, danger);
+  });
+
   testWidgets('a tap on a muscle opens it', (tester) async {
     final opened = <Muscle>[];
     await pumpComponent(
