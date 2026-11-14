@@ -145,6 +145,10 @@ class Exercise extends Equatable {
 
   bool get isCustom => isCustomId(id);
 
+  /// Lifted on a barbell, whose plates the workout can break down; a
+  /// custom exercise only when its equipment says so.
+  bool get usesBarbell => equipment.contains(Equipment.barbell);
+
   /// Whether [id] names a custom exercise, known or not.
   static bool isCustomId(String id) => id.startsWith(customIdPrefix);
 

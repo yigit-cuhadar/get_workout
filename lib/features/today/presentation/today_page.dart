@@ -476,21 +476,32 @@ class _WeekCard extends StatelessWidget {
         child: WeekStrip.plain(
           days: [
             for (final date in state.days)
-              WeekStripDay(
-                // Index 0 is Sunday, ISO weekday 7.
-                weekday: weekdays[date.weekday % 7],
-                number: '${date.day}',
-                state: calendarDayState(
-                  state.entriesOn(date),
-                  today: date == state.today,
-                ),
-              ),
+              _weekDay(l10n, weekdays, date, state),
           ],
           onDayTap: (_) => open(),
         ),
       ),
     };
   }
+}
+
+WeekStripDay _weekDay(
+  AppLocalizations l10n,
+  List<String> weekdays,
+  CalendarDate date,
+  TodayWeekState week,
+) {
+  final state = calendarDayState(
+    week.entriesOn(date),
+    today: date == week.today,
+  );
+  return WeekStripDay(
+    // Index 0 is Sunday, ISO weekday 7.
+    weekday: weekdays[date.weekday % 7],
+    number: '${date.day}',
+    state: state,
+    semanticLabel: weekDayLabel(l10n, date, state),
+  );
 }
 
 /// This week's sets: the total, the most trained muscles against the band

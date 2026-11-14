@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/features/calendar/domain/calendar_month.dart';
 import 'package:get_workout/features/calendar/presentation/calendar_marks.dart';
@@ -64,5 +65,32 @@ void main() {
       DayState.planned: 'Planned',
       DayState.today: 'Today',
     });
+  });
+  test('a week day reads its weekday, number and meaning', () async {
+    await initializeDateFormatting('en');
+    final l10n = AppLocalizationsEn();
+    final friday = CalendarDate(2026, 11, 13);
+    expect(weekDayLabel(l10n, friday, DayState.none), 'Friday 13');
+    expect(
+      weekDayLabel(l10n, friday, DayState.done),
+      'Friday 13, Workout done',
+    );
+    expect(
+      weekDayLabel(l10n, friday, DayState.light),
+      'Friday 13, Cardio done',
+    );
+    expect(
+      weekDayLabel(l10n, friday, DayState.missed),
+      'Friday 13, Program day missed',
+    );
+    expect(
+      weekDayLabel(l10n, friday, DayState.planned),
+      'Friday 13, Program day planned',
+    );
+    expect(weekDayLabel(l10n, friday, DayState.today), 'Friday 13, Today');
+    expect(
+      weekDayLabel(l10n, friday, DayState.todayDone),
+      'Friday 13, Today, Workout done',
+    );
   });
 }

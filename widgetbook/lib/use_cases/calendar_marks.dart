@@ -13,7 +13,12 @@ WeekStrip _week(String title, int first, List<DayState> states) => WeekStrip(
   title: title,
   days: [
     for (final (i, state) in states.indexed)
-      WeekStripDay(weekday: _letters[i], number: '${first + i}', state: state),
+      WeekStripDay(
+        weekday: _letters[i],
+        number: '${first + i}',
+        state: state,
+        semanticLabel: '${first + i}, ${state.name}',
+      ),
   ],
   onDayTap: (_) {},
 );

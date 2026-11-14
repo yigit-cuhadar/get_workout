@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/features/body/presentation/widgets/pose_camera.dart';
 
@@ -12,11 +13,13 @@ import '../fake_camera.dart';
 void main() {
   late FakeCameraPlatform platform;
   late List<String> captured;
+  late int skipped;
 
   setUp(() {
     platform = FakeCameraPlatform([backCamera, frontCamera]);
     CameraPlatform.instance = platform;
     captured = [];
+    skipped = 0;
   });
 
   Future<void> show(WidgetTester tester, {String? ghostFile}) async {
@@ -30,6 +33,7 @@ void main() {
           total: 4,
           ghostFile: ghostFile,
           onCaptured: captured.add,
+          onSkip: () => skipped++,
         ),
       ),
     );
@@ -41,7 +45,7 @@ void main() {
   testWidgets('names the pose and its step, back camera first', (tester) async {
     await show(tester);
 
-    expect(find.text('Right side'), findsOneWidget);
+    expect(find.text('Right side · first photo'), findsOneWidget);
     expect(find.text('2 / 4'), findsOneWidget);
     expect(platform.opened, [backCamera]);
   });
@@ -64,6 +68,7 @@ void main() {
     await show(tester, ghostFile: ghost.path);
 
     expect(button('Guide pose'), findsNothing);
+    expect(find.text('Right side · match last photo'), findsOneWidget);
   });
 
   testWidgets('the shutter takes the photo at once', (tester) async {
@@ -137,18 +142,45 @@ void main() {
     expect(button('Switch camera'), findsNothing);
   });
 
-  testWidgets('camera access off says so', (tester) async {
+  testWidgets('camera access off opens the settings or skips the photo', (
+    tester,
+  ) async {
+    final settings = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('com.spencerccf.app_settings/methods'),
+      (call) async {
+        settings.add(call.method);
+        return null;
+      },
+    );
     platform.initError = CameraException('CameraAccessDenied', 'denied');
     await show(tester);
 
-    expect(find.text("The camera isn't available"), findsOneWidget);
     expect(find.text('Right side'), findsOneWidget);
+    expect(find.text('Camera access is off'), findsOneWidget);
+    expect(
+      find.text('Progress photos need the camera. Turn it on in Settings.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Open settings'));
+    await tester.pump();
+    expect(settings, ['openSettings']);
+
+    await tester.tap(find.text('Skip photo'));
+    expect(skipped, 1);
   });
 
-  testWidgets('no camera says so', (tester) async {
+  testWidgets('no camera only skips the photo', (tester) async {
     CameraPlatform.instance = platform = FakeCameraPlatform([]);
     await show(tester);
 
-    expect(find.text("The camera isn't available"), findsOneWidget);
+    expect(find.text('No camera found'), findsOneWidget);
+    expect(
+      find.text('This device has no camera to take progress photos.'),
+      findsOneWidget,
+    );
+    expect(find.text('Open settings'), findsNothing);
+    await tester.tap(find.text('Skip photo'));
+    expect(skipped, 1);
   });
 }

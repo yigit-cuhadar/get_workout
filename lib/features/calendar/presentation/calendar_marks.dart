@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../programs/domain/calendar_date.dart';
@@ -20,6 +21,25 @@ DayState calendarDayState(List<CalendarEntry> entries, {required bool today}) {
   if (marks.contains(CalendarMark.missed)) return DayState.missed;
   if (marks.contains(CalendarMark.planned)) return DayState.planned;
   return DayState.none;
+}
+
+/// What a screen reader says for a week day: its weekday and number, then
+/// what its circle [state] means, such as "Friday 13, Workout done".
+String weekDayLabel(AppLocalizations l10n, CalendarDate date, DayState state) {
+  final day = l10n.calendarWeekDay(
+    DateFormat.EEEE(l10n.localeName).format(date.toLocalDateTime()),
+    date.day,
+  );
+  final meaning = switch (state) {
+    DayState.none => null,
+    DayState.done => l10n.calendarWorkoutMark,
+    DayState.light => l10n.calendarCardioMark,
+    DayState.planned => l10n.calendarPlannedMark,
+    DayState.missed => l10n.calendarMissedMark,
+    DayState.today => l10n.calendarMarksToday,
+    DayState.todayDone => l10n.calendarTodayDone,
+  };
+  return meaning == null ? day : '$day, $meaning';
 }
 
 /// The day circles a month can show, in the legend's order, with their

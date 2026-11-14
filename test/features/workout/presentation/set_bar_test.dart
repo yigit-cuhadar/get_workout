@@ -8,6 +8,7 @@ import 'package:get_workout/features/calculators/domain/calculation.dart';
 import 'package:get_workout/features/calculators/domain/calculators_usecases.dart';
 import 'package:get_workout/features/calculators/domain/plates.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
+import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
@@ -17,10 +18,14 @@ import 'package:get_workout/features/workout/presentation/workout_editor.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../exercises/fixtures.dart' as catalogue;
 import '../fixtures.dart';
 
 class _MockSettingsCubit extends MockCubit<SettingsState>
     implements SettingsCubit {}
+
+class _MockCatalogueCubit extends MockCubit<ExerciseCatalogueState>
+    implements ExerciseCatalogueCubit {}
 
 class _MockEditor extends Mock implements WorkoutEditor<EditedWorkout> {}
 
@@ -39,6 +44,8 @@ void main() {
     LoggingType type = LoggingType.weightReps,
     WeightUnit unit = WeightUnit.kg,
     bool plates = true,
+    List<Equipment> equipment = const [Equipment.barbell],
+    bool known = true,
     bool refused = false,
   }) {
     final editor = _MockEditor();
@@ -50,14 +57,23 @@ void main() {
         loaded: true,
       ),
     );
+    final exercises = _MockCatalogueCubit();
+    when(() => exercises.state).thenReturn(
+      CatalogueReady([
+        if (known) catalogue.exercise('Bench Press', equipment: equipment),
+      ]),
+    );
     return tester.pumpWidget(
       MaterialApp(
         theme: AppPreset.shipped.lightTheme(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
-          body: BlocProvider<SettingsCubit>.value(
-            value: settings,
+          body: MultiBlocProvider(
+            providers: [
+              BlocProvider<SettingsCubit>.value(value: settings),
+              BlocProvider<ExerciseCatalogueCubit>.value(value: exercises),
+            ],
             child: Align(
               alignment: Alignment.bottomCenter,
               child: SetBar(
@@ -151,6 +167,29 @@ void main() {
       type: LoggingType.weightDuration,
     );
     expect(platesButton(), findsOneWidget);
+  });
+
+  testWidgets('only a barbell exercise has the plate button', (tester) async {
+    await pump(
+      tester,
+      set: lift(32, 8, done: false),
+      equipment: const [Equipment.dumbbell, Equipment.bench],
+    );
+    expect(platesButton(), findsNothing);
+
+    await pump(
+      tester,
+      set: lift(82.5, 8, done: false),
+      equipment: const [Equipment.barbell, Equipment.bench],
+    );
+    expect(platesButton(), findsOneWidget);
+  });
+
+  testWidgets('an exercise the catalogue does not know has no plate button', (
+    tester,
+  ) async {
+    await pump(tester, set: lift(82.5, 8, done: false), known: false);
+    expect(platesButton(), findsNothing);
   });
 
   testWidgets('a refused tick rings the empty field and says why once', (

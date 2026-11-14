@@ -362,6 +362,7 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
           setState(() => _retaking = false);
           _cubit.photoTaken(file);
         },
+        onSkip: _cubit.skip,
       );
     }
     return Column(

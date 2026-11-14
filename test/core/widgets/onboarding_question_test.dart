@@ -83,8 +83,36 @@ void main() {
     );
 
     expect(find.text('Bigger, fuller muscles'), findsOneWidget);
+    final grid = tester.widget<ChoiceGrid>(find.byType(ChoiceGrid));
+    expect(grid.form, ChoiceListForm.stacked);
+    expect(grid.selected, 0);
+    expect(grid.options.map((option) => option.enabled), [true, true, false]);
     await tester.tap(find.text('STRENGTH'));
     await tester.tap(find.text('LOCKED'));
     expect(picked, ['strength']);
+  });
+  testWidgets('null can be an answer; no answer selects no row', (
+    tester,
+  ) async {
+    Widget choices(String? selected) => OnboardingChoices<String?>(
+      values: const [null, 'push'],
+      selected: selected,
+      title: (value) => value ?? 'none',
+      onChanged: (_) {},
+    );
+
+    await pumpComponent(tester, choices(null));
+    expect(tester.widget<ChoiceGrid>(find.byType(ChoiceGrid)).selected, 0);
+
+    await pumpComponent(
+      tester,
+      OnboardingChoices<String>(
+        values: const ['push'],
+        selected: null,
+        title: (value) => value,
+        onChanged: (_) {},
+      ),
+    );
+    expect(tester.widget<ChoiceGrid>(find.byType(ChoiceGrid)).selected, isNull);
   });
 }

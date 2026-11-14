@@ -51,6 +51,8 @@ void main() {
         isInMutuallyExclusiveGroup: true,
         hasCheckedState: true,
         isChecked: true,
+        hasEnabledState: true,
+        isEnabled: true,
         isFocusable: true,
         hasTapAction: true,
         hasFocusAction: true,

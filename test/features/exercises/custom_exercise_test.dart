@@ -222,4 +222,34 @@ void main() {
       verifyNever(() => repository.createCustomExercise(any(), any()));
     });
   });
+
+  test('only an exercise with a barbell uses one', () {
+    expect(
+      exercise('ex_a', equipment: const [Equipment.barbell]).usesBarbell,
+      isTrue,
+    );
+    expect(
+      exercise('ex_b', equipment: const [Equipment.ezBar]).usesBarbell,
+      isFalse,
+    );
+    expect(
+      Exercise.custom(
+        id: 'custom_a',
+        name: 'Floor Press',
+        loggingType: LoggingType.weightReps,
+        mainMuscles: const [Muscle.pec],
+        equipment: const [Equipment.barbell],
+      ).usesBarbell,
+      isTrue,
+    );
+    expect(
+      Exercise.custom(
+        id: 'custom_b',
+        name: 'Floor Press',
+        loggingType: LoggingType.weightReps,
+        mainMuscles: const [Muscle.pec],
+      ).usesBarbell,
+      isFalse,
+    );
+  });
 }

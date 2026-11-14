@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../calculators/domain/calculation.dart';
 import '../../calculators/domain/plates.dart';
 import '../../exercises/domain/vocabulary.dart';
+import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
@@ -179,8 +180,9 @@ class _RestBelowBarState extends State<RestBelowBar>
 /// ticked it shows [_EffortQuestion] instead. A tick refused for missing
 /// values turns Log set off, rings the empty fields and says so under
 /// them until the set can be ticked. With [loadPlates], the weight of a
-/// barbell-style set (weight × reps or time) has a plate button showing
-/// its breakdown on the user's bar and plates.
+/// barbell exercise's set (weight × reps or time) has a plate button
+/// showing its breakdown on the user's bar and plates; the workout keeps
+/// no equipment, so the exercise is looked up in the catalogue.
 class SetBar extends StatelessWidget {
   const SetBar({
     super.key,
@@ -222,6 +224,14 @@ class SetBar extends StatelessWidget {
     final exercise = state.workout!.exercises[ref.exercise];
     final set = exercise.sets[ref.set];
     final type = exercise.loggingType;
+    final barbell = context.select(
+      (ExerciseCatalogueCubit catalogue) => switch (catalogue.state) {
+        CatalogueReady(:final exercises) => exercises.any(
+          (known) => known.id == exercise.exerciseId && known.usesBarbell,
+        ),
+        _ => false,
+      },
+    );
     final hint = state.suggestion(ref);
     final previous = state.lastTime(ref);
     final details = [
@@ -342,8 +352,9 @@ class SetBar extends StatelessWidget {
       onLog: blocked ? null : () => _toggle(context, ref),
       onPlates: switch ((loadPlates, set.weightKg ?? hint.weightKg)) {
         (final loadPlates?, final kg?)
-            when type == LoggingType.weightReps ||
-                type == LoggingType.weightDuration =>
+            when barbell &&
+                (type == LoggingType.weightReps ||
+                    type == LoggingType.weightDuration) =>
           (button) => _showPlates(button, loadPlates, kg, settings),
         _ => null,
       },

@@ -165,9 +165,10 @@ class OnboardingQuestionBody extends StatelessWidget {
   }
 }
 
-/// One answer of [values] as 60px radio rows: each its [title] and the
-/// line under it ([subtitle]), the [selected] one on accent-soft. A value
-/// not [enabled] takes no tap. Null may be one of them, e.g. "none".
+/// One answer of [values] as Forge's stacked choice rows: each its
+/// [title] and, when it has one, the line under it ([subtitle]). A value
+/// not [enabled] is faded and takes no tap. Null may be one of them, e.g.
+/// "none".
 class OnboardingChoices<T> extends StatelessWidget {
   const OnboardingChoices({
     super.key,
@@ -187,121 +188,20 @@ class OnboardingChoices<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    spacing: 6,
-    children: [
-      for (final value in values)
-        _ChoiceRow(
-          title: title(value),
-          subtitle: subtitle?.call(value),
-          selected: value == selected,
-          onTap: enabled?.call(value) ?? true ? () => onChanged(value) : null,
-        ),
-    ],
-  );
-}
-
-class _ChoiceRow extends StatelessWidget {
-  const _ChoiceRow({
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String? subtitle;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  @override
   Widget build(BuildContext context) {
-    final style = ForgeStyle.of(context);
-    final colors = style.colors;
-    final text = Theme.of(context).textTheme;
-    final subtitle = this.subtitle;
-    return Semantics(
-      inMutuallyExclusiveGroup: true,
-      checked: selected,
-      button: true,
-      enabled: onTap != null,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 60),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? colors.accentSoft : colors.surface,
-            borderRadius: BorderRadius.circular(style.radii.md),
+    final index = values.indexWhere((value) => value == selected);
+    return ChoiceGrid.list(
+      form: ChoiceListForm.stacked,
+      options: [
+        for (final value in values)
+          ChoiceOption(
+            label: title(value),
+            hint: subtitle?.call(value),
+            enabled: enabled?.call(value) ?? true,
           ),
-          child: Row(
-            spacing: 12,
-            children: [
-              _Radio(selected: selected),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: 2,
-                  children: [
-                    Text(
-                      title,
-                      style: text.titleMedium!.copyWith(
-                        color: selected ? colors.onAccentSoft : colors.ink,
-                      ),
-                    ),
-                    if (subtitle != null)
-                      Text(
-                        subtitle,
-                        style: text.labelMedium!.copyWith(
-                          fontWeight: FontWeight.w400,
-                          color: colors.inkMuted,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The 20px radio of a row: a line-strong ring, accent with an accent dot
-/// when [selected].
-class _Radio extends StatelessWidget {
-  const _Radio({required this.selected});
-
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = ForgeStyle.of(context);
-    final colors = style.colors;
-    return Container(
-      width: 20,
-      height: 20,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(style.radii.sm),
-        border: Border.all(
-          color: selected ? colors.accent : colors.lineStrong,
-          width: 2,
-        ),
-      ),
-      child: selected
-          ? Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: colors.accent,
-              ),
-            )
-          : null,
+      ],
+      selected: index < 0 ? null : index,
+      onSelected: (i) => onChanged(values[i]),
     );
   }
 }
