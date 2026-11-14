@@ -6,6 +6,7 @@ Built with MobileAppForge. Work from the forge root (this repo is cloned at
 - State of the app and what to do next: `SPEC.md`.
 - Run: `flutter run` (debug and profile use the dev Firebase project, release uses prod)
 - Check before every commit: `dart format lib tool test && flutter analyze && flutter test`
+- Widgetbook of the app's components: `cd widgetbook && dart run build_runner build -d && flutter run -d chrome`
 - Grant or revoke the admin claim: `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) tool/set_admin.sh <project-id> <email> [--revoke]`
 - Grant or remove server-side Premium on dev (writes `entitlements/{uid}`; refuses non `-dev` projects): `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) tool/set_premium.sh <project>-dev <uid> [days|off]`
 - Validate content (exercises and programs, with a per-program summary): `dart run tool/validate_content.dart`
