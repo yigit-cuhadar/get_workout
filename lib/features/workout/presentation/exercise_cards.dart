@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/grouping.dart';
@@ -13,16 +14,18 @@ import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/equipment_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/presentation/program_text.dart';
+import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/workout.dart';
 import 'set_bubbles.dart';
+import 'widgets/exercise_card.dart';
 import 'workout_editor.dart';
 import 'workout_editor_view.dart';
 import 'workout_text.dart';
 
 /// The exercises of the workout [editor] edits, as a sliver: a card for
 /// each one or each superset or circuit. Only the card of the selected set
-/// is open, showing its [SetBubbles]; the others show each exercise's
+/// is open, showing its set bubbles; the others show each exercise's
 /// progress on one line, and tapping one opens it. [picker] is the route
 /// of the exercise picker above the page.
 ///
@@ -117,68 +120,44 @@ class _ExerciseCardsState extends State<ExerciseCards> {
 
   /// Card [block] of [groupBlocks]; as the drag's [proxy], only its lines.
   Widget _card(int block, {Key? key, bool proxy = false}) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final state = widget.state;
-    final exercises = state.workout!.exercises;
+    final exercises = widget.state.workout!.exercises;
     final blocks = groupBlocks(exercises);
-    final (start, end) = blocks[block];
-    final selected = state.selection?.exercise;
-    final lines = _collapsed || proxy;
-    final open =
-        !lines && selected != null && selected >= start && selected < end;
+    final (start, _) = blocks[block];
     // Nothing to hold while a card moves or edits are refused.
     final holdable = !proxy && !_collapsed && widget.editor.canEdit;
     final moves = holdable ? _moves(block, blocks.length) : null;
-    return Card(
+    return _Card(
       key: key,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (end - start > 1 && !lines)
-            ListTile(
-              dense: true,
-              title: Text(
-                l10n.groupLabel(exercises[start].group!, end - start),
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                ),
+      block: block,
+      form: proxy
+          ? ExerciseCardForm.lifted
+          : _collapsed
+          ? ExerciseCardForm.line
+          : null,
+      state: widget.state,
+      editor: widget.editor,
+      picker: widget.picker,
+      exerciseRoute: widget.exerciseRoute,
+      wrapLine: (item, line) {
+        final exercise = start + item;
+        var wrapped = line;
+        if (moves != null) {
+          wrapped = Semantics(
+            customSemanticsActions: moves,
+            child: Listener(
+              onPointerDown: (event) => _holdStarted(event, exercise),
+              child: _HoldDragStartListener(
+                index: block,
+                onGate: (gate) => _newGate = gate,
+                child: wrapped,
               ),
             ),
-          for (var i = start; i < end; i++)
-            _ExerciseHeader(
-              key: _collapsed && !proxy && _hold?.exercise == i
-                  ? _heldLine
-                  : null,
-              index: i,
-              open: open,
-              state: state,
-              editor: widget.editor,
-              picker: widget.picker,
-              exerciseRoute: widget.exerciseRoute,
-              draggable: moves == null
-                  ? null
-                  : (tile) => Semantics(
-                      customSemanticsActions: moves,
-                      child: Listener(
-                        onPointerDown: (event) => _holdStarted(event, i),
-                        child: _HoldDragStartListener(
-                          index: block,
-                          onGate: (gate) => _newGate = gate,
-                          child: tile,
-                        ),
-                      ),
-                    ),
-            ),
-          if (open)
-            SetBubbles(
-              start: start,
-              end: end,
-              state: state,
-              editor: widget.editor,
-            ),
-        ],
-      ),
+          );
+        }
+        return _collapsed && !proxy && _hold?.exercise == exercise
+            ? KeyedSubtree(key: _heldLine, child: wrapped)
+            : wrapped;
+      },
     );
   }
 
@@ -384,91 +363,105 @@ class _HoldGate extends MultiDragPointerState {
   }
 }
 
-Widget? _groupLeading(List<WorkoutExercise> exercises, int index) =>
-    exercises[index].group == null
-    ? null
-    : CircleAvatar(child: Text(groupItemLabel(exercises, index)));
-
-/// Exercise [index]'s line in its card, [draggable] wrapping all of it but
-/// its menu. [open], its name, goal, last time and note, and within a group
-/// tapping it moves the selection to it; else its progress, and tapping it
-/// opens it.
-class _ExerciseHeader extends StatelessWidget {
-  const _ExerciseHeader({
+/// Card [block] of [groupBlocks] as an [ExerciseCard]: open when it has
+/// the selected set, else collapsed, unless [form] says otherwise. Within
+/// an open group, tapping an exercise moves the selection to it; tapping a
+/// collapsed one opens it.
+class _Card extends StatelessWidget {
+  const _Card({
     super.key,
-    required this.index,
-    required this.open,
+    required this.block,
+    required this.form,
     required this.state,
     required this.editor,
     required this.picker,
     required this.exerciseRoute,
-    required this.draggable,
+    required this.wrapLine,
   });
 
-  final int index;
-  final bool open;
+  final int block;
+  final ExerciseCardForm? form;
   final EditedWorkout state;
   final WorkoutEditor<EditedWorkout> editor;
   final String Function({required int max, required bool multiple}) picker;
-
-  /// Where an exercise's detail page opens above the page.
   final String Function(String id) exerciseRoute;
-  final Widget Function(Widget tile)? draggable;
+  final Widget Function(int item, Widget line) wrapLine;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final unit = context.select(
+      (SettingsCubit cubit) => cubit.state.settings.weightUnit,
+    );
+    final exercises = state.workout!.exercises;
+    final (start, end) = groupBlocks(exercises)[block];
+    final selected = state.selection?.exercise;
+    final grouped = end - start > 1;
+    final form =
+        this.form ??
+        (selected != null && selected >= start && selected < end
+            ? ExerciseCardForm.open
+            : ExerciseCardForm.collapsed);
+    final open = form == ExerciseCardForm.open;
+    return Padding(
+      padding: const EdgeInsets.all(Gap.sm),
+      child: ExerciseCard(
+        form: form,
+        optionsLabel: l10n.programItemActions,
+        group: grouped
+            ? l10n.groupLabel(exercises[start].group!, end - start)
+            : null,
+        wrapLine: wrapLine,
+        items: [
+          for (var i = start; i < end; i++)
+            _item(context, i, open: open, grouped: grouped, unit: unit),
+        ],
+      ),
+    );
+  }
+
+  ExerciseCardItem _item(
+    BuildContext context,
+    int index, {
+    required bool open,
+    required bool grouped,
+    required WeightUnit unit,
+  }) {
+    final l10n = AppLocalizations.of(context);
     final exercises = state.workout!.exercises;
     final exercise = exercises[index];
-    final Widget tile;
-    if (open) {
-      final unit = context.select(
-        (SettingsCubit cubit) => cubit.state.settings.weightUnit,
-      );
-      final last = state.stats[exercise.exerciseId]?.last;
-      final details = [
-        ?l10n.goalText(exercise, unit),
-        if (last != null) l10n.lastTimeText(last.date),
-        ?exercise.note,
-      ];
-      final grouped = exercise.group != null;
-      tile = ListTile(
-        leading: _groupLeading(exercises, index),
-        title: Text(
-          exercise.name,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        subtitle: details.isEmpty ? null : Text(details.join('\n')),
-        selected: grouped && state.selection?.exercise == index,
-        onTap: grouped ? () => editor.openExercise(index) : null,
-      );
-    } else {
-      tile = ListTile(
-        leading: _groupLeading(exercises, index),
-        title: Text(l10n.exerciseProgress(exercise)),
-        onTap: () => editor.openExercise(index),
-      );
-    }
-    return Row(
-      children: [
-        Expanded(child: draggable?.call(tile) ?? tile),
-        _ExerciseMenu(
-          index: index,
-          state: state,
-          editor: editor,
-          picker: picker,
-          exerciseRoute: exerciseRoute,
-        ),
-      ],
+    final total = exercise.sets.length;
+    final done = exercise.doneSets.length;
+    final last = state.stats[exercise.exerciseId]?.last;
+    return ExerciseCardItem(
+      name: exercise.name,
+      count: l10n.exerciseCardCount(done, total),
+      progress: total == 0 ? 0 : done / total,
+      allDone: total > 0 && done == total,
+      letter: grouped ? groupItemLabel(exercises, index) : null,
+      details: open
+          ? [
+              ?l10n.goalText(exercise, unit),
+              if (last != null) l10n.lastTimeText(last.date),
+              ?exercise.note,
+            ]
+          : const [],
+      sets: open ? setBubbles(context, index, state, editor) : null,
+      onTap: !open || grouped ? () => editor.openExercise(index) : null,
+      onOptions: (button) => _ExerciseMenu(
+        index: index,
+        state: state,
+        editor: editor,
+        picker: picker,
+        exerciseRoute: exerciseRoute,
+      ).show(button),
     );
   }
 }
 
-enum _ExerciseAction { details, swap, link, ungroup, note, remove }
-
 /// The actions on exercise [index]: its detail page, swap, group, note,
 /// remove.
-class _ExerciseMenu extends StatelessWidget {
+class _ExerciseMenu {
   const _ExerciseMenu({
     required this.index,
     required this.state,
@@ -485,55 +478,41 @@ class _ExerciseMenu extends StatelessWidget {
   /// Where an exercise's detail page opens above the page.
   final String Function(String id) exerciseRoute;
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+  /// Opens under [button], the exercise's menu button.
+  void show(BuildContext button) {
+    final l10n = AppLocalizations.of(button);
     final exercises = state.workout!.exercises;
     final exercise = exercises[index];
-    return PopupMenuButton<_ExerciseAction>(
-      tooltip: l10n.programItemActions,
-      onSelected: (action) => switch (action) {
-        _ExerciseAction.details => context.push(
-          exerciseRoute(exercise.exerciseId),
+    showForgeMenu(
+      context: button,
+      items: [
+        ForgeMenuItem(
+          label: l10n.workoutExerciseDetails,
+          onTap: () => button.push(exerciseRoute(exercise.exerciseId)),
         ),
-        _ExerciseAction.swap => _swap(context),
-        _ExerciseAction.link => editor.linkWithNext(index),
-        _ExerciseAction.ungroup => editor.ungroup(index),
-        _ExerciseAction.note => _editNote(context, exercise),
-        _ExerciseAction.remove => _remove(context, exercise),
-      },
-      itemBuilder: (_) => [
-        PopupMenuItem(
-          value: _ExerciseAction.details,
-          child: Text(l10n.workoutExerciseDetails),
-        ),
-        PopupMenuItem(
-          value: _ExerciseAction.swap,
-          child: Text(l10n.workoutSwap),
-        ),
+        ForgeMenuItem(label: l10n.workoutSwap, onTap: () => _swap(button)),
         if (canLinkWithNext(exercises, index))
-          PopupMenuItem(
-            value: _ExerciseAction.link,
-            child: Text(
-              linkedSize(exercises, index) == 2
-                  ? l10n.programMakeSuperset
-                  : l10n.programMakeCircuit,
-            ),
+          ForgeMenuItem(
+            label: linkedSize(exercises, index) == 2
+                ? l10n.programMakeSuperset
+                : l10n.programMakeCircuit,
+            onTap: () => editor.linkWithNext(index),
           ),
         if (exercise.group != null)
-          PopupMenuItem(
-            value: _ExerciseAction.ungroup,
-            child: Text(l10n.programUngroup),
+          ForgeMenuItem(
+            label: l10n.programUngroup,
+            onTap: () => editor.ungroup(index),
           ),
-        PopupMenuItem(
-          value: _ExerciseAction.note,
-          child: Text(
-            exercise.note == null ? l10n.workoutAddNote : l10n.workoutEditNote,
-          ),
+        ForgeMenuItem(
+          label: exercise.note == null
+              ? l10n.workoutAddNote
+              : l10n.workoutEditNote,
+          onTap: () => _editNote(button, exercise),
         ),
-        PopupMenuItem(
-          value: _ExerciseAction.remove,
-          child: Text(l10n.programRemoveItem),
+        ForgeMenuItem(
+          label: l10n.programRemoveItem,
+          destructive: true,
+          onTap: () => _remove(button, exercise),
         ),
       ],
     );

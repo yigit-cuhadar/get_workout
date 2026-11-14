@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_ui/forge_ui.dart';
 
 import '../../../core/max_length_formatter.dart';
 import '../../../l10n/app_localizations.dart';
@@ -9,9 +10,10 @@ import '../domain/set_logging.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/workout.dart';
+import '../domain/workout_editing.dart' as editing;
 import '../domain/workout_tips.dart';
+import 'widgets/set_type_menu.dart';
 import 'workout_editor.dart';
-import 'workout_help.dart';
 import 'workout_text.dart';
 
 /// Asks [title] with [body]; true when the user picks [confirm].
@@ -82,8 +84,9 @@ class _NoteFieldState extends State<NoteField> {
 }
 
 /// Asks which kind of set to add to exercise [index] of the workout
-/// [editor] edits, each with what it is, and adds it; one tap each. The
-/// first time, a tip tells what the kinds are. Needs [SettingsCubit] above.
+/// [editor] edits in an [AddSetSheet], each with the bubble it would get
+/// and what it is, and adds it; one tap each. The first time, a tip tells
+/// what the kinds are. Needs [SettingsCubit] above.
 Future<void> addSetOfKind(
   BuildContext context,
   WorkoutEditor<EditedWorkout> editor,
@@ -92,42 +95,33 @@ Future<void> addSetOfKind(
   final exercise = editor.state.workout?.exercises.elementAtOrNull(index);
   if (exercise == null) return;
   final settings = context.read<SettingsCubit>();
-  final type = await showModalBottomSheet<SetType>(
+  final type = await showForgeBottomSheet<SetType>(
     context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
     builder: (context) {
       final l10n = AppLocalizations.of(context);
       final seen = context.select(
         (SettingsCubit cubit) =>
             cubit.state.loaded ? cubit.state.settings.seenTips : null,
       );
-      return SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ListTile(
-                title: Text(
-                  l10n.workoutAddSet,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              if (setTypesTipDue(seen))
-                TipBanner(
-                  text: l10n.tipSetTypes,
-                  onDismiss: () => settings.tipSeen(Tip.setTypes),
-                ),
-              for (final type in exercise.loggingType.setTypes)
-                ListTile(
-                  title: Text(l10n.setTypeLabel(type)),
-                  subtitle: Text(l10n.setTypeHint(type)),
-                  onTap: () => Navigator.pop(context, type),
-                ),
-            ],
-          ),
-        ),
+      return AddSetSheet(
+        title: l10n.workoutAddSet,
+        tip: setTypesTipDue(seen)
+            ? TipBanner(
+                message: l10n.tipSetTypes,
+                dismissLabel: l10n.tipDismiss,
+                onDismiss: () => settings.tipSeen(Tip.setTypes),
+              )
+            : null,
+        options: [
+          for (final type in exercise.loggingType.setTypes)
+            AddSetOption(
+              label: l10n.setTypeLabel(type),
+              hint: l10n.setTypeHint(type),
+              bubble: _newSetLabel(l10n, exercise, type),
+              warmup: type == SetType.warmup,
+              onTap: () => Navigator.pop(context, type),
+            ),
+        ],
       );
     },
   );
@@ -135,4 +129,17 @@ Future<void> addSetOfKind(
   // Picking a kind is what the tip was for.
   unawaited(settings.tipSeen(Tip.setTypes));
   editor.addSet(index, type);
+}
+
+/// The label a new set of [type] would get in [exercise].
+String _newSetLabel(
+  AppLocalizations l10n,
+  WorkoutExercise exercise,
+  SetType type,
+) {
+  final at = editing.newSetPosition(exercise, type);
+  final added = exercise.copyWith(
+    sets: [...exercise.sets]..insert(at, WorkoutSet(type: type)),
+  );
+  return l10n.setLabel(added, at);
 }
