@@ -336,7 +336,7 @@ class _FormState extends State<_Form> {
           ForgeMenuItem(
             label: l10n.builderDuplicateDay,
             icon: ForgeIcons.contentCopy,
-            onTap: () => _cubit.duplicateDay(index),
+            onTap: () => _cubit.duplicateDay(index, l10n.builderDayCopy),
           ),
         if (index > 0)
           ForgeMenuItem(
@@ -530,9 +530,9 @@ class _FormState extends State<_Form> {
               children: [
                 ForgeAddButton(
                   label: l10n.programAddExercises,
-                  onPressed: () {
-                    if (state.freeSlots > 0) _addExercises(state);
-                  },
+                  onPressed: state.freeSlots > 0
+                      ? () => _addExercises(state)
+                      : null,
                 ),
                 if (state.freeSlots == 0)
                   Text(
@@ -597,6 +597,7 @@ class _RenameDayDialogState extends State<_RenameDayDialog> {
         label: l10n.programDayName,
         hint: l10n.programDayDefault(widget.number),
         controller: _controller,
+        autofocus: true,
         inputFormatters: [maxLengthFormatter(ProgramLimits.maxDayNameLength)],
         textInputAction: TextInputAction.done,
         onSubmitted: (name) => Navigator.pop(context, name),
@@ -726,13 +727,13 @@ class _ItemTile extends StatelessWidget {
             label: linkedSize(items, index) == 2
                 ? l10n.programMakeSuperset
                 : l10n.programMakeCircuit,
-            icon: ForgeIcons.add,
+            icon: ForgeIcons.dragHandle,
             onTap: () => cubit.linkWithNext(index),
           ),
         if (grouped)
           ForgeMenuItem(
             label: l10n.programUngroup,
-            icon: ForgeIcons.removeCircle,
+            icon: ForgeIcons.remove,
             onTap: () => cubit.ungroup(index),
           ),
         remove,
@@ -890,10 +891,9 @@ class _ItemEditorState extends State<_ItemEditor> {
                   ),
                 ],
               ),
-            _RestField(
+            ForgeTextField.tapOnly(
               label: l10n.builderRest,
               value: l10n.restClock(_restS),
-              error: error({ItemIssue.restOutOfRange}),
               onTap: _pickRest,
             ),
             if (widget.logsWeight)
@@ -947,61 +947,5 @@ class _NumberField extends StatelessWidget {
     ],
     errorText: error,
     onChanged: onChanged,
-  );
-}
-
-/// The rest as a field that is not typed in: a tap opens the duration
-/// wheel ([onTap]).
-class _RestField extends StatefulWidget {
-  const _RestField({
-    required this.label,
-    required this.value,
-    required this.error,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final String? error;
-  final VoidCallback onTap;
-
-  @override
-  State<_RestField> createState() => _RestFieldState();
-}
-
-class _RestFieldState extends State<_RestField> {
-  late final _controller = TextEditingController(text: widget.value);
-
-  @override
-  void didUpdateWidget(_RestField old) {
-    super.didUpdateWidget(old);
-    if (old.value != widget.value) _controller.text = widget.value;
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    label: widget.label,
-    value: widget.value,
-    onTap: widget.onTap,
-    child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: widget.onTap,
-      child: ExcludeSemantics(
-        child: AbsorbPointer(
-          child: ForgeTextField(
-            label: widget.label,
-            controller: _controller,
-            errorText: widget.error,
-          ),
-        ),
-      ),
-    ),
   );
 }

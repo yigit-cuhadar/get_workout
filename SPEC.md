@@ -753,22 +753,24 @@ Decisions (the canvases they were drawn on are deleted):
   day's chip and in your workouts.", field "Day name" with hint "Day n",
   Save · Cancel); the ⋯, a second tap on the selected chip or a long press
   opens the day menu: Rename day, Duplicate day (the copy follows and is
-  selected), Move earlier, Move later, Delete day, each with an icon, the
+  selected, a named day's copy is "Push copy"), Move earlier, Move later, Delete day, each with an icon, the
   ones that cannot apply hidden; deleting a day with exercises asks
   ("Delete this day and its exercises?", "Its 5 exercises are removed
-  too."). Under the chips "Push · 6 exercises · ~55 min"; the rows in one
+  too.", one: "Its exercise is removed too."); cancelling the Rename
+  dialog after "+ Day" keeps "Day n". Under the chips "Push · 6 exercises · ~55 min"; the rows in one
   card follow the BuilderRow card (two-line handle, no Weight chip, a
   circuit's items only Reps or Time with the accent rule and "rest after
   each round"); an unavailable item is the row's unavailable form with ⋯
   (Replace exercise, Remove). An empty day is an EmptyView in a card ("No
   exercises on this day"), after a failed save the danger line instead;
-  Add exercises stays, with "A day holds up to 20 exercises." under it once
-  full. The sets-and-reps sheet is titled with the exercise; Rest opens the
-  minutes:seconds wheel (0:00–10:00, 15 s steps). Leaving with changes:
+  Add exercises stays, disabled, with "A day holds up to 20 exercises."
+  under it once full. The sets-and-reps sheet is titled with the exercise; Rest is a
+  tap-only field opening the minutes:seconds wheel (0:00–10:00, 15 s steps). Leaving with changes:
   "Your edits to <name> will be lost." ("…this program…" unnamed), Discard
   in danger. Not found is the untitled EmptyView, a load failure ErrorView
   with both lines; loading is a skeleton of the page; every menu item has
-  an icon.
+  an icon (a row's: tune, sync, the two-line handle for Superset / Circuit
+  with next, remove for Ungroup, delete); the Rename field takes the focus.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 

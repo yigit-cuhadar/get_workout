@@ -139,7 +139,7 @@ void main() {
 
     await tester.tap(find.text('Duplicate day'));
     await tester.pumpAndSettle();
-    verify(() => cubit.duplicateDay(0)).called(1);
+    verify(() => cubit.duplicateDay(0, any())).called(1);
   });
 
   testWidgets('deleting a day with exercises asks first', (tester) async {
@@ -173,6 +173,10 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Day 3'), findsWidgets);
+    expect(
+      tester.widget<ForgeTextField>(find.byType(ForgeTextField).last).autofocus,
+      isTrue,
+    );
 
     await tester.enterText(find.byType(TextField).last, 'Arms');
     await tester.tap(find.widgetWithText(ForgeButton, 'Save'));
@@ -254,6 +258,10 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('A day holds up to 20 exercises.'), findsOneWidget);
+    expect(
+      tester.widget<ForgeAddButton>(find.byType(ForgeAddButton)).onPressed,
+      isNull,
+    );
   });
 
   testWidgets('the sets and reps sheet; Rest opens the wheel', (tester) async {
@@ -266,7 +274,7 @@ void main() {
     expect(find.text('Target weight (kg, optional)'), findsOneWidget);
     expect(find.text('1:30'), findsWidgets);
 
-    await tester.tap(find.bySemanticsLabel('Rest'));
+    await tester.tap(find.widgetWithText(ForgeTextField, 'Rest'));
     await tester.pumpAndSettle();
     expect(find.byType(ForgeDurationWheel), findsOneWidget);
   });

@@ -193,6 +193,8 @@ void main() {
   });
 
   group('days', () {
+    String copy(String name) => '$name copy';
+
     test('a new day is added and selected, up to seven', () async {
       final cubit = await build();
       for (var i = 0; i < 8; i++) {
@@ -235,11 +237,17 @@ void main() {
         ..renameDay(0, 'Push')
         ..addDay()
         ..renameDay(1, 'Pull')
-        ..duplicateDay(0);
+        ..duplicateDay(0, copy);
       final days = cubit.state.program.days;
-      expect([for (final d in days) d.name], ['Push', 'Push', 'Pull']);
+      expect([for (final d in days) d.name], ['Push', 'Push copy', 'Pull']);
       expect(days[1].items, days[0].items);
       expect(cubit.state.selectedDay, 1);
+    });
+
+    test('an unnamed day\'s copy stays unnamed', () async {
+      final cubit = await build();
+      cubit.duplicateDay(0, copy);
+      expect([for (final d in cubit.state.program.days) d.name], ['', '']);
     });
 
     test('no copy once there are seven days', () async {
@@ -247,7 +255,7 @@ void main() {
       for (var i = 0; i < 6; i++) {
         cubit.addDay();
       }
-      cubit.duplicateDay(0);
+      cubit.duplicateDay(0, copy);
       expect(cubit.state.program.days, hasLength(7));
       expect(cubit.state.selectedDay, 6);
     });
