@@ -347,6 +347,26 @@ void main() {
       ProgramDetailState(
         status: ProgramDetailStatus.failed,
         failure: NetworkFailure(),
+        action: ProgramDetailAction.delete,
+      ),
+    ],
+  );
+
+  blocTest<ProgramDetailCubit, ProgramDetailState>(
+    'a failed stop says it was the stop',
+    setUp: () {
+      activeIs(armsActive);
+      when(() => repository.stopProgram(any()))
+          .thenAnswer((_) async => const Err(NetworkFailure()));
+    },
+    build: () => build('p2'),
+    act: (cubit) => cubit.stop(),
+    expect: () => const [
+      ProgramDetailState(status: ProgramDetailStatus.working),
+      ProgramDetailState(
+        status: ProgramDetailStatus.failed,
+        failure: NetworkFailure(),
+        action: ProgramDetailAction.stop,
       ),
     ],
   );

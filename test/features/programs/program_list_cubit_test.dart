@@ -126,6 +126,7 @@ void main() {
     expect: () => [
       ProgramListState(
         status: ProgramListStatus.ready,
+        today: CalendarDate(2026, 11, 11),
         programs: [other, upperLower],
       ),
     ],
@@ -159,6 +160,7 @@ void main() {
     expect: () => [
       ProgramListState(
         status: ProgramListStatus.ready,
+        today: CalendarDate(2026, 11, 11),
         programs: [other, upperLower],
         active: active,
         week: 2,
@@ -237,9 +239,17 @@ void main() {
       actives['u1']!.add(null);
     },
     expect: () => [
-      ProgramListState(status: ProgramListStatus.ready, programs: [other]),
+      ProgramListState(
+        status: ProgramListStatus.ready,
+        today: CalendarDate(2026, 11, 11),
+        programs: [other],
+      ),
       const ProgramListState(),
-      ProgramListState(status: ProgramListStatus.ready, programs: [upperLower]),
+      ProgramListState(
+        status: ProgramListStatus.ready,
+        today: CalendarDate(2026, 11, 11),
+        programs: [upperLower],
+      ),
     ],
   );
 
@@ -277,7 +287,11 @@ void main() {
         failure: PermissionFailure(),
       ),
       const ProgramListState(),
-      ProgramListState(status: ProgramListStatus.ready, programs: [other]),
+      ProgramListState(
+        status: ProgramListStatus.ready,
+        today: CalendarDate(2026, 11, 11),
+        programs: [other],
+      ),
     ],
   );
 
@@ -452,6 +466,57 @@ void main() {
     },
   );
 
+  blocTest<ProgramListCubit, ProgramListState>(
+    'counts a finished program\'s workouts over its whole run',
+    build: build,
+    act: (cubit) async {
+      await signIn(member);
+      // One week from Monday 2 November: over since Monday 9.
+      programs['u1']!.add([program(id: 'p1', lengthWeeks: 1)]);
+      actives['u1']!.add(active);
+      await pumpEventQueue();
+      expect(cubit.state.finished, isTrue);
+      expect(cubit.state.workoutCount, isNull);
+      expect(cubit.state.startDayIndex, isNull);
+      completed.add([
+        CompletedDay(date: CalendarDate(2026, 11, 2), dayIndex: 0),
+        CompletedDay(date: CalendarDate(2026, 11, 5), dayIndex: 1),
+      ]);
+      await pumpEventQueue();
+    },
+    verify: (cubit) {
+      expect(cubit.state.workoutCount, 2);
+      verify(
+        () => completedDays.watch(
+          'u1',
+          'p1',
+          from: CalendarDate(2026, 11, 2),
+          to: CalendarDate(2026, 11, 11),
+        ),
+      ).called(1);
+    },
+  );
+
+  blocTest<ProgramListCubit, ProgramListState>(
+    'a running program has no workout count and starts its next day',
+    build: build,
+    act: (_) async {
+      await signIn(member);
+      programs['u1']!.add([upperLower]);
+      actives['u1']!.add(active);
+      await pumpEventQueue();
+      completed.add([
+        CompletedDay(date: CalendarDate(2026, 11, 9), dayIndex: 0),
+      ]);
+      await pumpEventQueue();
+    },
+    verify: (cubit) {
+      expect(cubit.state.workoutCount, isNull);
+      expect(cubit.state.startDayIndex, 1);
+      expect(cubit.state.today, CalendarDate(2026, 11, 11));
+    },
+  );
+
   group('a missed day', () {
     // Thursday's day 1 was missed; today is Friday 13 November.
     setUp(() => now = DateTime(2026, 11, 13, 8));
@@ -479,6 +544,9 @@ void main() {
         expect(cubit.state.moveDate, CalendarDate(2026, 11, 16));
         // Until resolved it comes first again, on the next training day.
         expect(cubit.state.nextDate, CalendarDate(2026, 11, 16));
+        // Start waits for the answer.
+        expect(cubit.state.nextDayIndex, 1);
+        expect(cubit.state.startDayIndex, isNull);
       },
     );
 

@@ -227,6 +227,7 @@ class _ActiveProgram extends StatelessWidget {
     final access = state.access(program);
     final weeks = program.lengthWeeks;
     final week = state.week;
+    final locked = access == ProgramAccess.locked;
     return BlocListener<ProgramDetailCubit, ProgramDetailState>(
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, detail) {
@@ -246,17 +247,27 @@ class _ActiveProgram extends StatelessWidget {
           default:
         }
       },
-      child: state.finished
-          ? FeaturedCard(
-              form: FeaturedCardForm.band,
-              eyebrow: l10n.programFinishedWeeks(weeks ?? 0),
-              title: program.name,
-              locked: access == ProgramAccess.locked,
-              note: switch (state.workoutCount) {
-                final count? => l10n.programWorkoutCount(count),
-                null => null,
-              },
-              action: FeaturedAction(
+      child: FeaturedCard(
+        form: FeaturedCardForm.band,
+        eyebrow: state.finished
+            ? l10n.programFinishedWeeks(weeks ?? 0)
+            : week == null
+            ? l10n.programActive
+            : weeks == null
+            ? l10n.programActiveWeek(week)
+            : l10n.programActiveWeekOf(week, weeks),
+        title: program.name,
+        locked: locked,
+        menu: _ProgramMenuButton(state, program, premium: premium),
+        progress: !state.finished && weeks != null && week != null
+            ? week / weeks
+            : null,
+        note: switch (state.workoutCount) {
+          final count? => l10n.programWorkoutCount(count),
+          null => null,
+        },
+        action: state.finished
+            ? FeaturedAction(
                 l10n.programRunAgain,
                 () => _ProgramActions(
                   context,
@@ -264,45 +275,27 @@ class _ActiveProgram extends StatelessWidget {
                   program,
                   premium,
                 ).runAgain(),
-                locked: access == ProgramAccess.locked,
-              ),
-              moreActions: [
-                FeaturedAction(
-                  l10n.programNew,
-                  () => context.go(Routes.programNew),
+                locked: locked,
+              )
+            : switch (state.startDayIndex) {
+                final day? => FeaturedAction(
+                  l10n.workoutStartDay(l10n.dayName(program.days[day], day)),
+                  () => startProgramDay(context, program, day),
+                  locked: locked,
                 ),
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                FeaturedCard(
-                  form: FeaturedCardForm.band,
-                  eyebrow: week == null
-                      ? l10n.programActive
-                      : weeks == null
-                      ? l10n.programActiveWeek(week)
-                      : l10n.programActiveWeekOf(week, weeks),
-                  title: program.name,
-                  locked: access == ProgramAccess.locked,
-                  action: switch (state.startDayIndex) {
-                    final day? => FeaturedAction(
-                      l10n.workoutStartDay(
-                        l10n.dayName(program.days[day], day),
-                      ),
-                      () => startProgramDay(context, program, day),
-                      locked: access == ProgramAccess.locked,
-                    ),
-                    null => null,
-                  },
-                ),
-                if (weeks != null && week != null)
-                  Progress.track(value: week / weeks),
-                _ProgramMenuButton(state, program, premium: premium),
-                if (access != ProgramAccess.locked)
-                  ListRowCard(children: weekDayRows(context, state, program)),
-              ],
+                null => null,
+              },
+        moreActions: [
+          if (state.finished)
+            FeaturedAction(
+              l10n.programNew,
+              () => context.go(Routes.programNew),
             ),
+        ],
+        rows: state.finished || locked
+            ? const []
+            : weekDayRows(context, state, program),
+      ),
     );
   }
 }
@@ -319,10 +312,11 @@ class _ProgramMenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final busy = context.watch<ProgramDetailCubit>().state.isBusy;
+    final ink = ForgeStyle.of(context).colors.onFeatured;
     return Builder(
       builder: (anchor) => IconButton(
         tooltip: l10n.programOptions,
-        icon: const ForgeIcon(ForgeIcons.moreHoriz),
+        icon: ForgeIcon(ForgeIcons.moreHoriz, color: ink),
         onPressed: busy
             ? null
             : () => _ProgramActions(anchor, state, program, premium).menu(),
@@ -462,17 +456,17 @@ List<Widget> weekDayRows(
   );
   final prompt = missed == null
       ? null
-      : MissedDayPrompt(
-          program: program,
-          missed: missed,
-          moveDate: state.moveDate!,
-          busy: state.resolving,
-        );
+      : MissedDayPrompt(moveDate: state.moveDate!, busy: state.resolving);
+  // The prompt belongs to its row: no line between them.
+  Widget withPrompt(Widget row) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [row, ?prompt],
+  );
   final plan = state.weekPlan;
   return [
     // A day missed in an earlier week waits above this week's.
-    if (missed != null && !plan.contains(missed)) ...[row(missed), ?prompt],
-    for (final day in plan) ...[row(day), if (day == missed) ?prompt],
+    if (missed != null && !plan.contains(missed)) withPrompt(row(missed)),
+    for (final day in plan) day == missed ? withPrompt(row(day)) : row(day),
     if (plan.isEmpty && missed == null) ListRow(title: l10n.programWeekEmpty),
   ];
 }
