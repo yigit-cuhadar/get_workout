@@ -182,16 +182,32 @@ extension WorkoutText on AppLocalizations {
     SetType.drop => addSetDropHint,
   };
 
-  /// The workout header's line: its name and, while a set is to do, the
-  /// [selected] set's exercise among all, e.g. `Push · exercise 1 of 6`.
-  String workoutHeaderLine(Workout workout, SetSelection? selected) {
+  /// The workout's short name where space is tight: a program day's name
+  /// without its program's (`Push`, kept as `Push Pull Legs · Push`) while
+  /// [programs] still has that program; else its name.
+  String workoutShortName(Workout workout, List<Program> programs) {
+    final program = programs
+        .where((p) => p.id == workout.programId)
+        .firstOrNull;
+    if (program == null || !workout.isFromProgram) return workout.name;
+    final prefix = workoutProgramDayName(program.name, '');
+    final name = workout.name;
+    return name.startsWith(prefix) && name.length > prefix.length
+        ? name.substring(prefix.length)
+        : name;
+  }
+
+  /// The workout header's line: its [name] (see [workoutShortName]) and,
+  /// while a set is to do, the [selected] set's exercise among all, e.g.
+  /// `Push · exercise 1 of 6`.
+  String workoutHeaderLine(
+    Workout workout,
+    String name,
+    SetSelection? selected,
+  ) {
     final exercise = selected?.exercise;
-    if (exercise == null || !workout.hasUndoneSets) return workout.name;
-    return workoutHeaderProgress(
-      workout.name,
-      exercise + 1,
-      workout.exercises.length,
-    );
+    if (exercise == null || !workout.hasUndoneSets) return name;
+    return workoutHeaderProgress(name, exercise + 1, workout.exercises.length);
   }
 
   /// The open card's last time: its date and best working set

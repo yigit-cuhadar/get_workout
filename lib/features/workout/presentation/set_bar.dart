@@ -195,10 +195,10 @@ class SetBar extends StatelessWidget {
     ];
     return SetPanel(
       title: l10n.setToDo(exercise, ref.set),
-      details: [
-        if (set.type == SetType.warmup) l10n.setTypeHint(set.type),
-        if (details.isNotEmpty) details.join(' · '),
-      ],
+      description: set.type == SetType.warmup
+          ? l10n.setTypeHint(set.type)
+          : null,
+      details: [if (details.isNotEmpty) details.join(' · ')],
       labels: SetPanelLabels(
         log: l10n.workoutLogSet,
         done: l10n.setPanelDone,

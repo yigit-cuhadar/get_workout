@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../programs/presentation/program_list_cubit.dart';
 import 'active_workout_cubit.dart';
 import 'elapsed_text.dart';
 import 'rest_timer_cubit.dart';
@@ -49,7 +50,10 @@ class RunningWorkoutBar extends StatelessWidget {
           if (!shown) return const SizedBox.shrink();
           final l10n = AppLocalizations.of(context);
           Widget bar(String detail) => WorkoutBar(
-            name: workout.name,
+            name: l10n.workoutShortName(
+              workout,
+              context.read<ProgramListCubit>().state.programs,
+            ),
             detail: detail,
             onTap: () => context.push(Routes.workout),
           );

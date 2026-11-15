@@ -80,6 +80,20 @@ Widget setPanel(BuildContext context) => _panel(
   ],
 );
 
+@widgetbook.UseCase(name: 'Warm-up', type: SetPanel)
+Widget setPanelWarmup(BuildContext context) => Align(
+  alignment: Alignment.bottomCenter,
+  child: SetPanel(
+    title: 'Bench Press · Warm-up 1 of 2',
+    description: 'A lighter set to get ready. Not counted in your stats.',
+    details: const [],
+    values: [_kg(40), _value(8, 'reps')],
+    labels: _labels,
+    onOptions: () {},
+    onLog: () {},
+  ),
+);
+
 @widgetbook.UseCase(name: 'Missing value', type: SetPanel)
 Widget setPanelMissing(BuildContext context) => _panel(
   'Bench Press · set 3 of 4',

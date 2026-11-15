@@ -48,8 +48,8 @@ Future<bool> confirmChoice(
   return confirmed == true;
 }
 
-/// A note as a multi-line [ForgeTextField] that applies every change at
-/// once, cut to [maxLength].
+/// A note as a multi-line [ForgeTextField] of at most [maxLength]
+/// characters that applies every change at once.
 class NoteField extends StatefulWidget {
   const NoteField({
     super.key,
@@ -82,6 +82,8 @@ class _NoteFieldState extends State<NoteField> {
 
   void _changed() {
     final text = _controller.text;
+    // The field counts characters; stored notes are capped in UTF-16 code
+    // units, which emoji take two or more of.
     if (text.length > widget.maxLength) {
       _controller.text = cutToLength(text, widget.maxLength);
       return;
@@ -103,6 +105,7 @@ class _NoteFieldState extends State<NoteField> {
     hint: widget.hint,
     controller: _controller,
     multiline: true,
+    maxLength: widget.maxLength,
   );
 }
 

@@ -308,18 +308,35 @@ void main() {
       'the header names the selected set\'s exercise while sets are left',
       () {
         expect(
-          l10n.workoutHeaderLine(w, (exercise: 1, set: 0)),
+          l10n.workoutHeaderLine(w, w.name, (exercise: 1, set: 0)),
           'Workout w · exercise 2 of 2',
         );
         final done = workout('w', [
           exercise('Bench Press', [lift(80, 8)]),
         ]);
         expect(
-          l10n.workoutHeaderLine(done, (exercise: 0, set: 0)),
+          l10n.workoutHeaderLine(done, done.name, (exercise: 0, set: 0)),
           'Workout w',
         );
       },
     );
+
+    test('a program day goes by its day name where space is tight', () {
+      const program = Program(
+        id: 'p1',
+        name: 'Upper/Lower 4-Day',
+        days: [ProgramDay(name: 'Lower 1', items: [])],
+      );
+      final day = Workout(
+        id: 'w',
+        startedAt: DateTime(2026, 11, 13),
+        programId: 'p1',
+        dayIndex: 0,
+        name: 'Upper/Lower 4-Day · Lower 1',
+      );
+      expect(l10n.workoutShortName(day, [program]), 'Lower 1');
+      expect(l10n.workoutShortName(day, const []), day.name);
+    });
 
     test('last time shows the best working set', () {
       final last = LastSession(

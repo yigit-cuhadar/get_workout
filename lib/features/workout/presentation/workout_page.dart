@@ -12,6 +12,7 @@ import '../../exercises/domain/exercise.dart';
 import '../../../core/max_length_formatter.dart';
 import '../../../core/text_length.dart';
 import '../../programs/domain/program.dart';
+import '../../programs/presentation/program_list_cubit.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/workout.dart';
@@ -348,6 +349,9 @@ class _Header extends StatelessWidget implements PreferredSizeWidget {
     final l10n = AppLocalizations.of(context);
     final workout = state.workout!;
     final finishing = state.status == WorkoutStatus.finishing;
+    final programs = context.select(
+      (ProgramListCubit cubit) => cubit.state.programs,
+    );
     return EverySecond(
       builder: (context) => ForgeAppBar.value(
         leading: ForgeAppBarAction.icon(
@@ -356,7 +360,11 @@ class _Header extends StatelessWidget implements PreferredSizeWidget {
           onPressed: () => context.pop(),
         ),
         value: l10n.elapsedText(DateTime.now().difference(workout.startedAt)),
-        subtitle: l10n.workoutHeaderLine(workout, state.selection),
+        subtitle: l10n.workoutHeaderLine(
+          workout,
+          l10n.workoutShortName(workout, programs),
+          state.selection,
+        ),
         actions: [
           ForgeButton(
             label: l10n.workoutFinish,

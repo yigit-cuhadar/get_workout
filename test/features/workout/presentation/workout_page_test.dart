@@ -6,6 +6,8 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
+import 'package:get_workout/features/programs/domain/program.dart';
+import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/workout/domain/rest.dart';
@@ -30,6 +32,9 @@ class _MockSettings extends MockCubit<SettingsState> implements SettingsCubit {}
 
 class _MockCatalogue extends MockCubit<ExerciseCatalogueState>
     implements ExerciseCatalogueCubit {}
+
+class _MockPrograms extends MockCubit<ProgramListState>
+    implements ProgramListCubit {}
 
 class _MockEquipment extends MockCubit<EquipmentState>
     implements EquipmentCubit {}
@@ -69,6 +74,7 @@ void main() {
     ActiveWorkoutState state, {
     RestTimerState rest = const RestTimerState(),
     ({double kg, int reps})? progression,
+    List<Program> programs = const [],
   }) async {
     tester.view
       ..physicalSize = const Size(1200, 2600)
@@ -98,6 +104,10 @@ void main() {
     );
     final catalogue = _MockCatalogue();
     when(() => catalogue.state).thenReturn(const CatalogueReady([]));
+    final programList = _MockPrograms();
+    when(() => programList.state).thenReturn(
+      ProgramListState(status: ProgramListStatus.ready, programs: programs),
+    );
     final equipment = _MockEquipment();
     when(() => equipment.state).thenReturn(const EquipmentState(null));
     await tester.pumpWidget(
@@ -108,6 +118,7 @@ void main() {
           BlocProvider<SettingsCubit>.value(value: settings),
           BlocProvider<ExerciseCatalogueCubit>.value(value: catalogue),
           BlocProvider<EquipmentCubit>.value(value: equipment),
+          BlocProvider<ProgramListCubit>.value(value: programList),
         ],
         child: MaterialApp(
           theme: AppPreset.shipped.lightTheme(),
@@ -244,5 +255,74 @@ void main() {
       find.widgetWithText(ForgeButton, 'Finish'),
     );
     expect(finish.loading, isTrue);
+  });
+
+  testWidgets('the open card\'s menu opens on one tap', (tester) async {
+    final bench = exercise('Bench', [
+      lift(60, 8, type: SetType.warmup, done: false),
+      lift(80, 8, done: false),
+    ]);
+    await pump(tester, active([squat, bench], picked: (exercise: 1, set: 1)));
+    final options = find.bySemanticsLabel('Exercise options');
+    await tester.tap(options.last);
+    await tester.pumpAndSettle();
+    expect(find.text('Swap exercise'), findsOneWidget);
+  });
+
+  testWidgets('the open card\'s menu opens on one tap, on a warm-up too', (
+    tester,
+  ) async {
+    final rdl = exercise('Romanian Deadlift', [
+      lift(60, 8, type: SetType.warmup, done: false),
+      lift(70, 8, type: SetType.warmup, done: false),
+      lift(100, 8, done: false),
+    ]).copyWith(goal: () => item('Romanian Deadlift', sets: 1));
+    await pump(tester, active([rdl, squat], picked: (exercise: 0, set: 0)));
+    await tester.tap(find.bySemanticsLabel('Exercise options').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Swap exercise'), findsOneWidget);
+  });
+
+  testWidgets('a program day goes by its day name in the header', (
+    tester,
+  ) async {
+    final state = active([squat], picked: (exercise: 0, set: 1));
+    await pump(
+      tester,
+      ActiveWorkoutState(
+        status: WorkoutStatus.active,
+        workout: Workout(
+          id: 'w',
+          startedAt: DateTime.now(),
+          programId: 'p1',
+          dayIndex: 0,
+          name: 'Upper/Lower 4-Day · Lower 1',
+          exercises: state.workout!.exercises,
+        ),
+        picked: state.picked,
+      ),
+      programs: const [
+        Program(
+          id: 'p1',
+          name: 'Upper/Lower 4-Day',
+          days: [ProgramDay(name: 'Lower 1', items: [])],
+        ),
+      ],
+    );
+    expect(find.text('Lower 1 · exercise 1 of 1'), findsOneWidget);
+  });
+
+  testWidgets('a warm-up\'s line is in the body font, not the data font', (
+    tester,
+  ) async {
+    final rdl = exercise('Romanian Deadlift', [
+      lift(60, 8, type: SetType.warmup, done: false),
+      lift(100, 8, done: false),
+    ]);
+    await pump(tester, active([rdl], picked: (exercise: 0, set: 0)));
+    final line = tester.widget<Text>(
+      find.text('A lighter set to get ready. Not counted in your stats.'),
+    );
+    expect(line.style!.fontFamily, isNot(contains('Mono')));
   });
 }
