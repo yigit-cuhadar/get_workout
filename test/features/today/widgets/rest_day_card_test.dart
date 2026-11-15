@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/features/today/presentation/widgets/rest_day_card.dart';
 
 import '../../../component_harness.dart';
@@ -6,20 +7,22 @@ import '../../../component_harness.dart';
 void main() {
   final taps = <String>[];
 
-  RestDayCard card({required int? steps}) => RestDayCard(
+  RestDayCard card({required int? steps, bool locked = false}) => RestDayCard(
     next: 'Pull, Mon, Nov 16',
+    nextDay: 'Pull',
     steps: steps,
     goal: 10000,
     onSteps: () => taps.add('steps'),
     onLogCardio: () => taps.add('cardio'),
+    onStartEarly: () => taps.add('early'),
     onStartEmpty: () => taps.add('empty'),
+    locked: locked,
   );
 
   setUp(taps.clear);
 
-  testWidgets('offers a walk toward the goal, cardio and an empty workout', (
-    tester,
-  ) async {
+  testWidgets('offers a walk toward the goal, cardio, the next day early '
+      'and an empty workout', (tester) async {
     await pumpComponent(tester, card(steps: 6240));
 
     expect(find.text('Rest day'), findsOneWidget);
@@ -28,8 +31,27 @@ void main() {
 
     await tester.tap(find.text('Go for a walk'));
     await tester.tap(find.text('Log cardio'));
+    await tester.tap(find.text('Start Pull early'));
     await tester.tap(find.text('Start empty workout'));
-    expect(taps, ['steps', 'cardio', 'empty']);
+    expect(taps, ['steps', 'cardio', 'early', 'empty']);
+  });
+
+  testWidgets('a locked next day keeps its button, which opens the paywall', (
+    tester,
+  ) async {
+    await pumpComponent(tester, card(steps: 6240, locked: true));
+
+    expect(
+      find.descendant(
+        of: find.widgetWithText(ForgeButton, 'Start Pull early'),
+        matching: find.byWidgetPredicate(
+          (widget) => widget is ForgeIcon && widget.icon == ForgeIcons.lock,
+        ),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Start Pull early'));
+    expect(taps, ['early']);
   });
 
   testWidgets('without step access the walk row opens the Steps page', (

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../profile/presentation/profile_cubit.dart';
@@ -60,24 +61,25 @@ class _ConsentPromptState extends State<ConsentPrompt> {
     _open = true;
     final cubit = context.read<ConsentCubit>();
     final l10n = AppLocalizations.of(context);
+    // Two equal choices, so both are secondary; no dismissing.
     final consent = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => PopScope(
         canPop: false,
-        child: AlertDialog(
-          title: Text(l10n.consentTitle),
-          content: Text(l10n.consentBody),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(l10n.consentDeny),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(l10n.consentAllow),
-            ),
-          ],
+        child: ForgeDialog(
+          title: l10n.consentTitle,
+          message: l10n.consentBody,
+          action: ForgeButton(
+            label: l10n.consentAllow,
+            variant: ForgeButtonVariant.secondary,
+            onPressed: () => Navigator.pop(context, true),
+          ),
+          cancel: ForgeButton(
+            label: l10n.consentDeny,
+            variant: ForgeButtonVariant.secondary,
+            onPressed: () => Navigator.pop(context, false),
+          ),
         ),
       ),
     );
