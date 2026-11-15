@@ -16,7 +16,7 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/workout.dart';
 import '../domain/warmups.dart';
 import 'set_bubbles.dart';
-import 'swap_exercise.dart';
+import '../../programs/presentation/exercise_picker_page.dart';
 import 'widgets/progression_hint.dart';
 import 'widgets/exercise_card.dart';
 import 'workout_editor.dart';
