@@ -299,13 +299,13 @@ class SetBar extends StatelessWidget {
             l10n.liftedWeightText(value.totalKg, unit),
           ),
       ],
-      // Below the bar. ForgeInfoCard has no free line, so it is a label.
-      _ => [(l10n.calcBar, barText), (l10n.platesLighterThanBar(barText), '')],
+      _ => null,
     };
     showForgeInfo(
       context: button,
       title: l10n.liftedWeightText(kg, unit),
-      facts: facts,
+      facts: facts ?? [(l10n.calcBar, barText)],
+      note: facts == null ? l10n.platesLighterThanBar(barText) : null,
     );
   }
 

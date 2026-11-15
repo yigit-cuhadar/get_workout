@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/router.dart';
 import '../../../core/max_length_formatter.dart';
 import '../../../core/text_length.dart';
 import '../../../core/widgets/featured_card.dart';
@@ -174,11 +176,18 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
               ),
             if (summary.programUnknown) ...[
               const SizedBox(height: 10),
-              // NoticeBanner has no form without a title and an action yet.
-              EmptyView(
+              NoticeBanner(
                 icon: ForgeIcons.info,
+                title: l10n.summaryProgramNotUpdated,
                 message: l10n.workoutProgramUnknown,
-                compact: true,
+                action: ForgeButton(
+                  label: l10n.summaryOpenPrograms,
+                  variant: ForgeButtonVariant.secondary,
+                  onPressed: () {
+                    cubit.summaryShown();
+                    context.go(Routes.programs);
+                  },
+                ),
               ),
             ],
             if (worked.isNotEmpty) ...[

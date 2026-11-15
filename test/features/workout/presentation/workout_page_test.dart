@@ -265,6 +265,30 @@ void main() {
       find.widgetWithText(ForgeButton, 'Finish'),
     );
     expect(finish.loading, isTrue);
+    expect(find.byType(Progress), findsOneWidget);
+  });
+
+  testWidgets('Swap leaves the menu once every set is done', (tester) async {
+    final done = exercise('Squat', [lift(100, 5)]);
+    await pump(tester, active([done, squat], picked: (exercise: 0, set: 0)));
+    await tester.tap(find.bySemanticsLabel('Exercise options').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Exercise details'), findsOneWidget);
+    expect(find.text('Swap exercise'), findsNothing);
+  });
+
+  testWidgets('the workout note is a card whose Add opens the sheet', (
+    tester,
+  ) async {
+    await pump(tester, active([squat], picked: (exercise: 0, set: 1)));
+    when(() => cubit.setNote(any())).thenReturn(null);
+    await tester.scrollUntilVisible(find.text('Workout note'), 200);
+    await tester.tap(find.text('Add'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'Tight shoulder');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    verify(() => cubit.setNote('Tight shoulder')).called(1);
   });
 
   testWidgets('the open card\'s menu opens on one tap', (tester) async {

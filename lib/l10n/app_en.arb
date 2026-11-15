@@ -1827,5 +1827,12 @@
   "pastProgramDay": "Program day",
   "pastProgramDayDetail": "Fills the exercises from the day",
   "pastProgramDayNone": "None",
-  "pastContinue": "Continue"
+  "pastContinue": "Continue",
+  "summaryDayUpdated": "{day} updated.",
+  "@summaryDayUpdated": {"placeholders": {"day": {"type": "String"}}},
+  "summaryProgramNotUpdated": "Program not updated",
+  "summaryOpenPrograms": "Open Programs",
+  "historyChangedTitle": "Changed elsewhere",
+  "historyDeletedTitle": "Deleted elsewhere",
+  "workoutSaving": "Saving"
 }

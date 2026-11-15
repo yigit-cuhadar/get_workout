@@ -148,10 +148,9 @@ void main() {
   testWidgets('a weight below the bar says so', (tester) async {
     await pump(tester, set: lift(15, 8, done: false));
 
-    expect((await openPlates(tester)).facts, [
-      ('Bar', '20 kg'),
-      ('Lighter than the 20 kg bar.', ''),
-    ]);
+    final card = await openPlates(tester);
+    expect(card.facts, [('Bar', '20 kg')]);
+    expect(card.note, 'Lighter than the 20 kg bar.');
   });
 
   testWidgets('pound plates are listed in pounds', (tester) async {

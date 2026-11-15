@@ -57,7 +57,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
       listenWhen: (previous, current) =>
           previous.status != current.status ||
           current.failure != null ||
-          previous.savedProgramId != current.savedProgramId,
+          previous.savedProgramId != current.savedProgramId ||
+          !previous.dayUpdated && current.dayUpdated,
       listener: (context, state) {
         if (state.failure case final failure?) {
           showForgeSnackbar(
@@ -80,6 +81,18 @@ class _WorkoutPageState extends State<WorkoutPage> {
             message: l10n.workoutSavedAsProgram,
             actionLabel: l10n.workoutViewProgram,
             onAction: () => context.go(Routes.program(id, created: true)),
+          );
+        }
+        final updated = state.workout;
+        if (state.dayUpdated && updated != null) {
+          showForgeSnackbar(
+            context,
+            message: l10n.summaryDayUpdated(
+              l10n.workoutShortName(
+                updated,
+                context.read<ProgramListCubit>().state.programs,
+              ),
+            ),
           );
         }
         // Discarded, put away after the summary, or another user; not when
@@ -244,77 +257,88 @@ class _ActiveWorkout extends StatelessWidget {
       },
       child: Scaffold(
         appBar: _Header(state),
-        body: SetBarLayout(
-          panel: workout.isEmpty
-              ? const SizedBox.shrink()
-              : _Panel(state: state),
-          content: CustomScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            slivers: [
-              SliverList.list(
-                children: [
-                  if (autoWarmupsTipDue(seen, added: state.warmupsAdded))
-                    Padding(
-                      padding: const EdgeInsets.all(Gap.sm),
-                      child: TipBanner(
-                        message: l10n.tipAutoWarmups,
-                        dismissLabel: l10n.tipDismiss,
-                        onDismiss: () => context.read<SettingsCubit>().tipSeen(
-                          Tip.autoWarmups,
-                        ),
-                      ),
+        body: Column(
+          children: [
+            if (state.status == WorkoutStatus.finishing)
+              Progress.indeterminate(label: l10n.workoutSaving),
+            Expanded(
+              child: SetBarLayout(
+                panel: workout.isEmpty
+                    ? const SizedBox.shrink()
+                    : _Panel(state: state),
+                content: CustomScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  slivers: [
+                    SliverList.list(
+                      children: [
+                        if (autoWarmupsTipDue(seen, added: state.warmupsAdded))
+                          Padding(
+                            padding: const EdgeInsets.all(Gap.sm),
+                            child: TipBanner(
+                              message: l10n.tipAutoWarmups,
+                              dismissLabel: l10n.tipDismiss,
+                              onDismiss: () => context
+                                  .read<SettingsCubit>()
+                                  .tipSeen(Tip.autoWarmups),
+                            ),
+                          ),
+                        if (workout.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(Gap.sm),
+                            child: EmptyView(
+                              icon: ForgeIcons.fitnessCenter,
+                              message: l10n.workoutEmpty,
+                              actions: [
+                                ForgeButton(
+                                  label: l10n.programAddExercises,
+                                  leadingIcon: ForgeIcons.add,
+                                  onPressed: add,
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
-                  if (workout.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(Gap.sm),
-                      child: EmptyView(
-                        icon: ForgeIcons.fitnessCenter,
-                        message: l10n.workoutEmpty,
-                        actions: [
-                          ForgeButton(
-                            label: l10n.programAddExercises,
-                            leadingIcon: ForgeIcons.add,
-                            onPressed: add,
+                    ExerciseCards(
+                      state: state,
+                      editor: cubit,
+                      running: cubit,
+                      picker: Routes.workoutPicker,
+                      exerciseRoute: Routes.workoutExercise,
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(
+                        Gap.sm,
+                        0,
+                        Gap.sm,
+                        Gap.xl,
+                      ),
+                      sliver: SliverList.list(
+                        children: [
+                          if (!workout.isEmpty && !full)
+                            Padding(
+                              padding: const EdgeInsets.all(Gap.sm),
+                              child: ForgeAddButton(
+                                label: l10n.programAddExercises,
+                                onPressed: add,
+                              ),
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.all(Gap.sm),
+                            child: WorkoutNoteCard(
+                              note: workout.note,
+                              onSaved: cubit.setNote,
+                            ),
                           ),
                         ],
-                      ),
-                    ),
-                ],
-              ),
-              ExerciseCards(
-                state: state,
-                editor: cubit,
-                running: cubit,
-                picker: Routes.workoutPicker,
-                exerciseRoute: Routes.workoutExercise,
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(Gap.sm, 0, Gap.sm, Gap.xl),
-                sliver: SliverList.list(
-                  children: [
-                    if (!workout.isEmpty && !full)
-                      Padding(
-                        padding: const EdgeInsets.all(Gap.sm),
-                        child: ForgeAddButton(
-                          label: l10n.programAddExercises,
-                          onPressed: add,
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.all(Gap.sm),
-                      child: NoteField(
-                        initial: workout.note,
-                        label: l10n.workoutNote,
-                        hint: l10n.workoutNoteHint,
-                        maxLength: WorkoutLimits.maxNoteLength,
-                        onChanged: cubit.setNote,
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

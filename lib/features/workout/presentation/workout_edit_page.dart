@@ -153,7 +153,13 @@ class _EditView extends StatelessWidget {
                   onRetry: cubit.retry,
                 ),
                 _ when !editing => const LoadingView(),
-                _ => _Form(state, routes),
+                _ => Column(
+                  children: [
+                    if (state.status != WorkoutEditStatus.editing)
+                      Progress.indeterminate(label: l10n.workoutSaving),
+                    Expanded(child: _Form(state, routes)),
+                  ],
+                ),
               },
             ),
           );
@@ -243,26 +249,36 @@ class _FormState extends State<_Form> {
         if (conflict != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            // NoticeBanner has no form with only a message and text actions.
-            child: EmptyView(
-              icon: ForgeIcons.error,
-              compact: true,
+            child: NoticeBanner(
+              icon: conflict == WorkoutEditConflict.changed
+                  ? ForgeIcons.sync
+                  : ForgeIcons.delete,
+              title: conflict == WorkoutEditConflict.changed
+                  ? l10n.historyChangedTitle
+                  : l10n.historyDeletedTitle,
               message: conflict == WorkoutEditConflict.changed
                   ? l10n.historyChangedElsewhere
                   : l10n.historyDeletedElsewhere,
-              actions: [
-                ForgeButton(
-                  label: l10n.historyDiscardChanges,
-                  onPressed: () => context.pop(),
-                  variant: ForgeButtonVariant.text,
-                ),
-                if (conflict == WorkoutEditConflict.changed)
-                  ForgeButton(
-                    label: l10n.historyReload,
-                    onPressed: cubit.reload,
-                    variant: ForgeButtonVariant.text,
+              action: Row(
+                spacing: Gap.sm,
+                children: [
+                  Expanded(
+                    child: ForgeButton(
+                      label: l10n.historyDiscardChanges,
+                      onPressed: () => context.pop(),
+                      variant: ForgeButtonVariant.secondary,
+                    ),
                   ),
-              ],
+                  if (conflict == WorkoutEditConflict.changed)
+                    Expanded(
+                      child: ForgeButton(
+                        label: l10n.historyReload,
+                        onPressed: cubit.reload,
+                        variant: ForgeButtonVariant.secondary,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ListRowCard(
@@ -300,13 +316,7 @@ class _FormState extends State<_Form> {
             onPressed: () => _addExercises(context, workout),
           ),
         const SizedBox(height: 10),
-        NoteField(
-          initial: workout.note,
-          label: l10n.workoutNote,
-          hint: l10n.workoutNoteHint,
-          maxLength: WorkoutLimits.maxNoteLength,
-          onChanged: cubit.setNote,
-        ),
+        WorkoutNoteCard(note: workout.note, onSaved: cubit.setNote),
         const SizedBox(height: Gap.md),
         SizedBox(
           width: double.infinity,
@@ -547,6 +557,10 @@ class _FormState extends State<_Form> {
   }
 }
 
+/// The effort of done set [ref] as the workout screen asks it: the
+/// scale's question ("How hard was set 1?", "RIR", "RPE"), the set's
+/// values under it, then the rows; picking the chosen step again clears
+/// it.
 class _EffortSheet extends StatelessWidget {
   const _EffortSheet(this.ref);
 
@@ -555,37 +569,51 @@ class _EffortSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scale = context.select(
-      (SettingsCubit cubit) => cubit.state.settings.effortScale,
+    final settings = context.select(
+      (SettingsCubit cubit) => cubit.state.settings,
     );
+    final scale = settings.effortScale;
     return BlocBuilder<WorkoutEditCubit, WorkoutEditState>(
       builder: (context, state) {
         final exercise = state.workout!.exercises[ref.exercise];
+        final set = exercise.sets[ref.set];
         final steps = scale.steps;
-        final chosen = scale.stepOf(exercise.sets[ref.set]);
+        final chosen = scale.stepOf(set);
         return ForgeBottomSheet(
-          title: l10n.effortRowQuestion(scale, exercise, ref.set),
-          child: Semantics(
-            container: true,
-            child: ChoiceGrid.list(
-              options: [
-                for (final step in steps)
-                  ChoiceOption(
-                    label: l10n.effortStepLabel(step, scale),
-                    hint: l10n.effortStepShortMeaning(step, scale),
-                  ),
-              ],
-              selected: chosen == null ? null : steps.indexOf(chosen),
-              onSelected: (index) {
-                final step = steps[index];
-                context.read<WorkoutEditCubit>().setEffort(
-                  ref,
-                  step == chosen ? null : step,
-                );
-                Navigator.pop(context);
-              },
-              form: ChoiceListForm.inline,
-            ),
+          title: l10n.effortAskTitle(scale, exercise, ref.set),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: Gap.sm,
+            children: [
+              Text(
+                l10n.setWithDropsText(
+                  set,
+                  exercise.loggingType,
+                  settings.weightUnit,
+                ),
+                style: ForgeStyle.of(context).data
+                    .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
+              ),
+              ChoiceGrid.list(
+                options: [
+                  for (final step in steps)
+                    ChoiceOption(
+                      label: l10n.effortStepLabel(step, scale),
+                      hint: l10n.effortStepShortMeaning(step, scale),
+                    ),
+                ],
+                selected: chosen == null ? null : steps.indexOf(chosen),
+                onSelected: (index) {
+                  final step = steps[index];
+                  context.read<WorkoutEditCubit>().setEffort(
+                    ref,
+                    step == chosen ? null : step,
+                  );
+                  Navigator.pop(context);
+                },
+                form: ChoiceListForm.inline,
+              ),
+            ],
           ),
         );
       },

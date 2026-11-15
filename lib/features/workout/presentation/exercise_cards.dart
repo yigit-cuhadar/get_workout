@@ -529,11 +529,13 @@ class ExerciseMenu {
     final exercise = exercises[index];
     final running = this.running;
     return [
-      ForgeMenuItem(
-        label: l10n.workoutSwap,
-        icon: ForgeIcons.sync,
-        onTap: () => _swap(button),
-      ),
+      // Nothing is left to move once every set is done.
+      if (exercise.sets.isEmpty || exercise.sets.any((set) => !set.done))
+        ForgeMenuItem(
+          label: l10n.workoutSwap,
+          icon: ForgeIcons.sync,
+          onTap: () => _swap(button),
+        ),
       ForgeMenuItem(
         label: l10n.workoutExerciseDetails,
         icon: ForgeIcons.info,
@@ -551,7 +553,7 @@ class ExerciseMenu {
           label: linkedSize(exercises, index) == 2
               ? l10n.programMakeSuperset
               : l10n.programMakeCircuit,
-          icon: ForgeIcons.list,
+          icon: ForgeIcons.dragHandle,
           onTap: () => editor.linkWithNext(index),
         ),
       if (exercise.group != null)

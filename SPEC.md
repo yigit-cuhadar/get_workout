@@ -567,7 +567,8 @@ Decisions (the canvases they were drawn on are deleted):
 - Workout screen (owner's picks, 2026-11-15): the header is Forge
   AppBar's value form (minimize, the elapsed time large, "Push · exercise N
   of M" with N the selected set's exercise, the name alone once every set
-  is done), Finish shows its loading state while finishing (no bar); the
+  is done), Finish shows its loading state while finishing, with a thin
+  indeterminate bar under the header (the owner reversed "no bar"); the
   empty free workout is an untitled EmptyView ("Add exercises to start
   logging.", Add exercises); a card's "Last time" shows the best working
   set (heaviest, then most reps); the progression hint shows when every
@@ -588,15 +589,18 @@ Decisions (the canvases they were drawn on are deleted):
   circuit the new one takes its place and the finished one leaves the
   group, just before it); the picker's Swap form says "Sets 1 and 2 are
   logged; the rest move to the new exercise."; with nothing done it is a
-  plain replace. The plate breakdown: plates that can't make the weight
+  plain replace; Swap leaves the ⋯ once every set of the exercise is done.
+  The workout note is a plain card titled "Workout note" with Add (empty,
+  no body) or Edit (the note as its body), opening the note sheet (the
+  three-line field and Save), as the exercise note. The plate breakdown: plates that can't make the weight
   show the target, Bar, Each side and "Closest · 82.5 kg"; below the bar
-  Bar and "Lighter than the 20 kg bar."; at the bar "Each side · No
+  Bar and the info card's muted note "Lighter than the 20 kg bar."; at the bar "Each side · No
   plates". The rest-alert question is "Notify when a rest ends?" with "Get
   a notification when a rest is over while GetWorkout is in the
   background." (Allow · Not now). Log set stays off while a value is
   missing. Dialogs' Cancel is the secondary button; every ⋯ menu row has
   an icon (exercise ⋯: Swap sync, Exercise details info, Add note edit,
-  Superset / Circuit with next list, Ungroup remove, Rest time timer,
+  Superset / Circuit with next dragHandle, Ungroup remove, Rest time timer,
   Warm-up sets trendingUp, Remove exercise delete; Discard workout delete).
 - Workout summary (owner's picks, 2026-11-15): a page of its own with a
   Summary app bar whose back does what Done does; the featured block reads
@@ -610,7 +614,8 @@ Decisions (the canvases they were drawn on are deleted):
   "+2 reps" / "+5 s" without a weight), counted by the records figure;
   none beaten is one sentence on a plain card ("No new records this time.
   Bench Press was 2.5 kg off your best.", the first workout "Records start
-  from this workout."); "Worked today" shows small front and back models
+  from this workout."); a program not moved on is a NoticeBanner ("Program
+  not updated", the reason, Open Programs); "Worked today" shows small front and back models
   shaded by this workout's sets on Weekly volume's 0–20 scale and up to
   three busiest muscles; the bottom bar has Done and, for a free workout,
   Save as program (a dialog with "Its exercises and sets become a new
@@ -618,7 +623,8 @@ Decisions (the canvases they were drawn on are deleted):
   program), for a program day only "Save changes to Push" when the workout
   changed the day (an exercise added, removed or swapped, the order, a
   working set count or a rest; not reps or weights), which asks "Update
-  Push?" / "Your next Push workouts use these exercises and sets." first;
+  Push?" / "Your next Push workouts use these exercises and sets." first,
+  then goes, and a snackbar says "Push updated.";
   kept items keep their targets, new ones take them from their sets.
 - Add past workout and Edit workout (owner's picks, 2026-11-15): one page.
   The calendar's + first opens a sheet (Date with the system picker up to
@@ -629,8 +635,12 @@ Decisions (the canvases they were drawn on are deleted):
   chevrons opening the same pickers, a set table per exercise (values typed
   in boxes, the bubble ticks a set: filled accent ticked, an outline not;
   holding it opens the set type menu; the effort tag opens the effort rows
-  in a sheet), Add exercises, the workout note (the multi-line field
-  capped at three lines), and Discard (new) or Delete workout at the end.
+  in a sheet titled as the workout screen asks it, "How hard was set 1?" or
+  RIR / RPE, with the set's values under it), Add exercises, the workout
+  note card (as on the workout screen), and Discard (new) or Delete
+  workout at the end. While it saves a thin indeterminate bar runs under
+  the app bar; a change elsewhere is a NoticeBanner ("Changed elsewhere" /
+  "Deleted elsewhere", the sentence, Discard and Reload / Discard).
   There is no name field: a past workout is named after its program day,
   else "Workout"; the day only fills the exercises, the program is left
   alone. Saving with unticked sets asks "1 set isn't ticked. It will be
