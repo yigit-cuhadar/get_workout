@@ -54,9 +54,10 @@ class _EditView extends StatelessWidget {
     Future<bool> confirmDiscard() => confirmChoice(
       context,
       title: l10n.historyDiscardTitle,
-      body: null,
+      body: l10n.historyDiscardBody,
       cancel: l10n.programKeepEditing,
       confirm: l10n.workoutDiscardConfirm,
+      destructive: true,
     );
     return UnsavedChangesGuard(
       hasChanges: () => cubit.hasChanges,
@@ -148,8 +149,7 @@ class _Form extends StatelessWidget {
     final saving = state.status == WorkoutEditStatus.saving;
     final conflict = state.conflict;
     return SetBarLayout(
-      state: state,
-      editor: cubit,
+      panel: SetBar(state: state, editor: cubit),
       content: CustomScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         slivers: [
@@ -266,6 +266,7 @@ class _Form extends StatelessWidget {
                   child: NoteField(
                     initial: workout.note,
                     label: l10n.workoutNote,
+                    hint: l10n.workoutNoteHint,
                     maxLength: WorkoutLimits.maxNoteLength,
                     onChanged: cubit.setNote,
                   ),

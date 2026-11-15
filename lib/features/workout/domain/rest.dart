@@ -96,10 +96,7 @@ SetRef? newlyDone(Workout before, Workout after) {
 /// Warm-ups start none. In a superset or circuit, rounds count working
 /// sets (warm-ups are not in any round), and only the round's last item
 /// starts a rest: the group's last exercise that has that many working
-/// sets. The length is that of the group's last exercise (the one itself
-/// outside a group), as the program estimates it: its program rest, else
-/// [exerciseRestS] of its exercise, else the settings' default. A rest of
-/// 0 means none.
+/// sets. Its length is [groupRestS]. A rest of 0 means none.
 Duration? restAfterTick(
   Workout workout,
   SetRef at, {
@@ -118,13 +115,37 @@ Duration? restAfterTick(
       if (_working(exercises[i]).length > round) i,
   ].last;
   if (roundLast != at.exercise) return null;
-  final source = exercises[end - 1];
-  final seconds =
-      source.goal?.restS ??
-      exerciseRestS(source.exerciseId) ??
-      settings.defaultS;
+  final seconds = groupRestS(
+    exercises,
+    at.exercise,
+    defaultS: settings.defaultS,
+    exerciseRestS: exerciseRestS,
+  );
   return seconds > 0 ? Duration(seconds: seconds) : null;
 }
+
+/// The rest in seconds after a set of exercise [index], or after each
+/// round of its superset or circuit: that of the group's last exercise
+/// (the exercise itself outside a group), as the program estimates it: the
+/// rest chosen in the workout, else its program rest, else
+/// [exerciseRestS] of its exercise, else [defaultS].
+int groupRestS(
+  List<WorkoutExercise> exercises,
+  int index, {
+  required int defaultS,
+  required int? Function(String exerciseId) exerciseRestS,
+}) {
+  final source = exercises[restSource(exercises, index)];
+  return source.restS ??
+      source.goal?.restS ??
+      exerciseRestS(source.exerciseId) ??
+      defaultS;
+}
+
+/// The exercise whose rest [groupRestS] of exercise [index] is: the last
+/// of its group, or itself.
+int restSource(List<WorkoutExercise> exercises, int index) =>
+    groupRange(exercises, index).$2 - 1;
 
 /// The first set not done yet in the order the workout is done in, after
 /// [after] and then from the start; null when every set is done. Outside a

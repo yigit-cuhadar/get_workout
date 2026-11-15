@@ -22,6 +22,7 @@ import '../domain/workout.dart';
 import '../domain/workout_editing.dart' as editing;
 import '../domain/workout_repository.dart';
 import '../domain/workout_usecases.dart';
+import '../domain/progression.dart';
 import 'workout_editor.dart';
 
 enum WorkoutStatus {
@@ -61,6 +62,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.asking,
     this.askingWithRest = false,
     this.entryWaitsForRest = false,
+    this.doneSetPicked = false,
     this.warmupsAdded = false,
     this.weightUnit,
     this.warmupSteps = const [],
@@ -109,11 +111,15 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   final bool askingWithRest;
 
   /// The last tick started the rest and left a set to do, so that set's
-  /// values wait until the rest is over (see [showsSetEntry]): while it
-  /// runs, the set bar shows nothing but the effort question. Picking a
-  /// set or adding one shows it at once. After the workout's last set the
-  /// bar keeps showing that done set.
+  /// values wait until the rest is over (see [workoutPanel]): while it
+  /// runs, the panel shows the rest. Picking a set or adding one shows it
+  /// at once.
   final bool entryWaitsForRest;
+
+  /// A set was picked while every set was done, so the panel shows it
+  /// instead of offering to finish (see [workoutPanel]); until a set is
+  /// to do again or the page opens anew.
+  final bool doneSetPicked;
 
   /// Warm-ups were added to this workout automatically, which its tip
   /// tells.
@@ -174,6 +180,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     SetRef? Function()? asking,
     bool? askingWithRest,
     bool? entryWaitsForRest,
+    bool? doneSetPicked,
     bool? warmupsAdded,
     WeightUnit? Function()? weightUnit,
     List<WarmupStep>? warmupSteps,
@@ -195,6 +202,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     asking: asking != null ? asking() : this.asking,
     askingWithRest: askingWithRest ?? this.askingWithRest,
     entryWaitsForRest: entryWaitsForRest ?? this.entryWaitsForRest,
+    doneSetPicked: doneSetPicked ?? this.doneSetPicked,
     warmupsAdded: warmupsAdded ?? this.warmupsAdded,
     weightUnit: weightUnit != null ? weightUnit() : this.weightUnit,
     warmupSteps: warmupSteps ?? this.warmupSteps,
@@ -217,6 +225,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     asking,
     askingWithRest,
     entryWaitsForRest,
+    doneSetPicked,
     warmupsAdded,
     weightUnit,
     warmupSteps,
@@ -236,7 +245,8 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
 /// [_restAfterEdit]. Only this workout has rests; editing a stored one
 /// does not.
 class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
-    with WorkoutEditor<ActiveWorkoutState> {
+    with WorkoutEditor<ActiveWorkoutState>
+    implements RunningWorkout {
   ActiveWorkoutCubit({
     required WatchAuthUser watchAuthUser,
     required this._loadLocal,
@@ -537,12 +547,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   void pageOpened() {
     final dropsQuestion = state.asking != null && !state.askingWithRest;
     if (dropsQuestion) pauseAsking();
-    if (state.picked == null && !dropsQuestion) return;
+    if (state.picked == null && !dropsQuestion && !state.doneSetPicked) {
+      return;
+    }
     emit(
       state.copyWith(
         picked: () => null,
         invalidSet: () => null,
         asking: dropsQuestion ? () => null : null,
+        doneSetPicked: false,
       ),
     );
   }
@@ -863,6 +876,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       entryWaitsForRest: started
           ? nextSet(changed, null) != null
           : state.entryWaitsForRest,
+      doneSetPicked:
+          state.doneSetPicked &&
+          !changed.hasUndoneSets &&
+          newlyDone(workout, changed) == null,
     );
     _keep();
   }
@@ -876,6 +893,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       invalidSet: () => null,
       asking: () => null,
       entryWaitsForRest: false,
+      doneSetPicked: picked != null && !(state.workout?.hasUndoneSets ?? true),
     ),
   );
 
@@ -903,6 +921,55 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   @override
   void noteWarmupsAdded() {
     if (!state.warmupsAdded) emit(state.copyWith(warmupsAdded: true));
+  }
+
+  @override
+  int exerciseRestS(int index) {
+    final catalogue = knownExercises;
+    return groupRestS(
+      state.workout!.exercises,
+      index,
+      defaultS: _restTimer.defaultS,
+      exerciseRestS: (id) => catalogue[id]?.defaultRestS,
+    );
+  }
+
+  @override
+  int? roundRestS(int index) {
+    if (!_restTimer.enabled) return null;
+    final seconds = exerciseRestS(index);
+    return seconds > 0 ? seconds : null;
+  }
+
+  /// Kept on the group's last exercise, whose rest [groupRestS] takes.
+  @override
+  void setExerciseRest(int index, int seconds) {
+    final exercises = state.workout?.exercises;
+    if (exercises == null || index < 0 || index >= exercises.length) return;
+    final source = restSource(exercises, index);
+    edit(
+      (workout) => workout.copyWith(
+        exercises: [
+          for (final (i, e) in workout.exercises.indexed)
+            i == source ? e.copyWith(restS: () => seconds) : e,
+        ],
+      ),
+    );
+  }
+
+  @override
+  ({double kg, int reps})? progressionFor(int index) {
+    final exercise = state.workout?.exercises.elementAtOrNull(index);
+    final unit = state.weightUnit;
+    if (exercise == null || unit == null) return null;
+    final suggested = progression(
+      exercise,
+      state.stats[exercise.exerciseId]?.last,
+      unit,
+    );
+    return suggested != null && progressionOpen(exercise, suggested.kg)
+        ? suggested
+        : null;
   }
 
   /// The rest once an edit made [after] of [before], and whether the edit
@@ -940,6 +1007,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     SetSelection? picked,
     bool keepQuestion = false,
     bool entryWaitsForRest = false,
+    bool doneSetPicked = false,
     bool? warmupsAdded,
   }) {
     emit(
@@ -951,6 +1019,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         picked: () => picked,
         asking: keepQuestion ? null : () => null,
         entryWaitsForRest: entryWaitsForRest,
+        doneSetPicked: doneSetPicked,
         warmupsAdded: warmupsAdded,
       ),
     );

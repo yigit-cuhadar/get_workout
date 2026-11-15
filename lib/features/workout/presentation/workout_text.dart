@@ -10,9 +10,11 @@ import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/effort.dart';
 import '../domain/exercise_stats.dart';
+import '../domain/progression.dart';
 import '../domain/set_logging.dart';
 import '../domain/set_selection.dart';
 import '../domain/workout.dart';
+import '../domain/workout_editing.dart' as editing;
 
 extension WorkoutText on AppLocalizations {
   /// The plates on each side of the bar in the plate breakdown, heaviest
@@ -161,6 +163,98 @@ extension WorkoutText on AppLocalizations {
         : helpRepsLeft(step.rir);
   }
 
+  /// [effortStepMeaning] as short as an answer row has it, e.g. `4+ reps
+  /// left`, `last rep missed`.
+  String effortStepShortMeaning(EffortStep step, EffortScale scale) {
+    if (step.failed) return effortFailedShort;
+    if (scale == EffortScale.byFeel && step.rir == 2) {
+      return helpRepsLeftRange(2, 3);
+    }
+    return step == scale.steps.first
+        ? effortRepsLeftPlus(step.rir)
+        : helpRepsLeft(step.rir);
+  }
+
+  /// What adding a set of [type] does, in the add-set sheet.
+  String addSetHint(SetType type) => switch (type) {
+    SetType.normal => addSetNormalHint,
+    SetType.warmup => addSetWarmupHint,
+    SetType.drop => addSetDropHint,
+  };
+
+  /// The workout's short name where space is tight: a program day's name
+  /// without its program's (`Push`, kept as `Push Pull Legs · Push`) while
+  /// [programs] still has that program; else its name.
+  String workoutShortName(Workout workout, List<Program> programs) {
+    final program = programs
+        .where((p) => p.id == workout.programId)
+        .firstOrNull;
+    if (program == null || !workout.isFromProgram) return workout.name;
+    final prefix = workoutProgramDayName(program.name, '');
+    final name = workout.name;
+    return name.startsWith(prefix) && name.length > prefix.length
+        ? name.substring(prefix.length)
+        : name;
+  }
+
+  /// The workout header's line: its [name] (see [workoutShortName]) and,
+  /// while a set is to do, the [selected] set's exercise among all, e.g.
+  /// `Push · exercise 1 of 6`.
+  String workoutHeaderLine(
+    Workout workout,
+    String name,
+    SetSelection? selected,
+  ) {
+    final exercise = selected?.exercise;
+    if (exercise == null || !workout.hasUndoneSets) return name;
+    return workoutHeaderProgress(name, exercise + 1, workout.exercises.length);
+  }
+
+  /// The open card's last time: its date and best working set
+  /// ([bestSet]) in [unit], e.g. `Last time: Fri, Nov 6 · 82.5 kg × 6`.
+  String lastSessionText(LastSession last, LoggingType type, WeightUnit unit) {
+    final best = bestSet(last.sets, type);
+    final date = DateFormat.MMMEd(localeName).format(last.date);
+    return best == null
+        ? workoutLastTime(date)
+        : workoutLastTimeBest(date, setWithUnitText(best, type, unit));
+  }
+
+  /// The rest panel's line on what comes after the rest, [next] of
+  /// [workout] when one is left: `next: set 4 · 82.5 × 8` with its
+  /// [values] (none while unknown), the exercise named instead of the set
+  /// when it is not [after]'s; `All sets done` otherwise.
+  String restPanelNextText(
+    Workout workout,
+    SetRef? next,
+    SetRef? after,
+    SetValues values,
+    WeightUnit unit,
+  ) {
+    if (next == null) return restPanelAllSetsDone;
+    final exercise = workout.exercises[next.exercise];
+    final set = exercise.sets[next.set];
+    final number = exercise.sets
+        .take(next.set + 1)
+        .where((s) => !s.isWarmup)
+        .length;
+    final what = next.exercise != after?.exercise || set.isWarmup
+        ? exercise.name
+        : set.type == SetType.drop
+        ? effortAskDropSetName(number)
+        : effortAskSetName(number);
+    final shown = setText(
+      WorkoutSet(
+        weightKg: values.weightKg,
+        reps: values.reps,
+        durationS: values.durationS,
+      ),
+      exercise.loggingType,
+      unit,
+    );
+    return restPanelNext(shown.isEmpty ? what : '$what · $shown');
+  }
+
   /// Set [index] of [exercise] by its kind and number among the working
   /// sets, e.g. `Set 2`, `Drop set 3`.
   String ratedSetName(WorkoutExercise exercise, int index) {
@@ -185,8 +279,8 @@ extension WorkoutText on AppLocalizations {
         : effortAskSetName(number);
     return switch (scale) {
       EffortScale.byFeel => effortAskFeel(set),
-      EffortScale.rir => effortAskRir(set),
-      EffortScale.rpe => effortAskRpe(set),
+      EffortScale.rir => effortRirTitle,
+      EffortScale.rpe => effortRpeTitle,
     };
   }
 
@@ -229,8 +323,8 @@ extension WorkoutText on AppLocalizations {
   /// set it is about ([effortDoneValues]), e.g. `How hard was it?`.
   String effortQuestionText(EffortScale scale) => switch (scale) {
     EffortScale.byFeel => effortQuestionFeel,
-    EffortScale.rir => effortQuestionRir,
-    EffortScale.rpe => effortQuestionRpe,
+    EffortScale.rir => effortRirTitle,
+    EffortScale.rpe => effortRpeTitle,
   };
 
   /// Set [asked] of [workout] as done, over the effort question asked
@@ -306,10 +400,37 @@ extension WorkoutText on AppLocalizations {
     // As the weight field's label says: added, or assistance.
     final load = switch (type) {
       LoggingType.weightedBodyweight => workoutAddedWeight(weight),
-      LoggingType.assistedBodyweight => workoutAssistance(weight),
+      LoggingType.assistedBodyweight => setPanelAssist(weight),
       _ => weight,
     };
     return '$load × $work';
+  }
+
+  /// [setWithUnitText] followed by a drop set's drops, e.g. `80 kg × 6 ·
+  /// 60 × 8 · 40 × 10`.
+  String setWithDropsText(WorkoutSet set, LoggingType type, WeightUnit unit) =>
+      [
+        setWithUnitText(set, type, unit),
+        for (final drop in set.drops)
+          setText(
+            WorkoutSet(weightKg: drop.weightKg, reps: drop.reps),
+            type,
+            unit,
+          ),
+      ].join(' · ');
+
+  /// The label set [index] of [exercise] would get as a set of [type],
+  /// moved where [editing.retypedSetPosition] puts it.
+  String setLabelAs(WorkoutExercise exercise, int index, SetType type) {
+    final set = exercise.sets[index];
+    if (set.type == type) return setLabel(exercise, index);
+    final to = editing.retypedSetPosition(exercise, index, type);
+    final retyped = exercise.copyWith(
+      sets: [...exercise.sets]
+        ..removeAt(index)
+        ..insert(to, set.copyWith(type: type)),
+    );
+    return setLabel(retyped, to);
   }
 
   /// Whole minutes; under one, "< 1 min".

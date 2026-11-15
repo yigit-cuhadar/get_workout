@@ -11,8 +11,8 @@ abstract final class WorkoutMaps {
   /// Far above any real value, far below where rounding fails.
   static const _maxWhole = 1e9;
 
-  /// [withGoal] keeps the program goal, which only the workout in progress
-  /// has.
+  /// [withGoal] keeps the program goal and the rest chosen in the workout,
+  /// which only the workout in progress has.
   static Map<String, Object?> exerciseToMap(
     WorkoutExercise exercise, {
     bool withGoal = false,
@@ -28,6 +28,7 @@ abstract final class WorkoutMaps {
     'note': ?exercise.note,
     'sets': [for (final set in exercise.sets) setToMap(set)],
     if (withGoal && exercise.goal != null) 'goal': _goalToMap(exercise.goal!),
+    if (withGoal && exercise.restS != null) 'restS': exercise.restS,
   };
 
   static Map<String, Object?> setToMap(WorkoutSet set) => {
@@ -76,6 +77,10 @@ abstract final class WorkoutMaps {
       note: _text(raw['note']),
       sets: setsFromList(raw['sets']),
       goal: _goalFromMap(id, raw['goal']),
+      restS: switch (whole(raw['restS'])) {
+        final int s when s >= 0 && s <= ProgramLimits.maxRestS => s,
+        _ => null,
+      },
     );
   }
 

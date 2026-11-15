@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
@@ -26,25 +27,32 @@ Future<void> startWorkout(
   final cubit = context.read<ActiveWorkoutCubit>();
   final current = cubit.state.workout;
   if (cubit.state.inProgress && current != null) {
-    final choice = await showDialog<_InProgressChoice>(
+    final choice = await showForgeDialog<_InProgressChoice>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.workoutInProgressTitle),
-        content: Text(l10n.workoutInProgressBody(current.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, _InProgressChoice.discard),
-            child: Text(l10n.workoutDiscardAndStart),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, _InProgressChoice.resume),
-            child: Text(l10n.workoutResume),
-          ),
-        ],
+      builder: (context) => ForgeDialog(
+        title: l10n.workoutInProgressTitle,
+        message: l10n.workoutInProgressBody(current.name),
+        action: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: Gap.sm,
+          children: [
+            ForgeButton(
+              label: l10n.workoutResume,
+              onPressed: () => Navigator.pop(context, _InProgressChoice.resume),
+            ),
+            ForgeButton(
+              label: l10n.workoutDiscardAndStart,
+              onPressed: () =>
+                  Navigator.pop(context, _InProgressChoice.discard),
+              variant: ForgeButtonVariant.danger,
+            ),
+          ],
+        ),
+        cancel: ForgeButton(
+          label: l10n.cancel,
+          onPressed: () => Navigator.pop(context),
+          variant: ForgeButtonVariant.text,
+        ),
       ),
     );
     if (!context.mounted || choice == null) return;

@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/presentation/program_text.dart';
@@ -14,6 +15,8 @@ import 'fixtures.dart';
 
 void main() {
   final l10n = lookupAppLocalizations(const Locale('en'));
+
+  setUpAll(() => initializeDateFormatting('en'));
 
   test('durations under a minute do not read as 0 min', () {
     expect(l10n.durationMinutes(const Duration(seconds: 24)), '< 1 min');
@@ -37,7 +40,7 @@ void main() {
     );
     expect(
       l10n.setWithUnitText(set, LoggingType.assistedBodyweight, kg),
-      '−20 kg × 8',
+      '20 kg assist × 8',
     );
     expect(
       l10n.setWithUnitText(lift(0, 8), LoggingType.weightedBodyweight, kg),
@@ -176,14 +179,8 @@ void main() {
         l10n.effortAskTitle(EffortScale.byFeel, bench, 1),
         'How hard was set 1?',
       );
-      expect(
-        l10n.effortAskTitle(EffortScale.rpe, bench, 2),
-        "What was drop set 2's RPE?",
-      );
-      expect(
-        l10n.effortAskTitle(EffortScale.rir, bench, 1),
-        'How many reps were left in set 1?',
-      );
+      expect(l10n.effortAskTitle(EffortScale.rpe, bench, 2), 'RPE');
+      expect(l10n.effortAskTitle(EffortScale.rir, bench, 1), 'RIR');
       expect(
         l10n.effortAskValues(w, (exercise: 0, set: 1), selected, WeightUnit.kg),
         '80 kg × 8',
@@ -214,10 +211,7 @@ void main() {
         ),
         'Squat · Set 1 done · 100 kg × 5',
       );
-      expect(
-        l10n.effortQuestionText(EffortScale.rpe),
-        'How hard was it, from 1 to 10?',
-      );
+      expect(l10n.effortQuestionText(EffortScale.rpe), 'RPE');
     });
 
     test('progress counts working sets only', () {
@@ -246,7 +240,7 @@ void main() {
         '2 reps left',
         '1 rep left',
         'No reps left',
-        'Could not finish the last rep',
+        "Couldn't finish the last rep",
       ],
     );
     expect(
@@ -259,7 +253,7 @@ void main() {
         '2–3 reps left',
         '1 rep left',
         'No reps left',
-        'Could not finish the last rep',
+        "Couldn't finish the last rep",
       ],
     );
   });
@@ -277,11 +271,118 @@ void main() {
         ('RPE 8', '2 reps left'),
         ('RPE 9', '1 rep left'),
         ('RPE 10', 'No reps left'),
-        ('Failed', 'Could not finish the last rep'),
+        ('Failed', "Couldn't finish the last rep"),
       ],
     );
     // An older set with 5 left reads as the easiest step.
     expect(l10n.effortText(const WorkoutSet(rir: 5), rpe), 'RPE 6 or less');
+  });
+
+  test('answer rows say what each step means in short', () {
+    expect(
+      [
+        for (final step in EffortScale.byFeel.steps)
+          l10n.effortStepShortMeaning(step, EffortScale.byFeel),
+      ],
+      [
+        '4+ reps left',
+        '2–3 reps left',
+        '1 rep left',
+        'No reps left',
+        'last rep missed',
+      ],
+    );
+    expect(
+      l10n.effortStepShortMeaning(EffortScale.rir.steps.first, EffortScale.rir),
+      '5+ reps left',
+    );
+  });
+
+  group('the workout screen', () {
+    final w = workout('w', [
+      exercise('Bench Press', [lift(80, 8), lift(80, 8, done: false)]),
+      exercise('Squat', [lift(100, 5, done: false)]),
+    ]);
+
+    test(
+      'the header names the selected set\'s exercise while sets are left',
+      () {
+        expect(
+          l10n.workoutHeaderLine(w, w.name, (exercise: 1, set: 0)),
+          'Workout w · exercise 2 of 2',
+        );
+        final done = workout('w', [
+          exercise('Bench Press', [lift(80, 8)]),
+        ]);
+        expect(
+          l10n.workoutHeaderLine(done, done.name, (exercise: 0, set: 0)),
+          'Workout w',
+        );
+      },
+    );
+
+    test('a program day goes by its day name where space is tight', () {
+      const program = Program(
+        id: 'p1',
+        name: 'Upper/Lower 4-Day',
+        days: [ProgramDay(name: 'Lower 1', items: [])],
+      );
+      final day = Workout(
+        id: 'w',
+        startedAt: DateTime(2026, 11, 13),
+        programId: 'p1',
+        dayIndex: 0,
+        name: 'Upper/Lower 4-Day · Lower 1',
+      );
+      expect(l10n.workoutShortName(day, [program]), 'Lower 1');
+      expect(l10n.workoutShortName(day, const []), day.name);
+    });
+
+    test('last time shows the best working set', () {
+      final last = LastSession(
+        date: DateTime(2026, 11, 6),
+        workoutId: 'w0',
+        sets: [
+          lift(40, 8, type: SetType.warmup),
+          lift(80, 8),
+          lift(82.5, 6),
+          lift(82.5, 5),
+        ],
+      );
+      expect(
+        l10n.lastSessionText(last, LoggingType.weightReps, WeightUnit.kg),
+        'Last time: Fri, Nov 6 · 82.5 kg × 6',
+      );
+    });
+
+    test('the rest names the next set, or its exercise when it changes', () {
+      const values = (weightKg: 82.5, reps: 8, durationS: null);
+      const kg = WeightUnit.kg;
+      expect(
+        l10n.restPanelNextText(
+          w,
+          (exercise: 0, set: 1),
+          (exercise: 0, set: 0),
+          values,
+          kg,
+        ),
+        'next: set 2 · 82.5 × 8',
+      );
+      expect(
+        l10n.restPanelNextText(
+          w,
+          (exercise: 1, set: 0),
+          (exercise: 0, set: 1),
+          (weightKg: null, reps: null, durationS: null),
+          kg,
+        ),
+        'next: Squat',
+      );
+      expect(
+        l10n.restPanelNextText(w, null, null, values, kg),
+        'All sets done',
+      );
+    });
   });
 
   group('a weight typed in the other unit shows rounded', () {

@@ -120,6 +120,7 @@ class _DetailView extends StatelessWidget {
       body: l10n.historyDeleteBody,
       cancel: l10n.cancel,
       confirm: l10n.historyDeleteConfirm,
+      destructive: true,
     )) {
       await cubit.delete();
     }

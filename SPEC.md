@@ -564,6 +564,24 @@ Decisions (the canvases they were drawn on are deleted):
   and empty states the boards don't draw keep interim texts until the
   screen step draws them; the plate breakdown's undrawn cases and the
   camera's Close or Skip are drawn and asked there.
+- Workout screen (owner's picks, 2026-11-15): the header is Forge
+  AppBar's value form (minimize, the elapsed time large, "Push · exercise N
+  of M" with N the selected set's exercise, the name alone once every set
+  is done), Finish shows its loading state while finishing (no bar); the
+  empty free workout is an untitled EmptyView ("Add exercises to start
+  logging.", Add exercises); a card's "Last time" shows the best working
+  set (heaviest, then most reps); the progression hint shows when every
+  working set last time reached the top of the rep range (weight × reps
+  with a range), one weight step up (2.5 kg / 5 lb), and a tap fills every
+  working set not done yet, then it goes; the rest panel's line is "next:
+  set 4 · 82.5 × 8", the exercise named when it changes, using the panel's
+  width; the RIR and RPE question titles are just "RIR" and "RPE"; answer
+  rows carry short meanings ("4+ reps left", "last rep missed"), the help
+  the long ones; the exercise ⋯ keeps Superset / Circuit with next and
+  Ungroup, adds "Rest time · 2:00" (a sheet of 1:00–4:00 for this workout)
+  and "Warm-up sets" (adds the scheme's warm-ups or removes the untouched
+  ones); a set picked during a rest shows its entry under the rest's thin
+  line; once every set is done the panel offers "Finish workout".
 - Today screen step (owner's picks, 2026-11-15): the featured block follows
   the FeaturedCard card (chevron, the whole block opens the program, the
   dumbbell on its line, no divider); a rest day (the next day planned
@@ -1693,7 +1711,10 @@ the feature you are about to touch, and keep it true when you change it.
   set note 200, 40 exercises, 30 sets each, 5 drops per set. The rules
   validate the top-level fields of `workouts` and `exerciseStats` (allowed
   keys, types, sizes); the app checks sets before storing.
-- **Rest timer**: ticking a set starts a rest of its program item's
+- **Rest timer**: ticking a set starts a rest of the rest chosen for the
+  exercise in this workout (exercise ⋯ › Rest time; `WorkoutExercise.restS`,
+  kept on a group's last exercise and, like the goal, only in the local
+  file, never with the finished workout), else its program item's
   `restS`, else the exercise's `defaultRestS`, else the user's default
   (`settings.restTimer`: `enabled`, default on; `defaultS`, 90 s, 15-600;
   `notify`), which the workout cubit follows itself. A rest of 0 is none.

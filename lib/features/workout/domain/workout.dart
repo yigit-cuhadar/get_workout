@@ -140,6 +140,7 @@ class WorkoutExercise extends Equatable implements Groupable<WorkoutExercise> {
     this.note,
     this.sets = const [],
     this.goal,
+    this.restS,
   });
 
   final String exerciseId;
@@ -159,6 +160,10 @@ class WorkoutExercise extends Equatable implements Groupable<WorkoutExercise> {
   /// finished workout.
   final ProgramItem? goal;
 
+  /// The rest after its sets the user chose in the workout in progress,
+  /// over the [goal]'s; never stored with the finished workout.
+  final int? restS;
+
   List<WorkoutSet> get doneSets => [
     for (final set in sets)
       if (set.done) set,
@@ -174,6 +179,7 @@ class WorkoutExercise extends Equatable implements Groupable<WorkoutExercise> {
     String? Function()? note,
     List<WorkoutSet>? sets,
     ProgramItem? Function()? goal,
+    int? Function()? restS,
   }) => WorkoutExercise(
     exerciseId: exerciseId ?? this.exerciseId,
     name: name ?? this.name,
@@ -184,6 +190,7 @@ class WorkoutExercise extends Equatable implements Groupable<WorkoutExercise> {
     note: note != null ? note() : this.note,
     sets: sets ?? this.sets,
     goal: goal != null ? goal() : this.goal,
+    restS: restS != null ? restS() : this.restS,
   );
 
   @override
@@ -200,6 +207,7 @@ class WorkoutExercise extends Equatable implements Groupable<WorkoutExercise> {
     note,
     sets,
     goal,
+    restS,
   ];
 }
 

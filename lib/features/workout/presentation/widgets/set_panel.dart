@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../../core/widgets/tap_band.dart';
+import 'effort_question.dart';
 
 /// One value of a set in a [SetPanel], shown as a [StepperField].
 class SetPanelValue {
@@ -76,13 +77,17 @@ class SetPanelLabels {
 /// plate button beside the first value (the weight) opens its plate
 /// breakdown.
 ///
+/// A set picked while a rest runs has the [rest]'s thin line on top.
+///
 /// [SetPanel.showing] is the same panel showing something else in place of
-/// the entry: after Log set the effort question, then the rest countdown.
+/// the entry: after Log set the effort question, then the rest countdown,
+/// or Finish workout once every set is done.
 class SetPanel extends StatelessWidget {
   const SetPanel({
     super.key,
     required String this.title,
     required List<String> this.details,
+    this.description,
     required List<SetPanelValue> this.values,
     required SetPanelLabels this.labels,
     required VoidCallback this.onOptions,
@@ -93,11 +98,13 @@ class SetPanel extends StatelessWidget {
     this.onAddDrop,
     this.effort,
     this.onPlates,
+    this.rest,
   }) : child = null;
 
   const SetPanel.showing({super.key, required Widget this.child})
     : title = null,
       details = null,
+      description = null,
       values = null,
       labels = null,
       onOptions = null,
@@ -107,10 +114,14 @@ class SetPanel extends StatelessWidget {
       drops = null,
       onAddDrop = null,
       effort = null,
-      onPlates = null;
+      onPlates = null,
+      rest = null;
 
   final String? title;
   final List<String>? details;
+
+  /// What a set of its kind is, e.g. a warm-up's line, over the [details].
+  final String? description;
   final List<SetPanelValue>? values;
   final SetPanelLabels? labels;
   final VoidCallback? onOptions;
@@ -130,7 +141,16 @@ class SetPanel extends StatelessWidget {
   /// Opens the plate breakdown under the button whose context it is given;
   /// null hides the button.
   final ValueChanged<BuildContext>? onPlates;
+
+  /// The rest running while a set is picked during it, as a [RestLine] on
+  /// top.
+  final EffortRest? rest;
+
+  /// [child] brings its own padding.
   final Widget? child;
+
+  /// The entry's padding.
+  static const padding = EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, 20);
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +165,7 @@ class SetPanel extends StatelessWidget {
           borderRadius: BorderRadius.vertical(top: radius),
           border: Border.all(color: colors.line),
         ),
-        padding: const EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, 20),
+        padding: child == null ? padding : EdgeInsets.zero,
         child: child ?? _entry(context),
       ),
     );
@@ -179,6 +199,7 @@ class SetPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 12,
       children: [
+        if (rest case final rest?) RestLine(rest),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -193,6 +214,14 @@ class SetPanel extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
+                  if (description case final description?)
+                    Text(
+                      description,
+                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                        fontWeight: FontWeight.w400,
+                        color: colors.inkMuted,
+                      ),
+                    ),
                   for (final line in details!)
                     Text(
                       line,
@@ -203,23 +232,20 @@ class SetPanel extends StatelessWidget {
                 ],
               ),
             ),
-            Transform.translate(
-              offset: const Offset(Gap.sm, -Gap.sm),
+            // Drawn at the title's height, so a set without details
+            // leaves no gap under it; its band takes the 44px.
+            TapBand(
               child: Semantics(
                 button: true,
                 label: labels.options,
                 excludeSemantics: true,
-                child: InkResponse(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: onOptions,
-                  child: SizedBox.square(
-                    dimension: ForgeTheme.tapMin,
-                    child: Center(
-                      child: ForgeIcon(
-                        ForgeIcons.moreHoriz,
-                        size: 20,
-                        color: colors.inkMuted,
-                      ),
-                    ),
+                  child: ForgeIcon(
+                    ForgeIcons.moreHoriz,
+                    size: 20,
+                    color: colors.inkMuted,
                   ),
                 ),
               ),

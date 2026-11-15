@@ -4,7 +4,6 @@ import 'package:flutter/widgets.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/set_logging.dart';
 import '../domain/workout.dart';
-import '../domain/workout_editing.dart' as editing;
 import 'keep_visible.dart';
 import 'widgets/exercise_card.dart';
 import 'widgets/set_bubble.dart';
@@ -87,7 +86,7 @@ class _Bubble extends StatelessWidget {
             for (final type in types)
               SetTypeMenuItem(
                 label: l10n.setTypeLabel(type),
-                bubble: _labelAs(l10n, exercise, ref.set, type),
+                bubble: l10n.setLabelAs(exercise, ref.set, type),
                 warmup: type == SetType.warmup,
                 current: type == set.type,
                 onTap: () => editor.setType(ref, type),
@@ -101,23 +100,4 @@ class _Bubble extends StatelessWidget {
     );
     return selected ? KeepVisible(child: bubble) : bubble;
   }
-}
-
-/// The label set [index] of [exercise] would get as a set of [type], moved
-/// where [editing.retypedSetPosition] puts it.
-String _labelAs(
-  AppLocalizations l10n,
-  WorkoutExercise exercise,
-  int index,
-  SetType type,
-) {
-  final set = exercise.sets[index];
-  if (set.type == type) return l10n.setLabel(exercise, index);
-  final to = editing.retypedSetPosition(exercise, index, type);
-  final retyped = exercise.copyWith(
-    sets: [...exercise.sets]
-      ..removeAt(index)
-      ..insert(to, set.copyWith(type: type)),
-  );
-  return l10n.setLabel(retyped, to);
 }

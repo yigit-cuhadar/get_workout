@@ -274,7 +274,7 @@ void main() {
     );
     final scroll = find.byType(SingleChildScrollView);
     final viewport = tester.getRect(scroll);
-    final bands = find.byType(TapBand);
+    final bands = find.descendant(of: scroll, matching: find.byType(TapBand));
     // Scrolled until the first drop is above the scrolling part and the
     // second is cut by its top edge.
     final firstTop = tester.getTopLeft(bands.at(0)).dy;
@@ -305,5 +305,47 @@ void main() {
     );
     expect(find.text('How hard was set 3?'), findsOneWidget);
     expect(find.byType(StepperField), findsNothing);
+  });
+
+  testWidgets('without details the values sit right under the title; '
+      'the options keep their 44px band', (tester) async {
+    var options = 0;
+    await _pump(
+      tester,
+      SetPanel(
+        title: 'Squat · set 1 of 3',
+        details: const [],
+        values: [_value(null, 'kg'), _value(null, 'reps')],
+        labels: _labels,
+        onOptions: () => options++,
+        onLog: () {},
+      ),
+    );
+    final title = tester.getRect(find.text('Squat · set 1 of 3'));
+    final field = tester.getRect(find.byType(StepperField).first);
+    expect(field.top - title.bottom, closeTo(12, 1));
+    final icon = tester.getCenter(find.bySemanticsLabel('Set options'));
+    await tester.tapAt(icon + const Offset(0, 18));
+    expect(options, 1);
+  });
+
+  testWidgets('a description in the body font over the details', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      SetPanel(
+        title: 'Bench Press · Warm-up 1 of 2',
+        description: 'A lighter set to get ready.',
+        details: const [],
+        values: [_value(40, 'kg'), _value(8, 'reps')],
+        labels: _labels,
+        onOptions: () {},
+        onLog: () {},
+      ),
+    );
+    final line = tester.widget<Text>(find.text('A lighter set to get ready.'));
+    final theme = Theme.of(tester.element(find.byType(SetPanel)));
+    expect(line.style!.fontFamily, theme.textTheme.labelMedium!.fontFamily);
   });
 }

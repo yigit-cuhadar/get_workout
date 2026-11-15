@@ -2077,4 +2077,174 @@ void main() {
       await cubit.close();
     });
   });
+
+  group('workout screen', () {
+    const first = (exercise: 0, set: 0);
+    const second = (exercise: 0, set: 1);
+
+    /// Squat, two sets of 5–12 at 100 kg, a program rest of 90 s.
+    Future<ActiveWorkoutCubit> legsDay() async {
+      final cubit = await signedIn();
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      return cubit;
+    }
+
+    Future<void> lastTime(List<WorkoutSet> sets) async {
+      stats['squat']!.add(
+        applyWorkout(null, workout('w0', [exercise('squat', sets)]), 'squat'),
+      );
+      await pumpEventQueue();
+    }
+
+    group('progression', () {
+      test('one step up once every set hit the top of the range', () async {
+        final cubit = await legsDay();
+        await lastTime([lift(100, 12), lift(97.5, 12)]);
+        expect(cubit.progressionFor(0), (kg: 102.5, reps: 12));
+        await cubit.close();
+      });
+
+      test('none while a set fell short', () async {
+        final cubit = await legsDay();
+        await lastTime([lift(100, 12), lift(100, 11)]);
+        expect(cubit.progressionFor(0), isNull);
+        await cubit.close();
+      });
+
+      test('in pounds one 5 lb step', () async {
+        final cubit = await signedIn(unit: WeightUnit.lb);
+        await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+        await lastTime([lift(WeightUnit.lb.toKg(225), 12)]);
+        final kg = cubit.progressionFor(0)!.kg;
+        expect(WeightUnit.lb.fromKg(kg), closeTo(230, 1e-9));
+        await cubit.close();
+      });
+
+      test('fills the working sets not done, then goes', () async {
+        final cubit = await legsDay();
+        await lastTime([lift(100, 12), lift(100, 12)]);
+        cubit
+          ..toggleDone(first)
+          ..applyProgression(0, 102.5);
+        final sets = cubit.state.workout!.exercises[0].sets;
+        expect([for (final s in sets) s.weightKg], [100, 102.5]);
+        expect(cubit.progressionFor(0), isNull);
+        await cubit.close();
+      });
+    });
+
+    group('rest of an exercise', () {
+      test('follows the program until changed for this workout', () async {
+        final cubit = await legsDay();
+        expect(cubit.exerciseRestS(0), 90);
+        cubit.setExerciseRest(0, 120);
+        expect(cubit.exerciseRestS(0), 120);
+        cubit
+          ..setWeight(first, '100', WeightUnit.kg)
+          ..setReps(first, '5')
+          ..toggleDone(first);
+        expect(cubit.state.rest!.endsAt, now.add(const Duration(seconds: 120)));
+        await pumpEventQueue();
+        expect(kept()!.exercises[0].restS, 120);
+        await cubit.close();
+      });
+
+      test('a group\'s is its last exercise\'s', () async {
+        final cubit = await legsDay();
+        cubit
+          ..addExercises([bench], 'en')
+          ..linkWithNext(0)
+          ..setExerciseRest(0, 150);
+        final exercises = cubit.state.workout!.exercises;
+        expect((exercises[0].restS, exercises[1].restS), (null, 150));
+        expect(cubit.exerciseRestS(0), 150);
+        await cubit.close();
+      });
+
+      test('no round rest while the rest timer is off', () async {
+        final cubit = await legsDay();
+        expect(cubit.roundRestS(0), 90);
+        settings.add(
+          const UserSettings(
+            weightUnit: WeightUnit.kg,
+            lengthUnit: LengthUnit.cm,
+            restTimer: RestTimerSettings(enabled: false),
+          ),
+        );
+        await pumpEventQueue();
+        expect(cubit.roundRestS(0), isNull);
+        await cubit.close();
+      });
+    });
+
+    group('warm-up sets of an exercise', () {
+      List<SetType> types(ActiveWorkoutCubit cubit) => [
+        for (final s in cubit.state.workout!.exercises[0].sets) s.type,
+      ];
+
+      test('adds the scheme\'s, standard while off, and opens them', () async {
+        final cubit = await legsDay();
+        cubit.toggleWarmups(0);
+        expect(types(cubit), [
+          SetType.warmup,
+          SetType.warmup,
+          SetType.normal,
+          SetType.normal,
+        ]);
+        expect(cubit.state.selection, first);
+        await cubit.close();
+      });
+
+      test('removes the untouched ones, keeping one entered', () async {
+        final cubit = await legsDay();
+        cubit
+          ..toggleWarmups(0)
+          ..setWeight(second, '60', WeightUnit.kg)
+          ..toggleWarmups(0);
+        expect(types(cubit), [SetType.warmup, SetType.normal, SetType.normal]);
+        expect(cubit.state.workout!.exercises[0].sets[0].weightKg, 60);
+        await cubit.close();
+      });
+    });
+
+    group('every set done', () {
+      Future<ActiveWorkoutCubit> done() async {
+        final cubit = await legsDay();
+        cubit
+          ..setWeight(first, '100', WeightUnit.kg)
+          ..setReps(first, '5')
+          ..toggleDone(first)
+          ..toggleDone(second);
+        return cubit;
+      }
+
+      test('a done set picked shows until the page opens anew', () async {
+        final cubit = await done();
+        expect(cubit.state.doneSetPicked, isFalse);
+        cubit.selectSet(first);
+        expect(cubit.state.doneSetPicked, isTrue);
+        cubit.setEffort(first, const EffortStep.reserve(1));
+        expect(cubit.state.doneSetPicked, isTrue);
+        cubit.pageOpened();
+        expect(cubit.state.doneSetPicked, isFalse);
+        await cubit.close();
+      });
+
+      test('a set to do again ends it', () async {
+        final cubit = await done();
+        cubit
+          ..selectSet(first)
+          ..toggleDone(first);
+        expect(cubit.state.doneSetPicked, isFalse);
+        await cubit.close();
+      });
+
+      test('picking while sets are left is no done set picked', () async {
+        final cubit = await legsDay();
+        cubit.selectSet(second);
+        expect(cubit.state.doneSetPicked, isFalse);
+        await cubit.close();
+      });
+    });
+  });
 }

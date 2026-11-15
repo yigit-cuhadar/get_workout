@@ -497,7 +497,7 @@ class _Options extends StatelessWidget {
         dimension: ForgeTheme.tapMin,
         child: Center(
           child: ForgeIcon(
-            ForgeIcons.moreVert,
+            ForgeIcons.moreHoriz,
             size: 20,
             color: ForgeStyle.of(context).colors.inkMuted,
           ),

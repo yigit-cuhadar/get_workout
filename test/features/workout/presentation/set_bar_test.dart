@@ -245,8 +245,8 @@ void main() {
       'Max',
       'Failed',
     ]);
-    expect(grid.options.first.hint, '4 or more reps left');
-    expect(grid.options.last.hint, 'Could not finish the last rep');
+    expect(grid.options.first.hint, '4+ reps left');
+    expect(grid.options.last.hint, 'last rep missed');
     expect(grid.selected, 2);
     expect(find.text('Skip'), findsNothing);
     final settings = BlocProvider.of<SettingsCubit>(
