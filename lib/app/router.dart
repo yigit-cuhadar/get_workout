@@ -76,6 +76,10 @@ abstract final class Routes {
   static const afterOnboarding = '/suggested-program';
 
   static const today = '/today';
+
+  /// A finished workout above Today, so Back returns there.
+  static String todayWorkout(String id) =>
+      '$today/workouts/${Uri.encodeComponent(id)}';
   static const programs = '/programs';
   static const programNew = '$programs/new';
 
@@ -411,7 +415,17 @@ GoRouter buildRouter(
           child: AppShell(shell: shell),
         ),
         branches: [
-          _tab(Routes.today, const TodayPage()),
+          _tab(
+            Routes.today,
+            const TodayPage(),
+            routes: [
+              GoRoute(
+                path: 'workouts/:id',
+                builder: (_, state) =>
+                    WorkoutDetailPage(id: state.pathParameters['id']!),
+              ),
+            ],
+          ),
           _tab(
             Routes.programs,
             const ProgramsPage(),
