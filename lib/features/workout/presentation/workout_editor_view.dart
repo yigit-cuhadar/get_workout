@@ -21,7 +21,7 @@ import 'workout_text.dart';
 Future<bool> confirmChoice(
   BuildContext context, {
   required String title,
-  required String? body,
+  required String body,
   required String cancel,
   required String confirm,
   bool destructive = false,
@@ -30,7 +30,7 @@ Future<bool> confirmChoice(
     context: context,
     builder: (context) => ForgeDialog(
       title: title,
-      message: body ?? '',
+      message: body,
       action: ForgeButton(
         label: confirm,
         onPressed: () => Navigator.pop(context, true),
@@ -48,8 +48,8 @@ Future<bool> confirmChoice(
   return confirmed == true;
 }
 
-/// A note as a [ForgeTextField] that applies every change at once, cut to
-/// [maxLength].
+/// A note as a multi-line [ForgeTextField] that applies every change at
+/// once, cut to [maxLength].
 class NoteField extends StatefulWidget {
   const NoteField({
     super.key,
@@ -102,6 +102,7 @@ class _NoteFieldState extends State<NoteField> {
     label: widget.label,
     hint: widget.hint,
     controller: _controller,
+    multiline: true,
   );
 }
 

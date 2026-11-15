@@ -559,7 +559,7 @@ class _Panel extends StatelessWidget {
       barrierDismissible: false,
       builder: (context) => ForgeDialog(
         title: l10n.restNotifyQuestion,
-        message: '',
+        message: l10n.restNotifyBody,
         action: ForgeButton(
           label: l10n.restNotifyAllow,
           onPressed: () => Navigator.pop(context, true),

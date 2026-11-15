@@ -696,7 +696,7 @@ class _ExerciseMenu {
         !await confirmChoice(
           context,
           title: l10n.workoutRemoveExerciseTitle,
-          body: null,
+          body: l10n.workoutRemoveExerciseBody(exercise.sets.length),
           cancel: l10n.cancel,
           confirm: l10n.programRemoveItem,
           destructive: true,

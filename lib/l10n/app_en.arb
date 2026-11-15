@@ -1655,5 +1655,9 @@
   "addSetNormalHint": "A working set at the end",
   "addSetWarmupHint": "Goes after the other warm-ups",
   "addSetDropHint": "Lower the weight and keep going",
-  "workoutRemoveExercise": "Remove exercise"
+  "workoutRemoveExercise": "Remove exercise",
+  "workoutRemoveExerciseBody": "{count, plural, =1{Its 1 set is removed too.} other{Its {count} sets are removed too.}}",
+  "@workoutRemoveExerciseBody": {"placeholders": {"count": {"type": "int"}}},
+  "restNotifyBody": "You can turn it off in Profile.",
+  "historyDiscardBody": "Your changes to this workout will be lost."
 }

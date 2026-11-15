@@ -44,7 +44,7 @@ class _EditView extends StatelessWidget {
     Future<bool> confirmDiscard() => confirmChoice(
       context,
       title: l10n.historyDiscardTitle,
-      body: null,
+      body: l10n.historyDiscardBody,
       cancel: l10n.programKeepEditing,
       confirm: l10n.workoutDiscardConfirm,
       destructive: true,
