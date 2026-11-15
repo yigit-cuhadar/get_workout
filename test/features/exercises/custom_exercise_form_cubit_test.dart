@@ -44,7 +44,7 @@ void main() {
     when(() => repository.countCustomExercises(any()))
         .thenAnswer((_) async => const Ok(0));
     when(() => repository.createCustomExercise(any(), any()))
-        .thenAnswer((_) async => const Ok(null));
+        .thenAnswer((_) async => const Ok('custom_new'));
     when(() => repository.updateCustomExercise(any(), any()))
         .thenAnswer((_) async => const Ok(null));
   });
@@ -184,11 +184,13 @@ void main() {
         'status',
         CustomExerciseFormStatus.saving,
       ),
-      isA<CustomExerciseFormState>().having(
-        (state) => state.status,
-        'status',
-        CustomExerciseFormStatus.saved,
-      ),
+      isA<CustomExerciseFormState>()
+          .having(
+            (state) => state.status,
+            'status',
+            CustomExerciseFormStatus.saved,
+          )
+          .having((state) => state.savedId, 'savedId', 'custom_new'),
     ],
     verify: (_) => verify(
       () => repository.createCustomExercise(

@@ -41,6 +41,7 @@ import '../features/profile/presentation/onboarding_page.dart';
 import '../features/profile/presentation/profile_cubit.dart';
 import '../features/profile/presentation/profile_details_page.dart';
 import '../features/profile/presentation/profile_page.dart';
+import '../features/programs/domain/program.dart';
 import '../features/programs/presentation/catalogue_detail_page.dart';
 import '../features/programs/presentation/catalogue_page.dart';
 import '../features/programs/presentation/exercise_picker_page.dart';
@@ -57,6 +58,7 @@ import '../features/strength/presentation/strength_list_page.dart';
 import '../features/subscription/presentation/paywall_page.dart';
 import '../features/today/presentation/today_page.dart';
 import '../features/volume/presentation/volume_page.dart';
+import '../features/workout/domain/workout.dart';
 import '../features/workout/presentation/workout_detail_page.dart';
 import '../features/workout/domain/workout_editing.dart';
 import '../features/workout/presentation/workout_edit_page.dart';
@@ -136,6 +138,10 @@ abstract final class Routes {
   /// the one tapped.
   static String exercisePicker({required int max, required bool multiple}) =>
       '$programs/pick?max=$max&multiple=$multiple';
+
+  /// [exercisePicker] for the exercises the generator leaves out.
+  static String exerciseLeaveOutPicker(int max) =>
+      '${exercisePicker(max: max, multiple: true)}&form=leaveOut';
   static const exercises = '/exercises';
   static String exercise(String id) => '$exercises/${Uri.encodeComponent(id)}';
 
@@ -434,7 +440,7 @@ GoRouter buildRouter(
         path: Routes.workout,
         builder: (_, _) => const WorkoutPage(),
         routes: [
-          GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+          _pickerRoute(limit: WorkoutLimits.maxExercises),
           _workoutExercise(Routes.workoutExercise),
         ],
       ),
@@ -453,7 +459,7 @@ GoRouter buildRouter(
             Routes.today,
             const TodayPage(),
             routes: [
-              GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+              _pickerRoute(limit: WorkoutLimits.maxExercises),
               _workoutExercise(Routes.todayExercise),
               GoRoute(
                 path: 'workouts/:id',
@@ -484,7 +490,7 @@ GoRouter buildRouter(
                   returns: state.uri.queryParameters['return'] == 'true',
                 ),
               ),
-              GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+              _pickerRoute(limit: ProgramLimits.maxItemsPerDay),
               GoRoute(
                 path: 'generate',
                 builder: (_, _) => const GeneratorPage(),
@@ -581,9 +587,7 @@ GoRouter buildRouter(
                   returns: true,
                   picker: Routes.exerciseProgramPicker,
                 ),
-                routes: [
-                  GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
-                ],
+                routes: [_pickerRoute(limit: ProgramLimits.maxItemsPerDay)],
               ),
               GoRoute(
                 path: ':id',
@@ -647,7 +651,7 @@ GoRouter buildRouter(
                       routes: Routes.calendarEditing,
                     ),
                   ),
-                  GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+                  _pickerRoute(limit: WorkoutLimits.maxExercises),
                   _workoutExercise(Routes.calendarExercise),
                   GoRoute(
                     path: ':id',
@@ -793,14 +797,38 @@ _ProfileGate _profileGate(ProfileState state, {String? uid}) {
 ProfileField? _field(GoRouterState state) =>
     ProfileField.values.asNameMap()[state.pathParameters['field']];
 
-ExercisePickerPage _picker(GoRouterState state) {
-  final query = state.uri.queryParameters;
-  final max = int.tryParse(query['max'] ?? '') ?? 1;
-  return ExercisePickerPage(
-    max: max < 1 ? 1 : max,
-    multiple: query['multiple'] == 'true',
-  );
-}
+/// The exercise picker of a page whose lists hold at most [limit]
+/// exercises, with a custom exercise created above it. Adding opens over
+/// the flow (close); Swap and Replace are steps of it (back).
+GoRoute _pickerRoute({required int limit}) => GoRoute(
+  path: 'pick',
+  pageBuilder: (_, state) {
+    final query = state.uri.queryParameters;
+    final max = int.tryParse(query['max'] ?? '') ?? 1;
+    final form = ExercisePickerForm.byName(query['form']);
+    return MaterialPage(
+      key: state.pageKey,
+      fullscreenDialog:
+          form == ExercisePickerForm.add || form == ExercisePickerForm.leaveOut,
+      child: ExercisePickerPage(
+        max: max < 1 ? 1 : max,
+        limit: limit,
+        multiple: query['multiple'] == 'true',
+        form: form,
+        exerciseId: query['exercise'],
+        logged: int.tryParse(query['logged'] ?? '') ?? 0,
+        warmups: int.tryParse(query['warmups'] ?? '') ?? 0,
+      ),
+    );
+  },
+  routes: [
+    GoRoute(
+      path: 'new',
+      builder: (_, state) =>
+          CustomExerciseNewPage(name: state.uri.queryParameters['name']),
+    ),
+  ],
+);
 
 /// An exercise's detail page pushed above a workout (in progress or being
 /// edited), so going back returns to it; [exerciseRoute] is where it opens

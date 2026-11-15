@@ -11,15 +11,19 @@ import '../vocabulary_labels.dart';
 
 /// An exercise as an [ExerciseRow] opening its detail page at [route]:
 /// name, main muscles and equipment, a Custom tag when custom, a star
-/// toggling the favourite when [showFavorite], else [tag] at its end. With
-/// [onSelect] it is the picker's row for [selected] and selects instead.
+/// toggling the favourite when [showFavorite], else [tag] at its end;
+/// [onOpen] in place of opening the page (the picker's Swap form). With
+/// [onSelect] it is the picker's row for [selected] and selects instead,
+/// unless not [enabled].
 class ExerciseTile extends StatelessWidget {
   const ExerciseTile(
     this.exercise, {
     super.key,
     this.showFavorite = false,
     this.selected = false,
+    this.enabled = true,
     this.onSelect,
+    this.onOpen,
     this.route = Routes.exercise,
     this.tag,
   });
@@ -27,7 +31,9 @@ class ExerciseTile extends StatelessWidget {
   final Exercise exercise;
   final bool showFavorite;
   final bool selected;
+  final bool enabled;
   final VoidCallback? onSelect;
+  final VoidCallback? onOpen;
 
   /// The detail page's location for an exercise id.
   final String Function(String id) route;
@@ -62,36 +68,15 @@ class ExerciseTile extends StatelessWidget {
                 : null,
             custom: exercise.isCustom,
             relation: tag,
-            onTap: () => context.push(route(exercise.id)),
+            onTap: onOpen ?? () => context.push(route(exercise.id)),
           )
         : ExerciseRow.pick(
             name: name,
             detail: detail,
             custom: exercise.isCustom,
             selected: selected,
+            enabled: enabled,
             onTap: onSelect,
           );
-  }
-}
-
-/// A star that adds the exercise to, or removes it from, the favourites.
-class FavoriteButton extends StatelessWidget {
-  const FavoriteButton(this.exerciseId, {super.key});
-
-  final String exerciseId;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final favorite = context.select(
-      (FavoritesCubit cubit) => cubit.state.contains(exerciseId),
-    );
-    return IconButton(
-      isSelected: favorite,
-      icon: const Icon(Icons.star_border),
-      selectedIcon: const Icon(Icons.star),
-      tooltip: favorite ? l10n.favoriteRemove : l10n.favoriteAdd,
-      onPressed: () => context.read<FavoritesCubit>().toggle(exerciseId),
-    );
   }
 }

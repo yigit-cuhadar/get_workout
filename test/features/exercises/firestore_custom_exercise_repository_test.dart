@@ -31,9 +31,13 @@ void main() {
       repository.watchCustomExercises(uid).first;
 
   Future<String> create(CustomExercise exercise, {String uid = 'u1'}) async {
-    expect((await repository.createCustomExercise(uid, exercise)).isOk, isTrue);
+    final id = (await repository.createCustomExercise(
+      uid,
+      exercise,
+    )).valueOrNull;
     await pumpEventQueue();
-    return (await stored(uid).get()).docs.last.id;
+    expect(id, (await stored(uid).get()).docs.last.id);
+    return id!;
   }
 
   CustomExercise withId(CustomExercise exercise, String id) => CustomExercise(

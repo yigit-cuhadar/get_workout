@@ -21,6 +21,7 @@ import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise.dart';
 import 'package:get_workout/features/exercises/domain/custom_exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise.dart';
+import 'package:get_workout/features/exercises/domain/exercise_queries.dart';
 import 'package:get_workout/features/exercises/domain/exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
 import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
@@ -32,6 +33,7 @@ import 'package:get_workout/features/exercises/presentation/custom_write_rejecti
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/exercise_notes_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_page.dart';
 import 'package:get_workout/features/exercises/presentation/exercises_page.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
@@ -310,6 +312,8 @@ void main() {
     // Onboarding saves an equipment answer through the library.
     when(() => userLibrary.saveEquipment(any(), any()))
         .thenAnswer((_) async => const Ok(null));
+    when(() => userLibrary.watchExerciseNotes(any()))
+        .thenAnswer((_) => Stream.value(const {}));
     final customExercises = MockCustomExerciseRepository();
     when(() => customExercises.rejectedWrites)
         .thenAnswer((_) => const Stream.empty());
@@ -448,6 +452,14 @@ void main() {
       ..registerLazySingleton(
         () => CustomWriteRejectionsCubit(
           WatchRejectedCustomExerciseWrites(customExercises),
+        ),
+        dispose: (cubit) => cubit.close(),
+      )
+      ..registerLazySingleton(
+        () => ExerciseNotesCubit(
+          watchAuthUser: WatchAuthUser(settingsAuth),
+          watchExerciseNotes: WatchExerciseNotes(userLibrary),
+          setExerciseNote: SetExerciseNote(userLibrary),
         ),
         dispose: (cubit) => cubit.close(),
       )
@@ -832,25 +844,32 @@ void main() {
       expect(find.byType(LibraryPage), findsOneWidget);
       expect(front(), Routes.exerciseList);
       expect(selectedTab(tester), 2);
+      // The field is focused once the page is in, after the last frame.
+      await tester.pump();
       expect(searchFocused(tester), isTrue);
 
-      await tester.tap(find.byType(BackButton));
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
       expect(find.byType(LibraryPage), findsNothing);
       expect(find.byType(ExercisesPage), findsOneWidget);
       expect(path(), Routes.exercises);
     });
 
-    testWidgets('keeps the search for the next time it opens', (tester) async {
+    testWidgets('opens on an empty search, keeping the filters', (
+      tester,
+    ) async {
       await startAsGuest(tester);
       await openList(tester);
       await tester.enterText(find.byType(TextField), 'squat');
-      await tester.tap(find.byType(BackButton));
+      sl<LibraryCubit>().setOnlyFavorites(true);
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byType(ForgeSearchField));
       await tester.pumpAndSettle();
-      expect(find.widgetWithText(TextField, 'squat'), findsOneWidget);
+      expect(library().query, '');
+      expect(find.widgetWithText(TextField, 'squat'), findsNothing);
+      expect(library().filter.onlyFavorites, isTrue);
     });
 
     testWidgets('a muscle opens it filtered, in main and also-works '
@@ -866,16 +885,22 @@ void main() {
       expect(library().filter.muscles, {Muscle.quads});
       expect(ids(library().muscleExercises!.main), ['squat']);
       expect(ids(library().muscleExercises!.alsoWorks), ['split_squat']);
-      expect(find.text('Main'), findsOneWidget);
-      expect(find.text('Also works'), findsOneWidget);
+      expect(find.text('Main · 1'), findsOneWidget);
+      expect(find.text('Also works · 1'), findsOneWidget);
+      expect(find.text('Back Squat'), findsOneWidget);
+      expect(find.text('Split Squat'), findsNothing);
+
+      await tester.tap(find.text('Also works · 1'));
+      await tester.pumpAndSettle();
+      expect(find.text('Back Squat'), findsNothing);
+      expect(find.text('Split Squat'), findsOneWidget);
 
       // The muscle's chip.
-      await tester.tap(find.byTooltip('Delete'));
+      await tester.tap(find.widgetWithText(ForgeChip, 'Quads'));
       await tester.pumpAndSettle();
 
       expect(library().filter.muscles, isEmpty);
-      expect(find.text('Main'), findsNothing);
-      expect(find.text('Also works'), findsNothing);
+      expect(find.text('Main · 1'), findsNothing);
       expect(find.text('Back Squat'), findsOneWidget);
       expect(find.text('Split Squat'), findsOneWidget);
     });
@@ -885,13 +910,13 @@ void main() {
       await startAsGuest(tester);
       await openList(tester);
       await tester.enterText(find.byType(TextField), 'bench');
-      await tester.tap(find.byType(BackButton));
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
 
       unawaited(router.push(Routes.exerciseListOf(Muscle.quads)));
       await tester.pumpAndSettle();
       expect(library().query, '');
-      await tester.tap(find.byType(BackButton));
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
 
       expect(library().filter.muscles, isEmpty);
@@ -905,7 +930,7 @@ void main() {
       await tester.tap(find.byType(ForgeSearchField));
       await tester.pumpAndSettle();
       expect(library().filter.muscles, isEmpty);
-      expect(find.text('Main'), findsNothing);
+      expect(find.textContaining('Main ·'), findsNothing);
     });
 
     testWidgets('a muscle filter the user changed outlives the visit', (
@@ -917,11 +942,46 @@ void main() {
 
       sl<LibraryCubit>().toggleMuscle(Muscle.glute);
       await tester.pumpAndSettle();
-      expect(find.text('Main'), findsNothing);
-      await tester.tap(find.byType(BackButton));
+      expect(find.textContaining('Main ·'), findsNothing);
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
 
       expect(library().filter.muscles, {Muscle.quads, Muscle.glute});
+    });
+
+    testWidgets('the count and the sort sit on one line; the sort is a menu', (
+      tester,
+    ) async {
+      await startWithSplitSquat(tester);
+      await tester.tap(find.byType(ForgeSearchField));
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 exercises'), findsOneWidget);
+      await tester.tap(find.text('Most popular'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ForgeMenu), findsOneWidget);
+      await tester.tap(find.text('A–Z'));
+      await tester.pumpAndSettle();
+
+      expect(library().sort, ExerciseSort.alphabetical);
+      expect(find.text('A–Z'), findsOneWidget);
+    });
+
+    testWidgets('the filter button counts the filters on', (tester) async {
+      await startAsGuest(tester);
+      await openList(tester);
+      sl<LibraryCubit>()
+        ..setOnlyFavorites(true)
+        ..toggleMuscle(Muscle.quads);
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<ForgeSearchField>(find.byType(ForgeSearchField))
+            .activeFilters,
+        2,
+      );
+      expect(find.widgetWithText(ForgeChip, 'Quads'), findsOneWidget);
     });
 
     testWidgets('one muscle picked by hand gives no sections', (tester) async {
@@ -933,7 +993,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(library().muscle, Muscle.quads);
-      expect(find.text('Main'), findsNothing);
+      expect(find.textContaining('Main ·'), findsNothing);
       expect(find.text('Split Squat'), findsOneWidget);
     });
 
@@ -949,13 +1009,13 @@ void main() {
       expect(find.byType(LibraryPage), findsOneWidget);
       expect(library().filter.muscles, {Muscle.glute});
       expect(ids(library().muscleExercises!.main), ['split_squat']);
-      expect(find.text('Main'), findsOneWidget);
+      expect(find.text('Main · 1'), findsOneWidget);
 
       router.go(Routes.exerciseList);
       await tester.pumpAndSettle();
       expect(find.byType(LibraryPage), findsOneWidget);
       expect(library().filter.muscles, isEmpty);
-      expect(find.text('Main'), findsNothing);
+      expect(find.textContaining('Main ·'), findsNothing);
     });
 
     testWidgets('one gesture on the model opens one page', (tester) async {
@@ -983,7 +1043,7 @@ void main() {
       expect(find.byType(ExerciseDetailPage), findsNothing);
       expect(selectedTab(tester), 2);
 
-      await tester.tap(find.byType(BackButton));
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
       expect(find.byType(ExercisesPage), findsOneWidget);
     });
@@ -1024,7 +1084,7 @@ void main() {
       await startAsGuest(tester);
       await openList(tester);
 
-      await tester.tap(find.byTooltip('New custom exercise'));
+      await tester.tap(find.bySemanticsLabel('New custom exercise'));
       await tester.pumpAndSettle();
       expect(find.byType(CustomExerciseNewPage), findsOneWidget);
       expect(front(), Routes.customExerciseNew);
@@ -1032,7 +1092,7 @@ void main() {
 
       await tester.enterText(find.widgetWithText(TextField, 'Name'), 'Sled');
       await tester.pump();
-      await tester.tap(find.byType(BackButton));
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
       expect(find.text('Discard changes?'), findsOneWidget);
       await tester.tap(find.text('Discard'));
@@ -1061,7 +1121,7 @@ void main() {
       expect(find.widgetWithText(TextField, 'benchh'), findsOneWidget);
 
       // The name came from the search, so leaving asks nothing.
-      await tester.tap(find.byType(BackButton));
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
       expect(find.byType(LibraryPage), findsOneWidget);
     });
@@ -1084,7 +1144,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Create custom exercise'), findsOneWidget);
 
-      await tester.tap(find.widgetWithText(ForgeButton, 'Clear all'));
+      // The empty card's, under the chips' own.
+      await tester.tap(find.widgetWithText(ForgeButton, 'Clear all').last);
       await tester.pumpAndSettle();
       expect(sl<LibraryCubit>().state.filter.isEmpty, isTrue);
       expect(find.text('No exercises match "benchh"'), findsOneWidget);
@@ -1272,7 +1333,7 @@ void main() {
       ) async {
         await createProgram(tester);
 
-        await tester.tap(find.byType(BackButton));
+        await tester.tap(find.bySemanticsLabel('Back'));
         await tester.pumpAndSettle();
 
         expectBackOnTheExercise(tester);
@@ -1291,7 +1352,7 @@ void main() {
         expect(selectedTab(tester), tab);
         await tester.tap(find.text('Back Squat'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Add 1'));
+        await tester.tap(find.text('Add 1 exercise'));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Save'));
@@ -1312,7 +1373,7 @@ void main() {
         // The page refuses to pop from the next frame on.
         await tester.pump();
 
-        await tester.tap(find.byType(BackButton));
+        await tester.tap(find.bySemanticsLabel('Back'));
         await tester.pumpAndSettle();
         expect(find.text('Discard changes?'), findsOneWidget);
         await tester.tap(find.text('Discard'));
@@ -1355,7 +1416,7 @@ void main() {
     testWidgets('back asks once with the same prompt', (tester) async {
       await fillIn(tester);
 
-      await tester.tap(find.byType(BackButton));
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
       expect(find.text('Discard changes?'), findsOneWidget);
       await tester.tap(find.text('Discard'));
@@ -2083,7 +2144,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.byType(ExerciseDetailPage), findsOneWidget);
-    expect(find.byType(LoadingView), findsOneWidget);
+    expect(find.byType(SkeletonBar), findsWidgets);
     expect(find.text('This exercise is no longer available.'), findsNothing);
 
     exerciseFeed.add([_squat]);
@@ -2326,7 +2387,7 @@ void main() {
     }
 
     Future<void> back(WidgetTester tester) async {
-      await tester.tap(find.byType(BackButton));
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
     }
 
@@ -2431,7 +2492,7 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
     expect(find.byType(WorkoutDetailPage), findsOneWidget);
-    await tester.tap(find.byType(BackButton));
+    await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
     expect(find.byType(TodayPage), findsOneWidget);
     expect(path(), Routes.today);
@@ -2455,7 +2516,7 @@ void main() {
     expect(find.byType(WeightNewPage), findsOneWidget);
     expect(path(), Routes.progress);
 
-    await tester.tap(find.byType(BackButton));
+    await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
     expect(find.byType(ProgressPage), findsOneWidget);
     expect(path(), Routes.progress);
