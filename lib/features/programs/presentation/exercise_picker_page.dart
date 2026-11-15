@@ -43,12 +43,13 @@ enum ExercisePickerForm {
 }
 
 /// Opens [picker]'s page in its Swap form for [exerciseId], [logged] of
-/// whose sets are done (its note says they stay); the picked exercise's
-/// id, or null when none is picked.
+/// whose working sets and [warmups] of whose warm-ups are done (its note
+/// says they stay); the picked exercise's id, or null when none is picked.
 Future<String?> pickSwap(
   BuildContext context, {
   required String exerciseId,
   required int logged,
+  required int warmups,
   required PickerRoute picker,
 }) async {
   final picked = await context.push<List<Exercise>>(
@@ -57,6 +58,7 @@ Future<String?> pickSwap(
       ExercisePickerForm.swap,
       exerciseId: exerciseId,
       logged: logged,
+      warmups: warmups,
     ),
   );
   return picked?.firstOrNull?.id;
@@ -85,6 +87,7 @@ String _withForm(
   ExercisePickerForm form, {
   String? exerciseId,
   int logged = 0,
+  int warmups = 0,
 }) {
   final uri = Uri.parse(location);
   return uri
@@ -94,6 +97,7 @@ String _withForm(
           'form': form.name,
           'exercise': ?exerciseId,
           if (logged > 0) 'logged': '$logged',
+          if (warmups > 0) 'warmups': '$warmups',
         },
       )
       .toString();
@@ -112,6 +116,7 @@ class ExercisePickerPage extends StatelessWidget {
     this.form = ExercisePickerForm.add,
     this.exerciseId,
     this.logged = 0,
+    this.warmups = 0,
   });
 
   final int max;
@@ -120,6 +125,7 @@ class ExercisePickerPage extends StatelessWidget {
   final ExercisePickerForm form;
   final String? exerciseId;
   final int logged;
+  final int warmups;
 
   @override
   Widget build(BuildContext context) {
@@ -142,6 +148,7 @@ class ExercisePickerPage extends StatelessWidget {
         form: form,
         limit: limit,
         logged: logged,
+        warmups: warmups,
         exerciseId: exerciseId,
       ),
     );
@@ -153,12 +160,14 @@ class _PickerView extends StatefulWidget {
     required this.form,
     required this.limit,
     required this.logged,
+    required this.warmups,
     required this.exerciseId,
   });
 
   final ExercisePickerForm form;
   final int limit;
   final int logged;
+  final int warmups;
 
   /// The exercise being swapped or replaced, if any; an
   /// [ExerciseDetailCubit] gives its similar ones.
@@ -257,7 +266,8 @@ class _PickerViewState extends State<_PickerView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (widget.form == ExercisePickerForm.swap && widget.logged > 0)
+                if (widget.form == ExercisePickerForm.swap &&
+                    widget.logged + widget.warmups > 0)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
                       Gap.md + Gap.xs,
@@ -266,7 +276,7 @@ class _PickerViewState extends State<_PickerView> {
                       Gap.sm,
                     ),
                     child: Text(
-                      l10n.pickerSwapLogged(widget.logged),
+                      _swapNote(l10n, widget.logged, widget.warmups),
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         color: ForgeStyle.of(context).colors.inkMuted,
                       ),
@@ -318,3 +328,12 @@ class _PickerViewState extends State<_PickerView> {
     );
   }
 }
+
+/// The Swap form's note: which done sets stay, warm-ups named apart from
+/// the numbered working sets.
+String _swapNote(AppLocalizations l10n, int logged, int warmups) =>
+    switch ((logged, warmups)) {
+      (_, 0) => l10n.pickerSwapLogged(logged),
+      (0, _) => l10n.pickerSwapWarmupsLogged(warmups),
+      _ => l10n.pickerSwapBothLogged(warmups, logged),
+    };

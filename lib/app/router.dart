@@ -814,6 +814,7 @@ GoRoute _pickerRoute({required int limit}) => GoRoute(
         form: form,
         exerciseId: query['exercise'],
         logged: int.tryParse(query['logged'] ?? '') ?? 0,
+        warmups: int.tryParse(query['warmups'] ?? '') ?? 0,
       ),
     );
   },

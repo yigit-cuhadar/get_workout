@@ -710,7 +710,8 @@ Decisions (the canvases they were drawn on are deleted):
   and the rest under "All exercises", no count or sort; a tap picks; Swap
   notes the logged sets ("Set 1 is logged; …", "Sets 1 and 2 are logged;
   the rest move to the new exercise.", "Sets 1–3 are logged; …"; none
-  while nothing is logged). Menus carry an icon per
+  while nothing is logged; logged warm-ups are named apart, "2 warm-ups
+  and set 1 are logged; …", "1 warm-up is logged; …", K1 2026-11-15). Menus carry an icon per
   item: sort Most popular (trending up) / A–Z (list); Add to workout
   (dumbbell) / Add to program (plus); Edit (edit) / Delete (delete).
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that

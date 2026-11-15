@@ -193,6 +193,35 @@ void main() {
     expect(ids(picked!), ['incline']);
   });
 
+  testWidgets('the swap note names logged warm-ups apart', (tester) async {
+    Future<void> swap({required int logged, required int warmups}) => pump(
+      tester,
+      ExercisePickerPage(
+        max: 1,
+        limit: 40,
+        multiple: false,
+        form: ExercisePickerForm.swap,
+        exerciseId: 'bench',
+        logged: logged,
+        warmups: warmups,
+      ),
+    );
+
+    await swap(logged: 1, warmups: 2);
+    expect(
+      find.text(
+        '2 warm-ups and set 1 are logged; the rest move to the new exercise.',
+      ),
+      findsOneWidget,
+    );
+
+    await swap(logged: 0, warmups: 1);
+    expect(
+      find.text('1 warm-up is logged; the rest move to the new exercise.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('similar ones the search leaves out go, and their label too', (
     tester,
   ) async {
