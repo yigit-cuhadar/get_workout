@@ -319,6 +319,12 @@ void main() {
 
     expect(find.text('Active program · week 2 of 8'), findsOneWidget);
     expect(find.text('Premium has ended'), findsOneWidget);
+    await tester.tap(find.byTooltip('Program options'));
+    await settle(tester);
+    expect(find.text('Open program'), findsOneWidget);
+    expect(find.text('Change days'), findsNothing);
+    await tester.tapAt(Offset.zero);
+    await settle(tester);
     await tester.tap(find.text('See Premium'));
     expect(paywalls, 1);
   });

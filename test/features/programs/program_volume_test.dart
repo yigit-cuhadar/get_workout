@@ -31,4 +31,20 @@ void main() {
     expect(volume.total, 12);
     expect(volume.sets, {Muscle.pec: 3});
   });
+
+  test('ranks every muscle, the busiest first, ties in vocabulary order', () {
+    final volume = programVolume(program(id: 'p1'), {
+      'a': exercise('a', main: [Muscle.quads]),
+      'b': exercise('b', main: [Muscle.pec]),
+      'c': exercise('c', main: [Muscle.quads]),
+    });
+    final ranked = volume.ranked;
+    expect(ranked.length, Muscle.values.length);
+    expect(ranked.take(2), [
+      (muscle: Muscle.quads, sets: 6.0),
+      (muscle: Muscle.pec, sets: 3.0),
+    ]);
+    // Untrained, in vocabulary order.
+    expect(ranked[2], (muscle: Muscle.lat, sets: 0.0));
+  });
 }

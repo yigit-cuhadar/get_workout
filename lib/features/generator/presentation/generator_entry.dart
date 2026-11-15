@@ -26,11 +26,11 @@ class GeneratorEntry extends StatelessWidget {
     return ListRow(
       title: l10n.generatorTitle,
       detail: l10n.generatorEntryInfo,
-      locked: locked,
+      // A locked row keeps full colour and opens the paywall.
       trailing: locked
           ? ForgeTag(l10n.cataloguePremium, kind: ForgeTagKind.premium)
           : null,
-      end: ListRowEnd.chevron,
+      end: locked ? ListRowEnd.none : ListRowEnd.chevron,
       onTap: () => openGenerator(context),
     );
   }

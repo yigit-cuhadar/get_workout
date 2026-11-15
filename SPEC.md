@@ -593,7 +593,14 @@ Decisions (the canvases they were drawn on are deleted):
   the paywall) with a "Premium has ended" NoticeBanner under it; the
   program lists stay in every state; undrawn states use the components'
   standard forms (EmptyView, SectionCard.loading / error, button loading,
-  ForgeSnackbar) and are drawn on the board afterwards.
+  ForgeSnackbar) and are drawn on the board afterwards. Follow-up picks:
+  no programs at all is an EmptyView without a button (the prompt above
+  leads to the catalogue); the weekly sets card opens a view of every
+  muscle (its look is being drawn); loading is LoadingView and the error
+  ErrorView with its second line for now; locked rows keep an ink title
+  and the Premium tag without a chevron; a locked copy's ⋯ has no Change
+  days; the weekly sets card is hidden while the premium status is
+  unknown.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 

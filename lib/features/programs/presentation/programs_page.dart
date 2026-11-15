@@ -341,7 +341,8 @@ class _ProgramActions {
           label: l10n.programOpen,
           onTap: () => context.go(Routes.program(program.id!)),
         ),
-        if (!state.finished)
+        // A locked copy cannot be rescheduled.
+        if (!state.finished && state.access(program) != ProgramAccess.locked)
           ForgeMenuItem(label: l10n.programChangeDays, onTap: changeDays),
         ForgeMenuItem(
           label: l10n.programDuplicate,
@@ -358,9 +359,7 @@ class _ProgramActions {
     );
   }
 
-  /// A locked copy opens the paywall instead.
   Future<void> changeDays() async {
-    if (_locked()) return;
     final active = state.active!;
     final weekdays = await _pickWeekdays(
       active.weekdays,
@@ -541,11 +540,11 @@ class _ProgramRow extends StatelessWidget {
         l10n.programDayCount(program.days.length),
         if (weeks != null) l10n.programWeekCount(weeks),
       ].join(' · '),
-      locked: locked,
+      // A locked copy keeps full colour.
       trailing: locked
           ? ForgeTag(l10n.cataloguePremium, kind: ForgeTagKind.premium)
           : null,
-      end: ListRowEnd.chevron,
+      end: locked ? ListRowEnd.none : ListRowEnd.chevron,
       onTap: () => context.go(Routes.program(program.id!)),
     );
   }

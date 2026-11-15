@@ -15,6 +15,17 @@ class ProgramVolume extends Equatable {
   /// The program's working sets, each once.
   final int total;
 
+  /// Every muscle with its weekly sets, the busiest first, ties and the
+  /// untrained ones (0) in vocabulary order.
+  List<({Muscle muscle, double sets})> get ranked =>
+      [
+        for (final muscle in Muscle.values)
+          (muscle: muscle, sets: sets[muscle] ?? 0),
+      ]..sort((a, b) {
+        final bySets = b.sets.compareTo(a.sets);
+        return bySets != 0 ? bySets : a.muscle.index.compareTo(b.muscle.index);
+      });
+
   @override
   List<Object?> get props => [sets, total];
 }
