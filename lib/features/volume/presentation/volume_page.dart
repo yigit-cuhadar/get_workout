@@ -199,18 +199,18 @@ class VolumeMuscleList extends StatelessWidget {
 
 /// The model with each trained muscle of [sets] in the heat ramp's colour;
 /// an untrained one keeps the body's colour. Tapping a muscle calls
-/// [onOpen].
+/// [onOpen]; without it the model only turns, and its hint says so.
 class VolumeModel extends StatefulWidget {
   const VolumeModel({
     super.key,
     required this.sets,
     required this.semanticLabel,
-    required this.onOpen,
+    this.onOpen,
   });
 
   final Map<Muscle, double> sets;
   final String semanticLabel;
-  final ValueChanged<Muscle> onOpen;
+  final ValueChanged<Muscle>? onOpen;
 
   @override
   State<VolumeModel> createState() => _VolumeModelState();
@@ -254,7 +254,9 @@ class _VolumeModelState extends State<VolumeModel> {
         ),
         if (model is BodyModelReady)
           Text(
-            l10n.volumeModelHint,
+            widget.onOpen == null
+                ? l10n.volumeModelTurnHint
+                : l10n.volumeModelHint,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall,
           ),

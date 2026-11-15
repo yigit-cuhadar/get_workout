@@ -1,8 +1,12 @@
 import 'package:bloc_test/bloc_test.dart';
+
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/core/widgets/volume_band.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
@@ -40,6 +44,7 @@ void main() {
     WidgetTester tester, {
     required ProgramListState programs,
     required ExerciseCatalogueState exercises,
+    BodyModelState body = const BodyModelFailed(),
   }) async {
     tester.view
       ..physicalSize = const Size(1200, 6000)
@@ -48,7 +53,7 @@ void main() {
     when(() => list.state).thenReturn(programs);
     when(() => catalogue.state).thenReturn(exercises);
     final model = _ModelCubit();
-    when(() => model.state).thenReturn(const BodyModelFailed());
+    when(() => model.state).thenReturn(body);
     when(model.load).thenAnswer((_) async {});
     await tester.pumpWidget(
       MultiBlocProvider(
@@ -90,6 +95,42 @@ void main() {
     expect(bands.length, Muscle.values.length);
     expect(bands.first.muscle, Muscle.quads);
     expect(bands.first.sets, 9);
+  });
+
+  testWidgets('nothing opens a muscle: the model only turns', (tester) async {
+    final body = await tester.runAsync(
+      () async => Model3D.fromGlb(
+        File('assets/models/body_male.glb').readAsBytesSync(),
+      ),
+    );
+    await pump(
+      tester,
+      programs: ProgramListState(
+        status: ProgramListStatus.ready,
+        programs: [program(id: 'p1')],
+      ),
+      exercises: CatalogueReady([
+        exercise('a', main: [Muscle.quads]),
+      ]),
+      body: BodyModelReady(body!),
+    );
+
+    expect(find.text('Drag to turn'), findsOneWidget);
+    expect(
+      tester.widget<ModelViewer>(find.byType(ModelViewer)).onPartTap,
+      isNull,
+    );
+    expect(
+      tester
+          .widgetList<InkWell>(
+            find.ancestor(
+              of: find.byType(VolumeBand),
+              matching: find.byType(InkWell),
+            ),
+          )
+          .every((row) => row.onTap == null),
+      isTrue,
+    );
   });
 
   testWidgets('a program that is gone says so', (tester) async {

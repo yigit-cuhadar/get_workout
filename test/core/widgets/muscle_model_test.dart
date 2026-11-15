@@ -92,6 +92,18 @@ void main() {
     expect(opened, [Muscle.pec]);
   });
 
+  testWidgets('without onOpen the model only turns', (tester) async {
+    await pumpComponent(
+      tester,
+      framed(MuscleModel(model: body, semanticLabel: 'Body')),
+    );
+
+    final viewer = tester.widget<ModelViewer>(find.byType(ModelViewer));
+    expect(viewer.onPartTap, isNull);
+    expect(viewer.onScrub, isNull);
+    expect(viewer.onScrubEnd, isNull);
+  });
+
   testWidgets('a slide shows the muscle and its release opens it', (
     tester,
   ) async {

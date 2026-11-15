@@ -98,8 +98,6 @@ class _Volume extends StatelessWidget {
         VolumeModel(
           sets: volume.sets,
           semanticLabel: l10n.programVolumeModelLabel(name),
-          // A muscle of a program opens nothing yet.
-          onOpen: (_) {},
         ),
         const Padding(
           padding: EdgeInsets.all(Gap.md),

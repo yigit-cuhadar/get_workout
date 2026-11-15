@@ -275,6 +275,7 @@
   "volumeModelLabel": "Body model coloured by sets per muscle, {week}",
   "@volumeModelLabel": {"placeholders": {"week": {"type": "String"}}},
   "volumeModelHint": "Drag to turn · tap a muscle",
+  "volumeModelTurnHint": "Drag to turn",
   "volumeMuscleSummary": "{sets} · {zone}",
   "@volumeMuscleSummary": {"placeholders": {"sets": {"type": "String"}, "zone": {"type": "String"}}},
   "volumeContributionsTitle": "Where the sets came from",

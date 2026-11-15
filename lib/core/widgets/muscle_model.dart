@@ -29,14 +29,14 @@ Set<String> muscleMeshes(Iterable<Muscle> muscles) => {
 /// Weekly volume), in a framed panel with Front / Back in its corner. A
 /// tap on a muscle, or a slide across muscles and its release, opens it
 /// through [onOpen]; while sliding, the muscle under the finger shows in
-/// a bar at the bottom. Muscles in [colors] are painted so, those in
+/// a bar at the bottom; without [onOpen] it only turns. Muscles in [colors] are painted so, those in
 /// [outlined] ringed in danger. With [sides] Front / Back sit in the
 /// corner.
 class MuscleModel extends StatefulWidget {
   const MuscleModel({
     super.key,
     required Model3D this.model,
-    required ValueChanged<Muscle> this.onOpen,
+    this.onOpen,
     required String this.semanticLabel,
     this.colors = const {},
     this.outlined = const {},
@@ -114,6 +114,7 @@ class _MuscleModelState extends State<MuscleModel> {
     final l10n = AppLocalizations.of(context);
     final model = widget.model;
     final onRetry = widget.onRetry;
+    final opens = widget.onOpen != null;
     final segments = SizedBox(
       width: _segmentsWidth,
       child: ListenableBuilder(
@@ -145,10 +146,10 @@ class _MuscleModelState extends State<MuscleModel> {
               },
               outlinedParts: muscleMeshes(widget.outlined),
               outlineColor: p.danger,
-              selectable: (part) => muscleOfMesh(part) != null,
-              onPartTap: _open,
-              onScrub: _onScrub,
-              onScrubEnd: _onScrubEnd,
+              selectable: opens ? (part) => muscleOfMesh(part) != null : null,
+              onPartTap: opens ? _open : null,
+              onScrub: opens ? _onScrub : null,
+              onScrubEnd: opens ? _onScrubEnd : null,
               semanticLabel: widget.semanticLabel,
             ),
           ),
