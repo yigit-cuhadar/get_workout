@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/vocabulary.dart';
-import 'exercise_catalogue_cubit.dart';
 import 'library_cubit.dart';
 import 'widgets/library_list_view.dart';
 
@@ -15,11 +14,11 @@ import 'widgets/library_list_view.dart';
 /// custom exercise, on the browsing state the Exercises tab shares.
 ///
 /// Opened for a [muscle] picked on the model (the location's `muscle`), it
-/// browses that muscle for this visit: the muscle becomes the filter, the
-/// list splits into its main and secondary exercises while it stays the
-/// only muscle filtered, and leaving (or a link to another muscle) takes
-/// it away again. Otherwise the search field takes focus once the page is
-/// in.
+/// browses that muscle for this visit: the muscle becomes the filter (a
+/// removable chip), the list switches between its main and secondary
+/// exercises while it stays the only muscle filtered, and leaving (or a
+/// link to another muscle) takes it away again. Otherwise the search
+/// starts empty and takes focus once the page is in.
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key, this.muscle});
 
@@ -35,7 +34,13 @@ class _LibraryPageState extends State<LibraryPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.muscle case final muscle?) _library.openMuscle(muscle);
+    switch (widget.muscle) {
+      case final muscle?:
+        _library.openMuscle(muscle);
+      // From the search pill the list opens on an empty search.
+      case null:
+        _library.setQuery('');
+    }
   }
 
   @override
@@ -59,35 +64,21 @@ class _LibraryPageState extends State<LibraryPage> {
     return BlocProvider.value(
       value: _library,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.libraryTitle),
+        appBar: ForgeAppBar(
+          title: l10n.libraryTitle,
           actions: [
-            IconButton(
-              tooltip: l10n.customNew,
-              icon: const Icon(Icons.add),
+            ForgeAppBarAction.icon(
+              icon: ForgeIcons.add,
+              label: l10n.customNew,
               onPressed: () => context.push(Routes.customExerciseNew),
             ),
           ],
         ),
-        body: BlocBuilder<ExerciseCatalogueCubit, ExerciseCatalogueState>(
-          builder: (context, catalogue) => switch (catalogue) {
-            CatalogueLoading() => const LoadingView(),
-            CatalogueFailed() => ErrorView(
-              title: l10n.libraryLoadFailed,
-              message: l10n.loadFailedDetail,
-              retryLabel: l10n.retry,
-              onRetry: context.read<ExerciseCatalogueCubit>().retry,
-            ),
-            CatalogueReady() => Padding(
-              padding: const EdgeInsets.only(top: Gap.md),
-              child: LibraryListView(
-                focusSearch: widget.muscle == null,
-                sectionsFor: widget.muscle,
-                onCreate: (name) =>
-                    context.push(Routes.customExerciseNamed(name)),
-              ),
-            ),
-          },
+        body: LibraryListView(
+          focusSearch: widget.muscle == null,
+          searchWhileLoading: true,
+          sectionsFor: widget.muscle,
+          onCreate: (name) => context.push(Routes.customExerciseNamed(name)),
         ),
       ),
     );

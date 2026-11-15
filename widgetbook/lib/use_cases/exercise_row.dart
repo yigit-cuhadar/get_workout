@@ -71,6 +71,23 @@ Widget pickerRows(BuildContext context) => SingleChildScrollView(
   ),
 );
 
+@widgetbook.UseCase(name: 'Picker at the limit', type: ExerciseRow)
+Widget pickerFullRows(BuildContext context) => _card([
+  for (final (name, detail, selected) in [
+    ('Bench Press', 'Chest · Barbell', true),
+    ('Incline Dumbbell Press', 'Chest · Dumbbell', true),
+    ('Cable Fly', 'Chest · Cable', false),
+    ('Push-up', 'Chest · Bodyweight', false),
+  ])
+    ExerciseRow.pick(
+      name: name,
+      detail: detail,
+      selected: selected,
+      enabled: selected,
+      onTap: () {},
+    ),
+]);
+
 @widgetbook.UseCase(name: 'Similar exercises', type: ExerciseRow)
 Widget similarRows(BuildContext context) => _card([
   ExerciseRow(

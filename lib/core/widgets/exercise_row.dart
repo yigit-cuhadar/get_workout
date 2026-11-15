@@ -18,16 +18,19 @@ class ExerciseRow extends StatelessWidget {
     this.custom = false,
     this.relation,
     required this.onTap,
-  }) : selected = null;
+  }) : selected = null,
+       enabled = true;
 
   /// The picker's row: a square checkbox in front, tinted when [selected];
-  /// [onTap] toggles it.
+  /// [onTap] toggles it. Not [enabled] (the picker is full), it is drawn in
+  /// line-strong and takes no taps.
   const ExerciseRow.pick({
     super.key,
     required this.name,
     required this.detail,
     this.custom = false,
     required bool this.selected,
+    this.enabled = true,
     required this.onTap,
   }) : relation = null,
        favorite = false,
@@ -40,6 +43,7 @@ class ExerciseRow extends StatelessWidget {
   final bool custom;
   final String? relation;
   final bool? selected;
+  final bool enabled;
   final VoidCallback onTap;
 
   static const double _minHeight = 60;
@@ -52,12 +56,16 @@ class ExerciseRow extends StatelessWidget {
     final selected = this.selected;
     final on = selected ?? false;
     final relation = this.relation;
+    final onTap = enabled ? this.onTap : null;
     final row = Row(
       spacing: 12,
       children: [
         if (selected != null)
           ExcludeSemantics(
-            child: ForgeCheckbox(value: on, onChanged: (_) => onTap()),
+            child: IgnorePointer(
+              ignoring: onTap == null,
+              child: ForgeCheckbox(value: on, onChanged: (_) => onTap?.call()),
+            ),
           ),
         Expanded(
           child: Column(
@@ -74,7 +82,11 @@ class ExerciseRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: text.bodyLarge!.copyWith(
                         fontWeight: FontWeight.w500,
-                        color: on ? p.onAccentSoft : p.ink,
+                        color: on
+                            ? p.onAccentSoft
+                            : enabled
+                            ? p.ink
+                            : p.lineStrong,
                       ),
                     ),
                   ),
@@ -86,7 +98,9 @@ class ExerciseRow extends StatelessWidget {
                 detail,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: text.bodySmall,
+                style: enabled
+                    ? text.bodySmall
+                    : text.bodySmall!.copyWith(color: p.lineStrong),
               ),
             ],
           ),
@@ -117,7 +131,7 @@ class ExerciseRow extends StatelessWidget {
     );
     if (selected != null) {
       result = MergeSemantics(
-        child: Semantics(checked: on, child: result),
+        child: Semantics(checked: on, enabled: enabled, child: result),
       );
     }
     return result;

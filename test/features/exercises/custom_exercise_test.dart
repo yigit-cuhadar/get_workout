@@ -154,7 +154,7 @@ void main() {
       repository = MockCustomExerciseRepository();
       save = SaveCustomExercise(repository);
       when(() => repository.createCustomExercise(any(), any()))
-          .thenAnswer((_) async => const Ok(null));
+          .thenAnswer((_) async => const Ok('custom_new'));
       when(() => repository.updateCustomExercise(any(), any()))
           .thenAnswer((_) async => const Ok(null));
       when(() => repository.countCustomExercises(any()))
@@ -166,7 +166,7 @@ void main() {
         uid: 'u1',
         exercise: _with(name: '  Landmine Press ', note: '  '),
       ));
-      expect(result.isOk, isTrue);
+      expect(result.valueOrNull, 'custom_new');
       verify(() => repository.createCustomExercise('u1', _with(note: null)))
           .called(1);
     });
@@ -178,7 +178,10 @@ void main() {
         mainMuscles: [Muscle.pec],
         note: ' Slow ',
       );
-      await save((uid: 'u1', exercise: stored));
+      expect(
+        (await save((uid: 'u1', exercise: stored))).valueOrNull,
+        'custom_a',
+      );
       verify(
         () => repository.updateCustomExercise(
           'u1',

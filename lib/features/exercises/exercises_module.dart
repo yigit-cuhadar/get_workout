@@ -19,6 +19,7 @@ import 'presentation/custom_write_rejections_cubit.dart';
 import 'presentation/equipment_cubit.dart';
 import 'presentation/exercise_catalogue_cubit.dart';
 import 'presentation/exercise_detail_cubit.dart';
+import 'presentation/exercise_notes_cubit.dart';
 import 'presentation/favorites_cubit.dart';
 import 'presentation/library_cubit.dart';
 
@@ -49,6 +50,8 @@ class ExercisesModule implements FeatureModule {
       ..registerFactory(() => SaveOwnedEquipment(sl()))
       ..registerFactory(() => WatchFavorites(sl()))
       ..registerFactory(() => SetFavorite(sl()))
+      ..registerFactory(() => WatchExerciseNotes(sl()))
+      ..registerFactory(() => SetExerciseNote(sl()))
       ..registerFactory(() => WatchCustomExercises(sl()))
       ..registerFactory(() => WatchRejectedCustomExerciseWrites(sl()))
       ..registerFactory(() => SaveCustomExercise(sl()))
@@ -66,6 +69,13 @@ class ExercisesModule implements FeatureModule {
           watchAuthUser: sl(),
           watchFavorites: sl(),
           setFavorite: sl(),
+        ),
+      )
+      ..registerLazySingleton(
+        () => ExerciseNotesCubit(
+          watchAuthUser: sl(),
+          watchExerciseNotes: sl(),
+          setExerciseNote: sl(),
         ),
       )
       ..registerLazySingleton(
