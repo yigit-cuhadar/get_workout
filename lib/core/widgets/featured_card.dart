@@ -13,6 +13,10 @@ enum FeaturedCardForm {
 
   /// A surface card in a 1.5px accent outline: a suggestion.
   outline,
+
+  /// The outline with a smaller title, a note and its buttons stacked full
+  /// width: a prompt to pick a way on (no program yet, or it finished).
+  prompt,
 }
 
 /// A button of a [FeaturedCard]. A [locked] one shows a lock and opens the
@@ -50,10 +54,12 @@ class FeaturedStat {
 }
 
 /// The one featured card of a screen in its [form]: an [eyebrow] (with a
-/// lock when [locked]) over the [title], then the [line], a [note], the
-/// summary's four [stats] and its buttons. The first button is the main
-/// one; one of [moreActions] sits beside [action], two sit side by side
-/// under it; a block has no more actions. With [onTap] the whole card opens something and shows a chevron.
+/// lock when [locked]) over the [title], then a band's [progress], the
+/// [line], a [note], the summary's four [stats] and its buttons, and a
+/// band's [rows]. The first button is the main one; one of [moreActions]
+/// sits beside [action], two sit side by side under it; a prompt stacks
+/// them all. With [onTap] the whole card opens something and shows a
+/// chevron; a band may show its [menu] there instead.
 class FeaturedCard extends StatelessWidget {
   const FeaturedCard({
     super.key,
@@ -66,8 +72,16 @@ class FeaturedCard extends StatelessWidget {
     this.stats = const [],
     this.action,
     this.moreActions = const [],
+    this.progress,
+    this.rows = const [],
+    this.menu,
     this.onTap,
-  }) : loading = false;
+  }) : assert(
+         form == FeaturedCardForm.band || (progress == null && menu == null),
+         'Only a band has progress and a menu.',
+       ),
+       assert(menu == null || onTap == null, 'A menu or a chevron, not both.'),
+       loading = false;
 
   /// The card while what it shows loads: the [eyebrow] over shimmering
   /// bars, never a button.
@@ -80,6 +94,9 @@ class FeaturedCard extends StatelessWidget {
       stats = const [],
       action = null,
       moreActions = const [],
+      progress = null,
+      rows = const [],
+      menu = null,
       onTap = null,
       loading = true;
 
@@ -95,6 +112,18 @@ class FeaturedCard extends StatelessWidget {
   final List<FeaturedStat> stats;
   final FeaturedAction? action;
   final List<FeaturedAction> moreActions;
+
+  /// A band's progress through what it shows, from 0 to 1, as a bar over
+  /// its line and buttons.
+  final double? progress;
+
+  /// A band's rows under its buttons ([ListRow]s, e.g. a program's days),
+  /// a line between each two and above the first.
+  final List<Widget> rows;
+
+  /// A band's options (an icon button opening a menu) in the chevron's
+  /// place, when the band itself opens nothing.
+  final Widget? menu;
   final VoidCallback? onTap;
   final bool loading;
 
@@ -103,6 +132,8 @@ class FeaturedCard extends StatelessWidget {
   static const double _bodyGap = 14;
   static const double _lineGap = 10;
   static const double _chevronSize = 18;
+  static const double _promptTitleSize = 20;
+  static const double _promptTitleHeight = 26;
 
   @override
   Widget build(BuildContext context) {
@@ -139,6 +170,8 @@ class FeaturedCard extends StatelessWidget {
         ),
       );
     }
+
+    if (form == FeaturedCardForm.prompt) return _prompt(context);
 
     final featuredHead = form != FeaturedCardForm.outline;
     final headInk = featuredHead ? p.onFeatured : p.ink;
@@ -194,7 +227,9 @@ class FeaturedCard extends StatelessWidget {
               ForgeIcons.chevronRight,
               size: _chevronSize,
               color: headInk,
-            ),
+            )
+          else
+            ?menu,
         ],
       ),
     );
@@ -226,6 +261,10 @@ class FeaturedCard extends StatelessWidget {
               child: head,
             ),
             ?body,
+            for (final row in rows) ...[
+              Divider(height: 1, thickness: 1, color: p.line),
+              row,
+            ],
           ],
         ),
       ),
@@ -268,7 +307,9 @@ class FeaturedCard extends StatelessWidget {
     final line = this.line;
     final note = this.note;
     final action = this.action;
+    final progress = this.progress;
     final children = [
+      if (progress != null) Progress.track(value: progress),
       if (line != null)
         Row(
           spacing: _lineGap,
@@ -350,6 +391,51 @@ class FeaturedCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: _bodyGap,
         children: children,
+      ),
+    );
+  }
+
+  /// The prompt: a surface card in the accent outline, the eyebrow over a
+  /// 20px title, the note and every button stacked full width.
+  Widget _prompt(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    final p = style.colors;
+    final text = Theme.of(context).textTheme;
+    final radius = BorderRadius.circular(style.radii.lg);
+    final note = this.note;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: radius,
+        border: Border.all(color: p.accent, width: ForgeStyle.featuredBorder),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, Gap.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: _lineGap,
+          children: [
+            Text(
+              eyebrow!,
+              style: text.bodySmall!.copyWith(fontWeight: FontWeight.w500),
+            ),
+            Semantics(
+              header: true,
+              child: Text(
+                title!,
+                style: text.titleLarge!.copyWith(
+                  fontSize: _promptTitleSize,
+                  height: _promptTitleHeight / _promptTitleSize,
+                  letterSpacing: -0.02 * _promptTitleSize,
+                ),
+              ),
+            ),
+            if (note != null)
+              Text(note, style: text.bodyMedium!.copyWith(color: p.inkMuted)),
+            if (action case final action?) _button(action, main: true),
+            for (final more in moreActions) _button(more, main: false),
+          ],
+        ),
       ),
     );
   }

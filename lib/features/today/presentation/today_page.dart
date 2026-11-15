@@ -407,7 +407,7 @@ class _NoProgramDay extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final finished = this.finished;
     return FeaturedCard(
-      form: FeaturedCardForm.outline,
+      form: FeaturedCardForm.prompt,
       eyebrow: finished == null
           ? l10n.todayGetStarted
           : l10n.todayProgramFinishedEyebrow,
