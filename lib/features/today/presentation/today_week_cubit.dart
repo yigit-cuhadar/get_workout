@@ -37,6 +37,17 @@ class TodayWeekState extends Equatable {
 
   List<CalendarEntry> entriesOn(CalendarDate date) => entries[date] ?? const [];
 
+  /// The workouts finished [today], oldest first; null while the week
+  /// loads, none when it failed.
+  List<Workout>? get doneToday => switch (status) {
+    TodayWeekStatus.loading => null,
+    TodayWeekStatus.failure => const [],
+    TodayWeekStatus.ready => [
+      for (final entry in entriesOn(today))
+        if (entry case WorkoutEntry(:final workout)) workout,
+    ],
+  };
+
   @override
   List<Object?> get props => [today, days, status, entries, failure];
 }

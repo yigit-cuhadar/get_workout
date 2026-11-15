@@ -582,6 +582,24 @@ Decisions (the canvases they were drawn on are deleted):
   and "Warm-up sets" (adds the scheme's warm-ups or removes the untouched
   ones); a set picked during a rest shows its entry under the rest's thin
   line; once every set is done the panel offers "Finish workout".
+- Today screen step (owner's picks, 2026-11-15): the featured block follows
+  the FeaturedCard card (chevron, the whole block opens the program, the
+  dumbbell on its line, no divider); a rest day (the next day planned
+  later, nothing trained today) shows the rest-day card with "Start <day>
+  early" above Start empty workout; trained today with the next day later
+  shows a "Done today · <day>" block (working sets and duration, See summary)
+  over a "Next: <day>" row opening the program; a program ending before
+  another training day shows its next day undated with Start; a missed day
+  takes the Programs band form (Missed tag, Do it today, Move, Skip; no
+  Start); while a workout runs the block reads "Exercise N of M · K sets
+  done" (N the first exercise with a set not done, K every done set) and the
+  elapsed time, ticking; no program or finished keeps Generate a program
+  (locked without Premium) with See ready-made programs and Start empty
+  workout, in the outline card's 20px form with stacked buttons; steps are
+  Progress.bar (figure, "to go", bar); a card's error is SectionCard.error;
+  no step access is SectionCard.empty "See your steps"; loading is per card
+  and Calculators always shows; a rest day keeps the zones and "to go"
+  lines; the locked note has no lock icon.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
@@ -1951,8 +1969,14 @@ the feature you are about to touch, and keep it true when you change it.
   both show the same plan; the next day with its exercise count and
   estimate, the date it is planned for (`ProgramListState.nextDate`, the
   first of `ProgramSchedule.upcoming`) and Start through
-  `startProgramDay`. A missed day shows the Programs tab's
-  `MissedDayPrompt` inside the card instead of Start: Start comes back once
+  `startProgramDay`. A next day planned after today (none missed) makes
+  today a rest day (the rest-day card, its "Start <day> early" through
+  `startProgramDay`), or, when a workout was finished today (the latest of
+  the week strip's workouts on today's date), the "Done today" block over
+  the next day's row; until today's workouts are known the card shows only
+  its title. A locked copy's missed day stays its locked block. A missed
+  day shows in a header band with the three choices (`resolveMissedDay`,
+  shared with `MissedDayPrompt`) instead of Start: Start comes back once
   the missed day is answered (Do it today, Move or Skip; owner's pick,
   Açık kararlar, 2026-11-15), only while the program is open, as there; a failed
   choice is reported by the prompt that made it, so the two tabs never

@@ -153,3 +153,63 @@ Widget featuredOutlineTwo(BuildContext context) => _page(
     onTap: () {},
   ),
 );
+
+@widgetbook.UseCase(name: 'Prompt', type: FeaturedCard)
+Widget featuredPrompt(BuildContext context) => _page(
+  FeaturedCard(
+    form: FeaturedCardForm.prompt,
+    eyebrow: 'Get started',
+    title: 'Pick your first program',
+    note: 'A plan sets your training days and fills Today.',
+    action: FeaturedAction('See ready-made programs', () {}),
+    moreActions: [
+      FeaturedAction(
+        'Generate a program',
+        () {},
+        locked: context.knobs.boolean(label: 'Locked', initialValue: true),
+      ),
+      FeaturedAction('Start empty workout', () {}),
+    ],
+  ),
+);
+
+@widgetbook.UseCase(name: 'Band · day rows and menu', type: FeaturedCard)
+Widget featuredBandRows(BuildContext context) => _page(
+  FeaturedCard(
+    form: FeaturedCardForm.band,
+    eyebrow: 'Active program · week 3 of 8',
+    title: 'Push Pull Legs',
+    progress: 0.37,
+    action: FeaturedAction('Start Push', () {}),
+    menu: IconButton(
+      tooltip: 'Program options',
+      onPressed: () {},
+      icon: const ForgeIcon(ForgeIcons.moreHoriz),
+    ),
+    rows: const [
+      ListRow(
+        leading: ListRowDateBox(weekday: 'Mon', day: '9', state: DayState.done),
+        title: 'Pull',
+        detail: 'Done',
+      ),
+      ListRow(
+        leading: ListRowDateBox(
+          weekday: 'Wed',
+          day: '11',
+          state: DayState.missed,
+        ),
+        title: 'Legs',
+        error: 'Missed',
+      ),
+      ListRow(
+        leading: ListRowDateBox(
+          weekday: 'Fri',
+          day: '13',
+          state: DayState.planned,
+        ),
+        title: 'Push',
+        detail: 'Planned',
+      ),
+    ],
+  ),
+);

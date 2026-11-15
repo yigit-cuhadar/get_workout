@@ -51,7 +51,7 @@ class MissedDayPrompt extends StatelessWidget {
           ForgeButton(
             label: l10n.programMissedToday,
             loading: busy,
-            onPressed: () => _resolve(context, MissedDayChoice.doToday),
+            onPressed: () => resolveMissedDay(context, MissedDayChoice.doToday),
           ),
           const SizedBox(height: Gap.sm),
           Row(
@@ -60,7 +60,7 @@ class MissedDayPrompt extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: busy
                       ? null
-                      : () => _resolve(
+                      : () => resolveMissedDay(
                           context,
                           MissedDayChoice.moveToNextWeekday,
                         ),
@@ -74,7 +74,7 @@ class MissedDayPrompt extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: busy
                       ? null
-                      : () => _resolve(context, MissedDayChoice.skip),
+                      : () => resolveMissedDay(context, MissedDayChoice.skip),
                   child: Text(l10n.programMissedSkip),
                 ),
               ),
@@ -84,23 +84,29 @@ class MissedDayPrompt extends StatelessWidget {
       ),
     );
   }
+}
 
-  Future<void> _resolve(BuildContext context, MissedDayChoice choice) async {
-    final l10n = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final cubit = context.read<ProgramListCubit>();
-    await cubit.resolveMissed(choice);
-    final failure = cubit.state.resolveFailure;
-    if (failure == null) return;
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          failure is NetworkFailure
-              ? l10n.errorNetwork
-              : l10n.programMissedFailed,
-        ),
+/// Resolves the active program's missed day with [choice] through the
+/// [ProgramListCubit] above [context]; a failure is reported here, by the
+/// prompt that made the choice.
+Future<void> resolveMissedDay(
+  BuildContext context,
+  MissedDayChoice choice,
+) async {
+  final l10n = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  final cubit = context.read<ProgramListCubit>();
+  await cubit.resolveMissed(choice);
+  final failure = cubit.state.resolveFailure;
+  if (failure == null) return;
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text(
+        failure is NetworkFailure
+            ? l10n.errorNetwork
+            : l10n.programMissedFailed,
       ),
-    );
-    cubit.resolveFailureShown();
-  }
+    ),
+  );
+  cubit.resolveFailureShown();
 }

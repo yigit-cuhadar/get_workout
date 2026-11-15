@@ -76,6 +76,29 @@ abstract final class Routes {
   static const afterOnboarding = '/suggested-program';
 
   static const today = '/today';
+
+  /// A finished workout above Today, so Back returns there.
+  static String todayWorkout(String id) =>
+      '$today/workouts/${Uri.encodeComponent(id)}';
+  static String todayWorkoutEdit(String id) => '${todayWorkout(id)}/edit';
+  static String todayPicker({required int max, required bool multiple}) =>
+      '$today/pick?max=$max&multiple=$multiple';
+  static String todayExercise(String id) =>
+      '$today/exercises/${Uri.encodeComponent(id)}';
+
+  /// A stored workout edited in Today's tab.
+  static const WorkoutEditRoutes todayEditing = (
+    edit: todayWorkoutEdit,
+    picker: todayPicker,
+    exercise: todayExercise,
+  );
+
+  /// A stored workout edited in the calendar's.
+  static const WorkoutEditRoutes calendarEditing = (
+    edit: calendarWorkoutEdit,
+    picker: calendarPicker,
+    exercise: calendarExercise,
+  );
   static const programs = '/programs';
   static const programNew = '$programs/new';
 
@@ -411,7 +434,30 @@ GoRouter buildRouter(
           child: AppShell(shell: shell),
         ),
         branches: [
-          _tab(Routes.today, const TodayPage()),
+          _tab(
+            Routes.today,
+            const TodayPage(),
+            routes: [
+              GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
+              _workoutExercise(Routes.todayExercise),
+              GoRoute(
+                path: 'workouts/:id',
+                builder: (_, state) => WorkoutDetailPage(
+                  id: state.pathParameters['id']!,
+                  routes: Routes.todayEditing,
+                ),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (_, state) => WorkoutEditPage(
+                      id: state.pathParameters['id'],
+                      routes: Routes.todayEditing,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
           _tab(
             Routes.programs,
             const ProgramsPage(),
@@ -573,19 +619,24 @@ GoRouter buildRouter(
                   // Before ':id', which would match these too.
                   GoRoute(
                     path: 'new',
-                    builder: (_, _) => const WorkoutEditPage(),
+                    builder: (_, _) =>
+                        const WorkoutEditPage(routes: Routes.calendarEditing),
                   ),
                   GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
                   _workoutExercise(Routes.calendarExercise),
                   GoRoute(
                     path: ':id',
-                    builder: (_, state) =>
-                        WorkoutDetailPage(id: state.pathParameters['id']!),
+                    builder: (_, state) => WorkoutDetailPage(
+                      id: state.pathParameters['id']!,
+                      routes: Routes.calendarEditing,
+                    ),
                     routes: [
                       GoRoute(
                         path: 'edit',
-                        builder: (_, state) =>
-                            WorkoutEditPage(id: state.pathParameters['id']),
+                        builder: (_, state) => WorkoutEditPage(
+                          id: state.pathParameters['id'],
+                          routes: Routes.calendarEditing,
+                        ),
                       ),
                     ],
                   ),

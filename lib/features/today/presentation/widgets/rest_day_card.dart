@@ -5,26 +5,33 @@ import '../../../../l10n/app_localizations.dart';
 
 /// Today on a day the program has no workout, in the featured block's
 /// place: the [next] day ("Pull, Mon, Nov 16"), a walk toward the step
-/// goal opening the Steps page ([onSteps]), Log cardio ([onLogCardio]) and
-/// Start empty workout ([onStartEmpty]). Today's [steps] against the
-/// [goal]; null [steps] when the app cannot read them.
+/// goal opening the Steps page ([onSteps]), Log cardio ([onLogCardio]),
+/// Start [nextDay] early ([onStartEarly]; with a lock when [locked], as it
+/// opens the paywall) and Start empty workout ([onStartEmpty]). Today's
+/// [steps] against the [goal]; null [steps] when the app cannot read them.
 class RestDayCard extends StatelessWidget {
   const RestDayCard({
     super.key,
     required this.next,
+    required this.nextDay,
     required this.steps,
     required this.goal,
     required this.onSteps,
     required this.onLogCardio,
+    required this.onStartEarly,
     required this.onStartEmpty,
+    this.locked = false,
   });
 
   final String next;
+  final String nextDay;
   final int? steps;
   final int goal;
   final VoidCallback onSteps;
   final VoidCallback onLogCardio;
+  final VoidCallback onStartEarly;
   final VoidCallback onStartEmpty;
+  final bool locked;
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +98,15 @@ class RestDayCard extends StatelessWidget {
                   onTap: onLogCardio,
                 ),
               ],
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: ForgeButton(
+              label: l10n.restDayCardStartEarly(nextDay),
+              variant: ForgeButtonVariant.secondary,
+              locked: locked,
+              onPressed: onStartEarly,
             ),
           ),
           SizedBox(
