@@ -347,7 +347,8 @@ class _PlateRow extends StatelessWidget {
 
 /// One side of the bar, side-on: the collar, the sleeve, and each plate
 /// from the collar out with its weight under it; a label with no room
-/// next to the one before drops a line, on a short leader.
+/// next to the one before drops a line, on a short leader. A load longer
+/// than the sleeve has its plates and gaps narrowed to fit it.
 class _BarPainter extends CustomPainter {
   _BarPainter({
     required this.plates,
@@ -365,6 +366,11 @@ class _BarPainter extends CustomPainter {
   static const height = 174.0;
   static const _axis = 70.0;
   static const _gap = 3.0;
+  static const _sleeveStart = 44.0;
+  static const _sleeveEnd = 274.0;
+
+  /// Where the first plate sits, past the collar.
+  static const _platesStart = 48.0;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -396,22 +402,40 @@ class _BarPainter extends CustomPainter {
 
     rect(0, 66, 40, 8, 2, colors.lineStrong);
     rect(36, 56, 8, 28, 2, colors.lineStrong);
-    rect(44, 66, 230, 8, 2, colors.surfaceSunken);
-    var x = 48.0;
+    rect(
+      _sleeveStart,
+      66,
+      _sleeveEnd - _sleeveStart,
+      8,
+      2,
+      colors.surfaceSunken,
+    );
+    final length =
+        plates.fold(
+          0.0,
+          (sum, plate) =>
+              sum + plate.count * (PlateLook.of(plate.kg).width + _gap),
+        ) -
+        _gap;
+    const room = _sleeveEnd - _platesStart;
+    final fit = length > room ? room / length : 1.0;
+    final gap = _gap * fit;
+    var x = _platesStart;
     var labelEnd = double.negativeInfinity;
     for (final plate in plates) {
       final look = PlateLook.of(plate.kg);
+      final plateWidth = look.width * fit;
       for (var i = 0; i < plate.count; i++) {
         rect(
           x,
           _axis - look.height / 2,
-          look.width,
+          plateWidth,
           look.height,
           3,
           look.color(plateColors),
           edge: look.edge(colors),
         );
-        final centre = x + look.width / 2;
+        final centre = x + plateWidth / 2;
         final painter = TextPainter(
           text: TextSpan(text: plate.short, style: label),
           textDirection: TextDirection.ltr,
@@ -434,7 +458,7 @@ class _BarPainter extends CustomPainter {
           Offset(left, (dropped ? 167 : 150) - painter.height * 0.8),
         );
         painter.dispose();
-        x += look.width + _gap;
+        x += plateWidth + gap;
       }
     }
   }

@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/features/programs/presentation/widgets/builder_row.dart';
+import 'package:get_workout/l10n/app_localizations.dart';
 
 import '../../../../component_harness.dart';
 
 void main() {
-  Widget list(List<BuilderRow> rows) => CustomScrollView(
+  Widget list(
+    List<BuilderRow> rows, {
+    void Function(int from, int to)? onReorder,
+  }) => CustomScrollView(
     slivers: [
       BuilderCard(
         sliver: SliverReorderableList(
           itemCount: rows.length,
-          onReorderItem: (_, _) {},
+          onReorderItem: onReorder ?? (_, _) {},
           itemBuilder: (_, index) =>
               KeyedSubtree(key: ValueKey(index), child: rows[index]),
         ),
@@ -194,5 +199,99 @@ void main() {
     );
 
     expect(find.text('Replace it with another exercise.'), findsOneWidget);
+  });
+
+  testWidgets('the handle starts a drag across a 44px band', (tester) async {
+    final moves = <(int, int)>[];
+    await pumpComponent(
+      tester,
+      list([
+        for (final (i, name) in ['Bench Press', 'Overhead Press'].indexed)
+          BuilderRow(
+            index: i,
+            name: name,
+            values: const [],
+            menu: const [],
+            divided: i > 0,
+          ),
+      ], onReorder: (from, to) => moves.add((from, to))),
+    );
+    final handle = find.byWidgetPredicate(
+      (widget) =>
+          widget is ForgeIcon && widget.icon == ForgeIcons.dragIndicator,
+    );
+    expect(tester.getSize(handle.first), const Size.square(16));
+    // 12px right of the drawn handle, inside its band.
+    final from = tester.getCenter(handle.first) + const Offset(12, 0);
+    final gesture = await tester.startGesture(from);
+    for (var i = 0; i < 10; i++) {
+      await gesture.moveBy(const Offset(0, 20));
+      await tester.pump();
+    }
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(moves, [(0, 1)]);
+  });
+
+  testWidgets('a screen reader moves the row up and down', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final moved = <String>[];
+    await pumpComponent(
+      tester,
+      list([
+        for (final (i, name) in ['Bench Press', 'Overhead Press'].indexed)
+          BuilderRow(
+            index: i,
+            name: name,
+            values: const [],
+            menu: const [],
+            onMoveUp: i == 0 ? null : () => moved.add('$name up'),
+            onMoveDown: i == 1 ? null : () => moved.add('$name down'),
+          ),
+      ]),
+    );
+    final widgets = WidgetsLocalizations.of(
+      tester.element(find.text('Bench Press')),
+    );
+    final reorder = lookupAppLocalizations(const Locale('en')).programReorder;
+    final handles = find.bySemanticsLabel(reorder);
+    expect(handles, findsNWidgets(2));
+    List<String> actions(int index) {
+      final node = tester.getSemantics(handles.at(index));
+      return [
+        for (final id in node.getSemanticsData().customSemanticsActionIds!)
+          CustomSemanticsAction.getAction(id)!.label!,
+      ];
+    }
+
+    expect(actions(0), [widgets.reorderItemDown]);
+    expect(actions(1), [widgets.reorderItemUp]);
+    for (final (index, label) in [
+      (0, widgets.reorderItemDown),
+      (1, widgets.reorderItemUp),
+    ]) {
+      final node = tester.getSemantics(handles.at(index));
+      node.owner!.performAction(
+        node.id,
+        SemanticsAction.customAction,
+        CustomSemanticsAction.getIdentifier(
+          CustomSemanticsAction(label: label),
+        ),
+      );
+    }
+    expect(moved, ['Bench Press down', 'Overhead Press up']);
+    semantics.dispose();
+  });
+
+  test("a circuit's header counts its rounds", () {
+    final l10n = lookupAppLocalizations(const Locale('en'));
+    expect(
+      l10n.builderRowCircuit(1, '1:30'),
+      'Circuit · 1 round · rest after each round 1:30',
+    );
+    expect(
+      l10n.builderRowCircuit(3, '1:30'),
+      'Circuit · 3 rounds · rest after each round 1:30',
+    );
   });
 }

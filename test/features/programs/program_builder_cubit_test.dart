@@ -398,6 +398,40 @@ void main() {
       expect(cubit.state.day!.items[1].repMin, isNot(5));
     });
 
+    test('a group saved uneven is loaded in step, unchanged', () async {
+      when(() => repository.getProgram('u1', 'p1')).thenAnswer(
+        (_) async => Ok(
+          Program(
+            id: 'p1',
+            name: 'Uneven',
+            days: [
+              ProgramDay(
+                items: [
+                  item('a', sets: 4, restS: 120, group: 'A'),
+                  item('b', sets: 2, restS: 60, group: 'A'),
+                  item('c', sets: 5, restS: 30),
+                  item('d', sets: 3, restS: 45, group: 'B'),
+                  item('a', sets: 2, restS: 90, group: 'B'),
+                  item('b', sets: 1, restS: 75, group: 'B'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+      final cubit = await build(programId: 'p1');
+      expect(setsAndRest(cubit), [
+        (4, 60),
+        (4, 60),
+        (5, 30),
+        (3, 75),
+        (3, 75),
+        (3, 75),
+      ]);
+      // Nothing the user changed, so leaving asks nothing.
+      expect(cubit.state.dirty, isFalse);
+    });
+
     test('an item on its own changes alone', () async {
       final cubit = await filled(['a', 'b']);
       cubit
@@ -485,7 +519,7 @@ void main() {
       days: [
         ProgramDay(
           items: [
-            item('a', group: 'A'),
+            item('a', sets: 4, group: 'A'),
             item('retired', sets: 4, group: 'A'),
           ],
         ),
@@ -528,7 +562,7 @@ void main() {
     test('or removed, which also dissolves their superset', () async {
       final cubit = await build(programId: 'p1');
       cubit.removeItem(1);
-      expect(cubit.state.day!.items, [item('a')]);
+      expect(cubit.state.day!.items, [item('a', sets: 4)]);
       await cubit.save();
       expect(cubit.state.status, ProgramBuilderStatus.saved);
     });

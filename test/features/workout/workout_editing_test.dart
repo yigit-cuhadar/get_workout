@@ -28,9 +28,10 @@ void main() {
       ProgramDay(
         name: 'A',
         items: [
-          item('gone', group: 'A'),
+          // Saved before groups were kept in step.
+          item('gone', group: 'A', sets: 4),
           item('squat', group: 'A', sets: 4, targetKg: 100),
-          item('lunge', group: 'A'),
+          item('lunge', group: 'A', restS: 60),
           item('plank', repMin: null, repMax: null, durationS: 60),
         ],
       ),
@@ -73,13 +74,22 @@ void main() {
         language: 'en',
         warmups: const WarmupSettings(),
       );
-      expect(warmed.exercises.map((e) => e.sets.length), [6, 5, 3]);
+      expect(warmed.exercises.map((e) => e.sets.length), [6, 6, 3]);
       expect(warmed.exercises.first.sets.take(2).map((s) => s.type), [
         SetType.warmup,
         SetType.warmup,
       ]);
       // The plank is timed.
       expect(warmed.exercises.last.sets.any((s) => s.isWarmup), isFalse);
+    });
+
+    test('a group takes its first sets and last rest, as the builder', () {
+      expect(
+        built.exercises.map(
+          (e) => (e.sets.length, e.goal!.sets, e.goal!.restS),
+        ),
+        [(4, 4, 60), (4, 4, 60), (3, 3, 90)],
+      );
     });
 
     test('leaves out unavailable exercises and relabels groups', () {

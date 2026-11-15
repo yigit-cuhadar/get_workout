@@ -225,9 +225,16 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
     if (isClosed || _closed) return;
     switch (result) {
       case Ok(:final value):
+        // A group saved uneven is shown, and saved again, in step, as a
+        // workout of the day takes it.
         _initial = value.days.isEmpty
             ? value.copyWith(days: const [ProgramDay()])
-            : value;
+            : value.copyWith(
+                days: [
+                  for (final day in value.days)
+                    day.copyWith(items: editing.alignGroups(day.items)),
+                ],
+              );
         emit(
           state.copyWith(
             status: ProgramBuilderStatus.editing,

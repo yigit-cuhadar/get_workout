@@ -11,6 +11,7 @@ import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
+import 'package:get_workout/features/workout/domain/effort.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
 import 'package:get_workout/features/workout/presentation/set_bar.dart';
@@ -38,6 +39,8 @@ Calculation<PlateLoad> _loadPlates(
 void main() {
   setUpAll(() => registerFallbackValue((exercise: 0, set: 0)));
 
+  late _MockEditor editor;
+
   Future<void> pump(
     WidgetTester tester, {
     required WorkoutSet set,
@@ -48,7 +51,7 @@ void main() {
     bool known = true,
     bool refused = false,
   }) {
-    final editor = _MockEditor();
+    editor = _MockEditor();
     when(() => editor.toggledSet(any())).thenReturn(null);
     final settings = _MockSettingsCubit();
     when(() => settings.state).thenReturn(
@@ -218,5 +221,45 @@ void main() {
     );
     final fields = tester.widgetList<StepperField>(find.byType(StepperField));
     expect(fields.map((field) => field.invalid), [true, false]);
+  });
+
+  testWidgets("a done set's effort: rows with their meaning, no Skip", (
+    tester,
+  ) async {
+    const set = WorkoutSet(
+      type: SetType.normal,
+      weightKg: 82.5,
+      reps: 8,
+      done: true,
+      rir: 1,
+    );
+    await pump(tester, set: set);
+
+    final grid = tester.widget<ChoiceGrid>(find.byType(ChoiceGrid));
+    // The same rows as the effort question.
+    expect(grid.form, ChoiceListForm.inline);
+    expect(grid.options.map((option) => option.label), [
+      'Easy',
+      'Moderate',
+      'Hard',
+      'Max',
+      'Failed',
+    ]);
+    expect(grid.options.first.hint, '4 or more reps left');
+    expect(grid.options.last.hint, 'Could not finish the last rep');
+    expect(grid.selected, 2);
+    expect(find.text('Skip'), findsNothing);
+    final settings = BlocProvider.of<SettingsCubit>(
+      tester.element(find.byType(SetBar)),
+    );
+    when(() => settings.tipSeen(Tip.effort)).thenAnswer((_) async {});
+    await tester.tap(find.text('Max'));
+    verify(
+      () =>
+          editor.setEffort((exercise: 0, set: 0), const EffortStep.reserve(0)),
+    ).called(1);
+    // The chosen step again clears it.
+    await tester.tap(find.text('Hard'));
+    verify(() => editor.setEffort((exercise: 0, set: 0), null)).called(1);
   });
 }

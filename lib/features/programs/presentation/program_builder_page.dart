@@ -472,8 +472,8 @@ class _DayMenu extends StatelessWidget {
   }
 }
 
-/// An item of the day as a [BuilderRow]: its values as chips, which open
-/// the item's editor, and its actions in the ⋯ menu. A superset's rows
+/// An item of the day as a [BuilderRow]: its values (with the target
+/// weight, if any) as chips, which open the item's editor, and its actions in the ⋯ menu. A superset's rows
 /// show the rest only on the last, a circuit's only reps or time, with
 /// the group's rest (and a circuit's rounds) in the header above the
 /// first.
@@ -534,6 +534,12 @@ class _ItemTile extends StatelessWidget {
             onTap: edit,
           ),
         work,
+        if (item.targetKg case final targetKg?)
+          BuilderValue(
+            label: l10n.builderRowWeight,
+            value: l10n.liftedWeightText(targetKg, cubit.weightUnit),
+            onTap: edit,
+          ),
         if (!grouped || (!circuit && index == end - 1))
           BuilderValue(
             label: l10n.builderRowRest,
@@ -549,6 +555,10 @@ class _ItemTile extends StatelessWidget {
           ? l10n.builderRowCircuit(item.sets, rest(last.restS))
           : l10n.builderRowSuperset(rest(last.restS)),
       lifted: lifted,
+      onMoveUp: index == 0 ? null : () => cubit.moveItem(index, index - 1),
+      onMoveDown: index == items.length - 1
+          ? null
+          : () => cubit.moveItem(index, index + 1),
       issues: [
         for (final issue in issues)
           if (issue != ItemIssue.exerciseUnavailable) l10n.itemIssueText(issue),

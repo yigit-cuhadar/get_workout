@@ -73,3 +73,31 @@ Widget muscleModelPair(BuildContext context) => SingleChildScrollView(
     ),
   ),
 );
+
+@widgetbook.UseCase(
+  name: 'Front and back side by side, loading',
+  type: MuscleModelPair,
+)
+Widget muscleModelPairLoading(BuildContext context) =>
+    const SingleChildScrollView(
+      padding: EdgeInsets.all(Gap.md),
+      child: MuscleModelPair.loading(
+        title: 'Worked muscles',
+        main: [Muscle.pec],
+        secondary: [Muscle.frontDelt, Muscle.triceps],
+      ),
+    );
+
+@widgetbook.UseCase(
+  name: 'Front and back side by side, failed',
+  type: MuscleModelPair,
+)
+Widget muscleModelPairFailed(BuildContext context) => SingleChildScrollView(
+  padding: const EdgeInsets.all(Gap.md),
+  child: MuscleModelPair.failed(
+    title: 'Worked muscles',
+    main: const [Muscle.pec],
+    secondary: const [Muscle.frontDelt, Muscle.triceps],
+    onRetry: () {},
+  ),
+);

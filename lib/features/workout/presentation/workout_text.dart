@@ -278,18 +278,6 @@ extension WorkoutText on AppLocalizations {
     };
   }
 
-  /// What a by-feel [step] means, e.g. `1 left`; null on other scales.
-  String? effortStepHint(EffortStep step, EffortScale scale) {
-    if (scale != EffortScale.byFeel) return null;
-    if (step.failed) return effortFailedHint;
-    return switch (step.rir) {
-      >= 4 => effortEasyHint,
-      >= 2 => effortModerateHint,
-      1 => effortHardHint,
-      _ => effortMaxHint,
-    };
-  }
-
   /// The effort of [set] on [scale], e.g. `Hard`, `RIR 2`, `RPE 8` or
   /// `Failed`; null without one.
   String? effortText(WorkoutSet set, EffortScale scale) {

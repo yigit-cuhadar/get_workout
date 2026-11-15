@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../../core/widgets/tap_band.dart';
@@ -28,6 +29,10 @@ class BuilderValue {
 /// [groupHeader] above it ("Superset · rest after both 1:30"). While it is
 /// dragged ([lifted]) it floats on a soft shadow. [issues] say what is
 /// wrong with it, in danger under its chips.
+///
+/// The handle takes touches across a 44px band; a screen reader moves the
+/// row with its Move up ([onMoveUp]) and Move down ([onMoveDown]) actions,
+/// each left out when null.
 class BuilderRow extends StatelessWidget {
   const BuilderRow({
     super.key,
@@ -40,6 +45,8 @@ class BuilderRow extends StatelessWidget {
     this.groupHeader,
     this.lifted = false,
     this.issues = const [],
+    this.onMoveUp,
+    this.onMoveDown,
   });
 
   /// Its place in the reorderable list, for the drag handle.
@@ -52,6 +59,8 @@ class BuilderRow extends StatelessWidget {
   final String? groupHeader;
   final bool lifted;
   final List<String> issues;
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +68,7 @@ class BuilderRow extends StatelessWidget {
     final colors = style.colors;
     final text = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
+    final widgets = WidgetsLocalizations.of(context);
     final groupHeader = this.groupHeader;
     final row = Container(
       padding: const EdgeInsets.fromLTRB(10, 12, 12, 12),
@@ -81,14 +91,22 @@ class BuilderRow extends StatelessWidget {
       child: Row(
         spacing: 10,
         children: [
-          ReorderableDragStartListener(
-            index: index,
-            child: Semantics(
-              label: l10n.programReorder,
-              child: ForgeIcon(
-                ForgeIcons.dragIndicator,
-                size: 16,
-                color: colors.lineStrong,
+          TapBand(
+            child: ReorderableDragStartListener(
+              index: index,
+              child: Semantics(
+                label: l10n.programReorder,
+                customSemanticsActions: {
+                  CustomSemanticsAction(label: widgets.reorderItemUp):
+                      ?onMoveUp,
+                  CustomSemanticsAction(label: widgets.reorderItemDown):
+                      ?onMoveDown,
+                },
+                child: ForgeIcon(
+                  ForgeIcons.dragIndicator,
+                  size: 16,
+                  color: colors.lineStrong,
+                ),
               ),
             ),
           ),
@@ -140,7 +158,7 @@ class BuilderRow extends StatelessWidget {
         ],
       ),
     );
-    // The chips take taps across a 44px band around them.
+    // The handle and the chips take taps across a 44px band around them.
     final banded = TapBandArea(child: row);
     final scaled = lifted
         ? Transform.scale(scale: 1.02, child: banded)

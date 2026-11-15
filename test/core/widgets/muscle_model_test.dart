@@ -7,7 +7,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/core/widgets/muscle_model.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 
-import 'component_harness.dart';
+import '../../component_harness.dart';
 
 void main() {
   late Model3D body;
@@ -173,5 +173,45 @@ void main() {
     }
     final viewers = tester.widgetList<ModelViewer>(find.byType(ModelViewer));
     expect(viewers.every((viewer) => !viewer.interactive), isTrue);
+  });
+
+  testWidgets('side by side while loading: shimmer, the legend shows', (
+    tester,
+  ) async {
+    await pumpComponent(
+      tester,
+      const MuscleModelPair.loading(
+        title: 'Worked muscles',
+        main: [Muscle.pec],
+        secondary: [Muscle.triceps],
+      ),
+    );
+
+    expect(find.byType(ModelViewer), findsNothing);
+    expect(find.byType(SkeletonBar), findsWidgets);
+    for (final text in ['Worked muscles', 'Front', 'Back', 'Main']) {
+      expect(find.text(text), findsOneWidget);
+    }
+    expect(find.text('Secondary'), findsOneWidget);
+  });
+
+  testWidgets('side by side failed: Retry, the legend shows', (tester) async {
+    var retried = 0;
+    await pumpComponent(
+      tester,
+      MuscleModelPair.failed(
+        title: 'Worked muscles',
+        main: const [Muscle.pec],
+        secondary: const [Muscle.triceps],
+        onRetry: () => retried++,
+      ),
+    );
+
+    expect(find.byType(ModelViewer), findsNothing);
+    expect(find.text("Couldn't load the model"), findsOneWidget);
+    expect(find.text('Main'), findsOneWidget);
+    expect(find.text('Secondary'), findsOneWidget);
+    await tester.tap(find.text('Retry'));
+    expect(retried, 1);
   });
 }

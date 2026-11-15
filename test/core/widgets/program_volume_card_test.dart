@@ -7,7 +7,7 @@ import 'package:get_workout/core/widgets/program_volume_card.dart';
 import 'package:get_workout/core/widgets/volume_band.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 
-import 'component_harness.dart';
+import '../../component_harness.dart';
 
 void main() {
   late Model3D body;

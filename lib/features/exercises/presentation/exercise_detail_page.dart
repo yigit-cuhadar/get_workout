@@ -416,14 +416,26 @@ class _MusclePreviewState extends State<_MusclePreview> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final exercise = widget.exercise;
+    final title = l10n.muscleModelWorked;
+    final main = exercise.mainMuscles;
+    final secondary = exercise.secondaryMuscles;
     return switch (context.watch<BodyModelCubit>().state) {
-      BodyModelLoading() => const LoadingView(),
-      BodyModelFailed() => Center(child: Text(l10n.modelLoadFailed)),
+      BodyModelLoading() => MuscleModelPair.loading(
+        title: title,
+        main: main,
+        secondary: secondary,
+      ),
+      BodyModelFailed() => MuscleModelPair.failed(
+        title: title,
+        main: main,
+        secondary: secondary,
+        onRetry: context.read<BodyModelCubit>().load,
+      ),
       BodyModelReady(:final model) => MuscleModelPair(
         model: model,
-        title: l10n.muscleModelWorked,
-        main: exercise.mainMuscles,
-        secondary: exercise.secondaryMuscles,
+        title: title,
+        main: main,
+        secondary: secondary,
       ),
     };
   }

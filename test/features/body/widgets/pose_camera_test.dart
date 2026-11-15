@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/features/body/presentation/widgets/pose_camera.dart';
 
-import '../../../core/widgets/component_harness.dart';
+import '../../../component_harness.dart';
 import '../fake_camera.dart';
 
 void main() {

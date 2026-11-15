@@ -5,7 +5,7 @@ import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/core/widgets/volume_band.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 
-import 'component_harness.dart';
+import '../../component_harness.dart';
 
 void main() {
   final band = AppPreset.shipped.lightTheme().extension<GwColors>()!;

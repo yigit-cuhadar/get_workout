@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/core/widgets/program_card.dart';
 
-import 'component_harness.dart';
+import '../../component_harness.dart';
 
 void main() {
   testWidgets('a card shows its facts and goal and opens on a tap', (

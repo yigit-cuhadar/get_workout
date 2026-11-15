@@ -461,7 +461,8 @@ class SetBar extends StatelessWidget {
 }
 
 /// The effort of the selected set [rated], which is done: which set it
-/// is, the help, and the steps.
+/// is, the help, and the steps as the same rows, each with its meaning, as
+/// the [EffortQuestion], without Skip.
 class _EffortRow extends StatelessWidget {
   const _EffortRow({
     required this.rated,
@@ -480,6 +481,8 @@ class _EffortRow extends StatelessWidget {
       (SettingsCubit cubit) => cubit.state.settings.effortScale,
     );
     final exercise = state.workout!.exercises[rated.exercise];
+    final steps = scale.steps;
+    final chosen = scale.stepOf(exercise.sets[rated.set]);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -494,13 +497,22 @@ class _EffortRow extends StatelessWidget {
             const WorkoutHelpButton(),
           ],
         ),
-        EffortChoice(
-          scale: scale,
-          chosen: scale.stepOf(exercise.sets[rated.set]),
-          onChosen: (step) {
-            editor.setEffort(rated, step);
+        ChoiceGrid.list(
+          options: [
+            for (final step in steps)
+              ChoiceOption(
+                label: l10n.effortStepLabel(step, scale),
+                hint: l10n.effortStepMeaning(step, scale),
+              ),
+          ],
+          selected: chosen == null ? null : steps.indexOf(chosen),
+          onSelected: (index) {
+            final step = steps[index];
+            // Picking the chosen step again clears it.
+            editor.setEffort(rated, step == chosen ? null : step);
             context.read<SettingsCubit>().tipSeen(Tip.effort);
           },
+          form: ChoiceListForm.inline,
         ),
       ],
     );
@@ -618,64 +630,6 @@ class _EffortQuestion extends StatelessWidget {
       progress: rest.progress,
       onAddTime: workout.extendRest,
       onSkip: workout.skipRest,
-    );
-  }
-}
-
-/// The steps of [scale] in a row, [chosen] selected; picking the chosen
-/// one again clears it.
-class EffortChoice extends StatelessWidget {
-  const EffortChoice({
-    super.key,
-    required this.scale,
-    required this.chosen,
-    required this.onChosen,
-  });
-
-  final EffortScale scale;
-  final EffortStep? chosen;
-  final ValueChanged<EffortStep?> onChosen;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        spacing: Gap.xs,
-        children: [
-          for (final step in scale.steps)
-            ChoiceChip(
-              showCheckmark: false,
-              label: _StepLabel(
-                label: l10n.effortStepLabel(step, scale),
-                hint: l10n.effortStepHint(step, scale),
-              ),
-              selected: step == chosen,
-              onSelected: (_) => onChosen(step == chosen ? null : step),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StepLabel extends StatelessWidget {
-  const _StepLabel({required this.label, required this.hint});
-
-  final String label;
-  final String? hint;
-
-  @override
-  Widget build(BuildContext context) {
-    final hint = this.hint;
-    if (hint == null) return Text(label);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label),
-        Text(hint, style: Theme.of(context).textTheme.labelSmall),
-      ],
     );
   }
 }

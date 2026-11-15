@@ -275,20 +275,39 @@ class _SkeletonFigure extends StatelessWidget {
 
 /// The body's front and back side by side, still, under a [title]: the
 /// [main] muscles in accent, the [secondary] ones in a 40% accent tint,
-/// with a legend naming them.
+/// with a legend naming them. The legend shows also while the model loads
+/// (a shimmering figure per side) and when it could not load (the error
+/// and Retry in place of the figures).
 class MuscleModelPair extends StatelessWidget {
   const MuscleModelPair({
     super.key,
-    required this.model,
+    required Model3D this.model,
     required this.title,
     required this.main,
     this.secondary = const [],
-  });
+  }) : onRetry = null;
 
-  final Model3D model;
+  const MuscleModelPair.loading({
+    super.key,
+    required this.title,
+    required this.main,
+    this.secondary = const [],
+  }) : model = null,
+       onRetry = null;
+
+  const MuscleModelPair.failed({
+    super.key,
+    required this.title,
+    required this.main,
+    this.secondary = const [],
+    required VoidCallback this.onRetry,
+  }) : model = null;
+
+  final Model3D? model;
   final String title;
   final List<Muscle> main;
   final List<Muscle> secondary;
+  final VoidCallback? onRetry;
 
   static const double _width = 120;
 
@@ -312,12 +331,15 @@ class MuscleModelPair extends StatelessWidget {
         SizedBox(
           width: _width,
           height: _width * _aspect,
-          child: StillMuscleModel(
-            model: model,
-            back: back,
-            base: muscleModelBase(p),
-            colors: colors,
-          ),
+          child: switch (model) {
+            final model? => StillMuscleModel(
+              model: model,
+              back: back,
+              base: muscleModelBase(p),
+              colors: colors,
+            ),
+            null => const FittedBox(child: _SkeletonFigure()),
+          },
         ),
         Text(
           label,
@@ -361,20 +383,29 @@ class MuscleModelPair extends StatelessWidget {
         spacing: 12,
         children: [
           Text(title, style: text.titleMedium),
-          Semantics(
-            image: true,
-            label: l10n.muscleNames([...main, ...secondary]),
-            child: ExcludeSemantics(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: 28,
-                children: [
-                  side(l10n.libraryFront, back: false),
-                  side(l10n.libraryBack, back: true),
-                ],
+          if (onRetry case final onRetry?)
+            ErrorView(
+              title: l10n.muscleModelFailedTitle,
+              message: l10n.muscleModelPairFailedDetail,
+              retryLabel: l10n.retry,
+              onRetry: onRetry,
+              compact: true,
+            )
+          else
+            Semantics(
+              image: true,
+              label: l10n.muscleNames([...main, ...secondary]),
+              child: ExcludeSemantics(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  spacing: 28,
+                  children: [
+                    side(l10n.libraryFront, back: false),
+                    side(l10n.libraryBack, back: true),
+                  ],
+                ),
               ),
             ),
-          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: 6,

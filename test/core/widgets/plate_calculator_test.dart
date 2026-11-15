@@ -64,7 +64,11 @@ void main() {
     expect(find.text('Closest'), findsOneWidget);
     expect(find.text('62.5 kg'), findsOneWidget);
     expect(
-      find.textContaining("Your plates can't make 63.7 kg"),
+      // The plates are edited below the card, on the Plates page.
+      find.text(
+        "Your plates can't make 63.7 kg. Showing 62.5 kg; "
+        'add smaller plates below.',
+      ),
       findsOneWidget,
     );
   });
@@ -229,5 +233,70 @@ void main() {
         .width;
     expect(swatchWidth('25 kg'), greaterThan(swatchWidth('10 kg')));
     expect(swatchWidth('10 kg'), greaterThan(swatchWidth('1.25 kg')));
+  });
+
+  group('the drawing', () {
+    /// The plates drawn on the bar (none of them white, which adds an
+    /// edge) as (left, width, height).
+    Future<List<(double, double, double)>> drawn(
+      WidgetTester tester,
+      List<PlateStack> plates,
+    ) async {
+      await pumpComponent(
+        tester,
+        PlateCalculator(
+          target: '[VALUE]',
+          bar: '20 kg',
+          plates: plates,
+          perSide: '[VALUE]',
+        ),
+      );
+      final rects = <RRect>[];
+      final paint = find
+          .descendant(
+            of: find.byType(PlateCalculator),
+            matching: find.byType(CustomPaint),
+          )
+          .first;
+      expect(
+        paint,
+        paints..everything((method, arguments) {
+          if (method == #drawRRect) rects.add(arguments.first as RRect);
+          return true;
+        }),
+      );
+      // The collar, its stop and the sleeve come first.
+      return [
+        for (final rect in rects.skip(3)) (rect.left, rect.width, rect.height),
+      ];
+    }
+
+    testWidgets('plates that fit keep their sizes', (tester) async {
+      final plates = await drawn(tester, const [
+        PlateStack(kg: 25, weight: '25 kg', short: '25', count: 2),
+        PlateStack(kg: 10, weight: '10 kg', short: '10', count: 1),
+      ]);
+      expect(plates.map((plate) => (plate.$2, plate.$3)), [
+        (16, 120),
+        (16, 120),
+        (12, 84),
+      ]);
+      expect(plates.first.$1, 48);
+    });
+
+    testWidgets('a load longer than the sleeve is narrowed to fit it', (
+      tester,
+    ) async {
+      final plates = await drawn(tester, const [
+        PlateStack(kg: 25, weight: '25 kg', short: '25', count: 16),
+      ]);
+      expect(plates, hasLength(16));
+      final end = plates.last.$1 + plates.last.$2;
+      // The sleeve ends at 274 of the drawing's 280.
+      expect(end, closeTo(274, 0.01));
+      expect(plates.first.$2, lessThan(16));
+      // Heights stay.
+      expect(plates.every((plate) => plate.$3 == 120), isTrue);
+    });
   });
 }

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/features/today/presentation/widgets/rest_day_card.dart';
 
-import '../../../core/widgets/component_harness.dart';
+import '../../../component_harness.dart';
 
 void main() {
   final taps = <String>[];

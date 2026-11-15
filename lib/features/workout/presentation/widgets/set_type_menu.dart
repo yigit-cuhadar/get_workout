@@ -89,8 +89,9 @@ class SetTypeMenu extends StatelessWidget {
     Widget row(String label, Color color, VoidCallback onTap, Widget? end) =>
         InkWell(
           onTap: onTap,
-          child: SizedBox(
-            height: ForgeTheme.tapMin,
+          // At least 44px; taller as the text grows.
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: ForgeTheme.tapMin),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
@@ -322,6 +323,8 @@ class AddSetSheet extends StatelessWidget {
   final List<AddSetOption> options;
   final Widget? tip;
 
+  static const double _optionHeight = 64;
+
   @override
   Widget build(BuildContext context) {
     final style = ForgeStyle.of(context);
@@ -338,7 +341,8 @@ class AddSetSheet extends StatelessWidget {
             InkWell(
               onTap: option.onTap,
               child: Container(
-                height: 64,
+                // At least 64px; taller as the text grows.
+                constraints: const BoxConstraints(minHeight: _optionHeight),
                 padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
                 decoration: BoxDecoration(
                   border: Border(top: BorderSide(color: style.colors.line)),
@@ -356,7 +360,7 @@ class AddSetSheet extends StatelessWidget {
                     ),
                     Expanded(
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         spacing: 1,
                         children: [

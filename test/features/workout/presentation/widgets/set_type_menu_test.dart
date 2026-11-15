@@ -5,12 +5,29 @@ import 'package:get_workout/features/workout/presentation/widgets/set_bubble.dar
 import 'package:get_workout/features/workout/presentation/widgets/set_type_menu.dart';
 
 void main() {
-  Future<List<String>> openMenu(WidgetTester tester) async {
+  /// Shows [home] with text [scale]d.
+  Widget app(Widget home, {double scale = 1}) => MaterialApp(
+    theme: AppPreset.slate.lightTheme(),
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context)
+          .copyWith(textScaler: TextScaler.linear(scale)),
+      child: child!,
+    ),
+    home: home,
+  );
+
+  double rowHeight(WidgetTester tester, String label) => tester
+      .getSize(
+        find.ancestor(of: find.text(label), matching: find.byType(InkWell)),
+      )
+      .height;
+
+  Future<List<String>> openMenu(WidgetTester tester, {double scale = 1}) async {
     final ran = <String>[];
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppPreset.slate.lightTheme(),
-        home: Scaffold(
+      app(
+        scale: scale,
+        Scaffold(
           body: Center(
             child: Builder(
               builder: (context) => SetBubble(
@@ -144,5 +161,51 @@ void main() {
     await tester.tap(find.text('Got it'));
     expect(picked, ['warmup']);
     expect(dismissed, 1);
+  });
+
+  testWidgets('menu rows are 44px and grow with the text', (tester) async {
+    Future<void> pump({double scale = 1}) => tester.pumpWidget(
+      app(
+        scale: scale,
+        Center(
+          child: SetTypeMenu(
+            types: [
+              SetTypeMenuItem(label: 'Working', bubble: '3', onTap: () {}),
+            ],
+            removeLabel: 'Remove set',
+            onRemove: () {},
+          ),
+        ),
+      ),
+    );
+    await pump();
+    expect(rowHeight(tester, 'Remove set'), 44);
+    await pump(scale: 3);
+    expect(rowHeight(tester, 'Remove set'), greaterThan(44));
+  });
+
+  testWidgets('add sheet rows are 64px and grow with the text', (tester) async {
+    Future<void> pump({double scale = 1}) => tester.pumpWidget(
+      app(
+        scale: scale,
+        Scaffold(
+          body: AddSetSheet(
+            title: 'Add set',
+            options: [
+              AddSetOption(
+                label: 'Normal',
+                hint: 'A working set at the end',
+                bubble: '5',
+                onTap: () {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await pump();
+    expect(rowHeight(tester, 'Normal'), 64);
+    await pump(scale: 2);
+    expect(rowHeight(tester, 'Normal'), greaterThan(64));
   });
 }

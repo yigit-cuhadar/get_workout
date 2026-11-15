@@ -17,7 +17,9 @@ class TapBandArea extends SingleChildRenderObjectWidget {
 }
 
 /// A control drawn smaller than [ForgeTheme.tapMin] whose [TapBandArea]
-/// gives it a full tap band.
+/// gives it a full tap band. The band takes touches only while the control
+/// is drawn whole: one scrolled partly or fully out of view, or hidden,
+/// takes only the touches that land on what is drawn of it.
 class TapBand extends SingleChildRenderObjectWidget {
   const TapBand({super.key, required super.child});
 
@@ -45,6 +47,30 @@ class _RenderTapBand extends RenderProxyBox {
     _area = null;
     super.detach();
   }
+
+  /// Whether every ancestor up to [area] paints this band and none of them
+  /// clips any of it.
+  bool _drawnWholeIn(_RenderTapBandArea area) {
+    RenderObject child = this;
+    var node = parent;
+    while (node != null && node != area) {
+      if (!node.paintsChild(child)) return false;
+      if (node.describeApproximatePaintClip(child) case final clip?) {
+        final box = MatrixUtils.transformRect(
+          getTransformTo(node),
+          Offset.zero & size,
+        );
+        final drawn = clip.intersect(box);
+        // A hair's tolerance for rounding in the transforms.
+        if (drawn.width < box.width - 0.5 || drawn.height < box.height - 0.5) {
+          return false;
+        }
+      }
+      child = node;
+      node = node.parent;
+    }
+    return node == area;
+  }
 }
 
 class _RenderTapBandArea extends RenderProxyBox {
@@ -57,7 +83,9 @@ class _RenderTapBandArea extends RenderProxyBox {
       Offset? nearestLocal;
       var nearestDistance = double.infinity;
       for (final band in bands) {
-        if (!band.attached || !band.hasSize) continue;
+        if (!band.attached || !band.hasSize || !band._drawnWholeIn(this)) {
+          continue;
+        }
         final local = band.globalToLocal(localToGlobal(position));
         final centre = band.size.center(Offset.zero);
         final area = Rect.fromCenter(

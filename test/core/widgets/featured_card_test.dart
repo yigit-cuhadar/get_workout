@@ -1,8 +1,9 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/core/widgets/featured_card.dart';
 
-import 'component_harness.dart';
+import '../../component_harness.dart';
 
 void main() {
   ForgeButtonVariant variantOf(WidgetTester tester, String label) => tester
@@ -58,6 +59,36 @@ void main() {
     }
     expect(find.byType(ForgeIcon), findsNothing);
     expect(find.byType(ForgeButton), findsNothing);
+  });
+
+  testWidgets('an odd last stat keeps its column', (tester) async {
+    await pumpComponent(
+      tester,
+      const FeaturedCard(
+        form: FeaturedCardForm.block,
+        eyebrow: 'Workout done',
+        title: 'Push',
+        stats: [
+          FeaturedStat('Duration', '52 min'),
+          FeaturedStat('Volume', '12,400 kg'),
+          FeaturedStat('Exercises', '6'),
+        ],
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(
+      tester.getTopLeft(find.text('Exercises')).dx,
+      tester.getTopLeft(find.text('Duration')).dx,
+    );
+    double column(String label) => tester
+        .getSize(
+          find
+              .ancestor(of: find.text(label), matching: find.byType(Expanded))
+              .first,
+        )
+        .width;
+    expect(column('Exercises'), column('Duration'));
   });
 
   testWidgets('a locked copy shows a lock and keeps Start tappable', (

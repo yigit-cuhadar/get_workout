@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
+import 'package:get_workout/core/widgets/tap_band.dart';
 import 'package:get_workout/features/workout/presentation/widgets/set_panel.dart';
 
 const _labels = SetPanelLabels(
@@ -13,14 +14,23 @@ const _labels = SetPanelLabels(
   plates: 'Plates',
 );
 
-Future<void> _pump(WidgetTester tester, SetPanel panel) => tester.pumpWidget(
-  MaterialApp(
-    theme: AppPreset.slate.lightTheme(),
-    home: Scaffold(
-      body: Align(alignment: Alignment.bottomCenter, child: panel),
-    ),
-  ),
-);
+/// [height] caps the panel, as the workout screen gives it a share of the
+/// page.
+Future<void> _pump(WidgetTester tester, SetPanel panel, {double? height}) =>
+    tester.pumpWidget(
+      MaterialApp(
+        theme: AppPreset.slate.lightTheme(),
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.bottomCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: height ?? double.infinity),
+              child: panel,
+            ),
+          ),
+        ),
+      ),
+    );
 
 SetPanelValue _value(
   double? value,
@@ -235,6 +245,57 @@ void main() {
       (addDrop.leadingIcon, addDrop.variant, addDrop.size),
       (ForgeIcons.add, ForgeButtonVariant.text, ForgeButtonSize.small),
     );
+  });
+
+  testWidgets('a drop scrolled out of view takes no taps on its band', (
+    tester,
+  ) async {
+    final removed = <int>[];
+    await _pump(
+      tester,
+      SetPanel(
+        title: 'Bench Press · Drop set 4 of 4',
+        details: const [],
+        labels: _labels,
+        values: [_value(82.5, 'kg'), _value(6, 'reps')],
+        drops: [
+          for (var i = 0; i < 6; i++)
+            SetPanelDrop(
+              label: 'Drop ${i + 1}',
+              values: [_value(60, 'kg'), _value(8, 'reps')],
+              onRemove: () => removed.add(i),
+            ),
+        ],
+        onAddDrop: () {},
+        onOptions: () {},
+        onLog: () {},
+      ),
+      height: 340,
+    );
+    final scroll = find.byType(SingleChildScrollView);
+    final viewport = tester.getRect(scroll);
+    final bands = find.byType(TapBand);
+    // Scrolled until the first drop is above the scrolling part and the
+    // second is cut by its top edge.
+    final firstTop = tester.getTopLeft(bands.at(0)).dy;
+    final secondTop = tester.getTopLeft(bands.at(1)).dy;
+    await tester.drag(scroll, Offset(0, viewport.top - secondTop - 10));
+    await tester.pumpAndSettle();
+    expect(tester.getRect(bands.at(0)).bottom, lessThan(viewport.top));
+    expect(tester.getRect(bands.at(1)).top, lessThan(viewport.top));
+    expect(tester.getRect(bands.at(1)).bottom, greaterThan(viewport.top));
+    expect(firstTop, lessThan(secondTop));
+    // On the first drop's place, and on the second's band past its box.
+    await tester.tapAt(tester.getCenter(bands.at(0)));
+    await tester.tapAt(
+      tester.getRect(bands.at(1)).centerRight + const Offset(6, 0),
+    );
+    expect(removed, isEmpty);
+    // A drop drawn whole keeps its band.
+    final third = tester.getRect(bands.at(2));
+    expect(viewport.contains(third.topLeft), isTrue);
+    await tester.tapAt(third.centerRight + const Offset(6, 0));
+    expect(removed, [2]);
   });
 
   testWidgets('showing: something else in place of the entry', (tester) async {

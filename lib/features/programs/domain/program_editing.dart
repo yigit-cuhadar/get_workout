@@ -41,6 +41,16 @@ List<ProgramItem> alignGroup(List<ProgramItem> items, int index) {
   );
 }
 
+/// [items] with every superset and circuit in step, as [alignGroup] does.
+/// A group stored before groups were kept in step may differ.
+List<ProgramItem> alignGroups(List<ProgramItem> items) {
+  var aligned = items;
+  for (final (start, end) in groupBlocks(items)) {
+    if (end - start > 1) aligned = alignGroup(aligned, start);
+  }
+  return aligned;
+}
+
 /// A new item for [exercise]: 3 sets of 8-12 reps, or of 30 s for duration
 /// exercises, resting the exercise's default rest, or 90 s for a custom one.
 ProgramItem defaultItem(Exercise exercise) {

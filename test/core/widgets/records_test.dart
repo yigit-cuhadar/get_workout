@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/core/widgets/records.dart';
 
-import 'component_harness.dart';
+import '../../component_harness.dart';
 
 void main() {
   testWidgets('the biggest record says New record over its value', (

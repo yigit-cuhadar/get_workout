@@ -309,8 +309,10 @@ class FeaturedCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: Gap.md,
                   children: [
-                    for (final stat in stats.sublist(row, row + 2))
+                    for (final stat in stats.skip(row).take(2))
                       Expanded(child: _stat(context, stat, ink, quiet)),
+                    // An odd last stat keeps its column.
+                    if (row + 1 == stats.length) const Spacer(),
                   ],
                 ),
             ],

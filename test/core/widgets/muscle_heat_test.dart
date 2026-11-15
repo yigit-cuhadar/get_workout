@@ -9,7 +9,7 @@ import 'package:get_workout/features/exercises/domain/muscle_meshes.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:forge_ui/forge_ui.dart';
 
-import 'component_harness.dart';
+import '../../component_harness.dart';
 
 void main() {
   final p = AppPreset.shipped.lightTheme().extension<ForgeStyle>()!.colors;

@@ -293,8 +293,8 @@ class _WorkoutCard extends StatelessWidget {
   }
 }
 
-/// The workout in progress in place of the next one, and the way back
-/// into it, as the workout bar.
+/// The workout in progress in place of the next one, with the program day
+/// it was started from, and the way back into it, as the workout bar.
 class _WorkoutInProgressCard extends StatelessWidget {
   const _WorkoutInProgressCard(this.next);
   final WorkoutInProgress next;
@@ -307,6 +307,15 @@ class _WorkoutInProgressCard extends StatelessWidget {
       form: FeaturedCardForm.block,
       eyebrow: l10n.todayWorkoutInProgress,
       title: next.name,
+      line: switch ((next.program, next.dayIndex)) {
+        (final program?, final dayIndex?) => FeaturedLine(
+          l10n.todayInProgressDay(
+            l10n.dayName(program.days[dayIndex], dayIndex),
+            program.name,
+          ),
+        ),
+        _ => null,
+      },
       action: FeaturedAction(l10n.todayResumeWorkout, open),
       onTap: open,
     );
