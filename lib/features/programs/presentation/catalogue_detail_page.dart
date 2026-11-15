@@ -73,6 +73,13 @@ class _CatalogueDetailView extends StatelessWidget {
               },
               error: true,
             );
+          case CopyStatus.startFailed:
+            cubit.copyHandled();
+            showForgeSnackbar(
+              context,
+              message: l10n.catalogueStartFailed,
+              error: true,
+            );
           case CopyStatus.idle || CopyStatus.copying:
         }
       },
@@ -242,7 +249,7 @@ class _ProgramState extends State<_Program> {
         if (state.status == CatalogueDetailStatus.unlocking) ...[
           const SizedBox(height: Gap.sm),
           NoticeBanner(
-            icon: ForgeIcons.sync,
+            icon: ForgeIcons.lock,
             title: l10n.catalogueUnlockingTitle,
             message: l10n.catalogueUnlocking,
             action: ForgeButton(

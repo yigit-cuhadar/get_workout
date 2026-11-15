@@ -16,7 +16,8 @@ import 'program_text.dart';
 /// One day of a program as a card of rows: its name over its exercise
 /// count (and estimate, with [estimate]) and a chevron that points down
 /// while closed and up while [open]; open, the day's exercises follow in
-/// the same card. Which days are open is the page's own view state.
+/// the same card; with [onStart], ▶ in front of the chevron starts the day.
+/// Which days are open is the page's own view state.
 class ProgramDayCard extends StatelessWidget {
   const ProgramDayCard({
     super.key,
@@ -26,6 +27,7 @@ class ProgramDayCard extends StatelessWidget {
     required this.onToggle,
     this.estimate = true,
     this.onExerciseTap,
+    this.onStart,
   });
 
   final ProgramDay day;
@@ -36,6 +38,7 @@ class ProgramDayCard extends StatelessWidget {
 
   /// With it, an exercise of the library opens from its row.
   final ValueChanged<String>? onExerciseTap;
+  final VoidCallback? onStart;
 
   @override
   Widget build(BuildContext context) {
@@ -52,13 +55,37 @@ class ProgramDayCard extends StatelessWidget {
                   l10n.estimateText(estimateDay(day)),
                 )
               : l10n.programExerciseCount(count),
-          trailing: Semantics(
-            label: open ? l10n.programDayHide : l10n.programDayShow,
-            child: ForgeIcon(
-              open ? ForgeIcons.expandLess : ForgeIcons.expandMore,
-              size: 18,
-              color: style.colors.inkMuted,
-            ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (onStart case final start?)
+                Semantics(
+                  button: true,
+                  label: l10n.workoutStartThisDay,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: start,
+                    child: SizedBox.square(
+                      dimension: ForgeTheme.tapMin,
+                      child: Center(
+                        child: ForgeIcon(
+                          ForgeIcons.playArrow,
+                          size: 18,
+                          color: style.colors.ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              Semantics(
+                label: open ? l10n.programDayHide : l10n.programDayShow,
+                child: ForgeIcon(
+                  open ? ForgeIcons.expandLess : ForgeIcons.expandMore,
+                  size: 18,
+                  color: style.colors.inkMuted,
+                ),
+              ),
+            ],
           ),
           onTap: onToggle,
         ),

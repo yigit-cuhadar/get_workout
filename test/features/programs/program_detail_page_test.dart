@@ -61,7 +61,10 @@ void main() {
   late _DetailCubit detail;
   late int paywalls;
 
-  setUpAll(() => registerFallbackValue(MissedDayChoice.skip));
+  setUpAll(() {
+    registerFallbackValue(MissedDayChoice.skip);
+    registerFallbackValue(program());
+  });
 
   ProgramListState ready({
     List<Program>? programs,
@@ -117,6 +120,7 @@ void main() {
     final workout = _WorkoutCubit();
     when(() => workout.state)
         .thenReturn(const ActiveWorkoutState(status: WorkoutStatus.none));
+    when(() => workout.access(any())).thenReturn(ProgramAccess.locked);
     final settings = _SettingsCubit();
     when(() => settings.state)
         .thenReturn(SettingsState(UserSettings.defaultsFor(null)));
@@ -381,5 +385,22 @@ void main() {
     );
     expect(find.text("Couldn't load your programs."), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
+  });
+
+  testWidgets('▶ on a day row goes through the premium gate when locked', (
+    tester,
+  ) async {
+    final copy = program(id: 'p1', lengthWeeks: 8, premium: true);
+    await pump(tester, ready(programs: [copy], premium: false));
+
+    expect(find.bySemanticsLabel('Start this day'), findsNWidgets(2));
+    await tester.tap(find.bySemanticsLabel('Start this day').first);
+    await settle(tester);
+    // The status is unknown here, so the gate asks to wait.
+    expect(
+      find.text('Checking your subscription. Try again in a moment.'),
+      findsOneWidget,
+    );
+    verifyNever(() => detail.start(any()));
   });
 }

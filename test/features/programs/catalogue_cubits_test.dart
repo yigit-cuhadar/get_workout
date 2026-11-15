@@ -602,14 +602,16 @@ void main() {
       verifyNever(() => programRepository.createProgram(any(), any()));
     });
 
-    test('a copy that cannot be started fails', () async {
+    test('a copy that cannot be started stays, not started', () async {
       when(() => programRepository.startProgram(any(), any()))
           .thenAnswer((_) async => const Err(NetworkFailure()));
       final cubit = await open(free.id);
 
       await cubit.copy(CopyIntent.start, weekdays: const [1, 4]);
 
-      expect(cubit.state.copyStatus, CopyStatus.failed);
+      verify(() => programRepository.createProgram('u1', any())).called(1);
+      expect(cubit.state.copyStatus, CopyStatus.startFailed);
+      expect(cubit.state.copyId, 'copy1');
       expect(cubit.state.copyFailure, isA<NetworkFailure>());
     });
 

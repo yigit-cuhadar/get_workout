@@ -53,6 +53,10 @@ enum CopyStatus {
 
   /// [CatalogueDetailState.copyId] is the new copy.
   copied,
+
+  /// The copy [CatalogueDetailState.copyId] was stored but could not be
+  /// started; it stays among the user's programs, not started.
+  startFailed,
   failed,
 }
 
@@ -241,7 +245,6 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
           exercise.id: exercise.loggingType,
       },
     ));
-    var result = saved;
     if (saved case Ok(value: final id) when intent == CopyIntent.start) {
       final started = await _startProgram((
         uid: uid,
@@ -256,11 +259,20 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
         ),
         weekdays: weekdays!,
       ));
-      result = started.map((_) => id);
+      if (isClosed) return;
+      if (started.failureOrNull case final failure?) {
+        return emit(
+          state.copyWith(
+            copyStatus: CopyStatus.startFailed,
+            copyId: () => id,
+            copyFailure: () => failure,
+          ),
+        );
+      }
     }
     if (isClosed) return;
     emit(
-      result.fold(
+      saved.fold(
         (id) => state.copyWith(copyStatus: CopyStatus.copied, copyId: () => id),
         (failure) => state.copyWith(
           copyStatus: CopyStatus.failed,

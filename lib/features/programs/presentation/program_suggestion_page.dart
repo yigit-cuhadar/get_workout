@@ -144,7 +144,9 @@ class _Suggestion extends StatelessWidget {
                   ),
                 ),
               );
-            case CopyStatus.idle || CopyStatus.copying:
+            case CopyStatus.idle ||
+                CopyStatus.copying ||
+                CopyStatus.startFailed:
           }
         },
         builder: (context, state) => Column(

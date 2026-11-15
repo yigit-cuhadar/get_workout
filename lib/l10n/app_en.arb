@@ -1837,5 +1837,6 @@
   "builderDayEmptyBody": "Add exercises; they keep the order you set.",
   "builderDayFull": "A day holds up to {max} exercises.",
   "@builderDayFull": {"placeholders": {"max": {"type": "int"}}},
-  "builderRest": "Rest"
+  "builderRest": "Rest",
+  "catalogueStartFailed": "Added, but couldn't start the program. Try again."
 }
