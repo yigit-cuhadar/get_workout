@@ -228,6 +228,29 @@ void main() {
       cubit.deleteDay(0);
       expect(names(), ['Push'], reason: 'the last day stays');
     });
+
+    test('a duplicated day follows its original and is selected', () async {
+      final cubit = await filled(['a', 'b']);
+      cubit
+        ..renameDay(0, 'Push')
+        ..addDay()
+        ..renameDay(1, 'Pull')
+        ..duplicateDay(0);
+      final days = cubit.state.program.days;
+      expect([for (final d in days) d.name], ['Push', 'Push', 'Pull']);
+      expect(days[1].items, days[0].items);
+      expect(cubit.state.selectedDay, 1);
+    });
+
+    test('no copy once there are seven days', () async {
+      final cubit = await build();
+      for (var i = 0; i < 6; i++) {
+        cubit.addDay();
+      }
+      cubit.duplicateDay(0);
+      expect(cubit.state.program.days, hasLength(7));
+      expect(cubit.state.selectedDay, 6);
+    });
   });
 
   group('items', () {

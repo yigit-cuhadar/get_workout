@@ -7,8 +7,17 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 typedef _Item = ({String name, List<(String, String)> values});
 
 final _menu = [
-  ForgeMenuItem(label: 'Edit', onTap: () {}),
-  ForgeMenuItem(label: 'Remove', onTap: () {}, destructive: true),
+  ForgeMenuItem(
+    label: 'Edit sets and reps',
+    icon: ForgeIcons.tune,
+    onTap: () {},
+  ),
+  ForgeMenuItem(
+    label: 'Remove',
+    icon: ForgeIcons.delete,
+    onTap: () {},
+    destructive: true,
+  ),
 ];
 
 /// The day's rows in their card; [group] the indexes of a superset or
@@ -105,3 +114,53 @@ Widget timedBuilderRow(BuildContext context) => _day([
     values: [('Sets', '2'), ('Time', '30 s'), ('Rest', '1:30')],
   ),
 ]);
+
+@widgetbook.UseCase(name: 'Unavailable exercise', type: BuilderRow)
+Widget unavailableBuilderRow(BuildContext context) => CustomScrollView(
+  slivers: [
+    SliverPadding(
+      padding: const EdgeInsets.all(Gap.md),
+      sliver: BuilderCard(
+        sliver: SliverReorderableList(
+          itemCount: 2,
+          onReorderItem: (_, _) {},
+          itemBuilder: (context, i) => i == 0
+              ? BuilderRow(
+                  key: const ValueKey(0),
+                  index: 0,
+                  name: 'Bench Press',
+                  values: [
+                    for (final (label, value) in [
+                      ('Sets', '4'),
+                      ('Reps', '6–8'),
+                      ('Rest', '2:00'),
+                    ])
+                      BuilderValue(label: label, value: value, onTap: () {}),
+                  ],
+                  menu: _menu,
+                  divided: false,
+                )
+              : BuilderRow.unavailable(
+                  key: const ValueKey(1),
+                  index: 1,
+                  name: 'Unavailable exercise',
+                  help: 'No longer in the library. Replace or remove it.',
+                  menu: [
+                    ForgeMenuItem(
+                      label: 'Replace exercise',
+                      icon: ForgeIcons.sync,
+                      onTap: () {},
+                    ),
+                    ForgeMenuItem(
+                      label: 'Remove',
+                      icon: ForgeIcons.delete,
+                      onTap: () {},
+                      destructive: true,
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    ),
+  ],
+);

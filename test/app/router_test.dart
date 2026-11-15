@@ -1272,7 +1272,7 @@ void main() {
       ) async {
         await createProgram(tester);
 
-        await tester.tap(find.byType(BackButton));
+        await tester.tap(find.bySemanticsLabel('Back'));
         await tester.pumpAndSettle();
 
         expectBackOnTheExercise(tester);
@@ -1312,7 +1312,7 @@ void main() {
         // The page refuses to pop from the next frame on.
         await tester.pump();
 
-        await tester.tap(find.byType(BackButton));
+        await tester.tap(find.bySemanticsLabel('Back'));
         await tester.pumpAndSettle();
         expect(find.text('Discard changes?'), findsOneWidget);
         await tester.tap(find.text('Discard'));

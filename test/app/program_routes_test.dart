@@ -343,7 +343,7 @@ void main() {
     expect(find.widgetWithText(TextField, 'Leg Day'), findsOneWidget);
     expect(path(), Routes.programEdit('p1'));
 
-    await tap(tester, find.byType(BackButton));
+    await tap(tester, find.bySemanticsLabel('Back'));
     expect(find.byType(ProgramDetailPage), findsOneWidget);
   });
 
@@ -396,11 +396,11 @@ void main() {
     // The page refuses to pop from the next frame on.
     await tester.pump();
 
-    await tap(tester, find.byType(BackButton));
+    await tap(tester, find.bySemanticsLabel('Back'));
     await tap(tester, find.text('Keep editing'));
     expect(find.byType(ProgramBuilderPage), findsOneWidget);
 
-    await tap(tester, find.byType(BackButton));
+    await tap(tester, find.bySemanticsLabel('Back'));
     await tap(tester, find.text('Discard'));
     expect(find.byType(ProgramBuilderPage), findsNothing);
     expect(find.byType(ProgramsPage), findsOneWidget);

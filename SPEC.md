@@ -481,9 +481,9 @@ Decisions (the canvases they were drawn on are deleted):
     list rows with the Premium lock; "Fits you" tags and a recommended row.
     The ready-made program page: tags, summary rows, weekly sets, days, Start
     this program, Duplicate in ⋯, Get Premium to start when locked.
-  - Program builder: name, day chips with + Day, a day menu (Rename,
-    Duplicate, Delete day), builder rows in one card, Add exercise, circuits;
-    Save in the app bar.
+  - Program builder: name and length, day chips with + Day, a day menu
+    (Rename, Duplicate, Move earlier, Move later, Delete day), builder rows
+    in one card, Add exercises, circuits; Save in the app bar.
   - Exercises: the search pill over the body model with a Front / Back
     toggle; a tap or a slide's release opens the list at once. The list:
     active filters as removable chips with Clear all, count and sort on one
@@ -742,6 +742,30 @@ Decisions (the canvases they were drawn on are deleted):
   and Show all equipment; onboarding and Your profile too); focus muscles
   as chips under "Focus muscles (2 of 3)"; left-out exercises as rows with
   × and a secondary "Add exercises to leave out".
+- Program builder (owner's picks, 2026-11-15): the name, then "Length in
+  weeks (optional)" with "Leave empty to run until you stop it" under it;
+  the day chips (selected: accent fill and border, no check, a ⋯ at its
+  end; a day with a problem carries a danger alert icon) and "+ Day", which
+  adds the day and opens the Rename dialog ("Rename day", "Shown on the
+  day's chip and in your workouts.", field "Day name" with hint "Day n",
+  Save · Cancel); the ⋯, a second tap on the selected chip or a long press
+  opens the day menu: Rename day, Duplicate day (the copy follows and is
+  selected), Move earlier, Move later, Delete day, each with an icon, the
+  ones that cannot apply hidden; deleting a day with exercises asks
+  ("Delete this day and its exercises?", "Its 5 exercises are removed
+  too."). Under the chips "Push · 6 exercises · ~55 min"; the rows in one
+  card follow the BuilderRow card (two-line handle, no Weight chip, a
+  circuit's items only Reps or Time with the accent rule and "rest after
+  each round"); an unavailable item is the row's unavailable form with ⋯
+  (Replace exercise, Remove). An empty day is an EmptyView in a card ("No
+  exercises on this day"), after a failed save the danger line instead;
+  Add exercises stays, with "A day holds up to 20 exercises." under it once
+  full. The sets-and-reps sheet is titled with the exercise; Rest opens the
+  minutes:seconds wheel (0:00–10:00, 15 s steps). Leaving with changes:
+  "Your edits to <name> will be lost." ("…this program…" unnamed), Discard
+  in danger. Not found is the untitled EmptyView, a load failure ErrorView
+  with both lines; loading is a skeleton of the page; every menu item has
+  an icon.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
@@ -1462,8 +1486,8 @@ the feature you are about to touch, and keep it true when you change it.
   (`Routes.programNewReturning` in Programs, `Routes.exerciseProgramNew`
   with its own picker in Exercises; `returningProgramNew` picks), so the
   exercise can be added; from a workout or the history it opens in the
-  Programs tab as before. In the builder, Add
-  day selects the new day and focuses its name; opening the builder or
+  Programs tab as before. In the builder, + Day
+  selects the new day and opens its Rename dialog; opening the builder or
   switching days never takes the focus.
 - **Schedule**: `activeProgram.nextDate` is a calendar date stored as a
   `YYYY-MM-DD` string, so it is the same date in every time zone, and

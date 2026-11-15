@@ -22,7 +22,8 @@ class BuilderValue {
 /// An exercise of a program day in the builder: a drag handle, the
 /// exercise's [name], its [values] as chips, each editable on tap, and the
 /// ⋯ [menu]. Rows sit in one card ([BuilderCard]); every row after the
-/// first has a line above it ([divided]).
+/// first has a line above it ([divided]). [BuilderRow.unavailable] is an
+/// item whose exercise left the library.
 ///
 /// A row of a superset or circuit ([grouped]) carries the group's 3px
 /// accent rule and accent-soft fill; the group's first row has the
@@ -47,7 +48,26 @@ class BuilderRow extends StatelessWidget {
     this.issues = const [],
     this.onMoveUp,
     this.onMoveDown,
-  });
+  }) : unavailableHelp = null;
+
+  /// An item whose exercise is no longer in the library: an alert icon in
+  /// the handle's place, [name] in danger with [help] under it, no chips,
+  /// and the ⋯ [menu]. It cannot be dragged.
+  const BuilderRow.unavailable({
+    super.key,
+    required this.index,
+    required this.name,
+    required String help,
+    required this.menu,
+    this.divided = true,
+  }) : unavailableHelp = help,
+       values = const [],
+       grouped = false,
+       groupHeader = null,
+       lifted = false,
+       issues = const [],
+       onMoveUp = null,
+       onMoveDown = null;
 
   /// Its place in the reorderable list, for the drag handle.
   final int index;
@@ -61,6 +81,7 @@ class BuilderRow extends StatelessWidget {
   final List<String> issues;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
+  final String? unavailableHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -91,25 +112,28 @@ class BuilderRow extends StatelessWidget {
       child: Row(
         spacing: 10,
         children: [
-          TapBand(
-            child: ReorderableDragStartListener(
-              index: index,
-              child: Semantics(
-                label: l10n.programReorder,
-                customSemanticsActions: {
-                  CustomSemanticsAction(label: widgets.reorderItemUp):
-                      ?onMoveUp,
-                  CustomSemanticsAction(label: widgets.reorderItemDown):
-                      ?onMoveDown,
-                },
-                child: ForgeIcon(
-                  ForgeIcons.dragIndicator,
-                  size: 16,
-                  color: colors.lineStrong,
+          if (unavailableHelp == null)
+            TapBand(
+              child: ReorderableDragStartListener(
+                index: index,
+                child: Semantics(
+                  label: l10n.programReorder,
+                  customSemanticsActions: {
+                    CustomSemanticsAction(label: widgets.reorderItemUp):
+                        ?onMoveUp,
+                    CustomSemanticsAction(label: widgets.reorderItemDown):
+                        ?onMoveDown,
+                  },
+                  child: ForgeIcon(
+                    ForgeIcons.dragHandle,
+                    size: 20,
+                    color: colors.lineStrong,
+                  ),
                 ),
               ),
-            ),
-          ),
+            )
+          else
+            ForgeIcon(ForgeIcons.error, size: 18, color: colors.lineStrong),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,13 +143,21 @@ class BuilderRow extends StatelessWidget {
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: text.titleMedium,
+                  style: unavailableHelp == null
+                      ? text.titleMedium
+                      : text.titleMedium!.copyWith(color: colors.danger),
                 ),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [for (final value in values) _ValueChip(value)],
-                ),
+                if (unavailableHelp case final help?)
+                  Text(
+                    help,
+                    style: text.bodySmall!.copyWith(color: colors.inkMuted),
+                  )
+                else
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [for (final value in values) _ValueChip(value)],
+                  ),
                 for (final issue in issues)
                   Text(
                     issue,
@@ -136,6 +168,7 @@ class BuilderRow extends StatelessWidget {
           ),
           Builder(
             builder: (context) => Semantics(
+              container: true,
               button: true,
               label: l10n.programItemActions,
               child: GestureDetector(
