@@ -136,6 +136,23 @@ void main() {
     ]);
   });
 
+  testWidgets('the bar alone takes no plates', (tester) async {
+    await pump(tester, set: lift(20, 8, done: false));
+
+    expect((await openPlates(tester)).facts, [
+      ('Bar', '20 kg'),
+      ('Each side', 'No plates'),
+    ]);
+  });
+
+  testWidgets('a weight below the bar says so', (tester) async {
+    await pump(tester, set: lift(15, 8, done: false));
+
+    final card = await openPlates(tester);
+    expect(card.facts, [('Bar', '20 kg')]);
+    expect(card.note, 'Lighter than the 20 kg bar.');
+  });
+
   testWidgets('pound plates are listed in pounds', (tester) async {
     await pump(
       tester,

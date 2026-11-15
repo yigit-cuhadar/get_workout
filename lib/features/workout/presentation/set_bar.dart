@@ -266,8 +266,9 @@ class SetBar extends StatelessWidget {
   }
 
   /// The plate breakdown of [kg] under the plate [button]: the weight, the
-  /// user's [bar] of that kind, the plates on each side, and the closest load when the plates
-  /// can't make it.
+  /// user's [bar] of that kind, the plates on each side ("No plates" at the
+  /// bar's weight) and the closest load when the plates can't make it;
+  /// below the bar, that it is lighter.
   void _showPlates(
     BuildContext button,
     PlateLoader loadPlates,
@@ -278,29 +279,33 @@ class SetBar extends StatelessWidget {
     final l10n = AppLocalizations.of(button);
     final unit = settings.weightUnit;
     final barKg = settings.barWeightKgFor(bar);
-    final load = switch (loadPlates(
+    final barText = l10n.liftedWeightText(barKg, unit);
+    final facts = switch (loadPlates(
       kg,
       barKg: barKg,
       plates: settings.plates,
     )) {
-      Calculated(:final value) => value,
+      Calculated(:final value) => [
+        (l10n.calcBar, barText),
+        (
+          l10n.plateCalculatorEachSide,
+          value.perSide.isEmpty
+              ? l10n.platesNone
+              : l10n.platesEachSideText(value.perSide, unit),
+        ),
+        if (!value.exact)
+          (
+            l10n.plateCalculatorClosest,
+            l10n.liftedWeightText(value.totalKg, unit),
+          ),
+      ],
       _ => null,
     };
     showForgeInfo(
       context: button,
       title: l10n.liftedWeightText(kg, unit),
-      facts: [
-        (l10n.calcBar, l10n.liftedWeightText(barKg, unit)),
-        (
-          l10n.plateCalculatorEachSide,
-          l10n.platesEachSideText(load?.perSide ?? const [], unit),
-        ),
-        if (load != null && !load.exact)
-          (
-            l10n.plateCalculatorClosest,
-            l10n.liftedWeightText(load.totalKg, unit),
-          ),
-      ],
+      facts: facts ?? [(l10n.calcBar, barText)],
+      note: facts == null ? l10n.platesLighterThanBar(barText) : null,
     );
   }
 

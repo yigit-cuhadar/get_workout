@@ -98,6 +98,10 @@ abstract interface class WorkoutRepository {
     List<String> exerciseIds,
   );
 
+  /// The finished workouts of program [programId], from the server when it
+  /// answers quickly, else from the device's cache.
+  Future<Result<List<Workout>>> programWorkouts(String uid, String programId);
+
   /// One page of the finished workouts, again on every change, the
   /// device's cache first. The first page starts at the newest; a later one
   /// [after] the end of the page before it. Without [through] a page holds a

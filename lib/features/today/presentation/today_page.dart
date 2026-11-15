@@ -313,7 +313,7 @@ class _DoneTodayCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final DoneToday(:workout, :program, :dayIndex, :date) = next;
-    final summary = summarizeWorkout(workout, const []);
+    final summary = summarizeWorkout(workout);
     // A day's workout is named after it, its program first.
     final done =
         workout.programId == program.id &&

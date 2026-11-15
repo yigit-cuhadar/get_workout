@@ -41,7 +41,7 @@ Future<bool> confirmChoice(
       cancel: ForgeButton(
         label: cancel,
         onPressed: () => Navigator.pop(context, false),
-        variant: ForgeButtonVariant.text,
+        variant: ForgeButtonVariant.secondary,
       ),
     ),
   );
@@ -107,6 +107,54 @@ class _NoteFieldState extends State<NoteField> {
     multiline: true,
     maxLength: widget.maxLength,
   );
+}
+
+/// The workout's [note] as a plain card titled "Workout note": "Add" when
+/// there is none, else the note under the title and "Edit"; either opens
+/// the note sheet (the field and Save), whose text goes to [onSaved].
+class WorkoutNoteCard extends StatelessWidget {
+  const WorkoutNoteCard({super.key, required this.note, required this.onSaved});
+
+  final String? note;
+  final ValueChanged<String> onSaved;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final note = this.note;
+    return SectionCard.plain(
+      title: l10n.workoutNote,
+      actionLabel: note == null ? l10n.detailAdd : l10n.historyEdit,
+      onAction: () => _edit(context),
+      child: note == null
+          ? null
+          : Text(note, style: Theme.of(context).textTheme.bodyMedium),
+    );
+  }
+
+  Future<void> _edit(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    var text = note ?? '';
+    final saved = await showForgeBottomSheet<bool>(
+      context: context,
+      builder: (context) => ForgeBottomSheet(
+        title: l10n.workoutNote,
+        action: ForgeButton(
+          label: l10n.programSave,
+          onPressed: () => Navigator.pop(context, true),
+          size: ForgeButtonSize.large,
+        ),
+        child: NoteField(
+          initial: note,
+          label: l10n.workoutNote,
+          hint: l10n.workoutNoteHint,
+          maxLength: WorkoutLimits.maxNoteLength,
+          onChanged: (changed) => text = changed,
+        ),
+      ),
+    );
+    if (saved == true) onSaved(text);
+  }
 }
 
 /// Asks which kind of set to add to exercise [index] of the workout

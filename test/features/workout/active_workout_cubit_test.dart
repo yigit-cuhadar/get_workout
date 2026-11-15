@@ -134,6 +134,8 @@ void main() {
     );
     when(() => repository.getStats(any(), any()))
         .thenAnswer((_) async => const Ok({}));
+    when(() => repository.programWorkouts(any(), any()))
+        .thenAnswer((_) async => const Ok([]));
     when(
       () => repository.saveWorkout(
         any(),
@@ -176,6 +178,7 @@ void main() {
       confirmStored: ConfirmStoredWorkout(repository),
       rebuildStats: RebuildExerciseStats(repository),
       saveAsProgram: SaveWorkoutAsProgram(SaveProgram(programRepository)),
+      updateProgramDay: UpdateProgramDay(SaveProgram(programRepository)),
       programs: programs,
       catalogue: catalogue,
       watchSettings: WatchSettings(settingsRepository),
@@ -655,7 +658,12 @@ void main() {
         ..setDuration((exercise: 0, set: 0), '30')
         ..toggleDone((exercise: 0, set: 0))
         ..swapExercise(0, bench, 'en');
-      expect(types(cubit, 0), [SetType.normal]);
+      expect(cubit.state.workout!.exercises.map((e) => e.exerciseId), [
+        'plank',
+        'bench',
+      ]);
+      expect(types(cubit, 1), [SetType.normal]);
+      expect(cubit.state.selection, (exercise: 1, set: 0));
       await cubit.close();
     });
 

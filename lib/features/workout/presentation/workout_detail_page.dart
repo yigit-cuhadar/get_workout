@@ -81,7 +81,15 @@ class _DetailView extends StatelessWidget {
                   tooltip: l10n.historyEdit,
                   icon: const Icon(Icons.edit_outlined),
                   onPressed: state.canChange
-                      ? () => context.push(routes.edit(workout.id))
+                      ? () async {
+                          // The edit page deletes it too, and says so.
+                          final deleted = await context.push<bool>(
+                            routes.edit(workout.id),
+                          );
+                          if (deleted == true && context.mounted) {
+                            context.pop();
+                          }
+                        }
                       : null,
                 ),
                 IconButton(
@@ -146,7 +154,7 @@ class _Workout extends StatelessWidget {
           const LinearProgressIndicator(),
         const SizedBox(height: Gap.sm),
         WorkoutSummaryCard(
-          summary: summarizeWorkout(workout, const []),
+          summary: summarizeWorkout(workout),
           caption:
               '${dates.formatMediumDate(start)} · '
               '${dates.formatTimeOfDay(TimeOfDay.fromDateTime(start))}',

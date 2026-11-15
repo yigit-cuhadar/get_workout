@@ -80,14 +80,24 @@ class RecordItem {
 /// in success.
 class RecordList extends StatelessWidget {
   const RecordList({super.key, required List<RecordItem> this.records})
-    : closest = null;
+    : closest = null,
+      message = null;
+
+  /// No new record, said in one sentence on a plain card (a workout's
+  /// summary): how close the best came, or that records start now.
+  const RecordList.message({super.key, required String this.message})
+    : records = null,
+      closest = null;
 
   /// No new record: a muted trophy row. After the first workout it says
   /// records start now; later [closest] says how close the best came.
-  const RecordList.none({super.key, this.closest}) : records = null;
+  const RecordList.none({super.key, this.closest})
+    : records = null,
+      message = null;
 
   final List<RecordItem>? records;
   final String? closest;
+  final String? message;
 
   static const double _trophy = 36;
 
@@ -99,6 +109,7 @@ class RecordList extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final records = this.records;
     final closest = this.closest;
+    final message = this.message;
     Widget trophy({required bool muted}) => Container(
       width: _trophy,
       height: _trophy,
@@ -134,7 +145,9 @@ class RecordList extends StatelessWidget {
             ? null
             : Border.all(color: p.line, width: style.cardBorder),
       ),
-      child: records == null
+      child: message != null
+          ? Text(message, style: text.bodyMedium!.copyWith(color: p.inkMuted))
+          : records == null
           ? Row(
               spacing: 12,
               children: [

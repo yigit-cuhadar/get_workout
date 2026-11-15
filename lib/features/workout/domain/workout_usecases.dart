@@ -40,6 +40,15 @@ typedef WorkoutAsProgram = ({
   Map<String, Exercise> catalogue,
 });
 
+/// Day [dayIndex] of [program] gets [items]; see `changedProgramDay`.
+typedef ProgramDayUpdate = ({
+  String uid,
+  Program program,
+  int dayIndex,
+  List<ProgramItem> items,
+  Map<String, Exercise> catalogue,
+});
+
 class LoadLocalWorkouts implements UseCase<LocalWorkouts, String> {
   const LoadLocalWorkouts(this._store);
   final LocalWorkoutStore _store;
@@ -113,7 +122,6 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
     final before = read.valueOrNull!;
     final after = <String, ExerciseStats>{};
     final stale = <String>{};
-    final records = <NewRecord>[];
     for (final id in workout.exerciseIds) {
       final known = before[id];
       if (known == null || !known.current) stale.add(id);
@@ -122,19 +130,7 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
         continue;
       }
       final updated = applyWorkout(known.stats, workout, id);
-      if (updated == null) continue;
-      after[id] = updated;
-      final name = workout.exercises.firstWhere((e) => e.exerciseId == id).name;
-      for (final kind in beatenRecords(known.stats, updated, workout)) {
-        records.add(
-          NewRecord(
-            exerciseId: id,
-            name: name,
-            kind: kind,
-            value: updated.records[kind]!.value,
-          ),
-        );
-      }
+      if (updated != null) after[id] = updated;
     }
     final program = params.program;
     final programUnknown = workout.isFromProgram && program == null;
@@ -149,23 +145,63 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
             on: CalendarDate.of(workout.startedAt),
           )
         : null;
+    final previous = await _previousOfDay(params.uid, workout);
     final saved = await _repository.saveWorkout(
       params.uid,
       workout,
       after,
       advance: advance,
     );
-    return saved.map(
-      (_) => (
-        workout: workout,
-        summary: summarizeWorkout(
-          workout,
-          records,
-          programUnknown: programUnknown,
-        ),
-        staleStats: stale,
-      ),
+    if (saved case Err(:final failure)) return Err(failure);
+    final active = program?.active;
+    final known = program?.program;
+    final summary = summarizeWorkout(
+      workout,
+      before: {
+        for (final MapEntry(:key, :value) in before.entries) key: value.stats,
+      },
+      after: after,
+      programUnknown: programUnknown,
     );
+    return Ok((
+      workout: workout,
+      summary: summary.copyWith(
+        programWeek: () =>
+            active != null &&
+                known != null &&
+                known.id == workout.programId &&
+                active.programId == known.id
+            ? ProgramSchedule(
+                active,
+                dayCount: known.days.length,
+                lengthWeeks: known.lengthWeeks,
+              ).week(CalendarDate.of(workout.startedAt))
+            : null,
+        previous: () => previous == null ? null : workoutTotals(previous),
+      ),
+      staleStats: stale,
+    ));
+  }
+
+  /// The latest workout of [workout]'s program day before it; null for a
+  /// free workout, the day's first, or when it cannot be read.
+  Future<Workout?> _previousOfDay(String uid, Workout workout) async {
+    final programId = workout.programId;
+    final dayIndex = workout.dayIndex;
+    if (programId == null || dayIndex == null) return null;
+    final read = await _repository.programWorkouts(uid, programId);
+    Workout? latest;
+    for (final other in read.valueOrNull ?? const <Workout>[]) {
+      if (other.id == workout.id ||
+          other.dayIndex != dayIndex ||
+          !other.startedAt.isBefore(workout.startedAt)) {
+        continue;
+      }
+      if (latest == null || other.startedAt.isAfter(latest.startedAt)) {
+        latest = other;
+      }
+    }
+    return latest;
   }
 }
 
@@ -226,6 +262,31 @@ class SaveWorkoutAsProgram implements UseCase<String, WorkoutAsProgram> {
         key: value.loggingType,
     },
   ));
+}
+
+/// Stores [ProgramDayUpdate.items] as the day's items, refused like
+/// [SaveProgram] when the program would not be valid.
+class UpdateProgramDay implements UseCase<String, ProgramDayUpdate> {
+  const UpdateProgramDay(this._saveProgram);
+  final SaveProgram _saveProgram;
+
+  @override
+  Future<Result<String>> call(ProgramDayUpdate params) {
+    final program = params.program;
+    return _saveProgram((
+      uid: params.uid,
+      program: program.copyWith(
+        days: [
+          for (final (i, day) in program.days.indexed)
+            i == params.dayIndex ? day.copyWith(items: params.items) : day,
+        ],
+      ),
+      loggingTypes: <String, LoggingType>{
+        for (final MapEntry(:key, :value) in params.catalogue.entries)
+          key: value.loggingType,
+      },
+    ));
+  }
 }
 
 class ShowWorkoutOnLockScreen implements UseCase<void, LockScreenWorkout> {

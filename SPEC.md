@@ -601,7 +601,8 @@ Decisions (the canvases they were drawn on are deleted):
 - Workout screen (owner's picks, 2026-11-15): the header is Forge
   AppBar's value form (minimize, the elapsed time large, "Push · exercise N
   of M" with N the selected set's exercise, the name alone once every set
-  is done), Finish shows its loading state while finishing (no bar); the
+  is done), Finish shows its loading state while finishing, with a thin
+  indeterminate bar under the header (the owner reversed "no bar"); the
   empty free workout is an untitled EmptyView ("Add exercises to start
   logging.", Add exercises); a card's "Last time" shows the best working
   set (heaviest, then most reps); the progression hint shows when every
@@ -616,6 +617,68 @@ Decisions (the canvases they were drawn on are deleted):
   and "Warm-up sets" (adds the scheme's warm-ups or removes the untouched
   ones); a set picked during a rest shows its entry under the rest's thin
   line; once every set is done the panel offers "Finish workout".
+- Workout screen, rest of the board (owner's picks, 2026-11-15): swapping
+  an exercise with done sets keeps them on it as a finished card and moves
+  the sets not done to the new exercise right after it (in a superset or
+  circuit the new one takes its place and the finished one leaves the
+  group, just before it); the picker's Swap form says "Sets 1 and 2 are
+  logged; the rest move to the new exercise."; with nothing done it is a
+  plain replace; Swap leaves the ⋯ once every set of the exercise is done.
+  The workout note is a plain card titled "Workout note" with Add (empty,
+  no body) or Edit (the note as its body), opening the note sheet (the
+  three-line field and Save), as the exercise note. The plate breakdown: plates that can't make the weight
+  show the target, Bar, Each side and "Closest · 82.5 kg"; below the bar
+  Bar and the info card's muted note "Lighter than the 20 kg bar."; at the bar "Each side · No
+  plates". The rest-alert question is "Notify when a rest ends?" with "Get
+  a notification when a rest is over while GetWorkout is in the
+  background." (Allow · Not now). Log set stays off while a value is
+  missing. Dialogs' Cancel is the secondary button; every ⋯ menu row has
+  an icon (exercise ⋯: Swap sync, Exercise details info, Add note edit,
+  Superset / Circuit with next dragHandle, Ungroup remove, Rest time timer,
+  Warm-up sets trendingUp, Remove exercise delete; Discard workout delete).
+- Workout summary (owner's picks, 2026-11-15): a page of its own with a
+  Summary app bar whose back does what Done does; the featured block reads
+  "Workout done · Fri, Nov 13", the day's name, "Push Pull Legs · week 3 ·
+  vs Fri, Nov 6" and duration, volume, sets and records two by two, the
+  first three with their change since the program day's previous finished
+  workout (more volume or sets in success, less in danger, duration and
+  "=" muted; free workouts and a day's first time show no "vs" and no
+  change); records are RecordList rows, one per exercise that beat a
+  record (its heaviest working set, the gain over the previous heaviest,
+  "+2 reps" / "+5 s" without a weight), counted by the records figure;
+  none beaten is one sentence on a plain card ("No new records this time.
+  Bench Press was 2.5 kg off your best.", the first workout "Records start
+  from this workout."); a program not moved on is a NoticeBanner ("Program
+  not updated", the reason, Open Programs); "Worked today" shows small front and back models
+  shaded by this workout's sets on Weekly volume's 0–20 scale and up to
+  three busiest muscles; the bottom bar has Done and, for a free workout,
+  Save as program (a dialog with "Its exercises and sets become a new
+  one-day program."; once saved it goes and a snackbar offers View
+  program), for a program day only "Save changes to Push" when the workout
+  changed the day (an exercise added, removed or swapped, the order, a
+  working set count or a rest; not reps or weights), which asks "Update
+  Push?" / "Your next Push workouts use these exercises and sets." first,
+  then goes, and a snackbar says "Push updated.";
+  kept items keep their targets, new ones take them from their sets.
+- Add past workout and Edit workout (owner's picks, 2026-11-15): one page.
+  The calendar's + first opens a sheet (Date with the system picker up to
+  today, Start time on the Forge time wheel, Duration on the Forge wheel in
+  hours and minutes, and with an active program "Program day · Fills the
+  exercises from the day", None first), then Continue opens the page. The
+  page has Save in the app bar, "Date and time" and Duration rows with
+  chevrons opening the same pickers, a set table per exercise (values typed
+  in boxes, the bubble ticks a set: filled accent ticked, an outline not;
+  holding it opens the set type menu; the effort tag opens the effort rows
+  in a sheet titled as the workout screen asks it, "How hard was set 1?" or
+  RIR / RPE, with the set's values under it), Add exercises, the workout
+  note card (as on the workout screen), and Discard (new) or Delete
+  workout at the end. While it saves a thin indeterminate bar runs under
+  the app bar; a change elsewhere is a NoticeBanner ("Changed elsewhere" /
+  "Deleted elsewhere", the sentence, Discard and Reload / Discard).
+  There is no name field: a past workout is named after its program day,
+  else "Workout"; the day only fills the exercises, the program is left
+  alone. Saving with unticked sets asks "1 set isn't ticked. It will be
+  left out."
 - Today screen step (owner's picks, 2026-11-15): the featured block follows
   the FeaturedCard card (chevron, the whole block opens the program, the
   dumbbell on its line, no divider); a rest day (the next day planned
@@ -1888,7 +1951,9 @@ the feature you are about to touch, and keep it true when you change it.
 - **1RM**: Epley, `weight * (1 + reps / 30)`; sets above 12 reps are ignored.
 - **Swapping an exercise**: the same logging type keeps the sets, another
   gets as many empty ones; up to eight alternatives are offered before the
-  whole library.
+  whole library. With some sets done, only the sets not done move to the
+  new exercise, placed after the old one, which keeps its done sets
+  (`swapKeepingLogged`).
 - **Workout limits**: name 1-100 characters, note 1000, exercise note 500,
   set note 200, 40 exercises, 30 sets each, 5 drops per set. The rules
   validate the top-level fields of `workouts` and `exerciseStats` (allowed
@@ -2059,14 +2124,12 @@ the feature you are about to touch, and keep it true when you change it.
   celebrates none.
 - **Workout summary**: duration ("< 1 min" under a minute), volume (weight ×
   reps of the working sets of `weight_reps` and `weighted_bodyweight`;
-  assistance is no load), working sets and exercises. Layout (UX pass,
-  2026-11-13, owner's pick): one prominent card (`WorkoutSummaryCard`,
-  shared with the workout page of the history) with "Workout done", the
-  name and the four totals two by two; then the celebration (trophy and
-  count), above a card of the new records, each its exercise over what it
-  is and its value; then
-  the note that the program was not moved on, when so; Done and Save as
-  program (not for a program's workout) fixed at the bottom.
+  assistance is no load), working sets and records, laid out as SPEC ›
+  Design says. The comparison reads the program's finished workouts by
+  `programId` (no composite index), from the server within 2 s, else the
+  cache, before the batch is written. The day's changes are judged on the
+  workout as it was before finishing (every set) against the day's items
+  (`changedProgramDay`) and stored with `SaveProgram`.
 - **Stats update**: stats are computed from what the device knows at
   finishing, the server's when it answers for all of them within 2 s, else
   the cache's
@@ -2104,7 +2167,9 @@ the feature you are about to touch, and keep it true when you change it.
   the set note); each drop is a row under its set, named in the last column.
 - **Editing workouts**: editing, deleting and adding a past workout store
   the workout in one batch, never changing `activeProgram`; a past workout
-  has no program, and moving a program workout's start only moves the day
+  has no program (a program day only fills its exercises, `pastWorkout`),
+  the edit page deletes too (it then closes with the workout's page), and
+  moving a program workout's start only moves the day
   shown as done. Edits keep ticked sets only and pass the finishing checks
   (`isStorable`); the use case also refuses a start or end in the future
   and a duration over 24 h. The batch carries the stats of every exercise
