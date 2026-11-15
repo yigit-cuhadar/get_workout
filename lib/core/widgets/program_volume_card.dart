@@ -12,7 +12,7 @@ import 'volume_band.dart';
 /// How a program spreads its weekly [sets] per muscle: small front and
 /// back models painted by sets beside the busiest muscles (ties in
 /// vocabulary order) as VolumeBands, under the title and the program's
-/// [total] sets. A tap opens the full list through [onTap].
+/// [total] sets and a chevron. A tap opens the full list through [onTap].
 class ProgramVolumeCard extends StatelessWidget {
   const ProgramVolumeCard({
     super.key,
@@ -75,6 +75,11 @@ class ProgramVolumeCard extends StatelessWidget {
                   Text(
                     l10n.setsText(total.toDouble()),
                     style: style.data.copyWith(color: style.colors.inkMuted),
+                  ),
+                  ForgeIcon(
+                    ForgeIcons.chevronRight,
+                    size: 18,
+                    color: style.colors.inkMuted,
                   ),
                 ],
               ),

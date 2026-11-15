@@ -299,13 +299,20 @@ void main() {
     expect(find.byType(ProgramsPage), findsOneWidget);
   }
 
+  /// Opens the stored program from the list under the tab's cards.
+  Future<void> openStored(WidgetTester tester) async {
+    await tester.scrollUntilVisible(find.text('Leg Day'), 200);
+    await tap(tester, find.text('Leg Day'));
+  }
+
   testWidgets('the empty tab offers a new program inside its branch', (
     tester,
   ) async {
     await start(tester);
     await openPrograms(tester);
 
-    expect(find.textContaining('No programs yet'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('No programs yet'), 200);
+    expect(find.text('No programs yet'), findsOneWidget);
     await tap(tester, find.text('New program'));
 
     expect(find.byType(ProgramBuilderPage), findsOneWidget);
@@ -319,7 +326,7 @@ void main() {
     await start(tester);
     await openPrograms(tester, [stored]);
 
-    await tap(tester, find.text('Leg Day'));
+    await openStored(tester);
     expect(find.byType(ProgramDetailPage), findsOneWidget);
     // Not active, so its first day is open.
     expect(find.text('Back Squat'), findsOneWidget);
@@ -407,7 +414,7 @@ void main() {
   ) async {
     await start(tester);
     await openPrograms(tester, [stored]);
-    await tap(tester, find.text('Leg Day'));
+    await openStored(tester);
     await tap(tester, find.byTooltip('Edit'));
     await tester.enterText(
       find.widgetWithText(TextField, 'Leg Day'),
@@ -466,7 +473,7 @@ void main() {
   ) async {
     await start(tester);
     await openPrograms(tester, [stored]);
-    await tap(tester, find.text('Leg Day'));
+    await openStored(tester);
     await tap(tester, find.byTooltip('Edit'));
 
     await reselectPrograms(tester);
@@ -526,7 +533,7 @@ void main() {
       ),
     ).thenAnswer((_) async => const Ok(null));
     await openPrograms(tester, [stored, copy]);
-    await tap(tester, find.text('Leg Day'));
+    await openStored(tester);
 
     await tap(tester, find.byType(PopupMenuButton<VoidCallback>));
     await tap(tester, find.text('Duplicate'));
