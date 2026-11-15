@@ -10,7 +10,7 @@ import '../../subscription/presentation/premium.dart';
 /// first and go on only if they unlocked it there.
 Future<void> openGenerator(BuildContext context) async {
   if (await context.requirePremium() && context.mounted) {
-    context.go(Routes.programGenerator);
+    await context.push(Routes.programGenerator);
   }
 }
 

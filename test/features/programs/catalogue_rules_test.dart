@@ -81,6 +81,9 @@ Map<String, Object?> validProgram({
   'lengthWeeks': 8,
   'equipment': ['dumbbell', 'bench', 'bodyweight'],
   'minutes': {'min': 6, 'max': 6},
+  'dayList': [
+    {'name': 'Day 1', 'exercises': 2},
+  ],
   'l10n': {
     'en': {'name': name, 'summary': 'One short day. It has two exercises.'},
   },
@@ -376,6 +379,22 @@ void main() {
     'minutes not the app\'s estimate': (
       (p) => p['minutes'] = {'min': 5, 'max': 6},
       const ContentProblem('minutes', 'minutes must be {"min": 6, "max": 6}'),
+    ),
+    'dayList not the days': (
+      (p) => p['dayList'] = [
+        {'name': 'Day 1', 'exercises': 3},
+      ],
+      const ContentProblem(
+        'dayList',
+        'dayList must be [{"name":"Day 1","exercises":2}]',
+      ),
+    ),
+    'dayList missing': (
+      (p) => p.remove('dayList'),
+      const ContentProblem(
+        'dayList',
+        'dayList must be [{"name":"Day 1","exercises":2}]',
+      ),
     ),
     'minutes missing': (
       (p) => p.remove('minutes'),

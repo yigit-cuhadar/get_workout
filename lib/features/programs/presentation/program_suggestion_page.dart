@@ -8,7 +8,10 @@ import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/catalogue_queries.dart';
 import 'catalogue_detail_cubit.dart';
-import 'catalogue_page.dart';
+import '../../exercises/presentation/vocabulary_labels.dart';
+import '../../profile/presentation/profile_questions.dart';
+import '../../../core/widgets/program_card.dart';
+import 'catalogue_text.dart';
 import 'program_catalogue_cubit.dart';
 
 /// After onboarding: the free ready-made program that suits the user best,
@@ -130,9 +133,6 @@ class _Suggestion extends StatelessWidget {
             case CopyStatus.copied:
               cubit.copyHandled();
               context.go(Routes.program(state.copyId!, created: true));
-            case CopyStatus.alreadyCopied:
-              cubit.copyHandled();
-              context.go(Routes.program(state.copyId!));
             case CopyStatus.failed:
               cubit.copyHandled();
               ScaffoldMessenger.of(context).showSnackBar(
@@ -144,7 +144,9 @@ class _Suggestion extends StatelessWidget {
                   ),
                 ),
               );
-            case CopyStatus.idle || CopyStatus.copying:
+            case CopyStatus.idle ||
+                CopyStatus.copying ||
+                CopyStatus.startFailed:
           }
         },
         builder: (context, state) => Column(
@@ -156,10 +158,21 @@ class _Suggestion extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.all(Gap.md),
-              child: CatalogueProgramCard(
-                suggestion.program,
-                premium: false,
-                reasons: suggestion.reasons,
+              child: ProgramCard(
+                name: suggestion.program.text(language).name,
+                facts: [
+                  l10n.catalogueDaysPerWeek(suggestion.program.daysPerWeek),
+                  l10n.levelName(suggestion.program.level),
+                  if (suggestion.program.lengthWeeks case final weeks?)
+                    l10n.programWeekCount(weeks),
+                ].join(' · '),
+                tags: [l10n.goalName(suggestion.program.goal)],
+                recommended: true,
+                match: suggestion.reasons.isEmpty
+                    ? null
+                    : l10n.matchText(suggestion.reasons),
+                onTap: () =>
+                    context.go(Routes.catalogueProgram(suggestion.program.id)),
               ),
             ),
             if (state.status == CatalogueDetailStatus.ready &&
@@ -172,7 +185,14 @@ class _Suggestion extends StatelessWidget {
                   loading:
                       state.useStatus == UseStatus.waiting ||
                       state.copyStatus == CopyStatus.copying,
-                  onPressed: context.read<CatalogueDetailCubit>().use,
+                  onPressed: () {
+                    final cubit = context.read<CatalogueDetailCubit>();
+                    // The user's copy opens rather than another one.
+                    if (cubit.existingCopyId case final id?) {
+                      return context.go(Routes.program(id));
+                    }
+                    cubit.copy(CopyIntent.keep);
+                  },
                 ),
               ),
           ],

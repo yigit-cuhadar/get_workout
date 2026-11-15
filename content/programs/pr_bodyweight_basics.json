@@ -16,6 +16,20 @@
     "min": 30,
     "max": 32
   },
+  "dayList": [
+    {
+      "name": "Squat and Push",
+      "exercises": 6
+    },
+    {
+      "name": "Lunge and Pull",
+      "exercises": 8
+    },
+    {
+      "name": "Full Body",
+      "exercises": 7
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Bodyweight Basics 3-Day",

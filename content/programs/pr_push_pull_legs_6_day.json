@@ -21,6 +21,32 @@
     "min": 31,
     "max": 41
   },
+  "dayList": [
+    {
+      "name": "Push A (Heavy)",
+      "exercises": 5
+    },
+    {
+      "name": "Pull A (Heavy)",
+      "exercises": 5
+    },
+    {
+      "name": "Legs A (Heavy)",
+      "exercises": 5
+    },
+    {
+      "name": "Push B (Volume)",
+      "exercises": 5
+    },
+    {
+      "name": "Pull B (Volume)",
+      "exercises": 6
+    },
+    {
+      "name": "Legs B (Volume)",
+      "exercises": 6
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Push Pull Legs 6-Day",

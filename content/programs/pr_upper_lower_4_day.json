@@ -21,6 +21,24 @@
     "min": 34,
     "max": 51
   },
+  "dayList": [
+    {
+      "name": "Upper 1",
+      "exercises": 7
+    },
+    {
+      "name": "Lower 1",
+      "exercises": 6
+    },
+    {
+      "name": "Upper 2",
+      "exercises": 8
+    },
+    {
+      "name": "Lower 2",
+      "exercises": 6
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Upper/Lower 4-Day",

@@ -437,6 +437,7 @@ void main() {
           exercises: catalogue,
           getDays: GetCatalogueDays(readyMadePrograms),
           saveProgram: SaveProgram(programs),
+          startProgram: StartProgram(programs),
           getCurrentUser: GetCurrentUser(programAuth),
         ),
       )

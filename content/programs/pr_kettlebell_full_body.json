@@ -17,6 +17,20 @@
     "min": 32,
     "max": 39
   },
+  "dayList": [
+    {
+      "name": "Swing and Press",
+      "exercises": 6
+    },
+    {
+      "name": "Hinge and Pull",
+      "exercises": 6
+    },
+    {
+      "name": "Full Body Flow",
+      "exercises": 6
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Kettlebell Full Body 3-Day",

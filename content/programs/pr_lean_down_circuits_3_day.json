@@ -17,6 +17,20 @@
     "min": 31,
     "max": 33
   },
+  "dayList": [
+    {
+      "name": "Circuit Day 1",
+      "exercises": 10
+    },
+    {
+      "name": "Circuit Day 2",
+      "exercises": 10
+    },
+    {
+      "name": "Circuit Day 3",
+      "exercises": 10
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Lean-Down Circuits 3-Day",

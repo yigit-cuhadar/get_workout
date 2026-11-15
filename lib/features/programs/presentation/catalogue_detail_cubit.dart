@@ -51,14 +51,18 @@ enum CopyStatus {
   idle,
   copying,
 
-  /// The user already has a copy, [CatalogueDetailState.copyId]; the page
-  /// offers it, or [CatalogueDetailCubit.copy] for another.
-  alreadyCopied,
-
   /// [CatalogueDetailState.copyId] is the new copy.
   copied,
+
+  /// The copy [CatalogueDetailState.copyId] was stored but could not be
+  /// started; it stays among the user's programs, not started.
+  startFailed,
   failed,
 }
+
+/// What a copy is made for: to start it on the weekdays picked, to edit it
+/// in the builder, or only to keep it among the user's programs.
+enum CopyIntent { start, edit, keep }
 
 class CatalogueDetailState extends Equatable {
   const CatalogueDetailState({
@@ -67,6 +71,7 @@ class CatalogueDetailState extends Equatable {
     this.days = const [],
     this.useStatus = UseStatus.waiting,
     this.copyStatus = CopyStatus.idle,
+    this.copyIntent,
     this.copyId,
     this.copyFailure,
   });
@@ -82,11 +87,15 @@ class CatalogueDetailState extends Equatable {
   /// Only meaningful when [status] is ready.
   final UseStatus useStatus;
   final CopyStatus copyStatus;
+
+  /// What the copy being made, or just made, is for.
+  final CopyIntent? copyIntent;
   final String? copyId;
   final Failure? copyFailure;
 
   CatalogueDetailState copyWith({
     CopyStatus? copyStatus,
+    CopyIntent? Function()? copyIntent,
     String? Function()? copyId,
     Failure? Function()? copyFailure,
   }) => CatalogueDetailState(
@@ -95,6 +104,7 @@ class CatalogueDetailState extends Equatable {
     days: days,
     useStatus: useStatus,
     copyStatus: copyStatus ?? this.copyStatus,
+    copyIntent: copyIntent != null ? copyIntent() : this.copyIntent,
     copyId: copyId != null ? copyId() : this.copyId,
     copyFailure: copyFailure != null ? copyFailure() : this.copyFailure,
   );
@@ -106,6 +116,7 @@ class CatalogueDetailState extends Equatable {
     days,
     useStatus,
     copyStatus,
+    copyIntent,
     copyId,
     copyFailure,
   ];
@@ -129,6 +140,7 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
     required this._exercises,
     required this._getDays,
     required this._saveProgram,
+    required this._startProgram,
     required this._getCurrentUser,
     this.retryDelay = const Duration(seconds: 2),
   }) : _catalogue = catalogue,
@@ -153,6 +165,7 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
   final ExerciseCatalogueCubit _exercises;
   final GetCatalogueDays _getDays;
   final SaveProgram _saveProgram;
+  final StartProgram _startProgram;
   final GetCurrentUser _getCurrentUser;
   late final StreamSubscription<ProgramCatalogueState> _catalogueSubscription;
   late final StreamSubscription<ProgramListState> _listSubscription;
@@ -184,35 +197,25 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
   /// Tries the exercise library again after it failed to load.
   Future<void> retryExercises() => _exercises.retry();
 
-  /// The primary action: copies the program, unless the user already has a
-  /// copy of it, which is offered instead.
-  Future<void> use() async {
-    if (state.useStatus != UseStatus.ready ||
-        state.copyStatus == CopyStatus.copying) {
-      return;
-    }
-    final existing = _list.state.programs
-        .where(
-          (program) =>
-              program.origin == ProgramOrigin.catalog &&
-              program.sourceId == programId,
-        )
-        .firstOrNull;
-    if (existing != null) {
-      emit(
-        state.copyWith(
-          copyStatus: CopyStatus.alreadyCopied,
-          copyId: () => existing.id,
-        ),
-      );
-      return;
-    }
-    return copy();
-  }
+  /// The name of the user's active program, which starting this one
+  /// replaces.
+  String? get activeProgramName => _list.state.activeProgram?.name;
+
+  /// The user's copy of this program, if they have one, which the page
+  /// offers before making another.
+  String? get existingCopyId => _list.state.programs
+      .where(
+        (program) =>
+            program.origin == ProgramOrigin.catalog &&
+            program.sourceId == programId,
+      )
+      .firstOrNull
+      ?.id;
 
   /// Stores a copy of the program as one of the user's, through the
-  /// builder's validation.
-  Future<void> copy() async {
+  /// builder's validation, for [intent]: to start it at once on [weekdays]
+  /// (one per day), replacing any active program, or to edit it.
+  Future<void> copy(CopyIntent intent, {List<int>? weekdays}) async {
     final program = _program;
     final uid = _getCurrentUser()?.id;
     final exercises = _exercises.state;
@@ -221,27 +224,55 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
         state.copyStatus == CopyStatus.copying ||
         program == null ||
         uid == null ||
-        exercises is! CatalogueReady) {
+        exercises is! CatalogueReady ||
+        (intent == CopyIntent.start && weekdays == null)) {
       return;
     }
     emit(
       state.copyWith(
         copyStatus: CopyStatus.copying,
+        copyIntent: () => intent,
         copyId: () => null,
         copyFailure: () => null,
       ),
     );
-    final result = await _saveProgram((
+    final copy = program.copy(state.days, language);
+    final saved = await _saveProgram((
       uid: uid,
-      program: program.copy(state.days, language),
+      program: copy,
       loggingTypes: {
         for (final exercise in exercises.exercises)
           exercise.id: exercise.loggingType,
       },
     ));
+    if (saved case Ok(value: final id) when intent == CopyIntent.start) {
+      final started = await _startProgram((
+        uid: uid,
+        program: Program(
+          id: id,
+          name: copy.name,
+          origin: copy.origin,
+          sourceId: copy.sourceId,
+          lengthWeeks: copy.lengthWeeks,
+          days: copy.days,
+          premium: copy.premium,
+        ),
+        weekdays: weekdays!,
+      ));
+      if (isClosed) return;
+      if (started.failureOrNull case final failure?) {
+        return emit(
+          state.copyWith(
+            copyStatus: CopyStatus.startFailed,
+            copyId: () => id,
+            copyFailure: () => failure,
+          ),
+        );
+      }
+    }
     if (isClosed) return;
     emit(
-      result.fold(
+      saved.fold(
         (id) => state.copyWith(copyStatus: CopyStatus.copied, copyId: () => id),
         (failure) => state.copyWith(
           copyStatus: CopyStatus.failed,
@@ -255,6 +286,7 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
   void copyHandled() => emit(
     state.copyWith(
       copyStatus: CopyStatus.idle,
+      copyIntent: () => null,
       copyId: () => null,
       copyFailure: () => null,
     ),
@@ -361,6 +393,7 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
         days: days,
         useStatus: _useStatus(days),
         copyStatus: state.copyStatus,
+        copyIntent: state.copyIntent,
         copyId: state.copyId,
         copyFailure: state.copyFailure,
       ),

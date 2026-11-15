@@ -23,6 +23,24 @@
     "min": 36,
     "max": 55
   },
+  "dayList": [
+    {
+      "name": "Back and Shoulders A",
+      "exercises": 6
+    },
+    {
+      "name": "Lower A",
+      "exercises": 5
+    },
+    {
+      "name": "Back and Shoulders B",
+      "exercises": 9
+    },
+    {
+      "name": "Lower B",
+      "exercises": 5
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Shoulders and Back Focus 4-Day",

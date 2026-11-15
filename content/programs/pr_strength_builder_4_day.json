@@ -23,6 +23,24 @@
     "min": 44,
     "max": 57
   },
+  "dayList": [
+    {
+      "name": "Squat Day",
+      "exercises": 6
+    },
+    {
+      "name": "Bench Day",
+      "exercises": 6
+    },
+    {
+      "name": "Deadlift Day",
+      "exercises": 5
+    },
+    {
+      "name": "Press Day",
+      "exercises": 5
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Strength Builder 4-Day",

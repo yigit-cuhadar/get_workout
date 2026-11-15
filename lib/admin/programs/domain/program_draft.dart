@@ -10,8 +10,8 @@ import '../../../features/programs/domain/program_editing.dart';
 /// A ready-made program as the editor holds it: the fields of
 /// `programs/{id}` and `programs/{id}/detail/main` that are typed in, any of
 /// them possibly unset or invalid until the catalogue rules pass. The
-/// fields computed from the days (`daysPerWeek`, `equipment`, `minutes`) are
-/// not held but derived by [content].
+/// fields computed from the days (`daysPerWeek`, `equipment`, `minutes`,
+/// `dayList`) are not held but derived by [content].
 ///
 /// A required number of an item that is unset is -1, as in [ProgramEntry],
 /// so the rules report it.
@@ -82,8 +82,8 @@ class ProgramDraft extends Equatable {
       text[language] ?? const CatalogueText(name: '', summary: '');
 
   /// The content-file shape the catalogue rules check and the repository
-  /// stores, with `daysPerWeek`, `equipment` and `minutes` computed from
-  /// the days and [exercises] (every exercise by id). Unset required fields
+  /// stores, with `daysPerWeek`, `equipment`, `minutes` and `dayList`
+  /// computed from the days and [exercises] (every exercise by id). Unset required fields
   /// are written as null so the rules report them; a language without text
   /// is left out, but English, which is required.
   Map<String, Object?> content(Map<String, ExerciseEntry> exercises) {
@@ -109,6 +109,7 @@ class ProgramDraft extends Equatable {
       'days': [for (final day in days) _dayJson(day)],
     };
     json['equipment'] = programEquipment(ProgramEntry(json), exercises);
+    json['dayList'] = catalogueDayList(days);
     if (sessionMinutes(days) case (:final min, :final max)) {
       json['minutes'] = {'min': min, 'max': max};
     }

@@ -238,9 +238,10 @@ class ProfileQuestion extends StatelessWidget {
   }
 }
 
-/// The equipment owned: presets as chips, then each item. Bodyweight is
-/// always owned, so it is not offered.
-class EquipmentAnswer extends StatelessWidget {
+/// The equipment owned: presets as chips, then the common items and every
+/// item owned as rows with a square checkbox in front, and Show all
+/// equipment, which lists every item. Bodyweight is always owned, so it is not offered.
+class EquipmentAnswer extends StatefulWidget {
   const EquipmentAnswer({
     super.key,
     required this.owned,
@@ -253,36 +254,73 @@ class EquipmentAnswer extends StatelessWidget {
   final ValueChanged<EquipmentProfile> onPreset;
   final ValueChanged<Equipment> onToggle;
 
+  /// The items listed before Show all equipment.
+  static const common = [
+    Equipment.barbell,
+    Equipment.plate,
+    Equipment.dumbbell,
+    Equipment.bench,
+    Equipment.pullUpBar,
+    Equipment.cable,
+    Equipment.kettlebell,
+  ];
+
+  @override
+  State<EquipmentAnswer> createState() => _EquipmentAnswerState();
+}
+
+class _EquipmentAnswerState extends State<EquipmentAnswer> {
+  var _all = false;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final owned = this.owned;
+    final owned = widget.owned;
+    // Collapsed, the common items and everything owned, in vocabulary
+    // order after the common ones.
+    final items = [
+      ...EquipmentAnswer.common,
+      for (final item in Equipment.values)
+        if (item != Equipment.bodyweight &&
+            !EquipmentAnswer.common.contains(item) &&
+            (_all || (owned?.contains(item) ?? false)))
+          item,
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 12,
       children: [
         Wrap(
-          spacing: Gap.sm,
-          runSpacing: Gap.sm,
+          spacing: 6,
+          runSpacing: 6,
           children: [
             for (final preset in EquipmentProfile.values)
-              ChoiceChip(
-                label: Text(l10n.presetName(preset)),
+              ForgeChip(
+                label: l10n.presetName(preset),
+                showCheck: false,
                 selected:
                     owned != null &&
                     owned.length == preset.equipment.length &&
                     owned.containsAll(preset.equipment),
-                onSelected: (_) => onPreset(preset),
+                onPressed: () => widget.onPreset(preset),
               ),
           ],
         ),
-        const SizedBox(height: Gap.md),
-        for (final item in Equipment.values)
-          if (item != Equipment.bodyweight)
-            CheckboxListTile(
-              value: owned?.contains(item) ?? false,
-              title: Text(l10n.equipmentName(item)),
-              onChanged: (_) => onToggle(item),
-            ),
+        ListRowCard(
+          children: [
+            for (final item in items)
+              ListRow(
+                title: l10n.equipmentName(item),
+                checked: owned?.contains(item) ?? false,
+                onTap: () => widget.onToggle(item),
+              ),
+            if (items.length < Equipment.values.length - 1)
+              ListRow(
+                title: l10n.equipmentShowAll,
+                onTap: () => setState(() => _all = true),
+              ),
+          ],
+        ),
       ],
     );
   }

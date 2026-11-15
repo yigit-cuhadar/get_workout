@@ -41,6 +41,10 @@ Map<String, Object?> programJson({
   'lengthWeeks': 8,
   'equipment': ['dumbbell', 'bench'],
   'minutes': {'min': 8, 'max': 11},
+  'dayList': [
+    {'name': 'Day A', 'exercises': 2},
+    {'name': 'Day B', 'exercises': 2},
+  ],
   'l10n': {
     'en': {'name': name, 'summary': 'A press and a curl. Twice a week.'},
   },
