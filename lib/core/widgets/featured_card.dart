@@ -94,6 +94,7 @@ class FeaturedCard extends StatelessWidget {
     required this.form,
     required String this.eyebrow,
     required String this.title,
+    this.when,
     this.locked = false,
     this.line,
     this.note,
@@ -135,6 +136,7 @@ class FeaturedCard extends StatelessWidget {
     this.onTap,
   }) : form = FeaturedCardForm.band,
        title = null,
+       when = null,
        locked = false,
        line = null,
        note = null,
@@ -153,6 +155,7 @@ class FeaturedCard extends StatelessWidget {
   const FeaturedCard.loading({super.key, required String this.eyebrow})
     : form = FeaturedCardForm.block,
       title = null,
+      when = null,
       locked = false,
       line = null,
       note = null,
@@ -173,6 +176,10 @@ class FeaturedCard extends StatelessWidget {
   final FeaturedCardForm form;
   final String? eyebrow;
   final String? title;
+
+  /// A band's muted line under its [title]: when it happens ("Today",
+  /// "Mon, Nov 16").
+  final String? when;
   final bool locked;
   final FeaturedLine? line;
 
@@ -307,6 +314,8 @@ class FeaturedCard extends StatelessWidget {
                       style: text.headlineMedium!.copyWith(color: headInk),
                     ),
                   ),
+                if (when case final at?)
+                  Text(at, style: text.bodyLarge!.copyWith(color: headQuiet)),
               ],
             ),
           ),

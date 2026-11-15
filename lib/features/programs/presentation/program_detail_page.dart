@@ -494,11 +494,12 @@ class _Band extends StatelessWidget {
       eyebrow: eyebrow,
       title: dayName == null
           ? l10n.programStateActive
-          : date == null
-          ? l10n.programNextDay(dayName)
+          : l10n.programNextDay(dayName),
+      when: dayName == null || date == null
+          ? null
           : date == list.today
-          ? l10n.programNextToday(dayName)
-          : l10n.programNextOn(dayName, l10n.planDate(date)),
+          ? l10n.programNextWhenToday
+          : l10n.planDate(date),
       locked: locked,
       note: note,
       alert: mismatch,
