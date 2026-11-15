@@ -365,8 +365,8 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 
 Group 11, design in code (the owner's plan; the studios are the target, see Design)
 - [x] Theme — `ForgePreset` → `ForgeTheme` in forge_ui with the studio's colours, type scale, radii and borders, light and dark; Slate, Measure and Graphite all in code, switched by a dev-only picker in Profile, prod ships the one picked at the end; fonts bundled; the studio's own line icons (not an icon package), with the heavier form for the selected tab — `lib/app/theme.dart` swaps in and screens change without edits
-- [ ] Forge components — the MobileAppForge Studio cards built in forge_ui with every form and state on their card, widget tests for their behaviour; merged and tagged before the app uses them
-- [ ] App components — the GetWorkout Studio components in the app, every state on their card
+- [x] Forge components — the MobileAppForge Studio cards built in forge_ui with every form and state on their card, widget tests for their behaviour; merged and tagged before the app uses them
+- [x] App components — the GetWorkout Studio components in the app, every state on their card
 - [ ] Key screens — Today, Workout and Programs with every state on their boards, approved by the owner before the rest
 - [ ] The remaining screens by studio group (Ana sekmeler, Antrenman ve programlar, İlerleme, Formlar, Kurulum, hesap ve abonelik) — one group at a time, each with its owner-approved flow changes from Design built along with the look
 - [ ] Widget tests for the critical flows once the UI is stable; the final preset picked on a device
