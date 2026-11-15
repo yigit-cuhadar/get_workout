@@ -35,8 +35,8 @@ class LibraryListView extends StatefulWidget {
   /// secondary one.
   final Muscle? sectionsFor;
 
-  /// With it, a search matching nothing, no filter on, offers to create
-  /// the searched exercise; it gets the search text.
+  /// With it, a search matching nothing offers to create the searched
+  /// exercise; it gets the search text.
   final ValueChanged<String>? onCreate;
 
   @override
@@ -94,11 +94,13 @@ class _LibraryListViewState extends State<LibraryListView> {
       builder: (context, state) {
         final results = state.results;
         final onCreate = widget.onCreate;
-        final noMatch =
-            onCreate != null &&
-            results.isEmpty &&
-            state.query.isNotEmpty &&
-            state.filter.isEmpty;
+        final create = onCreate == null || state.query.isEmpty
+            ? null
+            : () => onCreate(state.query);
+        final filtered = results.isEmpty && !state.filter.isEmpty;
+        final searched =
+            results.isEmpty && state.filter.isEmpty && create != null;
+        final noMatch = filtered || searched;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -178,9 +180,24 @@ class _LibraryListViewState extends State<LibraryListView> {
               ),
             Expanded(
               child: switch (state.muscleExercises) {
-                _ when noMatch => _NoMatch(
-                  query: state.query,
-                  onCreate: () => onCreate(state.query),
+                _ when filtered => _NoMatch(
+                  icon: ForgeIcons.tune,
+                  title: l10n.libraryNoResultsTitle,
+                  message: l10n.libraryFilteredNoResults,
+                  actions: [
+                    ForgeButton(
+                      label: l10n.libraryClearFilters,
+                      variant: ForgeButtonVariant.secondary,
+                      onPressed: library.clearFilters,
+                    ),
+                    if (create != null) _CreateButton(create),
+                  ],
+                ),
+                _ when searched => _NoMatch(
+                  icon: ForgeIcons.search,
+                  title: l10n.librarySearchNoResultsTitle(state.query),
+                  message: l10n.librarySearchNoResults,
+                  actions: [_CreateButton(create)],
                 ),
                 _ when results.isEmpty => EmptyView(
                   title: l10n.libraryNoResultsTitle,
@@ -210,43 +227,54 @@ class _LibraryListViewState extends State<LibraryListView> {
       ExerciseTile(exercise, showFavorite: true);
 }
 
-/// A search matching nothing, in a card: the searched text and a button
-/// creating it as the user's own exercise.
+/// Nothing matching the search or the filters, in a card.
 class _NoMatch extends StatelessWidget {
-  const _NoMatch({required this.query, required this.onCreate});
+  const _NoMatch({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.actions,
+  });
 
-  final String query;
-  final VoidCallback onCreate;
+  final ForgeIconData icon;
+  final String title;
+  final String message;
+  final List<Widget> actions;
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return ListView(
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
-      children: [
-        Semantics(
-          liveRegion: true,
-          child: ListRowCard(
-            children: [
-              EmptyView(
-                icon: ForgeIcons.search,
-                title: l10n.librarySearchNoResultsTitle(query),
-                message: l10n.librarySearchNoResults,
-                actions: [
-                  ForgeButton(
-                    label: l10n.libraryCreateCustom,
-                    variant: ForgeButtonVariant.secondary,
-                    onPressed: onCreate,
-                  ),
-                ],
-              ),
-            ],
-          ),
+  Widget build(BuildContext context) => ListView(
+    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+    padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
+    children: [
+      Semantics(
+        liveRegion: true,
+        child: ListRowCard(
+          children: [
+            EmptyView(
+              icon: icon,
+              title: title,
+              message: message,
+              actions: actions,
+            ),
+          ],
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
+/// Creates the searched exercise as the user's own.
+class _CreateButton extends StatelessWidget {
+  const _CreateButton(this.onPressed);
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => ForgeButton(
+    label: AppLocalizations.of(context).libraryCreateCustom,
+    variant: ForgeButtonVariant.secondary,
+    onPressed: onPressed,
+  );
 }
 
 /// The results of one muscle under "Main" and "Also works".

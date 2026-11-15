@@ -1045,15 +1045,28 @@ void main() {
       expect(find.byType(LibraryPage), findsOneWidget);
     });
 
-    testWidgets('with a filter on it offers no new exercise', (tester) async {
+    testWidgets('with a filter on it offers Clear all, and with a search '
+        'also to create it', (tester) async {
       await startAsGuest(tester);
       await openList(tester);
       sl<LibraryCubit>().setOnlyFavorites(true);
-      await tester.enterText(find.byType(TextField), 'benchh');
       await tester.pumpAndSettle();
 
       expect(find.text('No exercises match'), findsOneWidget);
+      expect(
+        find.text('Clear a filter or turn off Only my equipment.'),
+        findsOneWidget,
+      );
       expect(find.text('Create custom exercise'), findsNothing);
+
+      await tester.enterText(find.byType(TextField), 'benchh');
+      await tester.pumpAndSettle();
+      expect(find.text('Create custom exercise'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(ForgeButton, 'Clear all'));
+      await tester.pumpAndSettle();
+      expect(sl<LibraryCubit>().state.filter.isEmpty, isTrue);
+      expect(find.text('No exercises match "benchh"'), findsOneWidget);
     });
   });
 

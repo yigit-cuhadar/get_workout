@@ -628,11 +628,15 @@ Decisions (the canvases they were drawn on are deleted):
   search and no-results states belong to that page); the model shows "Tap
   or slide across a muscle" at its bottom while nothing slides, the
   muscle bar while sliding; a model that cannot load shows "Couldn't load
-  the body model", "Search still works." and Retry; a search matching
+  the body model", "Search still works." and Retry (Weekly volume: "Try
+  again."); the pill always shows "Search exercises"; a search matching
   nothing (no filter on) shows the search text, "Check the spelling or add
   it as your own exercise." and Create custom exercise, which opens the
-  form with the name filled in; exercise rows keep the star button and the
-  chevron; the tabs are Forge NavigationBar with the workout bar above it,
+  form with the name filled in; with a filter on, "No exercises match",
+  "Clear a filter or turn off Only my equipment.", Clear all and, with
+  search text, Create custom exercise too; exercise rows keep the star
+  button and the chevron; tab labels stop growing at 1.5x text (Forge
+  v0.20); the tabs are Forge NavigationBar with the workout bar above it,
   and the shell's notices are Forge snackbars (4 s, "Open" on a restored
   workout).
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
