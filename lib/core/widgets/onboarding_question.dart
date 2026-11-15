@@ -37,8 +37,9 @@ class OnboardingQuestion extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
+      bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, Gap.sm, 14, 18),
+        padding: const EdgeInsets.fromLTRB(14, Gap.sm, 14, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: 12,
@@ -72,13 +73,19 @@ class OnboardingQuestion extends StatelessWidget {
               ),
             ),
             Expanded(child: body),
-            ForgeButton(
-              label: actionLabel,
-              onPressed: onAction,
-              loading: loading,
-              size: ForgeButtonSize.large,
-            ),
           ],
+        ),
+      ),
+    ),
+    // In the bar, so a snackbar shows above it rather than over it.
+    bottomNavigationBar: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
+        child: ForgeButton(
+          label: actionLabel,
+          onPressed: onAction,
+          loading: loading,
+          size: ForgeButtonSize.large,
         ),
       ),
     ),

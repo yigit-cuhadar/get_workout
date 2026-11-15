@@ -453,6 +453,11 @@ Decisions (the canvases they were drawn on are deleted):
   picker; confirmations stay dialogs); Restore's result is a snackbar and a
   success closes the paywall. The Measure preset keeps its saturated colours
   (an accepted exception to muted colours).
+- Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
+  names logged warm-ups apart; K2 a program band's title is the day
+  alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
+  snackbar sits above a screen's fixed bottom button, which therefore
+  lives in the Scaffold's bottom bar.
 - Asked afterwards (2026-11-15), where the studio had been changed without
   the owner: the program page's ⋯ holds Edit, Duplicate and Delete; a
   program workout's summary also offers Save as program; Delete account opens
