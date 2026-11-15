@@ -44,6 +44,7 @@ import '../features/programs/presentation/catalogue_detail_page.dart';
 import '../features/programs/presentation/catalogue_page.dart';
 import '../features/programs/presentation/exercise_picker_page.dart';
 import '../features/programs/presentation/program_suggestion_page.dart';
+import '../features/programs/presentation/program_volume_page.dart';
 import '../features/programs/presentation/program_builder_page.dart';
 import '../features/programs/presentation/program_detail_page.dart';
 import '../features/programs/presentation/programs_page.dart';
@@ -122,6 +123,10 @@ abstract final class Routes {
   /// [created]: the program was just stored; see [ProgramDetailPage.created].
   static String program(String id, {bool created = false}) =>
       '$programs/${Uri.encodeComponent(id)}${created ? '?created=true' : ''}';
+
+  /// A program's weekly sets per muscle, pushed above the Programs tab.
+  static String programVolume(String id) =>
+      '$programs/volume/${Uri.encodeComponent(id)}';
   static String programEdit(String id) =>
       '$programs/${Uri.encodeComponent(id)}/edit';
 
@@ -508,6 +513,12 @@ GoRouter buildRouter(
                     ],
                   ),
                 ],
+              ),
+              // Before ':id', which would match 'volume' too.
+              GoRoute(
+                path: 'volume/:id',
+                builder: (_, state) =>
+                    ProgramVolumePage(id: state.pathParameters['id']!),
               ),
               GoRoute(
                 path: ':id',

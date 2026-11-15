@@ -203,6 +203,16 @@ void main() {
     expect(find.text('Arms'), findsOneWidget);
   });
 
+  testWidgets('the weekly sets card opens the program\'s volume page', (
+    tester,
+  ) async {
+    await pump(tester, ready(activeProgram: active));
+
+    await tester.tap(find.text('Weekly sets in this program'));
+    await settle(tester);
+    expect(find.text('at /programs/volume/p1'), findsOneWidget);
+  });
+
   testWidgets('a missed day hides Start until answered under its row', (
     tester,
   ) async {

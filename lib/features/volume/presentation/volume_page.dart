@@ -128,14 +128,14 @@ class _Week extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scale = volumeScale(week.sets.values);
     final muscles = week.musclesBySets;
     return ListView(
       padding: const EdgeInsets.only(bottom: Gap.md),
       children: [
-        _VolumeModel(
-          week,
+        VolumeModel(
+          sets: week.sets,
           semanticLabel: l10n.volumeModelLabel(_weekLabel(context, state)),
+          onOpen: (muscle) => _showMuscle(context, muscle),
         ),
         const Padding(
           padding: EdgeInsets.all(Gap.md),
@@ -151,46 +151,72 @@ class _Week extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-          child: Card(
-            margin: EdgeInsets.zero,
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                for (final muscle in muscles)
-                  InkWell(
-                    onTap: () => _showMuscle(context, muscle),
-                    child: Padding(
-                      padding: const EdgeInsets.all(Gap.md),
-                      child: VolumeBand(
-                        muscle: muscle,
-                        sets: week.setsOf(muscle),
-                        scale: scale,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+        VolumeMuscleList(
+          muscles: [
+            for (final muscle in muscles)
+              (muscle: muscle, sets: week.setsOf(muscle)),
+          ],
+          onOpen: (muscle) => _showMuscle(context, muscle),
         ),
       ],
     );
   }
 }
 
-/// The model with each trained muscle in its zone's colour; an untrained
-/// one keeps the body's colour. Tapping a muscle opens it.
-class _VolumeModel extends StatefulWidget {
-  const _VolumeModel(this.week, {required this.semanticLabel});
-  final WeekVolume week;
-  final String semanticLabel;
+/// Each muscle's weekly [muscles] sets as a band against the reference,
+/// in the order given; a row opens its muscle through [onOpen], when given.
+class VolumeMuscleList extends StatelessWidget {
+  const VolumeMuscleList({super.key, required this.muscles, this.onOpen});
+
+  final List<({Muscle muscle, double sets})> muscles;
+  final ValueChanged<Muscle>? onOpen;
 
   @override
-  State<_VolumeModel> createState() => _VolumeModelState();
+  Widget build(BuildContext context) {
+    final scale = volumeScale(muscles.map((m) => m.sets));
+    final onOpen = this.onOpen;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+      child: Card(
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            for (final (:muscle, :sets) in muscles)
+              InkWell(
+                onTap: onOpen == null ? null : () => onOpen(muscle),
+                child: Padding(
+                  padding: const EdgeInsets.all(Gap.md),
+                  child: VolumeBand(muscle: muscle, sets: sets, scale: scale),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _VolumeModelState extends State<_VolumeModel> {
+/// The model with each trained muscle of [sets] in the heat ramp's colour;
+/// an untrained one keeps the body's colour. Tapping a muscle calls
+/// [onOpen].
+class VolumeModel extends StatefulWidget {
+  const VolumeModel({
+    super.key,
+    required this.sets,
+    required this.semanticLabel,
+    required this.onOpen,
+  });
+
+  final Map<Muscle, double> sets;
+  final String semanticLabel;
+  final ValueChanged<Muscle> onOpen;
+
+  @override
+  State<VolumeModel> createState() => _VolumeModelState();
+}
+
+class _VolumeModelState extends State<VolumeModel> {
   /// Share of the screen height the model takes, leaving the bars in view.
   static const _heightRatio = 1 / 3;
 
@@ -204,7 +230,7 @@ class _VolumeModelState extends State<_VolumeModel> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final p = ForgeStyle.of(context).colors;
-    final sets = widget.week.sets;
+    final sets = widget.sets;
     final model = context.watch<BodyModelCubit>().state;
     // One model, turned by dragging, shows the front and the back.
     return Column(
@@ -221,7 +247,7 @@ class _VolumeModelState extends State<_VolumeModel> {
               colors: muscleHeatColors(p, sets),
               outlined: muscleHeatOver(sets),
               sides: false,
-              onOpen: (muscle) => _showMuscle(context, muscle),
+              onOpen: widget.onOpen,
               semanticLabel: widget.semanticLabel,
             ),
           },

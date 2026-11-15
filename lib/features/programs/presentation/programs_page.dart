@@ -489,7 +489,7 @@ class _ActiveProgramVolumeState extends State<_ActiveProgramVolume> {
     final program = widget.program;
     final catalogue = context.watch<ExerciseCatalogueCubit>();
     final model = context.watch<BodyModelCubit>();
-    void open() => context.go(Routes.program(program.id!));
+    void open() => context.go(Routes.programVolume(program.id!));
     SectionCard failed(VoidCallback retry) => SectionCard.error(
       title: l10n.programVolumeTitle,
       onTap: open,

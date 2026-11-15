@@ -595,8 +595,10 @@ Decisions (the canvases they were drawn on are deleted):
   standard forms (EmptyView, SectionCard.loading / error, button loading,
   ForgeSnackbar) and are drawn on the board afterwards. Follow-up picks:
   no programs at all is an EmptyView without a button (the prompt above
-  leads to the catalogue); the weekly sets card opens a view of every
-  muscle (its look is being drawn); loading is LoadingView and the error
+  leads to the catalogue); the weekly sets card (with a chevron) opens the
+  weekly volume page's model and muscle list for the program, pushed
+  above Programs, "<name> · per week" and its total in place of the week
+  picker, every muscle listed, no trend; loading is LoadingView and the error
   ErrorView with its second line for now; locked rows keep an ink title
   and the Premium tag without a chevron; a locked copy's ⋯ has no Change
   days; the weekly sets card is hidden while the premium status is
