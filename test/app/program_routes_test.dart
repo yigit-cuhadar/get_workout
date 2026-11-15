@@ -292,7 +292,7 @@ void main() {
     await tap(
       tester,
       find.descendant(
-        of: find.byType(NavigationBar),
+        of: find.byType(ForgeNavigationBar),
         matching: find.text('Programs'),
       ),
     );
@@ -316,7 +316,7 @@ void main() {
     await tap(tester, find.text('New program'));
 
     expect(find.byType(ProgramBuilderPage), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(ForgeNavigationBar), findsOneWidget);
     expect(path(), Routes.programNew);
   });
 
@@ -404,7 +404,7 @@ void main() {
   Future<void> reselectPrograms(WidgetTester tester) => tap(
     tester,
     find.descendant(
-      of: find.byType(NavigationBar),
+      of: find.byType(ForgeNavigationBar),
       matching: find.text('Programs'),
     ),
   );
@@ -448,7 +448,7 @@ void main() {
     await tap(
       tester,
       find.descendant(
-        of: find.byType(NavigationBar),
+        of: find.byType(ForgeNavigationBar),
         matching: find.text('Today'),
       ),
     );
@@ -459,7 +459,9 @@ void main() {
     expect(find.text('Discard changes?'), findsOneWidget);
     expect(find.byType(ProgramBuilderPage), findsOneWidget);
     expect(
-      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      tester
+          .widget<ForgeNavigationBar>(find.byType(ForgeNavigationBar))
+          .selectedIndex,
       1,
     );
     await tap(tester, find.text('Keep editing'));

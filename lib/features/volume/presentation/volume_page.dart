@@ -240,6 +240,7 @@ class _VolumeModelState extends State<VolumeModel> {
           child: switch (model) {
             BodyModelLoading() => const MuscleModel.loading(sides: false),
             BodyModelFailed() => MuscleModel.failed(
+              message: AppLocalizations.of(context).muscleModelFailedDetail,
               onRetry: context.read<BodyModelCubit>().load,
             ),
             BodyModelReady(:final model) => MuscleModel(

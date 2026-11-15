@@ -29,7 +29,8 @@ Set<String> muscleMeshes(Iterable<Muscle> muscles) => {
 /// Weekly volume), in a framed panel with Front / Back in its corner. A
 /// tap on a muscle, or a slide across muscles and its release, opens it
 /// through [onOpen]; while sliding, the muscle under the finger shows in
-/// a bar at the bottom; without [onOpen] it only turns. Muscles in [colors] are painted so, those in
+/// a bar at the bottom, where a [hint] waits while nothing slides; without
+/// [onOpen] it only turns. Muscles in [colors] are painted so, those in
 /// [outlined] ringed in danger. With [sides] Front / Back sit in the
 /// corner.
 class MuscleModel extends StatefulWidget {
@@ -38,33 +39,43 @@ class MuscleModel extends StatefulWidget {
     required Model3D this.model,
     this.onOpen,
     required String this.semanticLabel,
+    this.hint,
     this.colors = const {},
     this.outlined = const {},
     this.sides = true,
-  }) : onRetry = null;
+  }) : onRetry = null,
+       message = null;
 
   /// The model loads: a shimmering figure.
   const MuscleModel.loading({super.key, this.sides = true})
     : model = null,
       onOpen = null,
       semanticLabel = null,
+      hint = null,
       colors = const {},
       outlined = const {},
-      onRetry = null;
+      onRetry = null,
+      message = null;
 
-  /// The model could not load: the error and Retry; the page around it
-  /// keeps working.
-  const MuscleModel.failed({super.key, required VoidCallback this.onRetry})
-    : sides = false,
-      model = null,
-      onOpen = null,
-      semanticLabel = null,
-      colors = const {},
-      outlined = const {};
+  /// The model could not load: the error, [message] on what still works,
+  /// and Retry.
+  const MuscleModel.failed({
+    super.key,
+    required String this.message,
+    required VoidCallback this.onRetry,
+  }) : sides = false,
+       model = null,
+       onOpen = null,
+       semanticLabel = null,
+       hint = null,
+       colors = const {},
+       outlined = const {};
 
   final Model3D? model;
   final ValueChanged<Muscle>? onOpen;
   final String? semanticLabel;
+  final String? hint;
+  final String? message;
   final Map<Muscle, Color> colors;
   final Set<Muscle> outlined;
   final VoidCallback? onRetry;
@@ -154,20 +165,24 @@ class _MuscleModelState extends State<MuscleModel> {
             ),
           ),
           if (widget.sides) Positioned(top: 10, right: 10, child: segments),
-          if (scrubbed != null)
+          if (scrubbed != null || widget.hint != null)
             Positioned(
               left: 12,
               right: 12,
               bottom: 12,
-              child: IgnorePointer(child: _ScrubBar(scrubbed)),
+              child: IgnorePointer(
+                child: scrubbed != null
+                    ? _ScrubBar(scrubbed)
+                    : _HintBar(widget.hint!),
+              ),
             ),
         ],
       );
     } else if (onRetry != null) {
       content = Center(
         child: ErrorView(
-          title: l10n.muscleModelFailedTitle,
-          message: l10n.muscleModelFailedDetail,
+          title: l10n.bodyModelFailedTitle,
+          message: widget.message!,
           retryLabel: l10n.retry,
           onRetry: onRetry,
         ),
@@ -246,6 +261,35 @@ class _ScrubBar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// What the model does, waiting at its bottom while nothing slides.
+class _HintBar extends StatelessWidget {
+  const _HintBar(this.hint);
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    final p = style.colors;
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      alignment: AlignmentDirectional.centerStart,
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(style.radii.md),
+        border: Border.all(color: p.line),
+      ),
+      child: Text(
+        hint,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodySmall!
+            .copyWith(color: p.inkMuted),
       ),
     );
   }

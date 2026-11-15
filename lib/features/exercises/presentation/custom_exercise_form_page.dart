@@ -17,10 +17,16 @@ import 'widgets/choice_section.dart';
 
 /// Creates a custom exercise.
 class CustomExerciseNewPage extends StatelessWidget {
-  const CustomExerciseNewPage({super.key});
+  const CustomExerciseNewPage({super.key, this.name});
+
+  /// The name it starts with, e.g. a search that found nothing.
+  final String? name;
 
   @override
-  Widget build(BuildContext context) => const _CustomExerciseForm(null);
+  Widget build(BuildContext context) => _CustomExerciseForm(switch (name) {
+    final name? => CustomExercise(name: name),
+    null => null,
+  });
 }
 
 /// A stored custom exercise, edited in place. It is taken from the

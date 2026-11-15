@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router.dart';
@@ -37,17 +38,19 @@ class _BodyViewState extends State<BodyView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
       child: BlocBuilder<BodyModelCubit, BodyModelState>(
         builder: (context, state) => switch (state) {
           BodyModelLoading() => const MuscleModel.loading(),
           BodyModelFailed() => MuscleModel.failed(
+            message: l10n.muscleModelSearchStillWorks,
             onRetry: context.read<BodyModelCubit>().load,
           ),
           BodyModelReady(:final model) => MuscleModel(
             model: model,
             onOpen: (muscle) => openMuscleList(context, muscle),
             semanticLabel: l10n.libraryModelLabel,
+            hint: l10n.muscleModelHint,
           ),
         },
       ),

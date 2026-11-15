@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/router.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/cardio/domain/cardio_repository.dart';
@@ -169,7 +170,7 @@ void main() {
   }
 
   Finder tab(String label) => find.descendant(
-    of: find.byType(NavigationBar),
+    of: find.byType(ForgeNavigationBar),
     matching: find.text(label),
   );
 
@@ -205,7 +206,7 @@ void main() {
     await openCardio(tester);
 
     expect(find.byType(CardioListPage), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(ForgeNavigationBar), findsOneWidget);
     expect(router.routerDelegate.currentConfiguration.uri.path, Routes.cardio);
   });
 
@@ -219,7 +220,7 @@ void main() {
     await tap(tester, find.text('Log cardio'));
 
     expect(find.byType(CardioNewPage), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(ForgeNavigationBar), findsOneWidget);
     expect(
       router.routerDelegate.currentConfiguration.uri.path,
       Routes.cardioNew,

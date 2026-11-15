@@ -25,52 +25,26 @@ class AppShell extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const RunningWorkoutBar(),
-          NavigationBar(
+          ForgeNavigationBar(
             selectedIndex: shell.currentIndex,
-            onDestinationSelected: (index) => index == shell.currentIndex
+            onSelected: (index) => index == shell.currentIndex
                 ? _popToFirst(index)
                 : shell.goBranch(index),
             destinations: [
-              NavigationDestination(
-                icon: const ForgeIcon(ForgeIcons.today),
-                selectedIcon: const ForgeIcon(
-                  ForgeIcons.today,
-                  weight: ForgeIcon.selectedWeight,
-                ),
-                label: l10n.tabToday,
-              ),
-              NavigationDestination(
-                icon: const ForgeIcon(ForgeIcons.description),
-                selectedIcon: const ForgeIcon(
-                  ForgeIcons.description,
-                  weight: ForgeIcon.selectedWeight,
-                ),
+              ForgeDestination(icon: ForgeIcons.today, label: l10n.tabToday),
+              ForgeDestination(
+                icon: ForgeIcons.description,
                 label: l10n.tabPrograms,
               ),
-              NavigationDestination(
-                icon: const ForgeIcon(ForgeIcons.fitnessCenter),
-                selectedIcon: const ForgeIcon(
-                  ForgeIcons.fitnessCenter,
-                  weight: ForgeIcon.selectedWeight,
-                ),
+              ForgeDestination(
+                icon: ForgeIcons.fitnessCenter,
                 label: l10n.tabExercises,
               ),
-              NavigationDestination(
-                icon: const ForgeIcon(ForgeIcons.barChart),
-                selectedIcon: const ForgeIcon(
-                  ForgeIcons.barChart,
-                  weight: ForgeIcon.selectedWeight,
-                ),
+              ForgeDestination(
+                icon: ForgeIcons.barChart,
                 label: l10n.tabProgress,
               ),
-              NavigationDestination(
-                icon: const ForgeIcon(ForgeIcons.person),
-                selectedIcon: const ForgeIcon(
-                  ForgeIcons.person,
-                  weight: ForgeIcon.selectedWeight,
-                ),
-                label: l10n.tabProfile,
-              ),
+              ForgeDestination(icon: ForgeIcons.person, label: l10n.tabProfile),
             ],
           ),
         ],

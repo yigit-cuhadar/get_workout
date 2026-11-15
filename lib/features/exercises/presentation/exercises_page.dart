@@ -13,9 +13,9 @@ import 'library_cubit.dart';
 import 'widgets/body_view.dart';
 import 'widgets/library_list_view.dart';
 
-/// The Exercises tab's first page: the body model under a search box. The
-/// box opens the exercise list page, a muscle opens it filtered to that
-/// muscle.
+/// The Exercises tab's first page: the body model under a tap-only search
+/// pill. The pill opens the exercise list page, a muscle opens it filtered
+/// to that muscle.
 class ExercisesPage extends StatelessWidget {
   const ExercisesPage({super.key});
 
@@ -27,7 +27,7 @@ class ExercisesPage extends StatelessWidget {
       BlocProvider.value(value: sl<CustomWriteRejectionsCubit>()),
     ],
     child: Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).tabExercises)),
+      appBar: ForgeAppBar(title: AppLocalizations.of(context).tabExercises),
       body: const _ExercisesView(),
     ),
   );
@@ -52,7 +52,6 @@ class _ExercisesViewState extends State<_ExercisesView> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final query = context.select((LibraryCubit library) => library.state.query);
     // Equipment and custom exercises change on this tab's pages, favourites
     // also on a ready-made program's exercise pages in Programs; their
     // failures are reported once, here, while this tab has been opened.
@@ -80,10 +79,10 @@ class _ExercisesViewState extends State<_ExercisesView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.all(Gap.md),
+            padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, 10),
             child: LibrarySearchHero(
-              child: LibrarySearchEntry(
-                query: query,
+              child: ForgeSearchField.tapOnly(
+                hint: l10n.librarySearch,
                 onTap: () => context.push(Routes.exerciseList),
               ),
             ),
@@ -95,6 +94,5 @@ class _ExercisesViewState extends State<_ExercisesView> {
   }
 
   static void _report(BuildContext context, String message) =>
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      showForgeSnackbar(context, message: message, error: true);
 }
