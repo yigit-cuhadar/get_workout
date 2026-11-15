@@ -38,7 +38,6 @@ import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_page.dart';
 import 'package:get_workout/features/exercises/presentation/widgets/body_view.dart';
-import 'package:get_workout/features/exercises/presentation/widgets/library_list_view.dart';
 import 'package:get_workout/features/account/presentation/account_page.dart';
 import 'package:get_workout/features/account/domain/account_usecases.dart';
 import 'package:get_workout/features/account/domain/consent_repository.dart';
@@ -612,7 +611,7 @@ void main() {
   Future<void> tapTab(WidgetTester tester, String label) async {
     await tester.tap(
       find.descendant(
-        of: find.byType(NavigationBar),
+        of: find.byType(ForgeNavigationBar),
         matching: find.text(label),
       ),
     );
@@ -626,7 +625,7 @@ void main() {
   /// The exercise list, through the Exercises tab's search box.
   Future<void> openList(WidgetTester tester) async {
     await openExercises(tester);
-    await tester.tap(find.byType(LibrarySearchEntry));
+    await tester.tap(find.byType(ForgeSearchField));
     await tester.pumpAndSettle();
   }
 
@@ -642,8 +641,9 @@ void main() {
 
   String path() => router.routerDelegate.currentConfiguration.uri.path;
 
-  int selectedTab(WidgetTester tester) =>
-      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex;
+  int selectedTab(WidgetTester tester) => tester
+      .widget<ForgeNavigationBar>(find.byType(ForgeNavigationBar))
+      .selectedIndex;
 
   Future<void> openAccount(WidgetTester tester) async {
     await tapTab(tester, 'Profile');
@@ -689,7 +689,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(attempts, 2);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(ForgeNavigationBar), findsOneWidget);
   });
 
   testWidgets('a session update keeps the auth form', (tester) async {
@@ -708,7 +708,12 @@ void main() {
     await startAsGuest(tester);
 
     expect(find.byType(TodayPage), findsOneWidget);
-    expect(find.byType(NavigationDestination), findsNWidgets(5));
+    expect(
+      tester
+          .widget<ForgeNavigationBar>(find.byType(ForgeNavigationBar))
+          .destinations,
+      hasLength(5),
+    );
     for (final label in [
       'Today',
       'Programs',
@@ -718,7 +723,7 @@ void main() {
     ]) {
       expect(
         find.descendant(
-          of: find.byType(NavigationBar),
+          of: find.byType(ForgeNavigationBar),
           matching: find.text(label),
         ),
         findsOneWidget,
@@ -735,7 +740,12 @@ void main() {
     await startAsGuest(tester);
 
     expect(tester.takeException(), isNull);
-    expect(find.byType(NavigationDestination), findsNWidgets(5));
+    expect(
+      tester
+          .widget<ForgeNavigationBar>(find.byType(ForgeNavigationBar))
+          .destinations,
+      hasLength(5),
+    );
   });
 
   testWidgets('tabs switch and keep their own stack', (tester) async {
@@ -793,7 +803,7 @@ void main() {
 
     expect(find.byType(ExerciseDetailPage), findsOneWidget);
     expect(find.text('Back Squat'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(ForgeNavigationBar), findsOneWidget);
     expect(selectedTab(tester), 2);
   });
 
@@ -816,7 +826,7 @@ void main() {
       await openExercises(tester);
       expect(find.byTooltip('New custom exercise'), findsNothing);
 
-      await tester.tap(find.byType(LibrarySearchEntry));
+      await tester.tap(find.byType(ForgeSearchField));
       await tester.pumpAndSettle();
       expect(find.byType(LibraryPage), findsOneWidget);
       expect(front(), Routes.exerciseList);
@@ -837,14 +847,7 @@ void main() {
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
 
-      expect(
-        find.descendant(
-          of: find.byType(LibrarySearchEntry),
-          matching: find.text('squat'),
-        ),
-        findsOneWidget,
-      );
-      await tester.tap(find.byType(LibrarySearchEntry));
+      await tester.tap(find.byType(ForgeSearchField));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(TextField, 'squat'), findsOneWidget);
     });
@@ -893,12 +896,12 @@ void main() {
       expect(library().filter.muscles, isEmpty);
       expect(
         find.descendant(
-          of: find.byType(LibrarySearchEntry),
+          of: find.byType(ForgeSearchField),
           matching: find.text('bench'),
         ),
         findsNothing,
       );
-      await tester.tap(find.byType(LibrarySearchEntry));
+      await tester.tap(find.byType(ForgeSearchField));
       await tester.pumpAndSettle();
       expect(library().filter.muscles, isEmpty);
       expect(find.text('Main'), findsNothing);
@@ -922,7 +925,7 @@ void main() {
 
     testWidgets('one muscle picked by hand gives no sections', (tester) async {
       await startWithSplitSquat(tester);
-      await tester.tap(find.byType(LibrarySearchEntry));
+      await tester.tap(find.byType(ForgeSearchField));
       await tester.pumpAndSettle();
 
       sl<LibraryCubit>().toggleMuscle(Muscle.quads);
@@ -1024,7 +1027,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(CustomExerciseNewPage), findsOneWidget);
       expect(front(), Routes.customExerciseNew);
-      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(find.byType(ForgeNavigationBar), findsOneWidget);
 
       await tester.enterText(find.widgetWithText(TextField, 'Name'), 'Sled');
       await tester.pump();
@@ -1036,6 +1039,54 @@ void main() {
 
       expect(find.byType(CustomExerciseNewPage), findsNothing);
       expect(find.byType(LibraryPage), findsOneWidget);
+    });
+  });
+
+  group('exercise list without a match', () {
+    testWidgets('a search matching nothing offers to create it, '
+        'named after the search', (tester) async {
+      await startAsGuest(tester);
+      await openList(tester);
+      await tester.enterText(find.byType(TextField), 'benchh');
+      await tester.pumpAndSettle();
+
+      expect(find.text('No exercises match "benchh"'), findsOneWidget);
+      expect(find.text('No exercises'), findsNothing);
+      await tester.tap(find.text('Create custom exercise'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CustomExerciseNewPage), findsOneWidget);
+      expect(front(), Routes.customExerciseNew);
+      expect(find.widgetWithText(TextField, 'benchh'), findsOneWidget);
+
+      // The name came from the search, so leaving asks nothing.
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.byType(LibraryPage), findsOneWidget);
+    });
+
+    testWidgets('with a filter on it offers Clear all, and with a search '
+        'also to create it', (tester) async {
+      await startAsGuest(tester);
+      await openList(tester);
+      sl<LibraryCubit>().setOnlyFavorites(true);
+      await tester.pumpAndSettle();
+
+      expect(find.text('No exercises match'), findsOneWidget);
+      expect(
+        find.text('Clear a filter or turn off Only my equipment.'),
+        findsOneWidget,
+      );
+      expect(find.text('Create custom exercise'), findsNothing);
+
+      await tester.enterText(find.byType(TextField), 'benchh');
+      await tester.pumpAndSettle();
+      expect(find.text('Create custom exercise'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(ForgeButton, 'Clear all'));
+      await tester.pumpAndSettle();
+      expect(sl<LibraryCubit>().state.filter.isEmpty, isTrue);
+      expect(find.text('No exercises match "benchh"'), findsOneWidget);
     });
   });
 
@@ -1347,7 +1398,7 @@ void main() {
 
     expect(find.byType(ExerciseDetailPage), findsOneWidget);
     expect(find.text('This exercise is no longer available.'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(ForgeNavigationBar), findsOneWidget);
   });
 
   testWidgets('editing an exercise that is not custom shows not found', (
@@ -1373,7 +1424,7 @@ void main() {
     await tester.tap(find.text('Calories'));
     await tester.pumpAndSettle();
     expect(find.byType(CaloriesPage), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(ForgeNavigationBar), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
@@ -1395,7 +1446,7 @@ void main() {
       router.go(route);
       await tester.pumpAndSettle();
       expect(find.byType(page), findsOneWidget, reason: route);
-      expect(find.byType(NavigationBar), findsOneWidget, reason: route);
+      expect(find.byType(ForgeNavigationBar), findsOneWidget, reason: route);
       expect(route, startsWith('${Routes.calculators}/'));
     }
   });
@@ -1447,7 +1498,7 @@ void main() {
       await startAsGuest(tester);
 
       expect(find.byType(OnboardingPage), findsOneWidget);
-      expect(find.byType(NavigationBar), findsNothing);
+      expect(find.byType(ForgeNavigationBar), findsNothing);
     });
 
     testWidgets('a returning user waits for the profile, then skips it', (
@@ -1615,7 +1666,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(OnboardingPage), findsOneWidget);
-      expect(find.byType(NavigationBar), findsNothing);
+      expect(find.byType(ForgeNavigationBar), findsNothing);
     });
 
     testWidgets('a profile stream that dies on onboarding does not trap', (
@@ -1669,7 +1720,7 @@ void main() {
       await tester.pumpAndSettle();
       final auth = tester.widget<AuthPage>(find.byType(AuthPage));
       expect(auth.initialSignUp, isFalse);
-      expect(find.byType(NavigationBar), findsNothing);
+      expect(find.byType(ForgeNavigationBar), findsNothing);
 
       // The account (another uid) has completed onboarding.
       storedProfile = onboarded;
@@ -1766,7 +1817,7 @@ void main() {
     ).called(1);
     expect(find.byType(ProfileDetailsPage), findsOneWidget);
     expect(find.text('Get stronger'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(ForgeNavigationBar), findsOneWidget);
   });
 
   group('consent prompt', () {
@@ -1830,7 +1881,7 @@ void main() {
       users.add(null);
       await tester.pumpAndSettle();
       // Still on the tabs, the new guest's profile loading.
-      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(find.byType(ForgeNavigationBar), findsOneWidget);
       expect(dialog, findsNothing);
 
       profileStream.add(choicesAnswered);

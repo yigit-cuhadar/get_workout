@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
 import 'program_list_cubit.dart';
@@ -19,10 +20,9 @@ class ProgramWritesNotice extends StatelessWidget {
         listenWhen: (previous, current) =>
             current.writeRejected && !previous.writeRejected,
         listener: (context, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context).programWritesRejected),
-            ),
+          showForgeSnackbar(
+            context,
+            message: AppLocalizations.of(context).programWritesRejected,
           );
           context.read<ProgramListCubit>().rejectionShown();
         },

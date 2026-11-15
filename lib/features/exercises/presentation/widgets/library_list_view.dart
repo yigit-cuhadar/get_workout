@@ -22,6 +22,7 @@ class LibraryListView extends StatefulWidget {
     this.tileBuilder,
     this.focusSearch = false,
     this.sectionsFor,
+    this.onCreate,
   });
 
   final Widget Function(BuildContext context, Exercise exercise)? tileBuilder;
@@ -33,6 +34,10 @@ class LibraryListView extends StatefulWidget {
   /// exercises working it as a main muscle and those working it as a
   /// secondary one.
   final Muscle? sectionsFor;
+
+  /// With it, a search matching nothing offers to create the searched
+  /// exercise; it gets the search text.
+  final ValueChanged<String>? onCreate;
 
   @override
   State<LibraryListView> createState() => _LibraryListViewState();
@@ -88,6 +93,14 @@ class _LibraryListViewState extends State<LibraryListView> {
       listener: (_, state) => _search.text = state.query,
       builder: (context, state) {
         final results = state.results;
+        final onCreate = widget.onCreate;
+        final create = onCreate == null || state.query.isEmpty
+            ? null
+            : () => onCreate(state.query);
+        final filtered = results.isEmpty && !state.filter.isEmpty;
+        final searched =
+            results.isEmpty && state.filter.isEmpty && create != null;
+        final noMatch = filtered || searched;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -152,18 +165,40 @@ class _LibraryListViewState extends State<LibraryListView> {
               ),
             ),
             if (!state.filter.isEmpty) _ActiveFilters(state.filter),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Gap.md,
-                vertical: Gap.sm,
+            if (noMatch)
+              const SizedBox(height: Gap.sm)
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Gap.md,
+                  vertical: Gap.sm,
+                ),
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(l10n.libraryResultCount(results.length)),
+                ),
               ),
-              child: Semantics(
-                liveRegion: true,
-                child: Text(l10n.libraryResultCount(results.length)),
-              ),
-            ),
             Expanded(
               child: switch (state.muscleExercises) {
+                _ when filtered => _NoMatch(
+                  icon: ForgeIcons.tune,
+                  title: l10n.libraryNoResultsTitle,
+                  message: l10n.libraryFilteredNoResults,
+                  actions: [
+                    ForgeButton(
+                      label: l10n.libraryClearFilters,
+                      variant: ForgeButtonVariant.secondary,
+                      onPressed: library.clearFilters,
+                    ),
+                    if (create != null) _CreateButton(create),
+                  ],
+                ),
+                _ when searched => _NoMatch(
+                  icon: ForgeIcons.search,
+                  title: l10n.librarySearchNoResultsTitle(state.query),
+                  message: l10n.librarySearchNoResults,
+                  actions: [_CreateButton(create)],
+                ),
                 _ when results.isEmpty => EmptyView(
                   title: l10n.libraryNoResultsTitle,
                   message: l10n.libraryNoResults,
@@ -190,6 +225,56 @@ class _LibraryListViewState extends State<LibraryListView> {
   Widget _tile(BuildContext context, Exercise exercise) =>
       widget.tileBuilder?.call(context, exercise) ??
       ExerciseTile(exercise, showFavorite: true);
+}
+
+/// Nothing matching the search or the filters, in a card.
+class _NoMatch extends StatelessWidget {
+  const _NoMatch({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.actions,
+  });
+
+  final ForgeIconData icon;
+  final String title;
+  final String message;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+    padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
+    children: [
+      Semantics(
+        liveRegion: true,
+        child: ListRowCard(
+          children: [
+            EmptyView(
+              icon: icon,
+              title: title,
+              message: message,
+              actions: actions,
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+/// Creates the searched exercise as the user's own.
+class _CreateButton extends StatelessWidget {
+  const _CreateButton(this.onPressed);
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => ForgeButton(
+    label: AppLocalizations.of(context).libraryCreateCustom,
+    variant: ForgeButtonVariant.secondary,
+    onPressed: onPressed,
+  );
 }
 
 /// The results of one muscle under "Main" and "Also works".
@@ -221,9 +306,9 @@ class _Sections extends StatelessWidget {
   }
 }
 
-/// The search field flying between the Exercises tab's
-/// [LibrarySearchEntry] and the list page. In flight it is drawn as the
-/// entry; the page's field takes focus only once its route is in.
+/// The search field flying between the Exercises tab's tap-only pill and
+/// the list page. In flight it is drawn as the pill; the page's field takes
+/// focus only once its route is in.
 class LibrarySearchHero extends StatelessWidget {
   const LibrarySearchHero({super.key, required this.child});
 
@@ -232,45 +317,12 @@ class LibrarySearchHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Hero(
     tag: LibrarySearchHero,
-    flightShuttleBuilder: (_, _, _, from, _) =>
-        LibrarySearchEntry(query: from.read<LibraryCubit>().state.query),
+    flightShuttleBuilder: (context, _, _, _, _) => ForgeSearchField.tapOnly(
+      hint: AppLocalizations.of(context).librarySearch,
+      onTap: () {},
+    ),
     child: child,
   );
-}
-
-/// Looks like the list's search field showing [query]; [onTap] opens it.
-class LibrarySearchEntry extends StatelessWidget {
-  const LibrarySearchEntry({super.key, required this.query, this.onTap});
-
-  final String query;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Material(
-      type: MaterialType.transparency,
-      child: Semantics(
-        button: true,
-        child: InkWell(
-          onTap: onTap,
-          child: InputDecorator(
-            isEmpty: query.isEmpty,
-            decoration: InputDecoration(
-              labelText: l10n.librarySearch,
-              prefixIcon: const Icon(Icons.search),
-            ),
-            child: Text(
-              query,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// One removable chip per active filter value, then "Clear all".
