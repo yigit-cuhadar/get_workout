@@ -21,6 +21,14 @@ class RequestNotificationAccess implements UseCase<bool, NoParams> {
   Future<Result<bool>> call(NoParams params) => _repository.request();
 }
 
+class GetNotificationsAsked implements UseCase<bool, NoParams> {
+  const GetNotificationsAsked(this._repository);
+  final NotificationRepository _repository;
+
+  @override
+  Future<Result<bool>> call(NoParams params) => _repository.askedHere();
+}
+
 class OpenNotificationSettings implements UseCase<void, NoParams> {
   const OpenNotificationSettings(this._repository);
   final NotificationRepository _repository;

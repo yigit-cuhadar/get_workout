@@ -113,10 +113,11 @@ extension SubscriptionText on AppLocalizations {
     _ => errorGeneric,
   };
 
-  /// The state line of the Profile tab's Premium card.
-  String subscriptionSummary(SubscriptionSummary summary) => switch (summary) {
+  /// The title of the Profile tab's Premium card; null for a free user,
+  /// whose card says what Premium is instead.
+  String? subscriptionState(SubscriptionSummary summary) => switch (summary) {
     SubscriptionChecking() => premiumRowChecking,
-    SubscriptionFree() => premiumRowFree,
+    SubscriptionFree() => null,
     SubscriptionBillingIssue() => premiumRowBillingIssue,
     SubscriptionLifetime() => premiumRowLifetime,
     SubscriptionTrial(:final date) => premiumRowTrial(_date(date)),
@@ -124,6 +125,12 @@ extension SubscriptionText on AppLocalizations {
     SubscriptionEnds(:final date) => premiumRowEnds(_date(date)),
   };
 
-  String _date(DateTime value) =>
-      DateFormat.yMMMd(localeName).format(value.toLocal());
+  /// `Nov 20`, with the year only when it is not this one.
+  String _date(DateTime value) {
+    final local = value.toLocal();
+    final format = local.year == DateTime.now().year
+        ? DateFormat.MMMd(localeName)
+        : DateFormat.yMMMd(localeName);
+    return format.format(local);
+  }
 }

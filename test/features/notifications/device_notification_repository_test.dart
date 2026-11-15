@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 import 'package:get_workout/features/notifications/data/device_notification_repository.dart';
 import 'package:get_workout/features/notifications/data/notification_payloads.dart';
+import 'package:get_workout/features/notifications/data/notifications_asked_marker.dart';
 import 'package:get_workout/features/notifications/domain/notification_repository.dart';
 import 'package:get_workout/features/notifications/domain/reminder_plan.dart';
 import 'package:mocktail/mocktail.dart';
@@ -12,6 +15,7 @@ class MockNotifications extends Mock implements Notifications {}
 void main() {
   late MockNotifications notifications;
   late DeviceNotificationRepository repository;
+  late Directory directory;
 
   ReminderNotice notice(int id, {int day = 13}) => (
     id: id,
@@ -31,7 +35,23 @@ void main() {
   setUp(() {
     notifications = MockNotifications();
     syncAnswers(const Ok(null));
-    repository = DeviceNotificationRepository(Future.value(notifications));
+    directory = Directory.systemTemp.createTempSync('notifications');
+    repository = DeviceNotificationRepository(
+      Future.value(notifications),
+      NotificationsAskedMarker(() async => directory),
+    );
+  });
+
+  tearDown(() => directory.deleteSync(recursive: true));
+
+  test('a request is remembered as asked on the device', () async {
+    when(notifications.request)
+        .thenAnswer((_) async => const Ok(NotificationPermission.denied));
+    expect((await repository.askedHere()).valueOrNull, isFalse);
+
+    expect((await repository.request()).valueOrNull, isFalse);
+
+    expect((await repository.askedHere()).valueOrNull, isTrue);
   });
 
   test('syncs the ids of its kind to the notices', () async {

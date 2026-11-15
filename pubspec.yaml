@@ -99,6 +99,8 @@ dependencies:
   image: ^4.12.0
   cloud_functions: ^7.0.1
   firebase_messaging: ^17.0.1
+  wakelock_plus: ^1.8.2
+  audioplayers: ^6.8.1
 
 dependency_overrides:
   # 0.11.1 patched for the iPhone 17 front camera; see the top of
@@ -139,6 +141,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/models/
+    - assets/sounds/
 
   # The Measure preset's families; Slate and Graphite use forge_ui's Geist.
   fonts:

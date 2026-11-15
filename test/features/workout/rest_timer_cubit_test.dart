@@ -57,6 +57,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(base);
     registerFallbackValue(DateTime(2000));
+    registerFallbackValue(RestAlert.off);
     registerFallbackValue(
       LockScreenWorkout(name: '', startedAt: DateTime(2000)),
     );
@@ -99,6 +100,7 @@ void main() {
         any(),
         title: any(named: 'title'),
         body: any(named: 'body'),
+        alert: any(named: 'alert'),
       ),
     ).thenAnswer((_) async => const Ok(null));
     when(notifications.allowed).thenAnswer((_) async => Ok(allowed));
@@ -180,15 +182,21 @@ void main() {
     totalS: of ?? seconds,
   );
 
-  void verifyScheduled(DateTime at, {String body = 'squat 2'}) =>
-      verify(() => notifications.schedule(at, title: 'Rest over', body: body))
-          .called(1);
+  void verifyScheduled(DateTime at, {String body = 'squat 2'}) => verify(
+    () => notifications.schedule(
+      at,
+      title: 'Rest over',
+      body: body,
+      alert: RestAlert.chimeVibrate,
+    ),
+  ).called(1);
 
   void verifyNothingScheduled() => verifyNever(
     () => notifications.schedule(
       any(),
       title: any(named: 'title'),
       body: any(named: 'body'),
+      alert: any(named: 'alert'),
     ),
   );
 
@@ -200,6 +208,7 @@ void main() {
         any(),
         title: any(named: 'title'),
         body: any(named: 'body'),
+        alert: any(named: 'alert'),
       ),
     ).thenAnswer((_) => done.future);
     return done;
@@ -427,6 +436,7 @@ void main() {
             later,
             title: any(named: 'title'),
             body: any(named: 'body'),
+            alert: any(named: 'alert'),
           ),
         ]);
       });
@@ -480,6 +490,7 @@ void main() {
           any(),
           title: any(named: 'title'),
           body: any(named: 'body'),
+          alert: any(named: 'alert'),
         ),
       ).thenAnswer((_) async => const Err(UnknownFailure('no')));
       run((async, cubit) {

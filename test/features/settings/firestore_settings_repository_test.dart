@@ -92,7 +92,8 @@ void main() {
         'lengthUnit': 'in',
         'themeMode': 'dark',
         'effortScale': 'rpe',
-        'restTimer': {'enabled': true, 'defaultS': 90},
+        'restTimer': {'enabled': true, 'defaultS': 90, 'alert': 'chimeVibrate'},
+        'keepScreenOn': true,
         'warmups': {
           'scheme': 'standard',
           'custom': <Object?>[],
@@ -215,6 +216,25 @@ void main() {
     });
   });
 
+  group('keep screen on', () {
+    test('is stored and read back', () async {
+      final settings = defaults.copyWith(keepScreenOn: false);
+
+      await repository.saveSettings('u1', settings);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored['keepScreenOn'], false);
+      expect(await repository.watchSettings('u1').first, settings);
+    });
+
+    test('anything but a bool reads as on', () async {
+      await user().set({
+        'settings': {'keepScreenOn': 'no'},
+      });
+      expect((await repository.watchSettings('u1').first).keepScreenOn, true);
+    });
+  });
+
   group('rest timer', () {
     test('is stored and read back', () async {
       final settings = defaults.copyWith(
@@ -222,6 +242,7 @@ void main() {
           enabled: false,
           defaultS: 120,
           notify: true,
+          alert: RestAlert.vibrate,
         ),
       );
 
@@ -232,6 +253,7 @@ void main() {
         'enabled': false,
         'defaultS': 120,
         'notify': true,
+        'alert': 'vibrate',
       });
       expect(await repository.watchSettings('u1').first, settings);
     });
@@ -239,7 +261,12 @@ void main() {
     test('missing or malformed values read as the defaults', () async {
       await user().set({
         'settings': {
-          'restTimer': {'enabled': 'yes', 'defaultS': 'long', 'notify': 1},
+          'restTimer': {
+            'enabled': 'yes',
+            'defaultS': 'long',
+            'notify': 1,
+            'alert': 'loud',
+          },
         },
       });
       expect(
@@ -551,7 +578,8 @@ void main() {
         'lengthUnit': 'in',
         'themeMode': 'system',
         'effortScale': 'feel',
-        'restTimer': {'enabled': true, 'defaultS': 90},
+        'restTimer': {'enabled': true, 'defaultS': 90, 'alert': 'chimeVibrate'},
+        'keepScreenOn': true,
         'warmups': {
           'scheme': 'standard',
           'custom': <Object?>[],

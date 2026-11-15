@@ -24,8 +24,10 @@ import '../features/notifications/presentation/notifications_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/first_weekday.dart';
 import '../features/settings/presentation/settings_cubit.dart';
+import '../features/workout/domain/rest_usecases.dart';
 import '../features/workout/domain/workout_usecases.dart';
 import '../features/workout/presentation/active_workout_cubit.dart';
+import '../features/workout/presentation/keep_screen_on.dart';
 import '../features/workout/presentation/rest_timer_cubit.dart';
 import '../features/subscription/presentation/purchaser_session.dart';
 import '../features/subscription/subscription_module.dart';
@@ -177,36 +179,51 @@ class _AppState extends State<App> {
         // follows it from the start.
         BlocProvider.value(value: sl<ProgramListCubit>()),
       ],
-      child: DeviceFirstWeekday(
-        child: FirstWeekdayListener(
-          created: sl<ProgramListCubit>().firstWeekday,
-          onChanged: (context, firstWeekday) =>
-              context.read<ProgramListCubit>().changeFirstWeekday(firstWeekday),
-          child: BlocListener<RestTimerCubit, RestTimerState>(
-            listenWhen: (previous, current) =>
-                current.phase == RestPhase.over &&
-                previous.phase != current.phase,
-            listener: (_, _) => unawaited(HapticFeedback.heavyImpact()),
-            child: BlocSelector<SettingsCubit, SettingsState, ThemePreference>(
-              selector: (state) => state.settings.themePreference,
-              builder: (context, theme) => ValueListenableBuilder(
-                valueListenable: _preset,
-                builder: (context, preset, _) => MaterialApp.router(
-                  onGenerateTitle: (context) =>
-                      AppLocalizations.of(context).appTitle,
-                  localizationsDelegates:
-                      AppLocalizations.localizationsDelegates,
-                  supportedLocales: AppLocalizations.supportedLocales,
-                  theme: preset.lightTheme(),
-                  darkTheme: preset.darkTheme(),
-                  themeMode: switch (theme) {
-                    ThemePreference.system => ThemeMode.system,
-                    ThemePreference.light => ThemeMode.light,
-                    ThemePreference.dark => ThemeMode.dark,
-                  },
-                  routerConfig: _router,
-                ),
-              ),
+      child: KeepScreenOn(
+        child: DeviceFirstWeekday(
+          child: FirstWeekdayListener(
+            created: sl<ProgramListCubit>().firstWeekday,
+            onChanged: (context, firstWeekday) => context
+                .read<ProgramListCubit>()
+                .changeFirstWeekday(firstWeekday),
+            child: BlocListener<RestTimerCubit, RestTimerState>(
+              listenWhen: (previous, current) =>
+                  current.phase == RestPhase.over &&
+                  previous.phase != current.phase,
+              listener: (context, _) {
+                final alert = context
+                    .read<SettingsCubit>()
+                    .state
+                    .settings
+                    .restTimer
+                    .alert;
+                if (alert.chimes) {
+                  unawaited(sl<PlayRestChime>()(const NoParams()));
+                }
+                if (alert.vibrates) unawaited(HapticFeedback.heavyImpact());
+              },
+              child:
+                  BlocSelector<SettingsCubit, SettingsState, ThemePreference>(
+                    selector: (state) => state.settings.themePreference,
+                    builder: (context, theme) => ValueListenableBuilder(
+                      valueListenable: _preset,
+                      builder: (context, preset, _) => MaterialApp.router(
+                        onGenerateTitle: (context) =>
+                            AppLocalizations.of(context).appTitle,
+                        localizationsDelegates:
+                            AppLocalizations.localizationsDelegates,
+                        supportedLocales: AppLocalizations.supportedLocales,
+                        theme: preset.lightTheme(),
+                        darkTheme: preset.darkTheme(),
+                        themeMode: switch (theme) {
+                          ThemePreference.system => ThemeMode.system,
+                          ThemePreference.light => ThemeMode.light,
+                          ThemePreference.dark => ThemeMode.dark,
+                        },
+                        routerConfig: _router,
+                      ),
+                    ),
+                  ),
             ),
           ),
         ),

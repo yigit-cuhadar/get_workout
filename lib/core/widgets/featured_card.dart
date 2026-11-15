@@ -19,6 +19,10 @@ enum FeaturedCardForm {
   prompt,
 }
 
+/// The colour of a prompt's title: a state that is not known yet is muted,
+/// one that needs the user's attention is danger.
+enum FeaturedTitleTone { ink, muted, danger }
+
 /// A button of a [FeaturedCard]. A [locked] one shows a lock and opens the
 /// paywall from [onPressed].
 class FeaturedAction {
@@ -92,12 +96,17 @@ class FeaturedCard extends StatelessWidget {
     this.chart,
     this.menu,
     this.onTap,
+    this.titleTone = FeaturedTitleTone.ink,
   }) : assert(
          form == FeaturedCardForm.band ||
              (progress == null && menu == null && chart == null),
          'Only a band has progress, a chart and a menu.',
        ),
        assert(menu == null || onTap == null, 'A menu or a chevron, not both.'),
+       assert(
+         form == FeaturedCardForm.prompt || titleTone == FeaturedTitleTone.ink,
+         'Only a prompt tones its title.',
+       ),
        error = null,
        loading = false;
 
@@ -120,6 +129,7 @@ class FeaturedCard extends StatelessWidget {
        rows = const [],
        chart = null,
        menu = null,
+       titleTone = FeaturedTitleTone.ink,
        loading = false;
 
   /// The card while what it shows loads: the [eyebrow] over shimmering
@@ -139,6 +149,7 @@ class FeaturedCard extends StatelessWidget {
       menu = null,
       onTap = null,
       error = null,
+      titleTone = FeaturedTitleTone.ink,
       loading = true;
 
   final FeaturedCardForm form;
@@ -171,6 +182,10 @@ class FeaturedCard extends StatelessWidget {
   /// place, when the band itself opens nothing.
   final Widget? menu;
   final VoidCallback? onTap;
+
+  /// A prompt's title colour; a prompt with no [action] stacks only its
+  /// [moreActions], in the secondary form.
+  final FeaturedTitleTone titleTone;
   final bool loading;
 
   /// Share of on-featured that its quieter text keeps.
@@ -495,6 +510,11 @@ class FeaturedCard extends StatelessWidget {
                   fontSize: _promptTitleSize,
                   height: _promptTitleHeight / _promptTitleSize,
                   letterSpacing: -0.02 * _promptTitleSize,
+                  color: switch (titleTone) {
+                    FeaturedTitleTone.ink => p.ink,
+                    FeaturedTitleTone.muted => p.inkMuted,
+                    FeaturedTitleTone.danger => p.danger,
+                  },
                 ),
               ),
             ),

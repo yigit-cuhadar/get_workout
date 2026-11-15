@@ -164,7 +164,7 @@ birthYear, heightCm, weightKg, targetWeightKg), `settings` (units,
 effortScale, weekStart (`monday` \| `sunday` \| `saturday`; absent, or a
 value this version does not know, is automatic), restTimer, warmups
 (autoWarmups for older versions), seenTips[],
-bar and plates (`barWeightKg`, `ezBarWeightKg`, `trapBarWeightKg`,
+keepScreenOn, bar and plates (`barWeightKg`, `ezBarWeightKg`, `trapBarWeightKg`,
 `plates[]`; each only while customised), stepGoal,
 reminder times,
 trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
@@ -622,6 +622,25 @@ Decisions (the canvases they were drawn on are deleted):
   and the Premium tag without a chevron; a locked copy's ⋯ has no Change
   days; the weekly sets card is hidden while the premium status is
   unknown.
+- Profile tab (owner's picks, 2026-11-15): the account header names a
+  signed-in user (name over email; without a name the email is the name,
+  no second line; no workout count), a guest "Guest" / "Create an account
+  to keep your workouts"; Premium is a FeaturedCard prompt (free: the pitch
+  and Get Premium; otherwise the state as the title, muted while checking,
+  danger on a payment problem, the pitch under it and one secondary Manage
+  subscription; dates "Nov 20", the year only when not this one); the
+  groups are More, Units, Workout, Reminders, Connected apps, Appearance,
+  Privacy; choices open choice sheets; with the rest timer off its rows
+  hide; new: Rest sound and vibration, Keep screen on (on by default),
+  Bar and plates (its own page, which the Plates calculator links to),
+  Connected apps (the health store, "Steps in", On / Off); the reminder
+  time is Forge's wheel, saved as it turns; the permission dialogs carry
+  titles ("Allow notifications?", "Notifications are off") and the rest
+  notification asks as the reminders do; "Notifications are off" leads
+  Reminders whenever the device refuses, its button "Allow notifications"
+  (asks) on a device never asked, else "Open settings"; the rest sound is
+  a bundled chime played in the app with audioplayers, the background
+  rest notification uses it or is silent.
 - Exercises tab and shell (owner's picks, 2026-11-15): the tab's search
   pill is Forge SearchField's tap-only form and opens the Exercise list
   page as before (search, filters, sort and + live there; the board's
@@ -1085,16 +1104,38 @@ the feature you are about to touch, and keep it true when you change it.
   changes (an edit left as it opened, a page that saved), other tabs'
   stacks, pushes and tab switches are left alone. Back and the guard share
   one prompt per page, so nothing asks twice.
-- **Profile tab** (UX pass, 2026-11-13, owner's pick): one page, top to
-  bottom: the account row, the Premium card, Your profile, Calculators,
-  then the settings groups (Units, Workout, Reminders, Appearance), Privacy
-  and, in debug builds on the fake, the Fake store rows. The Premium card
-  (`PremiumCard`, primary container) names Premium, the user's state
-  (checking, free, trial, renews, ends, lifetime, payment problem) and in
-  one line what Premium brings; a free user gets "Get Premium" (the
-  paywall), a subscriber (trial, renewing, ending, payment problem) "Manage
-  subscription" (the store's manage page); lifetime or granted Premium (no
-  expiry, nothing to manage) and an unknown status get no action. Restore
+- **Profile tab** (UX pass, 2026-11-13, owner's pick; studio board
+  2026-11-15): one page, top to bottom: the account header, the Premium
+  card, More (Your profile, Calculators), then the settings groups (Units,
+  Workout, Reminders, Connected apps, Appearance), Privacy and, in debug
+  builds, the preset picker and on the fake the Fake store rows. Every
+  change saves at once; a failed save shows a snackbar. The Premium card
+  (`PremiumCard`, a FeaturedCard prompt) says what Premium brings with
+  "Get Premium" (the paywall) to a free user; otherwise the user's state
+  (checking, trial, renews, ends, lifetime, payment problem) is its title
+  over that line, and a subscriber (trial, renewing, ending, payment
+  problem) gets "Manage subscription" (the store's manage page); lifetime
+  or granted Premium (no expiry, nothing to manage) and an unknown status
+  get no action. Workout group: effort, warm-ups, the rest timer and,
+  while it is on, its default rest, rest notification and rest sound
+  (`settings.restTimer.alert`: chime and vibrate (default), chime,
+  vibrate or off; a rest reaching zero in the app plays the chime,
+  `assets/sounds/rest_chime.wav` (two soft bell tones, generated for the
+  app, no licence), through `audioplayers` mixed with other audio and
+  silent in silent mode, and vibrates as chosen; the rest notification
+  sounds the same: one Android channel per choice (`rest_chime_vibrate`,
+  `rest_chime`, `rest_vibrate`, `rest_silent`, "Rest over · <choice>"),
+  as Android fixes a channel's sound and vibration, the chime bundled as
+  `res/raw/chime.wav` and iOS `chime.caf`; iOS cannot vibrate without a
+  sound, so Vibrate is silent there), Bar and plates (a summary; its
+  page edits the barbell, EZ bar and trap bar weights and the plates, and
+  puts back the standard set) and Keep screen on (`settings.keepScreenOn`,
+  default on: the screen stays awake while a workout is in progress,
+  through `wakelock_plus`). Connected apps: the health store (Apple
+  Health, or Health Connect) with what the app reads ("Steps in") and
+  On / Off from step access, read again on resume; On opens the store's
+  settings, Off the Steps page (which explains before asking); hidden
+  without a health store. Restore
   reports its result in a snackbar and, on success, closes the paywall
   (owner's pick, 2026-11-15).
 - **Units**: stored metric. kg/lb and cm/in chosen by the user. A single
@@ -1769,7 +1810,7 @@ the feature you are about to touch, and keep it true when you change it.
   file, never with the finished workout), else its program item's
   `restS`, else the exercise's `defaultRestS`, else the user's default
   (`settings.restTimer`: `enabled`, default on; `defaultS`, 90 s, 15-600;
-  `notify`), which the workout cubit follows itself. A rest of 0 is none.
+  `notify`; `alert`), which the workout cubit follows itself. A rest of 0 is none.
   In a superset or circuit rounds count working sets (warm-ups belong to
   no round, so a warm-up on one exercise shifts nothing), and only the
   group's last exercise with a working set in that round starts the rest,
@@ -2413,8 +2454,9 @@ the feature you are about to touch, and keep it true when you change it.
   from settings as before. The EZ bar and the trap bar have their own
   weights next to the bar's, defaulting by the unit (EZ 10 kg / 25 lb, trap
   25 kg / 55 lb) until customised; the workout's plate breakdown uses the
-  bar of the exercise's equipment (barbell first, then trap, then EZ). No
-  UI edits them yet: it is drawn in the screen step. 1RM and the macros' calories stay empty (no
+  bar of the exercise's equipment (barbell first, then trap, then EZ). The
+  Bar and plates settings page edits them; the Plates calculator shows a
+  summary row leading there. 1RM and the macros' calories stay empty (no
   single source); the goal and target weight map onto no calculator
   input. A known number shows as a tile (`KnownNumberField`), not a field:
   its name, the value to one decimal in the user's unit and, for a value
@@ -2478,12 +2520,18 @@ the feature you are about to touch, and keep it true when you change it.
   workout reminder tapped while the workout in progress is in front stays
   there. A tap at launch waits until the app is past splash and
   onboarding; navigation runs after the next frame.
-  Permission: turning a reminder on asks in the app with one line first
-  (unless the device already allows), then the system; a refusal shows a
-  dialog with "Open settings" (the app's notification settings), and the
-  reminder is stored on anyway, like the rest notification's wish; while
-  a reminder is on and the device refuses, the settings say so with "Open
-  settings". All notifications share the Android channel `workout`,
+  Permission: turning a reminder, or the rest notification in the
+  settings, on asks in the app first ("Allow notifications?" with one
+  line on why; unless the device already allows), then the system; a
+  refusal shows "Notifications are off" with "Open settings" (the app's
+  notification settings), and the wish is stored on anyway; "Not now"
+  changes nothing. While the device refuses (also before it was ever
+  asked, which reads the same), the Reminders group starts with a
+  "Notifications are off" notice: "Allow notifications" (asks) on a
+  device never asked, else "Open settings". The platforms read a device
+  never asked as refused, so the app keeps a marker file
+  (`notifications_asked`, app support) written by every request, the
+  reminders' and the rest notification's. All notifications share the Android channel `workout`,
   except the rest countdown (`rest`). Both channels are created when
   notifications initialise at app start (no permission needed), so a
   pushed announcement finds `workout` before any local notification.

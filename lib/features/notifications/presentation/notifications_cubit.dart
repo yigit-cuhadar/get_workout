@@ -18,13 +18,17 @@ import '../domain/notifications_usecases.dart';
 import '../domain/reminder_plan.dart';
 
 class NotificationsState extends Equatable {
-  const NotificationsState({this.allowed});
+  const NotificationsState({this.allowed, this.asked});
 
   /// Whether the device lets the app notify; null until known.
   final bool? allowed;
 
+  /// Whether this device was asked; a device never asked reads as not
+  /// allowed. Null until known.
+  final bool? asked;
+
   @override
-  List<Object?> get props => [allowed];
+  List<Object?> get props => [allowed, asked];
 }
 
 typedef NotificationText = ({String title, String body});
@@ -54,6 +58,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     required this._sync,
     required this._getAccess,
     required this._requestAccess,
+    required this._getAsked,
     required this._openSettings,
     required this._refreshTimeZone,
     required this._followAnnouncements,
@@ -96,6 +101,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   final SyncReminders _sync;
   final GetNotificationAccess _getAccess;
   final RequestNotificationAccess _requestAccess;
+  final GetNotificationsAsked _getAsked;
   final OpenNotificationSettings _openSettings;
   final RefreshTimeZone _refreshTimeZone;
   final FollowAnnouncements _followAnnouncements;
@@ -151,7 +157,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       Log.e('notifications', 'permission not asked: ${failure.message}');
     }
     final allowed = result.valueOrNull ?? false;
-    if (!isClosed) emit(NotificationsState(allowed: allowed));
+    if (!isClosed) emit(NotificationsState(allowed: allowed, asked: true));
     // Following needs the network; the answer must not wait for it.
     if (allowed) unawaited(_follow());
     return allowed;
@@ -170,8 +176,11 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       Log.e('notifications', 'permission unknown: ${failure.message}');
     }
     final allowed = result.valueOrNull;
+    final asked = allowed == true
+        ? true
+        : (await _getAsked(const NoParams())).valueOrNull;
     if (isClosed) return;
-    emit(NotificationsState(allowed: allowed));
+    emit(NotificationsState(allowed: allowed, asked: asked));
     if (allowed == true) await _follow();
   }
 

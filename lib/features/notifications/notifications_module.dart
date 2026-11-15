@@ -2,12 +2,14 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 import 'package:get_it/get_it.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../core/device_localizations.dart';
 import '../../l10n/app_localizations.dart';
 import '../programs/presentation/program_text.dart';
 import 'data/device_notification_repository.dart';
 import 'data/fcm_announcement_repository.dart';
+import 'data/notifications_asked_marker.dart';
 import 'domain/notification_repository.dart';
 import 'domain/notifications_usecases.dart';
 import 'domain/reminder_plan.dart';
@@ -56,7 +58,10 @@ class NotificationsModule implements FeatureModule {
         return notifications;
       })
       ..registerLazySingleton<NotificationRepository>(
-        () => DeviceNotificationRepository(sl.getAsync<Notifications>()),
+        () => DeviceNotificationRepository(sl.getAsync<Notifications>(), sl()),
+      )
+      ..registerLazySingleton(
+        () => const NotificationsAskedMarker(getApplicationSupportDirectory),
       )
       ..registerLazySingleton<AnnouncementRepository>(
         () => FcmAnnouncementRepository(
@@ -73,6 +78,7 @@ class NotificationsModule implements FeatureModule {
       )
       ..registerFactory(() => GetNotificationAccess(sl()))
       ..registerFactory(() => RequestNotificationAccess(sl()))
+      ..registerFactory(() => GetNotificationsAsked(sl()))
       ..registerFactory(() => OpenNotificationSettings(sl()))
       ..registerFactory(() => RefreshTimeZone(sl()))
       ..registerFactory(() => SyncReminders(sl()))
@@ -90,6 +96,7 @@ class NotificationsModule implements FeatureModule {
           sync: sl(),
           getAccess: sl(),
           requestAccess: sl(),
+          getAsked: sl(),
           openSettings: sl(),
           refreshTimeZone: sl(),
           followAnnouncements: sl(),
