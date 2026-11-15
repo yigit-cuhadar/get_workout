@@ -43,18 +43,39 @@ class SetTableInput {
   final bool wide;
 }
 
-/// One set of a [SetTable.edit]: its bubble's [label], its values in
-/// small boxes joined by "×" ([inputs]), and its [effort].
+/// One set of a [SetTable.edit]: its bubble's [label], ticked ([done],
+/// filled accent) or not (an outline), its values in small boxes joined by
+/// "×" ([inputs]), and its [effort]. Tapping the bubble calls [onToggle],
+/// holding it [onOptions] (with the bubble's context, to open a menu at
+/// it), tapping the effort [onEffort] (null: not rated, as a warm-up or a
+/// set not ticked). A drop set's [drops] follow in boxes of their own, then
+/// its [note].
 class SetTableEditRow {
   const SetTableEditRow({
     required this.label,
+    required this.semanticLabel,
     required this.inputs,
+    required this.done,
+    required this.onToggle,
+    required this.onOptions,
     this.effort,
+    this.onEffort,
+    this.drops = const [],
+    this.note,
   });
 
   final String label;
+
+  /// What screen readers call the bubble ("Set 2, done").
+  final String semanticLabel;
   final List<SetTableInput> inputs;
+  final bool done;
+  final VoidCallback onToggle;
+  final ValueChanged<BuildContext> onOptions;
   final String? effort;
+  final VoidCallback? onEffort;
+  final List<List<SetTableInput>> drops;
+  final String? note;
 }
 
 /// The sets of an exercise in history, on a card: the exercise's [name],
@@ -76,17 +97,18 @@ class SetTable extends StatelessWidget {
        menu = null,
        onAddSet = null;
 
+  /// [onAddSet] null: the exercise has as many sets as it may.
   const SetTable.edit({
     super.key,
     required this.name,
     required List<SetTableEditRow> rows,
     required List<ForgeMenuItem> this.menu,
-    required VoidCallback this.onAddSet,
+    required this.onAddSet,
+    this.group,
+    this.note,
   }) : rows = null,
        editRows = rows,
-       group = null,
-       type = null,
-       note = null;
+       type = null;
 
   final String name;
   final List<SetTableRow>? rows;
@@ -120,10 +142,14 @@ class SetTable extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _EditHeader(name: name, menu: menu!),
-            for (final (i, row) in editRows.indexed)
+            _EditHeader(name: name, group: group, note: note, menu: menu!),
+            for (final (i, row) in editRows.indexed) ...[
               _EditRow(row: row, divided: i > 0),
-            _AddSet(onPressed: onAddSet!),
+              for (final (d, drop) in row.drops.indexed)
+                _EditDropRow(inputs: drop, number: d + 1),
+              if (row.note case final note?) _SetNote(note),
+            ],
+            if (onAddSet case final onAddSet?) _AddSet(onPressed: onAddSet),
           ],
         ),
       );
@@ -176,24 +202,7 @@ class _Header extends StatelessWidget {
         child: Row(
           spacing: 10,
           children: [
-            if (group != null)
-              Container(
-                width: SetTable._bubbleSize,
-                height: SetTable._bubbleSize,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: style.colors.surfaceSunken,
-                ),
-                child: Text(
-                  group,
-                  style: style.data.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: style.colors.ink,
-                  ),
-                ),
-              ),
+            if (group != null) _GroupLetter(group),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,6 +214,35 @@ class _Header extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A group's A1 / A2 letter in a surface-sunken circle.
+class _GroupLetter extends StatelessWidget {
+  const _GroupLetter(this.letter);
+
+  final String letter;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    return Container(
+      width: SetTable._bubbleSize,
+      height: SetTable._bubbleSize,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: style.colors.surfaceSunken,
+      ),
+      child: Text(
+        letter,
+        style: style.data.copyWith(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: style.colors.ink,
         ),
       ),
     );
@@ -314,43 +352,71 @@ class _DropRow extends StatelessWidget {
 }
 
 class _EditHeader extends StatelessWidget {
-  const _EditHeader({required this.name, required this.menu});
+  const _EditHeader({
+    required this.name,
+    required this.group,
+    required this.note,
+    required this.menu,
+  });
 
   final String name;
+  final String? group;
+  final String? note;
   final List<ForgeMenuItem> menu;
 
   @override
-  Widget build(BuildContext context) => ConstrainedBox(
-    constraints: const BoxConstraints(minHeight: ForgeTheme.tapMin),
-    child: Row(
-      children: [
-        Expanded(
-          child: Text(name, style: Theme.of(context).textTheme.titleMedium),
-        ),
-        Builder(
-          builder: (context) => Semantics(
-            button: true,
-            label: AppLocalizations.of(context).setTableOptions,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => showForgeMenu(context: context, items: menu),
-              child: SizedBox.square(
-                dimension: ForgeTheme.tapMin,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: ForgeIcon(
-                    ForgeIcons.moreHoriz,
-                    size: 20,
-                    color: ForgeStyle.of(context).colors.inkMuted,
+  Widget build(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    final text = Theme.of(context).textTheme;
+    final group = this.group;
+    final note = this.note;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: ForgeTheme.tapMin),
+      child: Row(
+        spacing: Gap.sm,
+        children: [
+          if (group != null) _GroupLetter(group),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: text.titleMedium),
+                if (note != null)
+                  Text(
+                    note,
+                    style: text.labelMedium!.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: style.colors.inkMuted,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Builder(
+            builder: (context) => Semantics(
+              button: true,
+              label: AppLocalizations.of(context).setTableOptions,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => showForgeMenu(context: context, items: menu),
+                child: SizedBox.square(
+                  dimension: ForgeTheme.tapMin,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: ForgeIcon(
+                      ForgeIcons.moreHoriz,
+                      size: 20,
+                      color: style.colors.inkMuted,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 class _EditRow extends StatelessWidget {
@@ -362,7 +428,7 @@ class _EditRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = ForgeStyle.of(context).colors;
-    final times = Text('×', style: TextStyle(color: colors.inkMuted));
+    final effort = ForgeTag(row.effort ?? '—');
     return Container(
       constraints: const BoxConstraints(minHeight: 48),
       decoration: divided
@@ -373,18 +439,85 @@ class _EditRow extends StatelessWidget {
       child: Row(
         spacing: Gap.sm,
         children: [
-          _Bubble(row.label),
-          for (final (i, input) in row.inputs.indexed) ...[
-            if (i > 0) times,
-            ForgeNumberField.compact(
-              label: input.label,
-              width: input.wide ? 70 : 50,
-              controller: input.controller,
-              onChanged: input.onChanged,
+          Builder(
+            builder: (bubble) => Semantics(
+              button: true,
+              checked: row.done,
+              label: row.semanticLabel,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: row.onToggle,
+                onLongPress: () => row.onOptions(bubble),
+                child: SizedBox.square(
+                  dimension: ForgeTheme.tapMin,
+                  child: Center(
+                    child: ExcludeSemantics(
+                      child: _Bubble(row.label, done: row.done),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ],
+          ),
+          ..._inputs(row.inputs, colors),
           const Spacer(),
-          ForgeTag(row.effort ?? '—'),
+          if (row.onEffort case final onEffort?)
+            Semantics(
+              button: true,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onEffort,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: ForgeTheme.tapMin,
+                  ),
+                  child: Center(child: effort),
+                ),
+              ),
+            )
+          else
+            effort,
+        ],
+      ),
+    );
+  }
+}
+
+/// [inputs] as small boxes joined by "×".
+List<Widget> _inputs(List<SetTableInput> inputs, ForgePalette colors) => [
+  for (final (i, input) in inputs.indexed) ...[
+    if (i > 0) Text('×', style: TextStyle(color: colors.inkMuted)),
+    ForgeNumberField.compact(
+      label: input.label,
+      width: input.wide ? 70 : 50,
+      controller: input.controller,
+      onChanged: input.onChanged,
+    ),
+  ],
+];
+
+/// A drop of a set being edited: its boxes under the set, indented, and
+/// "Drop 1" at the end.
+class _EditDropRow extends StatelessWidget {
+  const _EditDropRow({required this.inputs, required this.number});
+
+  final List<SetTableInput> inputs;
+  final int number;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ForgeStyle.of(context).colors;
+    return Padding(
+      padding: const EdgeInsets.only(left: SetTable._indent, bottom: 6),
+      child: Row(
+        spacing: Gap.sm,
+        children: [
+          ..._inputs(inputs, colors),
+          const Spacer(),
+          ForgeTag(
+            AppLocalizations.of(context).workoutDrop(number),
+            kind: ForgeTagKind.plain,
+          ),
         ],
       ),
     );
@@ -426,27 +559,34 @@ class _AddSet extends StatelessWidget {
   }
 }
 
-/// A done set's 28px bubble: its label in mono on accent.
+/// A set's 28px bubble: its label in mono on accent when [done], else on
+/// a line-strong ring.
 // SetBubble's small done form, drawn here until that component lands.
 class _Bubble extends StatelessWidget {
-  const _Bubble(this.label);
+  const _Bubble(this.label, {this.done = true});
 
   final String label;
+  final bool done;
 
   @override
   Widget build(BuildContext context) {
     final style = ForgeStyle.of(context);
+    final colors = style.colors;
     return Container(
       width: SetTable._bubbleSize,
       height: SetTable._bubbleSize,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: style.colors.accent,
+        color: done ? colors.accent : colors.surface,
+        border: done ? null : Border.all(color: colors.lineStrong, width: 1.5),
       ),
       child: Text(
         label,
-        style: style.data.copyWith(fontSize: 11, color: style.colors.onAccent),
+        style: style.data.copyWith(
+          fontSize: 11,
+          color: done ? colors.onAccent : colors.ink,
+        ),
       ),
     );
   }

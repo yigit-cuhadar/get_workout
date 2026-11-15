@@ -378,7 +378,7 @@ void main() {
     await tap(tester, find.text('Add exercises'));
     expect(find.byType(ExercisePickerPage), findsOneWidget);
     await tap(tester, find.text('Back Squat'));
-    await tap(tester, find.text('Add 1'));
+    await tap(tester, find.text('Add 1 exercise'));
 
     expect(find.byType(ExercisePickerPage), findsNothing);
     expect(find.byType(ProgramBuilderPage), findsOneWidget);
@@ -597,7 +597,7 @@ void main() {
     expect(find.textContaining('min'), findsNothing);
     await tap(tester, find.text('Add exercises'));
     await tap(tester, find.text('Back Squat'));
-    await tap(tester, find.text('Add 1'));
+    await tap(tester, find.text('Add 1 exercise'));
     expect(find.textContaining('min'), findsOneWidget);
   });
 }

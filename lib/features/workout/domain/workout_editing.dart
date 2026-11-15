@@ -96,6 +96,49 @@ Workout workoutFromProgramDay({
   }),
 );
 
+/// What a new past workout starts from: its [name], [start] and
+/// [duration], and optionally day [dayIndex] of [program] to fill its
+/// exercises from, named in [language].
+typedef PastWorkoutPlan = ({
+  String name,
+  DateTime start,
+  Duration duration,
+  Program? program,
+  int? dayIndex,
+  String language,
+});
+
+/// New past workout [id] as [plan] has it: the program day's exercises
+/// with their goals and empty sets ([workoutFromProgramDay], without
+/// warm-ups), or none. A past workout never belongs to a program.
+Workout pastWorkout(
+  String id,
+  PastWorkoutPlan plan,
+  Map<String, Exercise> catalogue,
+) {
+  final program = plan.program;
+  final dayIndex = plan.dayIndex;
+  final exercises = program != null && dayIndex != null
+      ? workoutFromProgramDay(
+          id: id,
+          startedAt: plan.start,
+          name: plan.name,
+          program: program,
+          dayIndex: dayIndex,
+          catalogue: catalogue,
+          language: plan.language,
+          warmups: null,
+        ).exercises
+      : const <WorkoutExercise>[];
+  return Workout(
+    id: id,
+    startedAt: plan.start,
+    finishedAt: plan.start.add(plan.duration),
+    name: plan.name,
+    exercises: exercises,
+  );
+}
+
 /// [current] doing [replacement] instead, in the same place and group. Its
 /// sets stay when the logging type does; otherwise as many empty sets of
 /// the same kinds take their place. The goal is fitted to the new type.
@@ -126,6 +169,62 @@ WorkoutExercise swapExercise(
         ? null
         : fitToLoggingType(goal.copyWith(exerciseId: replacement.id), type),
   );
+}
+
+/// Exercise [index] of [exercises] swapped for [replacement] once some of
+/// its sets are done: the done sets stay with it as a finished exercise,
+/// and its other sets go to [replacement] (as [swapExercise] fits them)
+/// right after it, one empty set when none is left. In a superset or
+/// circuit the replacement takes its place and the finished exercise
+/// leaves the group, just before it. Returns the list and where the
+/// replacement is. With no done set it is a plain [swapExercise].
+({List<WorkoutExercise> exercises, int swapped}) swapKeepingLogged(
+  List<WorkoutExercise> exercises,
+  int index,
+  Exercise replacement,
+  String language,
+) {
+  final current = exercises[index];
+  final done = current.doneSets;
+  if (done.isEmpty) {
+    return (
+      exercises: [
+        for (final (i, exercise) in exercises.indexed)
+          i == index ? swapExercise(exercise, replacement, language) : exercise,
+      ],
+      swapped: index,
+    );
+  }
+  final rest = [
+    for (final set in current.sets)
+      if (!set.done) set,
+  ];
+  final moved = swapExercise(
+    current.copyWith(
+      sets: rest.isEmpty ? const [WorkoutSet()] : rest,
+      note: () => null,
+    ),
+    replacement,
+    language,
+  );
+  final kept = current.copyWith(sets: done, group: () => null);
+  final (start, _) = groupRange(exercises, index);
+  final grouped = current.group != null;
+  final list = grouped
+      ? [
+          ...exercises.sublist(0, start),
+          kept,
+          ...exercises.sublist(start, index),
+          moved,
+          ...exercises.sublist(index + 1),
+        ]
+      : [
+          ...exercises.sublist(0, index),
+          kept,
+          moved,
+          ...exercises.sublist(index + 1),
+        ];
+  return (exercises: relabelGroups(list), swapped: index + 1);
 }
 
 /// [workout] finished [at], never before it started (a device clock set
@@ -215,65 +314,133 @@ bool advancesProgram(Workout workout, ActiveProgram? active, Program? program) {
   return schedule.nextDayIndex == dayIndex;
 }
 
-/// A one-day program of the user's own repeating finished [workout], named
-/// [name]: per exercise its working sets, their rep range or longest
-/// duration, and its heaviest weight (least assistance) as the target.
-/// Rest is the exercise's default ([fallbackRestS] for a custom one).
-/// Exercises not in [catalogue] are left out. The result still needs
-/// `validateProgram`.
+/// [exercise] as a program item: its working sets (its done sets when it
+/// has none), their rep range or longest duration, and its heaviest weight
+/// (least assistance) as the target. Rest is the exercise's default
+/// ([fallbackRestS] for a custom one). Null when [catalogue] does not know
+/// it.
+ProgramItem? programItemFrom(
+  WorkoutExercise exercise,
+  Map<String, Exercise> catalogue,
+) {
+  final known = catalogue[exercise.exerciseId];
+  if (known == null) return null;
+  final type = exercise.loggingType;
+  final working = workingSets(exercise.sets);
+  final sets = working.isEmpty ? exercise.doneSets : working;
+  final reps = [for (final set in sets) ?set.reps]..sort();
+  final durations = [for (final set in sets) ?set.durationS]..sort();
+  final weights = [
+    for (final set in sets)
+      if (set.weightKg case final kg? when kg > 0) kg,
+  ]..sort();
+  int clampReps(int reps) =>
+      reps.clamp(ProgramLimits.minReps, ProgramLimits.maxReps);
+  return ProgramItem(
+    exerciseId: exercise.exerciseId,
+    sets: sets.length.clamp(ProgramLimits.minSets, ProgramLimits.maxSets),
+    repMin: type.logsReps && reps.isNotEmpty ? clampReps(reps.first) : null,
+    repMax: type.logsReps && reps.isNotEmpty ? clampReps(reps.last) : null,
+    durationS: type.isDurationBased && durations.isNotEmpty
+        ? durations.last.clamp(
+            ProgramLimits.minDurationS,
+            ProgramLimits.maxDurationS,
+          )
+        : null,
+    restS: (known.defaultRestS ?? fallbackRestS).clamp(
+      0,
+      ProgramLimits.maxRestS,
+    ),
+    targetKg: type.logsWeight && weights.isNotEmpty
+        ? (type == LoggingType.assistedBodyweight
+                  ? weights.first
+                  : weights.last)
+              .clamp(0, ProgramLimits.maxTargetKg)
+              .toDouble()
+        : null,
+    group: exercise.group,
+  );
+}
+
+/// A one-day program named [name] from [workout], an item per exercise as
+/// [programItemFrom] makes it. Exercises not in [catalogue] are left out.
+/// The result still needs `validateProgram`.
 Program programFromWorkout(
   Workout workout, {
   required String name,
   required Map<String, Exercise> catalogue,
-}) {
-  ProgramItem? item(WorkoutExercise exercise) {
-    final known = catalogue[exercise.exerciseId];
-    if (known == null) return null;
-    final type = exercise.loggingType;
-    final working = workingSets(exercise.sets);
-    final sets = working.isEmpty ? exercise.doneSets : working;
-    final reps = [for (final set in sets) ?set.reps]..sort();
-    final durations = [for (final set in sets) ?set.durationS]..sort();
-    final weights = [
-      for (final set in sets)
-        if (set.weightKg case final kg? when kg > 0) kg,
-    ]..sort();
-    int clampReps(int reps) =>
-        reps.clamp(ProgramLimits.minReps, ProgramLimits.maxReps);
-    return ProgramItem(
-      exerciseId: exercise.exerciseId,
-      sets: sets.length.clamp(ProgramLimits.minSets, ProgramLimits.maxSets),
-      repMin: type.logsReps && reps.isNotEmpty ? clampReps(reps.first) : null,
-      repMax: type.logsReps && reps.isNotEmpty ? clampReps(reps.last) : null,
-      durationS: type.isDurationBased && durations.isNotEmpty
-          ? durations.last.clamp(
-              ProgramLimits.minDurationS,
-              ProgramLimits.maxDurationS,
-            )
-          : null,
-      restS: (known.defaultRestS ?? fallbackRestS).clamp(
-        0,
-        ProgramLimits.maxRestS,
+}) => Program(
+  name: cutToLength(name.trim(), ProgramLimits.maxNameLength),
+  days: [
+    ProgramDay(
+      items: relabelGroups([
+        for (final exercise in workout.exercises)
+          ?programItemFrom(exercise, catalogue),
+      ]),
+    ),
+  ],
+);
+
+/// The items [workout] (in progress, every set) would give its day of
+/// [program], or null when it did the day as planned. It changed the day
+/// when an exercise was added, removed or swapped, the exercises' order or
+/// a working set count changed, or a rest was set to another length; reps
+/// and weights change with progression and do not count. Items the
+/// workout kept keep their targets; new ones are made by
+/// [programItemFrom]. Planned items [catalogue] does not know were left
+/// out at the start, so they are not counted as removed.
+List<ProgramItem>? changedProgramDay(
+  Workout workout,
+  Program program,
+  Map<String, Exercise> catalogue,
+) {
+  final dayIndex = workout.dayIndex;
+  if (workout.programId != program.id ||
+      dayIndex == null ||
+      dayIndex >= program.days.length) {
+    return null;
+  }
+  final planned = [
+    for (final item in alignGroups(program.days[dayIndex].items))
+      if (catalogue.containsKey(item.exerciseId)) item,
+  ];
+  final exercises = workout.exercises;
+  var changed = planned.length != exercises.length;
+  final unused = [...planned];
+  final items = <ProgramItem>[];
+  for (final (i, exercise) in exercises.indexed) {
+    final count = workingSets([
+      for (final set in exercise.sets) set.copyWith(done: true),
+    ]).length;
+    final plan = planned.elementAtOrNull(i);
+    if (plan == null ||
+        plan.exerciseId != exercise.exerciseId ||
+        plan.sets != count ||
+        (exercise.restS != null && exercise.restS != plan.restS)) {
+      changed = true;
+    }
+    final kept = unused
+        .where((item) => item.exerciseId == exercise.exerciseId)
+        .firstOrNull;
+    if (kept != null) unused.remove(kept);
+    final base =
+        kept ??
+        exercise.goal ??
+        programItemFrom(
+          exercise.copyWith(
+            sets: [for (final set in exercise.sets) set.copyWith(done: true)],
+          ),
+          catalogue,
+        );
+    if (base == null) continue;
+    items.add(
+      base.copyWith(
+        exerciseId: exercise.exerciseId,
+        sets: count.clamp(ProgramLimits.minSets, ProgramLimits.maxSets),
+        restS: exercise.restS,
+        group: () => exercise.group,
       ),
-      targetKg: type.logsWeight && weights.isNotEmpty
-          ? (type == LoggingType.assistedBodyweight
-                    ? weights.first
-                    : weights.last)
-                .clamp(0, ProgramLimits.maxTargetKg)
-                .toDouble()
-          : null,
-      group: exercise.group,
     );
   }
-
-  return Program(
-    name: cutToLength(name.trim(), ProgramLimits.maxNameLength),
-    days: [
-      ProgramDay(
-        items: relabelGroups([
-          for (final exercise in workout.exercises) ?item(exercise),
-        ]),
-      ),
-    ],
-  );
+  return changed ? relabelGroups(items) : null;
 }

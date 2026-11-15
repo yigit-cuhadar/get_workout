@@ -31,6 +31,8 @@ enum WorkoutEditStatus {
   editing,
   saving,
   saved,
+  deleting,
+  deleted,
 
   /// The signed-in user changed; the page closes.
   closed,
@@ -123,7 +125,7 @@ class WorkoutEditState extends Equatable implements EditedWorkout {
 }
 
 /// Edits stored workout [id] of the user signed in when it opens, or, with
-/// no [id], a new past workout named [name]. Saving stores it with its
+/// no [id], a new past workout as [plan] has it (see `pastWorkout`). Saving stores it with its
 /// exercises' stats rebuilt and leaves the active program alone; a past
 /// workout is never from a program. A stored workout can be edited once the
 /// server has confirmed its latest change, and is followed while edited:
@@ -133,7 +135,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     with WorkoutEditor<WorkoutEditState> {
   WorkoutEditCubit({
     this.id,
-    required String name,
+    required PastWorkoutPlan plan,
     required GetCurrentUser getCurrentUser,
     required WatchAuthUser watchAuthUser,
     required this._watchWorkout,
@@ -155,19 +157,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     if (uid == null) {
       _close();
     } else if (id == null) {
-      final now = _clock();
-      final start = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        now.hour,
-      ).subtract(newDuration);
-      _start = Workout(
-        id: newWorkoutId(uid),
-        startedAt: start,
-        finishedAt: start.add(newDuration),
-        name: name,
-      );
+      _start = pastWorkout(newWorkoutId(uid), plan, knownExercises);
       emit(
         WorkoutEditState(status: WorkoutEditStatus.editing, workout: _start),
       );
@@ -200,6 +190,26 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
 
   /// How long a new past workout lasts until changed.
   static const newDuration = Duration(hours: 1);
+
+  /// A new past workout's plan with no program day: an hour ending at the
+  /// start of [now]'s hour, named [name].
+  static PastWorkoutPlan defaultPlan(
+    String name,
+    DateTime now,
+    String language,
+  ) => (
+    name: name,
+    start: DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+    ).subtract(newDuration),
+    duration: newDuration,
+    program: null,
+    dayIndex: null,
+    language: language,
+  );
 
   bool get isNew => id == null;
 
@@ -427,6 +437,35 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
         unawaited(_workoutSubscription?.cancel());
         _changed(uid, workout.id, deleted: false, staleStats: stale);
         emit(state.copyWith(status: WorkoutEditStatus.saved));
+    }
+  }
+
+  /// Deletes the stored workout and rebuilds its exercises' stats without
+  /// it; refused while in conflict.
+  Future<void> delete() async {
+    final uid = _uid;
+    final original = _original;
+    if (uid == null ||
+        original == null ||
+        state.status != WorkoutEditStatus.editing ||
+        state.conflict != null) {
+      return;
+    }
+    emit(state.copyWith(status: WorkoutEditStatus.deleting));
+    final result = await _saveChange((uid: uid, before: original, after: null));
+    if (isClosed || state.status != WorkoutEditStatus.deleting) return;
+    switch (result) {
+      case Err(:final failure):
+        emit(
+          state.copyWith(
+            status: WorkoutEditStatus.editing,
+            failure: () => failure,
+          ),
+        );
+      case Ok(value: final stale):
+        unawaited(_workoutSubscription?.cancel());
+        _changed(uid, original.id, deleted: true, staleStats: stale);
+        emit(state.copyWith(status: WorkoutEditStatus.deleted));
     }
   }
 

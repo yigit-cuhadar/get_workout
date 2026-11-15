@@ -18,7 +18,7 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/program.dart';
 import '../domain/program_editing.dart';
 import '../domain/program_validation.dart';
-import 'pick_replacement.dart';
+import 'exercise_picker_page.dart';
 import 'program_builder_cubit.dart';
 import 'program_text.dart';
 import 'widgets/builder_row.dart';
@@ -555,11 +555,15 @@ class _FormState extends State<_Form> {
     if (picked != null && picked.isNotEmpty) _cubit.addExercises(picked);
   }
 
+  /// An exercise no longer in the library is replaced without its
+  /// similar ones.
   Future<void> _replace(int index) async {
-    final item = _cubit.state.day!.items[index];
+    final state = _cubit.state;
+    final item = state.day?.items.elementAtOrNull(index);
+    if (item == null) return;
     final picked = await pickReplacement(
       context,
-      exerciseId: _cubit.state.isUnavailable(item) ? null : item.exerciseId,
+      exerciseId: state.isUnavailable(item) ? null : item.exerciseId,
       picker: widget.picker,
     );
     if (picked != null) _cubit.replaceExercise(index, picked);

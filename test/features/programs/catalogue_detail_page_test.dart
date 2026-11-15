@@ -135,10 +135,14 @@ void main() {
       ],
     );
     addTearDown(router.dispose);
+    // The page provides the app-wide catalogue itself.
+    if (sl.isRegistered<ProgramCatalogueCubit>()) {
+      sl.unregister<ProgramCatalogueCubit>();
+    }
+    sl.registerSingleton<ProgramCatalogueCubit>(catalogue);
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
-          BlocProvider<ProgramCatalogueCubit>.value(value: catalogue),
           BlocProvider<ExerciseCatalogueCubit>.value(value: exercises),
           BlocProvider<BodyModelCubit>.value(value: model),
           BlocProvider<SettingsCubit>.value(value: settings),

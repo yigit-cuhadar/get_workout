@@ -19,8 +19,8 @@ abstract interface class CustomExerciseRepository {
   /// the count current.
   Future<Result<int>> countCustomExercises(String uid);
 
-  /// Stores [exercise], which has no id, as a new one.
-  Future<Result<void>> createCustomExercise(
+  /// Stores [exercise], which has no id, as a new one; its new id.
+  Future<Result<String>> createCustomExercise(
     String uid,
     CustomExercise exercise,
   );

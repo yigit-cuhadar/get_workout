@@ -52,4 +52,11 @@ class ExercisePickerCubit extends Cubit<ExercisePickerState> {
       emit(ExercisePickerState(selected: [...state.selected, exercise]));
     }
   }
+
+  /// Chooses [exercise], just created for this pick: ticked unless already
+  /// chosen or the pick is full; with [multiple] off it finishes the pick.
+  void choose(Exercise exercise) {
+    if (state.isSelected(exercise) || (multiple && isFull)) return;
+    toggle(exercise);
+  }
 }

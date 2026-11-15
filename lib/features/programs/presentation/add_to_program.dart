@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
@@ -31,20 +32,20 @@ Future<void> addToProgram(
     if (!context.mounted) return;
   }
   if (state.programs.isEmpty) {
-    final create = await showDialog<bool>(
+    final create = await showForgeDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        content: Text(l10n.addToProgramNone),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.addToProgramCreate),
-          ),
-        ],
+      builder: (context) => ForgeDialog(
+        title: l10n.addToProgramNoneTitle,
+        message: l10n.addToProgramNone,
+        action: ForgeButton(
+          label: l10n.addToProgramCreate,
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        cancel: ForgeButton(
+          label: l10n.cancel,
+          variant: ForgeButtonVariant.secondary,
+          onPressed: () => Navigator.pop(context, false),
+        ),
       ),
     );
     if (create == true && context.mounted) {
@@ -71,7 +72,7 @@ Future<void> addToProgram(
   if (program == null || !context.mounted) return;
   final day = await _pick<int>(
     context,
-    title: l10n.addToProgramDay,
+    title: l10n.addToProgramDayOf(program.name),
     options: [
       for (final (i, d) in program.days.indexed)
         (
@@ -84,42 +85,42 @@ Future<void> addToProgram(
     ],
   );
   if (day == null || !context.mounted) return;
-  final messenger = ScaffoldMessenger.of(context);
   final name = exercise.localized(context).name;
   final dayName = '${program.name} · ${l10n.dayName(program.days[day], day)}';
   final added = await cubit.add(program, day, exercise);
-  messenger.showSnackBar(
-    SnackBar(
-      content: Text(
-        added ? l10n.addToProgramDone(name, dayName) : l10n.addToProgramFailed,
-      ),
-    ),
+  if (!context.mounted) return;
+  showForgeSnackbar(
+    context,
+    message: added
+        ? l10n.addToProgramDone(name, dayName)
+        : l10n.addToProgramFailed,
+    error: !added,
   );
 }
 
-/// A sheet of [options] (value, label, enabled); null when dismissed.
+/// A sheet of [options] (value, label, enabled) as rows, a full one
+/// drawn off; null when dismissed.
 Future<T?> _pick<T>(
   BuildContext context, {
   required String title,
   required List<(T, String, bool)> options,
-}) => showModalBottomSheet<T>(
+}) => showForgeBottomSheet<T>(
   context: context,
-  showDragHandle: true,
-  isScrollControlled: true,
-  builder: (context) => SafeArea(
-    child: ListView(
-      shrinkWrap: true,
-      children: [
-        ListTile(
-          title: Text(title, style: Theme.of(context).textTheme.titleMedium),
-        ),
-        for (final (value, label, enabled) in options)
-          ListTile(
-            enabled: enabled,
-            title: Text(label),
-            onTap: () => Navigator.pop(context, value),
-          ),
-      ],
+  builder: (context) => ForgeBottomSheet(
+    title: title,
+    child: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (value, label, enabled) in options)
+            ListRow(
+              title: label,
+              disabled: !enabled,
+              onTap: () => Navigator.pop(context, value),
+            ),
+        ],
+      ),
     ),
   ),
 );

@@ -61,4 +61,37 @@ void main() {
       ExercisePickerState(selected: [b], done: true),
     ],
   );
+
+  group('a just-created exercise', () {
+    blocTest<ExercisePickerCubit, ExercisePickerState>(
+      'is ticked, never unticked when already chosen',
+      build: () => ExercisePickerCubit(max: 3, multiple: true),
+      act: (cubit) => cubit
+        ..choose(a)
+        ..choose(a),
+      expect: () => [
+        ExercisePickerState(selected: [a]),
+      ],
+    );
+
+    blocTest<ExercisePickerCubit, ExercisePickerState>(
+      'is not ticked when the pick is full',
+      build: () => ExercisePickerCubit(max: 1, multiple: true),
+      act: (cubit) => cubit
+        ..toggle(a)
+        ..choose(b),
+      expect: () => [
+        ExercisePickerState(selected: [a]),
+      ],
+    );
+
+    blocTest<ExercisePickerCubit, ExercisePickerState>(
+      'finishes a single pick',
+      build: () => ExercisePickerCubit(max: 1, multiple: false),
+      act: (cubit) => cubit.choose(b),
+      expect: () => [
+        ExercisePickerState(selected: [b], done: true),
+      ],
+    );
+  });
 }

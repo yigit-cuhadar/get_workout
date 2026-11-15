@@ -284,13 +284,63 @@ void main() {
       finishedAt: monday.add(const Duration(minutes: 52)),
     );
     expect(
-      summarizeWorkout(done, const []),
+      summarizeWorkout(done),
       const WorkoutSummary(
         duration: Duration(minutes: 52),
         volumeKg: 600,
         setCount: 3,
         exerciseCount: 3,
+        muscleSets: {Muscle.quads: 3},
       ),
     );
+  });
+
+  group('summarizeWorkout records', () {
+    final before = workout('w0', [
+      exercise('squat', [lift(100, 5)]),
+      exercise('bench', [lift(80, 8)]),
+    ], startedAt: monday);
+    final stats = {
+      'squat': rebuildStats('squat', [before]),
+      'bench': rebuildStats('bench', [before]),
+    };
+    Workout today(double squat, double bench) => workout('w1', [
+      exercise('squat', [lift(squat - 20, 3), lift(squat, 5)]),
+      exercise('bench', [lift(bench, 8)]),
+    ], startedAt: monday.add(const Duration(days: 2)));
+    WorkoutSummary summarize(Workout done) => summarizeWorkout(
+      done,
+      before: stats,
+      after: {
+        for (final id in ['squat', 'bench'])
+          id: applyWorkout(stats[id], done, id)!,
+      },
+    );
+
+    test('one row per exercise, its heaviest set and weight gain', () {
+      final summary = summarize(today(102.5, 80));
+      final record = summary.records.single;
+      expect(record.exerciseId, 'squat');
+      expect(record.set, lift(102.5, 5));
+      expect(record.gain, (kind: RecordKind.heaviestWeight, amount: 2.5));
+      expect(summary.closest, isNull);
+    });
+
+    test('none beaten: the closest heaviest weight', () {
+      final summary = summarize(today(95, 77.5));
+      expect(summary.records, isEmpty);
+      expect(summary.closest, (name: 'bench', kg: 2.5));
+      expect(summary.firstWorkout, isFalse);
+    });
+
+    test('nothing done before: records start now', () {
+      final done = today(100, 80);
+      final summary = summarizeWorkout(
+        done,
+        before: {'squat': null, 'bench': null},
+      );
+      expect(summary.firstWorkout, isTrue);
+      expect(summary.records, isEmpty);
+    });
   });
 }

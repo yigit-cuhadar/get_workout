@@ -118,8 +118,11 @@ class _FormViewState extends State<_FormView> {
         listenWhen: (previous, current) => previous.status != current.status,
         listener: (context, state) {
           switch (state.status) {
-            case CustomExerciseFormStatus.saved ||
-                CustomExerciseFormStatus.closed:
+            // Saved, it returns the exercise's id, e.g. for the picker
+            // to choose it.
+            case CustomExerciseFormStatus.saved:
+              context.pop(state.savedId);
+            case CustomExerciseFormStatus.closed:
               context.pop();
             case CustomExerciseFormStatus.saveFailed:
               ScaffoldMessenger.of(context).showSnackBar(
