@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/core/widgets/featured_card.dart';
@@ -170,6 +170,106 @@ void main() {
       tester.getRect(find.text('Browse')).top,
     );
     expect(variantOf(tester, 'Browse'), ForgeButtonVariant.secondary);
+  });
+
+  testWidgets('a prompt stacks every button, a locked one keeping its lock', (
+    tester,
+  ) async {
+    final taps = <String>[];
+    await pumpComponent(
+      tester,
+      FeaturedCard(
+        form: FeaturedCardForm.prompt,
+        eyebrow: 'Get started',
+        title: 'Pick your first program',
+        note: 'A plan sets your training days and fills Today.',
+        action: FeaturedAction('See ready-made programs', () => taps.add('a')),
+        moreActions: [
+          FeaturedAction(
+            'Generate a program',
+            () => taps.add('b'),
+            locked: true,
+          ),
+          FeaturedAction('Start empty workout', () => taps.add('c')),
+        ],
+      ),
+    );
+
+    expect(
+      variantOf(tester, 'See ready-made programs'),
+      ForgeButtonVariant.primary,
+    );
+    expect(
+      variantOf(tester, 'Start empty workout'),
+      ForgeButtonVariant.secondary,
+    );
+    final labels = [
+      'See ready-made programs',
+      'Generate a program',
+      'Start empty workout',
+    ];
+    for (var i = 1; i < labels.length; i++) {
+      expect(
+        tester.getRect(find.text(labels[i])).top,
+        greaterThan(tester.getRect(find.text(labels[i - 1])).bottom),
+      );
+    }
+    expect(
+      tester
+          .widget<ForgeButton>(
+            find.widgetWithText(ForgeButton, 'Generate a program'),
+          )
+          .locked,
+      isTrue,
+    );
+    expect(
+      find.byType(ForgeIcon).evaluate().where((e) {
+        final icon = e.widget as ForgeIcon;
+        return icon.icon == ForgeIcons.chevronRight;
+      }),
+      isEmpty,
+    );
+    for (final label in labels) {
+      await tester.tap(find.text(label));
+    }
+    expect(taps, ['a', 'b', 'c']);
+  });
+
+  testWidgets('a band shows its progress, its rows and its menu', (
+    tester,
+  ) async {
+    final taps = <String>[];
+    await pumpComponent(
+      tester,
+      FeaturedCard(
+        form: FeaturedCardForm.band,
+        eyebrow: 'Active program · week 3 of 8',
+        title: 'Push Pull Legs',
+        progress: 0.37,
+        action: FeaturedAction('Start Legs', () => taps.add('start')),
+        menu: IconButton(
+          tooltip: 'Program options',
+          onPressed: () => taps.add('menu'),
+          icon: const ForgeIcon(ForgeIcons.moreHoriz),
+        ),
+        rows: [
+          ListRow(title: 'Pull', detail: 'Done', onTap: () => taps.add('pull')),
+          const ListRow(title: 'Legs', detail: 'Missed'),
+        ],
+      ),
+    );
+
+    expect(tester.widget<Progress>(find.byType(Progress)).value, 0.37);
+    expect(
+      tester.getRect(find.text('Pull')).top,
+      greaterThan(tester.getRect(find.text('Start Legs')).bottom),
+    );
+    // A line above each row.
+    expect(find.byType(Divider), findsNWidgets(2));
+    await tester.tap(find.byTooltip('Program options'));
+    await tester.tap(find.text('Start Legs'));
+    await tester.tap(find.text('Pull'));
+    expect(taps, ['menu', 'start', 'pull']);
   });
 
   testWidgets('loading shows the eyebrow over shimmering bars, no button', (

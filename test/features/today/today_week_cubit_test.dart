@@ -169,6 +169,41 @@ void main() {
   List<CalendarMark> marksOn(TodayWeekCubit cubit, CalendarDate date) =>
       calendarMarks(cubit.state.entriesOn(date));
 
+  blocTest<TodayWeekCubit, TodayWeekState>(
+    'knows the workouts finished today, oldest first',
+    build: build,
+    act: (_) {
+      final morning = workout(
+        'w2',
+        const [],
+        startedAt: DateTime(2026, 11, 13, 7),
+      );
+      final evening = workout(
+        'w3',
+        const [],
+        startedAt: DateTime(2026, 11, 13, 18),
+      );
+      return load(alice, done: [upper, morning, evening], sessions: [run]);
+    },
+    verify: (cubit) => expect(
+      cubit.state.doneToday?.map((workout) => workout.id),
+      ['w2', 'w3'],
+    ),
+  );
+
+  test('knows no workout today while loading, and none after a failure', () {
+    final week = build().state;
+    expect(week.doneToday, isNull);
+    expect(
+      TodayWeekState(
+        today: week.today,
+        days: week.days,
+        status: TodayWeekStatus.failure,
+      ).doneToday,
+      isEmpty,
+    );
+  });
+
   test('starts loading on the locale\'s week, today included', () {
     final sundays = build().state;
     expect(sundays.status, TodayWeekStatus.loading);

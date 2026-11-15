@@ -4,6 +4,7 @@ import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/domain/program_schedule.dart';
 import '../../programs/presentation/program_list_cubit.dart';
+import '../../workout/domain/workout.dart';
 import '../../workout/presentation/active_workout_cubit.dart';
 
 /// What the Today tab offers to train next.
@@ -41,6 +42,45 @@ class NextProgramDay extends NextWorkout {
   List<Object?> get props => [program, dayIndex, date, access];
 }
 
+/// The active [program]'s next day, [dayIndex], is planned for the later
+/// [date] and nothing was trained today: a rest day, from which that day
+/// can still start early (through the paywall when [access] is locked).
+class RestDay extends NextWorkout {
+  const RestDay({
+    required this.program,
+    required this.dayIndex,
+    required this.date,
+    required this.access,
+  });
+
+  final Program program;
+  final int dayIndex;
+  final CalendarDate date;
+  final ProgramAccess access;
+
+  @override
+  List<Object?> get props => [program, dayIndex, date, access];
+}
+
+/// [workout] was finished today and the active [program]'s next day,
+/// [dayIndex], is planned for the later [date].
+class DoneToday extends NextWorkout {
+  const DoneToday({
+    required this.workout,
+    required this.program,
+    required this.dayIndex,
+    required this.date,
+  });
+
+  final Workout workout;
+  final Program program;
+  final int dayIndex;
+  final CalendarDate date;
+
+  @override
+  List<Object?> get props => [workout, program, dayIndex, date];
+}
+
 /// The active [program]'s next day was [missed]; it is resolved as in the
 /// Programs tab, or started anyway.
 class MissedProgramDay extends NextWorkout {
@@ -60,18 +100,40 @@ class MissedProgramDay extends NextWorkout {
   List<Object?> get props => [program, missed, moveDate];
 }
 
-/// A workout named [name] is in progress, so it is resumed rather than
-/// another started; started from day [dayIndex] of [program] when that
-/// day is still the one it was started from.
+/// A workout named [name] is in progress since [startedAt], so it is
+/// resumed rather than another started; started from day [dayIndex] of
+/// [program] when that day is still the one it was started from. It is at
+/// exercise [exercise] (from 1, the first with a set not done) of
+/// [exercises], with [doneSets] sets done in all.
 class WorkoutInProgress extends NextWorkout {
-  const WorkoutInProgress({required this.name, this.program, this.dayIndex});
+  const WorkoutInProgress({
+    required this.name,
+    required this.startedAt,
+    required this.exercise,
+    required this.exercises,
+    required this.doneSets,
+    this.program,
+    this.dayIndex,
+  });
 
   final String name;
+  final DateTime startedAt;
+  final int exercise;
+  final int exercises;
+  final int doneSets;
   final Program? program;
   final int? dayIndex;
 
   @override
-  List<Object?> get props => [name, program, dayIndex];
+  List<Object?> get props => [
+    name,
+    startedAt,
+    exercise,
+    exercises,
+    doneSets,
+    program,
+    dayIndex,
+  ];
 }
 
 /// What Today shows of the active workout, so the card rebuilds only when
@@ -82,23 +144,43 @@ typedef ActiveWorkoutView = ({
   String? name,
   String? programId,
   int? dayIndex,
+  DateTime? startedAt,
+  int exercise,
+  int exercises,
+  int doneSets,
 });
 
-ActiveWorkoutView activeWorkoutViewOf(ActiveWorkoutState state) => (
-  loading: state.status == WorkoutStatus.loading,
-  inProgress: state.inProgress,
-  name: state.workout?.name,
-  programId: state.workout?.programId,
-  dayIndex: state.workout?.dayIndex,
-);
+ActiveWorkoutView activeWorkoutViewOf(ActiveWorkoutState state) {
+  final exercises = state.workout?.exercises ?? const [];
+  final open = exercises.indexWhere((e) => e.sets.any((s) => !s.done));
+  return (
+    loading: state.status == WorkoutStatus.loading,
+    inProgress: state.inProgress,
+    name: state.workout?.name,
+    programId: state.workout?.programId,
+    dayIndex: state.workout?.dayIndex,
+    startedAt: state.workout?.startedAt,
+    // Every set done: the last one.
+    exercise: open == -1 ? exercises.length : open + 1,
+    exercises: exercises.length,
+    doneSets: state.workout?.doneSetCount ?? 0,
+  );
+}
+
+/// What Today knows of [today]: the workouts finished on it, oldest first;
+/// null while they are not known yet.
+typedef TodayView = ({CalendarDate today, List<Workout>? done});
 
 /// The next workout: the one in progress in [active] (an empty one is not),
-/// else derived only from what the Programs tab shows in [state]; null
-/// until it is known: while the workout in progress is looked for (Start
-/// could otherwise show for a day already running), while the list loads,
-/// and while the premium status of a premium copy is (a missed day could
-/// otherwise show as a planned one with Start). A missed day is offered
-/// only while the program is open, as there.
+/// else derived from what the Programs tab shows in [state] and what was
+/// done [today]; null until it is known: while the workout in progress is
+/// looked for (Start could otherwise show for a day already running),
+/// while the list loads, while the premium status of a premium copy is (a
+/// missed day could otherwise show as a planned one with Start), and,
+/// before a later next day, while today's workouts are. A missed day is
+/// offered only while the program is open, as there. A next day planned
+/// after today, none missed, makes today a rest day, or done when a workout
+/// was finished today (the latest).
 ///
 /// A workout does not store its day's name; [startName] is the name a day
 /// gives the workout it starts, so a workout still named so was started
@@ -107,14 +189,19 @@ NextWorkout? nextWorkoutOf(
   ProgramListState state,
   ActiveWorkoutView active, {
   required String Function(Program program, int dayIndex) startName,
+  required TodayView today,
 }) {
   if (active.loading) return null;
   if (active case (
     inProgress: true,
     name: final name?,
+    startedAt: final startedAt?,
     :final programId,
     :final dayIndex,
     loading: _,
+    exercise: _,
+    exercises: _,
+    doneSets: _,
   )) {
     final program = programId == null ? null : state.program(programId);
     final matches =
@@ -122,9 +209,15 @@ NextWorkout? nextWorkoutOf(
         dayIndex != null &&
         dayIndex < program.days.length &&
         startName(program, dayIndex) == name;
-    return matches
-        ? WorkoutInProgress(name: name, program: program, dayIndex: dayIndex)
-        : WorkoutInProgress(name: name);
+    return WorkoutInProgress(
+      name: name,
+      startedAt: startedAt,
+      exercise: active.exercise,
+      exercises: active.exercises,
+      doneSets: active.doneSets,
+      program: matches ? program : null,
+      dayIndex: matches ? dayIndex : null,
+    );
   }
   if (state.status != ProgramListStatus.ready) return null;
   final program = state.activeProgram;
@@ -143,10 +236,30 @@ NextWorkout? nextWorkoutOf(
       moveDate: moveDate,
     );
   }
+  final date = state.nextDate;
+  // A locked copy's missed day stays due, as its block.
+  if (date != null && missed == null && date.isAfter(today.today)) {
+    final done = today.done;
+    if (done == null) return null;
+    if (done.lastOrNull case final workout?) {
+      return DoneToday(
+        workout: workout,
+        program: program,
+        dayIndex: dayIndex,
+        date: date,
+      );
+    }
+    return RestDay(
+      program: program,
+      dayIndex: dayIndex,
+      date: date,
+      access: access,
+    );
+  }
   return NextProgramDay(
     program: program,
     dayIndex: dayIndex,
-    date: state.nextDate,
+    date: date,
     access: access,
   );
 }

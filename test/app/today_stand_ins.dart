@@ -9,6 +9,7 @@ import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_steps_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_volume_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_week_cubit.dart';
+import 'package:get_workout/features/volume/domain/weekly_volume.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _WeekCubit extends MockCubit<TodayWeekState> implements TodayWeekCubit {}
@@ -30,8 +31,8 @@ class _ProgramListCubit extends MockCubit<ProgramListState>
 
 /// Registers the Today tab's cubits as stand-ins, for tests that land on
 /// Today without testing it: the week is ready and empty (its loading
-/// skeleton shimmers, which never settles), the volume stays loading (no
-/// spinner), steps have no health store, and the program list, unless
+/// skeleton shimmers, which never settles), the volume is ready and empty,
+/// steps have no health store, and the program list, unless
 /// the test has its own, is ready and empty.
 void registerTodayStandIns() {
   final monday = CalendarDate(2026, 11, 9);
@@ -49,7 +50,13 @@ void registerTodayStandIns() {
     })
     ..registerFactoryParam<TodayVolumeCubit, int, void>((_, _) {
       final cubit = _VolumeCubit();
-      when(() => cubit.state).thenReturn(TodayVolumeState(weekStart: monday));
+      when(() => cubit.state).thenReturn(
+        TodayVolumeState(
+          weekStart: monday,
+          status: TodayVolumeStatus.ready,
+          week: WeekVolume(monday, const []),
+        ),
+      );
       return cubit;
     })
     ..registerFactory<TodayStepsCubit>(() {

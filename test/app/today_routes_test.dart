@@ -302,7 +302,8 @@ void main() {
       await tap(tester, find.text('Do it today'));
 
       verify(() => list.resolveMissed(MissedDayChoice.doToday)).called(1);
-      expect(find.text('Start Lower'), findsOneWidget);
+      // Start comes back only once the day is answered.
+      expect(find.text('Start Lower'), findsNothing);
     });
 
     testWidgets('a failed choice is reported by the prompt', (tester) async {
@@ -325,7 +326,7 @@ void main() {
         programs: const ProgramListState(status: ProgramListStatus.ready),
       );
 
-      await tap(tester, find.text('Browse ready-made programs'));
+      await tap(tester, find.text('See ready-made programs'));
 
       expectAt(Routes.catalogue);
     });
@@ -336,7 +337,7 @@ void main() {
         programs: const ProgramListState(status: ProgramListStatus.ready),
       );
 
-      expect(find.text('Next workout'), findsOneWidget);
+      expect(find.text('Pick your first program'), findsOneWidget);
       await tap(tester, find.text('Start empty workout'));
 
       verify(() => workout.startFree('Workout')).called(1);
@@ -396,8 +397,7 @@ void main() {
       await start(tester, programs: planned);
       verify(() => steps.load(10000)).called(1);
 
-      await reveal(tester, find.text('4,000 steps'));
-      expect(find.text('of 10,000'), findsOneWidget);
+      await reveal(tester, find.text('4,000'));
       expect(find.text('6,000 to go'), findsOneWidget);
       await tap(tester, find.text('Steps'));
 
