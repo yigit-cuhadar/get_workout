@@ -173,4 +173,55 @@ void main() {
       await expectation;
     });
   });
+
+  group('exercise notes', () {
+    test('are empty while the document or the field is missing', () async {
+      expect(await repository.watchExerciseNotes('u1').first, isEmpty);
+      await user().set({'favoriteExerciseIds': <String>[]});
+      expect(await repository.watchExerciseNotes('u1').first, isEmpty);
+    });
+
+    test('values that are not text are dropped', () async {
+      await user().set({
+        'exerciseNotes': {'squat': 'Wide stance', 'bench': 3, 'row': ''},
+      });
+      expect(await repository.watchExerciseNotes('u1').first, {
+        'squat': 'Wide stance',
+      });
+    });
+
+    test('saving one keeps the other notes and fields', () async {
+      await user().set({
+        'exerciseNotes': {'squat': 'Wide stance'},
+        'favoriteExerciseIds': ['squat'],
+      });
+
+      final result = await repository.setExerciseNote('u1', 'bench', 'Grip');
+
+      expect(result.isOk, isTrue);
+      expect((await user().get()).data(), {
+        'exerciseNotes': {'squat': 'Wide stance', 'bench': 'Grip'},
+        'favoriteExerciseIds': ['squat'],
+      });
+    });
+
+    test('an empty note removes only that one', () async {
+      await user().set({
+        'exerciseNotes': {'squat': 'Wide stance', 'bench': 'Grip'},
+      });
+
+      await repository.setExerciseNote('u1', 'bench', '');
+
+      expect(await repository.watchExerciseNotes('u1').first, {
+        'squat': 'Wide stance',
+      });
+    });
+
+    test('saving to a missing document creates it', () async {
+      await repository.setExerciseNote('u1', 'squat', 'Wide stance');
+      expect(await repository.watchExerciseNotes('u1').first, {
+        'squat': 'Wide stance',
+      });
+    });
+  });
 }

@@ -66,6 +66,35 @@ class SetFavorite implements UseCase<void, FavoriteUpdate> {
   );
 }
 
+typedef ExerciseNoteUpdate = ({String uid, String exerciseId, String note});
+
+/// The longest own note on an exercise.
+const maxExerciseNoteLength = 500;
+
+class WatchExerciseNotes {
+  const WatchExerciseNotes(this._repository);
+  final UserLibraryRepository _repository;
+
+  Stream<Map<String, String>> call(String uid) =>
+      _repository.watchExerciseNotes(uid);
+}
+
+/// Stores the note trimmed; a blank one removes the note. A note over
+/// [maxExerciseNoteLength] is refused.
+class SetExerciseNote implements UseCase<void, ExerciseNoteUpdate> {
+  const SetExerciseNote(this._repository);
+  final UserLibraryRepository _repository;
+
+  @override
+  Future<Result<void>> call(ExerciseNoteUpdate params) async {
+    final note = params.note.trim();
+    if (note.length > maxExerciseNoteLength) {
+      return const Err(ValidationFailure('Note too long'));
+    }
+    return _repository.setExerciseNote(params.uid, params.exerciseId, note);
+  }
+}
+
 typedef CustomExerciseSave = ({String uid, CustomExercise exercise});
 
 typedef CustomExerciseDelete = ({String uid, String id});
