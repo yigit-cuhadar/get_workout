@@ -582,6 +582,18 @@ Decisions (the canvases they were drawn on are deleted):
   no step access is SectionCard.empty "See your steps"; loading is per card
   and Calculators always shows; a rest day keeps the zones and "to go"
   lines; the locked note has no lock icon.
+- Programs screen step (owner's picks, 2026-11-15): the band's days are
+  ListRow date-box rows (Done with a check, Missed, Next, Planned; today
+  ringed); while a day is missed Start is hidden and Do it today / Move /
+  Skip sit under its row; the band opens nothing, ⋯ holds Open program,
+  Change days, Duplicate (opens the copy) and Stop program, which asks
+  first (also on the program page); a finished band reads "n workouts"
+  with Run it again (weekday picker first) and New program (the builder);
+  a locked Premium copy keeps its band (lock in the eyebrow, Start opens
+  the paywall) with a "Premium has ended" NoticeBanner under it; the
+  program lists stay in every state; undrawn states use the components'
+  standard forms (EmptyView, SectionCard.loading / error, button loading,
+  ForgeSnackbar) and are drawn on the board afterwards.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 

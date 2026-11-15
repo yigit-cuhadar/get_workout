@@ -5,8 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/app/router.dart';
 import 'package:get_workout/app/theme.dart';
+import 'package:get_workout/features/exercises/presentation/body_model_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
+import 'package:get_workout/features/programs/presentation/premium_prompt.dart';
+import 'package:get_workout/features/programs/presentation/program_detail_cubit.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/features/programs/presentation/programs_page.dart';
 import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
@@ -23,6 +27,15 @@ class MockWorkoutCubit extends MockCubit<ActiveWorkoutState>
 
 class MockProgramListCubit extends MockCubit<ProgramListState>
     implements ProgramListCubit {}
+
+class MockProgramDetailCubit extends MockCubit<ProgramDetailState>
+    implements ProgramDetailCubit {}
+
+class MockCatalogueCubit extends MockCubit<ExerciseCatalogueState>
+    implements ExerciseCatalogueCubit {}
+
+class MockBodyModelCubit extends MockCubit<BodyModelState>
+    implements BodyModelCubit {}
 
 void main() {
   late MockWorkoutCubit cubit;
@@ -43,6 +56,20 @@ void main() {
       when(() => list.state).thenReturn(programs);
       sl.registerSingleton<ProgramListCubit>(list);
     }
+    final detail = MockProgramDetailCubit();
+    when(() => detail.state).thenReturn(const ProgramDetailState());
+    sl
+      ..registerSingleton(PremiumPrompt((_) {}))
+      ..registerFactoryParam<ProgramDetailCubit, String, void>(
+        (_, _) => detail,
+      );
+    final catalogue = MockCatalogueCubit();
+    // Failed, not loading: a loading card shimmers, which never settles.
+    when(() => catalogue.state)
+        .thenReturn(const CatalogueFailed(UnknownFailure('offline')));
+    final model = MockBodyModelCubit();
+    when(() => model.state).thenReturn(const BodyModelLoading());
+    when(model.load).thenAnswer((_) async {});
     cubit = MockWorkoutCubit();
     when(() => cubit.state).thenReturn(state);
     when(() => cubit.startFree(any())).thenReturn(true);
@@ -62,6 +89,8 @@ void main() {
       MultiBlocProvider(
         providers: [
           BlocProvider<ActiveWorkoutCubit>.value(value: cubit),
+          BlocProvider<ExerciseCatalogueCubit>.value(value: catalogue),
+          BlocProvider<BodyModelCubit>.value(value: model),
           unknownPremium(),
           programList(),
           defaultSettings(),

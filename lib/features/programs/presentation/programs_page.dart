@@ -118,7 +118,7 @@ class _Programs extends StatelessWidget {
       children: [
         if (active == null)
           FeaturedCard(
-            form: FeaturedCardForm.outline,
+            form: FeaturedCardForm.prompt,
             eyebrow: l10n.programsStartEyebrow,
             title: l10n.programsStartTitle,
             note: l10n.programsStartDetail,
@@ -176,15 +176,10 @@ class _Programs extends StatelessWidget {
         ),
         if (state.programs.isEmpty) ...[
           const SizedBox(height: Gap.sm),
+          // The prompt above already leads to the catalogue.
           EmptyView(
             title: l10n.programsEmptyTitle,
             message: l10n.programsEmptyDetail,
-            actions: [
-              ForgeButton(
-                label: l10n.programsSeeCatalogue,
-                onPressed: () => context.go(Routes.catalogue),
-              ),
-            ],
           ),
         ],
         if (others.isNotEmpty) ...[
