@@ -281,7 +281,7 @@ class _ExcludedAnswer extends StatelessWidget {
           leadingIcon: ForgeIcons.add,
           onPressed: () async {
             final picked = await context.push<List<Exercise>>(
-              Routes.generatorPicker(max: _pickAtOnce, multiple: true),
+              Routes.exerciseLeaveOutPicker(_pickAtOnce),
             );
             if (picked != null) cubit.exclude(picked.map((e) => e.id));
           },

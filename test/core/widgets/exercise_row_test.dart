@@ -117,4 +117,30 @@ void main() {
     await tester.tap(find.byType(ForgeCheckbox));
     expect(toggled, 2);
   });
+
+  testWidgets('a picker row off at the limit takes no taps', (tester) async {
+    var toggled = 0;
+    await pumpComponent(
+      tester,
+      ExerciseRow.pick(
+        name: 'Cable Fly',
+        detail: 'Chest · Cable',
+        selected: false,
+        enabled: false,
+        onTap: () => toggled++,
+      ),
+    );
+
+    expect(
+      tester.getSemantics(find.byType(ExerciseRow)),
+      isSemantics(
+        hasCheckedState: true,
+        hasEnabledState: true,
+        label: 'Cable Fly\nChest · Cable',
+      ),
+    );
+    await tester.tap(find.text('Cable Fly'));
+    await tester.tap(find.byType(ForgeCheckbox));
+    expect(toggled, 0);
+  });
 }

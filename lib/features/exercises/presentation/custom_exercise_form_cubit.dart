@@ -31,6 +31,7 @@ class CustomExerciseFormState extends Equatable {
     this.issues = const {},
     this.status = CustomExerciseFormStatus.editing,
     this.failure,
+    this.savedId,
   });
 
   /// As typed.
@@ -50,6 +51,9 @@ class CustomExerciseFormState extends Equatable {
   final CustomExerciseFormStatus status;
   final Failure? failure;
 
+  /// The exercise's id once saved.
+  final String? savedId;
+
   bool get isSaving => status == CustomExerciseFormStatus.saving;
 
   /// Saved or closed: nothing changes any more.
@@ -67,6 +71,7 @@ class CustomExerciseFormState extends Equatable {
     Set<CustomExerciseIssue>? issues,
     CustomExerciseFormStatus? status,
     Failure? failure,
+    String? savedId,
   }) => CustomExerciseFormState(
     name: name ?? this.name,
     loggingType: loggingType ?? this.loggingType,
@@ -77,6 +82,7 @@ class CustomExerciseFormState extends Equatable {
     issues: issues ?? this.issues,
     status: status ?? this.status,
     failure: failure,
+    savedId: savedId ?? this.savedId,
   );
 
   @override
@@ -90,6 +96,7 @@ class CustomExerciseFormState extends Equatable {
     issues,
     status,
     failure,
+    savedId,
   ];
 }
 
@@ -215,17 +222,18 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
     emit(
       state.copyWith(status: CustomExerciseFormStatus.saving, issues: const {}),
     );
-    final failure = (await _saveExercise((uid: uid, exercise: exercise)))
-        .failureOrNull;
+    final result = await _saveExercise((uid: uid, exercise: exercise));
     if (isClosed || state.isDone) return;
-    emit(
-      failure == null
-          ? state.copyWith(status: CustomExerciseFormStatus.saved)
-          : state.copyWith(
-              status: CustomExerciseFormStatus.saveFailed,
-              failure: failure,
-            ),
-    );
+    emit(switch (result) {
+      Ok(:final value) => state.copyWith(
+        status: CustomExerciseFormStatus.saved,
+        savedId: value,
+      ),
+      Err(:final failure) => state.copyWith(
+        status: CustomExerciseFormStatus.saveFailed,
+        failure: failure,
+      ),
+    });
   }
 
   /// The exercise the inputs describe, in the vocabulary's order; the use

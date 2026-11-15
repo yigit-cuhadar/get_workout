@@ -51,12 +51,13 @@ class FirestoreCustomExerciseRepository implements CustomExerciseRepository {
   );
 
   @override
-  Future<Result<void>> createCustomExercise(
+  Future<Result<String>> createCustomExercise(
     String uid,
     CustomExercise exercise,
   ) => guard(() async {
     final id = '${Exercise.customIdPrefix}${_exercises(uid).doc().id}';
     _confirmLater(_exercises(uid).doc(id).set(toMap(exercise)));
+    return id;
   }, mapper: mapFirebaseError);
 
   /// An update, not a set, so fields a newer app version stored are kept.

@@ -7,8 +7,9 @@ import 'package:forge_firebase/forge_firebase.dart';
 import '../domain/user_library_repository.dart';
 import '../domain/vocabulary.dart';
 
-/// Owned equipment is `profile.equipment` and favourites are
-/// `favoriteExerciseIds` of `users/{uid}`, a document shared with other
+/// Owned equipment is `profile.equipment`, favourites are
+/// `favoriteExerciseIds` and own notes the map `exerciseNotes` (exercise id
+/// to text) of `users/{uid}`, a document shared with other
 /// features, so writes always merge. `FirestoreCollection` only offers
 /// whole-document writes, hence the direct Firestore access.
 class FirestoreUserLibraryRepository implements UserLibraryRepository {
@@ -17,6 +18,7 @@ class FirestoreUserLibraryRepository implements UserLibraryRepository {
   final FirebaseFirestore _firestore;
 
   static const _favorites = 'favoriteExerciseIds';
+  static const _notes = 'exerciseNotes';
 
   @override
   Stream<Set<Equipment>?> watchEquipment(String uid) => _watch(uid, (data) {
@@ -80,6 +82,32 @@ class FirestoreUserLibraryRepository implements UserLibraryRepository {
       _favorites: favorite
           ? FieldValue.arrayUnion([exerciseId])
           : FieldValue.arrayRemove([exerciseId]),
+    }, SetOptions(merge: true)),
+    mapper: mapFirebaseError,
+  );
+
+  @override
+  Stream<Map<String, String>> watchExerciseNotes(String uid) =>
+      _watch(uid, (data) {
+        final raw = data?[_notes];
+        return raw is Map
+            ? {
+                for (final MapEntry(:key, :value) in raw.entries)
+                  if (key is String && value is String && value.isNotEmpty)
+                    key: value,
+              }
+            : <String, String>{};
+      });
+
+  /// A merge write merges into the map, so other notes stay.
+  @override
+  Future<Result<void>> setExerciseNote(
+    String uid,
+    String exerciseId,
+    String note,
+  ) => guard(
+    () => _user(uid).set({
+      _notes: {exerciseId: note.isEmpty ? FieldValue.delete() : note},
     }, SetOptions(merge: true)),
     mapper: mapFirebaseError,
   );
