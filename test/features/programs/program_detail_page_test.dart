@@ -234,7 +234,8 @@ void main() {
     await pump(tester, ready(activeProgram: active));
 
     expect(find.textContaining('Active · week 2 of 8 · '), findsOneWidget);
-    expect(find.text('Next: Lower, Thu, Nov 12'), findsOneWidget);
+    expect(find.text('Next: Lower'), findsOneWidget);
+    expect(find.text('Thu, Nov 12'), findsOneWidget);
     expect(find.text('Start Lower'), findsOneWidget);
     expect(find.text('Change days'), findsOneWidget);
     expect(find.text('Stop'), findsOneWidget);
