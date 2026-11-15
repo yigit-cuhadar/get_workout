@@ -249,6 +249,11 @@ void main() {
     expect(find.text('Bench Press e1RM'), findsOneWidget);
     expect(find.text('104 kg'), findsOneWidget);
     expect(find.text('+3 in 8 weeks'), findsOneWidget);
+    // One sans string like the Body band's, not mono with its wide space.
+    final theme = Theme.of(tester.element(find.byType(ProgressPage)));
+    final figure = tester.widget<Text>(find.text('104 kg')).style!;
+    expect(figure.fontFamily, theme.textTheme.headlineMedium!.fontFamily);
+    expect(figure.fontSize, 24);
     expect(find.text('this week'), findsOneWidget);
     expect(find.text('2 sessions · 47.2 km · 148 min'), findsOneWidget);
     expect(find.text('6,240 / 10,000'), findsOneWidget);

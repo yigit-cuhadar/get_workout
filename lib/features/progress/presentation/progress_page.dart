@@ -398,7 +398,10 @@ class _StrengthFigure extends StatelessWidget {
   final double e1rmKg;
   final ({double kg, int weeks})? change;
 
+  /// The board's figure: the Body band's sans hero, at 24px (-0.03em),
+  /// so the unit sits a normal space from the number.
   static const _figureSize = 24.0;
+  static const _figureHeight = 28.0;
 
   @override
   Widget build(BuildContext context) {
@@ -416,7 +419,11 @@ class _StrengthFigure extends StatelessWidget {
       children: [
         Text(
           l10n.estimatedWeightText(e1rmKg, unit),
-          style: text.headlineSmall!.copyWith(fontSize: _figureSize),
+          style: text.headlineMedium!.copyWith(
+            fontSize: _figureSize,
+            height: _figureHeight / _figureSize,
+            letterSpacing: -0.03 * _figureSize,
+          ),
         ),
         if (change != null)
           Flexible(
