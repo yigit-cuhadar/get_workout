@@ -21,21 +21,28 @@ enum ProgramDetailStatus {
   closed,
 }
 
+/// What a [ProgramDetailCubit] was asked to do.
+enum ProgramDetailAction { start, changeWeekdays, stop, duplicate, delete }
+
 class ProgramDetailState extends Equatable {
   const ProgramDetailState({
     this.status = ProgramDetailStatus.idle,
     this.failure,
+    this.action,
     this.copyId,
   });
 
   final ProgramDetailStatus status;
   final Failure? failure;
+
+  /// The action that [failure] failed.
+  final ProgramDetailAction? action;
   final String? copyId;
 
   bool get isBusy => status == ProgramDetailStatus.working;
 
   @override
-  List<Object?> get props => [status, failure, copyId];
+  List<Object?> get props => [status, failure, action, copyId];
 }
 
 /// The actions of one program's page: start, change weekdays, stop,
@@ -90,6 +97,7 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
   Future<void> start(List<int> weekdays) {
     if (access != ProgramAccess.open) return Future.value();
     return _withProgram(
+      ProgramDetailAction.start,
       (uid, program) =>
           _startProgram((uid: uid, program: program, weekdays: weekdays)),
     );
@@ -104,6 +112,7 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
       return Future.value();
     }
     return _withProgram(
+      ProgramDetailAction.changeWeekdays,
       (uid, program) => _changeWeekdays((
         uid: uid,
         active: active,
@@ -116,12 +125,15 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
   /// Only for the active program.
   Future<void> stop() {
     if (_list.state.active?.programId != programId) return Future.value();
-    return _withProgram((uid, _) => _stopProgram(uid));
+    return _withProgram(
+      ProgramDetailAction.stop,
+      (uid, _) => _stopProgram(uid),
+    );
   }
 
   /// [nameOf] makes the copy's name from the original's.
   Future<void> duplicate(String Function(String name) nameOf) =>
-      _withProgram((uid, program) async {
+      _withProgram(ProgramDetailAction.duplicate, (uid, program) async {
         final result = await _duplicateProgram((
           uid: uid,
           program: program,
@@ -139,22 +151,24 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
         });
       });
 
-  Future<void> delete() => _withProgram((uid, _) async {
-    final result = await _deleteProgram((
-      uid: uid,
-      id: programId,
-      activeProgramId: _list.state.active?.programId,
-    ));
-    return result.map((_) {
-      if (!isClosed && state.status != ProgramDetailStatus.closed) {
-        emit(const ProgramDetailState(status: ProgramDetailStatus.deleted));
-      }
-    });
-  });
+  Future<void> delete() =>
+      _withProgram(ProgramDetailAction.delete, (uid, _) async {
+        final result = await _deleteProgram((
+          uid: uid,
+          id: programId,
+          activeProgramId: _list.state.active?.programId,
+        ));
+        return result.map((_) {
+          if (!isClosed && state.status != ProgramDetailStatus.closed) {
+            emit(const ProgramDetailState(status: ProgramDetailStatus.deleted));
+          }
+        });
+      });
 
   /// Runs [action] for the page's user and program. A success that did not
   /// emit a result of its own returns to idle.
   Future<void> _withProgram(
+    ProgramDetailAction kind,
     Future<Result<void>> Function(String uid, Program program) action,
   ) async {
     if (state.isBusy || state.status == ProgramDetailStatus.closed) return;
@@ -171,6 +185,7 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
           : ProgramDetailState(
               status: ProgramDetailStatus.failed,
               failure: failure,
+              action: kind,
             ),
     );
   }

@@ -1,22 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/widgets/featured_card.dart';
+import '../../../core/widgets/program_volume_card.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../exercises/domain/exercise.dart';
+import '../../exercises/presentation/body_model_cubit.dart';
+import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../generator/presentation/generator_entry.dart';
-import '../../settings/presentation/first_weekday.dart';
 import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
 import '../domain/program_schedule.dart';
+import '../domain/program_volume.dart';
 import 'missed_day_prompt.dart';
+import 'premium_prompt.dart';
+import 'program_detail_cubit.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
+import 'stop_program_dialog.dart';
+import 'weekday_dialog.dart';
 
-/// The Programs tab's first page: the active program's card with the next
-/// workout and this week's days, then the ways into the ready-made
+/// The Programs tab's first page: the active program in a header band with
+/// this week's days, its weekly sets, then the ways into the ready-made
 /// programs, the generator and the builder and an empty workout, then the
 /// other programs.
 class ProgramsPage extends StatelessWidget {
@@ -26,14 +36,16 @@ class ProgramsPage extends StatelessWidget {
   Widget build(BuildContext context) => BlocProvider.value(
     value: sl<ProgramListCubit>(),
     child: Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).tabPrograms)),
-      body: const _ProgramsView(),
+      appBar: ForgeAppBar(title: AppLocalizations.of(context).tabPrograms),
+      body: _ProgramsView(premium: sl<PremiumPrompt>()),
     ),
   );
 }
 
 class _ProgramsView extends StatefulWidget {
-  const _ProgramsView();
+  const _ProgramsView({required this.premium});
+
+  final PremiumPrompt premium;
 
   @override
   State<_ProgramsView> createState() => _ProgramsViewState();
@@ -65,89 +77,132 @@ class _ProgramsViewState extends State<_ProgramsView> {
     // missed-day choice by its prompt.
     return BlocBuilder<ProgramListCubit, ProgramListState>(
       builder: (context, state) => switch (state.status) {
-        ProgramListStatus.loading => const LoadingView(),
+        ProgramListStatus.loading => const _Loading(),
         ProgramListStatus.failure => ErrorView(
-          title: l10n.programsLoadFailed,
+          title: l10n.programsLoadFailedTitle,
           message: l10n.loadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: _cubit.retry,
         ),
-        ProgramListStatus.ready => _Programs(state),
+        ProgramListStatus.ready => _Programs(state, premium: widget.premium),
       },
     );
   }
 }
 
+/// The page's shape while it loads: the band's skeleton and two cards'.
+class _Loading extends StatelessWidget {
+  const _Loading();
+
+  @override
+  Widget build(BuildContext context) => const SingleChildScrollView(
+    padding: EdgeInsets.all(Gap.md),
+    child: LoadingView(),
+  );
+}
+
 class _Programs extends StatelessWidget {
-  const _Programs(this.state);
+  const _Programs(this.state, {required this.premium});
+
   final ProgramListState state;
+  final PremiumPrompt premium;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final active = state.activeProgram;
     final others = state.otherPrograms;
+    final access = active == null ? null : state.access(active);
     return ListView(
       padding: const EdgeInsets.all(Gap.md),
       children: [
-        if (state.activeProgram != null) ...[
-          _ActiveProgramCard(state),
-          const SizedBox(height: Gap.md),
+        if (active == null)
+          FeaturedCard(
+            form: FeaturedCardForm.outline,
+            eyebrow: l10n.programsStartEyebrow,
+            title: l10n.programsStartTitle,
+            note: l10n.programsStartDetail,
+            action: FeaturedAction(
+              l10n.programsSeeCatalogue,
+              () => context.go(Routes.catalogue),
+            ),
+          )
+        else ...[
+          BlocProvider(
+            key: ValueKey(active.id),
+            create: (_) => sl<ProgramDetailCubit>(param1: active.id),
+            child: _ActiveProgram(state, active, premium: premium),
+          ),
+          // Kept, not stopped: it carries on once premium is back.
+          if (access == ProgramAccess.locked) ...[
+            const SizedBox(height: Gap.sm),
+            NoticeBanner(
+              icon: ForgeIcons.lock,
+              title: l10n.programPremiumEndedTitle,
+              message: l10n.programPremiumEndedBody(active.name),
+              action: ForgeButton(
+                label: l10n.programSeePremium,
+                variant: ForgeButtonVariant.secondary,
+                onPressed: () => premium.show(context),
+              ),
+            ),
+          ],
+          if (!state.finished && access != ProgramAccess.waiting) ...[
+            const SizedBox(height: Gap.sm),
+            _ActiveProgramVolume(active),
+          ],
         ],
-        Card(
-          margin: EdgeInsets.zero,
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.auto_awesome_outlined),
-                title: Text(l10n.catalogueTitle),
-                subtitle: Text(l10n.catalogueEntryInfo),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.go(Routes.catalogue),
-              ),
-              const GeneratorEntry(),
-              ListTile(
-                leading: const Icon(Icons.add),
-                title: Text(l10n.programNew),
-                subtitle: Text(l10n.programNewInfo),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.go(Routes.programNew),
-              ),
-              ListTile(
-                leading: const Icon(Icons.play_arrow),
-                title: Text(l10n.workoutStartEmpty),
-                onTap: () => startFreeWorkout(context),
+        const SizedBox(height: Gap.sm),
+        ListRowCard(
+          children: [
+            ListRow(
+              title: l10n.catalogueTitle,
+              detail: l10n.programsCatalogueInfo,
+              end: ListRowEnd.chevron,
+              onTap: () => context.go(Routes.catalogue),
+            ),
+            const GeneratorEntry(),
+            ListRow(
+              title: l10n.programNew,
+              detail: l10n.programNewInfo,
+              end: ListRowEnd.chevron,
+              onTap: () => context.go(Routes.programNew),
+            ),
+            ListRow(
+              title: l10n.workoutStartEmpty,
+              onTap: () => startFreeWorkout(context),
+            ),
+          ],
+        ),
+        if (state.programs.isEmpty) ...[
+          const SizedBox(height: Gap.sm),
+          EmptyView(
+            title: l10n.programsEmptyTitle,
+            message: l10n.programsEmptyDetail,
+            actions: [
+              ForgeButton(
+                label: l10n.programsSeeCatalogue,
+                onPressed: () => context.go(Routes.catalogue),
               ),
             ],
           ),
-        ),
-        if (state.programs.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: Gap.md),
-            child: Text(l10n.programsEmpty),
-          ),
+        ],
         if (others.isNotEmpty) ...[
           Padding(
-            padding: const EdgeInsets.fromLTRB(0, Gap.lg, 0, Gap.sm),
+            padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.md, Gap.xs, Gap.xs),
             child: Text(
-              state.activeProgram == null
-                  ? l10n.programsMine
-                  : l10n.programsOther,
+              active == null ? l10n.programsMine : l10n.programsOther,
               style: Theme.of(context).textTheme.titleSmall,
             ),
           ),
-          Card(
-            margin: EdgeInsets.zero,
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                for (final program in others)
-                  _ProgramTile(
-                    program,
-                    locked: state.access(program) == ProgramAccess.locked,
-                  ),
-              ],
-            ),
+          ListRowCard(
+            children: [
+              for (final program in others)
+                _ProgramRow(
+                  program,
+                  locked: state.access(program) == ProgramAccess.locked,
+                ),
+            ],
           ),
         ],
       ],
@@ -155,113 +210,334 @@ class _Programs extends StatelessWidget {
   }
 }
 
-/// The active program: its name, which opens it, where it stands, the next
-/// workout with the one Start of a program day here, a missed day's prompt
-/// and this week's days with their state.
-class _ActiveProgramCard extends StatelessWidget {
-  const _ActiveProgramCard(this.state);
+/// The active program's band: where it stands, the one Start of a program
+/// day here (hidden while a missed day waits for its answer) and this
+/// week's days, or once it finished its result and the ways on; its
+/// options in ⋯.
+class _ActiveProgram extends StatelessWidget {
+  const _ActiveProgram(this.state, this.program, {required this.premium});
+
   final ProgramListState state;
+  final Program program;
+  final PremiumPrompt premium;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final program = state.activeProgram!;
     final access = state.access(program);
     final weeks = program.lengthWeeks;
     final week = state.week;
-    final progress = state.finished
-        ? l10n.programFinished
-        : [
-            if (week != null)
-              weeks == null
-                  ? l10n.programWeekNumber(week)
-                  : l10n.programWeekOf(week, weeks),
-            l10n.weekdayList(
-              state.active!.weekdays,
-              context.watchFirstWeekday(),
-            ),
-          ].join(' · ');
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ListTile(
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.programActive,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                  ),
+    return BlocListener<ProgramDetailCubit, ProgramDetailState>(
+      listenWhen: (previous, current) => previous.status != current.status,
+      listener: (context, detail) {
+        switch (detail.status) {
+          case ProgramDetailStatus.duplicated:
+            context.go(Routes.program(detail.copyId!, created: true));
+          case ProgramDetailStatus.failed:
+            showForgeSnackbar(
+              context,
+              message: detail.failure is NetworkFailure
+                  ? l10n.errorNetwork
+                  : detail.action == ProgramDetailAction.stop
+                  ? l10n.programStopFailed
+                  : l10n.programActionFailed,
+              error: true,
+            );
+          default:
+        }
+      },
+      child: state.finished
+          ? FeaturedCard(
+              form: FeaturedCardForm.band,
+              eyebrow: l10n.programFinishedWeeks(weeks ?? 0),
+              title: program.name,
+              locked: access == ProgramAccess.locked,
+              note: switch (state.workoutCount) {
+                final count? => l10n.programWorkoutCount(count),
+                null => null,
+              },
+              action: FeaturedAction(
+                l10n.programRunAgain,
+                () => _ProgramActions(
+                  context,
+                  state,
+                  program,
+                  premium,
+                ).runAgain(),
+                locked: access == ProgramAccess.locked,
+              ),
+              moreActions: [
+                FeaturedAction(
+                  l10n.programNew,
+                  () => context.go(Routes.programNew),
                 ),
-                Text(program.name, style: theme.textTheme.titleMedium),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FeaturedCard(
+                  form: FeaturedCardForm.band,
+                  eyebrow: week == null
+                      ? l10n.programActive
+                      : weeks == null
+                      ? l10n.programActiveWeek(week)
+                      : l10n.programActiveWeekOf(week, weeks),
+                  title: program.name,
+                  locked: access == ProgramAccess.locked,
+                  action: switch (state.startDayIndex) {
+                    final day? => FeaturedAction(
+                      l10n.workoutStartDay(
+                        l10n.dayName(program.days[day], day),
+                      ),
+                      () => startProgramDay(context, program, day),
+                      locked: access == ProgramAccess.locked,
+                    ),
+                    null => null,
+                  },
+                ),
+                if (weeks != null && week != null)
+                  Progress.track(value: week / weeks),
+                _ProgramMenuButton(state, program, premium: premium),
+                if (access != ProgramAccess.locked)
+                  ListRowCard(children: weekDayRows(context, state, program)),
               ],
             ),
-            subtitle: Text(progress),
-            trailing: access == ProgramAccess.locked
-                ? Icon(
-                    Icons.lock_outline,
-                    semanticLabel: l10n.catalogueLockedLabel,
-                  )
-                : const Icon(Icons.chevron_right),
-            onTap: () => context.go(Routes.program(program.id!)),
-          ),
-          if (!state.finished && weeks != null && week != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-              child: LinearProgressIndicator(value: week / weeks),
-            ),
-          // Locked, it opens the paywall instead.
-          if (state.nextDayIndex case final day?)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(Gap.md, Gap.md, Gap.md, 0),
-              child: ForgeButton(
-                label: l10n.workoutStartDay(
-                  l10n.dayName(program.days[day], day),
-                ),
-                onPressed: () => startProgramDay(context, program, day),
-              ),
-            ),
-          // Kept, not stopped: it carries on once premium is back.
-          if (access == ProgramAccess.locked)
-            Padding(
-              padding: const EdgeInsets.all(Gap.md),
-              child: Row(
-                children: [
-                  const Icon(Icons.lock_outline),
-                  const SizedBox(width: Gap.sm),
-                  Expanded(child: Text(l10n.programLockedActive)),
-                ],
-              ),
-            )
-          else if (access == ProgramAccess.waiting)
-            const Padding(padding: EdgeInsets.all(Gap.md), child: LoadingView())
-          else ...[
-            if (state.missed case final missed?)
-              MissedDayPrompt(
-                program: program,
-                missed: missed,
-                moveDate: state.moveDate!,
-                busy: state.resolving,
-              ),
-            if (!state.finished) ...[
-              const SizedBox(height: Gap.sm),
-              _WeekPlan(state),
-            ],
-            const SizedBox(height: Gap.sm),
-          ],
-        ],
+    );
+  }
+}
+
+/// The ⋯ of the active program's band.
+class _ProgramMenuButton extends StatelessWidget {
+  const _ProgramMenuButton(this.state, this.program, {required this.premium});
+
+  final ProgramListState state;
+  final Program program;
+  final PremiumPrompt premium;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final busy = context.watch<ProgramDetailCubit>().state.isBusy;
+    return Builder(
+      builder: (anchor) => IconButton(
+        tooltip: l10n.programOptions,
+        icon: const ForgeIcon(ForgeIcons.moreHoriz),
+        onPressed: busy
+            ? null
+            : () => _ProgramActions(anchor, state, program, premium).menu(),
       ),
     );
   }
 }
 
-class _ProgramTile extends StatelessWidget {
-  const _ProgramTile(this.program, {required this.locked});
+/// What the band's buttons and ⋯ do, through the [ProgramDetailCubit] of
+/// the active program above [context].
+class _ProgramActions {
+  _ProgramActions(this.context, this.state, this.program, this.premium);
+
+  final BuildContext context;
+  final ProgramListState state;
+  final Program program;
+  final PremiumPrompt premium;
+
+  ProgramDetailCubit get _cubit => context.read<ProgramDetailCubit>();
+
+  Future<void> menu() {
+    final l10n = AppLocalizations.of(context);
+    return showForgeMenu(
+      context: context,
+      items: [
+        ForgeMenuItem(
+          label: l10n.programOpen,
+          onTap: () => context.go(Routes.program(program.id!)),
+        ),
+        if (!state.finished)
+          ForgeMenuItem(label: l10n.programChangeDays, onTap: changeDays),
+        ForgeMenuItem(
+          label: l10n.programDuplicate,
+          onTap: () {
+            _cubit.duplicate(l10n.programCopyName);
+          },
+        ),
+        ForgeMenuItem(
+          label: l10n.programStopConfirm,
+          destructive: true,
+          onTap: stop,
+        ),
+      ],
+    );
+  }
+
+  /// A locked copy opens the paywall instead.
+  Future<void> changeDays() async {
+    if (_locked()) return;
+    final active = state.active!;
+    final weekdays = await _pickWeekdays(
+      active.weekdays,
+      AppLocalizations.of(context).programSave,
+    );
+    if (weekdays != null) await _cubit.changeWeekdays(weekdays);
+  }
+
+  Future<void> stop() async {
+    final cubit = _cubit;
+    if (!await confirmStopProgram(context, program.name)) return;
+    await cubit.stop();
+  }
+
+  /// Starts the finished program again from today on the weekdays picked;
+  /// a locked copy opens the paywall instead.
+  Future<void> runAgain() async {
+    if (_locked()) return;
+    final weekdays = await _pickWeekdays(
+      state.active!.weekdays,
+      AppLocalizations.of(context).programStart,
+    );
+    if (weekdays != null) await _cubit.start(weekdays);
+  }
+
+  bool _locked() {
+    if (state.access(program) != ProgramAccess.locked) return false;
+    premium.show(context);
+    return true;
+  }
+
+  Future<List<int>?> _pickWeekdays(List<int> current, String confirmLabel) {
+    final count = program.days.length;
+    return showWeekdayDialog(
+      context,
+      count: count,
+      initial: current.length == count
+          ? current
+          : ProgramSchedule.suggestedWeekdays(count),
+      confirmLabel: confirmLabel,
+    );
+  }
+}
+
+/// This week's planned and done days of the active program as date-box
+/// rows with their state, a missed day's prompt under its row; none
+/// starts, the band's Start does. While the premium status of a premium
+/// copy is unknown, loading rows.
+List<Widget> weekDayRows(
+  BuildContext context,
+  ProgramListState state,
+  Program program,
+) {
+  if (state.access(program) == ProgramAccess.waiting) {
+    return [for (var i = 0; i < 3; i++) ListRow.loading(index: i)];
+  }
+  final l10n = AppLocalizations.of(context);
+  final success = ForgeStyle.of(context).colors.success;
+  final missed = state.missed;
+  bool isNext(PlannedDay day) =>
+      day.status == PlannedStatus.planned &&
+      day.dayIndex == state.nextDayIndex &&
+      day.date == state.nextDate;
+  Widget row(PlannedDay day) => ListRow(
+    leading: ListRowDateBox(
+      weekday: l10n.weekdayShort(day.date.weekday),
+      day: '${day.date.day}',
+      state: switch (day.status) {
+        PlannedStatus.done => DayState.done,
+        PlannedStatus.missed => DayState.missed,
+        PlannedStatus.planned when day.date == state.today => DayState.today,
+        PlannedStatus.planned => DayState.planned,
+      },
+    ),
+    title: day.dayIndex < program.days.length
+        ? l10n.dayName(program.days[day.dayIndex], day.dayIndex)
+        : l10n.programDayDefault(day.dayIndex + 1),
+    detail: switch (day.status) {
+      PlannedStatus.done => l10n.programDayDone,
+      PlannedStatus.missed => null,
+      PlannedStatus.planned when isNext(day) => l10n.programDayNext,
+      PlannedStatus.planned => l10n.programDayPlanned,
+    },
+    error: day.status == PlannedStatus.missed ? l10n.programDayMissed : null,
+    trailing: day.status == PlannedStatus.done
+        ? ForgeIcon(ForgeIcons.check, size: 16, color: success)
+        : null,
+  );
+  final prompt = missed == null
+      ? null
+      : MissedDayPrompt(
+          program: program,
+          missed: missed,
+          moveDate: state.moveDate!,
+          busy: state.resolving,
+        );
+  final plan = state.weekPlan;
+  return [
+    // A day missed in an earlier week waits above this week's.
+    if (missed != null && !plan.contains(missed)) ...[row(missed), ?prompt],
+    for (final day in plan) ...[row(day), if (day == missed) ?prompt],
+    if (plan.isEmpty && missed == null) ListRow(title: l10n.programWeekEmpty),
+  ];
+}
+
+/// The active program's weekly sets, once its exercises and the body model
+/// are known.
+class _ActiveProgramVolume extends StatefulWidget {
+  const _ActiveProgramVolume(this.program);
+
+  final Program program;
+
+  @override
+  State<_ActiveProgramVolume> createState() => _ActiveProgramVolumeState();
+}
+
+class _ActiveProgramVolumeState extends State<_ActiveProgramVolume> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<BodyModelCubit>().load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final program = widget.program;
+    final catalogue = context.watch<ExerciseCatalogueCubit>();
+    final model = context.watch<BodyModelCubit>();
+    void open() => context.go(Routes.program(program.id!));
+    SectionCard failed(VoidCallback retry) => SectionCard.error(
+      title: l10n.programVolumeTitle,
+      onTap: open,
+      message: l10n.programVolumeLoadFailed,
+      retryLabel: l10n.retry,
+      onRetry: retry,
+    );
+    return switch ((catalogue.state, model.state)) {
+      (CatalogueFailed(), _) => failed(catalogue.retry),
+      (_, BodyModelFailed()) => failed(model.load),
+      (CatalogueReady(:final exercises), BodyModelReady(model: final body)) =>
+        _card(program, exercises, body, open),
+      _ => SectionCard.loading(title: l10n.programVolumeTitle, onTap: open),
+    };
+  }
+
+  static Widget _card(
+    Program program,
+    List<Exercise> exercises,
+    Model3D model,
+    VoidCallback open,
+  ) {
+    final volume = programVolume(program, {
+      for (final exercise in exercises) exercise.id: exercise,
+    });
+    return ProgramVolumeCard(
+      model: model,
+      sets: volume.sets,
+      total: volume.total,
+      onTap: open,
+    );
+  }
+}
+
+class _ProgramRow extends StatelessWidget {
+  const _ProgramRow(this.program, {required this.locked});
 
   final Program program;
   final bool locked;
@@ -270,76 +546,18 @@ class _ProgramTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final weeks = program.lengthWeeks;
-    return ListTile(
-      title: Text(program.name),
-      subtitle: Text(
-        [
-          l10n.programDayCount(program.days.length),
-          if (weeks != null) l10n.programWeekCount(weeks),
-        ].join(' · '),
-      ),
+    return ListRow(
+      title: program.name,
+      detail: [
+        l10n.programDayCount(program.days.length),
+        if (weeks != null) l10n.programWeekCount(weeks),
+      ].join(' · '),
+      locked: locked,
       trailing: locked
-          ? Icon(Icons.lock_outline, semanticLabel: l10n.catalogueLockedLabel)
-          : const Icon(Icons.chevron_right),
+          ? ForgeTag(l10n.cataloguePremium, kind: ForgeTagKind.premium)
+          : null,
+      end: ListRowEnd.chevron,
       onTap: () => context.go(Routes.program(program.id!)),
-    );
-  }
-}
-
-/// This week's planned and done days of the active program, each with its
-/// state; none starts, the next workout above does.
-class _WeekPlan extends StatelessWidget {
-  const _WeekPlan(this.state);
-  final ProgramListState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final program = state.activeProgram!;
-    final plan = state.weekPlan;
-    if (plan.isEmpty) {
-      return ListTile(dense: true, title: Text(l10n.programWeekEmpty));
-    }
-    bool isNext(PlannedDay day) =>
-        day.status == PlannedStatus.planned &&
-        day.dayIndex == state.nextDayIndex &&
-        day.date == state.nextDate;
-    return Column(
-      children: [
-        for (final day in plan)
-          ListTile(
-            dense: true,
-            title: Text(
-              day.dayIndex < program.days.length
-                  ? l10n.dayName(program.days[day.dayIndex], day.dayIndex)
-                  : l10n.programDayDefault(day.dayIndex + 1),
-            ),
-            subtitle: Text(l10n.planDate(day.date)),
-            trailing: switch (day.status) {
-              PlannedStatus.done => Icon(
-                Icons.check_circle,
-                color: theme.colorScheme.primary,
-                semanticLabel: l10n.programDayDone,
-              ),
-              PlannedStatus.missed => Icon(
-                Icons.error_outline,
-                color: theme.colorScheme.error,
-                semanticLabel: l10n.programDayMissed,
-              ),
-              PlannedStatus.planned when isNext(day) => Text(
-                l10n.programDayNext,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              PlannedStatus.planned => Icon(
-                Icons.schedule,
-                semanticLabel: l10n.programDayPlanned,
-              ),
-            },
-          ),
-      ],
     );
   }
 }

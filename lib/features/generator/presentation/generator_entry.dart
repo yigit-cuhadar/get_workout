@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
@@ -13,7 +14,8 @@ Future<void> openGenerator(BuildContext context) async {
   }
 }
 
-/// The way into the generator, shown to everyone; locked without premium.
+/// The way into the generator as a row, shown to everyone; locked without
+/// premium.
 class GeneratorEntry extends StatelessWidget {
   const GeneratorEntry({super.key});
 
@@ -21,13 +23,14 @@ class GeneratorEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locked = context.watchPremium() == PremiumStatus.free;
-    return ListTile(
-      leading: const Icon(Icons.tune),
-      title: Text(l10n.generatorTitle),
-      subtitle: Text(l10n.generatorEntryInfo),
+    return ListRow(
+      title: l10n.generatorTitle,
+      detail: l10n.generatorEntryInfo,
+      locked: locked,
       trailing: locked
-          ? Icon(Icons.lock_outline, semanticLabel: l10n.catalogueLockedLabel)
-          : const Icon(Icons.chevron_right),
+          ? ForgeTag(l10n.cataloguePremium, kind: ForgeTagKind.premium)
+          : null,
+      end: ListRowEnd.chevron,
       onTap: () => openGenerator(context),
     );
   }

@@ -19,6 +19,7 @@ import 'premium_prompt.dart';
 import 'program_day_section.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
+import 'stop_program_dialog.dart';
 import 'weekday_dialog.dart';
 
 /// One program: a summary card with its state, length and weekdays and
@@ -366,7 +367,16 @@ class _Summary extends StatelessWidget {
                   const SizedBox(width: Gap.sm),
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: busy ? null : cubit.stop,
+                      onPressed: busy
+                          ? null
+                          : () async {
+                              if (await confirmStopProgram(
+                                context,
+                                program.name,
+                              )) {
+                                await cubit.stop();
+                              }
+                            },
                       child: Text(l10n.programStop),
                     ),
                   ),

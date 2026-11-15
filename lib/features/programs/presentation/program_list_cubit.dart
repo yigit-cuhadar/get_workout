@@ -20,6 +20,8 @@ class ProgramListState extends Equatable {
     this.active,
     this.weekPlan = const [],
     this.finished = false,
+    this.workoutCount,
+    this.today,
     this.week,
     this.nextDate,
     this.missed,
@@ -44,6 +46,13 @@ class ProgramListState extends Equatable {
 
   /// The active program has run its length.
   final bool finished;
+
+  /// The workouts done from the [finished] active program over its run;
+  /// null while unknown or before it finished.
+  final int? workoutCount;
+
+  /// The date the plan was made for; null until ready.
+  final CalendarDate? today;
 
   /// The active program's week as of today, from 1 (see
   /// [ProgramSchedule.week]); null without an active program.
@@ -93,6 +102,10 @@ class ProgramListState extends Equatable {
     return active!.nextDayIndex % days;
   }
 
+  /// The day the active program's Start begins: [nextDayIndex], but none
+  /// while a [missed] day waits for the user's choice.
+  int? get startDayIndex => missed == null ? nextDayIndex : null;
+
   List<Program> get otherPrograms => [
     for (final program in programs)
       if (program.id != active?.programId) program,
@@ -109,6 +122,8 @@ class ProgramListState extends Equatable {
     active: active,
     weekPlan: weekPlan,
     finished: finished,
+    workoutCount: workoutCount,
+    today: today,
     week: week,
     nextDate: nextDate,
     missed: missed,
@@ -129,6 +144,8 @@ class ProgramListState extends Equatable {
     active,
     weekPlan,
     finished,
+    workoutCount,
+    today,
     week,
     nextDate,
     missed,
@@ -191,8 +208,13 @@ class ProgramListCubit extends Cubit<ProgramListState> {
   bool _activeKnown = false;
   List<CompletedDay> _completed = const [];
 
-  /// The program and week the completed days are followed for.
-  (String, CalendarDate)? _completedFor;
+  /// Whether [_completed] arrived for the program and kind of range they
+  /// are followed for.
+  bool _completedKnown = false;
+
+  /// The program and dates the completed days are followed for, and
+  /// whether those are the finished program's whole run.
+  (String, CalendarDate, CalendarDate, bool)? _completedFor;
 
   int _firstWeekday;
   int get firstWeekday => _firstWeekday;
@@ -272,6 +294,8 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     if (uid == null) return;
     _programsSubscription = _watchPrograms(uid).listen((programs) {
       _programs = programs;
+      // A program's length decides whether it finished.
+      _followCompleted();
       _emitReady();
     }, onError: _fail);
     _activeSubscription = _watchActiveProgram(uid).listen((active) {
@@ -282,28 +306,46 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     }, onError: _fail);
   }
 
+  /// Follows the done days of this week's plan or, once the active program
+  /// finished, of its whole run to count its workouts.
   void _followCompleted() {
     final uid = _uid;
     final active = _active;
-    final week = _today.startOfWeek(_firstWeekday);
-    final key = active == null ? null : (active.programId, week);
+    final today = _today;
+    final finished = _schedule()?.isFinished(today) ?? false;
+    final week = today.startOfWeek(_firstWeekday);
+    final key = active == null
+        ? null
+        : finished
+        ? (
+            active.programId,
+            CalendarDate.of(active.startedAt.toLocal()),
+            today,
+            true,
+          )
+        : (active.programId, week, week.addDays(6), false);
     if (key == _completedFor) return;
     // Another week of the same program keeps the done days known, which
-    // the plan only counts within its week, until its own arrive.
-    if (key?.$1 != _completedFor?.$1) _completed = const [];
+    // the plan only counts within its week, until its own arrive; a count
+    // over the run never shows a week's.
+    if (key?.$1 != _completedFor?.$1 || key?.$4 != _completedFor?.$4) {
+      _completed = const [];
+      _completedKnown = false;
+    }
     _completedFor = key;
     unawaited(_completedSubscription?.cancel());
     _completedSubscription = null;
-    if (uid == null || active == null) return;
+    if (uid == null || key == null) return;
     _completedSubscription =
         _watchCompletedDays((
           uid: uid,
-          programId: active.programId,
-          from: week,
-          to: week.addDays(6),
+          programId: key.$1,
+          from: key.$2,
+          to: key.$3,
         )).listen(
           (days) {
             _completed = days;
+            _completedKnown = true;
             _emitReady();
           },
           // Without done days the plan still shows; nothing else depends on
@@ -313,21 +355,27 @@ class ProgramListCubit extends Cubit<ProgramListState> {
         );
   }
 
-  void _emitReady() {
-    final programs = _programs;
-    if (programs == null || !_activeKnown) return;
+  /// The active program's schedule, once it and its program are known.
+  ProgramSchedule? _schedule() {
     final active = _active;
     final program = active == null
         ? null
-        : programs.where((p) => p.id == active.programId).firstOrNull;
-    final today = _today;
-    final schedule = program == null || program.days.isEmpty
+        : _programs?.where((p) => p.id == active.programId).firstOrNull;
+    return program == null || program.days.isEmpty
         ? null
         : ProgramSchedule(
             active!,
             dayCount: program.days.length,
             lengthWeeks: program.lengthWeeks,
           );
+  }
+
+  void _emitReady() {
+    final programs = _programs;
+    if (programs == null || !_activeKnown) return;
+    final active = _active;
+    final today = _today;
+    final schedule = _schedule();
     final finished = schedule?.isFinished(today) ?? false;
     // Done on its date without the program moving on is not missed; only
     // this week's done days are known.
@@ -350,6 +398,8 @@ class ProgramListCubit extends Cubit<ProgramListState> {
             ) ??
             const [],
         finished: finished,
+        workoutCount: finished && _completedKnown ? _completed.length : null,
+        today: today,
         week: schedule?.week(today),
         nextDate: finished ? null : schedule?.upcoming(today).firstOrNull?.date,
         missed: missed
@@ -389,6 +439,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     _completedSubscription = null;
     _completedFor = null;
     _completed = const [];
+    _completedKnown = false;
   }
 
   @override
