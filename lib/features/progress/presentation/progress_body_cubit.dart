@@ -9,19 +9,15 @@ import '../domain/body_snapshot.dart';
 class ProgressBodyState extends Equatable {
   const ProgressBodyState({
     this.status = BodyListStatus.loading,
-    this.empty = true,
     this.snapshot = const BodySnapshot(),
   });
 
   /// As the body list's.
   final BodyListStatus status;
-
-  /// Nothing is logged.
-  final bool empty;
   final BodySnapshot snapshot;
 
   @override
-  List<Object?> get props => [status, empty, snapshot];
+  List<Object?> get props => [status, snapshot];
 }
 
 /// The [bodySnapshot] of the app's body list, for the Progress tab. Its
@@ -49,7 +45,6 @@ class ProgressBodyCubit extends Cubit<ProgressBodyState> {
   void _publish(BodyListState list) => emit(
     ProgressBodyState(
       status: list.status,
-      empty: list.entries.isEmpty,
       snapshot: bodySnapshot(list.entries, list.bodyFat, now: _clock()),
     ),
   );

@@ -11,45 +11,33 @@ import '../domain/progress_usecases.dart';
 
 enum ProgressStrengthStatus { loading, ready, failure }
 
-/// One exercise's best estimated one-rep max.
-class StrengthTile extends Equatable {
-  const StrengthTile({
-    required this.exerciseId,
-    required this.e1rmKg,
-    this.exercise,
-  });
-
-  final String exerciseId;
-  final double e1rmKg;
-
-  /// From the catalogue; null once the exercise is no longer in it.
-  final Exercise? exercise;
-
-  @override
-  List<Object?> get props => [exerciseId, e1rmKg, exercise];
-}
-
 class ProgressStrengthState extends Equatable {
   const ProgressStrengthState({
     this.status = ProgressStrengthStatus.loading,
-    this.tiles = const [],
+    this.highlight,
+    this.exercise,
     this.trained = false,
   });
 
   final ProgressStrengthStatus status;
 
-  /// Most recently trained first.
-  final List<StrengthTile> tiles;
+  /// The most recently trained exercise with an estimated one-rep max.
+  final StrengthHighlight? highlight;
 
-  /// The user has finished a workout, whether or not [tiles] has any.
+  /// [highlight]'s exercise from the catalogue; null once it is no longer
+  /// in it.
+  final Exercise? exercise;
+
+  /// The user has finished a workout, whether or not there is a
+  /// [highlight].
   final bool trained;
 
   @override
-  List<Object?> get props => [status, tiles, trained];
+  List<Object?> get props => [status, highlight, exercise, trained];
 }
 
-/// The [strengthHighlights] of whoever is signed in, named from the
-/// catalogue, for the Progress tab. Loading until every exercise is named
+/// The [strengthHighlight] of whoever is signed in, named from the
+/// catalogue, for the Progress tab. Loading until its exercise is named
 /// or known to be gone; a user change starts over. A failed stream shows
 /// as a failure until it delivers again, by itself or at once on [retry].
 class ProgressStrengthCubit extends Cubit<ProgressStrengthState> {
@@ -102,26 +90,18 @@ class ProgressStrengthCubit extends Cubit<ProgressStrengthState> {
     if (highlights == null || catalogue is! CatalogueReady) {
       return emit(const ProgressStrengthState());
     }
-    final known = {
-      for (final exercise in catalogue.exercises) exercise.id: exercise,
-    };
+    final highlight = highlights.highlight;
+    final id = highlight?.exerciseId;
+    final exercise = catalogue.exercises.where((e) => e.id == id).firstOrNull;
     // A custom exercise is not known to be gone before those load.
-    if (highlights.top.any(
-      (h) => !known.containsKey(h.exerciseId) && !catalogue.knows(h.exerciseId),
-    )) {
+    if (id != null && exercise == null && !catalogue.knows(id)) {
       return emit(const ProgressStrengthState());
     }
     emit(
       ProgressStrengthState(
         status: ProgressStrengthStatus.ready,
-        tiles: [
-          for (final (:exerciseId, :e1rmKg) in highlights.top)
-            StrengthTile(
-              exerciseId: exerciseId,
-              e1rmKg: e1rmKg,
-              exercise: known[exerciseId],
-            ),
-        ],
+        highlight: highlight,
+        exercise: exercise,
         trained: highlights.trained,
       ),
     );
