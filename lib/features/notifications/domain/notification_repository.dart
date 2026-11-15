@@ -13,6 +13,10 @@ abstract interface class NotificationRepository {
   /// Asks the device to let the app notify; whether it may.
   Future<Result<bool>> request();
 
+  /// Whether this device was asked to let the app notify, by the reminders
+  /// or the rest notification; until then [allowed] reads false too.
+  Future<Result<bool>> askedHere();
+
   /// Opens the system settings of the app's notifications.
   Future<Result<void>> openSettings();
 

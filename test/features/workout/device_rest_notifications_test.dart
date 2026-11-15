@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_notifications/forge_notifications.dart';
+import 'package:get_workout/features/notifications/data/notifications_asked_marker.dart';
 import 'package:get_workout/features/workout/data/device_rest_notifications.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -22,6 +23,7 @@ void main() {
     rest = DeviceRestNotifications(
       Future.value(notifications),
       () async => directory,
+      NotificationsAskedMarker(() async => directory),
     );
     when(notifications.requestExact).thenAnswer((_) async => const Ok(true));
   });
@@ -41,6 +43,13 @@ void main() {
         .thenAnswer((_) async => const Ok(false));
     expect((await rest.request()).valueOrNull, isTrue);
     verify(notifications.requestExact).called(1);
+    expect(
+      (await NotificationsAskedMarker(
+        () async => directory,
+      ).exists()).valueOrNull,
+      isTrue,
+      reason: 'the device was asked',
+    );
   });
 
   test('exact alarms are not asked for when on, nor after a refusal', () async {
@@ -81,6 +90,7 @@ void main() {
     final again = DeviceRestNotifications(
       Future.value(notifications),
       () async => directory,
+      NotificationsAskedMarker(() async => directory),
     );
     expect((await again.askedHere()).valueOrNull, isTrue);
   });

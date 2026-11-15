@@ -76,6 +76,7 @@ void main() {
   late MockNotificationRepository device;
   late MockAnnouncementRepository announcements;
   late bool allowed;
+  late bool asked;
   late bool requestGrants;
 
   /// What each sync asked for, in order.
@@ -103,13 +104,16 @@ void main() {
     device = MockNotificationRepository();
     announcements = MockAnnouncementRepository();
     allowed = true;
+    asked = true;
     requestGrants = true;
     syncs = [];
     knownEntries = {};
     entryChanges = {};
     gate = null;
     when(device.allowed).thenAnswer((_) async => Ok(allowed));
+    when(device.askedHere).thenAnswer((_) async => Ok(asked));
     when(device.request).thenAnswer((_) async {
+      asked = true;
       allowed = requestGrants;
       return Ok(allowed);
     });
@@ -169,6 +173,7 @@ void main() {
       sync: SyncReminders(device),
       getAccess: GetNotificationAccess(device),
       requestAccess: RequestNotificationAccess(device),
+      getAsked: GetNotificationsAsked(device),
       openSettings: OpenNotificationSettings(device),
       refreshTimeZone: RefreshTimeZone(device),
       followAnnouncements: FollowAnnouncements(announcements),
@@ -570,7 +575,7 @@ void main() {
       final cubit = build();
       await pumpEventQueue();
 
-      expect(cubit.state, const NotificationsState(allowed: true));
+      expect(cubit.state, const NotificationsState(allowed: true, asked: true));
       verify(() => announcements.follow('en')).called(1);
 
       await cubit.resumed();
@@ -582,12 +587,15 @@ void main() {
       allowed = false;
       final cubit = build();
       await pumpEventQueue();
-      expect(cubit.state, const NotificationsState(allowed: false));
+      expect(
+        cubit.state,
+        const NotificationsState(allowed: false, asked: true),
+      );
       verifyNever(() => announcements.follow(any()));
 
       expect(await cubit.allow(), isTrue);
 
-      expect(cubit.state, const NotificationsState(allowed: true));
+      expect(cubit.state, const NotificationsState(allowed: true, asked: true));
       verify(() => announcements.follow('en')).called(1);
       await cubit.close();
     });
@@ -614,7 +622,29 @@ void main() {
       await pumpEventQueue();
 
       expect(await cubit.allow(), isFalse);
-      expect(cubit.state, const NotificationsState(allowed: false));
+      expect(
+        cubit.state,
+        const NotificationsState(allowed: false, asked: true),
+      );
+      await cubit.close();
+    });
+
+    test('a device never asked reads as not asked until it is', () async {
+      allowed = false;
+      asked = false;
+      final cubit = build();
+      await pumpEventQueue();
+      expect(
+        cubit.state,
+        const NotificationsState(allowed: false, asked: false),
+      );
+
+      requestGrants = false;
+      expect(await cubit.allow(), isFalse);
+      expect(
+        cubit.state,
+        const NotificationsState(allowed: false, asked: true),
+      );
       await cubit.close();
     });
 

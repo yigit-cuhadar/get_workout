@@ -9,12 +9,14 @@ import '../../core/device_localizations.dart';
 import '../notifications/data/notification_payloads.dart';
 import '../programs/domain/completed_days.dart';
 import 'data/android_workout_lock_screen.dart';
+import 'data/audio_rest_chime.dart';
 import 'data/device_rest_notifications.dart';
 import 'data/file_local_workout_store.dart';
 import 'data/firestore_workout_repository.dart';
 import 'data/ios_workout_lock_screen.dart';
 import 'data/workout_completed_days.dart';
 import 'domain/history_usecases.dart';
+import 'domain/rest_chime.dart';
 import 'domain/rest_notifications.dart';
 import 'domain/rest_usecases.dart';
 import 'domain/workout_lock_screen.dart';
@@ -50,8 +52,10 @@ class WorkoutModule implements FeatureModule {
         () => DeviceRestNotifications(
           sl.getAsync<Notifications>(),
           getApplicationSupportDirectory,
+          sl(),
         ),
       )
+      ..registerLazySingleton<RestChime>(AudioRestChime.new)
       ..registerLazySingleton<WorkoutLockScreen>(
         () => defaultTargetPlatform == TargetPlatform.iOS
             ? const IosWorkoutLockScreen()
@@ -66,6 +70,7 @@ class WorkoutModule implements FeatureModule {
       ..registerFactory(() => ShouldAskRestNotifications(sl()))
       ..registerFactory(() => AllowRestNotifications(sl()))
       ..registerFactory(() => DeclineRestNotifications(sl()))
+      ..registerFactory(() => PlayRestChime(sl()))
       ..registerFactory(() => ScheduleRestNotification(sl()))
       ..registerFactory(() => CancelRestNotification(sl()))
       ..registerFactory(() => LoadLocalWorkouts(sl()))

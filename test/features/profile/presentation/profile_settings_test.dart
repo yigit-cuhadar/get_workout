@@ -55,10 +55,11 @@ void main() {
     Widget child, {
     UserSettings shown = metric,
     bool? allowed = true,
+    bool? asked = true,
   }) {
     when(() => settings.state).thenReturn(SettingsState(shown, loaded: true));
     when(() => notifications.state)
-        .thenReturn(NotificationsState(allowed: allowed));
+        .thenReturn(NotificationsState(allowed: allowed, asked: asked));
     return pumpComponent(
       tester,
       MultiBlocProvider(
@@ -190,6 +191,24 @@ void main() {
 
       await pump(tester, const ReminderSettingsGroup());
       expect(find.byType(NoticeBanner), findsNothing);
+    });
+
+    testWidgets('the notice asks on a device never asked, else opens the '
+        'settings', (tester) async {
+      await pump(
+        tester,
+        const ReminderSettingsGroup(),
+        allowed: false,
+        asked: false,
+      );
+      expect(find.text('Open settings'), findsNothing);
+      await tester.tap(find.text('Allow notifications'));
+      verify(notifications.allow).called(1);
+
+      await pump(tester, const ReminderSettingsGroup(), allowed: false);
+      expect(find.text('Allow notifications'), findsNothing);
+      await tester.tap(find.text('Open settings'));
+      verify(notifications.openSettings).called(1);
     });
 
     testWidgets('a reminder that is off hides its rows', (tester) async {

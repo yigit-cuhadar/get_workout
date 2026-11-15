@@ -1,5 +1,6 @@
 import 'package:forge_core/forge_core.dart';
 
+import 'rest_chime.dart';
 import 'rest_notifications.dart';
 
 /// The rest notification's text and time.
@@ -34,6 +35,14 @@ class AllowRestNotifications implements UseCase<bool, NoParams> {
     await _notifications.markAskedHere();
     return _notifications.request();
   }
+}
+
+class PlayRestChime implements UseCase<void, NoParams> {
+  const PlayRestChime(this._chime);
+  final RestChime _chime;
+
+  @override
+  Future<Result<void>> call(NoParams params) => _chime.play();
 }
 
 /// The user said "not now" on this device; other devices still ask.

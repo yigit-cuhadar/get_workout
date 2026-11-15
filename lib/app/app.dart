@@ -24,6 +24,7 @@ import '../features/notifications/presentation/notifications_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/first_weekday.dart';
 import '../features/settings/presentation/settings_cubit.dart';
+import '../features/workout/domain/rest_usecases.dart';
 import '../features/workout/domain/workout_usecases.dart';
 import '../features/workout/presentation/active_workout_cubit.dart';
 import '../features/workout/presentation/keep_screen_on.dart';
@@ -196,6 +197,9 @@ class _AppState extends State<App> {
                     .settings
                     .restTimer
                     .alert;
+                if (alert.chimes) {
+                  unawaited(sl<PlayRestChime>()(const NoParams()));
+                }
                 if (alert.vibrates) unawaited(HapticFeedback.heavyImpact());
               },
               child:

@@ -4,13 +4,15 @@ import 'package:forge_notifications/forge_notifications.dart';
 import '../domain/notification_repository.dart';
 import '../domain/reminder_plan.dart';
 import 'notification_payloads.dart';
+import 'notifications_asked_marker.dart';
 
 /// [NotificationRepository] over the app's local notifications, waiting
 /// until they are initialised.
 class DeviceNotificationRepository implements NotificationRepository {
-  const DeviceNotificationRepository(this._notifications);
+  const DeviceNotificationRepository(this._notifications, this._asked);
 
   final Future<Notifications> _notifications;
+  final NotificationsAskedMarker _asked;
 
   @override
   Future<Result<bool>> allowed() async =>
@@ -19,10 +21,16 @@ class DeviceNotificationRepository implements NotificationRepository {
       );
 
   @override
-  Future<Result<bool>> request() async =>
-      (await (await _notifications).request()).map(
-        (permission) => permission == NotificationPermission.granted,
-      );
+  Future<Result<bool>> request() async {
+    final result = (await (await _notifications).request()).map(
+      (permission) => permission == NotificationPermission.granted,
+    );
+    if (result.isOk) await _markAsked(_asked);
+    return result;
+  }
+
+  @override
+  Future<Result<bool>> askedHere() => _asked.exists();
 
   @override
   Future<Result<void>> openSettings() async =>
@@ -53,5 +61,13 @@ class DeviceNotificationRepository implements NotificationRepository {
           ),
       ],
     );
+  }
+}
+
+/// Notes that the device was asked; a failure only logs, as asking again
+/// is harmless.
+Future<void> _markAsked(NotificationsAskedMarker asked) async {
+  if ((await asked.set()).failureOrNull case final failure?) {
+    Log.e('notifications', 'not remembered as asked: ${failure.message}');
   }
 }

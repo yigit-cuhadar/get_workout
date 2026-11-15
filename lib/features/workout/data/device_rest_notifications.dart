@@ -3,16 +3,22 @@ import 'dart:io';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 
+import '../../notifications/data/notifications_asked_marker.dart';
 import '../domain/rest_notifications.dart';
 
 /// [RestNotifications] over the app's local notifications, waiting until
 /// they are initialised. That the user was asked on this device is an
 /// empty file in [_directory].
 class DeviceRestNotifications implements RestNotifications {
-  const DeviceRestNotifications(this._notifications, this._directory);
+  const DeviceRestNotifications(
+    this._notifications,
+    this._directory,
+    this._asked,
+  );
 
   final Future<Notifications> _notifications;
   final Future<Directory> Function() _directory;
+  final NotificationsAskedMarker _asked;
 
   /// The rest notification's id; other notifications use others.
   static const id = 1;
@@ -29,6 +35,9 @@ class DeviceRestNotifications implements RestNotifications {
     final granted = (await notifications.request()).map(
       (permission) => permission == NotificationPermission.granted,
     );
+    if (granted.isOk && (await _asked.set()).failureOrNull != null) {
+      Log.e('rest', 'notifications not remembered as asked');
+    }
     if (granted.valueOrNull == true &&
         (await notifications.canScheduleExact()).valueOrNull == false) {
       // Refused or failed, the notification falls back to an inexact alarm.

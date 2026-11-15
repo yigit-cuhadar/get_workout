@@ -15,7 +15,8 @@ import 'notification_permission.dart';
 import 'notifications_cubit.dart';
 
 /// The Reminders group of the settings, led by a notice while the device
-/// does not let the app notify. Needs [SettingsCubit] and
+/// does not let the app notify: it asks on a device never asked, else it
+/// opens the system settings. Needs [SettingsCubit] and
 /// [NotificationsCubit] above it.
 class ReminderSettingsGroup extends StatelessWidget {
   const ReminderSettingsGroup({super.key});
@@ -26,9 +27,7 @@ class ReminderSettingsGroup extends StatelessWidget {
     final settings = context.select(
       (SettingsCubit cubit) => cubit.state.settings,
     );
-    final allowed = context.select(
-      (NotificationsCubit cubit) => cubit.state.allowed,
-    );
+    final access = context.select((NotificationsCubit cubit) => cubit.state);
     final workout = settings.workoutReminder;
     final measurement = settings.measurementReminder;
     // Applied to the settings as they are when the choice arrives.
@@ -55,16 +54,25 @@ class ReminderSettingsGroup extends StatelessWidget {
     CalendarDate today() => CalendarDate.of(DateTime.now());
     return SettingsGroup(
       title: l10n.settingsReminders,
-      notice: allowed == false
+      notice: access.allowed == false
           ? NoticeBanner(
               icon: ForgeIcons.notificationsOff,
               title: l10n.notificationsOffTitle,
               message: l10n.notificationsOffMessage,
-              action: ForgeButton(
-                label: l10n.remindersOpenSettings,
-                variant: ForgeButtonVariant.secondary,
-                onPressed: context.read<NotificationsCubit>().openSettings,
-              ),
+              // A device never asked has no notification settings yet.
+              action: access.asked == false
+                  ? ForgeButton(
+                      label: l10n.notificationsAllow,
+                      variant: ForgeButtonVariant.secondary,
+                      onPressed: context.read<NotificationsCubit>().allow,
+                    )
+                  : ForgeButton(
+                      label: l10n.remindersOpenSettings,
+                      variant: ForgeButtonVariant.secondary,
+                      onPressed: context
+                          .read<NotificationsCubit>()
+                          .openSettings,
+                    ),
             )
           : null,
       rows: [

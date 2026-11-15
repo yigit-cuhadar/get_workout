@@ -162,6 +162,8 @@ enum RestAlert {
   vibrate,
   off;
 
+  bool get chimes => this == chimeVibrate || this == chime;
+
   bool get vibrates => this == chimeVibrate || this == vibrate;
 }
 

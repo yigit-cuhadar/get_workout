@@ -637,15 +637,15 @@ Decisions (the canvases they were drawn on are deleted):
   time is Forge's wheel, saved as it turns; the permission dialogs carry
   titles ("Allow notifications?", "Notifications are off") and the rest
   notification asks as the reminders do; "Notifications are off" leads
-  Reminders whenever the device refuses.
+  Reminders whenever the device refuses, its button "Allow notifications"
+  (asks) on a device never asked, else "Open settings"; the rest sound is
+  a bundled chime played in the app with audioplayers, the background
+  rest notification uses it or is silent.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
 ## Open questions
 
-- The rest chime (Rest sound and vibration): how it is played, in the app
-  and in the rest notification, is the owner's decision; until then only
-  the vibration follows the setting.
 - Google sign-in is offered next to email (`socialProviders` in
   `lib/app/router.dart`); both providers are enabled in both Firebase
   projects. It runs through Firebase Auth's browser flow, so iOS returns
@@ -1089,8 +1089,12 @@ the feature you are about to touch, and keep it true when you change it.
   get no action. Workout group: effort, warm-ups, the rest timer and,
   while it is on, its default rest, rest notification and rest sound
   (`settings.restTimer.alert`: chime and vibrate (default), chime,
-  vibrate or off; the vibration at a rest's end follows it, the chime
-  is not played yet, see Open questions), Bar and plates (a summary; its
+  vibrate or off; a rest reaching zero in the app plays the chime,
+  `assets/sounds/rest_chime.wav` (two soft bell tones, generated for the
+  app, no licence), through `audioplayers` mixed with other audio and
+  silent in silent mode, and vibrates as chosen; the rest notification
+  takes the same chime or none once `forge_notifications` v0.20 has
+  notification sounds), Bar and plates (a summary; its
   page edits the barbell, EZ bar and trap bar weights and the plates, and
   puts back the standard set) and Keep screen on (`settings.keepScreenOn`,
   default on: the screen stays awake while a workout is in progress,
@@ -2481,7 +2485,11 @@ the feature you are about to touch, and keep it true when you change it.
   notification settings), and the wish is stored on anyway; "Not now"
   changes nothing. While the device refuses (also before it was ever
   asked, which reads the same), the Reminders group starts with a
-  "Notifications are off" notice and "Open settings". All notifications share the Android channel `workout`,
+  "Notifications are off" notice: "Allow notifications" (asks) on a
+  device never asked, else "Open settings". The platforms read a device
+  never asked as refused, so the app keeps a marker file
+  (`notifications_asked`, app support) written by every request, the
+  reminders' and the rest notification's. All notifications share the Android channel `workout`,
   except the rest countdown (`rest`). Both channels are created when
   notifications initialise at app start (no permission needed), so a
   pushed announcement finds `workout` before any local notification.
