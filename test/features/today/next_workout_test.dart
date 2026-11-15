@@ -50,12 +50,27 @@ void main() {
   String startName(Program program, int dayIndex) =>
       '${program.name} · ${program.days[dayIndex].name}';
 
-  NextWorkout? next(ProgramListState state, ActiveWorkoutState workout) =>
-      nextWorkoutOf(state, activeWorkoutViewOf(workout), startName: startName);
+  /// Thursday 12 November 2026, nothing finished yet.
+  final thursday = CalendarDate(2026, 11, 12);
+
+  NextWorkout? next(
+    ProgramListState state,
+    ActiveWorkoutState workout, {
+    List<Workout>? done = const [],
+  }) => nextWorkoutOf(
+    state,
+    activeWorkoutViewOf(workout),
+    startName: startName,
+    today: (today: thursday, done: done),
+  );
 
   /// No workout in progress.
-  NextWorkout? idle(ProgramListState state) =>
-      next(state, const ActiveWorkoutState(status: WorkoutStatus.none));
+  NextWorkout? idle(ProgramListState state, {List<Workout>? done = const []}) =>
+      next(
+        state,
+        const ActiveWorkoutState(status: WorkoutStatus.none),
+        done: done,
+      );
 
   const exercise = WorkoutExercise(
     exerciseId: 'a',
@@ -77,6 +92,15 @@ void main() {
       exercises: const [exercise],
     );
 
+    /// Not from a program day, with nothing done.
+    WorkoutInProgress inProgress(String name) => WorkoutInProgress(
+      name: name,
+      startedAt: started,
+      exercise: 1,
+      exercises: 1,
+      doneSets: 0,
+    );
+
     test('comes first, with the program day it was started from', () {
       expect(
         next(
@@ -85,6 +109,10 @@ void main() {
         ),
         WorkoutInProgress(
           name: 'Upper Lower · Lower',
+          startedAt: started,
+          exercise: 1,
+          exercises: 1,
+          doneSets: 0,
           program: upperLower,
           dayIndex: 1,
         ),
@@ -97,12 +125,12 @@ void main() {
           const ProgramListState(),
           ActiveWorkoutState(status: WorkoutStatus.finishing, workout: lower),
         ),
-        const WorkoutInProgress(name: 'Upper Lower · Lower'),
+        inProgress('Upper Lower · Lower'),
       );
     });
 
     test('shows no program day that is not the one it was started from', () {
-      const name = WorkoutInProgress(name: 'Upper Lower · Lower');
+      final name = inProgress('Upper Lower · Lower');
       // A free workout.
       expect(
         next(
@@ -139,7 +167,7 @@ void main() {
       expect(next(ready(programs: [swapped]), running(lower)), name);
       expect(
         next(ready(), running(lower.copyWith(name: 'Leg day'))),
-        const WorkoutInProgress(name: 'Leg day'),
+        inProgress('Leg day'),
       );
     });
 
@@ -165,10 +193,57 @@ void main() {
       );
     });
 
+    test('is at the first exercise with a set not done, counting every '
+        'done set', () {
+      const done = WorkoutSet(reps: 5, done: true);
+      const open = WorkoutSet(reps: 5);
+      final progressed = lower.copyWith(
+        exercises: [
+          exercise.copyWith(sets: const [done, done, done]),
+          exercise.copyWith(sets: const [done, open, open]),
+          exercise.copyWith(sets: const [open]),
+          exercise.copyWith(sets: const [done, done, open]),
+        ],
+      );
+      final at = next(ready(), running(progressed))! as WorkoutInProgress;
+      expect((at.exercise, at.exercises, at.doneSets), (2, 4, 6));
+      // Every set done: the last exercise.
+      final all = lower.copyWith(
+        exercises: [
+          exercise.copyWith(sets: const [done]),
+          exercise.copyWith(sets: const [done]),
+        ],
+      );
+      final allDone = next(ready(), running(all))! as WorkoutInProgress;
+      expect(
+        (allDone.exercise, allDone.exercises, allDone.doneSets),
+        (2, 2, 2),
+      );
+    });
+
     test('rebuilds the card only for what it shows', () {
-      final view = activeWorkoutViewOf(running(lower));
-      final logged = lower.copyWith(exercises: const [exercise, exercise]);
-      expect(activeWorkoutViewOf(running(logged)), view);
+      const set = WorkoutSet(reps: 5);
+      final view = activeWorkoutViewOf(
+        running(
+          lower.copyWith(
+            exercises: [
+              exercise.copyWith(sets: [set]),
+            ],
+          ),
+        ),
+      );
+      final edited = lower.copyWith(
+        exercises: [
+          exercise.copyWith(sets: [set.copyWith(reps: () => 8)]),
+        ],
+      );
+      expect(activeWorkoutViewOf(running(edited)), view);
+      final logged = lower.copyWith(
+        exercises: [
+          exercise.copyWith(sets: [set.copyWith(done: true)]),
+        ],
+      );
+      expect(activeWorkoutViewOf(running(logged)), isNot(view));
     });
   });
 
@@ -224,6 +299,93 @@ void main() {
         program: upperLower,
         missed: missed,
         moveDate: CalendarDate(2026, 11, 16),
+      ),
+    );
+  });
+
+  group('a next day planned after today', () {
+    final monday = CalendarDate(2026, 11, 16);
+    final push = Workout(
+      id: 'w5',
+      startedAt: DateTime(2026, 11, 12, 7),
+      finishedAt: DateTime(2026, 11, 12, 8),
+      programId: 'p1',
+      dayIndex: 0,
+      name: 'Upper Lower · Upper',
+    );
+    final evening = Workout(
+      id: 'w6',
+      startedAt: DateTime(2026, 11, 12, 19),
+      finishedAt: DateTime(2026, 11, 12, 20),
+      name: 'Workout',
+    );
+
+    test('makes a rest day when nothing was done today', () {
+      expect(
+        idle(ready(activeProgram: active, nextDate: monday)),
+        RestDay(
+          program: upperLower,
+          dayIndex: 1,
+          date: monday,
+          access: ProgramAccess.open,
+        ),
+      );
+    });
+
+    test('shows the latest workout finished today', () {
+      expect(
+        idle(
+          ready(activeProgram: active, nextDate: monday),
+          done: [push, evening],
+        ),
+        DoneToday(
+          workout: evening,
+          program: upperLower,
+          dayIndex: 1,
+          date: monday,
+        ),
+      );
+    });
+
+    test('is not known while today\'s workouts are', () {
+      expect(
+        idle(ready(activeProgram: active, nextDate: monday), done: null),
+        isNull,
+      );
+    });
+
+    test('keeps a locked copy locked, Start early opening the paywall', () {
+      final next = idle(
+        ready(programs: [premiumCopy], activeProgram: active, nextDate: monday),
+      );
+      expect((next! as RestDay).access, ProgramAccess.locked);
+    });
+
+    test('a workout today does not hide a day planned for today', () {
+      expect(
+        idle(
+          ready(activeProgram: active, nextDate: thursday),
+          done: [push],
+        ),
+        NextProgramDay(
+          program: upperLower,
+          dayIndex: 1,
+          date: thursday,
+          access: ProgramAccess.open,
+        ),
+      );
+    });
+  });
+
+  test('a program ending before another training day shows its next day '
+      'undated', () {
+    expect(
+      idle(ready(activeProgram: active)),
+      NextProgramDay(
+        program: upperLower,
+        dayIndex: 1,
+        date: null,
+        access: ProgramAccess.open,
       ),
     );
   });

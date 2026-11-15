@@ -97,10 +97,13 @@ import 'package:get_workout/features/strength/presentation/strength_list_page.da
 import 'package:get_workout/features/today/presentation/today_page.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/history_usecases.dart';
+import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:get_workout/features/workout/presentation/workout_detail_cubit.dart';
 import 'package:get_workout/features/workout/presentation/workout_detail_page.dart';
+import 'package:get_workout/features/workout/presentation/workout_edit_cubit.dart';
+import 'package:get_workout/features/workout/presentation/workout_edit_page.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
@@ -2324,6 +2327,54 @@ void main() {
     });
   });
 
+  testWidgets('a workout opened above Today is edited in Today\'s tab, and '
+      'Back returns through it to Today', (tester) async {
+    await startAsGuest(tester);
+    final workout = Workout(
+      id: 'w1',
+      startedAt: DateTime(2026, 11, 13, 7),
+      finishedAt: DateTime(2026, 11, 13, 8),
+      name: 'Push',
+    );
+    sl
+      ..registerFactoryParam<WorkoutDetailCubit, String, void>((_, _) {
+        final cubit = _WorkoutDetailStandIn();
+        when(() => cubit.state).thenReturn(
+          WorkoutDetailState(
+            status: WorkoutDetailStatus.ready,
+            workout: workout,
+          ),
+        );
+        return cubit;
+      })
+      ..registerFactoryParam<WorkoutEditCubit, String?, String>((_, _) {
+        final cubit = _WorkoutEditStandIn();
+        // Not loading: its skeleton would never settle.
+        when(
+          () => cubit.state,
+        ).thenReturn(const WorkoutEditState(status: WorkoutEditStatus.missing));
+        when(() => cubit.hasChanges).thenReturn(false);
+        when(() => cubit.isNew).thenReturn(false);
+        return cubit;
+      });
+    unawaited(router.push(Routes.todayWorkout('w1')));
+    await tester.pumpAndSettle();
+    expect(find.byType(WorkoutDetailPage), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Edit'));
+    await tester.pumpAndSettle();
+    expect(find.byType(WorkoutEditPage), findsOneWidget);
+    expect(selectedTab(tester), 0);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.byType(WorkoutDetailPage), findsOneWidget);
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.byType(TodayPage), findsOneWidget);
+    expect(path(), Routes.today);
+  });
+
   testWidgets('Log weight opens above Progress, and Back returns to it', (
     tester,
   ) async {
@@ -2348,6 +2399,12 @@ void main() {
     expect(path(), Routes.progress);
   });
 }
+
+class _WorkoutDetailStandIn extends MockCubit<WorkoutDetailState>
+    implements WorkoutDetailCubit {}
+
+class _WorkoutEditStandIn extends MockCubit<WorkoutEditState>
+    implements WorkoutEditCubit {}
 
 class _WeightFormCubit extends MockCubit<WeightFormState>
     implements WeightFormCubit {}
