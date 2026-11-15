@@ -146,6 +146,10 @@ abstract final class Routes {
   static String exerciseListOf(Muscle muscle) =>
       '$exerciseList?muscle=${muscle.code}';
   static const customExerciseNew = '$exercises/new';
+
+  /// [customExerciseNew] with its name filled in.
+  static String customExerciseNamed(String name) =>
+      Uri(path: customExerciseNew, queryParameters: {'name': name}).toString();
   static String customExerciseEdit(String id) => '${exercise(id)}/edit';
 
   /// [programNew] pushed above a page in the Exercises tab, which saving or
@@ -561,7 +565,9 @@ GoRouter buildRouter(
               ),
               GoRoute(
                 path: 'new',
-                builder: (_, _) => const CustomExerciseNewPage(),
+                builder: (_, state) => CustomExerciseNewPage(
+                  name: state.uri.queryParameters['name'],
+                ),
               ),
               GoRoute(
                 path: 'new-program',

@@ -83,6 +83,8 @@ class _LibraryPageState extends State<LibraryPage> {
               child: LibraryListView(
                 focusSearch: widget.muscle == null,
                 sectionsFor: widget.muscle,
+                onCreate: (name) =>
+                    context.push(Routes.customExerciseNamed(name)),
               ),
             ),
           },

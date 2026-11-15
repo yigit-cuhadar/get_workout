@@ -28,8 +28,12 @@ Widget _panel(Widget child) => Padding(
 @widgetbook.UseCase(name: 'Slide and release to open', type: MuscleModel)
 Widget muscleModelExplore(BuildContext context) => _panel(
   _withModel(
-    (model) =>
-        MuscleModel(model: model, onOpen: (_) {}, semanticLabel: 'Body model'),
+    (model) => MuscleModel(
+      model: model,
+      onOpen: (_) {},
+      semanticLabel: 'Body model',
+      hint: 'Tap or slide across a muscle',
+    ),
   ),
 );
 
@@ -59,7 +63,7 @@ Widget muscleModelLoading(BuildContext context) =>
 
 @widgetbook.UseCase(name: 'Failed', type: MuscleModel)
 Widget muscleModelFailed(BuildContext context) =>
-    _panel(MuscleModel.failed(onRetry: () {}));
+    _panel(MuscleModel.failed(message: 'Search still works.', onRetry: () {}));
 
 @widgetbook.UseCase(name: 'Front and back side by side', type: MuscleModelPair)
 Widget muscleModelPair(BuildContext context) => SingleChildScrollView(

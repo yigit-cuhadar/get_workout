@@ -367,7 +367,7 @@ Group 11, design in code (the owner's plan; the studios are the target, see Desi
 - [x] Theme — `ForgePreset` → `ForgeTheme` in forge_ui with the studio's colours, type scale, radii and borders, light and dark; Slate, Measure and Graphite all in code, switched by a dev-only picker in Profile, prod ships the one picked at the end; fonts bundled; the studio's own line icons (not an icon package), with the heavier form for the selected tab — `lib/app/theme.dart` swaps in and screens change without edits
 - [x] Forge components — the MobileAppForge Studio cards built in forge_ui with every form and state on their card, widget tests for their behaviour; merged and tagged before the app uses them
 - [x] App components — the GetWorkout Studio components in the app, every state on their card
-- [ ] Key screens — Today, Workout and Programs with every state on their boards, approved by the owner before the rest
+- [x] Key screens — Today, Workout and Programs with every state on their boards, approved by the owner before the rest
 - [ ] The remaining screens by studio group (Ana sekmeler, Antrenman ve programlar, İlerleme, Formlar, Kurulum, hesap ve abonelik) — one group at a time, each with its owner-approved flow changes from Design built along with the look
 - [ ] Widget tests for the critical flows once the UI is stable; the final preset picked on a device
 
@@ -622,6 +622,23 @@ Decisions (the canvases they were drawn on are deleted):
   and the Premium tag without a chevron; a locked copy's ⋯ has no Change
   days; the weekly sets card is hidden while the premium status is
   unknown.
+- Exercises tab and shell (owner's picks, 2026-11-15): the tab's search
+  pill is Forge SearchField's tap-only form and opens the Exercise list
+  page as before (search, filters, sort and + live there; the board's
+  search and no-results states belong to that page); the model shows "Tap
+  or slide across a muscle" at its bottom while nothing slides, the
+  muscle bar while sliding; a model that cannot load shows "Couldn't load
+  the body model", "Search still works." and Retry (Weekly volume: "Try
+  again."); the pill always shows "Search exercises"; a search matching
+  nothing (no filter on) shows the search text, "Check the spelling or add
+  it as your own exercise." and Create custom exercise, which opens the
+  form with the name filled in; with a filter on, "No exercises match",
+  "Clear a filter or turn off Only my equipment.", Clear all and, with
+  search text, Create custom exercise too; exercise rows keep the star
+  button and the chevron; tab labels stop growing at 1.5x text (Forge
+  v0.20); the tabs are Forge NavigationBar with the workout bar above it,
+  and the shell's notices are Forge snackbars (4 s, "Open" on a restored
+  workout).
 - Progress screen step (owner's picks, 2026-11-15): Body is the featured
   band (the latest weight as its title, the change since the previous
   weigh-in as its line, "−0.4 since Nov 8", with the newest body fat at
@@ -1242,7 +1259,7 @@ the feature you are about to touch, and keep it true when you change it.
 - **Exercise list**: the Exercises tab opens on the interactive model (rotate,
   zoom, Front/Back, tap a muscle, or press and slide across muscles with
   its name and a haptic tick) under a search box. The box is an entry, not
-  a field: it shows the current search and opens the one exercise list
+  a field (Forge SearchField's tap-only pill): it opens the one exercise list
   page (`LibraryPage`, `/exercises/list`, declared before `:id`, inside
   the Exercises tab's stack, an explicit `MaterialPage` because go_router's default
   page for `builder` routes has no transition here), pushed above the model
@@ -1251,7 +1268,7 @@ the feature you are about to touch, and keep it true when you change it.
   + for a custom exercise; there is no model on it. Opened from the box,
   its search field takes focus once the page's route animation has
   completed (one keyboard request, after the transition). The box and the
-  page's search field are one Hero, drawn as the box in flight. One
+  page's search field are one Hero, drawn as the pill in flight. One
   gesture on the model opens one page: a muscle opens nothing while a page
   already covers the model. A muscle opens the same page at
   `/exercises/list?muscle=<code>`, without the keyboard. State: the list

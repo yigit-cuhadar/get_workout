@@ -127,6 +127,31 @@ void main() {
     expect(opened, [Muscle.pec]);
   });
 
+  testWidgets('the hint waits at the bottom until a slide', (tester) async {
+    await pumpComponent(
+      tester,
+      framed(
+        MuscleModel(
+          model: body,
+          onOpen: (_) {},
+          semanticLabel: 'Body',
+          hint: 'Tap or slide across a muscle',
+        ),
+      ),
+    );
+    final viewer = tester.widget<ModelViewer>(find.byType(ModelViewer));
+    expect(find.text('Tap or slide across a muscle'), findsOneWidget);
+
+    viewer.onScrub!('pec_right');
+    await tester.pump();
+    expect(find.text('Tap or slide across a muscle'), findsNothing);
+    expect(find.text('release to open'), findsOneWidget);
+
+    viewer.onScrubEnd!(null);
+    await tester.pump();
+    expect(find.text('Tap or slide across a muscle'), findsOneWidget);
+  });
+
   testWidgets('an interrupted slide opens nothing', (tester) async {
     final opened = <Muscle>[];
     await pumpComponent(
@@ -154,10 +179,16 @@ void main() {
     var retried = 0;
     await pumpComponent(
       tester,
-      framed(MuscleModel.failed(onRetry: () => retried++)),
+      framed(
+        MuscleModel.failed(
+          message: 'Search still works.',
+          onRetry: () => retried++,
+        ),
+      ),
     );
 
-    expect(find.text("Couldn't load the model"), findsOneWidget);
+    expect(find.text("Couldn't load the body model"), findsOneWidget);
+    expect(find.text('Search still works.'), findsOneWidget);
     await tester.tap(find.text('Retry'));
     expect(retried, 1);
   });
