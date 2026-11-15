@@ -384,37 +384,33 @@ screenshot next to the studio board, every state) that the owner approves
 or sends back. A look the studio does not draw is a question for the owner
 and is drawn in the studio first.
 
-Where it stands (2026-11-15, end of the session that built it):
+Where it stands (2026-11-16):
 - Ana sekmeler: done and merged (#105–#107).
-- Antrenman ve programlar: built and unit/widget-tested, pinned to Forge
-  v0.21.0, in draft PRs; not yet checked on a device or approved:
-  #108 exercise list, detail and picker (owns `pickSwap` /
-  `pickReplacement`), #109 workout screen rest, summary, past workout,
-  #110 program detail, ready-made program, catalogue, generator questions,
-  #111 program builder (contains #110). Each PR body lists the owner's
-  answers it follows; all answers are rows of the canvas
-  https://claude.ai/artifact/FTcBZaGmmAHqBZoULbHH33 and are written into
-  the branches' Design bullets.
+- Antrenman ve programlar: done, checked on the iOS simulator and approved
+  by the owner (2026-11-15); merged as #108–#111, studio #113, Forge
+  v0.21.1 (search-field border). The device check's picks K1–K3 are under
+  Design. The approval page and its canvases were local HTML, not kept.
+- GetWorkout Studio's published link is behind `design/studio.html` on
+  main (#113 and later). Publish that file to
+  https://claude.ai/artifact/PuK5WUbeyhVHMxA6THNDC2 from the owner's
+  account (a session signed in elsewhere cannot open it).
+- In progress in its own session: sheets open on the root navigator so
+  they cover the tab bar as the studio draws them (Forge
+  `showForgeBottomSheet` + every app sheet's providers passed in); check
+  every sheet on the device after it merges.
 - Next, in order:
-  1. Join the four branches on a check branch (merge #108 first; then the
-     stub swaps named in #109 and #111: delete `swap_exercise.dart` and
-     `pick_replacement.dart`, import from `exercise_picker_page.dart`;
-     `app_en.arb`, `router.dart` and SPEC conflicts keep both sides).
-  2. GetWorkout Studio: draw what these branches changed (the implementers
-     listed it in their PRs: FeaturedCard summary changes and danger Stop,
-     Record plain sentence, SetTable unticked sets, WorkedMuscles,
-     WorkoutNoteCard, OnboardingQuestion counter/eyebrow, BuilderRow
-     unavailable form and handle, ExerciseRow limit form, the boards' undrawn
-     states and every menu's icons), publish, commit `design/studio.html` in
-     its own PR.
-  3. Device check of every state on the iOS simulator, then the side-by-side
-     approval page; on the owner's approval mark the PRs ready, auto-merge.
-  4. Icons on every ForgeMenu item in the rest of the app (owner's rule;
-     these branches did their own menus).
-  5. The ready-made `dayList` import is on getworkout-dev only; prod waits
+  1. Icons on every ForgeMenu item in the rest of the app (owner's rule;
+     the training screens already have them).
+  2. The ready-made `dayList` import is on getworkout-dev only; prod waits
      for the owner (`tool/import_content.dart --project getworkout-prod`,
      `--dry-run` first).
-  6. Next group: İlerleme.
+  3. Next group: İlerleme. Same flow: implementers per screen set, a check
+     branch joining them, studio drawn from the answers, device check, every
+     finding the studio does not draw asked on a drawn canvas, then the
+     side-by-side approval.
+  4. Open question for the Kurulum group: the Generator preview menu has no
+     icon for "Keep when regenerating" (studio's Menu card shows a history
+     icon; recommended). Draw and ask when that group starts.
 
 ## Design
 
@@ -520,9 +516,9 @@ Decisions (the canvases they were drawn on are deleted):
     list rows with the Premium lock; "Fits you" tags and a recommended row.
     The ready-made program page: tags, summary rows, weekly sets, days, Start
     this program, Duplicate in ⋯, Get Premium to start when locked.
-  - Program builder: name, day chips with + Day, a day menu (Rename,
-    Duplicate, Delete day), builder rows in one card, Add exercise, circuits;
-    Save in the app bar.
+  - Program builder: name and length, day chips with + Day, a day menu
+    (Rename, Duplicate, Move earlier, Move later, Delete day), builder rows
+    in one card, Add exercises, circuits; Save in the app bar.
   - Exercises: the search pill over the body model with a Front / Back
     toggle; a tap or a slide's release opens the list at once. The list:
     active filters as removable chips with Clear all, count and sort on one
@@ -888,6 +884,32 @@ Decisions (the canvases they were drawn on are deleted):
   and every item owned, then Show all equipment for the rest; onboarding and Your profile too); focus muscles
   as chips under "Focus muscles (2 of 3)"; left-out exercises as rows with
   × and a secondary "Add exercises to leave out".
+- Program builder (owner's picks, 2026-11-15): the name, then "Length in
+  weeks (optional)" with "Leave empty to run until you stop it" under it;
+  the day chips (selected: accent fill and border, no check, a ⋯ at its
+  end; a day with a problem carries a danger alert icon) and "+ Day", which
+  adds the day and opens the Rename dialog ("Rename day", "Shown on the
+  day's chip and in your workouts.", field "Day name" with hint "Day n",
+  Save · Cancel); the ⋯, a second tap on the selected chip or a long press
+  opens the day menu: Rename day, Duplicate day (the copy follows and is
+  selected, a named day's copy is "Push copy"), Move earlier, Move later, Delete day, each with an icon, the
+  ones that cannot apply hidden; deleting a day with exercises asks
+  ("Delete this day and its exercises?", "Its 5 exercises are removed
+  too.", one: "Its exercise is removed too."); cancelling the Rename
+  dialog after "+ Day" keeps "Day n". Under the chips "Push · 6 exercises · ~55 min"; the rows in one
+  card follow the BuilderRow card (two-line handle, no Weight chip, a
+  circuit's items only Reps or Time with the accent rule and "rest after
+  each round"); an unavailable item is the row's unavailable form with ⋯
+  (Replace exercise, Remove). An empty day is an EmptyView in a card ("No
+  exercises on this day"), after a failed save the danger line instead;
+  Add exercises stays, disabled, with "A day holds up to 20 exercises."
+  under it once full. The sets-and-reps sheet is titled with the exercise; Rest is a
+  tap-only field opening the minutes:seconds wheel (0:00–10:00, 15 s steps). Leaving with changes:
+  "Your edits to <name> will be lost." ("…this program…" unnamed), Discard
+  in danger. Not found is the untitled EmptyView, a load failure ErrorView
+  with both lines; loading is a skeleton of the page; every menu item has
+  an icon (a row's: tune, sync, the two-line handle for Superset / Circuit
+  with next, remove for Ungroup, delete); the Rename field takes the focus.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
@@ -1622,8 +1644,8 @@ the feature you are about to touch, and keep it true when you change it.
   (`Routes.programNewReturning` in Programs, `Routes.exerciseProgramNew`
   with its own picker in Exercises; `returningProgramNew` picks), so the
   exercise can be added; from a workout or the history it opens in the
-  Programs tab as before. In the builder, Add
-  day selects the new day and focuses its name; opening the builder or
+  Programs tab as before. In the builder, + Day
+  selects the new day and opens its Rename dialog; opening the builder or
   switching days never takes the focus.
 - **Schedule**: `activeProgram.nextDate` is a calendar date stored as a
   `YYYY-MM-DD` string, so it is the same date in every time zone, and
