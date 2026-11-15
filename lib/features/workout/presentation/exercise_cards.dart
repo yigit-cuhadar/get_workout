@@ -631,7 +631,8 @@ class ExerciseMenu {
     final id = await pickSwap(
       context,
       exerciseId: exercise.exerciseId,
-      logged: exercise.doneSets.length,
+      logged: exercise.doneSets.where((set) => !set.isWarmup).length,
+      warmups: exercise.doneSets.where((set) => set.isWarmup).length,
       picker: picker,
     );
     final replacement = editor.knownExercises[id];
