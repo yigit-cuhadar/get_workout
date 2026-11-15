@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
@@ -26,24 +27,17 @@ class RunningWorkoutBar extends StatelessWidget {
         listener: (context, state) {
           final l10n = AppLocalizations.of(context);
           final cubit = context.read<ActiveWorkoutCubit>();
-          final messenger = ScaffoldMessenger.of(context);
           if (state.restored case final name?) {
-            messenger.showSnackBar(
-              SnackBar(
-                duration: const Duration(seconds: 10),
-                content: Text(l10n.workoutRestored(name)),
-                action: SnackBarAction(
-                  label: l10n.workoutOpen,
-                  onPressed: () => context.push(Routes.workout),
-                ),
-              ),
+            showForgeSnackbar(
+              context,
+              message: l10n.workoutRestored(name),
+              actionLabel: l10n.workoutOpen,
+              onAction: () => context.push(Routes.workout),
             );
             cubit.restoredShown();
           }
           if (state.localUnreadable) {
-            messenger.showSnackBar(
-              SnackBar(content: Text(l10n.workoutLocalUnreadable)),
-            );
+            showForgeSnackbar(context, message: l10n.workoutLocalUnreadable);
             cubit.localUnreadableShown();
           }
         },

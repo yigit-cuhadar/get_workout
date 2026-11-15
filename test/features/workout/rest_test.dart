@@ -30,6 +30,28 @@ void main() {
       expect(rest(w, (exercise: 0, set: 0)), const Duration(seconds: 180));
     });
 
+    test('the rest chosen in the workout comes before the program\'s', () {
+      final w = workout('w', [
+        withGoal(
+          exercise('squat', [lift(100, 5)]),
+          180,
+        ).copyWith(restS: () => 120),
+      ]);
+      expect(rest(w, (exercise: 0, set: 0)), const Duration(seconds: 120));
+    });
+
+    test('a group rests its last exercise\'s rest', () {
+      final exercises = [
+        exercise('squat', [lift(100, 5)], group: 'A'),
+        exercise('bench', [lift(80, 8)], group: 'A'),
+      ];
+      expect(restSource(exercises, 0), 1);
+      expect(
+        groupRestS(exercises, 0, defaultS: 75, exerciseRestS: exerciseRestS),
+        120,
+      );
+    });
+
     test('without a program rest, the exercise default', () {
       final w = workout('w', [
         exercise('squat', [lift(100, 5)]),

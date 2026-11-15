@@ -169,14 +169,79 @@ class SetTypeMenu extends StatelessWidget {
   }
 }
 
+/// The [types] a set can be as rows of the set options sheet: each label
+/// with the bubble it would give, the current one with an accent tick
+/// instead, split by lines.
+class SetTypeList extends StatelessWidget {
+  const SetTypeList({super.key, required this.types});
+
+  final List<SetTypeMenuItem> types;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ForgeStyle.of(context).colors;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, type) in types.indexed)
+          Semantics(
+            selected: type.current,
+            button: true,
+            child: InkWell(
+              onTap: type.onTap,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: ForgeTheme.tapMin),
+                padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
+                decoration: i == 0
+                    ? null
+                    : BoxDecoration(
+                        border: Border(top: BorderSide(color: colors.line)),
+                      ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        type.label,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                    if (type.current)
+                      ForgeIcon(
+                        ForgeIcons.check,
+                        size: 18,
+                        weight: 3,
+                        color: colors.accent,
+                      )
+                    else
+                      ExcludeSemantics(
+                        child: _MiniBubble(
+                          label: type.bubble,
+                          dashed: type.warmup,
+                          size: 24,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 /// The bubble a type would give the set, small and pending.
 class _MiniBubble extends StatelessWidget {
-  const _MiniBubble({required this.label, required this.dashed});
+  const _MiniBubble({
+    required this.label,
+    required this.dashed,
+    this.size = 22,
+  });
 
   final String label;
   final bool dashed;
-
-  static const double size = 22;
+  final double size;
 
   @override
   Widget build(BuildContext context) {

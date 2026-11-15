@@ -53,20 +53,20 @@ class RestPanel extends StatelessWidget {
           Row(
             spacing: 10,
             children: [
-              Expanded(
-                child: Text(
-                  over ? l10n.restOver : l10n.restPanelTitle,
-                  style: text.bodySmall!.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: colors.ink,
-                  ),
+              Text(
+                over ? l10n.restOver : l10n.restPanelTitle,
+                style: text.bodySmall!.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colors.ink,
                 ),
               ),
-              Flexible(
+              // The line takes all the width the title leaves.
+              Expanded(
                 child: Text(
                   next,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
                   style: style.data.copyWith(
                     fontSize: 11,
                     color: colors.inkMuted,

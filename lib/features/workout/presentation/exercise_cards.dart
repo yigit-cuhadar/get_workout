@@ -8,7 +8,6 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/grouping.dart';
-import '../../../core/max_length_formatter.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/equipment_cubit.dart';
@@ -17,7 +16,9 @@ import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/workout.dart';
+import '../domain/warmups.dart';
 import 'set_bubbles.dart';
+import 'widgets/progression_hint.dart';
 import 'widgets/exercise_card.dart';
 import 'workout_editor.dart';
 import 'workout_editor_view.dart';
@@ -33,6 +34,10 @@ import 'workout_text.dart';
 /// then drags its card (a group as one) to another place; once it is
 /// dropped the cards open as before, the selection having followed its
 /// exercise. Screen readers move a card up or down instead.
+///
+/// In the workout in progress ([running]) a group's label says its rest,
+/// the open card suggests a heavier load when last time allows it, and
+/// each exercise's menu changes its rest and warm-ups.
 class ExerciseCards extends StatefulWidget {
   const ExerciseCards({
     super.key,
@@ -40,10 +45,12 @@ class ExerciseCards extends StatefulWidget {
     required this.editor,
     required this.picker,
     required this.exerciseRoute,
+    this.running,
   });
 
   final EditedWorkout state;
   final WorkoutEditor<EditedWorkout> editor;
+  final RunningWorkout? running;
   final String Function({required int max, required bool multiple}) picker;
 
   /// Where an exercise's detail page opens above the page.
@@ -136,6 +143,7 @@ class _ExerciseCardsState extends State<ExerciseCards> {
           : null,
       state: widget.state,
       editor: widget.editor,
+      running: proxy ? null : widget.running,
       picker: widget.picker,
       exerciseRoute: widget.exerciseRoute,
       wrapLine: (item, line) {
@@ -374,6 +382,7 @@ class _Card extends StatelessWidget {
     required this.form,
     required this.state,
     required this.editor,
+    required this.running,
     required this.picker,
     required this.exerciseRoute,
     required this.wrapLine,
@@ -383,6 +392,7 @@ class _Card extends StatelessWidget {
   final ExerciseCardForm? form;
   final EditedWorkout state;
   final WorkoutEditor<EditedWorkout> editor;
+  final RunningWorkout? running;
   final String Function({required int max, required bool multiple}) picker;
   final String Function(String id) exerciseRoute;
   final Widget Function(int item, Widget line) wrapLine;
@@ -403,18 +413,45 @@ class _Card extends StatelessWidget {
             ? ExerciseCardForm.open
             : ExerciseCardForm.collapsed);
     final open = form == ExerciseCardForm.open;
+    final group = grouped
+        ? l10n.groupLabel(exercises[start].group!, end - start)
+        : null;
+    final roundRest = group == null ? null : running?.roundRestS(start);
+    // The exercise whose load it suggests: the card's, or the selected one
+    // of an open group.
+    final suggested = open ? (grouped ? selected : start) : null;
+    final progression = suggested == null
+        ? null
+        : running?.progressionFor(suggested);
     return Padding(
       padding: const EdgeInsets.all(Gap.sm),
-      child: ExerciseCard(
-        form: form,
-        optionsLabel: l10n.programItemActions,
-        group: grouped
-            ? l10n.groupLabel(exercises[start].group!, end - start)
-            : null,
-        wrapLine: wrapLine,
-        items: [
-          for (var i = start; i < end; i++)
-            _item(context, i, open: open, grouped: grouped, unit: unit),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: Gap.sm,
+        children: [
+          ExerciseCard(
+            form: form,
+            optionsLabel: l10n.programItemActions,
+            group: roundRest == null
+                ? group
+                : l10n.workoutGroupRest(
+                    group!,
+                    l10n.elapsedText(Duration(seconds: roundRest)),
+                  ),
+            wrapLine: wrapLine,
+            items: [
+              for (var i = start; i < end; i++)
+                _item(context, i, open: open, grouped: grouped, unit: unit),
+            ],
+          ),
+          if (progression != null)
+            ProgressionHint(
+              text: l10n.progressionHintText(
+                progression.reps,
+                l10n.liftedWeightText(progression.kg, unit),
+              ),
+              onTap: () => editor.applyProgression(suggested!, progression.kg),
+            ),
         ],
       ),
     );
@@ -442,7 +479,8 @@ class _Card extends StatelessWidget {
       details: open
           ? [
               ?l10n.goalText(exercise, unit),
-              if (last != null) l10n.lastTimeText(last.date),
+              if (last != null)
+                l10n.lastSessionText(last, exercise.loggingType, unit),
               ?exercise.note,
             ]
           : const [],
@@ -452,6 +490,7 @@ class _Card extends StatelessWidget {
         index: index,
         state: state,
         editor: editor,
+        running: running,
         picker: picker,
         exerciseRoute: exerciseRoute,
       ).show(button),
@@ -459,13 +498,14 @@ class _Card extends StatelessWidget {
   }
 }
 
-/// The actions on exercise [index]: its detail page, swap, group, note,
-/// remove.
+/// The actions on exercise [index]: swap, its detail page, note, group;
+/// in the workout in progress ([running]) its rest and warm-ups; remove.
 class _ExerciseMenu {
   const _ExerciseMenu({
     required this.index,
     required this.state,
     required this.editor,
+    required this.running,
     required this.picker,
     required this.exerciseRoute,
   });
@@ -473,6 +513,7 @@ class _ExerciseMenu {
   final int index;
   final EditedWorkout state;
   final WorkoutEditor<EditedWorkout> editor;
+  final RunningWorkout? running;
   final String Function({required int max, required bool multiple}) picker;
 
   /// Where an exercise's detail page opens above the page.
@@ -483,14 +524,21 @@ class _ExerciseMenu {
     final l10n = AppLocalizations.of(button);
     final exercises = state.workout!.exercises;
     final exercise = exercises[index];
+    final running = this.running;
     showForgeMenu(
       context: button,
       items: [
+        ForgeMenuItem(label: l10n.workoutSwap, onTap: () => _swap(button)),
         ForgeMenuItem(
           label: l10n.workoutExerciseDetails,
           onTap: () => button.push(exerciseRoute(exercise.exerciseId)),
         ),
-        ForgeMenuItem(label: l10n.workoutSwap, onTap: () => _swap(button)),
+        ForgeMenuItem(
+          label: exercise.note == null
+              ? l10n.workoutAddNote
+              : l10n.workoutEditNote,
+          onTap: () => _editNote(button, exercise),
+        ),
         if (canLinkWithNext(exercises, index))
           ForgeMenuItem(
             label: linkedSize(exercises, index) == 2
@@ -503,19 +551,63 @@ class _ExerciseMenu {
             label: l10n.programUngroup,
             onTap: () => editor.ungroup(index),
           ),
+        if (running != null)
+          ForgeMenuItem(
+            label: l10n.workoutRestTimeRow(
+              l10n.elapsedText(Duration(seconds: running.exerciseRestS(index))),
+            ),
+            onTap: () => _editRest(button, running),
+          ),
+        if (editor.warmupSettings != null && takesWarmups(exercise.loggingType))
+          ForgeMenuItem(
+            label: l10n.workoutWarmupSets,
+            onTap: () => editor.toggleWarmups(index),
+          ),
         ForgeMenuItem(
-          label: exercise.note == null
-              ? l10n.workoutAddNote
-              : l10n.workoutEditNote,
-          onTap: () => _editNote(button, exercise),
-        ),
-        ForgeMenuItem(
-          label: l10n.programRemoveItem,
+          label: l10n.workoutRemoveExercise,
           destructive: true,
           onTap: () => _remove(button, exercise),
         ),
       ],
     );
+  }
+
+  /// The rest after each set of the exercise, or each round of its group,
+  /// picked from [restChoicesS] in a sheet.
+  Future<void> _editRest(BuildContext context, RunningWorkout running) async {
+    final l10n = AppLocalizations.of(context);
+    final exercises = state.workout!.exercises;
+    final exercise = exercises[index];
+    final current = running.exerciseRestS(index);
+    final (start, end) = groupRange(exercises, index);
+    final seconds = await showForgeBottomSheet<int>(
+      context: context,
+      builder: (context) => ForgeBottomSheet(
+        title: l10n.workoutRestTimeTitle,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: Gap.sm,
+            children: [
+              Text(
+                exercise.group == null
+                    ? l10n.workoutRestAfterEachSet(exercise.name)
+                    : l10n.workoutRestAfterEachRound(
+                        l10n.groupLabel(exercise.group!, end - start),
+                      ),
+                style: Theme.of(context).textTheme.bodySmall!
+                    .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
+              ),
+              _RestChoices(
+                current: current,
+                onPicked: (seconds) => Navigator.pop(context, seconds),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (seconds != null) running.setExerciseRest(index, seconds);
   }
 
   /// The exercise's alternatives first, then the whole library.
@@ -576,35 +668,26 @@ class _ExerciseMenu {
 
   Future<void> _editNote(BuildContext context, WorkoutExercise exercise) async {
     final l10n = AppLocalizations.of(context);
-    final controller = TextEditingController(text: exercise.note ?? '');
-    final saved = await showDialog<bool>(
+    var text = exercise.note ?? '';
+    final saved = await showForgeBottomSheet<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(exercise.name),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: null,
-          textCapitalization: TextCapitalization.sentences,
-          inputFormatters: [
-            maxLengthFormatter(WorkoutLimits.maxExerciseNoteLength),
-          ],
-          decoration: InputDecoration(labelText: l10n.workoutExerciseNote),
+      builder: (context) => ForgeBottomSheet(
+        title: l10n.workoutExerciseNoteTitle(exercise.name),
+        action: ForgeButton(
+          label: l10n.programSave,
+          onPressed: () => Navigator.pop(context, true),
+          size: ForgeButtonSize.large,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.programSave),
-          ),
-        ],
+        child: NoteField(
+          initial: exercise.note,
+          label: l10n.workoutExerciseNote,
+          hint: l10n.workoutNoteHint,
+          maxLength: WorkoutLimits.maxExerciseNoteLength,
+          onChanged: (changed) => text = changed,
+        ),
       ),
     );
-    if (saved == true) editor.setExerciseNote(index, controller.text);
-    controller.dispose();
+    if (saved == true) editor.setExerciseNote(index, text);
   }
 
   Future<void> _remove(BuildContext context, WorkoutExercise exercise) async {
@@ -616,9 +699,73 @@ class _ExerciseMenu {
           body: null,
           cancel: l10n.cancel,
           confirm: l10n.programRemoveItem,
+          destructive: true,
         )) {
       return;
     }
     editor.removeExercise(index);
+  }
+}
+
+/// The rests offered for an exercise in the workout, in seconds.
+const restChoicesS = [60, 90, 120, 150, 180, 240];
+
+/// [restChoicesS] as rows in mono, the [current] one ticked in accent.
+class _RestChoices extends StatelessWidget {
+  const _RestChoices({required this.current, required this.onPicked});
+
+  final int current;
+  final ValueChanged<int> onPicked;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final style = ForgeStyle.of(context);
+    final colors = style.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, seconds) in restChoicesS.indexed)
+          Semantics(
+            selected: seconds == current,
+            button: true,
+            child: InkWell(
+              onTap: () => onPicked(seconds),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: ForgeTheme.tapMin),
+                padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
+                decoration: i == 0
+                    ? null
+                    : BoxDecoration(
+                        border: Border(top: BorderSide(color: colors.line)),
+                      ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.elapsedText(Duration(seconds: seconds)),
+                        style: style.data.copyWith(
+                          fontSize: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .fontSize,
+                          color: colors.ink,
+                        ),
+                      ),
+                    ),
+                    if (seconds == current)
+                      ForgeIcon(
+                        ForgeIcons.check,
+                        size: 18,
+                        weight: 3,
+                        color: colors.accent,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }

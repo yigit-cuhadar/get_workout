@@ -205,26 +205,50 @@ void main() {
     return done;
   }
 
-  group('the set entry beside the rest', () {
-    test('hides while the rest a tick started runs', () {
+  group('the workout panel', () {
+    WorkoutPanel panel({
+      bool asking = false,
+      bool waits = false,
+      bool allDone = false,
+      bool picked = false,
+      RestPhase phase = RestPhase.none,
+    }) => workoutPanel(
+      asking: asking,
+      entryWaitsForRest: waits,
+      allDone: allDone,
+      doneSetPicked: picked,
+      phase: phase,
+    );
+
+    test('asks the effort first', () {
       expect(
-        showsSetEntry(entryWaitsForRest: true, phase: RestPhase.running),
-        isFalse,
+        panel(asking: true, waits: true, phase: RestPhase.running),
+        WorkoutPanel.question,
       );
     });
 
-    test('shows once the rest is over or skipped', () {
-      for (final phase in [RestPhase.over, RestPhase.none]) {
-        expect(showsSetEntry(entryWaitsForRest: true, phase: phase), isTrue);
-      }
+    test('counts the rest a tick started down, then says it is over', () {
+      expect(panel(waits: true, phase: RestPhase.running), WorkoutPanel.rest);
+      expect(panel(waits: true, phase: RestPhase.over), WorkoutPanel.restOver);
+      expect(panel(waits: true), WorkoutPanel.entry);
     });
 
-    test('shows during a rest kept from before a relaunch', () {
-      // A relaunch leaves nothing waiting; see the workout cubit's tests.
+    test('shows a set picked during the rest with the rest above it', () {
+      // A relaunch leaves nothing waiting either.
+      expect(panel(phase: RestPhase.running), WorkoutPanel.entry);
+    });
+
+    test('offers to finish once every set is done, after the rest', () {
+      expect(panel(allDone: true, phase: RestPhase.running), WorkoutPanel.rest);
       expect(
-        showsSetEntry(entryWaitsForRest: false, phase: RestPhase.running),
-        isTrue,
+        panel(allDone: true, phase: RestPhase.over),
+        WorkoutPanel.restOver,
       );
+      expect(panel(allDone: true), WorkoutPanel.finish);
+    });
+
+    test('shows a done set picked once every set is done', () {
+      expect(panel(allDone: true, picked: true), WorkoutPanel.entry);
     });
   });
 

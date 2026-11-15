@@ -20,13 +20,44 @@ enum RestPhase {
   over,
 }
 
-/// Whether the set bar shows its selected set's values: not while
-/// [entryWaitsForRest] (see [ActiveWorkoutState.entryWaitsForRest]) and
-/// the rest runs ([phase]).
-bool showsSetEntry({
+/// What the workout's bottom panel shows.
+enum WorkoutPanel {
+  /// The effort of the set just ticked.
+  question,
+
+  /// The rest's countdown.
+  rest,
+
+  /// The moment the rest ended.
+  restOver,
+
+  /// Every set is done: Finish workout.
+  finish,
+
+  /// The selected set's values, under the rest's line while one runs.
+  entry,
+}
+
+/// The panel while the effort question is [asking] or not, [allDone] the
+/// workout's sets, the rest in [phase]: the question first; the rest while
+/// the set to do waits for it ([entryWaitsForRest]) or nothing is left to
+/// do; then Finish workout once every set is done, unless a done set was
+/// picked ([doneSetPicked]); else the selected set.
+WorkoutPanel workoutPanel({
+  required bool asking,
   required bool entryWaitsForRest,
+  required bool allDone,
+  required bool doneSetPicked,
   required RestPhase phase,
-}) => !entryWaitsForRest || phase != RestPhase.running;
+}) {
+  if (asking) return WorkoutPanel.question;
+  final finish = allDone && !doneSetPicked;
+  if (entryWaitsForRest || finish) {
+    if (phase == RestPhase.running) return WorkoutPanel.rest;
+    if (phase == RestPhase.over) return WorkoutPanel.restOver;
+  }
+  return finish ? WorkoutPanel.finish : WorkoutPanel.entry;
+}
 
 class RestTimerState extends Equatable {
   const RestTimerState({

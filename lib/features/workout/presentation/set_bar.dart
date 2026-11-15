@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:forge_ui/forge_ui.dart' hide TipBanner;
+import 'package:forge_ui/forge_ui.dart';
 
-import '../../../core/max_length_formatter.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calculators/domain/calculation.dart';
 import '../../calculators/domain/plates.dart';
@@ -22,6 +21,8 @@ import 'widgets/effort_question.dart';
 import 'workout_editor.dart';
 import 'workout_help.dart';
 import 'widgets/set_panel.dart';
+import 'widgets/set_type_menu.dart';
+import 'workout_editor_view.dart';
 import 'workout_text.dart';
 
 /// What to load on the bar for a set's weight: see
@@ -33,35 +34,17 @@ typedef PlateLoader = Calculation<PlateLoad> Function(
 });
 
 /// A page logging a workout: [content] above, and at the bottom the
-/// [SetBar] (its set's values only while [entry], its plate breakdown
-/// with [loadPlates]), then [below] it (e.g.
-/// the rest) and the safe area on the surface. The bottom takes at most
-/// [maxBottomShare] of the page (of what the keyboard leaves); the bar's
-/// drops and effort row scroll beyond that, its title, values and tick
-/// always show (as the effort question's set and Skip do, its choices
-/// and tip scrolling). What the bottom leaves goes to [content].
+/// [panel] (a [SetBar], or what the workout in progress shows in its place)
+/// over the safe area on the surface. The panel takes at most
+/// [maxBottomShare] of the page (of what the keyboard leaves); what does
+/// not fit scrolls inside it. What the panel leaves goes to [content].
 class SetBarLayout extends StatelessWidget {
-  const SetBarLayout({
-    super.key,
-    required this.content,
-    required this.state,
-    required this.editor,
-    this.entry = true,
-    this.below,
-    this.loadPlates,
-  });
+  const SetBarLayout({super.key, required this.content, required this.panel});
 
   final Widget content;
-  final EditedWorkout state;
-  final WorkoutEditor<EditedWorkout> editor;
-  final bool entry;
-  final Widget? below;
-  final PlateLoader? loadPlates;
+  final Widget panel;
 
   static const maxBottomShare = 0.6;
-
-  /// Of the bottom, the most [below] takes; the bar keeps the rest.
-  static const maxBelowShare = 0.4;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -78,37 +61,10 @@ class SetBarLayout extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Flexible(
-                  child: SetBar(
-                    state: state,
-                    editor: editor,
-                    entry: entry,
-                    loadPlates: loadPlates,
-                  ),
-                ),
+                Flexible(child: panel),
                 ColoredBox(
                   color: ForgeStyle.of(context).colors.surface,
-                  child: SafeArea(
-                    top: false,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Laid out first, so it is capped to leave the bar the
-                        // most room; what does not fit scrolls inside it.
-                        if (below case final below?)
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxHeight:
-                                  constraints.maxHeight *
-                                  maxBottomShare *
-                                  maxBelowShare,
-                            ),
-                            child: below,
-                          ),
-                      ],
-                    ),
-                  ),
+                  child: const SafeArea(top: false, child: SizedBox.shrink()),
                 ),
               ],
             ),
@@ -119,64 +75,11 @@ class SetBarLayout extends StatelessWidget {
   );
 }
 
-/// The rest strip, out of the way while the keyboard is up so the
-/// [SetBar] sits right on it. It stays mounted, so it still asks about
-/// notifications; only it rebuilds as the keyboard moves.
-class RestBelowBar extends StatefulWidget {
-  const RestBelowBar({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  State<RestBelowBar> createState() => _RestBelowBarState();
-}
-
-class _RestBelowBarState extends State<RestBelowBar>
-    with WidgetsBindingObserver {
-  bool _typing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _typing = _keyboardUp();
-  }
-
-  @override
-  void didChangeMetrics() {
-    final typing = _keyboardUp();
-    if (typing != _typing) setState(() => _typing = typing);
-  }
-
-  /// The page's own insets are taken off by the scaffold, so the view's.
-  bool _keyboardUp() => View.of(context).viewInsets.bottom > 0;
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Offstage(
-    offstage: _typing,
-    child: MediaQuery.removePadding(
-      context: context,
-      removeBottom: true,
-      child: widget.child,
-    ),
-  );
-}
-
 /// The selected set of the workout [editor] edits as a [SetPanel]: which
 /// one it is, its values in steppers with the suggestion as hint, its
-/// drops, its effort when it is done, its options and the tick; nothing
-/// while no set is selected or not [entry]. Right after a working set is
+/// drops, its effort when it is done, its options and the tick, under the
+/// line of a running [rest]; nothing while no set is selected. Right
+/// after a working set is
 /// ticked it shows [_EffortQuestion] instead. A tick refused for missing
 /// values turns Log set off, rings the empty fields and says so under
 /// them until the set can be ticked. With [loadPlates], the weight of a
@@ -189,14 +92,14 @@ class SetBar extends StatelessWidget {
     super.key,
     required this.state,
     required this.editor,
-    this.entry = true,
     this.loadPlates,
+    this.rest,
   });
 
   final EditedWorkout state;
   final WorkoutEditor<EditedWorkout> editor;
-  final bool entry;
   final PlateLoader? loadPlates;
+  final EffortRest? rest;
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +121,7 @@ class SetBar extends StatelessWidget {
     }
     final selection = state.selection;
     final index = selection?.set;
-    if (!entry || selection == null || index == null) {
+    if (selection == null || index == null) {
       return const SizedBox.shrink();
     }
     final ref = (exercise: selection.exercise, set: index);
@@ -239,7 +142,7 @@ class SetBar extends StatelessWidget {
     final previous = state.lastTime(ref);
     final details = [
       if (previous != null)
-        l10n.workoutLastTimeSet(l10n.setWithUnitText(previous, type, unit)),
+        l10n.workoutLastTimeSet(l10n.setWithDropsText(previous, type, unit)),
       ?set.note,
     ];
     final blocked =
@@ -293,7 +196,7 @@ class SetBar extends StatelessWidget {
     return SetPanel(
       title: l10n.setToDo(exercise, ref.set),
       details: [
-        if (set.type != SetType.normal) l10n.setTypeHint(set.type),
+        if (set.type == SetType.warmup) l10n.setTypeHint(set.type),
         if (details.isNotEmpty) details.join(' · '),
       ],
       labels: SetPanelLabels(
@@ -304,10 +207,8 @@ class SetBar extends StatelessWidget {
         removeDrop: l10n.workoutRemoveDrop,
         plates: l10n.setPanelPlates,
       ),
-      onOptions: () => showModalBottomSheet<void>(
+      onOptions: () => showForgeBottomSheet<void>(
         context: context,
-        showDragHandle: true,
-        isScrollControlled: true,
         builder: (_) => _SetOptions(editor: editor),
       ),
       values: values,
@@ -353,6 +254,7 @@ class SetBar extends StatelessWidget {
             ),
       done: set.done,
       onLog: blocked ? null : () => _toggle(context, ref),
+      rest: rest,
       onPlates: switch ((loadPlates, bar, set.weightKg ?? hint.weightKg)) {
         (final loadPlates?, final bar?, final kg?)
             when type == LoggingType.weightReps ||
@@ -494,7 +396,7 @@ class _EffortRow extends StatelessWidget {
                 style: Theme.of(context).textTheme.labelLarge,
               ),
             ),
-            const WorkoutHelpButton(),
+            EffortHelpButton(onPressed: () => openWorkoutHelp(context)),
           ],
         ),
         ChoiceGrid.list(
@@ -502,7 +404,7 @@ class _EffortRow extends StatelessWidget {
             for (final step in steps)
               ChoiceOption(
                 label: l10n.effortStepLabel(step, scale),
-                hint: l10n.effortStepMeaning(step, scale),
+                hint: l10n.effortStepShortMeaning(step, scale),
               ),
           ],
           selected: chosen == null ? null : steps.indexOf(chosen),
@@ -559,7 +461,7 @@ class _EffortQuestion extends StatelessWidget {
       for (final step in steps)
         ChoiceOption(
           label: l10n.effortStepLabel(step, scale),
-          hint: l10n.effortStepMeaning(step, scale),
+          hint: l10n.effortStepShortMeaning(step, scale),
         ),
     ];
     void pick(int index) {
@@ -611,9 +513,13 @@ class _EffortQuestion extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Flexible(child: question),
-              TipBanner(
-                text: l10n.tipEffort,
-                onDismiss: () => settings.tipSeen(Tip.effort),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, Gap.md),
+                child: TipBanner(
+                  message: l10n.tipEffort,
+                  dismissLabel: l10n.tipDismiss,
+                  onDismiss: () => settings.tipSeen(Tip.effort),
+                ),
               ),
             ],
           );
@@ -645,7 +551,6 @@ class _SetOptions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     return BlocBuilder<WorkoutEditor<EditedWorkout>, EditedWorkout>(
       bloc: editor,
       builder: (context, state) {
@@ -655,47 +560,38 @@ class _SetOptions extends StatelessWidget {
         final ref = (exercise: selection.exercise, set: index);
         final exercise = state.workout!.exercises[ref.exercise];
         final set = exercise.sets[ref.set];
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: Gap.md,
-              right: Gap.md,
-              bottom: MediaQuery.viewInsetsOf(context).bottom,
-            ),
+        return ForgeBottomSheet(
+          title: l10n.setToDo(exercise, ref.set),
+          child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 12,
               children: [
-                Wrap(
-                  spacing: Gap.sm,
-                  children: [
+                SetTypeList(
+                  types: [
                     for (final type in exercise.loggingType.setTypes)
-                      ChoiceChip(
-                        label: Text(l10n.setTypeLabel(type)),
-                        selected: set.type == type,
-                        onSelected: (_) => editor.setType(ref, type),
+                      SetTypeMenuItem(
+                        label: l10n.setTypeLabel(type),
+                        bubble: l10n.setLabelAs(exercise, ref.set, type),
+                        warmup: type == SetType.warmup,
+                        current: type == set.type,
+                        onTap: () => editor.setType(ref, type),
                       ),
                   ],
                 ),
-                TextFormField(
+                NoteField(
                   key: ValueKey(ref),
-                  initialValue: set.note,
-                  maxLines: null,
-                  textCapitalization: TextCapitalization.sentences,
-                  inputFormatters: [
-                    maxLengthFormatter(WorkoutLimits.maxSetNoteLength),
-                  ],
-                  decoration: InputDecoration(labelText: l10n.workoutSetNote),
+                  initial: set.note,
+                  label: l10n.workoutSetNote,
+                  hint: l10n.workoutNoteHint,
+                  maxLength: WorkoutLimits.maxSetNoteLength,
                   onChanged: (text) => editor.setSetNote(ref, text),
                 ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    Icons.delete_outline,
-                    color: theme.colorScheme.error,
-                  ),
-                  title: Text(l10n.workoutRemoveSet),
+                ListRow(
+                  title: l10n.workoutRemoveSet,
+                  leading: const ForgeIcon(ForgeIcons.delete),
+                  destructive: true,
                   onTap: () {
                     Navigator.pop(context);
                     editor.removeSet(ref);

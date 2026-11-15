@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../../core/widgets/tap_band.dart';
+import 'effort_question.dart';
 
 /// One value of a set in a [SetPanel], shown as a [StepperField].
 class SetPanelValue {
@@ -76,8 +77,11 @@ class SetPanelLabels {
 /// plate button beside the first value (the weight) opens its plate
 /// breakdown.
 ///
+/// A set picked while a rest runs has the [rest]'s thin line on top.
+///
 /// [SetPanel.showing] is the same panel showing something else in place of
-/// the entry: after Log set the effort question, then the rest countdown.
+/// the entry: after Log set the effort question, then the rest countdown,
+/// or Finish workout once every set is done.
 class SetPanel extends StatelessWidget {
   const SetPanel({
     super.key,
@@ -93,6 +97,7 @@ class SetPanel extends StatelessWidget {
     this.onAddDrop,
     this.effort,
     this.onPlates,
+    this.rest,
   }) : child = null;
 
   const SetPanel.showing({super.key, required Widget this.child})
@@ -107,7 +112,8 @@ class SetPanel extends StatelessWidget {
       drops = null,
       onAddDrop = null,
       effort = null,
-      onPlates = null;
+      onPlates = null,
+      rest = null;
 
   final String? title;
   final List<String>? details;
@@ -130,7 +136,16 @@ class SetPanel extends StatelessWidget {
   /// Opens the plate breakdown under the button whose context it is given;
   /// null hides the button.
   final ValueChanged<BuildContext>? onPlates;
+
+  /// The rest running while a set is picked during it, as a [RestLine] on
+  /// top.
+  final EffortRest? rest;
+
+  /// [child] brings its own padding.
   final Widget? child;
+
+  /// The entry's padding.
+  static const padding = EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, 20);
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +160,7 @@ class SetPanel extends StatelessWidget {
           borderRadius: BorderRadius.vertical(top: radius),
           border: Border.all(color: colors.line),
         ),
-        padding: const EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, 20),
+        padding: child == null ? padding : EdgeInsets.zero,
         child: child ?? _entry(context),
       ),
     );
@@ -179,6 +194,7 @@ class SetPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 12,
       children: [
+        if (rest case final rest?) RestLine(rest),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

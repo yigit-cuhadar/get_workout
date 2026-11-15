@@ -317,6 +317,7 @@ service cloud.firestore {
       exercises: [
         full.exercises.first.copyWith(
           goal: () => item('squat', sets: 2, targetKg: 100),
+          restS: () => 120,
           sets: [...full.exercises.first.sets, const WorkoutSet()],
         ),
         full.exercises.last,
@@ -340,10 +341,13 @@ service cloud.firestore {
 
     tearDown(() => directory.deleteSync(recursive: true));
 
-    test('keeps drafts with goals, finished workouts and stale ids', () async {
-      expect((await store.save('u1', kept)).isOk, isTrue);
-      expect((await store.load('u1')).valueOrNull, kept);
-    });
+    test(
+      'keeps drafts with goals and rests, finished workouts and stale ids',
+      () async {
+        expect((await store.save('u1', kept)).isOk, isTrue);
+        expect((await store.load('u1')).valueOrNull, kept);
+      },
+    );
 
     group('the rest', () {
       // The store's clock reads 42 ms.

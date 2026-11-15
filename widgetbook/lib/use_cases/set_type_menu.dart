@@ -37,6 +37,31 @@ Widget setTypeMenu(BuildContext context) => _menu(drop: true);
 @widgetbook.UseCase(name: 'Non-rep exercise (no drop set)', type: SetTypeMenu)
 Widget setTypeMenuNoDrop(BuildContext context) => _menu(drop: false);
 
+@widgetbook.UseCase(name: 'Set options sheet', type: SetTypeList)
+Widget setTypeList(BuildContext context) => Padding(
+  padding: const EdgeInsets.all(Gap.md),
+  child: Material(
+    color: ForgeStyle.of(context).colors.surface,
+    child: SetTypeList(
+      types: [
+        SetTypeMenuItem(
+          label: 'Warm-up',
+          bubble: 'W',
+          warmup: true,
+          onTap: () {},
+        ),
+        SetTypeMenuItem(
+          label: 'Working',
+          bubble: '3',
+          current: true,
+          onTap: () {},
+        ),
+        SetTypeMenuItem(label: 'Drop set', bubble: '3D', onTap: () {}),
+      ],
+    ),
+  ),
+);
+
 @widgetbook.UseCase(name: 'Add set', type: AddSetSheet)
 Widget addSetSheet(BuildContext context) {
   final tip = context.knobs.boolean(

@@ -23,7 +23,10 @@ Widget countingDownRestPanel(BuildContext context) => _panel(
       initialValue: 0.6,
       max: 1,
     ),
-    next: 'Next: Bench Press · set 4 of 4',
+    next: context.knobs.string(
+      label: 'Next',
+      initialValue: 'next: set 4 · 82.5 × 8',
+    ),
     onAddTime: () {},
     onSkip: () {},
   ),
@@ -32,7 +35,7 @@ Widget countingDownRestPanel(BuildContext context) => _panel(
 @widgetbook.UseCase(name: 'Rest over', type: RestPanel)
 Widget restOverRestPanel(BuildContext context) => _panel(
   context,
-  const RestPanel.over(time: '0:00', next: 'Next: Bench Press · set 4 of 4'),
+  const RestPanel.over(time: '0:00', next: 'next: set 4 · 82.5 × 8'),
 );
 
 @widgetbook.UseCase(name: 'No next set', type: RestPanel)

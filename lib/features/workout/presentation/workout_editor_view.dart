@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 
-import '../../../core/max_length_formatter.dart';
+import '../../../core/text_length.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/set_logging.dart';
 import '../../settings/domain/user_settings.dart';
@@ -16,46 +16,53 @@ import 'widgets/set_type_menu.dart';
 import 'workout_editor.dart';
 import 'workout_text.dart';
 
-/// Asks [title] with [body]; true when the user picks [confirm].
+/// Asks [title] with [body] in a [ForgeDialog]; true when the user picks
+/// [confirm], a danger action when it is [destructive].
 Future<bool> confirmChoice(
   BuildContext context, {
   required String title,
   required String? body,
   required String cancel,
   required String confirm,
+  bool destructive = false,
 }) async {
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showForgeDialog<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: body == null ? null : Text(body),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(cancel),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(confirm),
-        ),
-      ],
+    builder: (context) => ForgeDialog(
+      title: title,
+      message: body ?? '',
+      action: ForgeButton(
+        label: confirm,
+        onPressed: () => Navigator.pop(context, true),
+        variant: destructive
+            ? ForgeButtonVariant.danger
+            : ForgeButtonVariant.primary,
+      ),
+      cancel: ForgeButton(
+        label: cancel,
+        onPressed: () => Navigator.pop(context, false),
+        variant: ForgeButtonVariant.text,
+      ),
     ),
   );
   return confirmed == true;
 }
 
-/// A multi-line note that applies every change at once.
+/// A note as a [ForgeTextField] that applies every change at once, cut to
+/// [maxLength].
 class NoteField extends StatefulWidget {
   const NoteField({
     super.key,
     required this.initial,
     required this.label,
+    required this.hint,
     required this.maxLength,
     required this.onChanged,
   });
 
   final String? initial;
   final String label;
+  final String hint;
   final int maxLength;
   final ValueChanged<String> onChanged;
 
@@ -65,6 +72,24 @@ class NoteField extends StatefulWidget {
 
 class _NoteFieldState extends State<NoteField> {
   late final _controller = TextEditingController(text: widget.initial ?? '');
+  late String _last = _controller.text;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_changed);
+  }
+
+  void _changed() {
+    final text = _controller.text;
+    if (text.length > widget.maxLength) {
+      _controller.text = cutToLength(text, widget.maxLength);
+      return;
+    }
+    if (text == _last) return;
+    _last = text;
+    widget.onChanged(text);
+  }
 
   @override
   void dispose() {
@@ -73,13 +98,10 @@ class _NoteFieldState extends State<NoteField> {
   }
 
   @override
-  Widget build(BuildContext context) => TextField(
+  Widget build(BuildContext context) => ForgeTextField(
+    label: widget.label,
+    hint: widget.hint,
     controller: _controller,
-    maxLines: null,
-    textCapitalization: TextCapitalization.sentences,
-    inputFormatters: [maxLengthFormatter(widget.maxLength)],
-    decoration: InputDecoration(labelText: widget.label),
-    onChanged: widget.onChanged,
   );
 }
 
@@ -116,7 +138,7 @@ Future<void> addSetOfKind(
           for (final type in exercise.loggingType.setTypes)
             AddSetOption(
               label: l10n.setTypeLabel(type),
-              hint: l10n.setTypeHint(type),
+              hint: l10n.addSetHint(type),
               bubble: _newSetLabel(l10n, exercise, type),
               warmup: type == SetType.warmup,
               onTap: () => Navigator.pop(context, type),

@@ -5,7 +5,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/rest.dart';
 import 'rest_panel.dart';
 
-/// The rest running while an [EffortQuestion] is asked: its [time] left,
+/// The rest running while an [EffortQuestion] is asked, or above a set
+/// picked during it (see [RestLine]): its [time] left,
 /// how much of it has passed ([progress], 0 to 1), +15 s ([onAddTime])
 /// and Skip ([onSkip]).
 class EffortRest {
@@ -76,27 +77,7 @@ class EffortQuestion extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 10,
         children: [
-          if (rest != null)
-            Row(
-              spacing: Gap.sm,
-              children: [
-                Expanded(child: RestTrack(progress: rest.progress)),
-                Text(
-                  l10n.restRemaining(rest.time),
-                  style: style.data.copyWith(color: colors.ink),
-                ),
-                ForgeButton(
-                  label: l10n.restAdd(restExtension.inSeconds),
-                  onPressed: rest.onAddTime,
-                  variant: ForgeButtonVariant.text,
-                ),
-                ForgeButton(
-                  label: l10n.effortQuestionSkipRest,
-                  onPressed: rest.onSkip,
-                  variant: ForgeButtonVariant.text,
-                ),
-              ],
-            ),
+          if (rest != null) RestLine(rest),
           Row(
             children: [
               Expanded(
@@ -113,7 +94,7 @@ class EffortQuestion extends StatelessWidget {
                 onPressed: onSkip,
                 variant: ForgeButtonVariant.text,
               ),
-              _HelpButton(onPressed: onHelp),
+              EffortHelpButton(onPressed: onHelp),
             ],
           ),
           // What does not fit the panel's share of the page scrolls.
@@ -133,10 +114,44 @@ class EffortQuestion extends StatelessWidget {
   }
 }
 
+/// The thin line of a running [rest] on top of the bottom panel: its fill,
+/// the time left, +15 s and Skip.
+class RestLine extends StatelessWidget {
+  const RestLine(this.rest, {super.key});
+
+  final EffortRest rest;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final style = ForgeStyle.of(context);
+    return Row(
+      spacing: Gap.sm,
+      children: [
+        Expanded(child: RestTrack(progress: rest.progress)),
+        Text(
+          l10n.restRemaining(rest.time),
+          style: style.data.copyWith(color: style.colors.ink),
+        ),
+        ForgeButton(
+          label: l10n.restAdd(restExtension.inSeconds),
+          onPressed: rest.onAddTime,
+          variant: ForgeButtonVariant.text,
+        ),
+        ForgeButton(
+          label: l10n.effortQuestionSkipRest,
+          onPressed: rest.onSkip,
+          variant: ForgeButtonVariant.text,
+        ),
+      ],
+    );
+  }
+}
+
 /// The "?" opening the effort help: an 18px help icon in ink-muted across
 /// a 44px target.
-class _HelpButton extends StatelessWidget {
-  const _HelpButton({required this.onPressed});
+class EffortHelpButton extends StatelessWidget {
+  const EffortHelpButton({super.key, required this.onPressed});
 
   final VoidCallback onPressed;
 

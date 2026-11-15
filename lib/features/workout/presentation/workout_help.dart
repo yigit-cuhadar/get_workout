@@ -8,32 +8,10 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/effort.dart';
 import 'workout_text.dart';
 
-/// A "?" opening [WorkoutHelpSheet], calling [onOpen] and, once it is
-/// closed, [onClosed]. Needs [SettingsCubit] above it.
-class WorkoutHelpButton extends StatelessWidget {
-  const WorkoutHelpButton({super.key, this.onOpen, this.onClosed});
-
-  final VoidCallback? onOpen;
-  final VoidCallback? onClosed;
-
-  @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: AppLocalizations.of(context).workoutHelp,
-    icon: const Icon(Icons.help_outline),
-    onPressed: () async {
-      onOpen?.call();
-      await openWorkoutHelp(context);
-      onClosed?.call();
-    },
-  );
-}
-
 /// Opens [WorkoutHelpSheet]; done once it is closed.
 Future<void> openWorkoutHelp(BuildContext context) =>
-    showModalBottomSheet<void>(
+    showForgeBottomSheet<void>(
       context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
       builder: (_) => const WorkoutHelpSheet(),
     );
 
@@ -45,38 +23,47 @@ class WorkoutHelpSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final text = Theme.of(context).textTheme;
+    final colors = ForgeStyle.of(context).colors;
     final scale = context.select(
       (SettingsCubit cubit) => cubit.state.settings.effortScale,
     );
-    Widget heading(String text) => Padding(
-      padding: const EdgeInsets.only(top: Gap.md, bottom: Gap.xs),
-      child: Text(text, style: theme.textTheme.titleMedium),
+    Widget heading(String title) => Padding(
+      padding: const EdgeInsets.only(top: Gap.sm),
+      child: Text(title, style: text.titleMedium),
     );
-    return DraggableScrollableSheet(
-      expand: false,
-      builder: (context, controller) => SafeArea(
-        child: ListView(
-          controller: controller,
-          padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
+    return ForgeBottomSheet(
+      title: l10n.helpTitle,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: Gap.sm,
           children: [
-            Text(l10n.helpTitle, style: theme.textTheme.titleLarge),
             heading(l10n.helpEffortTitle),
             Text(l10n.helpEffortBody),
-            const SizedBox(height: Gap.sm),
             Text(switch (scale) {
               EffortScale.byFeel => l10n.helpScaleFeel,
               EffortScale.rir => l10n.helpScaleRir,
               EffortScale.rpe => l10n.helpScaleRpe,
             }),
             for (final step in scale.steps)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                title: Text(l10n.effortStepLabel(step, scale)),
-                subtitle: Text(l10n.effortStepMeaning(step, scale)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.effortStepLabel(step, scale),
+                    style: text.titleSmall,
+                  ),
+                  Text(
+                    l10n.effortStepMeaning(step, scale),
+                    style: text.bodySmall!.copyWith(color: colors.inkMuted),
+                  ),
+                ],
               ),
-            Text(l10n.helpSettingsHint, style: theme.textTheme.bodySmall),
+            Text(
+              l10n.helpSettingsHint,
+              style: text.bodySmall!.copyWith(color: colors.inkMuted),
+            ),
             heading(l10n.helpWarmupTitle),
             Text(l10n.helpWarmupBody),
             heading(l10n.helpDropTitle),
@@ -86,25 +73,4 @@ class WorkoutHelpSheet extends StatelessWidget {
       ),
     );
   }
-}
-
-/// A first-use tip in the flow of the page, never in the way: [text] and
-/// a button that dismisses it.
-class TipBanner extends StatelessWidget {
-  const TipBanner({super.key, required this.text, required this.onDismiss});
-
-  final String text;
-  final VoidCallback onDismiss;
-
-  @override
-  Widget build(BuildContext context) => MaterialBanner(
-    leading: const Icon(Icons.lightbulb_outline),
-    content: Text(text),
-    actions: [
-      TextButton(
-        onPressed: onDismiss,
-        child: Text(AppLocalizations.of(context).tipDismiss),
-      ),
-    ],
-  );
 }

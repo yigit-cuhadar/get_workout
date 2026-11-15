@@ -61,6 +61,26 @@ extension EditedSelection on EditedWorkout {
   SetRef? get effortRowRef => effortRowSet(workout, selection);
 }
 
+/// What only the workout in progress offers beside editing: the rest
+/// after each exercise, which the user can change there, and heavier loads
+/// suggested from last time.
+abstract interface class RunningWorkout {
+  /// The rest in seconds after a set of exercise [index], or after each
+  /// round of its group; see `groupRestS`.
+  int exerciseRestS(int index);
+
+  /// [exerciseRestS], or null while rests are off or it is none.
+  int? roundRestS(int index);
+
+  /// Sets [exerciseRestS] of exercise [index] (its group's) for this
+  /// workout, from the next rest on.
+  void setExerciseRest(int index, int seconds);
+
+  /// The heavier load suggested for exercise [index] while it still has
+  /// a working set to fill; see `progression`.
+  ({double kg, int reps})? progressionFor(int index);
+}
+
 /// Editing a workout's exercises and sets, shared by the workout in
 /// progress and the editing of a stored one. Each change goes through
 /// [edit], which decides whether the workout can be changed now. The
@@ -278,6 +298,52 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
 
   void setExerciseNote(int index, String text) =>
       _editExercise(index, (e) => e.copyWith(note: () => _note(text)));
+
+  /// Puts [kg] into every working set of exercise [index] not done yet;
+  /// warm-ups and done sets stay. See `progression`.
+  void applyProgression(int index, double kg) => _editExercise(
+    index,
+    (e) => e.copyWith(
+      sets: [
+        for (final set in e.sets)
+          set.isWarmup || set.done ? set : set.copyWith(weightKg: () => kg),
+      ],
+    ),
+  );
+
+  /// Removes the untouched warm-ups (nothing entered, not done) of
+  /// exercise [index] when it has any warm-up; otherwise puts one empty
+  /// warm-up per set of the user's scheme ([WarmupSettings.rampSteps])
+  /// before its sets, as far as they fit. The exercise opens on its first
+  /// undone set when it is the open one.
+  void toggleWarmups(int index) {
+    final settings = warmupSettings;
+    final exercise = state.workout?.exercises.elementAtOrNull(index);
+    if (settings == null || exercise == null) return;
+    const untouched = WorkoutSet(type: SetType.warmup);
+    final List<WorkoutSet> sets;
+    if (exercise.sets.any((set) => set.isWarmup)) {
+      sets = [
+        for (final set in exercise.sets)
+          if (set != untouched) set,
+      ];
+    } else {
+      final room = WorkoutLimits.maxSets - exercise.sets.length;
+      sets = [
+        for (final _ in settings.rampSteps.take(room < 0 ? 0 : room)) untouched,
+        ...exercise.sets,
+      ];
+    }
+    if (sets.length == exercise.sets.length) return;
+    final current = state.selection;
+    _editExercise(
+      index,
+      (e) => e.copyWith(sets: sets),
+      movesSets: true,
+      select: (after) =>
+          current?.exercise == index ? openedExercise(after, index) : current,
+    );
+  }
 
   /// A new empty set of [type] where [editing.newSetPosition] puts it,
   /// selected. Only rep-based exercises have drop sets; a duration one gets

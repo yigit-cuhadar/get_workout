@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:get_workout/features/workout/presentation/widgets/effort_question.dart';
 import 'package:get_workout/features/workout/presentation/widgets/set_panel.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
@@ -47,6 +48,7 @@ Widget _panel(
   bool off = false,
   String? error,
   Widget? effort,
+  EffortRest? rest,
 }) => Align(
   alignment: Alignment.bottomCenter,
   child: SetPanel(
@@ -59,6 +61,7 @@ Widget _panel(
     onAddDrop: drops == null ? null : () {},
     done: done,
     effort: effort,
+    rest: rest,
     onOptions: () {},
     onLog: off ? null : () {},
   ),
@@ -137,6 +140,46 @@ Widget setPanelDone(BuildContext context) => _panel(
   [_kg(82.5), _value(8, 'reps')],
   done: true,
   effort: const Text('Effort (built by EffortQuestion)'),
+);
+
+@widgetbook.UseCase(name: 'Set picked during a rest', type: SetPanel)
+Widget setPanelResting(BuildContext context) => _panel(
+  'Bench Press · set 4 of 4',
+  'Last time: 80 kg × 7',
+  [_kg(82.5), _value(8, 'reps')],
+  rest: EffortRest(
+    time: '1:12',
+    progress: context.knobs.double.slider(
+      label: 'Rest passed',
+      initialValue: 0.4,
+      max: 1,
+    ),
+    onAddTime: () {},
+    onSkip: () {},
+  ),
+);
+
+@widgetbook.UseCase(name: 'Every set done', type: SetPanel)
+Widget setPanelFinish(BuildContext context) => Align(
+  alignment: Alignment.bottomCenter,
+  child: SetPanel.showing(
+    child: Padding(
+      padding: SetPanel.padding,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: [
+          Text('All sets done', style: Theme.of(context).textTheme.titleMedium),
+          ForgeButton(
+            label: 'Finish workout',
+            onPressed: () {},
+            size: ForgeButtonSize.large,
+          ),
+        ],
+      ),
+    ),
+  ),
 );
 
 @widgetbook.UseCase(name: 'Showing the effort or the rest', type: SetPanel)
