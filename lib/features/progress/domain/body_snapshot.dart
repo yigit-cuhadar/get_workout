@@ -10,12 +10,17 @@ typedef BodyFatPoint = ({DateTime date, double percent});
 /// What the Progress tab shows of the body log.
 class BodySnapshot extends Equatable {
   const BodySnapshot({
-    this.latestKg,
+    this.latest,
+    this.previous,
     this.weights = const [],
     this.latestBodyFat,
   });
 
-  final double? latestKg;
+  /// The newest weigh-in.
+  final WeightPoint? latest;
+
+  /// The weigh-in before [latest].
+  final WeightPoint? previous;
 
   /// The weights of the last 12 weeks, oldest first.
   final List<WeightPoint> weights;
@@ -23,8 +28,14 @@ class BodySnapshot extends Equatable {
   /// The newest entry's body fat that has one, with that entry's date.
   final BodyFatPoint? latestBodyFat;
 
+  /// The change since the [previous] weigh-in, in kg.
+  double? get change => switch ((latest, previous)) {
+    (final latest?, final previous?) => latest.kg - previous.kg,
+    _ => null,
+  };
+
   @override
-  List<Object?> get props => [latestKg, weights, latestBodyFat];
+  List<Object?> get props => [latest, previous, weights, latestBodyFat];
 }
 
 /// The [BodySnapshot] of [entries] (newest first), whose body fat by entry
@@ -41,8 +52,13 @@ BodySnapshot bodySnapshot(
       break;
     }
   }
+  final weighIns = [
+    for (final entry in entries)
+      if (entry.weightKg case final kg?) (date: entry.date, kg: kg),
+  ];
   return BodySnapshot(
-    latestKg: latestWeightKg(entries),
+    latest: weighIns.firstOrNull,
+    previous: weighIns.skip(1).firstOrNull,
     weights: weightSeries(entries, range: StrengthRange.weeks12, now: now),
     latestBodyFat: latestBodyFat,
   );

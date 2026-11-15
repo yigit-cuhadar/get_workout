@@ -51,9 +51,9 @@ void main() {
       cubit.state,
       ProgressBodyState(
         status: BodyListStatus.ready,
-        empty: false,
         snapshot: BodySnapshot(
-          latestKg: 80,
+          latest: (date: DateTime(2026, 11, 10), kg: 80.0),
+          previous: (date: DateTime(2026, 8, 25), kg: 85.0),
           weights: [
             (date: DateTime(2026, 8, 25), kg: 85.0),
             (date: DateTime(2026, 11, 10), kg: 80.0),
@@ -78,7 +78,7 @@ void main() {
     expect(cubit.state.snapshot.weights, [
       (date: DateTime(2026, 11, 10), kg: 80.0),
     ]);
-    expect(cubit.state.snapshot.latestKg, 80);
+    expect(cubit.state.snapshot.latest?.kg, 80);
     await cubit.close();
   });
 

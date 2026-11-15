@@ -285,6 +285,66 @@ void main() {
     expect(find.byType(ForgeButton), findsNothing);
   });
 
+  testWidgets('a band holds its chart between its line and its buttons', (
+    tester,
+  ) async {
+    await pumpComponent(
+      tester,
+      FeaturedCard(
+        form: FeaturedCardForm.band,
+        eyebrow: 'Body',
+        title: '82.4 kg',
+        line: const FeaturedLine(
+          '−0.4 since Nov 8',
+          data: '19.5 % fat',
+          icon: ForgeIcons.trendingUp,
+        ),
+        chart: const SizedBox(key: Key('chart'), height: 32),
+        action: FeaturedAction('Log weight', () {}),
+        moreActions: [FeaturedAction('Measurement day', () {})],
+        onTap: () {},
+      ),
+    );
+
+    final chart = tester.getRect(find.byKey(const Key('chart')));
+    expect(
+      chart.top,
+      greaterThan(tester.getRect(find.text('19.5 % fat')).bottom),
+    );
+    expect(chart.bottom, lessThan(tester.getRect(find.text('Log weight')).top));
+    expect(
+      tester.widgetList<ForgeIcon>(find.byType(ForgeIcon)).map((i) => i.icon),
+      contains(ForgeIcons.trendingUp),
+    );
+  });
+
+  testWidgets('a band that failed shows the eyebrow, Retry and its buttons', (
+    tester,
+  ) async {
+    final taps = <String>[];
+    await pumpComponent(
+      tester,
+      FeaturedCard.bandError(
+        eyebrow: 'Body',
+        error: FeaturedError(
+          "Couldn't load your entries",
+          retryLabel: 'Retry',
+          onRetry: () => taps.add('retry'),
+        ),
+        action: FeaturedAction('Log weight', () => taps.add('log')),
+        moreActions: [FeaturedAction('Measurement day', () {})],
+        onTap: () => taps.add('open'),
+      ),
+    );
+
+    expect(find.text("Couldn't load your entries"), findsOneWidget);
+    expect(variantOf(tester, 'Retry'), ForgeButtonVariant.outline);
+    await tester.tap(find.text('Retry'));
+    await tester.tap(find.text('Log weight'));
+    await tester.tap(find.text('Body'));
+    expect(taps, ['retry', 'log', 'open']);
+  });
+
   testWidgets('a prompt tones its title and stacks only secondary buttons '
       'without a main action', (tester) async {
     var managed = 0;

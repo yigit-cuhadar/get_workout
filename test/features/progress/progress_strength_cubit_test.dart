@@ -30,7 +30,7 @@ void main() {
     records: {
       RecordKind.bestE1rm: StatRecord(value: kg, date: date, workoutId: 'w'),
     },
-    history: [HistoryPoint(date: date, workoutId: 'w')],
+    history: [HistoryPoint(date: date, workoutId: 'w', bestE1rmKg: kg)],
   );
 
   late StreamController<AuthUser?> users;
@@ -64,7 +64,10 @@ void main() {
     when(auth.watchUser).thenAnswer((_) => users.stream);
     return ProgressStrengthCubit(
       watchAuthUser: WatchAuthUser(auth),
-      watchHighlights: WatchStrengthHighlights(repository),
+      watchHighlights: WatchStrengthHighlights(
+        repository,
+        clock: () => DateTime(2026, 11, 13, 12),
+      ),
       catalogue: catalogue,
     );
   }
@@ -79,30 +82,44 @@ void main() {
     await pumpEventQueue();
   }
 
-  test('the highlights, named from the catalogue', () async {
+  test(
+    'the most recently trained exercise, named from the catalogue',
+    () async {
+      final cubit = build();
+      await signIn(alice);
+      expect(cubit.state.status, ProgressStrengthStatus.loading);
+      await show({
+        'squat': best(120, DateTime(2026, 11, 1)),
+        'bench': best(90, DateTime(2026, 11, 10)),
+      });
+
+      expect(
+        cubit.state,
+        ProgressStrengthState(
+          status: ProgressStrengthStatus.ready,
+          highlight: const StrengthHighlight(exerciseId: 'bench', e1rmKg: 90),
+          exercise: bench,
+          trained: true,
+        ),
+      );
+      verify(() => repository.watchAllStats('u1')).called(1);
+      await cubit.close();
+    },
+  );
+
+  test('an exercise no longer in the library has no name', () async {
     final cubit = build();
     await signIn(alice);
-    expect(cubit.state.status, ProgressStrengthStatus.loading);
-    await show({
-      'squat': best(120, DateTime(2026, 11, 1)),
-      'bench': best(90, DateTime(2026, 11, 10)),
-      'ex_retired': best(50, DateTime(2026, 10, 1)),
-    });
+    await show({'ex_retired': best(50, DateTime(2026, 11, 1))});
 
     expect(
       cubit.state,
-      ProgressStrengthState(
+      const ProgressStrengthState(
         status: ProgressStrengthStatus.ready,
-        tiles: [
-          StrengthTile(exerciseId: 'bench', e1rmKg: 90, exercise: bench),
-          StrengthTile(exerciseId: 'squat', e1rmKg: 120, exercise: squat),
-          // No longer in the library: no name.
-          const StrengthTile(exerciseId: 'ex_retired', e1rmKg: 50),
-        ],
+        highlight: StrengthHighlight(exerciseId: 'ex_retired', e1rmKg: 50),
         trained: true,
       ),
     );
-    verify(() => repository.watchAllStats('u1')).called(1);
     await cubit.close();
   });
 
@@ -151,7 +168,7 @@ void main() {
     );
     await pumpEventQueue();
     expect(cubit.state.status, ProgressStrengthStatus.ready);
-    expect(cubit.state.tiles.single.exercise?.id, 'custom_abc');
+    expect(cubit.state.exercise?.id, 'custom_abc');
     await cubit.close();
   });
 
