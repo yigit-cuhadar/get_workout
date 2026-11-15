@@ -21,6 +21,28 @@
     "min": 33,
     "max": 41
   },
+  "dayList": [
+    {
+      "name": "Upper",
+      "exercises": 5
+    },
+    {
+      "name": "Lower",
+      "exercises": 5
+    },
+    {
+      "name": "Push",
+      "exercises": 6
+    },
+    {
+      "name": "Pull",
+      "exercises": 6
+    },
+    {
+      "name": "Legs",
+      "exercises": 6
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Five-Day Hypertrophy Split",

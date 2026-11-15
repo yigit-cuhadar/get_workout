@@ -9,15 +9,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/grouping.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/equipment_cubit.dart';
-import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/workout.dart';
 import '../domain/warmups.dart';
 import 'set_bubbles.dart';
+import '../../programs/presentation/exercise_picker_page.dart';
 import 'widgets/progression_hint.dart';
 import 'widgets/exercise_card.dart';
 import 'workout_editor.dart';
@@ -486,7 +485,7 @@ class _Card extends StatelessWidget {
           : const [],
       sets: open ? setBubbles(context, index, state, editor) : null,
       onTap: !open || grouped ? () => editor.openExercise(index) : null,
-      onOptions: (button) => _ExerciseMenu(
+      onOptions: (button) => ExerciseMenu(
         index: index,
         state: state,
         editor: editor,
@@ -500,8 +499,8 @@ class _Card extends StatelessWidget {
 
 /// The actions on exercise [index]: swap, its detail page, note, group;
 /// in the workout in progress ([running]) its rest and warm-ups; remove.
-class _ExerciseMenu {
-  const _ExerciseMenu({
+class ExerciseMenu {
+  const ExerciseMenu({
     required this.index,
     required this.state,
     required this.editor,
@@ -520,56 +519,70 @@ class _ExerciseMenu {
   final String Function(String id) exerciseRoute;
 
   /// Opens under [button], the exercise's menu button.
-  void show(BuildContext button) {
+  void show(BuildContext button) =>
+      showForgeMenu(context: button, items: items(button));
+
+  /// The menu's rows; [button] is where it opens.
+  List<ForgeMenuItem> items(BuildContext button) {
     final l10n = AppLocalizations.of(button);
     final exercises = state.workout!.exercises;
     final exercise = exercises[index];
     final running = this.running;
-    showForgeMenu(
-      context: button,
-      items: [
-        ForgeMenuItem(label: l10n.workoutSwap, onTap: () => _swap(button)),
+    return [
+      // Nothing is left to move once every set is done.
+      if (exercise.sets.isEmpty || exercise.sets.any((set) => !set.done))
         ForgeMenuItem(
-          label: l10n.workoutExerciseDetails,
-          onTap: () => button.push(exerciseRoute(exercise.exerciseId)),
+          label: l10n.workoutSwap,
+          icon: ForgeIcons.sync,
+          onTap: () => _swap(button),
         ),
+      ForgeMenuItem(
+        label: l10n.workoutExerciseDetails,
+        icon: ForgeIcons.info,
+        onTap: () => button.push(exerciseRoute(exercise.exerciseId)),
+      ),
+      ForgeMenuItem(
+        label: exercise.note == null
+            ? l10n.workoutAddNote
+            : l10n.workoutEditNote,
+        icon: ForgeIcons.edit,
+        onTap: () => _editNote(button, exercise),
+      ),
+      if (canLinkWithNext(exercises, index))
         ForgeMenuItem(
-          label: exercise.note == null
-              ? l10n.workoutAddNote
-              : l10n.workoutEditNote,
-          onTap: () => _editNote(button, exercise),
+          label: linkedSize(exercises, index) == 2
+              ? l10n.programMakeSuperset
+              : l10n.programMakeCircuit,
+          icon: ForgeIcons.dragHandle,
+          onTap: () => editor.linkWithNext(index),
         ),
-        if (canLinkWithNext(exercises, index))
-          ForgeMenuItem(
-            label: linkedSize(exercises, index) == 2
-                ? l10n.programMakeSuperset
-                : l10n.programMakeCircuit,
-            onTap: () => editor.linkWithNext(index),
-          ),
-        if (exercise.group != null)
-          ForgeMenuItem(
-            label: l10n.programUngroup,
-            onTap: () => editor.ungroup(index),
-          ),
-        if (running != null)
-          ForgeMenuItem(
-            label: l10n.workoutRestTimeRow(
-              l10n.elapsedText(Duration(seconds: running.exerciseRestS(index))),
-            ),
-            onTap: () => _editRest(button, running),
-          ),
-        if (editor.warmupSettings != null && takesWarmups(exercise.loggingType))
-          ForgeMenuItem(
-            label: l10n.workoutWarmupSets,
-            onTap: () => editor.toggleWarmups(index),
-          ),
+      if (exercise.group != null)
         ForgeMenuItem(
-          label: l10n.workoutRemoveExercise,
-          destructive: true,
-          onTap: () => _remove(button, exercise),
+          label: l10n.programUngroup,
+          icon: ForgeIcons.remove,
+          onTap: () => editor.ungroup(index),
         ),
-      ],
-    );
+      if (running != null)
+        ForgeMenuItem(
+          label: l10n.workoutRestTimeRow(
+            l10n.elapsedText(Duration(seconds: running.exerciseRestS(index))),
+          ),
+          icon: ForgeIcons.timer,
+          onTap: () => _editRest(button, running),
+        ),
+      if (editor.warmupSettings != null && takesWarmups(exercise.loggingType))
+        ForgeMenuItem(
+          label: l10n.workoutWarmupSets,
+          icon: ForgeIcons.trendingUp,
+          onTap: () => editor.toggleWarmups(index),
+        ),
+      ForgeMenuItem(
+        label: l10n.workoutRemoveExercise,
+        icon: ForgeIcons.delete,
+        destructive: true,
+        onTap: () => _remove(button, exercise),
+      ),
+    ];
   }
 
   /// The rest after each set of the exercise, or each round of its group,
@@ -610,58 +623,19 @@ class _ExerciseMenu {
     if (seconds != null) running.setExerciseRest(index, seconds);
   }
 
-  /// The exercise's alternatives first, then the whole library.
+  /// The picked exercise takes its place; done sets stay (see
+  /// [WorkoutEditor.swapExercise]).
   Future<void> _swap(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
     final language = Localizations.localeOf(context).languageCode;
-    final owned = context.read<EquipmentCubit>().state.owned ?? const {};
-    final alternatives = editor.alternatives(index, owned).take(8).toList();
-    const browse = Object();
-    final choice = await showModalBottomSheet<Object>(
-      context: context,
-      useRootNavigator: true,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (context) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.search),
-              title: Text(l10n.workoutSwapBrowse),
-              onTap: () => Navigator.pop(context, browse),
-            ),
-            if (alternatives.isNotEmpty)
-              ListTile(
-                dense: true,
-                title: Text(
-                  l10n.workoutSwapAlternatives,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
-            for (final exercise in alternatives)
-              ListTile(
-                title: Text(exercise.localized(context).name),
-                subtitle: Text(
-                  l10n.exerciseSummary(
-                    l10n.muscleNames(exercise.mainMuscles),
-                    l10n.equipmentNames(exercise.equipment),
-                  ),
-                ),
-                onTap: () => Navigator.pop(context, exercise),
-              ),
-          ],
-        ),
-      ),
+    final exercise = state.workout!.exercises[index];
+    final id = await pickSwap(
+      context,
+      exerciseId: exercise.exerciseId,
+      logged: exercise.doneSets.where((set) => !set.isWarmup).length,
+      warmups: exercise.doneSets.where((set) => set.isWarmup).length,
+      picker: picker,
     );
-    if (!context.mounted) return;
-    var replacement = choice is Exercise ? choice : null;
-    if (identical(choice, browse)) {
-      final picked = await context.push<List<Exercise>>(
-        picker(max: 1, multiple: false),
-      );
-      replacement = picked?.firstOrNull;
-    }
+    final replacement = editor.knownExercises[id];
     if (replacement != null) {
       editor.swapExercise(index, replacement, language);
     }

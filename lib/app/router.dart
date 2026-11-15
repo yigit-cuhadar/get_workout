@@ -60,6 +60,7 @@ import '../features/today/presentation/today_page.dart';
 import '../features/volume/presentation/volume_page.dart';
 import '../features/workout/domain/workout.dart';
 import '../features/workout/presentation/workout_detail_page.dart';
+import '../features/workout/domain/workout_editing.dart';
 import '../features/workout/presentation/workout_edit_page.dart';
 import '../features/workout/presentation/workout_page.dart';
 import '../l10n/app_localizations.dart';
@@ -110,13 +111,20 @@ abstract final class Routes {
   /// leaving it returns to.
   static const programNewReturning = '$programNew?return=true';
   static const catalogue = '$programs/catalogue';
-  static const programGenerator = '$programs/generate';
+
+  /// The generator's questions, full screen above the tabs; pushed, so
+  /// Back on the first question returns where it was opened.
+  static const programGenerator = '/generate';
 
   /// Push it with the `GeneratorAnswers` as `extra`; without them it goes
   /// back to the questions.
   static const programGeneratorPreview = '$programGenerator/preview';
+
   static String catalogueProgram(String id) =>
       '$catalogue/${Uri.encodeComponent(id)}';
+
+  /// A ready-made program's weekly sets per muscle.
+  static String catalogueVolume(String id) => '${catalogueProgram(id)}/volume';
 
   /// An exercise of a ready-made program, opened inside the Programs tab.
   static String catalogueExercise(String programId, String exerciseId) =>
@@ -138,9 +146,10 @@ abstract final class Routes {
   static String exercisePicker({required int max, required bool multiple}) =>
       '$programs/pick?max=$max&multiple=$multiple';
 
-  /// [exercisePicker] for the exercises the generator leaves out.
+  /// The exercise picker above the generator, for the exercises it leaves
+  /// out; see [exercisePicker].
   static String exerciseLeaveOutPicker(int max) =>
-      '${exercisePicker(max: max, multiple: true)}&form=leaveOut';
+      '$programGenerator/pick?max=$max&multiple=true&form=leaveOut';
   static const exercises = '/exercises';
   static String exercise(String id) => '$exercises/${Uri.encodeComponent(id)}';
 
@@ -444,6 +453,21 @@ GoRouter buildRouter(
         ],
       ),
       GoRoute(
+        path: Routes.programGenerator,
+        builder: (_, _) => const GeneratorPage(),
+        routes: [
+          GoRoute(
+            path: 'preview',
+            redirect: (_, state) => state.extra is GeneratorAnswers
+                ? null
+                : Routes.programGenerator,
+            builder: (_, state) =>
+                GeneratorPreviewPage(answers: state.extra! as GeneratorAnswers),
+          ),
+          _pickerRoute(limit: ProgramLimits.maxItemsPerDay),
+        ],
+      ),
+      GoRoute(
         path: Routes.paywall,
         pageBuilder: (_, _) =>
             const MaterialPage(fullscreenDialog: true, child: PaywallPage()),
@@ -491,21 +515,6 @@ GoRouter buildRouter(
               ),
               _pickerRoute(limit: ProgramLimits.maxItemsPerDay),
               GoRoute(
-                path: 'generate',
-                builder: (_, _) => const GeneratorPage(),
-                routes: [
-                  GoRoute(
-                    path: 'preview',
-                    redirect: (_, state) => state.extra is GeneratorAnswers
-                        ? null
-                        : Routes.programGenerator,
-                    builder: (_, state) => GeneratorPreviewPage(
-                      answers: state.extra! as GeneratorAnswers,
-                    ),
-                  ),
-                ],
-              ),
-              GoRoute(
                 path: 'catalogue',
                 builder: (_, _) => const CataloguePage(),
                 routes: [
@@ -514,6 +523,12 @@ GoRouter buildRouter(
                     builder: (_, state) =>
                         CatalogueDetailPage(id: state.pathParameters['id']!),
                     routes: [
+                      GoRoute(
+                        path: 'volume',
+                        builder: (_, state) => CatalogueVolumePage(
+                          id: state.pathParameters['id']!,
+                        ),
+                      ),
                       GoRoute(
                         path: 'exercises/:exerciseId',
                         builder: (_, state) => ExerciseDetailPage(
@@ -645,8 +660,10 @@ GoRouter buildRouter(
                   // Before ':id', which would match these too.
                   GoRoute(
                     path: 'new',
-                    builder: (_, _) =>
-                        const WorkoutEditPage(routes: Routes.calendarEditing),
+                    builder: (_, state) => WorkoutEditPage(
+                      plan: state.extra as PastWorkoutPlan?,
+                      routes: Routes.calendarEditing,
+                    ),
                   ),
                   _pickerRoute(limit: WorkoutLimits.maxExercises),
                   _workoutExercise(Routes.calendarExercise),

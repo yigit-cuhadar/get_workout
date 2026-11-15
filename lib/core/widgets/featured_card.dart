@@ -24,15 +24,24 @@ enum FeaturedCardForm {
 enum FeaturedTitleTone { ink, muted, danger }
 
 /// A button of a [FeaturedCard]. A [locked] one shows a lock and opens the
-/// paywall from [onPressed].
+/// paywall from [onPressed]; a [danger] one is destructive (a danger
+/// outline); a [loading] one shows the ring while its work runs.
 class FeaturedAction {
-  const FeaturedAction(this.label, this.onPressed, {this.locked = false});
+  const FeaturedAction(
+    this.label,
+    this.onPressed, {
+    this.locked = false,
+    this.danger = false,
+    this.loading = false,
+  });
 
   final String label;
 
   /// Null disables the button.
   final VoidCallback? onPressed;
   final bool locked;
+  final bool danger;
+  final bool loading;
 }
 
 /// The line under a [FeaturedCard]'s name: its [icon] (a dumbbell unless
@@ -64,12 +73,24 @@ class FeaturedError {
   final VoidCallback onRetry;
 }
 
-/// One of the summary block's four figures.
+/// Which way a [FeaturedStat]'s change went: a gain, a drop, or neither
+/// good nor bad (a duration, no change).
+enum FeaturedChangeTone { gain, drop, neutral }
+
+/// One of the summary block's four figures, with its [change] since last
+/// time after the label.
 class FeaturedStat {
-  const FeaturedStat(this.label, this.value);
+  const FeaturedStat(
+    this.label,
+    this.value, {
+    this.change,
+    this.tone = FeaturedChangeTone.neutral,
+  });
 
   final String label;
   final String value;
+  final String? change;
+  final FeaturedChangeTone tone;
 }
 
 /// The one featured card of a screen in its [form]: an [eyebrow] (with a
@@ -85,6 +106,7 @@ class FeaturedCard extends StatelessWidget {
     required this.form,
     required String this.eyebrow,
     required String this.title,
+    this.when,
     this.locked = false,
     this.line,
     this.note,
@@ -97,10 +119,15 @@ class FeaturedCard extends StatelessWidget {
     this.menu,
     this.onTap,
     this.titleTone = FeaturedTitleTone.ink,
+    this.alert,
+    this.footActions = const [],
   }) : assert(
          form == FeaturedCardForm.band ||
-             (progress == null && menu == null && chart == null),
-         'Only a band has progress, a chart and a menu.',
+             (progress == null &&
+                 menu == null &&
+                 chart == null &&
+                 alert == null),
+         'Only a band has progress, a chart, a menu and an alert.',
        ),
        assert(menu == null || onTap == null, 'A menu or a chevron, not both.'),
        assert(
@@ -121,6 +148,7 @@ class FeaturedCard extends StatelessWidget {
     this.onTap,
   }) : form = FeaturedCardForm.band,
        title = null,
+       when = null,
        locked = false,
        line = null,
        note = null,
@@ -130,6 +158,8 @@ class FeaturedCard extends StatelessWidget {
        chart = null,
        menu = null,
        titleTone = FeaturedTitleTone.ink,
+       alert = null,
+       footActions = const [],
        loading = false;
 
   /// The card while what it shows loads: the [eyebrow] over shimmering
@@ -137,6 +167,7 @@ class FeaturedCard extends StatelessWidget {
   const FeaturedCard.loading({super.key, required String this.eyebrow})
     : form = FeaturedCardForm.block,
       title = null,
+      when = null,
       locked = false,
       line = null,
       note = null,
@@ -150,11 +181,17 @@ class FeaturedCard extends StatelessWidget {
       onTap = null,
       error = null,
       titleTone = FeaturedTitleTone.ink,
+      alert = null,
+      footActions = const [],
       loading = true;
 
   final FeaturedCardForm form;
   final String? eyebrow;
   final String? title;
+
+  /// A band's muted line under its [title]: when it happens ("Today",
+  /// "Mon, Nov 16").
+  final String? when;
   final bool locked;
   final FeaturedLine? line;
 
@@ -186,10 +223,21 @@ class FeaturedCard extends StatelessWidget {
   /// A prompt's title colour; a prompt with no [action] stacks only its
   /// [moreActions], in the secondary form.
   final FeaturedTitleTone titleTone;
+
+  /// A band's line in danger over its progress: something the user must
+  /// fix (the training days no longer match the program's days).
+  final String? alert;
+
+  /// A band's last row of buttons, side by side under the others (Change
+  /// days and Stop); one alone takes the full width.
+  final List<FeaturedAction> footActions;
   final bool loading;
 
   /// Share of on-featured that its quieter text keeps.
   static const double _quiet = 0.72;
+
+  /// Share of success or danger in a stat's change on the featured fill.
+  static const double _changeTint = 0.45;
   static const double _bodyGap = 14;
   static const double _lineGap = 10;
   static const double _chevronSize = 18;
@@ -281,6 +329,8 @@ class FeaturedCard extends StatelessWidget {
                       style: text.headlineMedium!.copyWith(color: headInk),
                     ),
                   ),
+                if (when case final at?)
+                  Text(at, style: text.bodyLarge!.copyWith(color: headQuiet)),
               ],
             ),
           ),
@@ -370,7 +420,10 @@ class FeaturedCard extends StatelessWidget {
     final note = this.note;
     final action = this.action;
     final progress = this.progress;
+    final alert = this.alert;
     final children = [
+      if (alert != null)
+        Text(alert, style: text.bodySmall!.copyWith(color: p.danger)),
       if (progress != null) Progress.track(value: progress),
       if (line != null)
         Row(
@@ -461,6 +514,14 @@ class FeaturedCard extends StatelessWidget {
               Expanded(child: _button(more, main: false)),
           ],
         ),
+      if (footActions.isNotEmpty)
+        Row(
+          spacing: Gap.sm,
+          children: [
+            for (final foot in footActions)
+              Expanded(child: _button(foot, main: false)),
+          ],
+        ),
     ];
     if (children.isEmpty) return null;
     return Padding(
@@ -540,8 +601,31 @@ class FeaturedCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 2,
       children: [
-        Text(
-          stat.label,
+        Text.rich(
+          TextSpan(
+            text: stat.label,
+            children: [
+              if (stat.change case final change?)
+                TextSpan(
+                  text: ' $change',
+                  style: TextStyle(
+                    color: switch (stat.tone) {
+                      FeaturedChangeTone.gain => Color.lerp(
+                        ink,
+                        style.colors.success,
+                        _changeTint,
+                      ),
+                      FeaturedChangeTone.drop => Color.lerp(
+                        ink,
+                        style.colors.danger,
+                        _changeTint,
+                      ),
+                      FeaturedChangeTone.neutral => quiet,
+                    },
+                  ),
+                ),
+            ],
+          ),
           style: text.labelMedium!.copyWith(
             fontWeight: FontWeight.w400,
             color: quiet,
@@ -561,7 +645,10 @@ class FeaturedCard extends StatelessWidget {
       label: action.label,
       onPressed: action.onPressed,
       locked: action.locked,
-      variant: !main
+      loading: action.loading,
+      variant: action.danger
+          ? ForgeButtonVariant.danger
+          : !main
           ? ForgeButtonVariant.secondary
           : form == FeaturedCardForm.block
           ? ForgeButtonVariant.featured

@@ -4,7 +4,8 @@ import 'package:forge_ui/forge_ui.dart';
 import '../../l10n/app_localizations.dart';
 
 /// A page of a one-question-per-page flow (onboarding, the generator):
-/// Back and a progress bar of [count] parts up to [step] on top, the
+/// Back, a progress bar of [count] parts up to [step] and the mono
+/// "step / count" counter on top, the
 /// question as [body] (an [OnboardingQuestionBody]) and its action
 /// ([actionLabel], Continue) full width at the bottom, with a spinner
 /// while [loading].
@@ -36,8 +37,9 @@ class OnboardingQuestion extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
+      bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, Gap.sm, 14, 18),
+        padding: const EdgeInsets.fromLTRB(14, Gap.sm, 14, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: 12,
@@ -54,22 +56,36 @@ class OnboardingQuestion extends StatelessWidget {
                     ),
                   ),
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: Gap.sm),
-                      child: StepProgress(count: count, current: step + 1),
+                    child: StepProgress(count: count, current: step + 1),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: Gap.xs),
+                    child: Text(
+                      AppLocalizations.of(context)
+                          .questionCounter(step + 1, count),
+                      style: ForgeStyle.of(context).data.copyWith(
+                        fontSize: 13,
+                        color: ForgeStyle.of(context).colors.inkMuted,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
             Expanded(child: body),
-            ForgeButton(
-              label: actionLabel,
-              onPressed: onAction,
-              loading: loading,
-              size: ForgeButtonSize.large,
-            ),
           ],
+        ),
+      ),
+    ),
+    // In the bar, so a snackbar shows above it rather than over it.
+    bottomNavigationBar: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
+        child: ForgeButton(
+          label: actionLabel,
+          onPressed: onAction,
+          loading: loading,
+          size: ForgeButtonSize.large,
         ),
       ),
     ),
@@ -102,8 +118,9 @@ class _BackButton extends StatelessWidget {
   );
 }
 
-/// A question: its [title] and the line under it ([info]) at the top, the
-/// [answer] anchored to the bottom, near the thumb. With [scrolls], a
+/// A question: its [title] under an optional [eyebrow] (the flow's name)
+/// and the line under it ([info]) at the top, the [answer] anchored to the
+/// bottom, near the thumb. With [scrolls], a
 /// taller answer scrolls; without, it must fit (a ruler or a wheel, whose
 /// drags a scrolling page would take).
 class OnboardingQuestionBody extends StatelessWidget {
@@ -111,12 +128,14 @@ class OnboardingQuestionBody extends StatelessWidget {
     super.key,
     required this.title,
     required this.answer,
+    this.eyebrow,
     this.info,
     this.scrolls = true,
   });
 
   final String title;
   final Widget answer;
+  final String? eyebrow;
   final String? info;
   final bool scrolls;
 
@@ -124,43 +143,59 @@ class OnboardingQuestionBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final info = this.info;
-    final column = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.sm, Gap.xs, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 6,
-            children: [
-              Text(
-                title,
-                style: text.headlineMedium!.copyWith(
-                  fontSize: 24,
-                  height: 30 / 24,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.48,
-                ),
+    final eyebrow = this.eyebrow;
+    final muted = ForgeStyle.of(context).colors.inkMuted;
+    final header = Padding(
+      padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.sm, Gap.xs, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 6,
+        children: [
+          if (eyebrow != null)
+            Text(
+              eyebrow,
+              style: text.labelMedium!.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: muted,
               ),
-              if (info != null)
-                Text(
-                  info,
-                  style: text.bodyMedium!.copyWith(
-                    color: ForgeStyle.of(context).colors.inkMuted,
-                  ),
-                ),
+            ),
+          Text(
+            title,
+            style: text.headlineMedium!.copyWith(
+              fontSize: 24,
+              height: 30 / 24,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.48,
+            ),
+          ),
+          if (info != null)
+            Text(info, style: text.bodyMedium!.copyWith(color: muted)),
+        ],
+      ),
+    );
+    if (!scrolls) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [header, const SizedBox(height: 12), const Spacer(), answer],
+      );
+    }
+    // Sits at the bottom of the page when shorter than it. Laid out without
+    // intrinsic sizes, which rows built from their width cannot give.
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              header,
+              Padding(padding: const EdgeInsets.only(top: 12), child: answer),
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        const Spacer(),
-        answer,
-      ],
-    );
-    if (!scrolls) return column;
-    // Sits at the bottom of the page when shorter than it.
-    return CustomScrollView(
-      slivers: [SliverFillRemaining(hasScrollBody: false, child: column)],
+      ),
     );
   }
 }

@@ -18,6 +18,7 @@ import 'package:get_workout/features/profile/domain/profile_usecases.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/body_model_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
@@ -236,6 +237,8 @@ void main() {
       );
     registerTodayStandIns();
 
+    final bodyModel = BodyModelCubit(() async => throw const FormatException());
+    addTearDown(bodyModel.close);
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
@@ -250,6 +253,7 @@ void main() {
           BlocProvider.value(value: equipment),
           BlocProvider.value(value: entitlement),
           BlocProvider.value(value: profile),
+          BlocProvider<BodyModelCubit>.value(value: bodyModel),
         ],
         child: MaterialApp.router(
           theme: ThemeData(
@@ -332,13 +336,14 @@ void main() {
     expect(find.text('Back Squat'), findsOneWidget);
     expect(path(), Routes.program('p1'));
 
-    await tap(tester, find.byTooltip('Edit'));
+    await tap(tester, find.bySemanticsLabel('Program options'));
+    await tap(tester, find.text('Edit'));
     expect(find.byType(ProgramBuilderPage), findsOneWidget);
     expect(find.text('Edit program'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Leg Day'), findsOneWidget);
     expect(path(), Routes.programEdit('p1'));
 
-    await tap(tester, find.byType(BackButton));
+    await tap(tester, find.bySemanticsLabel('Back'));
     expect(find.byType(ProgramDetailPage), findsOneWidget);
   });
 
@@ -391,11 +396,11 @@ void main() {
     // The page refuses to pop from the next frame on.
     await tester.pump();
 
-    await tap(tester, find.byType(BackButton));
+    await tap(tester, find.bySemanticsLabel('Back'));
     await tap(tester, find.text('Keep editing'));
     expect(find.byType(ProgramBuilderPage), findsOneWidget);
 
-    await tap(tester, find.byType(BackButton));
+    await tap(tester, find.bySemanticsLabel('Back'));
     await tap(tester, find.text('Discard'));
     expect(find.byType(ProgramBuilderPage), findsNothing);
     expect(find.byType(ProgramsPage), findsOneWidget);
@@ -415,7 +420,8 @@ void main() {
     await start(tester);
     await openPrograms(tester, [stored]);
     await openStored(tester);
-    await tap(tester, find.byTooltip('Edit'));
+    await tap(tester, find.bySemanticsLabel('Program options'));
+    await tap(tester, find.text('Edit'));
     await tester.enterText(
       find.widgetWithText(TextField, 'Leg Day'),
       'Leg Day 2',
@@ -476,7 +482,8 @@ void main() {
     await start(tester);
     await openPrograms(tester, [stored]);
     await openStored(tester);
-    await tap(tester, find.byTooltip('Edit'));
+    await tap(tester, find.bySemanticsLabel('Program options'));
+    await tap(tester, find.text('Edit'));
 
     await reselectPrograms(tester);
 
@@ -537,17 +544,17 @@ void main() {
     await openPrograms(tester, [stored, copy]);
     await openStored(tester);
 
-    await tap(tester, find.byType(PopupMenuButton<VoidCallback>));
+    await tap(tester, find.bySemanticsLabel('Program options'));
     await tap(tester, find.text('Duplicate'));
     expect(path(), Routes.program('p2'));
     expect(find.text('Leg Day (copy)'), findsOneWidget);
 
-    await tap(tester, find.byType(PopupMenuButton<VoidCallback>));
+    await tap(tester, find.bySemanticsLabel('Program options'));
     await tap(tester, find.text('Delete'));
     await tap(
       tester,
       find.descendant(
-        of: find.byType(AlertDialog),
+        of: find.byType(ForgeDialog),
         matching: find.text('Delete'),
       ),
     );

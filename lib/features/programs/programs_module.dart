@@ -110,6 +110,7 @@ class ProgramsModule implements FeatureModule {
           exercises: sl(),
           getDays: sl(),
           saveProgram: sl(),
+          startProgram: sl(),
           getCurrentUser: sl(),
         ),
       )

@@ -6,6 +6,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/programs/data/firestore_catalogue_repository.dart';
+import 'package:get_workout/features/programs/domain/catalogue_program.dart';
 import 'package:get_workout/features/programs/domain/catalogue_rules.dart';
 
 import '../../../tool/src/content_import.dart';
@@ -90,6 +91,14 @@ void main() {
           min: minutes['min'],
           max: minutes['max'],
         ), reason: card.id);
+        expect(
+          [
+            for (final day in card.dayList!)
+              {'name': day.name, 'exercises': day.exercises},
+          ],
+          json['dayList'],
+          reason: card.id,
+        );
         expect(card.text('en').name, text['name'], reason: card.id);
         expect(card.text('en').summary, text['summary'], reason: card.id);
       }
@@ -164,6 +173,54 @@ void main() {
       expect(
         [for (final c in cards) c.minutes],
         [(min: 30, max: 45), null, null, null, null],
+      );
+    });
+
+    test('reads the day list, and shows a card with an unreadable one '
+        'without it', () async {
+      await firestore.doc('programs/a').set({
+        ...card(),
+        'dayList': [
+          {'name': 'Upper A', 'exercises': 6},
+          {'name': 'Lower A', 'exercises': 5.0},
+        ],
+      });
+      for (final (id, dayList) in [
+        ('b', <Object?>[]),
+        (
+          'c',
+          [
+            {'name': 'Upper A'},
+          ],
+        ),
+        (
+          'd',
+          [
+            {'name': 1, 'exercises': 6},
+          ],
+        ),
+        ('e', 'Upper A'),
+      ]) {
+        await firestore.doc('programs/$id').set({
+          ...card(),
+          'dayList': dayList,
+        });
+      }
+
+      final cards = await repository.watchPrograms().first;
+
+      expect(
+        [for (final c in cards) c.dayList],
+        [
+          const [
+            CatalogueDay(name: 'Upper A', exercises: 6),
+            CatalogueDay(name: 'Lower A', exercises: 5),
+          ],
+          null,
+          null,
+          null,
+          null,
+        ],
       );
     });
 

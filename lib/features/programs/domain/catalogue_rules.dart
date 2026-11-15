@@ -9,6 +9,8 @@
 // each exercise, and the catalogue as a whole. Shared by
 // tool/validate_content.dart and the importer, so it is pure Dart and its
 // messages are the validator's output.
+import 'dart:convert';
+
 import '../../exercises/domain/content_rules.dart';
 import '../../exercises/domain/muscle_volume.dart';
 import '../../exercises/domain/vocabulary.dart';
@@ -57,6 +59,7 @@ const programKeys = {
   'lengthWeeks',
   'equipment',
   'minutes',
+  'dayList',
   'equipmentProfile',
   'order',
   'l10n',
@@ -185,6 +188,12 @@ List<String> programEquipment(
   ];
 }
 
+/// The `dayList` of a program: each day's name and exercise count, for the
+/// page of a premium program whose days a user without premium cannot read.
+List<Map<String, Object?>> catalogueDayList(List<ProgramDay> days) => [
+  for (final day in days) {'name': day.name, 'exercises': day.items.length},
+];
+
 /// Every rule [d] breaks, on its own and against [library] (every exercise,
 /// by id, whatever its status). Rules across programs are [checkCatalogue]'s.
 List<ContentProblem> programProblems(
@@ -239,6 +248,19 @@ List<ContentProblem> programProblems(
       equipment.length != expected.length ||
       !expected.indexed.every((e) => equipment[e.$1] == e.$2)) {
     check.err('equipment', 'equipment must be [${expected.join(', ')}]');
+  }
+
+  final dayList = d['dayList'];
+  final expectedDays = catalogueDayList(entry.program.days);
+  if (dayList is! List ||
+      dayList.length != expectedDays.length ||
+      !expectedDays.indexed.every(
+        (e) =>
+            dayList[e.$1] is Map &&
+            (dayList[e.$1] as Map)['name'] == e.$2['name'] &&
+            (dayList[e.$1] as Map)['exercises'] == e.$2['exercises'],
+      )) {
+    check.err('dayList', 'dayList must be ${jsonEncode(expectedDays)}');
   }
 
   if (sessionMinutes(entry.program.days) case (:final min, :final max)) {

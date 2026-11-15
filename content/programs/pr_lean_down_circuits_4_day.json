@@ -25,6 +25,24 @@
     "min": 30,
     "max": 33
   },
+  "dayList": [
+    {
+      "name": "Lower Circuits",
+      "exercises": 10
+    },
+    {
+      "name": "Upper Circuits",
+      "exercises": 10
+    },
+    {
+      "name": "Full Body Circuits A",
+      "exercises": 8
+    },
+    {
+      "name": "Full Body Circuits B",
+      "exercises": 10
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Lean-Down Circuits 4-Day",

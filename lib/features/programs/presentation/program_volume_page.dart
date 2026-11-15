@@ -9,6 +9,7 @@ import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../volume/presentation/volume_page.dart';
 import '../../volume/presentation/volume_text.dart';
 import '../domain/program_volume.dart';
+import 'catalogue_detail_cubit.dart';
 import 'program_list_cubit.dart';
 
 /// Program [id]'s weekly sets per muscle as the weekly volume page shows a
@@ -55,6 +56,65 @@ class ProgramVolumePage extends StatelessWidget {
                   }),
                 ),
               _ => const LoadingView(),
+            };
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// A ready-made program's weekly sets per muscle, as [ProgramVolumePage]
+/// shows one of the user's own: pushed above its page in the Programs tab.
+class CatalogueVolumePage extends StatelessWidget {
+  const CatalogueVolumePage({super.key, required this.id});
+
+  final String id;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final language = Localizations.localeOf(context).languageCode;
+    return BlocProvider(
+      create: (_) => sl<CatalogueDetailCubit>(param1: id, param2: language),
+      child: Scaffold(
+        appBar: ForgeAppBar(title: l10n.programVolumePageTitle),
+        body: BlocBuilder<CatalogueDetailCubit, CatalogueDetailState>(
+          builder: (context, state) {
+            final catalogue = context.watch<ExerciseCatalogueCubit>();
+            final program = state.program;
+            return switch ((state.status, catalogue.state)) {
+              (CatalogueDetailStatus.notFound, _) => EmptyView(
+                message: l10n.catalogueNotFound,
+              ),
+              (
+                CatalogueDetailStatus.offline || CatalogueDetailStatus.failure,
+                _,
+              ) =>
+                ErrorView(
+                  title: l10n.catalogueLoadFailedTitle,
+                  message: l10n.loadFailedDetail,
+                  retryLabel: l10n.retry,
+                  onRetry: context.read<CatalogueDetailCubit>().retry,
+                ),
+              (_, CatalogueFailed()) => ErrorView(
+                title: l10n.programVolumeLoadFailed,
+                message: l10n.loadFailedDetail,
+                retryLabel: l10n.retry,
+                onRetry: catalogue.retry,
+              ),
+              (CatalogueDetailStatus.ready, CatalogueReady(:final exercises))
+                  when program != null =>
+                _Volume(
+                  name: program.text(language).name,
+                  volume: programVolume(program.copy(state.days, language), {
+                    for (final exercise in exercises) exercise.id: exercise,
+                  }),
+                ),
+              _ => const SingleChildScrollView(
+                padding: EdgeInsets.all(Gap.md),
+                child: LoadingView(),
+              ),
             };
           },
         ),

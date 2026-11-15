@@ -7,6 +7,45 @@ import 'package:get_workout/features/programs/domain/program.dart';
 import 'fixtures.dart';
 
 void main() {
+  group('suits', () {
+    final program = card('p', goal: Goal.getStronger, level: Level.advanced);
+    const profile = TrainingProfile(
+      goal: Goal.getStronger,
+      level: Level.advanced,
+      daysPerWeek: 3,
+    );
+
+    test('a program for the goal, level and days per week fits', () {
+      expect(profile.suits(program), isTrue);
+    });
+
+    test('any answer that differs or is missing does not', () {
+      expect(
+        const TrainingProfile(
+          goal: Goal.getStronger,
+          level: Level.advanced,
+          daysPerWeek: 4,
+        ).suits(program),
+        isFalse,
+      );
+      expect(
+        const TrainingProfile(
+          goal: Goal.getStronger,
+          level: Level.beginner,
+          daysPerWeek: 3,
+        ).suits(program),
+        isFalse,
+      );
+      expect(
+        const TrainingProfile(
+          level: Level.advanced,
+          daysPerWeek: 3,
+        ).suits(program),
+        isFalse,
+      );
+    });
+  });
+
   group('fits', () {
     final gym = card(
       'gym',

@@ -146,7 +146,10 @@ Variations are the other exercises of the same `family`, ordered by rank.
 every exercise used, computed by the validator), `minutes` (`{min, max}`,
 the shortest and longest session by the app's `estimateDay`, each day
 rounded to whole minutes and at least 1; checked by the validator; the app
-shows a card without a readable one without minutes), `equipmentProfile`
+shows a card without a readable one without minutes), `dayList[]`
+(`{name, exercises}` per day, computed from the days and checked by the
+validator, so a locked premium program can list its days; a card without
+a readable one lists none), `equipmentProfile`
 (`full_gym` \| `home_gym` \| `dumbbells` \| `bodyweight` \| `bands`, for
 filtering; every exercise fits it through `equipment` or an alternative set),
 `order` (unique int, the catalogue's default sort),
@@ -381,37 +384,33 @@ screenshot next to the studio board, every state) that the owner approves
 or sends back. A look the studio does not draw is a question for the owner
 and is drawn in the studio first.
 
-Where it stands (2026-11-15, end of the session that built it):
+Where it stands (2026-11-16):
 - Ana sekmeler: done and merged (#105–#107).
-- Antrenman ve programlar: built and unit/widget-tested, pinned to Forge
-  v0.21.0, in draft PRs; not yet checked on a device or approved:
-  #108 exercise list, detail and picker (owns `pickSwap` /
-  `pickReplacement`), #109 workout screen rest, summary, past workout,
-  #110 program detail, ready-made program, catalogue, generator questions,
-  #111 program builder (contains #110). Each PR body lists the owner's
-  answers it follows; all answers are rows of the canvas
-  https://claude.ai/artifact/FTcBZaGmmAHqBZoULbHH33 and are written into
-  the branches' Design bullets.
+- Antrenman ve programlar: done, checked on the iOS simulator and approved
+  by the owner (2026-11-15); merged as #108–#111, studio #113, Forge
+  v0.21.1 (search-field border). The device check's picks K1–K3 are under
+  Design. The approval page and its canvases were local HTML, not kept.
+- GetWorkout Studio's published link is behind `design/studio.html` on
+  main (#113 and later). Publish that file to
+  https://claude.ai/artifact/PuK5WUbeyhVHMxA6THNDC2 from the owner's
+  account (a session signed in elsewhere cannot open it).
+- In progress in its own session: sheets open on the root navigator so
+  they cover the tab bar as the studio draws them (Forge
+  `showForgeBottomSheet` + every app sheet's providers passed in); check
+  every sheet on the device after it merges.
 - Next, in order:
-  1. Join the four branches on a check branch (merge #108 first; then the
-     stub swaps named in #109 and #111: delete `swap_exercise.dart` and
-     `pick_replacement.dart`, import from `exercise_picker_page.dart`;
-     `app_en.arb`, `router.dart` and SPEC conflicts keep both sides).
-  2. GetWorkout Studio: draw what these branches changed (the implementers
-     listed it in their PRs: FeaturedCard summary changes and danger Stop,
-     Record plain sentence, SetTable unticked sets, WorkedMuscles,
-     WorkoutNoteCard, OnboardingQuestion counter/eyebrow, BuilderRow
-     unavailable form and handle, ExerciseRow limit form, the boards' undrawn
-     states and every menu's icons), publish, commit `design/studio.html` in
-     its own PR.
-  3. Device check of every state on the iOS simulator, then the side-by-side
-     approval page; on the owner's approval mark the PRs ready, auto-merge.
-  4. Icons on every ForgeMenu item in the rest of the app (owner's rule;
-     these branches did their own menus).
-  5. The ready-made `dayList` import is on getworkout-dev only; prod waits
+  1. Icons on every ForgeMenu item in the rest of the app (owner's rule;
+     the training screens already have them).
+  2. The ready-made `dayList` import is on getworkout-dev only; prod waits
      for the owner (`tool/import_content.dart --project getworkout-prod`,
      `--dry-run` first).
-  6. Next group: İlerleme.
+  3. Next group: İlerleme. Same flow: implementers per screen set, a check
+     branch joining them, studio drawn from the answers, device check, every
+     finding the studio does not draw asked on a drawn canvas, then the
+     side-by-side approval.
+  4. Open question for the Kurulum group: the Generator preview menu has no
+     icon for "Keep when regenerating" (studio's Menu card shows a history
+     icon; recommended). Draw and ask when that group starts.
 
 ## Design
 
@@ -484,6 +483,11 @@ Decisions (the canvases they were drawn on are deleted):
   picker; confirmations stay dialogs); Restore's result is a snackbar and a
   success closes the paywall. The Measure preset keeps its saturated colours
   (an accepted exception to muted colours).
+- Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
+  names logged warm-ups apart; K2 a program band's title is the day
+  alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
+  snackbar sits above a screen's fixed bottom button, which therefore
+  lives in the Scaffold's bottom bar.
 - Asked afterwards (2026-11-15), where the studio had been changed without
   the owner: the program page's ⋯ holds Edit, Duplicate and Delete; a
   program workout's summary also offers Save as program; Delete account opens
@@ -512,9 +516,9 @@ Decisions (the canvases they were drawn on are deleted):
     list rows with the Premium lock; "Fits you" tags and a recommended row.
     The ready-made program page: tags, summary rows, weekly sets, days, Start
     this program, Duplicate in ⋯, Get Premium to start when locked.
-  - Program builder: name, day chips with + Day, a day menu (Rename,
-    Duplicate, Delete day), builder rows in one card, Add exercise, circuits;
-    Save in the app bar.
+  - Program builder: name and length, day chips with + Day, a day menu
+    (Rename, Duplicate, Move earlier, Move later, Delete day), builder rows
+    in one card, Add exercises, circuits; Save in the app bar.
   - Exercises: the search pill over the body model with a Front / Back
     toggle; a tap or a slide's release opens the list at once. The list:
     active filters as removable chips with Clear all, count and sort on one
@@ -601,7 +605,8 @@ Decisions (the canvases they were drawn on are deleted):
 - Workout screen (owner's picks, 2026-11-15): the header is Forge
   AppBar's value form (minimize, the elapsed time large, "Push · exercise N
   of M" with N the selected set's exercise, the name alone once every set
-  is done), Finish shows its loading state while finishing (no bar); the
+  is done), Finish shows its loading state while finishing, with a thin
+  indeterminate bar under the header (the owner reversed "no bar"); the
   empty free workout is an untitled EmptyView ("Add exercises to start
   logging.", Add exercises); a card's "Last time" shows the best working
   set (heaviest, then most reps); the progression hint shows when every
@@ -616,6 +621,68 @@ Decisions (the canvases they were drawn on are deleted):
   and "Warm-up sets" (adds the scheme's warm-ups or removes the untouched
   ones); a set picked during a rest shows its entry under the rest's thin
   line; once every set is done the panel offers "Finish workout".
+- Workout screen, rest of the board (owner's picks, 2026-11-15): swapping
+  an exercise with done sets keeps them on it as a finished card and moves
+  the sets not done to the new exercise right after it (in a superset or
+  circuit the new one takes its place and the finished one leaves the
+  group, just before it); the picker's Swap form says "Sets 1 and 2 are
+  logged; the rest move to the new exercise."; with nothing done it is a
+  plain replace; Swap leaves the ⋯ once every set of the exercise is done.
+  The workout note is a plain card titled "Workout note" with Add (empty,
+  no body) or Edit (the note as its body), opening the note sheet (the
+  three-line field and Save), as the exercise note. The plate breakdown: plates that can't make the weight
+  show the target, Bar, Each side and "Closest · 82.5 kg"; below the bar
+  Bar and the info card's muted note "Lighter than the 20 kg bar."; at the bar "Each side · No
+  plates". The rest-alert question is "Notify when a rest ends?" with "Get
+  a notification when a rest is over while GetWorkout is in the
+  background." (Allow · Not now). Log set stays off while a value is
+  missing. Dialogs' Cancel is the secondary button; every ⋯ menu row has
+  an icon (exercise ⋯: Swap sync, Exercise details info, Add note edit,
+  Superset / Circuit with next dragHandle, Ungroup remove, Rest time timer,
+  Warm-up sets trendingUp, Remove exercise delete; Discard workout delete).
+- Workout summary (owner's picks, 2026-11-15): a page of its own with a
+  Summary app bar whose back does what Done does; the featured block reads
+  "Workout done · Fri, Nov 13", the day's name, "Push Pull Legs · week 3 ·
+  vs Fri, Nov 6" and duration, volume, sets and records two by two, the
+  first three with their change since the program day's previous finished
+  workout (more volume or sets in success, less in danger, duration and
+  "=" muted; free workouts and a day's first time show no "vs" and no
+  change); records are RecordList rows, one per exercise that beat a
+  record (its heaviest working set, the gain over the previous heaviest,
+  "+2 reps" / "+5 s" without a weight), counted by the records figure;
+  none beaten is one sentence on a plain card ("No new records this time.
+  Bench Press was 2.5 kg off your best.", the first workout "Records start
+  from this workout."); a program not moved on is a NoticeBanner ("Program
+  not updated", the reason, Open Programs); "Worked today" shows small front and back models
+  shaded by this workout's sets on Weekly volume's 0–20 scale and up to
+  three busiest muscles; the bottom bar has Done and, for a free workout,
+  Save as program (a dialog with "Its exercises and sets become a new
+  one-day program."; once saved it goes and a snackbar offers View
+  program), for a program day only "Save changes to Push" when the workout
+  changed the day (an exercise added, removed or swapped, the order, a
+  working set count or a rest; not reps or weights), which asks "Update
+  Push?" / "Your next Push workouts use these exercises and sets." first,
+  then goes, and a snackbar says "Push updated.";
+  kept items keep their targets, new ones take them from their sets.
+- Add past workout and Edit workout (owner's picks, 2026-11-15): one page.
+  The calendar's + first opens a sheet (Date with the system picker up to
+  today, Start time on the Forge time wheel, Duration on the Forge wheel in
+  hours and minutes, and with an active program "Program day · Fills the
+  exercises from the day", None first), then Continue opens the page. The
+  page has Save in the app bar, "Date and time" and Duration rows with
+  chevrons opening the same pickers, a set table per exercise (values typed
+  in boxes, the bubble ticks a set: filled accent ticked, an outline not;
+  holding it opens the set type menu; the effort tag opens the effort rows
+  in a sheet titled as the workout screen asks it, "How hard was set 1?" or
+  RIR / RPE, with the set's values under it), Add exercises, the workout
+  note card (as on the workout screen), and Discard (new) or Delete
+  workout at the end. While it saves a thin indeterminate bar runs under
+  the app bar; a change elsewhere is a NoticeBanner ("Changed elsewhere" /
+  "Deleted elsewhere", the sentence, Discard and Reload / Discard).
+  There is no name field: a past workout is named after its program day,
+  else "Workout"; the day only fills the exercises, the program is left
+  alone. Saving with unticked sets asks "1 set isn't ticked. It will be
+  left out."
 - Today screen step (owner's picks, 2026-11-15): the featured block follows
   the FeaturedCard card (chevron, the whole block opens the program, the
   dumbbell on its line, no divider); a rest day (the next day planned
@@ -746,6 +813,103 @@ Decisions (the canvases they were drawn on are deleted):
   and set 1 are logged; …", "1 warm-up is logged; …", K1 2026-11-15). Menus carry an icon per
   item: sort Most popular (trending up) / A–Z (list); Add to workout
   (dumbbell) / Add to program (plus); Edit (edit) / Delete (delete).
+- Program detail (owner's picks, 2026-11-15): the FeaturedCard band at the
+  card's size: "Active · week 3 of 8 · Mon, Wed, Fri" over "Next: Push"
+  with a muted "Today" ("Mon, Nov 16" later) under it (K2), the week's progress, Start
+  <day>, then Change days and Stop (danger) side by side; not active
+  "8 weeks · 3 days" / "Not active" with Start program (Replace your
+  active program? first when another runs, then the weekday picker);
+  finished "… · Mon, Wed, Fri" / "Finished" with Run it again (weekday
+  picker) and New program, no Stop; a missed day takes the Today missed
+  form (You missed Legs on Wed, Nov 11, Missed, Do it today, Move to
+  Monday and Skip, no Start; the progress bar stays) with Change days and
+  Stop under it; the days
+  mismatch is a danger line over the progress; a locked Premium copy
+  keeps the lock in the eyebrow and Start in place (it opens the
+  paywall), its note without an icon, no Change days, Stop kept; the
+  weekly sets card shows (also on a locked copy, hidden while the premium
+  status is unknown); then "Days": each day a card "Day 1 · Push" /
+  "6 exercises · ~55 min" that opens and closes (chevron down / up; the
+  next day open while active), its exercises "4 × 6–8 · Rest 2:00", not
+  tappable; a superset or circuit gets a muted "Superset A · rest after
+  each round 1:30" over it and its exercises lose their own rest; ▶ on
+  each day row, in front of the chevron, starts that day (a locked copy
+  opens the paywall); ⋯ Edit,
+  Duplicate, Delete (each with an icon); dialogs are ForgeDialogs; the
+  weekday picker says "Workouts follow these days each week."; load
+  error is ErrorView with its second line, not found an untitled
+  EmptyView.
+- Ready-made program (owner's picks, 2026-11-15): no app-bar title; the
+  name at 24px, Fits you (Forge record tag; the program is for the
+  user's goal, level and days per week) or the Premium tag and the goal
+  tag, the summary; standard ListRows Days "3 a week", Level, Length
+  ("8 weeks · 45–60 min", "~55 min" when every day is as long), Goal,
+  Equipment (the setup); the weekly sets card (opens the program's
+  weekly sets page); "Days" whose cards open in place ("6 exercises",
+  exercise rows with a chevron open the exercise); a locked Premium
+  program lists its days' names and exercise counts from the card,
+  opening nothing, and no weekly sets; Start this program in the bottom
+  bar (Get Premium to start when locked): the user's copy is offered
+  first (Open my copy / Add another copy), then Replace your active
+  program?, then the weekday picker; only once the days are picked is
+  the copy made and started, then its page opens; cancelling leaves the
+  page unchanged; a copy that cannot be started stays, not started, with
+  "Added, but couldn't start the program. Try again."; ⋯ Duplicate copies it and opens the builder on the
+  copy, hidden for a locked program; unlocking is Forge NoticeBanner
+  ("Unlocking this program" / "Premium is active. This takes a
+  moment." / Retry); a program with an exercise no longer available has
+  Start disabled and the muted reason at the end of the page; offline
+  "You're offline. Connect once to load the ready-made programs." and
+  errors are ErrorView with the second line, not found an untitled
+  EmptyView.
+- Ready-made programs (owner's picks, 2026-11-15): a search by the name in
+  the app language, live and ANDed with the filters, cleared when the
+  page is left; the filters as one sideways line of chips (Only my
+  equipment, Level, Days per week, Goal, Equipment; unset ones the name
+  with ▾, chosen values removable ×), each opening the sheet; while
+  filtering "3 filters on" and Clear; otherwise the best match as one
+  recommended row with "Matches your goal and level" in success, then
+  "12 programs · 6 free" ("12 programs" with Premium); programs as
+  ProgramCard rows with Fits you or the Premium tag (locked rows: no
+  chevron); no results: "No programs match" with "Try another name." and
+  Clear search while searching, "Remove a filter to see more programs."
+  and Clear filters while filtering; the filter sheet is a
+  ForgeBottomSheet (a switch row, chip groups, Clear, Done).
+- Generator questions (owner's picks, 2026-11-15): full screen above the
+  tabs (pushed; Back on the first question returns); the OnboardingQuestion
+  page with the mono "n / 9" counter after the progress (onboarding too)
+  and "Generate a program" over each question; Continue, "Create my
+  program" on the last; the equipment answer is the OnboardingQuestion
+  card's (preset chips, ListRow checkboxes in front, seven common items
+  and every item owned, then Show all equipment for the rest; onboarding and Your profile too); focus muscles
+  as chips under "Focus muscles (2 of 3)"; left-out exercises as rows with
+  × and a secondary "Add exercises to leave out".
+- Program builder (owner's picks, 2026-11-15): the name, then "Length in
+  weeks (optional)" with "Leave empty to run until you stop it" under it;
+  the day chips (selected: accent fill and border, no check, a ⋯ at its
+  end; a day with a problem carries a danger alert icon) and "+ Day", which
+  adds the day and opens the Rename dialog ("Rename day", "Shown on the
+  day's chip and in your workouts.", field "Day name" with hint "Day n",
+  Save · Cancel); the ⋯, a second tap on the selected chip or a long press
+  opens the day menu: Rename day, Duplicate day (the copy follows and is
+  selected, a named day's copy is "Push copy"), Move earlier, Move later, Delete day, each with an icon, the
+  ones that cannot apply hidden; deleting a day with exercises asks
+  ("Delete this day and its exercises?", "Its 5 exercises are removed
+  too.", one: "Its exercise is removed too."); cancelling the Rename
+  dialog after "+ Day" keeps "Day n". Under the chips "Push · 6 exercises · ~55 min"; the rows in one
+  card follow the BuilderRow card (two-line handle, no Weight chip, a
+  circuit's items only Reps or Time with the accent rule and "rest after
+  each round"); an unavailable item is the row's unavailable form with ⋯
+  (Replace exercise, Remove). An empty day is an EmptyView in a card ("No
+  exercises on this day"), after a failed save the danger line instead;
+  Add exercises stays, disabled, with "A day holds up to 20 exercises."
+  under it once full. The sets-and-reps sheet is titled with the exercise; Rest is a
+  tap-only field opening the minutes:seconds wheel (0:00–10:00, 15 s steps). Leaving with changes:
+  "Your edits to <name> will be lost." ("…this program…" unnamed), Discard
+  in danger. Not found is the untitled EmptyView, a load failure ErrorView
+  with both lines; loading is a skeleton of the page; every menu item has
+  an icon (a row's: tune, sync, the two-line handle for Superset / Circuit
+  with next, remove for Ungroup, delete); the Rename field takes the focus.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
@@ -1466,7 +1630,8 @@ the feature you are about to touch, and keep it true when you change it.
   a days mismatch warning while active, then Start program, or Change days
   and Stop, or the premium lock (Start locked, or the active copy locked
   with Stop still allowed); then one card per day with its exercise count
-  and estimate, ▶ to start that day (the premium gate for a locked copy)
+  and estimate, ▶ to start that day (the premium gate for a locked copy;
+  see Design › Program detail for the page's look)
   and a toggle that shows its exercises. Which days are open is the page's
   view state, never stored: the next day while the program is active, the
   first day while it is not; again from there once its days change (an
@@ -1479,8 +1644,8 @@ the feature you are about to touch, and keep it true when you change it.
   (`Routes.programNewReturning` in Programs, `Routes.exerciseProgramNew`
   with its own picker in Exercises; `returningProgramNew` picks), so the
   exercise can be added; from a workout or the history it opens in the
-  Programs tab as before. In the builder, Add
-  day selects the new day and focuses its name; opening the builder or
+  Programs tab as before. In the builder, + Day
+  selects the new day and opens its Rename dialog; opening the builder or
   switching days never takes the focus.
 - **Schedule**: `activeProgram.nextDate` is a calendar date stored as a
   `YYYY-MM-DD` string, so it is the same date in every time zone, and
@@ -1512,13 +1677,17 @@ the feature you are about to touch, and keep it true when you change it.
   again three times (after 2, 4 and 8 s), then on Retry, since the
   entitlement may not have reached the server yet; a refused free program
   is a failure. Days read under an earlier premium status are dropped.
-  "Use this program" waits for the exercise library and the user's
+  "Start this program" waits for the exercise library and the user's
   programs, and is blocked with a message when a day uses an exercise no
-  longer in the library (copying without it would change the program). It
+  longer in the library (copying without it would change the program).
+  After the copy offer, the replace confirmation and the weekday picker it
   copies the program into `users/{uid}/programs` (`origin: catalog`,
   `sourceId`, `premium` for a premium one) through the builder's
-  validation and opens the copy, which is started like any own program;
-  when a copy from the same `sourceId` exists, it is offered first. An
+  validation, starts the copy and opens it; when a copy from the same
+  `sourceId` exists, it is offered first. Duplicate copies it the same way
+  and opens the builder on the copy. The card's `dayList` (each day's
+  name and exercise count, computed from the days like `minutes`) lets a
+  locked premium program list its days. An
   exercise opened from a ready-made program opens its alternatives and
   variations inside the Programs tab. Recommended for you: never a program
   above the user's level (beginner while unanswered) or needing equipment
@@ -1539,22 +1708,20 @@ the feature you are about to touch, and keep it true when you change it.
   `SubscriptionModule.showPaywall`. The program cubits follow that status,
   so a page updates by itself once the paywall grants premium; pages get
   the premium action from their page widget, never from `sl`.
-- **Ready-made programs page** (UX pass, 2026-11-13, variant B): the
-  filters as chips under the app bar, scrolling sideways: "Fits my
-  equipment" (toggles in place; while the equipment is unknown it opens
-  the sheet, which says why), then for Level, Days per week, Goal and
-  Equipment each chosen value as a removable chip (removing it turns that
-  value off) or, with none chosen, the filter's name; a chip opens the
-  filters sheet, as does the filter action in the app bar (badged while
-  filtering). While filtering, "n filters on" (each chosen value counts
-  one, `CatalogueFilter.activeCount`) and Clear. Then "Recommended for you"
-  (hidden while filtering) and "All programs", each program a list row
-  (ProgramCard's row form, owner's pick; the card form stays for single
-  suggestions)
-  (`CatalogueProgramCard`, also on the post-onboarding suggestion): name
-  with Free, Premium or the lock, the facts as tags (level, goal, days a
-  week, length, equipment profile, session time) and "Matches your ..."
-  where it applies. The filters sheet is unchanged.
+- **Ready-made programs page** (UX pass, 2026-11-13, variant B; the
+  screen step, 2026-11-15): a search by name, then the filters as chips
+  scrolling sideways: "Only my equipment" (toggles in place; while the
+  equipment is unknown it opens the sheet, which says why), then for
+  Level, Days per week, Goal and Equipment each chosen value as a
+  removable chip (removing it turns that value off) or, with none chosen,
+  the filter's name with ▾; a chip opens the filters sheet (no filter
+  action in the app bar). While filtering, "n filters on" (each chosen
+  value counts one, `CatalogueFilter.activeCount`) and Clear. Otherwise
+  the best recommendation as one row and the count, then every program
+  as ProgramCard's row form: name with Fits you (`TrainingProfile.suits`:
+  the user's goal, level and days per week) or the Premium tag while
+  locked, "days · level · length". The post-onboarding suggestion shows
+  ProgramCard's card form.
 - **Copies of premium programs** (decided by the user, 2026-11-11): a copy
   of a premium ready-made program is marked `premium: true` and keeps the
   mark through edits and duplicates. Without premium it stays visible and
@@ -1609,8 +1776,8 @@ the feature you are about to touch, and keep it true when you change it.
   Layout (UX pass, 2026-11-13): the questions are laid out as onboarding's
   (one per page, Back and the progress segments with "n / 9" in the app
   bar, "Generate a program" above the question, the answer near the
-  thumb, Next or "Create my program" at the bottom; Back on the first
-  question leaves). The preview: split and summary, the uncovered muscles
+  thumb, Continue or "Create my program" at the bottom; Back on the first
+  question leaves), full screen above the tabs (`/generate`). The preview: split and summary, the uncovered muscles
   as a card, a Weekly sets card with each target muscle as a plain bar
   filled to its own target (full once met) and "x of target", then the days as the
   program page's day cards (`ProgramDayCard`, without ▶), the first open
@@ -1888,7 +2055,9 @@ the feature you are about to touch, and keep it true when you change it.
 - **1RM**: Epley, `weight * (1 + reps / 30)`; sets above 12 reps are ignored.
 - **Swapping an exercise**: the same logging type keeps the sets, another
   gets as many empty ones; up to eight alternatives are offered before the
-  whole library.
+  whole library. With some sets done, only the sets not done move to the
+  new exercise, placed after the old one, which keeps its done sets
+  (`swapKeepingLogged`).
 - **Workout limits**: name 1-100 characters, note 1000, exercise note 500,
   set note 200, 40 exercises, 30 sets each, 5 drops per set. The rules
   validate the top-level fields of `workouts` and `exerciseStats` (allowed
@@ -2059,14 +2228,12 @@ the feature you are about to touch, and keep it true when you change it.
   celebrates none.
 - **Workout summary**: duration ("< 1 min" under a minute), volume (weight ×
   reps of the working sets of `weight_reps` and `weighted_bodyweight`;
-  assistance is no load), working sets and exercises. Layout (UX pass,
-  2026-11-13, owner's pick): one prominent card (`WorkoutSummaryCard`,
-  shared with the workout page of the history) with "Workout done", the
-  name and the four totals two by two; then the celebration (trophy and
-  count), above a card of the new records, each its exercise over what it
-  is and its value; then
-  the note that the program was not moved on, when so; Done and Save as
-  program (not for a program's workout) fixed at the bottom.
+  assistance is no load), working sets and records, laid out as SPEC ›
+  Design says. The comparison reads the program's finished workouts by
+  `programId` (no composite index), from the server within 2 s, else the
+  cache, before the batch is written. The day's changes are judged on the
+  workout as it was before finishing (every set) against the day's items
+  (`changedProgramDay`) and stored with `SaveProgram`.
 - **Stats update**: stats are computed from what the device knows at
   finishing, the server's when it answers for all of them within 2 s, else
   the cache's
@@ -2104,7 +2271,9 @@ the feature you are about to touch, and keep it true when you change it.
   the set note); each drop is a row under its set, named in the last column.
 - **Editing workouts**: editing, deleting and adding a past workout store
   the workout in one batch, never changing `activeProgram`; a past workout
-  has no program, and moving a program workout's start only moves the day
+  has no program (a program day only fills its exercises, `pastWorkout`),
+  the edit page deletes too (it then closes with the workout's page), and
+  moving a program workout's start only moves the day
   shown as done. Edits keep ticked sets only and pass the finishing checks
   (`isStorable`); the use case also refuses a start or end in the future
   and a duration over 24 h. The batch carries the stats of every exercise

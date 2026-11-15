@@ -77,6 +77,27 @@ Widget featuredSummary(BuildContext context) => _page(
   ),
 );
 
+@widgetbook.UseCase(name: 'Summary block with changes', type: FeaturedCard)
+Widget featuredSummaryChanges(BuildContext context) => _page(
+  const FeaturedCard(
+    form: FeaturedCardForm.block,
+    eyebrow: 'Workout done · Fri, Nov 13',
+    title: 'Push',
+    note: 'Push Pull Legs · week 3 · vs Fri, Nov 6',
+    stats: [
+      FeaturedStat('Duration', '52 min', change: '−4 min'),
+      FeaturedStat(
+        'Volume',
+        '12,400 kg',
+        change: '+6 %',
+        tone: FeaturedChangeTone.gain,
+      ),
+      FeaturedStat('Sets', '16', change: '−2', tone: FeaturedChangeTone.drop),
+      FeaturedStat('Records', '2'),
+    ],
+  ),
+);
+
 @widgetbook.UseCase(name: 'Locked premium copy', type: FeaturedCard)
 Widget featuredLocked(BuildContext context) => _page(
   FeaturedCard(
@@ -277,5 +298,78 @@ Widget featuredBandError(BuildContext context) => _page(
     action: FeaturedAction('Log weight', () {}),
     moreActions: [FeaturedAction('Measurement day', () {})],
     onTap: () {},
+  ),
+);
+
+@widgetbook.UseCase(
+  name: 'Band · next day and foot actions',
+  type: FeaturedCard,
+)
+Widget featuredFootActions(BuildContext context) => _page(
+  FeaturedCard(
+    form: FeaturedCardForm.band,
+    eyebrow: 'Active · week 3 of 8 · Mon, Wed, Fri',
+    title: 'Next: Push, today',
+    progress: 3 / 8,
+    alert: context.knobs.boolean(label: 'Days mismatch')
+        ? 'The program now has 4 days. Change your training days to match.'
+        : null,
+    action: FeaturedAction('Start Push', () {}),
+    footActions: [
+      FeaturedAction('Change days', () {}),
+      FeaturedAction('Stop', () {}, danger: true),
+    ],
+  ),
+);
+
+@widgetbook.UseCase(
+  name: 'Band · missed day and foot actions',
+  type: FeaturedCard,
+)
+Widget featuredMissedFoot(BuildContext context) => _page(
+  FeaturedCard(
+    form: FeaturedCardForm.band,
+    eyebrow: 'Active · week 3 of 8 · Mon, Wed, Fri',
+    title: 'Legs',
+    progress: 3 / 8,
+    line: const FeaturedLine.missed(
+      'You missed Legs on Wed, Nov 11',
+      status: 'Missed',
+    ),
+    action: FeaturedAction('Do it today', () {}),
+    moreActions: [
+      FeaturedAction('Move to Monday', () {}),
+      FeaturedAction('Skip', () {}),
+    ],
+    footActions: [
+      FeaturedAction('Change days', () {}),
+      FeaturedAction('Stop', () {}, danger: true),
+    ],
+  ),
+);
+
+@widgetbook.UseCase(name: 'Band · locked copy with Stop', type: FeaturedCard)
+Widget featuredLockedStop(BuildContext context) => _page(
+  FeaturedCard(
+    form: FeaturedCardForm.band,
+    eyebrow: 'Active · week 3 of 12 · Mon, Tue, Thu, Fri',
+    title: 'Next: Upper A, today',
+    locked: true,
+    progress: 3 / 12,
+    note:
+        'This program came from Premium, which has ended. It carries on '
+        'once you get Premium again.',
+    action: FeaturedAction('Start Upper A', () {}, locked: true),
+    footActions: [FeaturedAction('Stop', () {}, danger: true)],
+  ),
+);
+
+@widgetbook.UseCase(name: 'Band · action loading', type: FeaturedCard)
+Widget featuredActionLoading(BuildContext context) => _page(
+  FeaturedCard(
+    form: FeaturedCardForm.band,
+    eyebrow: '8 weeks · 3 days',
+    title: 'Not active',
+    action: FeaturedAction('Start program', () {}, loading: true),
   ),
 );

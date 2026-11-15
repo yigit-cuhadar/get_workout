@@ -66,12 +66,33 @@ Widget programRecommendedRows(BuildContext context) => _page([
         name: 'Push Pull Legs',
         facts: '3 days · Intermediate · 8 weeks',
         recommended: true,
+        match: 'Matches your goal and level',
         onTap: () {},
       ),
       ProgramCard.row(
         name: 'Full Body Basics',
         facts: '3 days · Beginner · 6 weeks',
         recommended: true,
+        onTap: () {},
+      ),
+    ],
+  ),
+]);
+
+@widgetbook.UseCase(name: 'Row · fits and locked', type: ProgramCard)
+Widget programRowTags(BuildContext context) => _page([
+  ListRowCard(
+    children: [
+      ProgramCard.row(
+        name: 'Full Body Basics',
+        facts: '3 days · Beginner · 6 weeks',
+        fits: true,
+        onTap: () {},
+      ),
+      ProgramCard.row(
+        name: 'Upper Lower Strength',
+        facts: '4 days · Advanced · 12 weeks',
+        locked: true,
         onTap: () {},
       ),
     ],

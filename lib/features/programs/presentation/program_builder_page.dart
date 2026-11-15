@@ -6,6 +6,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/grouping.dart';
 import '../../../core/max_length_formatter.dart';
 import '../../../core/unsaved_changes.dart';
 import '../../../l10n/app_localizations.dart';
@@ -15,13 +16,14 @@ import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/program.dart';
-import '../../../core/grouping.dart';
 import '../domain/program_editing.dart';
 import '../domain/program_validation.dart';
 import 'exercise_picker_page.dart';
 import 'program_builder_cubit.dart';
-import 'widgets/builder_row.dart';
 import 'program_text.dart';
+import 'widgets/builder_row.dart';
+
+typedef _Picker = String Function({required int max, required bool multiple});
 
 /// Creates a program, or edits program [programId].
 class ProgramBuilderPage extends StatelessWidget {
@@ -55,7 +57,7 @@ class _BuilderView extends StatelessWidget {
   const _BuilderView({required this.returns, required this.picker});
 
   final bool returns;
-  final String Function({required int max, required bool multiple}) picker;
+  final _Picker picker;
 
   @override
   Widget build(BuildContext context) {
@@ -73,10 +75,9 @@ class _BuilderView extends StatelessWidget {
               for (final id in state.adjusted)
                 state.exercises[id]?.localized(context).name ?? id,
             ];
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10n.programAdjusted(l10n.inlineList(names))),
-              ),
+            showForgeSnackbar(
+              context,
+              message: l10n.programAdjusted(l10n.inlineList(names)),
             );
             cubit.adjustedShown();
             return;
@@ -91,14 +92,12 @@ class _BuilderView extends StatelessWidget {
             case ProgramBuilderStatus.closed:
               context.go(Routes.programs);
             case ProgramBuilderStatus.saveFailed:
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    state.failure is NetworkFailure
-                        ? l10n.errorNetwork
-                        : l10n.programSaveFailed,
-                  ),
-                ),
+              showForgeSnackbar(
+                context,
+                message: state.failure is NetworkFailure
+                    ? l10n.errorNetwork
+                    : l10n.programSaveFailed,
+                error: true,
               );
             default:
           }
@@ -108,6 +107,10 @@ class _BuilderView extends StatelessWidget {
           final ready =
               state.status != ProgramBuilderStatus.loading &&
               catalogue is CatalogueReady;
+          final shown =
+              ready &&
+              state.status != ProgramBuilderStatus.notFound &&
+              state.status != ProgramBuilderStatus.loadFailed;
           return PopScope(
             canPop: !state.dirty,
             onPopInvokedWithResult: (didPop, _) async {
@@ -117,25 +120,24 @@ class _BuilderView extends StatelessWidget {
               }
             },
             child: Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  cubit.isEditing ? l10n.programEditTitle : l10n.programNew,
-                ),
+              appBar: ForgeAppBar(
+                title: cubit.isEditing
+                    ? l10n.programEditTitle
+                    : l10n.programNew,
                 actions: [
-                  if (ready)
-                    TextButton(
+                  if (shown)
+                    ForgeAppBarAction.text(
+                      label: l10n.programSave,
                       onPressed: state.isBusy ? null : cubit.save,
-                      child: Text(l10n.programSave),
                     ),
                 ],
               ),
               body: switch (state.status) {
                 ProgramBuilderStatus.notFound => EmptyView(
-                  title: l10n.programNotFoundTitle,
                   message: l10n.programNotFound,
                 ),
                 ProgramBuilderStatus.loadFailed => ErrorView(
-                  title: l10n.programsLoadFailed,
+                  title: l10n.programsLoadFailedTitle,
                   message: l10n.loadFailedDetail,
                   retryLabel: l10n.retry,
                   onRetry: cubit.load,
@@ -147,7 +149,7 @@ class _BuilderView extends StatelessWidget {
                     retryLabel: l10n.retry,
                     onRetry: context.read<ExerciseCatalogueCubit>().retry,
                   ),
-                  _ when !ready => const LoadingView(),
+                  _ when !ready => const _Skeleton(),
                   _ => _Form(picker: picker),
                 },
               },
@@ -160,33 +162,101 @@ class _BuilderView extends StatelessWidget {
 
   static Future<bool> _confirmDiscard(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    final discard = await showDialog<bool>(
+    final name = context.read<ProgramBuilderCubit>().state.program.name.trim();
+    final discard = await showForgeDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.programDiscardTitle),
-        content: Text(l10n.programDiscardBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.programKeepEditing),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.programDiscard),
-          ),
-        ],
+      builder: (context) => ForgeDialog(
+        title: l10n.programDiscardTitle,
+        message: name.isEmpty
+            ? l10n.programDiscardBody
+            : l10n.builderDiscardNamed(name),
+        action: ForgeButton(
+          label: l10n.programDiscard,
+          variant: ForgeButtonVariant.danger,
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        cancel: ForgeButton(
+          label: l10n.programKeepEditing,
+          variant: ForgeButtonVariant.secondary,
+          onPressed: () => Navigator.pop(context, false),
+        ),
       ),
     );
     return discard == true;
   }
 }
 
-/// The program's fields and days, then the selected day's items, which
-/// reorder by dragging.
+/// The page while the program or the library loads: the name, the day
+/// chips and two cards of rows as skeletons.
+class _Skeleton extends StatelessWidget {
+  const _Skeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget card(List<(double, double)> bars) => _Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: Gap.sm,
+        children: [
+          for (final (width, height) in bars)
+            SkeletonBar(widthFactor: width, height: height),
+        ],
+      ),
+    );
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: Gap.sm,
+        children: [
+          card([(0.25, 14), (0.9, 10)]),
+          Row(
+            spacing: 6,
+            children: [
+              for (final width in [64.0, 56.0, 56.0, 72.0])
+                SkeletonBar(
+                  width: width,
+                  height: 36,
+                  radius: ForgeRadii.button,
+                ),
+            ],
+          ),
+          card([(0.5, 14), (0.7, 10), (0.45, 10)]),
+          card([(0.5, 14), (0.65, 10), (0.45, 10)]),
+        ],
+      ),
+    );
+  }
+}
+
+/// A surface card around [child], as the day's rows sit in.
+class _Card extends StatelessWidget {
+  const _Card({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: style.colors.surface,
+        borderRadius: BorderRadius.circular(style.radii.lg),
+        border: style.cardBorder == 0
+            ? null
+            : Border.all(color: style.colors.line, width: style.cardBorder),
+      ),
+      child: Padding(padding: const EdgeInsets.all(Gap.md), child: child),
+    );
+  }
+}
+
+/// The program's name and length, its day chips, then the selected day's
+/// items, which reorder by dragging.
 class _Form extends StatefulWidget {
   const _Form({required this.picker});
 
-  final String Function({required int max, required bool multiple}) picker;
+  final _Picker picker;
 
   @override
   State<_Form> createState() => _FormState();
@@ -199,47 +269,108 @@ class _FormState extends State<_Form> {
     text: _cubit.state.program.lengthWeeks?.toString() ?? '',
   );
 
-  /// The name field of the day last added, which takes the focus once;
-  /// opening the builder or switching days never does. A fresh node per
-  /// added day: moving a focused node to the next field would leave it
-  /// focused without a keyboard.
-  FocusNode? _newDayName;
-  Key? _newDayKey;
-
   @override
   void dispose() {
     _name.dispose();
     _weeks.dispose();
-    _newDayName?.dispose();
     super.dispose();
   }
 
-  /// A new field per day, so it shows that day's name.
-  static Key _dayKey(ProgramBuilderState state) =>
-      ValueKey('day-${state.selectedDay}-${state.program.days.length}');
-
-  void _addDay() {
+  /// Adds a day, then asks for its name.
+  Future<void> _addDay() async {
     final days = _cubit.state.program.days.length;
     _cubit.addDay();
     if (_cubit.state.program.days.length == days) return;
-    final previous = _newDayName;
-    final node = _newDayName = FocusNode();
-    _newDayKey = _dayKey(_cubit.state);
-    // The new day's field is built, and the previous one's gone, by then.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      previous?.dispose();
-      if (mounted) node.requestFocus();
-    });
+    await _rename(days);
+  }
+
+  Future<void> _rename(int index) async {
+    final day = _cubit.state.program.days[index];
+    final name = await showForgeDialog<String>(
+      context: context,
+      builder: (_) => _RenameDayDialog(name: day.name, number: index + 1),
+    );
+    if (name != null) _cubit.renameDay(index, name);
+  }
+
+  Future<void> _delete(int index) async {
+    final l10n = AppLocalizations.of(context);
+    final count = _cubit.state.program.days[index].items.length;
+    if (count > 0) {
+      final confirmed = await showForgeDialog<bool>(
+        context: context,
+        builder: (context) => ForgeDialog(
+          title: l10n.programDeleteDayTitle,
+          message: l10n.builderDeleteDayBody(count),
+          action: ForgeButton(
+            label: l10n.programDeleteDay,
+            variant: ForgeButtonVariant.danger,
+            onPressed: () => Navigator.pop(context, true),
+          ),
+          cancel: ForgeButton(
+            label: l10n.cancel,
+            variant: ForgeButtonVariant.secondary,
+            onPressed: () => Navigator.pop(context, false),
+          ),
+        ),
+      );
+      if (confirmed != true) return;
+    }
+    _cubit.deleteDay(index);
+  }
+
+  /// The day menu under day [index]'s chip ([anchor]).
+  void _dayMenu(BuildContext anchor, int index) {
+    final l10n = AppLocalizations.of(context);
+    final state = _cubit.state;
+    final count = state.program.days.length;
+    showForgeMenu(
+      context: anchor,
+      items: [
+        ForgeMenuItem(
+          label: l10n.builderRenameDay,
+          icon: ForgeIcons.edit,
+          onTap: () => _rename(index),
+        ),
+        if (state.canAddDay)
+          ForgeMenuItem(
+            label: l10n.builderDuplicateDay,
+            icon: ForgeIcons.contentCopy,
+            onTap: () => _cubit.duplicateDay(index, l10n.builderDayCopy),
+          ),
+        if (index > 0)
+          ForgeMenuItem(
+            label: l10n.programMoveDayEarlier,
+            icon: ForgeIcons.arrowUpward,
+            onTap: () => _cubit.moveDay(index, index - 1),
+          ),
+        if (index < count - 1)
+          ForgeMenuItem(
+            label: l10n.programMoveDayLater,
+            icon: ForgeIcons.arrowDownward,
+            onTap: () => _cubit.moveDay(index, index + 1),
+          ),
+        if (count > 1)
+          ForgeMenuItem(
+            label: l10n.programDeleteDay,
+            icon: ForgeIcons.delete,
+            destructive: true,
+            onTap: () => _delete(index),
+          ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final style = ForgeStyle.of(context);
+    final colors = style.colors;
+    final text = Theme.of(context).textTheme;
     final state = context.watch<ProgramBuilderCubit>().state;
     final validation = state.validation;
     final day = state.day!;
     final dayIndex = state.selectedDay;
-    final dayKey = _dayKey(state);
     final items = day.items;
     String? programError(Set<ProgramIssue> issues) => validation.program
         .where(issues.contains)
@@ -250,104 +381,113 @@ class _FormState extends State<_Form> {
       ProgramIssue.noDays,
       ProgramIssue.tooManyDays,
     });
+    final lengthError = programError({ProgramIssue.lengthWeeksOutOfRange});
+    Widget danger(String message) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
+      child: Text(
+        message,
+        style: text.bodySmall!.copyWith(color: colors.danger),
+      ),
+    );
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(Gap.md),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.sm),
+          sliver: SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: Gap.sm,
               children: [
-                TextField(
+                ForgeTextField(
+                  label: l10n.programName,
+                  hint: l10n.programName,
                   controller: _name,
-                  textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [
                     maxLengthFormatter(ProgramLimits.maxNameLength),
                   ],
-                  decoration: InputDecoration(
-                    labelText: l10n.programName,
-                    errorText: programError({
-                      ProgramIssue.nameMissing,
-                      ProgramIssue.nameTooLong,
-                    }),
-                  ),
+                  errorText: programError({
+                    ProgramIssue.nameMissing,
+                    ProgramIssue.nameTooLong,
+                  }),
                   onChanged: _cubit.setName,
                 ),
-                const SizedBox(height: Gap.sm),
-                TextField(
-                  controller: _weeks,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(2),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: Gap.xs,
+                  children: [
+                    ForgeTextField(
+                      label: l10n.programLength,
+                      controller: _weeks,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(2),
+                      ],
+                      errorText: lengthError,
+                      onChanged: _cubit.setLengthWeeks,
+                    ),
+                    if (lengthError == null)
+                      Text(
+                        l10n.programLengthHelp,
+                        style: text.bodySmall!.copyWith(color: colors.inkMuted),
+                      ),
                   ],
-                  decoration: InputDecoration(
-                    labelText: l10n.programLength,
-                    helperText: l10n.programLengthHelp,
-                    errorText: programError({
-                      ProgramIssue.lengthWeeksOutOfRange,
-                    }),
-                  ),
-                  onChanged: _cubit.setLengthWeeks,
                 ),
-                const SizedBox(height: Gap.md),
                 Wrap(
-                  spacing: Gap.sm,
-                  runSpacing: Gap.xs,
+                  spacing: 6,
+                  runSpacing: 6,
                   children: [
                     for (final (i, other) in state.program.days.indexed)
-                      ChoiceChip(
-                        label: Text(l10n.dayName(other, i)),
-                        selected: i == dayIndex,
-                        avatar:
-                            validation.dayIssues(i).isNotEmpty ||
-                                validation.items.keys.any((ref) => ref.day == i)
-                            ? Icon(
-                                Icons.error_outline,
-                                color: Theme.of(context).colorScheme.error,
-                              )
-                            : null,
-                        onSelected: (_) => _cubit.selectDay(i),
-                      ),
-                    ActionChip(
-                      avatar: const Icon(Icons.add),
-                      label: Text(l10n.programAddDay),
-                      onPressed: state.canAddDay ? _addDay : null,
-                    ),
-                  ],
-                ),
-                if (daysError != null) _ErrorText(daysError),
-                const SizedBox(height: Gap.md),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        key: dayKey,
-                        focusNode: dayKey == _newDayKey ? _newDayName : null,
-                        initialValue: day.name,
-                        textCapitalization: TextCapitalization.sentences,
-                        inputFormatters: [
-                          maxLengthFormatter(ProgramLimits.maxDayNameLength),
-                        ],
-                        decoration: InputDecoration(
-                          labelText: l10n.programDayName,
-                          hintText: l10n.programDayDefault(dayIndex + 1),
-                          helperText: day.items.isEmpty
-                              ? null
-                              : l10n.estimateText(estimateDay(day)),
-                          errorText: dayIssues.contains(DayIssue.nameTooLong)
-                              ? l10n.dayIssueText(DayIssue.nameTooLong)
+                      Builder(
+                        builder: (anchor) => ForgeChip(
+                          label: l10n.dayName(other, i),
+                          selected: i == dayIndex,
+                          showCheck: false,
+                          leading:
+                              validation.dayIssues(i).isNotEmpty ||
+                                  validation.items.keys.any(
+                                    (ref) => ref.day == i,
+                                  )
+                              ? ForgeIcon(
+                                  ForgeIcons.error,
+                                  size: 14,
+                                  color: colors.danger,
+                                )
                               : null,
+                          onPressed: () => _cubit.selectDay(i),
+                          onOptions: () => _dayMenu(anchor, i),
+                          optionsLabel: l10n.programDayActions,
                         ),
-                        onChanged: (name) => _cubit.renameDay(dayIndex, name),
                       ),
-                    ),
-                    _DayMenu(index: dayIndex, count: state.program.days.length),
+                    if (state.canAddDay)
+                      ForgeChip.add(
+                        label: l10n.programAddDay,
+                        onPressed: _addDay,
+                      ),
                   ],
                 ),
-                for (final issue in dayIssues)
-                  if (issue != DayIssue.nameTooLong)
-                    _ErrorText(l10n.dayIssueText(issue)),
+                if (daysError != null) danger(daysError),
+                if (items.isNotEmpty)
+                  Text(
+                    l10n.builderDaySummary(
+                      l10n.dayName(day, dayIndex),
+                      l10n.programDaySummary(
+                        items.length,
+                        l10n.estimateText(estimateDay(day)),
+                      ),
+                    ),
+                    style: style.data.copyWith(color: colors.inkMuted),
+                  ),
+                for (final issue in dayIssues) danger(l10n.dayIssueText(issue)),
+                if (items.isEmpty && !dayIssues.contains(DayIssue.noItems))
+                  _Card(
+                    child: EmptyView(
+                      icon: ForgeIcons.fitnessCenter,
+                      title: l10n.builderDayEmptyTitle,
+                      message: l10n.builderDayEmptyBody,
+                      compact: true,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -382,14 +522,25 @@ class _FormState extends State<_Form> {
             ),
           ),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(Gap.md, Gap.md, Gap.md, Gap.xl),
+          padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, Gap.xl),
           sliver: SliverToBoxAdapter(
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.add),
-              label: Text(l10n.programAddExercises),
-              onPressed: state.freeSlots > 0
-                  ? () => _addExercises(state)
-                  : null,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: Gap.sm,
+              children: [
+                ForgeAddButton(
+                  label: l10n.programAddExercises,
+                  onPressed: state.freeSlots > 0
+                      ? () => _addExercises(state)
+                      : null,
+                ),
+                if (state.freeSlots == 0)
+                  Text(
+                    l10n.builderDayFull(ProgramLimits.maxItemsPerDay),
+                    textAlign: TextAlign.center,
+                    style: text.bodySmall!.copyWith(color: colors.inkMuted),
+                  ),
+              ],
             ),
           ),
         ),
@@ -419,70 +570,61 @@ class _FormState extends State<_Form> {
   }
 }
 
-class _DayMenu extends StatelessWidget {
-  const _DayMenu({required this.index, required this.count});
+/// Names day [number]: its name, or empty for "Day n". Pops with the name,
+/// or null when cancelled.
+class _RenameDayDialog extends StatefulWidget {
+  const _RenameDayDialog({required this.name, required this.number});
 
-  final int index;
-  final int count;
+  final String name;
+  final int number;
+
+  @override
+  State<_RenameDayDialog> createState() => _RenameDayDialogState();
+}
+
+class _RenameDayDialogState extends State<_RenameDayDialog> {
+  late final _controller = TextEditingController(text: widget.name);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final cubit = context.read<ProgramBuilderCubit>();
-    return PopupMenuButton<VoidCallback>(
-      tooltip: l10n.programDayActions,
-      onSelected: (action) => action(),
-      itemBuilder: (_) => [
-        PopupMenuItem(
-          enabled: index > 0,
-          value: () => cubit.moveDay(index, index - 1),
-          child: Text(l10n.programMoveDayEarlier),
-        ),
-        PopupMenuItem(
-          enabled: index < count - 1,
-          value: () => cubit.moveDay(index, index + 1),
-          child: Text(l10n.programMoveDayLater),
-        ),
-        PopupMenuItem(
-          enabled: count > 1,
-          value: () => _delete(context),
-          child: Text(l10n.programDeleteDay),
-        ),
-      ],
+    return ForgeDialog(
+      title: l10n.builderRenameDay,
+      message: l10n.builderRenameDayBody,
+      field: ForgeTextField(
+        label: l10n.programDayName,
+        hint: l10n.programDayDefault(widget.number),
+        controller: _controller,
+        autofocus: true,
+        inputFormatters: [maxLengthFormatter(ProgramLimits.maxDayNameLength)],
+        textInputAction: TextInputAction.done,
+        onSubmitted: (name) => Navigator.pop(context, name),
+      ),
+      action: ForgeButton(
+        label: l10n.programSave,
+        onPressed: () => Navigator.pop(context, _controller.text),
+      ),
+      cancel: ForgeButton(
+        label: l10n.cancel,
+        variant: ForgeButtonVariant.secondary,
+        onPressed: () => Navigator.pop(context),
+      ),
     );
-  }
-
-  Future<void> _delete(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
-    final cubit = context.read<ProgramBuilderCubit>();
-    if (cubit.state.program.days[index].items.isNotEmpty) {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(l10n.programDeleteDayTitle),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(l10n.cancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(l10n.programDeleteDay),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true) return;
-    }
-    cubit.deleteDay(index);
   }
 }
 
-/// An item of the day as a [BuilderRow]: its values (with the target
-/// weight, if any) as chips, which open the item's editor, and its actions in the ⋯ menu. A superset's rows
+/// An item of the day as a [BuilderRow]: its values as chips, which open
+/// the item's editor, and its actions in the ⋯ menu. A superset's rows
 /// show the rest only on the last, a circuit's only reps or time, with
 /// the group's rest (and a circuit's rounds) in the header above the
-/// first.
+/// first. An item whose exercise left the library is the row's
+/// unavailable form.
 class _ItemTile extends StatelessWidget {
   const _ItemTile({
     super.key,
@@ -505,14 +647,33 @@ class _ItemTile extends StatelessWidget {
     final cubit = context.read<ProgramBuilderCubit>();
     final item = items[index];
     final exercise = state.exercises[item.exerciseId];
-    final unavailable = state.isUnavailable(item);
-    final issues = state.validation.itemIssues(state.selectedDay, index);
     final (start, end) = groupRange(items, index);
-    final size = end - start;
     final grouped = item.group != null;
-    final circuit = grouped && size > 2;
+    final divided = index > 0 && !(grouped && index > start);
+    final remove = ForgeMenuItem(
+      label: l10n.programRemoveItem,
+      icon: ForgeIcons.delete,
+      onTap: () => cubit.removeItem(index),
+      destructive: true,
+    );
+    final replace = ForgeMenuItem(
+      label: l10n.programReplaceExercise,
+      icon: ForgeIcons.sync,
+      onTap: onReplace,
+    );
+    if (state.isUnavailable(item) || exercise == null) {
+      return BuilderRow.unavailable(
+        index: index,
+        name: l10n.programExerciseUnavailable,
+        help: l10n.programUnavailableHelp,
+        menu: [replace, remove],
+        divided: divided,
+      );
+    }
+    final issues = state.validation.itemIssues(state.selectedDay, index);
+    final circuit = grouped && end - start > 2;
     final canLink = canLinkWithNext(items, index);
-    void edit() => unavailable ? onReplace() : _edit(context);
+    void edit() => _edit(context, exercise);
     String rest(int seconds) => l10n.restClock(seconds);
     final last = items[end - 1];
     final work = switch (item.durationS) {
@@ -529,9 +690,7 @@ class _ItemTile extends StatelessWidget {
     };
     return BuilderRow(
       index: index,
-      name: exercise == null
-          ? l10n.programExerciseUnavailable
-          : exercise.localized(context).name,
+      name: exercise.localized(context).name,
       values: [
         if (!circuit)
           BuilderValue(
@@ -540,12 +699,6 @@ class _ItemTile extends StatelessWidget {
             onTap: edit,
           ),
         work,
-        if (item.targetKg case final targetKg?)
-          BuilderValue(
-            label: l10n.builderRowWeight,
-            value: l10n.liftedWeightText(targetKg, cubit.weightUnit),
-            onTap: edit,
-          ),
         if (!grouped || (!circuit && index == end - 1))
           BuilderValue(
             label: l10n.builderRowRest,
@@ -553,7 +706,7 @@ class _ItemTile extends StatelessWidget {
             onTap: edit,
           ),
       ],
-      divided: index > 0 && !(grouped && index > start),
+      divided: divided,
       grouped: grouped,
       groupHeader: !grouped || index != start
           ? null
@@ -565,49 +718,43 @@ class _ItemTile extends StatelessWidget {
       onMoveDown: index == items.length - 1
           ? null
           : () => cubit.moveItem(index, index + 1),
-      issues: [
-        for (final issue in issues)
-          if (issue != ItemIssue.exerciseUnavailable) l10n.itemIssueText(issue),
-        if (unavailable) l10n.programUnavailableHelp,
-      ],
+      issues: [for (final issue in issues) l10n.itemIssueText(issue)],
       menu: [
-        if (!unavailable)
-          ForgeMenuItem(label: l10n.programEditItem, onTap: edit),
-        ForgeMenuItem(label: l10n.programReplaceExercise, onTap: onReplace),
+        ForgeMenuItem(
+          label: l10n.programEditItem,
+          icon: ForgeIcons.tune,
+          onTap: edit,
+        ),
+        replace,
         if (canLink)
           ForgeMenuItem(
             label: linkedSize(items, index) == 2
                 ? l10n.programMakeSuperset
                 : l10n.programMakeCircuit,
+            icon: ForgeIcons.dragHandle,
             onTap: () => cubit.linkWithNext(index),
           ),
         if (grouped)
           ForgeMenuItem(
             label: l10n.programUngroup,
+            icon: ForgeIcons.remove,
             onTap: () => cubit.ungroup(index),
           ),
-        ForgeMenuItem(
-          label: l10n.programRemoveItem,
-          onTap: () => cubit.removeItem(index),
-          destructive: true,
-        ),
+        remove,
       ],
     );
   }
 
-  void _edit(BuildContext context) {
+  void _edit(BuildContext context, Exercise exercise) {
     final cubit = context.read<ProgramBuilderCubit>();
-    final type = state.exercises[items[index].exerciseId]?.loggingType;
-    if (type == null) return;
-    showModalBottomSheet<void>(
+    final type = exercise.loggingType;
+    showForgeBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      showDragHandle: true,
       builder: (_) => BlocProvider.value(
         value: cubit,
         child: _ItemEditor(
           index: index,
+          title: exercise.localized(context).name,
           durationBased: type.isDurationBased,
           logsWeight: type.logsWeight,
         ),
@@ -621,11 +768,13 @@ class _ItemTile extends StatelessWidget {
 class _ItemEditor extends StatefulWidget {
   const _ItemEditor({
     required this.index,
+    required this.title,
     required this.durationBased,
     required this.logsWeight,
   });
 
   final int index;
+  final String title;
   final bool durationBased;
   final bool logsWeight;
 
@@ -640,8 +789,8 @@ class _ItemEditorState extends State<_ItemEditor> {
   late final _repMin = _controller(_item.repMin?.toString() ?? '');
   late final _repMax = _controller(_item.repMax?.toString() ?? '');
   late final _duration = _controller(_item.durationS?.toString() ?? '');
-  late final _rest = _controller('${_item.restS}');
   late final _target = _controller(_targetText());
+  late int _restS = _item.restS;
   final _controllers = <TextEditingController>[];
 
   TextEditingController _controller(String text) {
@@ -666,9 +815,24 @@ class _ItemEditorState extends State<_ItemEditor> {
     super.dispose();
   }
 
+  Future<void> _pickRest() => showForgeDurationWheel(
+    context: context,
+    wheel: ForgeDurationWheel.minutesSeconds(
+      label: AppLocalizations.of(context).builderRest,
+      initial: Duration(seconds: _restS),
+      max: const Duration(seconds: ProgramLimits.maxRestS),
+      step: const Duration(seconds: 15),
+      onChanged: (rest) {
+        setState(() => _restS = rest.inSeconds);
+        _cubit.setRest(widget.index, '${rest.inSeconds}');
+      },
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = ForgeStyle.of(context).colors;
     final issues = context.select(
       (ProgramBuilderCubit cubit) => cubit.state.liveItemIssues(widget.index),
     );
@@ -680,17 +844,17 @@ class _ItemEditorState extends State<_ItemEditor> {
       ItemIssue.repsOutOfRange,
       ItemIssue.repRangeInverted,
     });
-    return Padding(
-      padding: EdgeInsets.only(
-        left: Gap.md,
-        right: Gap.md,
-        bottom: MediaQuery.viewInsetsOf(context).bottom + Gap.md,
+    return ForgeBottomSheet(
+      title: widget.title,
+      action: ForgeButton(
+        label: l10n.libraryDone,
+        onPressed: () => Navigator.pop(context),
       ),
-      child: SafeArea(
-        top: false,
+      child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: Gap.md,
           children: [
             _NumberField(
               controller: _sets,
@@ -711,6 +875,7 @@ class _ItemEditorState extends State<_ItemEditor> {
             else
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: Gap.sm,
                 children: [
                   Expanded(
                     child: _NumberField(
@@ -720,7 +885,6 @@ class _ItemEditorState extends State<_ItemEditor> {
                       onChanged: (text) => _cubit.setRepMin(index, text),
                     ),
                   ),
-                  const SizedBox(width: Gap.sm),
                   Expanded(
                     child: _NumberField(
                       controller: _repMax,
@@ -731,11 +895,10 @@ class _ItemEditorState extends State<_ItemEditor> {
                   ),
                 ],
               ),
-            _NumberField(
-              controller: _rest,
-              label: l10n.programRestSeconds,
-              error: error({ItemIssue.restOutOfRange}),
-              onChanged: (text) => _cubit.setRest(index, text),
+            ForgeTextField.tapOnly(
+              label: l10n.builderRest,
+              value: l10n.restClock(_restS),
+              onTap: _pickRest,
             ),
             if (widget.logsWeight)
               _NumberField(
@@ -748,12 +911,11 @@ class _ItemEditorState extends State<_ItemEditor> {
                 onChanged: (text) => _cubit.setTarget(index, text),
               ),
             if (error({ItemIssue.wrongTarget}) case final text?)
-              _ErrorText(text),
-            const SizedBox(height: Gap.md),
-            ForgeButton(
-              label: l10n.libraryDone,
-              onPressed: () => Navigator.pop(context),
-            ),
+              Text(
+                text,
+                style: Theme.of(context).textTheme.bodySmall!
+                    .copyWith(color: colors.danger),
+              ),
           ],
         ),
       ),
@@ -777,38 +939,17 @@ class _NumberField extends StatelessWidget {
   final bool decimal;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: Gap.sm),
-    child: TextField(
-      controller: controller,
-      keyboardType: TextInputType.numberWithOptions(decimal: decimal),
-      inputFormatters: [
-        decimal
-            ? FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
-            : FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(decimal ? 7 : 4),
-      ],
-      decoration: InputDecoration(labelText: label, errorText: error),
-      onChanged: onChanged,
-    ),
+  Widget build(BuildContext context) => ForgeTextField(
+    label: label,
+    controller: controller,
+    keyboardType: TextInputType.numberWithOptions(decimal: decimal),
+    inputFormatters: [
+      decimal
+          ? FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
+          : FilteringTextInputFormatter.digitsOnly,
+      LengthLimitingTextInputFormatter(decimal ? 7 : 4),
+    ],
+    errorText: error,
+    onChanged: onChanged,
   );
-}
-
-class _ErrorText extends StatelessWidget {
-  const _ErrorText(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: Gap.xs),
-      child: Text(
-        text,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.error,
-        ),
-      ),
-    );
-  }
 }

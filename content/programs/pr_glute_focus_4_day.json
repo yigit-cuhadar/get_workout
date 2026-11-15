@@ -20,6 +20,24 @@
     "min": 32,
     "max": 39
   },
+  "dayList": [
+    {
+      "name": "Glutes and Hamstrings",
+      "exercises": 5
+    },
+    {
+      "name": "Upper A",
+      "exercises": 7
+    },
+    {
+      "name": "Glutes and Quads",
+      "exercises": 6
+    },
+    {
+      "name": "Upper B",
+      "exercises": 8
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Glute Focus 4-Day",

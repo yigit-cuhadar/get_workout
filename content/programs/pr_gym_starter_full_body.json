@@ -20,6 +20,20 @@
     "min": 31,
     "max": 32
   },
+  "dayList": [
+    {
+      "name": "Full Body A",
+      "exercises": 6
+    },
+    {
+      "name": "Full Body B",
+      "exercises": 6
+    },
+    {
+      "name": "Full Body C",
+      "exercises": 7
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Gym Starter: Full Body 3-Day",

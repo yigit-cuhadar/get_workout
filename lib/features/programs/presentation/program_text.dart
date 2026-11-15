@@ -13,6 +13,14 @@ extension ProgramText on AppLocalizations {
     return name.isEmpty ? programDayDefault(index + 1) : name;
   }
 
+  /// A day's card title, "Day 2 · Pull", or "Day 2" without a name.
+  String dayTitle(int index, String name) {
+    final trimmed = name.trim();
+    return trimmed.isEmpty
+        ? programDayDefault(index + 1)
+        : programDayTitle(index + 1, trimmed);
+  }
+
   /// `3 × 8–12`, `3 × 10` or `3 × 45 s`, with the target weight if any.
   String itemSummary(ProgramItem item, WeightUnit unit) {
     final duration = item.durationS;

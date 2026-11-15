@@ -58,6 +58,9 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.localUnreadable = false,
     this.savingProgram = false,
     this.savedProgramId,
+    this.dayChanges,
+    this.updatingDay = false,
+    this.dayUpdated = false,
     this.picked,
     this.asking,
     this.askingWithRest = false,
@@ -102,6 +105,14 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
 
   /// The program the finished workout was saved as.
   final String? savedProgramId;
+
+  /// The items the finished program-day workout would give its day, null
+  /// when it did the day as planned (see `changedProgramDay`).
+  final List<ProgramItem>? dayChanges;
+  final bool updatingDay;
+
+  /// The program day took [dayChanges].
+  final bool dayUpdated;
 
   @override
   final SetSelection? picked;
@@ -176,6 +187,9 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     bool? localUnreadable,
     bool? savingProgram,
     String? Function()? savedProgramId,
+    List<ProgramItem>? Function()? dayChanges,
+    bool? updatingDay,
+    bool? dayUpdated,
     SetSelection? Function()? picked,
     SetRef? Function()? asking,
     bool? askingWithRest,
@@ -198,6 +212,9 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     savedProgramId: savedProgramId != null
         ? savedProgramId()
         : this.savedProgramId,
+    dayChanges: dayChanges != null ? dayChanges() : this.dayChanges,
+    updatingDay: updatingDay ?? this.updatingDay,
+    dayUpdated: dayUpdated ?? this.dayUpdated,
     picked: picked != null ? picked() : this.picked,
     asking: asking != null ? asking() : this.asking,
     askingWithRest: askingWithRest ?? this.askingWithRest,
@@ -221,6 +238,9 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     localUnreadable,
     savingProgram,
     savedProgramId,
+    dayChanges,
+    updatingDay,
+    dayUpdated,
     picked,
     asking,
     askingWithRest,
@@ -257,6 +277,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     required this._confirmStored,
     required this._rebuildStats,
     required this._saveAsProgram,
+    required this._updateProgramDay,
     required this._programs,
     required this._catalogue,
     required this._watchSettings,
@@ -279,6 +300,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   final ConfirmStoredWorkout _confirmStored;
   final RebuildExerciseStats _rebuildStats;
   final SaveWorkoutAsProgram _saveAsProgram;
+  final UpdateProgramDay _updateProgramDay;
   final ProgramListCubit _programs;
   final ExerciseCatalogueCubit _catalogue;
   final WatchSettings _watchSettings;
@@ -628,6 +650,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     emit(state.copyWith(status: WorkoutStatus.finishing));
     _finishes++;
     final programs = _programs.state;
+    final dayProgram = programs.programs
+        .where((program) => program.id == workout.programId)
+        .firstOrNull;
+    final dayChanges = dayProgram == null
+        ? null
+        : editing.changedProgramDay(workout, dayProgram, knownExercises);
     final result = await _finishWorkout((
       uid: uid,
       workout: workout,
@@ -657,6 +685,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
             rest: () => null,
             workout: () => value.workout,
             summary: () => value.summary,
+            dayChanges: () => dayChanges,
             invalidSet: () => null,
           ),
         );
@@ -795,6 +824,43 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       state.copyWith(
         savingProgram: false,
         savedProgramId: () => result.valueOrNull,
+        failure: () => result.failureOrNull,
+      ),
+    );
+  }
+
+  /// Gives the finished workout's program day [ActiveWorkoutState.dayChanges].
+  Future<void> updateProgramDay() async {
+    final uid = _uid;
+    final workout = state.workout;
+    final items = state.dayChanges;
+    final program = _programs.state.programs
+        .where((program) => program.id == workout?.programId)
+        .firstOrNull;
+    if (uid == null ||
+        workout == null ||
+        items == null ||
+        program == null ||
+        state.status != WorkoutStatus.finished ||
+        state.updatingDay ||
+        state.dayUpdated) {
+      return;
+    }
+    emit(state.copyWith(updatingDay: true));
+    final result = await _updateProgramDay((
+      uid: uid,
+      program: program,
+      dayIndex: workout.dayIndex!,
+      items: items,
+      catalogue: knownExercises,
+    ));
+    if (isClosed || _uid != uid || state.status != WorkoutStatus.finished) {
+      return;
+    }
+    emit(
+      state.copyWith(
+        updatingDay: false,
+        dayUpdated: result.isOk,
         failure: () => result.failureOrNull,
       ),
     );

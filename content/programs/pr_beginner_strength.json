@@ -20,6 +20,20 @@
     "min": 33,
     "max": 37
   },
+  "dayList": [
+    {
+      "name": "Squat and Bench A",
+      "exercises": 5
+    },
+    {
+      "name": "Deadlift and Press",
+      "exercises": 5
+    },
+    {
+      "name": "Squat and Bench B",
+      "exercises": 5
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Beginner Strength 3-Day",

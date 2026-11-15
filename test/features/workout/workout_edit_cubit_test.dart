@@ -9,6 +9,7 @@ import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/history_usecases.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
+import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/workout/domain/workout_editing.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
@@ -75,7 +76,7 @@ void main() {
     await stored.close();
   });
 
-  WorkoutEditCubit build({String? id = 'w1'}) {
+  WorkoutEditCubit build({String? id = 'w1', PastWorkoutPlan? plan}) {
     final auth = MockAuthRepository();
     when(() => auth.currentUser).thenReturn(alice);
     when(auth.watchUser).thenAnswer((_) => users.stream);
@@ -83,7 +84,7 @@ void main() {
     when(() => catalogue.state).thenReturn(CatalogueReady([move('row')]));
     return WorkoutEditCubit(
       id: id,
-      name: 'Workout',
+      plan: plan ?? WorkoutEditCubit.defaultPlan('Workout', now, 'en'),
       getCurrentUser: GetCurrentUser(auth),
       watchAuthUser: WatchAuthUser(auth),
       watchWorkout: WatchStoredWorkout(repository),
@@ -154,6 +155,36 @@ void main() {
       expect(workout.exercises, isEmpty);
       await cubit.close();
     });
+
+    test(
+      'a past workout can start from a program day, as a free one',
+      () async {
+        final cubit = build(
+          id: null,
+          plan: (
+            name: 'Pull',
+            start: DateTime(2026, 11, 8, 10),
+            duration: const Duration(minutes: 50),
+            program: Program(
+              id: 'p1',
+              name: 'PPL',
+              days: [
+                ProgramDay(name: 'Pull', items: [item('row', sets: 2)]),
+              ],
+            ),
+            dayIndex: 0,
+            language: 'en',
+          ),
+        );
+        final workout = cubit.state.workout!;
+        expect(workout.name, 'Pull');
+        expect(workout.finishedAt, DateTime(2026, 11, 8, 10, 50));
+        expect(workout.programId, isNull);
+        expect(workout.exercises.single.sets, hasLength(2));
+        expect(cubit.hasChanges, isFalse);
+        await cubit.close();
+      },
+    );
 
     test('another user closes it', () async {
       final cubit = await editing();
@@ -399,6 +430,17 @@ void main() {
       expect(changes.single.stale, {'squat', 'row'});
       expect(cubit.state.status, WorkoutEditStatus.saved);
       expect(cubit.hasChanges, isFalse);
+      await cubit.close();
+    });
+
+    test('deleting removes it and reports its exercises stale', () async {
+      when(() => repository.deleteWorkout('u1', 'w1', any()))
+          .thenAnswer((_) async => const Ok(null));
+      final cubit = await editing();
+      await cubit.delete();
+      verify(() => repository.deleteWorkout('u1', 'w1', any())).called(1);
+      expect(changes.single.deleted, isTrue);
+      expect(cubit.state.status, WorkoutEditStatus.deleted);
       await cubit.close();
     });
 

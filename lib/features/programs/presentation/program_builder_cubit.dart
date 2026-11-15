@@ -342,6 +342,22 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
   void renameDay(int index, String name) =>
       _editDay(index, (day) => day.copyWith(name: name));
 
+  /// Puts a copy of day [index] right after it and selects the copy: its
+  /// items, and its name as [copyName] makes it ("Push copy"); an unnamed
+  /// day's copy stays unnamed.
+  void duplicateDay(int index, String Function(String name) copyName) {
+    final days = [...state.program.days];
+    if (!state.canAddDay || index < 0 || index >= days.length) return;
+    _retyped.clear();
+    final day = days[index];
+    final name = day.name.trim();
+    days.insert(
+      index + 1,
+      name.isEmpty ? day : day.copyWith(name: copyName(name)),
+    );
+    _edit(state.program.copyWith(days: days), selectedDay: index + 1);
+  }
+
   /// The moved day stays selected.
   void moveDay(int from, int to) {
     _retyped.clear();

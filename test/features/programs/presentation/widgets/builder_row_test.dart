@@ -201,6 +201,53 @@ void main() {
     expect(find.text('Replace it with another exercise.'), findsOneWidget);
   });
 
+  testWidgets('an unavailable item: danger name, help, ⋯, no handle', (
+    tester,
+  ) async {
+    var replaced = 0;
+    await pumpComponent(
+      tester,
+      list([
+        BuilderRow.unavailable(
+          index: 0,
+          name: 'Unavailable exercise',
+          help: 'No longer in the library. Replace or remove it.',
+          menu: [
+            ForgeMenuItem(
+              label: 'Replace exercise',
+              icon: ForgeIcons.sync,
+              onTap: () => replaced++,
+            ),
+          ],
+          divided: false,
+        ),
+      ]),
+    );
+
+    final context = tester.element(find.text('Unavailable exercise'));
+    final colors = ForgeStyle.of(context).colors;
+    expect(
+      tester.widget<Text>(find.text('Unavailable exercise')).style!.color,
+      colors.danger,
+    );
+    expect(
+      find.text('No longer in the library. Replace or remove it.'),
+      findsOneWidget,
+    );
+    expect(find.byType(ReorderableDragStartListener), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is ForgeIcon && widget.icon == ForgeIcons.error,
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.bySemanticsLabel('Exercise options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Replace exercise'));
+    await tester.pumpAndSettle();
+    expect(replaced, 1);
+  });
+
   testWidgets('the handle starts a drag across a 44px band', (tester) async {
     final moves = <(int, int)>[];
     await pumpComponent(
@@ -217,10 +264,9 @@ void main() {
       ], onReorder: (from, to) => moves.add((from, to))),
     );
     final handle = find.byWidgetPredicate(
-      (widget) =>
-          widget is ForgeIcon && widget.icon == ForgeIcons.dragIndicator,
+      (widget) => widget is ForgeIcon && widget.icon == ForgeIcons.dragHandle,
     );
-    expect(tester.getSize(handle.first), const Size.square(16));
+    expect(tester.getSize(handle.first), const Size.square(20));
     // 12px right of the drawn handle, inside its band.
     final from = tester.getCenter(handle.first) + const Offset(12, 0);
     final gesture = await tester.startGesture(from);

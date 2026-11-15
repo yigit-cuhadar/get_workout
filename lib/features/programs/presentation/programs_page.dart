@@ -1,27 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/widgets/featured_card.dart';
-import '../../../core/widgets/program_volume_card.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../exercises/domain/exercise.dart';
-import '../../exercises/presentation/body_model_cubit.dart';
-import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../generator/presentation/generator_entry.dart';
 import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
 import '../domain/program_schedule.dart';
-import '../domain/program_volume.dart';
 import 'missed_day_prompt.dart';
 import 'premium_prompt.dart';
 import 'program_detail_cubit.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
+import 'program_volume_section.dart';
 import 'stop_program_dialog.dart';
 import 'weekday_dialog.dart';
 
@@ -149,7 +144,10 @@ class _Programs extends StatelessWidget {
           ],
           if (!state.finished && access != ProgramAccess.waiting) ...[
             const SizedBox(height: Gap.sm),
-            _ActiveProgramVolume(active),
+            ProgramVolumeSection(
+              program: active,
+              onOpen: () => context.go(Routes.programVolume(active.id!)),
+            ),
           ],
         ],
         const SizedBox(height: Gap.sm),
@@ -339,19 +337,26 @@ class _ProgramActions {
       items: [
         ForgeMenuItem(
           label: l10n.programOpen,
+          icon: ForgeIcons.description,
           onTap: () => context.go(Routes.program(program.id!)),
         ),
         // A locked copy cannot be rescheduled.
         if (!state.finished && state.access(program) != ProgramAccess.locked)
-          ForgeMenuItem(label: l10n.programChangeDays, onTap: changeDays),
+          ForgeMenuItem(
+            label: l10n.programChangeDays,
+            icon: ForgeIcons.editCalendar,
+            onTap: changeDays,
+          ),
         ForgeMenuItem(
           label: l10n.programDuplicate,
+          icon: ForgeIcons.contentCopy,
           onTap: () {
             _cubit.duplicate(l10n.programCopyName);
           },
         ),
         ForgeMenuItem(
           label: l10n.programStopConfirm,
+          icon: ForgeIcons.stopCircle,
           destructive: true,
           onTap: stop,
         ),
@@ -463,65 +468,6 @@ List<Widget> weekDayRows(
     for (final day in plan) day == missed ? withPrompt(row(day)) : row(day),
     if (plan.isEmpty && missed == null) ListRow(title: l10n.programWeekEmpty),
   ];
-}
-
-/// The active program's weekly sets, once its exercises and the body model
-/// are known.
-class _ActiveProgramVolume extends StatefulWidget {
-  const _ActiveProgramVolume(this.program);
-
-  final Program program;
-
-  @override
-  State<_ActiveProgramVolume> createState() => _ActiveProgramVolumeState();
-}
-
-class _ActiveProgramVolumeState extends State<_ActiveProgramVolume> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<BodyModelCubit>().load();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final program = widget.program;
-    final catalogue = context.watch<ExerciseCatalogueCubit>();
-    final model = context.watch<BodyModelCubit>();
-    void open() => context.go(Routes.programVolume(program.id!));
-    SectionCard failed(VoidCallback retry) => SectionCard.error(
-      title: l10n.programVolumeTitle,
-      onTap: open,
-      message: l10n.programVolumeLoadFailed,
-      retryLabel: l10n.retry,
-      onRetry: retry,
-    );
-    return switch ((catalogue.state, model.state)) {
-      (CatalogueFailed(), _) => failed(catalogue.retry),
-      (_, BodyModelFailed()) => failed(model.load),
-      (CatalogueReady(:final exercises), BodyModelReady(model: final body)) =>
-        _card(program, exercises, body, open),
-      _ => SectionCard.loading(title: l10n.programVolumeTitle, onTap: open),
-    };
-  }
-
-  static Widget _card(
-    Program program,
-    List<Exercise> exercises,
-    Model3D model,
-    VoidCallback open,
-  ) {
-    final volume = programVolume(program, {
-      for (final exercise in exercises) exercise.id: exercise,
-    });
-    return ProgramVolumeCard(
-      model: model,
-      sets: volume.sets,
-      total: volume.total,
-      onTap: open,
-    );
-  }
 }
 
 class _ProgramRow extends StatelessWidget {

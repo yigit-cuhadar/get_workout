@@ -28,6 +28,7 @@ class ProgramCatalogueState extends Equatable {
     this.filter = const CatalogueFilter(),
     this.profile = const TrainingProfile(),
     this.premium,
+    this.query = '',
   });
 
   final ProgramCatalogueStatus status;
@@ -42,6 +43,22 @@ class ProgramCatalogueState extends Equatable {
 
   /// Null while unknown.
   final bool? premium;
+
+  /// The search text, as typed.
+  final String query;
+
+  /// Whether a search is on.
+  bool get searching => query.trim().isNotEmpty;
+
+  /// The programs [filter] lets through whose name in [language] holds the
+  /// search text, ignoring case.
+  List<CatalogueProgram> shown(String language) {
+    final text = query.trim().toLowerCase();
+    return [
+      for (final program in visible)
+        if (program.text(language).name.toLowerCase().contains(text)) program,
+    ];
+  }
 
   /// The programs [filter] lets through.
   List<CatalogueProgram> get visible => [
@@ -72,16 +89,25 @@ class ProgramCatalogueState extends Equatable {
     CatalogueFilter? filter,
     TrainingProfile? profile,
     bool? Function()? premium,
+    String? query,
   }) => ProgramCatalogueState(
     status: status ?? this.status,
     programs: programs ?? this.programs,
     filter: filter ?? this.filter,
     profile: profile ?? this.profile,
     premium: premium != null ? premium() : this.premium,
+    query: query ?? this.query,
   );
 
   @override
-  List<Object?> get props => [status, programs, filter, profile, premium];
+  List<Object?> get props => [
+    status,
+    programs,
+    filter,
+    profile,
+    premium,
+    query,
+  ];
 }
 
 /// The ready-made programs for the whole app, with the filters and what
@@ -170,6 +196,8 @@ class ProgramCatalogueCubit extends Cubit<ProgramCatalogueState> {
       _setFilter(state.filter.copyWith(fitsMyEquipment: value));
 
   void clearFilters() => _setFilter(const CatalogueFilter());
+
+  void search(String query) => emit(state.copyWith(query: query));
 
   void _setFilter(CatalogueFilter filter) =>
       emit(state.copyWith(filter: filter));

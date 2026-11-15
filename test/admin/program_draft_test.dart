@@ -23,9 +23,14 @@ void main() {
       expect(draft.content(exercises), json);
     });
 
-    test('computes daysPerWeek, equipment and minutes from the days', () {
-      final content = programJson();
+    test('computes daysPerWeek, equipment, minutes and dayList from the '
+        'days', () {
+      final content = ProgramDraft.fromJson(programJson()).content(exercises);
       expect(content['daysPerWeek'], 2);
+      expect(content['dayList'], [
+        {'name': 'Day A', 'exercises': 2},
+        {'name': 'Day B', 'exercises': 2},
+      ]);
       expect(content['equipment'], ['dumbbell', 'bench']);
       expect(content['minutes'], {'min': isA<int>(), 'max': isA<int>()});
       expect(programProblems(content, exercises), isEmpty);
