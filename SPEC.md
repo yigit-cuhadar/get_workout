@@ -390,25 +390,22 @@ Where it stands (2026-11-16):
   by the owner (2026-11-15); merged as #108–#111, studio #113, Forge
   v0.21.1 (search-field border). The device check's picks K1–K3 are under
   Design. The approval page and its canvases were local HTML, not kept.
-- GetWorkout Studio's published link is behind `design/studio.html` on
-  main (#113 and later). Publish that file to
-  https://claude.ai/artifact/PuK5WUbeyhVHMxA6THNDC2 from the owner's
-  account (a session signed in elsewhere cannot open it).
-- In progress in its own session: sheets open on the root navigator so
-  they cover the tab bar as the studio draws them (Forge
-  `showForgeBottomSheet` + every app sheet's providers passed in); check
-  every sheet on the device after it merges.
+- GetWorkout Studio's published link matches `design/studio.html` on main
+  again (published 2026-11-16 from the owner's account).
+- Sheets open on the root navigator over the tab bar (#114, Forge v0.21.2);
+  checked on the simulator with a direct sheet (exercise filters) and a
+  Forge sheet (Profile › Weight).
+- Every ForgeMenu item in the app has an icon (checked 2026-11-16); menus
+  built later get theirs as they are built.
+- Content: getworkout-dev has the ready-made `dayList`; getworkout-prod has
+  no content at all yet (a dry-run on 2026-11-16 would create all 466
+  documents), so the first prod import belongs to Release.
 - Next, in order:
-  1. Icons on every ForgeMenu item in the rest of the app (owner's rule;
-     the training screens already have them).
-  2. The ready-made `dayList` import is on getworkout-dev only; prod waits
-     for the owner (`tool/import_content.dart --project getworkout-prod`,
-     `--dry-run` first).
-  3. Next group: İlerleme. Same flow: implementers per screen set, a check
+  1. Next group: İlerleme. Same flow: implementers per screen set, a check
      branch joining them, studio drawn from the answers, device check, every
      finding the studio does not draw asked on a drawn canvas, then the
      side-by-side approval.
-  4. Open question for the Kurulum group: the Generator preview menu has no
+  2. Open question for the Kurulum group: the Generator preview menu has no
      icon for "Keep when regenerating" (studio's Menu card shows a history
      icon; recommended). Draw and ask when that group starts.
 
