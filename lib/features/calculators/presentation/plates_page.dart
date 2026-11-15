@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_ui/forge_ui.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router.dart';
+import '../../../core/widgets/settings_group.dart';
 import '../../../core/widgets/plate_calculator.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/user_settings.dart';
@@ -24,8 +28,6 @@ class PlatesPage extends StatelessWidget {
       create: (units) {
         final settings = context.read<SettingsCubit>().state.settings;
         return PlatesCubit(
-          sl(),
-          sl(),
           sl(),
           weightUnit: units.weight,
           barKg: settings.barWeightKg,
@@ -60,7 +62,7 @@ class PlatesPage extends StatelessWidget {
                     target: format.weightUnit.toKg(readNumber(state.target)!),
                     barKg: state.barKg,
                   ),
-                const Divider(),
+                const SizedBox(height: Gap.md),
                 _Equipment(state, format),
               ],
             ),
@@ -113,7 +115,7 @@ class _Load extends StatelessWidget {
   }
 }
 
-/// The bar and plate editor. Changes are saved to the user's settings.
+/// The bar and plates the calculator uses, opening their settings page.
 class _Equipment extends StatelessWidget {
   const _Equipment(this.state, this.format);
 
@@ -123,179 +125,17 @@ class _Equipment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = format.l10n;
-    final settingsCubit = context.read<SettingsCubit>();
-    final cubit = context.read<PlatesCubit>();
-    UserSettings settings() => settingsCubit.state.settings;
-    final custom = context.select(
-      (SettingsCubit cubit) =>
-          cubit.state.settings.customBarWeightKg != null ||
-          cubit.state.settings.customPlates != null,
-    );
-
-    Future<void> editPlate(Plate? plate) async {
-      final plates = await showDialog<List<Plate>>(
-        context: context,
-        builder: (_) =>
-            _PlateDialog(cubit: cubit, format: format, plate: plate),
-      );
-      if (plates != null) {
-        await settingsCubit.update(settings().copyWith(customPlates: plates));
-      }
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(l10n.calcEquipment, style: Theme.of(context).textTheme.titleSmall),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(l10n.calcBar),
-          trailing: Text(format.weight(state.barKg)),
-          onTap: () async {
-            final barKg = await showDialog<double>(
-              context: context,
-              builder: (_) => _BarDialog(cubit: cubit, format: format),
-            );
-            if (barKg != null) {
-              await settingsCubit.update(
-                settings().copyWith(customBarWeightKg: barKg),
-              );
-            }
-          },
-        ),
-        for (final plate in state.plates)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(format.weight(plate.weightKg, maxDecimals: 2)),
-            trailing: Text(l10n.calcPairs(plate.pairs)),
-            onTap: () => editPlate(plate),
+    return SettingsGroup(
+      title: l10n.calcEquipment,
+      rows: [
+        ListRow(
+          title: l10n.settingsBarPlates,
+          detail: l10n.calcEquipmentSummary(
+            format.weight(state.barKg, maxDecimals: 2),
+            state.plates.length,
           ),
-        Wrap(
-          children: [
-            TextButton(
-              onPressed: state.plates.length < maxPlateSizes
-                  ? () => editPlate(null)
-                  : null,
-              child: Text(l10n.calcAddPlate),
-            ),
-            if (custom)
-              TextButton(
-                onPressed: () =>
-                    settingsCubit.update(settings().withStandardEquipment()),
-                child: Text(l10n.calcUseStandardSet),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _BarDialog extends StatefulWidget {
-  const _BarDialog({required this.cubit, required this.format});
-
-  final PlatesCubit cubit;
-  final CalculatorFormat format;
-
-  @override
-  State<_BarDialog> createState() => _BarDialogState();
-}
-
-class _BarDialogState extends State<_BarDialog> {
-  late String _text = widget.format.editableWeight(widget.cubit.state.barKg);
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = widget.format.l10n;
-    final check = widget.cubit.checkBar(_text);
-    return AlertDialog(
-      title: Text(l10n.calcBar),
-      content: NumberField(
-        label: l10n.calcBarWeight(widget.format.weightUnitLabel),
-        value: _text,
-        onChanged: (text) => setState(() => _text = text),
-        errorText: widget.format.errorFor(CalculatorInput.barWeight, check),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        TextButton(
-          onPressed: check is Calculated<double>
-              ? () => Navigator.pop(context, check.value)
-              : null,
-          child: Text(l10n.save),
-        ),
-      ],
-    );
-  }
-}
-
-/// Adds a plate, or edits or removes [plate]. Pops with the new plate list.
-class _PlateDialog extends StatefulWidget {
-  const _PlateDialog({required this.cubit, required this.format, this.plate});
-
-  final PlatesCubit cubit;
-  final CalculatorFormat format;
-  final Plate? plate;
-
-  @override
-  State<_PlateDialog> createState() => _PlateDialogState();
-}
-
-class _PlateDialogState extends State<_PlateDialog> {
-  late String _weight = switch (widget.plate) {
-    final plate? => widget.format.editableWeight(plate.weightKg),
-    null => '',
-  };
-  late String _pairs = '${widget.plate?.pairs ?? 1}';
-
-  @override
-  Widget build(BuildContext context) {
-    final format = widget.format;
-    final l10n = format.l10n;
-    final cubit = widget.cubit;
-    final plate = widget.plate;
-    final check = cubit.checkPlate(_weight, _pairs);
-    return AlertDialog(
-      title: Text(plate == null ? l10n.calcAddPlate : l10n.calcEditPlate),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          NumberField(
-            label: l10n.calcPlateWeight(format.weightUnitLabel),
-            value: _weight,
-            onChanged: (text) => setState(() => _weight = text),
-            errorText: format.errorFor(CalculatorInput.plateWeight, check),
-          ),
-          NumberField(
-            label: l10n.calcPlatePairs,
-            value: _pairs,
-            wholeNumber: true,
-            onChanged: (text) => setState(() => _pairs = text),
-            errorText: format.errorFor(CalculatorInput.platePairs, check),
-          ),
-        ],
-      ),
-      actions: [
-        if (plate != null)
-          TextButton(
-            onPressed: () => Navigator.pop(context, cubit.withoutPlate(plate)),
-            child: Text(l10n.calcRemovePlate),
-          ),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        TextButton(
-          onPressed: check is Calculated<Plate>
-              ? () => Navigator.pop(
-                  context,
-                  cubit.withPlate(check.value, replacing: plate),
-                )
-              : null,
-          child: Text(l10n.save),
+          end: ListRowEnd.chevron,
+          onTap: () => context.push(Routes.barPlates),
         ),
       ],
     );

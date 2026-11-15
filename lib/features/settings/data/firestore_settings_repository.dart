@@ -39,6 +39,12 @@ class FirestoreSettingsRepository implements SettingsRepository {
     WeekStart.sunday: 'sunday',
     WeekStart.saturday: 'saturday',
   };
+  static const _alertCodes = {
+    RestAlert.chimeVibrate: 'chimeVibrate',
+    RestAlert.chime: 'chime',
+    RestAlert.vibrate: 'vibrate',
+    RestAlert.off: 'off',
+  };
   static const _schemeCodes = {
     WarmupScheme.off: 'off',
     WarmupScheme.light: 'light',
@@ -98,6 +104,10 @@ class FirestoreSettingsRepository implements SettingsRepository {
           : _decode(_effortCodes, map['effortScale'], defaults.effortScale),
       weekStart: _decode(_weekStartCodes, map['weekStart'], defaults.weekStart),
       restTimer: _restTimer(map['restTimer']),
+      keepScreenOn: switch (map['keepScreenOn']) {
+        final bool on => on,
+        _ => defaults.keepScreenOn,
+      },
       warmups: _warmups(map['warmups'], map['autoWarmups']),
       seenTips: _tips(map['seenTips']),
       stepGoal: _stepGoal(map['stepGoal']),
@@ -134,7 +144,9 @@ class FirestoreSettingsRepository implements SettingsRepository {
       'enabled': settings.restTimer.enabled,
       'defaultS': settings.restTimer.defaultS,
       'notify': ?settings.restTimer.notify,
+      'alert': _alertCodes[settings.restTimer.alert],
     },
+    'keepScreenOn': settings.keepScreenOn,
     'warmups': {
       'scheme': _schemeCodes[settings.warmups.scheme],
       'custom': [
@@ -244,6 +256,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
             )
           : fallback.defaultS,
       notify: notify is bool ? notify : fallback.notify,
+      alert: _decode(_alertCodes, raw['alert'], fallback.alert),
     );
   }
 

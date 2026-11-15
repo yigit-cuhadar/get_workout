@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
+import 'package:forge_core/forge_core.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/widgets/settings_group.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../account/presentation/privacy_section.dart';
+import '../../notifications/presentation/reminder_settings_group.dart';
+import '../../settings/presentation/settings_cubit.dart';
 import '../../settings/presentation/settings_section.dart';
+import '../../steps/presentation/connected_apps_group.dart';
+import '../../steps/presentation/health_access_cubit.dart';
 import '../../subscription/presentation/premium_card.dart';
 import 'profile_cubit.dart';
 
-/// The Profile tab: the account row, the Premium card, the profile and
-/// calculators rows, then
-/// the settings, privacy and any [debugSection].
+/// The Profile tab: the account header, the Premium card, the profile and
+/// calculators, then every setting in groups and any [debugSection].
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key, this.debugSection});
 
@@ -22,47 +28,117 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final user = context.select((AuthCubit auth) => auth.user);
-    return BlocListener<ProfileCubit, ProfileState>(
-      listenWhen: (_, current) => current.writeRejected,
-      listener: (context, _) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.profileWriteRejected)));
-        context.read<ProfileCubit>().rejectionShown();
-      },
-      child: Scaffold(
-        appBar: AppBar(title: Text(l10n.tabProfile)),
-        body: ListView(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.account_circle_outlined),
-              title: Text(
-                user == null || user.isAnonymous
-                    ? l10n.profileAccountGuest
-                    : user.email ?? '',
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ProfileCubit, ProfileState>(
+          listenWhen: (_, current) => current.writeRejected,
+          listener: (context, _) {
+            showForgeSnackbar(
+              context,
+              message: l10n.profileWriteRejected,
+              error: true,
+            );
+            context.read<ProfileCubit>().rejectionShown();
+          },
+        ),
+        BlocListener<SettingsCubit, SettingsState>(
+          listenWhen: (previous, current) =>
+              current.failure != null && current.failure != previous.failure,
+          listener: (context, _) => showForgeSnackbar(
+            context,
+            message: l10n.settingsSaveFailed,
+            error: true,
+          ),
+        ),
+      ],
+      child: BlocProvider(
+        create: (_) => sl<HealthAccessCubit>(),
+        child: Scaffold(
+          appBar: ForgeAppBar(title: l10n.tabProfile),
+          body: ListView(
+            padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
+            children: [
+              SettingsColumn(
+                children: [
+                  const _Header(),
+                  const PremiumCard(),
+                  SettingsGroup(
+                    title: l10n.profileMore,
+                    rows: [
+                      ListRow(
+                        title: l10n.profileDetails,
+                        end: ListRowEnd.chevron,
+                        onTap: () => context.go(Routes.profileDetails),
+                      ),
+                      ListRow(
+                        title: l10n.profileCalculators,
+                        end: ListRowEnd.chevron,
+                        onTap: () => context.go(Routes.calculators),
+                      ),
+                    ],
+                  ),
+                  const WorkoutSettingsGroups(),
+                  const ReminderSettingsGroup(),
+                  const ConnectedAppsGroup(),
+                  const AppearanceGroup(),
+                  const PrivacySection(),
+                  ?debugSection,
+                ],
               ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go(Routes.account),
-            ),
-            const PremiumCard(),
-            ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: Text(l10n.profileDetails),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go(Routes.profileDetails),
-            ),
-            ListTile(
-              leading: const Icon(Icons.calculate_outlined),
-              title: Text(l10n.profileCalculators),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go(Routes.calculators),
-            ),
-            const SettingsSection(),
-            const PrivacySection(),
-            ?debugSection,
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+/// The account: a guest asks to create one; a named user shows the name
+/// over the email; without a name the email stands in for it.
+class _Header extends StatelessWidget {
+  const _Header();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final user = context.select((AuthCubit auth) => auth.user);
+    void open() => context.go(Routes.account);
+    if (user == null || user.isAnonymous) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.xs, Gap.xs, 0),
+        child: ProfileHeader.guest(
+          name: l10n.profileGuestName,
+          detail: l10n.profileGuestDetail,
+          onTap: open,
+        ),
+      );
+    }
+    final email = user.email ?? '';
+    final name = user.displayName?.trim() ?? '';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.xs, Gap.xs, 0),
+      child: ProfileHeader(
+        initials: initialsOf(name.isEmpty ? email : name),
+        name: name.isEmpty ? email : name,
+        detail: name.isEmpty ? null : email,
+        onTap: open,
+      ),
+    );
+  }
+}
+
+/// Up to two letters: the first of the first two words of [name], or of
+/// an email its first letter.
+@visibleForTesting
+String initialsOf(String name) {
+  if (name.contains('@')) {
+    return name.characters.take(1).toString().toUpperCase();
+  }
+  return name
+      .split(RegExp(r'\s+'))
+      .where((word) => word.isNotEmpty)
+      .take(2)
+      .map((word) => word.characters.first)
+      .join()
+      .toUpperCase();
 }

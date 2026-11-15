@@ -19,6 +19,7 @@ import '../features/account/presentation/delete_account_page.dart';
 import '../features/calendar/presentation/calendar_page.dart';
 import '../features/cardio/presentation/cardio_form_page.dart';
 import '../features/cardio/presentation/cardio_list_page.dart';
+import '../features/calculators/presentation/bar_plates_page.dart';
 import '../features/calculators/presentation/body_fat_page.dart';
 import '../features/calculators/presentation/body_indices_page.dart';
 import '../features/calculators/presentation/calculators_page.dart';
@@ -218,6 +219,10 @@ abstract final class Routes {
 
   /// The automatic warm-up sets, from the settings.
   static const warmupSettings = '$profile/warmups';
+
+  /// The user's bars and plates, from the settings and the Plates
+  /// calculator.
+  static const barPlates = '$profile/bar-plates';
 
   static const profileDetails = '$profile/details';
   static String profileQuestion(ProfileField field) =>
@@ -725,6 +730,10 @@ GoRouter buildRouter(
                     builder: (_, _) => const DeleteAccountPage(),
                   ),
                 ],
+              ),
+              GoRoute(
+                path: 'bar-plates',
+                builder: (_, _) => const BarPlatesPage(),
               ),
               GoRoute(
                 path: 'warmups',

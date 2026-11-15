@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_ui/forge_ui.dart';
 
 import '../../../app/legal_links.dart';
 import '../../../core/open_link.dart';
+import '../../../core/widgets/settings_group.dart';
 import '../../../l10n/app_localizations.dart';
 import 'consent_cubit.dart';
 
-/// The analytics consent switch and the privacy policy. Needs
-/// [ConsentCubit] above it.
+/// The Privacy group: the analytics consent switch and the privacy policy.
+/// Needs [ConsentCubit] above it.
 class PrivacySection extends StatelessWidget {
   const PrivacySection({super.key});
 
@@ -17,25 +19,27 @@ class PrivacySection extends StatelessWidget {
     return BlocConsumer<ConsentCubit, ConsentState>(
       listenWhen: (previous, current) =>
           current.failure != null && current.failure != previous.failure,
-      listener: (context, _) =>
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(l10n.privacySaveFailed))),
-      builder: (context, state) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ListTile(dense: true, title: Text(l10n.privacyHeader)),
-          SwitchListTile(
-            title: Text(l10n.privacyShareUsage),
-            subtitle: Text(l10n.privacyShareUsageInfo),
-            value: state.consent ?? false,
-            onChanged: state.loaded
-                ? context.read<ConsentCubit>().answer
-                : null,
+      listener: (context, _) => showForgeSnackbar(
+        context,
+        message: l10n.privacySaveFailed,
+        error: true,
+      ),
+      builder: (context, state) => SettingsGroup(
+        title: l10n.privacyHeader,
+        rows: [
+          ListRow(
+            title: l10n.privacyShareUsage,
+            detail: l10n.privacyShareUsageInfo,
+            trailing: ForgeSwitch(
+              value: state.consent ?? false,
+              onChanged: state.loaded
+                  ? context.read<ConsentCubit>().answer
+                  : null,
+            ),
           ),
-          ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined),
-            title: Text(l10n.privacyPolicy),
-            trailing: const Icon(Icons.open_in_new),
+          ListRow(
+            title: l10n.privacyPolicy,
+            end: ListRowEnd.external,
             onTap: () => _openPolicy(context),
           ),
         ],
@@ -45,8 +49,9 @@ class PrivacySection extends StatelessWidget {
 
   Future<void> _openPolicy(BuildContext context) async {
     final failed = AppLocalizations.of(context).linkOpenFailed;
-    final messenger = ScaffoldMessenger.of(context);
     if (await openLink(LegalLinks.privacy)) return;
-    messenger.showSnackBar(SnackBar(content: Text(failed)));
+    if (context.mounted) {
+      showForgeSnackbar(context, message: failed, error: true);
+    }
   }
 }

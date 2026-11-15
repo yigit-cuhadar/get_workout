@@ -57,6 +57,9 @@ import 'package:get_workout/features/calculators/presentation/calories_page.dart
 import 'package:get_workout/features/calculators/presentation/macros_page.dart';
 import 'package:get_workout/features/calculators/presentation/one_rep_max_page.dart';
 import 'package:get_workout/features/calculators/presentation/plates_page.dart';
+import 'package:get_workout/features/notifications/presentation/notifications_cubit.dart';
+import 'package:get_workout/features/steps/domain/steps.dart';
+import 'package:get_workout/features/steps/presentation/health_access_cubit.dart';
 import 'package:get_workout/features/profile/domain/profile_repository.dart';
 import 'package:get_workout/features/profile/domain/profile_usecases.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
@@ -116,6 +119,12 @@ import 'progress_stand_ins.dart';
 import 'today_stand_ins.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
+
+class _NotificationsStandIn extends MockCubit<NotificationsState>
+    implements NotificationsCubit {}
+
+class _HealthAccessStandIn extends MockCubit<StepsAccess?>
+    implements HealthAccessCubit {}
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
 
@@ -193,6 +202,7 @@ void main() {
   late AuthCubit auth;
   late SettingsCubit settings;
   late MockProfileRepository profiles;
+  late NotificationsCubit notifications;
   late ProfileCubit profile;
   late ExerciseCatalogueCubit catalogue;
   late FavoritesCubit favorites;
@@ -511,6 +521,15 @@ void main() {
     paywallTelemetry = MockTelemetry();
     when(() => paywallTelemetry.logEvent(any(), any()))
         .thenAnswer((_) async {});
+    notifications = _NotificationsStandIn();
+    when(() => notifications.state)
+        .thenReturn(const NotificationsState(allowed: true));
+    sl.registerFactory<HealthAccessCubit>(() {
+      final health = _HealthAccessStandIn();
+      when(() => health.state).thenReturn(StepsAccess.granted);
+      when(health.load).thenAnswer((_) async {});
+      return health;
+    });
     sl.registerFactory(
       () => PremiumPaywallCubit(
         getOffering: GetOffering(store),
@@ -550,6 +569,7 @@ void main() {
           answeredConsent(),
         programList(),
         noWorkout(),
+        BlocProvider<NotificationsCubit>.value(value: notifications),
         BlocProvider.value(value: profile),
         BlocProvider.value(value: catalogue),
         BlocProvider.value(value: favorites),
@@ -627,7 +647,7 @@ void main() {
 
   Future<void> openAccount(WidgetTester tester) async {
     await tapTab(tester, 'Profile');
-    await tester.tap(find.text('Create account or sign in'));
+    await tester.tap(find.text('Create an account to keep your workouts'));
     await tester.pumpAndSettle();
   }
 
@@ -748,7 +768,7 @@ void main() {
     users.add(member);
     await tester.pumpAndSettle();
 
-    expect(find.text('Create account or sign in'), findsNothing);
+    expect(find.text('Guest'), findsNothing);
     expect(find.text('a@b.co'), findsOneWidget);
   });
 
@@ -2051,7 +2071,12 @@ void main() {
 
     testWidgets('a free user starts the yearly trial', (tester) async {
       await openProfileAsFreeGuest(tester);
-      expect(find.text('You are on Free'), findsOneWidget);
+      expect(
+        find.text(
+          'Program generator, 19 more programs and charts beyond 12 weeks.',
+        ),
+        findsOneWidget,
+      );
 
       await tapVisible(tester, 'Get Premium');
       expect(find.byType(PaywallPage), findsOneWidget);

@@ -155,12 +155,23 @@ class Plate extends Equatable {
   List<Object?> get props => [weightKg, pairs];
 }
 
+/// How the end of a rest is signalled.
+enum RestAlert {
+  chimeVibrate,
+  chime,
+  vibrate,
+  off;
+
+  bool get vibrates => this == chimeVibrate || this == vibrate;
+}
+
 /// The rest timer (`settings.restTimer`).
 class RestTimerSettings extends Equatable {
   const RestTimerSettings({
     this.enabled = true,
     this.defaultS = 90,
     this.notify,
+    this.alert = RestAlert.chimeVibrate,
   });
 
   /// Whether ticking a set starts a rest.
@@ -173,21 +184,29 @@ class RestTimerSettings extends Equatable {
   /// the background; null until the user has been asked.
   final bool? notify;
 
+  /// The sound and vibration when a rest is over.
+  final RestAlert alert;
+
   static const minS = 15;
   static const maxS = 600;
 
   /// What the settings page offers for [defaultS].
   static const choicesS = [30, 45, 60, 90, 120, 150, 180, 240, 300];
 
-  RestTimerSettings copyWith({bool? enabled, int? defaultS, bool? notify}) =>
-      RestTimerSettings(
-        enabled: enabled ?? this.enabled,
-        defaultS: defaultS ?? this.defaultS,
-        notify: notify ?? this.notify,
-      );
+  RestTimerSettings copyWith({
+    bool? enabled,
+    int? defaultS,
+    bool? notify,
+    RestAlert? alert,
+  }) => RestTimerSettings(
+    enabled: enabled ?? this.enabled,
+    defaultS: defaultS ?? this.defaultS,
+    notify: notify ?? this.notify,
+    alert: alert ?? this.alert,
+  );
 
   @override
-  List<Object?> get props => [enabled, defaultS, notify];
+  List<Object?> get props => [enabled, defaultS, notify, alert];
 }
 
 /// One automatic warm-up set: [percent] of the first working set's weight
@@ -399,6 +418,7 @@ class UserSettings extends Equatable {
     this.effortScale = EffortScale.byFeel,
     this.weekStart = WeekStart.automatic,
     this.restTimer = const RestTimerSettings(),
+    this.keepScreenOn = true,
     this.warmups = const WarmupSettings(),
     this.seenTips = const {},
     this.stepGoal = StepGoal.standard,
@@ -428,6 +448,9 @@ class UserSettings extends Equatable {
   final EffortScale effortScale;
   final WeekStart weekStart;
   final RestTimerSettings restTimer;
+
+  /// Whether the screen stays awake while a workout is in progress.
+  final bool keepScreenOn;
 
   /// Which warm-up sets exercises logged with a weight and reps start with
   /// in a workout in progress, and which exercises; see `warmedUp`.
@@ -521,6 +544,7 @@ class UserSettings extends Equatable {
     EffortScale? effortScale,
     WeekStart? weekStart,
     RestTimerSettings? restTimer,
+    bool? keepScreenOn,
     WarmupSettings? warmups,
     Set<Tip>? seenTips,
     int? stepGoal,
@@ -538,6 +562,7 @@ class UserSettings extends Equatable {
     effortScale: effortScale ?? this.effortScale,
     weekStart: weekStart ?? this.weekStart,
     restTimer: restTimer ?? this.restTimer,
+    keepScreenOn: keepScreenOn ?? this.keepScreenOn,
     warmups: warmups ?? this.warmups,
     seenTips: seenTips ?? this.seenTips,
     stepGoal: stepGoal ?? this.stepGoal,
@@ -551,6 +576,14 @@ class UserSettings extends Equatable {
         customTrackedMeasurements ?? this.customTrackedMeasurements,
   );
 
+  /// With [bar] (the EZ bar, the trap bar, or else the barbell) weighing
+  /// [kg].
+  UserSettings withBarWeight(Equipment bar, double kg) => switch (bar) {
+    Equipment.ezBar => copyWith(customEzBarWeightKg: kg),
+    Equipment.trapBar => copyWith(customTrapBarWeightKg: kg),
+    _ => copyWith(customBarWeightKg: kg),
+  };
+
   /// Drops the custom bars and plates, back to the standard set of the unit.
   UserSettings withStandardEquipment() => UserSettings(
     weightUnit: weightUnit,
@@ -559,6 +592,7 @@ class UserSettings extends Equatable {
     effortScale: effortScale,
     weekStart: weekStart,
     restTimer: restTimer,
+    keepScreenOn: keepScreenOn,
     warmups: warmups,
     seenTips: seenTips,
     stepGoal: stepGoal,
@@ -575,6 +609,7 @@ class UserSettings extends Equatable {
     effortScale,
     weekStart,
     restTimer,
+    keepScreenOn,
     warmups,
     seenTips,
     stepGoal,

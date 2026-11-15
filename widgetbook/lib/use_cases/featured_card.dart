@@ -173,6 +173,33 @@ Widget featuredPrompt(BuildContext context) => _page(
   ),
 );
 
+@widgetbook.UseCase(name: 'Prompt · state', type: FeaturedCard)
+Widget featuredPromptState(BuildContext context) {
+  final tone = context.knobs.object.dropdown(
+    label: 'Title tone',
+    options: FeaturedTitleTone.values,
+    labelBuilder: (tone) => tone.name,
+  );
+  return _page(
+    FeaturedCard(
+      form: FeaturedCardForm.prompt,
+      eyebrow: 'GetWorkout Premium',
+      title: switch (tone) {
+        FeaturedTitleTone.ink => 'Premium, renews Dec 13',
+        FeaturedTitleTone.muted => 'Checking…',
+        FeaturedTitleTone.danger =>
+          'Payment problem. Update your payment method',
+      },
+      titleTone: tone,
+      note: 'Program generator, 19 more programs and charts beyond 12 weeks.',
+      moreActions: [
+        if (tone != FeaturedTitleTone.muted)
+          FeaturedAction('Manage subscription', () {}),
+      ],
+    ),
+  );
+}
+
 @widgetbook.UseCase(name: 'Band · day rows and menu', type: FeaturedCard)
 Widget featuredBandRows(BuildContext context) => _page(
   FeaturedCard(

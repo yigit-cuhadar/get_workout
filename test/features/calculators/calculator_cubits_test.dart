@@ -11,6 +11,7 @@ import 'package:get_workout/features/calculators/presentation/body_indices_cubit
 import 'package:get_workout/features/calculators/presentation/calories_cubit.dart';
 import 'package:get_workout/features/calculators/presentation/macros_cubit.dart';
 import 'package:get_workout/features/calculators/presentation/one_rep_max_cubit.dart';
+import 'package:get_workout/features/calculators/presentation/bar_plates_cubit.dart';
 import 'package:get_workout/features/calculators/presentation/plates_cubit.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 
@@ -209,8 +210,6 @@ void main() {
   group('PlatesCubit', () {
     PlatesCubit build(WeightUnit unit, {List<Plate>? plates}) => PlatesCubit(
       const LoadPlates(),
-      const CheckBarWeight(),
-      const CheckPlate(),
       weightUnit: unit,
       barKg: 20,
       plates: plates ?? UserSettings.defaultPlates(WeightUnit.kg),
@@ -234,6 +233,16 @@ void main() {
       ]);
       expect(valueOf(cubit.state.result).totalKg, 55);
     });
+  });
+
+  group('BarPlatesCubit', () {
+    BarPlatesCubit build(WeightUnit unit, {List<Plate>? plates}) =>
+        BarPlatesCubit(
+          const CheckBarWeight(),
+          const CheckPlate(),
+          weightUnit: unit,
+          plates: plates ?? UserSettings.defaultPlates(WeightUnit.kg),
+        );
 
     test('checks for the editor convert from the user unit', () {
       final cubit = build(WeightUnit.lb);

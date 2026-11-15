@@ -284,4 +284,61 @@ void main() {
     expect(find.byType(SkeletonBar), findsNWidgets(2));
     expect(find.byType(ForgeButton), findsNothing);
   });
+
+  testWidgets('a prompt tones its title and stacks only secondary buttons '
+      'without a main action', (tester) async {
+    var managed = 0;
+    await pumpComponent(
+      tester,
+      FeaturedCard(
+        form: FeaturedCardForm.prompt,
+        eyebrow: 'GetWorkout Premium',
+        title: 'Payment problem. Update your payment method',
+        titleTone: FeaturedTitleTone.danger,
+        note: 'Program generator, 19 more programs and charts.',
+        moreActions: [FeaturedAction('Manage subscription', () => managed++)],
+      ),
+    );
+    final colors = ForgeStyle.of(tester.element(find.byType(FeaturedCard)))
+        .colors;
+
+    expect(
+      tester
+          .widget<Text>(
+            find.text('Payment problem. Update your payment method'),
+          )
+          .style!
+          .color,
+      colors.danger,
+    );
+    expect(find.byType(ForgeButton), findsOneWidget);
+    expect(
+      variantOf(tester, 'Manage subscription'),
+      ForgeButtonVariant.secondary,
+    );
+    await tester.tap(find.text('Manage subscription'));
+    expect(managed, 1);
+  });
+
+  testWidgets('a muted prompt title shows a state not known yet', (
+    tester,
+  ) async {
+    await pumpComponent(
+      tester,
+      const FeaturedCard(
+        form: FeaturedCardForm.prompt,
+        eyebrow: 'GetWorkout Premium',
+        title: 'Checking…',
+        titleTone: FeaturedTitleTone.muted,
+      ),
+    );
+    final colors = ForgeStyle.of(tester.element(find.byType(FeaturedCard)))
+        .colors;
+
+    expect(
+      tester.widget<Text>(find.text('Checking…')).style!.color,
+      colors.inkMuted,
+    );
+    expect(find.byType(ForgeButton), findsNothing);
+  });
 }

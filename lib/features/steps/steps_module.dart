@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'data/file_steps_prompt.dart';
 import 'domain/steps_prompt.dart';
 import 'domain/steps_usecases.dart';
+import 'presentation/health_access_cubit.dart';
 import 'presentation/steps_cubit.dart';
 
 /// The platform health store, except in debug and profile builds on a
@@ -39,6 +40,7 @@ class StepsModule implements FeatureModule {
       ..registerFactory(() => AllowStepsAccess(sl(), sl()))
       ..registerFactory(() => GetStepsHistory(sl()))
       ..registerFactory(() => GetTodaySteps(sl()))
+      ..registerFactory(() => HealthAccessCubit(sl(), sl()))
       ..registerFactory(
         () => StepsCubit(
           getAccess: sl(),
