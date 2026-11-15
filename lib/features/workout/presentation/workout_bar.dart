@@ -38,7 +38,11 @@ class RunningWorkoutBar extends StatelessWidget {
             cubit.restoredShown();
           }
           if (state.localUnreadable) {
-            showForgeSnackbar(context, message: l10n.workoutLocalUnreadable);
+            showForgeSnackbar(
+              context,
+              message: l10n.workoutLocalUnreadable,
+              error: true,
+            );
             cubit.localUnreadableShown();
           }
         },

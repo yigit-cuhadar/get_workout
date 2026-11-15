@@ -85,6 +85,9 @@ void main() {
     final typed = <String>[];
     var added = 0;
     var removed = 0;
+    var toggled = 0;
+    var options = 0;
+    var effort = 0;
     await pumpComponent(
       tester,
       SetTable.edit(
@@ -92,6 +95,11 @@ void main() {
         rows: [
           SetTableEditRow(
             label: '1',
+            semanticLabel: 'Set 1',
+            done: true,
+            onToggle: () => toggled++,
+            onOptions: (_) => options++,
+            onEffort: () => effort++,
             effort: 'Moderate',
             inputs: [
               SetTableInput(
@@ -129,6 +137,11 @@ void main() {
 
     await tester.tap(find.text('Add set'));
     expect(added, 1);
+
+    await tester.tap(find.text('1'));
+    await tester.longPress(find.text('1'));
+    await tester.tap(find.text('Moderate'));
+    expect((toggled, options, effort), (1, 1, 1));
 
     await tester.tap(find.bySemanticsLabel('Exercise options'));
     await tester.pumpAndSettle();

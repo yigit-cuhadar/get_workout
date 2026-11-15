@@ -1,6 +1,7 @@
 import 'package:forge_core/forge_core.dart';
 
 import '../../../core/one_rep_max.dart';
+import '../../exercises/domain/muscle_volume.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../programs/domain/program.dart';
 import 'set_logging.dart';
@@ -106,23 +107,51 @@ class ExerciseStats extends Equatable {
   List<Object?> get props => [records, last, history];
 }
 
-/// A record [workoutId] set, beating an earlier one.
-class NewRecord extends Equatable {
-  const NewRecord({
+/// An exercise that beat its records in a workout: its heaviest working
+/// [set] (the most reps among equals), the record [kinds] it beat, and the
+/// [gain] of the first of them in [gainOrder].
+class SummaryRecord extends Equatable {
+  const SummaryRecord({
     required this.exerciseId,
     required this.name,
-    required this.kind,
-    required this.value,
+    required this.loggingType,
+    required this.set,
+    required this.kinds,
+    required this.gain,
   });
 
   final String exerciseId;
   final String name;
-  final RecordKind kind;
-  final double value;
+  final LoggingType loggingType;
+  final WorkoutSet set;
+  final List<RecordKind> kinds;
+  final ({RecordKind kind, double amount}) gain;
+
+  /// Which beaten record's gain is shown: the heaviest weight first, then
+  /// reps and time for exercises without one.
+  static const gainOrder = [
+    RecordKind.heaviestWeight,
+    RecordKind.mostReps,
+    RecordKind.longestDuration,
+    RecordKind.bestE1rm,
+    RecordKind.bestSetVolume,
+  ];
 
   @override
-  List<Object?> get props => [exerciseId, name, kind, value];
+  List<Object?> get props => [exerciseId, name, loggingType, set, kinds, gain];
 }
+
+/// With no record beaten, the exercise whose heaviest set came closest to
+/// its heaviest weight, [kg] short of it.
+typedef ClosestRecord = ({String name, double kg});
+
+/// What a workout of the same program day amounted to, to compare with.
+typedef WorkoutTotals = ({
+  DateTime startedAt,
+  Duration duration,
+  double volumeKg,
+  int setCount,
+});
 
 /// What a finished workout amounted to.
 class WorkoutSummary extends Equatable {
@@ -132,7 +161,12 @@ class WorkoutSummary extends Equatable {
     required this.setCount,
     required this.exerciseCount,
     this.records = const [],
+    this.closest,
+    this.firstWorkout = false,
     this.programUnknown = false,
+    this.programWeek,
+    this.previous,
+    this.muscleSets = const {},
   });
 
   final Duration duration;
@@ -141,11 +175,44 @@ class WorkoutSummary extends Equatable {
   /// Done working sets; warm-ups do not count.
   final int setCount;
   final int exerciseCount;
-  final List<NewRecord> records;
+  final List<SummaryRecord> records;
+
+  /// With no record: how close the best came; null when nothing compares.
+  final ClosestRecord? closest;
+
+  /// None of its exercises had been done before: records start now.
+  final bool firstWorkout;
 
   /// The workout came from a program whose state was not known when it
   /// finished, so the program was not moved on.
   final bool programUnknown;
+
+  /// The active program's week it was done in.
+  final int? programWeek;
+
+  /// The program day's previous workout; null for a free workout or the
+  /// day's first.
+  final WorkoutTotals? previous;
+
+  /// Working sets per muscle, as weekly volume counts them.
+  final Map<Muscle, double> muscleSets;
+
+  WorkoutSummary copyWith({
+    int? Function()? programWeek,
+    WorkoutTotals? Function()? previous,
+  }) => WorkoutSummary(
+    duration: duration,
+    volumeKg: volumeKg,
+    setCount: setCount,
+    exerciseCount: exerciseCount,
+    records: records,
+    closest: closest,
+    firstWorkout: firstWorkout,
+    programUnknown: programUnknown,
+    programWeek: programWeek != null ? programWeek() : this.programWeek,
+    previous: previous != null ? previous() : this.previous,
+    muscleSets: muscleSets,
+  );
 
   @override
   List<Object?> get props => [
@@ -154,7 +221,12 @@ class WorkoutSummary extends Equatable {
     setCount,
     exerciseCount,
     records,
+    closest,
+    firstWorkout,
     programUnknown,
+    programWeek,
+    previous,
+    muscleSets,
   ];
 }
 
@@ -289,25 +361,101 @@ List<RecordKind> beatenRecords(
       kind,
 ];
 
-/// The summary of finished [workout] with the [records] it set.
+/// The totals of finished [workout].
+WorkoutTotals workoutTotals(Workout workout) => (
+  startedAt: workout.startedAt,
+  duration: (workout.finishedAt ?? workout.startedAt).difference(
+    workout.startedAt,
+  ),
+  volumeKg: workout.exercises.fold(
+    0,
+    (sum, e) => sum + sessionVolume(e.sets, e.loggingType),
+  ),
+  setCount: workout.exercises.fold(
+    0,
+    (count, e) => count + workingSets(e.sets).length,
+  ),
+);
+
+/// The summary of finished [workout] with the records it beat, judged
+/// against each exercise's stats [before] it (an id missing: unreadable).
+/// See [WorkoutSummary.closest] and [WorkoutSummary.firstWorkout].
 WorkoutSummary summarizeWorkout(
-  Workout workout,
-  List<NewRecord> records, {
+  Workout workout, {
+  Map<String, ExerciseStats?> before = const {},
+  Map<String, ExerciseStats> after = const {},
   bool programUnknown = false,
 }) {
-  final finished = workout.finishedAt ?? workout.startedAt;
+  final totals = workoutTotals(workout);
+  final records = <SummaryRecord>[];
+  ClosestRecord? closest;
+  final muscles = <Muscle, double>{};
+  for (final exercise in workout.exercises) {
+    addMuscleSets(
+      muscles,
+      muscleSets(
+        main: exercise.mainMuscles,
+        secondary: exercise.secondaryMuscles,
+        sets: workingSets(exercise.sets).length,
+      ),
+    );
+  }
+  for (final id in workout.exerciseIds) {
+    final entries = [
+      for (final e in workout.exercises)
+        if (e.exerciseId == id) e,
+    ];
+    final done = workingSets([for (final e in entries) ...e.sets]);
+    if (done.isEmpty) continue;
+    final type = entries.first.loggingType;
+    final previous = before[id]?.records;
+    final kinds = beatenRecords(before[id], after[id], workout);
+    final heaviest = done.reduce(
+      (a, b) =>
+          (b.weightKg ?? 0) > (a.weightKg ?? 0) ||
+              (b.weightKg ?? 0) == (a.weightKg ?? 0) &&
+                  (b.reps ?? 0) > (a.reps ?? 0)
+          ? b
+          : a,
+    );
+    if (kinds.isNotEmpty) {
+      final kind = SummaryRecord.gainOrder.firstWhere(kinds.contains);
+      records.add(
+        SummaryRecord(
+          exerciseId: id,
+          name: entries.first.name,
+          loggingType: type,
+          set: heaviest,
+          kinds: kinds,
+          gain: (
+            kind: kind,
+            amount: after[id]!.records[kind]!.value - previous![kind]!.value,
+          ),
+        ),
+      );
+      continue;
+    }
+    final best = previous?[RecordKind.heaviestWeight]?.value;
+    final kg = heaviest.weightKg;
+    if (best != null && kg != null && kg < best) {
+      if (closest == null || best - kg < closest.kg) {
+        closest = (name: entries.first.name, kg: best - kg);
+      }
+    }
+  }
   return WorkoutSummary(
-    duration: finished.difference(workout.startedAt),
-    volumeKg: workout.exercises.fold(
-      0,
-      (sum, e) => sum + sessionVolume(e.sets, e.loggingType),
-    ),
-    setCount: workout.exercises.fold(
-      0,
-      (count, e) => count + workingSets(e.sets).length,
-    ),
+    duration: totals.duration,
+    volumeKg: totals.volumeKg,
+    setCount: totals.setCount,
     exerciseCount: workout.exerciseIds.length,
     records: records,
+    closest: records.isEmpty ? closest : null,
+    firstWorkout:
+        before.isNotEmpty &&
+        workout.exerciseIds.every(
+          (id) => before.containsKey(id) && before[id] == null,
+        ),
     programUnknown: programUnknown,
+    muscleSets: muscles,
   );
 }

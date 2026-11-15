@@ -128,6 +128,135 @@ void main() {
     });
   });
 
+  group('changedProgramDay', () {
+    final day = Program(
+      id: 'p1',
+      name: 'Legs',
+      days: [
+        ProgramDay(
+          name: 'A',
+          items: [
+            item('squat', sets: 2, repMin: 5, repMax: 5, targetKg: 100),
+            item('lunge'),
+          ],
+        ),
+      ],
+    );
+    Workout done(List<WorkoutExercise> exercises) =>
+        workout('w1', exercises, programId: 'p1', dayIndex: 0);
+    final squat = exercise('squat', [lift(105, 5), lift(105, 5)]);
+    final lunge = exercise('lunge', [lift(20, 10), lift(20, 10), lift(20, 9)]);
+
+    test('reps and weights do not count', () {
+      expect(changedProgramDay(done([squat, lunge]), day, catalogue), isNull);
+    });
+
+    test('a set count, order or rest change gives the new items', () {
+      final more = done([
+        squat.copyWith(sets: [...squat.sets, lift(105, 5, done: false)]),
+        lunge,
+      ]);
+      final items = changedProgramDay(more, day, catalogue)!;
+      expect(items.first.sets, 3);
+      expect(items.first.targetKg, 100);
+      expect(
+        changedProgramDay(
+          done([lunge, squat]),
+          day,
+          catalogue,
+        )!.map((i) => i.exerciseId),
+        ['lunge', 'squat'],
+      );
+      expect(
+        changedProgramDay(
+          done([squat.copyWith(restS: () => 180), lunge]),
+          day,
+          catalogue,
+        )!.first.restS,
+        180,
+      );
+    });
+
+    test('an added exercise gets an item from its sets', () {
+      final plank = exercise('plank', [
+        const WorkoutSet(durationS: 40, done: true),
+      ], type: LoggingType.duration);
+      final items = changedProgramDay(
+        done([squat, lunge, plank]),
+        day,
+        catalogue,
+      )!;
+      expect(items.last.exerciseId, 'plank');
+      expect(items.last.durationS, 40);
+      expect(items.last.restS, 45);
+    });
+
+    test('another program or a free workout is never changed', () {
+      expect(changedProgramDay(workout('w', [lunge]), day, catalogue), isNull);
+    });
+  });
+
+  group('swapKeepingLogged', () {
+    final lunge = catalogue['lunge']!;
+
+    test('is a plain swap while nothing is done', () {
+      final list = [
+        exercise('squat', [lift(100, 5, done: false)]),
+      ];
+      final result = swapKeepingLogged(list, 0, lunge, 'en');
+      expect(result.swapped, 0);
+      expect(result.exercises.single.exerciseId, 'lunge');
+      expect(result.exercises.single.sets, list.single.sets);
+    });
+
+    test('keeps the done sets and moves the others right after', () {
+      final list = [
+        exercise('squat', [
+          lift(100, 5),
+          lift(100, 5),
+          lift(100, 5, done: false),
+        ]).copyWith(note: () => 'Belt'),
+        exercise('plank', []),
+      ];
+      final result = swapKeepingLogged(list, 0, lunge, 'en');
+      expect(result.swapped, 1);
+      expect(result.exercises.map((e) => e.exerciseId), [
+        'squat',
+        'lunge',
+        'plank',
+      ]);
+      expect(result.exercises[0].sets, [lift(100, 5), lift(100, 5)]);
+      expect(result.exercises[0].note, 'Belt');
+      expect(result.exercises[1].sets, [lift(100, 5, done: false)]);
+      expect(result.exercises[1].note, isNull);
+    });
+
+    test('gives the replacement one empty set when all are done', () {
+      final list = [
+        exercise('squat', [lift(100, 5)]),
+      ];
+      final result = swapKeepingLogged(list, 0, lunge, 'en');
+      expect(result.exercises[1].sets, const [WorkoutSet()]);
+    });
+
+    test('in a group the replacement takes its place, the done one leaves', () {
+      final list = [
+        exercise('plank', [], group: 'A'),
+        exercise('squat', [
+          lift(100, 5),
+          lift(100, 5, done: false),
+        ], group: 'A'),
+        exercise('dip', [], group: 'A'),
+      ];
+      final result = swapKeepingLogged(list, 1, lunge, 'en');
+      expect(result.swapped, 2);
+      expect(
+        [for (final e in result.exercises) (e.exerciseId, e.group)],
+        [('squat', null), ('plank', 'A'), ('lunge', 'A'), ('dip', 'A')],
+      );
+    });
+  });
+
   test('a new warm-up goes after the warm-ups, other sets at the end', () {
     final warmup = lift(40, 10, type: SetType.warmup);
     final working = exercise('squat', [lift(100, 5), lift(100, 5)]);

@@ -439,23 +439,6 @@ extension WorkoutText on AppLocalizations {
     return workoutMinutes((duration.inSeconds / 60).round());
   }
 
-  /// What [record] is and its value in [unit], without its exercise, e.g.
-  /// `Heaviest weight 80 kg`.
-  String recordText(NewRecord record, WeightUnit unit) {
-    final value = record.value;
-    return switch (record.kind) {
-      RecordKind.heaviestWeight => recordHeaviestWeight(
-        liftedWeightText(value, unit),
-      ),
-      RecordKind.bestE1rm => recordBestE1rm(estimatedWeightText(value, unit)),
-      RecordKind.bestSetVolume => recordBestSetVolume(weightText(value, unit)),
-      RecordKind.mostReps => recordMostReps(value.round()),
-      RecordKind.longestDuration => recordLongestDuration(
-        elapsedText(Duration(seconds: value.round())),
-      ),
-    };
-  }
-
   /// The header of the set table of an exercise of [type]: set, the values
   /// [setValues] gives, then effort.
   List<String> setColumns(LoggingType type, WeightUnit unit) => [

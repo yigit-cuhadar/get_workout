@@ -21,6 +21,7 @@ import 'domain/rest_chime.dart';
 import 'domain/rest_notifications.dart';
 import 'domain/rest_usecases.dart';
 import 'domain/workout_lock_screen.dart';
+import 'domain/workout_editing.dart';
 import 'domain/workout_repository.dart';
 import 'domain/workout_usecases.dart';
 import 'presentation/active_workout_cubit.dart';
@@ -88,6 +89,7 @@ class WorkoutModule implements FeatureModule {
       ..registerFactory(() => WatchAllExerciseStats(sl()))
       ..registerFactory(() => FinishWorkout(sl()))
       ..registerFactory(() => SaveWorkoutAsProgram(sl()))
+      ..registerFactory(() => UpdateProgramDay(sl()))
       // One workout in progress for the whole app.
       ..registerLazySingleton(
         () => ActiveWorkoutCubit(
@@ -100,6 +102,7 @@ class WorkoutModule implements FeatureModule {
           watchStats: sl(),
           finishWorkout: sl(),
           saveAsProgram: sl(),
+          updateProgramDay: sl(),
           programs: sl(),
           catalogue: sl(),
           watchSettings: sl(),
@@ -160,10 +163,10 @@ class WorkoutModule implements FeatureModule {
         ),
       )
       // A stored workout's id, or none and the name of a new past workout.
-      ..registerFactoryParam<WorkoutEditCubit, String?, String>(
-        (id, name) => WorkoutEditCubit(
+      ..registerFactoryParam<WorkoutEditCubit, String?, PastWorkoutPlan>(
+        (id, plan) => WorkoutEditCubit(
           id: id,
-          name: name,
+          plan: plan,
           getCurrentUser: sl(),
           watchAuthUser: sl(),
           watchWorkout: sl(),

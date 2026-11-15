@@ -55,6 +55,8 @@ void main() {
   setUp(() {
     repository = MockWorkoutRepository();
     finish = FinishWorkout(repository, clock: () => end);
+    when(() => repository.programWorkouts(any(), any()))
+        .thenAnswer((_) async => const Ok([]));
     when(
       () => repository.saveWorkout(
         any(),
@@ -108,11 +110,16 @@ void main() {
       );
       // Bench came from the cache, row not at all.
       expect(finished.staleStats, {'bench', 'row'});
-      expect(finished.summary.records.map((r) => r.kind), [
+      expect(finished.summary.records.single.exerciseId, 'squat');
+      expect(finished.summary.records.single.kinds, [
         RecordKind.heaviestWeight,
         RecordKind.bestE1rm,
         RecordKind.bestSetVolume,
       ]);
+      expect(
+        finished.summary.records.single.gain.kind,
+        RecordKind.heaviestWeight,
+      );
       expect(finished.summary.setCount, 3);
       expect(finished.summary.programUnknown, isFalse);
     });
