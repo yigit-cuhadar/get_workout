@@ -22,6 +22,28 @@
     "min": 37,
     "max": 44
   },
+  "dayList": [
+    {
+      "name": "Chest and Back A",
+      "exercises": 6
+    },
+    {
+      "name": "Legs: Quads",
+      "exercises": 6
+    },
+    {
+      "name": "Shoulders and Arms",
+      "exercises": 7
+    },
+    {
+      "name": "Back and Chest B",
+      "exercises": 6
+    },
+    {
+      "name": "Legs: Hamstrings and Glutes",
+      "exercises": 6
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Advanced Hypertrophy 5-Day",

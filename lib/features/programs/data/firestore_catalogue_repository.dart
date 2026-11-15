@@ -103,6 +103,7 @@ class FirestoreCatalogueRepository implements CatalogueRepository {
       lengthWeeks: weeks is int ? weeks : null,
       equipment: _equipment(map['equipment']),
       minutes: _minutes(map['minutes']),
+      dayList: _dayList(map['dayList']),
       equipmentProfile: profile,
       order: order,
       l10n: l10n,
@@ -117,6 +118,18 @@ class FirestoreCatalogueRepository implements CatalogueRepository {
       for (final code in value) ?Equipment.values.byCode(code),
     ];
     return equipment.length == value.length ? equipment : null;
+  }
+
+  /// Null unless every day has a name and a whole exercise count.
+  static List<CatalogueDay>? _dayList(Object? value) {
+    if (value is! List || value.isEmpty) return null;
+    final days = [
+      for (final day in value)
+        if (day case {'name': final String name, 'exercises': final count}
+            when _whole(count) != null)
+          CatalogueDay(name: name, exercises: _whole(count)!),
+    ];
+    return days.length == value.length ? days : null;
   }
 
   /// Null unless whole minutes with 1 ≤ min ≤ max.

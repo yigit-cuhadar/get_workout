@@ -22,6 +22,24 @@
     "min": 38,
     "max": 61
   },
+  "dayList": [
+    {
+      "name": "Upper Heavy",
+      "exercises": 6
+    },
+    {
+      "name": "Lower Heavy",
+      "exercises": 5
+    },
+    {
+      "name": "Upper Volume",
+      "exercises": 7
+    },
+    {
+      "name": "Lower Volume",
+      "exercises": 6
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Upper/Lower Strength 4-Day",

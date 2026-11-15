@@ -17,6 +17,24 @@
     "min": 38,
     "max": 41
   },
+  "dayList": [
+    {
+      "name": "Pull and Skills",
+      "exercises": 6
+    },
+    {
+      "name": "Push and Skills",
+      "exercises": 6
+    },
+    {
+      "name": "Legs and Core",
+      "exercises": 7
+    },
+    {
+      "name": "Full Body Strength",
+      "exercises": 6
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Advanced Calisthenics 4-Day",

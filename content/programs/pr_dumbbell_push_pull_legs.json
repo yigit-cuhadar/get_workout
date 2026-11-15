@@ -16,6 +16,20 @@
     "min": 43,
     "max": 45
   },
+  "dayList": [
+    {
+      "name": "Push",
+      "exercises": 7
+    },
+    {
+      "name": "Pull",
+      "exercises": 8
+    },
+    {
+      "name": "Legs",
+      "exercises": 6
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Dumbbell Push Pull Legs 3-Day",

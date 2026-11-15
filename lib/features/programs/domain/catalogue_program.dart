@@ -14,6 +14,18 @@ class CatalogueText extends Equatable {
   List<Object?> get props => [name, summary];
 }
 
+/// One day of a ready-made program as its card lists it: what the page
+/// shows of a day it may not open (a locked premium program's).
+class CatalogueDay extends Equatable {
+  const CatalogueDay({required this.name, required this.exercises});
+
+  final String name;
+  final int exercises;
+
+  @override
+  List<Object?> get props => [name, exercises];
+}
+
 /// A ready-made program's card (`programs/{id}`): what the catalogue lists
 /// for everyone. Its days are read separately, and only where the rules
 /// allow (see `CatalogueRepository.getDays`).
@@ -27,6 +39,7 @@ class CatalogueProgram extends Equatable {
     this.lengthWeeks,
     this.equipment,
     this.minutes,
+    this.dayList,
     required this.equipmentProfile,
     required this.order,
     required this.l10n,
@@ -48,6 +61,10 @@ class CatalogueProgram extends Equatable {
 
   /// The shortest and longest session; null when the card has none.
   final SessionMinutes? minutes;
+
+  /// Each day's name and exercise count; null when the card has no
+  /// readable list.
+  final List<CatalogueDay>? dayList;
 
   /// Every exercise can be done with this profile's equipment, through its
   /// own equipment or an alternative set.
@@ -94,6 +111,7 @@ class CatalogueProgram extends Equatable {
     lengthWeeks,
     equipment,
     minutes,
+    dayList,
     equipmentProfile,
     order,
     l10n,

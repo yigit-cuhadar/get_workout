@@ -22,6 +22,32 @@
     "min": 33,
     "max": 41
   },
+  "dayList": [
+    {
+      "name": "Chest and Back A",
+      "exercises": 6
+    },
+    {
+      "name": "Legs A",
+      "exercises": 5
+    },
+    {
+      "name": "Shoulders and Arms A",
+      "exercises": 7
+    },
+    {
+      "name": "Chest and Back B",
+      "exercises": 6
+    },
+    {
+      "name": "Legs B",
+      "exercises": 6
+    },
+    {
+      "name": "Shoulders and Arms B",
+      "exercises": 7
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Advanced Hypertrophy 6-Day",

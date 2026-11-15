@@ -21,6 +21,20 @@
     "min": 46,
     "max": 55
   },
+  "dayList": [
+    {
+      "name": "Push",
+      "exercises": 7
+    },
+    {
+      "name": "Pull",
+      "exercises": 7
+    },
+    {
+      "name": "Legs",
+      "exercises": 7
+    }
+  ],
   "l10n": {
     "en": {
       "name": "Push Pull Legs 3-Day",
