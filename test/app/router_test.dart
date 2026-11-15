@@ -100,6 +100,7 @@ import 'package:get_workout/features/today/presentation/today_page.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/history_usecases.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
+import 'package:get_workout/features/workout/domain/workout_editing.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:get_workout/features/workout/presentation/workout_detail_cubit.dart';
@@ -2405,7 +2406,10 @@ void main() {
         );
         return cubit;
       })
-      ..registerFactoryParam<WorkoutEditCubit, String?, String>((_, _) {
+      ..registerFactoryParam<WorkoutEditCubit, String?, PastWorkoutPlan>((
+        _,
+        _,
+      ) {
         final cubit = _WorkoutEditStandIn();
         // Not loading: its skeleton would never settle.
         when(
@@ -2424,7 +2428,7 @@ void main() {
     expect(find.byType(WorkoutEditPage), findsOneWidget);
     expect(selectedTab(tester), 0);
 
-    await tester.tap(find.byType(BackButton));
+    await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
     expect(find.byType(WorkoutDetailPage), findsOneWidget);
     await tester.tap(find.byType(BackButton));

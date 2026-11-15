@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
@@ -13,6 +15,7 @@ import '../../programs/presentation/program_text.dart';
 import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../workout/domain/exercise_stats.dart';
+import '../../workout/presentation/add_past_workout_sheet.dart';
 import '../../workout/presentation/start_workout.dart';
 import '../../workout/presentation/workout_text.dart';
 import '../domain/calendar_days.dart';
@@ -151,7 +154,14 @@ class _CalendarViewState extends State<_CalendarView> {
           title: Text(l10n.calendarTitle),
           actions: [
             TextButton.icon(
-              onPressed: () => context.go(Routes.calendarWorkoutNew),
+              onPressed: () async {
+                final plan = await askPastWorkout(context);
+                if (plan != null && context.mounted) {
+                  unawaited(
+                    context.push(Routes.calendarWorkoutNew, extra: plan),
+                  );
+                }
+              },
               icon: const Icon(Icons.add),
               label: Text(l10n.calendarAddPast),
             ),

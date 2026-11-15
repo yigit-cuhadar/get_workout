@@ -485,7 +485,7 @@ class _Card extends StatelessWidget {
           : const [],
       sets: open ? setBubbles(context, index, state, editor) : null,
       onTap: !open || grouped ? () => editor.openExercise(index) : null,
-      onOptions: (button) => _ExerciseMenu(
+      onOptions: (button) => ExerciseMenu(
         index: index,
         state: state,
         editor: editor,
@@ -499,8 +499,8 @@ class _Card extends StatelessWidget {
 
 /// The actions on exercise [index]: swap, its detail page, note, group;
 /// in the workout in progress ([running]) its rest and warm-ups; remove.
-class _ExerciseMenu {
-  const _ExerciseMenu({
+class ExerciseMenu {
+  const ExerciseMenu({
     required this.index,
     required this.state,
     required this.editor,
@@ -519,67 +519,68 @@ class _ExerciseMenu {
   final String Function(String id) exerciseRoute;
 
   /// Opens under [button], the exercise's menu button.
-  void show(BuildContext button) {
+  void show(BuildContext button) =>
+      showForgeMenu(context: button, items: items(button));
+
+  /// The menu's rows; [button] is where it opens.
+  List<ForgeMenuItem> items(BuildContext button) {
     final l10n = AppLocalizations.of(button);
     final exercises = state.workout!.exercises;
     final exercise = exercises[index];
     final running = this.running;
-    showForgeMenu(
-      context: button,
-      items: [
+    return [
+      ForgeMenuItem(
+        label: l10n.workoutSwap,
+        icon: ForgeIcons.sync,
+        onTap: () => _swap(button),
+      ),
+      ForgeMenuItem(
+        label: l10n.workoutExerciseDetails,
+        icon: ForgeIcons.info,
+        onTap: () => button.push(exerciseRoute(exercise.exerciseId)),
+      ),
+      ForgeMenuItem(
+        label: exercise.note == null
+            ? l10n.workoutAddNote
+            : l10n.workoutEditNote,
+        icon: ForgeIcons.edit,
+        onTap: () => _editNote(button, exercise),
+      ),
+      if (canLinkWithNext(exercises, index))
         ForgeMenuItem(
-          label: l10n.workoutSwap,
-          icon: ForgeIcons.sync,
-          onTap: () => _swap(button),
+          label: linkedSize(exercises, index) == 2
+              ? l10n.programMakeSuperset
+              : l10n.programMakeCircuit,
+          icon: ForgeIcons.list,
+          onTap: () => editor.linkWithNext(index),
         ),
+      if (exercise.group != null)
         ForgeMenuItem(
-          label: l10n.workoutExerciseDetails,
-          icon: ForgeIcons.info,
-          onTap: () => button.push(exerciseRoute(exercise.exerciseId)),
+          label: l10n.programUngroup,
+          icon: ForgeIcons.remove,
+          onTap: () => editor.ungroup(index),
         ),
+      if (running != null)
         ForgeMenuItem(
-          label: exercise.note == null
-              ? l10n.workoutAddNote
-              : l10n.workoutEditNote,
-          icon: ForgeIcons.edit,
-          onTap: () => _editNote(button, exercise),
+          label: l10n.workoutRestTimeRow(
+            l10n.elapsedText(Duration(seconds: running.exerciseRestS(index))),
+          ),
+          icon: ForgeIcons.timer,
+          onTap: () => _editRest(button, running),
         ),
-        if (canLinkWithNext(exercises, index))
-          ForgeMenuItem(
-            label: linkedSize(exercises, index) == 2
-                ? l10n.programMakeSuperset
-                : l10n.programMakeCircuit,
-            icon: ForgeIcons.list,
-            onTap: () => editor.linkWithNext(index),
-          ),
-        if (exercise.group != null)
-          ForgeMenuItem(
-            label: l10n.programUngroup,
-            icon: ForgeIcons.remove,
-            onTap: () => editor.ungroup(index),
-          ),
-        if (running != null)
-          ForgeMenuItem(
-            label: l10n.workoutRestTimeRow(
-              l10n.elapsedText(Duration(seconds: running.exerciseRestS(index))),
-            ),
-            icon: ForgeIcons.timer,
-            onTap: () => _editRest(button, running),
-          ),
-        if (editor.warmupSettings != null && takesWarmups(exercise.loggingType))
-          ForgeMenuItem(
-            label: l10n.workoutWarmupSets,
-            icon: ForgeIcons.trendingUp,
-            onTap: () => editor.toggleWarmups(index),
-          ),
+      if (editor.warmupSettings != null && takesWarmups(exercise.loggingType))
         ForgeMenuItem(
-          label: l10n.workoutRemoveExercise,
-          icon: ForgeIcons.delete,
-          destructive: true,
-          onTap: () => _remove(button, exercise),
+          label: l10n.workoutWarmupSets,
+          icon: ForgeIcons.trendingUp,
+          onTap: () => editor.toggleWarmups(index),
         ),
-      ],
-    );
+      ForgeMenuItem(
+        label: l10n.workoutRemoveExercise,
+        icon: ForgeIcons.delete,
+        destructive: true,
+        onTap: () => _remove(button, exercise),
+      ),
+    ];
   }
 
   /// The rest after each set of the exercise, or each round of its group,

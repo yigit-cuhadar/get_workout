@@ -34,3 +34,14 @@ Widget firstRecords(BuildContext context) => _page([const RecordList.none()]);
 Widget noRecords(BuildContext context) => _page([
   const RecordList.none(closest: 'Bench Press was 2.5 kg off your best.'),
 ]);
+
+@widgetbook.UseCase(name: 'No records · one sentence', type: RecordList)
+Widget recordMessage(BuildContext context) => _page([
+  RecordList.message(
+    message: context.knobs.string(
+      label: 'Message',
+      initialValue:
+          'No new records this time. Bench Press was 2.5 kg off your best.',
+    ),
+  ),
+]);

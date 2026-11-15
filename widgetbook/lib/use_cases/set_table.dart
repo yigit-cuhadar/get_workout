@@ -142,7 +142,12 @@ class _EditForm extends StatefulWidget {
 }
 
 class _EditFormState extends State<_EditForm> {
-  final _sets = [('W', '40', '10', null), ('1', '82.5', '8', 'Moderate')];
+  final _sets = [
+    ('W', '40', '10', null),
+    ('1', '82.5', '8', 'Moderate'),
+    ('2', '82.5', '', null),
+  ];
+  final _done = [true, true, false];
   late final _controllers = [
     for (final (_, weight, reps, _) in _sets)
       (TextEditingController(text: weight), TextEditingController(text: reps)),
@@ -165,7 +170,12 @@ class _EditFormState extends State<_EditForm> {
         for (final (i, (label, _, _, effort)) in _sets.indexed)
           SetTableEditRow(
             label: label,
+            semanticLabel: 'Set $label',
+            done: _done[i],
+            onToggle: () => setState(() => _done[i] = !_done[i]),
+            onOptions: (_) {},
             effort: effort,
+            onEffort: effort == null ? null : () {},
             inputs: [
               SetTableInput(
                 label: 'Weight',
@@ -182,8 +192,17 @@ class _EditFormState extends State<_EditForm> {
           ),
       ],
       menu: [
-        ForgeMenuItem(label: 'Swap exercise', onTap: () {}),
-        ForgeMenuItem(label: 'Remove', onTap: () {}, destructive: true),
+        ForgeMenuItem(
+          label: 'Swap exercise',
+          icon: ForgeIcons.sync,
+          onTap: () {},
+        ),
+        ForgeMenuItem(
+          label: 'Remove exercise',
+          icon: ForgeIcons.delete,
+          onTap: () {},
+          destructive: true,
+        ),
       ],
       onAddSet: () {},
     ),

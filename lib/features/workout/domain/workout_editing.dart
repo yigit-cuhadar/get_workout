@@ -96,6 +96,49 @@ Workout workoutFromProgramDay({
   }),
 );
 
+/// What a new past workout starts from: its [name], [start] and
+/// [duration], and optionally day [dayIndex] of [program] to fill its
+/// exercises from, named in [language].
+typedef PastWorkoutPlan = ({
+  String name,
+  DateTime start,
+  Duration duration,
+  Program? program,
+  int? dayIndex,
+  String language,
+});
+
+/// New past workout [id] as [plan] has it: the program day's exercises
+/// with their goals and empty sets ([workoutFromProgramDay], without
+/// warm-ups), or none. A past workout never belongs to a program.
+Workout pastWorkout(
+  String id,
+  PastWorkoutPlan plan,
+  Map<String, Exercise> catalogue,
+) {
+  final program = plan.program;
+  final dayIndex = plan.dayIndex;
+  final exercises = program != null && dayIndex != null
+      ? workoutFromProgramDay(
+          id: id,
+          startedAt: plan.start,
+          name: plan.name,
+          program: program,
+          dayIndex: dayIndex,
+          catalogue: catalogue,
+          language: plan.language,
+          warmups: null,
+        ).exercises
+      : const <WorkoutExercise>[];
+  return Workout(
+    id: id,
+    startedAt: plan.start,
+    finishedAt: plan.start.add(plan.duration),
+    name: plan.name,
+    exercises: exercises,
+  );
+}
+
 /// [current] doing [replacement] instead, in the same place and group. Its
 /// sets stay when the logging type does; otherwise as many empty sets of
 /// the same kinds take their place. The goal is fitted to the new type.

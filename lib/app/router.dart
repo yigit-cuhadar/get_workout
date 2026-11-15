@@ -58,6 +58,7 @@ import '../features/subscription/presentation/paywall_page.dart';
 import '../features/today/presentation/today_page.dart';
 import '../features/volume/presentation/volume_page.dart';
 import '../features/workout/presentation/workout_detail_page.dart';
+import '../features/workout/domain/workout_editing.dart';
 import '../features/workout/presentation/workout_edit_page.dart';
 import '../features/workout/presentation/workout_page.dart';
 import '../l10n/app_localizations.dart';
@@ -641,8 +642,10 @@ GoRouter buildRouter(
                   // Before ':id', which would match these too.
                   GoRoute(
                     path: 'new',
-                    builder: (_, _) =>
-                        const WorkoutEditPage(routes: Routes.calendarEditing),
+                    builder: (_, state) => WorkoutEditPage(
+                      plan: state.extra as PastWorkoutPlan?,
+                      routes: Routes.calendarEditing,
+                    ),
                   ),
                   GoRoute(path: 'pick', builder: (_, state) => _picker(state)),
                   _workoutExercise(Routes.calendarExercise),

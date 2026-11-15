@@ -1817,5 +1817,15 @@
   "summaryUpdateDayBody": "Your next {day} workouts use these exercises and sets.",
   "@summaryUpdateDayBody": {"placeholders": {"day": {"type": "String"}}},
   "summaryUpdateDay": "Update",
-  "summarySaveAsProgramBody": "Its exercises and sets become a new one-day program."
+  "summarySaveAsProgramBody": "Its exercises and sets become a new one-day program.",
+  "historyDateTime": "Date and time",
+  "historyDateTimeValue": "{date} · {time}",
+  "@historyDateTimeValue": {"placeholders": {"date": {"type": "String"}, "time": {"type": "String"}}},
+  "historyUntickedBody": "{count, plural, =1{1 set isn't ticked. It will be left out.} other{{count} sets aren't ticked. They will be left out.}}",
+  "@historyUntickedBody": {"placeholders": {"count": {"type": "int"}}},
+  "pastAddTitle": "Add past workout",
+  "pastProgramDay": "Program day",
+  "pastProgramDayDetail": "Fills the exercises from the day",
+  "pastProgramDayNone": "None",
+  "pastContinue": "Continue"
 }

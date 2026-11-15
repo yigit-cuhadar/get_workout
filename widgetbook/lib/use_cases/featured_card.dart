@@ -77,6 +77,27 @@ Widget featuredSummary(BuildContext context) => _page(
   ),
 );
 
+@widgetbook.UseCase(name: 'Summary block with changes', type: FeaturedCard)
+Widget featuredSummaryChanges(BuildContext context) => _page(
+  const FeaturedCard(
+    form: FeaturedCardForm.block,
+    eyebrow: 'Workout done · Fri, Nov 13',
+    title: 'Push',
+    note: 'Push Pull Legs · week 3 · vs Fri, Nov 6',
+    stats: [
+      FeaturedStat('Duration', '52 min', change: '−4 min'),
+      FeaturedStat(
+        'Volume',
+        '12,400 kg',
+        change: '+6 %',
+        tone: FeaturedChangeTone.gain,
+      ),
+      FeaturedStat('Sets', '16', change: '−2', tone: FeaturedChangeTone.drop),
+      FeaturedStat('Records', '2'),
+    ],
+  ),
+);
+
 @widgetbook.UseCase(name: 'Locked premium copy', type: FeaturedCard)
 Widget featuredLocked(BuildContext context) => _page(
   FeaturedCard(
