@@ -601,6 +601,7 @@ class _ItemTile extends StatelessWidget {
     if (type == null) return;
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       showDragHandle: true,
       builder: (_) => BlocProvider.value(

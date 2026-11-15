@@ -619,6 +619,7 @@ class _ExerciseMenu {
     const browse = Object();
     final choice = await showModalBottomSheet<Object>(
       context: context,
+      useRootNavigator: true,
       showDragHandle: true,
       isScrollControlled: true,
       builder: (context) => SafeArea(
