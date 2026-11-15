@@ -1,6 +1,7 @@
 import 'package:forge_core/forge_core.dart';
 
 import '../../body/domain/body_entry.dart';
+import '../../exercises/domain/vocabulary.dart';
 import '../../programs/domain/calendar_date.dart';
 
 enum WeightUnit { kg, lb }
@@ -404,6 +405,8 @@ class UserSettings extends Equatable {
     this.workoutReminder = const WorkoutReminderSettings(),
     this.measurementReminder = const MeasurementReminderSettings(),
     this.customBarWeightKg,
+    this.customEzBarWeightKg,
+    this.customTrapBarWeightKg,
     this.customPlates,
     this.customTrackedMeasurements,
   });
@@ -444,6 +447,10 @@ class UserSettings extends Equatable {
   /// [weightUnit], so switching units also switches the standard bar.
   final double? customBarWeightKg;
 
+  /// Like [customBarWeightKg], for the EZ bar and the trap bar.
+  final double? customEzBarWeightKg;
+  final double? customTrapBarWeightKg;
+
   /// Set once the user edits their plates; see [customBarWeightKg].
   final List<Plate>? customPlates;
 
@@ -453,12 +460,35 @@ class UserSettings extends Equatable {
 
   double get barWeightKg => customBarWeightKg ?? defaultBarWeightKg(weightUnit);
 
+  double get ezBarWeightKg =>
+      customEzBarWeightKg ?? defaultEzBarWeightKg(weightUnit);
+
+  double get trapBarWeightKg =>
+      customTrapBarWeightKg ?? defaultTrapBarWeightKg(weightUnit);
+
+  /// The weight of [bar]: the EZ bar, the trap bar, or else the barbell.
+  double barWeightKgFor(Equipment bar) => switch (bar) {
+    Equipment.ezBar => ezBarWeightKg,
+    Equipment.trapBar => trapBarWeightKg,
+    _ => barWeightKg,
+  };
+
   /// Largest first.
   List<Plate> get plates => customPlates ?? defaultPlates(weightUnit);
 
   static double defaultBarWeightKg(WeightUnit unit) => switch (unit) {
     WeightUnit.kg => 20,
     WeightUnit.lb => 45 * kgPerLb,
+  };
+
+  static double defaultEzBarWeightKg(WeightUnit unit) => switch (unit) {
+    WeightUnit.kg => 10,
+    WeightUnit.lb => 25 * kgPerLb,
+  };
+
+  static double defaultTrapBarWeightKg(WeightUnit unit) => switch (unit) {
+    WeightUnit.kg => 25,
+    WeightUnit.lb => 55 * kgPerLb,
   };
 
   static List<Plate> defaultPlates(WeightUnit unit) => switch (unit) {
@@ -497,6 +527,8 @@ class UserSettings extends Equatable {
     WorkoutReminderSettings? workoutReminder,
     MeasurementReminderSettings? measurementReminder,
     double? customBarWeightKg,
+    double? customEzBarWeightKg,
+    double? customTrapBarWeightKg,
     List<Plate>? customPlates,
     Set<BodyMeasurement>? customTrackedMeasurements,
   }) => UserSettings(
@@ -512,12 +544,14 @@ class UserSettings extends Equatable {
     workoutReminder: workoutReminder ?? this.workoutReminder,
     measurementReminder: measurementReminder ?? this.measurementReminder,
     customBarWeightKg: customBarWeightKg ?? this.customBarWeightKg,
+    customEzBarWeightKg: customEzBarWeightKg ?? this.customEzBarWeightKg,
+    customTrapBarWeightKg: customTrapBarWeightKg ?? this.customTrapBarWeightKg,
     customPlates: customPlates ?? this.customPlates,
     customTrackedMeasurements:
         customTrackedMeasurements ?? this.customTrackedMeasurements,
   );
 
-  /// Drops the custom bar and plates, back to the standard set of the unit.
+  /// Drops the custom bars and plates, back to the standard set of the unit.
   UserSettings withStandardEquipment() => UserSettings(
     weightUnit: weightUnit,
     lengthUnit: lengthUnit,
@@ -547,6 +581,8 @@ class UserSettings extends Equatable {
     workoutReminder,
     measurementReminder,
     customBarWeightKg,
+    customEzBarWeightKg,
+    customTrapBarWeightKg,
     customPlates,
     customTrackedMeasurements,
   ];

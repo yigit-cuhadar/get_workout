@@ -584,6 +584,8 @@ void main() {
     ];
     final custom = defaults.copyWith(
       customBarWeightKg: 15,
+      customEzBarWeightKg: 8,
+      customTrapBarWeightKg: 30,
       customPlates: plates,
     );
 
@@ -592,6 +594,8 @@ void main() {
 
       final stored = (await user().get()).data()!['settings'] as Map;
       expect(stored['barWeightKg'], 15);
+      expect(stored['ezBarWeightKg'], 8);
+      expect(stored['trapBarWeightKg'], 30);
       expect(stored['plates'], [
         {'weightKg': 20, 'pairs': 2},
         {'weightKg': 1.25, 'pairs': 1},
@@ -608,6 +612,8 @@ void main() {
 
         final stored = (await user().get()).data()!['settings'] as Map;
         expect(stored.containsKey('barWeightKg'), isFalse);
+        expect(stored.containsKey('ezBarWeightKg'), isFalse);
+        expect(stored.containsKey('trapBarWeightKg'), isFalse);
         expect(stored.containsKey('plates'), isFalse);
         expect(
           await repository.watchSettings('u1').first,
@@ -634,6 +640,8 @@ void main() {
       await user().set({
         'settings': {
           'barWeightKg': 'heavy',
+          'ezBarWeightKg': null,
+          'trapBarWeightKg': '30',
           'plates': [
             {'weightKg': 10, 'pairs': 2},
             {'weightKg': -5, 'pairs': 1},
@@ -646,6 +654,8 @@ void main() {
       final settings = await repository.watchSettings('u1').first;
 
       expect(settings.customBarWeightKg, isNull);
+      expect(settings.customEzBarWeightKg, isNull);
+      expect(settings.customTrapBarWeightKg, isNull);
       expect(
         settings.barWeightKg,
         UserSettings.defaultBarWeightKg(WeightUnit.lb),
@@ -657,6 +667,8 @@ void main() {
       await user().set({
         'settings': {
           'barWeightKg': 250,
+          'ezBarWeightKg': -3,
+          'trapBarWeightKg': 120,
           'plates': [
             {'weightKg': 0.05, 'pairs': 1},
             {'weightKg': 150, 'pairs': 30},
@@ -669,6 +681,8 @@ void main() {
       final settings = await repository.watchSettings('u1').first;
 
       expect(settings.barWeightKg, maxBarWeightKg);
+      expect(settings.ezBarWeightKg, 0);
+      expect(settings.trapBarWeightKg, maxBarWeightKg);
       expect(settings.plates, hasLength(maxPlateSizes));
       expect(
         settings.plates.first,

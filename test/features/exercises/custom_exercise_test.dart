@@ -223,15 +223,19 @@ void main() {
     });
   });
 
-  test('only an exercise with a barbell uses one', () {
+  test('the loaded bar prefers the barbell, then the trap bar, then EZ', () {
+    Equipment? bar(List<Equipment> equipment) =>
+        exercise('ex_a', equipment: equipment).loadedBar;
+    expect(bar(const [Equipment.barbell]), Equipment.barbell);
+    expect(bar(const [Equipment.ezBar]), Equipment.ezBar);
+    expect(bar(const [Equipment.trapBar]), Equipment.trapBar);
     expect(
-      exercise('ex_a', equipment: const [Equipment.barbell]).usesBarbell,
-      isTrue,
+      bar(const [Equipment.ezBar, Equipment.trapBar, Equipment.barbell]),
+      Equipment.barbell,
     );
-    expect(
-      exercise('ex_b', equipment: const [Equipment.ezBar]).usesBarbell,
-      isFalse,
-    );
+    expect(bar(const [Equipment.ezBar, Equipment.trapBar]), Equipment.trapBar);
+    expect(bar(const [Equipment.smithMachine]), isNull);
+    expect(bar(const [Equipment.dumbbell, Equipment.bench]), isNull);
     expect(
       Exercise.custom(
         id: 'custom_a',
@@ -239,8 +243,8 @@ void main() {
         loggingType: LoggingType.weightReps,
         mainMuscles: const [Muscle.pec],
         equipment: const [Equipment.barbell],
-      ).usesBarbell,
-      isTrue,
+      ).loadedBar,
+      Equipment.barbell,
     );
     expect(
       Exercise.custom(
@@ -248,8 +252,8 @@ void main() {
         name: 'Floor Press',
         loggingType: LoggingType.weightReps,
         mainMuscles: const [Muscle.pec],
-      ).usesBarbell,
-      isFalse,
+      ).loadedBar,
+      isNull,
     );
   });
 }

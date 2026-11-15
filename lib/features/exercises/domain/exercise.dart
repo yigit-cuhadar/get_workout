@@ -145,9 +145,14 @@ class Exercise extends Equatable {
 
   bool get isCustom => isCustomId(id);
 
-  /// Lifted on a barbell, whose plates the workout can break down; a
-  /// custom exercise only when its equipment says so.
-  bool get usesBarbell => equipment.contains(Equipment.barbell);
+  /// The plate-loaded bar it is lifted on, whose plates the workout can
+  /// break down: the barbell, else the trap bar, else the EZ bar; null for
+  /// none (a custom exercise has one only when its equipment says so).
+  Equipment? get loadedBar => const [
+    Equipment.barbell,
+    Equipment.trapBar,
+    Equipment.ezBar,
+  ].where(equipment.contains).firstOrNull;
 
   /// Whether [id] names a custom exercise, known or not.
   static bool isCustomId(String id) => id.startsWith(customIdPrefix);

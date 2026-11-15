@@ -169,21 +169,32 @@ void main() {
     expect(platesButton(), findsOneWidget);
   });
 
-  testWidgets('only a barbell exercise has the plate button', (tester) async {
-    await pump(
-      tester,
-      set: lift(32, 8, done: false),
-      equipment: const [Equipment.dumbbell, Equipment.bench],
-    );
-    expect(platesButton(), findsNothing);
-
-    await pump(
-      tester,
-      set: lift(82.5, 8, done: false),
-      equipment: const [Equipment.barbell, Equipment.bench],
-    );
-    expect(platesButton(), findsOneWidget);
+  testWidgets('only an exercise on a plate-loaded bar has the button', (
+    tester,
+  ) async {
+    for (final equipment in const [
+      [Equipment.dumbbell, Equipment.bench],
+      [Equipment.smithMachine],
+    ]) {
+      await pump(tester, set: lift(32, 8, done: false), equipment: equipment);
+      expect(platesButton(), findsNothing);
+    }
   });
+
+  for (final (equipment, weight, bar) in const [
+    ([Equipment.ezBar], 30.0, '10 kg'),
+    ([Equipment.trapBar], 85.0, '25 kg'),
+    ([Equipment.ezBar, Equipment.barbell], 60.0, '20 kg'),
+  ]) {
+    testWidgets('$equipment breaks down on a $bar bar', (tester) async {
+      await pump(
+        tester,
+        set: lift(weight, 5, done: false),
+        equipment: equipment,
+      );
+      expect((await openPlates(tester)).facts.first, ('Bar', bar));
+    });
+  }
 
   testWidgets('an exercise the catalogue does not know has no plate button', (
     tester,

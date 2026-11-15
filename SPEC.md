@@ -164,7 +164,8 @@ birthYear, heightCm, weightKg, targetWeightKg), `settings` (units,
 effortScale, weekStart (`monday` \| `sunday` \| `saturday`; absent, or a
 value this version does not know, is automatic), restTimer, warmups
 (autoWarmups for older versions), seenTips[],
-bar and plates, stepGoal,
+bar and plates (`barWeightKg`, `ezBarWeightKg`, `trapBarWeightKg`,
+`plates[]`; each only while customised), stepGoal,
 reminder times,
 trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
 `activeProgram` (`programId`, `weekdays[]` ISO 1-7, `nextDayIndex`,
@@ -542,7 +543,8 @@ Decisions (the canvases they were drawn on are deleted):
   in dark too, Slate's dark cards stay a tonal fill.
 - Building the components (owner's picks, 2026-11-14 to 15), drawn in the
   studios: the set panel's weight is typed on a tap and a plate button
-  beside it (barbell exercises only) opens the plate breakdown; a done set's
+  beside it (barbell, EZ bar and trap bar exercises only, not the Smith
+  machine) opens the plate breakdown; a done set's
   effort has no Skip, and the no-rest effort question one Skip; a card's
   count includes warm-ups; a collapsed group with every set done keeps its
   letter with a muted name; a lifted card leaves an empty gap; a superset or
@@ -2302,7 +2304,11 @@ the feature you are about to touch, and keep it true when you change it.
   calculators' own US Navy formula from those, when sex, height and the
   measurements allow it; activity from `daysPerWeek` (2 light, 3-5
   moderate, 6 active, by the levels' wording). Units, bar and plates come
-  from settings as before. 1RM and the macros' calories stay empty (no
+  from settings as before. The EZ bar and the trap bar have their own
+  weights next to the bar's, defaulting by the unit (EZ 10 kg / 25 lb, trap
+  25 kg / 55 lb) until customised; the workout's plate breakdown uses the
+  bar of the exercise's equipment (barbell first, then trap, then EZ). No
+  UI edits them yet: it is drawn in the screen step. 1RM and the macros' calories stay empty (no
   single source); the goal and target weight map onto no calculator
   input. A known number shows as a tile (`KnownNumberField`), not a field:
   its name, the value to one decimal in the user's unit and, for a value

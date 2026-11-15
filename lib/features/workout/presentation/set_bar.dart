@@ -180,9 +180,10 @@ class _RestBelowBarState extends State<RestBelowBar>
 /// ticked it shows [_EffortQuestion] instead. A tick refused for missing
 /// values turns Log set off, rings the empty fields and says so under
 /// them until the set can be ticked. With [loadPlates], the weight of a
-/// barbell exercise's set (weight × reps or time) has a plate button
-/// showing its breakdown on the user's bar and plates; the workout keeps
-/// no equipment, so the exercise is looked up in the catalogue.
+/// set (weight × reps or time) of an exercise on a barbell, trap bar or EZ
+/// bar has a plate button showing its breakdown on the user's bar of that
+/// kind and plates; the workout keeps no equipment, so the exercise is
+/// looked up in the catalogue.
 class SetBar extends StatelessWidget {
   const SetBar({
     super.key,
@@ -224,12 +225,14 @@ class SetBar extends StatelessWidget {
     final exercise = state.workout!.exercises[ref.exercise];
     final set = exercise.sets[ref.set];
     final type = exercise.loggingType;
-    final barbell = context.select(
+    final bar = context.select(
       (ExerciseCatalogueCubit catalogue) => switch (catalogue.state) {
-        CatalogueReady(:final exercises) => exercises.any(
-          (known) => known.id == exercise.exerciseId && known.usesBarbell,
-        ),
-        _ => false,
+        CatalogueReady(:final exercises) =>
+          exercises
+              .where((known) => known.id == exercise.exerciseId)
+              .firstOrNull
+              ?.loadedBar,
+        _ => null,
       },
     );
     final hint = state.suggestion(ref);
@@ -350,29 +353,29 @@ class SetBar extends StatelessWidget {
             ),
       done: set.done,
       onLog: blocked ? null : () => _toggle(context, ref),
-      onPlates: switch ((loadPlates, set.weightKg ?? hint.weightKg)) {
-        (final loadPlates?, final kg?)
-            when barbell &&
-                (type == LoggingType.weightReps ||
-                    type == LoggingType.weightDuration) =>
-          (button) => _showPlates(button, loadPlates, kg, settings),
+      onPlates: switch ((loadPlates, bar, set.weightKg ?? hint.weightKg)) {
+        (final loadPlates?, final bar?, final kg?)
+            when type == LoggingType.weightReps ||
+                type == LoggingType.weightDuration =>
+          (button) => _showPlates(button, loadPlates, kg, bar, settings),
         _ => null,
       },
     );
   }
 
   /// The plate breakdown of [kg] under the plate [button]: the weight, the
-  /// bar, the plates on each side, and the closest load when the plates
+  /// user's [bar] of that kind, the plates on each side, and the closest load when the plates
   /// can't make it.
   void _showPlates(
     BuildContext button,
     PlateLoader loadPlates,
     double kg,
+    Equipment bar,
     UserSettings settings,
   ) {
     final l10n = AppLocalizations.of(button);
     final unit = settings.weightUnit;
-    final barKg = settings.barWeightKg;
+    final barKg = settings.barWeightKgFor(bar);
     final load = switch (loadPlates(
       kg,
       barKg: barKg,
