@@ -527,15 +527,21 @@ class _ExerciseMenu {
     showForgeMenu(
       context: button,
       items: [
-        ForgeMenuItem(label: l10n.workoutSwap, onTap: () => _swap(button)),
+        ForgeMenuItem(
+          label: l10n.workoutSwap,
+          icon: ForgeIcons.sync,
+          onTap: () => _swap(button),
+        ),
         ForgeMenuItem(
           label: l10n.workoutExerciseDetails,
+          icon: ForgeIcons.info,
           onTap: () => button.push(exerciseRoute(exercise.exerciseId)),
         ),
         ForgeMenuItem(
           label: exercise.note == null
               ? l10n.workoutAddNote
               : l10n.workoutEditNote,
+          icon: ForgeIcons.edit,
           onTap: () => _editNote(button, exercise),
         ),
         if (canLinkWithNext(exercises, index))
@@ -543,11 +549,13 @@ class _ExerciseMenu {
             label: linkedSize(exercises, index) == 2
                 ? l10n.programMakeSuperset
                 : l10n.programMakeCircuit,
+            icon: ForgeIcons.list,
             onTap: () => editor.linkWithNext(index),
           ),
         if (exercise.group != null)
           ForgeMenuItem(
             label: l10n.programUngroup,
+            icon: ForgeIcons.remove,
             onTap: () => editor.ungroup(index),
           ),
         if (running != null)
@@ -555,15 +563,18 @@ class _ExerciseMenu {
             label: l10n.workoutRestTimeRow(
               l10n.elapsedText(Duration(seconds: running.exerciseRestS(index))),
             ),
+            icon: ForgeIcons.timer,
             onTap: () => _editRest(button, running),
           ),
         if (editor.warmupSettings != null && takesWarmups(exercise.loggingType))
           ForgeMenuItem(
             label: l10n.workoutWarmupSets,
+            icon: ForgeIcons.trendingUp,
             onTap: () => editor.toggleWarmups(index),
           ),
         ForgeMenuItem(
           label: l10n.workoutRemoveExercise,
+          icon: ForgeIcons.delete,
           destructive: true,
           onTap: () => _remove(button, exercise),
         ),

@@ -146,7 +146,7 @@ class _Workout extends StatelessWidget {
           const LinearProgressIndicator(),
         const SizedBox(height: Gap.sm),
         WorkoutSummaryCard(
-          summary: summarizeWorkout(workout, const []),
+          summary: summarizeWorkout(workout),
           caption:
               '${dates.formatMediumDate(start)} · '
               '${dates.formatTimeOfDay(TimeOfDay.fromDateTime(start))}',

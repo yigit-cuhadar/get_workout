@@ -9,8 +9,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
-import '../../../core/max_length_formatter.dart';
-import '../../../core/text_length.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_list_cubit.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -29,7 +27,7 @@ import 'rest_timer_cubit.dart';
 import 'set_bar.dart';
 import 'workout_editor.dart';
 import 'workout_editor_view.dart';
-import 'workout_summary_card.dart';
+import 'workout_summary_view.dart';
 import 'workout_text.dart';
 
 /// The workout in progress, full screen above the tabs; back minimizes it
@@ -66,6 +64,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
             context,
             message: failure is NetworkFailure
                 ? l10n.errorNetwork
+                : state.status == WorkoutStatus.finished &&
+                      state.workout!.isFromProgram
+                ? l10n.programActionFailed
                 : state.status == WorkoutStatus.finished
                 ? l10n.workoutSaveAsProgramFailed(ProgramLimits.maxItemsPerDay)
                 : l10n.workoutFinishFailed,
@@ -90,7 +91,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
         }
       },
       builder: (context, state) => switch (state.status) {
-        WorkoutStatus.finished => _Summary(state),
+        WorkoutStatus.finished => WorkoutSummaryView(state),
         WorkoutStatus.active ||
         WorkoutStatus.finishing => _ActiveWorkout(state),
         _ => const _Loading(),
@@ -383,6 +384,7 @@ class _Header extends StatelessWidget implements PreferredSizeWidget {
                       items: [
                         ForgeMenuItem(
                           label: l10n.workoutDiscard,
+                          icon: ForgeIcons.delete,
                           destructive: true,
                           onTap: () => _discard(context, state),
                         ),
@@ -580,160 +582,5 @@ class _Panel extends StatelessWidget {
       ),
     );
     await timer.answerNotify(allow: allow ?? false);
-  }
-}
-
-class _Summary extends StatelessWidget {
-  const _Summary(this.state);
-  final ActiveWorkoutState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final cubit = context.read<ActiveWorkoutCubit>();
-    final workout = state.workout!;
-    final summary = state.summary!;
-    final unit = context.select(
-      (SettingsCubit cubit) => cubit.state.settings.weightUnit,
-    );
-    return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.all(Gap.md),
-          children: [
-            WorkoutSummaryCard(
-              summary: summary,
-              caption: l10n.workoutDoneTitle,
-              title: workout.name,
-            ),
-            if (summary.records.isNotEmpty) ...[
-              const SizedBox(height: Gap.lg),
-              _Celebration(count: summary.records.length),
-              const SizedBox(height: Gap.sm),
-              Card(
-                margin: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    for (final record in summary.records)
-                      ListTile(
-                        leading: Icon(
-                          Icons.emoji_events,
-                          color: theme.colorScheme.primary,
-                        ),
-                        title: Text(record.name),
-                        subtitle: Text(l10n.recordText(record, unit)),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-            if (summary.programUnknown) ...[
-              const SizedBox(height: Gap.sm),
-              Card(
-                margin: EdgeInsets.zero,
-                child: ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: Text(l10n.workoutProgramUnknown),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(Gap.md),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ForgeButton(
-                label: l10n.libraryDone,
-                onPressed: cubit.summaryShown,
-              ),
-              if (!workout.isFromProgram) ...[
-                const SizedBox(height: Gap.sm),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.bookmark_add_outlined),
-                  label: Text(l10n.workoutSaveAsProgram),
-                  onPressed: state.savingProgram || state.savedProgramId != null
-                      ? null
-                      : () => _saveAsProgram(context, workout.name),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _saveAsProgram(BuildContext context, String name) async {
-    final l10n = AppLocalizations.of(context);
-    final cubit = context.read<ActiveWorkoutCubit>();
-    final controller = TextEditingController(
-      text: cutToLength(name, ProgramLimits.maxNameLength),
-    );
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.workoutSaveAsProgram),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.sentences,
-          inputFormatters: [maxLengthFormatter(ProgramLimits.maxNameLength)],
-          decoration: InputDecoration(labelText: l10n.workoutSaveAsProgramName),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.programSave),
-          ),
-        ],
-      ),
-    );
-    if (saved == true && controller.text.trim().isNotEmpty) {
-      await cubit.saveAsProgram(controller.text);
-    }
-    controller.dispose();
-  }
-}
-
-/// A trophy that pops in once, with the count of new records.
-class _Celebration extends StatelessWidget {
-  const _Celebration({required this.count});
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: 1),
-          duration: const Duration(milliseconds: 900),
-          curve: Curves.elasticOut,
-          builder: (_, scale, child) =>
-              Transform.scale(scale: scale, child: child),
-          child: Icon(
-            Icons.emoji_events,
-            color: theme.colorScheme.primary,
-            size: theme.textTheme.displayLarge?.fontSize,
-          ),
-        ),
-        Text(
-          AppLocalizations.of(context).workoutNewRecords(count),
-          style: theme.textTheme.headlineSmall,
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
   }
 }

@@ -88,6 +88,7 @@ class WorkoutModule implements FeatureModule {
       ..registerFactory(() => WatchAllExerciseStats(sl()))
       ..registerFactory(() => FinishWorkout(sl()))
       ..registerFactory(() => SaveWorkoutAsProgram(sl()))
+      ..registerFactory(() => UpdateProgramDay(sl()))
       // One workout in progress for the whole app.
       ..registerLazySingleton(
         () => ActiveWorkoutCubit(
@@ -100,6 +101,7 @@ class WorkoutModule implements FeatureModule {
           watchStats: sl(),
           finishWorkout: sl(),
           saveAsProgram: sl(),
+          updateProgramDay: sl(),
           programs: sl(),
           catalogue: sl(),
           watchSettings: sl(),

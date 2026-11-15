@@ -271,65 +271,133 @@ bool advancesProgram(Workout workout, ActiveProgram? active, Program? program) {
   return schedule.nextDayIndex == dayIndex;
 }
 
-/// A one-day program of the user's own repeating finished [workout], named
-/// [name]: per exercise its working sets, their rep range or longest
-/// duration, and its heaviest weight (least assistance) as the target.
-/// Rest is the exercise's default ([fallbackRestS] for a custom one).
-/// Exercises not in [catalogue] are left out. The result still needs
-/// `validateProgram`.
+/// [exercise] as a program item: its working sets (its done sets when it
+/// has none), their rep range or longest duration, and its heaviest weight
+/// (least assistance) as the target. Rest is the exercise's default
+/// ([fallbackRestS] for a custom one). Null when [catalogue] does not know
+/// it.
+ProgramItem? programItemFrom(
+  WorkoutExercise exercise,
+  Map<String, Exercise> catalogue,
+) {
+  final known = catalogue[exercise.exerciseId];
+  if (known == null) return null;
+  final type = exercise.loggingType;
+  final working = workingSets(exercise.sets);
+  final sets = working.isEmpty ? exercise.doneSets : working;
+  final reps = [for (final set in sets) ?set.reps]..sort();
+  final durations = [for (final set in sets) ?set.durationS]..sort();
+  final weights = [
+    for (final set in sets)
+      if (set.weightKg case final kg? when kg > 0) kg,
+  ]..sort();
+  int clampReps(int reps) =>
+      reps.clamp(ProgramLimits.minReps, ProgramLimits.maxReps);
+  return ProgramItem(
+    exerciseId: exercise.exerciseId,
+    sets: sets.length.clamp(ProgramLimits.minSets, ProgramLimits.maxSets),
+    repMin: type.logsReps && reps.isNotEmpty ? clampReps(reps.first) : null,
+    repMax: type.logsReps && reps.isNotEmpty ? clampReps(reps.last) : null,
+    durationS: type.isDurationBased && durations.isNotEmpty
+        ? durations.last.clamp(
+            ProgramLimits.minDurationS,
+            ProgramLimits.maxDurationS,
+          )
+        : null,
+    restS: (known.defaultRestS ?? fallbackRestS).clamp(
+      0,
+      ProgramLimits.maxRestS,
+    ),
+    targetKg: type.logsWeight && weights.isNotEmpty
+        ? (type == LoggingType.assistedBodyweight
+                  ? weights.first
+                  : weights.last)
+              .clamp(0, ProgramLimits.maxTargetKg)
+              .toDouble()
+        : null,
+    group: exercise.group,
+  );
+}
+
+/// A one-day program named [name] from [workout], an item per exercise as
+/// [programItemFrom] makes it. Exercises not in [catalogue] are left out.
+/// The result still needs `validateProgram`.
 Program programFromWorkout(
   Workout workout, {
   required String name,
   required Map<String, Exercise> catalogue,
-}) {
-  ProgramItem? item(WorkoutExercise exercise) {
-    final known = catalogue[exercise.exerciseId];
-    if (known == null) return null;
-    final type = exercise.loggingType;
-    final working = workingSets(exercise.sets);
-    final sets = working.isEmpty ? exercise.doneSets : working;
-    final reps = [for (final set in sets) ?set.reps]..sort();
-    final durations = [for (final set in sets) ?set.durationS]..sort();
-    final weights = [
-      for (final set in sets)
-        if (set.weightKg case final kg? when kg > 0) kg,
-    ]..sort();
-    int clampReps(int reps) =>
-        reps.clamp(ProgramLimits.minReps, ProgramLimits.maxReps);
-    return ProgramItem(
-      exerciseId: exercise.exerciseId,
-      sets: sets.length.clamp(ProgramLimits.minSets, ProgramLimits.maxSets),
-      repMin: type.logsReps && reps.isNotEmpty ? clampReps(reps.first) : null,
-      repMax: type.logsReps && reps.isNotEmpty ? clampReps(reps.last) : null,
-      durationS: type.isDurationBased && durations.isNotEmpty
-          ? durations.last.clamp(
-              ProgramLimits.minDurationS,
-              ProgramLimits.maxDurationS,
-            )
-          : null,
-      restS: (known.defaultRestS ?? fallbackRestS).clamp(
-        0,
-        ProgramLimits.maxRestS,
+}) => Program(
+  name: cutToLength(name.trim(), ProgramLimits.maxNameLength),
+  days: [
+    ProgramDay(
+      items: relabelGroups([
+        for (final exercise in workout.exercises)
+          ?programItemFrom(exercise, catalogue),
+      ]),
+    ),
+  ],
+);
+
+/// The items [workout] (in progress, every set) would give its day of
+/// [program], or null when it did the day as planned. It changed the day
+/// when an exercise was added, removed or swapped, the exercises' order or
+/// a working set count changed, or a rest was set to another length; reps
+/// and weights change with progression and do not count. Items the
+/// workout kept keep their targets; new ones are made by
+/// [programItemFrom]. Planned items [catalogue] does not know were left
+/// out at the start, so they are not counted as removed.
+List<ProgramItem>? changedProgramDay(
+  Workout workout,
+  Program program,
+  Map<String, Exercise> catalogue,
+) {
+  final dayIndex = workout.dayIndex;
+  if (workout.programId != program.id ||
+      dayIndex == null ||
+      dayIndex >= program.days.length) {
+    return null;
+  }
+  final planned = [
+    for (final item in alignGroups(program.days[dayIndex].items))
+      if (catalogue.containsKey(item.exerciseId)) item,
+  ];
+  final exercises = workout.exercises;
+  var changed = planned.length != exercises.length;
+  final unused = [...planned];
+  final items = <ProgramItem>[];
+  for (final (i, exercise) in exercises.indexed) {
+    final count = workingSets([
+      for (final set in exercise.sets) set.copyWith(done: true),
+    ]).length;
+    final plan = planned.elementAtOrNull(i);
+    if (plan == null ||
+        plan.exerciseId != exercise.exerciseId ||
+        plan.sets != count ||
+        (exercise.restS != null && exercise.restS != plan.restS)) {
+      changed = true;
+    }
+    final kept = unused
+        .where((item) => item.exerciseId == exercise.exerciseId)
+        .firstOrNull;
+    if (kept != null) unused.remove(kept);
+    final base =
+        kept ??
+        exercise.goal ??
+        programItemFrom(
+          exercise.copyWith(
+            sets: [for (final set in exercise.sets) set.copyWith(done: true)],
+          ),
+          catalogue,
+        );
+    if (base == null) continue;
+    items.add(
+      base.copyWith(
+        exerciseId: exercise.exerciseId,
+        sets: count.clamp(ProgramLimits.minSets, ProgramLimits.maxSets),
+        restS: exercise.restS,
+        group: () => exercise.group,
       ),
-      targetKg: type.logsWeight && weights.isNotEmpty
-          ? (type == LoggingType.assistedBodyweight
-                    ? weights.first
-                    : weights.last)
-                .clamp(0, ProgramLimits.maxTargetKg)
-                .toDouble()
-          : null,
-      group: exercise.group,
     );
   }
-
-  return Program(
-    name: cutToLength(name.trim(), ProgramLimits.maxNameLength),
-    days: [
-      ProgramDay(
-        items: relabelGroups([
-          for (final exercise in workout.exercises) ?item(exercise),
-        ]),
-      ),
-    ],
-  );
+  return changed ? relabelGroups(items) : null;
 }

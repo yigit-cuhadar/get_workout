@@ -64,12 +64,24 @@ class FeaturedError {
   final VoidCallback onRetry;
 }
 
-/// One of the summary block's four figures.
+/// Which way a [FeaturedStat]'s change went: a gain, a drop, or neither
+/// good nor bad (a duration, no change).
+enum FeaturedChangeTone { gain, drop, neutral }
+
+/// One of the summary block's four figures, with its [change] since last
+/// time after the label.
 class FeaturedStat {
-  const FeaturedStat(this.label, this.value);
+  const FeaturedStat(
+    this.label,
+    this.value, {
+    this.change,
+    this.tone = FeaturedChangeTone.neutral,
+  });
 
   final String label;
   final String value;
+  final String? change;
+  final FeaturedChangeTone tone;
 }
 
 /// The one featured card of a screen in its [form]: an [eyebrow] (with a
@@ -190,6 +202,9 @@ class FeaturedCard extends StatelessWidget {
 
   /// Share of on-featured that its quieter text keeps.
   static const double _quiet = 0.72;
+
+  /// Share of success or danger in a stat's change on the featured fill.
+  static const double _changeTint = 0.45;
   static const double _bodyGap = 14;
   static const double _lineGap = 10;
   static const double _chevronSize = 18;
@@ -540,8 +555,31 @@ class FeaturedCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 2,
       children: [
-        Text(
-          stat.label,
+        Text.rich(
+          TextSpan(
+            text: stat.label,
+            children: [
+              if (stat.change case final change?)
+                TextSpan(
+                  text: ' $change',
+                  style: TextStyle(
+                    color: switch (stat.tone) {
+                      FeaturedChangeTone.gain => Color.lerp(
+                        ink,
+                        style.colors.success,
+                        _changeTint,
+                      ),
+                      FeaturedChangeTone.drop => Color.lerp(
+                        ink,
+                        style.colors.danger,
+                        _changeTint,
+                      ),
+                      FeaturedChangeTone.neutral => quiet,
+                    },
+                  ),
+                ),
+            ],
+          ),
           style: text.labelMedium!.copyWith(
             fontWeight: FontWeight.w400,
             color: quiet,

@@ -380,7 +380,7 @@ class _WorkoutTile extends StatelessWidget {
       (SettingsCubit cubit) => cubit.state.settings.weightUnit,
     );
     final workout = entry.workout;
-    final summary = summarizeWorkout(workout, const []);
+    final summary = summarizeWorkout(workout);
     final details = [
       _time(context, workout.startedAt),
       l10n.durationMinutes(summary.duration),

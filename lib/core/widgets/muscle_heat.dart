@@ -118,3 +118,79 @@ class MuscleHeatLegend extends StatelessWidget {
     );
   }
 }
+
+/// A card of what a workout worked: [MuscleHeatPair] painted by its [sets],
+/// beside a [title] and a [line] naming the busiest muscles. Without a
+/// [model] (loading, or it could not load) the figures are shimmering
+/// bars.
+class WorkedMuscles extends StatelessWidget {
+  const WorkedMuscles({
+    super.key,
+    required this.model,
+    required this.sets,
+    required this.title,
+    required this.line,
+  });
+
+  final Model3D? model;
+  final Map<Muscle, num> sets;
+  final String title;
+  final String line;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    final p = style.colors;
+    final text = Theme.of(context).textTheme;
+    final model = this.model;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, Gap.md),
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(style.radii.lg),
+        border: style.cardBorder == 0
+            ? null
+            : Border.all(color: p.line, width: style.cardBorder),
+      ),
+      child: Row(
+        spacing: 14,
+        children: [
+          ExcludeSemantics(
+            child: model == null
+                ? const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 12,
+                    children: [
+                      SkeletonBar(
+                        width: MuscleHeatPair._width,
+                        height: MuscleHeatPair._height,
+                      ),
+                      SkeletonBar(
+                        width: MuscleHeatPair._width,
+                        height: MuscleHeatPair._height,
+                      ),
+                    ],
+                  )
+                : MuscleHeatPair(model: model, sets: sets),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: Gap.xs,
+              children: [
+                Text(
+                  title,
+                  style: text.bodySmall!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: p.ink,
+                  ),
+                ),
+                Text(line, style: text.bodySmall!.copyWith(color: p.inkMuted)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

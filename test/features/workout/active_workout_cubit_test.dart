@@ -134,6 +134,8 @@ void main() {
     );
     when(() => repository.getStats(any(), any()))
         .thenAnswer((_) async => const Ok({}));
+    when(() => repository.programWorkouts(any(), any()))
+        .thenAnswer((_) async => const Ok([]));
     when(
       () => repository.saveWorkout(
         any(),
@@ -176,6 +178,7 @@ void main() {
       confirmStored: ConfirmStoredWorkout(repository),
       rebuildStats: RebuildExerciseStats(repository),
       saveAsProgram: SaveWorkoutAsProgram(SaveProgram(programRepository)),
+      updateProgramDay: UpdateProgramDay(SaveProgram(programRepository)),
       programs: programs,
       catalogue: catalogue,
       watchSettings: WatchSettings(settingsRepository),

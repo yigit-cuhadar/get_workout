@@ -4,12 +4,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
+import 'package:get_workout/features/exercises/domain/vocabulary.dart';
+import 'package:get_workout/features/exercises/presentation/body_model_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
+import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/rest.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
@@ -38,6 +41,9 @@ class _MockPrograms extends MockCubit<ProgramListState>
 
 class _MockEquipment extends MockCubit<EquipmentState>
     implements EquipmentCubit {}
+
+class _MockBodyModel extends MockCubit<BodyModelState>
+    implements BodyModelCubit {}
 
 void main() {
   setUpAll(() => registerFallbackValue(0.0));
@@ -110,6 +116,9 @@ void main() {
     );
     final equipment = _MockEquipment();
     when(() => equipment.state).thenReturn(const EquipmentState(null));
+    final body = _MockBodyModel();
+    when(() => body.state).thenReturn(const BodyModelFailed());
+    when(body.load).thenAnswer((_) async {});
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
@@ -119,6 +128,7 @@ void main() {
           BlocProvider<ExerciseCatalogueCubit>.value(value: catalogue),
           BlocProvider<EquipmentCubit>.value(value: equipment),
           BlocProvider<ProgramListCubit>.value(value: programList),
+          BlocProvider<BodyModelCubit>.value(value: body),
         ],
         child: MaterialApp(
           theme: AppPreset.shipped.lightTheme(),
@@ -324,5 +334,118 @@ void main() {
       find.text('A lighter set to get ready. Not counted in your stats.'),
     );
     expect(line.style!.fontFamily, isNot(contains('Mono')));
+  });
+
+  group('summary', () {
+    final day = DateTime(2026, 11, 13, 18);
+    ActiveWorkoutState finished({
+      String? programId,
+      WorkoutSummary summary = const WorkoutSummary(
+        duration: Duration(minutes: 52),
+        volumeKg: 12400,
+        setCount: 18,
+        exerciseCount: 6,
+      ),
+      List<ProgramItem>? dayChanges,
+    }) => ActiveWorkoutState(
+      status: WorkoutStatus.finished,
+      workout: Workout(
+        id: 'w',
+        startedAt: day,
+        finishedAt: day.add(const Duration(minutes: 52)),
+        programId: programId,
+        dayIndex: programId == null ? null : 0,
+        name: 'Push',
+        exercises: [squat],
+      ),
+      summary: summary,
+      dayChanges: dayChanges,
+    );
+    const program = Program(
+      id: 'p',
+      name: 'Push Pull Legs',
+      days: [ProgramDay(name: 'Push', items: [])],
+    );
+
+    testWidgets('a free workout offers Save as program; Done closes it', (
+      tester,
+    ) async {
+      await pump(tester, finished());
+      expect(find.text('Workout done · Fri, Nov 13'), findsOneWidget);
+      expect(find.text('Save as program'), findsOneWidget);
+      when(() => cubit.summaryShown()).thenReturn(null);
+      await tester.tap(find.text('Done'));
+      verify(() => cubit.summaryShown()).called(1);
+    });
+
+    testWidgets('compares with the day\'s last workout', (tester) async {
+      await pump(
+        tester,
+        finished(
+          programId: 'p',
+          summary: WorkoutSummary(
+            duration: const Duration(minutes: 52),
+            volumeKg: 12400,
+            setCount: 18,
+            exerciseCount: 6,
+            programWeek: 3,
+            previous: (
+              startedAt: DateTime(2026, 11, 6, 18),
+              duration: const Duration(minutes: 56),
+              volumeKg: 11700,
+              setCount: 18,
+            ),
+            muscleSets: const {Muscle.pec: 10, Muscle.triceps: 6},
+          ),
+        ),
+        programs: const [program],
+      );
+      expect(
+        find.text('Push Pull Legs · week 3 · vs Fri, Nov 6'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('−4 min'), findsOneWidget);
+      expect(find.textContaining('+6 %'), findsOneWidget);
+      expect(find.text('Chest 10 sets · Triceps 6'), findsOneWidget);
+      expect(find.text('Save as program'), findsNothing);
+    });
+
+    testWidgets('a changed program day asks before saving the changes', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        finished(programId: 'p', dayChanges: const []),
+        programs: const [program],
+      );
+      when(() => cubit.updateProgramDay()).thenAnswer((_) async {});
+      await tester.tap(find.text('Save changes to Push'));
+      await tester.pumpAndSettle();
+      expect(find.text('Update Push?'), findsOneWidget);
+      await tester.tap(find.text('Update'));
+      await tester.pumpAndSettle();
+      verify(() => cubit.updateProgramDay()).called(1);
+    });
+
+    testWidgets('no record says how close the best came', (tester) async {
+      await pump(
+        tester,
+        finished(
+          summary: const WorkoutSummary(
+            duration: Duration(minutes: 52),
+            volumeKg: 12400,
+            setCount: 18,
+            exerciseCount: 6,
+            closest: (name: 'Bench Press', kg: 2.5),
+          ),
+        ),
+      );
+      expect(
+        find.text(
+          'No new records this time. Bench Press was 2.5 kg off your best.',
+        ),
+        findsOneWidget,
+      );
+    });
   });
 }

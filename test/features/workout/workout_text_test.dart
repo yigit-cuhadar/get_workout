@@ -412,18 +412,7 @@ void main() {
         ),
         '3 × 8 · 20.5 kg',
       );
-      expect(
-        l10n.recordText(
-          NewRecord(
-            exerciseId: 'e',
-            name: 'Squat',
-            kind: RecordKind.heaviestWeight,
-            value: kg80,
-          ),
-          lb,
-        ),
-        'Heaviest weight 176 lb',
-      );
+      expect(l10n.liftedWeightText(kg80, lb), '176 lb');
     });
 
     test('but one typed in the shown unit keeps its decimals', () {
@@ -444,34 +433,12 @@ void main() {
     });
 
     test('an estimated one-rep max is always rounded', () {
-      expect(
-        l10n.recordText(
-          NewRecord(
-            exerciseId: 'e',
-            name: 'Squat',
-            kind: RecordKind.bestE1rm,
-            value: lb.toKg(225.4),
-          ),
-          lb,
-        ),
-        'Best estimated 1RM 225 lb',
-      );
+      expect(l10n.estimatedWeightText(lb.toKg(225.4), lb), '225 lb');
       expect(l10n.estimatedWeightText(102.3, WeightUnit.kg), '102.5 kg');
     });
 
     test('volume keeps its own formatting', () {
-      expect(
-        l10n.recordText(
-          NewRecord(
-            exerciseId: 'e',
-            name: 'Squat',
-            kind: RecordKind.bestSetVolume,
-            value: kg80,
-          ),
-          lb,
-        ),
-        'Best set volume 176.4 lb',
-      );
+      expect(l10n.weightText(kg80, lb), '176.4 lb');
       expect(l10n.weightText(kg80, lb), '176.4 lb');
     });
   });

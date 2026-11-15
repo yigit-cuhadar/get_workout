@@ -128,6 +128,74 @@ void main() {
     });
   });
 
+  group('changedProgramDay', () {
+    final day = Program(
+      id: 'p1',
+      name: 'Legs',
+      days: [
+        ProgramDay(
+          name: 'A',
+          items: [
+            item('squat', sets: 2, repMin: 5, repMax: 5, targetKg: 100),
+            item('lunge'),
+          ],
+        ),
+      ],
+    );
+    Workout done(List<WorkoutExercise> exercises) =>
+        workout('w1', exercises, programId: 'p1', dayIndex: 0);
+    final squat = exercise('squat', [lift(105, 5), lift(105, 5)]);
+    final lunge = exercise('lunge', [lift(20, 10), lift(20, 10), lift(20, 9)]);
+
+    test('reps and weights do not count', () {
+      expect(changedProgramDay(done([squat, lunge]), day, catalogue), isNull);
+    });
+
+    test('a set count, order or rest change gives the new items', () {
+      final more = done([
+        squat.copyWith(sets: [...squat.sets, lift(105, 5, done: false)]),
+        lunge,
+      ]);
+      final items = changedProgramDay(more, day, catalogue)!;
+      expect(items.first.sets, 3);
+      expect(items.first.targetKg, 100);
+      expect(
+        changedProgramDay(
+          done([lunge, squat]),
+          day,
+          catalogue,
+        )!.map((i) => i.exerciseId),
+        ['lunge', 'squat'],
+      );
+      expect(
+        changedProgramDay(
+          done([squat.copyWith(restS: () => 180), lunge]),
+          day,
+          catalogue,
+        )!.first.restS,
+        180,
+      );
+    });
+
+    test('an added exercise gets an item from its sets', () {
+      final plank = exercise('plank', [
+        const WorkoutSet(durationS: 40, done: true),
+      ], type: LoggingType.duration);
+      final items = changedProgramDay(
+        done([squat, lunge, plank]),
+        day,
+        catalogue,
+      )!;
+      expect(items.last.exerciseId, 'plank');
+      expect(items.last.durationS, 40);
+      expect(items.last.restS, 45);
+    });
+
+    test('another program or a free workout is never changed', () {
+      expect(changedProgramDay(workout('w', [lunge]), day, catalogue), isNull);
+    });
+  });
+
   group('swapKeepingLogged', () {
     final lunge = catalogue['lunge']!;
 
