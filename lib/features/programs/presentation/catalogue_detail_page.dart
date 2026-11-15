@@ -32,8 +32,15 @@ class CatalogueDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Read here: a provider's create may not depend on inherited widgets.
     final language = Localizations.localeOf(context).languageCode;
-    return BlocProvider(
-      create: (_) => sl<CatalogueDetailCubit>(param1: id, param2: language),
+    // The catalogue's own route provides the app-wide catalogue only to
+    // itself; this page is a route of its own.
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: sl<ProgramCatalogueCubit>()),
+        BlocProvider(
+          create: (_) => sl<CatalogueDetailCubit>(param1: id, param2: language),
+        ),
+      ],
       child: _CatalogueDetailView(sl<PremiumPrompt>()),
     );
   }
