@@ -203,7 +203,14 @@ class _WorkoutInProgressCard extends StatelessWidget {
       builder: (context) => FeaturedCard(
         form: FeaturedCardForm.block,
         eyebrow: l10n.todayWorkoutInProgress,
-        title: next.name,
+        // Its day's name, not the workout's "Program · Day".
+        title: switch ((next.program, next.dayIndex)) {
+          (final program?, final dayIndex?) => l10n.dayName(
+            program.days[dayIndex],
+            dayIndex,
+          ),
+          _ => next.name,
+        },
         line: FeaturedLine(
           l10n.todayInProgressLine(
             next.exercise,

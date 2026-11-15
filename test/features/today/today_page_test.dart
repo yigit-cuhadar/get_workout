@@ -334,6 +334,29 @@ void main() {
     expect(find.text('Start Lower'), findsNothing);
   });
 
+  testWidgets('a running program day is titled by its day', (tester) async {
+    when(() => workout.state).thenReturn(
+      ActiveWorkoutState(
+        status: WorkoutStatus.active,
+        workout: Workout(
+          id: 'w7',
+          startedAt: DateTime.now(),
+          programId: 'p1',
+          dayIndex: 1,
+          // As startProgramDay names it.
+          name: 'Upper Lower · Lower',
+          exercises: [
+            bench.copyWith(sets: const [open]),
+          ],
+        ),
+      ),
+    );
+    await pumpToday(tester);
+
+    expect(find.text('Lower'), findsOneWidget);
+    expect(find.text('Upper Lower · Lower'), findsNothing);
+  });
+
   testWidgets('without a program, three ways to train', (tester) async {
     when(() => programs.state).thenReturn(
       const ProgramListState(status: ProgramListStatus.ready, premium: false),
