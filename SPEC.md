@@ -384,37 +384,33 @@ screenshot next to the studio board, every state) that the owner approves
 or sends back. A look the studio does not draw is a question for the owner
 and is drawn in the studio first.
 
-Where it stands (2026-11-15, end of the session that built it):
+Where it stands (2026-11-16):
 - Ana sekmeler: done and merged (#105–#107).
-- Antrenman ve programlar: built and unit/widget-tested, pinned to Forge
-  v0.21.0, in draft PRs; not yet checked on a device or approved:
-  #108 exercise list, detail and picker (owns `pickSwap` /
-  `pickReplacement`), #109 workout screen rest, summary, past workout,
-  #110 program detail, ready-made program, catalogue, generator questions,
-  #111 program builder (contains #110). Each PR body lists the owner's
-  answers it follows; all answers are rows of the canvas
-  https://claude.ai/artifact/FTcBZaGmmAHqBZoULbHH33 and are written into
-  the branches' Design bullets.
+- Antrenman ve programlar: done, checked on the iOS simulator and approved
+  by the owner (2026-11-15); merged as #108–#111, studio #113, Forge
+  v0.21.1 (search-field border). The device check's picks K1–K3 are under
+  Design. The approval page and its canvases were local HTML, not kept.
+- GetWorkout Studio's published link is behind `design/studio.html` on
+  main (#113 and later). Publish that file to
+  https://claude.ai/artifact/PuK5WUbeyhVHMxA6THNDC2 from the owner's
+  account (a session signed in elsewhere cannot open it).
+- In progress in its own session: sheets open on the root navigator so
+  they cover the tab bar as the studio draws them (Forge
+  `showForgeBottomSheet` + every app sheet's providers passed in); check
+  every sheet on the device after it merges.
 - Next, in order:
-  1. Join the four branches on a check branch (merge #108 first; then the
-     stub swaps named in #109 and #111: delete `swap_exercise.dart` and
-     `pick_replacement.dart`, import from `exercise_picker_page.dart`;
-     `app_en.arb`, `router.dart` and SPEC conflicts keep both sides).
-  2. GetWorkout Studio: draw what these branches changed (the implementers
-     listed it in their PRs: FeaturedCard summary changes and danger Stop,
-     Record plain sentence, SetTable unticked sets, WorkedMuscles,
-     WorkoutNoteCard, OnboardingQuestion counter/eyebrow, BuilderRow
-     unavailable form and handle, ExerciseRow limit form, the boards' undrawn
-     states and every menu's icons), publish, commit `design/studio.html` in
-     its own PR.
-  3. Device check of every state on the iOS simulator, then the side-by-side
-     approval page; on the owner's approval mark the PRs ready, auto-merge.
-  4. Icons on every ForgeMenu item in the rest of the app (owner's rule;
-     these branches did their own menus).
-  5. The ready-made `dayList` import is on getworkout-dev only; prod waits
+  1. Icons on every ForgeMenu item in the rest of the app (owner's rule;
+     the training screens already have them).
+  2. The ready-made `dayList` import is on getworkout-dev only; prod waits
      for the owner (`tool/import_content.dart --project getworkout-prod`,
      `--dry-run` first).
-  6. Next group: İlerleme.
+  3. Next group: İlerleme. Same flow: implementers per screen set, a check
+     branch joining them, studio drawn from the answers, device check, every
+     finding the studio does not draw asked on a drawn canvas, then the
+     side-by-side approval.
+  4. Open question for the Kurulum group: the Generator preview menu has no
+     icon for "Keep when regenerating" (studio's Menu card shows a history
+     icon; recommended). Draw and ask when that group starts.
 
 ## Design
 
