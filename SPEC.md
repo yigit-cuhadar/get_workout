@@ -598,7 +598,8 @@ Decisions (the canvases they were drawn on are deleted):
   leads to the catalogue); the weekly sets card (with a chevron) opens the
   weekly volume page's model and muscle list for the program, pushed
   above Programs, "<name> · per week" and its total in place of the week
-  picker, every muscle listed, no trend; loading is LoadingView and the error
+  picker, every muscle listed, no trend, and nothing there opens a muscle
+  (the model only turns: "Drag to turn"); loading is LoadingView and the error
   ErrorView with its second line for now; locked rows keep an ink title
   and the Premium tag without a chevron; a locked copy's ⋯ has no Change
   days; the weekly sets card is hidden while the premium status is
