@@ -4,7 +4,6 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/router.dart';
 import '../../../core/max_length_formatter.dart';
 import '../../../core/unsaved_changes.dart';
 import '../../../l10n/app_localizations.dart';
@@ -17,11 +16,21 @@ import 'set_bar.dart';
 import 'workout_edit_cubit.dart';
 import 'workout_editor_view.dart';
 
-/// Edits stored workout [id], or, without one, adds a past workout.
+/// Where a stored workout's edit page and the pages above it live, so they
+/// stay in the tab it was opened from: the calendar's or Today's.
+typedef WorkoutEditRoutes = ({
+  String Function(String id) edit,
+  String Function({required int max, required bool multiple}) picker,
+  String Function(String id) exercise,
+});
+
+/// Edits stored workout [id], or, without one, adds a past workout; the
+/// picker and exercises open at [routes].
 class WorkoutEditPage extends StatelessWidget {
-  const WorkoutEditPage({super.key, this.id});
+  const WorkoutEditPage({super.key, this.id, required this.routes});
 
   final String? id;
+  final WorkoutEditRoutes routes;
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +38,14 @@ class WorkoutEditPage extends StatelessWidget {
     final freeName = AppLocalizations.of(context).workoutFreeName;
     return BlocProvider(
       create: (_) => sl<WorkoutEditCubit>(param1: id, param2: freeName),
-      child: const _EditView(),
+      child: _EditView(routes),
     );
   }
 }
 
 class _EditView extends StatelessWidget {
-  const _EditView();
+  const _EditView(this.routes);
+  final WorkoutEditRoutes routes;
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +122,7 @@ class _EditView extends StatelessWidget {
                   onRetry: cubit.retry,
                 ),
                 _ when !editing => const LoadingView(),
-                _ => _Form(state),
+                _ => _Form(state, routes),
               },
             ),
           );
@@ -123,8 +133,9 @@ class _EditView extends StatelessWidget {
 }
 
 class _Form extends StatelessWidget {
-  const _Form(this.state);
+  const _Form(this.state, this.routes);
   final WorkoutEditState state;
+  final WorkoutEditRoutes routes;
 
   @override
   Widget build(BuildContext context) {
@@ -232,8 +243,8 @@ class _Form extends StatelessWidget {
           ExerciseCards(
             state: state,
             editor: cubit,
-            picker: Routes.calendarPicker,
-            exerciseRoute: Routes.calendarExercise,
+            picker: routes.picker,
+            exerciseRoute: routes.exercise,
           ),
           SliverPadding(
             padding: const EdgeInsets.only(bottom: Gap.xl),
@@ -281,7 +292,7 @@ class _Form extends StatelessWidget {
     final cubit = context.read<WorkoutEditCubit>();
     final language = Localizations.localeOf(context).languageCode;
     final picked = await context.push<List<Exercise>>(
-      Routes.calendarPicker(
+      routes.picker(
         max: WorkoutLimits.maxExercises - workout.exercises.length,
         multiple: true,
       ),

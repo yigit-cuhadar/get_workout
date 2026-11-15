@@ -159,7 +159,11 @@ void main() {
     final router = GoRouter(
       initialLocation: '/today',
       routes: [
-        GoRoute(path: '/today', builder: (_, _) => const TodayPage()),
+        GoRoute(
+          path: '/today',
+          builder: (_, _) => const TodayPage(),
+          routes: [GoRoute(path: 'workouts/:id', builder: location)],
+        ),
         GoRoute(
           path: '/:a',
           builder: location,
@@ -268,7 +272,14 @@ void main() {
 
     await tester.tap(find.text('See summary'));
     await tester.pumpAndSettle();
-    expect(find.text('at /progress/calendar/w5'), findsOneWidget);
+    expect(find.text('at /today/workouts/w5'), findsOneWidget);
+
+    // On top of Today: Back returns there.
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    navigator.pop();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Done today · Upper'), findsOneWidget);
   });
 
   testWidgets('a missed day is answered in its band, without Start', (

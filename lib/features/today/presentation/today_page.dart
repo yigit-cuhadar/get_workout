@@ -296,8 +296,8 @@ class _RestDayCard extends StatelessWidget {
   }
 }
 
-/// The workout finished today, opening its summary, over the next day,
-/// planned later, which opens the program like the block.
+/// The workout finished today, opening its page above Today, over the
+/// next day, planned later, which opens the program like the block.
 class _DoneTodayCard extends StatelessWidget {
   const _DoneTodayCard(this.next);
   final DoneToday next;
@@ -333,7 +333,7 @@ class _DoneTodayCard extends StatelessWidget {
           ),
           action: FeaturedAction(
             l10n.todaySeeSummary,
-            () => context.go(Routes.calendarWorkout(workout.id)),
+            () => context.push(Routes.todayWorkout(workout.id)),
           ),
           onTap: openProgram,
         ),

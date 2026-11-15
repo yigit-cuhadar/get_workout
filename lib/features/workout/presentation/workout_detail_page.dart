@@ -15,16 +15,19 @@ import '../domain/exercise_stats.dart';
 import '../domain/workout.dart';
 import 'widgets/set_table.dart';
 import 'workout_detail_cubit.dart';
+import 'workout_edit_page.dart';
 import 'workout_editor_view.dart';
 import 'workout_summary_card.dart';
 import 'workout_text.dart';
 
-/// A stored workout as it was logged, with its totals; it can be edited or
-/// deleted once the server has its latest change.
+/// A stored workout as it was logged, with its totals; it can be edited
+/// (at [routes], above this page) or deleted once the server has its latest
+/// change.
 class WorkoutDetailPage extends StatelessWidget {
-  const WorkoutDetailPage({super.key, required this.id});
+  const WorkoutDetailPage({super.key, required this.id, required this.routes});
 
   final String id;
+  final WorkoutEditRoutes routes;
 
   @override
   Widget build(BuildContext context) => MultiBlocProvider(
@@ -32,12 +35,13 @@ class WorkoutDetailPage extends StatelessWidget {
       BlocProvider(create: (_) => sl<WorkoutDetailCubit>(param1: id)),
       BlocProvider.value(value: sl<ProgramListCubit>()),
     ],
-    child: const _DetailView(),
+    child: _DetailView(routes),
   );
 }
 
 class _DetailView extends StatelessWidget {
-  const _DetailView();
+  const _DetailView(this.routes);
+  final WorkoutEditRoutes routes;
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +81,7 @@ class _DetailView extends StatelessWidget {
                   tooltip: l10n.historyEdit,
                   icon: const Icon(Icons.edit_outlined),
                   onPressed: state.canChange
-                      ? () => context.go(Routes.calendarWorkoutEdit(workout.id))
+                      ? () => context.push(routes.edit(workout.id))
                       : null,
                 ),
                 IconButton(
