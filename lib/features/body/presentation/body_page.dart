@@ -530,6 +530,7 @@ Future<void> _showAddSheet(BuildContext context) {
   final cubit = context.read<BodyChartCubit>();
   return showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => BlocProvider.value(

@@ -14,6 +14,7 @@ Future<void> showFilterSheet(BuildContext context) {
   final library = context.read<LibraryCubit>();
   return showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => BlocProvider.value(

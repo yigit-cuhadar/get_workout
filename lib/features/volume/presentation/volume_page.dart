@@ -269,6 +269,7 @@ class _VolumeModelState extends State<VolumeModel> {
 Future<void> _showMuscle(BuildContext context, Muscle muscle) =>
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       showDragHandle: true,
       builder: (_) => BlocProvider.value(

@@ -15,6 +15,7 @@ Future<bool> showEquipmentPicker(BuildContext context) async {
   final cubit = context.read<EquipmentCubit>();
   final saved = await showModalBottomSheet<bool>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => DraggableScrollableSheet(
