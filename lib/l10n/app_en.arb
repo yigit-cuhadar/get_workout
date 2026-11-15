@@ -188,7 +188,7 @@
   "@detailLoggedAs": {"placeholders": {"type": {"type": "String"}}},
   "detailOwnNote": "Your note",
   "detailOwnNoteAdd": "Add",
-  "detailOwnNoteSaveFailed": "Couldn't save your note. Try again",
+  "detailOwnNoteSaveFailed": "Couldn't save your note. Try again.",
   "addToProgramNoneTitle": "No programs yet",
   "addToProgramDayOf": "Add to which day of {program}?",
   "@addToProgramDayOf": {"placeholders": {"program": {"type": "String"}}},

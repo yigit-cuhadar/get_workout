@@ -142,7 +142,7 @@ class _AddAction extends StatelessWidget {
           ),
           ForgeMenuItem(
             label: l10n.addToProgram,
-            icon: ForgeIcons.description,
+            icon: ForgeIcons.add,
             onTap: () => _addToProgram(context),
           ),
         ],
@@ -342,7 +342,7 @@ class _OwnNote extends StatelessWidget {
       title: l10n.detailOwnNote,
       actionLabel: note == null ? l10n.detailOwnNoteAdd : l10n.customEdit,
       onAction: () => _edit(context, note),
-      child: note == null ? const SizedBox.shrink() : Text(note),
+      child: note == null ? null : Text(note),
     );
   }
 

@@ -689,7 +689,8 @@ Decisions (the canvases they were drawn on are deleted):
   tag with "Logged as …" under the model and only Equipment as a fact;
   Setup and How to do it as numbered circles; Common mistakes, Safety and
   Cues as bulleted lines in plain cards; a catalogue exercise has a "Your
-  note" card (Add while empty, Edit once written, a sheet with Save);
+  note" card (only its title and Add while empty; the note with Edit
+  once written; a sheet with Save);
   Similar rows end in their tag and a chevron; the app bar's star is an
   outline that fills when a favourite, Add opens a menu and a custom
   exercise has ⋯ (Edit, Delete after a dialog); the program and day
@@ -707,10 +708,11 @@ Decisions (the canvases they were drawn on are deleted):
   in the library) list up to eight similar exercises first under
   "Similar" (narrowed by the search and filters, hidden when none match)
   and the rest under "All exercises", no count or sort; a tap picks; Swap
-  notes the logged sets ("Sets 1 and 2 are logged; the rest move to the
-  new exercise.", none while nothing is logged). Menus carry an icon per
+  notes the logged sets ("Set 1 is logged; …", "Sets 1 and 2 are logged;
+  the rest move to the new exercise.", "Sets 1–3 are logged; …"; none
+  while nothing is logged). Menus carry an icon per
   item: sort Most popular (trending up) / A–Z (list); Add to workout
-  (dumbbell) / Add to program (document); Edit (edit) / Delete (delete).
+  (dumbbell) / Add to program (plus); Edit (edit) / Delete (delete).
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
