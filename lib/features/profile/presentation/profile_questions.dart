@@ -238,9 +238,9 @@ class ProfileQuestion extends StatelessWidget {
   }
 }
 
-/// The equipment owned: presets as chips, then the common items as rows
-/// with a square checkbox in front and Show all equipment, which lists
-/// every item. Bodyweight is always owned, so it is not offered.
+/// The equipment owned: presets as chips, then the common items and every
+/// item owned as rows with a square checkbox in front, and Show all
+/// equipment, which lists every item. Bodyweight is always owned, so it is not offered.
 class EquipmentAnswer extends StatefulWidget {
   const EquipmentAnswer({
     super.key,
@@ -276,12 +276,16 @@ class _EquipmentAnswerState extends State<EquipmentAnswer> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final owned = widget.owned;
-    final items = _all
-        ? [
-            for (final item in Equipment.values)
-              if (item != Equipment.bodyweight) item,
-          ]
-        : EquipmentAnswer.common;
+    // Collapsed, the common items and everything owned, in vocabulary
+    // order after the common ones.
+    final items = [
+      ...EquipmentAnswer.common,
+      for (final item in Equipment.values)
+        if (item != Equipment.bodyweight &&
+            !EquipmentAnswer.common.contains(item) &&
+            (_all || (owned?.contains(item) ?? false)))
+          item,
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 12,
@@ -310,7 +314,7 @@ class _EquipmentAnswerState extends State<EquipmentAnswer> {
                 checked: owned?.contains(item) ?? false,
                 onTap: () => widget.onToggle(item),
               ),
-            if (!_all)
+            if (items.length < Equipment.values.length - 1)
               ListRow(
                 title: l10n.equipmentShowAll,
                 onTap: () => setState(() => _all = true),

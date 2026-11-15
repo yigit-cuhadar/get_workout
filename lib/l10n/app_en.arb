@@ -1824,5 +1824,6 @@
   "catalogueGetPremiumToStart": "Get Premium to start",
   "equipmentShowAll": "Show all equipment",
   "catalogueReasonsAnd": "{first} and {last}",
-  "@catalogueReasonsAnd": {"placeholders": {"first": {"type": "String"}, "last": {"type": "String"}}}
+  "@catalogueReasonsAnd": {"placeholders": {"first": {"type": "String"}, "last": {"type": "String"}}},
+  "catalogueStartFailed": "Added, but couldn't start the program. Try again."
 }

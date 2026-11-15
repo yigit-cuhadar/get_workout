@@ -683,7 +683,8 @@ Decisions (the canvases they were drawn on are deleted):
   finished "… · Mon, Wed, Fri" / "Finished" with Run it again (weekday
   picker) and New program, no Stop; a missed day takes the Today missed
   form (You missed Legs on Wed, Nov 11, Missed, Do it today, Move to
-  Monday and Skip, no Start) with Change days and Stop under it; the days
+  Monday and Skip, no Start; the progress bar stays) with Change days and
+  Stop under it; the days
   mismatch is a danger line over the progress; a locked Premium copy
   keeps the lock in the eyebrow and Start in place (it opens the
   paywall), its note without an icon, no Change days, Stop kept; the
@@ -693,7 +694,8 @@ Decisions (the canvases they were drawn on are deleted):
   next day open while active), its exercises "4 × 6–8 · Rest 2:00", not
   tappable; a superset or circuit gets a muted "Superset A · rest after
   each round 1:30" over it and its exercises lose their own rest; ▶ on
-  each day row starts that day (waits for its Forge icon); ⋯ Edit,
+  each day row, in front of the chevron, starts that day (a locked copy
+  opens the paywall); ⋯ Edit,
   Duplicate, Delete (each with an icon); dialogs are ForgeDialogs; the
   weekday picker says "Workouts follow these days each week."; load
   error is ErrorView with its second line, not found an untitled
@@ -712,7 +714,8 @@ Decisions (the canvases they were drawn on are deleted):
   first (Open my copy / Add another copy), then Replace your active
   program?, then the weekday picker; only once the days are picked is
   the copy made and started, then its page opens; cancelling leaves the
-  page unchanged; ⋯ Duplicate copies it and opens the builder on the
+  page unchanged; a copy that cannot be started stays, not started, with
+  "Added, but couldn't start the program. Try again."; ⋯ Duplicate copies it and opens the builder on the
   copy, hidden for a locked program; unlocking is Forge NoticeBanner
   ("Unlocking this program" / "Premium is active. This takes a
   moment." / Retry); a program with an exercise no longer available has
@@ -739,7 +742,7 @@ Decisions (the canvases they were drawn on are deleted):
   and "Generate a program" over each question; Continue, "Create my
   program" on the last; the equipment answer is the OnboardingQuestion
   card's (preset chips, ListRow checkboxes in front, seven common items
-  and Show all equipment; onboarding and Your profile too); focus muscles
+  and every item owned, then Show all equipment for the rest; onboarding and Your profile too); focus muscles
   as chips under "Focus muscles (2 of 3)"; left-out exercises as rows with
   × and a secondary "Add exercises to leave out".
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that

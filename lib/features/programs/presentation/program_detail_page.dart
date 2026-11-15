@@ -561,6 +561,8 @@ class _DaysState extends State<_Days> {
             index: index,
             open: _open.contains(index),
             onToggle: () => _toggle(index),
+            // Locked, it opens the paywall instead.
+            onStart: () => startProgramDay(context, program, index),
           ),
       ],
     );
