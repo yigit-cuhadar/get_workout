@@ -183,6 +183,8 @@ void main() {
     final first = tester.getTopLeft(find.text('Dumbbell Bench Press')).dy;
     expect(first, allOf(greaterThan(similar), lessThan(rest)));
     expect(tester.getTopLeft(find.text('Cable Fly')).dy, greaterThan(rest));
+    // The exercise being swapped is not offered for itself.
+    expect(find.text('Bench Press'), findsNothing);
     expect(find.text('Alternative'), findsOneWidget);
     expect(find.text('Variation'), findsOneWidget);
 

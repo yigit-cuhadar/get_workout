@@ -26,6 +26,7 @@ class LibraryListView extends StatefulWidget {
     this.searchWhileLoading = false,
     this.sectionsFor,
     this.similar,
+    this.replacing,
     this.onCreate,
   });
 
@@ -44,6 +45,10 @@ class LibraryListView extends StatefulWidget {
   /// Listed first under "Similar", as far as the search and filters keep
   /// them, with the other results under "All exercises"; no count or sort.
   final List<Exercise>? similar;
+
+  /// With [similar]: the id of the exercise being swapped or replaced,
+  /// which is not offered as its own replacement.
+  final String? replacing;
 
   /// With it, a search matching nothing offers to create the searched
   /// exercise; it gets the search text.
@@ -200,7 +205,14 @@ class _LibraryListViewState extends State<LibraryListView> {
             ),
           );
         } else if (similar != null) {
-          body = _SimilarFirst(similar: similar, results: results, tile: _tile);
+          body = _SimilarFirst(
+            similar: similar,
+            results: [
+              for (final exercise in results)
+                if (exercise.id != widget.replacing) exercise,
+            ],
+            tile: _tile,
+          );
         } else {
           body = CustomScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,

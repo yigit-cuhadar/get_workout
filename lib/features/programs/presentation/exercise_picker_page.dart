@@ -142,7 +142,7 @@ class ExercisePickerPage extends StatelessWidget {
         form: form,
         limit: limit,
         logged: logged,
-        similarTo: exerciseId != null,
+        exerciseId: exerciseId,
       ),
     );
   }
@@ -153,15 +153,16 @@ class _PickerView extends StatefulWidget {
     required this.form,
     required this.limit,
     required this.logged,
-    required this.similarTo,
+    required this.exerciseId,
   });
 
   final ExercisePickerForm form;
   final int limit;
   final int logged;
 
-  /// Whether an [ExerciseDetailCubit] gives the exercise's similar ones.
-  final bool similarTo;
+  /// The exercise being swapped or replaced, if any; an
+  /// [ExerciseDetailCubit] gives its similar ones.
+  final String? exerciseId;
 
   @override
   State<_PickerView> createState() => _PickerViewState();
@@ -214,7 +215,7 @@ class _PickerViewState extends State<_PickerView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final picker = context.read<ExercisePickerCubit>();
-    final detail = widget.similarTo
+    final detail = widget.exerciseId != null
         ? context.watch<ExerciseDetailCubit>().state
         : null;
     final subject = detail is DetailReady
@@ -274,6 +275,7 @@ class _PickerViewState extends State<_PickerView> {
                 Expanded(
                   child: LibraryListView(
                     similar: similar,
+                    replacing: widget.exerciseId,
                     onCreate: _create,
                     tileBuilder: (context, exercise) => picker.multiple
                         ? ExerciseTile(
