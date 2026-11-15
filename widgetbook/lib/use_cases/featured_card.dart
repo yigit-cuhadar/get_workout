@@ -227,7 +227,7 @@ Widget featuredBandChart(BuildContext context) => _page(
       icon: ForgeIcons.trendingUp,
     ),
     chart: context.knobs.boolean(label: 'One weigh-in')
-        ? const SparklineEmpty(message: 'Log again to see the trend')
+        ? const SparklineEmptyBox(message: 'Log again to see the trend')
         : Sparkline(
             values: const [86.3, 85.9, 85.1, 84.6, 83.9, 83.2, 82.8, 82.4],
             color: ForgeStyle.of(context).colors.accent,

@@ -238,6 +238,10 @@ void main() {
 
     expect(find.text('82.4 kg'), findsOneWidget);
     expect(find.text('−0.4 since Nov 8'), findsOneWidget);
+    expect(
+      tester.widgetList<ForgeIcon>(find.byType(ForgeIcon)).map((i) => i.icon),
+      contains(ForgeIcons.trendingDown),
+    );
     expect(find.text('19.5 % fat'), findsOneWidget);
     expect(find.byType(app.Sparkline), findsOneWidget);
     expect(find.text('Nov 9–15'), findsOneWidget);

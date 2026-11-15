@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 
 import '../../../app/router.dart';
 import '../../../core/sparkline.dart';
-import '../../../core/text_length.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../body/presentation/body_list_cubit.dart';
@@ -206,7 +205,7 @@ class _BodyCard extends StatelessWidget {
                 values: [for (final point in snapshot.weights) point.kg],
                 color: ForgeStyle.of(context).colors.accent,
               )
-            : SparklineEmpty(message: l10n.progressBodyTrendEmpty),
+            : SparklineEmptyBox(message: l10n.progressBodyTrendEmpty),
         action: logWeight,
         moreActions: [measure],
         onTap: open,
@@ -232,7 +231,7 @@ class _BodyCard extends StatelessWidget {
       data: fat == null
           ? null
           : l10n.progressBodyFat(l10n.bodyFat(fat.percent)),
-      icon: ForgeIcons.trendingUp,
+      icon: change < 0 ? ForgeIcons.trendingDown : ForgeIcons.trendingUp,
     );
   }
 }
@@ -356,9 +355,6 @@ TextStyle _quiet(BuildContext context) =>
 class _StrengthCard extends StatelessWidget {
   const _StrengthCard();
 
-  /// The exercise names the header's detail has room for.
-  static const _nameLength = 22;
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -387,21 +383,14 @@ class _StrengthCard extends StatelessWidget {
       (ProgressStrengthStatus.ready, final highlight?) => SectionCard(
         title: title,
         detail: l10n.progressStrengthDetail(
-          _cut(
-            state.exercise?.localized(context).name ??
-                l10n.strengthRemovedExercise,
-          ),
+          state.exercise?.localized(context).name ??
+              l10n.strengthRemovedExercise,
         ),
         onTap: open,
         child: _StrengthFigure(highlight.e1rmKg, highlight.change),
       ),
     };
   }
-
-  /// Cut with "…" so the header keeps its title.
-  static String _cut(String name) => name.length <= _nameLength
-      ? name
-      : '${cutToLength(name, _nameLength - 1).trimRight()}…';
 }
 
 class _StrengthFigure extends StatelessWidget {
