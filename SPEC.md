@@ -639,6 +639,19 @@ Decisions (the canvases they were drawn on are deleted):
   v0.20); the tabs are Forge NavigationBar with the workout bar above it,
   and the shell's notices are Forge snackbars (4 s, "Open" on a restored
   workout).
+- Progress screen step (owner's picks, 2026-11-15): Body is the featured
+  band (the latest weight as its title, the change since the previous
+  weigh-in as its line, "−0.4 since Nov 8", with the newest body fat at
+  its end, the app's own bare line, Log weight and Measurement day); the
+  whole band opens Body; a single weigh-in shows a dashed box "Log again to
+  see the trend"; a failed body list keeps the band's eyebrow, the error
+  with Retry on one line and both buttons; the measurement-day prompt
+  (TipBanner) shows under Body while the measurement reminder is on, from
+  two days before its next date through that day, until a measurement
+  day is saved in that time; swiping it away hides it until the next date
+  (kept on the device); a card's error is SectionCard.error and no step
+  access SectionCard.empty "See your steps", as on Today; a drop in
+  strength is written in danger, a gain in success.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
@@ -2049,15 +2062,24 @@ the feature you are about to touch, and keep it true when you change it.
   the new day and week when the app resumes, and the week strip also when
   a snapshot arrives after the week ended; steps are read again on
   resume.
-- **Progress tab** (UX pass, 2026-11-13): one card per area, each opening
-  its page from anywhere on the card. Body: the latest weight, the weights
-  of the last 12 weeks as a sparkline, the newest body fat, Log weight and
-  Measurement day. Calendar: this week's strip (the one Today shows) and
-  the month's count of finished workouts. Weekly volume: this week's total
-  and muscle bars, never the trend. Strength: the best estimated 1RM of the
-  most recently trained exercises. Cardio: this week. Steps: today against
-  the goal. Each card reads through its own cubit and shows its own
-  failure, so one area failing leaves the others.
+- **Progress tab** (UX pass, 2026-11-13; screen step 2026-11-15): one
+  card per area, each opening its page from anywhere on the card. Body:
+  the latest weight, the change since the previous weigh-in, the newest
+  body fat, the weights of the last 12 weeks as a line, Log weight and
+  Measurement day; the measurement-day prompt under it when due.
+  Calendar: this week's strip (the one Today shows), always, with the
+  week's dates as its detail; no month count. Weekly volume: this week's
+  sets against the active program's planned weekly sets (every day of a
+  week once, `ProgramListState.plannedWeeklySets`) as "96 / 120 sets" and
+  a bar, then how many trained muscles are in, below and above the band;
+  without a running program "96 sets" and no bar. Strength: the most
+  recently trained exercise with an estimated 1RM, its latest workout's
+  best e1RM and the change since the first e1RM of the last 12 weeks ("+3
+  in 8 weeks", none with one there); the card opens the strength list.
+  Cardio: this week's sessions, distance and minutes. Steps: today
+  against the goal; no card without a health store. Each card reads
+  through its own cubit and shows its own failure, so one area failing
+  leaves the others.
 - **Calendar**: Progress → Calendar is one scrolling page (UX pass,
   2026-11-13): a card with this week's strip, which opens to the month
   (previous / next; tapping a date of a neighbouring month opens that
@@ -2124,8 +2146,8 @@ the feature you are about to touch, and keep it true when you change it.
   named or known to be gone (one no longer in the library shows as
   removed, since stats keep no name). If that collection read grows too
   costly, the fix is a small last-trained index written in the same batch
-  as the stats. An exercise's page opens from there and from its Progress
-  tile only; the exercise detail page no longer links to it (UX pass,
+  as the stats. An exercise's page opens from there only (the Progress card
+  opens the list); the exercise detail page no longer links to it (UX pass,
   2026-11-13). It lists the records (heaviest weight,
   best e1RM, most reps, best set volume, longest time), each opening the
   workout that set it, and charts each workout's best e1RM in the user's

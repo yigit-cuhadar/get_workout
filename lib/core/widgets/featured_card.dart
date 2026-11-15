@@ -31,18 +31,33 @@ class FeaturedAction {
   final bool locked;
 }
 
-/// The line under a [FeaturedCard]'s name: a dumbbell, the [text] and a
-/// mono [data] value at its end.
+/// The line under a [FeaturedCard]'s name: its [icon] (a dumbbell unless
+/// given), the [text] and a mono [data] value at its end.
 class FeaturedLine {
-  const FeaturedLine(this.text, {this.data}) : status = null;
+  const FeaturedLine(this.text, {this.data, this.icon}) : status = null;
 
   /// A missed day: a calendar, the [text] and the [status] in danger.
   const FeaturedLine.missed(this.text, {required String this.status})
-    : data = null;
+    : data = null,
+      icon = null;
 
   final String text;
   final String? data;
   final String? status;
+  final ForgeIconData? icon;
+}
+
+/// What a [FeaturedCard.bandError] failed at: the [message] and a retry.
+class FeaturedError {
+  const FeaturedError(
+    this.message, {
+    required this.retryLabel,
+    required this.onRetry,
+  });
+
+  final String message;
+  final String retryLabel;
+  final VoidCallback onRetry;
 }
 
 /// One of the summary block's four figures.
@@ -56,7 +71,7 @@ class FeaturedStat {
 /// The one featured card of a screen in its [form]: an [eyebrow] (with a
 /// lock when [locked]) over the [title], then a band's [progress], the
 /// [line], a [note], the summary's four [stats] and its buttons, and a
-/// band's [rows]. The first button is the main one; one of [moreActions]
+/// band's [rows]; a band may hold a [chart] over its buttons. The first button is the main one; one of [moreActions]
 /// sits beside [action], two sit side by side under it; a prompt stacks
 /// them all. With [onTap] the whole card opens something and shows a
 /// chevron; a band may show its [menu] there instead.
@@ -74,13 +89,37 @@ class FeaturedCard extends StatelessWidget {
     this.moreActions = const [],
     this.progress,
     this.rows = const [],
+    this.chart,
     this.menu,
     this.onTap,
   }) : assert(
-         form == FeaturedCardForm.band || (progress == null && menu == null),
-         'Only a band has progress and a menu.',
+         form == FeaturedCardForm.band ||
+             (progress == null && menu == null && chart == null),
+         'Only a band has progress, a chart and a menu.',
        ),
        assert(menu == null || onTap == null, 'A menu or a chevron, not both.'),
+       error = null,
+       loading = false;
+
+  /// A band whose content failed to load: the [eyebrow] alone, then the
+  /// [error]'s message in danger beside an outline Retry, over the buttons.
+  const FeaturedCard.bandError({
+    super.key,
+    required String this.eyebrow,
+    required FeaturedError this.error,
+    this.action,
+    this.moreActions = const [],
+    this.onTap,
+  }) : form = FeaturedCardForm.band,
+       title = null,
+       locked = false,
+       line = null,
+       note = null,
+       stats = const [],
+       progress = null,
+       rows = const [],
+       chart = null,
+       menu = null,
        loading = false;
 
   /// The card while what it shows loads: the [eyebrow] over shimmering
@@ -96,8 +135,10 @@ class FeaturedCard extends StatelessWidget {
       moreActions = const [],
       progress = null,
       rows = const [],
+      chart = null,
       menu = null,
       onTap = null,
+      error = null,
       loading = true;
 
   final FeaturedCardForm form;
@@ -120,6 +161,11 @@ class FeaturedCard extends StatelessWidget {
   /// A band's rows under its buttons ([ListRow]s, e.g. a program's days),
   /// a line between each two and above the first.
   final List<Widget> rows;
+
+  /// A band's chart (a sparkline, or the box that stands in for one)
+  /// between its line and its buttons.
+  final Widget? chart;
+  final FeaturedError? error;
 
   /// A band's options (an icon button opening a menu) in the chevron's
   /// place, when the band itself opens nothing.
@@ -212,13 +258,14 @@ class FeaturedCard extends StatelessWidget {
                     Flexible(child: Text(eyebrow!, style: eyebrowStyle)),
                   ],
                 ),
-                Semantics(
-                  header: true,
-                  child: Text(
-                    title!,
-                    style: text.headlineMedium!.copyWith(color: headInk),
+                if (title case final title?)
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      title,
+                      style: text.headlineMedium!.copyWith(color: headInk),
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -315,7 +362,10 @@ class FeaturedCard extends StatelessWidget {
           spacing: _lineGap,
           children: [
             ForgeIcon(
-              line.status == null ? ForgeIcons.fitnessCenter : ForgeIcons.event,
+              line.icon ??
+                  (line.status == null
+                      ? ForgeIcons.fitnessCenter
+                      : ForgeIcons.event),
               size: _chevronSize,
               color: ink,
             ),
@@ -337,8 +387,26 @@ class FeaturedCard extends StatelessWidget {
               ),
           ],
         ),
+      if (error case final error?)
+        Row(
+          spacing: Gap.sm,
+          children: [
+            Expanded(
+              child: Text(
+                error.message,
+                style: text.bodySmall!.copyWith(color: p.danger),
+              ),
+            ),
+            ForgeButton(
+              label: error.retryLabel,
+              onPressed: error.onRetry,
+              variant: ForgeButtonVariant.outline,
+            ),
+          ],
+        ),
       if (note != null)
         Text(note, style: text.bodySmall!.copyWith(color: quiet)),
+      ?chart,
       if (stats.isNotEmpty)
         Padding(
           padding: const EdgeInsets.only(top: Gap.xs),

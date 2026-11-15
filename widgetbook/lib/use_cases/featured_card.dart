@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:forge_ui/forge_ui.dart';
+import 'package:forge_ui/forge_ui.dart' hide Sparkline;
+import 'package:get_workout/core/sparkline.dart';
 import 'package:get_workout/core/widgets/featured_card.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
@@ -211,5 +212,43 @@ Widget featuredBandRows(BuildContext context) => _page(
         detail: 'Planned',
       ),
     ],
+  ),
+);
+
+@widgetbook.UseCase(name: 'Band · figure and chart', type: FeaturedCard)
+Widget featuredBandChart(BuildContext context) => _page(
+  FeaturedCard(
+    form: FeaturedCardForm.band,
+    eyebrow: 'Body',
+    title: '82.4 kg',
+    line: const FeaturedLine(
+      '−0.4 since Nov 8',
+      data: '19.5 % fat',
+      icon: ForgeIcons.trendingUp,
+    ),
+    chart: context.knobs.boolean(label: 'One weigh-in')
+        ? const SparklineEmptyBox(message: 'Log again to see the trend')
+        : Sparkline(
+            values: const [86.3, 85.9, 85.1, 84.6, 83.9, 83.2, 82.8, 82.4],
+            color: ForgeStyle.of(context).colors.accent,
+          ),
+    action: FeaturedAction('Log weight', () {}),
+    moreActions: [FeaturedAction('Measurement day', () {})],
+    onTap: () {},
+  ),
+);
+
+@widgetbook.UseCase(name: 'Band · error', type: FeaturedCard)
+Widget featuredBandError(BuildContext context) => _page(
+  FeaturedCard.bandError(
+    eyebrow: 'Body',
+    error: FeaturedError(
+      "Couldn't load your entries",
+      retryLabel: 'Retry',
+      onRetry: () {},
+    ),
+    action: FeaturedAction('Log weight', () {}),
+    moreActions: [FeaturedAction('Measurement day', () {})],
+    onTap: () {},
   ),
 );
