@@ -82,6 +82,16 @@ class TrainingProfile extends Equatable {
   final int? daysPerWeek;
   final Set<Equipment>? equipment;
 
+  /// Whether [program] is for the user's goal, level and days per week, all
+  /// answered: the Fits you tag.
+  bool suits(CatalogueProgram program) =>
+      goal != null &&
+      level != null &&
+      daysPerWeek != null &&
+      program.goal == goal &&
+      program.level == level &&
+      program.daysPerWeek == daysPerWeek;
+
   @override
   List<Object?> get props => [goal, level, daysPerWeek, equipment];
 }

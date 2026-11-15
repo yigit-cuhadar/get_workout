@@ -22,7 +22,8 @@ class ProgramCard extends StatelessWidget {
        _row = false;
 
   /// The catalogue's list row: the [name] with a Fits you or Premium tag,
-  /// the [facts] under it and a chevron. Put rows in a ListRowCard.
+  /// the [facts] under it and, where it applies, a recommended row's
+  /// [match]; a chevron unless [locked]. Put rows in a ListRowCard.
   const ProgramCard.row({
     super.key,
     required this.name,
@@ -30,9 +31,10 @@ class ProgramCard extends StatelessWidget {
     this.fits = false,
     this.locked = false,
     this.recommended = false,
+    this.match,
     required this.onTap,
-  }) : tags = const [],
-       match = null,
+  }) : assert(match == null || recommended),
+       tags = const [],
        _row = true;
 
   final String name;
@@ -64,6 +66,24 @@ class ProgramCard extends StatelessWidget {
     final premium = locked
         ? ForgeTag(l10n.cataloguePremium, kind: ForgeTagKind.premium)
         : null;
+    final match = this.match;
+    final matchRow = match == null
+        ? null
+        : Row(
+            spacing: 5,
+            children: [
+              ForgeIcon(ForgeIcons.check, size: 14, color: p.success),
+              Flexible(
+                child: Text(
+                  match,
+                  style: text.labelMedium!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: p.success,
+                  ),
+                ),
+              ),
+            ],
+          );
 
     if (_row) {
       return InkWell(
@@ -112,17 +132,18 @@ class ProgramCard extends StatelessWidget {
                         color: p.inkMuted,
                       ),
                     ),
+                    ?matchRow,
                   ],
                 ),
               ),
-              chevron,
+              // A locked row keeps an ink title and loses the chevron.
+              if (!locked) chevron,
             ],
           ),
         ),
       );
     }
 
-    final match = this.match;
     return Material(
       color: p.surface,
       clipBehavior: Clip.antiAlias,
@@ -173,26 +194,7 @@ class ProgramCard extends StatelessWidget {
                         runSpacing: 6,
                         children: [for (final tag in tags) ForgeTag(tag)],
                       ),
-                    if (match != null)
-                      Row(
-                        spacing: 5,
-                        children: [
-                          ForgeIcon(
-                            ForgeIcons.check,
-                            size: 14,
-                            color: p.success,
-                          ),
-                          Flexible(
-                            child: Text(
-                              match,
-                              style: text.labelMedium!.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: p.success,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    ?matchRow,
                   ],
                 ),
               ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_workout/core/widgets/onboarding_question.dart';
+import 'package:get_workout/features/exercises/domain/vocabulary.dart';
+import 'package:get_workout/features/profile/presentation/profile_questions.dart';
 import 'package:get_workout/features/profile/presentation/ruler_picker.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
@@ -9,6 +11,64 @@ Widget choiceOnboardingQuestion(BuildContext context) => const _Goal();
 
 @widgetbook.UseCase(name: 'Number question', type: OnboardingQuestion)
 Widget numberOnboardingQuestion(BuildContext context) => const _Height();
+
+@widgetbook.UseCase(name: 'With eyebrow', type: OnboardingQuestion)
+Widget eyebrowOnboardingQuestion(BuildContext context) => OnboardingQuestion(
+  step: 3,
+  count: 9,
+  onBack: () {},
+  body: OnboardingQuestionBody(
+    eyebrow: 'Generate a program',
+    title: 'How long can a session be?',
+    answer: OnboardingChoices<int>(
+      values: const [30, 45, 60, 75, 90],
+      selected: 60,
+      title: (minutes) => '$minutes minutes',
+      onChanged: (_) {},
+    ),
+  ),
+  actionLabel: 'Continue',
+  onAction: () {},
+);
+
+@widgetbook.UseCase(name: 'Equipment question', type: OnboardingQuestion)
+Widget equipmentOnboardingQuestion(BuildContext context) => const _Equipment();
+
+class _Equipment extends StatefulWidget {
+  const _Equipment();
+
+  @override
+  State<_Equipment> createState() => _EquipmentState();
+}
+
+class _EquipmentState extends State<_Equipment> {
+  Set<Equipment> _owned = {...EquipmentProfile.fullGym.equipment};
+
+  @override
+  Widget build(BuildContext context) => OnboardingQuestion(
+    step: 4,
+    count: 9,
+    onBack: () {},
+    body: OnboardingQuestionBody(
+      eyebrow: 'Generate a program',
+      title: 'What equipment do you have?',
+      info:
+          'Pick the closest set, then adjust it. Bodyweight exercises are '
+          'always included.',
+      answer: EquipmentAnswer(
+        owned: _owned,
+        onPreset: (preset) => setState(() => _owned = {...preset.equipment}),
+        onToggle: (item) => setState(
+          () => _owned = _owned.contains(item)
+              ? ({..._owned}..remove(item))
+              : {..._owned, item},
+        ),
+      ),
+    ),
+    actionLabel: 'Continue',
+    onAction: () {},
+  );
+}
 
 class _Goal extends StatefulWidget {
   const _Goal();

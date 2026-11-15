@@ -15,6 +15,8 @@ import 'package:get_workout/features/profile/domain/profile_usecases.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:get_workout/features/programs/data/no_completed_days.dart';
+import 'package:get_workout/features/programs/domain/active_program.dart';
+import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/catalogue_program.dart';
 import 'package:get_workout/features/programs/domain/catalogue_queries.dart';
 import 'package:get_workout/features/programs/domain/catalogue_repository.dart';
@@ -80,6 +82,15 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(program());
+    registerFallbackValue(
+      ActiveProgram(
+        programId: 'p1',
+        weekdays: const [1],
+        nextDayIndex: 0,
+        nextDate: CalendarDate(2026, 11, 16),
+        startedAt: DateTime(2026, 11, 15),
+      ),
+    );
   });
 
   setUp(() {
@@ -110,6 +121,8 @@ void main() {
         .thenAnswer((_) => const Stream.empty());
     when(() => programRepository.createProgram(any(), any()))
         .thenAnswer((_) async => const Ok('copy1'));
+    when(() => programRepository.startProgram(any(), any()))
+        .thenAnswer((_) async => const Ok(null));
 
     profileCubit = ProfileCubit(
       watchAuthUser: WatchAuthUser(auth),
@@ -171,6 +184,27 @@ void main() {
   });
 
   group('ProgramCatalogueCubit', () {
+    test(
+      'the search keeps the names holding the text, with the filters',
+      () async {
+        cards.add([free, paid]);
+        await pumpEventQueue();
+
+        catalogue.search('  ${paid.text('en').name.toUpperCase()} ');
+        expect(catalogue.state.searching, isTrue);
+        expect(catalogue.state.shown('en'), [paid]);
+
+        catalogue.toggleDays(free.daysPerWeek);
+        expect(catalogue.state.shown('en'), isEmpty);
+
+        catalogue
+          ..clearFilters()
+          ..search('');
+        expect(catalogue.state.searching, isFalse);
+        expect(catalogue.state.shown('en'), [free, paid]);
+      },
+    );
+
     test('loads the cards', () async {
       expect(catalogue.state.status, ProgramCatalogueStatus.loading);
 
@@ -337,6 +371,7 @@ void main() {
       exercises: exercises,
       getDays: GetCatalogueDays(catalogueRepository),
       saveProgram: SaveProgram(programRepository),
+      startProgram: StartProgram(programRepository),
       getCurrentUser: GetCurrentUser(auth),
       retryDelay: Duration.zero,
     );
@@ -515,10 +550,10 @@ void main() {
       expect(failed.state.status, CatalogueDetailStatus.failure);
     });
 
-    test('use copies the program into the user\'s programs', () async {
+    test('a kept copy is stored in the user\'s programs', () async {
       final cubit = await open(free.id);
 
-      await cubit.use();
+      await cubit.copy(CopyIntent.keep);
 
       final stored =
           verify(() => programRepository.createProgram('u1', captureAny()))
@@ -530,17 +565,68 @@ void main() {
       expect(stored.sourceId, free.id);
       expect(stored.premium, isFalse);
       expect(cubit.state.copyStatus, CopyStatus.copied);
+      expect(cubit.state.copyIntent, CopyIntent.keep);
       expect(cubit.state.copyId, 'copy1');
+      verifyNever(() => programRepository.startProgram(any(), any()));
 
       cubit.copyHandled();
       expect(cubit.state.copyStatus, CopyStatus.idle);
+      expect(cubit.state.copyIntent, isNull);
       expect(cubit.state.copyId, isNull);
+    });
+
+    test('a copy to start is stored, then started on the weekdays', () async {
+      final cubit = await open(free.id);
+
+      await cubit.copy(CopyIntent.start, weekdays: const [1, 4]);
+
+      verify(() => programRepository.createProgram('u1', any())).called(1);
+      final active =
+          verify(() => programRepository.startProgram('u1', captureAny()))
+                  .captured
+                  .single
+              as ActiveProgram;
+      expect(active.programId, 'copy1');
+      expect(active.weekdays, [1, 4]);
+      expect(cubit.state.copyStatus, CopyStatus.copied);
+      expect(cubit.state.copyIntent, CopyIntent.start);
+      expect(cubit.state.copyId, 'copy1');
+    });
+
+    test('no copy is made to start without weekdays', () async {
+      final cubit = await open(free.id);
+
+      await cubit.copy(CopyIntent.start);
+
+      expect(cubit.state.copyStatus, CopyStatus.idle);
+      verifyNever(() => programRepository.createProgram(any(), any()));
+    });
+
+    test('a copy that cannot be started fails', () async {
+      when(() => programRepository.startProgram(any(), any()))
+          .thenAnswer((_) async => const Err(NetworkFailure()));
+      final cubit = await open(free.id);
+
+      await cubit.copy(CopyIntent.start, weekdays: const [1, 4]);
+
+      expect(cubit.state.copyStatus, CopyStatus.failed);
+      expect(cubit.state.copyFailure, isA<NetworkFailure>());
+    });
+
+    test('a copy to edit says so', () async {
+      final cubit = await open(free.id);
+
+      await cubit.copy(CopyIntent.edit);
+
+      expect(cubit.state.copyStatus, CopyStatus.copied);
+      expect(cubit.state.copyIntent, CopyIntent.edit);
+      verifyNever(() => programRepository.startProgram(any(), any()));
     });
 
     test('a copy of a premium program is marked premium', () async {
       final cubit = await open(paid.id, premium: true);
 
-      await cubit.use();
+      await cubit.copy(CopyIntent.keep);
 
       final stored =
           verify(() => programRepository.createProgram('u1', captureAny()))
@@ -550,41 +636,23 @@ void main() {
       expect(stored.premium, isTrue);
     });
 
-    test('a program already copied offers the copy instead', () async {
-      final cubit = await open(
-        free.id,
-        mine: [
-          Program(
-            id: 'mine1',
-            name: 'My version',
-            origin: ProgramOrigin.catalog,
-            sourceId: free.id,
-            days: days,
-          ),
-        ],
+    test('the user\'s copy is known, an own program of the same name is '
+        'not', () async {
+      final mine = Program(
+        id: 'mine1',
+        name: 'My version',
+        origin: ProgramOrigin.catalog,
+        sourceId: free.id,
+        days: days,
       );
+      final copied = await open(free.id, mine: [mine]);
+      expect(copied.existingCopyId, 'mine1');
 
-      await cubit.use();
-
-      expect(cubit.state.copyStatus, CopyStatus.alreadyCopied);
-      expect(cubit.state.copyId, 'mine1');
-      verifyNever(() => programRepository.createProgram(any(), any()));
-
-      cubit.copyHandled();
-      await cubit.copy();
-      expect(cubit.state.copyStatus, CopyStatus.copied);
-      expect(cubit.state.copyId, 'copy1');
-    });
-
-    test('an own program of the same name is no copy', () async {
-      final cubit = await open(
+      final own = await open(
         free.id,
         mine: [program(id: 'p1', name: free.text('en').name)],
       );
-
-      await cubit.use();
-
-      expect(cubit.state.copyStatus, CopyStatus.copied);
+      expect(own.existingCopyId, isNull);
     });
 
     test('a program using an exercise no longer available is not '
@@ -597,13 +665,13 @@ void main() {
       final cubit = await open(free.id);
       expect(cubit.state.useStatus, UseStatus.exercisesMissing);
 
-      await cubit.use();
+      await cubit.copy(CopyIntent.keep);
 
       expect(cubit.state.copyStatus, CopyStatus.idle);
       verifyNever(() => programRepository.createProgram(any(), any()));
     });
 
-    test('use waits for the user\'s programs', () async {
+    test('a copy waits for the user\'s programs', () async {
       cards.add([free]);
       premiumStatus.controller.add(false);
       await pumpEventQueue();
@@ -613,28 +681,23 @@ void main() {
       expect(cubit.state.status, CatalogueDetailStatus.ready);
       expect(cubit.state.useStatus, UseStatus.waiting);
 
-      await cubit.use();
+      await cubit.copy(CopyIntent.keep);
       verifyNever(() => programRepository.createProgram(any(), any()));
 
-      userPrograms.add([
-        Program(
-          id: 'mine1',
-          name: 'My version',
-          origin: ProgramOrigin.catalog,
-          sourceId: free.id,
-          days: days,
-        ),
-      ]);
+      userPrograms.add(const []);
       await pumpEventQueue();
       expect(cubit.state.useStatus, UseStatus.ready);
-      await cubit.use();
-      expect(cubit.state.copyStatus, CopyStatus.alreadyCopied);
+      await cubit.copy(CopyIntent.keep);
+      expect(cubit.state.copyStatus, CopyStatus.copied);
     });
 
     test('a double tap copies once', () async {
       final cubit = await open(free.id);
 
-      await Future.wait([cubit.use(), cubit.use()]);
+      await Future.wait([
+        cubit.copy(CopyIntent.keep),
+        cubit.copy(CopyIntent.keep),
+      ]);
 
       verify(() => programRepository.createProgram('u1', any())).called(1);
       expect(cubit.state.copyStatus, CopyStatus.copied);
@@ -643,7 +706,7 @@ void main() {
     test('a locked program cannot be copied', () async {
       final cubit = await open(paid.id);
 
-      await cubit.use();
+      await cubit.copy(CopyIntent.keep);
 
       expect(cubit.state.copyStatus, CopyStatus.idle);
       verifyNever(() => programRepository.createProgram(any(), any()));

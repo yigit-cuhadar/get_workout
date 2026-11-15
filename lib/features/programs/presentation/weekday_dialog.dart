@@ -13,7 +13,7 @@ Future<List<int>?> showWeekdayDialog(
   required int count,
   required List<int> initial,
   required String confirmLabel,
-}) => showDialog<List<int>>(
+}) => showForgeDialog<List<int>>(
   context: context,
   builder: (_) => _WeekdayDialog(
     count: count,
@@ -40,44 +40,46 @@ class _WeekdayDialog extends StatefulWidget {
 class _WeekdayDialogState extends State<_WeekdayDialog> {
   late final Set<int> _selected = {...widget.initial};
 
+  void _toggle(int weekday) => setState(() {
+    if (!_selected.remove(weekday)) _selected.add(weekday);
+  });
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final complete = _selected.length == widget.count;
-    return AlertDialog(
-      title: Text(l10n.programPickDays(widget.count)),
-      content: Wrap(
-        spacing: Gap.sm,
-        runSpacing: Gap.xs,
+    return ForgeDialog(
+      title: l10n.programPickDays(widget.count),
+      message: l10n.programPickDaysMessage,
+      field: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 6,
+        runSpacing: 6,
         children: [
           for (final weekday in weekdaysFrom(context.watchFirstWeekday()))
-            FilterChip(
-              label: Text(l10n.weekdayShort(weekday)),
+            ForgeChip(
+              label: l10n.weekdayShort(weekday),
               selected: _selected.contains(weekday),
+              showCheck: false,
               // A full choice takes no more days until one is removed.
-              onSelected:
+              onPressed:
                   _selected.contains(weekday) || _selected.length < widget.count
-                  ? (on) => setState(
-                      () => on
-                          ? _selected.add(weekday)
-                          : _selected.remove(weekday),
-                    )
-                  : null,
+                  ? () => _toggle(weekday)
+                  : () {},
             ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        TextButton(
-          onPressed: complete
-              ? () => Navigator.pop(context, _selected.toList()..sort())
-              : null,
-          child: Text(widget.confirmLabel),
-        ),
-      ],
+      action: ForgeButton(
+        label: widget.confirmLabel,
+        onPressed: complete
+            ? () => Navigator.pop(context, _selected.toList()..sort())
+            : null,
+      ),
+      cancel: ForgeButton(
+        label: l10n.cancel,
+        variant: ForgeButtonVariant.secondary,
+        onPressed: () => Navigator.pop(context),
+      ),
     );
   }
 }

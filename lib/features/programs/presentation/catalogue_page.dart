@@ -5,18 +5,18 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/widgets/program_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
-import '../../exercises/presentation/widgets/choice_section.dart';
 import '../../profile/presentation/profile_questions.dart';
 import '../domain/catalogue_program.dart';
-import '../domain/catalogue_queries.dart';
 import 'catalogue_text.dart';
 import 'program_catalogue_cubit.dart';
 
-/// The ready-made programs as cards: what suits the user first, then all
-/// of them, with the filters as chips above.
+/// The ready-made programs: a search by name, the filters as one sideways
+/// line of chips, the best match (hidden while filtering or searching)
+/// and the count, then every program as a list row.
 class CataloguePage extends StatelessWidget {
   const CataloguePage({super.key});
 
@@ -27,62 +27,190 @@ class CataloguePage extends StatelessWidget {
   );
 }
 
-class _CatalogueView extends StatelessWidget {
+class _CatalogueView extends StatefulWidget {
   const _CatalogueView();
+
+  @override
+  State<_CatalogueView> createState() => _CatalogueViewState();
+}
+
+class _CatalogueViewState extends State<_CatalogueView> {
+  late final _cubit = context.read<ProgramCatalogueCubit>();
+  late final _search = TextEditingController(text: _cubit.state.query);
+
+  @override
+  void dispose() {
+    // The search belongs to this visit of the page.
+    _cubit.search('');
+    _search.dispose();
+    super.dispose();
+  }
+
+  void _clearSearch() {
+    _search.clear();
+    _cubit.search('');
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final cubit = context.read<ProgramCatalogueCubit>();
-    return BlocBuilder<ProgramCatalogueCubit, ProgramCatalogueState>(
-      builder: (context, state) => Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.catalogueTitle),
-          actions: [
-            if (state.status == ProgramCatalogueStatus.ready)
-              IconButton(
-                tooltip: l10n.catalogueFilters,
-                icon: Badge(
-                  isLabelVisible: state.filtering,
-                  child: const Icon(Icons.filter_list),
+    return Scaffold(
+      appBar: ForgeAppBar(title: l10n.catalogueTitle),
+      body: BlocBuilder<ProgramCatalogueCubit, ProgramCatalogueState>(
+        builder: (context, state) => ListView(
+          padding: const EdgeInsets.all(Gap.md),
+          children: [
+            ForgeSearchField(
+              hint: l10n.catalogueSearchHint,
+              clearLabel: l10n.catalogueClearSearch,
+              controller: _search,
+              onChanged: _cubit.search,
+            ),
+            const SizedBox(height: Gap.sm),
+            ...switch (state.status) {
+              ProgramCatalogueStatus.loading => [
+                _FilterChips(state),
+                const SizedBox(height: Gap.sm),
+                const LoadingView(),
+              ],
+              ProgramCatalogueStatus.offline => [
+                ErrorView(
+                  title: l10n.catalogueOfflineTitle,
+                  message: l10n.catalogueOfflineDetail,
+                  retryLabel: l10n.retry,
+                  onRetry: _cubit.retry,
                 ),
-                onPressed: () => _showFilterSheet(context),
-              ),
+              ],
+              ProgramCatalogueStatus.failure => [
+                ErrorView(
+                  title: l10n.catalogueLoadFailedTitle,
+                  message: l10n.loadFailedDetail,
+                  retryLabel: l10n.retry,
+                  onRetry: _cubit.retry,
+                ),
+              ],
+              ProgramCatalogueStatus.ready => _programs(context, state),
+            },
           ],
         ),
-        body: switch (state.status) {
-          ProgramCatalogueStatus.loading => const LoadingView(),
-          ProgramCatalogueStatus.offline => ErrorView(
-            title: l10n.catalogueOfflineTitle,
-            message: l10n.catalogueOfflineDetail,
-            retryLabel: l10n.retry,
-            onRetry: cubit.retry,
-          ),
-          ProgramCatalogueStatus.failure => ErrorView(
-            title: l10n.catalogueLoadFailed,
-            message: l10n.loadFailedDetail,
-            retryLabel: l10n.retry,
-            onRetry: cubit.retry,
-          ),
-          ProgramCatalogueStatus.ready => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      ),
+    );
+  }
+
+  List<Widget> _programs(BuildContext context, ProgramCatalogueState state) {
+    final l10n = AppLocalizations.of(context);
+    final language = Localizations.localeOf(context).languageCode;
+    final shown = state.shown(language);
+    final plain = !state.filtering && !state.searching;
+    final best = plain ? state.recommended.firstOrNull : null;
+    final free = state.programs.where((program) => !program.premium).length;
+    return [
+      _FilterChips(state),
+      if (state.filtering)
+        Padding(
+          padding: const EdgeInsets.only(left: Gap.xs, top: Gap.xs),
+          child: Row(
             children: [
-              _FilterChips(state),
-              if (state.filtering) _FilterCount(state.filterCount),
-              Expanded(child: _Programs(state)),
+              Expanded(
+                child: Text(
+                  l10n.catalogueFiltersOn(state.filterCount),
+                  style: Theme.of(context).textTheme.bodyMedium!
+                      .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
+                ),
+              ),
+              ForgeButton(
+                label: l10n.catalogueClearFilters,
+                variant: ForgeButtonVariant.text,
+                size: ForgeButtonSize.small,
+                onPressed: _cubit.clearFilters,
+              ),
             ],
           ),
-        },
-      ),
+        ),
+      const SizedBox(height: Gap.sm),
+      if (best != null) ...[
+        ListRowCard(
+          children: [
+            _row(
+              context,
+              state,
+              best.program,
+              recommended: true,
+              match: best.reasons.isEmpty ? null : l10n.matchText(best.reasons),
+            ),
+          ],
+        ),
+        const SizedBox(height: Gap.sm),
+      ],
+      if (plain)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(Gap.xs, 0, Gap.xs, Gap.sm),
+          child: Text(
+            state.premium == true
+                ? l10n.catalogueCount(state.programs.length)
+                : l10n.catalogueCountFree(state.programs.length, free),
+            style: Theme.of(context).textTheme.bodySmall!
+                .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
+          ),
+        ),
+      if (shown.isEmpty)
+        EmptyView(
+          icon: ForgeIcons.search,
+          title: l10n.catalogueNoMatch,
+          message: state.searching
+              ? l10n.catalogueNoMatchSearch
+              : l10n.catalogueNoMatchDetail,
+          actions: [
+            if (state.searching)
+              ForgeButton(
+                label: l10n.catalogueClearSearch,
+                variant: ForgeButtonVariant.secondary,
+                onPressed: _clearSearch,
+              ),
+            if (state.filtering)
+              ForgeButton(
+                label: l10n.catalogueClearAllFilters,
+                variant: ForgeButtonVariant.secondary,
+                onPressed: _cubit.clearFilters,
+              ),
+          ],
+        )
+      else
+        ListRowCard(
+          children: [
+            for (final program in shown) _row(context, state, program),
+          ],
+        ),
+    ];
+  }
+
+  Widget _row(
+    BuildContext context,
+    ProgramCatalogueState state,
+    CatalogueProgram program, {
+    bool recommended = false,
+    String? match,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final language = Localizations.localeOf(context).languageCode;
+    return ProgramCard.row(
+      name: program.text(language).name,
+      facts: l10n.catalogueRowFacts(program),
+      fits: state.profile.suits(program),
+      locked: program.premium && state.premium == false,
+      recommended: recommended,
+      match: match,
+      onTap: () => context.go(Routes.catalogueProgram(program.id)),
     );
   }
 }
 
-/// The filters as chips: fits my equipment, then each chosen value,
-/// removable, or the filter's name while none is chosen. A chip opens the
-/// filters sheet.
+/// The filters as one sideways line: Only my equipment, then for Level,
+/// Days per week, Goal and Equipment each chosen value, removable, or the
+/// filter's name with ▾ while none is chosen, which opens the sheet.
 class _FilterChips extends StatelessWidget {
   const _FilterChips(this.state);
+
   final ProgramCatalogueState state;
 
   @override
@@ -91,38 +219,31 @@ class _FilterChips extends StatelessWidget {
     final cubit = context.read<ProgramCatalogueCubit>();
     final filter = state.filter;
     final equipmentKnown = state.profile.equipment != null;
-    void open() => _showFilterSheet(context);
+    void open() => showCatalogueFilters(context);
     List<Widget> chips<T>({
       required String name,
       required List<T> chosen,
       required String Function(T value) labelOf,
       required ValueChanged<T> onRemove,
     }) => chosen.isEmpty
-        ? [
-            ActionChip(
-              label: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [Text(name), const Icon(Icons.arrow_drop_down)],
-              ),
-              onPressed: open,
-            ),
-          ]
+        ? [ForgeChip.menu(label: name, onPressed: open)]
         : [
             for (final value in chosen)
-              InputChip(
-                label: Text(labelOf(value)),
-                selected: true,
-                showCheckmark: false,
-                onPressed: open,
-                onDeleted: () => onRemove(value),
+              ForgeChip.removable(
+                label: labelOf(value),
+                removeHint: l10n.catalogueRemoveFilter,
+                onRemoved: () => onRemove(value),
               ),
           ];
     final all = [
       // Unknown equipment fits nothing yet; the sheet says why.
-      FilterChip(
-        label: Text(l10n.catalogueFitsMyEquipment),
+      ForgeChip(
+        label: l10n.catalogueFitsMyEquipment,
         selected: filter.fitsMyEquipment && equipmentKnown,
-        onSelected: equipmentKnown ? cubit.setFitsMyEquipment : (_) => open(),
+        showCheck: false,
+        onPressed: equipmentKnown
+            ? () => cubit.setFitsMyEquipment(!filter.fitsMyEquipment)
+            : open,
       ),
       ...chips(
         name: l10n.catalogueFilterLevel,
@@ -149,201 +270,28 @@ class _FilterChips extends StatelessWidget {
         onRemove: cubit.toggleProfile,
       ),
     ];
+    // The line runs to the screen's edge.
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-      child: Row(
-        children: [
-          for (final (i, chip) in all.indexed) ...[
-            if (i > 0) const SizedBox(width: Gap.sm),
-            chip,
-          ],
-        ],
-      ),
+      clipBehavior: Clip.none,
+      child: Row(spacing: 6, children: all),
     );
   }
 }
 
-/// "2 filters on" and Clear.
-class _FilterCount extends StatelessWidget {
-  const _FilterCount(this.count);
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-      child: Row(
-        children: [
-          Expanded(child: Text(l10n.catalogueFiltersOn(count))),
-          TextButton(
-            onPressed: context.read<ProgramCatalogueCubit>().clearFilters,
-            child: Text(l10n.catalogueClearFilters),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Programs extends StatelessWidget {
-  const _Programs(this.state);
-  final ProgramCatalogueState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final visible = state.visible;
-    // Recommendations would hide what the filters ask for.
-    final recommended = !state.filtering
-        ? state.recommended
-        : const <Recommendation>[];
-    Widget card(CatalogueProgram program, [List<MatchReason>? reasons]) =>
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.sm),
-          child: CatalogueProgramCard(
-            program,
-            premium: state.premium,
-            reasons: reasons,
-          ),
-        );
-    return ListView(
-      padding: const EdgeInsets.only(bottom: Gap.xl),
-      children: [
-        if (recommended.isNotEmpty) ...[
-          _Header(l10n.catalogueRecommended),
-          for (final recommendation in recommended)
-            card(recommendation.program, recommendation.reasons),
-          _Header(l10n.catalogueAll),
-        ],
-        if (visible.isEmpty)
-          EmptyView(
-            title: l10n.catalogueNoMatch,
-            message: l10n.catalogueNoMatchDetail,
-            actions: [
-              TextButton(
-                onPressed: context.read<ProgramCatalogueCubit>().clearFilters,
-                child: Text(l10n.catalogueClearFilters),
-              ),
-            ],
-          ),
-        for (final program in visible) card(program),
-      ],
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => ListTile(
-    dense: true,
-    title: Text(text, style: Theme.of(context).textTheme.titleSmall),
-  );
-}
-
-/// A ready-made program's card, opening its page: its name with Free,
-/// Premium or the lock when [premium] is false, its facts as tags, and why
-/// it suits the user when [reasons] are given.
-class CatalogueProgramCard extends StatelessWidget {
-  const CatalogueProgramCard(
-    this.program, {
-    super.key,
-    required this.premium,
-    this.reasons,
-  });
-
-  final CatalogueProgram program;
-
-  /// Whether the user has premium; null while unknown.
-  final bool? premium;
-  final List<MatchReason>? reasons;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final language = Localizations.localeOf(context).languageCode;
-    final reasons = this.reasons;
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.go(Routes.catalogueProgram(program.id)),
-        child: Padding(
-          padding: const EdgeInsets.all(Gap.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      program.text(language).name,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                  ),
-                  const SizedBox(width: Gap.sm),
-                  if (!program.premium)
-                    Text(
-                      l10n.catalogueFree,
-                      style: TextStyle(color: theme.colorScheme.primary),
-                    )
-                  else if (premium == false)
-                    Icon(
-                      Icons.lock_outline,
-                      semanticLabel: l10n.catalogueLockedLabel,
-                    )
-                  else
-                    Text(l10n.cataloguePremium),
-                ],
-              ),
-              const SizedBox(height: Gap.sm),
-              Wrap(
-                spacing: Gap.sm,
-                runSpacing: Gap.xs,
-                children: [
-                  for (final tag in l10n.catalogueTags(program))
-                    Chip(label: Text(tag)),
-                ],
-              ),
-              if (reasons != null && reasons.isNotEmpty) ...[
-                const SizedBox(height: Gap.sm),
-                Text(l10n.matchText(reasons)),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-Future<void> _showFilterSheet(BuildContext context) {
+/// The filters sheet: Only my equipment, then Level, Days per week, Goal
+/// and Equipment as chips; Clear and Done.
+Future<void> showCatalogueFilters(BuildContext context) {
   final cubit = context.read<ProgramCatalogueCubit>();
-  return showModalBottomSheet<void>(
+  return showForgeBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (_) => BlocProvider.value(
-      value: cubit,
-      child: DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.8,
-        builder: (context, scrollController) =>
-            _FilterSheet(scrollController: scrollController),
-      ),
-    ),
+    builder: (_) =>
+        BlocProvider.value(value: cubit, child: const _FilterSheet()),
   );
 }
 
 class _FilterSheet extends StatelessWidget {
-  const _FilterSheet({required this.scrollController});
-
-  final ScrollController scrollController;
+  const _FilterSheet();
 
   @override
   Widget build(BuildContext context) {
@@ -353,68 +301,126 @@ class _FilterSheet extends StatelessWidget {
         final cubit = context.read<ProgramCatalogueCubit>();
         final filter = state.filter;
         final equipmentKnown = state.profile.equipment != null;
-        return ListView(
-          controller: scrollController,
-          children: [
-            ListTile(
-              title: Text(
-                l10n.catalogueFilters,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              trailing: TextButton(
-                onPressed: state.filtering ? cubit.clearFilters : null,
-                child: Text(l10n.catalogueClearFilters),
-              ),
-            ),
-            SwitchListTile(
-              title: Text(l10n.catalogueFitsMyEquipment),
-              subtitle: equipmentKnown
-                  ? null
-                  : Text(l10n.catalogueSetEquipmentFirst),
-              value: filter.fitsMyEquipment && equipmentKnown,
-              onChanged: equipmentKnown ? cubit.setFitsMyEquipment : null,
-            ),
-            ChoiceSection(
-              title: l10n.catalogueFilterLevel,
-              values: Level.values,
-              selected: filter.levels,
-              labelOf: l10n.levelName,
-              onToggle: cubit.toggleLevel,
-            ),
-            ChoiceSection(
-              title: l10n.catalogueFilterDays,
-              values: state.dayOptions,
-              selected: filter.daysPerWeek,
-              labelOf: l10n.programDayCount,
-              onToggle: cubit.toggleDays,
-            ),
-            ChoiceSection(
-              title: l10n.catalogueFilterGoal,
-              values: Goal.values,
-              selected: filter.goals,
-              labelOf: l10n.goalName,
-              onToggle: cubit.toggleGoal,
-            ),
-            ChoiceSection(
-              title: l10n.catalogueFilterEquipment,
-              values: EquipmentProfile.values,
-              selected: filter.profiles,
-              labelOf: l10n.presetName,
-              onToggle: cubit.toggleProfile,
-            ),
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.all(Gap.md),
-                child: ForgeButton(
-                  label: l10n.catalogueFiltersDone,
-                  onPressed: () => Navigator.pop(context),
+        return ForgeBottomSheet(
+          title: l10n.catalogueFilters,
+          headerAction: ForgeButton(
+            label: l10n.catalogueClearFilters,
+            variant: ForgeButtonVariant.text,
+            size: ForgeButtonSize.small,
+            onPressed: state.filtering ? cubit.clearFilters : null,
+          ),
+          action: ForgeButton(
+            label: l10n.catalogueFiltersDone,
+            onPressed: () => Navigator.pop(context),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 14,
+              children: [
+                ListRowCard(
+                  children: [
+                    ListRow(
+                      title: l10n.catalogueFitsMyEquipment,
+                      detail: equipmentKnown
+                          ? null
+                          : l10n.catalogueSetEquipmentFirst,
+                      disabled: !equipmentKnown,
+                      trailing: ForgeSwitch(
+                        value: filter.fitsMyEquipment && equipmentKnown,
+                        onChanged: equipmentKnown
+                            ? cubit.setFitsMyEquipment
+                            : null,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+                _SheetChips(
+                  title: l10n.catalogueFilterLevel,
+                  values: Level.values,
+                  selected: filter.levels,
+                  labelOf: l10n.levelName,
+                  onToggle: cubit.toggleLevel,
+                ),
+                _SheetChips(
+                  title: l10n.catalogueFilterDays,
+                  values: state.dayOptions,
+                  selected: filter.daysPerWeek,
+                  labelOf: l10n.programDayCount,
+                  onToggle: cubit.toggleDays,
+                ),
+                _SheetChips(
+                  title: l10n.catalogueFilterGoal,
+                  values: Goal.values,
+                  selected: filter.goals,
+                  labelOf: l10n.goalName,
+                  onToggle: cubit.toggleGoal,
+                ),
+                _SheetChips(
+                  title: l10n.catalogueFilterEquipment,
+                  values: EquipmentProfile.values,
+                  selected: filter.profiles,
+                  labelOf: l10n.presetName,
+                  onToggle: cubit.toggleProfile,
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
   }
+}
+
+/// A filter of the sheet: its name in muted text over its values as
+/// chips, any number chosen.
+class _SheetChips<T> extends StatelessWidget {
+  const _SheetChips({
+    required this.title,
+    required this.values,
+    required this.selected,
+    required this.labelOf,
+    required this.onToggle,
+  });
+
+  final String title;
+  final List<T> values;
+  final Set<T> selected;
+  final String Function(T value) labelOf;
+  final ValueChanged<T> onToggle;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    spacing: Gap.sm,
+    children: [
+      Text(
+        title,
+        style: Theme.of(context).textTheme.bodySmall!
+            .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
+      ),
+      Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          for (final value in values)
+            ForgeChip(
+              label: labelOf(value),
+              selected: selected.contains(value),
+              showCheck: false,
+              onPressed: () => onToggle(value),
+            ),
+        ],
+      ),
+    ],
+  );
+}
+
+extension on AppLocalizations {
+  /// "3 days · Intermediate · 8 weeks".
+  String catalogueRowFacts(CatalogueProgram program) => [
+    programDayCount(program.daysPerWeek),
+    levelName(program.level),
+    if (program.lengthWeeks case final weeks?) programWeekCount(weeks),
+  ].join(' · ');
 }

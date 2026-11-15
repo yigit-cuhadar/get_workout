@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_ui/forge_ui.dart';
 
 import '../../../core/grouping.dart';
 import '../../../l10n/app_localizations.dart';
@@ -7,49 +8,15 @@ import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../settings/presentation/settings_cubit.dart';
+import '../../workout/presentation/workout_text.dart';
 import '../domain/program.dart';
 import '../domain/program_editing.dart';
 import 'program_text.dart';
 
-/// One day of a program, read-only: its name and estimate, then its
-/// exercises. With [onExerciseTap], an exercise of the library opens.
-class ProgramDaySection extends StatelessWidget {
-  const ProgramDaySection({
-    super.key,
-    required this.day,
-    required this.index,
-    this.onExerciseTap,
-  });
-
-  final ProgramDay day;
-  final int index;
-  final ValueChanged<String>? onExerciseTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Divider(),
-        ListTile(
-          title: Text(
-            l10n.dayName(day, index),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          subtitle: day.items.isEmpty
-              ? null
-              : Text(l10n.estimateText(estimateDay(day))),
-        ),
-        ProgramDayItems(day: day, onExerciseTap: onExerciseTap),
-      ],
-    );
-  }
-}
-
-/// One day of a program as a card: its name, exercise count and estimate,
-/// opening to its exercises when [open]. With [onStart], ▶ starts it.
-/// Which days are open is the page's own view state.
+/// One day of a program as a card of rows: its name over its exercise
+/// count (and estimate, with [estimate]) and a chevron that points down
+/// while closed and up while [open]; open, the day's exercises follow in
+/// the same card. Which days are open is the page's own view state.
 class ProgramDayCard extends StatelessWidget {
   const ProgramDayCard({
     super.key,
@@ -57,131 +24,129 @@ class ProgramDayCard extends StatelessWidget {
     required this.index,
     required this.open,
     required this.onToggle,
-    this.onStart,
+    this.estimate = true,
+    this.onExerciseTap,
   });
 
   final ProgramDay day;
   final int index;
   final bool open;
   final VoidCallback onToggle;
-  final VoidCallback? onStart;
+  final bool estimate;
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final onStart = this.onStart;
-    final empty = day.items.isEmpty;
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ListTile(
-            title: Text(
-              l10n.dayName(day, index),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            subtitle: empty
-                ? null
-                : Text(
-                    l10n.programDaySummary(
-                      day.items.length,
-                      l10n.estimateText(estimateDay(day)),
-                    ),
-                  ),
-            trailing: empty
-                ? null
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (onStart != null)
-                        IconButton(
-                          tooltip: l10n.workoutStartThisDay,
-                          icon: const Icon(Icons.play_arrow),
-                          onPressed: onStart,
-                        ),
-                      IconButton(
-                        tooltip: open
-                            ? l10n.programDayHide
-                            : l10n.programDayShow,
-                        icon: Icon(
-                          open ? Icons.expand_less : Icons.expand_more,
-                        ),
-                        onPressed: onToggle,
-                      ),
-                    ],
-                  ),
-            onTap: empty ? null : onToggle,
-          ),
-          if (open) ProgramDayItems(day: day),
-        ],
-      ),
-    );
-  }
-}
-
-/// A program day's exercises, one row each, with sets, rest and group.
-/// With [onExerciseTap], an exercise of the library opens.
-class ProgramDayItems extends StatelessWidget {
-  const ProgramDayItems({super.key, required this.day, this.onExerciseTap});
-
-  final ProgramDay day;
+  /// With it, an exercise of the library opens from its row.
   final ValueChanged<String>? onExerciseTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final unit = context.select(
-      (SettingsCubit cubit) => cubit.state.settings.weightUnit,
-    );
-    final catalogue = context.select(
-      (ExerciseCatalogueCubit cubit) => cubit.state,
-    );
-    final exercises = catalogue is CatalogueReady
-        ? {for (final e in catalogue.exercises) e.id: e}
-        : null;
-    final onTap = onExerciseTap;
-    bool opens(ProgramItem item) =>
-        onTap != null && exercises?[item.exerciseId] != null;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final style = ForgeStyle.of(context);
+    final count = day.items.length;
+    return ListRowCard(
       children: [
-        for (final (i, item) in day.items.indexed)
-          ListTile(
-            dense: true,
-            leading: item.group == null ? null : Text(item.group!),
-            title: Text(_name(l10n, exercises, item, context)),
-            subtitle: Text(
-              [
-                l10n.itemSummary(item, unit),
-                l10n.programRest(item.restS),
-                if (item.group case final group?)
-                  l10n.groupLabel(group, groupSize(day.items, i)),
-              ].join(' · '),
+        ListRow(
+          title: l10n.dayTitle(index, day.name),
+          detail: estimate
+              ? l10n.programDaySummary(
+                  count,
+                  l10n.estimateText(estimateDay(day)),
+                )
+              : l10n.programExerciseCount(count),
+          trailing: Semantics(
+            label: open ? l10n.programDayHide : l10n.programDayShow,
+            child: ForgeIcon(
+              open ? ForgeIcons.expandLess : ForgeIcons.expandMore,
+              size: 18,
+              color: style.colors.inkMuted,
             ),
-            trailing: opens(item) ? const Icon(Icons.chevron_right) : null,
-            onTap: opens(item) ? () => onTap!(item.exerciseId) : null,
           ),
+          onTap: onToggle,
+        ),
+        if (open) ...programDayRows(context, day, onExerciseTap: onExerciseTap),
       ],
     );
   }
+}
 
-  static int groupSize(List<ProgramItem> items, int index) {
-    final (start, end) = groupRange(items, index);
-    return end - start;
+/// A program day's exercises as rows of a [ListRowCard]: each its name
+/// over "4 × 6–8 · Rest 2:00"; a superset or circuit gets a muted row over
+/// it, "Superset A · rest after each round 1:30", and its exercises lose
+/// their own rest. With [onExerciseTap], an exercise of the library opens
+/// from its row, which then ends in a chevron.
+List<Widget> programDayRows(
+  BuildContext context,
+  ProgramDay day, {
+  ValueChanged<String>? onExerciseTap,
+}) {
+  final l10n = AppLocalizations.of(context);
+  final unit = context.select(
+    (SettingsCubit cubit) => cubit.state.settings.weightUnit,
+  );
+  final catalogue = context.select(
+    (ExerciseCatalogueCubit cubit) => cubit.state,
+  );
+  final exercises = catalogue is CatalogueReady
+      ? {for (final e in catalogue.exercises) e.id: e}
+      : null;
+  final items = day.items;
+  Widget row(ProgramItem item, {required bool grouped}) {
+    final opens = onExerciseTap != null && exercises?[item.exerciseId] != null;
+    return ListRow(
+      title: _name(context, l10n, exercises, item),
+      detail: grouped
+          ? l10n.itemSummary(item, unit)
+          : l10n.programItemLine(
+              l10n.itemSummary(item, unit),
+              l10n.elapsedText(Duration(seconds: item.restS)),
+            ),
+      end: opens ? ListRowEnd.chevron : ListRowEnd.none,
+      onTap: opens ? () => onExerciseTap(item.exerciseId) : null,
+    );
   }
 
-  static String _name(
-    AppLocalizations l10n,
-    Map<String, Exercise>? exercises,
-    ProgramItem item,
-    BuildContext context,
-  ) {
-    if (exercises == null) return l10n.programExerciseLoading;
-    final exercise = exercises[item.exerciseId];
-    return exercise == null
-        ? l10n.programExerciseUnavailable
-        : exercise.localized(context).name;
-  }
+  return [
+    for (final (start, end) in groupBlocks(items))
+      if (items[start].group case final group? when end - start > 1) ...[
+        _GroupLabel(
+          l10n.workoutGroupRest(
+            l10n.groupLabel(group, end - start),
+            l10n.elapsedText(Duration(seconds: items[end - 1].restS)),
+          ),
+        ),
+        for (var i = start; i < end; i++) row(items[i], grouped: true),
+      ] else
+        row(items[start], grouped: false),
+  ];
+}
+
+String _name(
+  BuildContext context,
+  AppLocalizations l10n,
+  Map<String, Exercise>? exercises,
+  ProgramItem item,
+) {
+  if (exercises == null) return l10n.programExerciseLoading;
+  final exercise = exercises[item.exerciseId];
+  return exercise == null
+      ? l10n.programExerciseUnavailable
+      : exercise.localized(context).name;
+}
+
+/// The muted line over a superset's or circuit's exercises.
+class _GroupLabel extends StatelessWidget {
+  const _GroupLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, Gap.sm),
+    child: Text(
+      text,
+      style: Theme.of(context).textTheme.labelMedium!.copyWith(
+        fontWeight: FontWeight.w600,
+        color: ForgeStyle.of(context).colors.inkMuted,
+      ),
+    ),
+  );
 }

@@ -6,17 +6,23 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../profile/presentation/profile_questions.dart';
 import '../domain/catalogue_program.dart';
+import '../domain/program_schedule.dart';
 import 'catalogue_detail_cubit.dart';
-import 'catalogue_text.dart';
 import 'premium_prompt.dart';
+import 'program_catalogue_cubit.dart';
 import 'program_day_section.dart';
+import 'program_detail_page.dart';
+import 'program_text.dart';
+import 'program_volume_section.dart';
+import 'weekday_dialog.dart';
 
-/// One ready-made program: its card, its days when the user may see them,
-/// and copying it into the user's programs.
+/// One ready-made program: its name, tags and summary, its facts as rows,
+/// its weekly sets and its days, which open in place; Start this program
+/// at the bottom (Get Premium to start when it is locked) and Duplicate in
+/// ⋯ to edit a copy.
 class CatalogueDetailPage extends StatelessWidget {
   const CatalogueDetailPage({super.key, required this.id});
 
@@ -45,176 +51,283 @@ class _CatalogueDetailView extends StatelessWidget {
     return BlocConsumer<CatalogueDetailCubit, CatalogueDetailState>(
       listenWhen: (previous, current) =>
           previous.copyStatus != current.copyStatus,
-      listener: (context, state) async {
+      listener: (context, state) {
         switch (state.copyStatus) {
           case CopyStatus.copied:
+            final id = state.copyId!;
+            final intent = state.copyIntent;
             cubit.copyHandled();
-            context.go(Routes.program(state.copyId!, created: true));
-          case CopyStatus.alreadyCopied:
-            final copyId = state.copyId!;
-            cubit.copyHandled();
-            await _offerCopy(context, copyId);
+            context.go(
+              intent == CopyIntent.edit
+                  ? Routes.programEdit(id)
+                  : Routes.program(id, created: true),
+            );
           case CopyStatus.failed:
             cubit.copyHandled();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(switch (state.copyFailure) {
-                  NetworkFailure() => l10n.errorNetwork,
-                  ValidationFailure() => l10n.catalogueCopyInvalid,
-                  _ => l10n.catalogueCopyFailed,
-                }),
-              ),
+            showForgeSnackbar(
+              context,
+              message: switch (state.copyFailure) {
+                NetworkFailure() => l10n.errorNetwork,
+                ValidationFailure() => l10n.catalogueCopyInvalid,
+                _ => l10n.catalogueCopyFailed,
+              },
+              error: true,
             );
           case CopyStatus.idle || CopyStatus.copying:
         }
       },
       builder: (context, state) {
         final program = state.program;
-        if (program == null) {
-          return Scaffold(
-            appBar: AppBar(),
-            body: switch (state.status) {
-              CatalogueDetailStatus.notFound => EmptyView(
-                title: l10n.programNotFoundTitle,
-                message: l10n.catalogueNotFound,
-              ),
-              CatalogueDetailStatus.offline => ErrorView(
-                title: l10n.offlineTitle,
-                message: l10n.catalogueDetailOffline,
-                retryLabel: l10n.retry,
-                onRetry: cubit.retry,
-              ),
-              CatalogueDetailStatus.failure => ErrorView(
-                title: l10n.catalogueLoadFailed,
-                message: l10n.loadFailedDetail,
-                retryLabel: l10n.retry,
-                onRetry: cubit.retry,
-              ),
-              _ => const LoadingView(),
-            },
-          );
-        }
-        return _Program(program: program, state: state, premium: premium);
+        final ready = state.status == CatalogueDetailStatus.ready;
+        final body = program != null && state.status.showsProgram
+            ? null
+            : switch (state.status) {
+                CatalogueDetailStatus.notFound => EmptyView(
+                  message: l10n.catalogueNotFound,
+                ),
+                CatalogueDetailStatus.offline => ErrorView(
+                  title: l10n.catalogueDetailOfflineTitle,
+                  message: l10n.loadFailedDetail,
+                  retryLabel: l10n.retry,
+                  onRetry: cubit.retry,
+                ),
+                CatalogueDetailStatus.failure => ErrorView(
+                  title: l10n.catalogueLoadFailedTitle,
+                  message: l10n.loadFailedDetail,
+                  retryLabel: l10n.retry,
+                  onRetry: cubit.retry,
+                ),
+                _ => const SingleChildScrollView(
+                  padding: EdgeInsets.all(Gap.md),
+                  child: LoadingView(),
+                ),
+              };
+        final canCopy = ready && state.useStatus == UseStatus.ready;
+        return Scaffold(
+          appBar: ForgeAppBar(
+            title: '',
+            actions: [
+              // A locked program's days cannot be copied.
+              if (canCopy)
+                Builder(
+                  builder: (anchor) => ForgeAppBarAction.icon(
+                    icon: ForgeIcons.moreHoriz,
+                    label: l10n.programOptions,
+                    onPressed: state.copyStatus == CopyStatus.copying
+                        ? null
+                        : () => showForgeMenu(
+                            context: anchor,
+                            items: [
+                              ForgeMenuItem(
+                                label: l10n.programDuplicate,
+                                icon: ForgeIcons.contentCopy,
+                                onTap: () => cubit.copy(CopyIntent.edit),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+            ],
+          ),
+          body: body ?? _Program(program: program!, state: state),
+          bottomNavigationBar: body == null
+              ? _Action(state: state, premium: premium)
+              : null,
+        );
       },
     );
   }
-
-  /// The user already has a copy: opens it, or adds another.
-  Future<void> _offerCopy(BuildContext context, String copyId) async {
-    final l10n = AppLocalizations.of(context);
-    final cubit = context.read<CatalogueDetailCubit>();
-    final copyAgain = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.catalogueAlreadyTitle),
-        content: Text(l10n.catalogueAlreadyBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.catalogueCopyAgain),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.catalogueOpenCopy),
-          ),
-        ],
-      ),
-    );
-    if (!context.mounted || copyAgain == null) return;
-    if (copyAgain) {
-      await cubit.copy();
-    } else {
-      context.go(Routes.program(copyId));
-    }
-  }
 }
 
-class _Program extends StatelessWidget {
-  const _Program({
-    required this.program,
-    required this.state,
-    required this.premium,
-  });
+extension on CatalogueDetailStatus {
+  /// The states that show the program's page rather than one message.
+  bool get showsProgram => switch (this) {
+    CatalogueDetailStatus.ready ||
+    CatalogueDetailStatus.locked ||
+    CatalogueDetailStatus.unlocking => true,
+    _ => false,
+  };
+}
+
+class _Program extends StatefulWidget {
+  const _Program({required this.program, required this.state});
 
   final CatalogueProgram program;
   final CatalogueDetailState state;
-  final PremiumPrompt premium;
+
+  @override
+  State<_Program> createState() => _ProgramState();
+}
+
+class _ProgramState extends State<_Program> {
+  /// The days open; the first at first.
+  final _open = {0};
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final style = ForgeStyle.of(context);
+    final text = Theme.of(context).textTheme;
     final cubit = context.read<CatalogueDetailCubit>();
-    final text = program.text(Localizations.localeOf(context).languageCode);
+    final program = widget.program;
+    final state = widget.state;
+    final language = Localizations.localeOf(context).languageCode;
+    final copy = program.text(language);
+    final catalogue = context.watch<ProgramCatalogueCubit>().state;
+    final locked = state.status == CatalogueDetailStatus.locked;
     final ready = state.status == CatalogueDetailStatus.ready;
-    // Bodyweight is everyone's; listing it says nothing.
-    final equipment = [
-      for (final e in program.equipment ?? const <Equipment>[])
-        if (e != Equipment.bodyweight) e,
-    ];
-    return Scaffold(
-      appBar: AppBar(title: Text(text.name)),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: Gap.xl),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(Gap.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    final length = l10n.catalogueLengthText(program);
+    return ListView(
+      padding: const EdgeInsets.all(Gap.md),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 6,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  copy.name,
+                  style: text.headlineMedium!.copyWith(
+                    fontSize: 24,
+                    height: 30 / 24,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.48,
+                  ),
+                ),
+              ),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  if (catalogue.profile.suits(program))
+                    ForgeTag(l10n.programCardFits, kind: ForgeTagKind.record),
+                  if (locked)
+                    ForgeTag(l10n.cataloguePremium, kind: ForgeTagKind.premium),
+                  ForgeTag(l10n.goalName(program.goal)),
+                ],
+              ),
+              Text(
+                copy.summary,
+                style: text.bodyMedium!.copyWith(color: style.colors.inkMuted),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: Gap.md),
+        ListRowCard(
+          children: [
+            ListRow(
+              title: l10n.programDays,
+              value: l10n.catalogueDaysAWeek(program.daysPerWeek),
+            ),
+            ListRow(
+              title: l10n.catalogueFilterLevel,
+              value: l10n.levelName(program.level),
+            ),
+            if (length != null)
+              ListRow(title: l10n.catalogueLength, value: length),
+            ListRow(
+              title: l10n.catalogueFilterGoal,
+              value: l10n.goalName(program.goal),
+            ),
+            ListRow(
+              title: l10n.catalogueFilterEquipment,
+              value: l10n.presetName(program.equipmentProfile),
+            ),
+          ],
+        ),
+        if (state.status == CatalogueDetailStatus.unlocking) ...[
+          const SizedBox(height: Gap.sm),
+          NoticeBanner(
+            icon: ForgeIcons.sync,
+            title: l10n.catalogueUnlockingTitle,
+            message: l10n.catalogueUnlocking,
+            action: ForgeButton(
+              label: l10n.retry,
+              variant: ForgeButtonVariant.secondary,
+              onPressed: cubit.retry,
+            ),
+          ),
+        ],
+        if (ready) ...[
+          const SizedBox(height: Gap.sm),
+          ProgramVolumeSection(
+            program: program.copy(state.days, language),
+            onOpen: () => context.go(Routes.catalogueVolume(program.id)),
+          ),
+        ],
+        if (ready || (locked && program.dayList != null))
+          ProgramDaysHeader(l10n.programDays),
+        if (ready)
+          for (final (index, day) in state.days.indexed) ...[
+            if (index > 0) const SizedBox(height: Gap.sm),
+            ProgramDayCard(
+              day: day,
+              index: index,
+              open: _open.contains(index),
+              estimate: false,
+              onToggle: () => setState(() {
+                if (!_open.remove(index)) _open.add(index);
+              }),
+              onExerciseTap: (exerciseId) => context.push(
+                Routes.catalogueExercise(program.id, exerciseId),
+              ),
+            ),
+          ]
+        else if (locked)
+          // Its days cannot be read without Premium: their names and
+          // counts only, which open nothing.
+          for (final (index, day) in (program.dayList ?? []).indexed) ...[
+            if (index > 0) const SizedBox(height: Gap.sm),
+            ListRowCard(
               children: [
-                Text(text.summary, style: theme.textTheme.bodyLarge),
-                const SizedBox(height: Gap.sm),
-                Text(l10n.catalogueFacts(program)),
-                Text(l10n.presetName(program.equipmentProfile)),
-                if (equipment.isNotEmpty)
-                  Text(l10n.catalogueEquipment(l10n.equipmentNames(equipment))),
-                if (program.minutes case final minutes?)
-                  Text(l10n.sessionMinutesText(minutes)),
-                const SizedBox(height: Gap.md),
-                _Action(state, premium),
+                ListRow(
+                  title: l10n.dayTitle(index, day.name),
+                  detail: l10n.programExerciseCount(day.exercises),
+                ),
+              ],
+            ),
+          ],
+        if (ready && state.useStatus == UseStatus.exercisesMissing)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.md, Gap.xs, 0),
+            child: Text(
+              l10n.catalogueExercisesMissing,
+              style: text.bodyMedium!.copyWith(color: style.colors.inkMuted),
+            ),
+          ),
+        if (ready && state.useStatus == UseStatus.exercisesFailed)
+          Padding(
+            padding: const EdgeInsets.only(top: Gap.md),
+            child: Row(
+              spacing: Gap.sm,
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.catalogueExercisesFailed,
+                    style: text.bodySmall!.copyWith(color: style.colors.danger),
+                  ),
+                ),
+                ForgeButton(
+                  label: l10n.retry,
+                  variant: ForgeButtonVariant.outline,
+                  onPressed: cubit.retryExercises,
+                ),
               ],
             ),
           ),
-          if (ready)
-            for (final (index, day) in state.days.indexed)
-              ProgramDaySection(
-                day: day,
-                index: index,
-                onExerciseTap: (exerciseId) => context.push(
-                  Routes.catalogueExercise(program.id, exerciseId),
-                ),
-              ),
-          if (state.status == CatalogueDetailStatus.loading)
-            const Padding(
-              padding: EdgeInsets.all(Gap.lg),
-              child: LoadingView(),
-            ),
-          if (state.status
-              case CatalogueDetailStatus.offline ||
-                  CatalogueDetailStatus.failure)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-              child: _Notice(
-                message: state.status == CatalogueDetailStatus.offline
-                    ? l10n.catalogueDetailOffline
-                    : l10n.catalogueDetailFailed,
-                onRetry: cubit.retry,
-              ),
-            ),
-          if (state.status == CatalogueDetailStatus.notFound)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-              child: Text(l10n.catalogueNotFound),
-            ),
-        ],
-      ),
+      ],
     );
   }
 }
 
-/// Use the program, or, when it is locked, the premium call to action.
+/// The bar at the bottom: Start this program, or Get Premium to start for
+/// a locked program; none while it unlocks.
 class _Action extends StatelessWidget {
-  const _Action(this.state, this.premium);
+  const _Action({required this.state, required this.premium});
 
   final CatalogueDetailState state;
   final PremiumPrompt premium;
@@ -222,54 +335,97 @@ class _Action extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final cubit = context.read<CatalogueDetailCubit>();
     return switch (state.status) {
-      CatalogueDetailStatus.ready => switch (state.useStatus) {
-        UseStatus.exercisesMissing => Text(l10n.catalogueExercisesMissing),
-        UseStatus.exercisesFailed => _Notice(
-          message: l10n.catalogueExercisesFailed,
-          onRetry: cubit.retryExercises,
+      CatalogueDetailStatus.locked => ForgeBottomActionBar(
+        primary: ForgeButton(
+          label: l10n.catalogueGetPremiumToStart,
+          onPressed: () => premium.show(context),
         ),
-        UseStatus.waiting || UseStatus.ready => ForgeButton(
-          label: l10n.catalogueUse,
+      ),
+      CatalogueDetailStatus.ready => ForgeBottomActionBar(
+        primary: ForgeButton(
+          label: l10n.catalogueStart,
           loading:
               state.useStatus == UseStatus.waiting ||
               state.copyStatus == CopyStatus.copying,
-          onPressed: cubit.use,
+          onPressed: state.useStatus == UseStatus.ready
+              ? () => _start(context)
+              : null,
         ),
-      },
-      CatalogueDetailStatus.locked => PremiumLock(
-        message: l10n.catalogueLockedBody,
-        prompt: premium,
-      ),
-      CatalogueDetailStatus.unlocking => _Notice(
-        message: l10n.catalogueUnlocking,
-        onRetry: cubit.retry,
       ),
       _ => const SizedBox.shrink(),
     };
   }
+
+  /// Offers the user's copy if they have one; then, after confirming that
+  /// it replaces the active program, asks for the weekdays. Only once they
+  /// are picked is the copy made and started.
+  Future<void> _start(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final cubit = context.read<CatalogueDetailCubit>();
+    if (cubit.existingCopyId case final copyId?) {
+      final another = await showForgeDialog<bool>(
+        context: context,
+        builder: (context) => ForgeDialog(
+          title: l10n.catalogueAlreadyTitle,
+          message: l10n.catalogueAlreadyBody,
+          action: ForgeButton(
+            label: l10n.catalogueOpenCopy,
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          cancel: ForgeButton(
+            label: l10n.catalogueCopyAgain,
+            variant: ForgeButtonVariant.secondary,
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ),
+      );
+      if (another == null || !context.mounted) return;
+      if (!another) return context.go(Routes.program(copyId));
+    }
+    if (cubit.activeProgramName case final current?) {
+      final replace = await showForgeDialog<bool>(
+        context: context,
+        builder: (context) => ForgeDialog(
+          title: l10n.programReplaceTitle,
+          message: l10n.programReplaceBody(current),
+          action: ForgeButton(
+            label: l10n.programReplace,
+            onPressed: () => Navigator.pop(context, true),
+          ),
+          cancel: ForgeButton(
+            label: l10n.cancel,
+            variant: ForgeButtonVariant.secondary,
+            onPressed: () => Navigator.pop(context, false),
+          ),
+        ),
+      );
+      if (replace != true || !context.mounted) return;
+    }
+    final count = state.days.length;
+    final weekdays = await showWeekdayDialog(
+      context,
+      count: count,
+      initial: ProgramSchedule.suggestedWeekdays(count),
+      confirmLabel: l10n.programStart,
+    );
+    if (weekdays == null) return;
+    await cubit.copy(CopyIntent.start, weekdays: weekdays);
+  }
 }
 
-/// A message with a retry.
-class _Notice extends StatelessWidget {
-  const _Notice({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Text(message),
-      Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: TextButton(
-          onPressed: onRetry,
-          child: Text(AppLocalizations.of(context).retry),
-        ),
-      ),
-    ],
-  );
+extension on AppLocalizations {
+  /// "8 weeks · 45–60 min", "8 weeks · ~55 min"; null with neither.
+  String? catalogueLengthText(CatalogueProgram program) {
+    final weeks = program.lengthWeeks;
+    final minutes = program.minutes;
+    final parts = [
+      if (weeks != null) programWeekCount(weeks),
+      if (minutes != null)
+        minutes.min == minutes.max
+            ? programEstimate(minutes.min)
+            : catalogueMinutesSpan(minutes.min, minutes.max),
+    ];
+    return parts.isEmpty ? null : parts.join(' · ');
+  }
 }

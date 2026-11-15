@@ -12,7 +12,6 @@ import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/equipment_cubit.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
-import '../../exercises/presentation/widgets/choice_section.dart';
 import '../../profile/presentation/profile_cubit.dart';
 import '../../profile/presentation/profile_questions.dart';
 import '../domain/generator_answers.dart';
@@ -93,6 +92,7 @@ class _QuestionsViewState extends State<_QuestionsView> {
           onBack: step == 0 ? null : cubit.back,
           body: OnboardingQuestionBody(
             key: ValueKey(state.step),
+            eyebrow: l10n.generatorTitle,
             title: l10n.generatorQuestion(state.step),
             info: l10n.generatorQuestionInfo(state.step),
             answer: _Answer(state),
@@ -159,19 +159,7 @@ class _Answer extends StatelessWidget {
         onPreset: cubit.applyPreset,
         onToggle: cubit.toggleEquipment,
       ),
-      GeneratorStep.focus => ChoiceSection<Muscle>(
-        title: l10n.generatorFocusCount(
-          state.focus.length,
-          GeneratorLimits.maxFocusMuscles,
-        ),
-        values: [
-          for (final muscle in musclePriority)
-            if (!(state.easyArea?.muscles.contains(muscle) ?? false)) muscle,
-        ],
-        selected: state.focus,
-        labelOf: l10n.muscleName,
-        onToggle: cubit.toggleFocus,
-      ),
+      GeneratorStep.focus => _FocusAnswer(state),
       GeneratorStep.excluded => _ExcludedAnswer(state.excluded),
       GeneratorStep.easyArea => OnboardingChoices<EasyArea?>(
         values: const [null, ...EasyArea.values],
@@ -202,6 +190,53 @@ class _Answer extends StatelessWidget {
   }
 }
 
+/// Up to three muscles to focus on, as chips under their count.
+class _FocusAnswer extends StatelessWidget {
+  const _FocusAnswer(this.state);
+
+  final GeneratorQuestionsState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final cubit = context.read<GeneratorQuestionsCubit>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: Gap.sm,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
+          child: Text(
+            l10n.generatorFocusCount(
+              state.focus.length,
+              GeneratorLimits.maxFocusMuscles,
+            ),
+            style: Theme.of(context).textTheme.labelMedium!.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: ForgeStyle.of(context).colors.inkMuted,
+            ),
+          ),
+        ),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final muscle in musclePriority)
+              if (!(state.easyArea?.muscles.contains(muscle) ?? false))
+                ForgeChip(
+                  label: l10n.muscleName(muscle),
+                  selected: state.focus.contains(muscle),
+                  showCheck: false,
+                  onPressed: () => cubit.toggleFocus(muscle),
+                ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 /// The exercises to leave out, and picking more from the library.
 class _ExcludedAnswer extends StatelessWidget {
   const _ExcludedAnswer(this.excluded);
@@ -223,33 +258,64 @@ class _ExcludedAnswer extends StatelessWidget {
         : const <String, Exercise>{};
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: Gap.sm,
       children: [
-        for (final id in excluded)
-          ListTile(
-            title: Text(
-              exercises[id]?.localized(context).name ??
-                  l10n.programExerciseUnavailable,
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.close),
-              tooltip: l10n.generatorExcludedRemove,
-              onPressed: () => cubit.include(id),
-            ),
+        if (excluded.isNotEmpty)
+          ListRowCard(
+            children: [
+              for (final id in excluded)
+                ListRow(
+                  title:
+                      exercises[id]?.localized(context).name ??
+                      l10n.programExerciseUnavailable,
+                  trailing: _RemoveButton(
+                    label: l10n.generatorExcludedRemove,
+                    onPressed: () => cubit.include(id),
+                  ),
+                ),
+            ],
           ),
-        Padding(
-          padding: const EdgeInsets.only(top: Gap.md),
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.add),
-            label: Text(l10n.generatorExcludedAdd),
-            onPressed: () async {
-              final picked = await context.push<List<Exercise>>(
-                Routes.exercisePicker(max: _pickAtOnce, multiple: true),
-              );
-              if (picked != null) cubit.exclude(picked.map((e) => e.id));
-            },
-          ),
+        ForgeButton(
+          label: l10n.generatorExcludedAdd,
+          variant: ForgeButtonVariant.secondary,
+          leadingIcon: ForgeIcons.add,
+          onPressed: () async {
+            final picked = await context.push<List<Exercise>>(
+              Routes.generatorPicker(max: _pickAtOnce, multiple: true),
+            );
+            if (picked != null) cubit.exclude(picked.map((e) => e.id));
+          },
         ),
       ],
     );
   }
+}
+
+/// The × that takes a left-out exercise back: an 18px ink-muted icon over a
+/// 44px target.
+class _RemoveButton extends StatelessWidget {
+  const _RemoveButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: label,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onPressed,
+      child: SizedBox.square(
+        dimension: ForgeTheme.tapMin,
+        child: Center(
+          child: ForgeIcon(
+            ForgeIcons.close,
+            size: 18,
+            color: ForgeStyle.of(context).colors.inkMuted,
+          ),
+        ),
+      ),
+    ),
+  );
 }

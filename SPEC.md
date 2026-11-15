@@ -146,7 +146,10 @@ Variations are the other exercises of the same `family`, ordered by rank.
 every exercise used, computed by the validator), `minutes` (`{min, max}`,
 the shortest and longest session by the app's `estimateDay`, each day
 rounded to whole minutes and at least 1; checked by the validator; the app
-shows a card without a readable one without minutes), `equipmentProfile`
+shows a card without a readable one without minutes), `dayList[]`
+(`{name, exercises}` per day, computed from the days and checked by the
+validator, so a locked premium program can list its days; a card without
+a readable one lists none), `equipmentProfile`
 (`full_gym` \| `home_gym` \| `dumbbells` \| `bodyweight` \| `bands`, for
 filtering; every exercise fits it through `equipment` or an alternative set),
 `order` (unique int, the catalogue's default sort),
@@ -671,6 +674,74 @@ Decisions (the canvases they were drawn on are deleted):
   (kept on the device); a card's error is SectionCard.error and no step
   access SectionCard.empty "See your steps", as on Today; a drop in
   strength is written in danger, a gain in success.
+- Program detail (owner's picks, 2026-11-15): the FeaturedCard band at the
+  card's size: "Active · week 3 of 8 · Mon, Wed, Fri" over "Next: Push,
+  today" ("Next: Pull, Mon, Nov 16" later), the week's progress, Start
+  <day>, then Change days and Stop (danger) side by side; not active
+  "8 weeks · 3 days" / "Not active" with Start program (Replace your
+  active program? first when another runs, then the weekday picker);
+  finished "… · Mon, Wed, Fri" / "Finished" with Run it again (weekday
+  picker) and New program, no Stop; a missed day takes the Today missed
+  form (You missed Legs on Wed, Nov 11, Missed, Do it today, Move to
+  Monday and Skip, no Start) with Change days and Stop under it; the days
+  mismatch is a danger line over the progress; a locked Premium copy
+  keeps the lock in the eyebrow and Start in place (it opens the
+  paywall), its note without an icon, no Change days, Stop kept; the
+  weekly sets card shows (also on a locked copy, hidden while the premium
+  status is unknown); then "Days": each day a card "Day 1 · Push" /
+  "6 exercises · ~55 min" that opens and closes (chevron down / up; the
+  next day open while active), its exercises "4 × 6–8 · Rest 2:00", not
+  tappable; a superset or circuit gets a muted "Superset A · rest after
+  each round 1:30" over it and its exercises lose their own rest; ▶ on
+  each day row starts that day (waits for its Forge icon); ⋯ Edit,
+  Duplicate, Delete (each with an icon); dialogs are ForgeDialogs; the
+  weekday picker says "Workouts follow these days each week."; load
+  error is ErrorView with its second line, not found an untitled
+  EmptyView.
+- Ready-made program (owner's picks, 2026-11-15): no app-bar title; the
+  name at 24px, Fits you (Forge record tag; the program is for the
+  user's goal, level and days per week) or the Premium tag and the goal
+  tag, the summary; standard ListRows Days "3 a week", Level, Length
+  ("8 weeks · 45–60 min", "~55 min" when every day is as long), Goal,
+  Equipment (the setup); the weekly sets card (opens the program's
+  weekly sets page); "Days" whose cards open in place ("6 exercises",
+  exercise rows with a chevron open the exercise); a locked Premium
+  program lists its days' names and exercise counts from the card,
+  opening nothing, and no weekly sets; Start this program in the bottom
+  bar (Get Premium to start when locked): the user's copy is offered
+  first (Open my copy / Add another copy), then Replace your active
+  program?, then the weekday picker; only once the days are picked is
+  the copy made and started, then its page opens; cancelling leaves the
+  page unchanged; ⋯ Duplicate copies it and opens the builder on the
+  copy, hidden for a locked program; unlocking is Forge NoticeBanner
+  ("Unlocking this program" / "Premium is active. This takes a
+  moment." / Retry); a program with an exercise no longer available has
+  Start disabled and the muted reason at the end of the page; offline
+  "You're offline. Connect once to load the ready-made programs." and
+  errors are ErrorView with the second line, not found an untitled
+  EmptyView.
+- Ready-made programs (owner's picks, 2026-11-15): a search by the name in
+  the app language, live and ANDed with the filters, cleared when the
+  page is left; the filters as one sideways line of chips (Only my
+  equipment, Level, Days per week, Goal, Equipment; unset ones the name
+  with ▾, chosen values removable ×), each opening the sheet; while
+  filtering "3 filters on" and Clear; otherwise the best match as one
+  recommended row with "Matches your goal and level" in success, then
+  "12 programs · 6 free" ("12 programs" with Premium); programs as
+  ProgramCard rows with Fits you or the Premium tag (locked rows: no
+  chevron); no results: "No programs match" with "Try another name." and
+  Clear search while searching, "Remove a filter to see more programs."
+  and Clear filters while filtering; the filter sheet is a
+  ForgeBottomSheet (a switch row, chip groups, Clear, Done).
+- Generator questions (owner's picks, 2026-11-15): full screen above the
+  tabs (pushed; Back on the first question returns); the OnboardingQuestion
+  page with the mono "n / 9" counter after the progress (onboarding too)
+  and "Generate a program" over each question; Continue, "Create my
+  program" on the last; the equipment answer is the OnboardingQuestion
+  card's (preset chips, ListRow checkboxes in front, seven common items
+  and Show all equipment; onboarding and Your profile too); focus muscles
+  as chips under "Focus muscles (2 of 3)"; left-out exercises as rows with
+  × and a secondary "Add exercises to leave out".
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
@@ -1377,7 +1448,8 @@ the feature you are about to touch, and keep it true when you change it.
   a days mismatch warning while active, then Start program, or Change days
   and Stop, or the premium lock (Start locked, or the active copy locked
   with Stop still allowed); then one card per day with its exercise count
-  and estimate, ▶ to start that day (the premium gate for a locked copy)
+  and estimate, ▶ to start that day (the premium gate for a locked copy;
+  see Design › Program detail for the page's look)
   and a toggle that shows its exercises. Which days are open is the page's
   view state, never stored: the next day while the program is active, the
   first day while it is not; again from there once its days change (an
@@ -1423,13 +1495,17 @@ the feature you are about to touch, and keep it true when you change it.
   again three times (after 2, 4 and 8 s), then on Retry, since the
   entitlement may not have reached the server yet; a refused free program
   is a failure. Days read under an earlier premium status are dropped.
-  "Use this program" waits for the exercise library and the user's
+  "Start this program" waits for the exercise library and the user's
   programs, and is blocked with a message when a day uses an exercise no
-  longer in the library (copying without it would change the program). It
+  longer in the library (copying without it would change the program).
+  After the copy offer, the replace confirmation and the weekday picker it
   copies the program into `users/{uid}/programs` (`origin: catalog`,
   `sourceId`, `premium` for a premium one) through the builder's
-  validation and opens the copy, which is started like any own program;
-  when a copy from the same `sourceId` exists, it is offered first. An
+  validation, starts the copy and opens it; when a copy from the same
+  `sourceId` exists, it is offered first. Duplicate copies it the same way
+  and opens the builder on the copy. The card's `dayList` (each day's
+  name and exercise count, computed from the days like `minutes`) lets a
+  locked premium program list its days. An
   exercise opened from a ready-made program opens its alternatives and
   variations inside the Programs tab. Recommended for you: never a program
   above the user's level (beginner while unanswered) or needing equipment
@@ -1450,22 +1526,20 @@ the feature you are about to touch, and keep it true when you change it.
   `SubscriptionModule.showPaywall`. The program cubits follow that status,
   so a page updates by itself once the paywall grants premium; pages get
   the premium action from their page widget, never from `sl`.
-- **Ready-made programs page** (UX pass, 2026-11-13, variant B): the
-  filters as chips under the app bar, scrolling sideways: "Fits my
-  equipment" (toggles in place; while the equipment is unknown it opens
-  the sheet, which says why), then for Level, Days per week, Goal and
-  Equipment each chosen value as a removable chip (removing it turns that
-  value off) or, with none chosen, the filter's name; a chip opens the
-  filters sheet, as does the filter action in the app bar (badged while
-  filtering). While filtering, "n filters on" (each chosen value counts
-  one, `CatalogueFilter.activeCount`) and Clear. Then "Recommended for you"
-  (hidden while filtering) and "All programs", each program a list row
-  (ProgramCard's row form, owner's pick; the card form stays for single
-  suggestions)
-  (`CatalogueProgramCard`, also on the post-onboarding suggestion): name
-  with Free, Premium or the lock, the facts as tags (level, goal, days a
-  week, length, equipment profile, session time) and "Matches your ..."
-  where it applies. The filters sheet is unchanged.
+- **Ready-made programs page** (UX pass, 2026-11-13, variant B; the
+  screen step, 2026-11-15): a search by name, then the filters as chips
+  scrolling sideways: "Only my equipment" (toggles in place; while the
+  equipment is unknown it opens the sheet, which says why), then for
+  Level, Days per week, Goal and Equipment each chosen value as a
+  removable chip (removing it turns that value off) or, with none chosen,
+  the filter's name with ▾; a chip opens the filters sheet (no filter
+  action in the app bar). While filtering, "n filters on" (each chosen
+  value counts one, `CatalogueFilter.activeCount`) and Clear. Otherwise
+  the best recommendation as one row and the count, then every program
+  as ProgramCard's row form: name with Fits you (`TrainingProfile.suits`:
+  the user's goal, level and days per week) or the Premium tag while
+  locked, "days · level · length". The post-onboarding suggestion shows
+  ProgramCard's card form.
 - **Copies of premium programs** (decided by the user, 2026-11-11): a copy
   of a premium ready-made program is marked `premium: true` and keeps the
   mark through edits and duplicates. Without premium it stays visible and
@@ -1520,8 +1594,8 @@ the feature you are about to touch, and keep it true when you change it.
   Layout (UX pass, 2026-11-13): the questions are laid out as onboarding's
   (one per page, Back and the progress segments with "n / 9" in the app
   bar, "Generate a program" above the question, the answer near the
-  thumb, Next or "Create my program" at the bottom; Back on the first
-  question leaves). The preview: split and summary, the uncovered muscles
+  thumb, Continue or "Create my program" at the bottom; Back on the first
+  question leaves), full screen above the tabs (`/generate`). The preview: split and summary, the uncovered muscles
   as a card, a Weekly sets card with each target muscle as a plain bar
   filled to its own target (full once met) and "x of target", then the days as the
   program page's day cards (`ProgramDayCard`, without ▶), the first open
