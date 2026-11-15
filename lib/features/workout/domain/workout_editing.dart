@@ -128,6 +128,62 @@ WorkoutExercise swapExercise(
   );
 }
 
+/// Exercise [index] of [exercises] swapped for [replacement] once some of
+/// its sets are done: the done sets stay with it as a finished exercise,
+/// and its other sets go to [replacement] (as [swapExercise] fits them)
+/// right after it, one empty set when none is left. In a superset or
+/// circuit the replacement takes its place and the finished exercise
+/// leaves the group, just before it. Returns the list and where the
+/// replacement is. With no done set it is a plain [swapExercise].
+({List<WorkoutExercise> exercises, int swapped}) swapKeepingLogged(
+  List<WorkoutExercise> exercises,
+  int index,
+  Exercise replacement,
+  String language,
+) {
+  final current = exercises[index];
+  final done = current.doneSets;
+  if (done.isEmpty) {
+    return (
+      exercises: [
+        for (final (i, exercise) in exercises.indexed)
+          i == index ? swapExercise(exercise, replacement, language) : exercise,
+      ],
+      swapped: index,
+    );
+  }
+  final rest = [
+    for (final set in current.sets)
+      if (!set.done) set,
+  ];
+  final moved = swapExercise(
+    current.copyWith(
+      sets: rest.isEmpty ? const [WorkoutSet()] : rest,
+      note: () => null,
+    ),
+    replacement,
+    language,
+  );
+  final kept = current.copyWith(sets: done, group: () => null);
+  final (start, _) = groupRange(exercises, index);
+  final grouped = current.group != null;
+  final list = grouped
+      ? [
+          ...exercises.sublist(0, start),
+          kept,
+          ...exercises.sublist(start, index),
+          moved,
+          ...exercises.sublist(index + 1),
+        ]
+      : [
+          ...exercises.sublist(0, index),
+          kept,
+          moved,
+          ...exercises.sublist(index + 1),
+        ];
+  return (exercises: relabelGroups(list), swapped: index + 1);
+}
+
 /// [workout] finished [at], never before it started (a device clock set
 /// back): only its done sets, exercises left without one removed, and no
 /// program goals.

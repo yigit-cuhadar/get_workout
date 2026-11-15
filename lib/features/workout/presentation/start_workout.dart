@@ -51,7 +51,7 @@ Future<void> startWorkout(
         cancel: ForgeButton(
           label: l10n.cancel,
           onPressed: () => Navigator.pop(context),
-          variant: ForgeButtonVariant.text,
+          variant: ForgeButtonVariant.secondary,
         ),
       ),
     );

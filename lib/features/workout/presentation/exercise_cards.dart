@@ -9,15 +9,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/grouping.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/equipment_cubit.dart';
-import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/workout.dart';
 import '../domain/warmups.dart';
 import 'set_bubbles.dart';
+import 'swap_exercise.dart';
 import 'widgets/progression_hint.dart';
 import 'widgets/exercise_card.dart';
 import 'workout_editor.dart';
@@ -610,57 +609,18 @@ class _ExerciseMenu {
     if (seconds != null) running.setExerciseRest(index, seconds);
   }
 
-  /// The exercise's alternatives first, then the whole library.
+  /// The picked exercise takes its place; done sets stay (see
+  /// [WorkoutEditor.swapExercise]).
   Future<void> _swap(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
     final language = Localizations.localeOf(context).languageCode;
-    final owned = context.read<EquipmentCubit>().state.owned ?? const {};
-    final alternatives = editor.alternatives(index, owned).take(8).toList();
-    const browse = Object();
-    final choice = await showModalBottomSheet<Object>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (context) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.search),
-              title: Text(l10n.workoutSwapBrowse),
-              onTap: () => Navigator.pop(context, browse),
-            ),
-            if (alternatives.isNotEmpty)
-              ListTile(
-                dense: true,
-                title: Text(
-                  l10n.workoutSwapAlternatives,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
-            for (final exercise in alternatives)
-              ListTile(
-                title: Text(exercise.localized(context).name),
-                subtitle: Text(
-                  l10n.exerciseSummary(
-                    l10n.muscleNames(exercise.mainMuscles),
-                    l10n.equipmentNames(exercise.equipment),
-                  ),
-                ),
-                onTap: () => Navigator.pop(context, exercise),
-              ),
-          ],
-        ),
-      ),
+    final exercise = state.workout!.exercises[index];
+    final id = await pickSwap(
+      context,
+      exerciseId: exercise.exerciseId,
+      logged: exercise.doneSets.length,
+      picker: picker,
     );
-    if (!context.mounted) return;
-    var replacement = choice is Exercise ? choice : null;
-    if (identical(choice, browse)) {
-      final picked = await context.push<List<Exercise>>(
-        picker(max: 1, multiple: false),
-      );
-      replacement = picked?.firstOrNull;
-    }
+    final replacement = editor.knownExercises[id];
     if (replacement != null) {
       editor.swapExercise(index, replacement, language);
     }

@@ -223,9 +223,40 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   /// Its untouched warm-ups go when the new exercise may have none there
   /// (see [warmupsAllowed], [withoutUnusedWarmups]); one without a done set gets warm-ups as one
   /// added would. When that changes its sets, it opens on its first undone.
+  /// With a done set the done sets stay on it and the others move to
+  /// [exercise] right after it (see `swapKeepingLogged`), which opens on
+  /// its first set.
   void swapExercise(int index, Exercise exercise, String language) {
     final before = state.workout?.exercises.elementAtOrNull(index);
     if (before == null || !canEdit) return;
+    if (before.doneSets.isNotEmpty) {
+      final split = editing.swapKeepingLogged(
+        state.workout!.exercises,
+        index,
+        exercise,
+        language,
+      );
+      final settings = warmupSettings;
+      final earlier = split.exercises.take(split.swapped).toList();
+      final moved = split.exercises[split.swapped];
+      final fitted = withoutUnusedWarmups(
+        moved,
+        moved,
+        allowed: warmupsAllowed(moved, earlier, settings),
+      );
+      final kept = fitted.sets.isEmpty
+          ? fitted.copyWith(sets: const [WorkoutSet()])
+          : fitted;
+      _editExercises(
+        (_) => [
+          for (final (i, e) in split.exercises.indexed)
+            i == split.swapped ? kept : e,
+        ],
+        movesSets: true,
+        select: (after) => openedExercise(after, split.swapped),
+      );
+      return;
+    }
     final swapped = editing.swapExercise(before, exercise, language);
     final settings = warmupSettings;
     final earlier = state.workout!.exercises.take(index).toList();

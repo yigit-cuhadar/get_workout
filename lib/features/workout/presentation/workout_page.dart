@@ -575,7 +575,7 @@ class _Panel extends StatelessWidget {
         cancel: ForgeButton(
           label: l10n.restNotifyLater,
           onPressed: () => Navigator.pop(context, false),
-          variant: ForgeButtonVariant.text,
+          variant: ForgeButtonVariant.secondary,
         ),
       ),
     );

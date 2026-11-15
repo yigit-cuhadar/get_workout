@@ -41,7 +41,7 @@ Future<bool> confirmChoice(
       cancel: ForgeButton(
         label: cancel,
         onPressed: () => Navigator.pop(context, false),
-        variant: ForgeButtonVariant.text,
+        variant: ForgeButtonVariant.secondary,
       ),
     ),
   );
