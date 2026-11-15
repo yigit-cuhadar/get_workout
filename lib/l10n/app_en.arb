@@ -1741,5 +1741,8 @@
   "barPlatesBarMessage": "The weight of the empty bar.",
   "calcEquipmentSummary": "{bar} bar · {count, plural, =1{1 plate size} other{{count} plate sizes}}",
   "@calcEquipmentSummary": {"placeholders": {"bar": {"type": "String"}, "count": {"type": "int"}}},
-  "notificationsAllow": "Allow notifications"
+  "notificationsAllow": "Allow notifications",
+  "restChannelName": "Rest over · {alert}",
+  "@restChannelName": {"placeholders": {"alert": {"type": "String"}}},
+  "restChannelDescription": "When a rest ends during a workout"
 }

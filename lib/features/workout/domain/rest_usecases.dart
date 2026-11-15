@@ -1,10 +1,17 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../settings/domain/user_settings.dart';
+
 import 'rest_chime.dart';
 import 'rest_notifications.dart';
 
 /// The rest notification's text and time.
-typedef RestNotice = ({DateTime at, String title, String body});
+typedef RestNotice = ({
+  DateTime at,
+  String title,
+  String body,
+  RestAlert alert,
+});
 
 /// Whether to ask the user, in the app, about the rest notification, given
 /// their [wish]: never after a no, never twice on one device, and not
@@ -63,6 +70,7 @@ class ScheduleRestNotification implements UseCase<void, RestNotice> {
     params.at,
     title: params.title,
     body: params.body,
+    alert: params.alert,
   );
 }
 

@@ -1093,8 +1093,11 @@ the feature you are about to touch, and keep it true when you change it.
   `assets/sounds/rest_chime.wav` (two soft bell tones, generated for the
   app, no licence), through `audioplayers` mixed with other audio and
   silent in silent mode, and vibrates as chosen; the rest notification
-  takes the same chime or none once `forge_notifications` v0.20 has
-  notification sounds), Bar and plates (a summary; its
+  sounds the same: one Android channel per choice (`rest_chime_vibrate`,
+  `rest_chime`, `rest_vibrate`, `rest_silent`, "Rest over · <choice>"),
+  as Android fixes a channel's sound and vibration, the chime bundled as
+  `res/raw/chime.wav` and iOS `chime.caf`; iOS cannot vibrate without a
+  sound, so Vibrate is silent there), Bar and plates (a summary; its
   page edits the barbell, EZ bar and trap bar weights and the plates, and
   puts back the standard set) and Keep screen on (`settings.keepScreenOn`,
   default on: the screen stays awake while a workout is in progress,

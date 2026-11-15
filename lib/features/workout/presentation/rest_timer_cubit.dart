@@ -471,6 +471,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
       at: rest.endsAt,
       title: text.title,
       body: text.body,
+      alert: _settings.state.settings.restTimer.alert,
     ));
     if (result.failureOrNull case final failure?) {
       Log.e('rest', 'rest notification not scheduled: ${failure.message}');

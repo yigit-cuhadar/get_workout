@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/device_localizations.dart';
 import '../notifications/data/notification_payloads.dart';
 import '../programs/domain/completed_days.dart';
+import '../settings/presentation/settings_section.dart';
 import 'data/android_workout_lock_screen.dart';
 import 'data/audio_rest_chime.dart';
 import 'data/device_rest_notifications.dart';
@@ -53,6 +54,11 @@ class WorkoutModule implements FeatureModule {
           sl.getAsync<Notifications>(),
           getApplicationSupportDirectory,
           sl(),
+          channelName: (alert) {
+            final l10n = deviceLocalizations();
+            return l10n.restChannelName(l10n.restAlertLabel(alert));
+          },
+          channelDescription: deviceLocalizations().restChannelDescription,
         ),
       )
       ..registerLazySingleton<RestChime>(AudioRestChime.new)
