@@ -125,36 +125,31 @@ Future<void> addToWorkout(BuildContext context, Exercise exercise) async {
   final workout = cubit.state.workout;
   if (cubit.state.inProgress && workout != null) {
     final added = cubit.addExercises([exercise], language);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          added ? l10n.workoutAdded(name, workout.name) : l10n.workoutAddFailed,
-        ),
-        action: added
-            ? SnackBarAction(
-                label: l10n.workoutOpen,
-                onPressed: () => context.push(Routes.workout),
-              )
-            : null,
-      ),
+    showForgeSnackbar(
+      context,
+      message: added
+          ? l10n.workoutAdded(name, workout.name)
+          : l10n.workoutAddFailed,
+      actionLabel: added ? l10n.workoutOpen : null,
+      onAction: added ? () => context.push(Routes.workout) : null,
+      error: !added,
     );
     return;
   }
-  final start = await showDialog<bool>(
+  final start = await showForgeDialog<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: Text(l10n.workoutStartWithTitle),
-      content: Text(l10n.workoutStartWithBody(name)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(l10n.cancel),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(l10n.workoutStartWorkout),
-        ),
-      ],
+    builder: (context) => ForgeDialog(
+      title: l10n.workoutStartWithTitle,
+      message: l10n.workoutStartWithBody(name),
+      action: ForgeButton(
+        label: l10n.workoutStartWorkout,
+        onPressed: () => Navigator.pop(context, true),
+      ),
+      cancel: ForgeButton(
+        label: l10n.cancel,
+        variant: ForgeButtonVariant.secondary,
+        onPressed: () => Navigator.pop(context, false),
+      ),
     ),
   );
   if (start != true || !context.mounted) return;

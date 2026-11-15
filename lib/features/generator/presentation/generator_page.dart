@@ -243,7 +243,7 @@ class _ExcludedAnswer extends StatelessWidget {
             label: Text(l10n.generatorExcludedAdd),
             onPressed: () async {
               final picked = await context.push<List<Exercise>>(
-                Routes.exercisePicker(max: _pickAtOnce, multiple: true),
+                Routes.exerciseLeaveOutPicker(_pickAtOnce),
               );
               if (picked != null) cubit.exclude(picked.map((e) => e.id));
             },

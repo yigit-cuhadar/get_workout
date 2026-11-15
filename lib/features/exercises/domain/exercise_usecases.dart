@@ -125,12 +125,13 @@ class WatchRejectedCustomExerciseWrites {
 /// name and drops a blank note first. An invalid exercise is refused with a
 /// [ValidationFailure] naming its issues; a new one beyond
 /// [CustomExerciseLimits.maxCount] with [CustomExerciseLimits.limitReached].
-class SaveCustomExercise implements UseCase<void, CustomExerciseSave> {
+/// Its result is the exercise's id, new or kept.
+class SaveCustomExercise implements UseCase<String, CustomExerciseSave> {
   const SaveCustomExercise(this._repository);
   final CustomExerciseRepository _repository;
 
   @override
-  Future<Result<void>> call(CustomExerciseSave params) async {
+  Future<Result<String>> call(CustomExerciseSave params) async {
     final given = params.exercise;
     final note = given.note?.trim() ?? '';
     final exercise = CustomExercise(
@@ -146,8 +147,11 @@ class SaveCustomExercise implements UseCase<void, CustomExerciseSave> {
     if (issues.isNotEmpty) {
       return Err(ValidationFailure(issues.map((i) => i.name).join(', ')));
     }
-    if (exercise.id != null) {
-      return _repository.updateCustomExercise(params.uid, exercise);
+    if (exercise.id case final id?) {
+      return (await _repository.updateCustomExercise(
+        params.uid,
+        exercise,
+      )).map((_) => id);
     }
     final count = await _repository.countCustomExercises(params.uid);
     return switch (count) {

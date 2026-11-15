@@ -10,12 +10,17 @@ import '../../../l10n/app_localizations.dart';
 import '../../programs/presentation/add_to_program.dart';
 import '../../programs/presentation/add_to_program_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
+import '../../workout/presentation/workout_editor_view.dart';
 import '../domain/exercise.dart';
+import '../domain/exercise_usecases.dart';
 import 'body_model_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
 import 'exercise_detail_cubit.dart';
+import 'exercise_notes_cubit.dart';
+import 'favorites_cubit.dart';
 import 'vocabulary_labels.dart';
 import 'widgets/exercise_tile.dart';
+import 'widgets/library_list_view.dart';
 
 class ExerciseDetailPage extends StatelessWidget {
   const ExerciseDetailPage({
@@ -30,13 +35,14 @@ class ExerciseDetailPage extends StatelessWidget {
   final String Function(String id) exerciseRoute;
 
   @override
-  Widget build(BuildContext context) => BlocProvider(
-    create: (_) => sl<ExerciseDetailCubit>(param1: exerciseId),
+  Widget build(BuildContext context) => MultiBlocProvider(
+    providers: [
+      BlocProvider(create: (_) => sl<ExerciseDetailCubit>(param1: exerciseId)),
+      BlocProvider.value(value: sl<ExerciseNotesCubit>()),
+    ],
     child: _DetailView(exerciseRoute),
   );
 }
-
-enum _CustomAction { edit, delete }
 
 class _DetailView extends StatelessWidget {
   const _DetailView(this.exerciseRoute);
@@ -51,119 +57,95 @@ class _DetailView extends StatelessWidget {
         if (state is DetailDeleted) {
           context.pop();
         } else if (state case DetailReady(:final deleteFailure?)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                deleteFailure is NetworkFailure
-                    ? l10n.errorNetwork
-                    : l10n.customDeleteFailed,
-              ),
-            ),
+          showForgeSnackbar(
+            context,
+            message: deleteFailure is NetworkFailure
+                ? l10n.errorNetwork
+                : l10n.customDeleteFailed,
+            error: true,
           );
         }
       },
       builder: (context, state) => Scaffold(
-        appBar: AppBar(
+        appBar: ForgeAppBar(
           title: state is DetailReady
-              ? Text(state.exercise.localized(context).name)
-              : null,
+              ? state.exercise.localized(context).name
+              : '',
           actions: [
             if (state is DetailReady) ...[
-              FavoriteButton(state.exercise.id),
-              _AddButton(state.exercise),
-              if (state.exercise.isCustom)
-                PopupMenuButton<_CustomAction>(
-                  onSelected: (action) => switch (action) {
-                    _CustomAction.edit => context.push(
-                      Routes.customExerciseEdit(state.exercise.id),
-                    ),
-                    _CustomAction.delete => _delete(context),
-                  },
-                  itemBuilder: (_) => [
-                    PopupMenuItem(
-                      value: _CustomAction.edit,
-                      child: Text(l10n.customEdit),
-                    ),
-                    PopupMenuItem(
-                      value: _CustomAction.delete,
-                      enabled: !state.deleting,
-                      child: Text(l10n.customDelete),
-                    ),
-                  ],
-                ),
+              _FavoriteAction(state.exercise.id),
+              _AddAction(state.exercise),
+              if (state.exercise.isCustom) _CustomActions(state),
             ],
           ],
         ),
         body: switch (state) {
-          DetailLoading() || DetailDeleted() => const LoadingView(),
-          DetailFailed() => ErrorView(
-            title: l10n.libraryLoadFailed,
-            message: l10n.loadFailedDetail,
-            retryLabel: l10n.retry,
-            onRetry: context.read<ExerciseCatalogueCubit>().retry,
+          DetailLoading() || DetailDeleted() => const _Loading(),
+          DetailFailed() => _InCard(
+            ErrorView(
+              title: l10n.libraryLoadFailed,
+              message: l10n.loadFailedDetail,
+              retryLabel: l10n.retry,
+              onRetry: context.read<ExerciseCatalogueCubit>().retry,
+            ),
           ),
-          DetailNotFound() => EmptyView(
-            title: l10n.detailNotFoundTitle,
-            message: l10n.detailNotFound,
+          DetailNotFound() => _InCard(
+            EmptyView(icon: ForgeIcons.search, message: l10n.detailNotFound),
           ),
           DetailReady() => _DetailBody(state, exerciseRoute),
         },
       ),
     );
   }
+}
 
-  static Future<void> _delete(BuildContext context) async {
+/// The favourite star: an outline, filled once a favourite.
+class _FavoriteAction extends StatelessWidget {
+  const _FavoriteAction(this.exerciseId);
+
+  final String exerciseId;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final cubit = context.read<ExerciseDetailCubit>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.customDeleteTitle),
-        content: Text(l10n.customDeleteBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.customDelete),
-          ),
-        ],
-      ),
+    final favorite = context.select(
+      (FavoritesCubit cubit) => cubit.state.contains(exerciseId),
     );
-    if (confirmed == true) await cubit.delete();
+    return ForgeAppBarAction.icon(
+      icon: ForgeIcons.star,
+      label: favorite ? l10n.favoriteRemove : l10n.favoriteAdd,
+      toggled: favorite,
+      onPressed: () => context.read<FavoritesCubit>().toggle(exerciseId),
+    );
   }
 }
 
-/// The one Add action: to the workout in progress (or a new one), or to a
-/// program.
-class _AddButton extends StatelessWidget {
-  const _AddButton(this.exercise);
+/// The one Add action: a menu adding to the workout in progress (or a new
+/// one) or to a program.
+class _AddAction extends StatelessWidget {
+  const _AddAction(this.exercise);
 
   final Exercise exercise;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return MenuAnchor(
-      menuChildren: [
-        MenuItemButton(
-          onPressed: () => addToWorkout(context, exercise),
-          child: Text(l10n.addToWorkout),
-        ),
-        MenuItemButton(
-          onPressed: () => _addToProgram(context),
-          child: Text(l10n.addToProgram),
-        ),
-      ],
-      builder: (_, menu, _) => Tooltip(
-        message: l10n.detailActions,
-        child: TextButton.icon(
-          onPressed: () => menu.isOpen ? menu.close() : menu.open(),
-          icon: const Icon(Icons.add),
-          label: Text(l10n.detailAdd),
-        ),
+    return ForgeAppBarAction.text(
+      label: l10n.detailAdd,
+      onPressed: () => showForgeMenu(
+        context: context,
+        items: [
+          ForgeMenuItem(
+            label: l10n.addToWorkout,
+            icon: ForgeIcons.fitnessCenter,
+            onTap: () => addToWorkout(context, exercise),
+          ),
+          ForgeMenuItem(
+            label: l10n.addToProgram,
+            icon: ForgeIcons.description,
+            onTap: () => _addToProgram(context),
+          ),
+        ],
       ),
     );
   }
@@ -172,6 +154,63 @@ class _AddButton extends StatelessWidget {
     final cubit = sl<AddToProgramCubit>();
     await addToProgram(context, exercise, cubit);
     await cubit.close();
+  }
+}
+
+/// A custom exercise's ⋯: Edit, and Delete after asking.
+class _CustomActions extends StatelessWidget {
+  const _CustomActions(this.detail);
+
+  final DetailReady detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return ForgeAppBarAction.icon(
+      icon: ForgeIcons.moreHoriz,
+      label: l10n.detailMore,
+      onPressed: () => showForgeMenu(
+        context: context,
+        items: [
+          ForgeMenuItem(
+            label: l10n.customEdit,
+            icon: ForgeIcons.edit,
+            onTap: () =>
+                context.push(Routes.customExerciseEdit(detail.exercise.id)),
+          ),
+          if (!detail.deleting)
+            ForgeMenuItem(
+              label: l10n.customDelete,
+              icon: ForgeIcons.delete,
+              destructive: true,
+              onTap: () => _delete(context),
+            ),
+        ],
+      ),
+    );
+  }
+
+  static Future<void> _delete(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final cubit = context.read<ExerciseDetailCubit>();
+    final confirmed = await showForgeDialog<bool>(
+      context: context,
+      builder: (context) => ForgeDialog(
+        title: l10n.customDeleteTitle,
+        message: l10n.customDeleteBody,
+        action: ForgeButton(
+          label: l10n.customDelete,
+          variant: ForgeButtonVariant.danger,
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        cancel: ForgeButton(
+          label: l10n.cancel,
+          variant: ForgeButtonVariant.secondary,
+          onPressed: () => Navigator.pop(context, false),
+        ),
+      ),
+    );
+    if (confirmed == true) await cubit.delete();
   }
 }
 
@@ -186,169 +225,160 @@ class _DetailBody extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final exercise = detail.exercise;
     final text = exercise.localized(context);
-    // A custom exercise has none of these but the logging type and equipment.
-    final facts = [
-      if (exercise.equipment.isNotEmpty)
-        (
-          l10n.detailEquipment,
-          [
+    final colors = ForgeStyle.of(context).colors;
+    final equipment = exercise.equipment.isEmpty
+        ? null
+        : [
             l10n.equipmentNames(exercise.equipment),
             for (final set in exercise.equipmentAlternatives)
               l10n.detailEquipmentOr(l10n.equipmentNames(set)),
-          ].join('\n'),
-        ),
-      if (exercise.level case final level?)
-        (l10n.detailLevel, l10n.levelName(level)),
-      if (exercise.mechanic case final mechanic?)
-        (l10n.detailMechanic, l10n.mechanicName(mechanic)),
-      if (exercise.movementPattern case final pattern?)
-        (l10n.detailMovementPattern, l10n.movementPatternName(pattern)),
-      if (exercise.laterality case final laterality?)
-        (l10n.detailLaterality, l10n.lateralityName(laterality)),
-      (l10n.detailLoggingType, l10n.loggingTypeName(exercise.loggingType)),
-      if (text.aliases.isNotEmpty)
-        (l10n.detailAliases, l10n.inlineList(text.aliases)),
+          ].join('\n');
+    // A custom exercise shows only its equipment here; the model names its
+    // muscles and the line under it the logging type.
+    final facts = [
+      if (equipment != null) (l10n.detailEquipment, equipment),
+      if (!exercise.isCustom) ...[
+        if (exercise.level case final level?)
+          (l10n.detailLevel, l10n.levelName(level)),
+        if (exercise.mechanic case final mechanic?)
+          (l10n.detailMechanic, l10n.mechanicName(mechanic)),
+        if (exercise.movementPattern case final pattern?)
+          (l10n.detailMovementPattern, l10n.movementPatternName(pattern)),
+        if (exercise.laterality case final laterality?)
+          (l10n.detailLaterality, l10n.lateralityName(laterality)),
+        (l10n.detailLoggingType, l10n.loggingTypeName(exercise.loggingType)),
+        if (text.aliases.isNotEmpty)
+          (l10n.detailAliases, l10n.inlineList(text.aliases)),
+      ],
+    ];
+    final similar = [
+      for (final other in detail.alternatives) (other, l10n.detailAlternative),
+      for (final other in detail.variations) (other, l10n.detailVariation),
     ];
     return ListView(
+      padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.lg),
       children: [
-        if (exercise.isCustom)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Chip(label: Text(l10n.customLabel)),
+        for (final part in [
+          _MusclePreview(exercise),
+          if (exercise.isCustom)
+            Row(
+              spacing: Gap.sm,
+              children: [
+                ForgeTag(l10n.customLabel),
+                Expanded(
+                  child: Text(
+                    l10n.detailLoggedAs(
+                      l10n.loggingTypeName(exercise.loggingType).toLowerCase(),
+                    ),
+                    style: Theme.of(context).textTheme.bodyMedium!
+                        .copyWith(color: colors.inkMuted),
+                  ),
+                ),
+              ],
             ),
-          ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-          child: _MusclePreview(exercise),
-        ),
-        _Section(child: _Facts(facts)),
-        if (text.setup.isNotEmpty)
-          _Section(title: l10n.detailSetup, child: _NumberedSteps(text.setup)),
-        if (text.execution.isNotEmpty)
-          _Section(
-            title: l10n.detailExecution,
-            child: _NumberedSteps(text.execution),
-          ),
-        if (text.mistakes.isNotEmpty)
-          _Section(
-            title: l10n.detailMistakes,
-            icon: Icons.close,
-            child: _Bullets(text.mistakes),
-          ),
-        if (text.safety case final safety?)
-          _Section(
-            title: l10n.detailSafety,
-            icon: Icons.warning_amber_outlined,
-            child: Text(safety),
-          ),
-        if (text.cues.isNotEmpty)
-          _Section(title: l10n.detailCues, child: _Bullets(text.cues)),
-        if (exercise.note case final note? when note.isNotEmpty)
-          _Section(title: l10n.detailNote, child: Text(note)),
-        if (detail.alternatives.isNotEmpty || detail.variations.isNotEmpty) ...[
-          _Header(l10n.detailSimilar),
-          for (final other in detail.alternatives)
-            ExerciseTile(
-              other,
-              route: exerciseRoute,
-              tag: l10n.detailAlternative,
+          if (facts.isNotEmpty)
+            ListRowCard(
+              children: [
+                for (final (label, value) in facts)
+                  ListRow(title: label, value: value),
+              ],
             ),
-          for (final other in detail.variations)
-            ExerciseTile(
-              other,
-              route: exerciseRoute,
-              tag: l10n.detailVariation,
+          if (text.setup.isNotEmpty)
+            SectionCard.plain(
+              title: l10n.detailSetup,
+              child: BenefitList.numbered(text.setup),
             ),
+          if (text.execution.isNotEmpty)
+            SectionCard.plain(
+              title: l10n.detailExecution,
+              child: BenefitList.numbered(text.execution),
+            ),
+          if (text.mistakes.isNotEmpty)
+            SectionCard.plain(
+              title: l10n.detailMistakes,
+              child: _Bullets(text.mistakes),
+            ),
+          if (text.safety case final safety?)
+            SectionCard.plain(
+              title: l10n.detailSafety,
+              child: _Bullets([safety]),
+            ),
+          if (text.cues.isNotEmpty)
+            SectionCard.plain(
+              title: l10n.detailCues,
+              child: _Bullets(text.cues),
+            ),
+          if (exercise.note case final note? when note.isNotEmpty)
+            SectionCard.plain(title: l10n.detailNote, child: Text(note)),
+          if (!exercise.isCustom) _OwnNote(exercise),
+        ]) ...[part, const SizedBox(height: Gap.sm)],
+        if (similar.isNotEmpty) ...[
+          ListSectionLabel(l10n.detailSimilar),
+          ListRowCard(
+            children: [
+              for (final (other, relation) in similar)
+                ExerciseTile(other, route: exerciseRoute, tag: relation),
+            ],
+          ),
         ],
-        const SizedBox(height: Gap.lg),
       ],
     );
   }
 }
 
-/// A card of its own on the page, under an optional [title] with an [icon].
-class _Section extends StatelessWidget {
-  const _Section({required this.child, this.title, this.icon});
+/// The user's own note on a catalogue exercise, edited in a sheet.
+class _OwnNote extends StatelessWidget {
+  const _OwnNote(this.exercise);
 
-  final String? title;
-  final IconData? icon;
-  final Widget child;
+  final Exercise exercise;
 
   @override
   Widget build(BuildContext context) {
-    final title = this.title;
-    final icon = this.icon;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Gap.md, vertical: Gap.xs),
-      child: Card(
-        margin: EdgeInsets.zero,
-        child: Padding(
-          padding: const EdgeInsets.all(Gap.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (title != null) ...[
-                Semantics(
-                  header: true,
-                  child: Row(
-                    children: [
-                      if (icon != null) ...[
-                        Icon(icon),
-                        const SizedBox(width: Gap.sm),
-                      ],
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: Gap.sm),
-              ],
-              child,
-            ],
-          ),
+    final l10n = AppLocalizations.of(context);
+    final note = context.select(
+      (ExerciseNotesCubit cubit) => cubit.state.of(exercise.id),
+    );
+    return SectionCard.plain(
+      title: l10n.detailOwnNote,
+      actionLabel: note == null ? l10n.detailOwnNoteAdd : l10n.customEdit,
+      onAction: () => _edit(context, note),
+      child: note == null ? const SizedBox.shrink() : Text(note),
+    );
+  }
+
+  Future<void> _edit(BuildContext context, String? note) async {
+    final l10n = AppLocalizations.of(context);
+    final notes = context.read<ExerciseNotesCubit>();
+    var text = note ?? '';
+    final save = await showForgeBottomSheet<bool>(
+      context: context,
+      builder: (context) => ForgeBottomSheet(
+        title: l10n.detailOwnNote,
+        action: ForgeButton(
+          label: l10n.customSave,
+          size: ForgeButtonSize.large,
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        child: NoteField(
+          initial: note,
+          label: l10n.detailNote,
+          hint: l10n.workoutNoteHint,
+          maxLength: maxExerciseNoteLength,
+          onChanged: (changed) => text = changed,
         ),
       ),
     );
-  }
-}
-
-/// Label and value rows, the labels in one column.
-class _Facts extends StatelessWidget {
-  const _Facts(this.facts);
-
-  final List<(String, String)> facts;
-
-  @override
-  Widget build(BuildContext context) {
-    final labelStyle = Theme.of(context).textTheme.bodyMedium;
-    final valueStyle = Theme.of(context).textTheme.titleSmall;
-    return Table(
-      columnWidths: const {0: IntrinsicColumnWidth()},
-      children: [
-        for (final (label, value) in facts)
-          TableRow(
-            children: [
-              Padding(
-                padding: const EdgeInsetsDirectional.only(
-                  end: Gap.md,
-                  bottom: Gap.sm,
-                ),
-                child: Text(label, style: labelStyle),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: Gap.sm),
-                child: Text(value, style: valueStyle),
-              ),
-            ],
-          ),
-      ],
-    );
+    if (save != true) return;
+    final failure = await notes.save(exercise.id, text);
+    if (failure != null && context.mounted) {
+      showForgeSnackbar(
+        context,
+        message: failure is NetworkFailure
+            ? l10n.errorNetwork
+            : l10n.detailOwnNoteSaveFailed,
+        error: true,
+      );
+    }
   }
 }
 
@@ -363,32 +393,69 @@ class _Bullets extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: Gap.xs,
+      children: [for (final item in items) Text(l10n.stepBullet(item))],
+    );
+  }
+}
+
+/// The page's shape in shimmering stand-ins: the model, the facts and two
+/// cards.
+class _Loading extends StatelessWidget {
+  const _Loading();
+
+  static const double _modelHeight = 200;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget card(List<double> widths) => ListRowCard(
       children: [
-        for (final item in items)
-          Padding(
-            padding: const EdgeInsets.only(bottom: Gap.xs),
-            child: Text(l10n.stepBullet(item)),
+        Padding(
+          padding: const EdgeInsets.all(Gap.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: Gap.sm,
+            children: [
+              for (final (i, width) in widths.indexed)
+                SkeletonBar(widthFactor: width, height: i == 0 ? 14 : 10),
+            ],
           ),
+        ),
+      ],
+    );
+    return ListView(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
+      children: [
+        SkeletonBar(
+          widthFactor: 1,
+          height: _modelHeight,
+          radius: ForgeStyle.of(context).radii.lg,
+        ),
+        const SizedBox(height: Gap.sm),
+        ListRowCard(
+          children: [for (var i = 0; i < 4; i++) ListRow.loading(index: i)],
+        ),
+        const SizedBox(height: Gap.sm),
+        card(const [0.4, 0.9, 0.7, 0.8]),
+        const SizedBox(height: Gap.sm),
+        card(const [0.4, 0.6, 0.8]),
       ],
     );
   }
 }
 
-/// Steps numbered from 1.
-class _NumberedSteps extends StatelessWidget {
-  const _NumberedSteps(this.steps);
+/// An error or empty state in a card.
+class _InCard extends StatelessWidget {
+  const _InCard(this.child);
 
-  final List<String> steps;
+  final Widget child;
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
     children: [
-      for (final (index, step) in steps.indexed)
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: CircleAvatar(child: Text('${index + 1}')),
-          title: Text(step),
-        ),
+      ListRowCard(children: [child]),
     ],
   );
 }
@@ -439,18 +506,4 @@ class _MusclePreviewState extends State<_MusclePreview> {
       ),
     };
   }
-}
-
-class _Header extends StatelessWidget {
-  const _Header(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    header: true,
-    child: ListTile(
-      title: Text(text, style: Theme.of(context).textTheme.titleMedium),
-    ),
-  );
 }

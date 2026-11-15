@@ -168,6 +168,8 @@ keepScreenOn, bar and plates (`barWeightKg`, `ezBarWeightKg`, `trapBarWeightKg`,
 `plates[]`; each only while customised), stepGoal,
 reminder times,
 trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
+`exerciseNotes` (exercise id → the user's own note, at most 500
+characters),
 `activeProgram` (`programId`, `weekdays[]` ISO 1-7, `nextDayIndex`,
 `nextDate` `YYYY-MM-DD`, `startedAt` device-clock timestamp).
 
@@ -671,6 +673,44 @@ Decisions (the canvases they were drawn on are deleted):
   (kept on the device); a card's error is SectionCard.error and no step
   access SectionCard.empty "See your steps", as on Today; a drop in
   strength is written in danger, a gain in success.
+- Exercise pages (owner's picks, 2026-11-15): the Exercise list keeps the
+  title "Exercises" and shows a model-chosen muscle as a removable chip
+  with Clear all, "Main · 42 | Also works · 18" as a segmented control
+  under it and the count with the sort under that; the count ("9
+  exercises") and the sort ("Most popular ▾", a menu with the current
+  sort ticked) share one line; active filters are removable chips that
+  wrap, with Clear all under them; the filter button carries their count;
+  the page opens from the pill on an empty search, filters and sort kept;
+  rows sit in one card; loading is shimmering rows and an error ErrorView
+  in a card, both under the search. Exercise detail: the model's pair form
+  (Worked muscles, Front / Back, Main / Secondary) for every exercise;
+  facts as plain rows (label left, value right), equipment alternatives
+  as extra lines and Also called last; a custom exercise shows its Custom
+  tag with "Logged as …" under the model and only Equipment as a fact;
+  Setup and How to do it as numbered circles; Common mistakes, Safety and
+  Cues as bulleted lines in plain cards; a catalogue exercise has a "Your
+  note" card (Add while empty, Edit once written, a sheet with Save);
+  Similar rows end in their tag and a chevron; the app bar's star is an
+  outline that fills when a favourite, Add opens a menu and a custom
+  exercise has ⋯ (Edit, Delete after a dialog); the program and day
+  sheets are list rows, a full day shown off ("Lower A · Full") and not
+  tappable, the day sheet titled "Add to which day of Upper Lower?"; no
+  programs asks "No programs yet" first; not found is one untitled line.
+  Exercise picker: "Add exercises" with close, the count bar ("None
+  chosen", "3 chosen", at the limit "2 chosen · 40 is the most" with the
+  other rows greyed and not tappable) and "Add 3 exercises"; the
+  generator's is "Leave out exercises" / "Leave out 3 exercises"; no
+  match offers Create custom exercise ("…it is added here once saved"),
+  which comes back chosen (single choice: picked at once), and with a
+  filter on the list's filter form; Swap ("Swap Bench Press", back) and
+  Replace ("Replace Bench Press", or "Replace exercise" for one no longer
+  in the library) list up to eight similar exercises first under
+  "Similar" (narrowed by the search and filters, hidden when none match)
+  and the rest under "All exercises", no count or sort; a tap picks; Swap
+  notes the logged sets ("Sets 1 and 2 are logged; the rest move to the
+  new exercise.", none while nothing is logged). Menus carry an icon per
+  item: sort Most popular (trending up) / A–Z (list); Add to workout
+  (dumbbell) / Add to program (document); Edit (edit) / Delete (delete).
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
@@ -1324,27 +1364,41 @@ the feature you are about to touch, and keep it true when you change it.
   the user already removed or changed the muscle filter, which then stays
   as they left it. So the box always opens without a model-chosen muscle.
   While the page's muscle is the only muscle filtered, the list shows its
-  chip and two sections, "Main" and "Also works", each in the list's
-  order, so search, filters and sort apply inside them; removing the chip
-  or adding another muscle gives the plain list, and one muscle picked by
-  hand in the filter sheet is a plain filtered list. Every exercise list
-  in the app is this widget (`LibraryListView`); the exercise picker
-  (`ExercisePickerPage`, for programs, the generator, the workout and
-  workout history) uses it with its own cubit and no sections.
+  chip and switches between "Main" and "Also works" (a segmented control
+  with each count), each in the list's order, so search, filters and sort
+  apply inside them; removing the chip or adding another muscle gives the
+  plain list, and one muscle picked by hand in the filter sheet is a plain
+  filtered list. Opened from the pill the search starts empty (the
+  filters and the sort stay); its field claims focus for the first frames
+  after the page is in, since the route's own focus and the Hero's flight
+  land after the first request. Every exercise list in the app is this
+  widget (`LibraryListView`); the exercise picker (`ExercisePickerPage`,
+  for programs, the generator, the workout and workout history) uses it
+  with its own cubit and no sections. The picker's route (`…/pick`) takes
+  `max`, `multiple` and a `form` (`add`, `leaveOut`, `swap`, `replace`,
+  with `exercise` and, for swap, `logged`); each place declares the most
+  its list holds (40 a workout, 20 a program day or a leave-out pick).
+  `pickSwap` and `pickReplacement` open the Swap and Replace forms and
+  return the picked exercise. "Create custom exercise" opens the form
+  above the picker (`…/pick/new?name=`), which pops with the new id; the
+  picker chooses it once the catalogue holds it (5 s at most).
 - **Exercise detail** (UX pass, 2026-11-13, owner's pick): the app bar
   holds the name, the favourite star, one Add button whose menu offers
   "Add to workout" (the workout in progress, else asking to start one) and
   "Add to program", the same in every place the page opens, and, for a
-  custom exercise, a menu with Edit and Delete. The body: the "Custom"
-  label, the model (front and back) with Main muscles and Also works; a
-  card of facts (equipment with its alternative sets, level, mechanic,
-  movement pattern, sides, logged as, also called); Setup and How to do
-  it as numbered steps; Common mistakes, Safety and Cues (as chips) each
-  as their own card; the custom exercise's Note; then one Similar
+  custom exercise, a menu with Edit and Delete. The body: the model
+  (front and back) with Main muscles and Also works; for a custom
+  exercise the "Custom" tag and its logging type; a card of facts
+  (equipment with its alternative sets; for a catalogue exercise also
+  level, mechanic, pattern, sides, logged as, also called); Setup and How
+  to do it as numbered steps; Common mistakes, Safety and Cues as
+  bulleted lines, each its own card; the custom exercise's Note, or on a
+  catalogue exercise the user's own note ("Your note", stored in
+  `users/{uid}.exerciseNotes`, trimmed, blank removes it); then one Similar
   exercises list, alternatives first, each tagged Alternative or
   Variation. An alternative of the same family is listed once, as a
   variation. Anything an exercise lacks is left out, so a custom exercise
-  shows the model, muscles, its facts, Note and nothing below. Records and
+  shows the model, its tag, equipment, Note and nothing below. Records and
   progress left the page; an exercise's strength page opens from Progress.
 
 ### Programs
