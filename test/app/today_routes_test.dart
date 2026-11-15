@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_workout/app/router.dart';
+import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
@@ -207,6 +208,9 @@ void main() {
           BlocProvider<SettingsCubit>.value(value: settings),
         ],
         child: MaterialApp.router(
+          theme: ThemeData(
+            extensions: AppPreset.shipped.lightTheme().extensions.values,
+          ),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           routerConfig: router,

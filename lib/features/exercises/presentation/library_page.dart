@@ -73,7 +73,8 @@ class _LibraryPageState extends State<LibraryPage> {
           builder: (context, catalogue) => switch (catalogue) {
             CatalogueLoading() => const LoadingView(),
             CatalogueFailed() => ErrorView(
-              message: l10n.libraryLoadFailed,
+              title: l10n.libraryLoadFailed,
+              message: l10n.loadFailedDetail,
               retryLabel: l10n.retry,
               onRetry: context.read<ExerciseCatalogueCubit>().retry,
             ),

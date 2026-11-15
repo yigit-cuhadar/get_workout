@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../../../core/widgets/muscle_heat.dart';
+import '../../../core/widgets/muscle_model.dart';
+import '../../../core/widgets/volume_band.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../exercises/domain/muscle_meshes.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/body_model_cubit.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
@@ -57,7 +58,8 @@ class _VolumeView extends StatelessWidget {
             // keeps its camera and nothing flashes.
             child: switch (state.status) {
               VolumeStatus.failure => ErrorView(
-                message: l10n.volumeLoadFailed,
+                title: l10n.volumeLoadFailed,
+                message: l10n.loadFailedDetail,
                 retryLabel: l10n.retry,
                 onRetry: cubit.retry,
               ),
@@ -135,7 +137,10 @@ class _Week extends StatelessWidget {
           week,
           semanticLabel: l10n.volumeModelLabel(_weekLabel(context, state)),
         ),
-        const _Legend(),
+        const Padding(
+          padding: EdgeInsets.all(Gap.md),
+          child: MuscleHeatLegend(),
+        ),
         if (week.entries.isEmpty)
           Padding(
             padding: const EdgeInsets.all(Gap.md),
@@ -154,17 +159,16 @@ class _Week extends StatelessWidget {
             child: Column(
               children: [
                 for (final muscle in muscles)
-                  ListTile(
-                    title: Text(l10n.muscleName(muscle)),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: Gap.sm),
-                      child: VolumeBandBar(
+                  InkWell(
+                    onTap: () => _showMuscle(context, muscle),
+                    child: Padding(
+                      padding: const EdgeInsets.all(Gap.md),
+                      child: VolumeBand(
+                        muscle: muscle,
                         sets: week.setsOf(muscle),
                         scale: scale,
                       ),
                     ),
-                    trailing: Text(l10n.setsText(week.setsOf(muscle))),
-                    onTap: () => _showMuscle(context, muscle),
                   ),
               ],
             ),
@@ -199,8 +203,8 @@ class _VolumeModelState extends State<_VolumeModel> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final colors = Theme.of(context).colorScheme;
-    final week = widget.week;
+    final p = ForgeStyle.of(context).colors;
+    final sets = widget.week.sets;
     final model = context.watch<BodyModelCubit>().state;
     // One model, turned by dragging, shows the front and the back.
     return Column(
@@ -208,22 +212,16 @@ class _VolumeModelState extends State<_VolumeModel> {
         SizedBox(
           height: MediaQuery.sizeOf(context).height * _heightRatio,
           child: switch (model) {
-            BodyModelLoading() => const LoadingView(),
-            BodyModelFailed() => Center(child: Text(l10n.modelLoadFailed)),
-            BodyModelReady(:final model) => ModelViewer(
+            BodyModelLoading() => const MuscleModel.loading(sides: false),
+            BodyModelFailed() => MuscleModel.failed(
+              onRetry: context.read<BodyModelCubit>().load,
+            ),
+            BodyModelReady(:final model) => MuscleModel(
               model: model,
-              partColors: {
-                for (final MapEntry(key: muscle, value: sets)
-                    in week.sets.entries)
-                  for (final mesh in muscle.meshNames)
-                    mesh: VolumeZone.of(sets).color(colors),
-              },
-              selectable: (part) => muscleOfMesh(part) != null,
-              onPartTap: (part) {
-                if (muscleOfMesh(part) case final muscle?) {
-                  _showMuscle(context, muscle);
-                }
-              },
+              colors: muscleHeatColors(p, sets),
+              outlined: muscleHeatOver(sets),
+              sides: false,
+              onOpen: (muscle) => _showMuscle(context, muscle),
               semanticLabel: widget.semanticLabel,
             ),
           },
@@ -235,34 +233,6 @@ class _VolumeModelState extends State<_VolumeModel> {
             style: Theme.of(context).textTheme.bodySmall,
           ),
       ],
-    );
-  }
-}
-
-class _Legend extends StatelessWidget {
-  const _Legend();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final colors = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.all(Gap.sm),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: Gap.md,
-        children: [
-          for (final zone in VolumeZone.values)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.circle, color: zone.color(colors)),
-                const SizedBox(width: Gap.xs),
-                Text(l10n.zoneLabel(zone)),
-              ],
-            ),
-        ],
-      ),
     );
   }
 }

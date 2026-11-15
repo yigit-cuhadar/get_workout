@@ -178,11 +178,11 @@ void main() {
       );
       expect(
         l10n.effortAskTitle(EffortScale.rpe, bench, 2),
-        'RPE of drop set 2?',
+        "What was drop set 2's RPE?",
       );
       expect(
         l10n.effortAskTitle(EffortScale.rir, bench, 1),
-        'Reps left in set 1?',
+        'How many reps were left in set 1?',
       );
       expect(
         l10n.effortAskValues(w, (exercise: 0, set: 1), selected, WeightUnit.kg),
@@ -195,6 +195,28 @@ void main() {
       expect(
         l10n.effortRowQuestion(EffortScale.rir, bench, 1),
         'Set 1 · how many more reps could you have done?',
+      );
+      expect(
+        l10n.effortDoneValues(
+          w,
+          (exercise: 0, set: 1),
+          selected,
+          WeightUnit.kg,
+        ),
+        'Set 1 done · 80 kg × 8',
+      );
+      expect(
+        l10n.effortDoneValues(
+          w,
+          (exercise: 1, set: 0),
+          selected,
+          WeightUnit.kg,
+        ),
+        'Squat · Set 1 done · 100 kg × 5',
+      );
+      expect(
+        l10n.effortQuestionText(EffortScale.rpe),
+        'How hard was it, from 1 to 10?',
       );
     });
 

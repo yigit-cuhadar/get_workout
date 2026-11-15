@@ -83,7 +83,8 @@ class _Unavailable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ErrorView(
-    message: l10n.profileUnavailable,
+    title: l10n.profileUnavailable,
+    message: l10n.profileUnavailableDetail,
     retryLabel: l10n.retry,
     onRetry: context.read<ProfileCubit>().resume,
   );

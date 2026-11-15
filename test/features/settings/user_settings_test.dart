@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 
 void main() {
@@ -73,6 +74,30 @@ void main() {
       ]);
     });
 
+    test('EZ and trap bars default by the unit: 10 / 25 kg, 25 / 55 lb', () {
+      expect(metric.ezBarWeightKg, 10);
+      expect(metric.trapBarWeightKg, 25);
+      expect(imperial.ezBarWeightKg, lb(25));
+      expect(imperial.trapBarWeightKg, lb(55));
+    });
+
+    test('each bar kind has its own weight', () {
+      final custom = metric.copyWith(
+        customBarWeightKg: 15,
+        customEzBarWeightKg: 8,
+        customTrapBarWeightKg: 30,
+      );
+      expect(custom.barWeightKgFor(Equipment.barbell), 15);
+      expect(custom.barWeightKgFor(Equipment.ezBar), 8);
+      expect(custom.barWeightKgFor(Equipment.trapBar), 30);
+      expect(
+        custom
+            .copyWith(weightUnit: WeightUnit.lb)
+            .barWeightKgFor(Equipment.ezBar),
+        8,
+      );
+    });
+
     test('every default plate size has pairs', () {
       for (final settings in [metric, imperial]) {
         expect(settings.plates.every((p) => p.pairs > 0), isTrue);
@@ -82,6 +107,8 @@ void main() {
     test('until customised, the equipment follows the weight unit', () {
       final switched = metric.copyWith(weightUnit: WeightUnit.lb);
       expect(switched.barWeightKg, imperial.barWeightKg);
+      expect(switched.ezBarWeightKg, imperial.ezBarWeightKg);
+      expect(switched.trapBarWeightKg, imperial.trapBarWeightKg);
       expect(switched.plates, imperial.plates);
     });
 
@@ -102,6 +129,8 @@ void main() {
         weekStart: WeekStart.monday,
         stepGoal: 6000,
         customBarWeightKg: 15,
+        customEzBarWeightKg: 8,
+        customTrapBarWeightKg: 30,
         customPlates: const [Plate(weightKg: 10, pairs: 3)],
       );
       expect(

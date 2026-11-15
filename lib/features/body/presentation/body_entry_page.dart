@@ -46,11 +46,15 @@ class StoredEntry extends StatelessWidget {
           body: switch (state.status) {
             BodyListStatus.loading => const LoadingView(),
             BodyListStatus.failure => ErrorView(
-              message: l10n.bodyLoadFailed,
+              title: l10n.bodyLoadFailed,
+              message: l10n.loadFailedDetail,
               retryLabel: l10n.retry,
               onRetry: context.read<BodyListCubit>().retry,
             ),
-            BodyListStatus.ready => EmptyView(message: l10n.bodyNotFound),
+            BodyListStatus.ready => EmptyView(
+              title: l10n.bodyNotFoundTitle,
+              message: l10n.bodyNotFound,
+            ),
           },
         );
       },

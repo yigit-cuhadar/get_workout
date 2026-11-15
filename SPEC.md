@@ -164,7 +164,8 @@ birthYear, heightCm, weightKg, targetWeightKg), `settings` (units,
 effortScale, weekStart (`monday` \| `sunday` \| `saturday`; absent, or a
 value this version does not know, is automatic), restTimer, warmups
 (autoWarmups for older versions), seenTips[],
-bar and plates, stepGoal,
+bar and plates (`barWeightKg`, `ezBarWeightKg`, `trapBarWeightKg`,
+`plates[]`; each only while customised), stepGoal,
 reminder times,
 trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
 `activeProgram` (`programId`, `weekdays[]` ISO 1-7, `nextDayIndex`,
@@ -364,8 +365,8 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 
 Group 11, design in code (the owner's plan; the studios are the target, see Design)
 - [x] Theme — `ForgePreset` → `ForgeTheme` in forge_ui with the studio's colours, type scale, radii and borders, light and dark; Slate, Measure and Graphite all in code, switched by a dev-only picker in Profile, prod ships the one picked at the end; fonts bundled; the studio's own line icons (not an icon package), with the heavier form for the selected tab — `lib/app/theme.dart` swaps in and screens change without edits
-- [ ] Forge components — the MobileAppForge Studio cards built in forge_ui with every form and state on their card, widget tests for their behaviour; merged and tagged before the app uses them
-- [ ] App components — the GetWorkout Studio components in the app, every state on their card
+- [x] Forge components — the MobileAppForge Studio cards built in forge_ui with every form and state on their card, widget tests for their behaviour; merged and tagged before the app uses them
+- [x] App components — the GetWorkout Studio components in the app, every state on their card
 - [ ] Key screens — Today, Workout and Programs with every state on their boards, approved by the owner before the rest
 - [ ] The remaining screens by studio group (Ana sekmeler, Antrenman ve programlar, İlerleme, Formlar, Kurulum, hesap ve abonelik) — one group at a time, each with its owner-approved flow changes from Design built along with the look
 - [ ] Widget tests for the critical flows once the UI is stable; the final preset picked on a device
@@ -540,6 +541,29 @@ Decisions (the canvases they were drawn on are deleted):
   with the app (Google Fonts, OFL); all three presets are in code behind a
   debug-only picker in Profile; Measure and Graphite keep the 1px card line
   in dark too, Slate's dark cards stay a tonal fill.
+- Building the components (owner's picks, 2026-11-14 to 15), drawn in the
+  studios: the set panel's weight is typed on a tap and a plate button
+  beside it (barbell, EZ bar and trap bar exercises only, not the Smith
+  machine) opens the plate breakdown; a done set's
+  effort has no Skip, and the no-rest effort question one Skip; a card's
+  count includes warm-ups; a collapsed group with every set done keeps its
+  letter with a muted name; a lifted card leaves an empty gap; a superset or
+  circuit keeps its items in step (one rounds count, one rest after the
+  group); every plate has its own size and a muted competition colour (25
+  red, 20 blue, 15 yellow, 10 green, 5 white, 2.5 red, 1.25 grey; pounds take
+  their kilo match; a weight between two plates takes the heavier), an
+  accepted exception to muted colours like Measure; "Fits you" is Forge's
+  record tag; the exercise list's star stays a button on every row; muscles
+  over 20 weekly sets get a 2px danger outline outside the edge; one mark per
+  day (workout > cardio > today > missed or planned; today with a finished
+  workout keeps its ring); Weekly volume has no Front / Back toggle; the
+  measurement camera keeps the preview's aspect ratio, its top line reads
+  "Front · match last photo" (first time "Front · first photo") and "1 / 4",
+  camera access off offers Open settings and Skip photo, no camera offers
+  Skip photo; the program's weekly sets card uses the compact band. Error
+  and empty states the boards don't draw keep interim texts until the
+  screen step draws them; the plate breakdown's undrawn cases and the
+  camera's Close or Skip are drawn and asked there.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
@@ -2280,7 +2304,11 @@ the feature you are about to touch, and keep it true when you change it.
   calculators' own US Navy formula from those, when sex, height and the
   measurements allow it; activity from `daysPerWeek` (2 light, 3-5
   moderate, 6 active, by the levels' wording). Units, bar and plates come
-  from settings as before. 1RM and the macros' calories stay empty (no
+  from settings as before. The EZ bar and the trap bar have their own
+  weights next to the bar's, defaulting by the unit (EZ 10 kg / 25 lb, trap
+  25 kg / 55 lb) until customised; the workout's plate breakdown uses the
+  bar of the exercise's equipment (barbell first, then trap, then EZ). No
+  UI edits them yet: it is drawn in the screen step. 1RM and the macros' calories stay empty (no
   single source); the goal and target weight map onto no calculator
   input. A known number shows as a tile (`KnownNumberField`), not a field:
   its name, the value to one decimal in the user's unit and, for a value

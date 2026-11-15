@@ -1,0 +1,472 @@
+import 'package:flutter/material.dart';
+import 'package:forge_ui/forge_ui.dart';
+
+import '../../app/theme.dart';
+import '../../l10n/app_localizations.dart';
+
+/// One plate size on each side of the bar: its weight in kg ([kg], which
+/// sizes its drawing), as shown with its unit ([weight], "25 kg") and
+/// without ([short], "25"), and how many of it go on each side ([count]).
+class PlateStack {
+  const PlateStack({
+    required this.kg,
+    required this.weight,
+    required this.short,
+    required this.count,
+  });
+
+  final double kg;
+  final String weight;
+  final String short;
+  final int count;
+}
+
+/// What to load on the bar, heaviest plates first.
+///
+/// The calculator's card has the [target] and the [bar] on top, one side
+/// of the bar drawn side-on with plates sized by weight, then the [plates]
+/// with their count and the load on each side ([perSide]).
+/// [PlateCalculator.closest] is the card when the plates can't make the
+/// [target]: the [closest] load below it, why, and its plates.
+/// [PlateCalculator.compact] is the small box over the set panel: the
+/// [target], the load per side, the plates as tags and the [bar].
+/// Every plate is drawn in its own size and colour ([PlateLook]).
+class PlateCalculator extends StatelessWidget {
+  const PlateCalculator({
+    super.key,
+    required this.target,
+    required String this.bar,
+    required this.plates,
+    required String this.perSide,
+  }) : closest = null,
+       _compact = false;
+
+  const PlateCalculator.closest({
+    super.key,
+    required this.target,
+    required String this.closest,
+    required this.plates,
+  }) : bar = null,
+       perSide = null,
+       _compact = false;
+
+  const PlateCalculator.compact({
+    super.key,
+    required this.target,
+    required String this.bar,
+    required this.plates,
+    required String this.perSide,
+  }) : closest = null,
+       _compact = true;
+
+  final String target;
+  final String? bar;
+  final List<PlateStack> plates;
+  final String? perSide;
+  final String? closest;
+  final bool _compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final style = ForgeStyle.of(context);
+    final colors = style.colors;
+    final text = Theme.of(context).textTheme;
+    final caption = text.labelMedium!.copyWith(
+      fontWeight: FontWeight.w400,
+      color: colors.inkMuted,
+    );
+    final big = style.dataLg.copyWith(
+      fontSize: 24,
+      height: 1.2,
+      color: colors.ink,
+    );
+    final closest = this.closest;
+    if (_compact) {
+      return _Card(
+        padding: const EdgeInsets.all(14),
+        spacing: 6,
+        children: [
+          Text(
+            l10n.plateCalculatorCompact(target, perSide!),
+            style: text.bodySmall!.copyWith(
+              fontWeight: FontWeight.w700,
+              color: colors.ink,
+            ),
+          ),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              for (final plate in plates)
+                for (var i = 0; i < plate.count; i++) ForgeTag(plate.short),
+              Text(l10n.plateCalculatorOnBar(bar!), style: caption),
+            ],
+          ),
+        ],
+      );
+    }
+    if (closest != null) {
+      return _Card(
+        padding: const EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, Gap.md),
+        spacing: 12,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _Figure(
+                  label: l10n.plateCalculatorTarget,
+                  value: Text(target, style: big),
+                ),
+              ),
+              _Figure(
+                label: l10n.plateCalculatorClosest,
+                value: Text(closest, style: big),
+                end: true,
+              ),
+            ],
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: Gap.sm,
+            children: [
+              ForgeIcon(ForgeIcons.info, size: 18, color: colors.inkMuted),
+              Expanded(
+                child: Text(
+                  l10n.plateCalculatorCannotMake(target, closest),
+                  style: text.bodySmall!.copyWith(color: colors.inkMuted),
+                ),
+              ),
+            ],
+          ),
+          for (final plate in plates)
+            _PlateRow(
+              plate: plate,
+              height: 34,
+              style: style.data.copyWith(fontSize: 14, color: colors.ink),
+            ),
+        ],
+      );
+    }
+    final rowStyle = style.data.copyWith(fontSize: 15, color: colors.ink);
+    final divider = Container(height: 1, color: colors.line);
+    return _Card(
+      padding: const EdgeInsets.all(14),
+      spacing: 10,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _Figure(
+                label: l10n.plateCalculatorTarget,
+                value: Text(target, style: big),
+              ),
+            ),
+            _Figure(
+              label: l10n.calcBar,
+              value: Text(bar!, style: rowStyle),
+              end: true,
+            ),
+          ],
+        ),
+        AspectRatio(
+          aspectRatio: _BarPainter.width / _BarPainter.height,
+          child: CustomPaint(
+            painter: _BarPainter(
+              plates: plates,
+              colors: colors,
+              plateColors: GwColors.of(context),
+              label: style.data.copyWith(fontSize: 10, color: colors.inkMuted),
+            ),
+          ),
+        ),
+        divider,
+        Text(
+          l10n.plateCalculatorHeaviestFirst,
+          style: text.labelSmall!.copyWith(
+            fontWeight: FontWeight.w400,
+            color: colors.inkMuted,
+          ),
+        ),
+        for (final plate in plates)
+          _PlateRow(plate: plate, height: 36, style: rowStyle),
+        divider,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.plateCalculatorEachSide,
+                style: text.bodySmall!.copyWith(color: colors.inkMuted),
+              ),
+            ),
+            Text(perSide!, style: rowStyle),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// How a plate is drawn: each kilo plate its own size (w × h) and muted
+/// competition colour. Any other plate, pound plates included, is drawn
+/// as the kilo plate nearest its weight (55 lb as 25, 45 lb as 20, 35 lb
+/// as 15, 25 lb as 10, 10 lb as 5, 5 lb as 2.5, 2.5 lb as 1.25); halfway
+/// between two, as the heavier.
+enum PlateLook {
+  kg25(25, 16, 120),
+  kg20(20, 16, 108),
+  kg15(15, 14, 96),
+  kg10(10, 12, 84),
+  kg5(5, 10, 68),
+  kg2p5(2.5, 8, 56),
+  kg1p25(1.25, 6, 44);
+
+  const PlateLook(this.kg, this.width, this.height);
+
+  final double kg;
+  final double width;
+  final double height;
+
+  /// The look of a plate weighing [kg].
+  static PlateLook of(double kg) => values.reduce(
+    (nearest, look) =>
+        (look.kg - kg).abs() < (nearest.kg - kg).abs() ? look : nearest,
+  );
+
+  Color color(GwColors colors) => switch (this) {
+    kg25 => colors.plate25,
+    kg20 => colors.plate20,
+    kg15 => colors.plate15,
+    kg10 => colors.plate10,
+    kg5 => colors.plate5,
+    kg2p5 => colors.plate2p5,
+    kg1p25 => colors.plate1p25,
+  };
+
+  /// The white plate's line-strong edge; null for the others.
+  Color? edge(ForgePalette colors) => this == kg5 ? colors.lineStrong : null;
+}
+
+class _Card extends StatelessWidget {
+  const _Card({
+    required this.padding,
+    required this.spacing,
+    required this.children,
+  });
+
+  final EdgeInsets padding;
+  final double spacing;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: style.colors.surface,
+        borderRadius: BorderRadius.circular(style.radii.lg),
+        border: style.cardBorder == 0
+            ? null
+            : Border.all(color: style.colors.line, width: style.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: spacing,
+        children: children,
+      ),
+    );
+  }
+}
+
+/// A caption over its [value], right-aligned at the [end].
+class _Figure extends StatelessWidget {
+  const _Figure({required this.label, required this.value, this.end = false});
+
+  final String label;
+  final Widget value;
+  final bool end;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: end ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: Theme.of(context).textTheme.labelMedium!.copyWith(
+          fontWeight: FontWeight.w400,
+          color: ForgeStyle.of(context).colors.inkMuted,
+        ),
+      ),
+      value,
+    ],
+  );
+}
+
+/// A plate size: its swatch, weight and count per side.
+class _PlateRow extends StatelessWidget {
+  const _PlateRow({
+    required this.plate,
+    required this.height,
+    required this.style,
+  });
+
+  final PlateStack plate;
+  final double height;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final look = PlateLook.of(plate.kg);
+    final edge = look.edge(ForgeStyle.of(context).colors);
+    return SizedBox(
+      height: height,
+      child: Row(
+        spacing: 10,
+        children: [
+          Container(
+            width: look.width,
+            height: 22,
+            decoration: BoxDecoration(
+              color: look.color(GwColors.of(context)),
+              borderRadius: const BorderRadius.all(Radius.circular(3)),
+              border: edge == null ? null : Border.all(color: edge),
+            ),
+          ),
+          Expanded(child: Text(plate.weight, style: style)),
+          Text(
+            AppLocalizations.of(context).plateCalculatorCount(plate.count),
+            style: style,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One side of the bar, side-on: the collar, the sleeve, and each plate
+/// from the collar out with its weight under it; a label with no room
+/// next to the one before drops a line, on a short leader. A load longer
+/// than the sleeve has its plates and gaps narrowed to fit it.
+class _BarPainter extends CustomPainter {
+  _BarPainter({
+    required this.plates,
+    required this.colors,
+    required this.plateColors,
+    required this.label,
+  });
+
+  final List<PlateStack> plates;
+  final ForgePalette colors;
+  final GwColors plateColors;
+  final TextStyle label;
+
+  static const width = 280.0;
+  static const height = 174.0;
+  static const _axis = 70.0;
+  static const _gap = 3.0;
+  static const _sleeveStart = 44.0;
+  static const _sleeveEnd = 274.0;
+
+  /// Where the first plate sits, past the collar.
+  static const _platesStart = 48.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.scale(size.width / width);
+    void rect(
+      double x,
+      double y,
+      double w,
+      double h,
+      double r,
+      Color color, {
+      Color? edge,
+    }) {
+      final shape = RRect.fromRectAndRadius(
+        Rect.fromLTWH(x, y, w, h),
+        Radius.circular(r),
+      );
+      canvas.drawRRect(shape, Paint()..color = color);
+      if (edge != null) {
+        canvas.drawRRect(
+          shape.deflate(0.5),
+          Paint()
+            ..color = edge
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1,
+        );
+      }
+    }
+
+    rect(0, 66, 40, 8, 2, colors.lineStrong);
+    rect(36, 56, 8, 28, 2, colors.lineStrong);
+    rect(
+      _sleeveStart,
+      66,
+      _sleeveEnd - _sleeveStart,
+      8,
+      2,
+      colors.surfaceSunken,
+    );
+    final length =
+        plates.fold(
+          0.0,
+          (sum, plate) =>
+              sum + plate.count * (PlateLook.of(plate.kg).width + _gap),
+        ) -
+        _gap;
+    const room = _sleeveEnd - _platesStart;
+    final fit = length > room ? room / length : 1.0;
+    final gap = _gap * fit;
+    var x = _platesStart;
+    var labelEnd = double.negativeInfinity;
+    for (final plate in plates) {
+      final look = PlateLook.of(plate.kg);
+      final plateWidth = look.width * fit;
+      for (var i = 0; i < plate.count; i++) {
+        rect(
+          x,
+          _axis - look.height / 2,
+          plateWidth,
+          look.height,
+          3,
+          look.color(plateColors),
+          edge: look.edge(colors),
+        );
+        final centre = x + plateWidth / 2;
+        final painter = TextPainter(
+          text: TextSpan(text: plate.short, style: label),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        final left = centre - painter.width / 2;
+        final dropped = left < labelEnd + _gap;
+        if (dropped) {
+          canvas.drawLine(
+            Offset(centre, 136),
+            Offset(centre, 156),
+            Paint()
+              ..color = colors.line
+              ..strokeWidth = 1,
+          );
+        } else {
+          labelEnd = left + painter.width;
+        }
+        painter.paint(
+          canvas,
+          Offset(left, (dropped ? 167 : 150) - painter.height * 0.8),
+        );
+        painter.dispose();
+        x += plateWidth + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BarPainter oldDelegate) =>
+      oldDelegate.plates != plates ||
+      oldDelegate.colors != colors ||
+      oldDelegate.plateColors != plateColors ||
+      oldDelegate.label != label;
+}

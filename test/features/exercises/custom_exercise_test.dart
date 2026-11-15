@@ -222,4 +222,38 @@ void main() {
       verifyNever(() => repository.createCustomExercise(any(), any()));
     });
   });
+
+  test('the loaded bar prefers the barbell, then the trap bar, then EZ', () {
+    Equipment? bar(List<Equipment> equipment) =>
+        exercise('ex_a', equipment: equipment).loadedBar;
+    expect(bar(const [Equipment.barbell]), Equipment.barbell);
+    expect(bar(const [Equipment.ezBar]), Equipment.ezBar);
+    expect(bar(const [Equipment.trapBar]), Equipment.trapBar);
+    expect(
+      bar(const [Equipment.ezBar, Equipment.trapBar, Equipment.barbell]),
+      Equipment.barbell,
+    );
+    expect(bar(const [Equipment.ezBar, Equipment.trapBar]), Equipment.trapBar);
+    expect(bar(const [Equipment.smithMachine]), isNull);
+    expect(bar(const [Equipment.dumbbell, Equipment.bench]), isNull);
+    expect(
+      Exercise.custom(
+        id: 'custom_a',
+        name: 'Floor Press',
+        loggingType: LoggingType.weightReps,
+        mainMuscles: const [Muscle.pec],
+        equipment: const [Equipment.barbell],
+      ).loadedBar,
+      Equipment.barbell,
+    );
+    expect(
+      Exercise.custom(
+        id: 'custom_b',
+        name: 'Floor Press',
+        loggingType: LoggingType.weightReps,
+        mainMuscles: const [Muscle.pec],
+      ).loadedBar,
+      isNull,
+    );
+  });
 }

@@ -104,12 +104,14 @@ class FirestoreSettingsRepository implements SettingsRepository {
       workoutReminder: _workoutReminder(map['reminders']),
       measurementReminder: _measurementReminder(map['reminders']),
       customBarWeightKg: _barWeight(map['barWeightKg']),
+      customEzBarWeightKg: _barWeight(map['ezBarWeightKg']),
+      customTrapBarWeightKg: _barWeight(map['trapBarWeightKg']),
       customPlates: _plates(map['plates']),
       customTrackedMeasurements: _measurements(map['trackedMeasurements']),
     );
   }
 
-  /// The week start, bar, plates and tracked measurements are written only
+  /// The week start, bars, plates and tracked measurements are written only
   /// while chosen or customised; deleting them returns the user to the
   /// default. Seen tips are only ever added, by [markTipSeen].
   @override
@@ -157,6 +159,8 @@ class FirestoreSettingsRepository implements SettingsRepository {
       },
     },
     'barWeightKg': settings.customBarWeightKg ?? FieldValue.delete(),
+    'ezBarWeightKg': settings.customEzBarWeightKg ?? FieldValue.delete(),
+    'trapBarWeightKg': settings.customTrapBarWeightKg ?? FieldValue.delete(),
     'plates':
         settings.customPlates
             ?.map((plate) => {'weightKg': plate.weightKg, 'pairs': plate.pairs})

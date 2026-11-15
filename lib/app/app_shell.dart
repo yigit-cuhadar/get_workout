@@ -24,7 +24,7 @@ class AppShell extends StatelessWidget {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const WorkoutBar(),
+          const RunningWorkoutBar(),
           NavigationBar(
             selectedIndex: shell.currentIndex,
             onDestinationSelected: (index) => index == shell.currentIndex

@@ -63,10 +63,10 @@ int retypedSetPosition(WorkoutExercise exercise, int index, SetType type) {
   return others.lastIndexWhere((set) => set.isWarmup) + 1;
 }
 
-/// A workout of day [dayIndex] of [program], its items as goals, each
-/// exercise [warmedUp] under [warmups] in day order (none without).
-/// Items whose exercise is not in [catalogue] (deleted or retired) are
-/// left out.
+/// A workout of day [dayIndex] of [program], its items as goals with each
+/// group in step as the builder shows it ([alignGroups]), each exercise
+/// [warmedUp] under [warmups] in day order (none without). Items whose
+/// exercise is not in [catalogue] (deleted or retired) are left out.
 Workout workoutFromProgramDay({
   required String id,
   required DateTime startedAt,
@@ -83,7 +83,7 @@ Workout workoutFromProgramDay({
   dayIndex: dayIndex,
   name: name,
   exercises: relabelGroups(switch ([
-    for (final item in program.days[dayIndex].items)
+    for (final item in alignGroups(program.days[dayIndex].items))
       if (catalogue[item.exerciseId] case final exercise?)
         exerciseFor(exercise, language, goal: item),
   ]) {

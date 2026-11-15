@@ -49,11 +49,15 @@ class CardioSessionPage extends StatelessWidget {
             body: switch (state.status) {
               CardioListStatus.loading => const LoadingView(),
               CardioListStatus.failure => ErrorView(
-                message: l10n.cardioLoadFailed,
+                title: l10n.cardioLoadFailed,
+                message: l10n.loadFailedDetail,
                 retryLabel: l10n.retry,
                 onRetry: context.read<CardioListCubit>().retry,
               ),
-              CardioListStatus.ready => EmptyView(message: l10n.cardioNotFound),
+              CardioListStatus.ready => EmptyView(
+                title: l10n.cardioNotFoundTitle,
+                message: l10n.cardioNotFound,
+              ),
             },
           );
         },

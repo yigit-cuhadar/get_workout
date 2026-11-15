@@ -53,12 +53,14 @@ class _CatalogueView extends StatelessWidget {
         body: switch (state.status) {
           ProgramCatalogueStatus.loading => const LoadingView(),
           ProgramCatalogueStatus.offline => ErrorView(
-            message: l10n.catalogueOffline,
+            title: l10n.catalogueOfflineTitle,
+            message: l10n.catalogueOfflineDetail,
             retryLabel: l10n.retry,
             onRetry: cubit.retry,
           ),
           ProgramCatalogueStatus.failure => ErrorView(
-            message: l10n.catalogueLoadFailed,
+            title: l10n.catalogueLoadFailed,
+            message: l10n.loadFailedDetail,
             retryLabel: l10n.retry,
             onRetry: cubit.retry,
           ),
@@ -217,11 +219,14 @@ class _Programs extends StatelessWidget {
         ],
         if (visible.isEmpty)
           EmptyView(
-            message: l10n.catalogueNoMatch,
-            action: TextButton(
-              onPressed: context.read<ProgramCatalogueCubit>().clearFilters,
-              child: Text(l10n.catalogueClearFilters),
-            ),
+            title: l10n.catalogueNoMatch,
+            message: l10n.catalogueNoMatchDetail,
+            actions: [
+              TextButton(
+                onPressed: context.read<ProgramCatalogueCubit>().clearFilters,
+                child: Text(l10n.catalogueClearFilters),
+              ),
+            ],
           ),
         for (final program in visible) card(program),
       ],

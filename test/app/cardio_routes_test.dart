@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/app/router.dart';
+import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/cardio/domain/cardio_repository.dart';
 import 'package:get_workout/features/cardio/domain/cardio_session.dart';
 import 'package:get_workout/features/cardio/domain/cardio_type.dart';
@@ -142,6 +143,9 @@ void main() {
           noWorkout(),
         ],
         child: MaterialApp.router(
+          theme: ThemeData(
+            extensions: AppPreset.shipped.lightTheme().extensions.values,
+          ),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           routerConfig: router = buildRouter(auth, profile),
@@ -211,7 +215,7 @@ void main() {
     await start(tester);
     await openCardio(tester);
 
-    expect(find.text('No cardio logged yet'), findsOneWidget);
+    expect(find.text('No cardio logged'), findsOneWidget);
     await tap(tester, find.text('Log cardio'));
 
     expect(find.byType(CardioNewPage), findsOneWidget);
@@ -264,7 +268,7 @@ void main() {
     router.go(Routes.cardioSession('nope'));
     await tester.pumpAndSettle();
 
-    expect(find.text('This session no longer exists'), findsOneWidget);
+    expect(find.text('This session no longer exists.'), findsOneWidget);
   });
 
   testWidgets('tapping the open Progress tab returns to its first page', (

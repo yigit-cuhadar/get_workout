@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/text_length.dart';
+import '../../../core/widgets/featured_card.dart';
+import '../../../core/widgets/volume_band.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calculators/presentation/calculator_list.dart';
-import '../../exercises/presentation/vocabulary_labels.dart';
+import '../../calendar/presentation/calendar_marks.dart';
 import '../../generator/presentation/generator_entry.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
@@ -21,7 +23,6 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../../steps/domain/steps.dart';
 import '../../volume/domain/weekly_volume.dart';
 import '../../volume/presentation/volume_charts.dart';
-import '../../volume/presentation/volume_text.dart';
 import '../../workout/domain/workout.dart';
 import '../../workout/presentation/active_workout_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
@@ -29,7 +30,6 @@ import 'next_workout.dart';
 import 'today_steps_cubit.dart';
 import 'today_volume_cubit.dart';
 import 'today_week_cubit.dart';
-import 'week_strip.dart';
 
 /// The Today tab: this week, the next workout, this week's volume, the
 /// calculators and steps, each card on its own data, so one failing leaves
@@ -260,26 +260,10 @@ class _WorkoutCard extends StatelessWidget {
           program,
           dayIndex,
           date: date,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (access == ProgramAccess.locked)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.lock_outline),
-                      const SizedBox(width: Gap.sm),
-                      Expanded(child: Text(l10n.programLockedActive)),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: Gap.md),
-            ],
-          ),
+          locked: access == ProgramAccess.locked,
         ),
       MissedProgramDay(:final program, :final missed, :final moveDate) =>
-        _ProgramDayCard(
+        _MissedDayCard(
           program,
           missed.dayIndex,
           busy: state.resolving,
@@ -290,25 +274,27 @@ class _WorkoutCard extends StatelessWidget {
             busy: state.resolving,
           ),
         ),
+      null when state.status != ProgramListStatus.failure =>
+        FeaturedCard.loading(eyebrow: l10n.todayNextTitle),
       _ => _TodayCard(
         prominent: true,
         title: l10n.todayNextTitle,
         child: switch (next) {
-          null when state.status == ProgramListStatus.failure => ErrorView(
-            message: l10n.programsLoadFailed,
+          NoProgramDay(:final finished) => _NoProgramDay(finished),
+          _ => ErrorView(
+            title: l10n.programsLoadFailed,
+            message: l10n.loadFailedDetail,
             retryLabel: l10n.retry,
             onRetry: context.read<ProgramListCubit>().retry,
           ),
-          NoProgramDay(:final finished) => _NoProgramDay(finished),
-          _ => const _Loading(),
         },
       ),
     };
   }
 }
 
-/// The workout in progress in place of the next one: its name, the program
-/// day it was started from, and the way back into it, as the workout bar.
+/// The workout in progress in place of the next one, with the program day
+/// it was started from, and the way back into it, as the workout bar.
 class _WorkoutInProgressCard extends StatelessWidget {
   const _WorkoutInProgressCard(this.next);
   final WorkoutInProgress next;
@@ -317,50 +303,82 @@ class _WorkoutInProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     void open() => context.push(Routes.workout);
-    return _TodayCard(
-      prominent: true,
-      label: l10n.todayWorkoutInProgress,
+    return FeaturedCard(
+      form: FeaturedCardForm.block,
+      eyebrow: l10n.todayWorkoutInProgress,
       title: next.name,
-      onOpen: open,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if ((next.program, next.dayIndex) case (
-            final program?,
-            final dayIndex?,
-          ))
-            ListTile(
-              leading: const Icon(Icons.fitness_center),
-              title: Text(l10n.dayName(program.days[dayIndex], dayIndex)),
-              subtitle: Text(program.name),
-            ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
-            child: ForgeButton(label: l10n.todayResumeWorkout, onPressed: open),
+      line: switch ((next.program, next.dayIndex)) {
+        (final program?, final dayIndex?) => FeaturedLine(
+          l10n.todayInProgressDay(
+            l10n.dayName(program.days[dayIndex], dayIndex),
+            program.name,
           ),
-        ],
-      ),
+        ),
+        _ => null,
+      },
+      action: FeaturedAction(l10n.todayResumeWorkout, open),
+      onTap: open,
     );
   }
 }
 
 /// A program day under its program's name, which opens the program: its
-/// size, Start, which goes through the premium gate for a locked copy and
-/// asks first while a workout is in progress, then [child].
+/// size and date, and Start, which goes through the premium gate for a
+/// [locked] copy and asks first while a workout is in progress.
 class _ProgramDayCard extends StatelessWidget {
   const _ProgramDayCard(
     this.program,
     this.dayIndex, {
+    required this.date,
+    required this.locked,
+  });
+
+  final Program program;
+  final int dayIndex;
+  final CalendarDate? date;
+  final bool locked;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final day = program.days[dayIndex];
+    final name = l10n.dayName(day, dayIndex);
+    final date = this.date;
+    return FeaturedCard(
+      form: FeaturedCardForm.block,
+      eyebrow: program.name,
+      locked: locked,
+      title: name,
+      line: FeaturedLine(
+        l10n.todayDaySummary(
+          day.items.length,
+          l10n.estimateText(estimateDay(day)),
+        ),
+        data: date == null ? null : l10n.planDate(date),
+      ),
+      note: locked ? l10n.programLockedActive : null,
+      action: FeaturedAction(
+        l10n.workoutStartDay(name),
+        () => startProgramDay(context, program, dayIndex),
+        locked: locked,
+      ),
+      onTap: () => context.go(Routes.program(program.id!)),
+    );
+  }
+}
+
+/// A missed program day under its program's name, which opens the program:
+/// its size, Start, then [child].
+class _MissedDayCard extends StatelessWidget {
+  const _MissedDayCard(
+    this.program,
+    this.dayIndex, {
     required this.child,
-    this.date,
     this.busy = false,
   });
 
   final Program program;
   final int dayIndex;
-
-  /// When it is planned; a missed day says so itself.
-  final CalendarDate? date;
 
   /// While true the card does not open the program: a tap on a button that
   /// is disabled meanwhile would otherwise fall through to the card.
@@ -372,7 +390,6 @@ class _ProgramDayCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final day = program.days[dayIndex];
     final name = l10n.dayName(day, dayIndex);
-    final date = this.date;
     return _TodayCard(
       prominent: true,
       label: program.name,
@@ -389,7 +406,6 @@ class _ProgramDayCard extends StatelessWidget {
                 l10n.estimateText(estimateDay(day)),
               ),
             ),
-            trailing: date == null ? null : Text(l10n.planDate(date)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: Gap.md),
@@ -442,20 +458,59 @@ class _NoProgramDay extends StatelessWidget {
   }
 }
 
-/// This week as one calendar row; it, and every day of it, opens the
-/// calendar, which has no route for a given date.
+/// This week as day circles in a SectionCard; it, and every day of it,
+/// opens the calendar, which has no route for a given date.
 class _WeekCard extends StatelessWidget {
   const _WeekCard();
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final weekdays = MaterialLocalizations.of(context).narrowWeekdays;
+    final state = context.watch<TodayWeekCubit>().state;
     void open() => context.go(Routes.calendar);
-    return _TodayCard(
-      title: AppLocalizations.of(context).todayWeekTitle,
-      onOpen: open,
-      child: WeekStrip(onOpen: open),
-    );
+    final title = l10n.todayWeekTitle;
+    return switch (state.status) {
+      TodayWeekStatus.loading => SectionCard.loading(title: title, onTap: open),
+      TodayWeekStatus.failure => SectionCard.error(
+        title: title,
+        onTap: open,
+        message: l10n.todayWeekLoadFailed,
+        retryLabel: l10n.retry,
+        onRetry: context.read<TodayWeekCubit>().retry,
+      ),
+      TodayWeekStatus.ready => SectionCard(
+        title: title,
+        onTap: open,
+        child: WeekStrip.plain(
+          days: [
+            for (final date in state.days)
+              _weekDay(l10n, weekdays, date, state),
+          ],
+          onDayTap: (_) => open(),
+        ),
+      ),
+    };
   }
+}
+
+WeekStripDay _weekDay(
+  AppLocalizations l10n,
+  List<String> weekdays,
+  CalendarDate date,
+  TodayWeekState week,
+) {
+  final state = calendarDayState(
+    week.entriesOn(date),
+    today: date == week.today,
+  );
+  return WeekStripDay(
+    // Index 0 is Sunday, ISO weekday 7.
+    weekday: weekdays[date.weekday % 7],
+    number: '${date.day}',
+    state: state,
+    semanticLabel: weekDayLabel(l10n, date, state),
+  );
 }
 
 /// This week's sets: the total, the most trained muscles against the band
@@ -477,7 +532,8 @@ class _VolumeCard extends StatelessWidget {
       onOpen: () => context.go(Routes.volume),
       child: switch ((state.status, week)) {
         (TodayVolumeStatus.failure, _) => ErrorView(
-          message: l10n.volumeLoadFailed,
+          title: l10n.volumeLoadFailed,
+          message: l10n.loadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: context.read<TodayVolumeCubit>().retry,
         ),
@@ -513,14 +569,11 @@ class _WeekVolume extends StatelessWidget {
         children: [
           for (final muscle in week.musclesBySets.take(_topMuscles))
             if (week.setsOf(muscle) > 0) ...[
-              Row(
-                children: [
-                  Expanded(child: Text(l10n.muscleName(muscle))),
-                  Text(l10n.setsText(week.setsOf(muscle))),
-                ],
+              VolumeBand(
+                muscle: muscle,
+                sets: week.setsOf(muscle),
+                scale: scale,
               ),
-              const SizedBox(height: Gap.xs),
-              VolumeBandBar(sets: week.setsOf(muscle), scale: scale),
               const SizedBox(height: Gap.sm),
             ],
           Text(
@@ -587,7 +640,8 @@ class _StepsCard extends StatelessWidget {
           onTap: open,
         ),
         (TodayStepsStatus.failure, _) => ErrorView(
-          message: l10n.stepsLoadFailed,
+          title: l10n.stepsLoadFailed,
+          message: l10n.stepsLoadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: () => context.read<TodayStepsCubit>().load(
             context.read<SettingsCubit>().state.settings.stepGoal,

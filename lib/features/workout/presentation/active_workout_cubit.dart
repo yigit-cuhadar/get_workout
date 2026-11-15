@@ -4,6 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../calculators/domain/calculation.dart';
+import '../../calculators/domain/calculators_usecases.dart';
+import '../../calculators/domain/plates.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../programs/domain/program.dart';
@@ -247,6 +250,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     required this._programs,
     required this._catalogue,
     required this._watchSettings,
+    required this._loadPlates,
     DateTime Function()? clock,
     this.retryDelay = const Duration(minutes: 1),
   }) : _clock = clock ?? DateTime.now,
@@ -268,11 +272,20 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   final ProgramListCubit _programs;
   final ExerciseCatalogueCubit _catalogue;
   final WatchSettings _watchSettings;
+  final LoadPlates _loadPlates;
   final DateTime Function() _clock;
 
   /// How long to wait before syncing again after the server could not be
   /// asked.
   final Duration retryDelay;
+
+  /// The plates to load on a [barKg] bar from [plates] for the set's
+  /// [targetKg], for its plate breakdown.
+  Calculation<PlateLoad> loadPlates(
+    double targetKg, {
+    required double barKg,
+    required List<Plate> plates,
+  }) => _loadPlates(targetKg: targetKg, barKg: barKg, plates: plates);
   late final StreamSubscription<String?> _userSubscription;
   StreamSubscription<UserSettings>? _settingsSubscription;
 

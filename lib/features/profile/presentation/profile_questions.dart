@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/question_page.dart';
+import '../../../core/widgets/onboarding_question.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
@@ -12,6 +12,7 @@ import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/user_profile.dart';
 import 'profile_form_cubit.dart';
+import 'ruler_picker.dart';
 
 /// Display names of the profile answers. Level and equipment names come
 /// from [VocabularyLabels].
@@ -171,20 +172,20 @@ class ProfileQuestion extends StatelessWidget {
       builder: (context, state) {
         final cubit = context.read<ProfileFormCubit>();
         return switch (field) {
-          ProfileField.goal => ChoiceAnswer(
+          ProfileField.goal => OnboardingChoices(
             values: Goal.values,
             selected: state.answers.goal,
             title: l10n.goalName,
             onChanged: cubit.setGoal,
           ),
-          ProfileField.level => ChoiceAnswer(
+          ProfileField.level => OnboardingChoices(
             values: Level.values,
             selected: state.answers.level,
             title: l10n.levelName,
             subtitle: l10n.levelInfo,
             onChanged: cubit.setLevel,
           ),
-          ProfileField.daysPerWeek => ChoiceAnswer(
+          ProfileField.daysPerWeek => OnboardingChoices(
             values: [
               for (
                 var days = ProfileLimits.minDaysPerWeek;
@@ -202,7 +203,7 @@ class ProfileQuestion extends StatelessWidget {
             onPreset: cubit.applyPreset,
             onToggle: cubit.toggleEquipment,
           ),
-          ProfileField.sex => ChoiceAnswer(
+          ProfileField.sex => OnboardingChoices(
             values: Sex.values,
             selected: state.answers.sex,
             title: l10n.sexName,
@@ -218,7 +219,7 @@ class ProfileQuestion extends StatelessWidget {
         };
       },
     );
-    return QuestionLayout(
+    return OnboardingQuestionBody(
       title: l10n.question(field),
       info: l10n.questionInfo(field),
       answer: answer,

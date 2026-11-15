@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_ui/forge_ui.dart';
+import 'package:forge_ui/forge_ui.dart' hide ChartSeries;
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -119,13 +119,15 @@ class _BodyViewState extends State<_BodyView> {
         body: switch (state.status) {
           BodyListStatus.loading => const LoadingView(),
           BodyListStatus.failure => ErrorView(
-            message: l10n.bodyLoadFailed,
+            title: l10n.bodyLoadFailed,
+            message: l10n.loadFailedDetail,
             retryLabel: l10n.retry,
             onRetry: context.read<BodyListCubit>().retry,
           ),
           BodyListStatus.ready when state.entries.isEmpty => EmptyView(
-            message: l10n.bodyEmpty,
-            action: const _LogButtons(),
+            title: l10n.bodyEmptyTitle,
+            message: l10n.bodyEmptyDetail,
+            actions: const [_LogButtons()],
           ),
           BodyListStatus.ready => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

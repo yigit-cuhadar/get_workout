@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_ui/forge_ui.dart';
+import 'package:forge_ui/forge_ui.dart' hide Sparkline, WeekStrip;
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -252,7 +252,8 @@ class _BodyCard extends StatelessWidget {
       child: switch (status) {
         BodyListStatus.loading => const _Loading(),
         BodyListStatus.failure => ErrorView(
-          message: l10n.bodyLoadFailed,
+          title: l10n.bodyLoadFailed,
+          message: l10n.loadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: context.read<ProgressBodyCubit>().retry,
         ),
@@ -382,7 +383,8 @@ class _VolumeCard extends StatelessWidget {
       onOpen: () => context.go(Routes.volume),
       child: switch ((state.status, week)) {
         (TodayVolumeStatus.failure, _) => ErrorView(
-          message: l10n.volumeLoadFailed,
+          title: l10n.volumeLoadFailed,
+          message: l10n.loadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: context.read<TodayVolumeCubit>().retry,
         ),
@@ -459,7 +461,8 @@ class _StrengthCard extends StatelessWidget {
       child: switch (state.status) {
         ProgressStrengthStatus.loading => const _Loading(),
         ProgressStrengthStatus.failure => ErrorView(
-          message: l10n.strengthLoadFailed,
+          title: l10n.strengthLoadFailed,
+          message: l10n.loadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: context.read<ProgressStrengthCubit>().retry,
         ),
@@ -576,7 +579,8 @@ class _CardioCard extends StatelessWidget {
       onOpen: () => context.go(Routes.cardio),
       child: switch ((state.status, state.chart.lastOrNull)) {
         (CardioListStatus.failure, _) => ErrorView(
-          message: l10n.cardioLoadFailed,
+          title: l10n.cardioLoadFailed,
+          message: l10n.loadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: context.read<CardioListCubit>().retry,
         ),
@@ -617,7 +621,8 @@ class _StepsCard extends StatelessWidget {
           child: Text(l10n.todayStepsSetUp),
         ),
         (TodayStepsStatus.failure, _) => ErrorView(
-          message: l10n.stepsLoadFailed,
+          title: l10n.stepsLoadFailed,
+          message: l10n.stepsLoadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: () => context.read<TodayStepsCubit>().load(
             context.read<SettingsCubit>().state.settings.stepGoal,

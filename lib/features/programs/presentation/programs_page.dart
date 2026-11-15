@@ -67,7 +67,8 @@ class _ProgramsViewState extends State<_ProgramsView> {
       builder: (context, state) => switch (state.status) {
         ProgramListStatus.loading => const LoadingView(),
         ProgramListStatus.failure => ErrorView(
-          message: l10n.programsLoadFailed,
+          title: l10n.programsLoadFailed,
+          message: l10n.loadFailedDetail,
           retryLabel: l10n.retry,
           onRetry: _cubit.retry,
         ),

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../core/grouping.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../calculators/domain/plates.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_text.dart';
@@ -14,6 +15,23 @@ import '../domain/set_selection.dart';
 import '../domain/workout.dart';
 
 extension WorkoutText on AppLocalizations {
+  /// The plates on each side of the bar in the plate breakdown, heaviest
+  /// first, each plate on its own: `25 + 25 + 1.25 kg`; a dash for none.
+  String platesEachSideText(List<PlateCount> perSide, WeightUnit unit) {
+    if (perSide.isEmpty) return '—';
+    final number = NumberFormat.decimalPattern(localeName)
+      ..maximumFractionDigits = 2;
+    final plates = [
+      for (final plate in perSide)
+        for (var i = 0; i < plate.count; i++)
+          number.format(unit.fromKg(plate.weightKg)),
+    ].join(' + ');
+    return switch (unit) {
+      WeightUnit.kg => programWeightKg(plates),
+      WeightUnit.lb => programWeightLb(plates),
+    };
+  }
+
   /// Set [set] of [exercise] as the set column labels it: a warm-up as
   /// such, else its number among the working sets, marked for a drop set.
   String setLabel(WorkoutExercise exercise, int set) {
@@ -207,6 +225,33 @@ extension WorkoutText on AppLocalizations {
         : effortAskValuesOf(exercise.name, values);
   }
 
+  /// The effort question of [scale] asked while no rest runs, under the
+  /// set it is about ([effortDoneValues]), e.g. `How hard was it?`.
+  String effortQuestionText(EffortScale scale) => switch (scale) {
+    EffortScale.byFeel => effortQuestionFeel,
+    EffortScale.rir => effortQuestionRir,
+    EffortScale.rpe => effortQuestionRpe,
+  };
+
+  /// Set [asked] of [workout] as done, over the effort question asked
+  /// while no rest runs, in [unit]: `Set 1 done · 82.5 kg × 8`, its
+  /// exercise first when it is not the [selected] one.
+  String effortDoneValues(
+    Workout workout,
+    SetRef asked,
+    SetSelection? selected,
+    WeightUnit unit,
+  ) {
+    final exercise = workout.exercises[asked.exercise];
+    final done = effortQuestionDone(
+      ratedSetName(exercise, asked.set),
+      setWithUnitText(exercise.sets[asked.set], exercise.loggingType, unit),
+    );
+    return selected?.exercise == asked.exercise
+        ? done
+        : effortAskValuesOf(exercise.name, done);
+  }
+
   /// The progress of [exercise] in working sets, e.g. `Squat · 1/3`, as
   /// "of N" counts them everywhere.
   String exerciseProgress(WorkoutExercise exercise) => workoutExerciseProgress(
@@ -230,18 +275,6 @@ extension WorkoutText on AppLocalizations {
         step.rir >= WorkoutLimits.maxRir ? workoutRirFivePlus : '${step.rir}',
       EffortScale.rpe =>
         step.rir >= 4 ? effortRpeSixOrLess : workoutRpe(10 - step.rir),
-    };
-  }
-
-  /// What a by-feel [step] means, e.g. `1 left`; null on other scales.
-  String? effortStepHint(EffortStep step, EffortScale scale) {
-    if (scale != EffortScale.byFeel) return null;
-    if (step.failed) return effortFailedHint;
-    return switch (step.rir) {
-      >= 4 => effortEasyHint,
-      >= 2 => effortModerateHint,
-      1 => effortHardHint,
-      _ => effortMaxHint,
     };
   }
 

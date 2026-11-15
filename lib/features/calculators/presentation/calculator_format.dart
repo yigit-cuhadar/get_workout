@@ -38,7 +38,11 @@ class CalculatorFormat {
 
   /// Trailing zeros dropped, so 2.5 and 1.25 kg plates read naturally.
   String weight(double kg, {int maxDecimals = 1}) =>
-      '${_trimmed(weightUnit.fromKg(kg), maxDecimals)} $weightUnitLabel';
+      '${weightNumber(kg, maxDecimals: maxDecimals)} $weightUnitLabel';
+
+  /// [weight] without the unit.
+  String weightNumber(double kg, {int maxDecimals = 1}) =>
+      _trimmed(weightUnit.fromKg(kg), maxDecimals);
 
   String _trimmed(double value, int maxDecimals) =>
       (NumberFormat.decimalPattern(

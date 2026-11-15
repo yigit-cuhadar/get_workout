@@ -39,8 +39,10 @@ class ExerciseListPage extends StatelessWidget {
             return failure == null
                 ? const LoadingView()
                 : ErrorView(
+                    title: "Couldn't load exercises",
                     message: failureMessage(failure),
                     onRetry: context.read<ExerciseListCubit>().retry,
+                    retryLabel: 'Retry',
                   );
           }
           final visible = state.visible;
@@ -66,7 +68,10 @@ class ExerciseListPage extends StatelessWidget {
               const Divider(height: 1),
               Expanded(
                 child: visible.isEmpty
-                    ? const EmptyView(message: 'No exercise matches.')
+                    ? const EmptyView(
+                        title: 'No results',
+                        message: 'No exercise matches.',
+                      )
                     : ListView.separated(
                         itemCount: visible.length,
                         separatorBuilder: (_, _) => const Divider(height: 1),

@@ -359,6 +359,88 @@ void main() {
     });
   });
 
+  group('a superset or circuit keeps its items in step', () {
+    List<(int, int)> setsAndRest(ProgramBuilderCubit cubit) => [
+      for (final i in cubit.state.day!.items) (i.sets, i.restS),
+    ];
+
+    test('joining aligns them to the first sets and the last rest', () async {
+      final cubit = await filled(['a', 'b', 'c', 'd']);
+      cubit
+        ..setSets(0, '4')
+        ..setRest(0, '120')
+        ..setSets(1, '2')
+        ..setRest(1, '60')
+        ..setSets(2, '5')
+        ..setRest(2, '45');
+
+      cubit.linkWithNext(0);
+      expect(setsAndRest(cubit).take(3), [(4, 60), (4, 60), (5, 45)]);
+      cubit.linkWithNext(1);
+      expect(setsAndRest(cubit).take(3), [(4, 45), (4, 45), (4, 45)]);
+    });
+
+    test('sets and rest typed on one item apply to the group', () async {
+      final cubit = await filled(['a', 'b', 'c']);
+      cubit
+        ..linkWithNext(0)
+        ..setSets(1, '5')
+        ..setRest(0, '75');
+      expect(setsAndRest(cubit), [(5, 75), (5, 75), (3, 90)]);
+    });
+
+    test('reps stay each item\'s own', () async {
+      final cubit = await filled(['a', 'b']);
+      cubit
+        ..linkWithNext(0)
+        ..setRepMin(0, '5');
+      expect(cubit.state.day!.items[0].repMin, 5);
+      expect(cubit.state.day!.items[1].repMin, isNot(5));
+    });
+
+    test('a group saved uneven is loaded in step, unchanged', () async {
+      when(() => repository.getProgram('u1', 'p1')).thenAnswer(
+        (_) async => Ok(
+          Program(
+            id: 'p1',
+            name: 'Uneven',
+            days: [
+              ProgramDay(
+                items: [
+                  item('a', sets: 4, restS: 120, group: 'A'),
+                  item('b', sets: 2, restS: 60, group: 'A'),
+                  item('c', sets: 5, restS: 30),
+                  item('d', sets: 3, restS: 45, group: 'B'),
+                  item('a', sets: 2, restS: 90, group: 'B'),
+                  item('b', sets: 1, restS: 75, group: 'B'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+      final cubit = await build(programId: 'p1');
+      expect(setsAndRest(cubit), [
+        (4, 60),
+        (4, 60),
+        (5, 30),
+        (3, 75),
+        (3, 75),
+        (3, 75),
+      ]);
+      // Nothing the user changed, so leaving asks nothing.
+      expect(cubit.state.dirty, isFalse);
+    });
+
+    test('an item on its own changes alone', () async {
+      final cubit = await filled(['a', 'b']);
+      cubit
+        ..setSets(0, '5')
+        ..setRest(0, '30');
+      expect(setsAndRest(cubit)[1], isNot((5, 30)));
+    });
+  });
+
   group('saving', () {
     test('a valid new program is created with its name trimmed', () async {
       final cubit = await filled(['a']);
@@ -437,7 +519,7 @@ void main() {
       days: [
         ProgramDay(
           items: [
-            item('a', group: 'A'),
+            item('a', sets: 4, group: 'A'),
             item('retired', sets: 4, group: 'A'),
           ],
         ),
@@ -480,7 +562,7 @@ void main() {
     test('or removed, which also dissolves their superset', () async {
       final cubit = await build(programId: 'p1');
       cubit.removeItem(1);
-      expect(cubit.state.day!.items, [item('a')]);
+      expect(cubit.state.day!.items, [item('a', sets: 4)]);
       await cubit.save();
       expect(cubit.state.status, ProgramBuilderStatus.saved);
     });

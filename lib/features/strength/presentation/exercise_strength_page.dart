@@ -66,11 +66,18 @@ class _StrengthView extends StatelessWidget {
           body: switch (state.status) {
             ExerciseStrengthStatus.loading => const LoadingView(),
             ExerciseStrengthStatus.failure => ErrorView(
-              message: l10n.strengthLoadFailed,
+              title: l10n.strengthLoadFailed,
+              message: l10n.loadFailedDetail,
               retryLabel: l10n.retry,
               onRetry: cubit.retry,
             ),
             ExerciseStrengthStatus.ready when !state.trained => EmptyView(
+              title: switch (exercise) {
+                final exercise? => l10n.strengthNoSessions(
+                  exercise.localized(context).name,
+                ),
+                null => l10n.strengthNoSessionsYet,
+              },
               message: l10n.strengthNotDone,
             ),
             ExerciseStrengthStatus.ready => _Strength(state),
