@@ -31,6 +31,14 @@ extension BodyText on AppLocalizations {
   String bodyWeightChange(double kg, WeightUnit unit) =>
       _signed(unit.fromKg(kg), bodyWeightUnit(unit));
 
+  /// Signed, without the unit; "0" for no change.
+  String bodyWeightChangeNumber(double kg, WeightUnit unit) {
+    final value = unit.fromKg(kg);
+    final text = _number(value.abs());
+    if (text == _number(0)) return text;
+    return value > 0 ? bodyIncrease(text) : bodyDecrease(text);
+  }
+
   String bodyLengthChange(double cm, LengthUnit unit) =>
       _signed(unit.fromCm(cm), bodyLengthUnit(unit));
 

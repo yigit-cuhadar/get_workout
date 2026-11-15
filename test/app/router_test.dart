@@ -2253,12 +2253,23 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('Progress lists the exercise and opens its page', (
+    testWidgets('the Strength card opens the list; an exercise its page', (
       tester,
     ) async {
       await startAsGuest(tester);
       registerStrength();
       await tapTab(tester, 'Progress');
+      await tester.scrollUntilVisible(
+        find.text('Strength'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(ProgressPage),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Strength'));
       await tester.pumpAndSettle();
       expect(find.byType(StrengthListPage), findsOneWidget);
@@ -2270,35 +2281,6 @@ void main() {
 
       await back(tester);
       expect(find.byType(StrengthListPage), findsOneWidget);
-    });
-
-    testWidgets('a Progress tile opens its exercise above Progress', (
-      tester,
-    ) async {
-      await startAsGuest(tester);
-      registerStrength();
-      await tapTab(tester, 'Progress');
-      await tester.scrollUntilVisible(
-        find.text('Back Squat'),
-        200,
-        scrollable: find
-            .descendant(
-              of: find.byType(ProgressPage),
-              matching: find.byType(Scrollable),
-            )
-            .first,
-      );
-      await tester.ensureVisible(find.text('Back Squat'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Back Squat'));
-      await tester.pumpAndSettle();
-      // Pushed above Progress, whose location stays.
-      expect(find.byType(ExerciseStrengthPage), findsOneWidget);
-      expect(path(), Routes.progress);
-
-      await back(tester);
-      expect(find.byType(ProgressPage), findsOneWidget);
-      expect(path(), Routes.progress);
     });
 
     testWidgets('a record opens the workout that set it, and back returns', (

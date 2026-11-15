@@ -10,7 +10,6 @@ import '../../../core/widgets/featured_card.dart';
 import '../../../core/widgets/volume_band.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calculators/presentation/calculator_list.dart';
-import '../../calendar/presentation/calendar_marks.dart';
 import '../../generator/presentation/generator_entry.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
@@ -35,6 +34,7 @@ import 'next_workout.dart';
 import 'today_steps_cubit.dart';
 import 'today_volume_cubit.dart';
 import 'today_week_cubit.dart';
+import 'week_card.dart';
 import 'widgets/rest_day_card.dart';
 
 /// The Today tab: this week, the next workout, this week's volume, the
@@ -78,7 +78,7 @@ class _TodayViewState extends State<_TodayView> {
 
   /// Independent cards, in order.
   static const _cards = [
-    _WeekCard(),
+    WeekCard(),
     _WorkoutCard(),
     _VolumeCard(),
     _CalculatorsCard(),
@@ -438,61 +438,6 @@ class _NoProgramDay extends StatelessWidget {
       ],
     );
   }
-}
-
-/// This week as day circles in a SectionCard; it, and every day of it,
-/// opens the calendar, which has no route for a given date.
-class _WeekCard extends StatelessWidget {
-  const _WeekCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final weekdays = MaterialLocalizations.of(context).narrowWeekdays;
-    final state = context.watch<TodayWeekCubit>().state;
-    void open() => context.go(Routes.calendar);
-    final title = l10n.todayWeekTitle;
-    return switch (state.status) {
-      TodayWeekStatus.loading => SectionCard.loading(title: title, onTap: open),
-      TodayWeekStatus.failure => SectionCard.error(
-        title: title,
-        onTap: open,
-        message: l10n.todayWeekLoadFailed,
-        retryLabel: l10n.retry,
-        onRetry: context.read<TodayWeekCubit>().retry,
-      ),
-      TodayWeekStatus.ready => SectionCard(
-        title: title,
-        onTap: open,
-        child: WeekStrip.plain(
-          days: [
-            for (final date in state.days)
-              _weekDay(l10n, weekdays, date, state),
-          ],
-          onDayTap: (_) => open(),
-        ),
-      ),
-    };
-  }
-}
-
-WeekStripDay _weekDay(
-  AppLocalizations l10n,
-  List<String> weekdays,
-  CalendarDate date,
-  TodayWeekState week,
-) {
-  final state = calendarDayState(
-    week.entriesOn(date),
-    today: date == week.today,
-  );
-  return WeekStripDay(
-    // Index 0 is Sunday, ISO weekday 7.
-    weekday: weekdays[date.weekday % 7],
-    number: '${date.day}',
-    state: state,
-    semanticLabel: weekDayLabel(l10n, date, state),
-  );
 }
 
 /// This week's sets: the total, the most trained muscles against the band

@@ -1,76 +1,78 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/features/body/domain/body_entry.dart';
-import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/progress/domain/body_snapshot.dart';
 import 'package:get_workout/features/progress/domain/progress_usecases.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../workout/fixtures.dart';
-
 class MockWorkoutRepository extends Mock implements WorkoutRepository {}
 
 void main() {
-  setUpAll(() => registerFallbackValue(CalendarDate(2026, 1, 1)));
+  group('strengthHighlight', () {
+    final now = DateTime(2026, 11, 13, 12);
+    ExerciseStats stats(List<(DateTime, double?)> points) => ExerciseStats(
+      history: [
+        for (final (date, kg) in points)
+          HistoryPoint(date: date, workoutId: 'w', bestE1rmKg: kg),
+      ],
+    );
 
-  group('strengthHighlights', () {
-    ExerciseStats stats({required DateTime last, double? e1rmKg}) =>
-        ExerciseStats(
-          records: {
-            if (e1rmKg != null)
-              RecordKind.bestE1rm: StatRecord(
-                value: e1rmKg,
-                date: last,
-                workoutId: 'w',
-              ),
-          },
-          history: [HistoryPoint(date: last, workoutId: 'w')],
-        );
-
-    test('the most recently trained with an e1RM, at most three', () {
-      final highlights = strengthHighlights({
-        'squat': stats(last: DateTime(2026, 11, 1), e1rmKg: 120),
-        'bench': stats(last: DateTime(2026, 11, 10), e1rmKg: 90),
+    test('the most recently trained with an e1RM, its latest', () {
+      final highlight = strengthHighlight({
+        'squat': stats([(DateTime(2026, 11, 1), 120)]),
+        // The latest workout's best, not the all-time best.
+        'bench': stats([
+          (DateTime(2026, 10, 30), 104),
+          (DateTime(2026, 11, 10), 100),
+        ]),
         // No e1RM, e.g. a plank: left out though the newest.
-        'plank': stats(last: DateTime(2026, 11, 12)),
-        'row': stats(last: DateTime(2026, 11, 5), e1rmKg: 80),
-        'deadlift': stats(last: DateTime(2026, 10, 1), e1rmKg: 150),
-      });
+        'plank': stats([(DateTime(2026, 11, 12), null)]),
+      }, now: now);
 
-      expect(highlights, [
-        (exerciseId: 'bench', e1rmKg: 90.0),
-        (exerciseId: 'row', e1rmKg: 80.0),
-        (exerciseId: 'squat', e1rmKg: 120.0),
-      ]);
+      expect(highlight?.exerciseId, 'bench');
+      expect(highlight?.e1rmKg, 100);
     });
 
-    test('ties go by id; last time counts before the history', () {
+    test('changes since the first e1RM of the last 12 weeks', () {
+      final highlight = strengthHighlight({
+        'bench': stats([
+          // Before the 12 weeks: not the start.
+          (DateTime(2026, 8, 1), 90),
+          (DateTime(2026, 9, 18), 101),
+          (DateTime(2026, 11, 13), 104),
+        ]),
+      }, now: now);
+
+      expect(highlight?.change, (kg: 3.0, weeks: 8));
+    });
+
+    test('one e1RM in the 12 weeks has no change', () {
+      final highlight = strengthHighlight({
+        'bench': stats([
+          (DateTime(2026, 8, 1), 90),
+          (DateTime(2026, 11, 10), 100),
+        ]),
+      }, now: now);
+      expect(highlight?.change, isNull);
+
+      final old = strengthHighlight({
+        'bench': stats([
+          (DateTime(2026, 6, 1), 90),
+          (DateTime(2026, 7, 1), 95),
+        ]),
+      }, now: now);
+      expect(old?.change, isNull);
+    });
+
+    test('ties go by id; none without stats', () {
       final day = DateTime(2026, 11, 10);
-      final highlights = strengthHighlights({
-        'b': stats(last: day, e1rmKg: 1),
-        'a': stats(last: day, e1rmKg: 2),
-        'c': ExerciseStats(
-          records: {
-            RecordKind.bestE1rm: StatRecord(
-              value: 3,
-              date: DateTime(2026, 1, 1),
-              workoutId: 'w',
-            ),
-          },
-          last: LastSession(
-            date: DateTime(2026, 11, 11),
-            workoutId: 'w',
-            sets: const [],
-          ),
-        ),
-      });
-
-      expect([for (final h in highlights) h.exerciseId], ['c', 'a', 'b']);
-    });
-
-    test('none without stats', () {
-      expect(strengthHighlights(const {}), isEmpty);
+      final highlight = strengthHighlight({
+        'b': stats([(day, 1)]),
+        'a': stats([(day, 2)]),
+      }, now: now);
+      expect(highlight?.exerciseId, 'a');
+      expect(strengthHighlight(const {}, now: now), isNull);
     });
   });
 
@@ -79,53 +81,27 @@ void main() {
     when(() => repository.watchAllStats('u1')).thenAnswer(
       (_) => Stream.value({
         'squat': ExerciseStats(
-          records: {
-            RecordKind.bestE1rm: StatRecord(
-              value: 100,
+          history: [
+            HistoryPoint(
               date: DateTime(2026, 11, 1),
               workoutId: 'w',
+              bestE1rmKg: 100,
             ),
-          },
-          history: [HistoryPoint(date: DateTime(2026, 11, 1), workoutId: 'w')],
+          ],
         ),
       }),
     );
 
-    final (:top, :trained) = await WatchStrengthHighlights(repository)('u1')
-        .first;
-    expect(top, [(exerciseId: 'squat', e1rmKg: 100.0)]);
+    final (:highlight, :trained) = await WatchStrengthHighlights(
+      repository,
+      clock: () => DateTime(2026, 11, 13),
+    )('u1').first;
+    expect(
+      highlight,
+      const StrengthHighlight(exerciseId: 'squat', e1rmKg: 100),
+    );
     expect(trained, isTrue);
   });
-
-  test(
-    'WatchWorkoutCountInMonth counts the workouts of the whole month',
-    () async {
-      final repository = MockWorkoutRepository();
-      when(
-        () => repository.watchWorkoutsBetween(
-          any(),
-          from: any(named: 'from'),
-          to: any(named: 'to'),
-        ),
-      ).thenAnswer(
-        (_) => Stream.value([workout('w1', const []), workout('w2', const [])]),
-      );
-
-      final count = await WatchWorkoutCountInMonth(repository)((
-        uid: 'u1',
-        day: CalendarDate(2026, 2, 14),
-      )).first;
-
-      expect(count, 2);
-      verify(
-        () => repository.watchWorkoutsBetween(
-          'u1',
-          from: CalendarDate(2026, 2, 1),
-          to: CalendarDate(2026, 2, 28),
-        ),
-      ).called(1);
-    },
-  );
 
   group('bodySnapshot', () {
     final now = DateTime(2026, 11, 13, 12);
@@ -150,7 +126,9 @@ void main() {
         'e1': 20,
       }, now: now);
 
-      expect(snapshot.latestKg, 80);
+      expect(snapshot.latest, (date: DateTime(2026, 11, 12), kg: 80.0));
+      expect(snapshot.previous, (date: DateTime(2026, 10, 1), kg: 82.0));
+      expect(snapshot.change, -2);
       // 1 August is more than 12 weeks back.
       expect(snapshot.weights, [
         (date: DateTime(2026, 10, 1), kg: 82.0),
@@ -160,6 +138,16 @@ void main() {
         date: DateTime(2026, 11, 3),
         percent: 18.5,
       ));
+    });
+
+    test('a single weigh-in has no change', () {
+      final snapshot = bodySnapshot(
+        [entry('e1', DateTime(2026, 11, 12), kg: 80)],
+        const {},
+        now: now,
+      );
+      expect(snapshot.previous, isNull);
+      expect(snapshot.change, isNull);
     });
 
     test('nothing logged shows nothing', () {

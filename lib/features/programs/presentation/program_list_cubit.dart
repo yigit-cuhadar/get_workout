@@ -10,6 +10,7 @@ import '../domain/completed_days.dart';
 import '../domain/program.dart';
 import '../domain/program_schedule.dart';
 import '../domain/program_usecases.dart';
+import '../domain/program_volume.dart';
 
 enum ProgramListStatus { loading, ready, failure }
 
@@ -94,6 +95,15 @@ class ProgramListState extends Equatable {
   }
 
   ProgramAccess access(Program program) => programAccess(program, premium);
+
+  /// The working sets a week of the active program plans, until it has
+  /// run its length; null without one.
+  int? get plannedWeeklySets {
+    final program = activeProgram;
+    return program == null || finished
+        ? null
+        : programVolume(program, const {}).total;
+  }
 
   /// The active program's day to do next, unless it has run its length.
   int? get nextDayIndex {
