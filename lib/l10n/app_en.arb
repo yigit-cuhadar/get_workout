@@ -140,6 +140,7 @@
   "unitLb": "lb",
   "unitCm": "cm",
   "unitIn": "in",
+  "unitFt": "ft",
   "themeSystem": "System",
   "themeLight": "Light",
   "themeDark": "Dark",

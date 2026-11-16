@@ -159,8 +159,8 @@ String formatProfileNumber(double value) => NumberFormat('0.#').format(value);
 }
 
 /// One question of the profile, answered into the [ProfileFormCubit] above
-/// it: the question at the top, a choice at the bottom near the thumb, a
-/// number (a ruler or a wheel) under the question. Heights and weights are
+/// it: the question at the top and its answer at the bottom, just above
+/// the page's action, near the thumb. Heights and weights are
 /// entered in the units of [SettingsCubit]; their unit switch changes that
 /// setting, and a tap on the value opens a sheet to type it.
 class ProfileQuestion extends StatelessWidget {
@@ -423,7 +423,16 @@ class _HeightAnswer extends StatelessWidget {
       picker: NumberPicker.ruler(
         key: ValueKey(unit),
         label: title,
-        unit: l10n.lengthUnitName(unit),
+        unit: unit == LengthUnit.cm ? l10n.unitCm : null,
+        parts: unit == LengthUnit.inch
+            ? (value) {
+                final (:feet, :inches) = feetAndInches(value);
+                return [
+                  ('$feet', l10n.unitFt),
+                  (formatProfileNumber(inches), l10n.unitIn),
+                ];
+              }
+            : null,
         min: range.min,
         max: range.max,
         step: 1,
@@ -632,6 +641,56 @@ class _EntrySheetState extends State<_EntrySheet> {
     }
   }
 
+  static const _keyboard = TextInputType.numberWithOptions(decimal: true);
+
+  // Plain numbers only; the length fits every valid answer.
+  static final _formatters = [
+    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+    LengthLimitingTextInputFormatter(6),
+  ];
+
+  /// Two fields side by side; when the entry is refused both take the
+  /// danger border and one message lies under the pair.
+  Widget _pair(List<({String label, String text})> fields) {
+    final error = _error;
+    final row = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: Gap.sm,
+      children: [
+        for (final (i, field) in fields.indexed)
+          Expanded(
+            child: ForgeTextField(
+              label: field.label,
+              controller: _controllers[i],
+              autofocus: i == 0,
+              keyboardType: _keyboard,
+              inputFormatters: _formatters,
+              textInputAction: i == fields.length - 1
+                  ? TextInputAction.done
+                  : TextInputAction.next,
+              onSubmitted: i == fields.length - 1 ? (_) => _submit() : null,
+              // The border only; the message is the pair's.
+              errorText: error == null ? null : '',
+            ),
+          ),
+      ],
+    );
+    if (error == null) return row;
+    final colors = ForgeStyle.of(context).colors;
+    // Written over the fields' empty message lines.
+    return Stack(
+      alignment: AlignmentDirectional.bottomStart,
+      children: [
+        row,
+        Text(
+          error,
+          style: Theme.of(context).textTheme.labelMedium!
+              .copyWith(color: colors.danger, fontWeight: FontWeight.w400),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -639,34 +698,18 @@ class _EntrySheetState extends State<_EntrySheet> {
     return ForgeBottomSheet(
       title: widget.entry.title,
       action: ForgeButton(label: l10n.save, onPressed: _submit),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: Gap.sm,
-        children: [
-          for (final (i, field) in fields.indexed)
-            Expanded(
-              child: ForgeTextField(
-                label: field.label,
-                controller: _controllers[i],
-                autofocus: i == 0,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                // Plain numbers only; the length fits every valid answer.
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                  LengthLimitingTextInputFormatter(6),
-                ],
-                textInputAction: i == fields.length - 1
-                    ? TextInputAction.done
-                    : TextInputAction.next,
-                onSubmitted: i == fields.length - 1 ? (_) => _submit() : null,
-                // One message for the entry, under its first field.
-                errorText: i == 0 ? _error : null,
-              ),
-            ),
-        ],
-      ),
+      child: fields.length == 1
+          ? ForgeTextField(
+              label: fields.single.label,
+              controller: _controllers.single,
+              autofocus: true,
+              keyboardType: _keyboard,
+              inputFormatters: _formatters,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
+              errorText: _error,
+            )
+          : _pair(fields),
     );
   }
 }

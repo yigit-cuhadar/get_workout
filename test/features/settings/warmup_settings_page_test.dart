@@ -201,6 +201,15 @@ void main() {
       await tester.enterText(find.byType(TextField).first, '98');
       await tester.pump();
       expect(find.text('Enter a percent from 10 to 95'), findsOneWidget);
+      expect(
+        [
+          for (final box in tester.widgetList<ForgeNumberField>(
+            find.byType(ForgeNumberField),
+          ))
+            box.invalid,
+        ],
+        [true, false],
+      );
       verifyNever(() => cubit.update(any()));
 
       await tester.enterText(find.byType(TextField).last, '25');

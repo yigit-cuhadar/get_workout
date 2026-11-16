@@ -363,12 +363,17 @@ class _StepRowState extends State<_StepRow> {
     final colors = style.colors;
     final unitStyle = Theme.of(context).textTheme.labelMedium!
         .copyWith(fontWeight: FontWeight.w400, color: colors.inkMuted);
-    Widget field(TextEditingController controller, String label) => Expanded(
+    Widget field(
+      TextEditingController controller,
+      String label,
+      WarmupStepIssue issue,
+    ) => Expanded(
       child: LayoutBuilder(
         builder: (context, constraints) => ForgeNumberField.compact(
           label: label,
           width: constraints.maxWidth,
           controller: controller,
+          invalid: _issues.contains(issue),
           onChanged: (_) => _changed(),
         ),
       ),
@@ -383,9 +388,13 @@ class _StepRowState extends State<_StepRow> {
           spacing: Gap.sm,
           children: [
             _WarmupBubble(l10n),
-            field(_percent, l10n.warmupPercent),
+            field(
+              _percent,
+              l10n.warmupPercent,
+              WarmupStepIssue.percentOutOfRange,
+            ),
             Text(l10n.warmupPercentUnit, style: unitStyle),
-            field(_reps, l10n.warmupReps),
+            field(_reps, l10n.warmupReps, WarmupStepIssue.repsOutOfRange),
             Text(l10n.warmupRepsUnit, style: unitStyle),
             Semantics(
               button: true,

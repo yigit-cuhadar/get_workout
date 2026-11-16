@@ -147,22 +147,20 @@ class _QuestionLoading extends StatelessWidget {
                 SkeletonBar(widthFactor: 0.4, height: 10),
               ],
             ),
+            const Spacer(),
             if (number) ...[
-              const SizedBox(height: 28),
               const FractionallySizedBox(
                 widthFactor: 0.3,
                 child: SkeletonBar(widthFactor: 1, height: 40),
               ),
               const SizedBox(height: Gap.md),
               SkeletonBar(widthFactor: 1, height: 72, radius: radius),
-            ] else ...[
-              const Spacer(),
+            ] else
               ListRowCard(
                 children: [
                   for (var i = 0; i < 3; i++) ListRow.loading(index: i),
                 ],
               ),
-            ],
           ],
         ),
       ),
@@ -208,7 +206,12 @@ class _QuestionForm extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(child: ProfileQuestion(state.questions.single)),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(Gap.md, Gap.md, Gap.md, 0),
+                  child: ProfileQuestion(state.questions.single),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(Gap.md),
                 child: Column(

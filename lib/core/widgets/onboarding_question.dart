@@ -119,10 +119,10 @@ class _BackButton extends StatelessWidget {
 }
 
 /// A question: its [title] under an optional [eyebrow] (the flow's name)
-/// and the line under it ([info]) at the top. With [scrolls], the [answer]
-/// is anchored to the bottom, near the thumb, and a taller one scrolls;
-/// without, it sits under the question and must fit (a ruler or a wheel,
-/// whose drags a scrolling page would take).
+/// and the line under it ([info]) at the top, the [answer] anchored to the
+/// bottom, near the thumb, with empty space between. With [scrolls], a
+/// taller answer scrolls; without, it must fit (a ruler or a wheel, whose
+/// drags a scrolling page would take).
 class OnboardingQuestionBody extends StatelessWidget {
   const OnboardingQuestionBody({
     super.key,
@@ -177,7 +177,7 @@ class OnboardingQuestionBody extends StatelessWidget {
     if (!scrolls) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [header, const SizedBox(height: 28), answer],
+        children: [header, const SizedBox(height: 12), const Spacer(), answer],
       );
     }
     // Sits at the bottom of the page when shorter than it. Laid out without
