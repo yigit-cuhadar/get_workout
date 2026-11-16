@@ -229,6 +229,9 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
                           : state.step == MeasureStep.weight
                           ? _weightPage(context, state)
                           : ListView(
+                              // A scroll position of its own per step, so
+                              // each step opens at the top.
+                              key: ValueKey(state.step),
                               padding: _contentPadding,
                               children: [
                                 Text(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:flutter/material.dart';
@@ -65,8 +67,16 @@ void main() {
 
   tearDown(sl.reset);
 
-  Future<void> show(WidgetTester tester, MeasurementDayState state) async {
-    when(() => cubit.state).thenReturn(state);
+  Future<void> show(
+    WidgetTester tester,
+    MeasurementDayState state, {
+    Stream<MeasurementDayState>? states,
+  }) async {
+    if (states == null) {
+      when(() => cubit.state).thenReturn(state);
+    } else {
+      whenListen(cubit, states, initialState: state);
+    }
     // A phone's width, tall enough for every tile.
     tester.view
       ..physicalSize = const Size(390 * 3, 1600 * 3)
@@ -218,5 +228,43 @@ void main() {
 
     await tester.tap(find.text('Skip this photo'));
     verify(() => cubit.closeCamera()).called(1);
+  });
+
+  testWidgets('each step opens at the top', (tester) async {
+    final states = StreamController<MeasurementDayState>();
+    addTearDown(states.close);
+    final measurements = start.copyWith(
+      step: MeasureStep.measurements,
+      groups: [
+        for (final measurement in BodyMeasurement.values) [measurement],
+      ],
+    );
+    await show(tester, measurements, states: states.stream);
+    // Short enough for the measurements to scroll.
+    tester.view.physicalSize = const Size(390 * 3, 700 * 3);
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byType(ListView), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    expect(find.text('Step 2 of 3 · Measurements'), findsOneWidget);
+    expect(
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .pixels,
+      greaterThan(0),
+    );
+
+    states.add(measurements.copyWith(step: MeasureStep.photos));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .pixels,
+      0,
+    );
+    expect(find.textContaining('Same light, same spot.'), findsOneWidget);
   });
 }
