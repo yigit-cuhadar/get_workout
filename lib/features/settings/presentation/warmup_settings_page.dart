@@ -338,6 +338,8 @@ class _StepRowState extends State<_StepRow> {
   late final _reps = TextEditingController(text: '${widget.step.reps}');
   Set<WarmupStepIssue> _issues = const {};
 
+  static const _removeSize = 32.0;
+
   @override
   void dispose() {
     _percent.dispose();
@@ -403,15 +405,21 @@ class _StepRowState extends State<_StepRow> {
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: remove,
-                child: SizedBox.square(
-                  dimension: ForgeNumberField.compactHeight,
-                  child: Center(
-                    child: ForgeIcon(
-                      ForgeIcons.close,
-                      size: 18,
-                      color: remove == null
-                          ? colors.lineStrong
-                          : colors.inkMuted,
+                // Drawn 32px; the padding takes taps across the tap minimum.
+                child: Padding(
+                  padding: const EdgeInsets.all(
+                    (ForgeTheme.tapMin - _removeSize) / 2,
+                  ),
+                  child: SizedBox.square(
+                    dimension: _removeSize,
+                    child: Center(
+                      child: ForgeIcon(
+                        ForgeIcons.close,
+                        size: 18,
+                        color: remove == null
+                            ? colors.lineStrong
+                            : colors.inkMuted,
+                      ),
                     ),
                   ),
                 ),

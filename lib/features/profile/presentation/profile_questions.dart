@@ -650,7 +650,7 @@ class _EntrySheetState extends State<_EntrySheet> {
   ];
 
   /// Two fields side by side; when the entry is refused both take the
-  /// danger border and one message lies under the pair.
+  /// danger border and one message sits under the pair.
   Widget _pair(List<({String label, String text})> fields) {
     final error = _error;
     final row = Row(
@@ -669,23 +669,24 @@ class _EntrySheetState extends State<_EntrySheet> {
                   ? TextInputAction.done
                   : TextInputAction.next,
               onSubmitted: i == fields.length - 1 ? (_) => _submit() : null,
-              // The border only; the message is the pair's.
+              // The danger border alone; the message is the pair's.
               errorText: error == null ? null : '',
             ),
           ),
       ],
     );
     if (error == null) return row;
-    final colors = ForgeStyle.of(context).colors;
-    // Written over the fields' empty message lines.
-    return Stack(
-      alignment: AlignmentDirectional.bottomStart,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: Gap.sm,
       children: [
         row,
         Text(
           error,
-          style: Theme.of(context).textTheme.labelMedium!
-              .copyWith(color: colors.danger, fontWeight: FontWeight.w400),
+          style: Theme.of(context).textTheme.labelMedium!.copyWith(
+            color: ForgeStyle.of(context).colors.danger,
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ],
     );
