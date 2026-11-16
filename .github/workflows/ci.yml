@@ -37,8 +37,9 @@ jobs:
         run: |
           flutter pub get
           dart run build_runner build -d
-          dart format --output=none --set-exit-if-changed lib
+          dart format --output=none --set-exit-if-changed lib test
           flutter analyze
+          flutter test
           flutter build web
   functions:
     runs-on: ubuntu-latest
