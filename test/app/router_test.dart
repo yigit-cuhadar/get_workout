@@ -1092,7 +1092,10 @@ void main() {
       expect(front(), Routes.customExerciseNew);
       expect(find.byType(ForgeNavigationBar), findsOneWidget);
 
-      await tester.enterText(find.widgetWithText(TextField, 'Name'), 'Sled');
+      await tester.enterText(
+        find.widgetWithText(ForgeTextField, 'Name'),
+        'Sled',
+      );
       await tester.pump();
       await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
@@ -1393,7 +1396,7 @@ void main() {
       router.go(Routes.customExerciseNew);
       await tester.pumpAndSettle();
       await tester.enterText(
-        find.widgetWithText(TextField, 'Name'),
+        find.widgetWithText(ForgeTextField, 'Name'),
         'Sled push',
       );
       await tester.pump();
