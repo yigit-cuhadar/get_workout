@@ -107,6 +107,8 @@ class FeaturedCard extends StatelessWidget {
     required String this.eyebrow,
     required String this.title,
     this.when,
+    this.origin,
+    this.onOrigin,
     this.locked = false,
     this.line,
     this.note,
@@ -130,6 +132,7 @@ class FeaturedCard extends StatelessWidget {
          'Only a band has progress, a chart, a menu and an alert.',
        ),
        assert(menu == null || onTap == null, 'A menu or a chevron, not both.'),
+       assert(onOrigin == null || origin != null, 'A link needs its text.'),
        assert(
          form == FeaturedCardForm.prompt || titleTone == FeaturedTitleTone.ink,
          'Only a prompt tones its title.',
@@ -149,6 +152,8 @@ class FeaturedCard extends StatelessWidget {
   }) : form = FeaturedCardForm.band,
        title = null,
        when = null,
+       origin = null,
+       onOrigin = null,
        locked = false,
        line = null,
        note = null,
@@ -168,6 +173,34 @@ class FeaturedCard extends StatelessWidget {
     : form = FeaturedCardForm.block,
       title = null,
       when = null,
+      origin = null,
+      onOrigin = null,
+      locked = false,
+      line = null,
+      note = null,
+      stats = const [],
+      action = null,
+      moreActions = const [],
+      progress = null,
+      rows = const [],
+      chart = null,
+      menu = null,
+      onTap = null,
+      error = null,
+      titleTone = FeaturedTitleTone.ink,
+      alert = null,
+      footActions = const [],
+      loading = true;
+
+  /// A band while what it shows loads: a sunken band over a row of four
+  /// shimmering figures (a past workout's page).
+  const FeaturedCard.bandLoading({super.key})
+    : form = FeaturedCardForm.band,
+      eyebrow = null,
+      title = null,
+      when = null,
+      origin = null,
+      onOrigin = null,
       locked = false,
       line = null,
       note = null,
@@ -192,6 +225,12 @@ class FeaturedCard extends StatelessWidget {
   /// A band's muted line under its [title]: when it happens ("Today",
   /// "Mon, Nov 16").
   final String? when;
+
+  /// A band's line under its [title] saying where it came from (a past
+  /// workout's program and week); underlined and opening it with
+  /// [onOrigin].
+  final String? origin;
+  final VoidCallback? onOrigin;
   final bool locked;
   final FeaturedLine? line;
 
@@ -243,6 +282,10 @@ class FeaturedCard extends StatelessWidget {
   static const double _chevronSize = 18;
   static const double _promptTitleSize = 20;
   static const double _promptTitleHeight = 26;
+  static const double _loadingBandHeight = 78;
+
+  /// A band's figures sit side by side, four at most.
+  static const int _bandFigures = 4;
 
   @override
   Widget build(BuildContext context) {
@@ -250,6 +293,40 @@ class FeaturedCard extends StatelessWidget {
     final p = style.colors;
     final text = Theme.of(context).textTheme;
     final radius = BorderRadius.circular(style.radii.lg);
+
+    if (loading && form == FeaturedCardForm.band) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: p.surface,
+          borderRadius: radius,
+          border: _cardBorder(style),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              height: _loadingBandHeight,
+              decoration: BoxDecoration(
+                color: p.surfaceSunken,
+                borderRadius: BorderRadius.vertical(top: radius.topLeft),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Gap.md, 12, Gap.md, 14),
+              child: Row(
+                spacing: Gap.sm,
+                children: [
+                  for (var i = 0; i < _bandFigures; i++)
+                    const Expanded(
+                      child: SkeletonBar(widthFactor: 0.8, height: 22),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     if (loading) {
       return DecoratedBox(
@@ -331,6 +408,7 @@ class FeaturedCard extends StatelessWidget {
                   ),
                 if (when case final at?)
                   Text(at, style: text.bodyLarge!.copyWith(color: headQuiet)),
+                if (origin case final origin?) _origin(origin, headQuiet, text),
               ],
             ),
           ),
@@ -475,7 +553,16 @@ class FeaturedCard extends StatelessWidget {
       if (note != null)
         Text(note, style: text.bodySmall!.copyWith(color: quiet)),
       ?chart,
-      if (stats.isNotEmpty)
+      if (stats.isNotEmpty && form == FeaturedCardForm.band)
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: Gap.sm,
+          children: [
+            for (final stat in stats.take(_bandFigures))
+              Expanded(child: _figure(context, stat, ink, quiet)),
+          ],
+        )
+      else if (stats.isNotEmpty)
         Padding(
           padding: const EdgeInsets.only(top: Gap.xs),
           child: Column(
@@ -634,6 +721,54 @@ class FeaturedCard extends StatelessWidget {
         Text(
           stat.value,
           style: style.dataLg.copyWith(fontWeight: FontWeight.w500, color: ink),
+        ),
+      ],
+    );
+  }
+
+  Widget _origin(String origin, Color color, TextTheme text) {
+    final onOrigin = this.onOrigin;
+    final label = Text(
+      origin,
+      style: text.bodySmall!.copyWith(
+        color: color,
+        decoration: onOrigin == null ? null : TextDecoration.underline,
+        decorationColor: color,
+      ),
+    );
+    if (onOrigin == null) return label;
+    return Semantics(
+      link: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onOrigin,
+        child: label,
+      ),
+    );
+  }
+
+  /// A band's figure: the value in mono over its label.
+  Widget _figure(
+    BuildContext context,
+    FeaturedStat stat,
+    Color ink,
+    Color quiet,
+  ) {
+    final style = ForgeStyle.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 2,
+      children: [
+        Text(
+          stat.value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: style.data.copyWith(fontSize: 15, height: 20 / 15, color: ink),
+        ),
+        Text(
+          stat.label,
+          style: Theme.of(context).textTheme.labelSmall!
+              .copyWith(fontWeight: FontWeight.w400, color: quiet),
         ),
       ],
     );

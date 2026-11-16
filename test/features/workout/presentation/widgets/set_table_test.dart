@@ -149,4 +149,26 @@ void main() {
     await tester.pumpAndSettle();
     expect(removed, 1);
   });
+
+  testWidgets('a header with a count opens and closes the card', (
+    tester,
+  ) async {
+    var toggled = 0;
+    Widget table({required bool open}) => SetTable(
+      name: 'Bench Press',
+      count: '1 set',
+      open: open,
+      onToggle: () => toggled++,
+      rows: const [SetTableRow(label: '1', values: '82.5 kg × 8')],
+    );
+    await pumpComponent(tester, table(open: false));
+
+    expect(find.text('1 set'), findsOneWidget);
+    expect(find.text('82.5 kg × 8'), findsNothing);
+    await tester.tap(find.text('Bench Press'));
+    expect(toggled, 1);
+
+    await pumpComponent(tester, table(open: true));
+    expect(find.text('82.5 kg × 8'), findsOneWidget);
+  });
 }

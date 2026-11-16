@@ -80,7 +80,10 @@ class SetTableEditRow {
 
 /// The sets of an exercise in history, on a card: the exercise's [name],
 /// its [group] letter (A1) in a sunken circle before it, its logging
-/// [type] and [note] under it, then a row per set (see [SetTableRow]).
+/// [type] and [note] under it, its set [count] at the end, then a row per
+/// set (see [SetTableRow]). With [onToggle] the header opens and closes
+/// the card (a chevron down while closed, up while [open]); closed, only
+/// the header shows.
 ///
 /// [SetTable.edit] (Add past workout, Edit workout) has the exercise's ⋯
 /// [menu] on top, the values in small boxes and "Add set" ([onAddSet]) at
@@ -93,6 +96,9 @@ class SetTable extends StatelessWidget {
     this.group,
     this.type,
     this.note,
+    this.count,
+    this.open = true,
+    this.onToggle,
   }) : editRows = null,
        menu = null,
        onAddSet = null;
@@ -108,7 +114,10 @@ class SetTable extends StatelessWidget {
     this.note,
   }) : rows = null,
        editRows = rows,
-       type = null;
+       type = null,
+       count = null,
+       open = true,
+       onToggle = null;
 
   final String name;
   final List<SetTableRow>? rows;
@@ -118,6 +127,11 @@ class SetTable extends StatelessWidget {
   final String? note;
   final List<ForgeMenuItem>? menu;
   final VoidCallback? onAddSet;
+
+  /// The set count at the header's end ("5 sets").
+  final String? count;
+  final bool open;
+  final VoidCallback? onToggle;
 
   /// Where a set's drops and note start: past its bubble and the gap.
   static const _indent = _bubbleSize + 10;
@@ -160,13 +174,22 @@ class SetTable extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Header(name: name, group: group, type: type, note: note),
-          for (final row in rows!) ...[
-            _Row(row: row),
-            if (row.note case final note?) _SetNote(note),
-            for (final (d, drop) in row.drops.indexed)
-              _DropRow(values: drop, number: d + 1),
-          ],
+          _Header(
+            name: name,
+            group: group,
+            type: type,
+            note: note,
+            count: count,
+            open: open,
+            onToggle: onToggle,
+          ),
+          if (open)
+            for (final row in rows!) ...[
+              _Row(row: row),
+              if (row.note case final note?) _SetNote(note),
+              for (final (d, drop) in row.drops.indexed)
+                _DropRow(values: drop, number: d + 1),
+            ],
         ],
       ),
     );
@@ -179,12 +202,18 @@ class _Header extends StatelessWidget {
     required this.group,
     required this.type,
     required this.note,
+    required this.count,
+    required this.open,
+    required this.onToggle,
   });
 
   final String name;
   final String? group;
   final String? type;
   final String? note;
+  final String? count;
+  final bool open;
+  final VoidCallback? onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -195,8 +224,11 @@ class _Header extends StatelessWidget {
       color: style.colors.inkMuted,
     );
     final group = this.group;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 40),
+    final onToggle = this.onToggle;
+    final header = ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: onToggle == null ? 40 : ForgeTheme.tapMin,
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: Gap.xs),
         child: Row(
@@ -213,8 +245,29 @@ class _Header extends StatelessWidget {
                 ],
               ),
             ),
+            if (count case final count?)
+              Text(
+                count,
+                style: style.data.copyWith(color: style.colors.inkMuted),
+              ),
+            if (onToggle != null)
+              ForgeIcon(
+                open ? ForgeIcons.expandLess : ForgeIcons.expandMore,
+                size: 18,
+                color: style.colors.inkMuted,
+              ),
           ],
         ),
+      ),
+    );
+    if (onToggle == null) return header;
+    return Semantics(
+      button: true,
+      expanded: open,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onToggle,
+        child: header,
       ),
     );
   }

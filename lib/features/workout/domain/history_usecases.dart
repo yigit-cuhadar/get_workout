@@ -110,3 +110,33 @@ class SaveWorkoutChange implements UseCase<Set<String>, WorkoutChange> {
     return saved.map((_) => exerciseIds.toSet());
   }
 }
+
+/// The sets of a stored workout holding a record their exercise still
+/// keeps (see [heldRecordSets]), from one read of each exercise's stats.
+class GetHeldRecords
+    implements UseCase<Set<(int, int)>, ({String uid, Workout workout})> {
+  const GetHeldRecords(this._repository);
+  final WorkoutRepository _repository;
+
+  @override
+  Future<Result<Set<(int, int)>>> call(
+    ({String uid, Workout workout}) params,
+  ) async {
+    final stats = <String, ExerciseStats>{};
+    try {
+      for (final id in {
+        for (final exercise in params.workout.exercises) exercise.exerciseId,
+      }) {
+        if (await _repository.watchStats(params.uid, id).first
+            case final found?) {
+          stats[id] = found;
+        }
+      }
+    } on Failure catch (failure) {
+      return Err(failure);
+    } catch (error) {
+      return Err(UnknownFailure('$error', error));
+    }
+    return Ok(heldRecordSets(params.workout, stats));
+  }
+}

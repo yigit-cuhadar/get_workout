@@ -67,6 +67,7 @@ void main() {
       saveChange: SaveWorkoutChange(repository),
       changed: (uid, id, {required deleted, required staleStats}) =>
           changes.add((uid: uid, id: id, deleted: deleted, stale: staleStats)),
+      getRecords: GetHeldRecords(repository),
     );
   }
 
@@ -74,6 +75,26 @@ void main() {
     stored.add(value);
     await pumpEventQueue();
   }
+
+  test('reads the records the workout still holds', () async {
+    when(() => repository.watchStats('u1', 'squat')).thenAnswer(
+      (_) => Stream.value(
+        ExerciseStats(
+          records: {
+            RecordKind.heaviestWeight: StatRecord(
+              value: 100,
+              date: legs.startedAt,
+              workoutId: 'w1',
+            ),
+          },
+        ),
+      ),
+    );
+    final cubit = build();
+    await show((workout: legs, pending: false));
+    expect(cubit.state.records, {(0, 0)});
+    await cubit.close();
+  });
 
   test('shows the workout as stored', () async {
     final cubit = build();

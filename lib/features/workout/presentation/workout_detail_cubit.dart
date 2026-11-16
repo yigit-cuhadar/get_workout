@@ -37,6 +37,7 @@ class WorkoutDetailState extends Equatable {
     this.workout,
     this.pending = false,
     this.failure,
+    this.records,
   });
 
   final WorkoutDetailStatus status;
@@ -50,20 +51,26 @@ class WorkoutDetailState extends Equatable {
   /// [WorkoutDetailCubit.failureShown].
   final Failure? failure;
 
+  /// The sets holding a record their exercise still keeps, as (exercise
+  /// index, set index); null until read, or when they could not be.
+  final Set<(int, int)>? records;
+
   bool get canChange => status == WorkoutDetailStatus.ready && !pending;
 
   WorkoutDetailState copyWith({
     WorkoutDetailStatus? status,
     Failure? Function()? failure,
+    Set<(int, int)>? Function()? records,
   }) => WorkoutDetailState(
     status: status ?? this.status,
     workout: workout,
     pending: pending,
     failure: failure != null ? failure() : this.failure,
+    records: records != null ? records() : this.records,
   );
 
   @override
-  List<Object?> get props => [status, workout, pending, failure];
+  List<Object?> get props => [status, workout, pending, failure, records];
 }
 
 /// Stored workout [id] of the user signed in when it opens, followed live;
@@ -77,6 +84,7 @@ class WorkoutDetailCubit extends Cubit<WorkoutDetailState> {
     required this._watchWorkout,
     required this._saveChange,
     required this._changed,
+    required this._getRecords,
   }) : _uid = getCurrentUser()?.id,
        super(const WorkoutDetailState()) {
     _userSubscription = watchAuthUser()
@@ -95,6 +103,7 @@ class WorkoutDetailCubit extends Cubit<WorkoutDetailState> {
   final WatchStoredWorkout _watchWorkout;
   final SaveWorkoutChange _saveChange;
   final StoredWorkoutChanged _changed;
+  final GetHeldRecords _getRecords;
 
   /// The user the page was opened for.
   final String? _uid;
@@ -117,15 +126,20 @@ class WorkoutDetailCubit extends Cubit<WorkoutDetailState> {
     _workoutSubscription = _watchWorkout((uid: uid, id: id)).listen(
       (stored) {
         if (!_following) return;
+        if (stored == null) {
+          emit(const WorkoutDetailState(status: WorkoutDetailStatus.missing));
+          return;
+        }
+        final same = stored.workout == state.workout;
         emit(
-          stored == null
-              ? const WorkoutDetailState(status: WorkoutDetailStatus.missing)
-              : WorkoutDetailState(
-                  status: WorkoutDetailStatus.ready,
-                  workout: stored.workout,
-                  pending: stored.pending,
-                ),
+          WorkoutDetailState(
+            status: WorkoutDetailStatus.ready,
+            workout: stored.workout,
+            pending: stored.pending,
+            records: same ? state.records : null,
+          ),
         );
+        if (!same) unawaited(_readRecords(uid, stored.workout));
       },
       onError: (Object error) {
         if (!_following) return;
@@ -137,6 +151,15 @@ class WorkoutDetailCubit extends Cubit<WorkoutDetailState> {
         );
       },
     );
+  }
+
+  /// The records [workout] holds, unless it changed meanwhile.
+  Future<void> _readRecords(String uid, Workout workout) async {
+    final result = await _getRecords((uid: uid, workout: workout));
+    if (isClosed || state.workout != workout) return;
+    if (result case Ok(value: final records)) {
+      emit(state.copyWith(records: () => records));
+    }
   }
 
   /// Snapshots are not shown while deleting or once closed.

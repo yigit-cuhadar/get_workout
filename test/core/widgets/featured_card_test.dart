@@ -401,4 +401,63 @@ void main() {
     );
     expect(find.byType(ForgeButton), findsNothing);
   });
+
+  testWidgets('a past workout band: its origin opens it, four figures', (
+    tester,
+  ) async {
+    var opened = 0;
+    await pumpComponent(
+      tester,
+      FeaturedCard(
+        form: FeaturedCardForm.band,
+        eyebrow: 'Fri, Nov 13 · 18:05',
+        title: 'Push',
+        origin: 'Push Pull Legs · week 3',
+        onOrigin: () => opened++,
+        stats: const [
+          FeaturedStat('duration', '52 min'),
+          FeaturedStat('volume', '12,400 kg'),
+          FeaturedStat('sets', '18'),
+          FeaturedStat('records', '2'),
+        ],
+      ),
+    );
+
+    for (final text in ['52 min', '12,400 kg', '18', '2', 'records']) {
+      expect(find.text(text), findsOneWidget);
+    }
+    expect(
+      tester
+          .widget<Text>(find.text('Push Pull Legs · week 3'))
+          .style!
+          .decoration,
+      TextDecoration.underline,
+    );
+    await tester.tap(find.text('Push Pull Legs · week 3'));
+    expect(opened, 1);
+  });
+
+  testWidgets('an origin with nothing to open is plain', (tester) async {
+    await pumpComponent(
+      tester,
+      const FeaturedCard(
+        form: FeaturedCardForm.band,
+        eyebrow: 'Fri, Nov 13 · 18:05',
+        title: 'Push',
+        origin: 'From a program you deleted',
+      ),
+    );
+    expect(
+      tester
+          .widget<Text>(find.text('From a program you deleted'))
+          .style!
+          .decoration,
+      isNot(TextDecoration.underline),
+    );
+  });
+
+  testWidgets('a loading band shimmers four figures', (tester) async {
+    await pumpComponent(tester, const FeaturedCard.bandLoading());
+    expect(find.byType(SkeletonBar), findsNWidgets(4));
+  });
 }

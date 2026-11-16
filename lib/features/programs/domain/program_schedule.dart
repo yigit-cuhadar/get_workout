@@ -102,6 +102,13 @@ class ProgramSchedule {
     return weeks != null && week > weeks ? weeks : week;
   }
 
+  /// The week of this run a workout on [date] falls in (see [week]); null
+  /// before the run started, when the workout belongs to an earlier one.
+  int? runWeek(CalendarDate date) =>
+      date.isBefore(CalendarDate.of(active.startedAt.toLocal()))
+      ? null
+      : week(date);
+
   /// Whether the program is over: the next day could only fall on or after
   /// [end].
   bool isFinished(CalendarDate today) {
