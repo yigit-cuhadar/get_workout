@@ -387,7 +387,7 @@ screenshot next to the studio board, every state) that the owner approves
 or sends back. A look the studio does not draw is a question for the owner
 and is drawn in the studio first.
 
-Where it stands (2026-11-16):
+Where it stands (2026-11-16, end of the İlerleme session):
 - Ana sekmeler: done and merged (#105–#107).
 - Antrenman ve programlar: done, checked on the iOS simulator and approved
   by the owner (2026-11-15); merged as #108–#111, studio #113, Forge
@@ -403,14 +403,34 @@ Where it stands (2026-11-16):
 - Content: getworkout-dev has the ready-made `dayList`; getworkout-prod has
   no content at all yet (a dry-run on 2026-11-16 would create all 466
   documents), so the first prod import belongs to Release.
+- İlerleme: done, checked on the iOS simulator and approved by the owner
+  (2026-11-16); merged as #116 (Weekly volume, Strength, Strength list,
+  with the stats data change), #117 (Body overview, Body compare,
+  Measurement summary), #118 (Calendar, Workout detail, Cardio, Steps,
+  health cardio sessions), studio #119; Forge v0.22.0–v0.22.2. Every answer
+  is a row of the canvas https://claude.ai/artifact/UdSCdEHtjQ17AMTiDD9qAR
+  (codes in each PR body) and is written into the Design bullets.
+- Owner to do: the Play Console Health apps declaration must list
+  exercise, distance, total calories burned and heart rate (#118 reads
+  cardio from Health Connect).
+- To check on a device with fuller data (the dev account has one weigh-in,
+  no measurement day, no steps): Body with several weigh-ins and
+  measurement days and photos; the past-workout band's four figures with a
+  large volume ("12,400 kg" may be cut); the Cardio session's distance
+  tile ("18.4 km" may wrap); health cardio sessions on a real device;
+  users who allowed steps before #118 are asked for workouts only through
+  Allow access again.
 - Next, in order:
-  1. Next group: İlerleme. Same flow: implementers per screen set, a check
-     branch joining them, studio drawn from the answers, device check, every
-     finding the studio does not draw asked on a drawn canvas, then the
-     side-by-side approval.
-  2. Open question for the Kurulum group: the Generator preview menu has no
-     icon for "Keep when regenerating" (studio's Menu card shows a history
-     icon; recommended). Draw and ask when that group starts.
+  1. Next group: Formlar (LogWeight, MeasurementDay, CardioLog,
+     CustomExercise, YourProfile, WarmupSettings, BarPlates, FiltersSheet,
+     ProfileQuestion). Same flow: implementers compare each screen with its
+     board, every question drawn on a canvas and asked one by one, Forge
+     changes tagged first, build, a check branch joining the work, device
+     check, findings drawn and asked, side-by-side approval, one PR per
+     screen set, studio redrawn in its own PR.
+  2. Then Kurulum, hesap ve abonelik. Open question for it: the Generator
+     preview menu has no icon for "Keep when regenerating" (studio's Menu
+     card shows a history icon; recommended). Draw and ask then.
 
 ## Design
 
