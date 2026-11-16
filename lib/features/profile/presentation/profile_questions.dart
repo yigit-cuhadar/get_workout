@@ -379,20 +379,22 @@ class _HeightAnswer extends StatelessWidget {
       unit.fromCm,
     );
     final title = l10n.fieldName(ProfileField.height);
+    // The sheet starts at the whole step the ruler shows.
+    final onRuler = value.roundToDouble().clamp(range.min, range.max);
     void type() => _openEntry(context, switch (unit) {
       LengthUnit.cm => (
         title: title,
         fields: [
           (
             label: l10n.calcHeight(l10n.unitCm),
-            text: formatProfileNumber(value),
+            text: formatProfileNumber(onRuler),
           ),
         ],
         error: _outOfRange(l10n, shown),
         enter: (texts) => cubit.enterHeight(texts.single, unit),
       ),
       LengthUnit.inch => () {
-        final (:feet, :inches) = feetAndInches(value);
+        final (:feet, :inches) = feetAndInches(onRuler);
         return (
           title: title,
           fields: [
