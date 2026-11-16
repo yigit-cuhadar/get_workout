@@ -3,6 +3,7 @@ import 'package:get_workout/app/theme.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
+import 'all_forms.dart';
 import 'grid_addon.dart';
 import 'main.directories.g.dart';
 
@@ -16,7 +17,7 @@ class GetWorkoutWidgetbook extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Widgetbook.material(
-    directories: directories,
+    directories: withAllForms(directories),
     addons: [
       MaterialThemeAddon(
         themes: [
