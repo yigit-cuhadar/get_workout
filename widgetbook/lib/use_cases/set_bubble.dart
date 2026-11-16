@@ -104,3 +104,14 @@ Widget setBubbleAll(BuildContext context) => Padding(
     ],
   ),
 );
+
+@widgetbook.UseCase(name: 'Small, warm-up', type: SetBubble)
+Widget setBubbleSmallWarmup(BuildContext context) => const Center(
+  child: SetBubble(
+    label: 'W',
+    semanticLabel: 'Warm-up set',
+    onTap: null,
+    warmup: true,
+    small: true,
+  ),
+);
