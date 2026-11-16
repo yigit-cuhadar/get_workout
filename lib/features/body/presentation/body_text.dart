@@ -198,8 +198,9 @@ extension BodyText on AppLocalizations {
     bodyWeight(BodyLimits.maxWeightKg, unit),
   );
 
+  /// "Enter a value from 10 to 250 cm".
   String bodyMeasurementRange(LengthUnit unit) => bodyErrorMeasurement(
-    bodyLength(BodyLimits.minMeasurementCm, unit),
+    bodyLengthNumber(BodyLimits.minMeasurementCm, unit),
     bodyLength(BodyLimits.maxMeasurementCm, unit),
   );
 }

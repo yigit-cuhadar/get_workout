@@ -4,59 +4,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../profile/domain/user_profile.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/body_entry.dart';
 import '../domain/body_stats.dart';
 import '../domain/body_usecases.dart';
 import '../domain/body_validation.dart';
+import '../domain/entry_body_fat.dart';
 import 'body_input.dart';
 
-/// One step of a measurement day.
-sealed class MeasureStep extends Equatable {
-  const MeasureStep();
-
-  /// The measurements asked for on this step.
-  List<BodyMeasurement> get measurements => const [];
-}
-
-class WeightStep extends MeasureStep {
-  const WeightStep();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class MeasurementStep extends MeasureStep {
-  const MeasurementStep(this.measurement);
-  final BodyMeasurement measurement;
-
-  @override
-  List<BodyMeasurement> get measurements => [measurement];
-
-  @override
-  List<Object?> get props => [measurement];
-}
-
-/// Both sides of a pair, such as the left and right thigh, on one step.
-class PairStep extends MeasureStep {
-  const PairStep(this.left, this.right);
-  final BodyMeasurement left;
-  final BodyMeasurement right;
-
-  @override
-  List<BodyMeasurement> get measurements => [left, right];
-
-  @override
-  List<Object?> get props => [left, right];
-}
-
-class PhotoStep extends MeasureStep {
-  const PhotoStep(this.pose);
-  final PhotoPose pose;
-
-  @override
-  List<Object?> get props => [pose];
-}
+/// The three steps of a measurement day, in order.
+enum MeasureStep { weight, measurements, photos }
 
 enum MeasurementDayStatus {
   editing,
@@ -64,37 +22,40 @@ enum MeasurementDayStatus {
   saved,
   saveFailed,
 
-  /// Every step was skipped; there is nothing to save.
-  empty,
-
   /// The signed-in user changed; the flow must close.
   closed,
 }
 
 class MeasurementDayState extends Equatable {
   const MeasurementDayState({
-    required this.steps,
-    this.index = 0,
-    this.weight = '',
+    required this.weight,
+    required this.groups,
+    this.step = MeasureStep.weight,
     this.measurements = const {},
+    this.invalidMeasurements = const {},
     this.newPhotos = const {},
     this.keptPhotos = const {},
     this.keptFiles = const {},
     this.ghosts = const {},
-    this.invalid = false,
-    this.invalidMeasurements = const {},
+    this.camera,
     this.status = MeasurementDayStatus.editing,
     this.failure,
   });
 
-  final List<MeasureStep> steps;
-  final int index;
+  final MeasureStep step;
 
-  /// In the user's weight unit, as typed.
-  final String weight;
+  /// On the ruler, in the user's weight unit.
+  final double weight;
+
+  /// The measurement rows: a measurement alone, or both sides of a pair.
+  final List<List<BodyMeasurement>> groups;
 
   /// In the user's length unit, as typed.
   final Map<BodyMeasurement, String> measurements;
+
+  /// The measurements whose value is out of range, once Next was tapped
+  /// on them; then kept up to date.
+  final Set<BodyMeasurement> invalidMeasurements;
 
   /// Pictures taken in this flow, as files.
   final Map<PhotoPose, String> newPhotos;
@@ -109,84 +70,77 @@ class MeasurementDayState extends Equatable {
   /// The file of the previous photo of each pose, to line a new one up with.
   final Map<PhotoPose, String> ghosts;
 
-  /// A value of the current step is out of range.
-  final bool invalid;
-
-  /// Those of the current step's measurements whose value is out of
-  /// range, while [invalid].
-  final Set<BodyMeasurement> invalidMeasurements;
+  /// The pose the camera is open for, on the photos step.
+  final PhotoPose? camera;
   final MeasurementDayStatus status;
   final Failure? failure;
-
-  MeasureStep get step => steps[index];
-  bool get isLast => index == steps.length - 1;
 
   /// The picture shown for [pose]: a new one, else the kept one.
   String? photoFile(PhotoPose pose) => newPhotos[pose] ?? keptFiles[pose];
 
   MeasurementDayState copyWith({
-    List<MeasureStep>? steps,
-    int? index,
-    String? weight,
+    MeasureStep? step,
+    double? weight,
+    List<List<BodyMeasurement>>? groups,
     Map<BodyMeasurement, String>? measurements,
+    Set<BodyMeasurement>? invalidMeasurements,
     Map<PhotoPose, String>? newPhotos,
     Map<PhotoPose, String>? keptFiles,
     Map<PhotoPose, String>? ghosts,
-    bool? invalid,
-    Set<BodyMeasurement>? invalidMeasurements,
+    PhotoPose? Function()? camera,
     MeasurementDayStatus? status,
     Failure? failure,
   }) => MeasurementDayState(
-    steps: steps ?? this.steps,
-    index: index ?? this.index,
+    step: step ?? this.step,
     weight: weight ?? this.weight,
+    groups: groups ?? this.groups,
     measurements: measurements ?? this.measurements,
+    invalidMeasurements: invalidMeasurements ?? this.invalidMeasurements,
     newPhotos: newPhotos ?? this.newPhotos,
     keptPhotos: keptPhotos,
     keptFiles: keptFiles ?? this.keptFiles,
     ghosts: ghosts ?? this.ghosts,
-    invalid: invalid ?? this.invalid,
-    // Cleared with [invalid].
-    invalidMeasurements: invalid == false
-        ? const {}
-        : invalidMeasurements ?? this.invalidMeasurements,
+    camera: camera == null ? this.camera : camera(),
     status: status ?? this.status,
     failure: failure,
   );
 
   @override
   List<Object?> get props => [
-    steps,
-    index,
+    step,
     weight,
+    groups,
     measurements,
+    invalidMeasurements,
     newPhotos,
     keptPhotos,
     keptFiles,
     ghosts,
-    invalid,
-    invalidMeasurements,
+    camera,
     status,
     failure,
   ];
 }
 
 /// What a measurement day starts from: the entry being edited (null for a
-/// new day), what the user tracks and their units.
+/// new day), what the user tracks, their units, and where the weight ruler
+/// starts when the entry has no weight.
 typedef MeasurementDaySetup = ({
   BodyEntry? initial,
   Set<BodyMeasurement> tracked,
   WeightUnit weightUnit,
   LengthUnit lengthUnit,
+  double startKg,
 });
 
-/// A measurement day, step by step: the weight, each tracked measurement
-/// (both sides of a pair on one step), then a photo of each pose. Every step can be skipped; the last one
-/// saves. Edits [MeasurementDaySetup.initial] when given; skipping a step
-/// then keeps its stored value, and only an emptied field clears one. The
-/// previous photos are loaded here, so the flow also works when opened
-/// first, e.g. from a reminder. Pictures taken and not kept are removed.
-/// Closes when the signed-in user changes.
+/// A measurement day in three steps: the weight on a ruler, which cannot
+/// be skipped (MD11); each tracked measurement, both sides of a pair on
+/// one row, any left empty; and a photo of each pose, any left out. The
+/// last step saves. Edits [MeasurementDaySetup.initial] when given: an
+/// emptied measurement clears it, a photo not retaken stays. The previous
+/// photos are loaded here, so the flow also works when opened first, e.g.
+/// from a reminder. Pictures taken and not kept are removed. Closes when
+/// the signed-in user changes.
 class MeasurementDayCubit extends Cubit<MeasurementDayState> {
   MeasurementDayCubit({
     required MeasurementDaySetup setup,
@@ -229,14 +183,18 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
   /// What [hasChanges] compares against.
   late final MeasurementDayState _start;
 
+  /// Set once Next was tapped on the measurements.
+  bool _checked = false;
+
   /// Fixed at the first save, so a retry saves the same entry.
   String? _entryId;
   DateTime? _date;
 
   bool get isEditing => _initial != null;
 
-  /// The values differ from those the flow opened with (none for a new
-  /// day), or a picture was taken; nothing once it saved or closed.
+  /// The weight or a value differs from those the flow opened with (none
+  /// for a new day), or a picture was taken; nothing once it saved or
+  /// closed.
   bool get hasChanges => switch (state.status) {
     MeasurementDayStatus.saved || MeasurementDayStatus.closed => false,
     _ =>
@@ -269,8 +227,8 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
   static MeasurementDayState _initialState(MeasurementDaySetup setup) {
     final initial = setup.initial;
     return MeasurementDayState(
-      steps: _steps(setup.tracked, initial),
-      weight: metricText(initial?.weightKg, setup.weightUnit.fromKg),
+      weight: rulerWeight(initial?.weightKg ?? setup.startKg, setup.weightUnit),
+      groups: _groups(setup.tracked, initial),
       measurements: {
         for (final MapEntry(:key, :value)
             in (initial?.measurements ?? const {}).entries)
@@ -281,22 +239,11 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
   }
 
   /// The tracked measurements, plus those the edited entry already has, in
-  /// their usual order; both sides of a pair share a step.
-  static List<MeasureStep> _steps(
+  /// their usual order; both sides of a pair share a row.
+  static List<List<BodyMeasurement>> _groups(
     Set<BodyMeasurement> tracked,
     BodyEntry? initial,
-  ) => [
-    const WeightStep(),
-    for (final group in pairedMeasurements({
-      ...tracked,
-      ...?initial?.measurements.keys,
-    }))
-      switch (group) {
-        [final left, final right] => PairStep(left, right),
-        _ => MeasurementStep(group.single),
-      },
-    for (final pose in PhotoPose.values) PhotoStep(pose),
-  ];
+  ) => pairedMeasurements({...tracked, ...?initial?.measurements.keys});
 
   /// The ghosts and the edited entry's photos, fetched from the backup
   /// when not on this device.
@@ -330,125 +277,102 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
     emit(state.copyWith(ghosts: present(previous), keptFiles: present(kept)));
   }
 
-  /// Follows a change of the tracked measurements, staying on the current
-  /// step when it is still there, or on one with a measurement of it (a
-  /// pair that lost or gained a side).
+  /// Follows a change of the tracked measurements.
   void setTracked(Set<BodyMeasurement> tracked) {
     if (state.status != MeasurementDayStatus.editing) return;
-    final steps = _steps(tracked, _initial);
-    final current = state.step;
-    var index = steps.indexOf(current);
-    if (index < 0 && current.measurements.isNotEmpty) {
-      index = steps.indexWhere(
-        (step) => step.measurements.any(current.measurements.contains),
-      );
-    }
+    final groups = _groups(tracked, _initial);
     emit(
       state.copyWith(
-        steps: steps,
-        index: index < 0 ? state.index.clamp(0, steps.length - 1) : index,
-        invalid: false,
+        groups: groups,
+        invalidMeasurements: _checked ? _invalid(groups) : const {},
       ),
     );
   }
 
-  void setWeight(String text) =>
-      _edit(state.copyWith(weight: text, invalid: false));
+  /// [value] in the user's weight unit.
+  void setWeight(double value) => _edit(state.copyWith(weight: value));
 
-  /// The value of [measurement], one of the current step's.
   void setMeasurement(BodyMeasurement measurement, String text) {
-    if (state.step.measurements.contains(measurement)) {
-      _edit(
-        state.copyWith(
-          measurements: {...state.measurements, measurement: text},
-          invalid: false,
-        ),
-      );
+    final next = state.copyWith(
+      measurements: {...state.measurements, measurement: text},
+    );
+    _edit(
+      _checked
+          ? next.copyWith(invalidMeasurements: _invalid(next.groups, next))
+          : next,
+    );
+  }
+
+  /// Opens the camera for [pose] on the photos step, over its picture if it
+  /// has one.
+  void openCamera(PhotoPose pose) {
+    if (state.step == MeasureStep.photos) {
+      _edit(state.copyWith(camera: () => pose));
     }
   }
 
-  /// [file] is the picture just taken for the current step, a photo; one
-  /// taken before for it is removed.
+  /// Back to the photos without a new picture ("Skip this photo").
+  void closeCamera() => _edit(state.copyWith(camera: () => null));
+
+  /// [file] is the picture just taken with the camera open; one taken
+  /// before for its pose is removed.
   void photoTaken(String file) {
-    if (state.status
-        case MeasurementDayStatus.saving || MeasurementDayStatus.closed) {
+    final pose = state.camera;
+    if (pose == null || !_canMove) {
       unawaited(_discardCapture(file));
       return;
     }
-    if (state.step case PhotoStep(:final pose)) {
-      if (state.newPhotos[pose] case final earlier?) {
-        unawaited(_discardCapture(earlier));
-      }
-      _edit(state.copyWith(newPhotos: {...state.newPhotos, pose: file}));
+    if (state.newPhotos[pose] case final earlier?) {
+      unawaited(_discardCapture(earlier));
     }
+    _edit(
+      state.copyWith(
+        newPhotos: {...state.newPhotos, pose: file},
+        camera: () => null,
+      ),
+    );
   }
 
   void _edit(MeasurementDayState next) {
-    if (state.status
-        case MeasurementDayStatus.saving || MeasurementDayStatus.closed) {
-      return;
-    }
+    if (!_canMove) return;
     emit(next.copyWith(status: MeasurementDayStatus.editing));
   }
 
-  /// Moves on once the current values are in range; the last step saves.
+  /// Moves on; the measurements only once every value is in range; the
+  /// photos save.
   Future<void> next() async {
     if (!_canMove) return;
-    if (!_valid(state.step)) {
-      emit(
-        state.copyWith(
-          invalid: true,
-          invalidMeasurements: _invalidMeasurements(state.step),
-        ),
-      );
-      return;
-    }
-    await _advance();
-  }
-
-  /// Moves on without changing the current step: what the edited entry
-  /// stores stays (a value typed here is dropped, on both fields of a
-  /// pair), as does a stored photo.
-  Future<void> skip() async {
-    if (!_canMove) return;
-    final initial = _initial;
-    final cleared = switch (state.step) {
-      WeightStep() => state.copyWith(
-        weight: metricText(initial?.weightKg, _weightUnit.fromKg),
-      ),
-      MeasurementStep() || PairStep() => state.copyWith(
-        measurements: {
-          ...state.measurements,
-          for (final measurement in state.step.measurements)
-            measurement: metricText(
-              initial?.measurements[measurement],
-              _lengthUnit.fromCm,
-            ),
-        },
-      ),
-      PhotoStep(:final pose) => () {
-        if (state.newPhotos[pose] case final taken?) {
-          unawaited(_discardCapture(taken));
+    switch (state.step) {
+      case MeasureStep.weight:
+        _edit(state.copyWith(step: MeasureStep.measurements));
+      case MeasureStep.measurements:
+        _checked = true;
+        final invalid = _invalid(state.groups);
+        if (invalid.isNotEmpty) {
+          emit(state.copyWith(invalidMeasurements: invalid));
+          return;
         }
-        return state.copyWith(newPhotos: {...state.newPhotos}..remove(pose));
-      }(),
-    };
-    emit(
-      cleared.copyWith(invalid: false, status: MeasurementDayStatus.editing),
-    );
-    await _advance();
+        _edit(
+          state.copyWith(
+            step: MeasureStep.photos,
+            invalidMeasurements: const {},
+          ),
+        );
+      case MeasureStep.photos:
+        await _save();
+    }
   }
 
-  /// False on the first step, where going back leaves the flow.
+  /// One step back, or out of the open camera; false on the first step,
+  /// where going back leaves the flow.
   bool back() {
-    if (!_canMove || state.index == 0) return false;
-    emit(
-      state.copyWith(
-        index: state.index - 1,
-        invalid: false,
-        status: MeasurementDayStatus.editing,
-      ),
-    );
+    if (!_canMove) return false;
+    if (state.camera != null) {
+      closeCamera();
+      return true;
+    }
+    if (state.step == MeasureStep.weight) return false;
+    _edit(state.copyWith(step: MeasureStep.values[state.step.index - 1]));
     return true;
   }
 
@@ -459,39 +383,38 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
     _ => true,
   };
 
-  Future<void> _advance() async {
-    if (state.isLast) return _save();
-    emit(state.copyWith(index: state.index + 1));
-  }
-
-  bool _valid(MeasureStep step) => switch (step) {
-    WeightStep() => switch (_weightKg) {
-      null => true,
-      final kg => BodyLimits.weightKg(kg),
-    },
-    MeasurementStep() || PairStep() => _invalidMeasurements(step).isEmpty,
-    PhotoStep() => true,
+  Set<BodyMeasurement> _invalid(
+    List<List<BodyMeasurement>> groups, [
+    MeasurementDayState? input,
+  ]) => {
+    for (final group in groups)
+      for (final measurement in group)
+        if (_cm(measurement, input ?? state) case final cm?
+            when !BodyLimits.measurementCm(cm))
+          measurement,
   };
 
-  Set<BodyMeasurement> _invalidMeasurements(MeasureStep step) => {
-    for (final measurement in step.measurements)
-      if (_cm(measurement) case final cm? when !BodyLimits.measurementCm(cm))
-        measurement,
+  double? _cm(BodyMeasurement measurement, MeasurementDayState input) =>
+      readMetric(
+        input.measurements[measurement] ?? '',
+        stored: _initial?.measurements[measurement],
+        fromMetric: _lengthUnit.fromCm,
+        toMetric: _lengthUnit.toCm,
+      );
+
+  /// The typed measurements in range, in cm.
+  Map<BodyMeasurement, double> get _validCm => {
+    for (final group in state.groups)
+      for (final measurement in group)
+        if (_cm(measurement, state) case final cm?
+            when BodyLimits.measurementCm(cm))
+          measurement: cm,
   };
 
-  double? get _weightKg => readMetric(
-    state.weight,
-    stored: _initial?.weightKg,
-    fromMetric: _weightUnit.fromKg,
-    toMetric: _weightUnit.toKg,
-  );
-
-  double? _cm(BodyMeasurement measurement) => readMetric(
-    state.measurements[measurement] ?? '',
-    stored: _initial?.measurements[measurement],
-    fromMetric: _lengthUnit.fromCm,
-    toMetric: _lengthUnit.toCm,
-  );
+  /// The body fat the typed measurements give a person of [sex] and
+  /// [heightCm], live as they are typed (MD10).
+  EntryBodyFat bodyFat({required Sex? sex, required double? heightCm}) =>
+      entryBodyFat(_validCm, sex: sex, heightCm: heightCm);
 
   void _close() {
     if (state.status != MeasurementDayStatus.closed && !isClosed) {
@@ -499,19 +422,18 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
     }
   }
 
-  /// Measurements no longer among the steps are left out, as are invalid
-  /// values of steps passed by going back and editing; those send the user
-  /// to their step.
+  /// Measurements no longer among the rows are left out; an invalid value
+  /// sends the user back to the measurements.
   Future<void> _save() async {
     final uid = _getCurrentUser()?.id;
     if (uid == null || uid != _uid) return _close();
-    final invalidAt = state.steps.indexWhere((step) => !_valid(step));
-    if (invalidAt >= 0) {
+    final invalid = _invalid(state.groups);
+    if (invalid.isNotEmpty) {
+      _checked = true;
       emit(
         state.copyWith(
-          index: invalidAt,
-          invalid: true,
-          invalidMeasurements: _invalidMeasurements(state.steps[invalidAt]),
+          step: MeasureStep.measurements,
+          invalidMeasurements: invalid,
         ),
       );
       return;
@@ -520,18 +442,14 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
     final entry = BodyEntry(
       id: _entryId ??= initial?.id ?? _newEntryId(uid),
       date: _date ??= initial?.date ?? _clock(),
-      weightKg: _weightKg,
-      measurements: {
-        for (final step in state.steps)
-          for (final measurement in step.measurements)
-            measurement: ?_cm(measurement),
-      },
+      weightKg: rulerWeightKg(
+        state.weight,
+        _weightUnit,
+        stored: initial?.weightKg,
+      ),
+      measurements: _validCm,
       photos: state.keptPhotos,
     );
-    if (entry.isEmpty && state.newPhotos.isEmpty) {
-      emit(state.copyWith(status: MeasurementDayStatus.empty));
-      return;
-    }
     emit(state.copyWith(status: MeasurementDayStatus.saving));
     final failure = (await _saveEntry((
       uid: uid,
