@@ -420,14 +420,33 @@ Where it stands (2026-11-16, end of the İlerleme session):
   tile ("18.4 km" may wrap); health cardio sessions on a real device;
   users who allowed steps before #118 are asked for workouts only through
   Allow access again.
-- Formlar: built in draft PRs #122 (Custom exercise, filters sheet, Bar
-  and plates), #123 (Your profile, Profile question, Warm-up sets), #124
-  (Log weight, Measurement day, Log cardio) on Forge v0.23.0; the answers
-  found while building are under Design › "Formlar, during the build".
-  Next: Forge v0.24.0 (check sheet, compact rows, hidden ruler label,
-  ruler parts, invalid compact box, snackbar over sheets), then each PR
-  takes those answers and re-pins; then a check branch joining the three,
-  the device check, the studio redrawn, the side-by-side approval.
+- Formlar (2026-11-16, end of the session that built it): every screen is
+  built in three draft PRs, all on Forge v0.24.2 (6491245), each with
+  the owner's answers in its body: #122 Custom exercise, filters sheet,
+  Bar and plates; #123 Your profile, Profile question, Warm-up sets (and
+  Onboarding's number questions, P5); #124 Log weight, Measurement day,
+  Log cardio. Forge v0.23.0–v0.24.2 added the date picker, h:m:s wheel,
+  side-labelled pair boxes, ruler parts and tappable value, list and
+  title-only dialogs, ListRow.check and showForgeCheckSheet, snackbars
+  over sheets, compact (34px) and tall (40px) number boxes.
+  The three branches merge into one check branch without conflicts; the
+  joined full suite was green except a set-table test that v0.24.2 fixes.
+  Next, in order:
+  1. A check branch joining #122–#124 (copy pubspec_overrides.yaml),
+     analyze and the full suite, then the iOS simulator check of every
+     Formlar state. Look in particular at: the date picker (an outside
+     day selects it and changes month; no earliest date), check rows'
+     14px title (the board draws 15px), "5 ft 11 in" (only the numbers
+     underlined), the snackbar over a sheet (no entry animation), a
+     failed My equipment save on the Library page (may show twice), the
+     Left/Right pair row at 390px, P5's bottom-anchored number questions.
+  2. GetWorkout Studio: redraw the Formlar boards to what was built and
+     answered (Custom exercise rows and sheets, filters rows, PQ8
+     equipment, PoseCamera and PhotoTile on Measurement day, MD12, P5
+     layout, CL rows and sheets, WS forms), its own PR; publish from the
+     owner's account.
+  3. Findings drawn and asked, then the side-by-side approval page; on
+     approval mark #122–#124 ready and merge them in order.
 - Next, in order:
   1. Next group: Formlar (LogWeight, MeasurementDay, CardioLog,
      CustomExercise, YourProfile, WarmupSettings, BarPlates, FiltersSheet,
