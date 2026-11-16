@@ -398,24 +398,25 @@ class _SeriesLook {
     _ => l10n.bodyLength(settings.lengthUnit.toCm(value), settings.lengthUnit),
   };
 
-  /// Writes the plotted values of [points]; a pair of measurements shows
-  /// both its sides ("36 / 35.5 cm"), found by the plotted mean.
-  String Function(double) formatter(
+  /// The tap tag of a pair of measurements: both sides of the entry on the
+  /// tapped day ("36 / 35.5 cm"); null for any other series.
+  String Function(ChartPoint)? pairTag(
     BodySeries series,
     List<SeriesPoint> points,
   ) {
+    if (series.measurements.length != 2) return null;
     final unit = settings.lengthUnit;
     String side(double? cm) =>
         cm == null ? l10n.bodyNoValue : l10n.bodyLengthNumber(cm, unit);
-    final pairs = {
+    final byDay = {
       for (final point in points)
         if (point.sides case [final left, final right])
-          shown(series, point.value): l10n.bodyQuantity(
+          point.date: l10n.bodyQuantity(
             l10n.bodyPair(side(left), side(right)),
             l10n.bodyLengthUnit(unit),
           ),
     };
-    return (value) => pairs[value] ?? format(series, value);
+    return (point) => byDay[point.day] ?? format(series, point.value);
   }
 
   List<ChartPoint> points(BodySeries series, List<SeriesPoint> points) => [
@@ -523,7 +524,11 @@ class _ChartCardState extends State<_ChartCard> {
               ChartSeries(
                 label: l10n.seriesName(shown),
                 points: look.points(shown, chart.points[shown] ?? const []),
-                format: look.formatter(shown, chart.points[shown] ?? const []),
+                format: (value) => look.format(shown, value),
+                formatPoint: look.pairTag(
+                  shown,
+                  chart.points[shown] ?? const [],
+                ),
                 look: _SeriesLook.looks[line++],
               ),
         ];

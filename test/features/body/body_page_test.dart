@@ -220,6 +220,8 @@ void main() {
     expect(card.title, '12 weeks');
     expect(card.detail, 'target 78 kg');
     expect(card.series!.single.average, isNotNull);
+    // Only a pair has its own tap tag.
+    expect(card.series!.single.formatPoint, isNull);
     expect(card.series!.single.targetLabel, 'Target');
     // No older entries: no range control.
     expect(card.range, isNull);
@@ -550,6 +552,8 @@ void main() {
         points: {
           BodySeries.upperArm: [
             SeriesPoint(oct18.date, 35.75, const [36, 35.5]),
+            // The same mean on another day keeps its own sides.
+            SeriesPoint(nov1.date, 35.75, const [35, 36.5]),
           ],
         },
       ),
@@ -557,7 +561,9 @@ void main() {
     await pump(tester, const BodyPage());
 
     final card = tester.widget<MultiSeriesChart>(find.byType(MultiSeriesChart));
-    expect(card.series!.single.format(35.75), '36 / 35.5 cm');
+    final tag = card.series!.single.formatPoint!;
+    expect(tag((day: oct18.date, value: 35.75)), '36 / 35.5 cm');
+    expect(tag((day: nov1.date, value: 35.75)), '35 / 36.5 cm');
   });
 
   testWidgets('empty and error states sit in cards', (tester) async {
