@@ -100,6 +100,17 @@ extension ProgramText on AppLocalizations {
   String planDate(CalendarDate date) =>
       DateFormat.MMMEd(localeName).format(date.toLocalDateTime());
 
+  /// "Nov 9–15", or "Oct 30–Nov 5" across two months.
+  String dateRange(CalendarDate first, CalendarDate last) {
+    final monthDay = DateFormat.MMMd(localeName);
+    return progressWeekRange(
+      monthDay.format(first.toLocalDateTime()),
+      first.month == last.month
+          ? '${last.day}'
+          : monthDay.format(last.toLocalDateTime()),
+    );
+  }
+
   String programIssueText(ProgramIssue issue) => switch (issue) {
     ProgramIssue.nameMissing => programErrorNameMissing,
     ProgramIssue.nameTooLong => programErrorNameTooLong(

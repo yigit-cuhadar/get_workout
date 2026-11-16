@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_health/forge_health.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/router.dart';
 import 'package:get_workout/app/theme.dart';
@@ -12,10 +13,12 @@ import 'package:get_workout/features/cardio/domain/cardio_repository.dart';
 import 'package:get_workout/features/cardio/domain/cardio_session.dart';
 import 'package:get_workout/features/cardio/domain/cardio_type.dart';
 import 'package:get_workout/features/cardio/domain/cardio_usecases.dart';
+import 'package:get_workout/features/cardio/domain/health_cardio.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_form_cubit.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_form_page.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_list_cubit.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_list_page.dart';
+import 'package:get_workout/features/cardio/presentation/cardio_session_page.dart';
 import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
 import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
 import 'package:get_workout/features/profile/domain/profile_repository.dart';
@@ -113,6 +116,7 @@ void main() {
           firstWeekday: DateTime.monday,
           watchAuthUser: WatchAuthUser(sessionAuth),
           watchSessions: WatchCardioSessions(cardio),
+          getHealth: GetHealthCardio(FakeHealthSteps()),
           watchRejectedWrites: WatchRejectedCardioWrites(cardio),
         ),
       )
@@ -227,12 +231,12 @@ void main() {
     );
   });
 
-  testWidgets('a session opens its edit form', (tester) async {
+  testWidgets('a session opens its page, Edit its form', (tester) async {
     await start(tester);
     await openCardio(tester, [run]);
     // The week's summary and the chart come first.
     await tester.scrollUntilVisible(
-      find.text('Outdoor run'),
+      find.textContaining('Outdoor run'),
       200,
       scrollable: find
           .descendant(
@@ -242,14 +246,17 @@ void main() {
           .first,
     );
 
-    await tap(tester, find.text('Outdoor run'));
+    await tap(tester, find.textContaining('Outdoor run'));
 
     expect(find.byType(CardioSessionPage), findsOneWidget);
-    expect(find.text('Edit cardio'), findsOneWidget);
     expect(
       router.routerDelegate.currentConfiguration.uri.path,
       Routes.cardioSession('r1'),
     );
+
+    await tap(tester, find.text('Edit'));
+    expect(find.byType(CardioEditPage), findsOneWidget);
+    expect(find.text('Edit cardio'), findsOneWidget);
   });
 
   testWidgets('back from the form returns to the list', (tester) async {

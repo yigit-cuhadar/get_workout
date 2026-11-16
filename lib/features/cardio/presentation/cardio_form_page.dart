@@ -22,10 +22,11 @@ class CardioNewPage extends StatelessWidget {
   Widget build(BuildContext context) => const _CardioForm(session: null);
 }
 
-/// A stored session, edited in place. It is taken from the shared list, so
-/// it opens at once from the list and also works from a bare link.
-class CardioSessionPage extends StatelessWidget {
-  const CardioSessionPage({super.key, required this.id});
+/// A stored session, edited in place; closes with true once it deleted
+/// it. It is taken from the shared list, so it opens at once from the
+/// session's page and also works from a bare link.
+class CardioEditPage extends StatelessWidget {
+  const CardioEditPage({super.key, required this.id});
 
   final String id;
 
@@ -54,10 +55,7 @@ class CardioSessionPage extends StatelessWidget {
                 retryLabel: l10n.retry,
                 onRetry: context.read<CardioListCubit>().retry,
               ),
-              CardioListStatus.ready => EmptyView(
-                title: l10n.cardioNotFoundTitle,
-                message: l10n.cardioNotFound,
-              ),
+              CardioListStatus.ready => EmptyView(message: l10n.cardioNotFound),
             },
           );
         },
@@ -124,9 +122,9 @@ class _CardioFormViewState extends State<_CardioFormView> {
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
         switch (state.status) {
-          case CardioFormStatus.saved ||
-              CardioFormStatus.deleted ||
-              CardioFormStatus.closed:
+          case CardioFormStatus.deleted:
+            context.pop(true);
+          case CardioFormStatus.saved || CardioFormStatus.closed:
             context.pop();
           case CardioFormStatus.saveFailed || CardioFormStatus.deleteFailed:
             ScaffoldMessenger.of(

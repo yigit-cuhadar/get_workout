@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/bar_chart.dart';
+import '../../../core/page_parts.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/domain/calendar_date.dart';
@@ -184,7 +185,7 @@ class _Loading extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(Gap.md),
       children: [
-        const _Panel(child: Center(child: Progress.ringLoading())),
+        const SurfaceCard(child: Center(child: Progress.ringLoading())),
         const SizedBox(height: Gap.md),
         StepperField.loading(),
         const SizedBox(height: Gap.md),
@@ -272,27 +273,6 @@ class _StepsState extends State<_Steps> {
   }
 }
 
-/// The flat card the ring sits in.
-class _Panel extends StatelessWidget {
-  const _Panel({required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = ForgeStyle.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: style.colors.surface,
-        borderRadius: BorderRadius.circular(style.radii.lg),
-        border: style.cardBorder == 0
-            ? null
-            : Border.all(color: style.colors.line, width: style.cardBorder),
-      ),
-      child: Padding(padding: const EdgeInsets.all(Gap.md), child: child),
-    );
-  }
-}
-
 /// Today's steps in the ring, "of" the goal inside it, and what is left
 /// to it under it.
 class _Today extends StatelessWidget {
@@ -304,7 +284,7 @@ class _Today extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final style = ForgeStyle.of(context);
     final number = NumberFormat.decimalPattern(l10n.localeName);
-    return _Panel(
+    return SurfaceCard(
       child: Column(
         children: [
           Progress.ring(

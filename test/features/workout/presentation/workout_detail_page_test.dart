@@ -12,7 +12,6 @@ import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
-import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/presentation/workout_detail_cubit.dart';
 import 'package:get_workout/features/workout/presentation/workout_detail_page.dart';
 import 'package:get_workout/l10n/app_localizations.dart';

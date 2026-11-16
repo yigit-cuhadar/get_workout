@@ -1,8 +1,18 @@
+import 'package:flutter/material.dart';
+
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/cardio_session.dart';
 import '../domain/cardio_type.dart';
 import '../domain/cardio_validation.dart';
+
+/// The health store the device reads from, by name.
+String healthStoreName(BuildContext context) {
+  final l10n = AppLocalizations.of(context);
+  return Theme.of(context).platform == TargetPlatform.iOS
+      ? l10n.stepsStoreApple
+      : l10n.stepsStoreGoogle;
+}
 
 /// Distances follow the user's length unit: km with cm, miles with inches.
 DistanceUnit distanceUnitFor(LengthUnit unit) => switch (unit) {

@@ -7,6 +7,7 @@ import 'package:forge_core/forge_core.dart';
 import '../domain/cardio_session.dart';
 import '../domain/cardio_usecases.dart';
 import '../domain/cardio_week.dart';
+import '../domain/health_cardio.dart';
 
 enum CardioListStatus { loading, ready, failure }
 
@@ -22,7 +23,7 @@ class CardioListState extends Equatable {
 
   final CardioListStatus status;
 
-  /// Newest first.
+  /// Newest first: the stored ones and those read from the health store.
   final List<CardioSession> sessions;
 
   /// [sessions] by week, newest first; only weeks with sessions.
@@ -60,7 +61,8 @@ class CardioListState extends Equatable {
   ];
 }
 
-/// The cardio sessions of whoever is signed in, by week from the app's first
+/// The cardio sessions of whoever is signed in, with the health store's
+/// workouts read in (see [GetHealthCardio]), by week from the app's first
 /// weekday (see [changeFirstWeekday]). Resets to loading on every user
 /// change, so a previous user's sessions are never shown.
 class CardioListCubit extends Cubit<CardioListState> {
@@ -68,6 +70,7 @@ class CardioListCubit extends Cubit<CardioListState> {
     required this._firstWeekday,
     required WatchAuthUser watchAuthUser,
     required this._watchSessions,
+    required this._getHealth,
     required WatchRejectedCardioWrites watchRejectedWrites,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now,
@@ -82,7 +85,12 @@ class CardioListCubit extends Cubit<CardioListState> {
   }
 
   final WatchCardioSessions _watchSessions;
+  final GetHealthCardio _getHealth;
   final DateTime Function() _clock;
+
+  /// The last stored sessions and health store sessions, newest first.
+  List<CardioSession> _stored = const [];
+  List<CardioSession> _health = const [];
   late final StreamSubscription<String?> _userSubscription;
   late final StreamSubscription<Failure> _rejectedSubscription;
   StreamSubscription<List<CardioSession>>? _sessionsSubscription;
@@ -93,7 +101,9 @@ class CardioListCubit extends Cubit<CardioListState> {
 
   void _onUser(String? uid) {
     _uid = uid;
+    _health = const [];
     _follow();
+    if (uid != null) unawaited(_readHealth());
   }
 
   /// Subscribes again after a failure.
@@ -102,12 +112,43 @@ class CardioListCubit extends Cubit<CardioListState> {
   void rejectionShown() => emit(state.copyWith(writeRejected: false));
 
   /// Moves the 12-week chart to the current week, e.g. after the app was in
-  /// the background over the first day of a week.
+  /// the background over the first day of a week, and reads the health
+  /// store again.
   void refreshNow() {
+    unawaited(_readHealth());
     if (state.status != CardioListStatus.ready) return;
     emit(
       state.copyWith(
         chart: lastWeeks(state.sessions, _firstWeekday, now: _clock()),
+      ),
+    );
+  }
+
+  /// A failed read keeps what was read before; the stored sessions stand
+  /// on their own.
+  Future<void> _readHealth() async {
+    final uid = _uid;
+    final result = await _getHealth();
+    if (isClosed || uid != _uid) return;
+    switch (result) {
+      case Err(:final failure):
+        Log.e('cardio', 'health store not read: ${failure.message}');
+      case Ok(value: final health):
+        _health = health;
+        if (state.status == CardioListStatus.ready) _emitReady();
+    }
+  }
+
+  void _emitReady() {
+    final sessions = [..._stored, ..._health]
+      ..sort((a, b) => b.date.compareTo(a.date));
+    emit(
+      CardioListState(
+        status: CardioListStatus.ready,
+        sessions: sessions,
+        weeks: groupByWeek(sessions, _firstWeekday),
+        chart: lastWeeks(sessions, _firstWeekday, now: _clock()),
+        writeRejected: state.writeRejected,
       ),
     );
   }
@@ -133,15 +174,10 @@ class CardioListCubit extends Cubit<CardioListState> {
     _sessionsSubscription = uid == null
         ? null
         : _watchSessions(uid).listen(
-            (sessions) => emit(
-              CardioListState(
-                status: CardioListStatus.ready,
-                sessions: sessions,
-                weeks: groupByWeek(sessions, _firstWeekday),
-                chart: lastWeeks(sessions, _firstWeekday, now: _clock()),
-                writeRejected: state.writeRejected,
-              ),
-            ),
+            (sessions) {
+              _stored = sessions;
+              _emitReady();
+            },
             onError: (Object error) => emit(
               CardioListState(
                 status: CardioListStatus.failure,
