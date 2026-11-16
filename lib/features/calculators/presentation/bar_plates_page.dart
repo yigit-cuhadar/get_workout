@@ -277,7 +277,8 @@ class _PlateSheetState extends State<_PlateSheet> {
             ? null
             : ForgeButton(
                 label: l10n.calcRemovePlate,
-                variant: ForgeButtonVariant.text,
+                variant: ForgeButtonVariant.danger,
+                size: ForgeButtonSize.small,
                 onPressed: () =>
                     Navigator.pop(context, cubit.withoutPlate(plate)),
               ),
