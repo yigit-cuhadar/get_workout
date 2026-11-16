@@ -371,7 +371,7 @@ class _StepRowState extends State<_StepRow> {
       WarmupStepIssue issue,
     ) => Expanded(
       child: LayoutBuilder(
-        builder: (context, constraints) => ForgeNumberField.compact(
+        builder: (context, constraints) => ForgeNumberField.tall(
           label: label,
           width: constraints.maxWidth,
           controller: controller,
