@@ -1803,7 +1803,9 @@ the feature you are about to touch, and keep it true when you change it.
   filters never match them, and they have no alternatives or variations
   and are no one's. They sort first, by name, in popularity order. A name
   may repeat a catalogue name; the label tells them apart. Equipment left
-  empty means unspecified and counts as doable with any. Deleting one also
+  empty means unspecified and counts as doable with any. The form's
+  check sheets take any ticks; bodyweight with other equipment is reported
+  on the Equipment row when Save is tried. Deleting one also
   removes it from favourites in the same write; programs then show it as
   unavailable, like a retired exercise, and workouts keep their copy. Added
   to a program, one rests 90 s by default, having no rest of its own. The

@@ -5,7 +5,9 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/max_length_formatter.dart';
+import '../../../core/page_parts.dart';
 import '../../../core/unsaved_changes.dart';
+import '../../../core/widgets/choice_sheet.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/custom_exercise.dart';
 import '../domain/exercise.dart';
@@ -13,7 +15,17 @@ import '../domain/vocabulary.dart';
 import 'custom_exercise_form_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
 import 'vocabulary_labels.dart';
-import 'widgets/choice_section.dart';
+
+const _padding = EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md);
+
+/// Between the form's parts.
+const double _gap = 10;
+
+/// [selected] in the order of [values].
+List<T> _inOrder<T>(List<T> values, Set<T> selected) => [
+  for (final value in values)
+    if (selected.contains(value)) value,
+];
 
 /// Creates a custom exercise.
 class CustomExerciseNewPage extends StatelessWidget {
@@ -56,20 +68,28 @@ class CustomExerciseEditPage extends StatelessWidget {
           }
           final l10n = AppLocalizations.of(context);
           return Scaffold(
-            appBar: AppBar(title: Text(l10n.customEditTitle)),
+            appBar: ForgeAppBar(title: l10n.customEditTitle),
             body: switch (state) {
-              CatalogueFailed() => ErrorView(
-                title: l10n.libraryLoadFailed,
-                message: l10n.loadFailedDetail,
-                retryLabel: l10n.retry,
-                onRetry: context.read<ExerciseCatalogueCubit>().retry,
+              CatalogueFailed() => ListView(
+                padding: _padding,
+                children: [
+                  SurfaceCard(
+                    child: ErrorView(
+                      title: l10n.libraryLoadFailed,
+                      message: l10n.loadFailedDetail,
+                      retryLabel: l10n.retry,
+                      onRetry: context.read<ExerciseCatalogueCubit>().retry,
+                      compact: true,
+                    ),
+                  ),
+                ],
               ),
               CatalogueReady() when state.knows(exerciseId) => EmptyView(
                 title: l10n.detailNotFoundTitle,
                 message: l10n.detailNotFound,
               ),
               // Still waiting for the user's custom exercises.
-              CatalogueLoading() || CatalogueReady() => const LoadingView(),
+              CatalogueLoading() || CatalogueReady() => const _Loading(),
             },
           );
         },
@@ -125,8 +145,10 @@ class _FormViewState extends State<_FormView> {
             case CustomExerciseFormStatus.closed:
               context.pop();
             case CustomExerciseFormStatus.saveFailed:
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(_failureText(l10n, state.failure))),
+              showForgeSnackbar(
+                context,
+                message: _failureText(l10n, state.failure),
+                error: true,
               );
             default:
           }
@@ -134,6 +156,12 @@ class _FormViewState extends State<_FormView> {
         builder: (context, state) {
           String? error(CustomExerciseIssue issue) =>
               state.issues.contains(issue) ? l10n.customIssueText(issue) : null;
+          String? names<T>(List<T> values, String Function(T) labelOf) =>
+              values.isEmpty ? null : values.map(labelOf).join(', ');
+          final musclesError =
+              error(CustomExerciseIssue.mainMusclesMissing) ??
+              error(CustomExerciseIssue.musclesRepeated);
+          final equipmentError = error(CustomExerciseIssue.equipmentInvalid);
           return PopScope(
             canPop: !_cubit.hasChanges,
             onPopInvokedWithResult: (didPop, _) async {
@@ -143,101 +171,136 @@ class _FormViewState extends State<_FormView> {
               }
             },
             child: Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  _cubit.isEditing ? l10n.customEditTitle : l10n.customNew,
-                ),
+              appBar: ForgeAppBar(
+                title: _cubit.isEditing
+                    ? l10n.customEditTitle
+                    : l10n.customNewTitle,
                 // In the app bar, so the keyboard closing never moves it from
                 // under the finger.
                 actions: [
-                  TextButton(
+                  ForgeAppBarAction.text(
+                    label: l10n.customSave,
                     onPressed: state.isSaving ? null : _cubit.save,
-                    child: Text(l10n.customSave),
                   ),
                 ],
               ),
-              body: ListView(
-                padding: const EdgeInsets.symmetric(vertical: Gap.md),
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                    child: TextField(
-                      controller: _name,
-                      textCapitalization: TextCapitalization.words,
-                      inputFormatters: [
-                        maxLengthFormatter(CustomExerciseLimits.maxNameLength),
+                  if (state.isSaving)
+                    Progress.indeterminate(label: l10n.workoutSaving),
+                  Expanded(
+                    child: ListView(
+                      padding: _padding,
+                      children: [
+                        ForgeTextField(
+                          label: l10n.customName,
+                          hint: l10n.customNameHint,
+                          controller: _name,
+                          inputFormatters: [
+                            maxLengthFormatter(
+                              CustomExerciseLimits.maxNameLength,
+                            ),
+                          ],
+                          errorText:
+                              error(CustomExerciseIssue.nameMissing) ??
+                              error(CustomExerciseIssue.nameTooLong),
+                          onChanged: _cubit.setName,
+                        ),
+                        const SizedBox(height: _gap),
+                        ListRowCard(
+                          children: [
+                            ListRow(
+                              title: l10n.customMainMuscles,
+                              value: names(
+                                _inOrder(Muscle.values, state.mainMuscles),
+                                l10n.muscleName,
+                              ),
+                              error: musclesError,
+                              missing: musclesError != null,
+                              end: ListRowEnd.chevron,
+                              onTap: () => _pick(
+                                title: l10n.customMainMuscles,
+                                values: Muscle.values,
+                                selected: state.mainMuscles,
+                                labelOf: l10n.muscleName,
+                                onSaved: _cubit.setMainMuscles,
+                              ),
+                            ),
+                            ListRow(
+                              title: l10n.customSecondaryMuscles,
+                              value:
+                                  names(
+                                    _inOrder(
+                                      Muscle.values,
+                                      state.secondaryMuscles,
+                                    ),
+                                    l10n.muscleName,
+                                  ) ??
+                                  l10n.customOptional,
+                              end: ListRowEnd.chevron,
+                              onTap: () => _pick(
+                                title: l10n.customSecondaryMuscles,
+                                values: [
+                                  for (final muscle in Muscle.values)
+                                    if (!state.mainMuscles.contains(muscle))
+                                      muscle,
+                                ],
+                                selected: state.secondaryMuscles,
+                                labelOf: l10n.muscleName,
+                                onSaved: _cubit.setSecondaryMuscles,
+                              ),
+                            ),
+                            ListRow(
+                              title: l10n.customEquipment,
+                              value:
+                                  names(
+                                    _inOrder(Equipment.values, state.equipment),
+                                    l10n.equipmentName,
+                                  ) ??
+                                  l10n.customOptional,
+                              error: equipmentError,
+                              missing: equipmentError != null,
+                              end: ListRowEnd.chevron,
+                              onTap: () => _pick(
+                                title: l10n.customEquipment,
+                                values: Equipment.values,
+                                selected: state.equipment,
+                                labelOf: l10n.equipmentName,
+                                onSaved: _cubit.setEquipment,
+                              ),
+                            ),
+                            ListRow(
+                              title: l10n.customLoggingType,
+                              value: l10n.loggingTypeName(state.loggingType),
+                              end: ListRowEnd.chevron,
+                              onTap: () async {
+                                final type = await showChoiceSheet(
+                                  context,
+                                  title: l10n.customLoggingType,
+                                  values: LoggingType.values,
+                                  selected: state.loggingType,
+                                  labelOf: l10n.loggingTypeName,
+                                );
+                                if (type != null) _cubit.setLoggingType(type);
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: _gap),
+                        ForgeTextField(
+                          label: l10n.customNote,
+                          controller: _note,
+                          multiline: true,
+                          inputFormatters: [
+                            maxLengthFormatter(
+                              CustomExerciseLimits.maxNoteLength,
+                            ),
+                          ],
+                          errorText: error(CustomExerciseIssue.noteTooLong),
+                          onChanged: _cubit.setNote,
+                        ),
                       ],
-                      decoration: InputDecoration(
-                        labelText: l10n.customName,
-                        errorText:
-                            error(CustomExerciseIssue.nameMissing) ??
-                            error(CustomExerciseIssue.nameTooLong),
-                      ),
-                      onChanged: _cubit.setName,
-                    ),
-                  ),
-                  const SizedBox(height: Gap.md),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                    child: DropdownButtonFormField<LoggingType>(
-                      initialValue: state.loggingType,
-                      decoration: InputDecoration(
-                        labelText: l10n.customLoggingType,
-                      ),
-                      items: [
-                        for (final type in LoggingType.values)
-                          DropdownMenuItem(
-                            value: type,
-                            child: Text(l10n.loggingTypeName(type)),
-                          ),
-                      ],
-                      onChanged: (type) => _cubit.setLoggingType(type!),
-                    ),
-                  ),
-                  ChoiceSection(
-                    title: l10n.customMainMuscles,
-                    values: Muscle.values,
-                    selected: state.mainMuscles,
-                    labelOf: l10n.muscleName,
-                    onToggle: _cubit.toggleMainMuscle,
-                    error:
-                        error(CustomExerciseIssue.mainMusclesMissing) ??
-                        error(CustomExerciseIssue.musclesRepeated),
-                  ),
-                  ChoiceSection(
-                    title: l10n.customSecondaryMuscles,
-                    values: [
-                      for (final muscle in Muscle.values)
-                        if (!state.mainMuscles.contains(muscle)) muscle,
-                    ],
-                    selected: state.secondaryMuscles,
-                    labelOf: l10n.muscleName,
-                    onToggle: _cubit.toggleSecondaryMuscle,
-                  ),
-                  ChoiceSection(
-                    title: l10n.customEquipment,
-                    values: Equipment.values,
-                    selected: state.equipment,
-                    labelOf: l10n.equipmentName,
-                    onToggle: _cubit.toggleEquipment,
-                    error: error(CustomExerciseIssue.equipmentInvalid),
-                  ),
-                  const SizedBox(height: Gap.md),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                    child: TextField(
-                      controller: _note,
-                      minLines: 1,
-                      maxLines: 4,
-                      textCapitalization: TextCapitalization.sentences,
-                      inputFormatters: [
-                        maxLengthFormatter(CustomExerciseLimits.maxNoteLength),
-                      ],
-                      decoration: InputDecoration(
-                        labelText: l10n.customNote,
-                        errorText: error(CustomExerciseIssue.noteTooLong),
-                      ),
-                      onChanged: _cubit.setNote,
                     ),
                   ),
                 ],
@@ -249,23 +312,42 @@ class _FormViewState extends State<_FormView> {
     );
   }
 
+  /// Offers [values] in a check sheet; a save hands the ticked ones on.
+  Future<void> _pick<T>({
+    required String title,
+    required List<T> values,
+    required Set<T> selected,
+    required String Function(T value) labelOf,
+    required ValueChanged<Set<T>> onSaved,
+  }) async {
+    final picked = await showForgeCheckSheet(
+      context: context,
+      title: title,
+      values: values,
+      selected: selected,
+      labelOf: labelOf,
+      saveLabel: AppLocalizations.of(context).customSave,
+    );
+    if (picked != null) onSaved(picked);
+  }
+
   Future<bool> _confirmDiscard() async {
     final l10n = AppLocalizations.of(context);
-    final discard = await showDialog<bool>(
+    final discard = await showForgeDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.programDiscardTitle),
-        content: Text(l10n.customDiscardBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.programKeepEditing),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.programDiscard),
-          ),
-        ],
+      builder: (context) => ForgeDialog(
+        title: l10n.programDiscardTitle,
+        message: l10n.customDiscardBody,
+        action: ForgeButton(
+          label: l10n.programDiscard,
+          variant: ForgeButtonVariant.danger,
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        cancel: ForgeButton(
+          label: l10n.programKeepEditing,
+          variant: ForgeButtonVariant.secondary,
+          onPressed: () => Navigator.pop(context, false),
+        ),
       ),
     );
     return discard ?? false;
@@ -279,6 +361,47 @@ class _FormViewState extends State<_FormView> {
         NetworkFailure() => l10n.errorNetwork,
         _ => l10n.customSaveFailed,
       };
+}
+
+/// The form's shape in shimmering stand-ins: the name field, the four rows
+/// and the note.
+class _Loading extends StatelessWidget {
+  const _Loading();
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    physics: const NeverScrollableScrollPhysics(),
+    padding: _padding,
+    children: [
+      const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 6,
+        children: [
+          SkeletonBar(widthFactor: 0.2, height: 10),
+          SkeletonBar(
+            widthFactor: 1,
+            height: ForgeTheme.tapMin,
+            radius: ForgeRadii.button,
+          ),
+        ],
+      ),
+      const SizedBox(height: _gap),
+      ListRowCard(
+        children: [for (var i = 0; i < 4; i++) ListRow.loading(index: i)],
+      ),
+      const SizedBox(height: _gap),
+      const SurfaceCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 6,
+          children: [
+            SkeletonBar(widthFactor: 0.4, height: 14),
+            SkeletonBar(widthFactor: 0.5, height: 10),
+          ],
+        ),
+      ),
+    ],
+  );
 }
 
 extension on AppLocalizations {
