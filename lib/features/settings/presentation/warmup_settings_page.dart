@@ -276,10 +276,9 @@ class _CustomSets extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return SectionCard(
+    return SectionCard.plain(
       title: l10n.warmupCustomTitle,
-      detail: l10n.warmupCustomDetail,
-      onTap: null,
+      note: l10n.warmupCustomDetail,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: Gap.xs,
