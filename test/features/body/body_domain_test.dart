@@ -199,4 +199,27 @@ void main() {
       expect(none.leanMass, isNull);
     });
   });
+
+  group('where a weight ruler starts', () {
+    final newest = entry('c', DateTime(2026, 11, 10), kg: 82.7);
+    final measured = entry(
+      'b',
+      DateTime(2026, 11, 1),
+      measurements: const {BodyMeasurement.waist: 88},
+    );
+    final older = entry('a', DateTime(2026, 10, 29), kg: 83.2);
+    final entries = [newest, measured, older];
+
+    test('the newest weigh-in, or the one before an edited entry', () {
+      expect(previousWeighIn(entries), newest);
+      expect(previousWeighIn(entries, edited: newest), older);
+      expect(previousWeighIn(entries, edited: older), isNull);
+    });
+
+    test('the weigh-in, else the profile weight, else 70 kg', () {
+      expect(startWeightKg(previous: newest, profileKg: 90), 82.7);
+      expect(startWeightKg(profileKg: 90), 90);
+      expect(startWeightKg(), defaultStartWeightKg);
+    });
+  });
 }

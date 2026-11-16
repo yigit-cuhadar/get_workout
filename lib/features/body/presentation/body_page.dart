@@ -21,6 +21,7 @@ import 'body_chart_cubit.dart';
 import 'body_list_cubit.dart';
 import 'body_state_card.dart';
 import 'body_text.dart';
+import 'weight_sheet.dart';
 import 'measurement_comparison.dart';
 import 'measurement_summary_cubit.dart';
 
@@ -188,7 +189,7 @@ class _LogButtons extends StatelessWidget {
         Expanded(
           child: ForgeButton(
             label: l10n.bodyLogWeight,
-            onPressed: () => context.go(Routes.bodyWeightNew),
+            onPressed: () => showWeightSheet(context),
           ),
         ),
         Expanded(

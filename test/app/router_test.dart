@@ -1,9 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:get_workout/features/body/domain/body_entry.dart';
 import 'package:get_workout/features/body/presentation/weight_form_cubit.dart';
-import 'package:get_workout/features/body/presentation/weight_form_page.dart';
+import 'package:get_workout/features/body/presentation/weight_sheet.dart';
 import 'package:get_workout/features/progress/domain/progress_usecases.dart';
 import 'package:get_workout/features/progress/presentation/progress_page.dart';
 import 'package:get_workout/features/progress/presentation/progress_strength_cubit.dart';
@@ -2512,13 +2511,17 @@ void main() {
     expect(path(), Routes.today);
   });
 
-  testWidgets('Log weight opens above Progress, and Back returns to it', (
+  testWidgets('Log weight opens its sheet over Progress, which stays', (
     tester,
   ) async {
     await startAsGuest(tester);
-    sl.registerFactoryParam<WeightFormCubit, BodyEntry?, WeightUnit>((_, _) {
+    sl.registerFactoryParam<WeightFormCubit, WeightFormSetup, WeightUnit>((
+      _,
+      _,
+    ) {
       final cubit = _WeightFormCubit();
-      when(() => cubit.state).thenReturn(WeightFormState(date: DateTime(2026)));
+      when(() => cubit.state)
+          .thenReturn(WeightFormState(date: DateTime(2026), weight: 70));
       when(() => cubit.isEditing).thenReturn(false);
       return cubit;
     });
@@ -2526,12 +2529,7 @@ void main() {
 
     await tester.tap(find.text('Log weight'));
     await tester.pumpAndSettle();
-    // Pushed above Progress, whose location stays.
-    expect(find.byType(WeightNewPage), findsOneWidget);
-    expect(path(), Routes.progress);
-
-    await tester.tap(find.bySemanticsLabel('Back'));
-    await tester.pumpAndSettle();
+    expect(find.byType(WeightSheet), findsOneWidget);
     expect(find.byType(ProgressPage), findsOneWidget);
     expect(path(), Routes.progress);
   });

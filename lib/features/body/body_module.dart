@@ -15,7 +15,6 @@ import 'data/file_body_chart_store.dart';
 import 'data/file_body_photo_store.dart';
 import 'data/firestore_body_repository.dart';
 import 'data/storage_body_photo_backup.dart';
-import 'domain/body_entry.dart';
 import 'domain/body_chart.dart';
 import 'domain/body_photo_sync.dart';
 import 'domain/body_photos.dart';
@@ -122,15 +121,15 @@ class BodyModule implements FeatureModule {
           getDailySteps: sl(),
         ),
       )
-      // The entry edited (null: a new log) and the weight unit.
-      ..registerFactoryParam<WeightFormCubit, BodyEntry?, WeightUnit>(
-        (entry, unit) => WeightFormCubit(
+      // What the sheet starts from and the weight unit.
+      ..registerFactoryParam<WeightFormCubit, WeightFormSetup, WeightUnit>(
+        (setup, unit) => WeightFormCubit(
+          setup: setup,
           saveEntry: sl(),
           newEntryId: sl(),
           getCurrentUser: sl(),
           watchAuthUser: sl(),
           unit: unit,
-          initial: entry,
         ),
       )
       // The id of the entry summed up; null to choose it, the newest

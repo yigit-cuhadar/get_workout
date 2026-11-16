@@ -64,6 +64,26 @@ BodyEntry? latestWeighIn(List<BodyEntry> entries) =>
 double? latestWeightKg(List<BodyEntry> entries) =>
     latestWeighIn(entries)?.weightKg;
 
+/// The weigh-in a new log is compared with and its ruler starts at: the
+/// newest of [entries] (newest first) with a weight, or, for an [edited]
+/// entry, the newest one before it.
+BodyEntry? previousWeighIn(List<BodyEntry> entries, {BodyEntry? edited}) =>
+    latestWeighIn([
+      for (final entry in entries)
+        if (edited == null ||
+            (entry.id != edited.id && entry.date.isBefore(edited.date)))
+          entry,
+    ]);
+
+/// Where a weight ruler starts without a weight of its own (LW05): the
+/// [previous] weigh-in, else the profile's [profileKg], else a common
+/// adult weight.
+double startWeightKg({BodyEntry? previous, double? profileKg}) =>
+    previous?.weightKg ?? profileKg ?? defaultStartWeightKg;
+
+/// The ruler's start with neither a weigh-in nor a profile weight.
+const defaultStartWeightKg = 70.0;
+
 /// For each pose, the path of the newest photo of [entries] (newest first)
 /// taken before [date] by an entry other than [excludeId]: the ghost a new
 /// photo of that pose is lined up with.
