@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
@@ -166,5 +169,30 @@ void main() {
 
     verify(() => equipment.save({Equipment.barbell})).called(1);
     expect(find.byType(FilterSheet), findsOneWidget);
+  });
+
+  testWidgets('a failed equipment save shows over the sheet', (tester) async {
+    final states = StreamController<EquipmentState>();
+    addTearDown(states.close);
+    whenListen(
+      equipment,
+      states.stream,
+      initialState: const EquipmentState({Equipment.barbell}),
+    );
+    await open(tester, state());
+
+    states.add(
+      const EquipmentState({Equipment.barbell}, failure: NetworkFailure()),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(
+      find.text("Couldn't save your equipment. Try again"),
+      findsOneWidget,
+    );
+    expect(find.byType(FilterSheet), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
   });
 }

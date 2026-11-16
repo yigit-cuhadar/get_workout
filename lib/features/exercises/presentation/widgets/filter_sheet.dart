@@ -89,87 +89,97 @@ class FilterSheet extends StatelessWidget {
       },
     );
 
-    return ForgeBottomSheet(
-      title: l10n.libraryFilters,
-      headerAction: ForgeButton(
-        label: l10n.libraryClearFilters,
-        variant: ForgeButtonVariant.text,
-        size: ForgeButtonSize.small,
-        onPressed: filter.isEmpty ? null : library.clearFilters,
+    // Over the sheet: a page's snackbar would draw under it.
+    return BlocListener<EquipmentCubit, EquipmentState>(
+      listenWhen: (previous, current) =>
+          current.failure != null && current.failure != previous.failure,
+      listener: (context, _) => showForgeSnackbar(
+        context,
+        message: l10n.equipmentSaveFailed,
+        error: true,
       ),
-      action: ForgeButton(
-        label: count == 0
-            ? l10n.libraryNoResultsTitle
-            : l10n.libraryShowResults(count),
-        size: ForgeButtonSize.large,
-        onPressed: count == 0 ? null : () => Navigator.pop(context),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: Gap.md,
-          children: [
-            ListRowCard(
-              children: [
-                ListRow(
-                  title: l10n.libraryOnlyFavorites,
-                  trailing: ForgeSwitch(
-                    value: filter.onlyFavorites,
-                    onChanged: library.setOnlyFavorites,
+      child: ForgeBottomSheet(
+        title: l10n.libraryFilters,
+        headerAction: ForgeButton(
+          label: l10n.libraryClearFilters,
+          variant: ForgeButtonVariant.text,
+          size: ForgeButtonSize.small,
+          onPressed: filter.isEmpty ? null : library.clearFilters,
+        ),
+        action: ForgeButton(
+          label: count == 0
+              ? l10n.libraryNoResultsTitle
+              : l10n.libraryShowResults(count),
+          size: ForgeButtonSize.large,
+          onPressed: count == 0 ? null : () => Navigator.pop(context),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: Gap.md,
+            children: [
+              ListRowCard(
+                children: [
+                  ListRow(
+                    title: l10n.libraryOnlyFavorites,
+                    trailing: ForgeSwitch(
+                      value: filter.onlyFavorites,
+                      onChanged: library.setOnlyFavorites,
+                    ),
                   ),
-                ),
-                ListRow(
-                  title: l10n.libraryOnlyDoable,
-                  detail: state.equipmentChosen
-                      ? null
-                      : l10n.libraryPickEquipmentFirst,
-                  trailing: ForgeSwitch(
-                    value: filter.onlyDoable,
-                    onChanged: (value) => _setOnlyDoable(context, value),
+                  ListRow(
+                    title: l10n.libraryOnlyDoable,
+                    detail: state.equipmentChosen
+                        ? null
+                        : l10n.libraryPickEquipmentFirst,
+                    trailing: ForgeSwitch(
+                      value: filter.onlyDoable,
+                      onChanged: (value) => _setOnlyDoable(context, value),
+                    ),
                   ),
-                ),
-                ListRow(
-                  title: l10n.equipmentTitle,
-                  value: owned == null ? null : '${owned.length}',
-                  end: ListRowEnd.chevron,
-                  onTap: () => showEquipmentPicker(context),
-                ),
-              ],
-            ),
-            ListRowCard(
-              children: [
-                choice(
-                  title: l10n.libraryFilterMuscle,
-                  values: Muscle.values,
-                  selected: filter.muscles,
-                  labelOf: l10n.muscleName,
-                  onSaved: library.setMuscles,
-                ),
-                choice(
-                  title: l10n.libraryFilterEquipment,
-                  values: Equipment.values,
-                  selected: filter.equipment,
-                  labelOf: l10n.equipmentName,
-                  onSaved: library.setEquipment,
-                ),
-                choice(
-                  title: l10n.libraryFilterMovementPattern,
-                  values: MovementPattern.values,
-                  selected: filter.movementPatterns,
-                  labelOf: l10n.movementPatternName,
-                  onSaved: library.setMovementPatterns,
-                ),
-                choice(
-                  title: l10n.libraryFilterLevel,
-                  values: Level.values,
-                  selected: filter.levels,
-                  labelOf: l10n.levelName,
-                  onSaved: library.setLevels,
-                ),
-              ],
-            ),
-          ],
+                  ListRow(
+                    title: l10n.equipmentTitle,
+                    value: owned == null ? null : '${owned.length}',
+                    end: ListRowEnd.chevron,
+                    onTap: () => showEquipmentPicker(context),
+                  ),
+                ],
+              ),
+              ListRowCard(
+                children: [
+                  choice(
+                    title: l10n.libraryFilterMuscle,
+                    values: Muscle.values,
+                    selected: filter.muscles,
+                    labelOf: l10n.muscleName,
+                    onSaved: library.setMuscles,
+                  ),
+                  choice(
+                    title: l10n.libraryFilterEquipment,
+                    values: Equipment.values,
+                    selected: filter.equipment,
+                    labelOf: l10n.equipmentName,
+                    onSaved: library.setEquipment,
+                  ),
+                  choice(
+                    title: l10n.libraryFilterMovementPattern,
+                    values: MovementPattern.values,
+                    selected: filter.movementPatterns,
+                    labelOf: l10n.movementPatternName,
+                    onSaved: library.setMovementPatterns,
+                  ),
+                  choice(
+                    title: l10n.libraryFilterLevel,
+                    values: Level.values,
+                    selected: filter.levels,
+                    labelOf: l10n.levelName,
+                    onSaved: library.setLevels,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
