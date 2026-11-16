@@ -8,6 +8,7 @@ import '../../programs/data/firestore_program_repository.dart';
 import '../../programs/domain/active_program.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../domain/exercise_stats.dart';
+import '../domain/set_logging.dart';
 import '../domain/workout.dart';
 import '../domain/workout_repository.dart';
 import 'workout_maps.dart';
@@ -433,6 +434,7 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
             'value': record.value,
             'date': Timestamp.fromDate(record.date),
             'workoutId': record.workoutId,
+            if (record.set case final set?) 'set': _setValuesToMap(set),
           },
       },
       if (last != null)
@@ -448,10 +450,26 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
             'workoutId': point.workoutId,
             'bestE1rmKg': ?point.bestE1rmKg,
             'volumeKg': point.volumeKg,
+            if (point.bestSet case final set?) 'set': _setValuesToMap(set),
+            'workoutName': ?point.workoutName,
           },
       ],
     };
   }
+
+  static Map<String, Object?> _setValuesToMap(SetValues set) => {
+    'weightKg': ?set.weightKg,
+    'reps': ?set.reps,
+    'durationS': ?set.durationS,
+  };
+
+  static SetValues? _setValues(Object? raw) => raw is Map
+      ? (
+          weightKg: WorkoutMaps.decimal(raw['weightKg']),
+          reps: WorkoutMaps.whole(raw['reps']),
+          durationS: WorkoutMaps.whole(raw['durationS']),
+        )
+      : null;
 
   /// Null for no document. Records, the last session and history points
   /// that cannot be read are left out.
@@ -482,7 +500,12 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
     if (value == null || date is! Timestamp || workoutId is! String) {
       return null;
     }
-    return StatRecord(value: value, date: date.toDate(), workoutId: workoutId);
+    return StatRecord(
+      value: value,
+      date: date.toDate(),
+      workoutId: workoutId,
+      set: _setValues(raw['set']),
+    );
   }
 
   static LastSession? _last(Object? raw) {
@@ -507,6 +530,10 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
       workoutId: workoutId,
       bestE1rmKg: WorkoutMaps.decimal(raw['bestE1rmKg']),
       volumeKg: WorkoutMaps.decimal(raw['volumeKg']) ?? 0,
+      bestSet: _setValues(raw['set']),
+      workoutName: raw['workoutName'] is String
+          ? raw['workoutName'] as String
+          : null,
     );
   }
 }

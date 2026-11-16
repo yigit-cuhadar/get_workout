@@ -10,7 +10,7 @@ import '../../l10n/app_localizations.dart';
 
 /// A [muscle]'s weekly [sets] as a Forge BandBar on a track up to
 /// [scale] sets, ticked at the [VolumeRange] ends: below it in
-/// band-below, in it in band-in, above it in band-over.
+/// band-below, in it in band-in, above it in band-over; none muted.
 class VolumeBand extends StatelessWidget {
   const VolumeBand({
     super.key,
@@ -34,6 +34,7 @@ class VolumeBand extends StatelessWidget {
       label: l10n.muscleName(muscle),
       valueLabel: l10n.setsText(sets),
       value: sets / scale,
+      muted: sets == 0,
       low: VolumeRange.min / scale,
       high: VolumeRange.max / scale,
       fills: BandBarFills(

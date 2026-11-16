@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../../exercises/domain/vocabulary.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../workout/domain/exercise_stats.dart';
 
@@ -62,26 +63,46 @@ List<E1rmPoint> e1rmSeries(
   ];
 }
 
-/// Whether [history] has an e1RM from before [range] starts: results a free
-/// user is told exist, behind Premium.
-bool hasE1rmBefore(
+/// Whether [history] has a workout from before [range] starts: results a
+/// free user is told exist, behind Premium.
+bool hasResultsBefore(
   List<HistoryPoint> history, {
   required StrengthRange range,
   required DateTime now,
 }) {
   final start = range.start(now);
-  return start != null &&
-      history.any(
-        (point) => point.bestE1rmKg != null && point.date.isBefore(start),
-      );
+  return start != null && history.any((point) => point.date.isBefore(start));
+}
+
+/// The workouts of [history] from [start] on (all of them when null),
+/// newest first.
+List<HistoryPoint> sessionsFrom(List<HistoryPoint> history, DateTime? start) =>
+    [
+      for (final point in history.reversed)
+        if (start == null || !point.date.isBefore(start)) point,
+    ];
+
+/// The logging type [stats] were most likely kept for, for an exercise no
+/// longer in the library: its records tell timed from rep-based and a load
+/// from none; assistance and added weight read as a plain load.
+LoggingType loggingTypeOf(ExerciseStats stats) {
+  final kinds = stats.records.keys.toSet();
+  if (kinds.contains(RecordKind.longestDuration)) {
+    return kinds.contains(RecordKind.heaviestWeight)
+        ? LoggingType.weightDuration
+        : LoggingType.duration;
+  }
+  return kinds.contains(RecordKind.heaviestWeight)
+      ? LoggingType.weightReps
+      : LoggingType.reps;
 }
 
 typedef RecordEntry = ({RecordKind kind, StatRecord record});
 
 /// The order records are listed in.
 const recordOrder = [
-  RecordKind.heaviestWeight,
   RecordKind.bestE1rm,
+  RecordKind.heaviestWeight,
   RecordKind.mostReps,
   RecordKind.bestSetVolume,
   RecordKind.longestDuration,

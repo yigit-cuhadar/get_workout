@@ -127,6 +127,9 @@ class VolumeCubit extends Cubit<VolumeState> {
     if (state.hasNext) _show(state.week.addDays(DateTime.daysPerWeek));
   }
 
+  /// Shows the week holding [day]; never one after the current week.
+  void showWeekOf(CalendarDate day) => _show(day.startOfWeek(_firstWeekday));
+
   /// Starts the weeks on [firstWeekday] from now on, showing the current
   /// week if it was shown, else the one sharing most days with the week
   /// shown.

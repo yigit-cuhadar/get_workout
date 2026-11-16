@@ -203,9 +203,12 @@ edits do not change it. `name` is 1-60 characters.
 `heaviestWeight`, `bestE1rm`, `bestSetVolume`, `mostReps`,
 `longestDuration`; each `value`, `date`, `workoutId`), `last` (`date`,
 `workoutId` and `sets` of the latest workout, shown as "last time"),
-`history[]` (`date`, `workoutId`, `bestE1rmKg?`, `volumeKg`; one point per
-workout). Rebuilt from that exercise's workouts whenever one is edited or
-deleted.
+`history[]` (`date`, `workoutId`, `bestE1rmKg?`, `volumeKg`, `set`,
+`workoutName`; one point per workout). A record's and a point's `set`
+(`weightKg?`, `reps?`, `durationS?`) is the set that made the record, or
+the workout's best working set (`bestSetOf`). Rebuilt from that exercise's
+workouts whenever one is edited or deleted; stats stored before `set` and
+`workoutName` were kept are rebuilt when their Strength page opens.
 
 **`users/{uid}/cardio/{id}`**: `type`, `date`, `durationS`, `distanceKm?`,
 `calories?`, `avgHeartRate?`, `incline?`, `note?`.
@@ -959,6 +962,54 @@ Decisions (the canvases they were drawn on are deleted):
   last under "Photos", the back chevron its only exit; it opens after a
   new measurement day is saved (the Measurement day board's "Kaydedildi"
   state goes).
+- Weekly volume (owner's picks, 2026-11-16): the week picker is Forge
+  PeriodSelector ("Nov 9–15" for every week, the week label opens the
+  system date picker up to today and shows the picked day's week); one card
+  holds the model, "Drag to turn · pinch to zoom" with the turn icon and the
+  8px 0 / 10 / 20 sets ramp (no outline sentence); "Sets per muscle" with
+  "96 total" lists every muscle, those without sets last at "0 sets", over
+  "target 10–20 per muscle · tap a muscle on the model or a bar to see its
+  exercises"; the "12-week trend" card is Forge Chart.line of each week's
+  total for Premium (this week's total as its detail, the first and last
+  week under its ends, a tap "14 sets · Nov 9–15") and SectionCard.locked (Premium tag, chevron,
+  paywall) for everyone else and while Premium is unknown. A week without
+  sets is an EmptyView "No sets this week" / "No sets that week", "Weekly
+  sets per muscle fill in as you train.", with the trend card under it. A
+  muscle's sheet: its sets and band under the title ("14 sets · 10–20
+  sets"), "Where the sets came from" ("Push · Nov 13"), a muscle without
+  sets "No sets for this muscle this week."; its trend is Forge Chart.bar
+  without a card, the 10–20 band behind the bars, the bars in the band
+  colours (below the band 40% accent), titled "Last 12 weeks" ("12 weeks to
+  Nov 15" for an earlier week), shimmering 110px while it loads. The
+  program's weekly sets page: "Drag to turn" and "target 10–20 per muscle".
+- Strength (owner's picks, 2026-11-16): the title is "Strength"; an
+  "Exercise" row opens the Exercise sheet (search and the Strength list's
+  rows, this one ticked, its height following the rows; another exercise replaces the page, so Back still
+  returns to the list); a removed exercise's row reads "Exercise no longer
+  in your library". Ranges are Forge SegmentedControl (locked segments open
+  the paywall); the chart is Forge Chart.line "Estimated 1RM", one dot per
+  workout evenly spaced, the range's first day to the last session as its
+  detail ("Aug 24 – Nov 13"), the first and last dates under its ends, a tap
+  "104 kg · Nov 13"; no e1RM in the range is Chart.empty "No estimated 1RM
+  in these 12 weeks" ("…6 months", "…the last year") / "Log a set of
+  Bench Press to continue the line." with the range's first day to today
+  as its detail;
+  loading is Chart.loading. Records are all five, Best e1RM, Heaviest, Most
+  reps, Best set volume, Longest time ("Best e1RM" and "Heaviest" in the
+  workout summary too), each with its date ("Fri, Nov 13") and the set that
+  made it ("82.5 kg × 8"; e1RM and set volume alone) in the data font,
+  not tappable; session lines are in the data font too.
+  Sessions are every workout in the range (all of them for an exercise
+  without an e1RM), newest first: the best set as the strength page writes
+  it ("82.5 × 8", "12 reps", "+10 kg × 8", "20 kg assist × 8", "1:45",
+  "20 kg · 1:30") with "· e1RM 104" where there is one, "Fri, Nov 13 ·
+  Push" under it, opening the workout. Dates carry the year only when it is
+  not this one.
+- Strength list (owner's picks, 2026-11-16): Forge SearchField and
+  ListRows ("Last done Nov 13", "Last done Sep 3, 2025"); nothing yet and
+  no match are untitled EmptyViews ("Finish a workout to see your records
+  and progress here.", "No exercises match your search."); loading is six
+  ListRow.loading rows.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
@@ -2482,11 +2533,8 @@ the feature you are about to touch, and keep it true when you change it.
   user's own workouts, so the gate is client-side only. Changing week
   keeps the week before on screen until the next arrives, so the model
   keeps its camera. `WatchWeeklyVolume` with one week is what the Today
-  tab's card calls. Layout (UX pass, 2026-11-13, variant A): the week
-  switcher, one body model (dragged to turn, so front and back are the
-  same model) with "Drag to turn · tap a muscle" under it once loaded,
-  the legend, then the muscle bars in one card; a muscle opens its sheet
-  as before.
+  tab's card calls. Layout: see Design, "Weekly volume" (2026-11-16); the
+  page's 12-week trend charts each week's total sets.
 - **Strength**: Progress → Strength lists the exercises with stats (the
   whole `exerciseStats` collection, live), most recently trained first
   (`last.date`, else the latest history point), searched by catalogue name,
@@ -2496,17 +2544,22 @@ the feature you are about to touch, and keep it true when you change it.
   costly, the fix is a small last-trained index written in the same batch
   as the stats. An exercise's page opens from there only (the Progress card
   opens the list); the exercise detail page no longer links to it (UX pass,
-  2026-11-13). It lists the records (heaviest weight,
-  best e1RM, most reps, best set volume, longest time), each opening the
-  workout that set it, and charts each workout's best e1RM in the user's
-  unit, on an axis of whole kg or lb at least four units tall; an exercise
-  that never had an e1RM (bodyweight, timed) shows its records only.
+  2026-11-13). It charts each workout's best e1RM in the user's unit
+  (Forge Chart.line), lists the records (best e1RM, heaviest weight, most
+  reps, best set volume, longest time) with the set that made them, and
+  the sessions in the range, each opening its workout; an exercise that
+  never had an e1RM (bodyweight, timed) shows no chart and every session.
+  A workout's best set: the highest e1RM (then the heavier, then more
+  reps) for a load, the least assistance (then more reps), the most reps,
+  the longest time, or the heaviest timed set (then the longer); a
+  record's set among equal values is the heavier one (for the heaviest
+  weight the one with more reps).
   Ranges: 12 weeks free; 6 months, 1 year and all Premium; a range starts
   at local midnight of the same day that many months back, or that
   month's last day when it is shorter. Records are all-time and free (the
   workout summary shows them too); only the chart beyond 12 weeks is
-  Premium, and a free user with older results is told so and offered the
-  paywall. The gate is client-side: one stats document holds the whole
+  Premium, and a free user with older results (any workout before the
+  last 12 weeks) is told so and offered the paywall. The gate is client-side: one stats document holds the whole
   history, so the rules cannot withhold old points without splitting it,
   and no server refusal can occur here.
 - **Charts**: `lib/core/line_chart.dart` is a small `CustomPainter` line
@@ -2521,7 +2574,9 @@ the feature you are about to touch, and keep it true when you change it.
   together; `BarChart` then gains an optional band and per-bar colours,
   and the volume trend (`VolumeTrendChart` and its painter) is replaced
   by it and deleted. The volume band bars and the cardio chart stay
-  feature widgets until then.
+  feature widgets until then. Done for Strength (Forge Chart.line) and
+  the volume trends (Forge Chart.line and Chart.bar with a band,
+  2026-11-16); `LineChart` remains for Body.
 - **Cardio**: Progress → Cardio is one scrolling page (UX pass,
   2026-11-13): this week's minutes, sessions and distance (in the user's
   unit, only when a session has one) on top, the 12-week minutes chart,

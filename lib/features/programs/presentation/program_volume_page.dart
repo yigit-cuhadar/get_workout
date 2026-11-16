@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
-import '../../../core/widgets/muscle_heat.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../volume/presentation/volume_page.dart';
@@ -134,18 +133,18 @@ class _Volume extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final style = ForgeStyle.of(context);
     return ListView(
-      padding: const EdgeInsets.only(bottom: Gap.md),
+      padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
       children: [
         // In the place of the weekly volume page's week picker.
         Padding(
-          padding: const EdgeInsets.all(Gap.md),
+          padding: const EdgeInsets.fromLTRB(Gap.xs, 0, Gap.xs, 10),
           child: Row(
             spacing: Gap.sm,
             children: [
               Expanded(
                 child: Text(
                   l10n.programVolumePerWeek(name),
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
               Text(
@@ -159,11 +158,8 @@ class _Volume extends StatelessWidget {
           sets: volume.sets,
           semanticLabel: l10n.programVolumeModelLabel(name),
         ),
-        const Padding(
-          padding: EdgeInsets.all(Gap.md),
-          child: MuscleHeatLegend(),
-        ),
-        VolumeMuscleList(muscles: volume.ranked),
+        const SizedBox(height: 10),
+        VolumeMuscleList(muscles: volume.ranked, total: volume.total),
       ],
     );
   }
