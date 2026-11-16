@@ -246,6 +246,17 @@ void main() {
           .first,
     );
 
+    // Clear of the bottom bar.
+    await tester.drag(
+      find
+          .descendant(
+            of: find.byType(CardioListPage),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+      const Offset(0, -300),
+    );
+    await tester.pumpAndSettle();
     await tap(tester, find.textContaining('Outdoor run'));
 
     expect(find.byType(CardioSessionPage), findsOneWidget);
