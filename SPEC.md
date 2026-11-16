@@ -429,10 +429,13 @@ Where it stands (2026-11-16, end of the İlerleme session):
   own pick: Log cardio asks "Discard this cardio session?" when left with
   changes. GetWorkout Studio's published link is behind main: publish
   design/studio.html from the owner's account.
-- Next:
-  1. Kurulum, hesap ve abonelik, in the same flow. Open question for it: the Generator
-     preview menu has no icon for "Keep when regenerating" (studio's Menu
-     card shows a history icon; recommended). Draw and ask then.
+- Kurulum, hesap ve abonelik: compared with the boards; 29 questions
+  answered (Design › "Kurulum, hesap ve abonelik, before the build").
+  Next: Forge first (forge_ui SplashScreen.failed and SubscriptionPlans
+  to the boards; forge_auth AuthPage on SignInPage with inline errors,
+  the user's sign-in methods, a link-account sheet), then three app
+  screen sets, a check branch, the device check, the studio redraw and
+  the side-by-side approval.
 
 ## Design
 
@@ -561,6 +564,40 @@ Decisions (the canvases they were drawn on are deleted):
   kept photo not on this device shows PhotoTile's loading form (B7). The
   note hint is "Add a note" (B8). A snackbar shows over an open sheet
   (Forge).
+- Kurulum, hesap ve abonelik, before the build (owner's picks,
+  2026-11-17; canvas was local HTML). Splash: the failed state keeps the
+  mark and name with one line "Couldn't start. Check your connection and
+  try again." and an outline Retry (SP3, a Forge change); the slow-start
+  line after 2 s (SP4). Onboarding: the health step names Health Connect
+  on Android and hides without a health store (ON5); a denied reminder
+  goes on silently, reminder off (ON6); the suggestion page has no "Not
+  now" (ON8); "Why this one" is written from the user's answers with the
+  catalogue description under it (ON10); the equipment answer stays the
+  2026-11-15 pick. Sign in: server email errors inline under the field
+  (SI6); "Continue as guest" hidden for a guest (SI7). Guest account
+  sheet: opened by the guest's Profile header; Account's Create account
+  still opens Sign in in create mode (GA6); its "Use email instead" opens
+  the email form in Create account mode (GA7). Account: the Data row says
+  "Backed up" or "Waiting to sync", no time (AC-Q1); the Subscription row
+  opens the paywall when free and Manage subscription when Premium
+  (AC-Q2). Paywall: layout C as the board ("Yearly · 7 days free", "That
+  is $5.00 a month.", "See monthly plan") (PW-Q1); the full renewal terms
+  under the button, 11px muted (PW-Q2); with no prices a disabled
+  "Subscribe" and no terms (PW-Q3); Forge's SubscriptionPlans is aligned
+  with the board and the paywall built on it (PW-F1). Generator preview:
+  Keep when regenerating uses the history icon (GP-Q1); Swap opens the
+  picker's Swap form (GP-Q2); Change sets and reps opens the builder's
+  targets sheet (GP-Q3); weekly sets as VolumeBand "n sets" (GP-Q4); days
+  collapse, the first open (GP-Q5). Calculators: every calculator's
+  inputs are chevron rows, each opening a number sheet (CP11, extended by
+  the owner to all); a missing input shows "—" and the result area
+  CalculatorResult.missing with "Add your <input> to see the result."
+  (CP12, CP10); no "(cm)" in titles when the unit is in the box (CP9);
+  activity short labels in the "Moderate · 3–5 days" pattern (CP14);
+  Calories rows "Lose 0.5 kg a week" (−550), "Keep weight", "Gain 0.25 kg
+  a week" (+275), 7,700 kcal per kg, lb labels for lb users (CP16); the
+  daily-minimum states are muted row notes (CP17); plates "closest"
+  keeps PlateCalculator's form (CP20).
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
