@@ -447,15 +447,8 @@ Where it stands (2026-11-16, end of the İlerleme session):
      owner's account.
   3. Findings drawn and asked, then the side-by-side approval page; on
      approval mark #122–#124 ready and merge them in order.
-- Next, in order:
-  1. Next group: Formlar (LogWeight, MeasurementDay, CardioLog,
-     CustomExercise, YourProfile, WarmupSettings, BarPlates, FiltersSheet,
-     ProfileQuestion). Same flow: implementers compare each screen with its
-     board, every question drawn on a canvas and asked one by one, Forge
-     changes tagged first, build, a check branch joining the work, device
-     check, findings drawn and asked, side-by-side approval, one PR per
-     screen set, studio redrawn in its own PR.
-  2. Then Kurulum, hesap ve abonelik. Open question for it: the Generator
+- After Formlar:
+  1. Kurulum, hesap ve abonelik, in the same flow. Open question for it: the Generator
      preview menu has no icon for "Keep when regenerating" (studio's Menu
      card shows a history icon; recommended). Draw and ask then.
 
