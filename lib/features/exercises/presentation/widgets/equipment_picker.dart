@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_ui/forge_ui.dart';
 
-import '../../../../core/widgets/check_sheet.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/vocabulary.dart';
 import '../equipment_cubit.dart';
@@ -15,8 +15,8 @@ import '../vocabulary_labels.dart';
 Future<bool> showEquipmentPicker(BuildContext context) async {
   final l10n = AppLocalizations.of(context);
   final cubit = context.read<EquipmentCubit>();
-  final owned = await showCheckSheet<Equipment>(
-    context,
+  final owned = await showForgeCheckSheet<Equipment>(
+    context: context,
     title: l10n.equipmentTitle,
     subtitle: l10n.equipmentInfo,
     values: [

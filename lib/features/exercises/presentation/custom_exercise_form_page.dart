@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/max_length_formatter.dart';
 import '../../../core/page_parts.dart';
 import '../../../core/unsaved_changes.dart';
-import '../../../core/widgets/check_sheet.dart';
 import '../../../core/widgets/choice_sheet.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/custom_exercise.dart';
@@ -230,10 +229,15 @@ class _FormViewState extends State<_FormView> {
                             ),
                             ListRow(
                               title: l10n.customSecondaryMuscles,
-                              value: names(
-                                _inOrder(Muscle.values, state.secondaryMuscles),
-                                l10n.muscleName,
-                              ),
+                              value:
+                                  names(
+                                    _inOrder(
+                                      Muscle.values,
+                                      state.secondaryMuscles,
+                                    ),
+                                    l10n.muscleName,
+                                  ) ??
+                                  l10n.customOptional,
                               end: ListRowEnd.chevron,
                               onTap: () => _pick(
                                 title: l10n.customSecondaryMuscles,
@@ -249,10 +253,12 @@ class _FormViewState extends State<_FormView> {
                             ),
                             ListRow(
                               title: l10n.customEquipment,
-                              value: names(
-                                _inOrder(Equipment.values, state.equipment),
-                                l10n.equipmentName,
-                              ),
+                              value:
+                                  names(
+                                    _inOrder(Equipment.values, state.equipment),
+                                    l10n.equipmentName,
+                                  ) ??
+                                  l10n.customOptional,
                               error: equipmentError,
                               missing: equipmentError != null,
                               end: ListRowEnd.chevron,
@@ -314,8 +320,8 @@ class _FormViewState extends State<_FormView> {
     required String Function(T value) labelOf,
     required ValueChanged<Set<T>> onSaved,
   }) async {
-    final picked = await showCheckSheet(
-      context,
+    final picked = await showForgeCheckSheet(
+      context: context,
       title: title,
       values: values,
       selected: selected,

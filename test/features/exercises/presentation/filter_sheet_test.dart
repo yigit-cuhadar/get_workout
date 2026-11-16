@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
-import 'package:get_workout/core/widgets/check_sheet.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
@@ -88,6 +87,23 @@ void main() {
     );
   });
 
+  testWidgets('a criterion shows two names and counts the rest', (
+    tester,
+  ) async {
+    await open(
+      tester,
+      state(
+        filter: const LibraryFilter(
+          muscles: {Muscle.calf, Muscle.lat, Muscle.pec, Muscle.biceps},
+          levels: {Level.beginner},
+        ),
+      ),
+    );
+
+    expect(find.text('Chest, Lats +2'), findsOneWidget);
+    expect(find.text('Beginner'), findsOneWidget);
+  });
+
   testWidgets('the bottom button shows the live count and closes the sheet', (
     tester,
   ) async {
@@ -119,13 +135,19 @@ void main() {
 
     await tester.tap(find.text('Muscle'));
     await tester.pumpAndSettle();
-    expect(find.byType(CheckRow), findsNWidgets(Muscle.values.length));
+    expect(
+      find.descendant(
+        of: find.byType(ForgeCheckSheet<Muscle>),
+        matching: find.byType(ListRow),
+      ),
+      findsNWidgets(Muscle.values.length),
+    );
     await tester.tap(find.text('Lats'));
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
     verify(() => library.setMuscles({Muscle.pec})).called(1);
-    expect(find.byType(CheckSheet<Muscle>), findsNothing);
+    expect(find.byType(ForgeCheckSheet<Muscle>), findsNothing);
     expect(find.byType(FilterSheet), findsOneWidget);
   });
 

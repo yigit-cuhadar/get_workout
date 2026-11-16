@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 
-import '../../../../core/widgets/check_sheet.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/vocabulary.dart';
 import '../equipment_cubit.dart';
@@ -20,6 +19,18 @@ Future<void> showFilterSheet(BuildContext context) {
         BlocProvider.value(value: library, child: const FilterSheet()),
   );
 }
+
+/// Up to two [names] as they are, the rest counted ("Chest, Lats +2");
+/// [any] when there are none.
+String _summary(
+  List<String> names, {
+  required String any,
+  required String Function(String shown, int count) more,
+}) => switch (names.length) {
+  0 => any,
+  <= 2 => names.join(', '),
+  _ => more(names.take(2).join(', '), names.length - 2),
+};
 
 /// The sheet [showFilterSheet] opens; it needs the [LibraryCubit] and the
 /// [EquipmentCubit] above it.
@@ -56,16 +67,18 @@ class FilterSheet extends StatelessWidget {
       required ValueChanged<Set<T>> onSaved,
     }) => ListRow(
       title: title,
-      value: selected.isEmpty
-          ? l10n.libraryFilterAny
-          : [
-              for (final value in values)
-                if (selected.contains(value)) labelOf(value),
-            ].join(', '),
+      value: _summary(
+        [
+          for (final value in values)
+            if (selected.contains(value)) labelOf(value),
+        ],
+        any: l10n.libraryFilterAny,
+        more: l10n.libraryFilterMore,
+      ),
       end: ListRowEnd.chevron,
       onTap: () async {
-        final picked = await showCheckSheet(
-          context,
+        final picked = await showForgeCheckSheet(
+          context: context,
           title: title,
           values: values,
           selected: selected,
