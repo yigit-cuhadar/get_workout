@@ -93,9 +93,9 @@ void main() {
       expect(cubit.hasChanges, isTrue);
       cubit.setName('Landmine Press');
       expect(cubit.hasChanges, isFalse);
-      cubit.toggleSecondaryMuscle(Muscle.pec);
+      cubit.setSecondaryMuscles({Muscle.triceps, Muscle.pec});
       expect(cubit.hasChanges, isTrue);
-      cubit.toggleSecondaryMuscle(Muscle.pec);
+      cubit.setSecondaryMuscles({Muscle.triceps});
       expect(cubit.hasChanges, isFalse);
     });
 
@@ -116,26 +116,29 @@ void main() {
 
   test('a muscle is main or secondary, never both', () {
     final cubit = build()
-      ..toggleSecondaryMuscle(Muscle.pec)
-      ..toggleMainMuscle(Muscle.pec);
-    expect(cubit.state.mainMuscles, {Muscle.pec});
-    expect(cubit.state.secondaryMuscles, isEmpty);
-    cubit.toggleSecondaryMuscle(Muscle.pec);
-    expect(cubit.state.mainMuscles, isEmpty);
+      ..setSecondaryMuscles({Muscle.pec, Muscle.triceps})
+      ..setMainMuscles({Muscle.pec, Muscle.frontDelt});
+    expect(cubit.state.mainMuscles, {Muscle.pec, Muscle.frontDelt});
+    expect(cubit.state.secondaryMuscles, {Muscle.triceps});
+    cubit.setSecondaryMuscles({Muscle.pec});
+    expect(cubit.state.mainMuscles, {Muscle.frontDelt});
     expect(cubit.state.secondaryMuscles, {Muscle.pec});
   });
 
-  test('bodyweight replaces other equipment and is replaced by it', () {
-    final cubit = build()
-      ..toggleEquipment(Equipment.box)
-      ..toggleEquipment(Equipment.bench)
-      ..toggleEquipment(Equipment.bodyweight);
-    expect(cubit.state.equipment, {Equipment.bodyweight});
-    cubit.toggleEquipment(Equipment.box);
-    expect(cubit.state.equipment, {Equipment.box});
-    cubit.toggleEquipment(Equipment.box);
-    expect(cubit.state.equipment, isEmpty);
-  });
+  test(
+    'bodyweight with other equipment is an issue once a save is tried',
+    () async {
+      final cubit = build(stored)
+        ..setEquipment({Equipment.box, Equipment.bodyweight});
+      expect(cubit.state.equipment, {Equipment.box, Equipment.bodyweight});
+      expect(cubit.state.issues, isEmpty);
+      await cubit.save();
+      expect(cubit.state.issues, {CustomExerciseIssue.equipmentInvalid});
+      verifyNever(() => repository.updateCustomExercise(any(), any()));
+      cubit.setEquipment({Equipment.bodyweight});
+      expect(cubit.state.issues, isEmpty);
+    },
+  );
 
   blocTest<CustomExerciseFormCubit, CustomExerciseFormState>(
     'shows issues only once saving was tried, then keeps them current',
@@ -145,7 +148,7 @@ void main() {
       await cubit.save();
       cubit
         ..setName('Press')
-        ..toggleMainMuscle(Muscle.pec);
+        ..setMainMuscles({Muscle.pec});
     },
     expect: () => [
       const CustomExerciseFormState(name: ' '),
@@ -172,12 +175,10 @@ void main() {
     act: (cubit) =>
         (cubit
               ..setName(' Cossack Squat ')
-              ..toggleMainMuscle(Muscle.quads)
-              ..toggleMainMuscle(Muscle.adductor)
-              ..toggleEquipment(Equipment.kettlebell)
-              ..toggleEquipment(Equipment.plate))
+              ..setMainMuscles({Muscle.quads, Muscle.adductor})
+              ..setEquipment({Equipment.kettlebell, Equipment.plate}))
             .save(),
-    skip: 5,
+    skip: 3,
     expect: () => [
       isA<CustomExerciseFormState>().having(
         (state) => state.status,
@@ -210,7 +211,7 @@ void main() {
     act: (cubit) async {
       cubit
         ..setName('Press')
-        ..toggleMainMuscle(Muscle.pec);
+        ..setMainMuscles({Muscle.pec});
       await cubit.save();
       await cubit.save();
       cubit.setName('Other');
@@ -253,7 +254,7 @@ void main() {
     act: (cubit) =>
         (cubit
               ..setName('Press')
-              ..toggleMainMuscle(Muscle.pec))
+              ..setMainMuscles({Muscle.pec}))
             .save(),
     verify: (cubit) {
       expect(cubit.state.status, CustomExerciseFormStatus.saveFailed);

@@ -420,23 +420,19 @@ Where it stands (2026-11-16, end of the İlerleme session):
   tile ("18.4 km" may wrap); health cardio sessions on a real device;
   users who allowed steps before #118 are asked for workouts only through
   Allow access again.
-- Formlar: built in draft PRs #122 (Custom exercise, filters sheet, Bar
-  and plates), #123 (Your profile, Profile question, Warm-up sets), #124
-  (Log weight, Measurement day, Log cardio) on Forge v0.23.0; the answers
-  found while building are under Design › "Formlar, during the build".
-  Next: Forge v0.24.0 (check sheet, compact rows, hidden ruler label,
-  ruler parts, invalid compact box, snackbar over sheets), then each PR
-  takes those answers and re-pins; then a check branch joining the three,
-  the device check, the studio redrawn, the side-by-side approval.
-- Next, in order:
-  1. Next group: Formlar (LogWeight, MeasurementDay, CardioLog,
-     CustomExercise, YourProfile, WarmupSettings, BarPlates, FiltersSheet,
-     ProfileQuestion). Same flow: implementers compare each screen with its
-     board, every question drawn on a canvas and asked one by one, Forge
-     changes tagged first, build, a check branch joining the work, device
-     check, findings drawn and asked, side-by-side approval, one PR per
-     screen set, studio redrawn in its own PR.
-  2. Then Kurulum, hesap ve abonelik. Open question for it: the Generator
+- Formlar (2026-11-16): built in draft PRs #122, #123, #124, all on
+  Forge v0.24.3 (363f51b). Checked on the iOS simulator on a branch
+  joining the three (full suite green); the check's fixes are in the PRs:
+  Measurement day steps open at the top, inline errors end with a full
+  stop, the ft in entry pre-fills the ruler's whole inches, the Custom
+  warm-up header note is whole (SectionCard.plain note), the plate
+  sheet's Remove is a danger text action, and Log cardio asks "Discard
+  this cardio session?" when left with changes (owner's pick Q1).
+  Next: the studio PR redrawing the Formlar boards (branch studio-forms),
+  the side-by-side approval page, then on approval mark #122–#124 ready
+  and merge them in order with the studio PR.
+- After Formlar:
+  1. Kurulum, hesap ve abonelik, in the same flow. Open question for it: the Generator
      preview menu has no icon for "Keep when regenerating" (studio's Menu
      card shows a history icon; recommended). Draw and ask then.
 
@@ -1791,7 +1787,9 @@ the feature you are about to touch, and keep it true when you change it.
   filters never match them, and they have no alternatives or variations
   and are no one's. They sort first, by name, in popularity order. A name
   may repeat a catalogue name; the label tells them apart. Equipment left
-  empty means unspecified and counts as doable with any. Deleting one also
+  empty means unspecified and counts as doable with any. The form's
+  check sheets take any ticks; bodyweight with other equipment is reported
+  on the Equipment row when Save is tried. Deleting one also
   removes it from favourites in the same write; programs then show it as
   unavailable, like a retired exercise, and workouts keep their copy. Added
   to a program, one rests 90 s by default, having no rest of its own. The

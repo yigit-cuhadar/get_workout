@@ -12,7 +12,6 @@ import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/user_profile.dart';
 import 'profile_form_cubit.dart';
-import 'ruler_picker.dart';
 
 /// Display names of the profile answers. Level and equipment names come
 /// from [VocabularyLabels].
@@ -112,10 +111,13 @@ extension ProfileLabels on AppLocalizations {
     return switch (field) {
       ProfileField.goal => goalName(profile.goal!),
       ProfileField.level => levelName(profile.level!),
-      ProfileField.daysPerWeek => profileDays(profile.daysPerWeek!),
-      ProfileField.equipment => profileEquipmentCount(
-        profile.equipment!.length,
-      ),
+      ProfileField.daysPerWeek => profileDaysAWeek(profile.daysPerWeek!),
+      ProfileField.equipment => switch (EquipmentProfile.matching(
+        profile.equipment!,
+      )) {
+        final preset? => presetName(preset),
+        null => profileEquipmentCustom,
+      },
       ProfileField.sex => sexName(profile.sex!),
       ProfileField.birthYear => '${profile.birthYear}',
       ProfileField.height => heightText(profile.heightCm!, settings.lengthUnit),
@@ -157,9 +159,10 @@ String formatProfileNumber(double value) => NumberFormat('0.#').format(value);
 }
 
 /// One question of the profile, answered into the [ProfileFormCubit] above
-/// it: the question at the top and its answer at the bottom, near the
-/// thumb. Heights and weights are entered in the units of [SettingsCubit];
-/// their unit switch changes that setting.
+/// it: the question at the top and its answer at the bottom, just above
+/// the page's action, near the thumb. Heights and weights are
+/// entered in the units of [SettingsCubit]; their unit switch changes that
+/// setting, and a tap on the value opens a sheet to type it.
 class ProfileQuestion extends StatelessWidget {
   const ProfileQuestion(this.field, {super.key});
 
@@ -299,9 +302,7 @@ class _EquipmentAnswerState extends State<EquipmentAnswer> {
                 label: l10n.presetName(preset),
                 showCheck: false,
                 selected:
-                    owned != null &&
-                    owned.length == preset.equipment.length &&
-                    owned.containsAll(preset.equipment),
+                    owned != null && EquipmentProfile.matching(owned) == preset,
                 onPressed: () => widget.onPreset(preset),
               ),
           ],
@@ -327,60 +328,26 @@ class _EquipmentAnswerState extends State<EquipmentAnswer> {
 }
 
 /// A wheel of the years [ProfileFormCubit.birthYearRange] allows.
-class _BirthYearAnswer extends StatefulWidget {
+class _BirthYearAnswer extends StatelessWidget {
   const _BirthYearAnswer(this.year);
 
   /// Answered as soon as the question shows.
   final int? year;
 
   @override
-  State<_BirthYearAnswer> createState() => _BirthYearAnswerState();
-}
-
-class _BirthYearAnswerState extends State<_BirthYearAnswer> {
-  static const _itemExtent = Gap.xl + Gap.sm;
-  static const _visibleItems = 5;
-
-  late final _range = context.read<ProfileFormCubit>().birthYearRange;
-  late final _controller = FixedExtentScrollController(
-    initialItem: ((widget.year ?? _range.max) - _range.min).clamp(
-      0,
-      _range.max - _range.min,
-    ),
-  );
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.headlineSmall;
+    final year = this.year;
+    if (year == null) return const SizedBox.shrink();
     final cubit = context.read<ProfileFormCubit>();
-    return SizedBox(
-      height: _itemExtent * _visibleItems,
-      // Kept from the page: the app bar would take the wheel's scrolling
-      // for content scrolling under it.
-      child: NotificationListener<ScrollNotification>(
-        onNotification: (_) => true,
-        child: ListWheelScrollView.useDelegate(
-          controller: _controller,
-          itemExtent: _itemExtent,
-          physics: const FixedExtentScrollPhysics(),
-          overAndUnderCenterOpacity: 0.5,
-          onSelectedItemChanged: (index) {
-            HapticFeedback.selectionClick();
-            cubit.setBirthYear(_range.min + index);
-          },
-          childDelegate: ListWheelChildBuilderDelegate(
-            childCount: _range.max - _range.min + 1,
-            builder: (context, index) =>
-                Center(child: Text('${_range.min + index}', style: style)),
-          ),
-        ),
-      ),
+    final range = cubit.birthYearRange;
+    return NumberPicker.wheel(
+      label: AppLocalizations.of(context).profileBirthYear,
+      min: range.min.toDouble(),
+      max: range.max.toDouble(),
+      step: 1,
+      value: year.toDouble(),
+      grouped: false,
+      onChanged: (value) => cubit.setBirthYear(value.round()),
     );
   }
 }
@@ -406,6 +373,43 @@ class _HeightAnswer extends StatelessWidget {
       unit.fromCm,
       1,
     );
+    final shown = displayRange(
+      ProfileLimits.minHeightCm,
+      ProfileLimits.maxHeightCm,
+      unit.fromCm,
+    );
+    final title = l10n.fieldName(ProfileField.height);
+    // The sheet starts at the whole step the ruler shows.
+    final onRuler = value.roundToDouble().clamp(range.min, range.max);
+    void type() => _openEntry(context, switch (unit) {
+      LengthUnit.cm => (
+        title: title,
+        fields: [
+          (
+            label: l10n.calcHeight(l10n.unitCm),
+            text: formatProfileNumber(onRuler),
+          ),
+        ],
+        error: _outOfRange(l10n, shown),
+        enter: (texts) => cubit.enterHeight(texts.single, unit),
+      ),
+      LengthUnit.inch => () {
+        final (:feet, :inches) = feetAndInches(onRuler);
+        return (
+          title: title,
+          fields: [
+            (label: l10n.profileFeet, text: '$feet'),
+            (label: l10n.profileInches, text: formatProfileNumber(inches)),
+          ],
+          error: l10n.calcOutOfRange(
+            l10n.heightText(ProfileLimits.minHeightCm, unit),
+            l10n.heightText(ProfileLimits.maxHeightCm, unit),
+          ),
+          enter: (List<String> texts) =>
+              cubit.enterFeetAndInches(texts.first, texts.last),
+        );
+      }(),
+    });
     return _NumberAnswer(
       unitSwitch: _UnitSwitch<LengthUnit>(
         values: LengthUnit.values,
@@ -418,30 +422,35 @@ class _HeightAnswer extends StatelessWidget {
           settings.copyWith(lengthUnit: unit),
         ),
       ),
-      text: l10n.heightText(cm, unit),
-      ruler: RulerPicker(
+      picker: NumberPicker.ruler(
         key: ValueKey(unit),
+        label: title,
+        unit: unit == LengthUnit.cm ? l10n.unitCm : null,
+        parts: unit == LengthUnit.inch
+            ? (value) {
+                final (:feet, :inches) = feetAndInches(value);
+                return [
+                  ('$feet', l10n.unitFt),
+                  (formatProfileNumber(inches), l10n.unitIn),
+                ];
+              }
+            : null,
         min: range.min,
         max: range.max,
         step: 1,
         value: value,
         onChanged: (value) => cubit.setHeight(value, unit),
-      ),
-      entry: (
-        label: l10n.calcHeight(l10n.lengthUnitName(unit)),
-        initialValue: formatProfileNumber(value),
-        error: _outOfRange(
-          l10n,
-          displayRange(
-            ProfileLimits.minHeightCm,
-            ProfileLimits.maxHeightCm,
-            unit.fromCm,
-          ),
-        ),
-        enter: (text) => cubit.enterHeight(text, unit),
+        onValueTap: type,
       ),
     );
   }
+}
+
+/// [inches] as whole feet and the inches left, to the one decimal shown.
+({int feet, double inches}) feetAndInches(double inches) {
+  final tenths = (inches * 10).round();
+  final feet = tenths ~/ 120;
+  return (feet: feet, inches: (tenths - feet * 120) / 10);
 }
 
 /// The body weight or the target weight.
@@ -472,6 +481,7 @@ class _WeightAnswer extends StatelessWidget {
       unit.fromKg,
       _step,
     );
+    final title = l10n.fieldName(field);
     return _NumberAnswer(
       unitSwitch: _UnitSwitch<WeightUnit>(
         values: WeightUnit.values,
@@ -481,9 +491,10 @@ class _WeightAnswer extends StatelessWidget {
           settings.copyWith(weightUnit: unit),
         ),
       ),
-      text: l10n.weightText(kg, unit),
-      ruler: RulerPicker(
+      picker: NumberPicker.ruler(
         key: ValueKey(unit),
+        label: title,
+        unit: unitName,
         min: range.min,
         max: range.max,
         step: _step,
@@ -491,23 +502,28 @@ class _WeightAnswer extends StatelessWidget {
         onChanged: (value) => target
             ? cubit.setTargetWeight(value, unit)
             : cubit.setWeight(value, unit),
-      ),
-      entry: (
-        label: target
-            ? l10n.calcTargetWeight(unitName)
-            : l10n.calcBodyWeight(unitName),
-        initialValue: formatProfileNumber(value),
-        error: _outOfRange(
-          l10n,
-          displayRange(
-            ProfileLimits.minWeightKg,
-            ProfileLimits.maxWeightKg,
-            unit.fromKg,
+        onValueTap: () => _openEntry(context, (
+          title: title,
+          fields: [
+            (
+              label: target
+                  ? l10n.calcTargetWeight(unitName)
+                  : l10n.calcBodyWeight(unitName),
+              text: formatProfileNumber(value),
+            ),
+          ],
+          error: _outOfRange(
+            l10n,
+            displayRange(
+              ProfileLimits.minWeightKg,
+              ProfileLimits.maxWeightKg,
+              unit.fromKg,
+            ),
           ),
-        ),
-        enter: (text) => target
-            ? cubit.enterTargetWeight(text, unit)
-            : cubit.enterWeight(text, unit),
+          enter: (texts) => target
+              ? cubit.enterTargetWeight(texts.single, unit)
+              : cubit.enterWeight(texts.single, unit),
+        )),
       ),
     );
   }
@@ -519,57 +535,47 @@ String _outOfRange(AppLocalizations l10n, ({double min, double max}) range) =>
       formatProfileNumber(range.max),
     );
 
-/// What typing a number answer needs: [enter] tells whether the text was
-/// accepted, and [error] is shown when not.
+/// What typing a number answer needs: its [title], one field or a pair
+/// side by side, each with its label and starting text; [enter] tells
+/// whether the texts were accepted, and [error] is shown when not.
 typedef _Entry = ({
-  String label,
-  String initialValue,
+  String title,
+  List<({String label, String text})> fields,
   String error,
-  bool Function(String text) enter,
+  bool Function(List<String> texts) enter,
 });
 
-/// A unit switch, the value in large type, which opens a field to type it,
-/// and a ruler to drag.
+void _openEntry(BuildContext context, _Entry entry) =>
+    showForgeBottomSheet<void>(
+      context: context,
+      builder: (_) => _EntrySheet(entry),
+    );
+
+/// The unit switch, narrow and centred, over the [picker] and the hint
+/// that its value can be typed.
 class _NumberAnswer extends StatelessWidget {
-  const _NumberAnswer({
-    required this.unitSwitch,
-    required this.text,
-    required this.ruler,
-    required this.entry,
-  });
+  const _NumberAnswer({required this.unitSwitch, required this.picker});
 
   final Widget unitSwitch;
-  final String text;
-  final Widget ruler;
-  final _Entry entry;
+  final Widget picker;
+
+  static const _switchWidth = 180.0;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: Gap.md,
       children: [
-        Center(child: unitSwitch),
-        const SizedBox(height: Gap.md),
         Center(
-          child: TextButton(
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (_) => _EntryDialog(entry),
-            ),
-            child: Text(text, style: theme.textTheme.displaySmall),
-          ),
+          child: SizedBox(width: _switchWidth, child: unitSwitch),
         ),
-        const SizedBox(height: Gap.sm),
-        NotificationListener<ScrollNotification>(
-          onNotification: (_) => true,
-          child: ruler,
-        ),
-        const SizedBox(height: Gap.sm),
+        picker,
         Text(
           l10n.profileRulerHint,
-          style: theme.textTheme.bodySmall,
+          style: Theme.of(context).textTheme.bodySmall!
+              .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
           textAlign: TextAlign.center,
         ),
       ],
@@ -591,73 +597,122 @@ class _UnitSwitch<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
 
   @override
-  Widget build(BuildContext context) => SegmentedButton<T>(
+  Widget build(BuildContext context) => ForgeSegmentedControl<T>(
     segments: [
       for (final value in values)
-        ButtonSegment(value: value, label: Text(label(value))),
+        ForgeSegment(value: value, label: label(value)),
     ],
-    selected: {selected},
-    onSelectionChanged: (selection) => onChanged(selection.single),
+    selected: selected,
+    onChanged: onChanged,
   );
 }
 
-/// Types a number answer; closes once it is accepted.
-class _EntryDialog extends StatefulWidget {
-  const _EntryDialog(this.entry);
+/// Types a number answer in a sheet titled with its field; closes once it
+/// is accepted.
+class _EntrySheet extends StatefulWidget {
+  const _EntrySheet(this.entry);
 
   final _Entry entry;
 
   @override
-  State<_EntryDialog> createState() => _EntryDialogState();
+  State<_EntrySheet> createState() => _EntrySheetState();
 }
 
-class _EntryDialogState extends State<_EntryDialog> {
-  late final _controller = TextEditingController(
-    text: widget.entry.initialValue,
-  );
+class _EntrySheetState extends State<_EntrySheet> {
+  late final _controllers = [
+    for (final field in widget.entry.fields)
+      TextEditingController(text: field.text),
+  ];
   String? _error;
 
   @override
   void dispose() {
-    _controller.dispose();
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   void _submit() {
-    if (widget.entry.enter(_controller.text)) {
+    if (widget.entry.enter([
+      for (final controller in _controllers) controller.text,
+    ])) {
       Navigator.of(context).pop();
     } else {
       setState(() => _error = widget.entry.error);
     }
   }
 
+  static const _keyboard = TextInputType.numberWithOptions(decimal: true);
+
+  // Plain numbers only; the length fits every valid answer.
+  static final _formatters = [
+    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+    LengthLimitingTextInputFormatter(6),
+  ];
+
+  /// Two fields side by side; when the entry is refused both take the
+  /// danger border and one message sits under the pair.
+  Widget _pair(List<({String label, String text})> fields) {
+    final error = _error;
+    final row = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: Gap.sm,
+      children: [
+        for (final (i, field) in fields.indexed)
+          Expanded(
+            child: ForgeTextField(
+              label: field.label,
+              controller: _controllers[i],
+              autofocus: i == 0,
+              keyboardType: _keyboard,
+              inputFormatters: _formatters,
+              textInputAction: i == fields.length - 1
+                  ? TextInputAction.done
+                  : TextInputAction.next,
+              onSubmitted: i == fields.length - 1 ? (_) => _submit() : null,
+              // The danger border alone; the message is the pair's.
+              errorText: error == null ? null : '',
+            ),
+          ),
+      ],
+    );
+    if (error == null) return row;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: Gap.sm,
+      children: [
+        row,
+        Text(
+          error,
+          style: Theme.of(context).textTheme.labelMedium!.copyWith(
+            color: ForgeStyle.of(context).colors.danger,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return AlertDialog(
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        // Plain numbers only; the length fits every valid answer.
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-          LengthLimitingTextInputFormatter(6),
-        ],
-        onSubmitted: (_) => _submit(),
-        decoration: InputDecoration(
-          labelText: widget.entry.label,
-          errorText: _error,
-          errorMaxLines: 3,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        TextButton(onPressed: _submit, child: Text(l10n.save)),
-      ],
+    final fields = widget.entry.fields;
+    return ForgeBottomSheet(
+      title: widget.entry.title,
+      action: ForgeButton(label: l10n.save, onPressed: _submit),
+      child: fields.length == 1
+          ? ForgeTextField(
+              label: fields.single.label,
+              controller: _controllers.single,
+              autofocus: true,
+              keyboardType: _keyboard,
+              inputFormatters: _formatters,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
+              errorText: _error,
+            )
+          : _pair(fields),
     );
   }
 }

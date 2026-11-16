@@ -42,7 +42,6 @@ class CustomExerciseFormState extends Equatable {
   final Set<Muscle> mainMuscles;
   final Set<Muscle> secondaryMuscles;
 
-  /// Bodyweight is only ever chosen alone.
   final Set<Equipment> equipment;
   final String note;
 
@@ -158,35 +157,25 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
   void setLoggingType(LoggingType type) =>
       _change(state.copyWith(loggingType: type));
 
-  /// Choosing a main muscle takes it off the secondary ones.
-  void toggleMainMuscle(Muscle muscle) => _change(
+  /// The main muscles take themselves off the secondary ones.
+  void setMainMuscles(Set<Muscle> muscles) => _change(
     state.copyWith(
-      mainMuscles: _toggle(state.mainMuscles, muscle),
-      secondaryMuscles: {...state.secondaryMuscles}..remove(muscle),
+      mainMuscles: muscles,
+      secondaryMuscles: state.secondaryMuscles.difference(muscles),
     ),
   );
 
-  /// Choosing a secondary muscle takes it off the main ones.
-  void toggleSecondaryMuscle(Muscle muscle) => _change(
+  /// The secondary muscles take themselves off the main ones.
+  void setSecondaryMuscles(Set<Muscle> muscles) => _change(
     state.copyWith(
-      secondaryMuscles: _toggle(state.secondaryMuscles, muscle),
-      mainMuscles: {...state.mainMuscles}..remove(muscle),
+      secondaryMuscles: muscles,
+      mainMuscles: state.mainMuscles.difference(muscles),
     ),
   );
 
-  /// Bodyweight means no equipment, so choosing it clears the rest and
-  /// choosing anything else clears it.
-  void toggleEquipment(Equipment item) {
-    final selected = _toggle(state.equipment, item);
-    if (selected.contains(item)) {
-      if (item == Equipment.bodyweight) {
-        selected.retainWhere((other) => other == item);
-      } else {
-        selected.remove(Equipment.bodyweight);
-      }
-    }
-    _change(state.copyWith(equipment: selected));
-  }
+  /// Bodyweight with anything else is an issue a save reports.
+  void setEquipment(Set<Equipment> equipment) =>
+      _change(state.copyWith(equipment: equipment));
 
   void setNote(String note) => _change(state.copyWith(note: note));
 
@@ -252,9 +241,6 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
     for (final value in values)
       if (selected.contains(value)) value,
   ];
-
-  static Set<T> _toggle<T>(Set<T> set, T value) =>
-      set.contains(value) ? ({...set}..remove(value)) : {...set, value};
 
   @override
   Future<void> close() async {

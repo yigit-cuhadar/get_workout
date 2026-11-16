@@ -185,6 +185,22 @@ void main() {
       expect(results(cubit), ['squat']);
     });
 
+    test('a check sheet sets all values of a criterion at once', () {
+      final cubit = build()
+        ..toggleMuscle(Muscle.biceps)
+        ..setMuscles({Muscle.pec, Muscle.quads})
+        ..setEquipment({Equipment.barbell})
+        ..setLevels({Level.intermediate})
+        ..setMovementPatterns({MovementPattern.squat});
+      expect(cubit.state.filter.muscles, {Muscle.pec, Muscle.quads});
+      expect(results(cubit), ['squat']);
+
+      cubit
+        ..setMovementPatterns({})
+        ..setMuscles({});
+      expect(results(cubit), ['bench_press', 'squat']);
+    });
+
     test('toggling a value again removes it', () {
       final cubit = build()
         ..toggleMuscle(Muscle.biceps)
