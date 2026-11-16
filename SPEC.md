@@ -420,18 +420,16 @@ Where it stands (2026-11-16, end of the İlerleme session):
   tile ("18.4 km" may wrap); health cardio sessions on a real device;
   users who allowed steps before #118 are asked for workouts only through
   Allow access again.
-- Formlar (2026-11-16): built in draft PRs #122, #123, #124, all on
-  Forge v0.24.3 (363f51b). Checked on the iOS simulator on a branch
-  joining the three (full suite green); the check's fixes are in the PRs:
-  Measurement day steps open at the top, inline errors end with a full
-  stop, the ft in entry pre-fills the ruler's whole inches, the Custom
-  warm-up header note is whole (SectionCard.plain note), the plate
-  sheet's Remove is a danger text action, and Log cardio asks "Discard
-  this cardio session?" when left with changes (owner's pick Q1).
-  Next: the studio PR redrawing the Formlar boards (branch studio-forms),
-  the side-by-side approval page, then on approval mark #122–#124 ready
-  and merge them in order with the studio PR.
-- After Formlar:
+- Formlar: done, checked on the iOS simulator and approved by the owner
+  (2026-11-16); merged as #122 (Custom exercise, filters sheet, Bar and
+  plates), #123 (Your profile, Profile question, Warm-up sets, Onboarding
+  number questions), #124 (Log weight, Measurement day, Log cardio),
+  studio #128; Forge v0.23.0–v0.24.3. The picks are under Design ›
+  "Formlar, before the build" and "during the build"; the device check's
+  own pick: Log cardio asks "Discard this cardio session?" when left with
+  changes. GetWorkout Studio's published link is behind main: publish
+  design/studio.html from the owner's account.
+- Next:
   1. Kurulum, hesap ve abonelik, in the same flow. Open question for it: the Generator
      preview menu has no icon for "Keep when regenerating" (studio's Menu
      card shows a history icon; recommended). Draw and ask then.
