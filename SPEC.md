@@ -420,6 +420,12 @@ Where it stands (2026-11-16, end of the İlerleme session):
   tile ("18.4 km" may wrap); health cardio sessions on a real device;
   users who allowed steps before #118 are asked for workouts only through
   Allow access again.
+- Formlar: compared with the boards (about 40 code fixes), 26 questions
+  asked and answered (Design › Formlar, before the build); FS14 (row
+  values of the filters sheet) is drawn and waits for the owner. Forge
+  first: Dialog date form, h:mm:ss duration wheel, a left/right pair
+  number row, a tappable ruler value, ForgeDialog without a message and
+  with list content.
 - Next, in order:
   1. Next group: Formlar (LogWeight, MeasurementDay, CardioLog,
      CustomExercise, YourProfile, WarmupSettings, BarPlates, FiltersSheet,
@@ -503,6 +509,38 @@ Decisions (the canvases they were drawn on are deleted):
   picker; confirmations stay dialogs); Restore's result is a snackbar and a
   success closes the paywall. The Measure preset keeps its saturated colours
   (an accepted exception to muted colours).
+- Formlar, before the build (owner's picks, 2026-11-16; canvas was local
+  HTML). Custom exercise: Main muscle, Also works, Equipment and Logged as
+  are rows opening a Forge bottom sheet (checkbox list + Save; Logged as
+  single choice) (CE12); a missing muscle or equipment shows the row's
+  missing form (CE14); while saving a thin indeterminate bar under the app
+  bar and Save off (CE15); several main muscles stay, comma-joined.
+  Filters sheet: Muscle (all 19), Equipment, Movement pattern and Level
+  are rows like Custom exercise's, each opening a checkbox sheet (owner's
+  own answer; FS14 draws the row values); My equipment's picker stacks
+  over the filters sheet and returns to it (FS12); Clear all shows
+  disabled when nothing is set (FS13); every equipment item scrolls in the
+  picker. Bar and plates: the sheet's Remove in danger (BP2). Your
+  profile: equipment matching no preset reads "Custom" (YP6); an
+  unanswered field "—" (YP7); errors keep ErrorView's two lines. Profile
+  question: choice and equipment questions load as title bars and ListRow
+  skeleton rows (PQ7); height in ft in is typed as feet and inches (PQ9);
+  the equipment answer follows the 2026-11-15 pick. Warm-up sets: no
+  example card when off (WS8); a lb user's example "Bench Press at 175
+  lb", rounded to 5 lb (WS9); the Custom row shows its sets (WS10); the
+  last custom set's × faded and off (WS11); an invalid row has one danger
+  line naming only the invalid field(s) (WS12). Log weight: the ruler
+  starts at the last weigh-in, else the profile weight (LW05); a failed
+  save is a snackbar over the sheet (LW06). Measurement day: Estimate
+  body fat is the Body fat tracking rule with a live estimate (MD10); the
+  weight step cannot be skipped (MD11, supersedes "every step can be
+  skipped" for weight); the tune icon only on step 2 (MD12); the camera,
+  empty photo slot and camera-off follow the PoseCamera, PhotoTile and
+  PermissionPrompt cards. Log cardio: Save faded while Duration is empty,
+  the row in its missing form (CL06); each row opens its picker (type
+  sheet, date dialog then time wheel, h:mm:ss wheel, number sheet, note
+  sheet) (CL08); speed types show "Speed 22.4 km/h" (CL09); heart rate and
+  incline rows stay.
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
