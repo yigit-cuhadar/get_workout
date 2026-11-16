@@ -420,11 +420,14 @@ Where it stands (2026-11-16, end of the İlerleme session):
   tile ("18.4 km" may wrap); health cardio sessions on a real device;
   users who allowed steps before #118 are asked for workouts only through
   Allow access again.
-- Formlar: compared with the boards (about 40 code fixes), 27 questions
-  asked and answered (Design › Formlar, before the build). Forge
-  first: Dialog date form, h:mm:ss duration wheel, a left/right pair
-  number row, a tappable ruler value, ForgeDialog without a message and
-  with list content.
+- Formlar: built in draft PRs #122 (Custom exercise, filters sheet, Bar
+  and plates), #123 (Your profile, Profile question, Warm-up sets), #124
+  (Log weight, Measurement day, Log cardio) on Forge v0.23.0; the answers
+  found while building are under Design › "Formlar, during the build".
+  Next: Forge v0.24.0 (check sheet, compact rows, hidden ruler label,
+  ruler parts, invalid compact box, snackbar over sheets), then each PR
+  takes those answers and re-pins; then a check branch joining the three,
+  the device check, the studio redrawn, the side-by-side approval.
 - Next, in order:
   1. Next group: Formlar (LogWeight, MeasurementDay, CardioLog,
      CustomExercise, YourProfile, WarmupSettings, BarPlates, FiltersSheet,
@@ -541,6 +544,29 @@ Decisions (the canvases they were drawn on are deleted):
   sheet, date dialog then time wheel, h:mm:ss wheel, number sheet, note
   sheet) (CL08); speed types show "Speed 22.4 km/h" (CL09); heart rate and
   incline rows stay.
+- Formlar, during the build (owner's picks, 2026-11-16; canvases were
+  local HTML). Filter rows show two names and the rest counted ("Chest,
+  Lats +2") (E1). Check lists (the filters' and Custom exercise's sheets,
+  My equipment) are a Forge check sheet with 44px near-flush rows (E2,
+  E6). Custom exercise's optional rows with nothing chosen read a muted
+  "Optional" (E3). My equipment shows no count until equipment is chosen
+  (E4); Only my equipment keeps "Pick your equipment first" and opens the
+  picker first (E5). Rulers and wheels draw no label (screen readers keep
+  it) (P1); in ft in the ruler reads "5 ft 11 in" (P2). An invalid warm-up
+  box is the board's 40px left-aligned box with a danger border and the
+  line (P3). The ft in entry sheet marks both fields and puts one message
+  under the pair (P4). Number questions (Profile question, Onboarding,
+  Measurement day step 1) keep the question at the top and put the unit
+  switch, value, ruler and hint just above Save / Continue, close to the
+  thumb (P5, owner's own direction). Cardio's distance, calories, heart
+  rate and incline open a sheet with a typed number field (B2). With the
+  camera off only the bottom bar's "Skip this photo" shows (B3). Log
+  weight from Progress opens the sheet over Progress (B4). Editing a
+  measurement day without a weight adds the ruler's weight (B5). Estimate
+  body fat without sex or height is a row leading to Your profile (B6). A
+  kept photo not on this device shows PhotoTile's loading form (B7). The
+  note hint is "Add a note" (B8). A snackbar shows over an open sheet
+  (Forge).
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
