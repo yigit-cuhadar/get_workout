@@ -400,3 +400,14 @@ Widget featuredPastWorkout(BuildContext context) {
 @widgetbook.UseCase(name: 'Band · loading', type: FeaturedCard)
 Widget featuredBandLoading(BuildContext context) =>
     _page(const FeaturedCard.bandLoading());
+
+@widgetbook.UseCase(name: 'Target', type: FeaturedCard)
+Widget featuredTarget(BuildContext context) => _page(
+  FeaturedCard.target(
+    title: context.knobs.string(label: 'Title', initialValue: 'Target 78 kg'),
+    note: context.knobs.string(
+      label: 'Line',
+      initialValue: 'At this pace, around Dec 28.',
+    ),
+  ),
+);

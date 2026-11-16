@@ -68,22 +68,97 @@ void main() {
         lift(90, 10),
       ], LoggingType.weightReps);
       expect(bests, {
-        RecordKind.heaviestWeight: 100,
-        RecordKind.bestE1rm: 120,
-        RecordKind.bestSetVolume: 900,
-        RecordKind.mostReps: 10,
+        RecordKind.heaviestWeight: (value: 100, set: lift(100, 6)),
+        RecordKind.bestE1rm: (value: 120, set: lift(100, 6)),
+        RecordKind.bestSetVolume: (value: 900, set: lift(90, 10)),
+        RecordKind.mostReps: (value: 10, set: lift(90, 10)),
       });
       expect(
         sessionBests([
           const WorkoutSet(reps: 12, done: true),
         ], LoggingType.weightedBodyweight),
-        {RecordKind.mostReps: 12},
+        {
+          RecordKind.mostReps: (
+            value: 12,
+            set: const WorkoutSet(reps: 12, done: true),
+          ),
+        },
       );
       expect(
         sessionBests([
           const WorkoutSet(durationS: 60, done: true),
         ], LoggingType.duration),
-        {RecordKind.longestDuration: 60},
+        {
+          RecordKind.longestDuration: (
+            value: 60,
+            set: const WorkoutSet(durationS: 60, done: true),
+          ),
+        },
+      );
+    });
+
+    test('equal bests keep the heavier set, the heaviest the more reps', () {
+      final bests = sessionBests([
+        lift(100, 5),
+        lift(100, 8),
+        lift(60, 8),
+      ], LoggingType.weightReps);
+      expect(bests[RecordKind.heaviestWeight]!.set, lift(100, 8));
+      expect(bests[RecordKind.mostReps]!.set, lift(100, 8));
+    });
+  });
+
+  group('bestSetOf', () {
+    test('a load: the highest e1RM, then the heavier', () {
+      expect(
+        bestSetOf([
+          lift(100, 5),
+          lift(90, 10),
+          lift(120, 1, type: SetType.warmup),
+        ], LoggingType.weightReps),
+        lift(90, 10),
+      );
+    });
+
+    test('assistance: the least, then more reps', () {
+      expect(
+        bestSetOf([
+          lift(30, 10),
+          lift(20, 6),
+          lift(20, 8),
+        ], LoggingType.assistedBodyweight),
+        lift(20, 8),
+      );
+    });
+
+    test('reps, time, and the heaviest timed set', () {
+      expect(
+        bestSetOf([
+          const WorkoutSet(reps: 12, done: true),
+          const WorkoutSet(reps: 15, done: true),
+        ], LoggingType.reps)!.reps,
+        15,
+      );
+      expect(
+        bestSetOf([
+          const WorkoutSet(durationS: 90, done: true),
+          const WorkoutSet(durationS: 60, done: true),
+        ], LoggingType.duration)!.durationS,
+        90,
+      );
+      expect(
+        bestSetOf([
+          const WorkoutSet(weightKg: 20, durationS: 60, done: true),
+          const WorkoutSet(weightKg: 24, durationS: 30, done: true),
+        ], LoggingType.weightDuration)!.weightKg,
+        24,
+      );
+    });
+
+    test('none without a done working set', () {
+      expect(
+        bestSetOf([lift(100, 5, done: false)], LoggingType.weightReps),
+        isNull,
       );
     });
   });
@@ -106,7 +181,12 @@ void main() {
       });
       expect(
         stats.records[RecordKind.heaviestWeight],
-        StatRecord(value: 100, date: monday, workoutId: 'w1'),
+        StatRecord(
+          value: 100,
+          date: monday,
+          workoutId: 'w1',
+          set: (weightKg: 100, reps: 5, durationS: null),
+        ),
       );
       expect(
         stats.last,
@@ -122,8 +202,11 @@ void main() {
           workoutId: 'w1',
           bestE1rmKg: 100 * (1 + 5 / 30),
           volumeKg: 1000,
+          bestSet: (weightKg: 100, reps: 5, durationS: null),
+          workoutName: 'Workout w1',
         ),
       ]);
+      expect(stats.outdated, isFalse);
     });
 
     test('a later workout beats only what it beats', () {
@@ -137,6 +220,11 @@ void main() {
       expect(stats.records[RecordKind.bestE1rm]!.workoutId, 'w2');
       // Per set: 80 × 12 beats 100 × 5.
       expect(stats.records[RecordKind.bestSetVolume]!.value, 960);
+      expect(stats.records[RecordKind.mostReps]!.set, (
+        weightKg: 80,
+        reps: 12,
+        durationS: null,
+      ));
       expect(stats.last!.workoutId, 'w2');
       expect(stats.history.map((p) => p.workoutId), ['w1', 'w2']);
     });
@@ -379,5 +467,39 @@ void main() {
       ]);
       expect(heldRecordSets(push, const {}), isEmpty);
     });
+  });
+
+  test('outdated: a record without its set or a point without its best set '
+      'or name', () {
+    final date = monday;
+    const set = (weightKg: 100.0, reps: 5, durationS: null);
+    expect(const ExerciseStats().outdated, isFalse);
+    expect(
+      ExerciseStats(
+        records: {
+          RecordKind.mostReps: StatRecord(value: 5, date: date, workoutId: 'w'),
+        },
+      ).outdated,
+      isTrue,
+    );
+    expect(
+      ExerciseStats(
+        history: [HistoryPoint(date: date, workoutId: 'w', bestSet: set)],
+      ).outdated,
+      isTrue,
+    );
+    expect(
+      ExerciseStats(
+        history: [
+          HistoryPoint(
+            date: date,
+            workoutId: 'w',
+            bestSet: set,
+            workoutName: 'Push',
+          ),
+        ],
+      ).outdated,
+      isFalse,
+    );
   });
 }

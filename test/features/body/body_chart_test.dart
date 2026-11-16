@@ -118,42 +118,6 @@ void main() {
     });
   });
 
-  group('axes', () {
-    test('the first line left, the second right, a third none', () {
-      expect(
-        chartAxes([BodySeries.weight, BodySeries.bodyFat, BodySeries.waist]),
-        {
-          BodySeries.weight: ChartAxis.left,
-          BodySeries.bodyFat: ChartAxis.right,
-          BodySeries.waist: ChartAxis.none,
-        },
-      );
-    });
-
-    test('bars take an axis only once the lines have theirs', () {
-      expect(chartAxes([BodySeries.weeklySets, BodySeries.weight]), {
-        BodySeries.weeklySets: ChartAxis.right,
-        BodySeries.weight: ChartAxis.left,
-      });
-      expect(
-        chartAxes([
-          BodySeries.weeklySets,
-          BodySeries.weight,
-          BodySeries.bodyFat,
-        ]),
-        {
-          BodySeries.weeklySets: ChartAxis.none,
-          BodySeries.weight: ChartAxis.left,
-          BodySeries.bodyFat: ChartAxis.right,
-        },
-      );
-      expect(chartAxes([BodySeries.dailySteps, BodySeries.weeklySets]), {
-        BodySeries.dailySteps: ChartAxis.left,
-        BodySeries.weeklySets: ChartAxis.right,
-      });
-    });
-  });
-
   group('line points', () {
     final measured = BodyEntry(
       id: 'm',
@@ -290,20 +254,23 @@ void main() {
     );
   });
 
-  test('a tapped position finds each series\' value, to the microsecond', () {
-    // Firestore keeps microseconds; the chart places points in ms.
-    final logged = DateTime(2026, 11, 3, 7, 30, 0, 123, 456);
-    final points = {
-      BodySeries.weight: [SeriesPoint(logged, 80)],
-      BodySeries.waist: [SeriesPoint(DateTime(2026, 11, 1), 84)],
-      BodySeries.weeklySets: [SeriesPoint(DateTime(2026, 11, 2), 12)],
-    };
-    final shown = points.keys.toList();
-    final at = logged.millisecondsSinceEpoch.toDouble().round();
-
-    expect(pointsAt(shown, points, at), [
-      (BodySeries.weight, SeriesPoint(logged, 80)),
-      (BodySeries.weeklySets, SeriesPoint(DateTime(2026, 11, 2), 12)),
-    ]);
+  test('a rolling 7-day average takes the points of the 7 days ending '
+      'on each', () {
+    expect(
+      rollingAverage([
+        SeriesPoint(DateTime(2026, 11, 1, 8), 80),
+        SeriesPoint(DateTime(2026, 11, 4, 8), 82),
+        SeriesPoint(DateTime(2026, 11, 7, 22), 84),
+        SeriesPoint(DateTime(2026, 11, 8, 7), 78),
+      ]),
+      [
+        SeriesPoint(DateTime(2026, 11, 1, 8), 80),
+        SeriesPoint(DateTime(2026, 11, 4, 8), 81),
+        SeriesPoint(DateTime(2026, 11, 7, 22), 82),
+        // Nov 1 has left the 7 days ending Nov 8.
+        SeriesPoint(DateTime(2026, 11, 8, 7), 81.33333333333333),
+      ],
+    );
+    expect(rollingAverage(const []), isEmpty);
   });
 }

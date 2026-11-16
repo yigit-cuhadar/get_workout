@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/core/line_chart.dart';
 
 void main() {
-  Future<void> pump(WidgetTester tester, List<ChartPoint> points) =>
+  Future<void> pump(WidgetTester tester, List<LinePoint> points) =>
       tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

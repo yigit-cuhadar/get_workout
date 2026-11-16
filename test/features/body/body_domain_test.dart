@@ -145,4 +145,58 @@ void main() {
       {PhotoPose.front: 'c/front', PhotoPose.back: 'b/back'},
     );
   });
+
+  group('overview boxes', () {
+    final oct18 = entry(
+      'oct18',
+      DateTime(2026, 10, 18),
+      kg: 84.1,
+      measurements: const {BodyMeasurement.waist: 92},
+    );
+    final nov1 = entry(
+      'nov1',
+      DateTime(2026, 11, 1),
+      kg: 82.9,
+      measurements: const {BodyMeasurement.waist: 88.5},
+    );
+    final nov13 = entry('nov13', DateTime(2026, 11, 13), kg: 82.4);
+    const fat = {'nov1': 19.5, 'oct18': 21.0};
+
+    test('change since the measurement day before the newest one', () {
+      final boxes = bodyOverview([nov13, nov1, oct18], fat, targetKg: 78);
+      expect(boxes.weight!.value, 82.4);
+      expect(boxes.weight!.change, closeTo(-1.7, 1e-9));
+      expect(boxes.weight!.tone, ChangeTone.good);
+      expect(boxes.bodyFat!.change, closeTo(-1.5, 1e-9));
+      expect(boxes.bodyFat!.tone, ChangeTone.good);
+      // The latest weight at the newest body fat.
+      expect(boxes.leanMass!.value, closeTo(82.4 * 0.805, 1e-9));
+      expect(boxes.leanMass!.change, closeTo(-0.107, 1e-9));
+      expect(boxes.leanMass!.tone, ChangeTone.bad);
+    });
+
+    test('weight away from the target is bad; no target is neutral', () {
+      final up = entry('up', DateTime(2026, 11, 14), kg: 85);
+      expect(
+        bodyOverview([up, nov1, oct18], fat, targetKg: 78).weight!.tone,
+        ChangeTone.bad,
+      );
+      expect(
+        bodyOverview([up, nov1, oct18], fat, targetKg: null).weight!.tone,
+        ChangeTone.neutral,
+      );
+    });
+
+    test('one measurement day or none: values without changes', () {
+      final one = bodyOverview([nov13, nov1], fat, targetKg: 78);
+      expect(one.weight!.change, isNull);
+      expect(one.bodyFat!.value, 19.5);
+      expect(one.bodyFat!.change, isNull);
+
+      final none = bodyOverview([nov13], const {}, targetKg: 78);
+      expect(none.weight!.value, 82.4);
+      expect(none.bodyFat, isNull);
+      expect(none.leanMass, isNull);
+    });
+  });
 }

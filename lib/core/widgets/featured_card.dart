@@ -17,6 +17,10 @@ enum FeaturedCardForm {
   /// The outline with a smaller title, a note and its buttons stacked full
   /// width: a prompt to pick a way on (no program yet, or it finished).
   prompt,
+
+  /// The outline with a 15px title and a muted line, no button: the way to
+  /// a target (Body Compare, Measurement summary).
+  target,
 }
 
 /// The colour of a prompt's title: a state that is not known yet is muted,
@@ -162,6 +166,33 @@ class FeaturedCard extends StatelessWidget {
        rows = const [],
        chart = null,
        menu = null,
+       titleTone = FeaturedTitleTone.ink,
+       alert = null,
+       footActions = const [],
+       loading = false;
+
+  /// The way to a target: the [title] ("Target 78 kg") over a muted
+  /// [note] ("At this pace, around Dec 28.") in the accent outline.
+  const FeaturedCard.target({
+    super.key,
+    required String this.title,
+    required String this.note,
+  }) : form = FeaturedCardForm.target,
+       eyebrow = null,
+       origin = null,
+       onOrigin = null,
+       when = null,
+       locked = false,
+       line = null,
+       stats = const [],
+       action = null,
+       moreActions = const [],
+       progress = null,
+       rows = const [],
+       chart = null,
+       menu = null,
+       onTap = null,
+       error = null,
        titleTone = FeaturedTitleTone.ink,
        alert = null,
        footActions = const [],
@@ -358,6 +389,29 @@ class FeaturedCard extends StatelessWidget {
     }
 
     if (form == FeaturedCardForm.prompt) return _prompt(context);
+    if (form == FeaturedCardForm.target) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: p.surface,
+          borderRadius: radius,
+          border: Border.all(color: p.accent, width: ForgeStyle.featuredBorder),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, Gap.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 12,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(title!, style: text.titleMedium),
+              ),
+              Text(note!, style: text.bodyMedium!.copyWith(color: p.inkMuted)),
+            ],
+          ),
+        ),
+      );
+    }
 
     final featuredHead = form != FeaturedCardForm.outline;
     final headInk = featuredHead ? p.onFeatured : p.ink;

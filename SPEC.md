@@ -203,9 +203,12 @@ edits do not change it. `name` is 1-60 characters.
 `heaviestWeight`, `bestE1rm`, `bestSetVolume`, `mostReps`,
 `longestDuration`; each `value`, `date`, `workoutId`), `last` (`date`,
 `workoutId` and `sets` of the latest workout, shown as "last time"),
-`history[]` (`date`, `workoutId`, `bestE1rmKg?`, `volumeKg`; one point per
-workout). Rebuilt from that exercise's workouts whenever one is edited or
-deleted.
+`history[]` (`date`, `workoutId`, `bestE1rmKg?`, `volumeKg`, `set`,
+`workoutName`; one point per workout). A record's and a point's `set`
+(`weightKg?`, `reps?`, `durationS?`) is the set that made the record, or
+the workout's best working set (`bestSetOf`). Rebuilt from that exercise's
+workouts whenever one is edited or deleted; stats stored before `set` and
+`workoutName` were kept are rebuilt when their Strength page opens.
 
 **`users/{uid}/cardio/{id}`**: `type`, `date`, `durationS`, `distanceKm?`,
 `calories?`, `avgHeartRate?`, `incline?`, `note?`.
@@ -985,6 +988,106 @@ Decisions (the canvases they were drawn on are deleted):
   Health" / "Something went wrong. Try again in a moment." / Retry); no
   store is the untitled one line; a load failure "Couldn't read your
   steps" / "Try again in a moment." / Retry; loading is skeletons.
+- Body overview (owner's picks, 2026-11-16): the app bar says "Body"; the
+  Overview / Compare switch stays in every state; three boxes (Weight,
+  Body fat, Lean mass; lean mass is the latest weight at the newest body
+  fat) with the change since the measurement day before the newest one
+  (weight: the latest weigh-in against that day's weight), the weight
+  green toward the target weight and red away (ink without one), body
+  fat down and lean mass up green; without body fat its two boxes show
+  "—"; the chart is Forge MultiSeriesChart titled with the range, detail
+  "target 78 kg" while the target line shows, weight as its daily line
+  under the rolling 7-day average ("daily weight · 7-day average"), the
+  target line in weight's colour labelled "Target"; a series chip opens
+  "Add to chart" (Forge sheet, checkbox rows; at three picked the others
+  dim and take no taps, the last one stays); the range control shows
+  only with entries older than 12 weeks, a free user then sees locked
+  ranges and the caption "See your older results with Premium" (opens
+  the paywall); chart empty, series error and loading are Forge's forms;
+  Log weight and Measurement day side by side; History rows: weight
+  ("—" without one), the date (" · measurement day"), body fat or "—",
+  a chevron, opening the entry; no entries: the empty view in a card
+  and both buttons under it, on Compare too; a failure is the error
+  view in a card. Without a target weight the weight change is neutral
+  (ink-muted); a left/right pair's chart values show both sides ("36 /
+  35.5 cm"); an empty range is the chart's empty form "Nothing in this
+  range" / "Nothing to show in this range yet." with the range control
+  and locked caption kept in the card.
+- Body compare and Measurement summary (owner's picks, 2026-11-16):
+  photos on Forge BeforeAfterSlider (pose name and "Oct 18 → Nov 1 ·
+  −1.2 kg", without a weight change "Oct 18 → Nov 1"; chips Front / Right / Left / Back for the poses either day
+  has, fading; a pose only one day has, or one day alone, shows that
+  photo in the single form; one still fetched shimmers, one the backup
+  lacks "Photo not on this device"); no photos on either day: a card "No progress photos
+  on these days" and a muted mono "Oct 18 → Nov 1" under the
+  Previous / First / Other date control; Other date (also when chosen)
+  and, on Compare, the later date (accent in the photo card's line, the
+  plain mono line without photos) open sheets "Compare with" / "Later
+  day" listing the days with the current one ticked; change boxes
+  (change large, "84.1 → 82.9 kg" under it, "—" for a side not
+  measured): Weight, Body fat, Lean mass, Fat mass, then the
+  measurements in the app's order, a pair as one box per side "Upper arm
+  (L)"; one measurement day: a card with its date and "No earlier
+  measurement day to compare with yet.", "Values" boxes, the photo; no
+  body fat: NoticeBanner "No body fat yet" with the reason (the profile
+  one with "Your profile"); the target is FeaturedCard's target form
+  ("Target 78 kg" over "At this pace, around Dec 28." / "4.9 kg to go." /
+  "Reached."); weigh-ins but no measurement day: "No measurement days
+  yet" with Measurement day; a linked day that is gone: "This entry no
+  longer exists."; dates without the year unless another year (the
+  summary's head "Oct 18 → Nov 1, 2026" and the sheets' rows keep it).
+  The summary heads with the dates and "Measurement day saved", photos
+  last under "Photos", the back chevron its only exit; it opens after a
+  new measurement day is saved (the Measurement day board's "Kaydedildi"
+  state goes).
+- Weekly volume (owner's picks, 2026-11-16): the week picker is Forge
+  PeriodSelector ("Nov 9–15" for every week, the week label opens the
+  system date picker up to today and shows the picked day's week); one card
+  holds the model, "Drag to turn · pinch to zoom" with the turn icon and the
+  8px 0 / 10 / 20 sets ramp (no outline sentence); "Sets per muscle" with
+  "96 total" lists every muscle, those without sets last at "0 sets", over
+  "target 10–20 per muscle · tap a muscle on the model or a bar to see its
+  exercises"; the "12-week trend" card is Forge Chart.line of each week's
+  total for Premium (this week's total as its detail, the first and last
+  week under its ends, a tap "14 sets · Nov 9–15") and SectionCard.locked (Premium tag, chevron,
+  paywall) for everyone else and while Premium is unknown. A week without
+  sets is an EmptyView "No sets this week" / "No sets that week", "Weekly
+  sets per muscle fill in as you train.", with the trend card under it. A
+  muscle's sheet: its sets and band under the title ("14 sets · 10–20
+  sets"), "Where the sets came from" ("Push · Nov 13"), a muscle without
+  sets "No sets for this muscle this week."; its trend is Forge Chart.bar
+  without a card, the 10–20 band behind the bars, the bars in the band
+  colours (below the band 40% accent), titled "Last 12 weeks" ("12 weeks to
+  Nov 15" for an earlier week), shimmering 110px while it loads. The
+  program's weekly sets page: "Drag to turn" and "target 10–20 per muscle".
+- Strength (owner's picks, 2026-11-16): the title is "Strength"; an
+  "Exercise" row opens the Exercise sheet (search and the Strength list's
+  rows, this one ticked, its height following the rows; another exercise replaces the page, so Back still
+  returns to the list); a removed exercise's row reads "Exercise no longer
+  in your library". Ranges are Forge SegmentedControl (locked segments open
+  the paywall); the chart is Forge Chart.line "Estimated 1RM", one dot per
+  workout evenly spaced, the range's first day to the last session as its
+  detail ("Aug 24 – Nov 13"), the first and last dates under its ends, a tap
+  "104 kg · Nov 13"; no e1RM in the range is Chart.empty "No estimated 1RM
+  in these 12 weeks" ("…6 months", "…the last year") / "Log a set of
+  Bench Press to continue the line." with the range's first day to today
+  as its detail;
+  loading is Chart.loading. Records are all five, Best e1RM, Heaviest, Most
+  reps, Best set volume, Longest time ("Best e1RM" and "Heaviest" in the
+  workout summary too), each with its date ("Fri, Nov 13") and the set that
+  made it ("82.5 kg × 8"; e1RM and set volume alone) in the data font,
+  not tappable; session lines are in the data font too.
+  Sessions are every workout in the range (all of them for an exercise
+  without an e1RM), newest first: the best set as the strength page writes
+  it ("82.5 × 8", "12 reps", "+10 kg × 8", "20 kg assist × 8", "1:45",
+  "20 kg · 1:30") with "· e1RM 104" where there is one, "Fri, Nov 13 ·
+  Push" under it, opening the workout. Dates carry the year only when it is
+  not this one.
+- Strength list (owner's picks, 2026-11-16): Forge SearchField and
+  ListRows ("Last done Nov 13", "Last done Sep 3, 2025"); nothing yet and
+  no match are untitled EmptyViews ("Finish a workout to see your records
+  and progress here.", "No exercises match your search."); loading is six
+  ListRow.loading rows.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
@@ -2501,11 +2604,8 @@ the feature you are about to touch, and keep it true when you change it.
   user's own workouts, so the gate is client-side only. Changing week
   keeps the week before on screen until the next arrives, so the model
   keeps its camera. `WatchWeeklyVolume` with one week is what the Today
-  tab's card calls. Layout (UX pass, 2026-11-13, variant A): the week
-  switcher, one body model (dragged to turn, so front and back are the
-  same model) with "Drag to turn · tap a muscle" under it once loaded,
-  the legend, then the muscle bars in one card; a muscle opens its sheet
-  as before.
+  tab's card calls. Layout: see Design, "Weekly volume" (2026-11-16); the
+  page's 12-week trend charts each week's total sets.
 - **Strength**: Progress → Strength lists the exercises with stats (the
   whole `exerciseStats` collection, live), most recently trained first
   (`last.date`, else the latest history point), searched by catalogue name,
@@ -2515,17 +2615,22 @@ the feature you are about to touch, and keep it true when you change it.
   costly, the fix is a small last-trained index written in the same batch
   as the stats. An exercise's page opens from there only (the Progress card
   opens the list); the exercise detail page no longer links to it (UX pass,
-  2026-11-13). It lists the records (heaviest weight,
-  best e1RM, most reps, best set volume, longest time), each opening the
-  workout that set it, and charts each workout's best e1RM in the user's
-  unit, on an axis of whole kg or lb at least four units tall; an exercise
-  that never had an e1RM (bodyweight, timed) shows its records only.
+  2026-11-13). It charts each workout's best e1RM in the user's unit
+  (Forge Chart.line), lists the records (best e1RM, heaviest weight, most
+  reps, best set volume, longest time) with the set that made them, and
+  the sessions in the range, each opening its workout; an exercise that
+  never had an e1RM (bodyweight, timed) shows no chart and every session.
+  A workout's best set: the highest e1RM (then the heavier, then more
+  reps) for a load, the least assistance (then more reps), the most reps,
+  the longest time, or the heaviest timed set (then the longer); a
+  record's set among equal values is the heavier one (for the heaviest
+  weight the one with more reps).
   Ranges: 12 weeks free; 6 months, 1 year and all Premium; a range starts
   at local midnight of the same day that many months back, or that
   month's last day when it is shorter. Records are all-time and free (the
   workout summary shows them too); only the chart beyond 12 weeks is
-  Premium, and a free user with older results is told so and offered the
-  paywall. The gate is client-side: one stats document holds the whole
+  Premium, and a free user with older results (any workout before the
+  last 12 weeks) is told so and offered the paywall. The gate is client-side: one stats document holds the whole
   history, so the rules cannot withhold old points without splitting it,
   and no server refusal can occur here.
 - **Charts**: `lib/core/line_chart.dart` is a small `CustomPainter` line
@@ -2564,11 +2669,26 @@ the feature you are about to touch, and keep it true when you change it.
   Android the app that saved them when its package is known (Strava,
   Google Fit, Samsung Health, Garmin Connect, Fitbit and a few more), else
   "Health Connect". Pace is rounded to the nearest second.
+  feature widgets until then. Done for Strength (Forge Chart.line) and
+  the volume trends (Forge Chart.line and Chart.bar with a band,
+  2026-11-16); `LineChart` remains for Body.
+- **Cardio**: Progress → Cardio is one scrolling page (UX pass,
+  2026-11-13): this week's minutes, sessions and distance (in the user's
+  unit, only when a session has one) on top, the 12-week minutes chart,
+  then the sessions under a header per week (with its minutes), newest
+  first; a session opens its detail (type, date, duration, distance, pace,
+  calories, note) with Edit and Delete (owner's pick, Çelişkiler,
+  2026-11-15). Log cardio is a full-width button
+  fixed at the bottom once the list has loaded, the empty page included,
+  which then shows only its message. Weeks start on the app's first
+  weekday (see Week start), for the summary, the chart and the list alike,
+  as on the Progress card.
+  The list follows the 500 newest sessions.
 
 ### Body, steps and calculators
 
 - **Weight log and measurement days** (`lib/features/body`): Progress →
-  Weight and measurements. A quick log is an entry with only `weightKg`
+  Body. A quick log is an entry with only `weightKg`
   (date picker; today keeps the current time, another day is noon); a
   measurement day is a step flow, weight → each tracked measurement → front,
   right, left, back photos, every step skippable, the last one saves;
@@ -2591,14 +2711,21 @@ the feature you are about to touch, and keep it true when you change it.
   Both sides of a pair (upper arm, forearm, thigh, calf) that are steps
   share one step with a Left and a Right field, skipped or cleared field
   by field as above; entry and compare show them on one row (L / R).
-- **Body page** (UX pass, 2026-11-13): two views behind one segmented
-  control. Overview: the latest weight and target, one chart, the range
-  picker (12 weeks free), Log weight, Measurement day and the history.
-  The chart shows up to three series picked in "Add to chart": weight,
+- **Body page** (UX pass, 2026-11-13; screen step 2026-11-16): two views
+  behind one segmented control. Overview: three boxes, one chart (range
+  control only with entries older than 12 weeks; 12 weeks free), Log
+  weight, Measurement day and the history; the looks are in SPEC › Design.
+  The boxes (`bodyOverview`): the latest weigh-in's weight, the newest
+  body fat and the lean mass of the two, each changed against the
+  measurement day before the newest one, counted only for values dated
+  after it. The chart shows up to three series picked in "Add to chart": weight,
   body fat, fat mass, lean mass and every measurement as lines, weekly
   sets and daily steps (a week's average, today's partial day left out) as
-  bars, plus the target weight line while weight shows. Each series keeps
-  its own scale; tapping a point shows the values of that date. Weekly
+  bars, plus the target weight line while weight shows. Weight carries
+  its rolling 7-day average (`rollingAverage`: the mean of the weigh-ins
+  in the 7 days ending on each, within the range). Each series keeps
+  its own scale; tapping a day shows the values of that date (a pair of
+  measurements as the mean of its sides). Weekly
   sets and daily steps are Premium (owner, 2026-11-13): locked in the
   sheet, never read for a free user, and a stored choice of them is hidden,
   not deleted. Hidden series do not count toward the three; when Premium
@@ -2609,15 +2736,14 @@ the feature you are about to touch, and keep it true when you change it.
   body fat once an entry has one). An unreadable choice file counts as not
   chosen. Under "All", daily steps go back to the oldest body entry or one
   year, whichever is older. Compare: the measurement summary's
-  comparison with Previous / First / Other date. `series_chart.dart` is
-  generic; move it to `forge_ui` when that package is next changed.
+  comparison (below). The chart is Forge's `MultiSeriesChart`.
 - **Body fat** (derived, never stored): US Navy, through the calculators'
   `estimateBodyFat`, from an entry's measurements and the profile's sex
   and height (`entryBodyFat` in `lib/features/body/domain`). Sites: the
   waist is measured at its narrowest and the abdomen at the navel, so men
   need `neck` + `abdomen`, women `neck` + `waist` + `hips`. An entry
   without them, or with values the formula rejects, simply shows none.
-  Shown on the Weight and measurements page as a series of its chart
+  Shown on the Body page as a series of its chart
   (see Body page; only once some entry has one), in each history row, on the entry and as a change in
   compare, with one decimal. "Measurements to track" has a "Body fat"
   box: ticked exactly while all its measurements are tracked (nothing
@@ -2647,52 +2773,49 @@ the feature you are about to touch, and keep it true when you change it.
   weight as the profile (30-300 kg), measurements 10-250 cm; values are
   typed to one decimal in the user's unit, so half a shown lb or inch
   step of slack lets the limits as shown pass (66.1 and 661.4 lb, 3.9 in).
-  The weight chart is a `LineChart` with the strength ranges: 12 weeks
-  free, longer Premium (confirmed by the user); the profile's
-  target weight shows with the distance to go. Comparing is the
-  measurement summary (below). Saving or deleting an entry sets `profile.weightKg` to
+  The Body chart has the strength ranges: 12 weeks free, longer Premium
+  (confirmed by the user); the profile's target weight shows as its line.
+  Comparing is the measurement summary (below). Saving or deleting an entry sets `profile.weightKg` to
   the weight of the most recent dated entry that has one, through the
   profile's `UpdateProfile` (calculators and the target distance use it);
   with no such entry the profile weight is left. Firestore rules validate
   `bodyEntries` (date timestamp, numeric `weightKg`, `measurements` and
   `photos` maps whose known keys hold numbers and strings).
-- **Measurement summary** (`lib/features/body`, planned with the owner):
-  one screen, `MeasurementSummaryPage`, titled "Measurement summary" at
-  `/progress/body/summary/:id` (opened in place of the flow right after a
-  new measurement day is saved; never after an edit). The same comparison
-  is the Body page's Compare view (see Body page), which a measurement
-  day's page opens for that day at `/progress/body?compare=<id>` when it
-  has an earlier one. The app-bar compare icon and the old compare page are gone; no
-  sharing or export. A measurement day is an entry with measurements or
+- **Measurement summary** (`lib/features/body`, planned with the owner;
+  screen step 2026-11-16): one screen, `MeasurementSummaryPage`, titled
+  "Measurement summary" at `/progress/body/summary/:id` (opened in place
+  of the flow right after a new measurement day is saved; never after an
+  edit). The same comparison is the Body page's Compare view, which a
+  measurement day's page opens for that day at
+  `/progress/body?compare=<id>` (gone: not found). Without a link Compare
+  shows the newest measurement day that has an earlier one, the only
+  measurement day alone, or that there is none; the later day can be
+  picked from the measurement days after the earlier one. No sharing or
+  export. A measurement day is an entry with measurements or
   photos (quick weight logs are not, as for the reminders). The baseline
   is one of the measurement days dated before the entry: the previous
   one by default, "First" (the oldest) or any of them from a list ("Other
-  date"); the chips show only with two or more. A chosen day that is
-  deleted or moves after the entry falls back to the previous day. Order:
-  the dates; body fat, fat mass and lean mass (from each day's own
-  weight; fat and lean mass need the later day's weight) with changes,
-  or one line on what is missing (sex/height with a link to the profile,
-  the measurements, or values the formula rejects); every value either
-  day has (weight, measurements, pairs on one row, a missing side a dash)
-  before → after with the difference, differences in the primary colour
-  whatever their sign; the target (hidden without a target weight or a
-  weight that day): distance, and an estimated date at the rate between
-  the two days, given only when the target is not reached (within
-  0.05 kg), the earlier day has a weight, the days are at least 7 days
-  apart, the weight moved toward the target, and the date is between now
-  and 2 years from now; then the photos of one pose (chips of the poses
-  either day has) on a before/after slider, the earlier left of a bar the
-  user drags, both photos filling the same 3:4 area (cover), a missing
-  one as a note on its half; photos of the shown pose are fetched from
-  the backup when missing. Without an earlier measurement day the same
-  screen shows the day alone: its date with "No earlier measurement day
-  to compare with yet.", values without before or change ("Values"),
-  body fat without change, the target without an estimate, and the
-  photo of the pose without a slider. The domain model
-  (`MeasurementSummary`, `measurement_summary.dart`) does every number;
-  `FindBaseline` picks the baseline; `MeasurementSummaryCubit` follows the
-  entries and the profile itself. The slider is `forge_ui`'s
-  `BeforeAfterSlider`.
+  date"); the control shows only with two or more. A chosen day that is
+  deleted or moves after the entry falls back to the previous day. Body
+  fat, fat mass and lean mass come from each day's own weight (fat and
+  lean mass need the later day's weight); otherwise a notice says what
+  is missing (sex/height with a link to the profile, the measurements,
+  values the formula rejects, the day's weight). Every value either day
+  has (weight, measurements, a pair as one box per side) shows before →
+  after with the difference; the target (hidden without a target weight
+  or a weight that day): an estimated date at the rate between the two
+  days, given only when the target is not reached (within 0.05 kg), the
+  earlier day has a weight, the days are at least 7 days apart, the
+  weight moved toward the target, and the date is between now and 2
+  years from now; else the distance or "Reached.". Then the photos of
+  every pose either day has on Forge's `BeforeAfterSlider` (a fade);
+  both days' photos are fetched from the backup when missing, once per
+  screen. Without an earlier measurement day the screen shows the day
+  alone: its date with "No earlier measurement day to compare with yet.",
+  "Values" without changes, the target, and the photos without a slider.
+  The domain model (`MeasurementSummary`, `measurement_summary.dart`)
+  does every number; `FindBaseline` picks the baseline;
+  `MeasurementSummaryCubit` follows the entries and the profile itself.
 - **Photos**: private app storage plus Cloud Storage backup. Never the gallery
   and never the device's own backups: Android's backup rules
   (`res/xml/data_extraction_rules.xml`, `backup_rules.xml`) exclude

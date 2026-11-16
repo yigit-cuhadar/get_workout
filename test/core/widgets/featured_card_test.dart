@@ -460,4 +460,39 @@ void main() {
     await pumpComponent(tester, const FeaturedCard.bandLoading());
     expect(find.byType(SkeletonBar), findsNWidgets(4));
   });
+
+  testWidgets('the target form: a 15px title, a muted line, the accent '
+      'outline and no button', (tester) async {
+    await pumpComponent(
+      tester,
+      const FeaturedCard.target(
+        title: 'Target 78 kg',
+        note: 'At this pace, around Dec 28.',
+      ),
+    );
+    final colors = ForgeStyle.of(tester.element(find.byType(FeaturedCard)))
+        .colors;
+
+    expect(tester.widget<Text>(find.text('Target 78 kg')).style!.fontSize, 15);
+    expect(
+      tester
+          .widget<Text>(find.text('At this pace, around Dec 28.'))
+          .style!
+          .color,
+      colors.inkMuted,
+    );
+    final box = tester.widget<DecoratedBox>(
+      find
+          .descendant(
+            of: find.byType(FeaturedCard),
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
+    );
+    expect(
+      ((box.decoration as BoxDecoration).border! as Border).top.color,
+      colors.accent,
+    );
+    expect(find.byType(ForgeButton), findsNothing);
+  });
 }

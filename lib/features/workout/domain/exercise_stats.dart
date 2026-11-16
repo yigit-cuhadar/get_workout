@@ -36,6 +36,7 @@ class StatRecord extends Equatable {
     required this.value,
     required this.date,
     required this.workoutId,
+    this.set,
   });
 
   final double value;
@@ -44,8 +45,11 @@ class StatRecord extends Equatable {
   final DateTime date;
   final String workoutId;
 
+  /// The set that made it; null in stats stored before sets were kept.
+  final SetValues? set;
+
   @override
-  List<Object?> get props => [value, date, workoutId];
+  List<Object?> get props => [value, date, workoutId, set];
 }
 
 /// The exercise's working sets in its latest workout, shown as "last
@@ -72,6 +76,8 @@ class HistoryPoint extends Equatable {
     required this.workoutId,
     this.bestE1rmKg,
     this.volumeKg = 0,
+    this.bestSet,
+    this.workoutName,
   });
 
   final DateTime date;
@@ -79,8 +85,20 @@ class HistoryPoint extends Equatable {
   final double? bestE1rmKg;
   final double volumeKg;
 
+  /// The workout's best working set (see [bestSetOf]) and its name; null
+  /// in stats stored before they were kept.
+  final SetValues? bestSet;
+  final String? workoutName;
+
   @override
-  List<Object?> get props => [date, workoutId, bestE1rmKg, volumeKg];
+  List<Object?> get props => [
+    date,
+    workoutId,
+    bestE1rmKg,
+    volumeKg,
+    bestSet,
+    workoutName,
+  ];
 }
 
 /// The summary of an exercise's workouts
@@ -102,6 +120,14 @@ class ExerciseStats extends Equatable {
 
   /// Oldest first, one point per workout.
   final List<HistoryPoint> history;
+
+  /// Stored before records kept their set and history points their best
+  /// set and workout name; [rebuildStats] brings it up to date.
+  bool get outdated =>
+      records.values.any((record) => record.set == null) ||
+      history.any(
+        (point) => point.bestSet == null || point.workoutName == null,
+      );
 
   @override
   List<Object?> get props => [records, last, history];
@@ -255,26 +281,75 @@ List<WorkoutSet> workingSets(Iterable<WorkoutSet> sets) => [
     if (set.done && !set.isWarmup) set,
 ];
 
+/// The values of [set] that a record or a best set keeps.
+SetValues setValues(WorkoutSet set) =>
+    (weightKg: set.weightKg, reps: set.reps, durationS: set.durationS);
+
+/// Orders sets of [type] from worst to best (see [bestSetOf]).
+int _compareSets(WorkoutSet a, WorkoutSet b, LoggingType type) {
+  int by(num? x, num? y) => (x ?? 0).compareTo(y ?? 0);
+  int chain(List<int> orders) =>
+      orders.firstWhere((order) => order != 0, orElse: () => 0);
+  return switch (type) {
+    LoggingType.weightReps || LoggingType.weightedBodyweight => chain([
+      by(setE1rm(a, type), setE1rm(b, type)),
+      by(a.weightKg, b.weightKg),
+      by(a.reps, b.reps),
+    ]),
+    // Less assistance is better (an empty one is none).
+    LoggingType.assistedBodyweight => chain([
+      by(b.weightKg, a.weightKg),
+      by(a.reps, b.reps),
+    ]),
+    LoggingType.reps => by(a.reps, b.reps),
+    LoggingType.duration => by(a.durationS, b.durationS),
+    LoggingType.weightDuration => chain([
+      by(a.weightKg, b.weightKg),
+      by(a.durationS, b.durationS),
+    ]),
+  };
+}
+
+/// The best of [sets]' done working sets for [type]: the highest e1RM
+/// (then the heavier, then more reps) for a load, the least assistance
+/// (then more reps), the most reps, the longest time, or the heaviest
+/// timed set (then the longer). Null without a done working set.
+WorkoutSet? bestSetOf(Iterable<WorkoutSet> sets, LoggingType type) =>
+    workingSets(sets).fold<WorkoutSet?>(
+      null,
+      (best, set) =>
+          best == null || _compareSets(set, best, type) > 0 ? set : best,
+    );
+
 /// The best value of each record kind of [type] among [sets]' done working
-/// sets. Kinds without a value above zero are left out.
-Map<RecordKind, double> sessionBests(
+/// sets, with the set that made it: among equal values the heavier (the
+/// one with more reps for the heaviest weight). Kinds without a value above
+/// zero are left out.
+Map<RecordKind, ({double value, WorkoutSet set})> sessionBests(
   Iterable<WorkoutSet> sets,
   LoggingType type,
 ) {
   final kinds = RecordKind.of(type);
-  final best = <RecordKind, double>{};
-  void offer(RecordKind kind, num? value) {
+  final best = <RecordKind, ({double value, WorkoutSet set})>{};
+  void offer(RecordKind kind, num? value, WorkoutSet set) {
     if (!kinds.contains(kind) || value == null || !(value > 0)) return;
     final current = best[kind];
-    if (current == null || value > current) best[kind] = value.toDouble();
+    final better =
+        current == null ||
+        value > current.value ||
+        value == current.value &&
+            ((set.weightKg ?? 0) > (current.set.weightKg ?? 0) ||
+                kind == RecordKind.heaviestWeight &&
+                    (set.reps ?? 0) > (current.set.reps ?? 0));
+    if (better) best[kind] = (value: value.toDouble(), set: set);
   }
 
   for (final set in workingSets(sets)) {
-    offer(RecordKind.heaviestWeight, set.weightKg);
-    offer(RecordKind.bestE1rm, setE1rm(set, type));
-    offer(RecordKind.bestSetVolume, setVolume(set, type));
-    offer(RecordKind.mostReps, set.reps);
-    offer(RecordKind.longestDuration, set.durationS);
+    offer(RecordKind.heaviestWeight, set.weightKg, set);
+    offer(RecordKind.bestE1rm, setE1rm(set, type), set);
+    offer(RecordKind.bestSetVolume, setVolume(set, type), set);
+    offer(RecordKind.mostReps, set.reps, set);
+    offer(RecordKind.longestDuration, set.durationS, set);
   }
   return best;
 }
@@ -335,13 +410,17 @@ ExerciseStats? applyWorkout(
   final type = entries.first.loggingType;
   final date = workout.startedAt;
   final records = {...?stats?.records};
-  for (final MapEntry(key: kind, :value) in sessionBests(done, type).entries) {
+  for (final MapEntry(key: kind, value: (:value, :set)) in sessionBests(
+    done,
+    type,
+  ).entries) {
     final current = records[kind];
     if (current == null || value > current.value) {
       records[kind] = StatRecord(
         value: value,
         date: date,
         workoutId: workout.id,
+        set: setValues(set),
       );
     }
   }
@@ -355,6 +434,8 @@ ExerciseStats? applyWorkout(
       workoutId: workout.id,
       bestE1rmKg: bests.isEmpty ? null : bests.reduce((a, b) => a > b ? a : b),
       volumeKg: sessionVolume(done, type),
+      bestSet: setValues(bestSetOf(done, type)!),
+      workoutName: workout.name,
     ),
   ]..sort((a, b) => a.date.compareTo(b.date));
   return ExerciseStats(
