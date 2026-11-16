@@ -542,6 +542,8 @@
   "@cardioSpeedLine": {"placeholders": {"speed": {"type": "String"}}},
   "cardioNoteHint": "Add a note",
   "cardioClear": "Clear",
+  "cardioDiscardTitle": "Discard this cardio session?",
+  "cardioDiscard": "Discard",
   "cardioSave": "Save",
   "cardioDelete": "Delete",
   "cardioDeleteTitle": "Delete this session?",

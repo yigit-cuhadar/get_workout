@@ -116,6 +116,7 @@ class CardioFormCubit extends Cubit<CardioFormState> {
        _uid = getCurrentUser()?.id,
        _clock = clock ?? DateTime.now,
        super(_initialState(_initial, _unit, clock ?? DateTime.now)) {
+    _start = state;
     _userSubscription = watchAuthUser()
         .map((user) => user?.id)
         .distinct()
@@ -139,6 +140,20 @@ class CardioFormCubit extends Cubit<CardioFormState> {
   bool _submitted = false;
 
   bool get isEditing => _initial?.id != null;
+
+  /// What [hasChanges] compares against.
+  late final CardioFormState _start;
+
+  /// A value differs from those the form opened with; nothing once it
+  /// saved or closed.
+  bool get hasChanges => switch (state.status) {
+    CardioFormStatus.saved ||
+    CardioFormStatus.closed ||
+    CardioFormStatus.deleted => false,
+    _ =>
+      state.copyWith(issues: const {}, status: CardioFormStatus.editing) !=
+          _start,
+  };
 
   /// The session as it stands, for its pace or speed under the form.
   CardioSession get session => _check(state).$1;

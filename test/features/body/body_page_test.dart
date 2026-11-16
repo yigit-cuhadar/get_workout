@@ -677,6 +677,16 @@ void main() {
       verify(form.save).called(1);
     });
 
+    testWidgets('Change opens the date picker over the sheet', (tester) async {
+      await pump(tester, const BodyPage());
+      await tester.tap(find.text('Log weight'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Change'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ForgeDatePicker), findsOneWidget);
+    });
+
     testWidgets('a failed save says so over the sheet, which stays', (
       tester,
     ) async {

@@ -127,6 +127,30 @@ void main() {
     });
   });
 
+  group('changes', () {
+    test('a changed value is a change; setting it back is none', () async {
+      final cubit = build(initial: stored);
+      expect(cubit.hasChanges, isFalse);
+
+      cubit.setCalories(610);
+      expect(cubit.hasChanges, isTrue);
+      cubit.setCalories(600);
+      expect(cubit.hasChanges, isFalse);
+      await cubit.close();
+    });
+
+    test('a new session has changes once something is picked, none once '
+        'saved', () async {
+      final cubit = build()..setDuration(const Duration(minutes: 20));
+      expect(cubit.hasChanges, isTrue);
+
+      await cubit.save();
+      expect(cubit.state.status, CardioFormStatus.saved);
+      expect(cubit.hasChanges, isFalse);
+      await cubit.close();
+    });
+  });
+
   group('validation', () {
     blocTest<CardioFormCubit, CardioFormState>(
       'Save is off, and saves nothing, until there is a duration (CL06)',

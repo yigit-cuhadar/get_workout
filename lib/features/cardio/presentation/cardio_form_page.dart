@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +8,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/day_time.dart';
+import '../../../core/unsaved_changes.dart';
 import '../../../core/widgets/choice_sheet.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calculators/presentation/calculator_input.dart';
@@ -120,151 +123,199 @@ class _CardioFormViewState extends State<_CardioFormView> {
         }
       },
       builder: (context, state) {
-        final type = state.type;
-        final noValue = l10n.bodyNoValue;
-        final missingDuration = state.duration <= Duration.zero;
         final rate = _rateLine(l10n, state);
-        return Scaffold(
-          appBar: ForgeAppBar(
-            title: _cubit.isEditing ? l10n.cardioEditTitle : l10n.cardioLog,
-            actions: [
-              ForgeAppBarAction.text(
-                label: l10n.cardioSave,
-                onPressed: state.canSave ? _cubit.save : null,
-              ),
-            ],
-          ),
-          body: ListView(
-            padding: const EdgeInsets.all(Gap.md),
-            children: [
-              ListRowCard(
-                children: [
-                  ListRow(
-                    title: l10n.cardioType,
-                    value: l10n.typeName(type),
-                    end: ListRowEnd.chevron,
-                    onTap: () => _pickType(type),
-                  ),
-                  ListRow(
-                    title: l10n.cardioDateTime,
-                    value: dayTimeText(context, state.date),
-                    error: state.issues.contains(CardioIssue.dateInFuture)
-                        ? l10n.cardioErrorDateInFuture
-                        : null,
-                    dataValue: true,
-                    end: ListRowEnd.chevron,
-                    onTap: () => _pickDateTime(state.date),
-                  ),
-                  ListRow(
-                    title: l10n.cardioDuration,
-                    value: missingDuration
-                        ? noValue
-                        : formatDuration(state.duration),
-                    missing: missingDuration,
-                    error: missingDuration ? l10n.cardioErrorDuration : null,
-                    dataValue: true,
-                    end: ListRowEnd.chevron,
-                    onTap: () => _pickDuration(state.duration),
-                  ),
-                  if (type.distance)
-                    ListRow(
-                      title: l10n.cardioDistanceRow,
-                      value: switch (state.distance) {
-                        final distance? => _distanceText(l10n, distance),
-                        null => noValue,
-                      },
-                      dataValue: true,
-                      end: ListRowEnd.chevron,
-                      onTap: () => _pickNumber(
-                        title: l10n.cardioDistanceRow,
-                        label: l10n.cardioDistance(
-                          l10n.distanceUnitLabel(widget.unit),
-                        ),
-                        field: _NumberField.distance(widget.unit),
-                        error: l10n.cardioErrorDistance,
-                        value: state.distance,
-                        onPicked: _cubit.setDistance,
-                      ),
-                    ),
-                  ListRow(
-                    title: l10n.cardioCaloriesRow,
-                    value: switch (state.calories) {
-                      final kcal? => l10n.cardioKcal(kcal),
-                      null => noValue,
-                    },
-                    dataValue: true,
-                    end: ListRowEnd.chevron,
-                    onTap: () => _pickNumber(
-                      title: l10n.cardioCaloriesRow,
-                      label: l10n.cardioCalories,
-                      field: _NumberField.calories,
-                      error: l10n.cardioErrorCalories,
-                      value: state.calories?.toDouble(),
-                      onPicked: (value) => _cubit.setCalories(value?.round()),
-                    ),
-                  ),
-                  ListRow(
-                    title: l10n.cardioHeartRateRow,
-                    value: switch (state.heartRate) {
-                      final bpm? => l10n.cardioBpm(bpm),
-                      null => noValue,
-                    },
-                    dataValue: true,
-                    end: ListRowEnd.chevron,
-                    onTap: () => _pickNumber(
-                      title: l10n.cardioHeartRateRow,
-                      label: l10n.cardioHeartRate,
-                      field: _NumberField.heartRate,
-                      error: l10n.cardioErrorHeartRate,
-                      value: state.heartRate?.toDouble(),
-                      onPicked: (value) => _cubit.setHeartRate(value?.round()),
-                    ),
-                  ),
-                  if (type.incline)
-                    ListRow(
-                      title: l10n.cardioInclineRow,
-                      value: switch (state.incline) {
-                        final incline? => l10n.cardioInclinePercent(
-                          formatDecimal(incline, 1),
-                        ),
-                        null => noValue,
-                      },
-                      dataValue: true,
-                      end: ListRowEnd.chevron,
-                      onTap: () => _pickNumber(
-                        title: l10n.cardioInclineRow,
-                        label: l10n.cardioIncline,
-                        field: _NumberField.incline,
-                        error: l10n.cardioErrorIncline,
-                        value: state.incline,
-                        onPicked: _cubit.setIncline,
-                      ),
-                    ),
-                  ListRow(
-                    title: l10n.cardioNote,
-                    value: state.note.trim().isEmpty ? noValue : state.note,
-                    end: ListRowEnd.chevron,
-                    onTap: () => _editNote(state.note),
-                  ),
-                ],
-              ),
-              if (rate != null) ...[
-                const SizedBox(height: Gap.sm),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
-                  child: Text(
-                    rate,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: ForgeStyle.of(context).colors.inkMuted,
-                    ),
-                  ),
-                ),
-              ],
-            ],
+        return UnsavedChangesGuard(
+          hasChanges: () => _cubit.hasChanges,
+          confirmDiscard: _confirmDiscard,
+          child: Builder(
+            builder: (context) => PopScope(
+              canPop: false,
+              onPopInvokedWithResult: (didPop, _) {
+                if (!didPop) unawaited(_leave(context));
+              },
+              child: _page(context, l10n, state, rate),
+            ),
           ),
         );
       },
     );
+  }
+
+  Widget _page(
+    BuildContext context,
+    AppLocalizations l10n,
+    CardioFormState state,
+    String? rate,
+  ) {
+    final type = state.type;
+    final noValue = l10n.bodyNoValue;
+    final missingDuration = state.duration <= Duration.zero;
+    return Scaffold(
+      appBar: ForgeAppBar(
+        title: _cubit.isEditing ? l10n.cardioEditTitle : l10n.cardioLog,
+        actions: [
+          ForgeAppBarAction.text(
+            label: l10n.cardioSave,
+            onPressed: state.canSave ? _cubit.save : null,
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(Gap.md),
+        children: [
+          ListRowCard(
+            children: [
+              ListRow(
+                title: l10n.cardioType,
+                value: l10n.typeName(type),
+                end: ListRowEnd.chevron,
+                onTap: () => _pickType(type),
+              ),
+              ListRow(
+                title: l10n.cardioDateTime,
+                value: dayTimeText(context, state.date),
+                error: state.issues.contains(CardioIssue.dateInFuture)
+                    ? l10n.cardioErrorDateInFuture
+                    : null,
+                dataValue: true,
+                end: ListRowEnd.chevron,
+                onTap: () => _pickDateTime(state.date),
+              ),
+              ListRow(
+                title: l10n.cardioDuration,
+                value: missingDuration
+                    ? noValue
+                    : formatDuration(state.duration),
+                missing: missingDuration,
+                error: missingDuration ? l10n.cardioErrorDuration : null,
+                dataValue: true,
+                end: ListRowEnd.chevron,
+                onTap: () => _pickDuration(state.duration),
+              ),
+              if (type.distance)
+                ListRow(
+                  title: l10n.cardioDistanceRow,
+                  value: switch (state.distance) {
+                    final distance? => _distanceText(l10n, distance),
+                    null => noValue,
+                  },
+                  dataValue: true,
+                  end: ListRowEnd.chevron,
+                  onTap: () => _pickNumber(
+                    title: l10n.cardioDistanceRow,
+                    label: l10n.cardioDistance(
+                      l10n.distanceUnitLabel(widget.unit),
+                    ),
+                    field: _NumberField.distance(widget.unit),
+                    error: l10n.cardioErrorDistance,
+                    value: state.distance,
+                    onPicked: _cubit.setDistance,
+                  ),
+                ),
+              ListRow(
+                title: l10n.cardioCaloriesRow,
+                value: switch (state.calories) {
+                  final kcal? => l10n.cardioKcal(kcal),
+                  null => noValue,
+                },
+                dataValue: true,
+                end: ListRowEnd.chevron,
+                onTap: () => _pickNumber(
+                  title: l10n.cardioCaloriesRow,
+                  label: l10n.cardioCalories,
+                  field: _NumberField.calories,
+                  error: l10n.cardioErrorCalories,
+                  value: state.calories?.toDouble(),
+                  onPicked: (value) => _cubit.setCalories(value?.round()),
+                ),
+              ),
+              ListRow(
+                title: l10n.cardioHeartRateRow,
+                value: switch (state.heartRate) {
+                  final bpm? => l10n.cardioBpm(bpm),
+                  null => noValue,
+                },
+                dataValue: true,
+                end: ListRowEnd.chevron,
+                onTap: () => _pickNumber(
+                  title: l10n.cardioHeartRateRow,
+                  label: l10n.cardioHeartRate,
+                  field: _NumberField.heartRate,
+                  error: l10n.cardioErrorHeartRate,
+                  value: state.heartRate?.toDouble(),
+                  onPicked: (value) => _cubit.setHeartRate(value?.round()),
+                ),
+              ),
+              if (type.incline)
+                ListRow(
+                  title: l10n.cardioInclineRow,
+                  value: switch (state.incline) {
+                    final incline? => l10n.cardioInclinePercent(
+                      formatDecimal(incline, 1),
+                    ),
+                    null => noValue,
+                  },
+                  dataValue: true,
+                  end: ListRowEnd.chevron,
+                  onTap: () => _pickNumber(
+                    title: l10n.cardioInclineRow,
+                    label: l10n.cardioIncline,
+                    field: _NumberField.incline,
+                    error: l10n.cardioErrorIncline,
+                    value: state.incline,
+                    onPicked: _cubit.setIncline,
+                  ),
+                ),
+              ListRow(
+                title: l10n.cardioNote,
+                value: state.note.trim().isEmpty ? noValue : state.note,
+                end: ListRowEnd.chevron,
+                onTap: () => _editNote(state.note),
+              ),
+            ],
+          ),
+          if (rate != null) ...[
+            const SizedBox(height: Gap.sm),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
+              child: Text(
+                rate,
+                style: Theme.of(context).textTheme.bodyMedium!
+                    .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Out of the form, after asking when something changed. [context] is
+  /// below the [UnsavedChangesGuard].
+  Future<void> _leave(BuildContext context) async {
+    if (_cubit.hasChanges && !await UnsavedChangesGuard.ask(context)) return;
+    if (context.mounted) context.pop();
+  }
+
+  Future<bool> _confirmDiscard() async {
+    final l10n = AppLocalizations.of(context);
+    final discard = await showForgeDialog<bool>(
+      context: context,
+      builder: (dialog) => ForgeDialog(
+        title: l10n.cardioDiscardTitle,
+        action: ForgeButton(
+          label: l10n.cardioDiscard,
+          variant: ForgeButtonVariant.danger,
+          onPressed: () => Navigator.pop(dialog, true),
+        ),
+        cancel: ForgeButton(
+          label: l10n.cancel,
+          variant: ForgeButtonVariant.secondary,
+          onPressed: () => Navigator.pop(dialog, false),
+        ),
+      ),
+    );
+    return discard ?? false;
   }
 
   String _distanceText(AppLocalizations l10n, double value) {

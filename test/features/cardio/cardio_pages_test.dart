@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
+import 'package:get_workout/core/unsaved_changes.dart';
 import 'package:get_workout/features/cardio/domain/cardio_session.dart';
 import 'package:get_workout/features/cardio/domain/cardio_type.dart';
 import 'package:get_workout/features/cardio/domain/cardio_week.dart';
@@ -17,6 +18,7 @@ import 'package:get_workout/features/cardio/presentation/cardio_session_page.dar
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockList extends MockCubit<CardioListState> implements CardioListCubit {}
@@ -243,20 +245,66 @@ void main() {
         ),
       );
       when(form.save).thenAnswer((_) async {});
+      when(() => form.hasChanges).thenReturn(false);
       // A fresh form for each call.
       await tester.pumpWidget(const SizedBox());
       await sl.reset();
       sl.registerFactoryParam<CardioFormCubit, CardioSession?, DistanceUnit>(
         (_, _) => form,
       );
-      await pump(
-        tester,
-        ready([?session]),
-        session == null
-            ? const CardioNewPage()
-            : CardioEditPage(id: session.id!),
+      tester.view
+        ..physicalSize = const Size(1200, 2600)
+        ..devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      final list = _MockList();
+      whenListen(
+        list,
+        const Stream<CardioListState>.empty(),
+        initialState: ready([?session]),
       );
-      await tester.pump();
+      sl.registerSingleton<CardioListCubit>(list);
+      final settings = _MockSettings();
+      when(() => settings.state).thenReturn(
+        const SettingsState(
+          UserSettings(weightUnit: WeightUnit.kg, lengthUnit: LengthUnit.cm),
+          loaded: true,
+        ),
+      );
+      final unsaved = UnsavedChanges();
+      final router = GoRouter(
+        initialLocation: '/form',
+        onEnter: unsaved.onEnter,
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const Text('the list'),
+            routes: [
+              GoRoute(
+                path: 'form',
+                builder: (_, _) => session == null
+                    ? const CardioNewPage()
+                    : CardioEditPage(id: session.id!),
+              ),
+            ],
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        RepositoryProvider.value(
+          value: unsaved,
+          child: BlocProvider<SettingsCubit>.value(
+            value: settings,
+            child: MaterialApp.router(
+              theme: AppPreset.slate.lightTheme(),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
     }
 
     testWidgets('a row per value with its picker; Save faded and Duration '
@@ -280,10 +328,9 @@ void main() {
       expect((rows[2].missing, rows[2].value), (true, '—'));
       expect(rows[2].error, 'Enter a duration');
       expect(rows.every((row) => row.end == ListRowEnd.chevron), isTrue);
-      final save = tester.widget<ForgeAppBarAction>(
-        find.byType(ForgeAppBarAction),
-      );
-      expect(save.label, 'Save');
+      final save = tester
+          .widgetList<ForgeAppBarAction>(find.byType(ForgeAppBarAction))
+          .singleWhere((action) => action.label == 'Save');
       expect(save.onPressed, isNull);
       expect(find.textContaining('Pace'), findsNothing);
     });
@@ -391,6 +438,40 @@ void main() {
       await tester.tap(find.text('Clear'));
       await tester.pumpAndSettle();
       verify(() => form.setCalories(null)).called(1);
+    });
+
+    testWidgets('leaving with changes asks first; Cancel stays, Discard '
+        'leaves', (tester) async {
+      await showForm(
+        tester,
+        CardioFormState(type: CardioType.outdoorRun, date: today),
+      );
+      when(() => form.hasChanges).thenReturn(true);
+
+      await tester.tap(find.bySemanticsLabel('Back'));
+      await tester.pumpAndSettle();
+      expect(find.text('Discard this cardio session?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(ForgeButton, 'Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CardioNewPage), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Back'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ForgeButton, 'Discard'));
+      await tester.pumpAndSettle();
+      expect(find.text('the list'), findsOneWidget);
+    });
+
+    testWidgets('leaving without changes does not ask', (tester) async {
+      await showForm(
+        tester,
+        CardioFormState(type: CardioType.outdoorRun, date: today),
+      );
+
+      await tester.tap(find.bySemanticsLabel('Back'));
+      await tester.pumpAndSettle();
+      expect(find.text('Discard this cardio session?'), findsNothing);
+      expect(find.text('the list'), findsOneWidget);
     });
   });
 }
