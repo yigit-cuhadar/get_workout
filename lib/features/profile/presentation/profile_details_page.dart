@@ -4,6 +4,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/widgets/settings_group.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/user_profile.dart';
@@ -11,35 +12,70 @@ import 'profile_cubit.dart';
 import 'profile_form_cubit.dart';
 import 'profile_questions.dart';
 
-/// The onboarding answers, each opening its question to change it.
+/// The onboarding answers in two groups, Body and Training, each opening
+/// its question to change it.
 class ProfileDetailsPage extends StatelessWidget {
   const ProfileDetailsPage({super.key});
+
+  static const body = [
+    ProfileField.sex,
+    ProfileField.birthYear,
+    ProfileField.height,
+    ProfileField.weight,
+    ProfileField.targetWeight,
+  ];
+  static const training = [
+    ProfileField.goal,
+    ProfileField.level,
+    ProfileField.daysPerWeek,
+    ProfileField.equipment,
+  ];
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<ProfileCubit>().state;
     final settings = context.select((SettingsCubit c) => c.state.settings);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.profileDetails)),
-      body: switch (state.status) {
-        ProfileStatus.loading => const LoadingView(),
-        ProfileStatus.unavailable => _Unavailable(l10n),
-        ProfileStatus.loaded => ListView(
-          children: [
-            for (final field in ProfileField.values)
-              ListTile(
-                title: Text(l10n.fieldName(field)),
-                subtitle: Text(
-                  l10n.answerText(state.profile, field, settings) ??
-                      l10n.profileNotAnswered,
-                ),
-                trailing: const Icon(Icons.chevron_right),
+    final loading = state.status == ProfileStatus.loading;
+    List<Widget> rows(List<ProfileField> fields) => [
+      for (final (i, field) in fields.indexed)
+        loading
+            ? ListRow.loading(index: i)
+            : ListRow(
+                title: l10n.fieldName(field),
+                value:
+                    l10n.answerText(state.profile, field, settings) ??
+                    l10n.profileNotAnswered,
+                end: ListRowEnd.chevron,
                 onTap: () => context.go(Routes.profileQuestion(field)),
               ),
-          ],
-        ),
-      },
+    ];
+    return Scaffold(
+      appBar: ForgeAppBar(title: l10n.profileDetails),
+      body: state.status == ProfileStatus.unavailable
+          ? _Unavailable(l10n)
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(
+                Gap.md,
+                Gap.xs,
+                Gap.md,
+                Gap.md,
+              ),
+              children: [
+                SettingsColumn(
+                  children: [
+                    SettingsGroup(
+                      title: l10n.profileSectionBody,
+                      rows: rows(body),
+                    ),
+                    SettingsGroup(
+                      title: l10n.profileSectionTraining,
+                      rows: rows(training),
+                    ),
+                  ],
+                ),
+              ],
+            ),
     );
   }
 }
@@ -58,9 +94,9 @@ class ProfileQuestionPage extends StatelessWidget {
           (uid: cubit.state.uid, status: cubit.state.status),
     );
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.fieldName(field))),
+      appBar: ForgeAppBar(title: l10n.fieldName(field)),
       body: switch (status) {
-        ProfileStatus.loading => const LoadingView(),
+        ProfileStatus.loading => _QuestionLoading(field),
         ProfileStatus.unavailable => _Unavailable(l10n),
         // A user change starts the answer over from the new user's profile.
         ProfileStatus.loaded => BlocProvider(
@@ -72,6 +108,64 @@ class ProfileQuestionPage extends StatelessWidget {
           child: const _QuestionForm(),
         ),
       },
+    );
+  }
+}
+
+/// Shimmering bars where the question's title and line and its answer
+/// will be: a number question's value and ruler, or the rows of a choice.
+class _QuestionLoading extends StatelessWidget {
+  const _QuestionLoading(this.field);
+
+  final ProfileField field;
+
+  @override
+  Widget build(BuildContext context) {
+    final number = switch (field) {
+      ProfileField.birthYear ||
+      ProfileField.height ||
+      ProfileField.weight ||
+      ProfileField.targetWeight => true,
+      ProfileField.goal ||
+      ProfileField.level ||
+      ProfileField.daysPerWeek ||
+      ProfileField.equipment ||
+      ProfileField.sex => false,
+    };
+    final radius = ForgeStyle.of(context).radii.md;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(Gap.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 10,
+              children: [
+                SkeletonBar(widthFactor: 0.7, height: 22),
+                SkeletonBar(widthFactor: 0.4, height: 10),
+              ],
+            ),
+            if (number) ...[
+              const SizedBox(height: 28),
+              const FractionallySizedBox(
+                widthFactor: 0.3,
+                child: SkeletonBar(widthFactor: 1, height: 40),
+              ),
+              const SizedBox(height: Gap.md),
+              SkeletonBar(widthFactor: 1, height: 72, radius: radius),
+            ] else ...[
+              const Spacer(),
+              ListRowCard(
+                children: [
+                  for (var i = 0; i < 3; i++) ListRow.loading(index: i),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -122,6 +216,7 @@ class _QuestionForm extends StatelessWidget {
                   children: [
                     ForgeButton(
                       label: l10n.save,
+                      size: ForgeButtonSize.large,
                       onPressed: state.canContinue ? cubit.next : null,
                     ),
                   ],

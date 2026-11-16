@@ -1867,6 +1867,8 @@ void main() {
 
     await tester.tap(find.text('Goal'));
     await tester.pumpAndSettle();
+    // Over the tab bar.
+    expect(find.byType(ForgeNavigationBar), findsNothing);
     await tester.tap(find.text('Get stronger'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Save'));
@@ -2063,7 +2065,8 @@ void main() {
       users.add(const AuthUser(id: 'u2', email: 'b@c.de'));
       await tester.pump();
       await tester.pump();
-      expect(find.byType(LoadingView), findsOneWidget);
+      expect(find.byType(ProfileQuestionPage), findsOneWidget);
+      expect(find.text('Get stronger'), findsNothing);
 
       profileStream.add(onboarded);
       await tester.pumpAndSettle();
@@ -2084,8 +2087,8 @@ void main() {
       users.add(const AuthUser(id: 'u2', email: 'b@c.de'));
       await tester.pump();
       await tester.pump();
-      expect(find.byType(LoadingView), findsOneWidget);
-      expect(find.text('Not answered'), findsNothing);
+      expect(find.byType(ListRow), findsNWidgets(9));
+      expect(find.text('Goal'), findsNothing);
 
       profileStream.addError(const NetworkFailure());
       await tester.pump();
@@ -2095,7 +2098,7 @@ void main() {
       storedProfile = onboarded;
       await tester.tap(find.text('Retry'));
       await tester.pumpAndSettle();
-      expect(find.text('Not answered'), findsWidgets);
+      expect(find.text('—'), findsWidgets);
     });
 
     testWidgets('a rejected save is reported once after the page closed', (
