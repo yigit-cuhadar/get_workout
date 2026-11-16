@@ -907,6 +907,77 @@ Decisions (the canvases they were drawn on are deleted):
   with both lines; loading is a skeleton of the page; every menu item has
   an icon (a row's: tune, sync, the two-line handle for Superset / Circuit
   with next, remove for Ungroup, delete); the Rename field takes the focus.
+- Calendar (owner's picks, 2026-11-16): a PeriodSelector over Forge
+  MonthGrid, the month always open and months ahead browsable (planned
+  days); tapping the month opens the system date picker. The card has the
+  count line ("4 workouts · 4 cardio · 1 missed", zero parts left out) and
+  the legend (Workout, Cardio, Planned, Missed, Today); a load failure is
+  MonthGrid's error form. The list follows the month shown: the current
+  month "This week · Nov 9–15" then "Earlier this month", another month
+  its weeks within it as sections, newest first; days and weeks with
+  nothing are left out; no "Show older workouts". All / Workouts / Cardio
+  chips filter the list, the marks and the count (Workouts keeps the
+  program's planned and missed days); hidden while the month has nothing
+  logged. Rows are ListRows with their own date box, today's in the "today"
+  form: a workout "48 min · 9,800 kg" (no volume: "48 min · 12 sets"),
+  cardio "Cardio · 18.4 km" (no distance: "Cardio · 45 min"), a planned day
+  "Planned · 6 exercises" with Start, a missed one "Missed" in danger with
+  Do it today. Holding the program's next day (planned or missed) opens the
+  Move sheet: "Move Push", "Planned for <date>. Pick a new day this week.",
+  day chips from today to the week's last day, nothing picked and Move off
+  until a day is picked ("Move to Saturday"). A locked Premium copy's Start
+  is locked (paywall) and its missed day has no Do it today and no Move.
+  Tapping a date rings it and scrolls its rows up; a date with no rows in
+  the list shows on top under its date with "Nothing on this day" or its
+  rows. A month with nothing logged: "Nothing logged in November" /
+  "Finished workouts and cardio show here." / Add past workout, under this
+  week's planned days; a chip with nothing: "No workouts in November" /
+  "Finished workouts show here." / Add past workout, or "No cardio in
+  November" / "Log a run, ride or swim." / Log cardio. + in the app bar is
+  the Forge icon action (ink).
+- Workout detail (owner's picks, 2026-11-16): "Workout" app bar with ⋯
+  (Edit, Delete workout in danger, each with its icon; off while waiting
+  to sync). A FeaturedCard band: the start ("Fri, Nov 13 · 18:05"), the
+  name, the program as an underlined link with the week of the active
+  copy's run ("Push Pull Legs · week 3"; another run or copy: the name
+  alone; "From a program you deleted"; a free workout: no line), and
+  duration, volume ("—" without), sets and records in one row. Records are
+  the ones the workout still holds (each exercise's stats read once): the
+  figure counts the sets tagged "record". Waiting to sync is a NoticeBanner
+  (danger icon, "Waiting to sync", its line, no button); the note a plain
+  card "Note"; each exercise a SetTable with its set count that opens and
+  closes on its header, the first open. Deleting runs a thin bar under the
+  app bar.
+- Cardio (owner's picks, 2026-11-16): This week as a FeaturedCard band
+  ("23.6 km · 74 min", without distance "74 min", "2 sessions"), the
+  12-week minutes as Forge Chart.bar (week labels, minutes over the bars),
+  sessions under "This week" and date-range labels ("Nov 2–8") as ListRows
+  ("Outdoor run · 5.2 km", "Tue, Nov 10 · 29 min"; without distance the
+  type alone), Log cardio in the bottom bar. No session: the band "0 km ·
+  0 min" / "No sessions yet", then "No cardio logged" in a card. Sessions
+  from Apple Health or Health Connect show with the store's source tag. A
+  session opens its page: the type, its start, distance / time / "per km"
+  (or "km/h") tiles (without distance the time alone), rows only for the
+  values it has (Calories, Average heart rate, Incline, Note), Edit in the
+  app bar and Delete (danger) at the end asking "Delete this session?"; a
+  health store session has neither and says "From Apple Health. Change it
+  there." under its tag.
+- Steps (owner's picks, 2026-11-16): Forge Progress.ring (136px) with "of
+  10,000" and "3,760 to go" / "Goal reached" under it, the goal as a Forge
+  StepperField ("daily goal", 100 steps, typed in place, the range under it
+  when out of range), the zero hint as a NoticeBanner ("No steps showing?",
+  Open Settings), This week / Last 30 days as a segmented control over the
+  chart (the week as Forge Chart.bar with "goal 10,000"; the 30 days keep
+  the app's chart until Forge has a form for them), then "Daily average" and
+  "Goal reached · n of m days" rows on both views. Access is Forge
+  PermissionPrompt: ask ("See your steps here", "GetWorkout reads steps from
+  Apple Health. Nothing else is read.", Allow access, on iOS the note
+  "Turned it off before? Open Settings, then Health."), refused ("Access is
+  off", Open Health Connect, Ask again), missing ("Health Connect is
+  needed", Get Health Connect, Not now), failed ("Couldn't reach Apple
+  Health" / "Something went wrong. Try again in a moment." / Retry); no
+  store is the untitled one line; a load failure "Couldn't read your
+  steps" / "Try again in a moment." / Retry; loading is skeletons.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
 
@@ -2249,23 +2320,21 @@ the feature you are about to touch, and keep it true when you change it.
 ### History and editing
 
 - **History**: the calendar's list (see Calendar) holds the finished
-  workouts, newest first, 20 per page, while its page is open. The first
-  five pages are live listeners (cache first, so they work offline); older
-  pages are read once.
-  A page gets a fixed end (`endAtDocument`) once the page after it
-  (`startAfterDocument`) loads, so pages never skip or repeat a workout.
-  Rows carry no records mark: it would need every exercise's stats. The
-  workout page names exercises from the catalogue (custom ones included),
-  else by the name stored with the workout (retired and deleted ones); a
-  program that no longer exists shows as deleted. The workout page (UX
-  pass, 2026-11-13, owner's pick): the name, Edit and Delete in the app
-  bar; the summary card with the start date and time, the program as a
-  link (or "From a program you deleted") and the four totals; the waiting
-  to sync note; the workout note as its own card; then a card per exercise
-  (group letter, name, exercise note) with a table of its sets: Set (as
-  `setLabel`), the value columns of its logging type (weight in the unit
-  with its field label, reps, time) and Effort (on the chosen scale, then
-  the set note); each drop is a row under its set, named in the last column.
+  workouts of the month shown, read with the month (no paging). Rows carry
+  no records mark. The workout page names exercises from the catalogue
+  (custom ones included), else by the name stored with the workout
+  (retired and deleted ones); a program that no longer exists shows as
+  deleted. The workout page (see Design › Workout detail): ⋯ with Edit and
+  Delete workout; the band with the start, the name, the program and the
+  week of the active copy's run (`ProgramSchedule.runWeek`, none for a
+  workout before the run started) and the four totals; the waiting to sync
+  notice; the note as its own card; then a card per exercise (group
+  letter, name, exercise note, set count), opening and closing, with a row
+  per set: the bubble (as `setLabel`), its values and its effort (on the
+  chosen scale), a "record" tag on a set holding a record the exercise
+  still keeps (`GetHeldRecords`: one read of each exercise's stats; a
+  record beaten later leaves the tag), then the set note; each drop is a
+  row under its set.
 - **Editing workouts**: editing, deleting and adding a past workout store
   the workout in one batch, never changing `activeProgram`; a past workout
   has no program (a program day only fills its exercises, `pastWorkout`),
@@ -2376,21 +2445,16 @@ the feature you are about to touch, and keep it true when you change it.
   against the goal; no card without a health store. Each card reads
   through its own cubit and shows its own failure, so one area failing
   leaves the others.
-- **Calendar**: Progress → Calendar is one scrolling page (UX pass,
-  2026-11-13): a card with this week's strip, which opens to the month
-  (previous / next; tapping a date of a neighbouring month opens that
-  month), weeks starting on the app's first weekday (see Week start), then one list by day
-  that also holds the workout history. The card follows its dates plus six
-  days on each side live: workouts and cardio by local start date, a range
-  on one field, so no composite index. The list runs from the end of this
-  week back to the oldest workout loaded, newest first, with workouts,
-  cardio (read once per range of dates listed), program days planned (with
-  Start) and missed; "Show older workouts" loads the next page. A tapped
-  date the list shows scrolls into view, listed even when empty; one it
-  does not show (a future week, or older than what is loaded) is read on
-  its own and shown as a section above the list. "Past workout" is an
-  app-bar action. A date is marked for a workout done, cardio done, a program day
-  planned and a program day missed. Planned days come from
+- **Calendar**: Progress → Calendar is one scrolling page (see Design ›
+  Calendar): the month card and the month's list, both from one
+  `CalendarCubit` that follows the month's dates plus six days on each side
+  live: workouts and cardio by local start date, a range on one field, so
+  no composite index. Weeks start on the app's first weekday (see Week
+  start). Months before and after can be browsed; one ahead shows the
+  program's planned days. The list holds workouts, cardio, program days
+  planned (with Start) and missed (Do it today, through
+  `ResolveMissedDay`). A date is marked for a workout done, cardio done, a
+  program day planned and a program day missed. Planned days come from
   `ProgramSchedule.plan`, the week plan's logic over any range: a program
   day done (a workout of the active program and that day, on that local
   date) shows only as its workout, and a day done twice on one date shows
@@ -2398,14 +2462,14 @@ the feature you are about to touch, and keep it true when you change it.
   program moving on (it was not loaded at finishing) is done, not planned
   or missed, here and in the Programs tab, whose missed-day prompt knows
   only this week's done days. The missed next day shows on its date as
-  missed, with "Do it today" on its row (owner's pick), and again where
-  it is planned now. A planned day starts through `startProgramDay`, so a
-  locked premium copy's days show but open the paywall. A workout opens
-  its page under the calendar, a cardio session its page (which finds only the 500
-  newest sessions). If the programs cannot be read, what was done still
-  shows. `MonthGrid` (`lib/features/calendar/presentation/month_grid.dart`)
-  is generic except for `CalendarDate`; move it to `forge_ui`, taking
-  `DateTime` dates, when that package is next changed.
+  missed, and again where it is planned now. Only the next day moves
+  (`MoveNextDay`: its `nextDate` set to a day from today to the last day of
+  its week; the days after it follow). A planned day starts through
+  `startProgramDay`, so a locked premium copy's days show but open the
+  paywall. A workout opens its page under the calendar, a cardio session
+  its page (which finds only the 500 newest sessions). If the programs
+  cannot be read, what was done still shows. The calendar reports workout
+  edits the server refused.
 - **Volume**: each completed working set counts 1 for every main muscle and
   0.5 for every secondary muscle. Warm-up sets do not count. A drop set counts
   as one set. Reference band is 10-20 sets per muscle per week.
@@ -2470,18 +2534,24 @@ the feature you are about to touch, and keep it true when you change it.
   and the volume trend (`VolumeTrendChart` and its painter) is replaced
   by it and deleted. The volume band bars and the cardio chart stay
   feature widgets until then.
-- **Cardio**: Progress → Cardio is one scrolling page (UX pass,
-  2026-11-13): this week's minutes, sessions and distance (in the user's
-  unit, only when a session has one) on top, the 12-week minutes chart,
-  then the sessions under a header per week (with its minutes), newest
-  first; a session opens its detail (type, date, duration, distance, pace,
-  calories, note) with Edit and Delete (owner's pick, Çelişkiler,
-  2026-11-15). Log cardio is a full-width button
-  fixed at the bottom once the list has loaded, the empty page included,
-  which then shows only its message. Weeks start on the app's first
-  weekday (see Week start), for the summary, the chart and the list alike,
-  as on the Progress card.
-  The list follows the 500 newest sessions.
+- **Cardio**: Progress → Cardio is one scrolling page (see Design ›
+  Cardio): this week's distance (in the user's unit, only when a session
+  has one), minutes and sessions on top, the 12-week minutes chart, then
+  the sessions under a label per week, newest first; a session opens its
+  page (type, start, distance, time, pace or speed, calories, heart rate,
+  incline, note) with Edit (the form, at `…/edit`) and Delete. Log cardio is
+  a full-width button fixed at the bottom once the list has loaded, the
+  empty page included. Weeks start on the app's first weekday (see Week
+  start), for the summary, the chart and the list alike, as on the Progress
+  card. The list follows the 500 newest sessions, plus the workouts of the
+  last 366 days in Apple Health or Health Connect (`GetHealthCardio` through
+  `forge_health`, read on opening and on app resume, never stored; running,
+  walking, hiking, cycling, elliptical, rowing, stairs, swimming, jump
+  rope, HIIT and other become the matching type, strength work is left
+  out). They need the workouts permission (Android: READ_EXERCISE,
+  READ_DISTANCE, READ_TOTAL_CALORIES_BURNED, READ_HEART_RATE); without it
+  none are read. They show only on the Cardio page, not on the calendar or
+  the Progress card, and cannot be edited or deleted here.
 
 ### Body, steps and calculators
 
@@ -2671,18 +2741,17 @@ the feature you are about to touch, and keep it true when you change it.
   reads the last 30 days in one call and derives today and the week (from the
   app's first weekday, see Week start) from it; it reloads on app resume and on pull,
   never by polling. Access: unless already granted, a one-screen
-  explanation comes first and the system is asked only after "Continue";
+  explanation comes first and the system is asked only after "Allow access";
   that the user was asked is remembered on the device (a marker file in
   app support), because HealthKit never says. Android refusal shows "Open
   Health Connect" and "Ask again"; a missing Health Connect offers its
   store page. On iOS a month of zeros shows a hint to allow access in
   Settings, never a denial. A failed request shows on the explanation or
   refusal screen; a failed refresh keeps the steps and says so. The page:
-  a today card with a ring around the count ("of" the goal) beside what
-  is left or "Goal reached", and under them a full-width "Daily goal" row
-  edited in place; the zero hint; then one
-  card with a This week / Last 30 days switch (kept only while the page is
-  open, week first), a `BarChart` with the goal as a line, and under it the
+  a ring around the count ("of" the goal) with what is left or "Goal
+  reached" under it, then the daily goal edited in place; the zero hint;
+  then a This week / Last 30 days switch (kept only while the page is
+  open, week first; see Design › Steps), a chart with the goal as a line, and under it the
   daily average and "Goal reached n of m days" over the chart's days
   before today (today's partial day and days to come left out, as on Body;
   hidden on a period's first day). The goal is `settings.stepGoal`, 10,000
