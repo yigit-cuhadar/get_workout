@@ -6,8 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../exercises/presentation/vocabulary_labels.dart';
 import 'strength_list_cubit.dart';
+import 'widgets/strength_exercises.dart';
 
 /// The exercises the user has done, most recently trained first, each
 /// opening its records and e1RM chart.
@@ -17,18 +17,35 @@ class StrengthListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => sl<StrengthListCubit>(),
-    child: const _StrengthListView(),
+    child: Scaffold(
+      appBar: ForgeAppBar(title: AppLocalizations.of(context).strengthTitle),
+      body: StrengthSearch(
+        padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
+        onPick: (context, id) => context.go(Routes.strengthExercise(id)),
+      ),
+    ),
   );
 }
 
-class _StrengthListView extends StatefulWidget {
-  const _StrengthListView();
+/// [StrengthExercises] scrolling inside [padding], searched in the app's
+/// language; [onPick] gets a row's exercise.
+class StrengthSearch extends StatefulWidget {
+  const StrengthSearch({
+    super.key,
+    required this.padding,
+    required this.onPick,
+    this.selected,
+  });
+
+  final EdgeInsets padding;
+  final void Function(BuildContext context, String exerciseId) onPick;
+  final String? selected;
 
   @override
-  State<_StrengthListView> createState() => _StrengthListViewState();
+  State<StrengthSearch> createState() => _StrengthSearchState();
 }
 
-class _StrengthListViewState extends State<_StrengthListView> {
+class _StrengthSearchState extends State<StrengthSearch> {
   final _search = TextEditingController();
 
   @override
@@ -46,87 +63,15 @@ class _StrengthListViewState extends State<_StrengthListView> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final cubit = context.read<StrengthListCubit>();
-    return BlocBuilder<StrengthListCubit, StrengthListState>(
-      builder: (context, state) => Scaffold(
-        appBar: AppBar(title: Text(l10n.strengthTitle)),
-        body: switch (state.status) {
-          StrengthListStatus.loading => const LoadingView(),
-          StrengthListStatus.failure => ErrorView(
-            title: l10n.strengthLoadFailed,
-            message: l10n.loadFailedDetail,
-            retryLabel: l10n.retry,
-            onRetry: cubit.retry,
-          ),
-          StrengthListStatus.ready when state.trainedCount == 0 => EmptyView(
-            title: l10n.strengthEmptyTitle,
-            message: l10n.strengthEmpty,
-          ),
-          StrengthListStatus.ready => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-                child: TextField(
-                  controller: _search,
-                  onChanged: cubit.setQuery,
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    labelText: l10n.librarySearch,
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: state.query.isEmpty
-                        ? null
-                        : IconButton(
-                            tooltip: MaterialLocalizations.of(context)
-                                .deleteButtonTooltip,
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _search.clear();
-                              cubit.setQuery('');
-                            },
-                          ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: state.items.isEmpty
-                    ? EmptyView(
-                        title: l10n.strengthNoResultsTitle,
-                        message: l10n.strengthNoResults,
-                      )
-                    : ListView.builder(
-                        itemCount: state.items.length,
-                        itemBuilder: (context, index) =>
-                            _ExerciseTile(state.items[index]),
-                      ),
-              ),
-            ],
-          ),
-        },
+  Widget build(BuildContext context) => ListView(
+    shrinkWrap: true,
+    padding: widget.padding,
+    children: [
+      StrengthExercises(
+        search: _search,
+        selected: widget.selected,
+        onPick: (id) => widget.onPick(context, id),
       ),
-    );
-  }
-}
-
-class _ExerciseTile extends StatelessWidget {
-  const _ExerciseTile(this.item);
-  final StrengthItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final dates = MaterialLocalizations.of(context);
-    final name =
-        item.exercise?.localized(context).name ?? l10n.strengthRemovedExercise;
-    return ListTile(
-      title: Text(name),
-      subtitle: Text(
-        l10n.strengthLastDone(dates.formatMediumDate(item.lastTrained)),
-      ),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => context.go(Routes.strengthExercise(item.exerciseId)),
-    );
-  }
+    ],
+  );
 }

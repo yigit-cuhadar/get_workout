@@ -72,7 +72,7 @@ class MuscleHeatPair extends StatelessWidget {
   }
 }
 
-/// The ramp as a bar from 0 to 20 sets, with what the outline marks.
+/// The ramp as a bar from 0 to 20 sets.
 class MuscleHeatLegend extends StatelessWidget {
   const MuscleHeatLegend({super.key});
 
@@ -87,9 +87,9 @@ class MuscleHeatLegend extends StatelessWidget {
       spacing: Gap.xs,
       children: [
         Container(
-          height: 10,
+          height: 8,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.circular(4),
             gradient: LinearGradient(colors: [muscleHeatColor(p, 0), p.accent]),
           ),
         ),
@@ -108,11 +108,6 @@ class MuscleHeatLegend extends StatelessWidget {
               ),
             ],
           ),
-        ),
-        Text(
-          l10n.muscleHeatOutline(muscleHeatFull),
-          style: Theme.of(context).textTheme.labelSmall!
-              .copyWith(fontWeight: FontWeight.w400, color: p.inkMuted),
         ),
       ],
     );

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/strength/domain/strength.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
@@ -110,11 +111,11 @@ void main() {
     });
   });
 
-  group('hasE1rmBefore', () {
-    test('an e1RM before the range starts', () {
+  group('hasResultsBefore', () {
+    test('a workout before the range starts, with an e1RM or not', () {
       expect(
-        hasE1rmBefore(
-          [point(DateTime(2026, 8, 19, 23, 59), 95)],
+        hasResultsBefore(
+          [point(DateTime(2026, 8, 19, 23, 59), null)],
           range: StrengthRange.weeks12,
           now: now,
         ),
@@ -122,10 +123,10 @@ void main() {
       );
     });
 
-    test('not for results inside the range or without an e1RM', () {
+    test('not for workouts inside the range', () {
       expect(
-        hasE1rmBefore(
-          [point(DateTime(2026, 1, 1), null), point(DateTime(2026, 8, 20), 99)],
+        hasResultsBefore(
+          [point(DateTime(2026, 8, 20), 99)],
           range: StrengthRange.weeks12,
           now: now,
         ),
@@ -135,12 +136,69 @@ void main() {
 
     test('never before all', () {
       expect(
-        hasE1rmBefore(
+        hasResultsBefore(
           [point(DateTime(2000, 1, 1), 50)],
           range: StrengthRange.all,
           now: now,
         ),
         isFalse,
+      );
+    });
+  });
+
+  group('sessionsFrom', () {
+    final history = [
+      point(DateTime(2026, 8, 19), 95),
+      point(DateTime(2026, 8, 20), null),
+      point(DateTime(2026, 11, 1), 100),
+    ];
+
+    test('the workouts from the start on, newest first', () {
+      expect(
+        [for (final p in sessionsFrom(history, DateTime(2026, 8, 20))) p.date],
+        [DateTime(2026, 11, 1), DateTime(2026, 8, 20)],
+      );
+    });
+
+    test('all of them without a start', () {
+      expect(sessionsFrom(history, null).length, 3);
+      expect(sessionsFrom(history, null).first.date, DateTime(2026, 11, 1));
+    });
+  });
+
+  group('loggingTypeOf', () {
+    StatRecord any() => StatRecord(value: 1, date: now, workoutId: 'w');
+
+    test('timed with or without a weight', () {
+      expect(
+        loggingTypeOf(
+          ExerciseStats(
+            records: {
+              RecordKind.longestDuration: any(),
+              RecordKind.heaviestWeight: any(),
+            },
+          ),
+        ),
+        LoggingType.weightDuration,
+      );
+      expect(
+        loggingTypeOf(
+          ExerciseStats(records: {RecordKind.longestDuration: any()}),
+        ),
+        LoggingType.duration,
+      );
+    });
+
+    test('a load, or reps alone', () {
+      expect(
+        loggingTypeOf(
+          ExerciseStats(records: {RecordKind.heaviestWeight: any()}),
+        ),
+        LoggingType.weightReps,
+      );
+      expect(
+        loggingTypeOf(ExerciseStats(records: {RecordKind.mostReps: any()})),
+        LoggingType.reps,
       );
     });
   });
@@ -161,13 +219,13 @@ void main() {
       expect(
         [for (final entry in orderedRecords(stats)) entry.kind],
         [
-          RecordKind.heaviestWeight,
           RecordKind.bestE1rm,
+          RecordKind.heaviestWeight,
           RecordKind.mostReps,
           RecordKind.bestSetVolume,
         ],
       );
-      expect(orderedRecords(stats)[1].record, record(120));
+      expect(orderedRecords(stats).first.record, record(120));
     });
 
     test('only the kinds there are', () {

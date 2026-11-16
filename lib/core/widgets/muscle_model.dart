@@ -32,7 +32,8 @@ Set<String> muscleMeshes(Iterable<Muscle> muscles) => {
 /// a bar at the bottom, where a [hint] waits while nothing slides; without
 /// [onOpen] it only turns. Muscles in [colors] are painted so, those in
 /// [outlined] ringed in danger. With [sides] Front / Back sit in the
-/// corner.
+/// corner. A [footer] (Weekly volume's hint and legend) sits under the
+/// model inside the panel.
 class MuscleModel extends StatefulWidget {
   const MuscleModel({
     super.key,
@@ -43,11 +44,12 @@ class MuscleModel extends StatefulWidget {
     this.colors = const {},
     this.outlined = const {},
     this.sides = true,
+    this.footer,
   }) : onRetry = null,
        message = null;
 
-  /// The model loads: a shimmering figure.
-  const MuscleModel.loading({super.key, this.sides = true})
+  /// The model loads: a shimmering figure, over a shimmering [footer].
+  const MuscleModel.loading({super.key, this.sides = true, this.footer})
     : model = null,
       onOpen = null,
       semanticLabel = null,
@@ -64,6 +66,7 @@ class MuscleModel extends StatefulWidget {
     required String this.message,
     required VoidCallback this.onRetry,
   }) : sides = false,
+       footer = null,
        model = null,
        onOpen = null,
        semanticLabel = null,
@@ -80,6 +83,7 @@ class MuscleModel extends StatefulWidget {
   final Set<Muscle> outlined;
   final VoidCallback? onRetry;
   final bool sides;
+  final Widget? footer;
 
   @override
   State<MuscleModel> createState() => _MuscleModelState();
@@ -202,6 +206,18 @@ class _MuscleModelState extends State<MuscleModel> {
         ],
       );
     }
+    final footer = widget.footer;
+    final framed = footer == null
+        ? content
+        : Column(
+            children: [
+              Expanded(child: content),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
+                child: footer,
+              ),
+            ],
+          );
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(style.radii.lg),
@@ -217,7 +233,7 @@ class _MuscleModelState extends State<MuscleModel> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(style.radii.lg),
-        child: content,
+        child: framed,
       ),
     );
   }

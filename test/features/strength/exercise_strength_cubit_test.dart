@@ -4,11 +4,13 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/strength/domain/strength.dart';
 import 'package:get_workout/features/strength/presentation/exercise_strength_cubit.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
+import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:mocktail/mocktail.dart';
@@ -25,14 +27,36 @@ void main() {
   final now = DateTime(2026, 11, 12, 12);
   final old = DateTime(2026, 3, 1);
   final recent = DateTime(2026, 11, 1);
-  final heaviest = StatRecord(value: 100, date: recent, workoutId: 'w2');
-  final e1rm = StatRecord(value: 116.7, date: recent, workoutId: 'w2');
+  const top = (weightKg: 100.0, reps: 5, durationS: null);
+  final heaviest = StatRecord(
+    value: 100,
+    date: recent,
+    workoutId: 'w2',
+    set: top,
+  );
+  final e1rm = StatRecord(
+    value: 116.7,
+    date: recent,
+    workoutId: 'w2',
+    set: top,
+  );
+  final oldPoint = HistoryPoint(
+    date: old,
+    workoutId: 'w1',
+    bestE1rmKg: 90,
+    bestSet: (weightKg: 80, reps: 4, durationS: null),
+    workoutName: 'Legs',
+  );
+  final recentPoint = HistoryPoint(
+    date: recent,
+    workoutId: 'w2',
+    bestE1rmKg: 116.7,
+    bestSet: top,
+    workoutName: 'Legs',
+  );
   final squat = ExerciseStats(
     records: {RecordKind.bestE1rm: e1rm, RecordKind.heaviestWeight: heaviest},
-    history: [
-      HistoryPoint(date: old, workoutId: 'w1', bestE1rmKg: 90),
-      HistoryPoint(date: recent, workoutId: 'w2', bestE1rmKg: 116.7),
-    ],
+    history: [oldPoint, recentPoint],
   );
 
   late StreamController<AuthUser?> users;
@@ -47,6 +71,9 @@ void main() {
     repository = MockWorkoutRepository();
     when(() => repository.watchStats(any(), 'squat'))
         .thenAnswer((_) => stats.stream);
+    when(() => repository.workoutsWith(any(), any())).thenAnswer(
+      (_) async => const Ok((workouts: <Workout>[], complete: false)),
+    );
   });
 
   tearDown(() async {
@@ -63,6 +90,7 @@ void main() {
       watchAuthUser: WatchAuthUser(auth),
       watchStats: WatchExerciseStats(repository),
       watchPremium: WatchPremium(premium),
+      rebuildStats: RebuildExerciseStats(repository),
       unit: unit,
       clock: () => now,
     );
@@ -93,11 +121,14 @@ void main() {
     expect(state.status, ExerciseStrengthStatus.ready);
     expect(state.trained, isTrue);
     expect(state.records, [
-      (kind: RecordKind.heaviestWeight, record: heaviest),
       (kind: RecordKind.bestE1rm, record: e1rm),
+      (kind: RecordKind.heaviestWeight, record: heaviest),
     ]);
     expect(state.range, StrengthRange.weeks12);
+    expect(state.rangeStart, DateTime(2026, 8, 20));
     expect(values(state), [116.5]);
+    expect(state.sessions, [recentPoint]);
+    expect(state.loggingType, LoggingType.weightReps);
     verify(() => repository.watchStats('u1', 'squat')).called(1);
     await cubit.close();
   });
@@ -123,6 +154,8 @@ void main() {
     cubit.selectRange(StrengthRange.all);
     expect(cubit.state.range, StrengthRange.all);
     expect(values(cubit.state), [90, 116.5]);
+    expect(cubit.state.sessions, [recentPoint, oldPoint]);
+    expect(cubit.state.rangeStart, old);
     await cubit.close();
   });
 
@@ -168,13 +201,30 @@ void main() {
           workoutId: 'w2',
         ),
       },
-      history: [HistoryPoint(date: recent, workoutId: 'w2')],
+      history: [
+        HistoryPoint(
+          date: old,
+          workoutId: 'w1',
+          bestSet: (weightKg: null, reps: null, durationS: 60),
+          workoutName: 'Core',
+        ),
+        HistoryPoint(
+          date: recent,
+          workoutId: 'w2',
+          bestSet: (weightKg: null, reps: null, durationS: 90),
+          workoutName: 'Core',
+        ),
+      ],
     );
     final cubit = await opened(value: plank);
     expect(cubit.state.trained, isTrue);
     expect(cubit.state.charted, isFalse);
     expect(cubit.state.records.single.kind, RecordKind.longestDuration);
     expect(cubit.state.points, isEmpty);
+    // Every session, however old, and nothing locked.
+    expect(cubit.state.sessions.length, 2);
+    expect(cubit.state.olderLocked, isFalse);
+    expect(cubit.state.loggingType, LoggingType.duration);
     await cubit.close();
   });
 
@@ -209,6 +259,33 @@ void main() {
     stats.add(squat);
     await pumpEventQueue();
     expect(cubit.state.range, StrengthRange.weeks12);
+    await cubit.close();
+  });
+
+  test('outdated stats show at once and are rebuilt once', () async {
+    final outdated = ExerciseStats(
+      records: {
+        RecordKind.bestE1rm: StatRecord(
+          value: 116.7,
+          date: recent,
+          workoutId: 'w2',
+        ),
+      },
+      history: [HistoryPoint(date: recent, workoutId: 'w2', bestE1rmKg: 116.7)],
+    );
+    final cubit = await opened(value: outdated);
+    expect(cubit.state.status, ExerciseStrengthStatus.ready);
+    verify(() => repository.workoutsWith('u1', 'squat')).called(1);
+
+    stats.add(outdated);
+    await pumpEventQueue();
+    verifyNever(() => repository.workoutsWith(any(), any()));
+    await cubit.close();
+  });
+
+  test('up-to-date stats are not rebuilt', () async {
+    final cubit = await opened(value: squat);
+    verifyNever(() => repository.workoutsWith(any(), any()));
     await cubit.close();
   });
 
