@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:forge_ui/forge_ui.dart';
+import 'package:forge_ui/forge_ui.dart' hide ChartPoint;
 
 import '../../../core/chart_geometry.dart';
 import '../../../core/chart_text.dart';

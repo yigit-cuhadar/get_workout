@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_health/forge_health.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/bar_chart.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
+import '../../programs/domain/calendar_date.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -55,8 +56,7 @@ class _StepsViewState extends State<_StepsView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     void snack(String text) =>
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(text)));
+        showForgeSnackbar(context, message: text, error: true);
     return MultiBlocListener(
       listeners: [
         // A failed refresh: the steps stay.
@@ -74,7 +74,7 @@ class _StepsViewState extends State<_StepsView> {
       ],
       child: BlocBuilder<StepsCubit, StepsState>(
         builder: (context, state) => Scaffold(
-          appBar: AppBar(title: Text(l10n.stepsTitle)),
+          appBar: ForgeAppBar(title: l10n.stepsTitle),
           body: _body(context, state),
         ),
       ),
@@ -83,65 +83,67 @@ class _StepsViewState extends State<_StepsView> {
 
   Widget _body(BuildContext context, StepsState state) {
     final l10n = AppLocalizations.of(context);
-    final failed = ErrorView(
-      title: l10n.stepsLoadFailed,
-      message: l10n.stepsLoadFailedDetail,
-      retryLabel: l10n.retry,
-      onRetry: _cubit.load,
-    );
-    if (state.failureShown == StepsFailureShown.page) return failed;
-    final inlineFailure = state.failureShown == StepsFailureShown.inline
-        ? const _InlineFailure()
-        : null;
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    final store = ios ? l10n.stepsStoreApple : l10n.stepsStoreGoogle;
+    if (state.failureShown == StepsFailureShown.page) {
+      return ErrorView(
+        title: l10n.stepsLoadFailed,
+        message: l10n.stepsLoadFailedDetail,
+        retryLabel: l10n.retry,
+        onRetry: _cubit.load,
+      );
+    }
+    // Asking or opening the settings failed: say so in place of the
+    // prompt, with a retry of what failed.
+    if (state.failureShown == StepsFailureShown.inline) {
+      return _Centred(
+        PermissionPrompt.failed(
+          title: l10n.stepsRequestFailed(store),
+          message: l10n.stepsRequestFailedDetail,
+          retryLabel: l10n.retry,
+          onRetry: state.access == StepsAccess.notInstalled
+              ? _cubit.load
+              : _cubit.allow,
+        ),
+      );
+    }
     final history = state.history;
     return switch (state.access) {
-      null => const LoadingView(),
-      StepsAccess.unsupported => EmptyView(
-        title: l10n.stepsUnsupportedTitle,
-        message: l10n.stepsUnsupported,
-        actions: [?inlineFailure],
+      null => const _Loading(),
+      StepsAccess.unsupported => EmptyView(message: l10n.stepsUnsupported),
+      StepsAccess.notInstalled => _Centred(
+        PermissionPrompt.missing(
+          title: l10n.stepsNotInstalledTitle,
+          message: l10n.stepsNotInstalled,
+          getLabel: l10n.stepsGetHealthConnect,
+          onGet: () => _openSettings(context),
+          notNowLabel: l10n.stepsNotNow,
+          onNotNow: () => context.pop(),
+        ),
       ),
-      StepsAccess.notInstalled => EmptyView(
-        title: l10n.stepsNotInstalledTitle,
-        message: l10n.stepsNotInstalled,
-        actions: [
-          Column(
-            children: [
-              ?inlineFailure,
-              FilledButton(
-                onPressed: state.busy ? null : () => _openSettings(context),
-                child: Text(l10n.stepsGetHealthConnect),
-              ),
-            ],
-          ),
-        ],
+      StepsAccess.explain => _Centred(
+        PermissionPrompt.ask(
+          icon: ForgeIcons.directionsWalk,
+          title: l10n.stepsExplainTitle,
+          message: l10n.stepsExplainBody(store),
+          allowLabel: l10n.stepsAllow,
+          onAllow: _cubit.allow,
+          // HealthKit never says it refused, so iOS says where to look.
+          note: ios ? l10n.stepsExplainNote : null,
+        ),
       ),
-      StepsAccess.explain => _Explanation(
-        busy: state.busy,
-        failure: inlineFailure,
-      ),
-      StepsAccess.denied => EmptyView(
-        title: l10n.stepsDeniedTitle,
-        message: l10n.stepsDenied,
-        actions: [
-          Column(
-            children: [
-              ?inlineFailure,
-              FilledButton(
-                onPressed: state.busy ? null : () => _openSettings(context),
-                child: Text(l10n.stepsOpenHealthConnect),
-              ),
-              const SizedBox(height: Gap.sm),
-              TextButton(
-                onPressed: state.busy ? null : _cubit.allow,
-                child: Text(l10n.stepsAskAgain),
-              ),
-            ],
-          ),
-        ],
+      StepsAccess.denied => _Centred(
+        PermissionPrompt.refused(
+          title: l10n.stepsDeniedTitle,
+          message: l10n.stepsDenied,
+          settingsLabel: l10n.stepsOpenHealthConnect,
+          onOpenSettings: () => _openSettings(context),
+          askAgainLabel: l10n.stepsAskAgain,
+          onAskAgain: _cubit.allow,
+        ),
       ),
       StepsAccess.granted ||
-      StepsAccess.undetermined when history == null => const LoadingView(),
+      StepsAccess.undetermined when history == null => const _Loading(),
       StepsAccess.granted || StepsAccess.undetermined => _Steps(
         history: history!,
         accessHint: state.accessHint,
@@ -151,79 +153,43 @@ class _StepsViewState extends State<_StepsView> {
   }
 
   Future<void> _openSettings(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final failedText = AppLocalizations.of(context).stepsSettingsFailed;
-    if (!await _cubit.openSettings()) {
-      messenger.showSnackBar(SnackBar(content: Text(failedText)));
+    final failed = AppLocalizations.of(context).stepsSettingsFailed;
+    if (!await _cubit.openSettings() && context.mounted) {
+      showForgeSnackbar(context, message: failed, error: true);
     }
   }
 }
 
-/// What the steps are for, before the system asks for access; asked only
-/// after the user continues.
-class _Explanation extends StatelessWidget {
-  const _Explanation({required this.busy, required this.failure});
-  final bool busy;
-  final Widget? failure;
+/// A prompt in the middle of the page, scrolling at large text.
+class _Centred extends StatelessWidget {
+  const _Centred(this.child);
+  final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final store = theme.platform == TargetPlatform.iOS
-        ? l10n.stepsStoreApple
-        : l10n.stepsStoreGoogle;
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(Gap.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.stepsExplainTitle,
-              style: theme.textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: Gap.md),
-            Text(
-              l10n.stepsExplainBody(store),
-              style: theme.textTheme.bodyLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: Gap.lg),
-            ?failure,
-            ForgeButton(
-              label: l10n.stepsContinue,
-              loading: busy,
-              onPressed: context.read<StepsCubit>().allow,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Center(
+    child: SingleChildScrollView(
+      padding: const EdgeInsets.all(Gap.md),
+      child: child,
+    ),
+  );
 }
 
-/// That the last request or load failed, above the actions to try again.
-class _InlineFailure extends StatelessWidget {
-  const _InlineFailure();
+/// The page's parts shimmering while the steps load.
+class _Loading extends StatelessWidget {
+  const _Loading();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final store = theme.platform == TargetPlatform.iOS
-        ? l10n.stepsStoreApple
-        : l10n.stepsStoreGoogle;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: Gap.md),
-      child: Text(
-        l10n.stepsRequestFailed(store),
-        textAlign: TextAlign.center,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          color: theme.colorScheme.error,
-        ),
-      ),
+    return ListView(
+      padding: const EdgeInsets.all(Gap.md),
+      children: [
+        const _Panel(child: Center(child: Progress.ringLoading())),
+        const SizedBox(height: Gap.md),
+        StepperField.loading(),
+        const SizedBox(height: Gap.md),
+        Chart.loading(title: l10n.stepsThisWeek),
+      ],
     );
   }
 }
@@ -256,11 +222,8 @@ class _StepsState extends State<_Steps> {
       (SettingsCubit cubit) => cubit.state.settings.stepGoal,
     );
     final firstWeekday = context.watchFirstWeekday();
-    final locale = l10n.localeName;
     final days = _month ? history.days : history.week(firstWeekday);
-    final title = _month
-        ? l10n.stepsLastDays(stepHistoryDays)
-        : l10n.stepsThisWeek;
+    final today = history.days.lastOrNull?.day;
     return RefreshIndicator(
       onRefresh: context.read<StepsCubit>().load,
       child: ListView(
@@ -268,59 +231,95 @@ class _StepsState extends State<_Steps> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(Gap.md),
         children: [
-          _Today(
-            progress: StepGoalProgress(steps: history.today, goal: goal),
+          _Today(StepGoalProgress(steps: history.today, goal: goal)),
+          const SizedBox(height: Gap.md),
+          _GoalEditor(goal),
+          if (widget.accessHint) ...[
+            const SizedBox(height: Gap.md),
+            NoticeBanner(
+              icon: ForgeIcons.info,
+              title: l10n.stepsZeroHintTitle,
+              message: l10n.stepsZeroHint,
+              action: ForgeButton(
+                label: l10n.stepsOpenSettings,
+                variant: ForgeButtonVariant.secondary,
+                onPressed: widget.onOpenSettings,
+              ),
+            ),
+          ],
+          const SizedBox(height: Gap.md),
+          ForgeSegmentedControl<bool>(
+            segments: [
+              ForgeSegment(value: false, label: l10n.stepsThisWeek),
+              ForgeSegment(
+                value: true,
+                label: l10n.stepsLastDays(stepHistoryDays),
+              ),
+            ],
+            selected: _month,
+            onChanged: (month) => setState(() => _month = month),
           ),
-          if (widget.accessHint)
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: Text(l10n.stepsZeroHint),
-                subtitle: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: TextButton(
-                    onPressed: widget.onOpenSettings,
-                    child: Text(l10n.stepsOpenSettings),
-                  ),
-                ),
-              ),
-            ),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(Gap.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SegmentedButton<bool>(
-                    showSelectedIcon: false,
-                    segments: [
-                      ButtonSegment(
-                        value: false,
-                        label: Text(l10n.stepsThisWeek),
-                      ),
-                      ButtonSegment(
-                        value: true,
-                        label: Text(l10n.stepsLastDays(stepHistoryDays)),
-                      ),
-                    ],
-                    selected: {_month},
-                    onSelectionChanged: (selection) =>
-                        setState(() => _month = selection.single),
-                  ),
-                  const SizedBox(height: Gap.md),
-                  _StepsChart(
-                    title: title,
-                    days: days,
-                    goal: goal,
-                    dayLabel: _month
-                        ? DateFormat.MMMd(locale)
-                        : DateFormat.E(locale),
-                  ),
-                  if (history.days.lastOrNull case final today?)
-                    _Summary(StepsSummary.before(today.day, days, goal: goal)),
-                ],
-              ),
-            ),
+          const SizedBox(height: Gap.md),
+          if (_month)
+            _MonthChart(days: days, goal: goal)
+          else
+            _WeekChart(days: days, goal: goal, today: today),
+          if (today != null)
+            _Summary(StepsSummary.before(today, days, goal: goal)),
+        ],
+      ),
+    );
+  }
+}
+
+/// The flat card the ring sits in.
+class _Panel extends StatelessWidget {
+  const _Panel({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: style.colors.surface,
+        borderRadius: BorderRadius.circular(style.radii.lg),
+        border: style.cardBorder == 0
+            ? null
+            : Border.all(color: style.colors.line, width: style.cardBorder),
+      ),
+      child: Padding(padding: const EdgeInsets.all(Gap.md), child: child),
+    );
+  }
+}
+
+/// Today's steps in the ring, "of" the goal inside it, and what is left
+/// to it under it.
+class _Today extends StatelessWidget {
+  const _Today(this.progress);
+  final StepGoalProgress progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final style = ForgeStyle.of(context);
+    final number = NumberFormat.decimalPattern(l10n.localeName);
+    return _Panel(
+      child: Column(
+        children: [
+          Progress.ring(
+            value: progress.steps.toDouble(),
+            goal: progress.goal.toDouble(),
+            figure: number.format(progress.steps),
+            caption: l10n.stepsOfGoal(progress.goal),
+          ),
+          const SizedBox(height: Gap.sm),
+          Text(
+            progress.reached
+                ? l10n.stepsGoalReached
+                : l10n.stepsToGo(progress.remaining),
+            style: Theme.of(context).textTheme.bodyMedium!
+                .copyWith(color: style.colors.inkMuted),
           ),
         ],
       ),
@@ -328,90 +327,9 @@ class _StepsState extends State<_Steps> {
   }
 }
 
-/// Today's steps as a ring around the count, what is left to the goal, and
-/// the goal with minus and plus; tapping it types it.
-class _Today extends StatelessWidget {
-  const _Today({required this.progress});
-  final StepGoalProgress progress;
-
-  /// Wide enough for the count in the ring's middle.
-  static const _ring = Gap.xl * 4;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final number = NumberFormat.decimalPattern(l10n.localeName);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(Gap.md),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Semantics(
-                  label:
-                      '${l10n.stepsCount(progress.steps)} '
-                      '${l10n.stepsOfGoal(progress.goal)}',
-                  excludeSemantics: true,
-                  child: SizedBox.square(
-                    dimension: _ring,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        CircularProgressIndicator(
-                          value: progress.fraction,
-                          strokeWidth: Gap.sm,
-                          backgroundColor:
-                              theme.colorScheme.surfaceContainerHighest,
-                        ),
-                        Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                number.format(progress.steps),
-                                style: theme.textTheme.headlineSmall,
-                              ),
-                              Text(
-                                l10n.stepsOfGoal(progress.goal),
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: Gap.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.stepsToday, style: theme.textTheme.titleMedium),
-                      Text(
-                        progress.reached
-                            ? l10n.stepsGoalReached
-                            : l10n.stepsToGo(progress.remaining),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: Gap.sm),
-            _GoalEditor(progress.goal),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// "Daily goal" with the goal between minus and plus, which move it by
-/// [StepGoal.step] within the limits; tapping the number types it. Each
-/// change saves at once.
+/// The daily goal between minus and plus, which move it by
+/// [StepGoal.step] within the limits; tapping the number types it, taken
+/// on the nearest step. Each change saves at once.
 class _GoalEditor extends StatefulWidget {
   const _GoalEditor(this.goal);
 
@@ -432,6 +350,9 @@ class _GoalEditorState extends State<_GoalEditor> {
   /// [SettingsCubit.update] took it for no change.
   bool _unwritten = false;
 
+  /// The last typed value was no goal.
+  bool _outOfRange = false;
+
   int get _goal => _picked ?? widget.goal;
 
   @override
@@ -447,6 +368,15 @@ class _GoalEditorState extends State<_GoalEditor> {
     }
   }
 
+  void _changed(double? value) {
+    final goal = value == null || value != value.roundToDouble()
+        ? null
+        : StepGoal.typed(value.toInt());
+    if (goal == null) return setState(() => _outOfRange = true);
+    _outOfRange = false;
+    _pick(goal);
+  }
+
   void _pick(int goal) {
     setState(() => _picked = goal);
     final settings = context.read<SettingsCubit>();
@@ -459,20 +389,9 @@ class _GoalEditorState extends State<_GoalEditor> {
     settings.update(settings.state.settings.copyWith(stepGoal: goal));
   }
 
-  Future<void> _type() async {
-    final typed = await showDialog<int>(
-      context: context,
-      builder: (_) => _GoalDialog(_goal),
-    );
-    if (typed != null && mounted) _pick(typed);
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final number = NumberFormat.decimalPattern(l10n.localeName);
-    final goal = _goal;
     // A failed save leaves the saved goal as it was.
     return BlocListener<SettingsCubit, SettingsState>(
       listenWhen: (previous, current) =>
@@ -481,38 +400,16 @@ class _GoalEditorState extends State<_GoalEditor> {
         _picked = null;
         _unwritten = false;
       }),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(l10n.stepsGoal, style: theme.textTheme.titleSmall),
-          ),
-          IconButton(
-            tooltip: l10n.stepsGoalLower(StepGoal.step),
-            icon: const Icon(Icons.remove),
-            onPressed: goal > StepGoal.min
-                ? () => _pick(StepGoal.stepped(goal, -1))
-                : null,
-          ),
-          Tooltip(
-            message: l10n.stepsGoalType,
-            child: TextButton(
-              onPressed: _type,
-              child: Text(
-                number.format(goal),
-                style: theme.textTheme.titleMedium,
-                maxLines: 1,
-                softWrap: false,
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: l10n.stepsGoalRaise(StepGoal.step),
-            icon: const Icon(Icons.add),
-            onPressed: goal < StepGoal.max
-                ? () => _pick(StepGoal.stepped(goal, 1))
-                : null,
-          ),
-        ],
+      child: StepperField(
+        value: _goal.toDouble(),
+        unit: l10n.stepsGoalUnit,
+        step: StepGoal.step.toDouble(),
+        min: StepGoal.min.toDouble(),
+        max: StepGoal.max.toDouble(),
+        errorText: _outOfRange
+            ? l10n.stepsGoalRange(StepGoal.min, StepGoal.max)
+            : null,
+        onChanged: _changed,
       ),
     );
   }
@@ -527,26 +424,19 @@ class _Summary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final number = NumberFormat.decimalPattern(l10n.localeName);
     if (summary.days == 0) return const SizedBox.shrink();
-    Widget stat(String label, String value) => Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: theme.textTheme.bodySmall),
-          Text(value, style: theme.textTheme.titleMedium),
-        ],
-      ),
-    );
     return Padding(
       padding: const EdgeInsets.only(top: Gap.md),
-      child: Row(
+      child: ListRowCard(
         children: [
-          stat(l10n.stepsAverage, l10n.stepsCount(summary.average)),
-          const SizedBox(width: Gap.md),
-          stat(
-            l10n.stepsGoalReached,
-            l10n.stepsReachedDays(summary.reached, summary.days),
+          ListRow(
+            title: l10n.stepsAverage,
+            value: number.format(summary.average),
+          ),
+          ListRow(
+            title: l10n.stepsGoalReached,
+            value: l10n.stepsReachedDays(summary.reached, summary.days),
           ),
         ],
       ),
@@ -554,108 +444,89 @@ class _Summary extends StatelessWidget {
   }
 }
 
-/// A bar a day with the goal across; a tap names the day and its steps.
-class _StepsChart extends StatelessWidget {
-  const _StepsChart({
-    required this.title,
-    required this.days,
-    required this.goal,
-    required this.dayLabel,
-  });
+String _dayText(AppLocalizations l10n, DailySteps day) => l10n.stepsOnDay(
+  DateFormat.MMMEd(l10n.localeName).format(day.day),
+  l10n.stepsCount(day.count),
+);
 
-  final String title;
+/// This week as Forge bars: a value over each day so far, today in accent,
+/// the goal across.
+class _WeekChart extends StatelessWidget {
+  const _WeekChart({required this.days, required this.goal, this.today});
+
   final List<DailySteps> days;
   final int goal;
+  final DateTime? today;
 
-  /// The label below a bar.
-  final DateFormat dayLabel;
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final letter = DateFormat.EEEEE(l10n.localeName);
+    final compact = NumberFormat.compact(locale: l10n.localeName);
+    final today = this.today;
+    final todayDate = today == null ? null : CalendarDate.of(today);
+    bool future(DailySteps day) =>
+        todayDate != null && CalendarDate.of(day.day).isAfter(todayDate);
+    final current = todayDate == null
+        ? null
+        : days.indexWhere((day) => CalendarDate.of(day.day) == todayDate);
+    final title = l10n.stepsThisWeek;
+    return Chart.bar(
+      title: title,
+      detail: l10n.stepsGoalDetail(goal),
+      bars: [
+        for (final day in days)
+          future(day)
+              ? ChartBar(label: letter.format(day.day))
+              : ChartBar(
+                  label: letter.format(day.day),
+                  value: day.count.toDouble(),
+                  valueLabel: compact.format(day.count),
+                ),
+      ],
+      current: current == null || current < 0 ? null : current,
+      target: goal.toDouble(),
+      semanticLabel: l10n.stepsChartLabel(
+        title,
+        l10n.stepsGoalValue(goal),
+        l10n.inlineList(
+          days.where((day) => !future(day)).map((d) => _dayText(l10n, d)),
+        ),
+      ),
+    );
+  }
+}
+
+/// The last 30 days, a bar a day with the goal across; a tap names the
+/// day and its steps.
+// Stays the app's chart until Forge has a form for 30 bars.
+class _MonthChart extends StatelessWidget {
+  const _MonthChart({required this.days, required this.goal});
+
+  final List<DailySteps> days;
+  final int goal;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final axis = NumberFormat.compact(locale: l10n.localeName);
-    final fullDate = DateFormat.MMMEd(l10n.localeName);
-    String dayText(DailySteps day) =>
-        l10n.stepsOnDay(fullDate.format(day.day), l10n.stepsCount(day.count));
-    return BarChart(
-      values: [for (final day in days) day.count.toDouble()],
-      xLabel: (index) => dayLabel.format(days[index].day),
-      yLabel: axis.format,
-      yPrecision: 1,
-      barLabel: (index) => dayText(days[index]),
-      semanticLabel: l10n.stepsChartLabel(
-        title,
-        l10n.stepsGoalValue(goal),
-        l10n.inlineList(days.map(dayText)),
-      ),
-      target: goal.toDouble(),
-    );
-  }
-}
-
-/// Types the daily goal; a number within the limits is taken on the
-/// nearest step.
-class _GoalDialog extends StatefulWidget {
-  const _GoalDialog(this.initial);
-  final int initial;
-
-  @override
-  State<_GoalDialog> createState() => _GoalDialogState();
-}
-
-class _GoalDialogState extends State<_GoalDialog> {
-  /// Selected, so typing replaces it.
-  late final _controller = TextEditingController.fromValue(
-    TextEditingValue(
-      text: '${widget.initial}',
-      selection: TextSelection(
-        baseOffset: 0,
-        extentOffset: '${widget.initial}'.length,
-      ),
-    ),
-  );
-  String? _error;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final goal = switch (int.tryParse(_controller.text)) {
-      final value? => StepGoal.typed(value),
-      null => null,
-    };
-    if (goal != null) return Navigator.pop(context, goal);
-    final l10n = AppLocalizations.of(context);
-    setState(() => _error = l10n.stepsGoalRange(StepGoal.min, StepGoal.max));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return AlertDialog(
-      title: Text(l10n.stepsGoal),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        keyboardType: TextInputType.number,
-        // Whole numbers only; five digits hold the largest goal.
-        inputFormatters: [
-          FilteringTextInputFormatter.digitsOnly,
-          LengthLimitingTextInputFormatter(5),
-        ],
-        onSubmitted: (_) => _submit(),
-        decoration: InputDecoration(errorText: _error, errorMaxLines: 2),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
+    final dayLabel = DateFormat.MMMd(l10n.localeName);
+    final title = l10n.stepsLastDays(stepHistoryDays);
+    return SectionCard.plain(
+      title: title,
+      child: BarChart(
+        values: [for (final day in days) day.count.toDouble()],
+        xLabel: (index) => dayLabel.format(days[index].day),
+        yLabel: axis.format,
+        yPrecision: 1,
+        barLabel: (index) => _dayText(l10n, days[index]),
+        semanticLabel: l10n.stepsChartLabel(
+          title,
+          l10n.stepsGoalValue(goal),
+          l10n.inlineList(days.map((d) => _dayText(l10n, d))),
         ),
-        FilledButton(onPressed: _submit, child: Text(l10n.save)),
-      ],
+        target: goal.toDouble(),
+      ),
     );
   }
 }
