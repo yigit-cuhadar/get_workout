@@ -351,7 +351,9 @@ GoRouter buildRouter(
   // Who onboarding was last shown to.
   String? onboardingUid;
   final unsavedChanges = UnsavedChanges();
+  final root = GlobalKey<NavigatorState>();
   return GoRouter(
+    navigatorKey: root,
     initialLocation: Routes.splash,
     onEnter: unsavedChanges.onEnter,
     // Refresh only when the redirect can change. A refresh re-parses the
@@ -781,6 +783,8 @@ GoRouter buildRouter(
                 routes: [
                   GoRoute(
                     path: ':field',
+                    // Over the tab bar.
+                    parentNavigatorKey: root,
                     redirect: (_, state) =>
                         _field(state) == null ? Routes.profileDetails : null,
                     builder: (_, state) => ProfileQuestionPage(_field(state)!),

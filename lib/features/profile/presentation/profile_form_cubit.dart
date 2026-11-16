@@ -208,6 +208,18 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
   bool enterHeight(String text, LengthUnit unit) =>
       _enter(text, (value) => setHeight(value, unit));
 
+  /// A height typed as whole [feet] and the [inches] past them (empty for
+  /// none, under 12).
+  bool enterFeetAndInches(String feet, String inches) {
+    final ft = _parse(feet);
+    final inch = inches.trim().isEmpty ? 0.0 : _parse(inches);
+    if (ft == null || inch == null) return false;
+    if (ft < 0 || ft != ft.roundToDouble() || inch < 0 || inch >= 12) {
+      return false;
+    }
+    return setHeight(ft * 12 + inch, LengthUnit.inch);
+  }
+
   bool enterWeight(String text, WeightUnit unit) =>
       _enter(text, (value) => setWeight(value, unit));
 

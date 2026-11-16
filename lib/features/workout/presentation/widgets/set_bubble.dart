@@ -8,7 +8,8 @@ import 'package:forge_ui/forge_ui.dart';
 /// accent, the current set (selected, not done) ringed 2.5px in accent, a
 /// pending set ringed 1.5px in line-strong; a [warmup]'s ring is dashed. A
 /// selected done set gets an accent ring 2.5px off it, dashed for a
-/// warm-up. [SetBubble.add] ends a row of them.
+/// warm-up. [SetBubble.add] ends a row of them. A [small] bubble (28px)
+/// stands for a set in a line of text, such as a warm-up set's row.
 ///
 /// [actions], also offered by [onLongPress], reach screen readers as
 /// custom actions.
@@ -23,6 +24,7 @@ class SetBubble extends StatelessWidget {
     this.warmup = false,
     this.onLongPress,
     this.actions,
+    this.small = false,
   });
 
   /// The add bubble: the add icon on a pending ring.
@@ -35,7 +37,8 @@ class SetBubble extends StatelessWidget {
        selected = false,
        warmup = false,
        onLongPress = null,
-       actions = null;
+       actions = null,
+       small = false;
 
   final String? label;
   final String semanticLabel;
@@ -47,26 +50,34 @@ class SetBubble extends StatelessWidget {
   final bool warmup;
   final VoidCallback? onLongPress;
   final Map<CustomSemanticsAction, VoidCallback>? actions;
+  final bool small;
 
   static const double diameter = 48;
+  static const double smallDiameter = 28;
 
   /// The side of a bubble, grown with the text scale so its label fits.
-  static double sizeOf(BuildContext context) =>
-      math.max(diameter, MediaQuery.textScalerOf(context).scale(diameter));
+  static double sizeOf(BuildContext context, {bool small = false}) {
+    final side = small ? smallDiameter : diameter;
+    return math.max(side, MediaQuery.textScalerOf(context).scale(side));
+  }
 
   @override
   Widget build(BuildContext context) {
     final style = ForgeStyle.of(context);
     final colors = style.colors;
     final current = selected && !done;
-    final size = sizeOf(context);
+    final size = sizeOf(context, small: small);
     final ring = done
         ? null
         : current
         ? (colors.accent, 2.5)
         : (colors.lineStrong, 1.5);
     final labelStyle = style.data.copyWith(
-      fontSize: current ? 15 : 14,
+      fontSize: small
+          ? 11
+          : current
+          ? 15
+          : 14,
       height: 1,
       fontWeight: current ? FontWeight.w600 : FontWeight.w500,
       color: done

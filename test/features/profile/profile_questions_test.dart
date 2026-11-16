@@ -1,9 +1,57 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:get_workout/features/profile/presentation/profile_questions.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
+import 'package:get_workout/l10n/app_localizations_en.dart';
 
 void main() {
+  group('answerText', () {
+    final l10n = AppLocalizationsEn();
+    const metric = UserSettings(
+      weightUnit: WeightUnit.kg,
+      lengthUnit: LengthUnit.cm,
+    );
+    String? answer(UserProfile profile, ProfileField field) =>
+        l10n.answerText(profile, field, metric);
+
+    test('training days read per week', () {
+      expect(
+        answer(const UserProfile(daysPerWeek: 3), ProfileField.daysPerWeek),
+        '3 a week',
+      );
+    });
+
+    test('equipment is named by its preset, else Custom', () {
+      expect(
+        answer(
+          UserProfile(equipment: EquipmentProfile.fullGym.equipment),
+          ProfileField.equipment,
+        ),
+        'Full gym',
+      );
+      expect(
+        answer(
+          UserProfile(
+            equipment: {...EquipmentProfile.homeGym.equipment, Equipment.cable},
+          ),
+          ProfileField.equipment,
+        ),
+        'Custom',
+      );
+    });
+
+    test('an unanswered field is null', () {
+      expect(answer(const UserProfile(), ProfileField.targetWeight), isNull);
+    });
+  });
+
+  test('feetAndInches splits to the one decimal shown', () {
+    expect(feetAndInches(71), (feet: 5, inches: 11.0));
+    expect(feetAndInches(71.96), (feet: 6, inches: 0.0));
+    expect(feetAndInches(70.86), (feet: 5, inches: 10.9));
+  });
+
   group('displayRange', () {
     test('metric limits are shown as they are', () {
       expect(

@@ -120,7 +120,7 @@ class _BackButton extends StatelessWidget {
 
 /// A question: its [title] under an optional [eyebrow] (the flow's name)
 /// and the line under it ([info]) at the top, the [answer] anchored to the
-/// bottom, near the thumb. With [scrolls], a
+/// bottom, near the thumb, with empty space between. With [scrolls], a
 /// taller answer scrolls; without, it must fit (a ruler or a wheel, whose
 /// drags a scrolling page would take).
 class OnboardingQuestionBody extends StatelessWidget {
