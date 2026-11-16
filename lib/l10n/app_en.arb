@@ -1522,7 +1522,6 @@
   "bodyDeletePhotos": "Its photos are deleted too. This can't be undone.",
   "bodyDeleteFailed": "Couldn't delete. Try again",
   "bodyPhotoMissing": "Photo not on this device",
-  "bodyPhotoNone": "No photo",
   "bodyCompare": "Compare",
   "bodyStepOf": "Step {step} of {total}",
   "@bodyStepOf": {"placeholders": {"step": {"type": "int"}, "total": {"type": "int"}}},

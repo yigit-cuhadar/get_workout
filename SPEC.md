@@ -925,17 +925,23 @@ Decisions (the canvases they were drawn on are deleted):
   the paywall); chart empty, series error and loading are Forge's forms;
   Log weight and Measurement day side by side; History rows: weight
   ("—" without one), the date (" · measurement day"), body fat or "—",
-  a chevron, opening the entry; no entries: the empty view and both
-  buttons under it, on Compare too.
+  a chevron, opening the entry; no entries: the empty view in a card
+  and both buttons under it, on Compare too; a failure is the error
+  view in a card. Without a target weight the weight change is neutral
+  (ink-muted); a left/right pair's chart values show both sides ("36 /
+  35.5 cm"); an empty range is the chart's empty form "Nothing in this
+  range" / "Nothing to show in this range yet." with the range control
+  and locked caption kept in the card.
 - Body compare and Measurement summary (owner's picks, 2026-11-16):
   photos on Forge BeforeAfterSlider (pose name and "Oct 18 → Nov 1 ·
-  −1.2 kg", chips Front / Right / Left / Back for the poses either day
-  has, fading; a missing photo "No photo", one still fetched shimmers,
-  one the backup lacks "Photo not on this device"; one day alone shows
-  its single form); no photos on either day: a card "No progress photos
+  −1.2 kg", without a weight change "Oct 18 → Nov 1"; chips Front / Right / Left / Back for the poses either day
+  has, fading; a pose only one day has, or one day alone, shows that
+  photo in the single form; one still fetched shimmers, one the backup
+  lacks "Photo not on this device"); no photos on either day: a card "No progress photos
   on these days" and a muted mono "Oct 18 → Nov 1" under the
   Previous / First / Other date control; Other date (also when chosen)
-  and, on Compare, the later date open sheets "Compare with" / "Later
+  and, on Compare, the later date (accent in the photo card's line, the
+  plain mono line without photos) open sheets "Compare with" / "Later
   day" listing the days with the current one ticked; change boxes
   (change large, "84.1 → 82.9 kg" under it, "—" for a side not
   measured): Weight, Body fat, Lean mass, Fat mass, then the

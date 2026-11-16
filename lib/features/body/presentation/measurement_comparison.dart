@@ -13,6 +13,7 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/body_entry.dart';
 import '../domain/entry_body_fat.dart';
 import '../domain/measurement_summary.dart';
+import 'body_state_card.dart';
 import 'body_text.dart';
 import 'measurement_summary_cubit.dart';
 
@@ -34,27 +35,30 @@ class MeasurementComparison extends StatelessWidget {
     return BlocBuilder<MeasurementSummaryCubit, MeasurementSummaryState>(
       builder: (context, state) => switch (state.status) {
         MeasurementSummaryStatus.loading => _Loading(compare: compare),
-        MeasurementSummaryStatus.failure => ErrorView(
-          title: l10n.bodyLoadFailed,
-          message: l10n.loadFailedDetail,
-          retryLabel: l10n.retry,
-          onRetry: context.read<MeasurementSummaryCubit>().retry,
+        MeasurementSummaryStatus.failure => BodyStateCard(
+          ErrorView(
+            title: l10n.bodyLoadFailed,
+            message: l10n.loadFailedDetail,
+            retryLabel: l10n.retry,
+            onRetry: context.read<MeasurementSummaryCubit>().retry,
+          ),
         ),
-        MeasurementSummaryStatus.notFound => EmptyView(
-          icon: ForgeIcons.event,
-          message: l10n.bodyNotFound,
+        MeasurementSummaryStatus.notFound => BodyStateCard(
+          EmptyView(icon: ForgeIcons.event, message: l10n.bodyNotFound),
         ),
-        MeasurementSummaryStatus.noMeasurementDays => EmptyView(
-          icon: ForgeIcons.event,
-          title: l10n.bodyNoMeasurementDaysTitle,
-          message: l10n.bodyNoMeasurementDays,
-          actions: [
-            ForgeButton(
-              label: l10n.bodyMeasurementDay,
-              variant: ForgeButtonVariant.secondary,
-              onPressed: () => context.go(Routes.bodyMeasureNew),
-            ),
-          ],
+        MeasurementSummaryStatus.noMeasurementDays => BodyStateCard(
+          EmptyView(
+            icon: ForgeIcons.event,
+            title: l10n.bodyNoMeasurementDaysTitle,
+            message: l10n.bodyNoMeasurementDays,
+            actions: [
+              ForgeButton(
+                label: l10n.bodyMeasurementDay,
+                variant: ForgeButtonVariant.secondary,
+                onPressed: () => context.go(Routes.bodyMeasureNew),
+              ),
+            ],
+          ),
         ),
         MeasurementSummaryStatus.ready => _Summary(state, compare: compare),
       },
@@ -154,7 +158,7 @@ class _Summary extends StatelessWidget {
       (SettingsCubit cubit) => cubit.state.settings,
     );
     final before = summary.before;
-    final photos = _Photos(state);
+    final photos = _Photos(state, compare: compare);
     final hasPhotos = summary.poses.isNotEmpty;
     final List<Widget> head;
     if (before == null) {
@@ -489,11 +493,13 @@ Future<String?> _pickDay(
   );
 }
 
-/// The photos of every pose either day has, compared on Forge's slider, or
-/// the one day's alone; a card saying there are none.
+/// The photos of every pose either day has, compared on Forge's slider; a
+/// pose only one day has shows that day's photo alone; a card saying there
+/// are none. On Compare the later date picks another later day.
 class _Photos extends StatelessWidget {
-  const _Photos(this.state);
+  const _Photos(this.state, {required this.compare});
   final MeasurementSummaryState state;
+  final bool compare;
 
   @override
   Widget build(BuildContext context) {
@@ -516,8 +522,7 @@ class _Photos extends StatelessWidget {
       );
     }
     ComparedPhoto photo(BodyEntry entry, PhotoPose pose) {
-      final path = entry.photos[pose];
-      if (path == null) return ComparedPhoto.missing(l10n.bodyPhotoNone);
+      final path = entry.photos[pose]!;
       if (state.photoFiles[path] case final file?) {
         return ComparedPhoto(FileImage(File(file)));
       }
@@ -527,19 +532,28 @@ class _Photos extends StatelessWidget {
 
     final change = switch (summary.weightKg?.change) {
       final kg? => l10n.bodyWeightChange(kg, unit),
-      null => l10n.bodyNoValue,
+      null => null,
     };
     return BeforeAfterSlider(
       // Opens on the later photo again for another pair of days.
       key: ValueKey((before?.id, after.id)),
       sliderLabel: l10n.bodyPhotoSlider,
+      onLaterDateTap: compare && state.laterCandidates.length > 1
+          ? () => _pickLater(context, state)
+          : null,
       views: [
         for (final pose in summary.poses)
-          if (before == null)
+          if (before == null || !before.photos.containsKey(pose))
             BeforeAfterView.single(
               name: l10n.poseShortName(pose),
               photo: photo(after, pose),
               date: l10n.bodyShortDate(after.date),
+            )
+          else if (!after.photos.containsKey(pose))
+            BeforeAfterView.single(
+              name: l10n.poseShortName(pose),
+              photo: photo(before, pose),
+              date: l10n.bodyShortDate(before.date),
             )
           else
             BeforeAfterView(

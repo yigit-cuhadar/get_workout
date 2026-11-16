@@ -19,6 +19,7 @@ import '../domain/body_entry.dart';
 import '../domain/body_stats.dart';
 import 'body_chart_cubit.dart';
 import 'body_list_cubit.dart';
+import 'body_state_card.dart';
 import 'body_text.dart';
 import 'measurement_comparison.dart';
 import 'measurement_summary_cubit.dart';
@@ -136,11 +137,13 @@ class _BodyViewState extends State<_BodyView> {
                     const _Empty(),
                   _ when _compare => const MeasurementComparison(compare: true),
                   BodyListStatus.loading => const _OverviewLoading(),
-                  BodyListStatus.failure => ErrorView(
-                    title: l10n.bodyLoadFailed,
-                    message: l10n.loadFailedDetail,
-                    retryLabel: l10n.retry,
-                    onRetry: context.read<BodyListCubit>().retry,
+                  BodyListStatus.failure => BodyStateCard(
+                    ErrorView(
+                      title: l10n.bodyLoadFailed,
+                      message: l10n.loadFailedDetail,
+                      retryLabel: l10n.retry,
+                      onRetry: context.read<BodyListCubit>().retry,
+                    ),
                   ),
                   BodyListStatus.ready => _Overview(state),
                 },
@@ -161,17 +164,13 @@ class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return ListView(
-      padding: const EdgeInsets.all(Gap.md),
-      children: [
-        EmptyView(
-          icon: ForgeIcons.monitorWeight,
-          title: l10n.bodyEmptyTitle,
-          message: l10n.bodyEmptyDetail,
-        ),
-        const SizedBox(height: 10),
-        const _LogButtons(),
-      ],
+    return BodyStateCard(
+      EmptyView(
+        icon: ForgeIcons.monitorWeight,
+        title: l10n.bodyEmptyTitle,
+        message: l10n.bodyEmptyDetail,
+      ),
+      below: const _LogButtons(),
     );
   }
 }
@@ -332,7 +331,11 @@ class _Boxes extends StatelessWidget {
                 final difference? => change(difference),
                 null => null,
               },
-              changeIsGood: box.tone == ChangeTone.good,
+              changeIsGood: switch (box.tone) {
+                ChangeTone.good => true,
+                ChangeTone.bad => false,
+                ChangeTone.neutral => null,
+              },
             ),
     );
     return IntrinsicHeight(
@@ -395,6 +398,26 @@ class _SeriesLook {
     _ => l10n.bodyLength(settings.lengthUnit.toCm(value), settings.lengthUnit),
   };
 
+  /// Writes the plotted values of [points]; a pair of measurements shows
+  /// both its sides ("36 / 35.5 cm"), found by the plotted mean.
+  String Function(double) formatter(
+    BodySeries series,
+    List<SeriesPoint> points,
+  ) {
+    final unit = settings.lengthUnit;
+    String side(double? cm) =>
+        cm == null ? l10n.bodyNoValue : l10n.bodyLengthNumber(cm, unit);
+    final pairs = {
+      for (final point in points)
+        if (point.sides case [final left, final right])
+          shown(series, point.value): l10n.bodyQuantity(
+            l10n.bodyPair(side(left), side(right)),
+            l10n.bodyLengthUnit(unit),
+          ),
+    };
+    return (value) => pairs[value] ?? format(series, value);
+  }
+
   List<ChartPoint> points(BodySeries series, List<SeriesPoint> points) => [
     for (final point in points)
       (day: point.date, value: shown(series, point.value)),
@@ -444,6 +467,11 @@ class _ChartCardState extends State<_ChartCard> {
         final from = chart.from;
         final to = chart.to;
         final waiting = chart.shown.every(chart.loading.contains);
+        final range = state.hasOlder ? _RangePicker(state.range) : null;
+        final lockedCaption = state.olderLocked ? l10n.bodyOlderLocked : null;
+        final VoidCallback? onLockedCaptionTap = state.olderLocked
+            ? () => context.requirePremium()
+            : null;
         if (from == null || to == null || waiting) {
           return waiting
               ? MultiSeriesChart.loading(title: title)
@@ -451,6 +479,9 @@ class _ChartCardState extends State<_ChartCard> {
                   title: title,
                   emptyTitle: l10n.bodyChartEmptyTitle,
                   message: l10n.bodyChartEmpty,
+                  range: range,
+                  lockedCaption: lockedCaption,
+                  onLockedCaptionTap: onLockedCaptionTap,
                 );
         }
         final target =
@@ -492,7 +523,7 @@ class _ChartCardState extends State<_ChartCard> {
               ChartSeries(
                 label: l10n.seriesName(shown),
                 points: look.points(shown, chart.points[shown] ?? const []),
-                format: (value) => look.format(shown, value),
+                format: look.formatter(shown, chart.points[shown] ?? const []),
                 look: _SeriesLook.looks[line++],
               ),
         ];
@@ -513,11 +544,9 @@ class _ChartCardState extends State<_ChartCard> {
           addLabel: l10n.bodyChartAdd,
           onAdd: _add,
           adding: _adding,
-          range: state.hasOlder ? _RangePicker(state.range) : null,
-          lockedCaption: state.olderLocked ? l10n.bodyOlderLocked : null,
-          onLockedCaptionTap: state.olderLocked
-              ? () => context.requirePremium()
-              : null,
+          range: range,
+          lockedCaption: lockedCaption,
+          onLockedCaptionTap: onLockedCaptionTap,
           semanticLabel: l10n.bodyChartSemantics(title),
         );
       },

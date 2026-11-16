@@ -305,9 +305,13 @@ void main() {
       find.byType(BeforeAfterSlider),
     );
     final front = slider.views!.single;
+    // Only Oct 18 has a front photo: it shows alone, on its date.
     expect(front.name, 'Front');
-    expect(front.change, '−1.2 kg');
-    expect(front.after!.missing, 'No photo');
+    expect(front.after, isNull);
+    expect(front.beforeDate, 'Oct 18');
+    // Not on this device and not being fetched: unavailable.
+    expect(front.before.missing, 'Photo not on this device');
+    expect(slider.onLaterDateTap, isNull);
     // One earlier day: no baseline choice.
     expect(find.text('Previous'), findsNothing);
 
@@ -483,5 +487,135 @@ void main() {
       ).bodyFat,
       isA<BodyFatNeedsMeasurements>(),
     );
+  });
+
+  testWidgets('both days\' photos: the later date opens the later days', (
+    tester,
+  ) async {
+    final withPhoto = BodyEntry(
+      id: 'nov1',
+      date: nov1.date,
+      weightKg: 82.9,
+      photos: const {PhotoPose.front: 'front-2.jpg'},
+    );
+    when(() => summary.state).thenReturn(
+      MeasurementSummaryState(
+        status: MeasurementSummaryStatus.ready,
+        summary: MeasurementSummary.of(
+          after: withPhoto,
+          before: oct18,
+          profile: const UserProfile(),
+          now: DateTime(year, 11, 13),
+        ),
+        laterCandidates: [nov13, withPhoto],
+        fetching: const {'front-2.jpg'},
+      ),
+    );
+    await pump(tester, const BodyPage(compareAfter: 'nov1'));
+
+    final slider = tester.widget<BeforeAfterSlider>(
+      find.byType(BeforeAfterSlider),
+    );
+    final front = slider.views!.single;
+    expect(front.change, '−1.2 kg');
+    expect(front.after!.image, isNull);
+    expect(front.after!.missing, isNull);
+    slider.onLaterDateTap!();
+    // The fetched photo shimmers on: no settling.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Later day'), findsOneWidget);
+  });
+
+  testWidgets('without a target weight the weight change is neutral', (
+    tester,
+  ) async {
+    when(() => profile.state)
+        .thenReturn(const ProfileState(status: ProfileStatus.loaded));
+    await pump(tester, const BodyPage());
+
+    final weight = tester.widget<StatTile>(
+      find.widgetWithText(StatTile, 'Weight'),
+    );
+    expect(weight.change, '−1.7');
+    expect(weight.changeIsGood, isNull);
+  });
+
+  testWidgets('a pair\'s chart values name both sides', (tester) async {
+    when(() => chart.state).thenReturn(
+      BodyChartState(
+        shown: const [BodySeries.upperArm],
+        from: DateTime(year, 8, 20),
+        to: DateTime(year, 11, 13),
+        points: {
+          BodySeries.upperArm: [
+            SeriesPoint(oct18.date, 35.75, const [36, 35.5]),
+          ],
+        },
+      ),
+    );
+    await pump(tester, const BodyPage());
+
+    final card = tester.widget<MultiSeriesChart>(find.byType(MultiSeriesChart));
+    expect(card.series!.single.format(35.75), '36 / 35.5 cm');
+  });
+
+  testWidgets('empty and error states sit in cards', (tester) async {
+    when(() => list.state)
+        .thenReturn(const BodyListState(status: BodyListStatus.failure));
+    await pump(tester, const BodyPage());
+    expect(
+      find.descendant(
+        of: find.byType(ListRowCard),
+        matching: find.byType(ErrorView),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('an empty range keeps the range control and locked caption', (
+    tester,
+  ) async {
+    when(() => list.state).thenReturn(
+      BodyListState(
+        status: BodyListStatus.ready,
+        entries: entries,
+        hasOlder: true,
+        olderLocked: true,
+      ),
+    );
+    when(() => chart.state).thenReturn(const BodyChartState());
+    await pump(tester, const BodyPage());
+
+    final card = tester.widget<MultiSeriesChart>(find.byType(MultiSeriesChart));
+    expect(card.series, isNull);
+    expect(card.range, isNotNull);
+    expect(card.lockedCaption, 'See your older results with Premium');
+    expect(find.text('Nothing in this range'), findsOneWidget);
+    expect(find.text('Nothing to show in this range yet.'), findsOneWidget);
+  });
+
+  testWidgets('no weight change: the photo line has only the dates', (
+    tester,
+  ) async {
+    BodyEntry photographed(String id, DateTime date) =>
+        BodyEntry(id: id, date: date, photos: {PhotoPose.front: '$id.jpg'});
+    when(() => summary.state).thenReturn(
+      MeasurementSummaryState(
+        status: MeasurementSummaryStatus.ready,
+        summary: MeasurementSummary.of(
+          after: photographed('b', nov1.date),
+          before: photographed('a', oct18.date),
+          profile: const UserProfile(),
+          now: DateTime(year, 11, 13),
+        ),
+      ),
+    );
+    await pump(tester, const BodyPage(compareAfter: 'b'));
+
+    final slider = tester.widget<BeforeAfterSlider>(
+      find.byType(BeforeAfterSlider),
+    );
+    expect(slider.views!.single.change, isNull);
   });
 }
