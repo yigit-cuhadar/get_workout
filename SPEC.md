@@ -919,7 +919,7 @@ Decisions (the canvases they were drawn on are deleted):
   "target 10–20 per muscle · tap a muscle on the model or a bar to see its
   exercises"; the "12-week trend" card is Forge Chart.line of each week's
   total for Premium (this week's total as its detail, the first and last
-  week under its ends) and SectionCard.locked (Premium tag, chevron,
+  week under its ends, a tap "14 sets · Nov 9–15") and SectionCard.locked (Premium tag, chevron,
   paywall) for everyone else and while Premium is unknown. A week without
   sets is an EmptyView "No sets this week" / "No sets that week", "Weekly
   sets per muscle fill in as you train.", with the trend card under it. A
@@ -932,18 +932,21 @@ Decisions (the canvases they were drawn on are deleted):
   program's weekly sets page: "Drag to turn" and "target 10–20 per muscle".
 - Strength (owner's picks, 2026-11-16): the title is "Strength"; an
   "Exercise" row opens the Exercise sheet (search and the Strength list's
-  rows, this one ticked; another exercise replaces the page, so Back still
+  rows, this one ticked, its height following the rows; another exercise replaces the page, so Back still
   returns to the list); a removed exercise's row reads "Exercise no longer
   in your library". Ranges are Forge SegmentedControl (locked segments open
   the paywall); the chart is Forge Chart.line "Estimated 1RM", one dot per
   workout evenly spaced, the range's first day to the last session as its
   detail ("Aug 24 – Nov 13"), the first and last dates under its ends, a tap
   "104 kg · Nov 13"; no e1RM in the range is Chart.empty "No estimated 1RM
-  in these 12 weeks" / "Log a set of Bench Press to continue the line.";
+  in these 12 weeks" ("…6 months", "…the last year") / "Log a set of
+  Bench Press to continue the line." with the range's first day to today
+  as its detail;
   loading is Chart.loading. Records are all five, Best e1RM, Heaviest, Most
   reps, Best set volume, Longest time ("Best e1RM" and "Heaviest" in the
   workout summary too), each with its date ("Fri, Nov 13") and the set that
-  made it ("82.5 kg × 8"; e1RM and set volume alone), not tappable.
+  made it ("82.5 kg × 8"; e1RM and set volume alone) in the data font,
+  not tappable; session lines are in the data font too.
   Sessions are every workout in the range (all of them for an exercise
   without an e1RM), newest first: the best set as the strength page writes
   it ("82.5 × 8", "12 reps", "+10 kg × 8", "20 kg assist × 8", "1:45",
