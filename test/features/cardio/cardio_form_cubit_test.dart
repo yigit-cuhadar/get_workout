@@ -107,18 +107,18 @@ void main() {
     test('an edit shows the stored values, distance in km', () {
       final state = build(initial: stored).state;
       expect(state.type, CardioType.treadmillRun);
-      expect((state.hours, state.minutes, state.seconds), ('1', '2', '3'));
-      expect(state.distance, '10');
-      expect(state.calories, '600');
-      expect(state.heartRate, '150');
-      expect(state.incline, '1.5');
+      expect(state.duration, const Duration(hours: 1, minutes: 2, seconds: 3));
+      expect(state.distance, 10);
+      expect(state.calories, 600);
+      expect(state.heartRate, 150);
+      expect(state.incline, 1.5);
       expect(state.note, 'Steady');
     });
 
     test('an edit shows the distance in miles for an imperial user', () {
       expect(
         build(initial: stored, unit: DistanceUnit.mile).state.distance,
-        '6.21',
+        6.21,
       );
     });
 
@@ -129,137 +129,62 @@ void main() {
 
   group('validation', () {
     blocTest<CardioFormCubit, CardioFormState>(
-      'shows every issue and saves nothing while the form is invalid',
+      'Save is off, and saves nothing, until there is a duration (CL06)',
       build: build,
-      act: (cubit) => (cubit..setHeartRate('20')).save(),
-      skip: 1,
-      expect: () => [
-        isA<CardioFormState>()
-            .having((s) => s.status, 'status', CardioFormStatus.editing)
-            .having((s) => s.issues, 'issues', {
-              CardioIssue.durationMissing,
-              CardioIssue.heartRateOutOfRange,
-            }),
-      ],
+      act: (cubit) async {
+        expect(cubit.state.canSave, isFalse);
+        await cubit.save();
+        cubit.setDuration(const Duration(minutes: 20));
+        expect(cubit.state.canSave, isTrue);
+      },
       verify: (_) => neverSaved(),
+    );
+
+    blocTest<CardioFormCubit, CardioFormState>(
+      'a start later today is shown on its row and saves nothing',
+      build: build,
+      act: (cubit) =>
+          (cubit
+                ..setDuration(const Duration(minutes: 20))
+                ..setDate(DateTime(2026, 11, 11, 23)))
+              .save(),
+      verify: (cubit) {
+        expect(cubit.state.issues, {CardioIssue.dateInFuture});
+        neverSaved();
+      },
     );
 
     blocTest<CardioFormCubit, CardioFormState>(
       'issues stay up to date after a failed attempt',
       build: build,
       act: (cubit) async {
+        cubit
+          ..setDuration(const Duration(minutes: 20))
+          ..setDate(DateTime(2026, 11, 11, 23));
         await cubit.save();
-        cubit.setDuration(minutes: '20');
+        cubit.setDate(DateTime(2026, 11, 11, 7));
       },
       verify: (cubit) => expect(cubit.state.issues, isEmpty),
     );
-
-    blocTest<CardioFormCubit, CardioFormState>(
-      'issues are not shown before the first save',
-      build: build,
-      act: (cubit) => cubit.setHeartRate('20'),
-      verify: (cubit) => expect(cubit.state.issues, isEmpty),
-    );
-
-    blocTest<CardioFormCubit, CardioFormState>(
-      'unreadable numbers are issues of their field',
-      build: build,
-      act: (cubit) =>
-          (cubit
-                ..setDuration(minutes: '30')
-                ..setDistance('5..2')
-                ..setCalories('1.5'))
-              .save(),
-      verify: (cubit) {
-        expect(cubit.state.issues, {
-          CardioIssue.distanceOutOfRange,
-          CardioIssue.caloriesOutOfRange,
-        });
-        neverSaved();
-      },
-    );
-
-    for (final (text, issues) in [
-      ('NaN', {CardioIssue.distanceOutOfRange, CardioIssue.inclineOutOfRange}),
-      (
-        'Infinity',
-        {CardioIssue.distanceOutOfRange, CardioIssue.inclineOutOfRange},
-      ),
-      (
-        '-Infinity',
-        {CardioIssue.distanceOutOfRange, CardioIssue.inclineOutOfRange},
-      ),
-      (
-        '1e400',
-        {CardioIssue.distanceOutOfRange, CardioIssue.inclineOutOfRange},
-      ),
-      // Readable, but far below the minimum distance; a fine incline.
-      ('1e-300', {CardioIssue.distanceOutOfRange}),
-    ]) {
-      blocTest<CardioFormCubit, CardioFormState>(
-        '"$text" is never saved as a distance or incline',
-        build: build,
-        act: (cubit) =>
-            (cubit
-                  ..setType(CardioType.treadmillRun)
-                  ..setDuration(minutes: '30')
-                  ..setDistance(text)
-                  ..setIncline(text))
-                .save(),
-        verify: (cubit) {
-          expect(cubit.state.issues, issues);
-          neverSaved();
-        },
-      );
-    }
-
-    blocTest<CardioFormCubit, CardioFormState>(
-      'huge digit strings are issues, not numbers',
-      build: build,
-      act: (cubit) =>
-          (cubit
-                ..setDuration(minutes: '30')
-                ..setCalories('9' * 40)
-                ..setHeartRate('1' * 25))
-              .save(),
-      verify: (cubit) => expect(cubit.state.issues, {
-        CardioIssue.caloriesOutOfRange,
-        CardioIssue.heartRateOutOfRange,
-      }),
-    );
-
-    for (final (name, hours, minutes, seconds) in [
-      ('a digit string too long to read', '9' * 30, '', ''),
-      ('more minutes than a day holds', '', '99999', ''),
-      ('24 hours and a second', '24', '0', '1'),
-    ]) {
-      blocTest<CardioFormCubit, CardioFormState>(
-        'a duration of $name is too long, not zero',
-        build: build,
-        act: (cubit) =>
-            (cubit..setDuration(
-                  hours: hours,
-                  minutes: minutes,
-                  seconds: seconds,
-                ))
-                .save(),
-        verify: (cubit) {
-          expect(cubit.state.issues, {CardioIssue.durationTooLong});
-          neverSaved();
-        },
-      );
-    }
 
     blocTest<CardioFormCubit, CardioFormState>(
       'a note longer than 500 characters is an issue',
       build: build,
       act: (cubit) =>
           (cubit
-                ..setDuration(minutes: '30')
+                ..setDuration(const Duration(minutes: 30))
                 ..setNote('x' * 501))
               .save(),
       verify: (cubit) => expect(cubit.state.issues, {CardioIssue.noteTooLong}),
     );
+
+    test('the session as it stands gives the pace', () {
+      final cubit = build()
+        ..setDuration(const Duration(minutes: 28, seconds: 40))
+        ..setDistance(5.2);
+      expect(cubit.session.pace(DistanceUnit.km), isNotNull);
+      unawaited(cubit.close());
+    });
   });
 
   group('save', () {
@@ -269,11 +194,11 @@ void main() {
       act: (cubit) =>
           (cubit
                 ..setType(CardioType.treadmillWalk)
-                ..setDuration(hours: '1', minutes: '5', seconds: '30')
-                ..setDistance('4,5')
-                ..setCalories(' 300 ')
-                ..setHeartRate('')
-                ..setIncline('-2')
+                ..setDuration(const Duration(hours: 1, minutes: 5, seconds: 30))
+                ..setDistance(4.5)
+                ..setCalories(300)
+                ..setHeartRate(null)
+                ..setIncline(-2)
                 ..setNote('  Hills  '))
               .save(),
       verify: (cubit) {
@@ -299,7 +224,7 @@ void main() {
       seed: () => CardioFormState(
         type: CardioType.hiit,
         date: DateTime(2026, 11, 11),
-        minutes: '20',
+        duration: const Duration(minutes: 20),
       ),
       act: (cubit) => cubit.save(),
       expect: () => [
@@ -317,12 +242,12 @@ void main() {
     );
 
     blocTest<CardioFormCubit, CardioFormState>(
-      'a distance typed in miles is stored in km',
+      'a distance picked in miles is stored in km',
       build: () => build(unit: DistanceUnit.mile),
       act: (cubit) =>
           (cubit
-                ..setDuration(minutes: '30')
-                ..setDistance('3'))
+                ..setDuration(const Duration(minutes: 30))
+                ..setDistance(3))
               .save(),
       verify: (_) => expect(saved().$1.distanceKm, closeTo(4.828032, 1e-9)),
     );
@@ -342,7 +267,7 @@ void main() {
     blocTest<CardioFormCubit, CardioFormState>(
       'an edit writes the fields the form shows; cleared ones are null',
       build: () => build(initial: stored),
-      act: (cubit) => (cubit..setIncline('')).save(),
+      act: (cubit) => (cubit..setIncline(null)).save(),
       verify: (_) {
         final (session, fields) = saved();
         expect(fields, {...CardioField.values});
@@ -375,7 +300,7 @@ void main() {
       act: (cubit) =>
           (cubit
                 ..setType(CardioType.other)
-                ..setCalories('120'))
+                ..setCalories(120))
               .save(),
       verify: (_) {
         final (session, fields) = saved();
@@ -412,7 +337,7 @@ void main() {
       verify: (cubit) {
         expect(cubit.state.status, CardioFormStatus.saveFailed);
         expect(cubit.state.failure, failure);
-        expect(cubit.state.distance, '10');
+        expect(cubit.state.distance, 10);
       },
     );
 

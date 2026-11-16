@@ -275,7 +275,7 @@ void main() {
     await openCardio(tester, [run]);
     await tap(tester, find.text('Log cardio'));
 
-    await tap(tester, find.byType(BackButton));
+    await tap(tester, find.bySemanticsLabel('Back'));
 
     expect(find.byType(CardioListPage), findsOneWidget);
     expect(find.byType(CardioNewPage), findsNothing);

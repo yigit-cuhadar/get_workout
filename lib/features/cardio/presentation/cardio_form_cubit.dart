@@ -8,7 +8,6 @@ import '../domain/cardio_session.dart';
 import '../domain/cardio_type.dart';
 import '../domain/cardio_usecases.dart';
 import '../domain/cardio_validation.dart';
-import 'cardio_text.dart';
 
 enum CardioFormStatus {
   editing,
@@ -23,18 +22,16 @@ enum CardioFormStatus {
   closed,
 }
 
-/// The form's inputs, as typed; distance in the unit the user sees.
+/// The form's values as picked; distance in the unit the user sees.
 class CardioFormState extends Equatable {
   const CardioFormState({
     required this.type,
     required this.date,
-    this.hours = '',
-    this.minutes = '',
-    this.seconds = '',
-    this.distance = '',
-    this.calories = '',
-    this.heartRate = '',
-    this.incline = '',
+    this.duration = Duration.zero,
+    this.distance,
+    this.calories,
+    this.heartRate,
+    this.incline,
     this.note = '',
     this.issues = const {},
     this.status = CardioFormStatus.editing,
@@ -43,13 +40,11 @@ class CardioFormState extends Equatable {
 
   final CardioType type;
   final DateTime date;
-  final String hours;
-  final String minutes;
-  final String seconds;
-  final String distance;
-  final String calories;
-  final String heartRate;
-  final String incline;
+  final Duration duration;
+  final double? distance;
+  final int? calories;
+  final int? heartRate;
+  final double? incline;
   final String note;
 
   /// Shown once a save was attempted, then kept up to date.
@@ -60,16 +55,17 @@ class CardioFormState extends Equatable {
   bool get isBusy =>
       status == CardioFormStatus.saving || status == CardioFormStatus.deleting;
 
+  /// Save is off until there is a duration, the one required value (CL06).
+  bool get canSave => duration > Duration.zero && !isBusy;
+
   CardioFormState copyWith({
     CardioType? type,
     DateTime? date,
-    String? hours,
-    String? minutes,
-    String? seconds,
-    String? distance,
-    String? calories,
-    String? heartRate,
-    String? incline,
+    Duration? duration,
+    double? Function()? distance,
+    int? Function()? calories,
+    int? Function()? heartRate,
+    double? Function()? incline,
     String? note,
     Set<CardioIssue>? issues,
     CardioFormStatus? status,
@@ -77,13 +73,11 @@ class CardioFormState extends Equatable {
   }) => CardioFormState(
     type: type ?? this.type,
     date: date ?? this.date,
-    hours: hours ?? this.hours,
-    minutes: minutes ?? this.minutes,
-    seconds: seconds ?? this.seconds,
-    distance: distance ?? this.distance,
-    calories: calories ?? this.calories,
-    heartRate: heartRate ?? this.heartRate,
-    incline: incline ?? this.incline,
+    duration: duration ?? this.duration,
+    distance: distance == null ? this.distance : distance(),
+    calories: calories == null ? this.calories : calories(),
+    heartRate: heartRate == null ? this.heartRate : heartRate(),
+    incline: incline == null ? this.incline : incline(),
     note: note ?? this.note,
     issues: issues ?? this.issues,
     status: status ?? this.status,
@@ -94,9 +88,7 @@ class CardioFormState extends Equatable {
   List<Object?> get props => [
     type,
     date,
-    hours,
-    minutes,
-    seconds,
+    duration,
     distance,
     calories,
     heartRate,
@@ -108,7 +100,7 @@ class CardioFormState extends Equatable {
   ];
 }
 
-/// Logs a new session, or edits [initial]. Distances are typed and shown in
+/// Logs a new session, or edits [initial]. Distances are picked and shown in
 /// [unit] and converted to km only here. Closes when the signed-in user
 /// changes, so it never shows or writes another user's session.
 class CardioFormCubit extends Cubit<CardioFormState> {
@@ -146,11 +138,10 @@ class CardioFormCubit extends Cubit<CardioFormState> {
   late final StreamSubscription<String?> _userSubscription;
   bool _submitted = false;
 
-  /// Each part of the duration; more is more than a day anyway, and larger
-  /// numbers could overflow [Duration].
-  static const _maxDurationPart = Duration.secondsPerDay;
-
   bool get isEditing => _initial?.id != null;
+
+  /// The session as it stands, for its pace or speed under the form.
+  CardioSession get session => _check(state).$1;
 
   static CardioFormState _initialState(
     CardioSession? session,
@@ -164,30 +155,32 @@ class CardioFormCubit extends Cubit<CardioFormState> {
         date: DateTime(now.year, now.month, now.day, now.hour, now.minute),
       );
     }
-    final duration = session.duration;
-    final incline = session.incline;
     return CardioFormState(
       type: session.type,
       date: session.date,
-      hours: '${duration.inHours}',
-      minutes: '${duration.inMinutes % 60}',
-      seconds: '${duration.inSeconds % 60}',
-      distance: _distanceText(session.distanceKm, unit),
-      calories: session.calories?.toString() ?? '',
-      heartRate: session.avgHeartRate?.toString() ?? '',
-      incline: incline == null ? '' : formatDecimal(incline, 1),
+      duration: session.duration,
+      distance: _shownDistance(session.distanceKm, unit),
+      calories: session.calories,
+      heartRate: session.avgHeartRate,
+      incline: session.incline,
       note: session.note ?? '',
     );
   }
 
   void setType(CardioType type) => _change(state.copyWith(type: type));
   void setDate(DateTime date) => _change(state.copyWith(date: date));
-  void setDuration({String? hours, String? minutes, String? seconds}) =>
-      _change(state.copyWith(hours: hours, minutes: minutes, seconds: seconds));
-  void setDistance(String text) => _change(state.copyWith(distance: text));
-  void setCalories(String text) => _change(state.copyWith(calories: text));
-  void setHeartRate(String text) => _change(state.copyWith(heartRate: text));
-  void setIncline(String text) => _change(state.copyWith(incline: text));
+  void setDuration(Duration duration) =>
+      _change(state.copyWith(duration: duration));
+
+  /// In the unit the user sees; null clears it, as for the values below.
+  void setDistance(double? value) =>
+      _change(state.copyWith(distance: () => value));
+  void setCalories(int? value) =>
+      _change(state.copyWith(calories: () => value));
+  void setHeartRate(int? value) =>
+      _change(state.copyWith(heartRate: () => value));
+  void setIncline(double? value) =>
+      _change(state.copyWith(incline: () => value));
   void setNote(String text) => _change(state.copyWith(note: text));
 
   void _change(CardioFormState next) {
@@ -197,7 +190,7 @@ class CardioFormCubit extends Cubit<CardioFormState> {
   }
 
   Future<void> save() async {
-    if (state.isBusy || state.status == CardioFormStatus.closed) return;
+    if (!state.canSave || state.status == CardioFormStatus.closed) return;
     _submitted = true;
     final (session, issues) = _check(state);
     if (issues.isNotEmpty) {
@@ -267,48 +260,10 @@ class CardioFormCubit extends Cubit<CardioFormState> {
     };
   }
 
-  /// The session the inputs describe, and what is wrong with it. Fields the
-  /// type does not use are left out.
+  /// The session the values describe, and what is wrong with it. Fields
+  /// the type does not use are left out.
   (CardioSession, Set<CardioIssue>) _check(CardioFormState input) {
     final type = input.type;
-    final unreadable = <CardioIssue>{};
-
-    T? read<T extends num>(
-      bool used,
-      String text,
-      T? Function(String) parse,
-      CardioIssue issue,
-    ) {
-      final trimmed = text.trim().replaceAll(',', '.');
-      if (!used || trimmed.isEmpty) return null;
-      final value = parse(trimmed);
-      if (value == null || !value.isFinite) {
-        unreadable.add(issue);
-        return null;
-      }
-      return value;
-    }
-
-    int? part(String text) {
-      final trimmed = text.trim();
-      if (trimmed.isEmpty) return 0;
-      final value = int.tryParse(trimmed);
-      return value == null || value < 0 || value > _maxDurationPart
-          ? null
-          : value;
-    }
-
-    final hours = part(input.hours);
-    final minutes = part(input.minutes);
-    final seconds = part(input.seconds);
-    final durationReadable =
-        hours != null && minutes != null && seconds != null;
-    final distance = read(
-      type.distance,
-      input.distance,
-      double.tryParse,
-      CardioIssue.distanceOutOfRange,
-    );
     final note = input.note.trim();
     final initial = _initial;
     final session = CardioSession(
@@ -318,52 +273,30 @@ class CardioFormCubit extends Cubit<CardioFormState> {
           ? initial.typeCode
           : null,
       date: input.date,
-      duration: durationReadable
-          ? Duration(hours: hours, minutes: minutes, seconds: seconds)
-          : Duration.zero,
-      distanceKm: _distanceKm(input.distance, distance),
-      calories: read(
-        true,
-        input.calories,
-        int.tryParse,
-        CardioIssue.caloriesOutOfRange,
-      ),
-      avgHeartRate: read(
-        true,
-        input.heartRate,
-        int.tryParse,
-        CardioIssue.heartRateOutOfRange,
-      ),
-      incline: read(
-        type.incline,
-        input.incline,
-        double.tryParse,
-        CardioIssue.inclineOutOfRange,
-      ),
+      duration: input.duration,
+      distanceKm: type.distance ? _distanceKm(input.distance) : null,
+      calories: input.calories,
+      avgHeartRate: input.heartRate,
+      incline: type.incline ? input.incline : null,
       note: note.isEmpty ? null : note,
     );
-    final issues = {...unreadable, ...validateCardio(session, now: _clock())};
-    if (!durationReadable) {
-      issues
-        ..remove(CardioIssue.durationMissing)
-        ..add(CardioIssue.durationTooLong);
-    }
-    return (session, issues);
+    return (session, validateCardio(session, now: _clock()));
   }
 
-  /// Keeps the stored km when the shown, rounded distance was not edited, so
-  /// saving other changes does not drift it.
-  double? _distanceKm(String text, double? value) {
+  /// Keeps the stored km while the shown, rounded distance was not
+  /// changed, so saving other changes does not drift it.
+  double? _distanceKm(double? value) {
     if (value == null) return null;
     final initial = _initial?.distanceKm;
-    if (initial != null && text == _distanceText(initial, _unit)) {
+    if (initial != null && value == _shownDistance(initial, _unit)) {
       return initial;
     }
     return _unit.toKm(value);
   }
 
-  static String _distanceText(double? km, DistanceUnit unit) =>
-      km == null ? '' : formatDecimal(unit.fromKm(km), 2);
+  /// [km] in [unit] to the 0.01 the distance picker steps by.
+  static double? _shownDistance(double? km, DistanceUnit unit) =>
+      km == null ? null : (unit.fromKm(km) * 100).round() / 100;
 
   @override
   Future<void> close() async {

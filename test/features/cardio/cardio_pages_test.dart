@@ -10,6 +10,7 @@ import 'package:get_workout/features/cardio/domain/cardio_session.dart';
 import 'package:get_workout/features/cardio/domain/cardio_type.dart';
 import 'package:get_workout/features/cardio/domain/cardio_week.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_form_cubit.dart';
+import 'package:get_workout/features/cardio/presentation/cardio_form_page.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_list_cubit.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_list_page.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_session_page.dart';
@@ -215,6 +216,147 @@ void main() {
     testWidgets('a session gone shows one line', (tester) async {
       await pump(tester, ready([run]), const CardioSessionPage(id: 'nope'));
       expect(find.text('This session no longer exists.'), findsOneWidget);
+    });
+  });
+
+  group('form', () {
+    late _MockForm form;
+
+    Future<void> showForm(
+      WidgetTester tester,
+      CardioFormState state, {
+      CardioSession? session,
+    }) async {
+      form = _MockForm();
+      whenListen(
+        form,
+        const Stream<CardioFormState>.empty(),
+        initialState: state,
+      );
+      when(() => form.isEditing).thenReturn(session != null);
+      when(() => form.session).thenReturn(
+        CardioSession(
+          type: state.type,
+          date: state.date,
+          duration: state.duration,
+          distanceKm: state.distance,
+        ),
+      );
+      when(form.save).thenAnswer((_) async {});
+      // A fresh form for each call.
+      await tester.pumpWidget(const SizedBox());
+      await sl.reset();
+      sl.registerFactoryParam<CardioFormCubit, CardioSession?, DistanceUnit>(
+        (_, _) => form,
+      );
+      await pump(
+        tester,
+        ready([?session]),
+        session == null
+            ? const CardioNewPage()
+            : CardioEditPage(id: session.id!),
+      );
+      await tester.pump();
+    }
+
+    testWidgets('a row per value with its picker; Save faded and Duration '
+        'missing while there is no duration', (tester) async {
+      await showForm(
+        tester,
+        CardioFormState(type: CardioType.outdoorRun, date: today),
+      );
+
+      final rows = tester.widgetList<ListRow>(find.byType(ListRow)).toList();
+      expect(rows.map((row) => row.title), [
+        'Type',
+        'Date and time',
+        'Duration',
+        'Distance',
+        'Calories',
+        'Average heart rate',
+        'Note',
+      ]);
+      expect(rows[1].value, startsWith('Today, '));
+      expect((rows[2].missing, rows[2].value), (true, '—'));
+      expect(rows[2].error, 'Enter a duration');
+      expect(rows.every((row) => row.end == ListRowEnd.chevron), isTrue);
+      final save = tester.widget<ForgeAppBarAction>(
+        find.byType(ForgeAppBarAction),
+      );
+      expect(save.label, 'Save');
+      expect(save.onPressed, isNull);
+      expect(find.textContaining('Pace'), findsNothing);
+    });
+
+    testWidgets('values, the pace under the rows, Save on; no delete', (
+      tester,
+    ) async {
+      await showForm(
+        tester,
+        CardioFormState(
+          type: CardioType.outdoorRun,
+          date: run.date,
+          duration: run.duration,
+          distance: 5.2,
+          calories: 310,
+          note: 'Easy pace, felt good',
+        ),
+        session: run,
+      );
+
+      expect(find.text('Edit cardio'), findsOneWidget);
+      expect(find.text('28:40'), findsOneWidget);
+      expect(find.text('5.2 km'), findsOneWidget);
+      expect(find.text('310 kcal'), findsOneWidget);
+      expect(find.text('Pace 5:31 /km'), findsOneWidget);
+      expect(find.bySemanticsLabel('Delete'), findsNothing);
+
+      await tester.tap(find.text('Save'));
+      verify(form.save).called(1);
+    });
+
+    testWidgets('speed types read a speed; incline types add incline, '
+        'no-distance types drop distance', (tester) async {
+      await showForm(
+        tester,
+        CardioFormState(
+          type: CardioType.outdoorCycle,
+          date: today,
+          duration: const Duration(hours: 1),
+          distance: 22.4,
+        ),
+      );
+      expect(find.text('Speed 22.4 km/h'), findsOneWidget);
+
+      await showForm(
+        tester,
+        CardioFormState(type: CardioType.stairClimber, date: today),
+      );
+      expect(find.text('Distance'), findsNothing);
+      expect(find.text('Incline'), findsOneWidget);
+    });
+
+    testWidgets('Duration opens the h:m:s wheel; Distance a number sheet', (
+      tester,
+    ) async {
+      await showForm(
+        tester,
+        CardioFormState(type: CardioType.outdoorRun, date: today),
+      );
+
+      await tester.tap(find.text('Duration'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ForgeDurationWheel), findsOneWidget);
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Distance'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ForgeBottomSheet), findsOneWidget);
+      expect(find.byType(NumberPicker), findsOneWidget);
+      await tester.tap(find.widgetWithText(ForgeButton, 'Save'));
+      await tester.pumpAndSettle();
+      verify(() => form.setDistance(5)).called(1);
     });
   });
 }

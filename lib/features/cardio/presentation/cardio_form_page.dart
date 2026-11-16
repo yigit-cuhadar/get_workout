@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/day_time.dart';
+import '../../../core/widgets/choice_sheet.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_cubit.dart';
+import '../../workout/presentation/workout_editor_view.dart';
 import '../domain/cardio_session.dart';
 import '../domain/cardio_type.dart';
 import '../domain/cardio_validation.dart';
@@ -22,8 +24,8 @@ class CardioNewPage extends StatelessWidget {
   Widget build(BuildContext context) => const _CardioForm(session: null);
 }
 
-/// A stored session, edited in place; closes with true once it deleted
-/// it. It is taken from the shared list, so it opens at once from the
+/// A stored session, edited in place; it is deleted from its own page.
+/// It is taken from the shared list, so it opens at once from the
 /// session's page and also works from a bare link.
 class CardioEditPage extends StatelessWidget {
   const CardioEditPage({super.key, required this.id});
@@ -89,31 +91,11 @@ class _CardioFormView extends StatefulWidget {
   State<_CardioFormView> createState() => _CardioFormViewState();
 }
 
+/// Each value a row that opens its picker (CL08), Save in the app bar,
+/// faded until there is a duration (CL06), and the pace or speed under
+/// the rows (CL09).
 class _CardioFormViewState extends State<_CardioFormView> {
   late final CardioFormCubit _cubit = context.read<CardioFormCubit>();
-  late final _hours = _controller(_cubit.state.hours);
-  late final _minutes = _controller(_cubit.state.minutes);
-  late final _seconds = _controller(_cubit.state.seconds);
-  late final _distance = _controller(_cubit.state.distance);
-  late final _calories = _controller(_cubit.state.calories);
-  late final _heartRate = _controller(_cubit.state.heartRate);
-  late final _incline = _controller(_cubit.state.incline);
-  late final _note = _controller(_cubit.state.note);
-  final _controllers = <TextEditingController>[];
-
-  TextEditingController _controller(String text) {
-    final controller = TextEditingController(text: text);
-    _controllers.add(controller);
-    return controller;
-  }
-
-  @override
-  void dispose() {
-    for (final controller in _controllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,164 +104,151 @@ class _CardioFormViewState extends State<_CardioFormView> {
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
         switch (state.status) {
-          case CardioFormStatus.deleted:
-            context.pop(true);
           case CardioFormStatus.saved || CardioFormStatus.closed:
             context.pop();
-          case CardioFormStatus.saveFailed || CardioFormStatus.deleteFailed:
-            ScaffoldMessenger.of(
+          case CardioFormStatus.saveFailed:
+            showForgeSnackbar(
               context,
-            ).showSnackBar(SnackBar(content: Text(_failureText(l10n, state))));
+              message: state.failure is NetworkFailure
+                  ? l10n.errorNetwork
+                  : l10n.cardioSaveFailed,
+              error: true,
+            );
           default:
         }
       },
       builder: (context, state) {
-        String? error(CardioIssue issue) =>
-            state.issues.contains(issue) ? l10n.issueText(issue) : null;
-        final durationError =
-            error(CardioIssue.durationMissing) ??
-            error(CardioIssue.durationTooLong);
+        final type = state.type;
+        final noValue = l10n.bodyNoValue;
+        final missingDuration = state.duration <= Duration.zero;
+        final rate = _rateLine(l10n, state);
         return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              _cubit.isEditing ? l10n.cardioEditTitle : l10n.cardioLog,
-            ),
+          appBar: ForgeAppBar(
+            title: _cubit.isEditing ? l10n.cardioEditTitle : l10n.cardioLog,
             actions: [
-              if (_cubit.isEditing)
-                IconButton(
-                  tooltip: l10n.cardioDelete,
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: state.isBusy ? null : () => _delete(l10n),
-                ),
+              ForgeAppBarAction.text(
+                label: l10n.cardioSave,
+                onPressed: state.canSave ? _cubit.save : null,
+              ),
             ],
           ),
           body: ListView(
             padding: const EdgeInsets.all(Gap.md),
             children: [
-              DropdownButtonFormField<CardioType>(
-                initialValue: state.type,
-                decoration: InputDecoration(labelText: l10n.cardioType),
-                items: [
-                  for (final type in CardioType.values)
-                    DropdownMenuItem(
-                      value: type,
-                      child: Text(l10n.typeName(type)),
-                    ),
-                ],
-                onChanged: (type) => _cubit.setType(type!),
-              ),
-              const SizedBox(height: Gap.sm),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.cardioDate),
-                trailing: Text(
-                  MaterialLocalizations.of(context)
-                      .formatMediumDate(state.date),
-                ),
-                onTap: () => _pickDate(state.date),
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.cardioTime),
-                trailing: Text(
-                  TimeOfDay.fromDateTime(state.date).format(context),
-                ),
-                onTap: () => _pickTime(state.date),
-              ),
-              if (error(CardioIssue.dateInFuture) case final text?)
-                _ErrorText(text),
-              const SizedBox(height: Gap.sm),
-              Text(l10n.cardioDuration),
-              Row(
+              ListRowCard(
                 children: [
-                  for (final (controller, label, onChanged) in [
-                    (
-                      _hours,
-                      l10n.cardioHours,
-                      (String text) => _cubit.setDuration(hours: text),
-                    ),
-                    (
-                      _minutes,
-                      l10n.cardioMinutesShort,
-                      (String text) => _cubit.setDuration(minutes: text),
-                    ),
-                    (
-                      _seconds,
-                      l10n.cardioSeconds,
-                      (String text) => _cubit.setDuration(seconds: text),
-                    ),
-                  ])
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
-                        child: TextField(
-                          controller: controller,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: _wholeNumber(5),
-                          decoration: InputDecoration(labelText: label),
-                          onChanged: onChanged,
-                        ),
+                  ListRow(
+                    title: l10n.cardioType,
+                    value: l10n.typeName(type),
+                    end: ListRowEnd.chevron,
+                    onTap: () => _pickType(type),
+                  ),
+                  ListRow(
+                    title: l10n.cardioDateTime,
+                    value: dayTimeText(context, state.date),
+                    error: state.issues.contains(CardioIssue.dateInFuture)
+                        ? l10n.cardioErrorDateInFuture
+                        : null,
+                    dataValue: true,
+                    end: ListRowEnd.chevron,
+                    onTap: () => _pickDateTime(state.date),
+                  ),
+                  ListRow(
+                    title: l10n.cardioDuration,
+                    value: missingDuration
+                        ? noValue
+                        : formatDuration(state.duration),
+                    missing: missingDuration,
+                    error: missingDuration ? l10n.cardioErrorDuration : null,
+                    dataValue: true,
+                    end: ListRowEnd.chevron,
+                    onTap: () => _pickDuration(state.duration),
+                  ),
+                  if (type.distance)
+                    ListRow(
+                      title: l10n.cardioDistanceRow,
+                      value: switch (state.distance) {
+                        final distance? => _distanceText(l10n, distance),
+                        null => noValue,
+                      },
+                      dataValue: true,
+                      end: ListRowEnd.chevron,
+                      onTap: () => _pickNumber(
+                        title: l10n.cardioDistanceRow,
+                        unit: l10n.distanceUnitLabel(widget.unit),
+                        field: _NumberField.distance(widget.unit),
+                        value: state.distance,
+                        onPicked: _cubit.setDistance,
                       ),
                     ),
-                ],
-              ),
-              if (durationError != null) _ErrorText(durationError),
-              if (state.type.distance)
-                _NumberField(
-                  controller: _distance,
-                  label: l10n.cardioDistance(
-                    l10n.distanceUnitLabel(widget.unit),
+                  ListRow(
+                    title: l10n.cardioCaloriesRow,
+                    value: switch (state.calories) {
+                      final kcal? => l10n.cardioKcal(kcal),
+                      null => noValue,
+                    },
+                    dataValue: true,
+                    end: ListRowEnd.chevron,
+                    onTap: () => _pickNumber(
+                      title: l10n.cardioCaloriesRow,
+                      field: _NumberField.calories,
+                      value: state.calories?.toDouble(),
+                      onPicked: (value) => _cubit.setCalories(value?.round()),
+                    ),
                   ),
-                  error: error(CardioIssue.distanceOutOfRange),
-                  decimal: true,
-                  formatters: _decimalNumber(6),
-                  onChanged: _cubit.setDistance,
-                ),
-              _NumberField(
-                controller: _calories,
-                label: l10n.cardioCalories,
-                error: error(CardioIssue.caloriesOutOfRange),
-                formatters: _wholeNumber(5),
-                onChanged: _cubit.setCalories,
-              ),
-              _NumberField(
-                controller: _heartRate,
-                label: l10n.cardioHeartRate,
-                error: error(CardioIssue.heartRateOutOfRange),
-                formatters: _wholeNumber(3),
-                onChanged: _cubit.setHeartRate,
-              ),
-              if (state.type.incline)
-                _NumberField(
-                  controller: _incline,
-                  label: l10n.cardioIncline,
-                  error: error(CardioIssue.inclineOutOfRange),
-                  decimal: true,
-                  signed: true,
-                  formatters: _decimalNumber(5, signed: true),
-                  onChanged: _cubit.setIncline,
-                ),
-              const SizedBox(height: Gap.sm),
-              TextField(
-                controller: _note,
-                minLines: 1,
-                maxLines: 4,
-                textCapitalization: TextCapitalization.sentences,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(CardioLimits.maxNoteLength),
+                  ListRow(
+                    title: l10n.cardioHeartRateRow,
+                    value: switch (state.heartRate) {
+                      final bpm? => l10n.cardioBpm(bpm),
+                      null => noValue,
+                    },
+                    dataValue: true,
+                    end: ListRowEnd.chevron,
+                    onTap: () => _pickNumber(
+                      title: l10n.cardioHeartRateRow,
+                      field: _NumberField.heartRate,
+                      value: state.heartRate?.toDouble(),
+                      onPicked: (value) => _cubit.setHeartRate(value?.round()),
+                    ),
+                  ),
+                  if (type.incline)
+                    ListRow(
+                      title: l10n.cardioInclineRow,
+                      value: switch (state.incline) {
+                        final incline? => l10n.cardioInclinePercent(
+                          formatDecimal(incline, 1),
+                        ),
+                        null => noValue,
+                      },
+                      dataValue: true,
+                      end: ListRowEnd.chevron,
+                      onTap: () => _pickNumber(
+                        title: l10n.cardioInclineRow,
+                        field: _NumberField.incline,
+                        value: state.incline,
+                        onPicked: _cubit.setIncline,
+                      ),
+                    ),
+                  ListRow(
+                    title: l10n.cardioNote,
+                    value: state.note.trim().isEmpty ? noValue : state.note,
+                    end: ListRowEnd.chevron,
+                    onTap: () => _editNote(state.note),
+                  ),
                 ],
-                decoration: InputDecoration(
-                  labelText: l10n.cardioNote,
-                  errorText: error(CardioIssue.noteTooLong),
+              ),
+              if (rate != null) ...[
+                const SizedBox(height: Gap.sm),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
+                  child: Text(
+                    rate,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: ForgeStyle.of(context).colors.inkMuted,
+                    ),
+                  ),
                 ),
-                onChanged: _cubit.setNote,
-              ),
-              const SizedBox(height: Gap.lg),
-              ForgeButton(
-                label: l10n.cardioSave,
-                loading: state.status == CardioFormStatus.saving,
-                onPressed: state.isBusy ? null : _cubit.save,
-              ),
+              ],
             ],
           ),
         );
@@ -287,139 +256,180 @@ class _CardioFormViewState extends State<_CardioFormView> {
     );
   }
 
-  static String _failureText(AppLocalizations l10n, CardioFormState state) =>
-      switch (state.failure) {
-        NetworkFailure() => l10n.errorNetwork,
-        _ when state.status == CardioFormStatus.deleteFailed =>
-          l10n.cardioDeleteFailed,
-        _ => l10n.cardioSaveFailed,
-      };
-
-  Future<void> _delete(AppLocalizations l10n) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.cardioDeleteTitle),
-        content: Text(l10n.cardioDeleteBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.cardioDelete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    await _cubit.delete();
+  String _distanceText(AppLocalizations l10n, double value) {
+    final text = formatDecimal(value, 2);
+    return switch (widget.unit) {
+      DistanceUnit.km => l10n.cardioDistanceKm(text),
+      DistanceUnit.mile => l10n.cardioDistanceMi(text),
+    };
   }
 
-  Future<void> _pickDate(DateTime current) async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: current.isAfter(now) ? now : current,
-      firstDate: DateTime(2000),
-      lastDate: now,
+  /// "Pace 5:31 /km", or "Speed 22.4 km/h" for a type that shows speed.
+  String? _rateLine(AppLocalizations l10n, CardioFormState state) {
+    if (!state.type.distance) return null;
+    final rate = l10n.rateText(_cubit.session, widget.unit);
+    if (rate == null) return null;
+    return state.type.rate == CardioRate.speed
+        ? l10n.cardioSpeedLine(rate)
+        : l10n.cardioPaceLine(rate);
+  }
+
+  Future<void> _pickType(CardioType current) async {
+    final picked = await showChoiceSheet(
+      context,
+      title: AppLocalizations.of(context).cardioType,
+      values: CardioType.values,
+      selected: current,
+      labelOf: AppLocalizations.of(context).typeName,
     );
-    if (picked == null) return;
-    _cubit.setDate(
-      DateTime(
-        picked.year,
-        picked.month,
-        picked.day,
-        current.hour,
-        current.minute,
+    if (picked != null) _cubit.setType(picked);
+  }
+
+  /// The day, then the time on the Forge time wheel.
+  Future<void> _pickDateTime(DateTime current) async {
+    final day = await pickPastDay(context, current);
+    if (day == null || !mounted) return;
+    var date = DateTime(
+      day.year,
+      day.month,
+      day.day,
+      current.hour,
+      current.minute,
+    );
+    _cubit.setDate(date);
+    await showForgeTimeWheel(
+      context: context,
+      initial: TimeOfDay.fromDateTime(date),
+      onChanged: (time) {
+        date = DateTime(day.year, day.month, day.day, time.hour, time.minute);
+        _cubit.setDate(date);
+      },
+    );
+  }
+
+  Future<void> _pickDuration(Duration current) {
+    final l10n = AppLocalizations.of(context);
+    return showForgeDurationWheel(
+      context: context,
+      wheel: ForgeDurationWheel.hoursMinutesSeconds(
+        label: l10n.cardioDuration,
+        initial: current,
+        max: CardioLimits.maxDuration,
+        hourUnit: l10n.cardioHours,
+        minuteUnit: l10n.cardioMinutesShort,
+        secondUnit: l10n.cardioSeconds,
+        onChanged: _cubit.setDuration,
       ),
     );
   }
 
-  Future<void> _pickTime(DateTime current) async {
-    final picked = await showTimePicker(
+  /// A sheet with [field]'s picker, at [value] or the field's start, Save
+  /// and, while there is a value, Clear.
+  Future<void> _pickNumber({
+    required String title,
+    required _NumberField field,
+    required double? value,
+    required ValueChanged<double?> onPicked,
+    String? unit,
+  }) async {
+    final l10n = AppLocalizations.of(context);
+    var picked = value ?? field.start;
+    final result = await showForgeBottomSheet<({double? value})>(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(current),
-    );
-    if (picked == null) return;
-    _cubit.setDate(
-      DateTime(
-        current.year,
-        current.month,
-        current.day,
-        picked.hour,
-        picked.minute,
+      builder: (sheet) => ForgeBottomSheet(
+        title: title,
+        headerAction: value == null
+            ? null
+            : ForgeButton(
+                label: l10n.cardioClear,
+                variant: ForgeButtonVariant.text,
+                onPressed: () => Navigator.pop(sheet, (value: null)),
+              ),
+        action: ForgeButton(
+          label: l10n.cardioSave,
+          size: ForgeButtonSize.large,
+          onPressed: () => Navigator.pop(sheet, (value: picked)),
+        ),
+        child: unit == null
+            ? NumberPicker.wheel(
+                label: title,
+                min: field.min,
+                max: field.max,
+                step: field.step,
+                value: picked,
+                onChanged: (next) => picked = next,
+              )
+            : NumberPicker.ruler(
+                label: title,
+                unit: unit,
+                min: field.min,
+                max: field.max,
+                step: field.step,
+                value: picked,
+                onChanged: (next) => picked = next,
+              ),
       ),
     );
+    if (result != null) onPicked(result.value);
   }
-}
 
-/// Digits only, so nothing like "1e9" or "NaN" can be typed; the cubit
-/// still checks what it parses.
-List<TextInputFormatter> _wholeNumber(int maxLength) => [
-  FilteringTextInputFormatter.digitsOnly,
-  LengthLimitingTextInputFormatter(maxLength),
-];
-
-List<TextInputFormatter> _decimalNumber(
-  int maxLength, {
-  bool signed = false,
-}) => [
-  FilteringTextInputFormatter.allow(RegExp(signed ? r'[0-9.,-]' : r'[0-9.,]')),
-  LengthLimitingTextInputFormatter(maxLength),
-];
-
-class _NumberField extends StatelessWidget {
-  const _NumberField({
-    required this.controller,
-    required this.label,
-    required this.error,
-    required this.onChanged,
-    required this.formatters,
-    this.decimal = false,
-    this.signed = false,
-  });
-
-  final TextEditingController controller;
-  final String label;
-  final String? error;
-  final ValueChanged<String> onChanged;
-  final List<TextInputFormatter> formatters;
-  final bool decimal;
-  final bool signed;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: Gap.sm),
-    child: TextField(
-      controller: controller,
-      keyboardType: TextInputType.numberWithOptions(
-        decimal: decimal,
-        signed: signed,
-      ),
-      inputFormatters: formatters,
-      decoration: InputDecoration(labelText: label, errorText: error),
-      onChanged: onChanged,
-    ),
-  );
-}
-
-class _ErrorText extends StatelessWidget {
-  const _ErrorText(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: Gap.xs),
-      child: Text(
-        text,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.error,
+  Future<void> _editNote(String note) async {
+    final l10n = AppLocalizations.of(context);
+    var text = note;
+    final saved = await showForgeBottomSheet<bool>(
+      context: context,
+      builder: (sheet) => ForgeBottomSheet(
+        title: l10n.cardioNote,
+        action: ForgeButton(
+          label: l10n.cardioSave,
+          size: ForgeButtonSize.large,
+          onPressed: () => Navigator.pop(sheet, true),
+        ),
+        child: NoteField(
+          initial: note,
+          label: l10n.cardioNote,
+          hint: l10n.cardioNoteHint,
+          maxLength: CardioLimits.maxNoteLength,
+          onChanged: (changed) => text = changed,
         ),
       ),
     );
+    if (saved == true) _cubit.setNote(text);
   }
+}
+
+/// The range a number sheet picks from, its step and where it starts
+/// without a value.
+class _NumberField {
+  const _NumberField(this.min, this.max, this.step, this.start);
+
+  _NumberField.distance(DistanceUnit unit)
+    : min = 0.1,
+      max = (unit.fromKm(CardioLimits.maxDistanceKm) * 10).floor() / 10,
+      step = 0.1,
+      start = 5;
+
+  final double min;
+  final double max;
+  final double step;
+  final double start;
+
+  static const calories = _NumberField(
+    1,
+    CardioLimits.maxCalories * 1.0,
+    1,
+    300,
+  );
+  static const heartRate = _NumberField(
+    CardioLimits.minHeartRate * 1.0,
+    CardioLimits.maxHeartRate * 1.0,
+    1,
+    140,
+  );
+  static const incline = _NumberField(
+    CardioLimits.minIncline,
+    CardioLimits.maxIncline,
+    0.5,
+    0,
+  );
 }
