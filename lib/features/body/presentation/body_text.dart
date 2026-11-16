@@ -39,8 +39,63 @@ extension BodyText on AppLocalizations {
     return value > 0 ? bodyIncrease(text) : bodyDecrease(text);
   }
 
-  String bodyLengthChange(double cm, LengthUnit unit) =>
-      _signed(unit.fromCm(cm), bodyLengthUnit(unit));
+  /// [kg] in [unit], without the unit.
+  String bodyWeightNumber(double kg, WeightUnit unit) =>
+      _number(unit.fromKg(kg));
+
+  /// [cm] in [unit], without the unit.
+  String bodyLengthNumber(double cm, LengthUnit unit) =>
+      _number(unit.fromCm(cm));
+
+  /// Signed, without the unit; "0" for no change.
+  String bodyLengthChangeNumber(double cm, LengthUnit unit) =>
+      _signedNumber(_number(unit.fromCm(cm).abs()), unit.fromCm(cm));
+
+  /// A body fat percentage without the sign, one decimal.
+  String bodyFatNumber(double percent) => _oneDecimal(percent);
+
+  /// Signed body fat points, one decimal, without the unit.
+  String bodyFatChangeNumber(double points) =>
+      _signedNumber(_oneDecimal(points.abs()), points);
+
+  String _signedNumber(String text, double value) {
+    if (text == _number(0) || text == _oneDecimal(0)) return text;
+    return value > 0 ? bodyIncrease(text) : bodyDecrease(text);
+  }
+
+  /// "Nov 1"; the year only when it is not this one.
+  String bodyShortDate(DateTime date) =>
+      _dated(date, DateFormat.MMMd, DateFormat.yMMMd);
+
+  /// "Fri, Nov 13"; the year only when it is not this one.
+  String bodyShortDayDate(DateTime date) =>
+      _dated(date, DateFormat.MMMEd, DateFormat.yMMMEd);
+
+  /// "Oct 18, 2026".
+  String bodyFullDate(DateTime date) =>
+      DateFormat.yMMMd(localeName).format(date.toLocal());
+
+  /// "Sun, Aug 30, 2026".
+  String bodyFullDayDate(DateTime date) =>
+      DateFormat.yMMMEd(localeName).format(date.toLocal());
+
+  /// "Oct 18 → Nov 1, 2026": the year once, unless the days' years differ.
+  String bodyDateSpan(DateTime from, DateTime to) => bodyFromTo(
+    from.toLocal().year == to.toLocal().year
+        ? DateFormat.MMMd(localeName).format(from.toLocal())
+        : bodyFullDate(from),
+    bodyFullDate(to),
+  );
+
+  String _dated(
+    DateTime date,
+    DateFormat Function([String?]) thisYear,
+    DateFormat Function([String?]) otherYear,
+  ) {
+    final local = date.toLocal();
+    final format = local.year == DateTime.now().year ? thisYear : otherYear;
+    return format(localeName).format(local);
+  }
 
   String _signed(double value, String unit) {
     final text = bodyQuantity(_number(value.abs()), unit);
@@ -118,13 +173,6 @@ extension BodyText on AppLocalizations {
   /// A body fat percentage, always with one decimal.
   String bodyFat(double percent) => bodyFatValue(_oneDecimal(percent));
 
-  /// Signed; "0.0 %" for no change.
-  String bodyFatChange(double points) {
-    final text = bodyFatValue(_oneDecimal(points.abs()));
-    if (_oneDecimal(points.abs()) == _oneDecimal(0)) return text;
-    return points > 0 ? bodyIncrease(text) : bodyDecrease(text);
-  }
-
   String _oneDecimal(double value) =>
       (NumberFormat.decimalPattern(localeName)
             ..minimumFractionDigits = 1
@@ -138,16 +186,12 @@ extension BodyText on AppLocalizations {
     PhotoPose.back => bodyPoseBack,
   };
 
-  /// What the entry holds besides its weight, e.g. "5 measurements · 4
-  /// photos"; null for a quick weight log.
-  String? entryContents(BodyEntry entry) {
-    final parts = [
-      if (entry.measurements.isNotEmpty)
-        bodyMeasurementCount(entry.measurements.length),
-      if (entry.photos.isNotEmpty) bodyPhotoCount(entry.photos.length),
-    ];
-    return parts.isEmpty ? null : parts.join(' · ');
-  }
+  /// The pose as the photo card's chips name it: "Right", not "Right side".
+  String poseShortName(PhotoPose pose) => switch (pose) {
+    PhotoPose.right => bodyPoseShortRight,
+    PhotoPose.left => bodyPoseShortLeft,
+    _ => poseName(pose),
+  };
 
   String bodyWeightRange(WeightUnit unit) => bodyErrorWeight(
     bodyWeight(BodyLimits.minWeightKg, unit),

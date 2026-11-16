@@ -21,6 +21,7 @@ class BodyListState extends Equatable {
     this.entries = const [],
     this.photoFiles = const {},
     this.range = StrengthRange.free,
+    this.hasOlder = false,
     this.olderLocked = false,
     this.bodyFat = const {},
     this.writeRejected = false,
@@ -37,6 +38,10 @@ class BodyListState extends Equatable {
 
   /// The chart's range: the one chosen, as far as Premium allows.
   final StrengthRange range;
+
+  /// Some entries are from before [StrengthRange.free]: the range
+  /// control shows.
+  final bool hasOlder;
 
   /// A free user has entries from before [StrengthRange.free]; tell them
   /// they are behind Premium.
@@ -61,6 +66,7 @@ class BodyListState extends Equatable {
     entries: entries,
     photoFiles: photoFiles ?? this.photoFiles,
     range: range,
+    hasOlder: hasOlder,
     olderLocked: olderLocked,
     bodyFat: bodyFat,
     writeRejected: writeRejected ?? this.writeRejected,
@@ -72,6 +78,7 @@ class BodyListState extends Equatable {
     entries,
     photoFiles,
     range,
+    hasOlder,
     olderLocked,
     bodyFat,
     writeRejected,
@@ -204,15 +211,19 @@ class BodyListCubit extends Cubit<BodyListState> {
     }
     final now = _clock();
     final range = _chosen.allowed(_premium);
+    final hasOlder = hasEntryBefore(
+      entries,
+      range: StrengthRange.free,
+      now: now,
+    );
     emit(
       BodyListState(
         status: BodyListStatus.ready,
         entries: entries,
         photoFiles: state.photoFiles,
         range: range,
-        olderLocked:
-            _premium == false &&
-            hasEntryBefore(entries, range: StrengthRange.free, now: now),
+        hasOlder: hasOlder,
+        olderLocked: _premium == false && hasOlder,
         bodyFat: bodyFatByEntry(
           entries,
           sex: _profile?.sex,

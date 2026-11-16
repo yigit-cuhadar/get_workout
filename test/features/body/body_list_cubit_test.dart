@@ -145,6 +145,8 @@ void main() {
       await pumpEventQueue();
       expect(cubit.state.range, StrengthRange.all);
       expect(cubit.state.olderLocked, isFalse);
+      // The range control stays for Premium too.
+      expect(cubit.state.hasOlder, isTrue);
     },
   );
 

@@ -224,39 +224,26 @@ void main() {
     expect(cubit.state.summary!.target, isNull);
   });
 
-  test('shows the first pose of either day and restores its photos '
-      'from the backup', () async {
+  test('restores both days\' photos from the backup, then shows the ones '
+      'it does not have as unavailable', () async {
     store.files[afterFront] = 'local/$afterFront';
     backup.remote[middleFront] = 'cloud';
-    backup.remote[afterBack] = 'cloud';
     await load([newest, middle]);
 
-    expect(cubit.state.pose, PhotoPose.front);
     expect(cubit.state.photoFiles, {
       afterFront: 'local/$afterFront',
       middleFront: 'local/$middleFront',
     });
-    // Only the shown pose is fetched.
-    expect(backup.calls, ['download $middleFront']);
+    expect(backup.calls, containsAll(['download $middleFront']));
+    // The backup has no copy of the later day's back photo.
+    expect(cubit.state.photoFiles.containsKey(afterBack), isFalse);
+    expect(cubit.state.fetching, isEmpty);
 
-    cubit.selectPose(PhotoPose.back);
+    // It is not asked for again.
+    final calls = backup.calls.length;
+    cubit.chooseBaseline(const FirstDay());
     await pumpEventQueue();
-    expect(cubit.state.pose, PhotoPose.back);
-    expect(cubit.state.photoFiles[afterBack], 'local/$afterBack');
-  });
-
-  test('a pose neither day has any more gives the first one', () async {
-    await load([newest, middle]);
-    cubit.selectPose(PhotoPose.back);
-    expect(cubit.state.pose, PhotoPose.back);
-
-    entries.add([BodyEntry(id: 'd3', date: newest.date, weightKg: 80), middle]);
-    await pumpEventQueue();
-    expect(cubit.state.pose, PhotoPose.front);
-
-    entries.add([BodyEntry(id: 'd3', date: newest.date, weightKg: 80)]);
-    await pumpEventQueue();
-    expect(cubit.state.pose, isNull);
+    expect(backup.calls.length, calls);
   });
 
   test('another user starts over', () async {
@@ -283,7 +270,8 @@ void main() {
 
       expect(cubit.state.summary!.after, newest);
       expect(cubit.state.summary!.before, middle);
-      expect(cubit.state.laterCandidates, [newest, middle]);
+      // The later days after the earlier one.
+      expect(cubit.state.laterCandidates, [newest]);
     });
 
     test('the later day can be chosen; the baseline follows it', () async {
@@ -310,13 +298,33 @@ void main() {
       expect(cubit.state.summary!.before, oldest);
     });
 
-    test('fewer than two measurement days leave nothing to compare', () async {
-      await load([newest, log]);
-      expect(cubit.state.status, MeasurementSummaryStatus.nothingToCompare);
+    test(
+      'one measurement day shows alone; none shows there are none',
+      () async {
+        await load([newest, log]);
+        expect(cubit.state.status, MeasurementSummaryStatus.ready);
+        expect(cubit.state.summary!.after, newest);
+        expect(cubit.state.summary!.before, isNull);
+        expect(cubit.state.laterCandidates, isEmpty);
 
-      entries.add([newest, middle]);
+        entries.add([log]);
+        await pumpEventQueue();
+        expect(cubit.state.status, MeasurementSummaryStatus.noMeasurementDays);
+      },
+    );
+
+    test('a day a link shows is not found once it is gone', () async {
+      await load([newest, middle, oldest]);
+      cubit.showDay('d2');
+      expect(cubit.state.summary!.after, middle);
+
+      entries.add([newest, oldest]);
       await pumpEventQueue();
-      expect(cubit.state.status, MeasurementSummaryStatus.ready);
+      expect(cubit.state.status, MeasurementSummaryStatus.notFound);
+
+      // Picking a day ends what the link asked for.
+      cubit.chooseAfter('d3');
+      expect(cubit.state.summary!.after, newest);
     });
   });
 }
