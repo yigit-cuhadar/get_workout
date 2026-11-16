@@ -142,7 +142,7 @@ void main() {
     expect(button('Switch camera'), findsNothing);
   });
 
-  testWidgets('camera access off opens the settings or skips the photo', (
+  testWidgets('camera access off opens the settings, no skip of its own', (
     tester,
   ) async {
     final settings = <String>[];
@@ -165,9 +165,8 @@ void main() {
     await tester.tap(find.text('Open settings'));
     await tester.pump();
     expect(settings, ['openSettings']);
-
-    await tester.tap(find.text('Skip photo'));
-    expect(skipped, 1);
+    // The page under the camera offers the skip (B3).
+    expect(find.text('Skip photo'), findsNothing);
   });
 
   testWidgets('no camera only skips the photo', (tester) async {

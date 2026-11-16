@@ -336,9 +336,8 @@ void main() {
       expect(find.text('Incline'), findsOneWidget);
     });
 
-    testWidgets('Duration opens the h:m:s wheel; Distance a number sheet', (
-      tester,
-    ) async {
+    testWidgets('Duration opens the h:m:s wheel; Distance a typed number '
+        'sheet that keeps a value out of range', (tester) async {
       await showForm(
         tester,
         CardioFormState(type: CardioType.outdoorRun, date: today),
@@ -353,10 +352,45 @@ void main() {
       await tester.tap(find.text('Distance'));
       await tester.pumpAndSettle();
       expect(find.byType(ForgeBottomSheet), findsOneWidget);
-      expect(find.byType(NumberPicker), findsOneWidget);
+      expect(find.text('Distance (km)'), findsOneWidget);
+      // No value yet: no Clear.
+      expect(find.text('Clear'), findsNothing);
+
+      await tester.enterText(find.byType(TextField), '900');
       await tester.tap(find.widgetWithText(ForgeButton, 'Save'));
       await tester.pumpAndSettle();
-      verify(() => form.setDistance(5)).called(1);
+      expect(
+        find.text('Enter a distance from 0.01 to 500 km (310 mi)'),
+        findsOneWidget,
+      );
+      verifyNever(() => form.setDistance(any()));
+
+      await tester.enterText(find.byType(TextField), '5,2');
+      await tester.tap(find.widgetWithText(ForgeButton, 'Save'));
+      await tester.pumpAndSettle();
+      verify(() => form.setDistance(5.2)).called(1);
+      expect(find.byType(ForgeBottomSheet), findsNothing);
+    });
+
+    testWidgets('Clear empties a value', (tester) async {
+      await showForm(
+        tester,
+        CardioFormState(
+          type: CardioType.outdoorRun,
+          date: today,
+          calories: 310,
+        ),
+      );
+
+      await tester.tap(find.text('Calories'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text,
+        '310',
+      );
+      await tester.tap(find.text('Clear'));
+      await tester.pumpAndSettle();
+      verify(() => form.setCalories(null)).called(1);
     });
   });
 }

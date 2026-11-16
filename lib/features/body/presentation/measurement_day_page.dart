@@ -227,13 +227,10 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
                                 onSkip: _cubit.closeCamera,
                               ),
                             )
+                          : state.step == MeasureStep.weight
+                          ? _weightPage(context, state)
                           : ListView(
-                              padding: const EdgeInsets.fromLTRB(
-                                Gap.md,
-                                0,
-                                Gap.md,
-                                Gap.lg,
-                              ),
+                              padding: _contentPadding,
                               children: [
                                 Text(
                                   _stepName(l10n, state.step),
@@ -241,12 +238,11 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
                                 ),
                                 const SizedBox(height: Gap.md),
                                 ...switch (state.step) {
-                                  MeasureStep.weight => _weight(context, state),
                                   MeasureStep.measurements => _measurements(
                                     context,
                                     state,
                                   ),
-                                  MeasureStep.photos => _photos(context, state),
+                                  _ => _photos(context, state),
                                 },
                               ],
                             ),
@@ -319,7 +315,11 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
     };
   }
 
-  List<Widget> _weight(BuildContext context, MeasurementDayState state) {
+  static const _contentPadding = EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.lg);
+
+  /// The heading at the top and the ruler at the bottom, near the thumb,
+  /// with the room between them (P5).
+  Widget _weightPage(BuildContext context, MeasurementDayState state) {
     final l10n = AppLocalizations.of(context);
     final unit = widget.settings.weightUnit;
     final range = rulerRange(
@@ -329,28 +329,50 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
       _weightStep,
     );
     final previous = widget.previous;
-    return [
-      NumberPicker.ruler(
-        label: l10n.bodyWeightTitle,
-        unit: l10n.bodyWeightUnit(unit),
-        min: range.min,
-        max: range.max,
-        step: _weightStep,
-        value: state.weight,
-        onChanged: _cubit.setWeight,
-      ),
-      if (previous?.weightKg case final kg?) ...[
-        const SizedBox(height: Gap.sm),
-        Text(
-          l10n.bodyLastWeighIn(
-            l10n.bodyWeight(kg, unit),
-            l10n.bodyShortDayDate(previous!.date),
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: _contentPadding,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: constraints.maxHeight - _contentPadding.vertical,
           ),
-          textAlign: TextAlign.center,
-          style: _muted(context),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l10n.bodyWeightTitle, style: _heading(context)),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: Gap.lg),
+                  NumberPicker.ruler(
+                    label: l10n.bodyWeightTitle,
+                    unit: l10n.bodyWeightUnit(unit),
+                    min: range.min,
+                    max: range.max,
+                    step: _weightStep,
+                    value: state.weight,
+                    onChanged: _cubit.setWeight,
+                  ),
+                  if (previous?.weightKg case final kg?) ...[
+                    const SizedBox(height: Gap.sm),
+                    Text(
+                      l10n.bodyLastWeighIn(
+                        l10n.bodyWeight(kg, unit),
+                        l10n.bodyShortDayDate(previous!.date),
+                      ),
+                      textAlign: TextAlign.center,
+                      style: _muted(context),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
         ),
-      ],
-    ];
+      ),
+    );
   }
 
   static TextStyle _muted(BuildContext context) =>

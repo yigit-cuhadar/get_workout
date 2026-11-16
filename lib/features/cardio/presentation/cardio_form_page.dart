@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -7,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/day_time.dart';
 import '../../../core/widgets/choice_sheet.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../calculators/presentation/calculator_input.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../workout/presentation/workout_editor_view.dart';
 import '../domain/cardio_session.dart';
@@ -175,8 +177,11 @@ class _CardioFormViewState extends State<_CardioFormView> {
                       end: ListRowEnd.chevron,
                       onTap: () => _pickNumber(
                         title: l10n.cardioDistanceRow,
-                        unit: l10n.distanceUnitLabel(widget.unit),
+                        label: l10n.cardioDistance(
+                          l10n.distanceUnitLabel(widget.unit),
+                        ),
                         field: _NumberField.distance(widget.unit),
+                        error: l10n.cardioErrorDistance,
                         value: state.distance,
                         onPicked: _cubit.setDistance,
                       ),
@@ -191,7 +196,9 @@ class _CardioFormViewState extends State<_CardioFormView> {
                     end: ListRowEnd.chevron,
                     onTap: () => _pickNumber(
                       title: l10n.cardioCaloriesRow,
+                      label: l10n.cardioCalories,
                       field: _NumberField.calories,
+                      error: l10n.cardioErrorCalories,
                       value: state.calories?.toDouble(),
                       onPicked: (value) => _cubit.setCalories(value?.round()),
                     ),
@@ -206,7 +213,9 @@ class _CardioFormViewState extends State<_CardioFormView> {
                     end: ListRowEnd.chevron,
                     onTap: () => _pickNumber(
                       title: l10n.cardioHeartRateRow,
+                      label: l10n.cardioHeartRate,
                       field: _NumberField.heartRate,
+                      error: l10n.cardioErrorHeartRate,
                       value: state.heartRate?.toDouble(),
                       onPicked: (value) => _cubit.setHeartRate(value?.round()),
                     ),
@@ -224,7 +233,9 @@ class _CardioFormViewState extends State<_CardioFormView> {
                       end: ListRowEnd.chevron,
                       onTap: () => _pickNumber(
                         title: l10n.cardioInclineRow,
+                        label: l10n.cardioIncline,
                         field: _NumberField.incline,
+                        error: l10n.cardioErrorIncline,
                         value: state.incline,
                         onPicked: _cubit.setIncline,
                       ),
@@ -323,51 +334,25 @@ class _CardioFormViewState extends State<_CardioFormView> {
     );
   }
 
-  /// A sheet with [field]'s picker, at [value] or the field's start, Save
-  /// and, while there is a value, Clear.
+  /// A sheet to type [title]'s value in a field labelled [label] (B2):
+  /// Clear while there is a value, and Save, which keeps the sheet open
+  /// with [error] on a value outside [field]'s range; empty clears it.
   Future<void> _pickNumber({
     required String title,
+    required String label,
     required _NumberField field,
+    required String error,
     required double? value,
     required ValueChanged<double?> onPicked,
-    String? unit,
   }) async {
-    final l10n = AppLocalizations.of(context);
-    var picked = value ?? field.start;
     final result = await showForgeBottomSheet<({double? value})>(
       context: context,
-      builder: (sheet) => ForgeBottomSheet(
+      builder: (_) => _NumberSheet(
         title: title,
-        headerAction: value == null
-            ? null
-            : ForgeButton(
-                label: l10n.cardioClear,
-                variant: ForgeButtonVariant.text,
-                onPressed: () => Navigator.pop(sheet, (value: null)),
-              ),
-        action: ForgeButton(
-          label: l10n.cardioSave,
-          size: ForgeButtonSize.large,
-          onPressed: () => Navigator.pop(sheet, (value: picked)),
-        ),
-        child: unit == null
-            ? NumberPicker.wheel(
-                label: title,
-                min: field.min,
-                max: field.max,
-                step: field.step,
-                value: picked,
-                onChanged: (next) => picked = next,
-              )
-            : NumberPicker.ruler(
-                label: title,
-                unit: unit,
-                min: field.min,
-                max: field.max,
-                step: field.step,
-                value: picked,
-                onChanged: (next) => picked = next,
-              ),
+        label: label,
+        field: field,
+        error: error,
+        value: value,
       ),
     );
     if (result != null) onPicked(result.value);
@@ -398,38 +383,121 @@ class _CardioFormViewState extends State<_CardioFormView> {
   }
 }
 
-/// The range a number sheet picks from, its step and where it starts
-/// without a value.
+/// The range a number sheet accepts and how many decimals it takes.
 class _NumberField {
-  const _NumberField(this.min, this.max, this.step, this.start);
+  const _NumberField(this.min, this.max, {this.decimals = 0});
 
   _NumberField.distance(DistanceUnit unit)
-    : min = 0.1,
-      max = (unit.fromKm(CardioLimits.maxDistanceKm) * 10).floor() / 10,
-      step = 0.1,
-      start = 5;
+    : min = unit.fromKm(CardioLimits.minDistanceKm),
+      max = unit.fromKm(CardioLimits.maxDistanceKm),
+      decimals = 2;
 
   final double min;
   final double max;
-  final double step;
-  final double start;
+  final int decimals;
 
-  static const calories = _NumberField(
-    1,
-    CardioLimits.maxCalories * 1.0,
-    1,
-    300,
-  );
+  static const calories = _NumberField(1, CardioLimits.maxCalories * 1.0);
   static const heartRate = _NumberField(
     CardioLimits.minHeartRate * 1.0,
     CardioLimits.maxHeartRate * 1.0,
-    1,
-    140,
   );
   static const incline = _NumberField(
     CardioLimits.minIncline,
     CardioLimits.maxIncline,
-    0.5,
-    0,
+    decimals: 1,
   );
+}
+
+class _NumberSheet extends StatefulWidget {
+  const _NumberSheet({
+    required this.title,
+    required this.label,
+    required this.field,
+    required this.error,
+    required this.value,
+  });
+
+  final String title;
+  final String label;
+  final _NumberField field;
+  final String error;
+  final double? value;
+
+  @override
+  State<_NumberSheet> createState() => _NumberSheetState();
+}
+
+class _NumberSheetState extends State<_NumberSheet> {
+  late final _controller = TextEditingController(
+    text: switch (widget.value) {
+      final value? => formatDecimal(value, widget.field.decimals),
+      null => '',
+    },
+  );
+  bool _invalid = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final field = widget.field;
+    final read = readNumber(_controller.text);
+    if (read == null) {
+      Navigator.pop(context, (value: null));
+      return;
+    }
+    // NaN fails both comparisons.
+    if (!(read >= field.min - 1e-9 && read <= field.max + 1e-9) ||
+        (field.decimals == 0 && read != read.roundToDouble())) {
+      setState(() => _invalid = true);
+      return;
+    }
+    Navigator.pop(context, (value: read));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final signed = widget.field.min < 0;
+    final decimal = widget.field.decimals > 0;
+    return ForgeBottomSheet(
+      title: widget.title,
+      headerAction: widget.value == null
+          ? null
+          : ForgeButton(
+              label: l10n.cardioClear,
+              variant: ForgeButtonVariant.text,
+              onPressed: () => Navigator.pop(context, (value: null)),
+            ),
+      action: ForgeButton(
+        label: l10n.cardioSave,
+        size: ForgeButtonSize.large,
+        onPressed: _save,
+      ),
+      child: ForgeTextField(
+        label: widget.label,
+        controller: _controller,
+        autofocus: true,
+        keyboardType: TextInputType.numberWithOptions(
+          decimal: decimal,
+          signed: signed,
+        ),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(
+            RegExp('[0-9${decimal ? '.,' : ''}${signed ? '-' : ''}]'),
+          ),
+          LengthLimitingTextInputFormatter(7),
+        ],
+        errorText: _invalid ? widget.error : null,
+        textInputAction: TextInputAction.done,
+        onChanged: (_) {
+          if (_invalid) setState(() => _invalid = false);
+        },
+        onSubmitted: (_) => _save(),
+      ),
+    );
+  }
 }

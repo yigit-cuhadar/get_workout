@@ -117,6 +117,13 @@ void main() {
     await show(tester, start);
 
     expect(find.text('Measurement day'), findsOneWidget);
+    // The heading only; the ruler draws no label of its own.
+    expect(find.text('Weight'), findsOneWidget);
+    // P5: the ruler sits low, near the bottom bar.
+    expect(
+      tester.getTopLeft(find.byType(NumberPicker)).dy,
+      greaterThan(tester.getBottomLeft(find.text('Weight')).dy + 200),
+    );
     final progress = tester.widget<StepProgress>(find.byType(StepProgress));
     expect((progress.count, progress.current), (3, 1));
     expect(progress.caption, 'Step 1 of 3 · Weight');

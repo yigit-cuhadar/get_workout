@@ -4,7 +4,6 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../core/day_time.dart';
-import '../../../core/widgets/sheet_snackbar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../profile/presentation/profile_cubit.dart';
 import '../../profile/presentation/profile_questions.dart';
@@ -53,14 +52,6 @@ class WeightSheet extends StatefulWidget {
 
 class _WeightSheetState extends State<WeightSheet> {
   late final WeightFormCubit _cubit = context.read<WeightFormCubit>();
-  final _snackbar = SheetSnackbar();
-
-  @override
-  void dispose() {
-    _snackbar.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -79,11 +70,13 @@ class _WeightSheetState extends State<WeightSheet> {
           case WeightFormStatus.saved || WeightFormStatus.closed:
             Navigator.pop(context);
           case WeightFormStatus.saveFailed:
-            _snackbar.show(
+            // Drawn over the sheet by Forge (LW06).
+            showForgeSnackbar(
               context,
-              state.failure is NetworkFailure
+              message: state.failure is NetworkFailure
                   ? l10n.errorNetwork
                   : l10n.bodySaveFailed,
+              error: true,
             );
           default:
         }
