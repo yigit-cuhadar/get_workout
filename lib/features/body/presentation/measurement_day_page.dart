@@ -224,7 +224,6 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
                                 total: PhotoPose.values.length,
                                 ghostFile: state.ghosts[camera],
                                 onCaptured: _cubit.photoTaken,
-                                onSkip: _cubit.closeCamera,
                               ),
                             )
                           : state.step == MeasureStep.weight

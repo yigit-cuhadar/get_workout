@@ -14,8 +14,8 @@ import '../../../../l10n/app_localizations.dart';
 /// guide pose, and the 3 s timer, the shutter and the switch-camera
 /// button on the bottom bar. The back camera comes first. A picture taken
 /// goes to [onCaptured] as the path of a temporary file. Without camera
-/// access it offers the system settings, the page giving the way to skip
-/// (B3); without a camera, [onSkip] alone.
+/// access it offers the system settings; without a camera it says so.
+/// Skipping the photo is the page's own action (B3).
 class PoseCamera extends StatefulWidget {
   const PoseCamera({
     super.key,
@@ -24,7 +24,6 @@ class PoseCamera extends StatefulWidget {
     required this.total,
     this.ghostFile,
     required this.onCaptured,
-    required this.onSkip,
   });
 
   final String pose;
@@ -32,9 +31,6 @@ class PoseCamera extends StatefulWidget {
   final int total;
   final String? ghostFile;
   final ValueChanged<String> onCaptured;
-
-  /// Goes on without this photo, where the device has no camera.
-  final VoidCallback onSkip;
 
   /// The timer's count, in seconds.
   static const countdown = 3;
@@ -240,8 +236,6 @@ class _PoseCameraState extends State<PoseCamera> {
             icon: ForgeIcons.noPhotography,
             title: l10n.poseCameraNoCameraTitle,
             message: l10n.poseCameraNoCamera,
-            skipLabel: l10n.poseCameraSkipPhoto,
-            onSkip: widget.onSkip,
           ),
           _ => null,
         };

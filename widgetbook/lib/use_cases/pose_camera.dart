@@ -6,9 +6,8 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
 // The states follow the device's camera: the 3 s timer and the shutter
 // show the countdown, refusing camera access shows the access-off prompt
-// (Open settings; the page offers the skip), a device without a camera the no-camera one
-// (Skip photo). A last photo cannot show
-// on the web (it is a file), so this is the first photo with its guide.
+// (Open settings), a device without a camera the no-camera one (no
+// button); the page offers the skip. A last photo cannot show on the web (it is a file), so this is the first photo with its guide.
 
 @widgetbook.UseCase(name: 'Live camera, first photo', type: PoseCamera)
 Widget poseCamera(BuildContext context) => Padding(
@@ -25,7 +24,6 @@ Widget poseCamera(BuildContext context) => Padding(
       ),
       total: 4,
       onCaptured: (_) {},
-      onSkip: () {},
     ),
   ),
 );
