@@ -110,6 +110,10 @@ void main() {
       final labels = [for (final bar in chart.bars!) bar.label];
       expect(labels.last, DateFormat.MMMd().format(weekStart(now, 1)));
       expect(labels[labels.length - 2], isEmpty);
+      // Weeks without minutes keep their bar and show no figure.
+      expect(chart.bars!.first.value, 0);
+      expect(chart.bars!.first.valueLabel, isNull);
+      expect(chart.bars!.last.valueLabel, '74');
       expect(find.text('Outdoor run · 5.2 km'), findsOneWidget);
       expect(find.text('Strava'), findsOneWidget);
       expect(find.text('Log cardio'), findsOneWidget);

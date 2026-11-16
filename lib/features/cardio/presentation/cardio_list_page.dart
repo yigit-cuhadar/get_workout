@@ -220,6 +220,7 @@ class _WeeksChart extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final label = DateFormat.MMMd(l10n.localeName);
     final last = weeks.length - 1;
+    int minutes(CardioWeek week) => (week.duration.inSeconds / 60).round();
     return Chart.bar(
       title: l10n.cardioChartTitle,
       detail: l10n.cardioChartDetail,
@@ -229,7 +230,8 @@ class _WeeksChart extends StatelessWidget {
             // Every other week, counted back from this one.
             label: (last - i).isEven ? label.format(week.start) : '',
             value: week.duration.inMinutes.toDouble(),
-            valueLabel: '${(week.duration.inSeconds / 60).round()}',
+            // An empty week has no figure over its bar.
+            valueLabel: minutes(week) == 0 ? null : '${minutes(week)}',
           ),
       ],
       current: last,
