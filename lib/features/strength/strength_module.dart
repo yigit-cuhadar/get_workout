@@ -28,6 +28,7 @@ class StrengthModule implements FeatureModule {
           watchAuthUser: sl(),
           watchStats: sl(),
           watchPremium: sl(),
+          rebuildStats: sl(),
           unit: unit,
         ),
       );

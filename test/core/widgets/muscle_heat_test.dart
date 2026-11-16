@@ -84,6 +84,6 @@ void main() {
     for (final text in ['0', '10', '20 sets']) {
       expect(find.text(text), findsOneWidget);
     }
-    expect(find.text('An outline marks over 20 sets.'), findsOneWidget);
+    expect(find.textContaining('outline'), findsNothing);
   });
 }

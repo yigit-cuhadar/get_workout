@@ -5,7 +5,7 @@ import 'package:get_workout/features/body/presentation/series_chart.dart';
 
 void main() {
   ChartSeries line(
-    List<ChartPoint> points, {
+    List<LinePoint> points, {
     SeriesAxis axis = SeriesAxis.left,
   }) => ChartSeries(
     points: points,
@@ -16,7 +16,7 @@ void main() {
     guide: 50,
   );
 
-  ChartSeries bars(List<ChartPoint> points) => ChartSeries(
+  ChartSeries bars(List<LinePoint> points) => ChartSeries(
     points: points,
     color: Colors.green,
     ticks: const [0, 10],

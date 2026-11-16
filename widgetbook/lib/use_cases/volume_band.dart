@@ -27,6 +27,7 @@ Widget volumeBands(BuildContext context) => Padding(
       ),
       const VolumeBand(muscle: Muscle.frontDelt, sets: 22, scale: _scale),
       const VolumeBand(muscle: Muscle.hamstring, sets: 8, scale: _scale),
+      const VolumeBand(muscle: Muscle.calf, sets: 0, scale: _scale),
     ],
   ),
 );

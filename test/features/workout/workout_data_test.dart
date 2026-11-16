@@ -112,6 +112,36 @@ void main() {
       );
     });
 
+    test('records keep their set; points their best set and name', () {
+      final map = FirestoreWorkoutRepository.statsToMap(
+        applyWorkout(null, full, 'squat')!,
+      );
+      final record = (map['records']! as Map)['heaviestWeight'] as Map;
+      expect(record['set'], isA<Map<String, Object?>>());
+      final point = (map['history']! as List).single as Map;
+      expect(point['set'], isA<Map<String, Object?>>());
+      expect(point['workoutName'], full.name);
+    });
+
+    test('stats stored before sets were kept read as outdated', () {
+      final stats = FirestoreWorkoutRepository.statsFromMap({
+        'records': {
+          'mostReps': {
+            'value': 12,
+            'date': Timestamp.fromDate(start),
+            'workoutId': 'w1',
+          },
+        },
+        'history': [
+          {'date': Timestamp.fromDate(start), 'workoutId': 'w1'},
+        ],
+      })!;
+      expect(stats.records[RecordKind.mostReps]!.set, isNull);
+      expect(stats.history.single.bestSet, isNull);
+      expect(stats.history.single.workoutName, isNull);
+      expect(stats.outdated, isTrue);
+    });
+
     test('unreadable parts of stats are left out', () {
       final stats = FirestoreWorkoutRepository.statsFromMap({
         'records': {

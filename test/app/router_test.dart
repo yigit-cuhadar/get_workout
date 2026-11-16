@@ -2332,15 +2332,23 @@ void main() {
             value: 100,
             date: yesterday,
             workoutId: 'w1',
+            set: (weightKg: 100, reps: 4, durationS: null),
           ),
           RecordKind.bestE1rm: StatRecord(
             value: 112,
             date: yesterday,
             workoutId: 'w1',
+            set: (weightKg: 100, reps: 4, durationS: null),
           ),
         },
         history: [
-          HistoryPoint(date: yesterday, workoutId: 'w1', bestE1rmKg: 112),
+          HistoryPoint(
+            date: yesterday,
+            workoutId: 'w1',
+            bestE1rmKg: 112,
+            bestSet: (weightKg: 100, reps: 4, durationS: null),
+            workoutName: 'Legs',
+          ),
         ],
       );
       final workouts = MockWorkoutRepository();
@@ -2372,6 +2380,7 @@ void main() {
             watchAuthUser: WatchAuthUser(strengthAuth),
             watchStats: WatchExerciseStats(workouts),
             watchPremium: const WatchPremium(FixedPremium(false)),
+            rebuildStats: RebuildExerciseStats(workouts),
             unit: unit,
           ),
         )
@@ -2422,7 +2431,7 @@ void main() {
       expect(find.byType(StrengthListPage), findsOneWidget);
     });
 
-    testWidgets('a record opens the workout that set it, and back returns', (
+    testWidgets('a session opens its workout, and back returns', (
       tester,
     ) async {
       await startAsGuest(tester);
@@ -2430,7 +2439,7 @@ void main() {
       router.go(Routes.strengthExercise('squat'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
-        find.text('Heaviest weight'),
+        find.text('100 × 4 · e1RM 112'),
         200,
         scrollable: find
             .descendant(
@@ -2439,7 +2448,7 @@ void main() {
             )
             .first,
       );
-      await tester.tap(find.text('Heaviest weight'));
+      await tester.tap(find.text('100 × 4 · e1RM 112'));
       await tester.pumpAndSettle();
       expect(find.byType(WorkoutDetailPage), findsOneWidget);
       await back(tester);

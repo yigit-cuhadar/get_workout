@@ -53,13 +53,52 @@ Widget muscleModelHeat(BuildContext context) => _panel(
         Muscle.biceps: 6,
         Muscle.abdominal: 4,
       }),
+      outlined: const {Muscle.frontDelt, Muscle.midDelt},
+      footer: const _VolumeFooter(),
     ),
   ),
 );
 
+/// Weekly volume's hint and ramp under the model.
+class _VolumeFooter extends StatelessWidget {
+  const _VolumeFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = ForgeStyle.of(context).colors.inkMuted;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 12,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: Gap.sm,
+          children: [
+            ForgeIcon(ForgeIcons.sync, size: 16, color: muted),
+            Text(
+              'Drag to turn · pinch to zoom',
+              style: Theme.of(context).textTheme.labelMedium!
+                  .copyWith(fontWeight: FontWeight.w400, color: muted),
+            ),
+          ],
+        ),
+        const MuscleHeatLegend(),
+      ],
+    );
+  }
+}
+
 @widgetbook.UseCase(name: 'Loading', type: MuscleModel)
 Widget muscleModelLoading(BuildContext context) =>
     _panel(const MuscleModel.loading());
+
+@widgetbook.UseCase(name: 'Loading over a shimmering legend', type: MuscleModel)
+Widget muscleModelLoadingFooter(BuildContext context) => _panel(
+  const MuscleModel.loading(
+    sides: false,
+    footer: SkeletonBar(widthFactor: 0.6, height: 8),
+  ),
+);
 
 @widgetbook.UseCase(name: 'Failed', type: MuscleModel)
 Widget muscleModelFailed(BuildContext context) =>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/widgets/muscle_heat.dart';
 import '../../../core/widgets/muscle_model.dart';
@@ -11,6 +12,7 @@ import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/body_model_cubit.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
+import '../../programs/domain/calendar_date.dart';
 import '../../settings/presentation/first_weekday.dart';
 import '../../subscription/presentation/premium.dart';
 import '../domain/weekly_volume.dart';
@@ -19,8 +21,8 @@ import 'volume_cubit.dart';
 import 'volume_text.dart';
 
 /// A week's sets per muscle on the body model and as bars against the
-/// reference band; a muscle opens where its sets came from and, with
-/// Premium, its 12-week trend.
+/// reference band, with the 12-week trend of the total (Premium); a muscle
+/// opens where its sets came from and, with Premium, its 12-week trend.
 class VolumePage extends StatelessWidget {
   const VolumePage({super.key});
 
@@ -49,24 +51,60 @@ class _VolumeView extends StatelessWidget {
     final state = context.watch<VolumeCubit>().state;
     final shown = state.shown;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.volumeTitle)),
-      body: Column(
+      appBar: ForgeAppBar(title: l10n.volumeTitle),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
         children: [
-          _WeekSelector(state),
-          Expanded(
+          for (final part in [
+            _WeekSelector(state),
             // While another week loads the one before stays, so the model
             // keeps its camera and nothing flashes.
-            child: switch (state.status) {
-              VolumeStatus.failure => ErrorView(
-                title: l10n.volumeLoadFailed,
-                message: l10n.loadFailedDetail,
-                retryLabel: l10n.retry,
-                onRetry: cubit.retry,
-              ),
-              _ when shown == null => const LoadingView(),
-              _ => _Week(state, shown),
+            ...switch (state.status) {
+              VolumeStatus.failure => [
+                ErrorView(
+                  title: l10n.volumeLoadFailed,
+                  message: l10n.loadFailedDetail,
+                  retryLabel: l10n.retry,
+                  onRetry: cubit.retry,
+                ),
+              ],
+              _ when shown == null => [
+                const VolumeModel(sets: {}),
+                SectionCard.loading(
+                  title: l10n.volumeSetsPerMuscle,
+                  onTap: null,
+                ),
+              ],
+              _ when shown.entries.isEmpty => [
+                EmptyView(
+                  title: state.isThisWeek
+                      ? l10n.volumeNoSetsThisWeek
+                      : l10n.volumeNoSetsThatWeek,
+                  message: l10n.volumeNoSetsDetail,
+                ),
+                _TotalTrend(state),
+              ],
+              _ => [
+                VolumeModel(
+                  sets: shown.sets,
+                  semanticLabel: l10n.volumeModelLabel(
+                    weekRangeText(context, state.week),
+                  ),
+                  onOpen: (muscle) => _showMuscle(context, muscle),
+                ),
+                VolumeMuscleList(
+                  muscles: [
+                    for (final muscle in shown.musclesBySets)
+                      (muscle: muscle, sets: shown.setsOf(muscle)),
+                  ],
+                  total: shown.totalSets,
+                  onOpen: (muscle) => _showMuscle(context, muscle),
+                ),
+                _TotalTrend(state),
+              ],
             },
-          ),
+          ])
+            Padding(padding: const EdgeInsets.only(bottom: 10), child: part),
         ],
       ),
     );
@@ -81,135 +119,134 @@ class _WeekSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<VolumeCubit>();
-    return Row(
-      children: [
-        IconButton(
-          tooltip: l10n.volumePreviousWeek,
-          onPressed: cubit.previousWeek,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Expanded(
-          child: Text(
-            _weekLabel(context, state),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
-        IconButton(
-          tooltip: l10n.volumeNextWeek,
-          onPressed: state.hasNext ? cubit.nextWeek : null,
-          icon: const Icon(Icons.chevron_right),
-        ),
-      ],
+    return PeriodSelector(
+      period: weekRangeText(context, state.week),
+      onPrevious: cubit.previousWeek,
+      onNext: state.hasNext ? cubit.nextWeek : null,
+      onPeriodTap: () => _pickDay(context),
+      previousLabel: l10n.volumePreviousWeek,
+      nextLabel: l10n.volumeNextWeek,
     );
+  }
+
+  /// The system date picker up to today; the picked day's week opens.
+  Future<void> _pickDay(BuildContext context) async {
+    final cubit = context.read<VolumeCubit>();
+    final now = DateTime.now();
+    final shown = state.week.toLocalDateTime();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: shown.isAfter(now) ? now : shown,
+      firstDate: DateTime(2000),
+      lastDate: now,
+    );
+    if (picked != null) cubit.showWeekOf(CalendarDate.of(picked));
   }
 }
 
-/// "This week", or the week's first and last day.
-String _weekLabel(BuildContext context, VolumeState state) {
-  final l10n = AppLocalizations.of(context);
-  final dates = MaterialLocalizations.of(context);
-  final week = state.week;
-  return state.isThisWeek
-      ? l10n.volumeThisWeek
-      : l10n.volumeWeekRange(
-          dates.formatShortMonthDay(week.toLocalDateTime()),
-          dates.formatShortMonthDay(
-            week.addDays(DateTime.daysPerWeek - 1).toLocalDateTime(),
-          ),
-        );
-}
-
-class _Week extends StatelessWidget {
-  const _Week(this.state, this.week);
+/// The total sets of each of the [trendWeeks] weeks ending with the one
+/// shown, for Premium; a locked card opening the paywall for everyone
+/// else, and while that is unknown.
+class _TotalTrend extends StatelessWidget {
+  const _TotalTrend(this.state);
   final VolumeState state;
-  final WeekVolume week;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final muscles = week.musclesBySets;
-    return ListView(
-      padding: const EdgeInsets.only(bottom: Gap.md),
-      children: [
-        VolumeModel(
-          sets: week.sets,
-          semanticLabel: l10n.volumeModelLabel(_weekLabel(context, state)),
-          onOpen: (muscle) => _showMuscle(context, muscle),
-        ),
-        const Padding(
-          padding: EdgeInsets.all(Gap.md),
-          child: MuscleHeatLegend(),
-        ),
-        if (week.entries.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(Gap.md),
-            child: Text(
-              state.isThisWeek
-                  ? l10n.volumeNoWorkoutsThisWeek
-                  : l10n.volumeNoWorkoutsThatWeek,
-              textAlign: TextAlign.center,
-            ),
-          ),
-        VolumeMuscleList(
-          muscles: [
-            for (final muscle in muscles)
-              (muscle: muscle, sets: week.setsOf(muscle)),
-          ],
-          onOpen: (muscle) => _showMuscle(context, muscle),
-        ),
-      ],
-    );
-  }
-}
-
-/// Each muscle's weekly [muscles] sets as a band against the reference,
-/// in the order given; a row opens its muscle through [onOpen], when given.
-class VolumeMuscleList extends StatelessWidget {
-  const VolumeMuscleList({super.key, required this.muscles, this.onOpen});
-
-  final List<({Muscle muscle, double sets})> muscles;
-  final ValueChanged<Muscle>? onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    final scale = volumeScale(muscles.map((m) => m.sets));
-    final onOpen = this.onOpen;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-      child: Card(
-        margin: EdgeInsets.zero,
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          children: [
-            for (final (:muscle, :sets) in muscles)
-              InkWell(
-                onTap: onOpen == null ? null : () => onOpen(muscle),
-                child: Padding(
-                  padding: const EdgeInsets.all(Gap.md),
-                  child: VolumeBand(muscle: muscle, sets: sets, scale: scale),
-                ),
-              ),
-          ],
-        ),
+    final dates = MaterialLocalizations.of(context);
+    final title = l10n.volumeTrendCard(trendWeeks);
+    if (context.watchPremium() != PremiumStatus.premium) {
+      return SectionCard.locked(
+        title: title,
+        onTap: context.openPaywall,
+        tag: ForgeTag(l10n.cataloguePremium, kind: ForgeTagKind.premium),
+        message: l10n.volumeTrendCardLocked(trendWeeks),
+      );
+    }
+    if (!state.hasTrend) return Chart.loading(title: title);
+    final weeks = state.weeks;
+    String start(WeekVolume week) =>
+        dates.formatShortMonthDay(week.start.toLocalDateTime());
+    final totals = [for (final week in weeks) week.totalSets.toDouble()];
+    return Chart.line(
+      title: title,
+      detail: l10n.setsText(totals.last),
+      values: totals,
+      pointLabel: (index) => l10n.volumeTrendPoint(
+        l10n.setsText(totals[index]),
+        weekRangeText(context, weeks[index].start),
+      ),
+      startLabel: start(weeks.first),
+      endLabel: start(weeks.last),
+      semanticLabel: l10n.volumeTotalTrendLabel(
+        l10n.inlineList(totals.map(l10n.setsText)),
       ),
     );
   }
 }
 
-/// The model with each trained muscle of [sets] in the heat ramp's colour;
-/// an untrained one keeps the body's colour. Tapping a muscle calls
-/// [onOpen]; without it the model only turns, and its hint says so.
+/// Each muscle's weekly [muscles] sets as a band against the reference,
+/// in the order given, in the Sets per muscle card with their [total] and
+/// what the band means; a band opens its muscle through [onOpen], when
+/// given, and the line says so.
+class VolumeMuscleList extends StatelessWidget {
+  const VolumeMuscleList({
+    super.key,
+    required this.muscles,
+    required this.total,
+    this.onOpen,
+  });
+
+  final List<({Muscle muscle, double sets})> muscles;
+  final int total;
+  final ValueChanged<Muscle>? onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scale = volumeScale(muscles.map((m) => m.sets));
+    final onOpen = this.onOpen;
+    return SectionCard(
+      title: l10n.volumeSetsPerMuscle,
+      detail: l10n.volumeTotal(l10n.wholeNumber(total)),
+      onTap: null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: [
+          for (final (:muscle, :sets) in muscles)
+            InkWell(
+              onTap: onOpen == null ? null : () => onOpen(muscle),
+              child: VolumeBand(muscle: muscle, sets: sets, scale: scale),
+            ),
+          Text(
+            onOpen == null
+                ? l10n.volumeTarget(VolumeRange.min, VolumeRange.max)
+                : l10n.volumeFootnote(VolumeRange.min, VolumeRange.max),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The model in its card with each trained muscle of [sets] in the heat
+/// ramp's colour (an untrained one keeps the body's colour), what it does
+/// and the ramp under it. Tapping a muscle calls [onOpen]; without it the
+/// model only turns, and its hint says so. Before the body model loads,
+/// and while [sets] are unknown (no [semanticLabel]), it shimmers.
 class VolumeModel extends StatefulWidget {
   const VolumeModel({
     super.key,
     required this.sets,
-    required this.semanticLabel,
+    this.semanticLabel,
     this.onOpen,
   });
 
   final Map<Muscle, double> sets;
-  final String semanticLabel;
+  final String? semanticLabel;
   final ValueChanged<Muscle>? onOpen;
 
   @override
@@ -217,8 +254,8 @@ class VolumeModel extends StatefulWidget {
 }
 
 class _VolumeModelState extends State<VolumeModel> {
-  /// Share of the screen height the model takes, leaving the bars in view.
-  static const _heightRatio = 1 / 3;
+  /// Share of the screen height the card takes, leaving the bars in view.
+  static const _heightRatio = 0.45;
 
   @override
   void initState() {
@@ -231,47 +268,73 @@ class _VolumeModelState extends State<VolumeModel> {
     final l10n = AppLocalizations.of(context);
     final p = ForgeStyle.of(context).colors;
     final sets = widget.sets;
+    final label = widget.semanticLabel;
     final model = context.watch<BodyModelCubit>().state;
     // One model, turned by dragging, shows the front and the back.
-    return Column(
-      children: [
-        SizedBox(
-          height: MediaQuery.sizeOf(context).height * _heightRatio,
-          child: switch (model) {
-            BodyModelLoading() => const MuscleModel.loading(sides: false),
-            BodyModelFailed() => MuscleModel.failed(
-              message: AppLocalizations.of(context).muscleModelTryAgain,
-              onRetry: context.read<BodyModelCubit>().load,
-            ),
-            BodyModelReady(:final model) => MuscleModel(
-              model: model,
-              colors: muscleHeatColors(p, sets),
-              outlined: muscleHeatOver(sets),
-              sides: false,
-              onOpen: widget.onOpen,
-              semanticLabel: widget.semanticLabel,
-            ),
-          },
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * _heightRatio,
+      child: switch (model) {
+        BodyModelFailed() => MuscleModel.failed(
+          message: l10n.muscleModelTryAgain,
+          onRetry: context.read<BodyModelCubit>().load,
         ),
-        if (model is BodyModelReady)
-          Text(
+        BodyModelReady(:final model) when label != null => MuscleModel(
+          model: model,
+          colors: muscleHeatColors(p, sets),
+          outlined: muscleHeatOver(sets),
+          sides: false,
+          onOpen: widget.onOpen,
+          semanticLabel: label,
+          footer: _Footer(
             widget.onOpen == null
                 ? l10n.volumeModelTurnHint
                 : l10n.volumeModelHint,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall,
           ),
+        ),
+        _ => const MuscleModel.loading(
+          sides: false,
+          footer: SkeletonBar(widthFactor: 0.6, height: 8),
+        ),
+      },
+    );
+  }
+}
+
+/// What the model does, over the heat ramp.
+class _Footer extends StatelessWidget {
+  const _Footer(this.hint);
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = ForgeStyle.of(context).colors.inkMuted;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 12,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: Gap.sm,
+          children: [
+            ForgeIcon(ForgeIcons.sync, size: 16, color: muted),
+            Flexible(
+              child: Text(
+                hint,
+                style: Theme.of(context).textTheme.labelMedium!
+                    .copyWith(fontWeight: FontWeight.w400, color: muted),
+              ),
+            ),
+          ],
+        ),
+        const MuscleHeatLegend(),
       ],
     );
   }
 }
 
 Future<void> _showMuscle(BuildContext context, Muscle muscle) =>
-    showModalBottomSheet<void>(
+    showForgeBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      showDragHandle: true,
       builder: (_) => BlocProvider.value(
         value: context.read<VolumeCubit>(),
         child: _MuscleSheet(muscle),
@@ -287,46 +350,52 @@ class _MuscleSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final text = Theme.of(context).textTheme;
     final dates = MaterialLocalizations.of(context);
     final state = context.watch<VolumeCubit>().state;
     final week = state.shown;
     if (week == null) return const SizedBox.shrink();
     final sets = week.setsOf(muscle);
     final contributions = week.contributionsTo(muscle);
-    return DraggableScrollableSheet(
-      expand: false,
-      builder: (context, controller) => ListView(
-        controller: controller,
-        children: [
-          ListTile(
-            title: Text(
-              l10n.muscleName(muscle),
-              style: theme.textTheme.titleLarge,
-            ),
-            subtitle: Text(
-              l10n.volumeMuscleSummary(
-                l10n.setsText(sets),
-                l10n.zoneLabel(VolumeZone.of(sets)),
+    return ForgeBottomSheet(
+      title: l10n.muscleName(muscle),
+      subtitle: l10n.volumeMuscleSummary(
+        l10n.setsText(sets),
+        l10n.zoneLabel(VolumeZone.of(sets)),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 10,
+          children: [
+            Semantics(
+              header: true,
+              child: Text(
+                l10n.volumeContributionsTitle,
+                style: text.titleMedium,
               ),
             ),
-          ),
-          _Header(l10n.volumeContributionsTitle),
-          if (contributions.isEmpty)
-            ListTile(title: Text(l10n.volumeNoContributions)),
-          for (final (:entry, sets: given) in contributions)
-            ListTile(
-              title: Text(_exerciseName(context, entry)),
-              subtitle: Text(
-                l10n.volumeContribution(
-                  entry.workoutName,
-                  dates.formatMediumDate(entry.startedAt.toLocal()),
-                ),
+            if (contributions.isEmpty)
+              Text(l10n.volumeNoContributions, style: text.bodySmall)
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final (:entry, sets: given) in contributions)
+                    ListRow(
+                      title: _exerciseName(context, entry),
+                      detail: l10n.volumeContribution(
+                        entry.workoutName,
+                        dates.formatShortMonthDay(entry.startedAt.toLocal()),
+                      ),
+                      value: l10n.setsText(given),
+                    ),
+                ],
               ),
-              trailing: Text(l10n.setsText(given)),
-            ),
-          _Trend(muscle: muscle, state: state),
-        ],
+            _Trend(muscle: muscle, state: state),
+          ],
+        ),
       ),
     );
   }
@@ -342,7 +411,7 @@ class _MuscleSheet extends StatelessWidget {
   }
 }
 
-/// The muscle's sets per week, for Premium; a locked teaser that opens the
+/// The muscle's sets per week, for Premium; a locked row that opens the
 /// paywall for everyone else, nothing while that is unknown.
 class _Trend extends StatelessWidget {
   const _Trend({required this.muscle, required this.state});
@@ -350,79 +419,68 @@ class _Trend extends StatelessWidget {
   final Muscle muscle;
   final VolumeState state;
 
+  /// The stand-in's height while the weeks load.
+  static const _height = 110.0;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
     final dates = MaterialLocalizations.of(context);
     final premium = context.watchPremium();
     if (premium == PremiumStatus.unknown) return const SizedBox.shrink();
     final weeks = state.weeks;
-    final sets = [for (final week in weeks) week.setsOf(muscle)];
+    final title = state.isThisWeek
+        ? l10n.volumeTrendTitle(trendWeeks)
+        : l10n.volumeTrendTitleUntil(
+            trendWeeks,
+            dates.formatShortMonthDay(
+              state.week.addDays(DateTime.daysPerWeek - 1).toLocalDateTime(),
+            ),
+          );
+    if (premium == PremiumStatus.premium && state.hasTrend) {
+      final numbers = NumberFormat.decimalPattern(l10n.localeName);
+      final sets = [for (final week in weeks) week.setsOf(muscle)];
+      return Chart.bar(
+        title: title,
+        card: false,
+        band: (
+          low: VolumeRange.min.toDouble(),
+          high: VolumeRange.max.toDouble(),
+        ),
+        bars: [
+          for (final (i, week) in weeks.indexed)
+            ChartBar(
+              label: '${week.start.day}',
+              value: sets[i],
+              valueLabel: numbers.format(sets[i]),
+            ),
+        ],
+        semanticLabel: l10n.volumeTrendLabel(
+          l10n.muscleName(muscle),
+          l10n.inlineList(sets.map(l10n.setsText)),
+        ),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 10,
       children: [
-        _Header(
-          state.isThisWeek
-              ? l10n.volumeTrendTitle(trendWeeks)
-              : l10n.volumeTrendTitleUntil(
-                  trendWeeks,
-                  dates.formatShortMonthDay(
-                    state.week
-                        .addDays(DateTime.daysPerWeek - 1)
-                        .toLocalDateTime(),
-                  ),
-                ),
-        ),
+        Semantics(header: true, child: Text(title, style: text.titleMedium)),
         if (premium == PremiumStatus.free)
-          ListTile(
-            leading: const Icon(Icons.lock_outline),
-            title: Text(l10n.volumeTrendLocked(trendWeeks)),
-            trailing: const Icon(Icons.chevron_right),
+          ListRow(
+            leading: ForgeIcon(
+              ForgeIcons.lock,
+              size: 18,
+              color: ForgeStyle.of(context).colors.inkMuted,
+            ),
+            title: l10n.volumeTrendLocked(trendWeeks),
+            end: ListRowEnd.chevron,
             onTap: context.openPaywall,
           )
-        else if (!state.hasTrend)
-          const LoadingView()
         else
-          Padding(
-            padding: const EdgeInsets.all(Gap.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                VolumeTrendChart(
-                  sets: sets,
-                  semanticLabel: l10n.volumeTrendLabel(
-                    l10n.muscleName(muscle),
-                    l10n.inlineList(sets.map(l10n.setsText)),
-                  ),
-                ),
-                const Divider(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    for (final week in [weeks.first, weeks.last])
-                      Text(
-                        dates.formatShortMonthDay(week.start.toLocalDateTime()),
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          const SkeletonBar(widthFactor: 1, height: _height, radius: Gap.sm),
       ],
     );
   }
-}
-
-class _Header extends StatelessWidget {
-  const _Header(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    header: true,
-    child: ListTile(
-      title: Text(text, style: Theme.of(context).textTheme.titleMedium),
-    ),
-  );
 }
