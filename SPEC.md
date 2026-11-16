@@ -914,7 +914,9 @@ Decisions (the canvases they were drawn on are deleted):
   line for a month with nothing) and
   the legend (Workout, Cardio, Planned, Missed, Today); a load failure is
   MonthGrid's error form. The list follows the month shown: the current
-  month "This week · Nov 9–15" then "Earlier this month", another month
+  month "This week · Nov 9–15" (today first, then the coming planned
+  days in date order, then this week's past days newest first) then
+  "Earlier this month", another month
   its weeks within it as sections, newest first; days and weeks with
   nothing are left out; no "Show older workouts". All / Workouts / Cardio
   chips filter the list, the marks and the count (Workouts keeps the

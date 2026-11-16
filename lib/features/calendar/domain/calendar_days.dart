@@ -71,8 +71,10 @@ class CalendarSection extends Equatable {
 }
 
 /// The list of [month]'s month: for the current one (holding [today]) this
-/// week, then the month's days before it; for any other month its weeks
-/// (from ISO weekday [firstWeekday], within the month), newest first.
+/// week (today first, then the days to come in date order, then its past
+/// days newest first), then the month's days before it; for any other month
+/// its weeks (from ISO weekday [firstWeekday], within the month), newest
+/// first.
 /// Days without entries, and sections without days, are left out.
 /// [entriesOn] gives a date's entries, already filtered.
 List<CalendarSection> monthSections(
@@ -98,8 +100,31 @@ List<CalendarSection> monthSections(
 
   if (monthOf(today) == first) {
     final week = today.startOfWeek(firstWeekday);
+    final thisWeek = section(
+      CalendarSectionKind.thisWeek,
+      week,
+      week.addDays(6),
+    );
+    int rank(CalendarDate date) => date == today
+        ? 0
+        : date.isAfter(today)
+        ? 1
+        : 2;
     return [
-      ?section(CalendarSectionKind.thisWeek, week, week.addDays(6)),
+      if (thisWeek != null)
+        CalendarSection(
+          thisWeek.kind,
+          thisWeek.first,
+          thisWeek.last,
+          [...thisWeek.days]..sort((a, b) {
+            final byRank = rank(a.date).compareTo(rank(b.date));
+            if (byRank != 0) return byRank;
+            // Days to come ascend; past days descend.
+            return rank(a.date) == 1
+                ? a.date.compareTo(b.date)
+                : b.date.compareTo(a.date);
+          }),
+        ),
       if (week.isAfter(first))
         ?section(CalendarSectionKind.earlierThisMonth, first, week.addDays(-1)),
     ];

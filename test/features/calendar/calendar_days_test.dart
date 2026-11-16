@@ -94,12 +94,26 @@ void main() {
     ]);
     expect(sections.first.first, d(2026, 11, 9));
     expect(sections.first.last, d(2026, 11, 15));
+    // Today, then the days to come in date order, then the past ones.
     expect(sections.first.days.map((day) => day.date), [
-      d(2026, 11, 13),
       today,
+      d(2026, 11, 13),
       d(2026, 11, 9),
     ]);
     expect(sections.last.days.map((day) => day.date), [d(2026, 11, 3)]);
+  });
+
+  test('this week: today, the days to come ascending, the past descending', () {
+    final listed = {9, 10, 11, 13, 15};
+    final sections = monthSections(
+      d(2026, 11, 1),
+      today: today,
+      firstWeekday: DateTime.monday,
+      entriesOn: (date) => date.month == 11 && listed.contains(date.day)
+          ? [WorkoutEntry(morning)]
+          : const [],
+    );
+    expect(sections.first.days.map((day) => day.date.day), [11, 13, 15, 10, 9]);
   });
 
   test('another month: its weeks within it, newest first, empty ones left '
