@@ -4,7 +4,8 @@ import 'package:get_it/get_it.dart';
 import 'presentation/calendar_cubit.dart';
 
 /// Registers the calendar. Needs `AuthModule`, `CardioModule`,
-/// `ProgramsModule` and `WorkoutModule`, whose use cases it reads.
+/// `ProgramsModule`, `WorkoutModule` and `HealthModule`, whose use cases it
+/// reads.
 class CalendarModule implements FeatureModule {
   const CalendarModule();
 
@@ -22,6 +23,7 @@ class CalendarModule implements FeatureModule {
         // The workout pages open above the calendar, so it is there to
         // report their refused edits.
         watchRejectedEdits: sl(),
+        getHealth: sl(),
       ),
     );
   }

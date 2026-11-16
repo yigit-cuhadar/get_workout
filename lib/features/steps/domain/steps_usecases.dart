@@ -42,7 +42,9 @@ class GetStepsAccess implements UseCase<StepsAccess, NoParams> {
 }
 
 /// The user said yes in the app: remembers that they were asked here, then
-/// shows the system's prompt where it still can.
+/// shows the system's prompt where it still can, for steps and then for
+/// workouts (the Cardio page's sessions). Only the steps answer counts: a
+/// workouts refusal leaves the steps as they are.
 class AllowStepsAccess implements UseCase<StepsAccess, NoParams> {
   const AllowStepsAccess(this._health, this._prompt);
   final HealthSteps _health;
@@ -53,7 +55,14 @@ class AllowStepsAccess implements UseCase<StepsAccess, NoParams> {
     if ((await _prompt.markAskedHere()).failureOrNull case final failure?) {
       Log.e('steps', 'not remembered as asked: ${failure.message}');
     }
-    return (await _health.requestPermission()).map(_access);
+    final steps = (await _health.requestPermission()).map(_access);
+    if (steps case Ok(value: StepsAccess.granted || StepsAccess.undetermined)) {
+      if ((await _health.requestWorkoutsPermission()).failureOrNull
+          case final failure?) {
+        Log.e('steps', 'workouts not asked: ${failure.message}');
+      }
+    }
+    return steps;
   }
 }
 

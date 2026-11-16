@@ -41,7 +41,7 @@ CardioSession? healthSession(HealthWorkout workout) {
     distanceKm: meters == null || meters <= 0 ? null : meters / 1000,
     calories: kcal == null || kcal <= 0 ? null : kcal.round(),
     avgHeartRate: workout.averageHeartRate,
-    fromHealth: true,
+    healthSource: workout.source,
   );
 }
 

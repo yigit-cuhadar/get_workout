@@ -136,7 +136,10 @@ class _Session extends StatelessWidget {
             const SizedBox(height: Gap.sm),
             Align(
               alignment: AlignmentDirectional.centerStart,
-              child: ForgeTag(store, kind: ForgeTagKind.source),
+              child: ForgeTag(
+                healthSourceName(context, session),
+                kind: ForgeTagKind.source,
+              ),
             ),
             const SizedBox(height: Gap.xs),
             Text(
@@ -184,7 +187,7 @@ class _Session extends StatelessWidget {
         final pace = session.pace(unit);
         if (pace == null) return null;
         return StatTile.figure(
-          figure: formatDuration(pace),
+          figure: formatPace(pace),
           caption: switch (unit) {
             DistanceUnit.km => l10n.cardioPerKm,
             DistanceUnit.mile => l10n.cardioPerMi,

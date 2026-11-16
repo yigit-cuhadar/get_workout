@@ -6,6 +6,7 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../cardio/domain/cardio_session.dart';
 import '../../cardio/domain/cardio_usecases.dart';
+import '../../cardio/domain/health_cardio.dart';
 import '../../programs/domain/active_program.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
@@ -87,7 +88,8 @@ class CalendarState extends Equatable {
 
 /// The calendar of whoever is signed in, a month at a time: their finished
 /// workouts, cardio sessions and the active program's days not done yet,
-/// followed live for the month shown, and the workout edits the server
+/// followed live for the month shown, with the health store's sessions
+/// (see [GetHealthCardio]), and the workout edits the server
 /// refused. [firstWeekday] (ISO) starts the weeks. Resets on every user
 /// change.
 class CalendarCubit extends Cubit<CalendarState> {
@@ -99,6 +101,7 @@ class CalendarCubit extends Cubit<CalendarState> {
     required this._watchPrograms,
     required this._watchActiveProgram,
     required WatchRejectedWorkoutEdits watchRejectedEdits,
+    required this._getHealth,
     DateTime Function()? clock,
   }) : _firstWeekday = firstWeekday,
        _clock = clock ?? DateTime.now,
@@ -123,6 +126,7 @@ class CalendarCubit extends Cubit<CalendarState> {
   final WatchCardioBetween _watchCardio;
   final WatchPrograms _watchPrograms;
   final WatchActiveProgram _watchActiveProgram;
+  final GetHealthCardio _getHealth;
   final DateTime Function() _clock;
   late final StreamSubscription<String?> _userSubscription;
   late final StreamSubscription<Failure> _rejectedSubscription;
@@ -138,6 +142,10 @@ class CalendarCubit extends Cubit<CalendarState> {
   List<Program>? _programs;
   ActiveProgram? _active;
   bool _activeKnown = false;
+
+  /// The health store's sessions, read once per user; none until read or
+  /// when they could not be.
+  List<CardioSession> _health = const [];
 
   CalendarDate get _today => CalendarDate.of(_clock());
 
@@ -232,8 +240,24 @@ class CalendarCubit extends Cubit<CalendarState> {
     _followUser();
   }
 
+  /// A failed read leaves the calendar without them.
+  Future<void> _readHealth() async {
+    final uid = _uid;
+    final result = await _getHealth();
+    if (isClosed || uid != _uid) return;
+    switch (result) {
+      case Err(:final failure):
+        Log.e('calendar', 'health store not read: ${failure.message}');
+      case Ok(value: final health):
+        _health = health;
+        _emitReady();
+    }
+  }
+
   void _followUser() {
     _cancelUser();
+    _health = const [];
+    if (_uid != null) unawaited(_readHealth());
     _programs = null;
     _active = null;
     _activeKnown = false;
@@ -320,7 +344,7 @@ class CalendarCubit extends Cubit<CalendarState> {
           to: to,
           today: today,
           workouts: workouts,
-          cardio: cardio,
+          cardio: [...cardio, ..._health],
           active: active,
           program: active == null
               ? null

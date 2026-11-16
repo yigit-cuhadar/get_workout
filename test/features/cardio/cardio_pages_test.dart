@@ -42,7 +42,7 @@ void main() {
     duration: const Duration(minutes: 45),
     distanceKm: 18,
     avgHeartRate: 142,
-    fromHealth: true,
+    healthSource: 'com.strava',
   );
   final bike = CardioSession(
     id: 'b1',
@@ -105,7 +105,7 @@ void main() {
       expect(find.text('2 sessions'), findsOneWidget);
       expect(find.text('12 weeks'), findsOneWidget);
       expect(find.text('Outdoor run · 5.2 km'), findsOneWidget);
-      expect(find.text('Health Connect'), findsOneWidget);
+      expect(find.text('Strava'), findsOneWidget);
       expect(find.text('Log cardio'), findsOneWidget);
     });
 
@@ -145,7 +145,7 @@ void main() {
       await pump(tester, ready([run]), const CardioSessionPage(id: 'r1'));
       expect(find.text('5.2 km'), findsOneWidget);
       expect(find.text('28:40'), findsOneWidget);
-      expect(find.text('5:30'), findsOneWidget);
+      expect(find.text('5:31'), findsOneWidget);
       expect(find.text('per km'), findsOneWidget);
       expect(find.text('310 kcal'), findsOneWidget);
       expect(find.text('Easy pace, felt good'), findsOneWidget);

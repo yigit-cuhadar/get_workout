@@ -6,7 +6,6 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/bar_chart.dart';
 import '../../../core/page_parts.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
@@ -477,9 +476,8 @@ class _WeekChart extends StatelessWidget {
   }
 }
 
-/// The last 30 days, a bar a day with the goal across; a tap names the
-/// day and its steps.
-// Stays the app's chart until Forge has a form for 30 bars.
+/// The last 30 days as Forge's dense bars, today in accent, the goal
+/// across; a tap names a day's steps.
 class _MonthChart extends StatelessWidget {
   const _MonthChart({required this.days, required this.goal});
 
@@ -489,23 +487,27 @@ class _MonthChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final axis = NumberFormat.compact(locale: l10n.localeName);
+    final number = NumberFormat.decimalPattern(l10n.localeName);
     final dayLabel = DateFormat.MMMd(l10n.localeName);
     final title = l10n.stepsLastDays(stepHistoryDays);
-    return SectionCard.plain(
+    return Chart.barDense(
       title: title,
-      child: BarChart(
-        values: [for (final day in days) day.count.toDouble()],
-        xLabel: (index) => dayLabel.format(days[index].day),
-        yLabel: axis.format,
-        yPrecision: 1,
-        barLabel: (index) => _dayText(l10n, days[index]),
-        semanticLabel: l10n.stepsChartLabel(
-          title,
-          l10n.stepsGoalValue(goal),
-          l10n.inlineList(days.map((d) => _dayText(l10n, d))),
-        ),
-        target: goal.toDouble(),
+      detail: l10n.stepsGoalDetail(goal),
+      bars: [
+        for (final day in days)
+          ChartBar(
+            label: dayLabel.format(day.day),
+            value: day.count.toDouble(),
+            valueLabel:
+                '${number.format(day.count)} · ${dayLabel.format(day.day)}',
+          ),
+      ],
+      current: days.isEmpty ? null : days.length - 1,
+      target: goal.toDouble(),
+      semanticLabel: l10n.stepsChartLabel(
+        title,
+        l10n.stepsGoalValue(goal),
+        l10n.inlineList(days.map((d) => _dayText(l10n, d))),
       ),
     );
   }

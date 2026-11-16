@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_health/forge_health.dart';
 import 'package:get_workout/features/calendar/domain/calendar_days.dart';
 import 'package:get_workout/features/calendar/domain/calendar_month.dart';
 import 'package:get_workout/features/calendar/presentation/calendar_cubit.dart';
@@ -10,6 +11,7 @@ import 'package:get_workout/features/cardio/domain/cardio_repository.dart';
 import 'package:get_workout/features/cardio/domain/cardio_session.dart';
 import 'package:get_workout/features/cardio/domain/cardio_type.dart';
 import 'package:get_workout/features/cardio/domain/cardio_usecases.dart';
+import 'package:get_workout/features/cardio/domain/health_cardio.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
@@ -59,6 +61,7 @@ void main() {
   late StreamController<AuthUser?> users;
   late MockWorkoutRepository workouts;
   late StreamController<Failure> rejected;
+  late FakeHealthSteps health;
   late MockCardioRepository cardio;
   late MockProgramRepository programs;
 
@@ -77,6 +80,7 @@ void main() {
     users = StreamController<AuthUser?>();
     workouts = MockWorkoutRepository();
     rejected = StreamController<Failure>.broadcast();
+    health = FakeHealthSteps(clock: () => now);
     cardio = MockCardioRepository();
     programs = MockProgramRepository();
     workoutStreams = {};
@@ -140,6 +144,7 @@ void main() {
       watchPrograms: WatchPrograms(programs),
       watchActiveProgram: WatchActiveProgram(programs),
       watchRejectedEdits: WatchRejectedWorkoutEdits(workouts),
+      getHealth: GetHealthCardio(health, clock: () => now),
       clock: () => now,
     );
   }
@@ -210,6 +215,25 @@ void main() {
     cubit.filter(CalendarFilter.workouts);
     expect(cubit.state.entriesOn(today), [WorkoutEntry(legs)]);
     expect(cubit.state.entriesOn(d(2026, 11, 18)), hasLength(1));
+    await cubit.close();
+  });
+
+  test('the health store\'s sessions mark and fill their dates', () async {
+    health
+      ..workoutsPermissionStatus = HealthPermission.granted
+      ..workoutList = [
+        HealthWorkout(
+          id: 'h',
+          type: HealthWorkoutType.cycling,
+          start: DateTime(2026, 11, 10, 7),
+          duration: const Duration(minutes: 45),
+          source: 'com.strava',
+        ),
+      ];
+    final cubit = build();
+    await signIn(alice);
+    await deliver();
+    expect(cubit.state.entriesOn(d(2026, 11, 10)).single, isA<CardioEntry>());
     await cubit.close();
   });
 

@@ -33,7 +33,7 @@ class CardioSession extends Equatable {
     this.avgHeartRate,
     this.incline,
     this.note,
-    this.fromHealth = false,
+    this.healthSource,
   }) : typeCode = typeCode ?? type.code;
 
   /// Null until the session is stored.
@@ -53,9 +53,13 @@ class CardioSession extends Equatable {
   final double? incline;
   final String? note;
 
+  /// Who saved it in the device's health store (an app's name on iOS, its
+  /// package name on Android); null for a session stored here.
+  final String? healthSource;
+
   /// Read from the device's health store (Apple Health, Health Connect):
   /// never stored here, so it cannot be edited or deleted here.
-  final bool fromHealth;
+  bool get fromHealth => healthSource != null;
 
   /// Unknown codes read as [CardioType.other].
   CardioType get type => CardioType.fromCode(typeCode);
@@ -93,7 +97,7 @@ class CardioSession extends Equatable {
     avgHeartRate: avgHeartRate,
     incline: incline,
     note: note,
-    fromHealth: fromHealth,
+    healthSource: healthSource,
   );
 
   @override
@@ -107,6 +111,6 @@ class CardioSession extends Equatable {
     avgHeartRate,
     incline,
     note,
-    fromHealth,
+    healthSource,
   ];
 }

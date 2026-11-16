@@ -334,12 +334,16 @@ class _Month extends StatelessWidget {
     };
   }
 
-  /// "4 workouts · 4 cardio · 1 missed", leaving out what is none.
-  String _summary(AppLocalizations l10n, MonthCounts counts) => [
-    if (counts.workouts > 0) l10n.calendarSummaryWorkouts(counts.workouts),
-    if (counts.cardio > 0) l10n.calendarSummaryCardio(counts.cardio),
-    if (counts.missed > 0) l10n.calendarSummaryMissed(counts.missed),
-  ].join(' · ');
+  /// "4 workouts · 4 cardio · 1 missed", leaving out what is none; none
+  /// for a month with nothing.
+  String? _summary(AppLocalizations l10n, MonthCounts counts) {
+    final parts = [
+      if (counts.workouts > 0) l10n.calendarSummaryWorkouts(counts.workouts),
+      if (counts.cardio > 0) l10n.calendarSummaryCardio(counts.cardio),
+      if (counts.missed > 0) l10n.calendarSummaryMissed(counts.missed),
+    ];
+    return parts.isEmpty ? null : parts.join(' · ');
+  }
 }
 
 /// All, Workouts or Cardio.
@@ -456,6 +460,12 @@ class _EntryRow extends StatelessWidget {
                 ? l10n.cardioMinutesOf(session.duration)
                 : l10n.distanceText(distance, unit),
           ),
+          trailing: session.fromHealth
+              ? ForgeTag(
+                  healthSourceName(context, session),
+                  kind: ForgeTagKind.source,
+                )
+              : null,
           end: ListRowEnd.chevron,
           onTap: () => context.push(Routes.cardioSession(session.id!)),
         );

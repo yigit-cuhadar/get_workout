@@ -258,7 +258,10 @@ class _Row extends StatelessWidget {
           '${l10n.planDate(CalendarDate.of(session.date))} · '
           '${l10n.cardioMinutesOf(session.duration)}',
       trailing: session.fromHealth
-          ? ForgeTag(healthStoreName(context), kind: ForgeTagKind.source)
+          ? ForgeTag(
+              healthSourceName(context, session),
+              kind: ForgeTagKind.source,
+            )
           : null,
       end: ListRowEnd.chevron,
       onTap: () => context.go(Routes.cardioSession(session.id!)),

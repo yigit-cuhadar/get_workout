@@ -731,7 +731,7 @@ Decisions (the canvases they were drawn on are deleted):
   Privacy; choices open choice sheets; with the rest timer off its rows
   hide; new: Rest sound and vibration, Keep screen on (on by default),
   Bar and plates (its own page, which the Plates calculator links to),
-  Connected apps (the health store, "Steps in", On / Off); the reminder
+  Connected apps (the health store, "Steps and cardio in", On / Off); the reminder
   time is Forge's wheel, saved as it turns; the permission dialogs carry
   titles ("Allow notifications?", "Notifications are off") and the rest
   notification asks as the reminders do; "Notifications are off" leads
@@ -910,7 +910,8 @@ Decisions (the canvases they were drawn on are deleted):
 - Calendar (owner's picks, 2026-11-16): a PeriodSelector over Forge
   MonthGrid, the month always open and months ahead browsable (planned
   days); tapping the month opens the system date picker. The card has the
-  count line ("4 workouts · 4 cardio · 1 missed", zero parts left out) and
+  count line ("4 workouts · 4 cardio · 1 missed", zero parts left out, no
+  line for a month with nothing) and
   the legend (Workout, Cardio, Planned, Missed, Today); a load failure is
   MonthGrid's error form. The list follows the month shown: the current
   month "This week · Nov 9–15" then "Earlier this month", another month
@@ -920,7 +921,8 @@ Decisions (the canvases they were drawn on are deleted):
   program's planned and missed days); hidden while the month has nothing
   logged. Rows are ListRows with their own date box, today's in the "today"
   form: a workout "48 min · 9,800 kg" (no volume: "48 min · 12 sets"),
-  cardio "Cardio · 18.4 km" (no distance: "Cardio · 45 min"), a planned day
+  cardio "Cardio · 18.4 km" (no distance: "Cardio · 45 min"; one from the
+  health store with its source tag), a planned day
   "Planned · 6 exercises" with Start, a missed one "Missed" in danger with
   Do it today. Holding the program's next day (planned or missed) opens the
   Move sheet: "Move Push", "Planned for <date>. Pick a new day this week.",
@@ -967,11 +969,12 @@ Decisions (the canvases they were drawn on are deleted):
   StepperField ("daily goal", 100 steps, typed in place, the range under it
   when out of range), the zero hint as a NoticeBanner ("No steps showing?",
   Open Settings), This week / Last 30 days as a segmented control over the
-  chart (the week as Forge Chart.bar with "goal 10,000"; the 30 days keep
-  the app's chart until Forge has a form for them), then "Daily average" and
+  chart (the week as Forge Chart.bar with "goal 10,000", the 30 days as
+  Forge Chart.barDense, a tap naming "10,500 · Nov 3"), then "Daily average" and
   "Goal reached · n of m days" rows on both views. Access is Forge
-  PermissionPrompt: ask ("See your steps here", "GetWorkout reads steps from
-  Apple Health. Nothing else is read.", Allow access, on iOS the note
+  PermissionPrompt: ask ("See your steps here", "GetWorkout reads steps and
+  cardio from Apple Health. Nothing else is read.", Allow access, which
+  asks for steps and then workouts, on iOS the note
   "Turned it off before? Open Settings, then Health."), refused ("Access is
   off", Open Health Connect, Ask again), missing ("Health Connect is
   needed", Get Health Connect, Not now), failed ("Couldn't reach Apple
@@ -1439,7 +1442,7 @@ the feature you are about to touch, and keep it true when you change it.
   puts back the standard set) and Keep screen on (`settings.keepScreenOn`,
   default on: the screen stays awake while a workout is in progress,
   through `wakelock_plus`). Connected apps: the health store (Apple
-  Health, or Health Connect) with what the app reads ("Steps in") and
+  Health, or Health Connect) with what the app reads ("Steps and cardio in") and
   On / Off from step access, read again on resume; On opens the store's
   settings, Off the Steps page (which explains before asking); hidden
   without a health store. Restore
@@ -2550,8 +2553,13 @@ the feature you are about to touch, and keep it true when you change it.
   rope, HIIT and other become the matching type, strength work is left
   out). They need the workouts permission (Android: READ_EXERCISE,
   READ_DISTANCE, READ_TOTAL_CALORIES_BURNED, READ_HEART_RATE); without it
-  none are read. They show only on the Cardio page, not on the calendar or
-  the Progress card, and cannot be edited or deleted here.
+  none are read; the Steps page's Allow access asks for steps and then
+  workouts (HX01). They show on the Cardio page, the Calendar (read once
+  per user, marked and counted as cardio) and the Progress card, and
+  cannot be edited or deleted here. Their tag names the store on iOS; on
+  Android the app that saved them when its package is known (Strava,
+  Google Fit, Samsung Health, Garmin Connect, Fitbit and a few more), else
+  "Health Connect". Pace is rounded to the nearest second.
 
 ### Body, steps and calculators
 
