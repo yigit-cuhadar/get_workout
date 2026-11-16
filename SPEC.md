@@ -420,33 +420,17 @@ Where it stands (2026-11-16, end of the İlerleme session):
   tile ("18.4 km" may wrap); health cardio sessions on a real device;
   users who allowed steps before #118 are asked for workouts only through
   Allow access again.
-- Formlar (2026-11-16, end of the session that built it): every screen is
-  built in three draft PRs, all on Forge v0.24.2 (6491245), each with
-  the owner's answers in its body: #122 Custom exercise, filters sheet,
-  Bar and plates; #123 Your profile, Profile question, Warm-up sets (and
-  Onboarding's number questions, P5); #124 Log weight, Measurement day,
-  Log cardio. Forge v0.23.0–v0.24.2 added the date picker, h:m:s wheel,
-  side-labelled pair boxes, ruler parts and tappable value, list and
-  title-only dialogs, ListRow.check and showForgeCheckSheet, snackbars
-  over sheets, compact (34px) and tall (40px) number boxes.
-  The three branches merge into one check branch without conflicts; the
-  joined full suite was green except a set-table test that v0.24.2 fixes.
-  Next, in order:
-  1. A check branch joining #122–#124 (copy pubspec_overrides.yaml),
-     analyze and the full suite, then the iOS simulator check of every
-     Formlar state. Look in particular at: the date picker (an outside
-     day selects it and changes month; no earliest date), check rows'
-     14px title (the board draws 15px), "5 ft 11 in" (only the numbers
-     underlined), the snackbar over a sheet (no entry animation), a
-     failed My equipment save on the Library page (may show twice), the
-     Left/Right pair row at 390px, P5's bottom-anchored number questions.
-  2. GetWorkout Studio: redraw the Formlar boards to what was built and
-     answered (Custom exercise rows and sheets, filters rows, PQ8
-     equipment, PoseCamera and PhotoTile on Measurement day, MD12, P5
-     layout, CL rows and sheets, WS forms), its own PR; publish from the
-     owner's account.
-  3. Findings drawn and asked, then the side-by-side approval page; on
-     approval mark #122–#124 ready and merge them in order.
+- Formlar (2026-11-16): built in draft PRs #122, #123, #124, all on
+  Forge v0.24.3 (363f51b). Checked on the iOS simulator on a branch
+  joining the three (full suite green); the check's fixes are in the PRs:
+  Measurement day steps open at the top, inline errors end with a full
+  stop, the ft in entry pre-fills the ruler's whole inches, the Custom
+  warm-up header note is whole (SectionCard.plain note), the plate
+  sheet's Remove is a danger text action, and Log cardio asks "Discard
+  this cardio session?" when left with changes (owner's pick Q1).
+  Next: the studio PR redrawing the Formlar boards (branch studio-forms),
+  the side-by-side approval page, then on approval mark #122–#124 ready
+  and merge them in order with the studio PR.
 - After Formlar:
   1. Kurulum, hesap ve abonelik, in the same flow. Open question for it: the Generator
      preview menu has no icon for "Keep when regenerating" (studio's Menu
