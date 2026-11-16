@@ -420,9 +420,8 @@ Where it stands (2026-11-16, end of the İlerleme session):
   tile ("18.4 km" may wrap); health cardio sessions on a real device;
   users who allowed steps before #118 are asked for workouts only through
   Allow access again.
-- Formlar: compared with the boards (about 40 code fixes), 26 questions
-  asked and answered (Design › Formlar, before the build); FS14 (row
-  values of the filters sheet) is drawn and waits for the owner. Forge
+- Formlar: compared with the boards (about 40 code fixes), 27 questions
+  asked and answered (Design › Formlar, before the build). Forge
   first: Dialog date form, h:mm:ss duration wheel, a left/right pair
   number row, a tappable ruler value, ForgeDialog without a message and
   with list content.
@@ -517,7 +516,8 @@ Decisions (the canvases they were drawn on are deleted):
   bar and Save off (CE15); several main muscles stay, comma-joined.
   Filters sheet: Muscle (all 19), Equipment, Movement pattern and Level
   are rows like Custom exercise's, each opening a checkbox sheet (owner's
-  own answer; FS14 draws the row values); My equipment's picker stacks
+  own answer), each row's value the chosen names ("Chest, Lats", "Any",
+  cut with …) (FS14); My equipment's picker stacks
   over the filters sheet and returns to it (FS12); Clear all shows
   disabled when nothing is set (FS13); every equipment item scrolls in the
   picker. Bar and plates: the sheet's Remove in danger (BP2). Your
