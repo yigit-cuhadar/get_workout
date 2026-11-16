@@ -952,7 +952,8 @@ Decisions (the canvases they were drawn on are deleted):
   app bar.
 - Cardio (owner's picks, 2026-11-16): This week as a FeaturedCard band
   ("23.6 km · 74 min", without distance "74 min", "2 sessions"), the
-  12-week minutes as Forge Chart.bar (week labels, minutes over the bars),
+  12-week minutes as Forge Chart.bar (small "Nov 9" labels on every other
+  week, this one labelled; minutes over the bars),
   sessions under "This week" and date-range labels ("Nov 2–8") as ListRows
   ("Outdoor run · 5.2 km", "Tue, Nov 10 · 29 min"; without distance the
   type alone), Log cardio in the bottom bar. No session: the band "0 km ·

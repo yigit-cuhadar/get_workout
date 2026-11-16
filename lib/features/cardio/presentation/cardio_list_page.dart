@@ -218,19 +218,22 @@ class _WeeksChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final label = DateFormat.Md(l10n.localeName);
+    final label = DateFormat.MMMd(l10n.localeName);
+    final last = weeks.length - 1;
     return Chart.bar(
       title: l10n.cardioChartTitle,
       detail: l10n.cardioChartDetail,
       bars: [
-        for (final week in weeks)
+        for (final (i, week) in weeks.indexed)
           ChartBar(
-            label: label.format(week.start),
+            // Every other week, counted back from this one.
+            label: (last - i).isEven ? label.format(week.start) : '',
             value: week.duration.inMinutes.toDouble(),
             valueLabel: '${(week.duration.inSeconds / 60).round()}',
           ),
       ],
-      current: weeks.length - 1,
+      current: last,
+      smallLabels: true,
       semanticLabel: l10n.cardioChartCaption,
     );
   }
