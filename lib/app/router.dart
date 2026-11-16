@@ -18,6 +18,7 @@ import '../features/body/presentation/weight_form_page.dart';
 import '../features/account/presentation/delete_account_page.dart';
 import '../features/calendar/presentation/calendar_page.dart';
 import '../features/cardio/presentation/cardio_form_page.dart';
+import '../features/cardio/presentation/cardio_session_page.dart';
 import '../features/cardio/presentation/cardio_list_page.dart';
 import '../features/calculators/presentation/bar_plates_page.dart';
 import '../features/calculators/presentation/body_fat_page.dart';
@@ -181,6 +182,7 @@ abstract final class Routes {
   static const cardio = '$progress/cardio';
   static const cardioNew = '$cardio/new';
   static String cardioSession(String id) => '$cardio/$id';
+  static String cardioSessionEdit(String id) => '${cardioSession(id)}/edit';
   static const steps = '$progress/steps';
   static const volume = '$progress/volume';
   static const strength = '$progress/$strengthSegment';
@@ -637,6 +639,13 @@ GoRouter buildRouter(
                     path: ':id',
                     builder: (_, state) =>
                         CardioSessionPage(id: state.pathParameters['id']!),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (_, state) =>
+                            CardioEditPage(id: state.pathParameters['id']!),
+                      ),
+                    ],
                   ),
                 ],
               ),

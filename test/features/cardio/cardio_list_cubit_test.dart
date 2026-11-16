@@ -4,10 +4,12 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_health/forge_health.dart';
 import 'package:get_workout/features/cardio/domain/cardio_repository.dart';
 import 'package:get_workout/features/cardio/domain/cardio_session.dart';
 import 'package:get_workout/features/cardio/domain/cardio_type.dart';
 import 'package:get_workout/features/cardio/domain/cardio_usecases.dart';
+import 'package:get_workout/features/cardio/domain/health_cardio.dart';
 import 'package:get_workout/features/cardio/domain/cardio_week.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_list_cubit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -62,6 +64,7 @@ void main() {
     firstWeekday: DateTime.monday,
     watchAuthUser: WatchAuthUser(auth),
     watchSessions: WatchCardioSessions(cardio),
+    getHealth: GetHealthCardio(FakeHealthSteps()),
     watchRejectedWrites: WatchRejectedCardioWrites(cardio),
     clock: () => now,
   );
@@ -71,6 +74,43 @@ void main() {
     sessions: sessions,
     weeks: groupByWeek(sessions, DateTime.monday),
     chart: lastWeeks(sessions, DateTime.monday, now: now),
+  );
+
+  blocTest<CardioListCubit, CardioListState>(
+    'reads the health store\'s workouts in with the stored sessions',
+    build: () => CardioListCubit(
+      firstWeekday: DateTime.monday,
+      watchAuthUser: WatchAuthUser(auth),
+      watchSessions: WatchCardioSessions(cardio),
+      getHealth: GetHealthCardio(
+        FakeHealthSteps(
+          workoutsPermissionStatus: HealthPermission.granted,
+          workoutList: [
+            HealthWorkout(
+              id: 'w',
+              type: HealthWorkoutType.cycling,
+              start: DateTime(2026, 11, 11, 7),
+              duration: const Duration(minutes: 45),
+              source: 'Watch',
+            ),
+          ],
+          clock: () => now,
+        ),
+        clock: () => now,
+      ),
+      watchRejectedWrites: WatchRejectedCardioWrites(cardio),
+      clock: () => now,
+    ),
+    act: (_) async {
+      users.add(member);
+      await pumpEventQueue();
+      stored['u1']!.add([guestRun]);
+      await pumpEventQueue();
+    },
+    verify: (cubit) {
+      expect(cubit.state.sessions.map((s) => s.id), ['health-w', 'a']);
+      expect(cubit.state.sessions.first.fromHealth, isTrue);
+    },
   );
 
   test('starts loading', () {
@@ -273,6 +313,7 @@ void main() {
         firstWeekday: DateTime.sunday,
         watchAuthUser: WatchAuthUser(auth),
         watchSessions: WatchCardioSessions(cardio),
+        getHealth: GetHealthCardio(FakeHealthSteps()),
         watchRejectedWrites: WatchRejectedCardioWrites(cardio),
         clock: () => now,
       ),

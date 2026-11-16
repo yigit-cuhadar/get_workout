@@ -1,11 +1,28 @@
 import 'package:forge_core/forge_core.dart';
 
-import '../../cardio/domain/cardio_session.dart';
-import '../../programs/domain/active_program.dart';
 import '../../programs/domain/calendar_date.dart';
-import '../../programs/domain/program.dart';
-import '../../workout/domain/workout.dart';
+import '../../programs/domain/program_schedule.dart';
 import 'calendar_month.dart';
+
+/// What the calendar shows: everything, or only workouts (with the
+/// program's planned and missed days) or only cardio.
+enum CalendarFilter { all, workouts, cardio }
+
+/// [entries] that [filter] keeps.
+List<CalendarEntry> filterEntries(
+  List<CalendarEntry> entries,
+  CalendarFilter filter,
+) => switch (filter) {
+  CalendarFilter.all => entries,
+  CalendarFilter.workouts => [
+    for (final entry in entries)
+      if (entry is! CardioEntry) entry,
+  ],
+  CalendarFilter.cardio => [
+    for (final entry in entries)
+      if (entry is CardioEntry) entry,
+  ],
+};
 
 /// A date of the calendar's list and what is on it: what was done, newest
 /// first, then the program days not done yet.
@@ -20,98 +37,131 @@ class CalendarDay extends Equatable {
   List<Object?> get props => [date, entries];
 }
 
-/// The first date of the calendar's list, which ends on the last day of
-/// the week starting on [weekStart]: the date of the oldest of [workouts]
-/// (the history loaded so far, newest first), or [weekStart] when that is
-/// earlier. While [more] older workouts may follow, only some workouts of
-/// that date may be loaded yet; see [listShows].
-CalendarDate listStart(
-  List<Workout> workouts, {
-  required bool more,
-  required CalendarDate weekStart,
-}) {
-  final oldest = workouts.lastOrNull?.startDate;
-  if (oldest == null) return weekStart;
-  return more || oldest.isBefore(weekStart) ? oldest : weekStart;
-}
-
-/// Whether the list from [start] (see [listStart]) to [end] shows [date]
-/// in full: the start only once no [more] workouts may follow.
-bool listShows(
-  CalendarDate date, {
-  required CalendarDate start,
-  required CalendarDate end,
-  required bool more,
-}) =>
-    !date.isAfter(end) && (more ? start.isBefore(date) : !date.isBefore(start));
-
-/// The calendar's list: the dates from [end] back to [start] (see
-/// [listStart]) with entries, newest first. [workouts] are the history
-/// loaded so far, newest first; [cardio] and the [active] program's days
-/// not done yet fill in the dates, as in [calendarEntries]. While [more]
-/// older workouts may follow, [start] shows only its workouts: the rest of
-/// that date waits for its other workouts, which may decide that a program
-/// day was done.
-///
-/// [revealed], a date the user asked for, is listed even without entries
-/// when the list shows it (see [listShows]).
-List<CalendarDay> calendarDays({
-  required CalendarDate today,
-  required CalendarDate start,
-  required CalendarDate end,
-  required List<Workout> workouts,
-  required bool more,
-  required List<CardioSession> cardio,
-  ActiveProgram? active,
-  Program? program,
-  CalendarDate? revealed,
-}) {
-  final entries = calendarEntries(
-    from: start,
-    to: end,
-    today: today,
-    workouts: workouts,
-    cardio: cardio,
-    active: active,
-    program: program,
-  );
-  if (more) entries[start]?.removeWhere((e) => e is! WorkoutEntry);
-  if (revealed != null &&
-      listShows(revealed, start: start, end: end, more: more)) {
-    entries.putIfAbsent(revealed, () => []);
-  }
-  final dates = entries.keys.toList()..sort((a, b) => b.compareTo(a));
-  return [for (final date in dates) _day(date, entries[date]!)];
-}
-
-/// [date] on its own, for a date the list does not show: its [workouts]
-/// and [cardio], and the [active] program's day on it not done yet, as in
-/// [calendarEntries].
-CalendarDay calendarDay(
-  CalendarDate date, {
-  required CalendarDate today,
-  required List<Workout> workouts,
-  required List<CardioSession> cardio,
-  ActiveProgram? active,
-  Program? program,
-}) => _day(
-  date,
-  calendarEntries(
-        from: date,
-        to: date,
-        today: today,
-        workouts: workouts,
-        cardio: cardio,
-        active: active,
-        program: program,
-      )[date] ??
-      const [],
-);
-
-/// calendarEntries lists what was done oldest first; the list shows it
-/// newest first.
-CalendarDay _day(CalendarDate date, List<CalendarEntry> entries) =>
+/// [date] with its [entries] as the list shows them.
+CalendarDay calendarDay(CalendarDate date, List<CalendarEntry> entries) =>
     CalendarDay(date, [
       ...entries.where((e) => e is! PlanEntry).toList().reversed,
       ...entries.whereType<PlanEntry>(),
     ]);
+
+/// Which part of a month a [CalendarSection] holds.
+enum CalendarSectionKind {
+  /// The current week, of the current month.
+  thisWeek,
+
+  /// The current month's days before this week.
+  earlierThisMonth,
+
+  /// A week of another month, within that month.
+  week,
+}
+
+/// One section of a month's list: its [kind], its first and [last] dates
+/// and its [days] with entries, newest first.
+class CalendarSection extends Equatable {
+  const CalendarSection(this.kind, this.first, this.last, this.days);
+
+  final CalendarSectionKind kind;
+  final CalendarDate first;
+  final CalendarDate last;
+  final List<CalendarDay> days;
+
+  @override
+  List<Object?> get props => [kind, first, last, days];
+}
+
+/// The list of [month]'s month: for the current one (holding [today]) this
+/// week (today first, then the days to come in date order, then its past
+/// days newest first), then the month's days before it; for any other month
+/// its weeks (from ISO weekday [firstWeekday], within the month), newest
+/// first.
+/// Days without entries, and sections without days, are left out.
+/// [entriesOn] gives a date's entries, already filtered.
+List<CalendarSection> monthSections(
+  CalendarDate month, {
+  required CalendarDate today,
+  required int firstWeekday,
+  required List<CalendarEntry> Function(CalendarDate date) entriesOn,
+}) {
+  final first = monthOf(month);
+  final last = addMonths(first, 1).addDays(-1);
+  CalendarSection? section(
+    CalendarSectionKind kind,
+    CalendarDate from,
+    CalendarDate to,
+  ) {
+    final days = [
+      for (var date = to; !date.isBefore(from); date = date.addDays(-1))
+        if (entriesOn(date) case final entries when entries.isNotEmpty)
+          calendarDay(date, entries),
+    ];
+    return days.isEmpty ? null : CalendarSection(kind, from, to, days);
+  }
+
+  if (monthOf(today) == first) {
+    final week = today.startOfWeek(firstWeekday);
+    final thisWeek = section(
+      CalendarSectionKind.thisWeek,
+      week,
+      week.addDays(6),
+    );
+    int rank(CalendarDate date) => date == today
+        ? 0
+        : date.isAfter(today)
+        ? 1
+        : 2;
+    return [
+      if (thisWeek != null)
+        CalendarSection(
+          thisWeek.kind,
+          thisWeek.first,
+          thisWeek.last,
+          [...thisWeek.days]..sort((a, b) {
+            final byRank = rank(a.date).compareTo(rank(b.date));
+            if (byRank != 0) return byRank;
+            // Days to come ascend; past days descend.
+            return rank(a.date) == 1
+                ? a.date.compareTo(b.date)
+                : b.date.compareTo(a.date);
+          }),
+        ),
+      if (week.isAfter(first))
+        ?section(CalendarSectionKind.earlierThisMonth, first, week.addDays(-1)),
+    ];
+  }
+  return [
+    for (final week in monthWeeks(first, firstWeekday: firstWeekday).reversed)
+      ?section(
+        CalendarSectionKind.week,
+        week.first.isBefore(first) ? first : week.first,
+        week.last.isAfter(last) ? last : week.last,
+      ),
+  ];
+}
+
+/// Counts of [month]'s month for its summary line.
+typedef MonthCounts = ({int workouts, int cardio, int missed});
+
+/// What [entriesOn] (already filtered) holds over [month]'s month.
+MonthCounts monthCounts(
+  CalendarDate month,
+  List<CalendarEntry> Function(CalendarDate date) entriesOn,
+) {
+  var (workouts, cardio, missed) = (0, 0, 0);
+  final first = monthOf(month);
+  final next = addMonths(first, 1);
+  for (var date = first; date.isBefore(next); date = date.addDays(1)) {
+    for (final entry in entriesOn(date)) {
+      switch (entry) {
+        case WorkoutEntry():
+          workouts++;
+        case CardioEntry():
+          cardio++;
+        case PlanEntry(:final day) when day.status == PlannedStatus.missed:
+          missed++;
+        case PlanEntry():
+      }
+    }
+  }
+  return (workouts: workouts, cardio: cardio, missed: missed);
+}

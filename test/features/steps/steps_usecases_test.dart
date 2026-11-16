@@ -90,6 +90,17 @@ void main() {
       );
     });
 
+    test('asks for workouts too once steps may be read', () async {
+      await AllowStepsAccess(health, prompt)();
+      expect(health.workoutsPermissionStatus, HealthPermission.granted);
+    });
+
+    test('a steps refusal does not ask for workouts', () async {
+      health.grantOnRequest = HealthPermission.denied;
+      await AllowStepsAccess(health, prompt)();
+      expect(health.workoutsPermissionStatus, HealthPermission.denied);
+    });
+
     test('asks even when the marker cannot be written', () async {
       prompt.failure = const UnknownFailure('disk');
       expect(

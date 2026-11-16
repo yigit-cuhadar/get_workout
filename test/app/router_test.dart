@@ -389,6 +389,7 @@ void main() {
         watchCompletedDays: const WatchCompletedDays(NoCompletedDays()),
         watchRejectedWrites: WatchRejectedProgramWrites(programs),
         resolveMissedDay: ResolveMissedDay(programs),
+        moveNextDay: MoveNextDay(programs),
         watchPremium: const WatchPremium(FixedPremium(false)),
       ),
       dispose: (cubit) => cubit.close(),
@@ -2392,6 +2393,7 @@ void main() {
             watchWorkout: WatchStoredWorkout(workouts),
             saveChange: SaveWorkoutChange(workouts),
             changed: (_, _, {required deleted, required staleStats}) {},
+            getRecords: GetHeldRecords(workouts),
           ),
         );
     }
@@ -2494,7 +2496,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(WorkoutDetailPage), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Edit'));
+    await tester.tap(find.bySemanticsLabel('Workout options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit'));
     await tester.pumpAndSettle();
     expect(find.byType(WorkoutEditPage), findsOneWidget);
     expect(selectedTab(tester), 0);

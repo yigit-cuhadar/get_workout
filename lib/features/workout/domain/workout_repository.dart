@@ -26,16 +26,6 @@ typedef WorkoutsByExercise = ({
 /// confirmed yet.
 typedef StoredWorkout = ({Workout workout, bool pending});
 
-/// Where a page of the history ends. Only the repository reads [position].
-final class HistoryCursor {
-  const HistoryCursor(this.position);
-  final Object position;
-}
-
-/// Finished workouts, newest first. [end] is the last one's place, null
-/// when there is none; [more] tells that older ones may follow.
-typedef HistoryPage = ({List<Workout> workouts, HistoryCursor? end, bool more});
-
 /// Finished workouts (`users/{uid}/workouts`), the stats derived from them
 /// (`users/{uid}/exerciseStats`) and, when a workout moves it on, the active
 /// program (`users/{uid}.activeProgram`), all written together in one batch.
@@ -101,17 +91,6 @@ abstract interface class WorkoutRepository {
   /// The finished workouts of program [programId], from the server when it
   /// answers quickly, else from the device's cache.
   Future<Result<List<Workout>>> programWorkouts(String uid, String programId);
-
-  /// One page of the finished workouts, again on every change, the
-  /// device's cache first. The first page starts at the newest; a later one
-  /// [after] the end of the page before it. Without [through] a page holds a
-  /// fixed number of workouts; with it, every workout down to that end, so
-  /// pages loaded one after another never skip or repeat one.
-  Stream<HistoryPage> watchHistory(
-    String uid, {
-    HistoryCursor? after,
-    HistoryCursor? through,
-  });
 
   /// The finished workouts started on the local dates [from] to [to], both
   /// included, oldest first; again on every change, the device's cache

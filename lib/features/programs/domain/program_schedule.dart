@@ -102,6 +102,13 @@ class ProgramSchedule {
     return weeks != null && week > weeks ? weeks : week;
   }
 
+  /// The week of this run a workout on [date] falls in (see [week]); null
+  /// before the run started, when the workout belongs to an earlier one.
+  int? runWeek(CalendarDate date) =>
+      date.isBefore(CalendarDate.of(active.startedAt.toLocal()))
+      ? null
+      : week(date);
+
   /// Whether the program is over: the next day could only fall on or after
   /// [end].
   bool isFinished(CalendarDate today) {
@@ -192,6 +199,27 @@ class ProgramSchedule {
     ];
     // Stable, so a date's done day stays before its planned one.
     return plan..sort((a, b) => a.date.compareTo(b.date));
+  }
+
+  /// The next day moved to [date]; the days after it follow from there.
+  ActiveProgram moveNext(CalendarDate date) => active.copyWith(nextDate: date);
+
+  /// The dates the next day may move to on [today]: from today to the
+  /// last day of its planned date's week (today's when it was missed),
+  /// weeks starting on ISO weekday [firstWeekday]; its own date included
+  /// when not missed.
+  List<CalendarDate> moveDates(
+    CalendarDate today, {
+    required int firstWeekday,
+  }) {
+    final planned = active.nextDate;
+    final week = (planned.isBefore(today) ? today : planned).startOfWeek(
+      firstWeekday,
+    );
+    final last = week.addDays(6);
+    return [
+      for (var date = today; !date.isAfter(last); date = date.addDays(1)) date,
+    ];
   }
 
   /// Missed day, option 1: do it today; the following days follow from

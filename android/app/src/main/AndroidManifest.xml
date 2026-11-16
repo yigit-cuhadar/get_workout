@@ -10,6 +10,11 @@
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS"/>
     <!-- Steps, read from Health Connect. -->
     <uses-permission android:name="android.permission.health.READ_STEPS"/>
+    <!-- Cardio from the health store: workouts and what they carry. -->
+    <uses-permission android:name="android.permission.health.READ_EXERCISE"/>
+    <uses-permission android:name="android.permission.health.READ_DISTANCE"/>
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED"/>
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
     <!-- Progress photos, taken with the camera plugin. It also declares
          audio and storage, which the app never uses (no video, never the
          gallery), and requires a camera, which only the photos need. -->

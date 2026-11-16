@@ -432,6 +432,43 @@ void main() {
     });
   });
 
+  group('heldRecordSets', () {
+    StatRecord held(double value, String id) =>
+        StatRecord(value: value, date: monday, workoutId: id);
+
+    test('tags the first working set with a record this workout holds', () {
+      final push = workout('w1', [
+        exercise('bench', [
+          lift(40, 10, type: SetType.warmup),
+          lift(80, 8),
+          lift(80, 8),
+          lift(75, 10),
+        ]),
+        exercise('row', [lift(60, 10)]),
+      ]);
+      final stats = {
+        'bench': ExerciseStats(
+          records: {
+            RecordKind.heaviestWeight: held(80, 'w1'),
+            RecordKind.mostReps: held(10, 'w1'),
+            RecordKind.bestE1rm: held(120, 'w0'),
+          },
+        ),
+        'row': ExerciseStats(
+          records: {RecordKind.heaviestWeight: held(70, 'w0')},
+        ),
+      };
+      expect(heldRecordSets(push, stats), {(0, 1), (0, 3)});
+    });
+
+    test('no stats, no records', () {
+      final push = workout('w1', [
+        exercise('bench', [lift(80, 8)]),
+      ]);
+      expect(heldRecordSets(push, const {}), isEmpty);
+    });
+  });
+
   test('outdated: a record without its set or a point without its best set '
       'or name', () {
     final date = monday;

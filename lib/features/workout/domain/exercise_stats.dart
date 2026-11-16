@@ -354,6 +354,39 @@ Map<RecordKind, ({double value, WorkoutSet set})> sessionBests(
   return best;
 }
 
+/// The sets of [workout] holding a record its exercise still keeps:
+/// for each record of [stats] (by exercise id) set by [workout], the
+/// first done working set with that record's value, as (exercise index,
+/// set index).
+Set<(int, int)> heldRecordSets(
+  Workout workout,
+  Map<String, ExerciseStats> stats,
+) {
+  final held = <(int, int)>{};
+  for (final (e, exercise) in workout.exercises.indexed) {
+    final records = stats[exercise.exerciseId]?.records ?? const {};
+    final type = exercise.loggingType;
+    for (final MapEntry(key: kind, value: record) in records.entries) {
+      if (record.workoutId != workout.id) continue;
+      for (final (s, set) in exercise.sets.indexed) {
+        if (!set.done || set.isWarmup) continue;
+        final value = switch (kind) {
+          RecordKind.heaviestWeight => set.weightKg,
+          RecordKind.bestE1rm => setE1rm(set, type),
+          RecordKind.bestSetVolume => setVolume(set, type),
+          RecordKind.mostReps => set.reps,
+          RecordKind.longestDuration => set.durationS,
+        };
+        if (value != null && (value - record.value).abs() < 1e-6) {
+          held.add((e, s));
+          break;
+        }
+      }
+    }
+  }
+  return held;
+}
+
 /// Volume of [sets]' done working sets.
 double sessionVolume(Iterable<WorkoutSet> sets, LoggingType type) =>
     workingSets(sets).fold(0, (sum, set) => sum + setVolume(set, type));

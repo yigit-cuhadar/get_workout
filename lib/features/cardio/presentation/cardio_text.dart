@@ -1,8 +1,45 @@
+import 'package:flutter/material.dart';
+
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/cardio_session.dart';
 import '../domain/cardio_type.dart';
 import '../domain/cardio_validation.dart';
+
+/// The health store the device reads from, by name.
+String healthStoreName(BuildContext context) {
+  final l10n = AppLocalizations.of(context);
+  return Theme.of(context).platform == TargetPlatform.iOS
+      ? l10n.stepsStoreApple
+      : l10n.stepsStoreGoogle;
+}
+
+/// Health Connect names a session's source by package name only; the
+/// apps known here are named, any other reads as the store.
+const _healthConnectSources = {
+  'com.strava': 'Strava',
+  'com.google.android.apps.fitness': 'Google Fit',
+  'com.sec.android.app.shealth': 'Samsung Health',
+  'com.garmin.android.apps.connectmobile': 'Garmin Connect',
+  'com.fitbit.FitbitMobile': 'Fitbit',
+  'com.nike.plusgps': 'Nike Run Club',
+  'com.runtastic.android': 'adidas Running',
+  'fi.polar.polarflow': 'Polar Flow',
+  'com.huawei.health': 'Huawei Health',
+  'com.mi.health': 'Mi Fitness',
+  'com.withings.wiscale2': 'Withings',
+  'com.suunto.android': 'Suunto',
+};
+
+/// The tag of a session read from the health store: the store on iOS,
+/// the app that saved it on Android when known, else the store.
+String healthSourceName(BuildContext context, CardioSession session) {
+  if (Theme.of(context).platform == TargetPlatform.iOS) {
+    return healthStoreName(context);
+  }
+  return _healthConnectSources[session.healthSource] ??
+      healthStoreName(context);
+}
 
 /// Distances follow the user's length unit: km with cm, miles with inches.
 DistanceUnit distanceUnitFor(LengthUnit unit) => switch (unit) {
@@ -18,6 +55,10 @@ String formatDuration(Duration duration) {
   final s = (seconds % 60).toString().padLeft(2, '0');
   return h > 0 ? '$h:${m.toString().padLeft(2, '0')}:$s' : '$m:$s';
 }
+
+/// A pace to the nearest second, as [formatDuration] writes it.
+String formatPace(Duration pace) =>
+    formatDuration(Duration(seconds: (pace.inMilliseconds / 1000).round()));
 
 /// At most [digits] decimals, without trailing zeros.
 String formatDecimal(double value, int digits) {
@@ -47,7 +88,7 @@ extension CardioText on AppLocalizations {
       case CardioRate.pace:
         final pace = session.pace(unit);
         if (pace == null) return null;
-        final text = formatDuration(pace);
+        final text = formatPace(pace);
         return switch (unit) {
           DistanceUnit.km => cardioPacePerKm(text),
           DistanceUnit.mile => cardioPacePerMi(text),

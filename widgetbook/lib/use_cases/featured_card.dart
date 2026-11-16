@@ -374,6 +374,33 @@ Widget featuredActionLoading(BuildContext context) => _page(
   ),
 );
 
+@widgetbook.UseCase(name: 'Band · past workout', type: FeaturedCard)
+Widget featuredPastWorkout(BuildContext context) {
+  final origin = context.knobs.object.dropdown(
+    label: 'Origin',
+    options: ['Push Pull Legs · week 3', 'From a program you deleted', 'None'],
+  );
+  return _page(
+    FeaturedCard(
+      form: FeaturedCardForm.band,
+      eyebrow: 'Fri, Nov 13 · 18:05',
+      title: 'Push',
+      origin: origin == 'None' ? null : origin,
+      onOrigin: origin == 'Push Pull Legs · week 3' ? () {} : null,
+      stats: const [
+        FeaturedStat('duration', '52 min'),
+        FeaturedStat('volume', '12,400 kg'),
+        FeaturedStat('sets', '18'),
+        FeaturedStat('records', '2'),
+      ],
+    ),
+  );
+}
+
+@widgetbook.UseCase(name: 'Band · loading', type: FeaturedCard)
+Widget featuredBandLoading(BuildContext context) =>
+    _page(const FeaturedCard.bandLoading());
+
 @widgetbook.UseCase(name: 'Target', type: FeaturedCard)
 Widget featuredTarget(BuildContext context) => _page(
   FeaturedCard.target(

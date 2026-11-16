@@ -208,3 +208,27 @@ class _EditFormState extends State<_EditForm> {
     ),
   ]);
 }
+
+@widgetbook.UseCase(name: 'Opens and closes', type: SetTable)
+Widget openingSetTable(BuildContext context) {
+  final open = context.knobs.boolean(label: 'Open', initialValue: true);
+  return _page([
+    SetTable(
+      name: 'Bench Press',
+      count: '2 sets',
+      open: open,
+      onToggle: () {},
+      rows: const [
+        SetTableRow(label: 'W', values: '40 kg × 10'),
+        SetTableRow(label: '1', values: '82.5 kg × 8', effort: 'Moderate'),
+      ],
+    ),
+    SetTable(
+      name: 'Incline Dumbbell Press',
+      count: '3 sets',
+      open: false,
+      onToggle: () {},
+      rows: const [SetTableRow(label: '1', values: '30 kg × 10')],
+    ),
+  ]);
+}

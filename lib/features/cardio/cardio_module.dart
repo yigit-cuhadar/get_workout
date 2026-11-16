@@ -7,10 +7,12 @@ import 'data/firestore_cardio_repository.dart';
 import 'domain/cardio_repository.dart';
 import 'domain/cardio_session.dart';
 import 'domain/cardio_usecases.dart';
+import 'domain/health_cardio.dart';
 import 'presentation/cardio_form_cubit.dart';
 import 'presentation/cardio_list_cubit.dart';
 
-/// Registers the cardio feature. Needs `AuthModule` for the current user.
+/// Registers the cardio feature. Needs `AuthModule` for the current user
+/// and `HealthModule` for the health store's workouts.
 class CardioModule implements FeatureModule {
   const CardioModule();
 
@@ -25,12 +27,14 @@ class CardioModule implements FeatureModule {
       ..registerFactory(() => WatchRejectedCardioWrites(sl()))
       ..registerFactory(() => SaveCardioSession(sl()))
       ..registerFactory(() => DeleteCardioSession(sl()))
+      ..registerFactory(() => GetHealthCardio(sl()))
       // One list for the whole app: the list and the session pages share it.
       ..registerLazySingleton(
         () => CardioListCubit(
           firstWeekday: currentFirstWeekday(sl()),
           watchAuthUser: sl(),
           watchSessions: sl(),
+          getHealth: sl(),
           watchRejectedWrites: sl(),
         ),
       )

@@ -86,6 +86,7 @@ class WorkoutModule implements FeatureModule {
       ..registerFactory(() => RebuildExerciseStats(sl()))
       ..registerFactory(() => NewWorkoutId(sl()))
       ..registerFactory(() => WatchExerciseStats(sl()))
+      ..registerFactory(() => GetHeldRecords(sl()))
       ..registerFactory(() => WatchAllExerciseStats(sl()))
       ..registerFactory(() => FinishWorkout(sl()))
       ..registerFactory(() => SaveWorkoutAsProgram(sl()))
@@ -147,7 +148,6 @@ class WorkoutModule implements FeatureModule {
           },
         ),
       )
-      ..registerFactory(() => WatchHistory(sl()))
       ..registerFactory(() => WatchWorkoutsBetween(sl()))
       ..registerFactory(() => WatchStoredWorkout(sl()))
       ..registerFactory(() => WatchRejectedWorkoutEdits(sl()))
@@ -160,6 +160,7 @@ class WorkoutModule implements FeatureModule {
           watchWorkout: sl(),
           saveChange: sl(),
           changed: sl<ActiveWorkoutCubit>().storedWorkoutChanged,
+          getRecords: sl(),
         ),
       )
       // A stored workout's id, or none and the name of a new past workout.

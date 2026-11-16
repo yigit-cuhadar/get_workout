@@ -7,12 +7,6 @@ import 'workout_editing.dart';
 import 'workout_repository.dart';
 import 'workout_usecases.dart';
 
-typedef HistoryQuery = ({
-  String uid,
-  HistoryCursor? after,
-  HistoryCursor? through,
-});
-
 /// A change to the stored workouts: [after] added (no [before]), [before]
 /// replaced by [after], or [before] deleted (no [after]).
 typedef WorkoutChange = ({String uid, Workout? before, Workout? after});
@@ -26,17 +20,6 @@ class WatchWorkoutsBetween {
 
   Stream<List<Workout>> call(DateRangeQuery query) => _repository
       .watchWorkoutsBetween(query.uid, from: query.from, to: query.to);
-}
-
-class WatchHistory {
-  const WatchHistory(this._repository);
-  final WorkoutRepository _repository;
-
-  Stream<HistoryPage> call(HistoryQuery query) => _repository.watchHistory(
-    query.uid,
-    after: query.after,
-    through: query.through,
-  );
 }
 
 class WatchStoredWorkout {
@@ -108,5 +91,35 @@ class SaveWorkoutChange implements UseCase<Set<String>, WorkoutChange> {
         ? await _repository.deleteWorkout(params.uid, id, stats)
         : await _repository.updateWorkout(params.uid, after, stats);
     return saved.map((_) => exerciseIds.toSet());
+  }
+}
+
+/// The sets of a stored workout holding a record their exercise still
+/// keeps (see [heldRecordSets]), from one read of each exercise's stats.
+class GetHeldRecords
+    implements UseCase<Set<(int, int)>, ({String uid, Workout workout})> {
+  const GetHeldRecords(this._repository);
+  final WorkoutRepository _repository;
+
+  @override
+  Future<Result<Set<(int, int)>>> call(
+    ({String uid, Workout workout}) params,
+  ) async {
+    final stats = <String, ExerciseStats>{};
+    try {
+      for (final id in {
+        for (final exercise in params.workout.exercises) exercise.exerciseId,
+      }) {
+        if (await _repository.watchStats(params.uid, id).first
+            case final found?) {
+          stats[id] = found;
+        }
+      }
+    } on Failure catch (failure) {
+      return Err(failure);
+    } catch (error) {
+      return Err(UnknownFailure('$error', error));
+    }
+    return Ok(heldRecordSets(params.workout, stats));
   }
 }

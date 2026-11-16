@@ -738,6 +738,13 @@ void main() {
       );
     });
 
+    test('a run week is none before the run started', () {
+      final plan = twoWeeks(d(2026, 11, 11));
+      expect(plan.runWeek(d(2026, 11, 10)), isNull);
+      expect(plan.runWeek(d(2026, 11, 11)), 1);
+      expect(plan.runWeek(d(2026, 11, 18)), 2);
+    });
+
     test('without a length a program never finishes', () {
       expect(
         schedule(active(nextDate: d(2030, 1, 1))).isFinished(d(2031, 1, 1)),

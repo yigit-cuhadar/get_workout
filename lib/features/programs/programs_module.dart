@@ -75,6 +75,7 @@ class ProgramsModule implements FeatureModule {
       ..registerFactory(() => ChangeWeekdays(sl()))
       ..registerFactory(() => StopProgram(sl()))
       ..registerFactory(() => ResolveMissedDay(sl()))
+      ..registerFactory(() => MoveNextDay(sl()))
       ..registerFactory(() => WatchCatalogue(sl()))
       ..registerFactory(() => GetCatalogueDays(sl()))
       ..registerFactory(() => WatchPremium(sl()))
@@ -88,6 +89,7 @@ class ProgramsModule implements FeatureModule {
           watchCompletedDays: sl(),
           watchRejectedWrites: sl(),
           resolveMissedDay: sl(),
+          moveNextDay: sl(),
           watchPremium: sl(),
         ),
       )
