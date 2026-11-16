@@ -359,19 +359,16 @@ class _MuscleSheet extends StatelessWidget {
     final contributions = week.contributionsTo(muscle);
     return ForgeBottomSheet(
       title: l10n.muscleName(muscle),
+      subtitle: l10n.volumeMuscleSummary(
+        l10n.setsText(sets),
+        l10n.zoneLabel(VolumeZone.of(sets)),
+      ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: 10,
           children: [
-            Text(
-              l10n.volumeMuscleSummary(
-                l10n.setsText(sets),
-                l10n.zoneLabel(VolumeZone.of(sets)),
-              ),
-              style: text.bodySmall,
-            ),
             Semantics(
               header: true,
               child: Text(

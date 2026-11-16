@@ -208,6 +208,35 @@ void main() {
     expect(find.text('No sets for this muscle this week.'), findsOneWidget);
   });
 
+  testWidgets('Premium: the sheet charts the muscle\'s weeks over the band', (
+    tester,
+  ) async {
+    final weeks = [
+      for (var i = trendWeeks - 1; i >= 0; i--)
+        weekOf(monday.addDays(-7 * i), 12),
+    ];
+    await pump(
+      tester,
+      ready(weeks),
+      premium: const EntitlementActive(Entitlement(isActive: true)),
+    );
+
+    await tester.tap(find.text('Chest'));
+    await tester.pumpAndSettle();
+    final chart = tester.widget<Chart>(
+      find.descendant(
+        of: find.byType(ForgeBottomSheet),
+        matching: find.byType(Chart),
+      ),
+    );
+    expect(chart.title, 'Last 12 weeks');
+    expect(chart.card, isFalse);
+    expect(chart.band, (low: 10.0, high: 20.0));
+    expect(chart.bars!.length, trendWeeks);
+    expect(chart.bars!.last.label, '9');
+    expect(chart.bars!.last.value, 12);
+  });
+
   testWidgets('a past week\'s sheet trend ends with that week', (tester) async {
     await pump(tester, ready([weekOf(before, 12)], week: before));
 
