@@ -19,8 +19,8 @@ enum MeasurementSummaryStatus {
   /// The entry does not exist (any more).
   notFound,
 
-  /// Choosing the later day: there are fewer than two measurement days.
-  nothingToCompare,
+  /// Choosing the later day: there is no measurement day.
+  noMeasurementDays,
 }
 
 class MeasurementSummaryState extends Equatable {
@@ -30,8 +30,8 @@ class MeasurementSummaryState extends Equatable {
     this.baseline = const PreviousDay(),
     this.candidates = const [],
     this.laterCandidates = const [],
-    this.pose,
     this.photoFiles = const {},
+    this.fetching = const {},
   });
 
   final MeasurementSummaryStatus status;
@@ -45,15 +45,15 @@ class MeasurementSummaryState extends Equatable {
   /// The earlier measurement days it can be compared with, newest first.
   final List<BodyEntry> candidates;
 
-  /// While choosing the later day, the days it can be: see
-  /// [comparableDays].
+  /// While choosing the later day, the measurement days it can be: those
+  /// after the earlier one, newest first.
   final List<BodyEntry> laterCandidates;
 
-  /// The pose the photos show; null when neither entry has a photo.
-  final PhotoPose? pose;
-
-  /// The files of the shown photos on this device, by storage path.
+  /// The files of the two days' photos on this device, by storage path.
   final Map<String, String> photoFiles;
+
+  /// The photos being fetched from the backup, by storage path.
+  final Set<String> fetching;
 
   @override
   List<Object?> get props => [
@@ -62,18 +62,19 @@ class MeasurementSummaryState extends Equatable {
     baseline,
     candidates,
     laterCandidates,
-    pose,
     photoFiles,
+    fetching,
   ];
 }
 
 /// One measurement day of whoever is signed in compared with an earlier
 /// one, both followed live with the profile (body fat, target weight):
 /// the previous measurement day unless another [Baseline] is chosen. The
-/// later day is the entry `afterId`; without one it can be chosen
-/// ([chooseAfter]), and is otherwise, or once the chosen one is gone, the
-/// newest of [comparableDays]. The photos of the chosen pose are fetched
-/// from the backup when not on this device.
+/// later day is the entry `afterId`; without one it is the day a link
+/// shows ([showDay]; gone: not found) or the user picks ([chooseAfter];
+/// gone: the newest), else the newest of [comparableDays], else the only
+/// measurement day on its own. The two days' photos are fetched from the
+/// backup when not on this device.
 class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
   MeasurementSummaryCubit({
     required this._afterId,
@@ -91,7 +92,7 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
       onUser: (_) {
         _entries = null;
         _photoFiles = const {};
-        emit(MeasurementSummaryState(baseline: _baseline, pose: _pose));
+        emit(MeasurementSummaryState(baseline: _baseline));
       },
       onData: (entries) {
         _entries = entries;
@@ -103,7 +104,6 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
           MeasurementSummaryState(
             status: MeasurementSummaryStatus.failure,
             baseline: _baseline,
-            pose: _pose,
           ),
         );
       },
@@ -133,11 +133,16 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
   late final UserStreamFollower<List<BodyEntry>> _entriesFollower;
   late final UserStreamFollower<UserProfile> _profileFollower;
   final _restoring = <String>{};
+
+  /// Photos the backup did not give; not asked for again.
+  final _unavailable = <String>{};
   List<BodyEntry>? _entries;
   UserProfile? _profile;
   Baseline _baseline = const PreviousDay();
   String? _chosenAfter;
-  PhotoPose? _pose;
+
+  /// The day a link asked for; not found once it is gone.
+  String? _linkedAfter;
   Map<String, String> _photoFiles = const {};
 
   void retry() {
@@ -150,14 +155,18 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
     _publish();
   }
 
-  /// Compares day [id] with an earlier one, when no day was given.
+  /// Compares day [id] with an earlier one, when no day was given; the
+  /// newest once it is gone.
   void chooseAfter(String id) {
     _chosenAfter = id;
+    _linkedAfter = null;
     _publish();
   }
 
-  void selectPose(PhotoPose pose) {
-    _pose = pose;
+  /// Shows day [id], as a link asks; not found once it is gone.
+  void showDay(String id) {
+    _chosenAfter = id;
+    _linkedAfter = id;
     _publish();
   }
 
@@ -165,23 +174,33 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
     final entries = _entries;
     final profile = _profile;
     if (entries == null || profile == null) return;
-    final later = _afterId == null
-        ? comparableDays(entries)
-        : const <BodyEntry>[];
-    final after = switch (_afterId) {
-      final id? => entries.where((entry) => entry.id == id).firstOrNull,
-      null =>
-        later.where((entry) => entry.id == _chosenAfter).firstOrNull ??
-            later.firstOrNull,
-    };
+    final days = [
+      for (final entry in entries)
+        if (isMeasurementDay(entry)) entry,
+    ];
+    BodyEntry? find(String? id) => id == null
+        ? null
+        : entries.where((entry) => entry.id == id).firstOrNull;
+    final linked = _linkedAfter;
+    final BodyEntry? after;
+    if (_afterId case final id?) {
+      after = find(id);
+    } else if (linked != null) {
+      after = find(linked);
+    } else {
+      final later = comparableDays(entries);
+      after =
+          later.where((entry) => entry.id == _chosenAfter).firstOrNull ??
+          later.firstOrNull ??
+          days.firstOrNull;
+    }
     if (after == null) {
       emit(
         MeasurementSummaryState(
-          status: _afterId == null
-              ? MeasurementSummaryStatus.nothingToCompare
+          status: _afterId == null && linked == null
+              ? MeasurementSummaryStatus.noMeasurementDays
               : MeasurementSummaryStatus.notFound,
           baseline: _baseline,
-          pose: _pose,
         ),
       );
       return;
@@ -199,22 +218,23 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
       profile: profile,
       now: _clock(),
     );
-    final poses = summary.poses;
-    final pose = poses.contains(_pose) ? _pose : poses.firstOrNull;
     emit(
       MeasurementSummaryState(
         status: MeasurementSummaryStatus.ready,
         summary: summary,
         baseline: _baseline,
         candidates: baselineCandidates(entries, after),
-        laterCandidates: later,
-        pose: pose,
+        laterCandidates: _afterId != null || before == null
+            ? const []
+            : [
+                for (final day in days)
+                  if (day.date.isAfter(before.date)) day,
+              ],
         photoFiles: _photoFiles,
+        fetching: _fetching(summary),
       ),
     );
-    if (pose != null) {
-      unawaited(_restore([?before?.photos[pose], ?after.photos[pose]]));
-    }
+    unawaited(_restore([...?before?.photos.values, ...after.photos.values]));
   }
 
   /// Those of [paths] that are not known yet, each once at a time.
@@ -222,7 +242,10 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
     final uid = _entriesFollower.uid;
     final missing = [
       for (final path in paths)
-        if (!_photoFiles.containsKey(path) && _restoring.add(path)) path,
+        if (!_photoFiles.containsKey(path) &&
+            !_unavailable.contains(path) &&
+            _restoring.add(path))
+          path,
     ];
     if (missing.isEmpty) return;
     final found = await Future.wait(missing.map(_restorePhoto.call));
@@ -232,19 +255,36 @@ class MeasurementSummaryCubit extends Cubit<MeasurementSummaryState> {
       ..._photoFiles,
       for (final (i, path) in missing.indexed) path: ?found[i],
     };
-    if (state.status == MeasurementSummaryStatus.ready) {
-      emit(
-        MeasurementSummaryState(
-          status: state.status,
-          summary: state.summary,
-          baseline: state.baseline,
-          candidates: state.candidates,
-          laterCandidates: state.laterCandidates,
-          pose: state.pose,
-          photoFiles: _photoFiles,
-        ),
-      );
-    }
+    _unavailable.addAll([
+      for (final (i, path) in missing.indexed)
+        if (found[i] == null) path,
+    ]);
+    _emitPhotos();
+  }
+
+  /// The photos of [summary]'s days not on this device yet that the
+  /// backup may still give.
+  Set<String> _fetching(MeasurementSummary summary) => {
+    for (final path in [
+      ...?summary.before?.photos.values,
+      ...summary.after.photos.values,
+    ])
+      if (!_photoFiles.containsKey(path) && !_unavailable.contains(path)) path,
+  };
+
+  void _emitPhotos() {
+    if (state.status != MeasurementSummaryStatus.ready) return;
+    emit(
+      MeasurementSummaryState(
+        status: state.status,
+        summary: state.summary,
+        baseline: state.baseline,
+        candidates: state.candidates,
+        laterCandidates: state.laterCandidates,
+        photoFiles: _photoFiles,
+        fetching: _fetching(state.summary!),
+      ),
+    );
   }
 
   @override

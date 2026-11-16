@@ -135,24 +135,6 @@ List<BodySeries> toggleSeries(
   return shown >= BodySeries.maxShown ? chosen : [...chosen, series];
 }
 
-/// Which value axis a series is read on.
-enum ChartAxis { left, right, none }
-
-/// The axis of each of [shown]: the first line on the left, the second on
-/// the right; bars take an axis still free after the lines, in order. The
-/// rest have none: their values show when a point is tapped.
-Map<BodySeries, ChartAxis> chartAxes(List<BodySeries> shown) {
-  final free = [ChartAxis.left, ChartAxis.right];
-  final axes = <BodySeries, ChartAxis>{};
-  for (final series in [
-    ...shown.where((series) => !series.isBar),
-    ...shown.where((series) => series.isBar),
-  ]) {
-    axes[series] = free.isEmpty ? ChartAxis.none : free.removeAt(0);
-  }
-  return {for (final series in shown) series: axes[series]!};
-}
-
 /// One value of a series: an entry's, or a week's from its first day.
 class SeriesPoint extends Equatable {
   const SeriesPoint(this.date, this.value, [this.sides = const []]);
@@ -223,6 +205,28 @@ List<SeriesPoint> linePoints(
     for (final entry in entries.reversed)
       if (start == null || !entry.date.isBefore(start)) ?pointOf(entry),
   ];
+}
+
+/// The rolling mean of [points] (oldest first) over [days] days: at each
+/// point, the mean of the points within the [days] days ending on its
+/// day.
+List<SeriesPoint> rollingAverage(List<SeriesPoint> points, {int days = 7}) {
+  final average = <SeriesPoint>[];
+  var first = 0;
+  var sum = 0.0;
+  for (var i = 0; i < points.length; i++) {
+    final day = CalendarDate.of(points[i].date.toLocal());
+    sum += points[i].value;
+    while (CalendarDate.of(points[first].date.toLocal())
+            .addDays(days - 1)
+            .compareTo(day) <
+        0) {
+      sum -= points[first].value;
+      first++;
+    }
+    average.add(SeriesPoint(points[i].date, sum / (i - first + 1)));
+  }
+  return average;
 }
 
 /// The weeks the chart's bars cover: from the one [start] falls in to the
@@ -301,29 +305,4 @@ double _average(List<DailySteps> days, CalendarDate today) {
   ];
   if (done.isEmpty) return days.last.count.toDouble();
   return done.reduce((a, b) => a + b) / done.length;
-}
-
-/// The value of each of [shown] at the chart position [milliseconds] (since
-/// the epoch, as the chart places them): a line's point on that very
-/// moment, a bar's week around it.
-List<(BodySeries, SeriesPoint)> pointsAt(
-  List<BodySeries> shown,
-  Map<BodySeries, List<SeriesPoint>> points,
-  int milliseconds,
-) {
-  bool at(BodySeries series, SeriesPoint point) {
-    final start = point.date.millisecondsSinceEpoch;
-    if (!series.isBar) return start == milliseconds;
-    final end = point.date
-        .add(const Duration(days: DateTime.daysPerWeek))
-        .millisecondsSinceEpoch;
-    return start <= milliseconds && milliseconds < end;
-  }
-
-  return [
-    for (final series in shown)
-      if (points[series]?.where((point) => at(series, point)).firstOrNull
-          case final point?)
-        (series, point),
-  ];
 }

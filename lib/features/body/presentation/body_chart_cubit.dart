@@ -23,6 +23,7 @@ class BodyChartState extends Equatable {
     this.from,
     this.to,
     this.points = const {},
+    this.weightAverage = const [],
     this.loading = const {},
     this.failed = const {},
     this.saveFailed = false,
@@ -51,6 +52,10 @@ class BodyChartState extends Equatable {
   /// empty for bars not read.
   final Map<BodySeries, List<SeriesPoint>> points;
 
+  /// The rolling 7-day mean of the weight's [points]; empty while weight
+  /// is not shown.
+  final List<SeriesPoint> weightAverage;
+
   /// Bars of [shown] being read, and those that could not be.
   final Set<BodySeries> loading;
   final Set<BodySeries> failed;
@@ -69,8 +74,6 @@ class BodyChartState extends Equatable {
   /// known not to have it.
   bool locked(BodySeries series) => series.isBar && premium == false;
 
-  Map<BodySeries, ChartAxis> get axes => chartAxes(shown);
-
   @override
   List<Object?> get props => [
     shown,
@@ -80,6 +83,7 @@ class BodyChartState extends Equatable {
     from,
     to,
     points,
+    weightAverage,
     loading,
     failed,
     saveFailed,
@@ -344,6 +348,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
                   ]
                 : lines[series]!,
         },
+        weightAverage: rollingAverage(lines[BodySeries.weight] ?? const []),
         loading: {
           if (shown.contains(BodySeries.weeklySets) &&
               _sets == null &&

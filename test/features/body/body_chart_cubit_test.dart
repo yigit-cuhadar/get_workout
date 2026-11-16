@@ -177,7 +177,7 @@ void main() {
     expect(cubit.state.points, {
       BodySeries.weight: [SeriesPoint(recent.date, 80)],
     });
-    expect(cubit.state.axes, {BodySeries.weight: ChartAxis.left});
+    expect(cubit.state.weightAverage, [SeriesPoint(recent.date, 80)]);
   });
 
   test('adds body fat by default once the user has some', () async {
@@ -279,7 +279,6 @@ void main() {
       expect(cubit.state.points[BodySeries.weeklySets], [
         SeriesPoint(DateTime(2026, 11, 9), 12),
       ]);
-      expect(cubit.state.axes[BodySeries.weeklySets], ChartAxis.right);
 
       await cubit.toggle(BodySeries.weeklySets);
       await pumpEventQueue();

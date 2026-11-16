@@ -82,3 +82,89 @@ Map<PhotoPose, String> previousPhotos(
   }
   return found;
 }
+
+/// Which way a change in an Overview box went for the user.
+enum ChangeTone { good, bad, neutral }
+
+/// One Overview box: its latest [value] and the [change] since the
+/// measurement day before the newest one; null when either side is
+/// missing.
+typedef OverviewBox = ({double value, double? change, ChangeTone tone});
+
+/// The Overview's three boxes, each null without a value: the latest
+/// weigh-in's weight, the newest body fat, and the lean mass the latest
+/// weight holds at that body fat.
+typedef BodyOverview = ({
+  OverviewBox? weight,
+  OverviewBox? bodyFat,
+  OverviewBox? leanMass,
+});
+
+/// The Overview boxes of [entries] (newest first), [bodyFat] by entry id.
+/// Changes are against the measurement day before the newest one (the
+/// baseline), from values dated after it: weight toward [targetKg] is
+/// good (neutral without a target), body fat down and lean mass up are
+/// good.
+BodyOverview bodyOverview(
+  List<BodyEntry> entries,
+  Map<String, double> bodyFat, {
+  required double? targetKg,
+}) {
+  final days = [
+    for (final entry in entries)
+      if (!entry.isWeightOnly) entry,
+  ];
+  final baseline = days.length > 1 ? days[1] : null;
+  final weighIn = latestWeighIn(entries);
+  final fatEntry = entries.where((e) => bodyFat.containsKey(e.id)).firstOrNull;
+  bool after(BodyEntry? entry) =>
+      baseline != null && entry != null && entry.date.isAfter(baseline.date);
+  double? lean(double? kg, double? percent) =>
+      kg == null || percent == null ? null : kg * (1 - percent / 100);
+
+  ChangeTone tone(double? change, {required bool upIsGood}) {
+    if (change == null || change == 0) return ChangeTone.neutral;
+    return (change > 0) == upIsGood ? ChangeTone.good : ChangeTone.bad;
+  }
+
+  OverviewBox? box(
+    double? value,
+    double? from,
+    bool counts,
+    ChangeTone Function(double?) toneOf,
+  ) {
+    if (value == null) return null;
+    final change = counts && from != null ? value - from : null;
+    return (value: value, change: change, tone: toneOf(change));
+  }
+
+  final kg = weighIn?.weightKg;
+  final fat = fatEntry == null ? null : bodyFat[fatEntry.id];
+  final baseKg = baseline?.weightKg;
+  final baseFat = baseline == null ? null : bodyFat[baseline.id];
+  return (
+    weight: box(kg, baseKg, after(weighIn), (change) {
+      if (targetKg == null || change == null || kg == null) {
+        return ChangeTone.neutral;
+      }
+      final closer = (kg - targetKg).abs() - (kg - change - targetKg).abs();
+      return closer == 0
+          ? ChangeTone.neutral
+          : closer < 0
+          ? ChangeTone.good
+          : ChangeTone.bad;
+    }),
+    bodyFat: box(
+      fat,
+      baseFat,
+      after(fatEntry),
+      (change) => tone(change, upIsGood: false),
+    ),
+    leanMass: box(
+      lean(kg, fat),
+      lean(baseKg, baseFat),
+      after(weighIn) && after(fatEntry),
+      (change) => tone(change, upIsGood: true),
+    ),
+  );
+}

@@ -1546,9 +1546,9 @@ void main() {
 
     expect(find.byType(BodyPage, skipOffstage: false), findsOneWidget);
     expect(find.byType(BodyEntryPage, skipOffstage: false), findsNothing);
-    verify(() => summary.chooseAfter('d1')).called(1);
+    verify(() => summary.showDay('d1')).called(1);
 
-    await tester.pageBack();
+    await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
     expect(find.byType(BodyPage, skipOffstage: false), findsNothing);
   });

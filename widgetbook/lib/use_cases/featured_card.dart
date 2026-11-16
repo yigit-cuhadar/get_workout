@@ -373,3 +373,14 @@ Widget featuredActionLoading(BuildContext context) => _page(
     action: FeaturedAction('Start program', () {}, loading: true),
   ),
 );
+
+@widgetbook.UseCase(name: 'Target', type: FeaturedCard)
+Widget featuredTarget(BuildContext context) => _page(
+  FeaturedCard.target(
+    title: context.knobs.string(label: 'Title', initialValue: 'Target 78 kg'),
+    note: context.knobs.string(
+      label: 'Line',
+      initialValue: 'At this pace, around Dec 28.',
+    ),
+  ),
+);
