@@ -7,12 +7,6 @@ import 'workout_editing.dart';
 import 'workout_repository.dart';
 import 'workout_usecases.dart';
 
-typedef HistoryQuery = ({
-  String uid,
-  HistoryCursor? after,
-  HistoryCursor? through,
-});
-
 /// A change to the stored workouts: [after] added (no [before]), [before]
 /// replaced by [after], or [before] deleted (no [after]).
 typedef WorkoutChange = ({String uid, Workout? before, Workout? after});
@@ -26,17 +20,6 @@ class WatchWorkoutsBetween {
 
   Stream<List<Workout>> call(DateRangeQuery query) => _repository
       .watchWorkoutsBetween(query.uid, from: query.from, to: query.to);
-}
-
-class WatchHistory {
-  const WatchHistory(this._repository);
-  final WorkoutRepository _repository;
-
-  Stream<HistoryPage> call(HistoryQuery query) => _repository.watchHistory(
-    query.uid,
-    after: query.after,
-    through: query.through,
-  );
 }
 
 class WatchStoredWorkout {

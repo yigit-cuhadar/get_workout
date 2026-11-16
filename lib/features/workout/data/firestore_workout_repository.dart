@@ -40,9 +40,6 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
   /// beyond it the stats are left as they are.
   static const maxRebuildWorkouts = 500;
 
-  /// Workouts per history page without an end.
-  static const historyPageSize = 20;
-
   @override
   String newWorkoutId(String uid) => _workouts(uid).doc().id;
 
@@ -63,31 +60,6 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
         },
       )
       .transform(_failures());
-
-  @override
-  Stream<HistoryPage> watchHistory(
-    String uid, {
-    HistoryCursor? after,
-    HistoryCursor? through,
-  }) {
-    var query = _workouts(uid).orderBy('startedAt', descending: true);
-    if (after != null) query = query.startAfterDocument(_position(after));
-    query = through == null
-        ? query.limit(historyPageSize)
-        : query.endAtDocument(_position(through));
-    return query
-        .snapshots()
-        .map(
-          (snap) => (
-            workouts: [
-              for (final doc in snap.docs) ?workoutFromMap(doc.id, doc.data()),
-            ],
-            end: snap.docs.isEmpty ? null : HistoryCursor(snap.docs.last),
-            more: through == null && snap.docs.length == historyPageSize,
-          ),
-        )
-        .transform(_failures());
-  }
 
   /// Only the date range is queried, which needs no composite index.
   @override
@@ -112,10 +84,6 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
         ],
       )
       .transform(_failures());
-
-  static DocumentSnapshot<Map<String, dynamic>> _position(
-    HistoryCursor cursor,
-  ) => cursor.position as DocumentSnapshot<Map<String, dynamic>>;
 
   @override
   Stream<StoredWorkout?> watchWorkout(String uid, String id) =>

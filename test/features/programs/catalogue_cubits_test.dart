@@ -158,6 +158,7 @@ void main() {
       watchCompletedDays: const WatchCompletedDays(NoCompletedDays()),
       watchRejectedWrites: WatchRejectedProgramWrites(programRepository),
       resolveMissedDay: ResolveMissedDay(programRepository),
+      moveNextDay: MoveNextDay(programRepository),
       watchPremium: const WatchPremium(FixedPremium(false)),
     );
     final exerciseRepository = MockExerciseRepository();

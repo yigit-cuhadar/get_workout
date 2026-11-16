@@ -12,6 +12,7 @@ import '../../programs/domain/program.dart';
 import '../../programs/domain/program_usecases.dart';
 import '../../workout/domain/history_usecases.dart';
 import '../../workout/domain/workout.dart';
+import '../domain/calendar_days.dart';
 import '../domain/calendar_month.dart';
 
 enum CalendarStatus { loading, ready, failure }
@@ -22,53 +23,73 @@ class CalendarState extends Equatable {
     required this.weeks,
     required this.selected,
     required this.today,
-    this.expanded = false,
+    this.filter = CalendarFilter.all,
     this.status = CalendarStatus.loading,
     this.entries = const {},
     this.failure,
+    this.writeRejected = false,
   });
 
-  /// The first day of the month loaded: the one shown when [expanded], else
-  /// the month of the week's first day.
+  /// The first day of the month shown.
   final CalendarDate month;
 
-  /// The rows shown, each seven dates: the month's (see `monthWeeks`) when
-  /// [expanded], else the selected date's week.
+  /// The month's rows, each seven dates (see `monthWeeks`).
   final List<List<CalendarDate>> weeks;
-
-  /// The full month shows, not one week.
-  final bool expanded;
   final CalendarDate selected;
   final CalendarDate today;
+
+  /// What the marks, the counts and the list show.
+  final CalendarFilter filter;
   final CalendarStatus status;
 
-  /// By date; see [calendarEntries]. Covers the dates of the month's
-  /// [monthRange], so every date of [weeks] has its own.
+  /// By date, unfiltered; see [calendarEntries]. Covers the dates of the
+  /// month's [monthRange], so every date of [weeks] has its own.
   final Map<CalendarDate, List<CalendarEntry>> entries;
   final Failure? failure;
 
-  /// The month named above the dates: the selected date's in a week.
-  CalendarDate get period => expanded ? month : monthOf(selected);
+  /// The server refused an edit or deletion of a workout that already
+  /// looked done; tell the user, then call [CalendarCubit.rejectionShown].
+  final bool writeRejected;
 
-  List<CalendarEntry> entriesOn(CalendarDate date) => entries[date] ?? const [];
+  /// [date]'s entries that [filter] keeps.
+  List<CalendarEntry> entriesOn(CalendarDate date) =>
+      filterEntries(entries[date] ?? const [], filter);
+
+  CalendarState copyWith({
+    CalendarDate? selected,
+    CalendarFilter? filter,
+    bool? writeRejected,
+  }) => CalendarState(
+    month: month,
+    weeks: weeks,
+    selected: selected ?? this.selected,
+    today: today,
+    filter: filter ?? this.filter,
+    status: status,
+    entries: entries,
+    failure: failure,
+    writeRejected: writeRejected ?? this.writeRejected,
+  );
 
   @override
   List<Object?> get props => [
     month,
     weeks,
-    expanded,
     selected,
     today,
+    filter,
     status,
     entries,
     failure,
+    writeRejected,
   ];
 }
 
-/// The calendar of whoever is signed in, one week or one month at a time:
-/// their finished workouts, cardio sessions and the active program's days
-/// not done yet, followed live for the month loaded. [firstWeekday] (ISO)
-/// starts the weeks. Resets on every user change.
+/// The calendar of whoever is signed in, a month at a time: their finished
+/// workouts, cardio sessions and the active program's days not done yet,
+/// followed live for the month shown, and the workout edits the server
+/// refused. [firstWeekday] (ISO) starts the weeks. Resets on every user
+/// change.
 class CalendarCubit extends Cubit<CalendarState> {
   CalendarCubit({
     required int firstWeekday,
@@ -77,6 +98,7 @@ class CalendarCubit extends Cubit<CalendarState> {
     required this._watchCardio,
     required this._watchPrograms,
     required this._watchActiveProgram,
+    required WatchRejectedWorkoutEdits watchRejectedEdits,
     DateTime Function()? clock,
   }) : _firstWeekday = firstWeekday,
        _clock = clock ?? DateTime.now,
@@ -84,7 +106,6 @@ class CalendarCubit extends Cubit<CalendarState> {
          _shown(
            selected: CalendarDate.of((clock ?? DateTime.now)()),
            today: CalendarDate.of((clock ?? DateTime.now)()),
-           expanded: false,
            firstWeekday: firstWeekday,
          ),
        ) {
@@ -92,6 +113,9 @@ class CalendarCubit extends Cubit<CalendarState> {
         .map((user) => user?.id)
         .distinct()
         .listen(_onUser);
+    _rejectedSubscription = watchRejectedEdits().listen(
+      (_) => emit(state.copyWith(writeRejected: true)),
+    );
   }
 
   int _firstWeekday;
@@ -101,6 +125,7 @@ class CalendarCubit extends Cubit<CalendarState> {
   final WatchActiveProgram _watchActiveProgram;
   final DateTime Function() _clock;
   late final StreamSubscription<String?> _userSubscription;
+  late final StreamSubscription<Failure> _rejectedSubscription;
   StreamSubscription<List<Program>>? _programsSubscription;
   StreamSubscription<ActiveProgram?>? _activeSubscription;
   StreamSubscription<List<Workout>>? _workoutsSubscription;
@@ -116,42 +141,31 @@ class CalendarCubit extends Cubit<CalendarState> {
 
   CalendarDate get _today => CalendarDate.of(_clock());
 
-  /// [selected] in a week or, [expanded], in its month, loading.
+  /// [selected]'s month, loading.
   static CalendarState _shown({
     required CalendarDate selected,
     required CalendarDate today,
-    required bool expanded,
     required int firstWeekday,
+    CalendarFilter filter = CalendarFilter.all,
+    bool writeRejected = false,
   }) {
-    final week = selected.startOfWeek(firstWeekday);
-    final month = monthOf(expanded ? selected : week);
+    final month = monthOf(selected);
     return CalendarState(
       month: month,
-      weeks: expanded
-          ? monthWeeks(month, firstWeekday: firstWeekday)
-          : [
-              [for (var i = 0; i < 7; i++) week.addDays(i)],
-            ],
-      expanded: expanded,
+      weeks: monthWeeks(month, firstWeekday: firstWeekday),
       selected: selected,
       today: today,
+      filter: filter,
+      writeRejected: writeRejected,
     );
   }
 
-  /// Shows the week or month [steps] after the one shown, before it when
-  /// negative, with today selected when it falls in it, else its first day.
+  /// Shows the month [steps] after the one shown, before it when negative,
+  /// with today selected when it falls in it, else its first day.
   void move(int steps) {
     final today = _today;
-    if (state.expanded) {
-      final month = addMonths(state.month, steps);
-      _show(monthOf(today) == month ? today : month, expanded: true);
-    } else {
-      final week = state.selected.startOfWeek(_firstWeekday).addDays(7 * steps);
-      _show(
-        today.startOfWeek(_firstWeekday) == week ? today : week,
-        expanded: false,
-      );
-    }
+    final month = addMonths(state.month, steps);
+    _show(monthOf(today) == month ? today : month);
   }
 
   /// Starts the weeks on [firstWeekday] from now on, keeping the date
@@ -159,53 +173,62 @@ class CalendarCubit extends Cubit<CalendarState> {
   void changeFirstWeekday(int firstWeekday) {
     if (firstWeekday == _firstWeekday) return;
     _firstWeekday = firstWeekday;
-    _show(state.selected, expanded: state.expanded);
-  }
-
-  /// Shows the full month of the selected date, or only its week.
-  void expand(bool expanded) => _show(state.selected, expanded: expanded);
-
-  /// Selects [date]; one of another month shows that month.
-  void select(CalendarDate date) => _show(date, expanded: state.expanded);
-
-  /// Follows the month again after a failure.
-  void retry() {
-    emit(_loading(state.selected, expanded: state.expanded));
-    _followUser();
-  }
-
-  CalendarState _loading(CalendarDate selected, {required bool expanded}) =>
-      _shown(
-        selected: selected,
-        today: _today,
-        expanded: expanded,
-        firstWeekday: _firstWeekday,
-      );
-
-  void _show(CalendarDate selected, {required bool expanded}) {
-    final shown = _loading(selected, expanded: expanded);
-    if (shown.month != state.month) {
-      emit(shown);
-      _followNewMonth();
-      return;
-    }
+    final shown = _loading(state.selected);
     emit(
       CalendarState(
         month: shown.month,
         weeks: shown.weeks,
-        expanded: expanded,
-        selected: selected,
+        selected: state.selected,
         today: state.today,
+        filter: state.filter,
         status: state.status,
         entries: state.entries,
         failure: state.failure,
+        writeRejected: state.writeRejected,
       ),
     );
   }
 
+  /// Selects [date]; one of another month shows that month.
+  void select(CalendarDate date) => _show(date);
+
+  void filter(CalendarFilter filter) => emit(state.copyWith(filter: filter));
+
+  void rejectionShown() => emit(state.copyWith(writeRejected: false));
+
+  /// Follows the month again after a failure.
+  void retry() {
+    emit(_loading(state.selected));
+    _followUser();
+  }
+
+  CalendarState _loading(CalendarDate selected) => _shown(
+    selected: selected,
+    today: _today,
+    firstWeekday: _firstWeekday,
+    filter: state.filter,
+    writeRejected: state.writeRejected,
+  );
+
+  void _show(CalendarDate selected) {
+    if (monthOf(selected) != state.month) {
+      emit(_loading(selected));
+      _followNewMonth();
+      return;
+    }
+    emit(state.copyWith(selected: selected));
+  }
+
   void _onUser(String? uid) {
     _uid = uid;
-    emit(_loading(_today, expanded: false));
+    emit(
+      _shown(
+        selected: _today,
+        today: _today,
+        firstWeekday: _firstWeekday,
+        writeRejected: state.writeRejected,
+      ),
+    );
     _followUser();
   }
 
@@ -287,10 +310,11 @@ class CalendarCubit extends Cubit<CalendarState> {
       CalendarState(
         month: state.month,
         weeks: state.weeks,
-        expanded: state.expanded,
         selected: state.selected,
         today: today,
+        filter: state.filter,
         status: CalendarStatus.ready,
+        writeRejected: state.writeRejected,
         entries: calendarEntries(
           from: from,
           to: to,
@@ -313,9 +337,10 @@ class CalendarCubit extends Cubit<CalendarState> {
       CalendarState(
         month: state.month,
         weeks: state.weeks,
-        expanded: state.expanded,
         selected: state.selected,
         today: state.today,
+        filter: state.filter,
+        writeRejected: state.writeRejected,
         status: CalendarStatus.failure,
         failure: error is Failure ? error : UnknownFailure('$error', error),
       ),
@@ -339,6 +364,7 @@ class CalendarCubit extends Cubit<CalendarState> {
   @override
   Future<void> close() async {
     await _userSubscription.cancel();
+    await _rejectedSubscription.cancel();
     _cancelUser();
     _cancelMonth();
     return super.close();

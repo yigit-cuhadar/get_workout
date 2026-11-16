@@ -389,6 +389,7 @@ void main() {
         watchCompletedDays: const WatchCompletedDays(NoCompletedDays()),
         watchRejectedWrites: WatchRejectedProgramWrites(programs),
         resolveMissedDay: ResolveMissedDay(programs),
+        moveNextDay: MoveNextDay(programs),
         watchPremium: const WatchPremium(FixedPremium(false)),
       ),
       dispose: (cubit) => cubit.close(),

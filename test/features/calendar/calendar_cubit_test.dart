@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/calendar/domain/calendar_days.dart';
 import 'package:get_workout/features/calendar/domain/calendar_month.dart';
 import 'package:get_workout/features/calendar/presentation/calendar_cubit.dart';
 import 'package:get_workout/features/cardio/domain/cardio_repository.dart';
@@ -57,6 +58,7 @@ void main() {
 
   late StreamController<AuthUser?> users;
   late MockWorkoutRepository workouts;
+  late StreamController<Failure> rejected;
   late MockCardioRepository cardio;
   late MockProgramRepository programs;
 
@@ -74,12 +76,14 @@ void main() {
   setUp(() {
     users = StreamController<AuthUser?>();
     workouts = MockWorkoutRepository();
+    rejected = StreamController<Failure>.broadcast();
     cardio = MockCardioRepository();
     programs = MockProgramRepository();
     workoutStreams = {};
     cardioStreams = {};
     programStreams = {};
     activeStreams = {};
+    when(() => workouts.rejectedEdits).thenAnswer((_) => rejected.stream);
     when(
       () => workouts.watchWorkoutsBetween(
         any(),
@@ -135,6 +139,7 @@ void main() {
       watchCardio: WatchCardioBetween(cardio),
       watchPrograms: WatchPrograms(programs),
       watchActiveProgram: WatchActiveProgram(programs),
+      watchRejectedEdits: WatchRejectedWorkoutEdits(workouts),
       clock: () => now,
     );
   }
@@ -165,71 +170,57 @@ void main() {
     for (var i = 0; i < 7; i++) start.addDays(i),
   ];
 
-  test('starts on this week, today selected, loading', () {
+  test('starts on this month, today selected, loading', () {
     final cubit = build();
-    expect(cubit.state.expanded, isFalse);
-    expect(cubit.state.weeks, [week(d(2026, 11, 9))]);
+    expect(cubit.state.weeks, hasLength(6));
+    expect(cubit.state.weeks.first, week(d(2026, 10, 26)));
     expect(cubit.state.month, d(2026, 11, 1));
-    expect(cubit.state.period, d(2026, 11, 1));
     expect(cubit.state.selected, today);
     expect(cubit.state.today, today);
+    expect(cubit.state.filter, CalendarFilter.all);
     expect(cubit.state.status, CalendarStatus.loading);
     unawaited(cubit.close());
   });
 
-  test(
-    'moves by week, today selected in its own, else the first day',
-    () async {
-      final cubit = build();
-      await signIn(alice);
-      await deliver();
-
-      cubit.move(1);
-      expect(cubit.state.weeks, [week(d(2026, 11, 16))]);
-      expect(cubit.state.selected, d(2026, 11, 16));
-      // Still November's dates: nothing to load.
-      expect(cubit.state.status, CalendarStatus.ready);
-
-      cubit.move(-1);
-      expect(cubit.state.selected, today);
-
-      // The week of 26 October loads October, which has its dates.
-      cubit.move(-2);
-      expect(cubit.state.weeks, [week(d(2026, 10, 26))]);
-      expect(cubit.state.selected, d(2026, 10, 26));
-      expect(cubit.state.month, d(2026, 10, 1));
-      expect(cubit.state.status, CalendarStatus.loading);
-      await pumpEventQueue();
-      expect(workoutStreams, contains('u1 2026-09-25'));
-
-      // Another date of the week keeps it, though the month named changes.
-      await deliver(month: 'u1 2026-09-25');
-      cubit.select(d(2026, 11, 1));
-      expect(cubit.state.month, d(2026, 10, 1));
-      expect(cubit.state.period, d(2026, 11, 1));
-      expect(cubit.state.status, CalendarStatus.ready);
-      await cubit.close();
-    },
-  );
-
-  test('opens to the month of the selected date and back', () async {
+  test('moves by month, today selected in its own, else the first day; '
+      'months ahead too', () async {
     final cubit = build();
     await signIn(alice);
     await deliver();
+
     cubit.move(1);
+    expect(cubit.state.month, d(2026, 12, 1));
+    expect(cubit.state.selected, d(2026, 12, 1));
+    expect(cubit.state.status, CalendarStatus.loading);
 
-    cubit.expand(true);
-    expect(cubit.state.expanded, isTrue);
-    expect(cubit.state.weeks, hasLength(6));
-    expect(cubit.state.weeks.first, week(d(2026, 10, 26)));
-    expect(cubit.state.selected, d(2026, 11, 16));
-    expect(cubit.state.status, CalendarStatus.ready);
+    cubit.move(-1);
+    expect(cubit.state.selected, today);
+    await cubit.close();
+  });
 
-    cubit.select(d(2026, 11, 26));
-    cubit.expand(false);
-    expect(cubit.state.weeks, [week(d(2026, 11, 23))]);
-    expect(cubit.state.selected, d(2026, 11, 26));
-    expect(cubit.state.status, CalendarStatus.ready);
+  test('the filter keeps workouts and program days, or cardio', () async {
+    final cubit = build();
+    await signIn(alice);
+    await deliver(activeProgram: active);
+
+    cubit.filter(CalendarFilter.cardio);
+    expect(cubit.state.entriesOn(today), [CardioEntry(run)]);
+    expect(cubit.state.entriesOn(d(2026, 11, 18)), isEmpty);
+
+    cubit.filter(CalendarFilter.workouts);
+    expect(cubit.state.entriesOn(today), [WorkoutEntry(legs)]);
+    expect(cubit.state.entriesOn(d(2026, 11, 18)), hasLength(1));
+    await cubit.close();
+  });
+
+  test('a refused workout edit is reported once', () async {
+    final cubit = build();
+    await signIn(alice);
+    rejected.add(const PermissionFailure('refused'));
+    await pumpEventQueue();
+    expect(cubit.state.writeRejected, isTrue);
+    cubit.rejectionShown();
+    expect(cubit.state.writeRejected, isFalse);
     await cubit.close();
   });
 
@@ -298,9 +289,7 @@ void main() {
     await signIn(alice);
     await deliver();
 
-    cubit
-      ..expand(true)
-      ..move(1);
+    cubit.move(1);
     expect(cubit.state.month, d(2026, 12, 1));
     expect(cubit.state.selected, d(2026, 12, 1));
     expect(cubit.state.status, CalendarStatus.loading);
@@ -332,7 +321,6 @@ void main() {
     final cubit = build();
     await signIn(alice);
     await deliver();
-    cubit.expand(true);
 
     cubit.select(d(2026, 11, 3));
     expect(cubit.state.selected, d(2026, 11, 3));
@@ -374,9 +362,7 @@ void main() {
 
     programStreams.clear();
     activeStreams.clear();
-    cubit
-      ..expand(true)
-      ..move(1);
+    cubit.move(1);
     await pumpEventQueue();
     await deliver(month: 'u1 2026-11-25', activeProgram: active);
     expect(cubit.state.status, CalendarStatus.ready);
@@ -396,9 +382,7 @@ void main() {
 
       programStreams.clear();
       activeStreams.clear();
-      cubit
-        ..expand(true)
-        ..move(1);
+      cubit.move(1);
       await pumpEventQueue();
       await deliver(month: 'u1 2026-11-25', sessions: []);
       expect(cubit.state.status, CalendarStatus.ready);
@@ -437,9 +421,7 @@ void main() {
     final cubit = build();
     await signIn(alice);
     await deliver(activeProgram: active);
-    cubit
-      ..expand(true)
-      ..move(1);
+    cubit.move(1);
 
     await signIn(bob);
     expect(cubit.state.month, d(2026, 11, 1));
@@ -452,45 +434,17 @@ void main() {
     await cubit.close();
   });
 
-  test('a new first weekday keeps the date and, in its month, the '
-      'entries', () async {
+  test('a new first weekday keeps the date and the entries', () async {
     final cubit = build();
     await signIn(alice);
     await deliver();
     final entries = cubit.state.entries;
 
     cubit.changeFirstWeekday(DateTime.sunday);
-    expect(cubit.state.weeks, [week(d(2026, 11, 8))]);
+    expect(cubit.state.weeks.first, week(d(2026, 11, 1)));
     expect(cubit.state.selected, today);
     expect(cubit.state.status, CalendarStatus.ready);
     expect(cubit.state.entries, entries);
-
-    cubit.expand(true);
-    expect(cubit.state.weeks.first, week(d(2026, 11, 1)));
-    cubit.changeFirstWeekday(DateTime.saturday);
-    expect(cubit.state.weeks.first, week(d(2026, 10, 31)));
-    expect(cubit.state.status, CalendarStatus.ready);
-    await cubit.close();
-  });
-
-  test('a new first weekday moving the week to another month loads '
-      'it', () async {
-    final cubit = build();
-    await signIn(alice);
-    await deliver();
-    // Sunday 1 November ends the Monday week that starts in October.
-    cubit.select(d(2026, 11, 1));
-    expect(cubit.state.month, d(2026, 10, 1));
-    await pumpEventQueue();
-    await deliver(month: 'u1 2026-09-25');
-
-    cubit.changeFirstWeekday(DateTime.sunday);
-    expect(cubit.state.weeks, [week(d(2026, 11, 1))]);
-    expect(cubit.state.month, d(2026, 11, 1));
-    expect(cubit.state.status, CalendarStatus.loading);
-    await pumpEventQueue();
-    await deliver();
-    expect(cubit.state.status, CalendarStatus.ready);
     await cubit.close();
   });
 }

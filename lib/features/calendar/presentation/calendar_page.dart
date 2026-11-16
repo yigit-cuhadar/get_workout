@@ -3,14 +3,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_ui/forge_ui.dart' hide MonthGrid;
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../app/router.dart';
+import '../../../core/page_parts.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../cardio/presentation/cardio_text.dart';
 import '../../programs/domain/calendar_date.dart';
+import '../../programs/domain/program.dart';
 import '../../programs/domain/program_schedule.dart';
+import '../../programs/domain/program_usecases.dart';
+import '../../programs/presentation/missed_day_prompt.dart';
+import '../../programs/presentation/program_list_cubit.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -21,12 +27,10 @@ import '../../workout/presentation/workout_text.dart';
 import '../domain/calendar_days.dart';
 import '../domain/calendar_month.dart';
 import 'calendar_cubit.dart';
-import 'calendar_list_cubit.dart';
 import 'calendar_marks.dart';
-import 'month_grid.dart';
 
-/// A week, or a month, of finished workouts, cardio and program days, above
-/// everything by date, newest first.
+/// A month of finished workouts, cardio and program days: the month card
+/// with its marks, a filter, then the month's days by week, newest first.
 class CalendarPage extends StatelessWidget {
   const CalendarPage({super.key});
 
@@ -36,16 +40,12 @@ class CalendarPage extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => sl<CalendarCubit>(param1: firstWeekday)),
-        BlocProvider(
-          create: (_) => sl<CalendarListCubit>(param1: firstWeekday),
-        ),
+        BlocProvider.value(value: sl<ProgramListCubit>()),
       ],
       child: FirstWeekdayListener(
         created: firstWeekday,
-        onChanged: (context, firstWeekday) {
-          context.read<CalendarCubit>().changeFirstWeekday(firstWeekday);
-          context.read<CalendarListCubit>().changeFirstWeekday(firstWeekday);
-        },
+        onChanged: (context, firstWeekday) =>
+            context.read<CalendarCubit>().changeFirstWeekday(firstWeekday),
         child: const _CalendarView(),
       ),
     );
@@ -60,411 +60,567 @@ class _CalendarView extends StatefulWidget {
 }
 
 class _CalendarViewState extends State<_CalendarView> {
-  final _scroll = ScrollController();
+  /// The first row of each listed date, to scroll to.
+  final _rows = <CalendarDate, GlobalKey>{};
 
-  /// Each listed date's header, to scroll to.
-  final _headers = <CalendarDate, GlobalKey>{};
+  /// The date the user tapped in the month, until the month changes.
+  CalendarDate? _tapped;
 
-  /// The date tapped, until the list has scrolled to it.
-  CalendarDate? _pending;
-  bool _seeking = false;
+  GlobalKey _keyOf(CalendarDate date) => _rows.putIfAbsent(date, GlobalKey.new);
 
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  void _select(CalendarDate date) {
-    context.read<CalendarCubit>().select(date);
-    context.read<CalendarListCubit>().reveal(date);
-    _pending = date;
-    _scrollToPending();
-  }
-
-  /// A move of the week or month, or of the view, selects a date the list
-  /// does not scroll to.
-  void _leave(void Function(CalendarCubit cubit) change) {
-    change(context.read<CalendarCubit>());
-    context.read<CalendarListCubit>().reveal(null);
-    _pending = null;
-  }
-
-  void _scrollToPending() =>
-      WidgetsBinding.instance.addPostFrameCallback((_) => _seek());
-
-  /// Brings the pending date's header to the top. The dates are built
-  /// lazily, so it may not be built yet: until it is, jumps a screen at a
-  /// time towards it, past the dates built, then scrolls to it. Waits for
-  /// a later state while it is not listed yet.
-  Future<void> _seek() async {
-    if (_seeking) return;
-    _seeking = true;
-    try {
-      // Bounded, should the list keep changing under it.
-      for (var jumps = 0; jumps < 200; jumps++) {
-        if (!mounted) return;
-        final pending = _pending;
-        if (pending == null) return;
-        final list = context.read<CalendarListCubit>().state;
-        final order = [
-          ?list.pinned?.date,
-          for (final day in list.days) day.date,
-        ];
-        final index = order.indexOf(pending);
-        if (index < 0) return;
-        final header = _headers[pending]?.currentContext;
-        if (header != null && header.mounted) {
-          _pending = null;
-          await Scrollable.ensureVisible(
-            header,
+  void _tap(DateTime day) {
+    final date = CalendarDate.of(day);
+    final cubit = context.read<CalendarCubit>();
+    final otherMonth = monthOf(date) != cubit.state.month;
+    cubit.select(date);
+    setState(() => _tapped = otherMonth ? null : date);
+    if (otherMonth) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final row = _rows[date]?.currentContext;
+      if (row != null && row.mounted) {
+        unawaited(
+          Scrollable.ensureVisible(
+            row,
             duration: kThemeAnimationDuration,
             curve: Curves.easeOut,
-          );
-          return;
-        }
-        final lastBuilt = order.lastIndexWhere(
-          (date) => _headers[date]?.currentContext != null,
+          ),
         );
-        final position = _scroll.position;
-        final step = position.viewportDimension;
-        final target = (position.pixels + (lastBuilt < index ? step : -step))
-            .clamp(position.minScrollExtent, position.maxScrollExtent);
-        if (target == position.pixels) return;
-        _scroll.jumpTo(target);
-        await WidgetsBinding.instance.endOfFrame;
       }
-    } finally {
-      _seeking = false;
+    });
+  }
+
+  void _move(int steps) {
+    context.read<CalendarCubit>().move(steps);
+    setState(() => _tapped = null);
+  }
+
+  Future<void> _pickMonth() async {
+    final cubit = context.read<CalendarCubit>();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: cubit.state.selected.toLocalDateTime(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(DateTime.now().year + 5, 12, 31),
+    );
+    if (picked == null || !mounted) return;
+    cubit.select(CalendarDate.of(picked));
+    setState(() => _tapped = null);
+  }
+
+  Future<void> _addPast() async {
+    final plan = await askPastWorkout(context);
+    if (plan != null && mounted) {
+      unawaited(context.push(Routes.calendarWorkoutNew, extra: plan));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return BlocListener<CalendarListCubit, CalendarListState>(
+    return BlocConsumer<CalendarCubit, CalendarState>(
       listenWhen: (_, current) => current.writeRejected,
       listener: (context, _) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.historyWritesRejected)));
-        context.read<CalendarListCubit>().rejectionShown();
+        showForgeSnackbar(
+          context,
+          message: l10n.historyWritesRejected,
+          error: true,
+        );
+        context.read<CalendarCubit>().rejectionShown();
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.calendarTitle),
-          actions: [
-            TextButton.icon(
-              onPressed: () async {
-                final plan = await askPastWorkout(context);
-                if (plan != null && context.mounted) {
-                  unawaited(
-                    context.push(Routes.calendarWorkoutNew, extra: plan),
-                  );
-                }
-              },
-              icon: const Icon(Icons.add),
-              label: Text(l10n.calendarAddPast),
-            ),
-          ],
-        ),
-        body: BlocConsumer<CalendarListCubit, CalendarListState>(
-          listener: (_, _) => _scrollToPending(),
-          builder: (context, state) => CustomScrollView(
-            controller: _scroll,
-            slivers: [
-              SliverToBoxAdapter(
-                child: _PeriodCard(onSelected: _select, onMove: _leave),
-              ),
-              ..._list(context, state),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Everything by date, newest first, built as it scrolls in, then the
-  /// button loading older workouts.
-  List<Widget> _list(BuildContext context, CalendarListState state) {
-    final l10n = AppLocalizations.of(context);
-    final cubit = context.read<CalendarListCubit>();
-    Widget fill(Widget child) =>
-        SliverFillRemaining(hasScrollBody: false, child: child);
-    GlobalKey header(CalendarDate date) =>
-        _headers.putIfAbsent(date, GlobalKey.new);
-    return switch (state.status) {
-      CalendarListStatus.loading => [fill(const LoadingView())],
-      CalendarListStatus.failure => [
-        fill(
-          ErrorView(
-            title: l10n.historyLoadFailed,
-            message: l10n.loadFailedDetail,
-            retryLabel: l10n.retry,
-            onRetry: cubit.retry,
-          ),
-        ),
-      ],
-      CalendarListStatus.ready when state.isEmpty => [
-        fill(
-          EmptyView(
-            title: l10n.historyEmpty,
-            message: l10n.historyEmptyDetail,
+      builder: (context, state) {
+        _rows.clear();
+        final tapped = _tapped;
+        return Scaffold(
+          appBar: ForgeAppBar(
+            title: l10n.calendarTitle,
             actions: [
-              ForgeButton(
-                label: l10n.workoutStartWorkout,
-                onPressed: () => startFreeWorkout(context),
+              ForgeAppBarAction.icon(
+                icon: ForgeIcons.add,
+                label: l10n.calendarAddPast,
+                onPressed: _addPast,
               ),
             ],
           ),
-        ),
-      ],
-      CalendarListStatus.ready => [
-        if (state.pinned case final pinned?)
-          SliverToBoxAdapter(
-            child: _Day(
-              key: header(pinned.date),
-              day: pinned,
-              loading: state.pinnedLoading,
-            ),
-          ),
-        SliverList.builder(
-          itemCount: state.days.length,
-          itemBuilder: (_, index) {
-            final day = state.days[index];
-            return _Day(key: header(day.date), day: day);
-          },
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.only(bottom: Gap.xl),
-          sliver: SliverToBoxAdapter(
-            child: state.more
-                ? Padding(
-                    padding: const EdgeInsets.all(Gap.md),
-                    child: state.loadingMore
-                        ? const Center(child: CircularProgressIndicator())
-                        : OutlinedButton(
-                            onPressed: cubit.loadMore,
-                            child: Text(l10n.historyLoadOlder),
-                          ),
-                  )
-                : null,
-          ),
-        ),
-      ],
-    };
-  }
-}
-
-/// The week or month shown, with the arrows moving it and the control
-/// switching between the two.
-class _PeriodCard extends StatelessWidget {
-  const _PeriodCard({required this.onSelected, required this.onMove});
-
-  final ValueChanged<CalendarDate> onSelected;
-  final void Function(void Function(CalendarCubit cubit) change) onMove;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final dates = MaterialLocalizations.of(context);
-    final state = context.watch<CalendarCubit>().state;
-    final expanded = state.expanded;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(Gap.sm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(Gap.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: Gap.sm,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  tooltip: expanded
-                      ? l10n.calendarPreviousMonth
-                      : l10n.calendarPreviousWeek,
-                  onPressed: () => onMove((cubit) => cubit.move(-1)),
+                PeriodSelector(
+                  period: DateFormat.yMMMM(l10n.localeName)
+                      .format(state.month.toLocalDateTime()),
+                  onPrevious: () => _move(-1),
+                  onNext: () => _move(1),
+                  onPeriodTap: _pickMonth,
+                  previousLabel: l10n.calendarPreviousMonth,
+                  nextLabel: l10n.calendarNextMonth,
                 ),
-                Expanded(
-                  child: Text(
-                    dates.formatMonthYear(state.period.toLocalDateTime()),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  tooltip: expanded
-                      ? l10n.calendarNextMonth
-                      : l10n.calendarNextWeek,
-                  onPressed: () => onMove((cubit) => cubit.move(1)),
-                ),
+                _Month(state, selected: tapped, onDayTap: _tap),
+                ..._list(context, state, tapped),
               ],
             ),
-            // While loading the dates show without marks.
-            MonthGrid(
-              weeks: state.weeks,
-              month: expanded ? state.month : null,
-              selected: state.selected,
-              today: state.today,
-              onSelected: onSelected,
-              marks: (date) =>
-                  calendarMarkIcons(context, state.entriesOn(date)),
-              semanticLabel: (date) =>
-                  calendarDayLabel(context, date, state.entriesOn(date)),
-            ),
-            if (state.status == CalendarStatus.failure)
-              ErrorView(
-                title: l10n.calendarLoadFailed,
-                message: l10n.loadFailedDetail,
-                retryLabel: l10n.retry,
-                onRetry: context.read<CalendarCubit>().retry,
-              ),
-            TextButton.icon(
-              onPressed: () => onMove((cubit) => cubit.expand(!expanded)),
-              icon: Icon(expanded ? Icons.expand_less : Icons.expand_more),
-              label: Text(
-                expanded ? l10n.calendarShowWeek : l10n.calendarShowMonth,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
+
+  /// The filter, the tapped date when the list does not hold it, and the
+  /// month's sections; or what stands in their place.
+  List<Widget> _list(
+    BuildContext context,
+    CalendarState state,
+    CalendarDate? tapped,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final firstWeekday = context.watchFirstWeekday();
+    final monthName = DateFormat.MMMM(l10n.localeName)
+        .format(state.month.toLocalDateTime());
+    switch (state.status) {
+      case CalendarStatus.failure:
+        return const [];
+      case CalendarStatus.loading:
+        return [
+          _Filter(state.filter),
+          const SkeletonBar(widthFactor: 0.3, height: 10),
+          const ListRowCard(
+            children: [
+              ListRow.loading(),
+              ListRow.loading(index: 1),
+              ListRow.loading(index: 2),
+            ],
+          ),
+        ];
+      case CalendarStatus.ready:
+    }
+    final sections = monthSections(
+      state.month,
+      today: state.today,
+      firstWeekday: firstWeekday,
+      entriesOn: state.entriesOn,
+    );
+    final everything = monthSections(
+      state.month,
+      today: state.today,
+      firstWeekday: firstWeekday,
+      entriesOn: (date) => state.entries[date] ?? const [],
+    );
+    final logged = everything.any(
+      (section) => section.days.any(
+        (day) => day.entries.any((entry) => entry is! PlanEntry),
+      ),
+    );
+    final listed = {
+      for (final section in sections)
+        for (final day in section.days) day.date,
+    };
+    final pinned = tapped != null && !listed.contains(tapped)
+        ? calendarDay(tapped, state.entriesOn(tapped))
+        : null;
+    final empty = switch (state.filter) {
+      _ when !logged => _EmptyCard(
+        title: l10n.calendarEmptyTitle(monthName),
+        message: l10n.calendarEmptyDetail,
+        action: l10n.calendarAddPast,
+        onPressed: _addPast,
+      ),
+      CalendarFilter.workouts when sections.isEmpty => _EmptyCard(
+        title: l10n.calendarNoWorkouts(monthName),
+        message: l10n.calendarNoWorkoutsDetail,
+        action: l10n.calendarAddPast,
+        onPressed: _addPast,
+      ),
+      CalendarFilter.cardio when sections.isEmpty => _EmptyCard(
+        title: l10n.calendarNoCardio(monthName),
+        message: l10n.calendarNoCardioDetail,
+        action: l10n.cardioLog,
+        onPressed: () => context.go(Routes.cardioNew),
+      ),
+      _ => null,
+    };
+    return [
+      // A month with nothing logged has nothing to filter.
+      if (logged) _Filter(state.filter),
+      if (pinned != null) ...[
+        SectionLabel(l10n.planDate(pinned.date)),
+        if (pinned.entries.isEmpty)
+          SurfaceCard(
+            child: Text(
+              l10n.calendarDayEmpty,
+              style: Theme.of(context).textTheme.bodyMedium!
+                  .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
+            ),
+          )
+        else
+          ListRowCard(children: _dayRows(context, state, pinned)),
+      ],
+      for (final section in sections) ...[
+        SectionLabel(switch (section.kind) {
+          CalendarSectionKind.thisWeek => l10n.calendarThisWeek(
+            l10n.dateRange(section.first, section.last),
+          ),
+          CalendarSectionKind.earlierThisMonth => l10n.calendarEarlierThisMonth,
+          CalendarSectionKind.week => l10n.dateRange(
+            section.first,
+            section.last,
+          ),
+        }),
+        ListRowCard(
+          children: [
+            for (final day in section.days) ..._dayRows(context, state, day),
+          ],
+        ),
+      ],
+      ?empty,
+    ];
+  }
+
+  List<Widget> _dayRows(
+    BuildContext context,
+    CalendarState state,
+    CalendarDay day,
+  ) => [
+    for (final (i, entry) in day.entries.indexed)
+      KeyedSubtree(
+        key: i == 0 ? _keyOf(day.date) : null,
+        child: _EntryRow(entry: entry, today: day.date == state.today),
+      ),
+  ];
 }
 
-/// A date's header and its entries, or a spinner while [loading] them.
-class _Day extends StatelessWidget {
-  const _Day({super.key, required this.day, this.loading = false});
+/// The month's circles with their marks, the summary and the legend; the
+/// tapped date ringed.
+class _Month extends StatelessWidget {
+  const _Month(this.state, {required this.selected, required this.onDayTap});
 
-  final CalendarDay day;
-  final bool loading;
+  final CalendarState state;
+  final CalendarDate? selected;
+  final ValueChanged<DateTime> onDayTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final dates = MaterialLocalizations.of(context);
-    final today = context.select((CalendarCubit cubit) => cubit.state.today);
-    final date = dates.formatFullDate(day.date.toLocalDateTime());
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final firstWeekday = context.watchFirstWeekday();
+    final narrow = MaterialLocalizations.of(context).narrowWeekdays;
+    // Sunday first; ISO 7 is Sunday.
+    final weekdays = [
+      for (var i = 0; i < 7; i++) narrow[(firstWeekday + i) % 7],
+    ];
+    return switch (state.status) {
+      CalendarStatus.loading => MonthGrid.loading(weekdays: weekdays),
+      CalendarStatus.failure => MonthGrid.error(
+        weekdays: weekdays,
+        message: l10n.calendarLoadFailed,
+        retryLabel: l10n.retry,
+        onRetry: context.read<CalendarCubit>().retry,
+      ),
+      CalendarStatus.ready => MonthGrid(
+        month: state.month.toLocalDateTime(),
+        firstWeekday: firstWeekday,
+        weekdays: weekdays,
+        stateOf: (day) {
+          final date = CalendarDate.of(day);
+          return calendarDayState(
+            state.entriesOn(date),
+            today: date == state.today,
+          );
+        },
+        summary: _summary(l10n, monthCounts(state.month, state.entriesOn)),
+        legend: calendarLegend(l10n),
+        selected: selected?.toLocalDateTime(),
+        onDayTap: onDayTap,
+      ),
+    };
+  }
+
+  /// "4 workouts · 4 cardio · 1 missed", leaving out what is none.
+  String _summary(AppLocalizations l10n, MonthCounts counts) => [
+    if (counts.workouts > 0) l10n.calendarSummaryWorkouts(counts.workouts),
+    if (counts.cardio > 0) l10n.calendarSummaryCardio(counts.cardio),
+    if (counts.missed > 0) l10n.calendarSummaryMissed(counts.missed),
+  ].join(' · ');
+}
+
+/// All, Workouts or Cardio.
+class _Filter extends StatelessWidget {
+  const _Filter(this.filter);
+  final CalendarFilter filter;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final cubit = context.read<CalendarCubit>();
+    return Wrap(
+      spacing: Gap.sm,
+      runSpacing: Gap.sm,
       children: [
-        ListTile(
-          dense: true,
-          title: Text(
-            day.date == today ? l10n.calendarToday(date) : date,
-            style: Theme.of(context).textTheme.titleSmall,
+        for (final (value, label) in [
+          (CalendarFilter.all, l10n.calendarFilterAll),
+          (CalendarFilter.workouts, l10n.calendarFilterWorkouts),
+          (CalendarFilter.cardio, l10n.calendarFilterCardio),
+        ])
+          ForgeChip(
+            label: label,
+            selected: value == filter,
+            showCheck: false,
+            onPressed: () => cubit.filter(value),
           ),
-        ),
-        if (loading)
-          const Padding(
-            padding: EdgeInsets.all(Gap.md),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else if (day.entries.isEmpty)
-          ListTile(title: Text(l10n.calendarDayEmpty))
-        else
-          for (final entry in day.entries)
-            switch (entry) {
-              WorkoutEntry() => _WorkoutTile(entry),
-              CardioEntry() => _CardioTile(entry),
-              PlanEntry() => _PlanTile(entry),
-            },
       ],
     );
   }
 }
 
-String _time(BuildContext context, DateTime time) =>
-    MaterialLocalizations.of(context)
-        .formatTimeOfDay(TimeOfDay.fromDateTime(time));
+/// A month or filter with nothing to list: its line and an action, in a
+/// card.
+class _EmptyCard extends StatelessWidget {
+  const _EmptyCard({
+    required this.title,
+    required this.message,
+    required this.action,
+    required this.onPressed,
+  });
 
-class _WorkoutTile extends StatelessWidget {
-  const _WorkoutTile(this.entry);
-  final WorkoutEntry entry;
+  final String title;
+  final String message;
+  final String action;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => SurfaceCard(
+    child: EmptyView(
+      icon: ForgeIcons.event,
+      title: title,
+      message: message,
+      compact: true,
+      actions: [
+        ForgeButton(
+          label: action,
+          variant: ForgeButtonVariant.secondary,
+          onPressed: onPressed,
+        ),
+      ],
+    ),
+  );
+}
+
+/// One entry of a date: its date box (today's ringed), then a workout or a
+/// cardio session opening its page, a planned day with Start, or a missed
+/// one with Do it today. Holding the program's next day, planned or
+/// missed, moves it.
+class _EntryRow extends StatelessWidget {
+  const _EntryRow({required this.entry, required this.today});
+
+  final CalendarEntry entry;
+  final bool today;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final unit = context.select(
-      (SettingsCubit cubit) => cubit.state.settings.weightUnit,
+    final date = entry.date.toLocalDateTime();
+    final box = ListRowDateBox(
+      weekday: DateFormat.E(l10n.localeName).format(date),
+      day: '${date.day}',
+      state: today ? DayState.today : DayState.none,
     );
-    final workout = entry.workout;
-    final summary = summarizeWorkout(workout);
-    final details = [
-      _time(context, workout.startedAt),
-      l10n.durationMinutes(summary.duration),
-      l10n.historySetCount(summary.setCount),
-      if (summary.volumeKg > 0) l10n.weightText(summary.volumeKg, unit),
-    ];
-    return ListTile(
-      leading: Icon(
-        Icons.fitness_center,
-        color: Theme.of(context).colorScheme.primary,
-      ),
-      title: Text(workout.name),
-      subtitle: Text(details.join(' · ')),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => context.go(Routes.calendarWorkout(workout.id)),
-    );
+    switch (entry) {
+      case WorkoutEntry(:final workout):
+        final unit = context.select(
+          (SettingsCubit cubit) => cubit.state.settings.weightUnit,
+        );
+        final summary = summarizeWorkout(workout);
+        return ListRow(
+          leading: box,
+          title: workout.name,
+          detail: [
+            l10n.durationMinutes(summary.duration),
+            if (summary.volumeKg > 0)
+              l10n.weightText(summary.volumeKg, unit)
+            else
+              l10n.historySetCount(summary.setCount),
+          ].join(' · '),
+          end: ListRowEnd.chevron,
+          onTap: () => context.go(Routes.calendarWorkout(workout.id)),
+        );
+      case CardioEntry(:final session):
+        final unit = context.select(
+          (SettingsCubit cubit) =>
+              distanceUnitFor(cubit.state.settings.lengthUnit),
+        );
+        final distance = session.distanceKm;
+        return ListRow(
+          leading: box,
+          title: l10n.typeName(session.type),
+          detail: l10n.calendarRowCardio(
+            distance == null
+                ? l10n.cardioMinutesOf(session.duration)
+                : l10n.distanceText(distance, unit),
+          ),
+          end: ListRowEnd.chevron,
+          onTap: () => context.push(Routes.cardioSession(session.id!)),
+        );
+      case PlanEntry(:final program, :final day):
+        return _PlanRow(program: program, day: day, box: box);
+    }
   }
 }
 
-class _CardioTile extends StatelessWidget {
-  const _CardioTile(this.entry);
-  final CardioEntry entry;
+class _PlanRow extends StatelessWidget {
+  const _PlanRow({required this.program, required this.day, required this.box});
+
+  final Program program;
+  final PlannedDay day;
+  final Widget box;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final session = entry.session;
-    return ListTile(
-      leading: Icon(
-        Icons.directions_run,
-        color: Theme.of(context).colorScheme.tertiary,
-      ),
-      title: Text(l10n.typeName(session.type)),
-      subtitle: Text(
-        '${_time(context, session.date)} · '
-        '${formatDuration(session.duration)}',
-      ),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => context.push(Routes.cardioSession(session.id!)),
-    );
-  }
-}
-
-/// A program day not done yet. A planned one starts like the program's own
-/// ▶; a missed one is resolved in the Programs tab.
-class _PlanTile extends StatelessWidget {
-  const _PlanTile(this.entry);
-  final PlanEntry entry;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final colors = Theme.of(context).colorScheme;
-    final PlanEntry(:program, :day) = entry;
-    final name = l10n.dayName(program.days[day.dayIndex], day.dayIndex);
+    final programs = context.watch<ProgramListCubit>().state;
+    final locked = programs.access(program) == ProgramAccess.locked;
     final missed = day.status == PlannedStatus.missed;
-    return ListTile(
-      leading: Icon(
-        missed ? Icons.error_outline : Icons.schedule,
-        color: missed ? colors.error : colors.primary,
-      ),
-      title: Text(name),
-      subtitle: Text(
-        missed
-            ? l10n.calendarMissed(program.name)
-            : l10n.calendarPlanned(program.name),
-      ),
-      trailing: missed
+    final active = programs.active;
+    // Only the next day has a date of its own to move.
+    final movable =
+        !locked &&
+        active != null &&
+        active.programId == program.id &&
+        active.nextDayIndex == day.dayIndex &&
+        (missed || active.nextDate == day.date);
+    final name = l10n.dayName(program.days[day.dayIndex], day.dayIndex);
+    final row = ListRow(
+      leading: box,
+      title: name,
+      detail: missed
           ? null
-          : IconButton(
-              icon: const Icon(Icons.play_arrow),
-              tooltip: l10n.workoutStartDay(name),
+          : l10n.calendarRowPlanned(program.days[day.dayIndex].items.length),
+      error: missed ? l10n.calendarRowMissed : null,
+      trailing: missed
+          ? (locked
+                ? null
+                : ForgeButton(
+                    label: l10n.programMissedToday,
+                    size: ForgeButtonSize.small,
+                    variant: ForgeButtonVariant.secondary,
+                    loading: programs.resolving,
+                    onPressed: () =>
+                        resolveMissedDay(context, MissedDayChoice.doToday),
+                  ))
+          : ForgeButton(
+              label: l10n.calendarStart,
+              size: ForgeButtonSize.small,
+              locked: locked,
               onPressed: () => startProgramDay(context, program, day.dayIndex),
             ),
+    );
+    if (!movable) return row;
+    return GestureDetector(
+      onLongPress: () => _moveSheet(context, name, active.nextDate),
+      child: row,
+    );
+  }
+
+  Future<void> _moveSheet(
+    BuildContext context,
+    String name,
+    CalendarDate planned,
+  ) async {
+    final programs = context.read<ProgramListCubit>();
+    final active = programs.state.active;
+    if (active == null) return;
+    final dates =
+        ProgramSchedule(
+          active,
+          dayCount: program.days.length,
+          lengthWeeks: program.lengthWeeks,
+        ).moveDates(
+          CalendarDate.of(DateTime.now()),
+          firstWeekday: programs.firstWeekday,
+        );
+    final picked = await showForgeBottomSheet<CalendarDate>(
+      context: context,
+      builder: (_) => _MoveSheet(name: name, planned: planned, dates: dates),
+    );
+    if (picked == null || !context.mounted) return;
+    await programs.moveNext(picked);
+    final failure = programs.state.resolveFailure;
+    if (failure == null || !context.mounted) return;
+    final l10n = AppLocalizations.of(context);
+    showForgeSnackbar(
+      context,
+      message: failure is NetworkFailure
+          ? l10n.errorNetwork
+          : l10n.programMissedFailed,
+      error: true,
+    );
+    programs.resolveFailureShown();
+  }
+}
+
+/// Picks the day of the week to move the next day to; nothing is picked
+/// at first.
+class _MoveSheet extends StatefulWidget {
+  const _MoveSheet({
+    required this.name,
+    required this.planned,
+    required this.dates,
+  });
+
+  final String name;
+  final CalendarDate planned;
+  final List<CalendarDate> dates;
+
+  @override
+  State<_MoveSheet> createState() => _MoveSheetState();
+}
+
+class _MoveSheetState extends State<_MoveSheet> {
+  CalendarDate? _picked;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final muted = ForgeStyle.of(context).colors.inkMuted;
+    final picked = _picked;
+    final chip = DateFormat.E(l10n.localeName);
+    return ForgeBottomSheet(
+      title: l10n.calendarMoveTitle(widget.name),
+      action: ForgeButton(
+        label: picked == null
+            ? l10n.calendarMove
+            : l10n.programMissedMove(l10n.weekdayLong(picked.weekday)),
+        size: ForgeButtonSize.large,
+        onPressed: picked == null || picked == widget.planned
+            ? null
+            : () => Navigator.pop(context, picked),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: Gap.md,
+        children: [
+          Text(
+            l10n.calendarMoveMessage(l10n.planDate(widget.planned)),
+            style: text.bodyMedium!.copyWith(color: muted),
+          ),
+          Wrap(
+            spacing: Gap.sm,
+            runSpacing: Gap.sm,
+            children: [
+              for (final date in widget.dates)
+                ForgeChip(
+                  label: '${chip.format(date.toLocalDateTime())} ${date.day}',
+                  selected: date == picked,
+                  showCheck: false,
+                  onPressed: () => setState(() => _picked = date),
+                ),
+            ],
+          ),
+          Text(
+            l10n.calendarMoveNote,
+            style: text.bodySmall!.copyWith(color: muted),
+          ),
+        ],
+      ),
     );
   }
 }

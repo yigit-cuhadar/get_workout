@@ -181,6 +181,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
     required this._watchCompletedDays,
     required WatchRejectedProgramWrites watchRejectedWrites,
     required this._resolveMissedDay,
+    required this._moveNextDay,
     required WatchPremium watchPremium,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now,
@@ -203,6 +204,7 @@ class ProgramListCubit extends Cubit<ProgramListState> {
   final WatchActiveProgram _watchActiveProgram;
   final WatchCompletedDays _watchCompletedDays;
   final ResolveMissedDay _resolveMissedDay;
+  final MoveNextDay _moveNextDay;
   final DateTime Function() _clock;
   late final StreamSubscription<String?> _userSubscription;
   late final StreamSubscription<Failure> _rejectedSubscription;
@@ -268,6 +270,31 @@ class ProgramListCubit extends Cubit<ProgramListState> {
       choice: choice,
     ))).failureOrNull;
     // A result for a previous user says nothing about the current one.
+    if (isClosed || _uid != uid) return;
+    emit(state.copyWith(resolving: false, resolveFailure: () => failure));
+  }
+
+  /// Moves the active program's next day to [date] of its week; reported
+  /// like [resolveMissed].
+  Future<void> moveNext(CalendarDate date) async {
+    final uid = _uid;
+    final active = state.active;
+    final program = state.activeProgram;
+    if (uid == null ||
+        active == null ||
+        program == null ||
+        state.resolving ||
+        state.access(program) != ProgramAccess.open) {
+      return;
+    }
+    emit(state.copyWith(resolving: true));
+    final failure = (await _moveNextDay((
+      uid: uid,
+      active: active,
+      program: program,
+      date: date,
+      firstWeekday: _firstWeekday,
+    ))).failureOrNull;
     if (isClosed || _uid != uid) return;
     emit(state.copyWith(resolving: false, resolveFailure: () => failure));
   }

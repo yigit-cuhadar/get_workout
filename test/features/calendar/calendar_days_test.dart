@@ -15,8 +15,6 @@ CalendarDate d(int year, int month, int day) => CalendarDate(year, month, day);
 void main() {
   // Wednesday 11 November 2026; the week ends on Sunday the 15th.
   final today = d(2026, 11, 11);
-  final monday = d(2026, 11, 9);
-  final sunday = d(2026, 11, 15);
   final upperLower = program(id: 'p1');
   // Upper was planned on Monday the 9th and missed; it comes again on
   // Friday the 13th, Lower on Monday the 16th.
@@ -34,7 +32,7 @@ void main() {
     startedAt: DateTime(2026, 11, 11, 19),
   );
   final older = workout('w2', const [], startedAt: DateTime(2026, 11, 3, 18));
-  final oldest = workout('w1', const [], startedAt: DateTime(2026, 11, 1, 18));
+  final october = workout('w1', const [], startedAt: DateTime(2026, 10, 6, 18));
   CardioSession run(String id, DateTime date) => CardioSession(
     id: id,
     type: CardioType.treadmillRun,
@@ -43,151 +41,116 @@ void main() {
   );
   final lunchRun = run('c1', DateTime(2026, 11, 11, 12));
   final earlyRun = run('c2', DateTime(2026, 11, 3, 6));
-  final firstRun = run('c3', DateTime(2026, 10, 20, 6));
 
-  List<CalendarDate> dates(List<CalendarDay> days) => [
-    for (final day in days) day.date,
-  ];
-
-  test('the list starts at the oldest workout loaded, or this week', () {
-    expect(listStart(const [], more: false, weekStart: monday), monday);
-    expect(listStart([morning], more: false, weekStart: monday), monday);
-    expect(
-      listStart([morning, older], more: false, weekStart: monday),
-      d(2026, 11, 3),
-    );
-    // Older ones to come: its own date, even in this week.
-    expect(listStart([evening, morning], more: true, weekStart: monday), today);
-  });
-
-  test('the list shows its dates, its start once nothing more follows', () {
-    final start = d(2026, 11, 3);
-    bool shows(CalendarDate date, {required bool more}) =>
-        listShows(date, start: start, end: sunday, more: more);
-    expect(shows(sunday, more: true), isTrue);
-    expect(shows(d(2026, 11, 16), more: false), isFalse);
-    expect(shows(d(2026, 11, 4), more: true), isTrue);
-    expect(shows(start, more: true), isFalse);
-    expect(shows(start, more: false), isTrue);
-    expect(shows(d(2026, 11, 2), more: false), isFalse);
-  });
-
-  test('dates with entries, newest first, newest first within one', () {
-    final days = calendarDays(
+  Map<CalendarDate, List<CalendarEntry>> entries(CalendarDate month) {
+    final (:from, :to) = monthRange(month);
+    return calendarEntries(
+      from: from,
+      to: to,
       today: today,
-      start: d(2026, 11, 1),
-      end: sunday,
-      workouts: [evening, morning, older, oldest],
-      more: false,
-      cardio: [lunchRun, earlyRun, firstRun],
+      workouts: [october, older, morning, evening],
+      cardio: [earlyRun, lunchRun],
       active: active,
       program: upperLower,
     );
-    // Not the run before the start, nor the plan after the end.
-    expect(dates(days), [
-      d(2026, 11, 13),
-      today,
-      d(2026, 11, 9),
-      d(2026, 11, 3),
-      d(2026, 11, 1),
-    ]);
-    expect(days[1].entries, [
+  }
+
+  List<CalendarEntry> Function(CalendarDate) on(
+    Map<CalendarDate, List<CalendarEntry>> entries, [
+    CalendarFilter filter = CalendarFilter.all,
+  ]) =>
+      (date) => filterEntries(entries[date] ?? const [], filter);
+
+  test('a day lists what was done newest first, then its plan', () {
+    final day = calendarDay(today, entries(d(2026, 11, 1))[today]!);
+    expect(day.entries, [
       WorkoutEntry(evening),
       CardioEntry(lunchRun),
       WorkoutEntry(morning),
     ]);
-    expect(days[0].entries, [
-      PlanEntry(
-        upperLower,
-        PlannedDay(
-          date: d(2026, 11, 13),
-          dayIndex: 0,
-          status: PlannedStatus.planned,
-        ),
-      ),
-    ]);
-    expect(days[2].entries, [
-      PlanEntry(
-        upperLower,
-        PlannedDay(
-          date: d(2026, 11, 9),
-          dayIndex: 0,
-          status: PlannedStatus.missed,
-        ),
-      ),
-    ]);
   });
 
-  test('while older workouts may follow, the start shows only those', () {
-    final days = calendarDays(
+  test('the filter keeps workouts and program days, or cardio', () {
+    final all = entries(d(2026, 11, 1));
+    expect(on(all, CalendarFilter.cardio)(today), [CardioEntry(lunchRun)]);
+    expect(on(all, CalendarFilter.workouts)(today), [
+      WorkoutEntry(morning),
+      WorkoutEntry(evening),
+    ]);
+    expect(on(all, CalendarFilter.workouts)(d(2026, 11, 9)), hasLength(1));
+  });
+
+  test('this month: this week, then the days before it', () {
+    final november = d(2026, 11, 1);
+    final sections = monthSections(
+      november,
       today: today,
-      start: d(2026, 11, 3),
-      end: sunday,
-      workouts: [morning, older],
-      more: true,
-      cardio: [lunchRun, earlyRun],
+      firstWeekday: DateTime.monday,
+      entriesOn: on(entries(november)),
     );
-    expect(dates(days), [today, d(2026, 11, 3)]);
-    expect(days.last.entries, [WorkoutEntry(older)]);
-  });
-
-  test('a date asked for is listed in place, even empty, if shown', () {
-    List<CalendarDate> revealing(CalendarDate date) => dates(
-      calendarDays(
-        today: today,
-        start: d(2026, 11, 3),
-        end: sunday,
-        workouts: [morning, older],
-        more: true,
-        cardio: const [],
-        revealed: date,
-      ),
-    );
-    expect(revealing(d(2026, 11, 5)), [today, d(2026, 11, 5), d(2026, 11, 3)]);
-    for (final date in [d(2026, 11, 3), d(2026, 11, 2), d(2026, 11, 18)]) {
-      expect(revealing(date), [today, d(2026, 11, 3)], reason: '$date');
-    }
-  });
-
-  test('a date on its own: what was done and the plan on it', () {
-    final later = calendarDay(
-      d(2026, 11, 20),
-      today: today,
-      workouts: const [],
-      cardio: const [],
-      active: active,
-      program: upperLower,
-    );
-    expect(later.entries, [
-      PlanEntry(
-        upperLower,
-        PlannedDay(
-          date: d(2026, 11, 20),
-          dayIndex: 0,
-          status: PlannedStatus.planned,
-        ),
-      ),
+    expect(sections.map((s) => s.kind), [
+      CalendarSectionKind.thisWeek,
+      CalendarSectionKind.earlierThisMonth,
     ]);
-    // Only that date: not the Monday between.
-    expect(
-      calendarDay(
-        d(2026, 11, 17),
-        today: today,
-        workouts: const [],
-        cardio: const [],
-        active: active,
-        program: upperLower,
-      ).entries,
-      isEmpty,
+    expect(sections.first.first, d(2026, 11, 9));
+    expect(sections.first.last, d(2026, 11, 15));
+    expect(sections.first.days.map((day) => day.date), [
+      d(2026, 11, 13),
+      today,
+      d(2026, 11, 9),
+    ]);
+    expect(sections.last.days.map((day) => day.date), [d(2026, 11, 3)]);
+  });
+
+  test('another month: its weeks within it, newest first, empty ones left '
+      'out', () {
+    final octoberMonth = d(2026, 10, 1);
+    final sections = monthSections(
+      octoberMonth,
+      today: today,
+      firstWeekday: DateTime.monday,
+      entriesOn: on(entries(octoberMonth)),
     );
+    expect(sections, hasLength(1));
+    expect(sections.single.kind, CalendarSectionKind.week);
+    expect(sections.single.first, d(2026, 10, 5));
+    expect(sections.single.last, d(2026, 10, 11));
+  });
+
+  test('a month ahead lists its planned weeks, clipped to the month', () {
+    final december = d(2026, 12, 1);
+    final sections = monthSections(
+      december,
+      today: today,
+      firstWeekday: DateTime.monday,
+      entriesOn: on(entries(december)),
+    );
+    expect(sections.first.last, d(2026, 12, 31));
+    expect(sections.last.first, d(2026, 12, 1));
     expect(
-      calendarDay(
-        d(2026, 11, 3),
-        today: today,
-        workouts: [older],
-        cardio: [earlyRun],
+      sections
+          .expand((s) => s.days)
+          .every((day) => day.entries.first is PlanEntry),
+      isTrue,
+    );
+  });
+
+  test('counts the month\'s workouts, cardio and missed days', () {
+    final november = d(2026, 11, 1);
+    final all = entries(november);
+    expect(monthCounts(november, on(all)), (workouts: 3, cardio: 2, missed: 1));
+    expect(monthCounts(november, on(all, CalendarFilter.cardio)), (
+      workouts: 0,
+      cardio: 2,
+      missed: 0,
+    ));
+    expect(
+      entries(november)[d(2026, 11, 9)]!.single,
+      isA<PlanEntry>().having(
+        (e) => e.day.status,
+        'status',
+        PlannedStatus.missed,
       ),
-      CalendarDay(d(2026, 11, 3), [WorkoutEntry(older), CardioEntry(earlyRun)]),
     );
   });
 }

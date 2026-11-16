@@ -101,6 +101,7 @@ void main() {
     watchCompletedDays: WatchCompletedDays(completedDays),
     watchRejectedWrites: WatchRejectedProgramWrites(repository),
     resolveMissedDay: ResolveMissedDay(repository, clock: () => now),
+    moveNextDay: MoveNextDay(repository, clock: () => now),
     watchPremium: WatchPremium(premium),
     clock: () => now,
   );

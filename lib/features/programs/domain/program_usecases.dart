@@ -236,6 +236,49 @@ class ResolveMissedDay implements UseCase<void, MissedDayResolution> {
   }
 }
 
+/// [program] is the active program as it is now.
+typedef NextDayMove = ({
+  String uid,
+  ActiveProgram active,
+  Program program,
+  CalendarDate date,
+  int firstWeekday,
+});
+
+/// Moves the active program's next day to another date of its week (see
+/// [ProgramSchedule.moveDates]); refused with a [ValidationFailure] for
+/// any other date.
+class MoveNextDay implements UseCase<void, NextDayMove> {
+  MoveNextDay(this._repository, {DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
+  final ProgramRepository _repository;
+  final DateTime Function() _clock;
+
+  @override
+  Future<Result<void>> call(NextDayMove params) async {
+    final program = params.program;
+    if (program.days.isEmpty || program.id != params.active.programId) {
+      return const Err(ValidationFailure('not the active program'));
+    }
+    final schedule = ProgramSchedule(
+      params.active,
+      dayCount: program.days.length,
+      lengthWeeks: program.lengthWeeks,
+    );
+    final dates = schedule.moveDates(
+      CalendarDate.of(_clock()),
+      firstWeekday: params.firstWeekday,
+    );
+    if (!dates.contains(params.date)) {
+      return const Err(ValidationFailure('not a date of its week'));
+    }
+    return _repository.updateActiveProgram(
+      params.uid,
+      schedule.moveNext(params.date),
+    );
+  }
+}
+
 /// Appends [ExerciseAddition.exercise] to a day of a stored program with
 /// the default targets (see [defaultItem]) and saves it like
 /// [SaveProgram]; refused with a [ValidationFailure] when the day is full or

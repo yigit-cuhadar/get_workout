@@ -148,7 +148,6 @@ class WorkoutModule implements FeatureModule {
           },
         ),
       )
-      ..registerFactory(() => WatchHistory(sl()))
       ..registerFactory(() => WatchWorkoutsBetween(sl()))
       ..registerFactory(() => WatchStoredWorkout(sl()))
       ..registerFactory(() => WatchRejectedWorkoutEdits(sl()))
