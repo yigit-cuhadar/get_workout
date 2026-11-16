@@ -1,9 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:get_workout/features/body/domain/body_entry.dart';
 import 'package:get_workout/features/body/presentation/weight_form_cubit.dart';
-import 'package:get_workout/features/body/presentation/weight_form_page.dart';
+import 'package:get_workout/features/body/presentation/weight_sheet.dart';
 import 'package:get_workout/features/progress/domain/progress_usecases.dart';
 import 'package:get_workout/features/progress/presentation/progress_page.dart';
 import 'package:get_workout/features/progress/presentation/progress_strength_cubit.dart';
@@ -1092,7 +1091,10 @@ void main() {
       expect(front(), Routes.customExerciseNew);
       expect(find.byType(ForgeNavigationBar), findsOneWidget);
 
-      await tester.enterText(find.widgetWithText(TextField, 'Name'), 'Sled');
+      await tester.enterText(
+        find.widgetWithText(ForgeTextField, 'Name'),
+        'Sled',
+      );
       await tester.pump();
       await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
@@ -1393,7 +1395,7 @@ void main() {
       router.go(Routes.customExerciseNew);
       await tester.pumpAndSettle();
       await tester.enterText(
-        find.widgetWithText(TextField, 'Name'),
+        find.widgetWithText(ForgeTextField, 'Name'),
         'Sled push',
       );
       await tester.pump();
@@ -1867,6 +1869,8 @@ void main() {
 
     await tester.tap(find.text('Goal'));
     await tester.pumpAndSettle();
+    // Over the tab bar.
+    expect(find.byType(ForgeNavigationBar), findsNothing);
     await tester.tap(find.text('Get stronger'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Save'));
@@ -2063,7 +2067,8 @@ void main() {
       users.add(const AuthUser(id: 'u2', email: 'b@c.de'));
       await tester.pump();
       await tester.pump();
-      expect(find.byType(LoadingView), findsOneWidget);
+      expect(find.byType(ProfileQuestionPage), findsOneWidget);
+      expect(find.text('Get stronger'), findsNothing);
 
       profileStream.add(onboarded);
       await tester.pumpAndSettle();
@@ -2084,8 +2089,8 @@ void main() {
       users.add(const AuthUser(id: 'u2', email: 'b@c.de'));
       await tester.pump();
       await tester.pump();
-      expect(find.byType(LoadingView), findsOneWidget);
-      expect(find.text('Not answered'), findsNothing);
+      expect(find.byType(ListRow), findsNWidgets(9));
+      expect(find.text('Goal'), findsNothing);
 
       profileStream.addError(const NetworkFailure());
       await tester.pump();
@@ -2095,7 +2100,7 @@ void main() {
       storedProfile = onboarded;
       await tester.tap(find.text('Retry'));
       await tester.pumpAndSettle();
-      expect(find.text('Not answered'), findsWidgets);
+      expect(find.text('—'), findsWidgets);
     });
 
     testWidgets('a rejected save is reported once after the page closed', (
@@ -2512,13 +2517,17 @@ void main() {
     expect(path(), Routes.today);
   });
 
-  testWidgets('Log weight opens above Progress, and Back returns to it', (
+  testWidgets('Log weight opens its sheet over Progress, which stays', (
     tester,
   ) async {
     await startAsGuest(tester);
-    sl.registerFactoryParam<WeightFormCubit, BodyEntry?, WeightUnit>((_, _) {
+    sl.registerFactoryParam<WeightFormCubit, WeightFormSetup, WeightUnit>((
+      _,
+      _,
+    ) {
       final cubit = _WeightFormCubit();
-      when(() => cubit.state).thenReturn(WeightFormState(date: DateTime(2026)));
+      when(() => cubit.state)
+          .thenReturn(WeightFormState(date: DateTime(2026), weight: 70));
       when(() => cubit.isEditing).thenReturn(false);
       return cubit;
     });
@@ -2526,12 +2535,7 @@ void main() {
 
     await tester.tap(find.text('Log weight'));
     await tester.pumpAndSettle();
-    // Pushed above Progress, whose location stays.
-    expect(find.byType(WeightNewPage), findsOneWidget);
-    expect(path(), Routes.progress);
-
-    await tester.tap(find.bySemanticsLabel('Back'));
-    await tester.pumpAndSettle();
+    expect(find.byType(WeightSheet), findsOneWidget);
     expect(find.byType(ProgressPage), findsOneWidget);
     expect(path(), Routes.progress);
   });

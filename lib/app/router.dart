@@ -14,7 +14,6 @@ import '../features/body/presentation/body_entry_page.dart';
 import '../features/body/presentation/body_page.dart';
 import '../features/body/presentation/measurement_day_page.dart';
 import '../features/body/presentation/measurement_summary_page.dart';
-import '../features/body/presentation/weight_form_page.dart';
 import '../features/account/presentation/delete_account_page.dart';
 import '../features/calendar/presentation/calendar_page.dart';
 import '../features/cardio/presentation/cardio_form_page.dart';
@@ -191,7 +190,6 @@ abstract final class Routes {
   static const strengthSegment = 'strength';
   static const calendar = '$progress/calendar';
   static const body = '$progress/body';
-  static const bodyWeightNew = '$body/weight';
   static const bodyMeasureNew = '$body/measure';
   static String bodySummary(String id) =>
       '$body/summary/${Uri.encodeComponent(id)}';
@@ -200,7 +198,6 @@ abstract final class Routes {
   /// The Body page on Compare, measurement day [id] the later one.
   static String bodyEntryCompare(String id) =>
       '$body?compare=${Uri.encodeQueryComponent(id)}';
-  static String bodyEntryWeight(String id) => '${bodyEntry(id)}/weight';
   static String bodyEntryMeasure(String id) => '${bodyEntry(id)}/measure';
 
   /// Adds a past workout.
@@ -351,7 +348,9 @@ GoRouter buildRouter(
   // Who onboarding was last shown to.
   String? onboardingUid;
   final unsavedChanges = UnsavedChanges();
+  final root = GlobalKey<NavigatorState>();
   return GoRouter(
+    navigatorKey: root,
     initialLocation: Routes.splash,
     onEnter: unsavedChanges.onEnter,
     // Refresh only when the redirect can change. A refresh re-parses the
@@ -706,10 +705,6 @@ GoRouter buildRouter(
                   // Before ':id', which would match these too; entry ids
                   // are Firestore auto ids.
                   GoRoute(
-                    path: 'weight',
-                    builder: (_, _) => const WeightNewPage(),
-                  ),
-                  GoRoute(
                     path: 'measure',
                     builder: (_, _) => const MeasurementDayNewPage(),
                   ),
@@ -724,11 +719,6 @@ GoRouter buildRouter(
                     builder: (_, state) =>
                         BodyEntryPage(id: state.pathParameters['id']!),
                     routes: [
-                      GoRoute(
-                        path: 'weight',
-                        builder: (_, state) =>
-                            WeightEditPage(id: state.pathParameters['id']!),
-                      ),
                       GoRoute(
                         path: 'measure',
                         builder: (_, state) => MeasurementDayEditPage(
@@ -781,6 +771,8 @@ GoRouter buildRouter(
                 routes: [
                   GoRoute(
                     path: ':field',
+                    // Over the tab bar.
+                    parentNavigatorKey: root,
                     redirect: (_, state) =>
                         _field(state) == null ? Routes.profileDetails : null,
                     builder: (_, state) => ProfileQuestionPage(_field(state)!),

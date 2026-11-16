@@ -245,6 +245,17 @@ enum EquipmentProfile implements Coded {
     };
     return set.every(codes.contains);
   }
+
+  /// The preset whose equipment is exactly [owned]; null when none is.
+  static EquipmentProfile? matching(Set<Equipment> owned) {
+    for (final preset in values) {
+      final equipment = preset.equipment;
+      if (equipment.length == owned.length && owned.containsAll(equipment)) {
+        return preset;
+      }
+    }
+    return null;
+  }
 }
 
 /// Whether users see an exercise. Exercises are never deleted, only retired.

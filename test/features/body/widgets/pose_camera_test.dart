@@ -5,6 +5,7 @@ import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/features/body/presentation/widgets/pose_camera.dart';
 
 import '../../../component_harness.dart';
@@ -13,13 +14,11 @@ import '../fake_camera.dart';
 void main() {
   late FakeCameraPlatform platform;
   late List<String> captured;
-  late int skipped;
 
   setUp(() {
     platform = FakeCameraPlatform([backCamera, frontCamera]);
     CameraPlatform.instance = platform;
     captured = [];
-    skipped = 0;
   });
 
   Future<void> show(WidgetTester tester, {String? ghostFile}) async {
@@ -33,7 +32,6 @@ void main() {
           total: 4,
           ghostFile: ghostFile,
           onCaptured: captured.add,
-          onSkip: () => skipped++,
         ),
       ),
     );
@@ -142,7 +140,7 @@ void main() {
     expect(button('Switch camera'), findsNothing);
   });
 
-  testWidgets('camera access off opens the settings or skips the photo', (
+  testWidgets('camera access off opens the settings, no skip of its own', (
     tester,
   ) async {
     final settings = <String>[];
@@ -165,12 +163,11 @@ void main() {
     await tester.tap(find.text('Open settings'));
     await tester.pump();
     expect(settings, ['openSettings']);
-
-    await tester.tap(find.text('Skip photo'));
-    expect(skipped, 1);
+    // The page under the camera offers the skip (B3).
+    expect(find.text('Skip photo'), findsNothing);
   });
 
-  testWidgets('no camera only skips the photo', (tester) async {
+  testWidgets('no camera says so, with no button of its own', (tester) async {
     CameraPlatform.instance = platform = FakeCameraPlatform([]);
     await show(tester);
 
@@ -180,7 +177,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Open settings'), findsNothing);
-    await tester.tap(find.text('Skip photo'));
-    expect(skipped, 1);
+    // The page under the camera offers the skip (B3).
+    expect(find.byType(ForgeButton), findsNothing);
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,6 +18,7 @@ import 'package:get_workout/features/body/presentation/body_list_cubit.dart';
 import 'package:get_workout/features/body/presentation/body_page.dart';
 import 'package:get_workout/features/body/presentation/measurement_summary_cubit.dart';
 import 'package:get_workout/features/body/presentation/measurement_summary_page.dart';
+import 'package:get_workout/features/body/presentation/weight_form_cubit.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
@@ -36,6 +39,9 @@ class _SettingsCubit extends MockCubit<SettingsState>
     implements SettingsCubit {}
 
 class _ProfileCubit extends MockCubit<ProfileState> implements ProfileCubit {}
+
+class _WeightFormCubit extends MockCubit<WeightFormState>
+    implements WeightFormCubit {}
 
 class _EntitlementCubit extends MockCubit<EntitlementState>
     implements EntitlementCubit {}
@@ -623,5 +629,104 @@ void main() {
       find.byType(BeforeAfterSlider),
     );
     expect(slider.views!.single.change, isNull);
+  });
+
+  group('Log weight', () {
+    late _WeightFormCubit form;
+    late StreamController<WeightFormState> states;
+    WeightFormSetup? opened;
+
+    setUp(() {
+      form = _WeightFormCubit();
+      states = StreamController<WeightFormState>();
+      final start = WeightFormState(date: DateTime.now(), weight: 82.4);
+      whenListen(form, states.stream, initialState: start);
+      when(() => form.isEditing).thenReturn(false);
+      when(form.save).thenAnswer((_) async {});
+      sl.registerFactoryParam<WeightFormCubit, WeightFormSetup, WeightUnit>((
+        setup,
+        _,
+      ) {
+        opened = setup;
+        return form;
+      });
+    });
+
+    tearDown(() => states.close());
+
+    testWidgets('opens a sheet over Body, its ruler at the last weigh-in', (
+      tester,
+    ) async {
+      await pump(tester, const BodyPage());
+
+      await tester.tap(find.widgetWithText(ForgeButton, 'Log weight'));
+      await tester.pumpAndSettle();
+
+      expect(opened, (initial: null, startKg: 82.4));
+      final sheet = find.byType(ForgeBottomSheet);
+      expect(
+        find.descendant(of: sheet, matching: find.text('Log weight')),
+        findsOneWidget,
+      );
+      final ruler = tester.widget<NumberPicker>(find.byType(NumberPicker));
+      expect((ruler.value, ruler.unit), (82.4, 'kg'));
+      expect(find.textContaining('Today, '), findsOneWidget);
+      expect(find.text('Change'), findsOneWidget);
+
+      await tester.tap(find.text('Save'));
+      verify(form.save).called(1);
+    });
+
+    testWidgets('Change opens the date picker over the sheet', (tester) async {
+      await pump(tester, const BodyPage());
+      await tester.tap(find.text('Log weight'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Change'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ForgeDatePicker), findsOneWidget);
+    });
+
+    testWidgets('a failed save says so over the sheet, which stays', (
+      tester,
+    ) async {
+      await pump(tester, const BodyPage());
+      await tester.tap(find.widgetWithText(ForgeButton, 'Log weight'));
+      await tester.pumpAndSettle();
+
+      states.add(
+        WeightFormState(
+          date: DateTime.now(),
+          weight: 82.4,
+          status: WeightFormStatus.saveFailed,
+          failure: const UnknownFailure(),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(ForgeSnackbar), findsOneWidget);
+      expect(find.text("Couldn't save. Try again"), findsOneWidget);
+      expect(find.byType(ForgeBottomSheet), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+      expect(find.byType(ForgeSnackbar), findsNothing);
+    });
+
+    testWidgets('closes once saved', (tester) async {
+      await pump(tester, const BodyPage());
+      await tester.tap(find.widgetWithText(ForgeButton, 'Log weight'));
+      await tester.pumpAndSettle();
+
+      states.add(
+        WeightFormState(
+          date: DateTime.now(),
+          weight: 82.4,
+          status: WeightFormStatus.saved,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ForgeBottomSheet), findsNothing);
+    });
   });
 }

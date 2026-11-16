@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/core/widgets/onboarding_question.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/profile/presentation/profile_questions.dart';
-import 'package:get_workout/features/profile/presentation/ruler_picker.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
@@ -127,20 +127,15 @@ class _HeightState extends State<_Height> {
       title: 'How tall are you?',
       info: 'Drag the ruler or tap the number to type it.',
       scrolls: false,
-      answer: Column(
-        children: [
-          Text(
-            '${_cm.round()} cm',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          RulerPicker(
-            min: 100,
-            max: 250,
-            step: 1,
-            value: _cm,
-            onChanged: (cm) => setState(() => _cm = cm),
-          ),
-        ],
+      answer: NumberPicker.ruler(
+        label: 'Height',
+        unit: 'cm',
+        min: 100,
+        max: 250,
+        step: 1,
+        value: _cm,
+        onChanged: (cm) => setState(() => _cm = cm),
+        onValueTap: () {},
       ),
     ),
     actionLabel: 'Continue',

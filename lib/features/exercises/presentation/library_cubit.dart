@@ -198,6 +198,18 @@ class LibraryCubit extends Cubit<LibraryState> {
     ),
   );
 
+  void setMuscles(Set<Muscle> muscles) =>
+      _recompute(filter: state.filter.copyWith(muscles: muscles));
+
+  void setEquipment(Set<Equipment> equipment) =>
+      _recompute(filter: state.filter.copyWith(equipment: equipment));
+
+  void setLevels(Set<Level> levels) =>
+      _recompute(filter: state.filter.copyWith(levels: levels));
+
+  void setMovementPatterns(Set<MovementPattern> patterns) =>
+      _recompute(filter: state.filter.copyWith(movementPatterns: patterns));
+
   /// While the user's equipment is unknown, only bodyweight counts.
   void setOnlyDoable(bool value) =>
       _recompute(filter: state.filter.copyWith(onlyDoable: value));

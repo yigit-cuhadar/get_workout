@@ -11,6 +11,7 @@ import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../body/presentation/body_list_cubit.dart';
 import '../../body/presentation/body_text.dart';
+import '../../body/presentation/weight_sheet.dart';
 import '../../cardio/presentation/cardio_list_cubit.dart';
 import '../../cardio/presentation/cardio_text.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
@@ -162,7 +163,7 @@ class _BodyCard extends StatelessWidget {
     void open() => context.go(Routes.body);
     final logWeight = FeaturedAction(
       l10n.bodyLogWeight,
-      () => context.push(Routes.bodyWeightNew),
+      () => showWeightSheet(context),
     );
     final measure = FeaturedAction(
       l10n.bodyMeasurementDay,

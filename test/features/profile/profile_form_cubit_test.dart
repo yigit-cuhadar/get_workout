@@ -397,6 +397,33 @@ void main() {
       expect(cubit.state.answers.targetWeightKg, 75);
     });
 
+    test('a height typed in feet and inches', () {
+      final cubit = onboarding();
+      expect(cubit.enterFeetAndInches('5', '11'), isTrue);
+      expect(cubit.state.answers.heightCm, closeTo(180.34, 1e-9));
+      expect(cubit.enterFeetAndInches('6', ''), isTrue);
+      expect(cubit.state.answers.heightCm, closeTo(182.88, 1e-9));
+      expect(cubit.enterFeetAndInches('5', '11,5'), isTrue);
+      expect(cubit.state.answers.heightCm, closeTo(181.61, 1e-9));
+
+      for (final (feet, inches) in [
+        ('5', '12'),
+        ('5', '-1'),
+        ('5.5', '0'),
+        ('', '70'),
+        ('9', '0'),
+        ('2', '0'),
+        ('NaN', '0'),
+      ]) {
+        expect(
+          cubit.enterFeetAndInches(feet, inches),
+          isFalse,
+          reason: '$feet ft $inches in',
+        );
+      }
+      expect(cubit.state.answers.heightCm, closeTo(181.61, 1e-9));
+    });
+
     test('non-finite and absurd entries are refused, never exceptions', () {
       const entries = [
         'Infinity',
