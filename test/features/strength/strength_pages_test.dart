@@ -18,6 +18,7 @@ import 'package:get_workout/features/strength/presentation/strength_list_page.da
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../programs/fixtures.dart';
@@ -151,6 +152,8 @@ void main() {
       expect(find.text('Last done Nov 13'), findsOneWidget);
       expect(find.text('Exercise no longer in your library'), findsOneWidget);
       expect(find.text('Last done Sep 3, ${year - 1}'), findsOneWidget);
+      final rows = tester.widgetList<ListRow>(find.byType(ListRow)).toList();
+      expect([for (final row in rows) row.muted], [false, true]);
     });
 
     testWidgets('nothing yet: one line and no search', (tester) async {
@@ -240,6 +243,11 @@ void main() {
       expect(find.text('Sessions'), findsOneWidget);
       expect(find.text('82.5 × 8 · e1RM 104.5'), findsOneWidget);
       expect(find.text('Fri, Nov 13 · Push'), findsOneWidget);
+      ListRow row(String text) => tester.widget<ListRow>(
+        find.ancestor(of: find.text(text), matching: find.byType(ListRow)),
+      );
+      expect(row('82.5 × 8 · e1RM 104.5').dataTitle, isTrue);
+      expect(row('Heaviest').dataValue, isTrue);
     });
 
     testWidgets('only a session opens its workout', (tester) async {
@@ -269,6 +277,8 @@ void main() {
       await pump(tester, '/progress/strength/bench');
 
       expect(find.text('No estimated 1RM in these 12 weeks'), findsOneWidget);
+      final today = DateFormat.MMMd('en').format(DateTime.now());
+      expect(find.text('Aug 24 – $today'), findsOneWidget);
       expect(
         find.text('Log a set of Bench Press to continue the line.'),
         findsOneWidget,

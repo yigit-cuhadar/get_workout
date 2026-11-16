@@ -118,6 +118,9 @@ void main() {
     expect(bands.length, Muscle.values.length);
     expect(bands.first.muscle, Muscle.pec);
     expect(bands.last.sets, 0);
+    final bars = tester.widgetList<BandBar>(find.byType(BandBar)).toList();
+    expect(bars.first.muted, isFalse);
+    expect(bars.last.muted, isTrue);
     expect(
       find.text(
         'target 10–20 per muscle · tap a muscle on the model or a bar to '
@@ -162,6 +165,7 @@ void main() {
     expect(chart.detail, '14 sets');
     expect(chart.startLabel, 'Aug 24');
     expect(chart.endLabel, 'Nov 9');
+    expect(chart.pointLabel!(trendWeeks - 1), '14 sets · Nov 9–15');
   });
 
   testWidgets('a past week without sets says so, with the trend under it', (

@@ -7,7 +7,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'chart_geometry.dart';
 import 'chart_text.dart';
 
-typedef ChartPoint = ({double x, double y});
+typedef LinePoint = ({double x, double y});
 
 /// A line through [points] with a value axis of round numbers and labels
 /// along the bottom, as many as fit at the user's text size. Tapping picks
@@ -26,7 +26,7 @@ class LineChart extends StatefulWidget {
   });
 
   /// Ordered by x.
-  final List<ChartPoint> points;
+  final List<LinePoint> points;
   final String Function(double x) xLabel;
   final String Function(double y) yLabel;
 

@@ -95,6 +95,7 @@ class _Row extends StatelessWidget {
             item.exercise?.localized(context).name ??
             l10n.strengthRemovedExercise,
         detail: l10n.strengthLastDone(l10n.shortDate(item.lastTrained)),
+        muted: item.removed,
         trailing: picked
             ? ForgeIcon(ForgeIcons.check, size: 18, color: colors.accent)
             : null,

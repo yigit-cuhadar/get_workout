@@ -39,6 +39,11 @@ void main() {
     expect(find.text('14 sets'), findsOneWidget);
   });
 
+  testWidgets('a muscle without sets is muted', (tester) async {
+    expect((await show(tester, 0)).muted, isTrue);
+    expect((await show(tester, 4)).muted, isFalse);
+  });
+
   testWidgets('ticks at 10 and 20 on the scale', (tester) async {
     final bar = await show(tester, 14);
 

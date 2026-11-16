@@ -171,6 +171,7 @@ class _StrengthView extends StatelessWidget {
               title: l10n.recordName(entry.kind),
               detail: l10n.dayDate(entry.record.date),
               value: l10n.recordValue(entry, type, unit),
+              dataValue: true,
             ),
         ],
       ),
@@ -184,6 +185,7 @@ class _StrengthView extends StatelessWidget {
                 for (final session in state.sessions)
                   ListRow(
                     title: l10n.sessionText(session, type, unit),
+                    dataTitle: true,
                     detail: l10n.sessionDetail(session),
                     end: ListRowEnd.chevron,
                     onTap: () =>
@@ -270,6 +272,10 @@ class _E1rmChart extends StatelessWidget {
     if (points.isEmpty) {
       return Chart.empty(
         title: title,
+        detail: l10n.strengthDates(
+          l10n.shortDate(state.rangeStart!),
+          l10n.shortDate(DateTime.now()),
+        ),
         emptyTitle: l10n.strengthChartEmptyTitle(state.range.name),
         message: l10n.strengthChartEmptyMessage(
           name ?? l10n.strengthRemovedExercise,

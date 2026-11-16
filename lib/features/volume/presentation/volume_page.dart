@@ -175,7 +175,7 @@ class _TotalTrend extends StatelessWidget {
       values: totals,
       pointLabel: (index) => l10n.volumeTrendPoint(
         l10n.setsText(totals[index]),
-        start(weeks[index]),
+        weekRangeText(context, weeks[index].start),
       ),
       startLabel: start(weeks.first),
       endLabel: start(weeks.last),

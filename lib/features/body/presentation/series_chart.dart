@@ -25,7 +25,7 @@ class ChartSeries {
   });
 
   /// Ordered by x. A bar spans [SeriesChart.barSpan] from its x.
-  final List<ChartPoint> points;
+  final List<LinePoint> points;
   final Color color;
 
   /// The series' own scale, round values from the bottom of the plot to
