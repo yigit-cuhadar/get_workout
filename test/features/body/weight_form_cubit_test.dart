@@ -5,7 +5,6 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/body/domain/body_entry.dart';
 import 'package:get_workout/features/body/domain/body_usecases.dart';
-import 'package:get_workout/features/body/domain/body_validation.dart';
 import 'package:get_workout/features/body/presentation/weight_form_cubit.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:mocktail/mocktail.dart';
@@ -32,19 +31,28 @@ void main() {
 
   WeightFormCubit build({
     BodyEntry? initial,
+    double startKg = 80,
     WeightUnit unit = WeightUnit.kg,
   }) => WeightFormCubit(
+    setup: (initial: initial, startKg: startKg),
     saveEntry: world.save(() => now),
     newEntryId: NewBodyEntryId(world.repository),
     getCurrentUser: GetCurrentUser(auth),
     watchAuthUser: WatchAuthUser(auth),
     unit: unit,
-    initial: initial,
     clock: () => now,
   );
 
+  test('a new log starts at the given weight, in the user unit', () {
+    final cubit = build(startKg: 80, unit: WeightUnit.lb);
+
+    expect(cubit.state.weight, 176.4);
+    expect(cubit.state.date, now);
+    unawaited(cubit.close());
+  });
+
   test('logs a new weight now, converted from lb', () async {
-    final cubit = build(unit: WeightUnit.lb)..setWeight('176,4');
+    final cubit = build(unit: WeightUnit.lb)..setWeight(176.4);
 
     await cubit.save();
 
@@ -55,30 +63,9 @@ void main() {
     await cubit.close();
   });
 
-  test('the lowest weight shown in lb is accepted', () async {
-    final cubit = build(unit: WeightUnit.lb)..setWeight('66.1');
-
-    await cubit.save();
-
-    expect(cubit.state.status, WeightFormStatus.saved);
-    await cubit.close();
-  });
-
-  test('a weight is required and must be in range', () async {
-    final cubit = build();
-
-    await cubit.save();
-    expect(cubit.state.issues, {BodyIssue.weightOutOfRange});
-
-    cubit.setWeight('80');
-    expect(cubit.state.issues, isEmpty);
-    expect(world.repository.calls, isEmpty);
-    await cubit.close();
-  });
-
   test('a retry after a failed save saves the same entry', () async {
     world.repository.startFailure = const NetworkFailure();
-    final cubit = build()..setWeight('80');
+    final cubit = build()..setWeight(80);
 
     await cubit.save();
     expect(cubit.state.status, WeightFormStatus.saveFailed);
@@ -91,10 +78,24 @@ void main() {
     await cubit.close();
   });
 
-  test('another day is logged at noon', () async {
+  test('another day is logged at noon, today at the time of now', () async {
     final cubit = build()..setDay(DateTime(2026, 11, 3));
 
     expect(cubit.state.date, DateTime(2026, 11, 3, 12));
+    cubit.setDay(DateTime(2026, 11, 12));
+    expect(cubit.state.date, now);
+    await cubit.close();
+  });
+
+  test('the day already set keeps its time', () async {
+    final initial = BodyEntry(
+      id: 'e1',
+      date: DateTime(2026, 11, 10, 7, 45),
+      weightKg: 82.7,
+    );
+    final cubit = build(initial: initial)..setDay(DateTime(2026, 11, 10));
+
+    expect(cubit.state.date, initial.date);
     await cubit.close();
   });
 
@@ -106,7 +107,7 @@ void main() {
       measurements: const {BodyMeasurement.waist: 85},
     );
     final cubit = build(initial: initial);
-    expect(cubit.state.weight, '80.1');
+    expect(cubit.state.weight, 80.1);
 
     cubit.setDay(DateTime(2026, 11, 2));
     await cubit.save();

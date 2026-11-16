@@ -14,8 +14,8 @@ import '../../../../l10n/app_localizations.dart';
 /// guide pose, and the 3 s timer, the shutter and the switch-camera
 /// button on the bottom bar. The back camera comes first. A picture taken
 /// goes to [onCaptured] as the path of a temporary file. Without camera
-/// access the page offers the system settings and [onSkip]; without a
-/// camera, [onSkip] alone.
+/// access it offers the system settings; without a camera it says so.
+/// Skipping the photo is the page's own action (B3).
 class PoseCamera extends StatefulWidget {
   const PoseCamera({
     super.key,
@@ -24,7 +24,6 @@ class PoseCamera extends StatefulWidget {
     required this.total,
     this.ghostFile,
     required this.onCaptured,
-    required this.onSkip,
   });
 
   final String pose;
@@ -32,9 +31,6 @@ class PoseCamera extends StatefulWidget {
   final int total;
   final String? ghostFile;
   final ValueChanged<String> onCaptured;
-
-  /// Goes on without this photo.
-  final VoidCallback onSkip;
 
   /// The timer's count, in seconds.
   static const countdown = 3;
@@ -233,17 +229,13 @@ class _PoseCameraState extends State<PoseCamera> {
             title: l10n.poseCameraAccessOffTitle,
             message: l10n.poseCameraAccessOff,
             settingsLabel: l10n.poseCameraOpenSettings,
+            // Skipping is the page's own action, under the camera.
             onOpenSettings: () => unawaited(openSettings()),
-            // The card's text button under Open settings.
-            askAgainLabel: l10n.poseCameraSkipPhoto,
-            onAskAgain: widget.onSkip,
           ),
           GhostCameraStatus.noCamera => PermissionPrompt.unavailable(
             icon: ForgeIcons.noPhotography,
             title: l10n.poseCameraNoCameraTitle,
             message: l10n.poseCameraNoCamera,
-            skipLabel: l10n.poseCameraSkipPhoto,
-            onSkip: widget.onSkip,
           ),
           _ => null,
         };

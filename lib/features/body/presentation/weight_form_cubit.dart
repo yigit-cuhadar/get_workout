@@ -7,7 +7,6 @@ import 'package:forge_core/forge_core.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/body_entry.dart';
 import '../domain/body_usecases.dart';
-import '../domain/body_validation.dart';
 import 'body_input.dart';
 
 enum WeightFormStatus {
@@ -20,60 +19,60 @@ enum WeightFormStatus {
   closed,
 }
 
-/// The weight as typed, in the user's unit.
+/// The weight on the ruler, in the user's unit, and when it was weighed.
 class WeightFormState extends Equatable {
   const WeightFormState({
     required this.date,
-    this.weight = '',
-    this.issues = const {},
+    required this.weight,
     this.status = WeightFormStatus.editing,
     this.failure,
   });
 
   final DateTime date;
-  final String weight;
-
-  /// Shown once a save was attempted, then kept up to date.
-  final Set<BodyIssue> issues;
+  final double weight;
   final WeightFormStatus status;
   final Failure? failure;
 
   WeightFormState copyWith({
     DateTime? date,
-    String? weight,
-    Set<BodyIssue>? issues,
+    double? weight,
     WeightFormStatus? status,
     Failure? failure,
   }) => WeightFormState(
     date: date ?? this.date,
     weight: weight ?? this.weight,
-    issues: issues ?? this.issues,
     status: status ?? this.status,
     failure: failure,
   );
 
   @override
-  List<Object?> get props => [date, weight, issues, status, failure];
+  List<Object?> get props => [date, weight, status, failure];
 }
 
-/// Logs a weight, or edits the weight and date of [initial]; anything else
-/// [initial] holds is kept. Closes when the signed-in user changes.
+/// What the weight sheet starts from: the entry edited (null for a new
+/// log) and, for a new log, the weight its ruler starts at.
+typedef WeightFormSetup = ({BodyEntry? initial, double startKg});
+
+/// Logs a weight, or edits the weight and date of [WeightFormSetup.initial];
+/// anything else it holds is kept. The ruler and the day picker only offer
+/// values that can be saved. Closes when the signed-in user changes.
 class WeightFormCubit extends Cubit<WeightFormState> {
   WeightFormCubit({
+    required WeightFormSetup setup,
     required this._saveEntry,
     required this._newEntryId,
     required GetCurrentUser getCurrentUser,
     required WatchAuthUser watchAuthUser,
     required this._unit,
-    this._initial,
     DateTime Function()? clock,
-  }) : _getCurrentUser = getCurrentUser,
+  }) : _initial = setup.initial,
+       _getCurrentUser = getCurrentUser,
        _uid = getCurrentUser()?.id,
        _clock = clock ?? DateTime.now,
        super(
          WeightFormState(
-           date: _initial?.date ?? (clock ?? DateTime.now)(),
-           weight: metricText(_initial?.weightKg, _unit.fromKg),
+           date: setup.initial?.date ?? (clock ?? DateTime.now)(),
+           weight: rulerWeight(setup.initial?.weightKg ?? setup.startKg, _unit),
          ),
        ) {
     _userSubscription = watchAuthUser()
@@ -94,20 +93,25 @@ class WeightFormCubit extends Cubit<WeightFormState> {
   final DateTime Function() _clock;
   final String? _uid;
   late final StreamSubscription<String?> _userSubscription;
-  bool _submitted = false;
 
   /// Fixed at the first save, so a retry saves the same entry.
   String? _entryId;
 
   bool get isEditing => _initial != null;
 
-  void setWeight(String text) => _change(state.copyWith(weight: text));
+  /// [value] in the user's unit.
+  void setWeight(double value) => _change(state.copyWith(weight: value));
 
-  /// Today keeps the time of now; another day is logged at noon.
+  /// Today keeps the time of now; another day is logged at noon. The day
+  /// already set keeps its time.
   void setDay(DateTime day) {
+    bool same(DateTime other) =>
+        day.year == other.year &&
+        day.month == other.month &&
+        day.day == other.day;
+    if (same(state.date)) return;
     final now = _clock();
-    final today =
-        day.year == now.year && day.month == now.month && day.day == now.day;
+    final today = same(now);
     _change(
       state.copyWith(
         date: today ? now : DateTime(day.year, day.month, day.day, 12),
@@ -116,35 +120,35 @@ class WeightFormCubit extends Cubit<WeightFormState> {
   }
 
   void _change(WeightFormState next) {
-    if (state.status == WeightFormStatus.closed) return;
-    final editing = next.copyWith(status: WeightFormStatus.editing);
-    emit(_submitted ? editing.copyWith(issues: _check(editing).$2) : editing);
+    if (state.status case WeightFormStatus.saving || WeightFormStatus.closed) {
+      return;
+    }
+    emit(next.copyWith(status: WeightFormStatus.editing));
   }
 
   Future<void> save() async {
     if (state.status case WeightFormStatus.saving || WeightFormStatus.closed) {
       return;
     }
-    _submitted = true;
     final uid = _getCurrentUser()?.id;
     if (uid == null || uid != _uid) {
       emit(state.copyWith(status: WeightFormStatus.closed));
       return;
     }
-    final (entry, issues) = _check(
-      state,
-      id: _entryId ??= _initial?.id ?? _newEntryId(uid),
+    final initial = _initial;
+    final entry = BodyEntry(
+      id: _entryId ??= initial?.id ?? _newEntryId(uid),
+      date: state.date,
+      weightKg: rulerWeightKg(state.weight, _unit, stored: initial?.weightKg),
+      measurements: initial?.measurements ?? const {},
+      photos: initial?.photos ?? const {},
     );
-    if (issues.isNotEmpty) {
-      emit(state.copyWith(issues: issues, status: WeightFormStatus.editing));
-      return;
-    }
-    emit(state.copyWith(status: WeightFormStatus.saving, issues: const {}));
+    emit(state.copyWith(status: WeightFormStatus.saving));
     final failure = (await _saveEntry((
       uid: uid,
       entry: entry,
       newPhotos: const {},
-      isNew: _initial == null,
+      isNew: initial == null,
     ))).failureOrNull;
     if (isClosed || state.status == WeightFormStatus.closed) return;
     emit(
@@ -154,32 +158,6 @@ class WeightFormCubit extends Cubit<WeightFormState> {
               status: WeightFormStatus.saveFailed,
               failure: failure,
             ),
-    );
-  }
-
-  /// The entry the input describes, under [id], and what is wrong with it.
-  /// A weight is required here, unlike on a measurement day.
-  (BodyEntry, Set<BodyIssue>) _check(WeightFormState input, {String id = ''}) {
-    final initial = _initial;
-    final weight = readMetric(
-      input.weight,
-      stored: initial?.weightKg,
-      fromMetric: _unit.fromKg,
-      toMetric: _unit.toKg,
-    );
-    final entry = BodyEntry(
-      id: id,
-      date: input.date,
-      weightKg: weight,
-      measurements: initial?.measurements ?? const {},
-      photos: initial?.photos ?? const {},
-    );
-    return (
-      entry,
-      {
-        ...validateBodyEntry(entry, now: _clock()),
-        if (weight == null) BodyIssue.weightOutOfRange,
-      }..remove(BodyIssue.empty),
     );
   }
 

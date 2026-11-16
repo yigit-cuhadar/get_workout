@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
@@ -208,12 +210,8 @@ class _Session extends StatelessWidget {
     }
   }
 
-  Future<void> _edit(BuildContext context) async {
-    final deleted = await context.push<bool>(
-      Routes.cardioSessionEdit(session.id!),
-    );
-    if (deleted == true && context.mounted) context.pop();
-  }
+  void _edit(BuildContext context) =>
+      unawaited(context.push(Routes.cardioSessionEdit(session.id!)));
 
   Future<void> _delete(BuildContext context) async {
     final l10n = AppLocalizations.of(context);

@@ -7,6 +7,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/day_time.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/body_entry.dart';
@@ -14,6 +15,7 @@ import '../domain/measurement_summary.dart';
 import 'body_list_cubit.dart';
 import 'body_photo.dart';
 import 'body_text.dart';
+import 'weight_sheet.dart';
 
 /// Shows [builder] with the stored entry [id], taken from the shared list,
 /// so it opens at once from the list and also works from a bare link.
@@ -124,25 +126,21 @@ class _EntryViewState extends State<_EntryView> {
     String length(BodyMeasurement measurement) =>
         l10n.bodyLength(entry.measurements[measurement]!, settings.lengthUnit);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          MaterialLocalizations.of(context).formatMediumDate(entry.date),
-        ),
+      appBar: ForgeAppBar(
+        title: MaterialLocalizations.of(context).formatMediumDate(entry.date),
         actions: [
-          IconButton(
-            tooltip: l10n.bodyEdit,
-            icon: const Icon(Icons.edit_outlined),
+          ForgeAppBarAction.icon(
+            icon: ForgeIcons.edit,
+            label: l10n.bodyEdit,
             onPressed: _deleting
                 ? null
-                : () => context.go(
-                    entry.isWeightOnly
-                        ? Routes.bodyEntryWeight(entry.id)
-                        : Routes.bodyEntryMeasure(entry.id),
-                  ),
+                : () => entry.isWeightOnly
+                      ? showWeightSheet(context, entry: entry)
+                      : context.go(Routes.bodyEntryMeasure(entry.id)),
           ),
-          IconButton(
-            tooltip: l10n.bodyDelete,
-            icon: const Icon(Icons.delete_outline),
+          ForgeAppBarAction.icon(
+            icon: ForgeIcons.delete,
+            label: l10n.bodyDelete,
             onPressed: _deleting ? null : () => _delete(entry),
           ),
         ],
@@ -150,43 +148,52 @@ class _EntryViewState extends State<_EntryView> {
       body: ListView(
         padding: const EdgeInsets.all(Gap.md),
         children: [
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.bodyWeightTitle),
-            trailing: Text(
-              weight == null
-                  ? l10n.bodyNoValue
-                  : l10n.bodyWeight(weight, settings.weightUnit),
-            ),
-          ),
-          if (bodyFat != null)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.bodyFatTitle),
-              trailing: Text(l10n.bodyFat(bodyFat)),
-            ),
-          for (final group in pairedMeasurements(
-            entry.measurements.keys.toSet(),
-          ))
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.measurementGroupName(group)),
-              trailing: Text(switch (group) {
-                [final left, final right] => l10n.bodyPair(
-                  length(left),
-                  length(right),
+          ListRowCard(
+            children: [
+              ListRow(
+                title: l10n.bodyWeightTitle,
+                value: weight == null
+                    ? l10n.bodyNoValue
+                    : l10n.bodyWeight(weight, settings.weightUnit),
+                dataValue: true,
+              ),
+              if (entry.isWeightOnly)
+                ListRow(
+                  title: l10n.bodyDate,
+                  value: dayTimeText(context, entry.date),
+                  dataValue: true,
                 ),
-                _ => length(group.single),
-              }),
-            ),
+              if (bodyFat != null)
+                ListRow(
+                  title: l10n.bodyFatTitle,
+                  value: l10n.bodyFat(bodyFat),
+                  dataValue: true,
+                ),
+              for (final group in pairedMeasurements(
+                entry.measurements.keys.toSet(),
+              ))
+                ListRow(
+                  title: l10n.measurementGroupName(group),
+                  value: switch (group) {
+                    [final left, final right] => l10n.bodyPair(
+                      length(left),
+                      length(right),
+                    ),
+                    _ => length(group.single),
+                  },
+                  dataValue: true,
+                ),
+            ],
+          ),
           if (comparable) ...[
-            const SizedBox(height: Gap.sm),
-            OutlinedButton.icon(
+            const SizedBox(height: Gap.md),
+            ForgeButton(
+              label: l10n.bodyCompare,
+              leadingIcon: ForgeIcons.compare,
+              variant: ForgeButtonVariant.secondary,
               onPressed: _deleting
                   ? null
                   : () => context.go(Routes.bodyEntryCompare(entry.id)),
-              icon: const Icon(Icons.compare),
-              label: Text(l10n.bodyCompare),
             ),
           ],
           if (entry.photos.isNotEmpty) ...[
@@ -209,23 +216,23 @@ class _EntryViewState extends State<_EntryView> {
   Future<void> _delete(BodyEntry entry) async {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<BodyListCubit>();
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showForgeDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.bodyDeleteTitle),
-        content: Text(
-          entry.photos.isEmpty ? l10n.bodyDeleteBody : l10n.bodyDeletePhotos,
+      builder: (dialog) => ForgeDialog(
+        title: l10n.bodyDeleteTitle,
+        message: entry.photos.isEmpty
+            ? l10n.bodyDeleteBody
+            : l10n.bodyDeletePhotos,
+        action: ForgeButton(
+          label: l10n.bodyDelete,
+          variant: ForgeButtonVariant.danger,
+          onPressed: () => Navigator.pop(dialog, true),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.bodyDelete),
-          ),
-        ],
+        cancel: ForgeButton(
+          label: l10n.cancel,
+          variant: ForgeButtonVariant.secondary,
+          onPressed: () => Navigator.pop(dialog, false),
+        ),
       ),
     );
     if (confirmed != true || !mounted) return;
@@ -237,12 +244,12 @@ class _EntryViewState extends State<_EntryView> {
       context.pop();
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          failure is NetworkFailure ? l10n.errorNetwork : l10n.bodyDeleteFailed,
-        ),
-      ),
+    showForgeSnackbar(
+      context,
+      message: failure is NetworkFailure
+          ? l10n.errorNetwork
+          : l10n.bodyDeleteFailed,
+      error: true,
     );
   }
 }
