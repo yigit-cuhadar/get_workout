@@ -10,17 +10,40 @@ void main() {
   const summary = 'Push, pull and legs, each once a week.';
 
   group('suggestionReason', () {
-    test('names the goal, the days and the equipment set', () {
-      final profile = TrainingProfile(
-        goal: Goal.buildMuscle,
-        daysPerWeek: 3,
-        equipment: EquipmentProfile.fullGym.equipment.toSet(),
-      );
+    const all = MatchReason.values;
+    final fullGym = TrainingProfile(
+      goal: Goal.buildMuscle,
+      level: Level.intermediate,
+      daysPerWeek: 3,
+      equipment: EquipmentProfile.fullGym.equipment.toSet(),
+    );
 
+    test('names the goal, the days and the equipment set it matches', () {
       expect(
-        l10n.suggestionReason(profile, summary),
+        l10n.suggestionReason(fullGym, all, summary),
         'You want to build muscle, train 3 days and use a full gym. '
         '$summary',
+      );
+    });
+
+    test('leaves out days the program does not match', () {
+      expect(
+        l10n.suggestionReason(fullGym, const [
+          MatchReason.goal,
+          MatchReason.level,
+          MatchReason.equipment,
+        ], summary),
+        'You want to build muscle and use a full gym. $summary',
+      );
+    });
+
+    test('leaves out a goal the program does not match', () {
+      expect(
+        l10n.suggestionReason(fullGym, const [
+          MatchReason.days,
+          MatchReason.equipment,
+        ], summary),
+        'You want to train 3 days and use a full gym. $summary',
       );
     });
 
@@ -32,14 +55,25 @@ void main() {
       );
 
       expect(
-        l10n.suggestionReason(profile, summary),
+        l10n.suggestionReason(profile, all, summary),
         'You want to lose fat and train 1 day. $summary',
       );
     });
 
-    test('is the summary alone without a goal or days', () {
+    test('names a single match alone', () {
       expect(
-        l10n.suggestionReason(const TrainingProfile(daysPerWeek: 3), summary),
+        l10n.suggestionReason(fullGym, const [MatchReason.goal], summary),
+        'You want to build muscle. $summary',
+      );
+    });
+
+    test('is the summary alone when nothing it names matches', () {
+      expect(
+        l10n.suggestionReason(fullGym, const [MatchReason.level], summary),
+        summary,
+      );
+      expect(
+        l10n.suggestionReason(const TrainingProfile(), all, summary),
         summary,
       );
     });

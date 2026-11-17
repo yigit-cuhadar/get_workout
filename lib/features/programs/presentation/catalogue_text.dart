@@ -22,31 +22,47 @@ extension CatalogueTextLabels on AppLocalizations {
     if (program.lengthWeeks case final weeks?) programWeekCount(weeks),
   ].join(' · ');
 
-  /// Why the post-onboarding suggestion: the user's answers in a sentence
-  /// ("You want to build muscle, train 3 days and use a full gym."), then
-  /// the program's own [summary]. Without a goal or days only the summary.
-  String suggestionReason(TrainingProfile profile, String summary) {
-    final goal = profile.goal;
-    final days = profile.daysPerWeek;
-    if (goal == null || days == null) return summary;
-    final wants = switch (goal) {
-      Goal.buildMuscle => suggestionWantsBuildMuscle,
-      Goal.getStronger => suggestionWantsGetStronger,
-      Goal.loseFat => suggestionWantsLoseFat,
-      Goal.generalFitness => suggestionWantsGeneralFitness,
-    };
+  /// Why the post-onboarding suggestion: the answers it matches, by
+  /// [reasons], in a sentence ("You want to build muscle, train 3 days and
+  /// use a full gym."), then the program's own [summary]. An answer the
+  /// program does not match is left out; with none, only the summary.
+  String suggestionReason(
+    TrainingProfile profile,
+    List<MatchReason> reasons,
+    String summary,
+  ) {
     final owned = profile.equipment;
     final preset = owned == null ? null : EquipmentProfile.matching(owned);
-    final answers = preset == null
-        ? suggestionAnswersNoEquipment(wants, days)
-        : suggestionAnswers(wants, days, switch (preset) {
-            EquipmentProfile.fullGym => suggestionUsesFullGym,
-            EquipmentProfile.homeGym => suggestionUsesHomeGym,
-            EquipmentProfile.dumbbells => suggestionUsesDumbbells,
-            EquipmentProfile.bodyweight => suggestionUsesBodyweight,
-            EquipmentProfile.bands => suggestionUsesBands,
-          });
+    final wants = [
+      if (profile.goal case final goal? when reasons.contains(MatchReason.goal))
+        switch (goal) {
+          Goal.buildMuscle => suggestionWantsBuildMuscle,
+          Goal.getStronger => suggestionWantsGetStronger,
+          Goal.loseFat => suggestionWantsLoseFat,
+          Goal.generalFitness => suggestionWantsGeneralFitness,
+        },
+      if (profile.daysPerWeek case final days?
+          when reasons.contains(MatchReason.days))
+        suggestionWantsDays(days),
+      if (preset != null && reasons.contains(MatchReason.equipment))
+        suggestionWantsEquipment(switch (preset) {
+          EquipmentProfile.fullGym => suggestionUsesFullGym,
+          EquipmentProfile.homeGym => suggestionUsesHomeGym,
+          EquipmentProfile.dumbbells => suggestionUsesDumbbells,
+          EquipmentProfile.bodyweight => suggestionUsesBodyweight,
+          EquipmentProfile.bands => suggestionUsesBands,
+        }),
+    ];
     final rest = summary.trim();
+    if (wants.isEmpty) return rest;
+    final answers = suggestionAnswers(
+      wants.length < 2
+          ? wants.single
+          : catalogueReasonsAnd(
+              inlineList(wants.take(wants.length - 1)),
+              wants.last,
+            ),
+    );
     return rest.isEmpty ? answers : '$answers $rest';
   }
 

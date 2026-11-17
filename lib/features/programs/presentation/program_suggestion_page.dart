@@ -243,7 +243,11 @@ class _Suggestion extends StatelessWidget {
           why: SectionCard.plain(
             title: l10n.suggestionWhy,
             child: Text(
-              l10n.suggestionReason(profile, program.text(language).summary),
+              l10n.suggestionReason(
+                profile,
+                suggestion.reasons,
+                program.text(language).summary,
+              ),
               style: text.bodyMedium,
             ),
           ),
