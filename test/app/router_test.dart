@@ -1535,7 +1535,7 @@ void main() {
     expect(find.byType(CaloriesPage), findsOneWidget);
     expect(find.byType(ForgeNavigationBar), findsOneWidget);
 
-    await tester.pageBack();
+    await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
     expect(find.byType(CalculatorsPage), findsOneWidget);
   });

@@ -3075,19 +3075,30 @@ the feature you are about to touch, and keep it true when you change it.
   Bar and plates settings page edits them; the Plates calculator shows a
   summary row leading there. 1RM and the macros' calories stay empty (no
   single source); the goal and target weight map onto no calculator
-  input. A known number shows as a tile (`KnownNumberField`), not a field:
-  its name, the value to one decimal in the user's unit and, for a value
-  from the body log, "Measured <date>" (the entry's date; body fat takes
-  the oldest of its circumferences'; the year only when not this one).
-  Profile values (height, age, a profile-only weight) have no date.
-  The tile has an edit icon; tapping it turns it into the normal field,
-  focused, holding the value; it stays a field (the cubit's `known` map
-  drops it). Focusing a field before the values arrive counts as editing
-  it, so a late value never replaces it. Both the waist and the abdomen
-  are known; the body fat calculator shows the one for the selected sex
-  (abdomen for men, waist for women), or an empty field, unless the user
-  typed or started editing it. Sex and activity stay selectors: they
-  already show the known choice. They are
+  input. Every input is a chevron row (name, the value in the user's unit
+  or "—") opening a number sheet (the Log cardio sheet, now
+  `core/widgets/number_sheet.dart`): titled with the name, the field
+  labelled with it too (no unit) and the unit muted inside the box after
+  the value, as in Log cardio's sheets (KC3), Clear while there is a value, Save rejecting a
+  value outside the input's range in the field. A known value's row adds
+  "Measured <date>" for a value from the body log (the entry's date; body
+  fat takes the oldest of its circumferences'; the year only when not
+  this one); profile values (height, age, a profile-only weight) have no
+  date. Saving a value in the sheet makes it the user's (the cubit's
+  `known` map drops it), so a late value never replaces it, even a
+  cleared one. Both the waist and the abdomen are known; the body fat
+  calculator shows the one for the selected sex (abdomen for men, waist
+  for women), unless the user set it. Sex and activity are chevron rows
+  opening choice sheets; body fat's sex is a segmented control. A missing
+  input shows the result card's missing form, "Add your <inputs> to see
+  the result." (1RM and macros keep their drawn lines). Reps take 1-100
+  in the sheet, so a set above 12 reaches its own row message. Calories:
+  "Daily energy need" is maintenance, with Lose / Keep weight / Gain rows
+  at 7,700 kcal per kg: 0.5 kg and 0.25 kg a week, or 1 lb and 0.5 lb for
+  a pound user; a target raised to the daily minimum, or no loss below
+  it, says so in a muted row note. Activity labels "Sedentary · no
+  exercise", "Light · 1–3 days", "Moderate · 3–5 days", "Hard · 6–7
+  days", "Very hard · physical job". Known values are
   starting values only: nothing is written back. They load once when a
   calculator opens; a value arriving late fills only inputs the user has
   not changed (even one they cleared stays empty). A source that cannot

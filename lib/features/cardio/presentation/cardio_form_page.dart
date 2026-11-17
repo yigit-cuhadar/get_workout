@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -9,9 +8,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/day_time.dart';
 import '../../../core/unsaved_changes.dart';
+import '../../../core/number_text.dart';
 import '../../../core/widgets/choice_sheet.dart';
+import '../../../core/widgets/number_sheet.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../calculators/presentation/calculator_input.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../workout/presentation/workout_editor_view.dart';
 import '../domain/cardio_session.dart';
@@ -203,10 +203,8 @@ class _CardioFormViewState extends State<_CardioFormView> {
                   end: ListRowEnd.chevron,
                   onTap: () => _pickNumber(
                     title: l10n.cardioDistanceRow,
-                    label: l10n.cardioDistance(
-                      l10n.distanceUnitLabel(widget.unit),
-                    ),
-                    field: _NumberField.distance(widget.unit),
+                    unit: l10n.distanceUnitLabel(widget.unit),
+                    bounds: _Bounds.distance(widget.unit),
                     error: l10n.cardioErrorDistance,
                     value: state.distance,
                     onPicked: _cubit.setDistance,
@@ -222,8 +220,8 @@ class _CardioFormViewState extends State<_CardioFormView> {
                 end: ListRowEnd.chevron,
                 onTap: () => _pickNumber(
                   title: l10n.cardioCaloriesRow,
-                  label: l10n.cardioCalories,
-                  field: _NumberField.calories,
+                  unit: l10n.cardioUnitKcal,
+                  bounds: _Bounds.calories,
                   error: l10n.cardioErrorCalories,
                   value: state.calories?.toDouble(),
                   onPicked: (value) => _cubit.setCalories(value?.round()),
@@ -239,8 +237,8 @@ class _CardioFormViewState extends State<_CardioFormView> {
                 end: ListRowEnd.chevron,
                 onTap: () => _pickNumber(
                   title: l10n.cardioHeartRateRow,
-                  label: l10n.cardioHeartRate,
-                  field: _NumberField.heartRate,
+                  unit: l10n.cardioUnitBpm,
+                  bounds: _Bounds.heartRate,
                   error: l10n.cardioErrorHeartRate,
                   value: state.heartRate?.toDouble(),
                   onPicked: (value) => _cubit.setHeartRate(value?.round()),
@@ -259,8 +257,8 @@ class _CardioFormViewState extends State<_CardioFormView> {
                   end: ListRowEnd.chevron,
                   onTap: () => _pickNumber(
                     title: l10n.cardioInclineRow,
-                    label: l10n.cardioIncline,
-                    field: _NumberField.incline,
+                    unit: l10n.cardioUnitPercent,
+                    bounds: _Bounds.incline,
                     error: l10n.cardioErrorIncline,
                     value: state.incline,
                     onPicked: _cubit.setIncline,
@@ -385,26 +383,23 @@ class _CardioFormViewState extends State<_CardioFormView> {
     );
   }
 
-  /// A sheet to type [title]'s value in a field labelled [label] (B2):
-  /// Clear while there is a value, and Save, which keeps the sheet open
-  /// with [error] on a value outside [field]'s range; empty clears it.
+  /// A number sheet (B2) for [title]'s value in [unit]; empty clears it.
   Future<void> _pickNumber({
     required String title,
-    required String label,
-    required _NumberField field,
+    required String unit,
+    required NumberBounds bounds,
     required String error,
     required double? value,
     required ValueChanged<double?> onPicked,
   }) async {
-    final result = await showForgeBottomSheet<({double? value})>(
-      context: context,
-      builder: (_) => _NumberSheet(
-        title: title,
-        label: label,
-        field: field,
-        error: error,
-        value: value,
-      ),
+    final result = await showNumberSheet(
+      context,
+      title: title,
+      label: title,
+      unit: unit,
+      bounds: bounds,
+      error: error,
+      value: value,
     );
     if (result != null) onPicked(result.value);
   }
@@ -434,121 +429,22 @@ class _CardioFormViewState extends State<_CardioFormView> {
   }
 }
 
-/// The range a number sheet accepts and how many decimals it takes.
-class _NumberField {
-  const _NumberField(this.min, this.max, {this.decimals = 0});
+/// The ranges of the number sheets.
+abstract final class _Bounds {
+  static NumberBounds distance(DistanceUnit unit) => NumberBounds(
+    unit.fromKm(CardioLimits.minDistanceKm),
+    unit.fromKm(CardioLimits.maxDistanceKm),
+    decimals: 2,
+  );
 
-  _NumberField.distance(DistanceUnit unit)
-    : min = unit.fromKm(CardioLimits.minDistanceKm),
-      max = unit.fromKm(CardioLimits.maxDistanceKm),
-      decimals = 2;
-
-  final double min;
-  final double max;
-  final int decimals;
-
-  static const calories = _NumberField(1, CardioLimits.maxCalories * 1.0);
-  static const heartRate = _NumberField(
+  static const calories = NumberBounds(1, CardioLimits.maxCalories * 1.0);
+  static const heartRate = NumberBounds(
     CardioLimits.minHeartRate * 1.0,
     CardioLimits.maxHeartRate * 1.0,
   );
-  static const incline = _NumberField(
+  static const incline = NumberBounds(
     CardioLimits.minIncline,
     CardioLimits.maxIncline,
     decimals: 1,
   );
-}
-
-class _NumberSheet extends StatefulWidget {
-  const _NumberSheet({
-    required this.title,
-    required this.label,
-    required this.field,
-    required this.error,
-    required this.value,
-  });
-
-  final String title;
-  final String label;
-  final _NumberField field;
-  final String error;
-  final double? value;
-
-  @override
-  State<_NumberSheet> createState() => _NumberSheetState();
-}
-
-class _NumberSheetState extends State<_NumberSheet> {
-  late final _controller = TextEditingController(
-    text: switch (widget.value) {
-      final value? => formatDecimal(value, widget.field.decimals),
-      null => '',
-    },
-  );
-  bool _invalid = false;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _save() {
-    final field = widget.field;
-    final read = readNumber(_controller.text);
-    if (read == null) {
-      Navigator.pop(context, (value: null));
-      return;
-    }
-    // NaN fails both comparisons.
-    if (!(read >= field.min - 1e-9 && read <= field.max + 1e-9) ||
-        (field.decimals == 0 && read != read.roundToDouble())) {
-      setState(() => _invalid = true);
-      return;
-    }
-    Navigator.pop(context, (value: read));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final signed = widget.field.min < 0;
-    final decimal = widget.field.decimals > 0;
-    return ForgeBottomSheet(
-      title: widget.title,
-      headerAction: widget.value == null
-          ? null
-          : ForgeButton(
-              label: l10n.cardioClear,
-              variant: ForgeButtonVariant.text,
-              onPressed: () => Navigator.pop(context, (value: null)),
-            ),
-      action: ForgeButton(
-        label: l10n.cardioSave,
-        size: ForgeButtonSize.large,
-        onPressed: _save,
-      ),
-      child: ForgeTextField(
-        label: widget.label,
-        controller: _controller,
-        autofocus: true,
-        keyboardType: TextInputType.numberWithOptions(
-          decimal: decimal,
-          signed: signed,
-        ),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(
-            RegExp('[0-9${decimal ? '.,' : ''}${signed ? '-' : ''}]'),
-          ),
-          LengthLimitingTextInputFormatter(7),
-        ],
-        errorText: _invalid ? widget.error : null,
-        textInputAction: TextInputAction.done,
-        onChanged: (_) {
-          if (_invalid) setState(() => _invalid = false);
-        },
-        onSubmitted: (_) => _save(),
-      ),
-    );
-  }
 }

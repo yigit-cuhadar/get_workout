@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../../core/number_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/calculation.dart';
 import '../domain/calculators_usecases.dart';
@@ -91,19 +92,18 @@ class MacrosCubit extends Cubit<MacrosState> {
     );
   }
 
-  /// The user started editing [input]: it is a plain field from now on,
-  /// which known values leave alone.
-  void edit(CalculatorInput input) {
+  /// The user set [input]: it is their value from now on, which known
+  /// values leave alone.
+  Map<CalculatorInput, KnownInput> _set(CalculatorInput input) {
     _changed.add(input);
-    _calculate(state._with(known: {...state.known}..remove(input)));
+    return {...state.known}..remove(input);
   }
 
   void caloriesChanged(String text) => _calculate(state._with(calories: text));
 
-  void weightChanged(String text) {
-    _changed.add(CalculatorInput.bodyWeight);
-    _calculate(state._with(weight: text));
-  }
+  void weightChanged(String text) => _calculate(
+    state._with(weight: text, known: _set(CalculatorInput.bodyWeight)),
+  );
 
   void proteinChanged(double gPerKg) =>
       _calculate(state._with(proteinGPerKg: gPerKg));

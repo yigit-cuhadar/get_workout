@@ -5,6 +5,9 @@ import 'calculation.dart';
 
 const InputRange liftedWeightRangeKg = (min: 0.5, max: 1000);
 
+/// What a reps input takes; above [maxEpleyReps] the set is rejected.
+const InputRange repsRange = (min: 1, max: 100);
+
 class PercentLoad extends Equatable {
   const PercentLoad({required this.percent, required this.weightKg});
 
@@ -22,7 +25,7 @@ class OneRepMax extends Equatable {
 
   final double estimateKg;
 
-  /// 50 to 95 % in 5 % steps.
+  /// 70 to 95 % in 5 % steps.
   final List<PercentLoad> loads;
 
   @override
@@ -55,7 +58,7 @@ Calculation<OneRepMax> estimateOneRepMax({
     OneRepMax(
       estimateKg: estimate,
       loads: [
-        for (var percent = 50; percent <= 95; percent += 5)
+        for (var percent = 70; percent <= 95; percent += 5)
           PercentLoad(
             percent: percent,
             weightKg:

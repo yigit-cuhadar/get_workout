@@ -49,13 +49,13 @@ class ChoiceRow extends StatelessWidget {
 }
 
 /// A [ForgeBottomSheet] titled [title] offering [values] as [ChoiceRow]s,
-/// [selected] marked; a tap picks a value and closes it. Null when closed
-/// without a pick.
-Future<T?> showChoiceSheet<T>(
+/// [selected] marked, if any; a tap picks a value and closes it. Null when
+/// closed without a pick.
+Future<T?> showChoiceSheet<T extends Object>(
   BuildContext context, {
   required String title,
   required List<T> values,
-  required T selected,
+  required T? selected,
   required String Function(T value) labelOf,
 }) => showForgeBottomSheet<T>(
   context: context,
@@ -80,7 +80,7 @@ Future<T?> showChoiceSheet<T>(
 
 /// A settings row showing the [selected] value of [values]; a tap offers
 /// them in a choice sheet titled [title].
-class ChoiceSettingRow<T> extends StatelessWidget {
+class ChoiceSettingRow<T extends Object> extends StatelessWidget {
   const ChoiceSettingRow({
     super.key,
     required this.title,

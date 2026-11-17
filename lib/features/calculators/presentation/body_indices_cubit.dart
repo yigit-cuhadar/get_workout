@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../../core/number_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/body_indices.dart';
 import '../domain/calculation.dart';
@@ -100,27 +101,24 @@ class BodyIndicesCubit extends Cubit<BodyIndicesState> {
     );
   }
 
-  /// The user started editing [input]: it is a plain field from now on,
-  /// which known values leave alone.
-  void edit(CalculatorInput input) {
+  /// The user set [input]: it is their value from now on, which known
+  /// values leave alone.
+  Map<CalculatorInput, KnownInput> _set(CalculatorInput input) {
     _changed.add(input);
-    _calculate(state._with(known: {...state.known}..remove(input)));
+    return {...state.known}..remove(input);
   }
 
-  void weightChanged(String text) {
-    _changed.add(CalculatorInput.bodyWeight);
-    _calculate(state._with(weight: text));
-  }
+  void weightChanged(String text) => _calculate(
+    state._with(weight: text, known: _set(CalculatorInput.bodyWeight)),
+  );
 
-  void heightChanged(String text) {
-    _changed.add(CalculatorInput.height);
-    _calculate(state._with(height: text));
-  }
+  void heightChanged(String text) => _calculate(
+    state._with(height: text, known: _set(CalculatorInput.height)),
+  );
 
-  void bodyFatChanged(String text) {
-    _changed.add(CalculatorInput.bodyFat);
-    _calculate(state._with(bodyFat: text));
-  }
+  void bodyFatChanged(String text) => _calculate(
+    state._with(bodyFat: text, known: _set(CalculatorInput.bodyFat)),
+  );
 
   void _calculate(BodyIndicesState inputs) {
     final weight = readNumber(inputs.weight);
