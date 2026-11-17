@@ -62,6 +62,7 @@ class _DeleteAccountView extends StatelessWidget {
               title: email == null
                   ? l10n.accountDeleteGuest
                   : l10n.accountDelete,
+              back: !partly,
             ),
             body: ListView(
               padding: const EdgeInsets.fromLTRB(

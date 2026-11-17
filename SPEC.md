@@ -1625,7 +1625,8 @@ the feature you are about to touch, and keep it true when you change it.
   Firestore is used; then it signs out and a new guest starts at
   onboarding. A local leftover is logged, not reported. If only the
   sign-in is left (the function's `details.reason` says so) the user stays
-  held on the page, which offers only "Try again". A function not deployed
+  held on the page, which offers only "Try again" (no back in its app
+  bar). A function not deployed
   or not callable answers `not-found` / `permission-denied`, shown as
   "deleting accounts isn't available yet", never as done; anything else
   that failed before the data went gives the workout back.
@@ -2104,13 +2105,13 @@ the feature you are about to touch, and keep it true when you change it.
   program page's day cards (`ProgramDayCard`, without ▶), the first open
   and again after Regenerate; Regenerate and Save fixed at the bottom.
   Design phase (2026-11-17): "Upper/lower · 4 days" over "Build muscle ·
-  Intermediate · 60 min"; uncovered muscles as a NoticeBanner; Weekly sets
+  Intermediate · 60 min"; uncovered muscles as NoticeBanner's one-line form; Weekly sets
   as a SectionCard with "n total" and a VolumeBand "n sets" per target
-  muscle (GP-Q4, replacing "x of target"); each exercise "3 × 6–8" with
+  muscle (GP-Q4, replacing "x of target"); each exercise "3 × 6–8" in mono with
   ⋯: Swap for a similar one (the picker's Swap form, `/generate/pick`;
   sets, rest and the kept mark stay, an exercise already on the day is
   ignored) (GP-Q2), Keep when regenerating (history icon, ticked; the row
-  reads "· Kept") (GP-Q1), Change sets and reps (the builder's targets
+  shows an accent "Kept" after its reps) (GP-Q1), Change sets and reps (the builder's targets
   sheet, `ItemTargetsSheet`) (GP-Q3), Remove (not the day's last).
   Regenerate keeps the kept items on their day as they are: they count
   towards the targets and no pass trims them; one gone from the library

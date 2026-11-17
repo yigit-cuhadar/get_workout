@@ -219,9 +219,8 @@ class _Program extends StatelessWidget {
               ),
             ),
             if (program.uncovered.isNotEmpty)
-              NoticeBanner(
+              NoticeBanner.line(
                 icon: ForgeIcons.warning,
-                title: l10n.generatorUncoveredTitle,
                 message: l10n.generatorUncovered(
                   l10n.muscleNames(program.uncovered),
                 ),
@@ -373,7 +372,9 @@ class _ItemRow extends StatelessWidget {
       title: exercise == null
           ? l10n.programExerciseLoading
           : exercise.localized(context).name,
-      detail: kept ? l10n.generatorKeptLine(summary) : summary,
+      detail: summary,
+      dataDetail: true,
+      detailNote: kept ? l10n.generatorKept : null,
       trailing: Builder(
         builder: (context) => Semantics(
           button: true,

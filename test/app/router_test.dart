@@ -2250,12 +2250,6 @@ void main() {
     testWidgets('layout C shows one plan and links to the other', (
       tester,
     ) async {
-      // A phone's height: on a shorter page Forge's SubscriptionPlans lets
-      // the plans run under the footer.
-      tester.view
-        ..physicalSize = const Size(390, 844)
-        ..devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
       await openProfileAsFreeGuest(tester);
       remoteConfig.values['paywall_layout'] = 'c';
 
@@ -2273,11 +2267,7 @@ void main() {
           .called(1);
     });
 
-    testWidgets('with large text the whole paywall scrolls', skip: true, (
-      tester,
-    ) async {
-      // Skipped: Forge v0.25.1's SubscriptionPlans overflows at 3x text
-      // instead of scrolling; to be fixed in Forge.
+    testWidgets('with large text the whole paywall scrolls', (tester) async {
       tester.view
         ..physicalSize = const Size(375, 667)
         ..devicePixelRatio = 1;
