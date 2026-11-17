@@ -16,7 +16,7 @@ import 'program_catalogue_cubit.dart';
 import 'program_text.dart';
 
 /// After onboarding: the free ready-made program that suits the user best,
-/// with why, to start at once on the days it shows, or the catalogue.
+/// with why, to save among the user's programs, or the catalogue.
 /// Straight to Today when there is nothing to suggest.
 class ProgramSuggestionPage extends StatelessWidget {
   const ProgramSuggestionPage({super.key});
@@ -156,28 +156,21 @@ class _Layout extends StatelessWidget {
   }
 }
 
-/// The suggested program, why, and Start this program on its days.
+/// The suggested program, why, and Start this program.
 class _Suggestion extends StatelessWidget {
   const _Suggestion(this.suggestion);
 
   final Recommendation suggestion;
 
-  /// Starts a copy on the days the card shows; with a program already
-  /// running, the copy is only kept, as replacing it needs the user's say.
-  void _start(BuildContext context, CatalogueDetailState state) {
+  /// Saves a copy among the user's programs without starting it; the
+  /// program page it opens starts it.
+  void _start(BuildContext context) {
     final cubit = context.read<CatalogueDetailCubit>();
     // The user's copy opens rather than another one.
     if (cubit.existingCopyId case final id?) {
       return context.go(Routes.program(id));
     }
-    if (cubit.activeProgramName != null) {
-      cubit.copy(CopyIntent.keep);
-      return;
-    }
-    cubit.copy(
-      CopyIntent.start,
-      weekdays: ProgramSchedule.suggestedWeekdays(state.days.length),
-    );
+    cubit.copy(CopyIntent.keep);
   }
 
   @override
@@ -261,7 +254,7 @@ class _Suggestion extends StatelessWidget {
                 state.copyStatus == CopyStatus.copying ||
                 (state.status == CatalogueDetailStatus.ready &&
                     state.useStatus == UseStatus.waiting),
-            onPressed: ready ? () => _start(context, state) : null,
+            onPressed: ready ? () => _start(context) : null,
           ),
         );
       },

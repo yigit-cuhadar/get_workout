@@ -12,7 +12,7 @@ import '../../steps/presentation/health_access_cubit.dart';
 import '../domain/user_profile.dart';
 
 /// After the last onboarding question: the workout reminder, then the
-/// health store where it has not been asked on this device, then [next]
+/// health store unless access is granted or there is none, then [next]
 /// (the program suggestion). A refused permission moves on silently.
 class OnboardingPermissionsPage extends StatelessWidget {
   const OnboardingPermissionsPage({super.key, required this.next});
@@ -63,8 +63,19 @@ class _StepsState extends State<_Steps> {
     _go(_Step.health);
   }
 
+  /// Asks where the system still can; where it will not ask again (iOS
+  /// once asked, Android refused for good), the store's settings.
   Future<void> _connectHealth() async {
-    await context.read<HealthAccessCubit>().allow();
+    final health = context.read<HealthAccessCubit>();
+    switch (health.state) {
+      case StepsAccess.undetermined:
+        await health.openSettings();
+      case StepsAccess.denied:
+        await health.allow();
+        if (health.state == StepsAccess.denied) await health.openSettings();
+      case _:
+        await health.allow();
+    }
     _go(_Step.done);
   }
 
@@ -94,9 +105,8 @@ class _StepsState extends State<_Steps> {
             if (snapshot.connectionState != ConnectionState.done) {
               return const _StepPage(LoadingView());
             }
-            // Asked only where a store exists and this device never asked.
-            if (context.read<HealthAccessCubit>().state !=
-                StepsAccess.explain) {
+            // Asked wherever a store exists and steps may not be read.
+            if (!_asksHealth(context.read<HealthAccessCubit>().state)) {
               return widget.next;
             }
             final store = Theme.of(context).platform == TargetPlatform.iOS
@@ -119,6 +129,14 @@ class _StepsState extends State<_Steps> {
     }
   }
 }
+
+bool _asksHealth(StepsAccess? access) => switch (access) {
+  StepsAccess.explain || StepsAccess.denied || StepsAccess.undetermined => true,
+  StepsAccess.granted ||
+  StepsAccess.unsupported ||
+  StepsAccess.notInstalled ||
+  null => false,
+};
 
 /// A step after the questions: their progress, full, over the [prompt].
 class _StepPage extends StatelessWidget {

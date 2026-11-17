@@ -69,6 +69,7 @@ import 'package:get_workout/features/profile/presentation/profile_details_page.d
 import 'package:get_workout/features/profile/presentation/profile_page.dart';
 import 'package:get_workout/features/programs/domain/catalogue_program.dart';
 import 'package:get_workout/features/programs/domain/catalogue_repository.dart';
+import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_repository.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
@@ -123,6 +124,8 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 class _NotificationsStandIn extends MockCubit<NotificationsState>
     implements NotificationsCubit {}
+
+class _FakeActiveProgram extends Fake implements ActiveProgram {}
 
 class _HealthAccessStandIn extends MockCubit<StepsAccess?>
     implements HealthAccessCubit {}
@@ -255,10 +258,17 @@ void main() {
   /// user has answered.
   ConsentCubit? consent;
 
+  /// Step access as the onboarding health step finds it.
+  late StepsAccess healthAccess;
+
+  /// The health access cubit the last page created.
+  late _HealthAccessStandIn health;
+
   setUp(() {
     storedProfile = onboarded;
     deletionUnderway = DeletionUnderway();
     consent = null;
+    healthAccess = StepsAccess.granted;
   });
 
   // Created inside each test so stream events run in the test's fake zone.
@@ -410,7 +420,13 @@ void main() {
       (_) async => const Ok([
         ProgramDay(
           items: [
-            ProgramItem(exerciseId: 'squat', sets: 3, repMin: 8, restS: 60),
+            ProgramItem(
+              exerciseId: 'squat',
+              sets: 3,
+              repMin: 8,
+              repMax: 8,
+              restS: 60,
+            ),
           ],
         ),
       ]),
@@ -539,9 +555,11 @@ void main() {
     when(() => notifications.state)
         .thenReturn(const NotificationsState(allowed: true));
     sl.registerFactory<HealthAccessCubit>(() {
-      final health = _HealthAccessStandIn();
-      when(() => health.state).thenReturn(StepsAccess.granted);
+      health = _HealthAccessStandIn();
+      when(() => health.state).thenReturn(healthAccess);
       when(health.load).thenAnswer((_) async {});
+      when(health.allow).thenAnswer((_) async {});
+      when(health.openSettings).thenAnswer((_) async {});
       return health;
     });
     sl.registerFactory(
@@ -1671,6 +1689,37 @@ void main() {
       expect(find.byType(CataloguePage), findsOneWidget);
     });
 
+    testWidgets('the suggestion is saved, not started', (tester) async {
+      registerFallbackValue(_FakeActiveProgram());
+      readyMade = [
+        card(
+          'pr_free',
+          goal: Goal.loseFat,
+          equipment: const [Equipment.bodyweight],
+          profile: EquipmentProfile.bodyweight,
+        ),
+      ];
+      storedProfile = choicesAnswered;
+      await startAsGuest(tester);
+      when(() => profiles.completeOnboarding(any(), any())).thenAnswer((_) {
+        profileStream.add(
+          storedProfile = UserProfile(
+            goal: Goal.loseFat,
+            onboardingCompletedAt: DateTime(2026),
+          ),
+        );
+        return Future.value(const Ok(null));
+      });
+      await finishOnboarding(tester);
+
+      await tester.tap(find.text('Start this program'));
+      await tester.pumpAndSettle();
+
+      verify(() => programs.createProgram(any(), any())).called(1);
+      verifyNever(() => programs.startProgram(any(), any()));
+      expect(path(), Routes.program('p1'));
+    });
+
     testWidgets('the reminder step turns reminders on, then moves on', (
       tester,
     ) async {
@@ -1693,6 +1742,40 @@ void main() {
       expect(find.text('Remind you on training days?'), findsNothing);
       expect(find.byType(TodayPage), findsOneWidget);
     });
+
+    for (final (access, settings) in [
+      (StepsAccess.explain, false),
+      (StepsAccess.denied, true),
+      (StepsAccess.undetermined, true),
+    ]) {
+      testWidgets('the health step shows while access is ${access.name}', (
+        tester,
+      ) async {
+        healthAccess = access;
+        storedProfile = choicesAnswered;
+        await startAsGuest(tester);
+        await finishOnboarding(tester);
+
+        expect(find.text('Bring in steps and cardio?'), findsOneWidget);
+        await tester.tap(find.textContaining('Connect '));
+        await tester.pumpAndSettle();
+
+        // iOS never asks twice; a refusal still asks on Android, where the
+        // stand-in stays refused and so leads to the settings.
+        if (access == StepsAccess.undetermined) {
+          verifyNever(health.allow);
+        } else {
+          verify(health.allow).called(1);
+        }
+        if (settings) {
+          verify(health.openSettings).called(1);
+        } else {
+          verifyNever(health.openSettings);
+        }
+        expect(find.text('Bring in steps and cardio?'), findsNothing);
+        expect(find.byType(TodayPage), findsOneWidget);
+      });
+    }
 
     testWidgets('onboarding goes forward and back one question at a time', (
       tester,

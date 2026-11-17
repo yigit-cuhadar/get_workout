@@ -1754,16 +1754,19 @@ the feature you are about to touch, and keep it true when you change it.
   training days?" (Turn on reminders asks the system and, if allowed,
   turns the workout reminder on at its default time; refused or Not now
   moves on silently, ON6), then "Bring in steps and cardio?" naming
-  Apple Health or Health Connect (ON5), shown only while step access is
-  `explain` (a health store exists and this device was never asked);
-  Connect asks, Skip moves on. Then the suggestion: "Your plan is ready",
+  Apple Health or Health Connect (ON5), shown wherever a health store
+  exists and steps cannot be read yet: never asked, refused or (iOS)
+  undetermined (SG4). Connect asks where the system still can (never
+  asked; Android refused asks again) and otherwise opens the store's or
+  the app's settings (iOS once asked; Android still refused after
+  asking); Skip moves on. Then the suggestion: "Your plan is ready",
   the FeaturedCard outline ("Recommended for you · free", the name,
   "3 days · Intermediate · 8 weeks" with the session time, each day as a
   row with its suggested weekday tag), "Why this one" (the user's goal,
   days and equipment set in one sentence, then the catalogue summary,
-  ON10), and at the bottom Start this program (starts a copy on the
-  shown weekdays; with a program already active it only keeps the copy;
-  the user's existing copy opens instead) and See other programs; no
+  ON10), and at the bottom Start this program (saves a copy among the
+  user's programs without starting it and opens its page; the user's
+  existing copy opens instead, SG1) and See other programs; no
   "Not now" (ON8); while it is chosen the card's loading form and a
   disabled Start. The page frame, the
   question layout and the radio answers are shared with the generator
@@ -2031,7 +2034,7 @@ the feature you are about to touch, and keep it true when you change it.
   goal, 2 for the level, 2 for the days per week (1 for a day more or
   less); the top 3 show, ties in catalogue order, free programs first
   unless the user is known to have premium. After onboarding the best
-  free recommendation is offered (start it, or browse); with none, or
+  free recommendation is offered (save it, or browse); with none, or
   the catalogue offline, onboarding lands on Today, and so does signing in
   from onboarding to an account already onboarded.
   `ProgramsModule` takes the premium status and the premium action as
