@@ -387,7 +387,7 @@ screenshot next to the studio board, every state) that the owner approves
 or sends back. A look the studio does not draw is a question for the owner
 and is drawn in the studio first.
 
-Where it stands (2026-11-16, end of the İlerleme session):
+Where it stands (2026-11-17, end of the Kurulum session):
 - Ana sekmeler: done and merged (#105–#107).
 - Antrenman ve programlar: done, checked on the iOS simulator and approved
   by the owner (2026-11-15); merged as #108–#111, studio #113, Forge
@@ -429,13 +429,21 @@ Where it stands (2026-11-16, end of the İlerleme session):
   own pick: Log cardio asks "Discard this cardio session?" when left with
   changes. GetWorkout Studio's published link is behind main: publish
   design/studio.html from the owner's account.
-- Kurulum, hesap ve abonelik: compared with the boards; 29 questions
-  answered (Design › "Kurulum, hesap ve abonelik, before the build").
-  Next: Forge first (forge_ui SplashScreen.failed and SubscriptionPlans
-  to the boards; forge_auth AuthPage on SignInPage with inline errors,
-  the user's sign-in methods, a link-account sheet), then three app
-  screen sets, a check branch, the device check, the studio redraw and
-  the side-by-side approval.
+- Kurulum, hesap ve abonelik: done, checked on the iOS simulator and
+  approved by the owner (2026-11-17); merged as #136 (the check branch
+  joining #133 splash, onboarding, sign-in, guest sheet; #132 calculators;
+  #134 account, delete account, paywall, generator preview; and the
+  device-check fixes), studio #135; Forge v0.25.0–v0.25.6. The picks are
+  under Design › "Kurulum, hesap ve abonelik, before the build", "during
+  the build" and "Device check of Kurulum". GetWorkout Studio's published
+  link is behind main: publish design/studio.html from the owner's
+  account; MobileAppForge Studio likewise (Forge design/studio.html).
+- Not checked on a device: Account and Delete account (need a real
+  account), the real Apple Health / Health Connect prompts, Android, large
+  text.
+- Next: Sign in with Apple (owner's pick 2026-11-17, now on the paid
+  Apple Developer account; the owner signs in to Xcode again first), then
+  widget tests for the critical flows and the final preset pick.
 
 ## Design
 
@@ -598,13 +606,29 @@ Decisions (the canvases they were drawn on are deleted):
   a week" (+275), 7,700 kcal per kg, lb labels for lb users (CP16); the
   daily-minimum states are muted row notes (CP17); plates "closest"
   keeps PlateCalculator's form (CP20).
+- Kurulum, during the build (owner's picks, 2026-11-17, canvases
+  apps/_review/kurulum2.html and kurulum3.html, local): lb users lose 1 lb
+  and gain 0.5 lb a week (KC1 A); activity labels Sedentary · no exercise,
+  Light · 1–3 days, Moderate · 3–5 days, Hard · 6–7 days, Very hard ·
+  physical job (KC2 A); a number sheet's label has no unit, the unit sits
+  muted inside the box, Log cardio too (KC3 B, Forge TextField unit
+  v0.25.2–v0.25.3); Age reads "31" (KC4 A); LinkAccountSheet is a Forge
+  component (KA1 A); sign-in error snackbars keep the error icon (KA2 A);
+  a pushed sign-in page has a round back button (KA3 A, Forge v0.25.1);
+  the suggestion's Start saves the copy without starting it (SG1); the
+  suggestion card is FeaturedCard's outline form (SG2 A); "Why this one"
+  is a sentence from the answers (SG3 A); the health step also shows when
+  access was refused or is undetermined (SG4 B); a pending purchase's Got
+  it closes the paywall (AP1 A); the store unavailable shows a disabled
+  Subscribe (AP2 A).
 - Device check of Kurulum (2026-11-17, canvas apps/_review/kurulum4.html,
   local): "Why this one" names only the answers the program matches, so a
   days count it does not match is not mentioned (CK1 B); the generator's
   goal question is onboarding's (CK2 A). Board rules fixed with it: the
   native launch screen on the featured colour (iOS and Android); the
-  permission steps' buttons at the page bottom (a Forge PermissionPrompt
-  change, pending); sign-in from Profile full screen; the paywall lists
+  permission steps' buttons at the page bottom (Forge v0.25.6), their icon
+  and title as the PermissionPrompt card draws them (CK3 A); sign-in from
+  Profile full screen; the paywall lists
   Yearly first with Best value at the row's end (Forge v0.25.5); the
   generator preview title in sans; calorie rates unrounded ("0.25 kg");
   calculator rows "Weight", values sans muted.
