@@ -66,9 +66,10 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   Until a screen is picked again, the app as built is the baseline:
   five tabs (Navigation), the Exercises tab and list (Exercise list).
   Picks are recorded here per screen as they are made.
-- **Blocked on accounts the user will open when needed**: Apple Developer
-  (Apple sign-in, HealthKit, iOS push, Live Activity on a real device), Google
-  Play Console, RevenueCat. Development continues without them.
+- **Blocked on accounts the user will open when needed**: Google Play
+  Console, RevenueCat. The Apple Developer account exists (2026-11-17,
+  team A8J42TV74R); iOS push and Live Activity on a real device still need
+  their setup. Development continues without them.
 
 ## Vocabulary
 
@@ -441,9 +442,8 @@ Where it stands (2026-11-17, end of the Kurulum session):
 - Not checked on a device: Account and Delete account (need a real
   account), the real Apple Health / Health Connect prompts, Android, large
   text.
-- Next: Sign in with Apple (owner's pick 2026-11-17, now on the paid
-  Apple Developer account; the owner signs in to Xcode again first), then
-  widget tests for the critical flows and the final preset pick.
+- Sign in with Apple: done (#137), checked on the owner's iPhone.
+- Next: widget tests for the critical flows and the final preset pick.
 
 ## Design
 
@@ -1252,11 +1252,11 @@ Decisions (the canvases they were drawn on are deleted):
   registered on dev. Still open: the release (Play app signing) SHA on
   prod once the Play Console exists, and a completed sign-in on a device
   (the emulator check stopped at the browser opening).
-- Apple sign-in is enabled in Firebase but not offered: it needs the Sign
-  in with Apple entitlement, which only a paid Apple Developer team can
-  sign (the free personal team cannot), and on Android an Apple Services
-  ID. The App Store requires it wherever Google is offered, so it must be
-  added before the iOS release.
+- Sign in with Apple is offered first on iOS (2026-11-17, the owner's paid
+  Apple Developer team A8J42TV74R, which now signs the app; the Sign in
+  with Apple entitlement is in Runner.entitlements). Android offers Google
+  alone: Apple there would need a Services ID. Checked on the owner's
+  iPhone the same day: a guest linked with Apple and kept their data.
 - A guest who signs in to an existing account leaves an orphaned anonymous user and its data behind; clean these up with a scheduled function when Cloud Functions arrive.
 - Photo backup: `storage.rules` and the `storage` entry in `firebase.json`
   are written but not deployed, and the default bucket is not created yet
