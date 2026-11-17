@@ -1,0 +1,51 @@
+import 'package:flutter/material.dart';
+import 'package:forge_auth/forge_auth.dart';
+import 'package:forge_ui/forge_ui.dart';
+
+import '../../../app/legal_links.dart';
+import '../../../core/open_link.dart';
+import '../../../core/widgets/app_mark.dart';
+import '../../../l10n/app_localizations.dart';
+import 'auth_strings.dart';
+
+/// The sign-in providers offered next to email. Apple joins once the app is
+/// signed by a paid Apple Developer team (the Sign in with Apple
+/// entitlement); the App Store requires it wherever Google is offered.
+const socialProviders = [SocialProvider.google];
+
+/// forge_auth's sign-in page with GetWorkout's mark, name, tagline, text
+/// and legal links; [initialSignUp] opens the email form's create mode.
+class AccountAuthPage extends StatelessWidget {
+  const AccountAuthPage({
+    super.key,
+    required this.initialSignUp,
+    required this.onSignedIn,
+  });
+
+  final bool initialSignUp;
+  final VoidCallback onSignedIn;
+
+  Future<void> _open(BuildContext context, Uri uri) async {
+    final failed = AppLocalizations.of(context).linkOpenFailed;
+    if (await openLink(uri)) return;
+    if (context.mounted) {
+      showForgeSnackbar(context, message: failed, error: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AuthPage(
+      mark: const AppMark(),
+      name: l10n.appTitle,
+      tagline: l10n.authTagline,
+      onTerms: () => _open(context, LegalLinks.terms),
+      onPrivacy: () => _open(context, LegalLinks.privacy),
+      strings: localizedAuthStrings(l10n),
+      providers: socialProviders,
+      initialSignUp: initialSignUp,
+      onSignedIn: onSignedIn,
+    );
+  }
+}

@@ -281,6 +281,7 @@ void main() {
         signInWithProvider: SignInWithProvider(repository),
         sendPasswordReset: SendPasswordReset(repository),
         getCurrentUser: GetCurrentUser(repository),
+        signInAnonymously: SignInAnonymously(repository),
       ),
     );
     const CalculatorsModule().register(sl);
@@ -612,12 +613,17 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// From the welcome through every question, each already answered.
+  /// From the welcome through every question, each already answered, and
+  /// past the reminder step.
   Future<void> finishOnboarding(WidgetTester tester) async {
     await tester.tap(find.text('Get started'));
     await tester.pumpAndSettle();
     for (var i = 0; i < ProfileField.values.length; i++) {
-      await tester.tap(find.text('Next'));
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+    }
+    if (find.text('Remind you on training days?').evaluate().isNotEmpty) {
+      await tester.tap(find.text('Not now'));
       await tester.pumpAndSettle();
     }
   }
@@ -659,9 +665,10 @@ void main() {
       .widget<ForgeNavigationBar>(find.byType(ForgeNavigationBar))
       .selectedIndex;
 
+  /// Account; a guest's Profile header opens the guest account sheet.
   Future<void> openAccount(WidgetTester tester) async {
     await tapTab(tester, 'Profile');
-    await tester.tap(find.text('Create an account to keep your workouts'));
+    router.go(Routes.account);
     await tester.pumpAndSettle();
   }
 
@@ -685,6 +692,24 @@ void main() {
     expect(find.byType(AuthPage), findsNothing);
     expect(find.text('a@b.co'), findsOneWidget);
     expect(find.text('Sign out'), findsOneWidget);
+  });
+
+  testWidgets("a guest's Profile header opens the guest account sheet", (
+    tester,
+  ) async {
+    await startAsGuest(tester);
+    await tapTab(tester, 'Profile');
+
+    await tester.tap(find.text('Create an account to keep your workouts'));
+    await tester.pumpAndSettle();
+    expect(find.text('Keep your workouts safe'), findsOneWidget);
+
+    // Email links the guest through the create-account form.
+    await tester.tap(find.text('Use email instead'));
+    await tester.pumpAndSettle();
+    expect(find.text('Keep your workouts safe'), findsNothing);
+    final page = tester.widget<AuthPage>(find.byType(AuthPage));
+    expect(page.initialSignUp, isTrue);
   });
 
   testWidgets('a failed guest start offers a retry', (tester) async {
@@ -1578,7 +1603,7 @@ void main() {
       await tester.pump();
 
       // The splash stays while the profile is loading.
-      expect(find.byType(LoadingView), findsOneWidget);
+      expect(find.byType(SplashScreen), findsOneWidget);
       expect(find.byType(OnboardingPage), findsNothing);
       expect(find.byType(TodayPage), findsNothing);
 
@@ -1639,9 +1664,33 @@ void main() {
       expect(find.byType(ProgramSuggestionPage), findsOneWidget);
       expect(find.text('Program pr_free'), findsOneWidget);
       expect(find.text('Program pr_paid'), findsNothing);
+      expect(find.text('Not now'), findsNothing);
 
-      await tester.tap(find.text('Not now'));
+      await tester.tap(find.text('See other programs'));
       await tester.pumpAndSettle();
+      expect(find.byType(CataloguePage), findsOneWidget);
+    });
+
+    testWidgets('the reminder step turns reminders on, then moves on', (
+      tester,
+    ) async {
+      storedProfile = choicesAnswered;
+      await startAsGuest(tester);
+      when(() => notifications.allow()).thenAnswer((_) async => false);
+      await tester.tap(find.text('Get started'));
+      await tester.pumpAndSettle();
+      for (var i = 0; i < ProfileField.values.length; i++) {
+        await tester.tap(find.text('Continue'));
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.text('Remind you on training days?'), findsOneWidget);
+      await tester.tap(find.text('Turn on reminders'));
+      await tester.pumpAndSettle();
+
+      // Refused: it moves on without a word; health access is granted already.
+      verify(() => notifications.allow()).called(1);
+      expect(find.text('Remind you on training days?'), findsNothing);
       expect(find.byType(TodayPage), findsOneWidget);
     });
 
@@ -1654,14 +1703,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(questionOnScreen(tester), 1);
 
-      // Nothing to skip: Next waits for an answer.
-      await tester.tap(find.text('Next'));
+      // Nothing to skip: Continue waits for an answer.
+      await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
       expect(questionOnScreen(tester), 1);
 
       await tester.tap(find.text('Build muscle'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Next'));
+      await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
       expect(questionOnScreen(tester), 2);
 
@@ -1695,7 +1744,7 @@ void main() {
 
       // Same gate as the previous user, but a different user: it refreshes.
       expect(find.byType(TodayPage), findsOneWidget);
-      expect(find.byType(LoadingView), findsNothing);
+      expect(find.byType(SplashScreen), findsNothing);
       verify(() => profiles.watchProfile('u2')).called(1);
     });
 

@@ -100,7 +100,8 @@ class FeaturedStat {
 /// The one featured card of a screen in its [form]: an [eyebrow] (with a
 /// lock when [locked]) over the [title], then a band's [progress], the
 /// [line], a [note], the summary's four [stats] and its buttons, and a
-/// band's [rows]; a band may hold a [chart] over its buttons. The first button is the main one; one of [moreActions]
+/// band's or an outline's [rows]; a band may hold a [chart] over its
+/// buttons. The first button is the main one; one of [moreActions]
 /// sits beside [action], two sit side by side under it; a prompt stacks
 /// them all. With [onTap] the whole card opens something and shows a
 /// chevron; a band may show its [menu] there instead.
@@ -276,8 +277,8 @@ class FeaturedCard extends StatelessWidget {
   /// its line and buttons.
   final double? progress;
 
-  /// A band's rows under its buttons ([ListRow]s, e.g. a program's days),
-  /// a line between each two and above the first.
+  /// A band's or an outline's rows under its buttons ([ListRow]s, e.g. a
+  /// program's days), a line between each two and above the first.
   final List<Widget> rows;
 
   /// A band's chart (a sparkline, or the box that stands in for one)
@@ -523,7 +524,14 @@ class FeaturedCard extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [head, ?body],
+          children: [
+            head,
+            ?body,
+            for (final row in rows) ...[
+              Divider(height: 1, thickness: 1, color: p.line),
+              row,
+            ],
+          ],
         ),
       ),
     };

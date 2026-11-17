@@ -23,6 +23,13 @@ extension ProfileLabels on AppLocalizations {
     Goal.generalFitness => goalGeneralFitness,
   };
 
+  String goalInfo(Goal goal) => switch (goal) {
+    Goal.buildMuscle => goalBuildMuscleInfo,
+    Goal.getStronger => goalGetStrongerInfo,
+    Goal.loseFat => goalLoseFatInfo,
+    Goal.generalFitness => goalGeneralFitnessInfo,
+  };
+
   String levelInfo(Level level) => switch (level) {
     Level.beginner => levelBeginnerInfo,
     Level.intermediate => levelIntermediateInfo,
@@ -55,7 +62,7 @@ extension ProfileLabels on AppLocalizations {
   };
 
   String question(ProfileField field) => switch (field) {
-    ProfileField.goal => questionGoal,
+    ProfileField.goal => profileQuestionGoal,
     ProfileField.level => questionLevel,
     ProfileField.daysPerWeek => questionDaysPerWeek,
     ProfileField.equipment => questionEquipment,
@@ -164,9 +171,20 @@ String formatProfileNumber(double value) => NumberFormat('0.#').format(value);
 /// entered in the units of [SettingsCubit]; their unit switch changes that
 /// setting, and a tap on the value opens a sheet to type it.
 class ProfileQuestion extends StatelessWidget {
-  const ProfileQuestion(this.field, {super.key});
+  const ProfileQuestion(this.field, {super.key, this.onboarding = false});
 
   final ProfileField field;
+
+  /// In onboarding the goal says what it is for: the first program.
+  final bool onboarding;
+
+  /// The goals in the order the question lists them.
+  static const goals = [
+    Goal.loseFat,
+    Goal.buildMuscle,
+    Goal.getStronger,
+    Goal.generalFitness,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -176,9 +194,10 @@ class ProfileQuestion extends StatelessWidget {
         final cubit = context.read<ProfileFormCubit>();
         return switch (field) {
           ProfileField.goal => OnboardingChoices(
-            values: Goal.values,
+            values: ProfileQuestion.goals,
             selected: state.answers.goal,
             title: l10n.goalName,
+            subtitle: l10n.goalInfo,
             onChanged: cubit.setGoal,
           ),
           ProfileField.level => OnboardingChoices(
@@ -224,7 +243,9 @@ class ProfileQuestion extends StatelessWidget {
     );
     return OnboardingQuestionBody(
       title: l10n.question(field),
-      info: l10n.questionInfo(field),
+      info: onboarding && field == ProfileField.goal
+          ? l10n.onboardingGoalInfo
+          : l10n.questionInfo(field),
       answer: answer,
       scrolls: switch (field) {
         ProfileField.goal ||

@@ -38,6 +38,21 @@ Widget featuredOutline(BuildContext context) => _page(
   ),
 );
 
+@widgetbook.UseCase(name: 'Outline · days', type: FeaturedCard)
+Widget featuredOutlineDays(BuildContext context) => _page(
+  const FeaturedCard(
+    form: FeaturedCardForm.outline,
+    eyebrow: 'Recommended for you · free',
+    title: 'Push Pull Legs',
+    line: FeaturedLine('3 days · Intermediate · 8 weeks', data: '~55 min'),
+    rows: [
+      ListRow(title: 'Push · 6 exercises', leading: ForgeTag('Mon')),
+      ListRow(title: 'Pull · 5 exercises', leading: ForgeTag('Wed')),
+      ListRow(title: 'Legs · 5 exercises', leading: ForgeTag('Fri')),
+    ],
+  ),
+);
+
 @widgetbook.UseCase(name: 'Header band', type: FeaturedCard)
 Widget featuredBand(BuildContext context) => _page(
   FeaturedCard(

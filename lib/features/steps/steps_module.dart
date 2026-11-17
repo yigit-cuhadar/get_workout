@@ -40,7 +40,7 @@ class StepsModule implements FeatureModule {
       ..registerFactory(() => AllowStepsAccess(sl(), sl()))
       ..registerFactory(() => GetStepsHistory(sl()))
       ..registerFactory(() => GetTodaySteps(sl()))
-      ..registerFactory(() => HealthAccessCubit(sl(), sl()))
+      ..registerFactory(() => HealthAccessCubit(sl(), sl(), sl()))
       ..registerFactory(
         () => StepsCubit(
           getAccess: sl(),

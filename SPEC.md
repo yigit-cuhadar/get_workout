@@ -1640,7 +1640,11 @@ the feature you are about to touch, and keep it true when you change it.
   2026-11-15): one page, top to bottom: the account header, the Premium
   card, More (Your profile, Calculators), then the settings groups (Units,
   Workout, Reminders, Connected apps, Appearance), Privacy and, in debug
-  builds, the preset picker and on the fake the Fake store rows. Every
+  builds, the preset picker and on the fake the Fake store rows. A
+  guest's header opens the guest account sheet (forge_auth
+  `showLinkAccountSheet`: "Keep your workouts safe", Google, Use email
+  instead, Not now); Use email instead opens Sign in on the email form
+  in create mode, which links the guest (GA6, GA7). Every
   change saves at once; a failed save shows a snackbar. The Premium card
   (`PremiumCard`, a FeaturedCard prompt) says what Premium brings with
   "Get Premium" (the paywall) to a free user; otherwise the user's state
@@ -1670,6 +1674,17 @@ the feature you are about to touch, and keep it true when you change it.
   without a health store. Restore
   reports its result in a snackbar and, on success, closes the paywall
   (owner's pick, 2026-11-15).
+- **Start and sign in** (design pass, Kurulum, 2026-11-17): the splash
+  is Forge SplashScreen, the GW mark and GetWorkout on featured, its
+  slow-start line after 2 s (SP4); a guest session that cannot start
+  shows SplashScreen.failed, "Couldn't start. Check your connection and
+  try again." with an outline Retry (SP3). Sign in is forge_auth's
+  AuthPage on SignInPage (`AccountAuthPage`): the mark, "Plan it, log it,
+  see it add up.", Continue with Google, Use email instead, the terms
+  line linking Terms and the privacy policy; email errors that belong to
+  a field show under it, the rest as "Sign-in didn't finish. Try again."
+  with Retry (SI6); "Continue as guest" shows only with nobody signed in,
+  so never for the app's guest (SI7).
 - **Units**: stored metric. kg/lb and cm/in chosen by the user. A single
   lifted weight is shown through `WeightUnit.shown`: within two decimals
   (the precision weight fields show; 1e-8 hundredths of tolerance, the
@@ -1727,7 +1742,30 @@ the feature you are about to touch, and keep it true when you change it.
   number question counts as answered when it shows; the target weight
   follows the weight until the user picks one. "I already have an
   account" shows on the welcome page for a guest only. In "Your profile"
-  every answer can be changed but not removed. The page frame, the
+  every answer can be changed but not removed. Design pass (Kurulum,
+  2026-11-17): the welcome is the mark on an accent tile, "Train with a
+  plan that fits your week.", a muted line and three numbered lines
+  (BenefitList), Get started and the guest's link at the bottom; every
+  question's action is Continue; the goal question reads "What is your
+  main goal?" with subtitles, Lose fat first (also in Your profile), and
+  only in onboarding "We use it to pick your first program." under it.
+  After the last question (`afterOnboarding`,
+  `OnboardingPermissionsPage`), the progress bar full: "Remind you on
+  training days?" (Turn on reminders asks the system and, if allowed,
+  turns the workout reminder on at its default time; refused or Not now
+  moves on silently, ON6), then "Bring in steps and cardio?" naming
+  Apple Health or Health Connect (ON5), shown only while step access is
+  `explain` (a health store exists and this device was never asked);
+  Connect asks, Skip moves on. Then the suggestion: "Your plan is ready",
+  the FeaturedCard outline ("Recommended for you · free", the name,
+  "3 days · Intermediate · 8 weeks" with the session time, each day as a
+  row with its suggested weekday tag), "Why this one" (the user's goal,
+  days and equipment set in one sentence, then the catalogue summary,
+  ON10), and at the bottom Start this program (starts a copy on the
+  shown weekdays; with a program already active it only keeps the copy;
+  the user's existing copy opens instead) and See other programs; no
+  "Not now" (ON8); while it is chosen the card's loading form and a
+  disabled Start. The page frame, the
   question layout and the radio answers are shared with the generator
   (`QuestionScaffold`, `QuestionLayout`, `ChoiceAnswer` in
   `lib/core/question_page.dart`; `EquipmentAnswer` in
@@ -1993,7 +2031,7 @@ the feature you are about to touch, and keep it true when you change it.
   goal, 2 for the level, 2 for the days per week (1 for a day more or
   less); the top 3 show, ties in catalogue order, free programs first
   unless the user is known to have premium. After onboarding the best
-  free recommendation is offered (use it, browse, or Today); with none, or
+  free recommendation is offered (start it, or browse); with none, or
   the catalogue offline, onboarding lands on Today, and so does signing in
   from onboarding to an account already onboarded.
   `ProgramsModule` takes the premium status and the premium action as

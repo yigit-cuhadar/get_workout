@@ -4,12 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
-import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/unsaved_changes.dart';
 import '../features/account/presentation/account_page.dart';
-import '../features/account/presentation/auth_strings.dart';
+import '../features/account/presentation/account_auth_page.dart';
 import '../features/body/presentation/body_entry_page.dart';
 import '../features/body/presentation/body_page.dart';
 import '../features/body/presentation/measurement_day_page.dart';
@@ -38,6 +37,7 @@ import '../features/generator/presentation/generator_page.dart';
 import '../features/generator/presentation/generator_preview_page.dart';
 import '../features/profile/domain/user_profile.dart';
 import '../features/profile/presentation/onboarding_page.dart';
+import '../features/profile/presentation/onboarding_permissions_page.dart';
 import '../features/profile/presentation/profile_cubit.dart';
 import '../features/profile/presentation/profile_details_page.dart';
 import '../features/profile/presentation/profile_page.dart';
@@ -63,8 +63,8 @@ import '../features/workout/presentation/workout_detail_page.dart';
 import '../features/workout/domain/workout_editing.dart';
 import '../features/workout/presentation/workout_edit_page.dart';
 import '../features/workout/presentation/workout_page.dart';
-import '../l10n/app_localizations.dart';
 import 'app_shell.dart';
+import 'splash.dart';
 
 abstract final class Routes {
   static const splash = '/splash';
@@ -327,11 +327,6 @@ String? notificationDestination(NotificationTarget target, List<String> open) =>
 String? lockScreenDestination(List<String> open, {required bool inProgress}) =>
     !inProgress || _workoutOpen(open) ? null : Routes.workout;
 
-/// The sign-in providers offered next to email. Apple joins once the app is
-/// signed by a paid Apple Developer team (the Sign in with Apple
-/// entitlement); the App Store requires it wherever Google is offered.
-const socialProviders = [SocialProvider.google];
-
 /// All routes live here. There is always a user (a guest until they create
 /// an account), so the gates are the splash while the session and then the
 /// user's profile resolve, a retry screen when the guest sign-in failed, and
@@ -408,23 +403,10 @@ GoRouter buildRouter(
     },
     routes: [
       GoRoute(path: '/', redirect: (_, _) => Routes.home),
-      GoRoute(
-        path: Routes.splash,
-        builder: (_, _) => const Scaffold(body: LoadingView()),
-      ),
+      GoRoute(path: Routes.splash, builder: (_, _) => const AppSplash()),
       GoRoute(
         path: Routes.startFailed,
-        builder: (context, _) {
-          final l10n = AppLocalizations.of(context);
-          return Scaffold(
-            body: ErrorView(
-              title: l10n.startFailed,
-              message: l10n.loadFailedDetail,
-              retryLabel: l10n.retry,
-              onRetry: auth.retryGuestSignIn,
-            ),
-          );
-        },
+        builder: (_, _) => AppStartFailed(onRetry: auth.retryGuestSignIn),
       ),
       GoRoute(
         path: Routes.onboarding,
@@ -432,9 +414,7 @@ GoRouter buildRouter(
         routes: [
           GoRoute(
             path: 'sign-in',
-            builder: (context, _) => AuthPage(
-              strings: localizedAuthStrings(AppLocalizations.of(context)),
-              providers: socialProviders,
+            builder: (context, _) => AccountAuthPage(
               initialSignUp: false,
               onSignedIn: () => context.pop(),
             ),
@@ -443,7 +423,8 @@ GoRouter buildRouter(
       ),
       GoRoute(
         path: Routes.afterOnboarding,
-        builder: (_, _) => const ProgramSuggestionPage(),
+        builder: (_, _) =>
+            const OnboardingPermissionsPage(next: ProgramSuggestionPage()),
       ),
       GoRoute(
         path: Routes.workout,
@@ -741,11 +722,7 @@ GoRouter buildRouter(
                 routes: [
                   GoRoute(
                     path: 'auth',
-                    builder: (context, state) => AuthPage(
-                      strings: localizedAuthStrings(
-                        AppLocalizations.of(context),
-                      ),
-                      providers: socialProviders,
+                    builder: (context, state) => AccountAuthPage(
                       initialSignUp:
                           state.uri.queryParameters['mode'] != 'sign-in',
                       onSignedIn: () => context.pop(),

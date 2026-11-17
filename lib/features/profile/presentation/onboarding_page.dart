@@ -6,8 +6,8 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/widgets/app_mark.dart';
 import '../../../core/widgets/onboarding_question.dart';
-
 import '../../../l10n/app_localizations.dart';
 import 'profile_cubit.dart';
 import 'profile_form_cubit.dart';
@@ -53,8 +53,11 @@ class _OnboardingView extends StatelessWidget {
           (current.failure != null && current.failure != previous.failure),
       listener: (context, state) {
         if (state.failure != null) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(l10n.profileSaveFailed)));
+          showForgeSnackbar(
+            context,
+            message: l10n.profileSaveFailed,
+            error: true,
+          );
         } else if (state.status == ProfileFormStatus.submitted) {
           // If the profile stream is down, the completion would never show
           // up and the user would stay here.
@@ -76,8 +79,9 @@ class _OnboardingView extends StatelessWidget {
             body: ProfileQuestion(
               state.question,
               key: ValueKey(state.question),
+              onboarding: true,
             ),
-            actionLabel: l10n.onboardingNext,
+            actionLabel: l10n.onboardingContinue,
             loading: submitted,
             onAction: state.canContinue ? cubit.next : null,
           ),
@@ -87,13 +91,20 @@ class _OnboardingView extends StatelessWidget {
   }
 }
 
+/// The welcome: the mark, the promise, three numbered lines, Get started
+/// and, for a guest, I already have an account.
 class _Welcome extends StatelessWidget {
   const _Welcome();
+
+  static const double _markTile = 60;
+  static const double _markRadius = 15;
+  static const double _markSize = 20;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final colors = ForgeStyle.of(context).colors;
+    final text = Theme.of(context).textTheme;
     // Someone signed in to an account (also a guest just linked to one) has
     // nothing to sign in to.
     final guest = context.select(
@@ -101,52 +112,71 @@ class _Welcome extends StatelessWidget {
     );
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(Gap.lg, 60, Gap.lg, Gap.lg),
           children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(Gap.md),
-                children: [
-                  const SizedBox(height: Gap.xl),
-                  Text(
-                    l10n.onboardingWelcomeTitle,
-                    style: theme.textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: Gap.md),
-                  for (final (icon, text) in [
-                    (Icons.calendar_month, l10n.onboardingWelcomeProgram),
-                    (Icons.check, l10n.onboardingWelcomeLog),
-                    (Icons.show_chart, l10n.onboardingWelcomeProgress),
-                  ])
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(icon),
-                      title: Text(text),
-                    ),
-                ],
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                width: _markTile,
+                height: _markTile,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.accent,
+                  borderRadius: BorderRadius.circular(_markRadius),
+                ),
+                child: DefaultTextStyle.merge(
+                  style: TextStyle(color: colors.onAccent),
+                  child: const AppMark(size: _markSize),
+                ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(Gap.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ForgeButton(
-                    label: l10n.onboardingGetStarted,
-                    onPressed: context.read<ProfileFormCubit>().start,
-                  ),
-                  // Nothing is stored before the last question, so a
-                  // returning user leaves no profile behind on the guest.
-                  if (guest)
-                    TextButton(
-                      onPressed: () => context.go(Routes.onboardingSignIn),
-                      child: Text(l10n.accountHaveOne),
-                    ),
-                ],
+            const SizedBox(height: 18),
+            Text(
+              l10n.onboardingWelcomeTitle,
+              style: text.headlineMedium!.copyWith(
+                fontSize: 30,
+                height: 34 / 30,
+                letterSpacing: -0.9,
               ),
             ),
+            const SizedBox(height: 18),
+            Text(
+              l10n.onboardingWelcomeSubtitle,
+              style: text.bodyLarge!.copyWith(color: colors.inkMuted),
+            ),
+            const SizedBox(height: 18),
+            BenefitList.numbered([
+              l10n.onboardingWelcomeProgram,
+              l10n.onboardingWelcomeLog,
+              l10n.onboardingWelcomeProgress,
+            ]),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(Gap.md),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: Gap.sm,
+            children: [
+              ForgeButton(
+                label: l10n.onboardingGetStarted,
+                onPressed: context.read<ProfileFormCubit>().start,
+                size: ForgeButtonSize.large,
+              ),
+              // Nothing is stored before the last question, so a
+              // returning user leaves no profile behind on the guest.
+              if (guest)
+                ForgeButton(
+                  label: l10n.accountHaveOne,
+                  onPressed: () => context.go(Routes.onboardingSignIn),
+                  variant: ForgeButtonVariant.text,
+                ),
+            ],
+          ),
         ),
       ),
     );
