@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_purchases/forge_purchases.dart';
-import 'package:forge_ui/forge_ui.dart';
 
-import '../../../core/open_link.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
 import 'premium.dart';
@@ -47,17 +45,8 @@ class PremiumCard extends StatelessWidget {
         // Lifetime or granted Premium has no subscription to manage.
         if (summary is! SubscriptionChecking &&
             summary is! SubscriptionLifetime)
-          FeaturedAction(l10n.premiumManage, () => _manage(context)),
+          FeaturedAction(l10n.premiumManage, context.manageSubscription),
       ],
     );
-  }
-
-  Future<void> _manage(BuildContext context) async {
-    final failed = AppLocalizations.of(context).premiumManageFailed;
-    final url = await context.read<EntitlementCubit>().managementUrl();
-    final opened = url.valueOrNull != null && await openLink(url.valueOrNull!);
-    if (!opened && context.mounted) {
-      showForgeSnackbar(context, message: failed, error: true);
-    }
   }
 }

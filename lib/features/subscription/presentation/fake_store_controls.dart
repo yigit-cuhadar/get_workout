@@ -67,6 +67,10 @@ class _FakeStoreControlsState extends State<FakeStoreControls> {
               value: PaywallLayout.cards,
               child: Text('B: plan cards'),
             ),
+            DropdownMenuItem(
+              value: PaywallLayout.single,
+              child: Text('C: one plan'),
+            ),
           ],
           onChanged: (layout) =>
               setState(() => widget.paywallLayout.layout = layout),

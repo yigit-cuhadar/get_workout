@@ -28,7 +28,8 @@ void main() {
         ('a', PaywallLayout.list),
         ('b', PaywallLayout.cards),
         ('', PaywallLayout.list),
-        ('c', PaywallLayout.list),
+        ('c', PaywallLayout.single),
+        ('d', PaywallLayout.list),
         ('B', PaywallLayout.list),
       ]) {
         config.values[paywallLayoutKey] = code;

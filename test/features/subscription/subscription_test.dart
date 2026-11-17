@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_workout/features/subscription/data/unavailable_purchases_repository.dart';
+import 'package:get_workout/features/subscription/domain/paywall_layout.dart';
 import 'package:get_workout/features/subscription/presentation/premium.dart';
 import 'package:get_workout/features/subscription/presentation/subscription_summary.dart';
 import 'package:get_workout/features/subscription/presentation/subscription_text.dart';
@@ -91,16 +92,33 @@ void main() {
       (plan) => plan.period == PlanPeriod.yearly,
     );
 
-    test('states price, period and trial', () {
-      expect(l10n.planOffer(monthly), r'$4.99 per month');
-      expect(l10n.planOffer(yearly), r'7 days free, then $39.99 per year');
+    test('names the trial on the button', () {
       expect(l10n.purchaseButton(monthly), 'Subscribe');
-      expect(l10n.purchaseButton(yearly), 'Start free trial');
+      expect(l10n.purchaseButton(yearly), 'Start 7-day free trial');
     });
 
-    test('a plan card states the period, then the trial', () {
-      expect(l10n.planCardLines(monthly), ['per month']);
-      expect(l10n.planCardLines(yearly), ['per year', '7 days free']);
+    test('a row has the price per period and the tag', () {
+      final row = l10n.paywallPlan(yearly, PaywallLayout.list, bestValue: true);
+      expect(row.name, 'Yearly');
+      expect(row.price, r'$39.99 / year');
+      expect(row.tag, 'Best value');
+      expect(row.detail, isNull);
+      expect(row.terms, l10n.purchaseTerms(yearly).join(' '));
+    });
+
+    test('a tile has the price, then the trial or the billing', () {
+      final yearlyTile = l10n.paywallPlan(
+        yearly,
+        PaywallLayout.cards,
+        bestValue: true,
+      );
+      expect(yearlyTile.price, r'$39.99');
+      expect(yearlyTile.detail, '7 days free');
+      expect(yearlyTile.tag, isNull);
+      expect(
+        l10n.paywallPlan(monthly, PaywallLayout.cards, bestValue: false).detail,
+        'billed monthly',
+      );
       const lifetime = Plan(
         id: 'l',
         period: PlanPeriod.lifetime,
@@ -108,7 +126,30 @@ void main() {
         priceAmount: 79.99,
         currencyCode: 'USD',
       );
-      expect(l10n.planCardLines(lifetime), ['once']);
+      expect(
+        l10n
+            .paywallPlan(lifetime, PaywallLayout.cards, bestValue: false)
+            .detail,
+        'once',
+      );
+    });
+
+    test('the single plan names its trial and its monthly price', () {
+      final single = l10n.paywallPlan(
+        yearly,
+        PaywallLayout.single,
+        bestValue: true,
+      );
+      expect(single.name, 'Yearly · 7 days free');
+      expect(single.price, r'$39.99 / year');
+      expect(single.detail, r'That is $3.33 a month.');
+      expect(
+        l10n
+            .paywallPlan(monthly, PaywallLayout.single, bestValue: false)
+            .detail,
+        isNull,
+      );
+      expect(l10n.paywallSeePlan(monthly), 'See monthly plan');
     });
 
     test('discloses the trial and the auto-renewal', () {
@@ -133,15 +174,11 @@ void main() {
       );
 
       test('is stated, then the regular price', () {
-        expect(
-          l10n.planOffer(intro),
-          r'$0.99 per month for 3 months, then $4.99 per month',
-        );
         expect(l10n.purchaseButton(intro), r'Start for $0.99');
-        expect(l10n.planCardLines(intro), [
-          'per month',
+        expect(
+          l10n.paywallPlan(intro, PaywallLayout.cards, bestValue: false).detail,
           r'$0.99 per month for 3 months',
-        ]);
+        );
         final terms = l10n.purchaseTerms(intro);
         expect(terms.first, contains(r'Introductory price: $0.99 per month'));
         expect(terms.first, contains(r'costs $4.99 per month'));
@@ -176,12 +213,7 @@ void main() {
           trial: const OfferPeriod(7, PeriodUnit.day),
           intro: intro.intro,
         );
-        expect(
-          l10n.planOffer(both),
-          r'7 days free, then $0.99 per month for 3 months, '
-          r'then $4.99 per month',
-        );
-        expect(l10n.purchaseButton(both), 'Start free trial');
+        expect(l10n.purchaseButton(both), 'Start 7-day free trial');
         expect(
           l10n.purchaseTerms(both).first,
           startsWith(

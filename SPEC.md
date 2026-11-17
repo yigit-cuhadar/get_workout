@@ -1501,8 +1501,20 @@ the feature you are about to touch, and keep it true when you change it.
   whole offer), B shows one card per plan side by side (name, the store's
   price, its period, then any trial or intro price), as many cards as the
   store offers (two today), C shows one plan (yearly) with its benefits and
-  "Or monthly, <price>" under it (owner's pick, Çelişkiler, 2026-11-15).
-- **Paywall A/B test** (Firebase Remote Config + A/B Testing, owner's call,
+  "See monthly plan" under it (PW-Q1, 2026-11-17, replacing "Or monthly,
+  <price>"). The page is Forge's `SubscriptionPlans` fed from
+  `PremiumPaywallCubit` (PW-F1): rows "Yearly" / "$59.99 / year" with
+  "Best value" on yearly when there is a monthly plan, tiles "$59.99"
+  over "7 days free" (else the intro offer, else "billed monthly"), the
+  single plan "Yearly · 7 days free" / "$59.99 / year" / "That is $5.00 a
+  month."; the button "Start 7-day free trial", "Start for <price>" or
+  "Subscribe"; the full renewal terms under it (PW-Q2). Prices failed:
+  the "Couldn't load plans" card and a disabled "Subscribe" without terms
+  (PW-Q3); a store that cannot sell: the unavailable card; a pending
+  purchase: the "Waiting for approval" card, whose "Got it" closes the
+  paywall (Premium unlocks by itself once approved). Restore's result is
+  "Premium restored." (the paywall closes) or "Nothing to restore.".
+- **Paywall A/B/C test** (Firebase Remote Config + A/B Testing, owner's call,
   2026-11-13; `forge_remote_config`): the Remote Config string
   `paywall_layout` picks the layout, `a` (list), `b` (cards) or `c` (one
   plan); the app's
@@ -1516,9 +1528,9 @@ the feature you are about to touch, and keep it true when you change it.
   from the second, and a failure only leaves the defaults. The paywall
   reads the layout once, when it opens (`PremiumPaywallCubit.layout`).
   Debug builds on the fake store override it with the "Paywall layout" row
-  among the Fake store rows (Remote Config, A or B; in memory until
+  among the Fake store rows (Remote Config, A, B or C; in memory until
   restart); release builds do not register the override. Events, through
-  `Telemetry.logEvent` (`forge_core`): `paywall_view` {`layout`: `a`|`b`}
+  `Telemetry.logEvent` (`forge_core`): `paywall_view` {`layout`: `a`|`b`|`c`}
   once per paywall open, when the plans first show to a user without
   Premium (not on a failed load, nor for a subscriber, whose paywall
   closes at once):
@@ -1536,6 +1548,20 @@ the feature you are about to touch, and keep it true when you change it.
   set up in the console, not by the app.
 
 ### Account and privacy
+
+- **Account page**: a signed-in user's card has Email, "Signed in with"
+  (`AuthUser.signInMethods`: Email, Google, Apple, comma-joined) and Data,
+  "Backed up" or "Waiting to sync" (AC-Q1; no time is recorded):
+  `FirestoreSyncRepository` asks Firestore's `waitForPendingWrites` when
+  the page opens and whenever `snapshotsInSync` fires, and calls writes
+  the server takes within 2 s backed up, so a normal write never flashes
+  "Waiting". Then "Subscription" with the GetWorkout Premium row, "You are
+  on Free" or the Profile card's state; it opens the paywall when free and
+  the store's manage page for a subscription, nothing while checking or
+  for lifetime Premium (AC-Q2). Then Sign out (a dialog; a failure is a
+  snackbar "Couldn't sign out." whose Retry signs out without asking
+  again) and Delete account. A guest gets the guest card (Create account,
+  I already have an account), the subscription row and Delete my data.
 
 - **Analytics consent** (`lib/features/account`):
   `settings.analyticsConsent` of each user, guests included (a guest has a
@@ -2077,6 +2103,20 @@ the feature you are about to touch, and keep it true when you change it.
   filled to its own target (full once met) and "x of target", then the days as the
   program page's day cards (`ProgramDayCard`, without ▶), the first open
   and again after Regenerate; Regenerate and Save fixed at the bottom.
+  Design phase (2026-11-17): "Upper/lower · 4 days" over "Build muscle ·
+  Intermediate · 60 min"; uncovered muscles as a NoticeBanner; Weekly sets
+  as a SectionCard with "n total" and a VolumeBand "n sets" per target
+  muscle (GP-Q4, replacing "x of target"); each exercise "3 × 6–8" with
+  ⋯: Swap for a similar one (the picker's Swap form, `/generate/pick`;
+  sets, rest and the kept mark stay, an exercise already on the day is
+  ignored) (GP-Q2), Keep when regenerating (history icon, ticked; the row
+  reads "· Kept") (GP-Q1), Change sets and reps (the builder's targets
+  sheet, `ItemTargetsSheet`) (GP-Q3), Remove (not the day's last).
+  Regenerate keeps the kept items on their day as they are: they count
+  towards the targets and no pass trims them; one gone from the library
+  is dropped. Edits recount the weekly sets and uncovered muscles. While
+  building, a "Building your program" card and both buttons off; Save
+  reads "Save program".
 - **Admin program editor**: edits `programs/{id}` and its `detail/main` in
   one transaction, so both are written or neither; a save is refused when
   either changed since the editor loaded them, and keeps `contentHash` and

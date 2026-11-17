@@ -1,11 +1,14 @@
-/// How the paywall shows its plans: the two arms of an A/B test, each with
-/// its Remote Config and analytics [code].
+/// How the paywall shows its plans: the three arms of an A/B/C test, each
+/// with its Remote Config and analytics [code].
 enum PaywallLayout {
   /// A: one row per plan. The default.
   list('a'),
 
   /// B: one card per plan, side by side.
-  cards('b');
+  cards('b'),
+
+  /// C: the selected plan alone, with a link to the other.
+  single('c');
 
   const PaywallLayout(this.code);
 

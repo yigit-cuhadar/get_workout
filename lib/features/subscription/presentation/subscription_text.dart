@@ -1,8 +1,10 @@
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../domain/paywall_layout.dart';
 import 'subscription_summary.dart';
 
 extension SubscriptionText on AppLocalizations {
@@ -19,26 +21,69 @@ extension SubscriptionText on AppLocalizations {
     PlanPeriod.lifetime => paywallOnce(plan.price),
   };
 
-  /// Under the price on the paywall's plan card: the period, then any free
-  /// trial and paid intro price.
-  List<String> planCardLines(Plan plan) => [
-    switch (plan.period) {
-      PlanPeriod.monthly => everyMonths(1),
-      PlanPeriod.yearly => everyYears(1),
-      PlanPeriod.lifetime => paywallCardOnce,
-    },
-    if (plan.trial case final trial?) paywallCardTrial(offerPeriod(trial)),
-    if (plan.intro case final intro?) introOffer(intro),
-  ];
-
-  /// `7 days free, then $39.99 per year`, with any paid intro price
-  /// between, or just the price.
-  String planOffer(Plan plan) {
+  /// [plan] worded for the paywall's [layout]; [bestValue] tags a row.
+  SubscriptionPlan paywallPlan(
+    Plan plan,
+    PaywallLayout layout, {
+    required bool bestValue,
+  }) {
+    final terms = purchaseTerms(plan).join(' ');
     final trial = plan.trial;
-    return trial == null
-        ? _afterTrial(plan)
-        : paywallTrialThen(offerPeriod(trial), _afterTrial(plan));
+    return switch (layout) {
+      PaywallLayout.list => SubscriptionPlan(
+        name: planName(plan),
+        price: _planPriceShort(plan),
+        terms: terms,
+        tag: bestValue ? paywallBestValue : null,
+      ),
+      PaywallLayout.cards => SubscriptionPlan(
+        name: planName(plan),
+        price: plan.price,
+        terms: terms,
+        detail: trial != null
+            ? paywallCardTrial(offerPeriod(trial))
+            : plan.intro != null
+            ? introOffer(plan.intro!)
+            : switch (plan.period) {
+                PlanPeriod.monthly => paywallBilledMonthly,
+                PlanPeriod.yearly => paywallBilledYearly,
+                PlanPeriod.lifetime => paywallCardOnce,
+              },
+      ),
+      PaywallLayout.single => SubscriptionPlan(
+        name: trial == null
+            ? planName(plan)
+            : paywallPlanTrial(
+                planName(plan),
+                paywallCardTrial(offerPeriod(trial)),
+              ),
+        price: _planPriceShort(plan),
+        terms: terms,
+        detail: plan.period == PlanPeriod.yearly
+            ? paywallMonthlyEquivalent(
+                NumberFormat.simpleCurrency(
+                  locale: localeName,
+                  name: plan.currencyCode,
+                ).format(plan.priceAmount / 12),
+              )
+            : null,
+      ),
+    };
   }
+
+  /// The single layout's link to [plan]: `See monthly plan`.
+  String paywallSeePlan(Plan plan) => switch (plan.period) {
+    PlanPeriod.monthly => paywallSeeMonthly,
+    PlanPeriod.yearly => paywallSeeYearly,
+    PlanPeriod.lifetime => paywallSeeLifetime,
+  };
+
+  /// `$59.99 / year`, in a plan's box.
+  String _planPriceShort(Plan plan) => switch (plan.period) {
+    PlanPeriod.monthly => paywallPriceMonth(plan.price),
+    PlanPeriod.yearly => paywallPriceYear(plan.price),
+    PlanPeriod.lifetime => paywallOnce(plan.price),
+  };
 
   /// `$0.99 per month for 3 months` or `$0.99 for 1 month`.
   String introOffer(IntroOffer intro) {
@@ -60,14 +105,23 @@ extension SubscriptionText on AppLocalizations {
 
   String purchaseButton(Plan plan) {
     final intro = plan.intro;
-    return plan.trial != null
-        ? paywallStartTrial
+    final trial = plan.trial;
+    return trial != null
+        ? paywallStartTrial(_trialLength(trial))
         : intro != null
         ? paywallStartIntro(intro.price)
         : plan.period == PlanPeriod.lifetime
         ? paywallBuy
         : paywallSubscribe;
   }
+
+  /// `7-day`, before "free trial".
+  String _trialLength(OfferPeriod period) => switch (period.unit) {
+    PeriodUnit.day => trialLengthDays(period.count),
+    PeriodUnit.week => trialLengthWeeks(period.count),
+    PeriodUnit.month => trialLengthMonths(period.count),
+    PeriodUnit.year => trialLengthYears(period.count),
+  };
 
   /// What the store charges and when, as the stores' review guidelines ask.
   List<String> purchaseTerms(Plan plan) {

@@ -7,6 +7,7 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/open_link.dart';
 import '../core/unsaved_changes.dart';
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
@@ -65,6 +66,7 @@ import '../features/workout/presentation/workout_edit_page.dart';
 import '../features/workout/presentation/workout_page.dart';
 import '../l10n/app_localizations.dart';
 import 'app_shell.dart';
+import 'legal_links.dart';
 
 abstract final class Routes {
   static const splash = '/splash';
@@ -150,6 +152,10 @@ abstract final class Routes {
   /// out; see [exercisePicker].
   static String exerciseLeaveOutPicker(int max) =>
       '$programGenerator/pick?max=$max&multiple=true&form=leaveOut';
+
+  /// [exercisePicker] above the generator's preview.
+  static String generatorPicker({required int max, required bool multiple}) =>
+      '$programGenerator/pick?max=$max&multiple=$multiple';
   static const exercises = '/exercises';
   static String exercise(String id) => '$exercises/${Uri.encodeComponent(id)}';
 
@@ -332,6 +338,22 @@ String? lockScreenDestination(List<String> open, {required bool inProgress}) =>
 /// entitlement); the App Store requires it wherever Google is offered.
 const socialProviders = [SocialProvider.google];
 
+/// forge_auth's sign-in page, closed once signed in.
+Widget _authPage(BuildContext context, {required bool initialSignUp}) {
+  final l10n = AppLocalizations.of(context);
+  return AuthPage(
+    mark: const Text('GW'),
+    name: l10n.appTitle,
+    tagline: l10n.authTagline,
+    onTerms: () => unawaited(openLink(LegalLinks.terms)),
+    onPrivacy: () => unawaited(openLink(LegalLinks.privacy)),
+    strings: localizedAuthStrings(l10n),
+    providers: socialProviders,
+    initialSignUp: initialSignUp,
+    onSignedIn: () => context.pop(),
+  );
+}
+
 /// All routes live here. There is always a user (a guest until they create
 /// an account), so the gates are the splash while the session and then the
 /// user's profile resolve, a retry screen when the guest sign-in failed, and
@@ -432,12 +454,7 @@ GoRouter buildRouter(
         routes: [
           GoRoute(
             path: 'sign-in',
-            builder: (context, _) => AuthPage(
-              strings: localizedAuthStrings(AppLocalizations.of(context)),
-              providers: socialProviders,
-              initialSignUp: false,
-              onSignedIn: () => context.pop(),
-            ),
+            builder: (context, _) => _authPage(context, initialSignUp: false),
           ),
         ],
       ),
@@ -741,14 +758,10 @@ GoRouter buildRouter(
                 routes: [
                   GoRoute(
                     path: 'auth',
-                    builder: (context, state) => AuthPage(
-                      strings: localizedAuthStrings(
-                        AppLocalizations.of(context),
-                      ),
-                      providers: socialProviders,
+                    builder: (context, state) => _authPage(
+                      context,
                       initialSignUp:
                           state.uri.queryParameters['mode'] != 'sign-in',
-                      onSignedIn: () => context.pop(),
                     ),
                   ),
                   GoRoute(

@@ -16,7 +16,8 @@ import 'program_text.dart';
 /// One day of a program as a card of rows: its name over its exercise
 /// count (and estimate, with [estimate]) and a chevron that points down
 /// while closed and up while [open]; open, the day's exercises follow in
-/// the same card; with [onStart], ▶ in front of the chevron starts the day.
+/// the same card ([rows] in place of [programDayRows] when given); with
+/// [onStart], ▶ in front of the chevron starts the day.
 /// Which days are open is the page's own view state.
 class ProgramDayCard extends StatelessWidget {
   const ProgramDayCard({
@@ -28,6 +29,7 @@ class ProgramDayCard extends StatelessWidget {
     this.estimate = true,
     this.onExerciseTap,
     this.onStart,
+    this.rows,
   });
 
   final ProgramDay day;
@@ -39,6 +41,7 @@ class ProgramDayCard extends StatelessWidget {
   /// With it, an exercise of the library opens from its row.
   final ValueChanged<String>? onExerciseTap;
   final VoidCallback? onStart;
+  final List<Widget>? rows;
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +92,8 @@ class ProgramDayCard extends StatelessWidget {
           ),
           onTap: onToggle,
         ),
-        if (open) ...programDayRows(context, day, onExerciseTap: onExerciseTap),
+        if (open)
+          ...rows ?? programDayRows(context, day, onExerciseTap: onExerciseTap),
       ],
     );
   }
