@@ -399,7 +399,12 @@ void main() {
       await tester.tap(find.text('Distance'));
       await tester.pumpAndSettle();
       expect(find.byType(ForgeBottomSheet), findsOneWidget);
-      expect(find.text('Distance (km)'), findsOneWidget);
+      // Titled and labelled with the name; the unit sits in the box.
+      expect(find.text('Distance'), findsNWidgets(3));
+      expect(
+        tester.widget<ForgeTextField>(find.byType(ForgeTextField)).unit,
+        'km',
+      );
       // No value yet: no Clear.
       expect(find.text('Clear'), findsNothing);
 

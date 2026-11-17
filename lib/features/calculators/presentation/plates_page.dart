@@ -54,7 +54,6 @@ class PlatesPage extends StatelessWidget {
                       input: CalculatorInput.targetWeight,
                       format: format,
                       title: l10n.calcTargetWeightTitle,
-                      label: l10n.calcTargetWeight(format.weightUnitLabel),
                       unit: format.weightUnitLabel,
                       text: state.target,
                       result: state.result,

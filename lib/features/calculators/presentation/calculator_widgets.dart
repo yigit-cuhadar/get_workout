@@ -71,7 +71,8 @@ class CalculatorScaffold<C extends Cubit<Object?>> extends StatelessWidget {
 /// A number input of a calculator as a chevron row: its [title], the
 /// value with its [unit] or "—", and, while it holds the value the app
 /// [known]s from the body log, the day it was measured. A tap opens a
-/// number sheet with a field labelled [label]; what is saved there goes to
+/// number sheet titled [title] with a field labelled [label] (else the
+/// title) and the unit in its box; what is saved there goes to
 /// [onChanged] as text, empty when cleared. The row's line says what is
 /// wrong with the value for [result].
 class CalculatorInputRow extends StatelessWidget {
@@ -80,7 +81,7 @@ class CalculatorInputRow extends StatelessWidget {
     required this.input,
     required this.format,
     required this.title,
-    required this.label,
+    this.label,
     required this.text,
     required this.onChanged,
     this.unit,
@@ -91,7 +92,7 @@ class CalculatorInputRow extends StatelessWidget {
   final CalculatorInput input;
   final CalculatorFormat format;
   final String title;
-  final String label;
+  final String? label;
   final String text;
   final ValueChanged<String> onChanged;
   final String? unit;
@@ -126,7 +127,8 @@ class CalculatorInputRow extends StatelessWidget {
     final picked = await showNumberSheet(
       context,
       title: title,
-      label: label,
+      label: label ?? title,
+      unit: unit,
       bounds: bounds,
       error: format.rangeError(input),
       value: value == null || value.isNaN ? null : value,

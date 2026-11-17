@@ -7,6 +7,8 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/open_link.dart';
+import 'legal_links.dart';
 import '../core/unsaved_changes.dart';
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/auth_strings.dart';
@@ -432,12 +434,7 @@ GoRouter buildRouter(
         routes: [
           GoRoute(
             path: 'sign-in',
-            builder: (context, _) => AuthPage(
-              strings: localizedAuthStrings(AppLocalizations.of(context)),
-              providers: socialProviders,
-              initialSignUp: false,
-              onSignedIn: () => context.pop(),
-            ),
+            builder: (context, _) => _authPage(context, initialSignUp: false),
           ),
         ],
       ),
@@ -741,14 +738,10 @@ GoRouter buildRouter(
                 routes: [
                   GoRoute(
                     path: 'auth',
-                    builder: (context, state) => AuthPage(
-                      strings: localizedAuthStrings(
-                        AppLocalizations.of(context),
-                      ),
-                      providers: socialProviders,
+                    builder: (context, state) => _authPage(
+                      context,
                       initialSignUp:
                           state.uri.queryParameters['mode'] != 'sign-in',
-                      onSignedIn: () => context.pop(),
                     ),
                   ),
                   GoRoute(
@@ -880,3 +873,18 @@ class _StreamListenable extends ChangeNotifier {
     super.dispose();
   }
 }
+
+// Holds the app on the new forge_auth AuthPage until the sign-in screen is
+// built from its board (no mark or tagline yet).
+Widget _authPage(BuildContext context, {required bool initialSignUp}) =>
+    AuthPage(
+      mark: const SizedBox.shrink(),
+      name: AppLocalizations.of(context).appTitle,
+      tagline: '',
+      onTerms: () => unawaited(openLink(LegalLinks.terms)),
+      onPrivacy: () => unawaited(openLink(LegalLinks.privacy)),
+      strings: localizedAuthStrings(AppLocalizations.of(context)),
+      providers: socialProviders,
+      initialSignUp: initialSignUp,
+      onSignedIn: () => context.pop(),
+    );

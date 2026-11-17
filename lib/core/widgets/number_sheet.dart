@@ -14,8 +14,8 @@ class NumberBounds {
   final int decimals;
 }
 
-/// A sheet titled [title] to type a value in a field labelled [label]:
-/// Clear in the header while there is a [value], and a full-width Save,
+/// A sheet titled [title] to type a value in a field labelled [label],
+/// its [unit] inside the box after the value: Clear in the header while there is a [value], and a full-width Save,
 /// which keeps the sheet open with [error] in the field for a value outside
 /// [bounds]. Saving an empty field clears the value. Null when closed
 /// without either.
@@ -23,6 +23,7 @@ Future<({double? value})?> showNumberSheet(
   BuildContext context, {
   required String title,
   required String label,
+  required String? unit,
   required NumberBounds bounds,
   required String error,
   required double? value,
@@ -31,6 +32,7 @@ Future<({double? value})?> showNumberSheet(
   builder: (_) => _NumberSheet(
     title: title,
     label: label,
+    unit: unit,
     bounds: bounds,
     error: error,
     value: value,
@@ -41,6 +43,7 @@ class _NumberSheet extends StatefulWidget {
   const _NumberSheet({
     required this.title,
     required this.label,
+    required this.unit,
     required this.bounds,
     required this.error,
     required this.value,
@@ -48,6 +51,7 @@ class _NumberSheet extends StatefulWidget {
 
   final String title;
   final String label;
+  final String? unit;
   final NumberBounds bounds;
   final String error;
   final double? value;
@@ -108,6 +112,7 @@ class _NumberSheetState extends State<_NumberSheet> {
       ),
       child: ForgeTextField(
         label: widget.label,
+        unit: widget.unit,
         controller: _controller,
         autofocus: true,
         keyboardType: TextInputType.numberWithOptions(

@@ -33,7 +33,7 @@ class BodyFatPage extends StatelessWidget {
             CalculatorInputRow row(
               CalculatorInput input, {
               required String title,
-              required String label,
+              String? label,
               required String text,
               required ValueChanged<String> onChanged,
             }) => CalculatorInputRow(
@@ -64,23 +64,19 @@ class BodyFatPage extends StatelessWidget {
                     row(
                       CalculatorInput.height,
                       title: l10n.calcKnownHeight,
-                      label: l10n.calcHeight(unit),
                       text: state.height,
                       onChanged: cubit.heightChanged,
                     ),
                     row(
                       CalculatorInput.neck,
                       title: l10n.calcKnownNeck,
-                      label: l10n.calcNeck(unit),
                       text: state.neck,
                       onChanged: cubit.neckChanged,
                     ),
                     row(
                       CalculatorInput.waist,
                       title: male ? l10n.calcKnownAbdomen : l10n.calcKnownWaist,
-                      label: male
-                          ? l10n.calcWaistAtNavel(unit)
-                          : l10n.calcWaist(unit),
+                      label: male ? l10n.calcAbdomenAtNavel : null,
                       text: state.waist,
                       onChanged: cubit.waistChanged,
                     ),
@@ -88,7 +84,6 @@ class BodyFatPage extends StatelessWidget {
                       row(
                         CalculatorInput.hip,
                         title: l10n.calcKnownHips,
-                        label: l10n.calcHip(unit),
                         text: state.hip,
                         onChanged: cubit.hipChanged,
                       ),

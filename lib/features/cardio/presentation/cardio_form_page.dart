@@ -203,9 +203,7 @@ class _CardioFormViewState extends State<_CardioFormView> {
                   end: ListRowEnd.chevron,
                   onTap: () => _pickNumber(
                     title: l10n.cardioDistanceRow,
-                    label: l10n.cardioDistance(
-                      l10n.distanceUnitLabel(widget.unit),
-                    ),
+                    unit: l10n.distanceUnitLabel(widget.unit),
                     bounds: _Bounds.distance(widget.unit),
                     error: l10n.cardioErrorDistance,
                     value: state.distance,
@@ -222,7 +220,7 @@ class _CardioFormViewState extends State<_CardioFormView> {
                 end: ListRowEnd.chevron,
                 onTap: () => _pickNumber(
                   title: l10n.cardioCaloriesRow,
-                  label: l10n.cardioCalories,
+                  unit: l10n.cardioUnitKcal,
                   bounds: _Bounds.calories,
                   error: l10n.cardioErrorCalories,
                   value: state.calories?.toDouble(),
@@ -239,7 +237,7 @@ class _CardioFormViewState extends State<_CardioFormView> {
                 end: ListRowEnd.chevron,
                 onTap: () => _pickNumber(
                   title: l10n.cardioHeartRateRow,
-                  label: l10n.cardioHeartRate,
+                  unit: l10n.cardioUnitBpm,
                   bounds: _Bounds.heartRate,
                   error: l10n.cardioErrorHeartRate,
                   value: state.heartRate?.toDouble(),
@@ -259,7 +257,7 @@ class _CardioFormViewState extends State<_CardioFormView> {
                   end: ListRowEnd.chevron,
                   onTap: () => _pickNumber(
                     title: l10n.cardioInclineRow,
-                    label: l10n.cardioIncline,
+                    unit: l10n.cardioUnitPercent,
                     bounds: _Bounds.incline,
                     error: l10n.cardioErrorIncline,
                     value: state.incline,
@@ -385,10 +383,10 @@ class _CardioFormViewState extends State<_CardioFormView> {
     );
   }
 
-  /// A number sheet (B2) for [title]'s value; empty clears it.
+  /// A number sheet (B2) for [title]'s value in [unit]; empty clears it.
   Future<void> _pickNumber({
     required String title,
-    required String label,
+    required String unit,
     required NumberBounds bounds,
     required String error,
     required double? value,
@@ -397,7 +395,8 @@ class _CardioFormViewState extends State<_CardioFormView> {
     final result = await showNumberSheet(
       context,
       title: title,
-      label: label,
+      label: title,
+      unit: unit,
       bounds: bounds,
       error: error,
       value: value,

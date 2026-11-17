@@ -3000,7 +3000,8 @@ the feature you are about to touch, and keep it true when you change it.
   input. Every input is a chevron row (name, the value in the user's unit
   or "—") opening a number sheet (the Log cardio sheet, now
   `core/widgets/number_sheet.dart`): titled with the name, the field
-  labelled with the unit, Clear while there is a value, Save rejecting a
+  labelled with it too (no unit) and the unit muted inside the box after
+  the value, as in Log cardio's sheets (KC3), Clear while there is a value, Save rejecting a
   value outside the input's range in the field. A known value's row adds
   "Measured <date>" for a value from the body log (the entry's date; body
   fat takes the oldest of its circumferences'; the year only when not
