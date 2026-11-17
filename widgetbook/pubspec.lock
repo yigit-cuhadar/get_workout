@@ -721,8 +721,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_auth"
-      ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
-      resolved-ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
+      ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
+      resolved-ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -730,8 +730,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_camera"
-      ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
-      resolved-ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
+      ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
+      resolved-ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -739,8 +739,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_core"
-      ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
-      resolved-ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
+      ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
+      resolved-ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -748,8 +748,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_firebase"
-      ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
-      resolved-ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
+      ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
+      resolved-ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -757,8 +757,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_health"
-      ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
-      resolved-ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
+      ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
+      resolved-ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -766,8 +766,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_model_viewer"
-      ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
-      resolved-ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
+      ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
+      resolved-ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.1"
@@ -775,8 +775,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_notifications"
-      ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
-      resolved-ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
+      ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
+      resolved-ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -784,8 +784,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_purchases"
-      ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
-      resolved-ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
+      ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
+      resolved-ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -793,8 +793,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_remote_config"
-      ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
-      resolved-ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
+      ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
+      resolved-ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -802,8 +802,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_ui"
-      ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
-      resolved-ref: f7e6c48842547ed04103e9ce8cf93a764a9ea023
+      ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
+      resolved-ref: d5d16623ea480f89b0be3f43639aeb386ff91b6a
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
