@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'theme.dart';
 
-/// Debug builds only: switches the app between the studio's presets so they
+/// Debug and profile builds only: switches the app between the studio's presets so they
 /// can be compared on a device before one ships.
 class PresetPicker extends StatelessWidget {
   const PresetPicker(this.preset, {super.key});

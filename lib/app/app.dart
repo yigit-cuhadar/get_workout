@@ -49,7 +49,9 @@ class _AppState extends State<App> {
     sl<AuthCubit>(),
     sl<ProfileCubit>(),
     deletionUnderway: sl<DeletionUnderway>(),
-    profileDebugSection: kDebugMode
+    // Profile builds too, so the presets can be compared on the owner's
+    // phone; never in release.
+    profileDebugSection: !kReleaseMode
         ? Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
