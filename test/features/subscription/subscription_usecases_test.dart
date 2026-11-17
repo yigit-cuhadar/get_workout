@@ -10,6 +10,28 @@ import 'package:mocktail/mocktail.dart';
 class MockTelemetry extends Mock implements Telemetry {}
 
 void main() {
+  group('GetPaywallOffering', () {
+    test('puts yearly before monthly, whatever the store\'s order', () async {
+      final store = FakePurchasesRepository(plans: fakePlans);
+
+      final offering = (await GetPaywallOffering(store)()).valueOrNull!;
+
+      expect(fakePlans.first.period, PlanPeriod.monthly);
+      expect(offering.plans.map((plan) => plan.period), [
+        PlanPeriod.yearly,
+        PlanPeriod.monthly,
+      ]);
+    });
+
+    test('passes a failure through', () async {
+      final result = await GetPaywallOffering(
+        FakePurchasesRepository(plans: const []),
+      )();
+
+      expect(result.isOk, isFalse);
+    });
+  });
+
   group('GetPaywallLayout', () {
     late FakeRemoteConfigRepository config;
 

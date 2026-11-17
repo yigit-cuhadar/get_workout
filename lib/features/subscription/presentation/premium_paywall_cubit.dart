@@ -5,8 +5,8 @@ import 'package:forge_purchases/forge_purchases.dart';
 import '../domain/paywall_layout.dart';
 import '../domain/subscription_usecases.dart';
 
-/// The package's paywall with the yearly plan selected by default, when the
-/// offering has one, in this session's [layout]. Logs the A/B test's events:
+/// The package's paywall in this session's [layout]; given
+/// [GetPaywallOffering], the yearly plan comes first and is selected. Logs the A/B test's events:
 /// a view once the plans first show to a user without Premium (a
 /// subscriber's paywall closes at once), and each purchase.
 class PremiumPaywallCubit extends PaywallCubit {
@@ -34,9 +34,6 @@ class PremiumPaywallCubit extends PaywallCubit {
     if (state.status == PaywallStatus.ready && !_viewLogged && !_isPremium()) {
       _viewLogged = true;
       unawaited(_logView(layout));
-    }
-    for (final plan in state.plans) {
-      if (plan.period == PlanPeriod.yearly) return select(plan);
     }
   }
 

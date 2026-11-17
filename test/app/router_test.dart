@@ -569,7 +569,7 @@ void main() {
     });
     sl.registerFactory(
       () => PremiumPaywallCubit(
-        getOffering: GetOffering(store),
+        getOffering: GetPaywallOffering(store),
         purchasePlan: PurchasePlan(store),
         restorePurchases: RestorePurchases(store),
         getLayout: GetPaywallLayout(remoteConfig),
