@@ -377,7 +377,7 @@ Group 11, design in code (the owner's plan; the studios are the target, see Desi
 - [x] Forge components — the MobileAppForge Studio cards built in forge_ui with every form and state on their card, widget tests for their behaviour; merged and tagged before the app uses them
 - [x] App components — the GetWorkout Studio components in the app, every state on their card
 - [x] Key screens — Today, Workout and Programs with every state on their boards, approved by the owner before the rest
-- [ ] The remaining screens by studio group (Ana sekmeler, Antrenman ve programlar, İlerleme, Formlar, Kurulum, hesap ve abonelik) — one group at a time, each with its owner-approved flow changes from Design built along with the look
+- [x] The remaining screens by studio group (Ana sekmeler, Antrenman ve programlar, İlerleme, Formlar, Kurulum, hesap ve abonelik) — one group at a time, each with its owner-approved flow changes from Design built along with the look
 - [ ] Widget tests for the critical flows once the UI is stable; the final preset picked on a device
 
 How it runs: the theme and the key screens are done in the main session;
@@ -443,7 +443,13 @@ Where it stands (2026-11-17, end of the Kurulum session):
   account), the real Apple Health / Health Connect prompts, Android, large
   text.
 - Sign in with Apple: done (#137), checked on the owner's iPhone.
-- Next: widget tests for the critical flows and the final preset pick.
+- Critical-flow widget tests: done (#138 first run, guest to account,
+  Account and Delete account, Premium, calculators; #139 logging a
+  workout, programs and missed days, the builder, the generator, body
+  logging), through the real router over fakes; no production bug found.
+  Not covered: dragging the weight ruler, taking a measurement photo.
+- Next: the final preset picked on the owner's phone (Slate, Measure,
+  Graphite), then the unpicked presets and the dev picker go.
 
 ## Design
 
