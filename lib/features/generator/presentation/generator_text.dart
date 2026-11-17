@@ -1,4 +1,6 @@
 import '../../../l10n/app_localizations.dart';
+import '../../profile/domain/user_profile.dart';
+import '../../profile/presentation/profile_questions.dart';
 import '../domain/generator_answers.dart';
 import '../domain/program_generator.dart';
 import 'generator_questions_cubit.dart';
@@ -39,7 +41,8 @@ extension GeneratorText on AppLocalizations {
   };
 
   String generatorQuestion(GeneratorStep step) => switch (step) {
-    GeneratorStep.goal => questionGoal,
+    // Onboarding's goal question.
+    GeneratorStep.goal => question(ProfileField.goal),
     GeneratorStep.level => questionLevel,
     GeneratorStep.days => questionDaysPerWeek,
     GeneratorStep.session => generatorQuestionSession,

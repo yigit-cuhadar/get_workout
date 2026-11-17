@@ -1053,7 +1053,6 @@
 
   "questionProgress": "{step} / {count}",
   "@questionProgress": {"placeholders": {"step": {"type": "int"}, "count": {"type": "int"}}},
-  "questionGoal": "What's your main goal?",
   "profileQuestionGoal": "What is your main goal?",
   "questionLevel": "How much training experience do you have?",
   "questionDaysPerWeek": "How many days a week can you train?",
