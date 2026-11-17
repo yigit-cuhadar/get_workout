@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -8,10 +9,13 @@ import '../../../core/widgets/app_mark.dart';
 import '../../../l10n/app_localizations.dart';
 import 'auth_strings.dart';
 
-/// The sign-in providers offered next to email. Apple joins once the app is
-/// signed by a paid Apple Developer team (the Sign in with Apple
-/// entitlement); the App Store requires it wherever Google is offered.
-const socialProviders = [SocialProvider.google];
+/// The sign-in providers offered next to email: Apple first on iOS, where
+/// the App Store requires it beside Google; Android offers Google alone
+/// (Apple there would need a Services ID).
+List<SocialProvider> get socialProviders => [
+  if (defaultTargetPlatform == TargetPlatform.iOS) SocialProvider.apple,
+  SocialProvider.google,
+];
 
 /// forge_auth's sign-in page with GetWorkout's mark, name, tagline, text
 /// and legal links; [initialSignUp] opens the email form's create mode.
