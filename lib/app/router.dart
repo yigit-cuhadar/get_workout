@@ -726,6 +726,8 @@ GoRouter buildRouter(
                 routes: [
                   GoRoute(
                     path: 'auth',
+                    // Full screen, over the tab bar.
+                    parentNavigatorKey: root,
                     builder: (context, state) => AccountAuthPage(
                       initialSignUp:
                           state.uri.queryParameters['mode'] != 'sign-in',
