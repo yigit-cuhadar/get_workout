@@ -10,13 +10,16 @@ import '../workout/presentation/active_workout_cubit.dart';
 import 'data/callable_account_repository.dart';
 import 'data/device_account_data.dart';
 import 'data/firestore_consent_repository.dart';
+import 'data/firestore_sync_repository.dart';
 import 'domain/account_repository.dart';
 import 'domain/account_usecases.dart';
 import 'domain/consent_repository.dart';
+import 'domain/sync_repository.dart';
 import 'presentation/consent_cubit.dart';
 import 'presentation/delete_account_cubit.dart';
+import 'presentation/sync_status_cubit.dart';
 
-/// Registers analytics consent and account deletion. Needs `AuthModule`,
+/// Registers analytics consent, the sync status and account deletion. Needs `AuthModule`,
 /// `NotificationsModule`, `WorkoutModule` and `BodyModule` (whose kept
 /// workouts and photos deletion removes), and the [telemetry] that
 /// `forge_firebase`'s `initFirebase` returned.
@@ -59,6 +62,11 @@ class AccountModule implements FeatureModule {
           forgetPhotos: sl(),
         ),
       )
+      ..registerLazySingleton<SyncRepository>(
+        () => FirestoreSyncRepository(FirebaseFirestore.instance),
+      )
+      ..registerFactory(() => WatchBackedUp(sl()))
+      ..registerFactory(() => SyncStatusCubit(watchBackedUp: sl()))
       ..registerFactory(() => WatchAnalyticsConsent(sl()))
       ..registerFactory(() => SaveAnalyticsConsent(sl()))
       ..registerFactory(() => FollowAnalyticsUser(sl()))

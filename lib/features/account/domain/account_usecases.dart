@@ -2,6 +2,7 @@ import 'package:forge_core/forge_core.dart';
 
 import 'account_repository.dart';
 import 'consent_repository.dart';
+import 'sync_repository.dart';
 
 typedef ConsentAnswer = ({String uid, bool consent});
 
@@ -19,6 +20,15 @@ class SaveAnalyticsConsent implements UseCase<void, ConsentAnswer> {
   @override
   Future<Result<void>> call(ConsentAnswer params) =>
       _repository.saveConsent(params.uid, params.consent);
+}
+
+/// Whether this device's writes are all on the server; see
+/// [SyncRepository.watchBackedUp].
+class WatchBackedUp {
+  const WatchBackedUp(this._repository);
+  final SyncRepository _repository;
+
+  Stream<bool> call() => _repository.watchBackedUp();
 }
 
 /// Points collection at the signed-in user (null: nobody); off until

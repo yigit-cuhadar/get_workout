@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
@@ -13,8 +14,9 @@ import '../domain/paywall_layout.dart';
 import 'premium_paywall_cubit.dart';
 import 'subscription_text.dart';
 
-/// The Premium paywall. Pops with true once the user has Premium, also when
-/// they already had it on opening.
+/// The Premium paywall: Forge's [SubscriptionPlans] fed from
+/// [PremiumPaywallCubit]. Pops with true once the user has Premium, also
+/// when they already had it on opening.
 class PaywallPage extends StatefulWidget {
   const PaywallPage({super.key});
 
@@ -60,27 +62,28 @@ class _PaywallViewState extends State<_PaywallView> {
     }
   }
 
-  void _close(String message) {
+  /// Closes this paywall's own route, even when something is above it,
+  /// with true once Premium is there, after showing [message].
+  void _close(String? message, {bool premium = true}) {
     if (_closing || !mounted) return;
     _closing = true;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
-    // Closes this paywall's own route, even when something is above it.
+    if (message != null) _show(message);
     final route = ModalRoute.of(context);
     if (route == null) return;
     final navigator = Navigator.of(context);
-    route.isCurrent ? navigator.pop(true) : navigator.removeRoute(route, true);
+    route.isCurrent
+        ? navigator.pop(premium)
+        : navigator.removeRoute(route, premium);
   }
 
-  void _show(String message) => ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message)));
+  void _show(String message, {bool error = false}) =>
+      showForgeSnackbar(context, message: message, error: error);
 
   void _onOutcome(PaywallState state) {
     final l10n = AppLocalizations.of(context);
     switch (state.outcome) {
-      case null || PaywallOutcome.cancelled:
+      // A pending purchase shows its card in place of the plans.
+      case null || PaywallOutcome.cancelled || PaywallOutcome.pending:
         return;
       case PaywallOutcome.purchased:
         _close(l10n.paywallPurchased);
@@ -88,13 +91,20 @@ class _PaywallViewState extends State<_PaywallView> {
         _close(l10n.paywallRestored);
       case PaywallOutcome.nothingToRestore:
         _show(l10n.paywallNothingToRestore);
-      case PaywallOutcome.pending:
-        _show(l10n.paywallPending);
       case PaywallOutcome.notEntitled:
-        _show(l10n.paywallNotEntitled);
+        _show(l10n.paywallNotEntitled, error: true);
       case PaywallOutcome.failed:
-        _show(l10n.purchaseError(state.failure ?? const UnknownFailure()));
+        _show(
+          l10n.purchaseError(state.failure ?? const UnknownFailure()),
+          error: true,
+        );
     }
+  }
+
+  Future<void> _open(Uri uri) async {
+    final failed = AppLocalizations.of(context).linkOpenFailed;
+    if (await openLink(uri) || !mounted) return;
+    _show(failed, error: true);
   }
 
   @override
@@ -117,293 +127,98 @@ class _PaywallViewState extends State<_PaywallView> {
           },
         ),
       ],
-      child: Scaffold(
-        appBar: AppBar(title: Text(l10n.premiumTitle)),
-        body: SafeArea(
-          top: false,
-          child: BlocBuilder<PaywallCubit, PaywallState>(
-            // A restore after a failed load keeps the load's message; the
-            // footer shows the restore in progress.
-            builder: (context, state) => switch (state) {
-              PaywallState(status: PaywallStatus.loading) => const _PinOrScroll(
-                fill: LoadingView(),
-              ),
-              PaywallState(:final loadFailure?) => _PinOrScroll(
-                fill: ErrorView(
-                  title: l10n.paywallLoadFailedTitle,
-                  message: switch (loadFailure) {
-                    PurchaseFailure() ||
-                    NetworkFailure() => l10n.purchaseError(loadFailure),
-                    _ => l10n.paywallLoadFailed,
-                  },
-                  retryLabel: l10n.retry,
-                  // Ignored while a purchase or restore is under way.
-                  onRetry: context.read<PaywallCubit>().load,
-                ),
-              ),
-              _ => _PinOrScroll(offer: _Offer(state, layout: widget.layout)),
-            },
-          ),
-        ),
+      child: BlocBuilder<PaywallCubit, PaywallState>(
+        builder: (context, state) => _plans(context, l10n, state),
       ),
     );
   }
-}
 
-/// The page above [_Footer]. The footer is pinned to the bottom while it
-/// takes at most half the height; taller (large text), the whole page
-/// scrolls as one, the footer last, so every plan and link stays reachable.
-class _PinOrScroll extends StatefulWidget {
-  const _PinOrScroll({this.offer, this.fill});
-
-  /// Scrolls above a pinned footer.
-  final Widget? offer;
-
-  /// Fills the room above a pinned footer.
-  final Widget? fill;
-
-  @override
-  State<_PinOrScroll> createState() => _PinOrScrollState();
-}
-
-class _PinOrScrollState extends State<_PinOrScroll> {
-  final _footer = GlobalKey();
-  bool _pinned = false;
-  double _height = 0;
-
-  /// Runs after layout, when the footer's height is known; starts unpinned
-  /// so the first frame never overflows.
-  void _measure() {
-    if (!mounted) return;
-    final footer = _footer.currentContext?.size?.height;
-    if (footer == null) return;
-    final pinned = footer <= _height / 2;
-    if (pinned != _pinned) setState(() => _pinned = pinned);
-  }
-
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      _height = constraints.maxHeight;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
-      final footer = NotificationListener<SizeChangedLayoutNotification>(
-        onNotification: (_) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
-          return true;
-        },
-        child: SizeChangedLayoutNotifier(
-          child: KeyedSubtree(key: _footer, child: const _Footer()),
-        ),
-      );
-      final offer = widget.offer;
-      final fill = widget.fill;
-      if (_pinned) {
-        return Column(
-          children: [
-            Expanded(child: fill ?? ListView(children: [?offer])),
-            footer,
-          ],
-        );
-      }
-      return ListView(
-        children: [
-          ?offer,
-          if (fill != null) SizedBox(height: _height / 2, child: fill),
-          footer,
-        ],
-      );
-    },
-  );
-}
-
-class _Offer extends StatelessWidget {
-  const _Offer(this.state, {required this.layout});
-
-  final PaywallState state;
-  final PaywallLayout layout;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(Gap.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(l10n.paywallIntro, style: theme.textTheme.titleMedium),
-          const SizedBox(height: Gap.sm),
-          for (final benefit in [
-            l10n.paywallBenefitGenerator,
-            l10n.paywallBenefitPrograms,
-            l10n.paywallBenefitStats,
-          ])
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.check, color: theme.colorScheme.primary),
-              title: Text(benefit),
-            ),
-          const SizedBox(height: Gap.md),
-          RadioGroup<Plan>(
-            groupValue: state.selected,
-            onChanged: (plan) {
-              if (plan != null && !state.isBusy) {
-                context.read<PaywallCubit>().select(plan);
-              }
-            },
-            child: switch (layout) {
-              PaywallLayout.list => _PlanList(state),
-              PaywallLayout.cards => _PlanCards(state),
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Layout A: one row per plan, its whole offer on the row.
-class _PlanList extends StatelessWidget {
-  const _PlanList(this.state);
-
-  final PaywallState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Column(
-      children: [
-        for (final plan in state.plans)
-          RadioListTile<Plan>(
-            value: plan,
-            enabled: !state.isBusy,
-            title: Text(l10n.planName(plan)),
-            subtitle: Text(l10n.planOffer(plan)),
+  Widget _plans(
+    BuildContext context,
+    AppLocalizations l10n,
+    PaywallState state,
+  ) {
+    final cubit = context.read<PaywallCubit>();
+    final layout = widget.layout;
+    final plans = state.plans;
+    final selected = state.selected;
+    final hasMonthly = plans.any((plan) => plan.period == PlanPeriod.monthly);
+    // The single layout links to the plan after the shown one.
+    final other = layout == PaywallLayout.single && plans.length > 1
+        ? plans[(plans.indexOf(selected!) + 1) % plans.length]
+        : null;
+    return SubscriptionPlans(
+      onClose: () => _close(null, premium: false),
+      title: l10n.premiumTitle,
+      benefits: [
+        l10n.paywallBenefitGenerator,
+        l10n.paywallBenefitPrograms,
+        l10n.paywallBenefitCharts,
+        l10n.paywallBenefitVolume,
+      ],
+      layout: switch (layout) {
+        PaywallLayout.list => SubscriptionLayout.rows,
+        PaywallLayout.cards => SubscriptionLayout.tiles,
+        PaywallLayout.single => SubscriptionLayout.single,
+      },
+      plans: [
+        for (final plan in plans)
+          l10n.paywallPlan(
+            plan,
+            layout,
+            bestValue: hasMonthly && plan.period == PlanPeriod.yearly,
           ),
       ],
-    );
-  }
-}
-
-/// Layout B: one card per plan, side by side, the price standing out.
-class _PlanCards extends StatelessWidget {
-  const _PlanCards(this.state);
-
-  final PaywallState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: Gap.sm,
-        children: [
-          for (final plan in state.plans)
-            Expanded(
-              child: Card(
-                margin: EdgeInsets.zero,
-                clipBehavior: Clip.antiAlias,
-                color: plan == state.selected ? colors.primaryContainer : null,
-                child: InkWell(
-                  onTap: state.isBusy
-                      ? null
-                      : () => context.read<PaywallCubit>().select(plan),
-                  child: Padding(
-                    padding: const EdgeInsets.all(Gap.sm),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Radio<Plan>(value: plan, enabled: !state.isBusy),
-                        Text(
-                          l10n.planName(plan),
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: Gap.xs),
-                        Text(plan.price, style: theme.textTheme.titleLarge),
-                        for (final line in l10n.planCardLines(plan))
-                          Text(line, style: theme.textTheme.bodySmall),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The selected plan's purchase button and terms over restore and the legal
-/// links; restore and the links on every state of the paywall.
-class _Footer extends StatelessWidget {
-  const _Footer();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final cubit = context.read<PaywallCubit>();
-    final state = context.watch<PaywallCubit>().state;
-    final selected = state.selected;
-    final canRestore =
-        state.status == PaywallStatus.ready ||
-        state.status == PaywallStatus.loadFailed;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, Gap.sm),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (selected != null) ...[
-            ForgeButton(
-              label: l10n.purchaseButton(selected),
-              loading: state.status == PaywallStatus.purchasing,
-              onPressed: state.isBusy ? null : cubit.purchase,
-            ),
-            for (final terms in l10n.purchaseTerms(selected)) ...[
-              const SizedBox(height: Gap.sm),
-              Text(
-                terms,
-                style: theme.textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ],
-          Wrap(
-            alignment: WrapAlignment.center,
-            children: [
-              TextButton(
-                onPressed: canRestore ? cubit.restore : null,
-                child: state.status == PaywallStatus.restoring
-                    ? const SizedBox.square(
-                        dimension: Gap.md,
-                        child: CircularProgressIndicator(),
-                      )
-                    : Text(l10n.paywallRestore),
-              ),
-              TextButton(
-                onPressed: () => _open(context, LegalLinks.terms),
-                child: Text(l10n.paywallTerms),
-              ),
-              TextButton(
-                onPressed: () => _open(context, LegalLinks.privacy),
-                child: Text(l10n.paywallPrivacy),
-              ),
-            ],
+      selected: selected == null ? -1 : plans.indexOf(selected),
+      onSelected: (index) => cubit.select(plans[index]),
+      purchaseLabel: selected == null
+          ? l10n.paywallSubscribe
+          : l10n.purchaseButton(selected),
+      onPurchase: cubit.purchase,
+      restoreLabel: l10n.paywallRestore,
+      onRestore: cubit.restore,
+      termsLabel: l10n.paywallTerms,
+      onTerms: () => _open(LegalLinks.terms),
+      privacyLabel: l10n.paywallPrivacy,
+      onPrivacy: () => _open(LegalLinks.privacy),
+      alternativeLabel: other == null ? null : l10n.paywallSeePlan(other),
+      onAlternative: other == null ? null : () => cubit.select(other),
+      loading: state.status == PaywallStatus.loading,
+      purchasing: state.status == PaywallStatus.purchasing
+          ? defaultTargetPlatform == TargetPlatform.iOS
+                ? l10n.paywallConfirmingAppStore
+                : l10n.paywallConfirmingPlay
+          : null,
+      restoring: state.status == PaywallStatus.restoring
+          ? l10n.paywallRestoring
+          : null,
+      message: switch (state) {
+        PaywallState(
+          loadFailure: PurchaseFailure(
+            reason: PurchaseFailureReason.storeUnavailable,
           ),
-        ],
-      ),
+        ) =>
+          SubscriptionMessage.unavailable(
+            message: l10n.paywallUnavailable,
+            actionLabel: l10n.retry,
+            onAction: cubit.load,
+          ),
+        PaywallState(loadFailure: _?) => SubscriptionMessage.failed(
+          title: l10n.paywallLoadFailedTitle,
+          message: l10n.paywallLoadFailed,
+          actionLabel: l10n.retry,
+          onAction: cubit.load,
+        ),
+        // Nothing more to do here: Premium unlocks by itself once approved.
+        PaywallState(outcome: PaywallOutcome.pending) =>
+          SubscriptionMessage.pending(
+            title: l10n.paywallPendingTitle,
+            message: l10n.paywallPending,
+            actionLabel: l10n.paywallGotIt,
+            onAction: () => _close(null, premium: false),
+          ),
+        _ => null,
+      },
     );
-  }
-
-  Future<void> _open(BuildContext context, Uri uri) async {
-    final failed = AppLocalizations.of(context).linkOpenFailed;
-    final messenger = ScaffoldMessenger.of(context);
-    if (await openLink(uri)) return;
-    messenger.showSnackBar(SnackBar(content: Text(failed)));
   }
 }

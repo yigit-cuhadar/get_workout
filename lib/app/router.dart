@@ -150,6 +150,10 @@ abstract final class Routes {
   /// out; see [exercisePicker].
   static String exerciseLeaveOutPicker(int max) =>
       '$programGenerator/pick?max=$max&multiple=true&form=leaveOut';
+
+  /// [exercisePicker] above the generator's preview.
+  static String generatorPicker({required int max, required bool multiple}) =>
+      '$programGenerator/pick?max=$max&multiple=$multiple';
   static const exercises = '/exercises';
   static String exercise(String id) => '$exercises/${Uri.encodeComponent(id)}';
 
