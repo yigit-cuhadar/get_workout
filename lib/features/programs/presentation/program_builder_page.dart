@@ -19,6 +19,7 @@ import '../domain/program.dart';
 import '../domain/program_editing.dart';
 import '../domain/program_validation.dart';
 import 'exercise_picker_page.dart';
+import 'item_targets_sheet.dart';
 import 'program_builder_cubit.dart';
 import 'program_text.dart';
 import 'widgets/builder_row.dart';
@@ -752,204 +753,50 @@ class _ItemTile extends StatelessWidget {
       context: context,
       builder: (_) => BlocProvider.value(
         value: cubit,
-        child: _ItemEditor(
-          index: index,
+        child: ItemTargetsSheet(
           title: exercise.localized(context).name,
           durationBased: type.isDurationBased,
           logsWeight: type.logsWeight,
+          targets: _BuilderItemTargets(cubit, index),
         ),
       ),
     );
   }
 }
 
-/// Sets, reps or duration, rest and target of one item; every change
-/// applies at once.
-class _ItemEditor extends StatefulWidget {
-  const _ItemEditor({
-    required this.index,
-    required this.title,
-    required this.durationBased,
-    required this.logsWeight,
-  });
+/// The builder's item at [index] of the selected day.
+class _BuilderItemTargets implements ItemTargets {
+  const _BuilderItemTargets(this._cubit, this._index);
 
-  final int index;
-  final String title;
-  final bool durationBased;
-  final bool logsWeight;
+  final ProgramBuilderCubit _cubit;
+  final int _index;
 
   @override
-  State<_ItemEditor> createState() => _ItemEditorState();
-}
-
-class _ItemEditorState extends State<_ItemEditor> {
-  late final ProgramBuilderCubit _cubit = context.read<ProgramBuilderCubit>();
-  late final ProgramItem _item = _cubit.state.day!.items[widget.index];
-  late final _sets = _controller('${_item.sets}');
-  late final _repMin = _controller(_item.repMin?.toString() ?? '');
-  late final _repMax = _controller(_item.repMax?.toString() ?? '');
-  late final _duration = _controller(_item.durationS?.toString() ?? '');
-  late final _target = _controller(_targetText());
-  late int _restS = _item.restS;
-  final _controllers = <TextEditingController>[];
-
-  TextEditingController _controller(String text) {
-    final controller = TextEditingController(text: text);
-    _controllers.add(controller);
-    return controller;
-  }
-
-  String _targetText() {
-    final kg = _item.targetKg;
-    if (kg == null) return '';
-    final value = _cubit.weightUnit.shownFromKg(kg);
-    final fixed = value.toStringAsFixed(2);
-    return fixed.replaceFirst(RegExp(r'\.?0+$'), '');
-  }
+  ProgramItem get item => _cubit.state.day!.items[_index];
 
   @override
-  void dispose() {
-    for (final controller in _controllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
+  WeightUnit get weightUnit => _cubit.weightUnit;
 
-  Future<void> _pickRest() => showForgeDurationWheel(
-    context: context,
-    wheel: ForgeDurationWheel.minutesSeconds(
-      label: AppLocalizations.of(context).builderRest,
-      initial: Duration(seconds: _restS),
-      max: const Duration(seconds: ProgramLimits.maxRestS),
-      step: const Duration(seconds: 15),
-      onChanged: (rest) {
-        setState(() => _restS = rest.inSeconds);
-        _cubit.setRest(widget.index, '${rest.inSeconds}');
-      },
-    ),
+  @override
+  Set<ItemIssue> watchIssues(BuildContext context) => context.select(
+    (ProgramBuilderCubit cubit) => cubit.state.liveItemIssues(_index),
   );
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final colors = ForgeStyle.of(context).colors;
-    final issues = context.select(
-      (ProgramBuilderCubit cubit) => cubit.state.liveItemIssues(widget.index),
-    );
-    final index = widget.index;
-    String? error(Set<ItemIssue> of) =>
-        issues.where(of.contains).map(l10n.itemIssueText).firstOrNull;
-    final repsError = error({
-      ItemIssue.repsMissing,
-      ItemIssue.repsOutOfRange,
-      ItemIssue.repRangeInverted,
-    });
-    return ForgeBottomSheet(
-      title: widget.title,
-      action: ForgeButton(
-        label: l10n.libraryDone,
-        onPressed: () => Navigator.pop(context),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: Gap.md,
-          children: [
-            _NumberField(
-              controller: _sets,
-              label: l10n.programSets,
-              error: error({ItemIssue.setsOutOfRange}),
-              onChanged: (text) => _cubit.setSets(index, text),
-            ),
-            if (widget.durationBased)
-              _NumberField(
-                controller: _duration,
-                label: l10n.programDurationSeconds,
-                error: error({
-                  ItemIssue.durationMissing,
-                  ItemIssue.durationOutOfRange,
-                }),
-                onChanged: (text) => _cubit.setDuration(index, text),
-              )
-            else
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: Gap.sm,
-                children: [
-                  Expanded(
-                    child: _NumberField(
-                      controller: _repMin,
-                      label: l10n.programRepMin,
-                      error: repsError,
-                      onChanged: (text) => _cubit.setRepMin(index, text),
-                    ),
-                  ),
-                  Expanded(
-                    child: _NumberField(
-                      controller: _repMax,
-                      label: l10n.programRepMax,
-                      error: repsError == null ? null : '',
-                      onChanged: (text) => _cubit.setRepMax(index, text),
-                    ),
-                  ),
-                ],
-              ),
-            ForgeTextField.tapOnly(
-              label: l10n.builderRest,
-              value: l10n.restClock(_restS),
-              onTap: _pickRest,
-            ),
-            if (widget.logsWeight)
-              _NumberField(
-                controller: _target,
-                label: l10n.programTarget(
-                  l10n.weightUnitLabel(_cubit.weightUnit),
-                ),
-                error: error({ItemIssue.targetOutOfRange}),
-                decimal: true,
-                onChanged: (text) => _cubit.setTarget(index, text),
-              ),
-            if (error({ItemIssue.wrongTarget}) case final text?)
-              Text(
-                text,
-                style: Theme.of(context).textTheme.bodySmall!
-                    .copyWith(color: colors.danger),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NumberField extends StatelessWidget {
-  const _NumberField({
-    required this.controller,
-    required this.label,
-    required this.error,
-    required this.onChanged,
-    this.decimal = false,
-  });
-
-  final TextEditingController controller;
-  final String label;
-  final String? error;
-  final ValueChanged<String> onChanged;
-  final bool decimal;
+  void setSets(String text) => _cubit.setSets(_index, text);
 
   @override
-  Widget build(BuildContext context) => ForgeTextField(
-    label: label,
-    controller: controller,
-    keyboardType: TextInputType.numberWithOptions(decimal: decimal),
-    inputFormatters: [
-      decimal
-          ? FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
-          : FilteringTextInputFormatter.digitsOnly,
-      LengthLimitingTextInputFormatter(decimal ? 7 : 4),
-    ],
-    errorText: error,
-    onChanged: onChanged,
-  );
+  void setRepMin(String text) => _cubit.setRepMin(_index, text);
+
+  @override
+  void setRepMax(String text) => _cubit.setRepMax(_index, text);
+
+  @override
+  void setDuration(String text) => _cubit.setDuration(_index, text);
+
+  @override
+  void setRest(int seconds) => _cubit.setRest(_index, '$seconds');
+
+  @override
+  void setTarget(String text) => _cubit.setTarget(_index, text);
 }

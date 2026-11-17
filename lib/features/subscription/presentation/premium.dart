@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_purchases/forge_purchases.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/open_link.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../programs/domain/premium_status.dart' as programs;
 
@@ -80,6 +82,16 @@ extension PremiumGate on BuildContext {
     }
     // The paywall pops with true before the cubit may have caught up.
     return unlocked == true || (mounted && read<EntitlementCubit>().isActive);
+  }
+
+  /// Opens the store's page for managing the subscription.
+  Future<void> manageSubscription() async {
+    final failed = AppLocalizations.of(this).premiumManageFailed;
+    final url = await read<EntitlementCubit>().managementUrl();
+    final opened = url.valueOrNull != null && await openLink(url.valueOrNull!);
+    if (!opened && mounted) {
+      showForgeSnackbar(this, message: failed, error: true);
+    }
   }
 }
 

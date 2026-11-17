@@ -598,6 +598,16 @@ Decisions (the canvases they were drawn on are deleted):
   a week" (+275), 7,700 kcal per kg, lb labels for lb users (CP16); the
   daily-minimum states are muted row notes (CP17); plates "closest"
   keeps PlateCalculator's form (CP20).
+- Device check of Kurulum (2026-11-17, canvas apps/_review/kurulum4.html,
+  local): "Why this one" names only the answers the program matches, so a
+  days count it does not match is not mentioned (CK1 B); the generator's
+  goal question is onboarding's (CK2 A). Board rules fixed with it: the
+  native launch screen on the featured colour (iOS and Android); the
+  permission steps' buttons at the page bottom (a Forge PermissionPrompt
+  change, pending); sign-in from Profile full screen; the paywall lists
+  Yearly first with Best value at the row's end (Forge v0.25.5); the
+  generator preview title in sans; calorie rates unrounded ("0.25 kg");
+  calculator rows "Weight", values sans muted.
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
@@ -990,7 +1000,8 @@ Decisions (the canvases they were drawn on are deleted):
   Clear search while searching, "Remove a filter to see more programs."
   and Clear filters while filtering; the filter sheet is a
   ForgeBottomSheet (a switch row, chip groups, Clear, Done).
-- Generator questions (owner's picks, 2026-11-15): full screen above the
+- Generator questions (owner's picks, 2026-11-15; the goal question is
+  onboarding's since CK2, 2026-11-17): full screen above the
   tabs (pushed; Back on the first question returns); the OnboardingQuestion
   page with the mono "n / 9" counter after the progress (onboarding too)
   and "Generate a program" over each question; Continue, "Create my
@@ -1488,7 +1499,9 @@ the feature you are about to touch, and keep it true when you change it.
     account, grants the server nothing until the next renewal; two
     concurrent subscriptions are tracked as one `productId`). Revisit if
     one of these shows up.
-- **Paywall**: full-screen `/paywall`, yearly selected by default, prices as
+- **Paywall**: full-screen `/paywall`, yearly listed first (the app sorts
+  yearly before monthly, whatever the store's order) and selected by
+  default, prices as
   the store gives them, trial shown only when the plan carries one, restore
   and legal links always visible. Terms and privacy URLs live in
   `lib/app/legal_links.dart`; placeholders until the pages exist. Layout
@@ -1501,8 +1514,20 @@ the feature you are about to touch, and keep it true when you change it.
   whole offer), B shows one card per plan side by side (name, the store's
   price, its period, then any trial or intro price), as many cards as the
   store offers (two today), C shows one plan (yearly) with its benefits and
-  "Or monthly, <price>" under it (owner's pick, Çelişkiler, 2026-11-15).
-- **Paywall A/B test** (Firebase Remote Config + A/B Testing, owner's call,
+  "See monthly plan" under it (PW-Q1, 2026-11-17, replacing "Or monthly,
+  <price>"). The page is Forge's `SubscriptionPlans` fed from
+  `PremiumPaywallCubit` (PW-F1): rows "Yearly" / "$59.99 / year" with
+  "Best value" on yearly when there is a monthly plan, tiles "$59.99"
+  over "7 days free" (else the intro offer, else "billed monthly"), the
+  single plan "Yearly · 7 days free" / "$59.99 / year" / "That is $5.00 a
+  month."; the button "Start 7-day free trial", "Start for <price>" or
+  "Subscribe"; the full renewal terms under it (PW-Q2). Prices failed:
+  the "Couldn't load plans" card and a disabled "Subscribe" without terms
+  (PW-Q3); a store that cannot sell: the unavailable card; a pending
+  purchase: the "Waiting for approval" card, whose "Got it" closes the
+  paywall (Premium unlocks by itself once approved). Restore's result is
+  "Premium restored." (the paywall closes) or "Nothing to restore.".
+- **Paywall A/B/C test** (Firebase Remote Config + A/B Testing, owner's call,
   2026-11-13; `forge_remote_config`): the Remote Config string
   `paywall_layout` picks the layout, `a` (list), `b` (cards) or `c` (one
   plan); the app's
@@ -1516,9 +1541,9 @@ the feature you are about to touch, and keep it true when you change it.
   from the second, and a failure only leaves the defaults. The paywall
   reads the layout once, when it opens (`PremiumPaywallCubit.layout`).
   Debug builds on the fake store override it with the "Paywall layout" row
-  among the Fake store rows (Remote Config, A or B; in memory until
+  among the Fake store rows (Remote Config, A, B or C; in memory until
   restart); release builds do not register the override. Events, through
-  `Telemetry.logEvent` (`forge_core`): `paywall_view` {`layout`: `a`|`b`}
+  `Telemetry.logEvent` (`forge_core`): `paywall_view` {`layout`: `a`|`b`|`c`}
   once per paywall open, when the plans first show to a user without
   Premium (not on a failed load, nor for a subscriber, whose paywall
   closes at once):
@@ -1536,6 +1561,20 @@ the feature you are about to touch, and keep it true when you change it.
   set up in the console, not by the app.
 
 ### Account and privacy
+
+- **Account page**: a signed-in user's card has Email, "Signed in with"
+  (`AuthUser.signInMethods`: Email, Google, Apple, comma-joined) and Data,
+  "Backed up" or "Waiting to sync" (AC-Q1; no time is recorded):
+  `FirestoreSyncRepository` asks Firestore's `waitForPendingWrites` when
+  the page opens and whenever `snapshotsInSync` fires, and calls writes
+  the server takes within 2 s backed up, so a normal write never flashes
+  "Waiting". Then "Subscription" with the GetWorkout Premium row, "You are
+  on Free" or the Profile card's state; it opens the paywall when free and
+  the store's manage page for a subscription, nothing while checking or
+  for lifetime Premium (AC-Q2). Then Sign out (a dialog; a failure is a
+  snackbar "Couldn't sign out." whose Retry signs out without asking
+  again) and Delete account. A guest gets the guest card (Create account,
+  I already have an account), the subscription row and Delete my data.
 
 - **Analytics consent** (`lib/features/account`):
   `settings.analyticsConsent` of each user, guests included (a guest has a
@@ -1599,7 +1638,8 @@ the feature you are about to touch, and keep it true when you change it.
   Firestore is used; then it signs out and a new guest starts at
   onboarding. A local leftover is logged, not reported. If only the
   sign-in is left (the function's `details.reason` says so) the user stays
-  held on the page, which offers only "Try again". A function not deployed
+  held on the page, which offers only "Try again" (no back in its app
+  bar). A function not deployed
   or not callable answers `not-found` / `permission-denied`, shown as
   "deleting accounts isn't available yet", never as done; anything else
   that failed before the data went gives the workout back.
@@ -1640,7 +1680,11 @@ the feature you are about to touch, and keep it true when you change it.
   2026-11-15): one page, top to bottom: the account header, the Premium
   card, More (Your profile, Calculators), then the settings groups (Units,
   Workout, Reminders, Connected apps, Appearance), Privacy and, in debug
-  builds, the preset picker and on the fake the Fake store rows. Every
+  builds, the preset picker and on the fake the Fake store rows. A
+  guest's header opens the guest account sheet (forge_auth
+  `showLinkAccountSheet`: "Keep your workouts safe", Google, Use email
+  instead, Not now); Use email instead opens Sign in on the email form
+  in create mode, which links the guest (GA6, GA7). Every
   change saves at once; a failed save shows a snackbar. The Premium card
   (`PremiumCard`, a FeaturedCard prompt) says what Premium brings with
   "Get Premium" (the paywall) to a free user; otherwise the user's state
@@ -1670,6 +1714,19 @@ the feature you are about to touch, and keep it true when you change it.
   without a health store. Restore
   reports its result in a snackbar and, on success, closes the paywall
   (owner's pick, 2026-11-15).
+- **Start and sign in** (design pass, Kurulum, 2026-11-17): the splash
+  is Forge SplashScreen, the GW mark and GetWorkout on featured (the
+  native launch screen is the same featured colour, iOS and Android), its
+  slow-start line after 2 s (SP4); a guest session that cannot start
+  shows SplashScreen.failed, "Couldn't start. Check your connection and
+  try again." with an outline Retry (SP3). Sign in is forge_auth's
+  AuthPage on SignInPage (`AccountAuthPage`): the mark, "Plan it, log it,
+  see it add up.", Continue with Google, Use email instead, the terms
+  line linking Terms and the privacy policy; email errors that belong to
+  a field show under it, the rest as "Sign-in didn't finish. Try again."
+  with Retry (SI6); "Continue as guest" shows only with nobody signed in,
+  so never for the app's guest (SI7). Pushed from Profile or Account
+  (`/profile/account/auth`) it opens full screen over the tab bar.
 - **Units**: stored metric. kg/lb and cm/in chosen by the user. A single
   lifted weight is shown through `WeightUnit.shown`: within two decimals
   (the precision weight fields show; 1e-8 hundredths of tolerance, the
@@ -1727,7 +1784,33 @@ the feature you are about to touch, and keep it true when you change it.
   number question counts as answered when it shows; the target weight
   follows the weight until the user picks one. "I already have an
   account" shows on the welcome page for a guest only. In "Your profile"
-  every answer can be changed but not removed. The page frame, the
+  every answer can be changed but not removed. Design pass (Kurulum,
+  2026-11-17): the welcome is the mark on an accent tile, "Train with a
+  plan that fits your week.", a muted line and three numbered lines
+  (BenefitList), Get started and the guest's link at the bottom; every
+  question's action is Continue; the goal question reads "What is your
+  main goal?" with subtitles, Lose fat first (also in Your profile), and
+  only in onboarding "We use it to pick your first program." under it.
+  After the last question (`afterOnboarding`,
+  `OnboardingPermissionsPage`), the progress bar full: "Remind you on
+  training days?" (Turn on reminders asks the system and, if allowed,
+  turns the workout reminder on at its default time; refused or Not now
+  moves on silently, ON6), then "Bring in steps and cardio?" naming
+  Apple Health or Health Connect (ON5), shown wherever a health store
+  exists and steps cannot be read yet: never asked, refused or (iOS)
+  undetermined (SG4). Connect asks where the system still can (never
+  asked; Android refused asks again) and otherwise opens the store's or
+  the app's settings (iOS once asked; Android still refused after
+  asking); Skip moves on. Then the suggestion: "Your plan is ready",
+  the FeaturedCard outline ("Recommended for you · free", the name,
+  "3 days · Intermediate · 8 weeks" with the session time, each day as a
+  row with its suggested weekday tag), "Why this one" (the user's goal,
+  days and equipment set that the program matches in one sentence, an
+  unmatched answer left out, then the catalogue summary, ON10, CK1), and at the bottom Start this program (saves a copy among the
+  user's programs without starting it and opens its page; the user's
+  existing copy opens instead, SG1) and See other programs; no
+  "Not now" (ON8); while it is chosen the card's loading form and a
+  disabled Start. The page frame, the
   question layout and the radio answers are shared with the generator
   (`QuestionScaffold`, `QuestionLayout`, `ChoiceAnswer` in
   `lib/core/question_page.dart`; `EquipmentAnswer` in
@@ -1993,7 +2076,7 @@ the feature you are about to touch, and keep it true when you change it.
   goal, 2 for the level, 2 for the days per week (1 for a day more or
   less); the top 3 show, ties in catalogue order, free programs first
   unless the user is known to have premium. After onboarding the best
-  free recommendation is offered (use it, browse, or Today); with none, or
+  free recommendation is offered (save it, or browse); with none, or
   the catalogue offline, onboarding lands on Today, and so does signing in
   from onboarding to an account already onboarded.
   `ProgramsModule` takes the premium status and the premium action as
@@ -2077,6 +2160,20 @@ the feature you are about to touch, and keep it true when you change it.
   filled to its own target (full once met) and "x of target", then the days as the
   program page's day cards (`ProgramDayCard`, without ▶), the first open
   and again after Regenerate; Regenerate and Save fixed at the bottom.
+  Design phase (2026-11-17): "Upper/lower · 4 days" over "Build muscle ·
+  Intermediate · 60 min"; uncovered muscles as NoticeBanner's one-line form; Weekly sets
+  as a SectionCard with "n total" and a VolumeBand "n sets" per target
+  muscle (GP-Q4, replacing "x of target"); each exercise "3 × 6–8" in mono with
+  ⋯: Swap for a similar one (the picker's Swap form, `/generate/pick`;
+  sets, rest and the kept mark stay, an exercise already on the day is
+  ignored) (GP-Q2), Keep when regenerating (history icon, ticked; the row
+  shows an accent "Kept" after its reps) (GP-Q1), Change sets and reps (the builder's targets
+  sheet, `ItemTargetsSheet`) (GP-Q3), Remove (not the day's last).
+  Regenerate keeps the kept items on their day as they are: they count
+  towards the targets and no pass trims them; one gone from the library
+  is dropped. Edits recount the weekly sets and uncovered muscles. While
+  building, a "Building your program" card and both buttons off; Save
+  reads "Save program".
 - **Admin program editor**: edits `programs/{id}` and its `detail/main` in
   one transaction, so both are written or neither; a save is refused when
   either changed since the editor loaded them, and keeps `contentHash` and
@@ -3034,19 +3131,30 @@ the feature you are about to touch, and keep it true when you change it.
   Bar and plates settings page edits them; the Plates calculator shows a
   summary row leading there. 1RM and the macros' calories stay empty (no
   single source); the goal and target weight map onto no calculator
-  input. A known number shows as a tile (`KnownNumberField`), not a field:
-  its name, the value to one decimal in the user's unit and, for a value
-  from the body log, "Measured <date>" (the entry's date; body fat takes
-  the oldest of its circumferences'; the year only when not this one).
-  Profile values (height, age, a profile-only weight) have no date.
-  The tile has an edit icon; tapping it turns it into the normal field,
-  focused, holding the value; it stays a field (the cubit's `known` map
-  drops it). Focusing a field before the values arrive counts as editing
-  it, so a late value never replaces it. Both the waist and the abdomen
-  are known; the body fat calculator shows the one for the selected sex
-  (abdomen for men, waist for women), or an empty field, unless the user
-  typed or started editing it. Sex and activity stay selectors: they
-  already show the known choice. They are
+  input. Every input is a chevron row (name, bodyweight's "Weight"; the
+  value in the user's unit, sans muted, or "—") opening a number sheet (the Log cardio sheet, now
+  `core/widgets/number_sheet.dart`): titled with the name, the field
+  labelled with it too (no unit) and the unit muted inside the box after
+  the value, as in Log cardio's sheets (KC3), Clear while there is a value, Save rejecting a
+  value outside the input's range in the field. A known value's row adds
+  "Measured <date>" for a value from the body log (the entry's date; body
+  fat takes the oldest of its circumferences'; the year only when not
+  this one); profile values (height, age, a profile-only weight) have no
+  date. Saving a value in the sheet makes it the user's (the cubit's
+  `known` map drops it), so a late value never replaces it, even a
+  cleared one. Both the waist and the abdomen are known; the body fat
+  calculator shows the one for the selected sex (abdomen for men, waist
+  for women), unless the user set it. Sex and activity are chevron rows
+  opening choice sheets; body fat's sex is a segmented control. A missing
+  input shows the result card's missing form, "Add your <inputs> to see
+  the result." (1RM and macros keep their drawn lines). Reps take 1-100
+  in the sheet, so a set above 12 reaches its own row message. Calories:
+  "Daily energy need" is maintenance, with Lose / Keep weight / Gain rows
+  at 7,700 kcal per kg: 0.5 kg and 0.25 kg a week, or 1 lb and 0.5 lb for
+  a pound user (named unrounded); a target raised to the daily minimum, or no loss below
+  it, says so in a muted row note. Activity labels "Sedentary · no
+  exercise", "Light · 1–3 days", "Moderate · 3–5 days", "Hard · 6–7
+  days", "Very hard · physical job". Known values are
   starting values only: nothing is written back. They load once when a
   calculator opens; a value arriving late fills only inputs the user has
   not changed (even one they cleared stays empty). A source that cannot

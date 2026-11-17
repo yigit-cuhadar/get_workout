@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:get_workout/features/account/domain/account_usecases.dart';
+import 'package:get_workout/features/account/domain/sync_repository.dart';
+import 'package:get_workout/features/account/presentation/sync_status_cubit.dart';
 import 'package:get_workout/features/body/presentation/weight_form_cubit.dart';
 import 'package:get_workout/features/body/presentation/weight_sheet.dart';
 import 'package:get_workout/features/progress/domain/progress_usecases.dart';
@@ -40,7 +43,6 @@ import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_page.dart';
 import 'package:get_workout/features/exercises/presentation/widgets/body_view.dart';
 import 'package:get_workout/features/account/presentation/account_page.dart';
-import 'package:get_workout/features/account/domain/account_usecases.dart';
 import 'package:get_workout/features/account/domain/consent_repository.dart';
 import 'package:get_workout/features/account/presentation/consent_cubit.dart';
 import 'package:get_workout/features/account/presentation/delete_account_cubit.dart';
@@ -69,6 +71,7 @@ import 'package:get_workout/features/profile/presentation/profile_details_page.d
 import 'package:get_workout/features/profile/presentation/profile_page.dart';
 import 'package:get_workout/features/programs/domain/catalogue_program.dart';
 import 'package:get_workout/features/programs/domain/catalogue_repository.dart';
+import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_repository.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
@@ -123,6 +126,8 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 class _NotificationsStandIn extends MockCubit<NotificationsState>
     implements NotificationsCubit {}
+
+class _FakeActiveProgram extends Fake implements ActiveProgram {}
 
 class _HealthAccessStandIn extends MockCubit<StepsAccess?>
     implements HealthAccessCubit {}
@@ -255,10 +260,17 @@ void main() {
   /// user has answered.
   ConsentCubit? consent;
 
+  /// Step access as the onboarding health step finds it.
+  late StepsAccess healthAccess;
+
+  /// The health access cubit the last page created.
+  late _HealthAccessStandIn health;
+
   setUp(() {
     storedProfile = onboarded;
     deletionUnderway = DeletionUnderway();
     consent = null;
+    healthAccess = StepsAccess.granted;
   });
 
   // Created inside each test so stream events run in the test's fake zone.
@@ -275,12 +287,16 @@ void main() {
       signInAnonymously: SignInAnonymously(repository),
     );
     sl.registerFactory(
+      () => SyncStatusCubit(watchBackedUp: WatchBackedUp(_BackedUp())),
+    );
+    sl.registerFactory(
       () => AuthFormCubit(
         signInWithEmail: SignInWithEmail(repository),
         signUpWithEmail: SignUpWithEmail(repository),
         signInWithProvider: SignInWithProvider(repository),
         sendPasswordReset: SendPasswordReset(repository),
         getCurrentUser: GetCurrentUser(repository),
+        signInAnonymously: SignInAnonymously(repository),
       ),
     );
     const CalculatorsModule().register(sl);
@@ -409,7 +425,13 @@ void main() {
       (_) async => const Ok([
         ProgramDay(
           items: [
-            ProgramItem(exerciseId: 'squat', sets: 3, repMin: 8, restS: 60),
+            ProgramItem(
+              exerciseId: 'squat',
+              sets: 3,
+              repMin: 8,
+              repMax: 8,
+              restS: 60,
+            ),
           ],
         ),
       ]),
@@ -538,14 +560,16 @@ void main() {
     when(() => notifications.state)
         .thenReturn(const NotificationsState(allowed: true));
     sl.registerFactory<HealthAccessCubit>(() {
-      final health = _HealthAccessStandIn();
-      when(() => health.state).thenReturn(StepsAccess.granted);
+      health = _HealthAccessStandIn();
+      when(() => health.state).thenReturn(healthAccess);
       when(health.load).thenAnswer((_) async {});
+      when(health.allow).thenAnswer((_) async {});
+      when(health.openSettings).thenAnswer((_) async {});
       return health;
     });
     sl.registerFactory(
       () => PremiumPaywallCubit(
-        getOffering: GetOffering(store),
+        getOffering: GetPaywallOffering(store),
         purchasePlan: PurchasePlan(store),
         restorePurchases: RestorePurchases(store),
         getLayout: GetPaywallLayout(remoteConfig),
@@ -612,12 +636,17 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// From the welcome through every question, each already answered.
+  /// From the welcome through every question, each already answered, and
+  /// past the reminder step.
   Future<void> finishOnboarding(WidgetTester tester) async {
     await tester.tap(find.text('Get started'));
     await tester.pumpAndSettle();
     for (var i = 0; i < ProfileField.values.length; i++) {
-      await tester.tap(find.text('Next'));
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+    }
+    if (find.text('Remind you on training days?').evaluate().isNotEmpty) {
+      await tester.tap(find.text('Not now'));
       await tester.pumpAndSettle();
     }
   }
@@ -659,9 +688,10 @@ void main() {
       .widget<ForgeNavigationBar>(find.byType(ForgeNavigationBar))
       .selectedIndex;
 
+  /// Account; a guest's Profile header opens the guest account sheet.
   Future<void> openAccount(WidgetTester tester) async {
     await tapTab(tester, 'Profile');
-    await tester.tap(find.text('Create an account to keep your workouts'));
+    router.go(Routes.account);
     await tester.pumpAndSettle();
   }
 
@@ -685,6 +715,24 @@ void main() {
     expect(find.byType(AuthPage), findsNothing);
     expect(find.text('a@b.co'), findsOneWidget);
     expect(find.text('Sign out'), findsOneWidget);
+  });
+
+  testWidgets("a guest's Profile header opens the guest account sheet", (
+    tester,
+  ) async {
+    await startAsGuest(tester);
+    await tapTab(tester, 'Profile');
+
+    await tester.tap(find.text('Create an account to keep your workouts'));
+    await tester.pumpAndSettle();
+    expect(find.text('Keep your workouts safe'), findsOneWidget);
+
+    // Email links the guest through the create-account form.
+    await tester.tap(find.text('Use email instead'));
+    await tester.pumpAndSettle();
+    expect(find.text('Keep your workouts safe'), findsNothing);
+    final page = tester.widget<AuthPage>(find.byType(AuthPage));
+    expect(page.initialSignUp, isTrue);
   });
 
   testWidgets('a failed guest start offers a retry', (tester) async {
@@ -1492,7 +1540,7 @@ void main() {
     expect(find.byType(CaloriesPage), findsOneWidget);
     expect(find.byType(ForgeNavigationBar), findsOneWidget);
 
-    await tester.pageBack();
+    await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
     expect(find.byType(CalculatorsPage), findsOneWidget);
   });
@@ -1578,7 +1626,7 @@ void main() {
       await tester.pump();
 
       // The splash stays while the profile is loading.
-      expect(find.byType(LoadingView), findsOneWidget);
+      expect(find.byType(SplashScreen), findsOneWidget);
       expect(find.byType(OnboardingPage), findsNothing);
       expect(find.byType(TodayPage), findsNothing);
 
@@ -1639,11 +1687,100 @@ void main() {
       expect(find.byType(ProgramSuggestionPage), findsOneWidget);
       expect(find.text('Program pr_free'), findsOneWidget);
       expect(find.text('Program pr_paid'), findsNothing);
+      expect(find.text('Not now'), findsNothing);
 
-      await tester.tap(find.text('Not now'));
+      await tester.tap(find.text('See other programs'));
       await tester.pumpAndSettle();
+      expect(find.byType(CataloguePage), findsOneWidget);
+    });
+
+    testWidgets('the suggestion is saved, not started', (tester) async {
+      registerFallbackValue(_FakeActiveProgram());
+      readyMade = [
+        card(
+          'pr_free',
+          goal: Goal.loseFat,
+          equipment: const [Equipment.bodyweight],
+          profile: EquipmentProfile.bodyweight,
+        ),
+      ];
+      storedProfile = choicesAnswered;
+      await startAsGuest(tester);
+      when(() => profiles.completeOnboarding(any(), any())).thenAnswer((_) {
+        profileStream.add(
+          storedProfile = UserProfile(
+            goal: Goal.loseFat,
+            onboardingCompletedAt: DateTime(2026),
+          ),
+        );
+        return Future.value(const Ok(null));
+      });
+      await finishOnboarding(tester);
+
+      await tester.tap(find.text('Start this program'));
+      await tester.pumpAndSettle();
+
+      verify(() => programs.createProgram(any(), any())).called(1);
+      verifyNever(() => programs.startProgram(any(), any()));
+      expect(path(), Routes.program('p1'));
+    });
+
+    testWidgets('the reminder step turns reminders on, then moves on', (
+      tester,
+    ) async {
+      storedProfile = choicesAnswered;
+      await startAsGuest(tester);
+      when(() => notifications.allow()).thenAnswer((_) async => false);
+      await tester.tap(find.text('Get started'));
+      await tester.pumpAndSettle();
+      for (var i = 0; i < ProfileField.values.length; i++) {
+        await tester.tap(find.text('Continue'));
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.text('Remind you on training days?'), findsOneWidget);
+      await tester.tap(find.text('Turn on reminders'));
+      await tester.pumpAndSettle();
+
+      // Refused: it moves on without a word; health access is granted already.
+      verify(() => notifications.allow()).called(1);
+      expect(find.text('Remind you on training days?'), findsNothing);
       expect(find.byType(TodayPage), findsOneWidget);
     });
+
+    for (final (access, settings) in [
+      (StepsAccess.explain, false),
+      (StepsAccess.denied, true),
+      (StepsAccess.undetermined, true),
+    ]) {
+      testWidgets('the health step shows while access is ${access.name}', (
+        tester,
+      ) async {
+        healthAccess = access;
+        storedProfile = choicesAnswered;
+        await startAsGuest(tester);
+        await finishOnboarding(tester);
+
+        expect(find.text('Bring in steps and cardio?'), findsOneWidget);
+        await tester.tap(find.textContaining('Connect '));
+        await tester.pumpAndSettle();
+
+        // iOS never asks twice; a refusal still asks on Android, where the
+        // stand-in stays refused and so leads to the settings.
+        if (access == StepsAccess.undetermined) {
+          verifyNever(health.allow);
+        } else {
+          verify(health.allow).called(1);
+        }
+        if (settings) {
+          verify(health.openSettings).called(1);
+        } else {
+          verifyNever(health.openSettings);
+        }
+        expect(find.text('Bring in steps and cardio?'), findsNothing);
+        expect(find.byType(TodayPage), findsOneWidget);
+      });
+    }
 
     testWidgets('onboarding goes forward and back one question at a time', (
       tester,
@@ -1654,14 +1791,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(questionOnScreen(tester), 1);
 
-      // Nothing to skip: Next waits for an answer.
-      await tester.tap(find.text('Next'));
+      // Nothing to skip: Continue waits for an answer.
+      await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
       expect(questionOnScreen(tester), 1);
 
       await tester.tap(find.text('Build muscle'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Next'));
+      await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
       expect(questionOnScreen(tester), 2);
 
@@ -1695,7 +1832,7 @@ void main() {
 
       // Same gate as the previous user, but a different user: it refreshes.
       expect(find.byType(TodayPage), findsOneWidget);
-      expect(find.byType(LoadingView), findsNothing);
+      expect(find.byType(SplashScreen), findsNothing);
       verify(() => profiles.watchProfile('u2')).called(1);
     });
 
@@ -2200,13 +2337,14 @@ void main() {
 
       await tapVisible(tester, 'Get Premium');
       expect(find.byType(PaywallPage), findsOneWidget);
-      expect(find.text(r'$4.99 per month'), findsOneWidget);
-      expect(find.text(r'7 days free, then $39.99 per year'), findsOneWidget);
+      expect(find.text(r'$4.99 / month'), findsOneWidget);
+      expect(find.text(r'$39.99 / year'), findsOneWidget);
+      expect(find.text('Best value'), findsOneWidget);
       expect(find.text('Restore purchases'), findsOneWidget);
       expect(find.text('Terms of Use'), findsOneWidget);
       expect(find.text('Privacy Policy'), findsOneWidget);
 
-      await tapVisible(tester, 'Start free trial');
+      await tapVisible(tester, 'Start 7-day free trial');
 
       expect(find.byType(PaywallPage), findsNothing);
       expect(find.text('Welcome to Premium!'), findsOneWidget);
@@ -2229,7 +2367,7 @@ void main() {
       expect(find.text(r'$4.99'), findsOneWidget);
       expect(find.text(r'$39.99'), findsOneWidget);
       expect(find.text('7 days free'), findsOneWidget);
-      expect(find.text(r'7 days free, then $39.99 per year'), findsNothing);
+      expect(find.text(r'$39.99 / year'), findsNothing);
 
       await tester.ensureVisible(find.text('Monthly'));
       await tester.pump();
@@ -2237,6 +2375,26 @@ void main() {
       await tester.pump();
       expect(find.text('Subscribe'), findsOneWidget);
       verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'b'}))
+          .called(1);
+    });
+
+    testWidgets('layout C shows one plan and links to the other', (
+      tester,
+    ) async {
+      await openProfileAsFreeGuest(tester);
+      remoteConfig.values['paywall_layout'] = 'c';
+
+      await tapVisible(tester, 'Get Premium');
+      expect(find.text('Yearly · 7 days free'), findsOneWidget);
+      expect(find.text(r'$39.99 / year'), findsOneWidget);
+      expect(find.text(r'That is $3.33 a month.'), findsOneWidget);
+      expect(find.text(r'$4.99 / month'), findsNothing);
+
+      await tapVisible(tester, 'See monthly plan');
+      expect(find.text(r'$4.99 / month'), findsOneWidget);
+      expect(find.text('See yearly plan'), findsOneWidget);
+      expect(find.text('Subscribe'), findsOneWidget);
+      verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'c'}))
           .called(1);
     });
 
@@ -2269,7 +2427,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Restore purchases'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('No purchases to restore'), findsOneWidget);
+      expect(find.text('Nothing to restore.'), findsOneWidget);
     });
 
     testWidgets('a restore after a failed load keeps the load message', (
@@ -2278,14 +2436,15 @@ void main() {
       await openProfileAsFreeGuest(tester);
       store.failure = const NetworkFailure();
       await tapVisible(tester, 'Get Premium');
-      expect(find.text('No internet connection'), findsOneWidget);
+      expect(find.text("Couldn't load plans"), findsOneWidget);
+      expect(find.text('Subscribe'), findsOneWidget);
 
       store.failure = null;
       await tapVisible(tester, 'Restore purchases');
 
-      expect(find.textContaining('No purchases to restore'), findsOneWidget);
+      expect(find.text('Nothing to restore.'), findsOneWidget);
+      expect(find.text("Couldn't load plans"), findsOneWidget);
       expect(find.text('Retry'), findsOneWidget);
-      expect(find.text('Start free trial'), findsNothing);
     });
 
     testWidgets('a pending purchase closes the paywall once approved', (
@@ -2295,7 +2454,7 @@ void main() {
       await tapVisible(tester, 'Get Premium');
       store.failure = const PurchaseFailure(PurchaseFailureReason.pending);
 
-      await tapVisible(tester, 'Start free trial');
+      await tapVisible(tester, 'Start 7-day free trial');
       expect(find.byType(PaywallPage), findsOneWidget);
       expect(find.textContaining('waiting for approval'), findsOneWidget);
 
@@ -2549,3 +2708,8 @@ class _WorkoutEditStandIn extends MockCubit<WorkoutEditState>
 
 class _WeightFormCubit extends MockCubit<WeightFormState>
     implements WeightFormCubit {}
+
+class _BackedUp implements SyncRepository {
+  @override
+  Stream<bool> watchBackedUp() => Stream.value(true);
+}

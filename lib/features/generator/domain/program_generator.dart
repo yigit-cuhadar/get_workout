@@ -72,6 +72,29 @@ class GeneratedProgram extends Equatable {
   /// usable works them, or none fitted the sessions.
   final Set<Muscle> uncovered;
 
+  /// This program with [days] in place of its own, its weekly sets and
+  /// uncovered muscles counted again with the library's [exercises].
+  GeneratedProgram withDays(
+    List<GeneratedDay> days,
+    Map<String, Exercise> exercises,
+  ) {
+    final work = [
+      for (final day in days)
+        for (final item in day.items)
+          if (exercises[item.exerciseId] case final exercise?)
+            (exercise, item.sets),
+    ];
+    return GeneratedProgram(
+      split: split,
+      days: days,
+      targets: targets,
+      weeklySets: _volumeOf(work),
+      uncovered: targets.keys.toSet().difference({
+        for (final (exercise, _) in work) ...exercise.mainMuscles,
+      }),
+    );
+  }
+
   /// The program to store: the user's own, editable like any other.
   Program toProgram({
     required String name,
@@ -198,11 +221,14 @@ const leftOutPatterns = {MovementPattern.mobility, MovementPattern.explosive};
 /// Makes a program from [answers] with the [exercises] of the library.
 /// Choices between equally good exercises follow [seed], so the same
 /// inputs and seed always give the same program, and another seed may give
-/// another one.
+/// another one. [kept] holds, per day, items the user keeps: they stay on
+/// their day as they are, count towards the targets and are never trimmed
+/// (one no longer in the library is left out).
 Result<GeneratedProgram> generateProgram(
   GeneratorAnswers answers,
   List<Exercise> exercises, {
   int seed = 0,
+  List<List<ProgramItem>> kept = const [],
 }) {
   final days = answers.daysPerWeek;
   if (days < GeneratorLimits.minDays || days > GeneratorLimits.maxDays) {
@@ -216,7 +242,14 @@ Result<GeneratedProgram> generateProgram(
   final kinds = splitDays(split, days);
   final week = <_Day>[];
   for (final (i, kind) in kinds.indexed) {
-    week.add(generator.fill(kind, kinds.sublist(i), week));
+    week.add(
+      generator.fill(
+        kind,
+        kinds.sublist(i),
+        week,
+        kept: kept.elementAtOrNull(i) ?? const [],
+      ),
+    );
   }
   if (week.any((day) => day.picks.isEmpty)) {
     return Err(GenerationFailure(GenerationIssue.noExercises));
@@ -279,10 +312,14 @@ class _Pick {
     this.template, {
     required this.muscle,
     required this.rank,
+    this.fixed = false,
   }) : sets = template.sets;
 
   final Exercise exercise;
   final ProgramItem template;
+
+  /// Kept by the user: no pass changes or removes it.
+  final bool fixed;
 
   /// The muscle it was picked for, and how many were picked for it on its
   /// day before it.
@@ -290,7 +327,7 @@ class _Pick {
   final int rank;
   int sets;
 
-  ProgramItem get item => template.copyWith(sets: sets);
+  ProgramItem get item => fixed ? template : template.copyWith(sets: sets);
 }
 
 class _Day {
@@ -311,6 +348,7 @@ class _Generator {
         for (final exercise in exercises)
           if (_usable(exercise, answers)) exercise,
       ]..sort(compareByPopularity),
+      _library = {for (final exercise in exercises) exercise.id: exercise},
       _budget = Duration(minutes: answers.sessionMinutes),
       _maxSets = answers.level == Level.beginner ? 4 : 5;
 
@@ -318,6 +356,7 @@ class _Generator {
   final math.Random _random;
   final Map<Muscle, int> targets;
   final List<Exercise> _pool;
+  final Map<String, Exercise> _library;
   final Duration _budget;
   final int _maxSets;
   final _used = <String>{};
@@ -344,11 +383,17 @@ class _Generator {
   }
 
   /// A day of [kind]; [rest] is it and the days after it, [before] the
-  /// days made so far. The muscle furthest short of what it still needs
-  /// from each of its remaining days, counting what this day already gives
-  /// it as a main or a secondary muscle, gets the next exercise, as long as
-  /// they fit the session. The day then runs most important first.
-  _Day fill(DayKind kind, List<DayKind> rest, List<_Day> before) {
+  /// days made so far. The day starts with its [kept] items. The muscle
+  /// furthest short of what it still needs from each of its remaining
+  /// days, counting what this day already gives it as a main or a
+  /// secondary muscle, gets the next exercise, as long as they fit the
+  /// session. The day then runs most important first.
+  _Day fill(
+    DayKind kind,
+    List<DayKind> rest,
+    List<_Day> before, {
+    required List<ProgramItem> kept,
+  }) {
     final day = _Day(kind);
     final regions = _regionsOf(kind);
     final done = _volume(before);
@@ -367,6 +412,33 @@ class _Generator {
     final exercisesFor = <Muscle, int>{};
     // Muscles nothing more can be added for today.
     final closed = <Muscle>{};
+    void plan(Exercise exercise, int sets) {
+      for (final main in exercise.mainMuscles) {
+        planned[main] = (planned[main] ?? 0) + sets;
+      }
+      for (final secondary in exercise.secondaryMuscles) {
+        planned[secondary] = (planned[secondary] ?? 0) + sets * 0.5;
+      }
+    }
+
+    for (final item in kept) {
+      final exercise = _library[item.exerciseId];
+      if (exercise == null ||
+          day.picks.any((pick) => pick.exercise.id == exercise.id)) {
+        continue;
+      }
+      final muscle =
+          exercise.mainMuscles.where(muscles.contains).firstOrNull ??
+          exercise.mainMuscles.firstOrNull ??
+          _ordered.first;
+      final rank = exercisesFor[muscle] ?? 0;
+      day.picks.add(
+        _Pick(exercise, item, muscle: muscle, rank: rank, fixed: true),
+      );
+      _used.add(exercise.id);
+      exercisesFor[muscle] = rank + 1;
+      plan(exercise, item.sets);
+    }
     while (day.picks.length < _maxExercisesPerDay) {
       Muscle? next;
       // A day has its few exercises even when the week has enough already.
@@ -408,18 +480,15 @@ class _Generator {
       }
       _used.add(exercise.id);
       exercisesFor[next] = rank + 1;
-      for (final main in exercise.mainMuscles) {
-        planned[main] = (planned[main] ?? 0) + _startSets;
-      }
-      for (final secondary in exercise.secondaryMuscles) {
-        planned[secondary] = (planned[secondary] ?? 0) + _startSets * 0.5;
-      }
+      plan(exercise, _startSets);
     }
     final order = {for (final (i, muscle) in _ordered.indexed) muscle: i};
     day.picks.sort(
       (a, b) => a.rank != b.rank
           ? a.rank.compareTo(b.rank)
-          : order[a.muscle]!.compareTo(order[b.muscle]!),
+          : (order[a.muscle] ?? order.length).compareTo(
+              order[b.muscle] ?? order.length,
+            ),
     );
     return day;
   }
@@ -505,7 +574,8 @@ class _Generator {
     for (final day in week) {
       while (day.estimate > _budget) {
         final volume = _volume(week);
-        final trimmable = day.picks.where((p) => p.sets > _minSets);
+        final trimmable = day.picks.where((p) => !p.fixed && p.sets > _minSets);
+        final last = day.picks.lastIndexWhere((p) => !p.fixed);
         if (trimmable.isNotEmpty) {
           // On a tie the later, less important exercise.
           trimmable
@@ -513,8 +583,8 @@ class _Generator {
                 (a, b) => _surplus(b, volume) >= _surplus(a, volume) ? b : a,
               )
               .sets--;
-        } else if (day.picks.length > 1) {
-          day.picks.removeLast();
+        } else if (day.picks.length > 1 && last >= 0) {
+          day.picks.removeAt(last);
         } else {
           break;
         }
@@ -538,7 +608,8 @@ class _Generator {
       for (final muscle in needy) {
         for (final day in week) {
           for (final pick in day.picks) {
-            if (!pick.exercise.mainMuscles.contains(muscle) ||
+            if (pick.fixed ||
+                !pick.exercise.mainMuscles.contains(muscle) ||
                 pick.sets >= _maxSets ||
                 pick.exercise.mainMuscles.any(
                   (m) => (volume[m] ?? 0) + 1 > maxWeeklySets,
@@ -584,7 +655,8 @@ class _Generator {
         if (!capped && sets <= targets[muscle]! + 2) continue;
         for (final day in week) {
           for (final pick in day.picks) {
-            if (!pick.exercise.mainMuscles.contains(muscle) ||
+            if (pick.fixed ||
+                !pick.exercise.mainMuscles.contains(muscle) ||
                 pick.sets <= _minSets ||
                 (!capped && hurts(pick))) {
               continue;
@@ -617,7 +689,9 @@ class _Generator {
     for (final day in week) {
       if (day.picks.length < 2) continue;
       for (final pick in day.picks) {
-        if (!pick.exercise.mainMuscles.contains(muscle)) continue;
+        if (pick.fixed || !pick.exercise.mainMuscles.contains(muscle)) {
+          continue;
+        }
         if (dropped == null || !hurts(pick) || hurts(dropped.$2)) {
           dropped = (day, pick);
         }
@@ -649,16 +723,20 @@ class _Generator {
   }
 }
 
-Map<Muscle, double> _volume(List<_Day> week) {
+Map<Muscle, double> _volume(List<_Day> week) => _volumeOf([
+  for (final day in week)
+    for (final pick in day.picks) (pick.exercise, pick.sets),
+]);
+
+/// Weekly sets per muscle of [work], each exercise with its sets.
+Map<Muscle, double> _volumeOf(Iterable<(Exercise, int)> work) {
   final volume = <Muscle, double>{};
-  for (final day in week) {
-    for (final pick in day.picks) {
-      for (final muscle in pick.exercise.mainMuscles) {
-        volume[muscle] = (volume[muscle] ?? 0) + pick.sets;
-      }
-      for (final muscle in pick.exercise.secondaryMuscles) {
-        volume[muscle] = (volume[muscle] ?? 0) + pick.sets * 0.5;
-      }
+  for (final (exercise, sets) in work) {
+    for (final muscle in exercise.mainMuscles) {
+      volume[muscle] = (volume[muscle] ?? 0) + sets;
+    }
+    for (final muscle in exercise.secondaryMuscles) {
+      volume[muscle] = (volume[muscle] ?? 0) + sets * 0.5;
     }
   }
   return volume;

@@ -415,12 +415,3 @@ class _SheetChips<T> extends StatelessWidget {
     ],
   );
 }
-
-extension on AppLocalizations {
-  /// "3 days · Intermediate · 8 weeks".
-  String catalogueRowFacts(CatalogueProgram program) => [
-    programDayCount(program.daysPerWeek),
-    levelName(program.level),
-    if (program.lengthWeeks case final weeks?) programWeekCount(weeks),
-  ].join(' · ');
-}

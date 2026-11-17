@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../domain/calculation.dart';
 import '../domain/calories.dart';
 import 'body_fat_cubit.dart';
+import 'calculator_format.dart';
 import 'calculator_widgets.dart';
 import 'widgets/calculator_result.dart';
 
@@ -25,64 +27,93 @@ class BodyFatPage extends StatelessWidget {
           builder: (context, state) {
             final cubit = context.read<BodyFatCubit>();
             final unit = format.lengthUnitLabel;
-            String? error(CalculatorInput input) =>
-                format.errorFor(input, state.result);
+            final male = state.sex == Sex.male;
+            final female = state.sex == Sex.female;
             final problem = format.generalError(state.result);
+            CalculatorInputRow row(
+              CalculatorInput input, {
+              required String title,
+              String? label,
+              required String text,
+              required ValueChanged<String> onChanged,
+            }) => CalculatorInputRow(
+              input: input,
+              format: format,
+              title: title,
+              label: label,
+              unit: unit,
+              text: text,
+              known: state.known[input],
+              result: state.result,
+              onChanged: onChanged,
+            );
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: calculatorGap,
               children: [
-                SexSelector(selected: state.sex, onChanged: cubit.sexChanged),
-                KnownNumberField(
-                  known: state.known[CalculatorInput.height],
-                  onEdit: () => cubit.edit(CalculatorInput.height),
-                  name: l10n.calcKnownHeight,
-                  unit: unit,
-                  label: l10n.calcHeight(unit),
-                  value: state.height,
-                  onChanged: cubit.heightChanged,
-                  errorText: error(CalculatorInput.height),
+                ForgeSegmentedControl<Sex?>(
+                  segments: [
+                    for (final sex in Sex.values)
+                      ForgeSegment(value: sex, label: l10n.calcSexLabel(sex)),
+                  ],
+                  selected: state.sex,
+                  onChanged: (sex) => cubit.sexChanged(sex!),
                 ),
-                KnownNumberField(
-                  known: state.known[CalculatorInput.neck],
-                  onEdit: () => cubit.edit(CalculatorInput.neck),
-                  name: l10n.calcKnownNeck,
-                  unit: unit,
-                  label: l10n.calcNeck(unit),
-                  value: state.neck,
-                  onChanged: cubit.neckChanged,
-                  errorText: error(CalculatorInput.neck),
+                ListRowCard(
+                  children: [
+                    row(
+                      CalculatorInput.height,
+                      title: l10n.calcKnownHeight,
+                      text: state.height,
+                      onChanged: cubit.heightChanged,
+                    ),
+                    row(
+                      CalculatorInput.neck,
+                      title: l10n.calcKnownNeck,
+                      text: state.neck,
+                      onChanged: cubit.neckChanged,
+                    ),
+                    row(
+                      CalculatorInput.waist,
+                      title: male ? l10n.calcKnownAbdomen : l10n.calcKnownWaist,
+                      label: male ? l10n.calcAbdomenAtNavel : null,
+                      text: state.waist,
+                      onChanged: cubit.waistChanged,
+                    ),
+                    if (female)
+                      row(
+                        CalculatorInput.hip,
+                        title: l10n.calcKnownHips,
+                        text: state.hip,
+                        onChanged: cubit.hipChanged,
+                      ),
+                  ],
                 ),
-                KnownNumberField(
-                  known: state.known[CalculatorInput.waist],
-                  onEdit: () => cubit.edit(CalculatorInput.waist),
-                  name: state.sex == Sex.male
-                      ? l10n.calcKnownAbdomen
-                      : l10n.calcKnownWaist,
-                  unit: unit,
-                  label: state.sex == Sex.male
-                      ? l10n.calcWaistAtNavel(unit)
-                      : l10n.calcWaist(unit),
-                  value: state.waist,
-                  onChanged: cubit.waistChanged,
-                  errorText: error(CalculatorInput.waist),
-                ),
-                if (state.sex == Sex.female)
-                  KnownNumberField(
-                    known: state.known[CalculatorInput.hip],
-                    onEdit: () => cubit.edit(CalculatorInput.hip),
-                    name: l10n.calcKnownHips,
-                    unit: unit,
-                    label: l10n.calcHip(unit),
-                    value: state.hip,
-                    onChanged: cubit.hipChanged,
-                    errorText: error(CalculatorInput.hip),
-                  ),
-                if (problem != null) InputProblem(problem),
-                if (state.result case Calculated(:final value))
-                  CalculatorResult(
-                    caption: l10n.calcBodyFatResult,
-                    value: l10n.calcPercent(format.number(value, decimals: 1)),
-                  ),
+                if (problem != null)
+                  InputProblem(problem)
+                else
+                  switch (state.result) {
+                    Calculated(:final value) => CalculatorResult(
+                      caption: l10n.calcBodyFatResult,
+                      value: l10n.calcPercent(
+                        format.number(value, decimals: 1),
+                      ),
+                    ),
+                    null => CalculatorResult.missing(
+                      caption: l10n.calcBodyFatResult,
+                      note: format.addToSee([
+                        if (state.sex == null) l10n.calcMissingSex,
+                        if (state.height.isEmpty) l10n.calcMissingHeight,
+                        if (state.neck.isEmpty) l10n.calcMissingNeck,
+                        if (state.waist.isEmpty)
+                          male
+                              ? l10n.calcMissingAbdomen
+                              : l10n.calcMissingWaist,
+                        if (female && state.hip.isEmpty) l10n.calcMissingHips,
+                      ]),
+                    ),
+                    _ => const SizedBox.shrink(),
+                  },
               ],
             );
           },

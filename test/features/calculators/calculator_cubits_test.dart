@@ -47,9 +47,13 @@ void main() {
 
       final kg = valueOf(metric.state.result);
       final pounds = valueOf(imperial.state.result);
-      expect(kg.bmr, closeTo(1780, 1e-9));
-      expect(pounds.bmr, closeTo(kg.bmr, 1e-9));
-      expect(pounds.lose!.kcal, closeTo(kg.lose!.kcal, 1e-9));
+      // BMR 1780 × 1.55.
+      expect(kg.maintenance, closeTo(2759, 1e-9));
+      expect(pounds.maintenance, closeTo(kg.maintenance, 1e-9));
+      // 0.5 kg a week, against 1 lb a week for a pound user.
+      expect(kg.lose!.kcal, closeTo(2759 - 550, 1e-9));
+      expect(pounds.lose!.kcal, closeTo(2759 - 0.45359237 * 1100, 1e-6));
+      expect(pounds.gain.kcal, closeTo(2759 + 0.45359237 * 550, 1e-6));
     });
 
     test('no result until every input is filled in', () {
@@ -86,7 +90,10 @@ void main() {
       final cubit = build(WeightUnit.kg, LengthUnit.cm)
         ..weightChanged('80,5')
         ..heightChanged('180');
-      expect(valueOf(cubit.state.result).bmr, closeTo(1785, 1e-9));
+      expect(
+        valueOf(cubit.state.result).maintenance,
+        closeTo(1785 * 1.55, 1e-9),
+      );
     });
 
     test('ranges apply to the converted value', () {

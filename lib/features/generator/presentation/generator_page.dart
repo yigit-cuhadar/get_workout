@@ -123,9 +123,10 @@ class _Answer extends StatelessWidget {
     final cubit = context.read<GeneratorQuestionsCubit>();
     return switch (state.step) {
       GeneratorStep.goal => OnboardingChoices(
-        values: Goal.values,
+        values: ProfileQuestion.goals,
         selected: state.goal,
         title: l10n.goalName,
+        subtitle: l10n.goalInfo,
         onChanged: cubit.setGoal,
       ),
       GeneratorStep.level => OnboardingChoices(

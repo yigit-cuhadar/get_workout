@@ -24,12 +24,16 @@ class EstimateCalories {
     required double heightCm,
     required double ageYears,
     required ActivityLevel activity,
+    required double loseKgPerWeek,
+    required double gainKgPerWeek,
   }) => estimateCalories(
     sex: sex,
     weightKg: weightKg,
     heightCm: heightCm,
     ageYears: ageYears,
     activity: activity,
+    loseKgPerWeek: loseKgPerWeek,
+    gainKgPerWeek: gainKgPerWeek,
   );
 }
 

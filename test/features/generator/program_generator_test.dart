@@ -548,13 +548,74 @@ void main() {
       answers: given,
       exercises: library,
       seed: 3,
+      kept: const [],
     ));
     expect(result.valueOrNull, generate(given, seed: 3));
     final failed = await const GenerateProgram()((
       answers: answers(days: 1),
       exercises: library,
       seed: 0,
+      kept: const [],
     ));
     expect(issueOf(failed), GenerationIssue.daysOutOfRange);
+  });
+
+  group('kept items', () {
+    test('stay on their day as they are through another seed', () {
+      final given = answers();
+      final first = generate(given);
+      final kept = first.days.first.items.first.copyWith(sets: 5, restS: 45);
+      for (final seed in [1, 2, 3]) {
+        final again = generateProgram(
+          given,
+          library,
+          seed: seed,
+          kept: [
+            [kept],
+          ],
+        ).valueOrNull!;
+        expect(again.days.first.items, contains(kept));
+        expect(
+          again.days.first.items.where((i) => i.exerciseId == kept.exerciseId),
+          hasLength(1),
+        );
+      }
+    });
+
+    test('one no longer in the library is left out', () {
+      final given = answers();
+      final again = generateProgram(
+        given,
+        library,
+        kept: [
+          [const ProgramItem(exerciseId: 'gone', sets: 3, restS: 60)],
+        ],
+      ).valueOrNull!;
+      expect(
+        again.days.first.items.map((i) => i.exerciseId),
+        isNot(contains('gone')),
+      );
+    });
+  });
+
+  test('withDays counts the weekly sets and uncovered muscles again', () {
+    final generated = generate(answers());
+    final byId = {for (final e in library) e.id: e};
+    final first = generated.days.first;
+    final removed = first.items.first;
+    final edited = generated.withDays([
+      GeneratedDay(
+        kind: first.kind,
+        variant: first.variant,
+        items: first.items.skip(1).toList(),
+      ),
+      ...generated.days.skip(1),
+    ], byId);
+    final muscle = byId[removed.exerciseId]!.mainMuscles.first;
+    expect(
+      edited.weeklySets[muscle] ?? 0,
+      (generated.weeklySets[muscle] ?? 0) - removed.sets,
+    );
+    expect(edited.targets, generated.targets);
   });
 }

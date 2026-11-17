@@ -29,24 +29,12 @@ void main() {
     expect(value(estimate(100, 1)).estimateKg, 100);
   });
 
-  test('loads from 50 to 95 % rounded to 2.5 kg', () {
-    // 116.67 · p, to the nearest 2.5: 58.3→57.5, 64.2→65, 70→70,
-    // 75.8→75, 81.7→82.5, 87.5→87.5, 93.3→92.5, 99.2→100, 105→105,
-    // 110.8→110.
+  test('loads from 70 to 95 % rounded to 2.5 kg', () {
+    // 116.67 · p, to the nearest 2.5: 81.7→82.5, 87.5→87.5, 93.3→92.5,
+    // 99.2→100, 105→105, 110.8→110.
     final loads = value(estimate(100, 5)).loads;
-    expect(loads.map((l) => l.percent), [
-      50,
-      55,
-      60,
-      65,
-      70,
-      75,
-      80,
-      85,
-      90,
-      95,
-    ]);
-    final expected = [57.5, 65, 70, 75, 82.5, 87.5, 92.5, 100, 105, 110];
+    expect(loads.map((l) => l.percent), [70, 75, 80, 85, 90, 95]);
+    final expected = [82.5, 87.5, 92.5, 100, 105, 110];
     for (var i = 0; i < loads.length; i++) {
       expect(loads[i].weightKg, closeTo(expected[i], 1e-9));
     }

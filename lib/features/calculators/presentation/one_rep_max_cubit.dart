@@ -5,7 +5,7 @@ import '../../settings/domain/user_settings.dart';
 import '../domain/calculation.dart';
 import '../domain/calculators_usecases.dart';
 import '../domain/one_rep_max.dart';
-import 'calculator_input.dart';
+import '../../../core/number_text.dart';
 
 class OneRepMaxState extends Equatable {
   const OneRepMaxState({this.weight = '', this.reps = '', this.result});

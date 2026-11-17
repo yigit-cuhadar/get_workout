@@ -231,4 +231,73 @@ void main() {
     verifyNever(() => repository.createProgram(any(), any()));
     await cubit.close();
   });
+
+  group('editing', () {
+    Future<GeneratorPreviewCubit> ready() async {
+      when(() => catalogue.state).thenReturn(CatalogueReady(library));
+      final cubit = build();
+      await pumpEventQueue();
+      return cubit;
+    }
+
+    test('a kept item stays through Regenerate', () async {
+      final cubit = await ready();
+      final item = cubit.state.program!.days.first.items.first;
+      cubit
+        ..toggleKept(0, 0)
+        ..editItem(0, 0, (item) => item.copyWith(sets: 5));
+      expect(cubit.state.isKept(0, item), isTrue);
+      await cubit.regenerate();
+      final day = cubit.state.program!.days.first.items;
+      expect(day, contains(item.copyWith(sets: 5)));
+      expect(cubit.state.kept, {(0, item.exerciseId)});
+      cubit.toggleKept(0, day.indexOf(item.copyWith(sets: 5)));
+      expect(cubit.state.kept, isEmpty);
+      await cubit.close();
+    });
+
+    test('a swap keeps sets and rest and the kept mark', () async {
+      final cubit = await ready();
+      final day = cubit.state.program!.days.first.items;
+      final item = day.first;
+      final other = library.firstWhere(
+        (e) =>
+            e.loggingType ==
+                library
+                    .firstWhere((x) => x.id == item.exerciseId)
+                    .loggingType &&
+            day.every((i) => i.exerciseId != e.id),
+      );
+      cubit
+        ..toggleKept(0, 0)
+        ..swapItem(0, 0, other.id);
+      final swapped = cubit.state.program!.days.first.items.first;
+      expect(swapped.exerciseId, other.id);
+      expect(swapped.sets, item.sets);
+      expect(swapped.restS, item.restS);
+      expect(cubit.state.kept, {(0, other.id)});
+      // An exercise already on the day is not added again.
+      cubit.swapItem(0, 0, day[1].exerciseId);
+      expect(cubit.state.program!.days.first.items.first.exerciseId, other.id);
+      await cubit.close();
+    });
+
+    test('a removed item leaves the weekly sets', () async {
+      final cubit = await ready();
+      final before = cubit.state.program!;
+      final removed = before.days.first.items.first;
+      cubit.removeItem(0, 0);
+      final after = cubit.state.program!;
+      expect(after.days.first.items, isNot(contains(removed)));
+      final main = library
+          .firstWhere((e) => e.id == removed.exerciseId)
+          .mainMuscles
+          .first;
+      expect(
+        after.weeklySets[main] ?? 0,
+        (before.weeklySets[main] ?? 0) - removed.sets,
+      );
+      await cubit.close();
+    });
+  });
 }

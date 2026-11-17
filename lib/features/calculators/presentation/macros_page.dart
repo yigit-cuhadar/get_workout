@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../domain/calculation.dart';
 import '../domain/macros.dart';
 import 'calculator_widgets.dart';
 import 'macros_cubit.dart';
+import 'widgets/calculator_result.dart';
 
 class MacrosPage extends StatelessWidget {
   const MacrosPage({super.key});
@@ -26,57 +28,69 @@ class MacrosPage extends StatelessWidget {
             String grams(double value) => l10n.calcGrams(format.number(value));
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: calculatorGap,
               children: [
-                NumberField(
-                  label: l10n.calcCalories,
-                  onChanged: cubit.caloriesChanged,
-                  errorText: format.errorFor(
-                    CalculatorInput.calories,
-                    state.result,
-                  ),
+                ListRowCard(
+                  children: [
+                    CalculatorInputRow(
+                      input: CalculatorInput.calories,
+                      format: format,
+                      title: l10n.calcCaloriesTitle,
+                      unit: l10n.calcUnitKcal,
+                      text: state.calories,
+                      result: state.result,
+                      onChanged: cubit.caloriesChanged,
+                    ),
+                    CalculatorInputRow(
+                      input: CalculatorInput.bodyWeight,
+                      format: format,
+                      title: l10n.calcKnownWeight,
+                      unit: format.weightUnitLabel,
+                      text: state.weight,
+                      known: state.known[CalculatorInput.bodyWeight],
+                      result: state.result,
+                      onChanged: cubit.weightChanged,
+                    ),
+                  ],
                 ),
-                KnownNumberField(
-                  known: state.known[CalculatorInput.bodyWeight],
-                  onEdit: () => cubit.edit(CalculatorInput.bodyWeight),
-                  name: l10n.calcKnownWeight,
-                  unit: format.weightUnitLabel,
-                  label: l10n.calcBodyWeight(format.weightUnitLabel),
-                  value: state.weight,
-                  onChanged: cubit.weightChanged,
-                  errorText: format.errorFor(
-                    CalculatorInput.bodyWeight,
-                    state.result,
-                  ),
-                ),
-                Text(
-                  l10n.calcProteinPerKg(
-                    format.number(state.proteinGPerKg, decimals: 1),
-                  ),
-                ),
-                Slider(
-                  value: state.proteinGPerKg,
+                ForgeSlider(
+                  label: l10n.calcProtein,
+                  unit: l10n.calcUnitGPerKg,
                   min: proteinRangeGPerKg.min,
                   max: proteinRangeGPerKg.max,
-                  divisions: 12,
+                  step: 0.1,
+                  value: state.proteinGPerKg,
                   onChanged: cubit.proteinChanged,
                 ),
-                Text(l10n.calcFatShare(format.number(state.fatPercent))),
-                Slider(
-                  value: state.fatPercent,
+                ForgeSlider(
+                  label: l10n.calcFat,
+                  unit: l10n.calcUnitPercentOfCalories,
                   min: fatRangePercent.min,
                   max: fatRangePercent.max,
-                  divisions: 15,
+                  step: 1,
+                  value: state.fatPercent,
                   onChanged: cubit.fatChanged,
                 ),
-                if (problem != null) InputProblem(problem),
-                if (state.result case Calculated(:final value)) ...[
-                  ResultTile(
-                    label: l10n.calcProtein,
-                    value: grams(value.proteinG),
-                  ),
-                  ResultTile(label: l10n.calcFat, value: grams(value.fatG)),
-                  ResultTile(label: l10n.calcCarbs, value: grams(value.carbsG)),
-                ],
+                if (problem != null)
+                  InputProblem(problem)
+                else
+                  switch (state.result) {
+                    Calculated(:final value) => CalculatorResult(
+                      caption: l10n.calcProtein,
+                      value: grams(value.proteinG),
+                      rows: [
+                        CalculatorRow(l10n.calcFat, grams(value.fatG)),
+                        CalculatorRow(l10n.calcCarbs, grams(value.carbsG)),
+                      ],
+                    ),
+                    null => CalculatorResult.missing(
+                      caption: l10n.calcProtein,
+                      note: state.calories.isEmpty
+                          ? l10n.calcMacrosMissing
+                          : format.addToSee([l10n.calcMissingBodyweight]),
+                    ),
+                    _ => const SizedBox.shrink(),
+                  },
               ],
             );
           },

@@ -5,7 +5,7 @@ import '../../settings/domain/user_settings.dart';
 import '../domain/calculation.dart';
 import '../domain/calculators_usecases.dart';
 import '../domain/plates.dart';
-import 'calculator_input.dart';
+import '../../../core/number_text.dart';
 
 class PlatesState extends Equatable {
   const PlatesState({

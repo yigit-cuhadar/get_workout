@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../core/widgets/settings_group.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../account/presentation/account_auth_page.dart';
+import '../../account/presentation/auth_strings.dart';
 import '../../account/presentation/privacy_section.dart';
 import '../../notifications/presentation/reminder_settings_group.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -93,8 +95,9 @@ class ProfilePage extends StatelessWidget {
   }
 }
 
-/// The account: a guest asks to create one; a named user shows the name
-/// over the email; without a name the email stands in for it.
+/// The account: a guest is asked to keep their workouts in an account (the
+/// guest account sheet); a named user shows the name over the email and
+/// opens Account; without a name the email stands in for it.
 class _Header extends StatelessWidget {
   const _Header();
 
@@ -109,7 +112,15 @@ class _Header extends StatelessWidget {
         child: ProfileHeader.guest(
           name: l10n.profileGuestName,
           detail: l10n.profileGuestDetail,
-          onTap: open,
+          onTap: () => showLinkAccountSheet(
+            context,
+            title: l10n.guestSheetTitle,
+            message: l10n.guestSheetMessage,
+            // The email form links the guest in create mode.
+            onUseEmail: () => context.push(Routes.accountAuth),
+            strings: localizedAuthStrings(l10n),
+            providers: socialProviders,
+          ),
         ),
       );
     }

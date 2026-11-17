@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../../core/number_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/calculation.dart';
 import '../domain/calculators_usecases.dart';
@@ -105,11 +106,11 @@ class BodyFatCubit extends Cubit<BodyFatState> {
     );
   }
 
-  /// The user started editing [input]: it is a plain field from now on,
-  /// which known values leave alone.
-  void edit(CalculatorInput input) {
+  /// The user set [input]: it is their value from now on, which known
+  /// values leave alone.
+  Map<CalculatorInput, KnownInput> _set(CalculatorInput input) {
     _changed.add(input);
-    _calculate(state._with(known: {...state.known}..remove(input)));
+    return {...state.known}..remove(input);
   }
 
   /// An untouched waist becomes the known measurement for [sex], or empty.
@@ -134,25 +135,18 @@ class BodyFatCubit extends Cubit<BodyFatState> {
     );
   }
 
-  void heightChanged(String text) {
-    _changed.add(CalculatorInput.height);
-    _calculate(state._with(height: text));
-  }
+  void heightChanged(String text) => _calculate(
+    state._with(height: text, known: _set(CalculatorInput.height)),
+  );
 
-  void neckChanged(String text) {
-    _changed.add(CalculatorInput.neck);
-    _calculate(state._with(neck: text));
-  }
+  void neckChanged(String text) =>
+      _calculate(state._with(neck: text, known: _set(CalculatorInput.neck)));
 
-  void waistChanged(String text) {
-    _changed.add(CalculatorInput.waist);
-    _calculate(state._with(waist: text));
-  }
+  void waistChanged(String text) =>
+      _calculate(state._with(waist: text, known: _set(CalculatorInput.waist)));
 
-  void hipChanged(String text) {
-    _changed.add(CalculatorInput.hip);
-    _calculate(state._with(hip: text));
-  }
+  void hipChanged(String text) =>
+      _calculate(state._with(hip: text, known: _set(CalculatorInput.hip)));
 
   void _calculate(BodyFatState inputs) => emit(
     BodyFatState(

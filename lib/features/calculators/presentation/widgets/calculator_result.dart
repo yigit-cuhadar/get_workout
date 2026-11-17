@@ -1,29 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+/// One row of a [CalculatorResult]: its [label] and [value], and a muted
+/// [note] under the label when the figure needs one.
+class CalculatorRow {
+  const CalculatorRow(this.label, this.value, {this.note});
+
+  final String label;
+  final String value;
+  final String? note;
+}
+
 /// The result card of a calculator: a [caption], the main figure ([value])
-/// in mono, then [rows], one per goal or breakdown, each its label and
-/// value. [CalculatorResult.missing] stands in while an input is missing:
-/// "—" and what to add ([message]).
+/// in mono, then [rows], one per goal or breakdown, and a muted [note]
+/// under everything. [CalculatorResult.missing] stands in while an input is
+/// missing: "—" and what to add ([note]).
 class CalculatorResult extends StatelessWidget {
   const CalculatorResult({
     super.key,
     required this.caption,
     required String this.value,
     this.rows = const [],
-  }) : message = null;
+    this.note,
+  });
 
   const CalculatorResult.missing({
     super.key,
     required this.caption,
-    required String this.message,
+    required String this.note,
   }) : value = null,
        rows = const [];
 
   final String caption;
   final String? value;
-  final List<(String, String)> rows;
-  final String? message;
+  final List<CalculatorRow> rows;
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +42,7 @@ class CalculatorResult extends StatelessWidget {
     final colors = style.colors;
     final text = Theme.of(context).textTheme;
     final value = this.value;
-    final message = this.message;
+    final note = this.note;
     final captionText = Text(
       caption,
       style: text.labelMedium!.copyWith(
@@ -58,18 +69,13 @@ class CalculatorResult extends StatelessWidget {
               color: missing ? colors.inkSubtle : colors.ink,
             ),
           ),
-          if (message != null)
-            Text(
-              message,
-              style: text.bodySmall!.copyWith(color: colors.inkMuted),
-            ),
           if (rows.isNotEmpty)
             Container(
               decoration: _card(style),
               clipBehavior: Clip.antiAlias,
               child: Column(
                 children: [
-                  for (final (i, (label, figure)) in rows.indexed)
+                  for (final (i, row) in rows.indexed)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
@@ -85,9 +91,24 @@ class CalculatorResult extends StatelessWidget {
                       child: Row(
                         spacing: 10,
                         children: [
-                          Expanded(child: Text(label, style: text.bodySmall)),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(row.label, style: text.bodySmall),
+                                if (row.note case final note?)
+                                  Text(
+                                    note,
+                                    style: text.labelMedium!.copyWith(
+                                      fontWeight: FontWeight.w400,
+                                      color: colors.inkMuted,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                           Text(
-                            figure,
+                            row.value,
                             style: style.data.copyWith(
                               fontSize: 13,
                               color: colors.ink,
@@ -99,6 +120,8 @@ class CalculatorResult extends StatelessWidget {
                 ],
               ),
             ),
+          if (note != null)
+            Text(note, style: text.bodySmall!.copyWith(color: colors.inkMuted)),
         ],
       ),
     );

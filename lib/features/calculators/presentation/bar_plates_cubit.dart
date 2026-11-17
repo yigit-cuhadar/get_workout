@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/calculation.dart';
 import '../domain/calculators_usecases.dart';
-import 'calculator_input.dart';
+import '../../../core/number_text.dart';
 
 /// Checks and plate lists for the Bar and plates page; the plates are the
 /// user's, from their settings, kept current through [platesChanged].
