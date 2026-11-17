@@ -205,7 +205,11 @@ class _Program extends StatelessWidget {
                       l10n.splitName(program.split),
                       answers.daysPerWeek,
                     ),
-                    style: text.headlineSmall,
+                    // The board's 22px sans heading.
+                    style: text.titleLarge!.copyWith(
+                      fontSize: 22,
+                      height: 28 / 22,
+                    ),
                   ),
                   Text(
                     l10n.generatorAnswersLine(
