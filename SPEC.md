@@ -373,12 +373,12 @@ Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-u
 - [x] Remaining pages (strength, calculators, account, sign-in with the Google mark on its button, your profile, warm-up settings, cardio form, workout edit, ready-made program page) keep their structure; their look is settled in the design phase
 
 Group 11, design in code (the owner's plan; the studios are the target, see Design)
-- [x] Theme — `ForgePreset` → `ForgeTheme` in forge_ui with the studio's colours, type scale, radii and borders, light and dark; Slate, Measure and Graphite all in code, switched by a dev-only picker in Profile, prod ships the one picked at the end; fonts bundled; the studio's own line icons (not an icon package), with the heavier form for the selected tab — `lib/app/theme.dart` swaps in and screens change without edits
+- [x] Theme — `ForgePreset` → `ForgeTheme` in forge_ui with the studio's colours, type scale, radii and borders, light and dark; Slate is the one preset (Measure and Graphite and the dev picker were removed, 2026-11-17); fonts bundled; the studio's own line icons (not an icon package), with the heavier form for the selected tab — `lib/app/theme.dart` swaps in and screens change without edits
 - [x] Forge components — the MobileAppForge Studio cards built in forge_ui with every form and state on their card, widget tests for their behaviour; merged and tagged before the app uses them
 - [x] App components — the GetWorkout Studio components in the app, every state on their card
 - [x] Key screens — Today, Workout and Programs with every state on their boards, approved by the owner before the rest
 - [x] The remaining screens by studio group (Ana sekmeler, Antrenman ve programlar, İlerleme, Formlar, Kurulum, hesap ve abonelik) — one group at a time, each with its owner-approved flow changes from Design built along with the look
-- [ ] Widget tests for the critical flows once the UI is stable; the final preset picked on a device
+- [x] Widget tests for the critical flows once the UI is stable; the final preset picked on a device (Slate, 2026-11-17)
 
 How it runs: the theme and the key screens are done in the main session;
 then Forge components and screen groups go to up to three implementers,
@@ -448,8 +448,8 @@ Where it stands (2026-11-17, end of the Kurulum session):
   workout, programs and missed days, the builder, the generator, body
   logging), through the real router over fakes; no production bug found.
   Not covered: dragging the weight ruler, taking a measurement photo.
-- Next: the final preset picked on the owner's phone (Slate, Measure,
-  Graphite), then the unpicked presets and the dev picker go.
+- Done: the final preset is picked (Slate, 2026-11-17); Measure, Graphite
+  and the dev picker are removed. Next phase: Release (AGENTS.md › Phases).
 
 ## Design
 
@@ -465,8 +465,8 @@ before drawing) are in AGENTS.md › Design studios.
 Decisions (the canvases they were drawn on are deleted):
 - Colours stay muted. Loud directions (scoreboard, soft, night, block) and the
   Stone preset were rejected; black is not a default accent.
-- Three presets (Slate, Measure, Graphite) are kept until the app is finished,
-  then one ships; Slate until then. Users only choose Light / Dark / System
+- Slate ships (owner's pick on the phone, 2026-11-17); Measure, Graphite and
+  the dev preset picker are removed. Users still choose Light / Dark / System
   (Profile › Appearance). 2026-11-15: the Cobalt & Graphite preview made
   outside the studio was dropped and its branches deleted.
 - Forge owns the theme engine (`ForgePreset` → `ForgeTheme`), type scale,
@@ -520,8 +520,7 @@ Decisions (the canvases they were drawn on are deleted):
   the paywall; effort answers are rows with their meaning everywhere, also when
   editing a done set; choice pickers open as bottom sheets (time: the system
   picker; confirmations stay dialogs); Restore's result is a snackbar and a
-  success closes the paywall. The Measure preset keeps its saturated colours
-  (an accepted exception to muted colours).
+  success closes the paywall. 
 - Formlar, before the build (owner's picks, 2026-11-16; canvas was local
   HTML). Custom exercise: Main muscle, Also works, Equipment and Logged as
   are rows opening a Forge bottom sheet (checkbox list + Save; Logged as
@@ -731,9 +730,8 @@ Decisions (the canvases they were drawn on are deleted):
 - Moving the design into Flutter (owner's picks, 2026-11-14): each icon has
   one drawing in the studios (the named set, else the most used one) and the
   app draws that set, not an icon package; the presets' fonts are bundled
-  with the app (Google Fonts, OFL); all three presets are in code behind a
-  debug-only picker in Profile; Measure and Graphite keep the 1px card line
-  in dark too, Slate's dark cards stay a tonal fill.
+  with the app (Google Fonts, OFL); Slate is the one preset
+  (the others were removed, 2026-11-17); its dark cards are a tonal fill.
 - Building the components (owner's picks, 2026-11-14 to 15), drawn in the
   studios: the set panel's weight is typed on a tap and a plate button
   beside it (barbell, EZ bar and trap bar exercises only, not the Smith
@@ -1710,7 +1708,7 @@ the feature you are about to touch, and keep it true when you change it.
   2026-11-15): one page, top to bottom: the account header, the Premium
   card, More (Your profile, Calculators), then the settings groups (Units,
   Workout, Reminders, Connected apps, Appearance), Privacy and, in debug
-  builds, the preset picker and on the fake the Fake store rows. A
+  builds, on the fake the Fake store rows. A
   guest's header opens the guest account sheet (forge_auth
   `showLinkAccountSheet`: "Keep your workouts safe", Google, Use email
   instead, Not now); Use email instead opens Sign in on the email form
