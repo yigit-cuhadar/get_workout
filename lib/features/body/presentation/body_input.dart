@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 
-import '../../calculators/presentation/calculator_input.dart';
-import '../../cardio/presentation/cardio_text.dart';
+import '../../../core/number_text.dart';
 import '../../settings/domain/user_settings.dart';
 
 /// A stored metric value as an input shows it, in the user's unit: at most

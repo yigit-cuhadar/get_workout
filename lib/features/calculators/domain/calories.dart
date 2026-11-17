@@ -1,6 +1,7 @@
 import 'package:forge_core/forge_core.dart';
 
 import '../../profile/domain/user_profile.dart';
+import '../../settings/domain/user_settings.dart';
 import 'calculation.dart';
 
 export '../../profile/domain/user_profile.dart' show Sex;
@@ -30,27 +31,36 @@ class CalorieTarget extends Equatable {
 
 class CalorieEstimate extends Equatable {
   const CalorieEstimate({
-    required this.bmr,
     required this.maintenance,
     required this.lose,
-    required this.loseSlowly,
     required this.gain,
   });
 
-  final double bmr;
   final double maintenance;
 
-  /// Maintenance −500 and −250 kcal. Null when the minimum intake leaves no
-  /// deficit, as a "lose" target at or above maintenance is no deficit.
+  /// Maintenance less the weekly loss. Null when the minimum intake leaves
+  /// no deficit, as a "lose" target at or above maintenance is no deficit.
   final CalorieTarget? lose;
-  final CalorieTarget? loseSlowly;
 
-  /// Maintenance +250 kcal.
+  /// Maintenance plus the weekly gain.
   final CalorieTarget gain;
 
   @override
-  List<Object?> get props => [bmr, maintenance, lose, loseSlowly, gain];
+  List<Object?> get props => [maintenance, lose, gain];
 }
+
+/// The energy in a kilo of body weight, for weekly change targets.
+const kcalPerKg = 7700;
+
+/// The daily kcal that adds up to [kg] of body weight a week.
+double dailyKcalForWeekly(double kg) => kg * kcalPerKg / 7;
+
+/// The weekly change of the lose and gain targets, in kg: 0.5 and 0.25 kg,
+/// or 1 and 0.5 lb for a user weighing in pounds.
+({double lose, double gain}) weeklyChangeKg(WeightUnit unit) => switch (unit) {
+  WeightUnit.kg => (lose: 0.5, gain: 0.25),
+  WeightUnit.lb => (lose: WeightUnit.lb.toKg(1), gain: WeightUnit.lb.toKg(0.5)),
+};
 
 const InputRange ageRangeYears = (min: 15, max: 100);
 
@@ -60,13 +70,16 @@ double minimumIntakeKcal(Sex sex) => switch (sex) {
   Sex.female => 1200,
 };
 
-/// Mifflin-St Jeor BMR times the activity factor.
+/// Mifflin-St Jeor BMR times the activity factor, with targets to lose
+/// [loseKgPerWeek] and gain [gainKgPerWeek].
 Calculation<CalorieEstimate> estimateCalories({
   required Sex sex,
   required double weightKg,
   required double heightCm,
   required double ageYears,
   required ActivityLevel activity,
+  required double loseKgPerWeek,
+  required double gainKgPerWeek,
 }) {
   final invalid = firstOutOfRange<CalorieEstimate>([
     (CalculatorInput.bodyWeight, weightKg, bodyWeightRangeKg),
@@ -100,11 +113,9 @@ Calculation<CalorieEstimate> estimateCalories({
 
   return Calculated(
     CalorieEstimate(
-      bmr: bmr,
       maintenance: maintenance,
-      lose: deficit(-500),
-      loseSlowly: deficit(-250),
-      gain: target(250),
+      lose: deficit(-dailyKcalForWeekly(loseKgPerWeek)),
+      gain: target(dailyKcalForWeekly(gainKgPerWeek)),
     ),
   );
 }

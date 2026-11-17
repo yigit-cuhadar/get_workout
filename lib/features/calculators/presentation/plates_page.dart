@@ -5,7 +5,8 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
-import '../../../core/widgets/settings_group.dart';
+import '../../../core/number_text.dart';
+import '../../../core/page_parts.dart';
 import '../../../core/widgets/plate_calculator.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/user_settings.dart';
@@ -13,7 +14,6 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/calculation.dart';
 import '../domain/plates.dart';
 import 'calculator_format.dart';
-import 'calculator_input.dart';
 import 'calculator_widgets.dart';
 import 'plates_cubit.dart';
 
@@ -46,14 +46,21 @@ class PlatesPage extends StatelessWidget {
           child: BlocBuilder<PlatesCubit, PlatesState>(
             builder: (context, state) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: calculatorGap,
               children: [
-                NumberField(
-                  label: l10n.calcTargetWeight(format.weightUnitLabel),
-                  onChanged: context.read<PlatesCubit>().targetChanged,
-                  errorText: format.errorFor(
-                    CalculatorInput.targetWeight,
-                    state.result,
-                  ),
+                ListRowCard(
+                  children: [
+                    CalculatorInputRow(
+                      input: CalculatorInput.targetWeight,
+                      format: format,
+                      title: l10n.calcTargetWeightTitle,
+                      label: l10n.calcTargetWeight(format.weightUnitLabel),
+                      unit: format.weightUnitLabel,
+                      text: state.target,
+                      result: state.result,
+                      onChanged: context.read<PlatesCubit>().targetChanged,
+                    ),
+                  ],
                 ),
                 if (state.result case Calculated(:final value))
                   _Load(
@@ -62,7 +69,6 @@ class PlatesPage extends StatelessWidget {
                     target: format.weightUnit.toKg(readNumber(state.target)!),
                     barKg: state.barKg,
                   ),
-                const SizedBox(height: Gap.md),
                 _Equipment(state, format),
               ],
             ),
@@ -125,17 +131,23 @@ class _Equipment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = format.l10n;
-    return SettingsGroup(
-      title: l10n.calcEquipment,
-      rows: [
-        ListRow(
-          title: l10n.settingsBarPlates,
-          detail: l10n.calcEquipmentSummary(
-            format.weight(state.barKg, maxDecimals: 2),
-            state.plates.length,
-          ),
-          end: ListRowEnd.chevron,
-          onTap: () => context.push(Routes.barPlates),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionLabel(l10n.calcEquipment),
+        const SizedBox(height: calculatorGap - Gap.xs),
+        ListRowCard(
+          children: [
+            ListRow(
+              title: l10n.settingsBarPlates,
+              detail: l10n.calcEquipmentSummary(
+                format.weight(state.barKg, maxDecimals: 2),
+                state.plates.length,
+              ),
+              end: ListRowEnd.chevron,
+              onTap: () => context.push(Routes.barPlates),
+            ),
+          ],
         ),
       ],
     );

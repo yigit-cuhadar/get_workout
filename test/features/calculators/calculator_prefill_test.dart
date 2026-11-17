@@ -159,16 +159,13 @@ void main() {
       });
     });
 
-    test('editing a known input keeps its value and result but makes it '
-        'a plain field', () async {
+    test('setting a known input makes it the user value', () async {
       final cubit = build();
       await arrive(everything);
-      final result = cubit.state.result;
 
-      cubit.edit(CalculatorInput.bodyWeight);
+      cubit.weightChanged('81');
 
-      expect(cubit.state.weight, '80.4');
-      expect(cubit.state.result, result);
+      expect(cubit.state.weight, '81');
       expect(cubit.state.known.keys, [
         CalculatorInput.height,
         CalculatorInput.age,
@@ -179,9 +176,9 @@ void main() {
       expect(cubit.state.known, isNot(contains(CalculatorInput.bodyWeight)));
     });
 
-    test('an input the user started editing before the values arrived '
-        'stays theirs', () async {
-      final cubit = build()..edit(CalculatorInput.bodyWeight);
+    test('an input the user cleared before the values arrived stays '
+        'theirs', () async {
+      final cubit = build()..weightChanged('');
 
       await arrive(everything);
 
@@ -255,9 +252,9 @@ void main() {
         CalculatorInput.hip: KnownInput(measured),
       });
 
-      cubit.edit(CalculatorInput.neck);
+      cubit.neckChanged('40');
       expect(cubit.state.known, isNot(contains(CalculatorInput.neck)));
-      expect(cubit.state.neck, '39');
+      expect(cubit.state.neck, '40');
     });
 
     test('unknown circumferences stay empty', () async {
@@ -341,14 +338,14 @@ void main() {
       final edited = build();
       await pumpEventQueue();
       edited
-        ..edit(CalculatorInput.waist)
+        ..waistChanged('84.5')
         ..sexChanged(Sex.female);
       expect(edited.state.waist, '84.5');
       expect(edited.state.known, isNot(contains(CalculatorInput.waist)));
     });
 
-    test('a waist focused before the values arrive stays empty', () async {
-      final cubit = build()..edit(CalculatorInput.waist);
+    test('a waist cleared before the values arrive stays empty', () async {
+      final cubit = build()..waistChanged('');
 
       await arrive(everything);
 
@@ -411,9 +408,9 @@ void main() {
         CalculatorInput.bodyFat: KnownInput(measured),
       });
 
-      cubit.edit(CalculatorInput.bodyFat);
+      cubit.bodyFatChanged('16');
       expect(cubit.state.known.keys, [CalculatorInput.height]);
-      expect(cubit.state.bodyFat, '15.2');
+      expect(cubit.state.bodyFat, '16');
     });
   });
 
@@ -436,9 +433,9 @@ void main() {
         CalculatorInput.bodyWeight: KnownInput(weighed),
       });
 
-      cubit.edit(CalculatorInput.bodyWeight);
+      cubit.weightChanged('81');
       expect(cubit.state.known, isEmpty);
-      expect(cubit.state.weight, '80.4');
+      expect(cubit.state.weight, '81');
     });
 
     test('a weight the user changed first stays', () async {

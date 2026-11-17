@@ -12,7 +12,10 @@ void main() {
       const CalculatorResult(
         caption: 'Daily energy need',
         value: '2,720 kcal',
-        rows: [('Lose 0.5 kg a week', '2,170'), ('Keep weight', '2,720')],
+        rows: [
+          CalculatorRow('Lose 0.5 kg a week', '2,170'),
+          CalculatorRow('Keep weight', '2,720'),
+        ],
       ),
     );
 
@@ -28,13 +31,39 @@ void main() {
       tester,
       const CalculatorResult.missing(
         caption: 'Daily energy need',
-        message: 'Add your height and activity to see the result.',
+        note: 'Add your height and activity to see the result.',
       ),
     );
 
     expect(find.text('—'), findsOneWidget);
     expect(
       find.text('Add your height and activity to see the result.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a row note under its label and a note under the card', (
+    tester,
+  ) async {
+    await pumpComponent(
+      tester,
+      const CalculatorResult(
+        caption: 'Daily energy need',
+        value: '1,590 kcal',
+        rows: [
+          CalculatorRow(
+            'Lose 0.5 kg a week',
+            '1,500',
+            note: 'Raised to the 1,500 kcal daily minimum',
+          ),
+        ],
+        note: 'Fat-free mass index: lean mass divided by height squared.',
+      ),
+    );
+
+    expect(find.text('Raised to the 1,500 kcal daily minimum'), findsOneWidget);
+    expect(
+      find.text('Fat-free mass index: lean mass divided by height squared.'),
       findsOneWidget,
     );
   });

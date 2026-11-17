@@ -9,6 +9,7 @@ import '../domain/calories.dart';
 import 'calculator_format.dart';
 import 'calculator_widgets.dart';
 import 'calories_cubit.dart';
+import 'widgets/calculator_result.dart';
 
 class CaloriesPage extends StatelessWidget {
   const CaloriesPage({super.key});
@@ -29,63 +30,75 @@ class CaloriesPage extends StatelessWidget {
         BlocBuilder<CaloriesCubit, CaloriesState>(
           builder: (context, state) {
             final cubit = context.read<CaloriesCubit>();
-            String? error(CalculatorInput input) =>
-                format.errorFor(input, state.result);
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: calculatorGap,
               children: [
-                SexSelector(selected: state.sex, onChanged: cubit.sexChanged),
-                KnownNumberField(
-                  known: state.known[CalculatorInput.bodyWeight],
-                  onEdit: () => cubit.edit(CalculatorInput.bodyWeight),
-                  name: l10n.calcKnownWeight,
-                  unit: format.weightUnitLabel,
-                  label: l10n.calcBodyWeight(format.weightUnitLabel),
-                  value: state.weight,
-                  onChanged: cubit.weightChanged,
-                  errorText: error(CalculatorInput.bodyWeight),
-                ),
-                KnownNumberField(
-                  known: state.known[CalculatorInput.height],
-                  onEdit: () => cubit.edit(CalculatorInput.height),
-                  name: l10n.calcKnownHeight,
-                  unit: format.lengthUnitLabel,
-                  label: l10n.calcHeight(format.lengthUnitLabel),
-                  value: state.height,
-                  onChanged: cubit.heightChanged,
-                  errorText: error(CalculatorInput.height),
-                ),
-                KnownNumberField(
-                  known: state.known[CalculatorInput.age],
-                  onEdit: () => cubit.edit(CalculatorInput.age),
-                  name: l10n.calcKnownAge,
-                  unit: l10n.calcUnitYears,
-                  label: l10n.calcAge,
-                  value: state.age,
-                  onChanged: cubit.ageChanged,
-                  errorText: error(CalculatorInput.age),
-                  wholeNumber: true,
-                ),
-                DropdownButtonFormField<ActivityLevel>(
-                  // Rebuilt for a known level that arrives after the page.
-                  key: ValueKey(state.activity),
-                  initialValue: state.activity,
-                  isExpanded: true,
-                  decoration: InputDecoration(labelText: l10n.calcActivity),
-                  items: [
-                    for (final level in ActivityLevel.values)
-                      DropdownMenuItem(
-                        value: level,
-                        child: Text(_activityLabel(l10n, level)),
-                      ),
+                ListRowCard(
+                  children: [
+                    CalculatorChoiceRow(
+                      title: l10n.calcSex,
+                      values: Sex.values,
+                      selected: state.sex,
+                      labelOf: l10n.calcSexLabel,
+                      onChanged: cubit.sexChanged,
+                    ),
+                    CalculatorInputRow(
+                      input: CalculatorInput.age,
+                      format: format,
+                      title: l10n.calcKnownAge,
+                      label: l10n.calcAge,
+                      text: state.age,
+                      known: state.known[CalculatorInput.age],
+                      result: state.result,
+                      onChanged: cubit.ageChanged,
+                    ),
+                    CalculatorInputRow(
+                      input: CalculatorInput.height,
+                      format: format,
+                      title: l10n.calcKnownHeight,
+                      label: l10n.calcHeight(format.lengthUnitLabel),
+                      unit: format.lengthUnitLabel,
+                      text: state.height,
+                      known: state.known[CalculatorInput.height],
+                      result: state.result,
+                      onChanged: cubit.heightChanged,
+                    ),
+                    CalculatorInputRow(
+                      input: CalculatorInput.bodyWeight,
+                      format: format,
+                      title: l10n.calcKnownWeight,
+                      label: l10n.calcBodyWeight(format.weightUnitLabel),
+                      unit: format.weightUnitLabel,
+                      text: state.weight,
+                      known: state.known[CalculatorInput.bodyWeight],
+                      result: state.result,
+                      onChanged: cubit.weightChanged,
+                    ),
+                    CalculatorChoiceRow(
+                      title: l10n.calcActivity,
+                      values: ActivityLevel.values,
+                      selected: state.activity,
+                      labelOf: l10n.calcActivityLabel,
+                      onChanged: cubit.activityChanged,
+                    ),
                   ],
-                  onChanged: (level) {
-                    if (level != null) cubit.activityChanged(level);
-                  },
                 ),
-                const SizedBox(height: Gap.md),
-                if (state.result case Calculated(:final value))
-                  _Estimate(value, format),
+                switch (state.result) {
+                  Calculated(:final value) => _Estimate(value, format),
+                  null => CalculatorResult.missing(
+                    caption: l10n.calcDailyEnergy,
+                    note: format.addToSee([
+                      if (state.sex == null) l10n.calcMissingSex,
+                      if (state.age.isEmpty) l10n.calcMissingAge,
+                      if (state.height.isEmpty) l10n.calcMissingHeight,
+                      if (state.weight.isEmpty) l10n.calcMissingBodyweight,
+                      if (state.activity == null) l10n.calcMissingActivity,
+                    ]),
+                  ),
+                  // A value outside its range says so on its row.
+                  _ => const SizedBox.shrink(),
+                },
               ],
             );
           },
@@ -93,15 +106,6 @@ class CaloriesPage extends StatelessWidget {
       ],
     );
   }
-
-  static String _activityLabel(AppLocalizations l10n, ActivityLevel level) =>
-      switch (level) {
-        ActivityLevel.sedentary => l10n.calcActivitySedentary,
-        ActivityLevel.light => l10n.calcActivityLight,
-        ActivityLevel.moderate => l10n.calcActivityModerate,
-        ActivityLevel.active => l10n.calcActivityActive,
-        ActivityLevel.veryActive => l10n.calcActivityVeryActive,
-      };
 }
 
 class _Estimate extends StatelessWidget {
@@ -113,25 +117,27 @@ class _Estimate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = format.l10n;
-    Widget target(String label, CalorieTarget? target) => target == null
-        ? ResultTile(label: label, value: '', note: l10n.calcNoDeficit)
-        : ResultTile(
-            label: label,
-            value: format.kcal(target.kcal),
-            note: target.floored
-                ? l10n.calcFloored(format.kcal(target.kcal))
-                : null,
-          );
-    return Column(
-      children: [
-        ResultTile(label: l10n.calcBmr, value: format.kcal(estimate.bmr)),
-        ResultTile(
-          label: l10n.calcMaintenance,
-          value: format.kcal(estimate.maintenance),
-        ),
-        target(l10n.calcLose, estimate.lose),
-        target(l10n.calcLoseSlowly, estimate.loseSlowly),
-        target(l10n.calcGain, estimate.gain),
+    final change = weeklyChangeKg(format.weightUnit);
+    String kcal(double value) => format.number(value);
+    CalculatorRow target(
+      String label,
+      CalorieTarget? target,
+    ) => switch (target) {
+      null => CalculatorRow(label, l10n.bodyNoValue, note: l10n.calcNoDeficit),
+      CalorieTarget(:final kcal, floored: true) => CalculatorRow(
+        label,
+        format.number(kcal),
+        note: l10n.calcFloored(format.kcal(kcal)),
+      ),
+      CalorieTarget(:final kcal) => CalculatorRow(label, format.number(kcal)),
+    };
+    return CalculatorResult(
+      caption: l10n.calcDailyEnergy,
+      value: format.kcal(estimate.maintenance),
+      rows: [
+        target(l10n.calcLosePerWeek(format.weight(change.lose)), estimate.lose),
+        CalculatorRow(l10n.calcKeepWeight, kcal(estimate.maintenance)),
+        target(l10n.calcGainPerWeek(format.weight(change.gain)), estimate.gain),
       ],
     );
   }

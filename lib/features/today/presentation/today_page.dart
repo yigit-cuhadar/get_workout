@@ -522,7 +522,8 @@ class _CalculatorsCard extends StatelessWidget {
         spacing: Gap.sm,
         runSpacing: Gap.sm,
         children: [
-          for (final (:title, subtitle: _, :route) in calculatorsOf(l10n))
+          for (final (:title, subtitle: _, :route, training: _)
+              in calculatorsOf(l10n))
             ForgeChip(label: title, onPressed: () => context.go(route)),
         ],
       ),

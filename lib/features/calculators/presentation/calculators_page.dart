@@ -1,26 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/page_parts.dart';
 import '../../../l10n/app_localizations.dart';
 import 'calculator_list.dart';
+import 'calculator_widgets.dart';
 
+/// The calculators in two groups, Body and Training.
 class CalculatorsPage extends StatelessWidget {
   const CalculatorsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final calculators = calculatorsOf(l10n);
+    Widget group(String label, bool training) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionLabel(label),
+        const SizedBox(height: calculatorGap - Gap.xs),
+        ListRowCard(
+          children: [
+            for (final (:title, :subtitle, :route, training: _)
+                in calculators.where((entry) => entry.training == training))
+              ListRow(
+                title: title,
+                detail: subtitle,
+                end: ListRowEnd.chevron,
+                onTap: () => context.go(route),
+              ),
+          ],
+        ),
+      ],
+    );
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.calculatorsTitle)),
+      appBar: ForgeAppBar(title: l10n.calculatorsTitle),
       body: ListView(
+        padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
         children: [
-          for (final (:title, :subtitle, :route) in calculatorsOf(l10n))
-            ListTile(
-              title: Text(title),
-              subtitle: Text(subtitle),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go(route),
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: calculatorGap,
+            children: [
+              group(l10n.calcGroupBody, false),
+              group(l10n.calcGroupTraining, true),
+            ],
+          ),
         ],
       ),
     );

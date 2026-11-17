@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/number_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/cardio_session.dart';
@@ -59,14 +60,6 @@ String formatDuration(Duration duration) {
 /// A pace to the nearest second, as [formatDuration] writes it.
 String formatPace(Duration pace) =>
     formatDuration(Duration(seconds: (pace.inMilliseconds / 1000).round()));
-
-/// At most [digits] decimals, without trailing zeros.
-String formatDecimal(double value, int digits) {
-  final fixed = value.toStringAsFixed(digits);
-  return fixed.contains('.')
-      ? fixed.replaceFirst(RegExp(r'\.?0+$'), '')
-      : fixed;
-}
 
 extension CardioText on AppLocalizations {
   String distanceUnitLabel(DistanceUnit unit) => switch (unit) {
