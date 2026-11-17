@@ -132,9 +132,15 @@ class _Estimate extends StatelessWidget {
       caption: l10n.calcDailyEnergy,
       value: format.kcal(estimate.maintenance),
       rows: [
-        target(l10n.calcLosePerWeek(format.weight(change.lose)), estimate.lose),
+        target(
+          l10n.calcLosePerWeek(format.weeklyRate(change.lose)),
+          estimate.lose,
+        ),
         CalculatorRow(l10n.calcKeepWeight, kcal(estimate.maintenance)),
-        target(l10n.calcGainPerWeek(format.weight(change.gain)), estimate.gain),
+        target(
+          l10n.calcGainPerWeek(format.weeklyRate(change.gain)),
+          estimate.gain,
+        ),
       ],
     );
   }

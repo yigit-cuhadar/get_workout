@@ -724,7 +724,7 @@
 
   "calcBodyFatOptional": "Body fat (optional)",
   "calcAbdomenAtNavel": "Abdomen, at the navel",
-  "calcKnownWeight": "Bodyweight",
+  "calcKnownWeight": "Weight",
   "calcKnownHeight": "Height",
   "calcKnownAge": "Age",
   "calcKnownNeck": "Neck",
@@ -749,7 +749,7 @@
   "calcMissingSex": "sex",
   "calcMissingAge": "age",
   "calcMissingHeight": "height",
-  "calcMissingBodyweight": "bodyweight",
+  "calcMissingBodyweight": "weight",
   "calcMissingActivity": "activity",
   "calcMissingNeck": "neck",
   "calcMissingWaist": "waist",

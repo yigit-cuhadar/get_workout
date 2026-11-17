@@ -116,7 +116,6 @@ class CalculatorInputRow extends StatelessWidget {
         (final shown?, null) => shown,
         (final shown?, final unit?) => l10n.calcKnownValue(shown, unit),
       },
-      dataValue: true,
       end: ListRowEnd.chevron,
       onTap: () => _pick(context, value),
     );

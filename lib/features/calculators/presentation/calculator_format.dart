@@ -46,6 +46,10 @@ class CalculatorFormat {
   String weight(double kg, {int maxDecimals = 1}) =>
       '${weightNumber(kg, maxDecimals: maxDecimals)} $weightUnitLabel';
 
+  /// A weekly rate of change as the calorie targets name it: 0.25 kg,
+  /// not rounded to 0.3.
+  String weeklyRate(double kg) => weight(kg, maxDecimals: 2);
+
   /// [weight] without the unit.
   String weightNumber(double kg, {int maxDecimals = 1}) =>
       _trimmed(weightUnit.fromKg(kg), maxDecimals);
