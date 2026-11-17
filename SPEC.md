@@ -598,6 +598,16 @@ Decisions (the canvases they were drawn on are deleted):
   a week" (+275), 7,700 kcal per kg, lb labels for lb users (CP16); the
   daily-minimum states are muted row notes (CP17); plates "closest"
   keeps PlateCalculator's form (CP20).
+- Device check of Kurulum (2026-11-17, canvas apps/_review/kurulum4.html,
+  local): "Why this one" names only the answers the program matches, so a
+  days count it does not match is not mentioned (CK1 B); the generator's
+  goal question is onboarding's (CK2 A). Board rules fixed with it: the
+  native launch screen on the featured colour (iOS and Android); the
+  permission steps' buttons at the page bottom (a Forge PermissionPrompt
+  change, pending); sign-in from Profile full screen; the paywall lists
+  Yearly first with Best value at the row's end (Forge v0.25.5); the
+  generator preview title in sans; calorie rates unrounded ("0.25 kg");
+  calculator rows "Weight", values sans muted.
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
@@ -990,7 +1000,8 @@ Decisions (the canvases they were drawn on are deleted):
   Clear search while searching, "Remove a filter to see more programs."
   and Clear filters while filtering; the filter sheet is a
   ForgeBottomSheet (a switch row, chip groups, Clear, Done).
-- Generator questions (owner's picks, 2026-11-15): full screen above the
+- Generator questions (owner's picks, 2026-11-15; the goal question is
+  onboarding's since CK2, 2026-11-17): full screen above the
   tabs (pushed; Back on the first question returns); the OnboardingQuestion
   page with the mono "n / 9" counter after the progress (onboarding too)
   and "Generate a program" over each question; Continue, "Create my
@@ -1488,7 +1499,9 @@ the feature you are about to touch, and keep it true when you change it.
     account, grants the server nothing until the next renewal; two
     concurrent subscriptions are tracked as one `productId`). Revisit if
     one of these shows up.
-- **Paywall**: full-screen `/paywall`, yearly selected by default, prices as
+- **Paywall**: full-screen `/paywall`, yearly listed first (the app sorts
+  yearly before monthly, whatever the store's order) and selected by
+  default, prices as
   the store gives them, trial shown only when the plan carries one, restore
   and legal links always visible. Terms and privacy URLs live in
   `lib/app/legal_links.dart`; placeholders until the pages exist. Layout
@@ -1702,7 +1715,8 @@ the feature you are about to touch, and keep it true when you change it.
   reports its result in a snackbar and, on success, closes the paywall
   (owner's pick, 2026-11-15).
 - **Start and sign in** (design pass, Kurulum, 2026-11-17): the splash
-  is Forge SplashScreen, the GW mark and GetWorkout on featured, its
+  is Forge SplashScreen, the GW mark and GetWorkout on featured (the
+  native launch screen is the same featured colour, iOS and Android), its
   slow-start line after 2 s (SP4); a guest session that cannot start
   shows SplashScreen.failed, "Couldn't start. Check your connection and
   try again." with an outline Retry (SP3). Sign in is forge_auth's
@@ -1711,7 +1725,8 @@ the feature you are about to touch, and keep it true when you change it.
   line linking Terms and the privacy policy; email errors that belong to
   a field show under it, the rest as "Sign-in didn't finish. Try again."
   with Retry (SI6); "Continue as guest" shows only with nobody signed in,
-  so never for the app's guest (SI7).
+  so never for the app's guest (SI7). Pushed from Profile or Account
+  (`/profile/account/auth`) it opens full screen over the tab bar.
 - **Units**: stored metric. kg/lb and cm/in chosen by the user. A single
   lifted weight is shown through `WeightUnit.shown`: within two decimals
   (the precision weight fields show; 1e-8 hundredths of tolerance, the
@@ -1790,8 +1805,8 @@ the feature you are about to touch, and keep it true when you change it.
   the FeaturedCard outline ("Recommended for you · free", the name,
   "3 days · Intermediate · 8 weeks" with the session time, each day as a
   row with its suggested weekday tag), "Why this one" (the user's goal,
-  days and equipment set in one sentence, then the catalogue summary,
-  ON10), and at the bottom Start this program (saves a copy among the
+  days and equipment set that the program matches in one sentence, an
+  unmatched answer left out, then the catalogue summary, ON10, CK1), and at the bottom Start this program (saves a copy among the
   user's programs without starting it and opens its page; the user's
   existing copy opens instead, SG1) and See other programs; no
   "Not now" (ON8); while it is chosen the card's loading form and a
@@ -3116,8 +3131,8 @@ the feature you are about to touch, and keep it true when you change it.
   Bar and plates settings page edits them; the Plates calculator shows a
   summary row leading there. 1RM and the macros' calories stay empty (no
   single source); the goal and target weight map onto no calculator
-  input. Every input is a chevron row (name, the value in the user's unit
-  or "—") opening a number sheet (the Log cardio sheet, now
+  input. Every input is a chevron row (name, bodyweight's "Weight"; the
+  value in the user's unit, sans muted, or "—") opening a number sheet (the Log cardio sheet, now
   `core/widgets/number_sheet.dart`): titled with the name, the field
   labelled with it too (no unit) and the unit muted inside the box after
   the value, as in Log cardio's sheets (KC3), Clear while there is a value, Save rejecting a
@@ -3136,7 +3151,7 @@ the feature you are about to touch, and keep it true when you change it.
   in the sheet, so a set above 12 reaches its own row message. Calories:
   "Daily energy need" is maintenance, with Lose / Keep weight / Gain rows
   at 7,700 kcal per kg: 0.5 kg and 0.25 kg a week, or 1 lb and 0.5 lb for
-  a pound user; a target raised to the daily minimum, or no loss below
+  a pound user (named unrounded); a target raised to the daily minimum, or no loss below
   it, says so in a muted row note. Activity labels "Sedentary · no
   exercise", "Light · 1–3 days", "Moderate · 3–5 days", "Hard · 6–7
   days", "Very hard · physical job". Known values are
