@@ -29,6 +29,7 @@ import 'package:mocktail/mocktail.dart';
 import '../features/programs/fixtures.dart';
 import '../features/workout/fixtures.dart' as fixtures show workout;
 import '../features/workout/fixtures.dart' show exercise, lift;
+import 'today_stand_ins.dart' show askedRestAlerts;
 
 class MockProgramListCubit extends MockCubit<ProgramListState>
     implements ProgramListCubit {}
@@ -204,6 +205,7 @@ void main() {
       MultiBlocProvider(
         providers: [
           BlocProvider<ActiveWorkoutCubit>.value(value: workout),
+          askedRestAlerts(),
           BlocProvider<EntitlementCubit>.value(value: entitlement),
           BlocProvider<SettingsCubit>.value(value: settings),
         ],

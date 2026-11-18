@@ -79,6 +79,44 @@ void main() {
     ),
   );
 
+  testWidgets('the first Start asks about rest alerts before the workout', (
+    tester,
+  ) async {
+    final app = TrainingWorld(
+      exercises: exercises,
+      settings: UserSettings(
+        weightUnit: WeightUnit.kg,
+        lengthUnit: LengthUnit.cm,
+        warmups: const WarmupSettings(scheme: WarmupScheme.off),
+        seenTips: Tip.values.toSet(),
+      ),
+    )..notificationsAskedHere = false;
+    app.programs
+      ..add(upperLower)
+      ..active = ActiveProgram(
+        programId: 'p1',
+        weekdays: const [1, 3],
+        nextDayIndex: 1,
+        nextDate: dateOf(flowStart),
+        startedAt: DateTime(2026, 11, 2),
+      );
+    await app.start(tester);
+
+    await tapText(tester, 'Start Lower');
+    expect(find.text('Get alerts when rest ends?'), findsOneWidget);
+    expect(find.byType(WorkoutPage), findsNothing);
+    await tapOn(tester, inDialog('Not now'));
+    expect(find.byType(WorkoutPage), findsOneWidget);
+
+    // Asked once on this device: the log never asks.
+    await enterValue(tester, 'kg', '100');
+    await enterValue(tester, 'reps', '5');
+    await tapText(tester, 'Log set');
+    expect(find.text('Get alerts when rest ends?'), findsNothing);
+
+    await app.stop(tester);
+  });
+
   testWidgets('today\'s day is logged with a rest, finished and shown done', (
     tester,
   ) async {

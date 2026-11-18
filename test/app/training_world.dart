@@ -398,6 +398,9 @@ class TrainingWorld {
   final UserSettings settings;
   DateTime now = flowStart;
 
+  /// Whether this device was asked to notify when a rest is over.
+  bool notificationsAskedHere = true;
+
   final programs = FakeProgramRepository();
   late final workouts = FakeWorkoutRepository(programs);
   final local = FakeLocalWorkoutStore();
@@ -531,7 +534,12 @@ class TrainingWorld {
       clock: _clock,
     );
     final notifications = _MockRestNotifications();
-    when(notifications.askedHere).thenAnswer((_) async => const Ok(true));
+    when(notifications.askedHere)
+        .thenAnswer((_) async => Ok(notificationsAskedHere));
+    when(notifications.markAskedHere).thenAnswer((_) async {
+      notificationsAskedHere = true;
+      return const Ok(null);
+    });
     when(notifications.cancel).thenAnswer((_) async => const Ok(null));
     when(
       () => notifications.schedule(

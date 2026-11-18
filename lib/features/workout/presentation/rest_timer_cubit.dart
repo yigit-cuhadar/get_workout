@@ -64,7 +64,6 @@ class RestTimerState extends Equatable {
     this.phase = RestPhase.none,
     this.remainingS = 0,
     this.totalS = 0,
-    this.askNotify = false,
   });
 
   final RestPhase phase;
@@ -76,27 +75,18 @@ class RestTimerState extends Equatable {
   /// included, so the part already passed can be shown.
   final int totalS;
 
-  /// Ask whether to notify when a rest is over, then answer with
-  /// [RestTimerCubit.answerNotify].
-  final bool askNotify;
-
   /// How much of the running rest has passed, from 0 to 1.
   double get progress => totalS == 0 ? 0 : 1 - remainingS / totalS;
 
-  RestTimerState copyWith({
-    RestPhase? phase,
-    int? remainingS,
-    int? totalS,
-    bool? askNotify,
-  }) => RestTimerState(
-    phase: phase ?? this.phase,
-    remainingS: remainingS ?? this.remainingS,
-    totalS: totalS ?? this.totalS,
-    askNotify: askNotify ?? this.askNotify,
-  );
+  RestTimerState copyWith({RestPhase? phase, int? remainingS, int? totalS}) =>
+      RestTimerState(
+        phase: phase ?? this.phase,
+        remainingS: remainingS ?? this.remainingS,
+        totalS: totalS ?? this.totalS,
+      );
 
   @override
-  List<Object?> get props => [phase, remainingS, totalS, askNotify];
+  List<Object?> get props => [phase, remainingS, totalS];
 }
 
 /// The notification's text for a rest of [workout] after which [next]
@@ -151,7 +141,6 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   }) : _workout = workout,
        _clock = clock ?? DateTime.now,
        super(const RestTimerState()) {
-    _status = workout.state.status;
     _rest = workout.state.rest;
     _seen = workout.state.workout;
     _subscription = workout.stream.listen(_onWorkout);
@@ -174,7 +163,6 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   final DateTime Function() _clock;
   late final StreamSubscription<ActiveWorkoutState> _subscription;
   late final StreamSubscription<SettingsState> _settingsSubscription;
-  late WorkoutStatus _status;
   Rest? _rest;
 
   /// [RestTimerState.totalS] of the running rest; null until its first
@@ -194,9 +182,6 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   /// Bumped whenever a scheduled notification may no longer be wanted: the
   /// rest changed or the app showed.
   int _generation = 0;
-
-  /// Whether asking was considered in this run of the app.
-  bool _considered = false;
 
   /// What the lock screen shows (or was last asked to), null for nothing.
   /// Unknown until the first sync, which so also replaces or removes one
@@ -227,8 +212,6 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   static const overLate = Duration(seconds: 2);
 
   void _onWorkout(ActiveWorkoutState workout) {
-    final wasActive = _status == WorkoutStatus.active;
-    _status = workout.status;
     _followTicks(workout.workout);
     if (workout.rest == _rest) {
       _syncLockScreen();
@@ -239,11 +222,6 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     _generation++;
     unawaited(_cancelNotification());
     _tick();
-    final rest = _rest;
-    // A rest kept from before the app started is not one the user started.
-    if (wasActive && rest != null && rest.runsAt(_clock())) {
-      unawaited(_considerAsking());
-    }
     if (_hidden) unawaited(_scheduleNotification());
   }
 
@@ -404,11 +382,18 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     _tick();
   }
 
-  /// The user's answer to [RestTimerState.askNotify]. "Not now" is
-  /// remembered on this device only, so other devices still ask; a yes is
-  /// the user's, on every device.
+  /// Whether to ask, as a workout starts, to notify when a rest is over:
+  /// the rest timer is on and this device has not been asked (see
+  /// [ShouldAskRestNotifications]). Answer with [answerNotify].
+  Future<bool> shouldAskNotify() async {
+    final rest = _settings.state.settings.restTimer;
+    return rest.enabled && await _shouldAsk(rest.notify);
+  }
+
+  /// The user's answer to [shouldAskNotify]. "Not now" is remembered on
+  /// this device only, so other devices still ask; a yes is the user's, on
+  /// every device.
   Future<void> answerNotify({required bool allow}) async {
-    emit(state.copyWith(askNotify: false));
     if (allow) {
       await setNotify(true);
     } else {
@@ -433,15 +418,6 @@ class RestTimerCubit extends Cubit<RestTimerState> {
       _syncLockScreen();
     }
     return allowed;
-  }
-
-  Future<void> _considerAsking() async {
-    if (_considered) return;
-    _considered = true;
-    if (await _shouldAsk(_settings.state.settings.restTimer.notify) &&
-        !isClosed) {
-      emit(state.copyWith(askNotify: true));
-    }
   }
 
   void _storeWish(bool notify) {
