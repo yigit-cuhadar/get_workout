@@ -388,7 +388,7 @@ screenshot next to the studio board, every state) that the owner approves
 or sends back. A look the studio does not draw is a question for the owner
 and is drawn in the studio first.
 
-Where it stands (2026-11-17, end of the Kurulum session):
+Where it stands (2026-11-18, end of Group 11):
 - Ana sekmeler: done and merged (#105–#107).
 - Antrenman ve programlar: done, checked on the iOS simulator and approved
   by the owner (2026-11-15); merged as #108–#111, studio #113, Forge
@@ -440,8 +440,8 @@ Where it stands (2026-11-17, end of the Kurulum session):
   link is behind main: publish design/studio.html from the owner's
   account; MobileAppForge Studio likewise (Forge design/studio.html).
 - Not checked on a device: Account and Delete account (need a real
-  account), the real Apple Health / Health Connect prompts, Android, large
-  text.
+  account; covered by #138's flow tests), the real Apple Health / Health
+  Connect prompts, Android, large text.
 - Sign in with Apple: done (#137), checked on the owner's iPhone.
 - Critical-flow widget tests: done (#138 first run, guest to account,
   Account and Delete account, Premium, calculators; #139 logging a
@@ -450,6 +450,22 @@ Where it stands (2026-11-17, end of the Kurulum session):
   Not covered: dragging the weight ruler, taking a measurement photo.
 - Done: the final preset is picked (Slate, 2026-11-17); Measure, Graphite
   and the dev picker are removed. Next phase: Release (AGENTS.md › Phases).
+- Next, in this order (2026-11-18 handoff):
+  1. Subscription (the last unticked feature): the owner opens RevenueCat;
+     App Store products first (the paid team A8J42TV74R is ready), then
+     deploy `revenueCatWebhook` with its secret and try purchase and
+     restore on the phone. Google Play waits for the Play Console.
+  2. Deploy `deleteAccount` to dev, check deletion on the phone, then prod.
+  3. Photo backup: create the default bucket, deploy `storage.rules`, check
+     the camera and backup on the phone.
+  4. iOS push and the workout Live Activity on the phone (paid team).
+  5. An Android round: Google sign-in, Health Connect, the launch screen.
+  6. Release: the first prod content import, then the store automation.
+- Owner to do: publish both studios from the owner's account (their links
+  are behind main), or share them with edit access so a session can; the
+  Play Console Health declaration (above); the female body model before
+  release.
+- Small: the Forge Widgetbook use case "ListRow · Info hint" is broken.
 
 ## Design
 
