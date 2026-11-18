@@ -89,6 +89,8 @@ class AccountModule implements FeatureModule {
           getCurrentUser: sl(),
           deleteAccount: sl(),
           reauthenticate: sl(),
+          reauthenticateWithProvider: sl(),
+          revokeAppleSignIn: sl(),
           underway: sl(),
           releaseWorkouts: sl<ActiveWorkoutCubit>().releaseUser,
           resumeWorkouts: sl<ActiveWorkoutCubit>().resumeUser,
