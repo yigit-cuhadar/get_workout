@@ -69,6 +69,7 @@ import 'package:get_workout/features/profile/presentation/onboarding_page.dart';
 import 'package:get_workout/features/profile/presentation/profile_cubit.dart';
 import 'package:get_workout/features/profile/presentation/profile_details_page.dart';
 import 'package:get_workout/features/profile/presentation/profile_page.dart';
+import 'package:get_workout/features/profile/presentation/profile_questions.dart';
 import 'package:get_workout/features/programs/domain/catalogue_program.dart';
 import 'package:get_workout/features/programs/domain/catalogue_repository.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
@@ -1743,6 +1744,36 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('You weigh '), findsOneWidget);
+    });
+
+    testWidgets('a next question slides in from the right, Back from the left', (
+      tester,
+    ) async {
+      storedProfile = choicesAnswered;
+      await startAsGuest(tester);
+      await tester.tap(find.text('Get started'));
+      await tester.pumpAndSettle();
+      final first = find.text('What is your main goal?');
+      final startX = tester.getTopLeft(first).dx;
+
+      await tester.tap(find.text('Continue'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      // Midway: the first leaves to the left, the second comes from the right.
+      expect(tester.getTopLeft(first).dx, lessThan(startX));
+      final second = find.byType(ProfileQuestion).last;
+      expect(tester.getTopLeft(second).dx, greaterThan(startX));
+      await tester.pumpAndSettle();
+      expect(first, findsNothing);
+
+      tester
+          .widget<OnboardingQuestion>(find.byType(OnboardingQuestion))
+          .onBack!();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(tester.getTopLeft(first).dx, lessThan(startX));
+      await tester.pumpAndSettle();
+      expect(tester.getTopLeft(first).dx, startX);
     });
 
     testWidgets('the reminder step turns reminders on, then moves on', (
