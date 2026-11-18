@@ -457,8 +457,8 @@ Where it stands (2026-11-18, end of Group 11):
      restore on the phone. Google Play waits for the Play Console.
   2. Deploy `deleteAccount` to dev, check deletion on the phone, then prod.
      (2026-11-18: live on dev; a Google-only account was deleted from the
-     owner's iPhone with the provider re-sign-in (#145); prod waits for the
-     owner.)
+     owner's iPhone with the provider re-sign-in (#145); deployed to prod the same
+     day.)
   3. Photo backup: create the default bucket, deploy `storage.rules`, check
      the camera and backup on the phone.
   4. iOS push and the workout Live Activity on the phone (paid team).
@@ -1313,8 +1313,10 @@ Decisions (the canvases they were drawn on are deleted):
   flutter/flutter#196204, after checking the iPhone 17 front camera with
   it. Until then do not bump `camera` past what 0.11.1 satisfies without
   re-copying the new release and re-applying the `PATCH` lines.
-- The projects are on the Blaze plan. `deleteAccount` is live on dev,
-  not on prod. On the owner's iPhone (2026-11-18) a Google-only user whose
+- The projects are on the Blaze plan. `deleteAccount` is live on dev
+  and, since 2026-11-18, on prod (with a random placeholder
+  `REVENUECAT_WEBHOOK_AUTHORIZATION`, which every deploy checks; the
+  webhook itself is not deployed there; artifact cleanup policy set). On the owner's iPhone (2026-11-18) a Google-only user whose
   sign-in was older than the function allows got the password prompt and
   then "Please sign in again", with no way to do so from the page. Fixed
   in #145 (provider re-sign-in, Forge v0.26.0) and checked the same day:
