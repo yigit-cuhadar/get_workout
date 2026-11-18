@@ -143,8 +143,10 @@ class _Loading extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(
-              height: ForgeAppBar.valueHeight,
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: ForgeAppBar.valueHeight,
+              ),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, Gap.md, 14, Gap.xs),
                 child: Row(
@@ -367,7 +369,7 @@ class _Header extends StatelessWidget implements PreferredSizeWidget {
   final ActiveWorkoutState state;
 
   @override
-  Size get preferredSize => const Size.fromHeight(ForgeAppBar.valueHeight);
+  Size get preferredSize => ForgeAppBar.valuePreferredSize;
 
   @override
   Widget build(BuildContext context) {
