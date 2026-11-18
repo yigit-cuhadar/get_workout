@@ -11,7 +11,6 @@ import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_schedule.dart';
-import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/programs/presentation/premium_prompt.dart';
 import 'package:get_workout/features/programs/presentation/program_detail_cubit.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
@@ -62,8 +61,6 @@ void main() {
   late _DetailCubit detail;
   late int paywalls;
 
-  setUpAll(() => registerFallbackValue(MissedDayChoice.skip));
-
   ProgramListState ready({
     List<Program>? programs,
     ActiveProgram? activeProgram,
@@ -98,7 +95,6 @@ void main() {
     when(() => detail.start(any())).thenAnswer((_) async {});
     when(() => detail.duplicate(any())).thenAnswer((_) async {});
     when(list.refreshNow).thenReturn(null);
-    when(() => list.resolveMissed(any())).thenAnswer((_) async {});
     sl
       ..registerSingleton<ProgramListCubit>(list)
       ..registerSingleton(PremiumPrompt((_) => paywalls++))
@@ -172,7 +168,7 @@ void main() {
   Future<void> settle(WidgetTester tester) =>
       tester.pump(const Duration(seconds: 1));
 
-  testWidgets('the active program\'s band: week, Start and its days', (
+  testWidgets('the active program\'s band: its week and days, no Start', (
     tester,
   ) async {
     await pump(
@@ -195,7 +191,9 @@ void main() {
     );
 
     expect(find.text('Active program · week 2 of 8'), findsOneWidget);
-    expect(find.text('Start Lower'), findsOneWidget);
+    // Today starts the day; Programs shows the plan.
+    expect(find.text('Start Lower'), findsNothing);
+    expect(find.text('Start empty workout'), findsNothing);
     expect(find.text('Done'), findsOneWidget);
     expect(find.text('Next'), findsOneWidget);
     expect(find.text('Weekly sets in this program'), findsOneWidget);
@@ -213,7 +211,7 @@ void main() {
     expect(find.text('at /programs/volume/p1'), findsOneWidget);
   });
 
-  testWidgets('a missed day hides Start until answered under its row', (
+  testWidgets('a missed day is its row alone; Today asks about it', (
     tester,
   ) async {
     final missed = PlannedDay(
@@ -228,18 +226,15 @@ void main() {
 
     expect(find.text('Start Lower'), findsNothing);
     expect(find.text('Missed'), findsOneWidget);
-    expect(find.text('Do it today'), findsOneWidget);
-    expect(find.text('Move to Monday'), findsOneWidget);
-
-    await tester.tap(find.text('Skip'));
-    await tester.pump();
-    verify(() => list.resolveMissed(MissedDayChoice.skip)).called(1);
+    expect(find.text('Do it today'), findsNothing);
+    expect(find.text('Move to Monday'), findsNothing);
+    expect(find.text('Skip'), findsNothing);
   });
 
   testWidgets('⋯ › Stop program asks first, then stops', (tester) async {
     await pump(tester, ready(activeProgram: active));
 
-    await tester.tap(find.byTooltip('Program options'));
+    await tester.tap(find.bySemanticsLabel('Program options'));
     await settle(tester);
     expect(find.text('Open program'), findsOneWidget);
     expect(find.text('Change days'), findsOneWidget);
@@ -252,7 +247,7 @@ void main() {
     await settle(tester);
     verifyNever(() => detail.stop());
 
-    await tester.tap(find.byTooltip('Program options'));
+    await tester.tap(find.bySemanticsLabel('Program options'));
     await settle(tester);
     await tester.tap(find.text('Stop program'));
     await settle(tester);
@@ -329,7 +324,7 @@ void main() {
 
     expect(find.text('Active program · week 2 of 8'), findsOneWidget);
     expect(find.text('Premium has ended'), findsOneWidget);
-    await tester.tap(find.byTooltip('Program options'));
+    await tester.tap(find.bySemanticsLabel('Program options'));
     await settle(tester);
     expect(find.text('Open program'), findsOneWidget);
     expect(find.text('Change days'), findsNothing);

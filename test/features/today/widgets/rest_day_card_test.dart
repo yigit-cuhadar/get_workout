@@ -15,14 +15,13 @@ void main() {
     onSteps: () => taps.add('steps'),
     onLogCardio: () => taps.add('cardio'),
     onStartEarly: () => taps.add('early'),
-    onStartEmpty: () => taps.add('empty'),
     locked: locked,
   );
 
   setUp(taps.clear);
 
-  testWidgets('offers a walk toward the goal, cardio, the next day early '
-      'and an empty workout', (tester) async {
+  testWidgets('offers a walk toward the goal, cardio and the next day early, '
+      'but no empty workout', (tester) async {
     await pumpComponent(tester, card(steps: 6240));
 
     expect(find.text('Rest day'), findsOneWidget);
@@ -32,8 +31,8 @@ void main() {
     await tester.tap(find.text('Go for a walk'));
     await tester.tap(find.text('Log cardio'));
     await tester.tap(find.text('Start Pull early'));
-    await tester.tap(find.text('Start empty workout'));
-    expect(taps, ['steps', 'cardio', 'early', 'empty']);
+    expect(find.text('Start empty workout'), findsNothing);
+    expect(taps, ['steps', 'cardio', 'early']);
   });
 
   testWidgets('a locked next day keeps its button, which opens the paywall', (

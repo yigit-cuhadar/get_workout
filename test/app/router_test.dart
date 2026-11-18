@@ -1528,10 +1528,15 @@ void main() {
     expect(find.text('This exercise is no longer available.'), findsOneWidget);
   });
 
-  testWidgets('Profile opens the calculators inside the tab', (tester) async {
+  testWidgets('Today opens the calculators inside the tab', (tester) async {
     await startAsGuest(tester);
-    await tapTab(tester, 'Profile');
+    await tapTab(tester, 'Today');
 
+    await tester.scrollUntilVisible(
+      find.text('Calculators'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Calculators'));
     await tester.pumpAndSettle();
     expect(find.byType(CalculatorsPage), findsOneWidget);
@@ -1546,7 +1551,7 @@ void main() {
     expect(find.byType(CalculatorsPage), findsOneWidget);
   });
 
-  testWidgets('every calculator has a route under Profile', (tester) async {
+  testWidgets('every calculator has a route under Today', (tester) async {
     await startAsGuest(tester);
     final pages = {
       Routes.calories: CaloriesPage,
@@ -1570,12 +1575,11 @@ void main() {
     tester,
   ) async {
     await startAsGuest(tester);
-    await tapTab(tester, 'Profile');
     router.go(Routes.plates);
     await tester.pumpAndSettle();
 
-    await tapTab(tester, 'Today');
     await tapTab(tester, 'Profile');
+    await tapTab(tester, 'Today');
 
     expect(find.byType(PlatesPage), findsOneWidget);
   });

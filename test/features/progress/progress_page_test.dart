@@ -7,6 +7,7 @@ import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/core/sparkline.dart' as app;
+import 'package:get_workout/core/widgets/volume_band.dart';
 import 'package:get_workout/features/body/domain/body_entry.dart';
 import 'package:get_workout/features/body/presentation/body_list_cubit.dart';
 import 'package:get_workout/features/cardio/domain/cardio_session.dart';
@@ -245,17 +246,16 @@ void main() {
     expect(find.text('19.5 % fat'), findsOneWidget);
     expect(find.byType(app.Sparkline), findsOneWidget);
     expect(find.text('Nov 9–15'), findsOneWidget);
-    expect(find.text('12 sets'), findsOneWidget);
+    // The week's total, and the most trained muscle's band.
+    expect(find.text('12 sets'), findsNWidgets(2));
+    expect(find.byType(VolumeBand), findsOneWidget);
+    // Strength and Cardio as StatTiles: the figure, its unit apart.
     expect(find.text('Bench Press e1RM'), findsOneWidget);
-    expect(find.text('104 kg'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '104'), findsOneWidget);
     expect(find.text('+3 in 8 weeks'), findsOneWidget);
-    // One sans string like the Body band's, not mono with its wide space.
-    final theme = Theme.of(tester.element(find.byType(ProgressPage)));
-    final figure = tester.widget<Text>(find.text('104 kg')).style!;
-    expect(figure.fontFamily, theme.textTheme.headlineMedium!.fontFamily);
-    expect(figure.fontSize, 24);
     expect(find.text('this week'), findsOneWidget);
-    expect(find.text('2 sessions · 47.2 km · 148 min'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '47.2'), findsOneWidget);
+    expect(find.text('2 sessions · 148 min'), findsOneWidget);
     expect(find.text('6,240 / 10,000'), findsOneWidget);
     expect(find.byType(TipBanner), findsNothing);
 
@@ -263,6 +263,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('at /progress/body'), findsOneWidget);
   });
+
+  for (final (card, path) in [
+    ('Calendar', '/progress/calendar'),
+    ('10', '/progress/calendar'),
+    ('Weekly volume', '/progress/volume'),
+    ('Strength', '/progress/strength'),
+    ('Cardio', '/progress/cardio'),
+    ('Steps', '/progress/steps'),
+  ]) {
+    testWidgets('$card opens $path', (tester) async {
+      await pumpProgress(tester);
+
+      await tester.tap(find.text(card));
+      await tester.pumpAndSettle();
+      expect(find.text('at $path'), findsOneWidget);
+    });
+  }
 
   testWidgets('weekly volume against the active program\'s week', (
     tester,
@@ -351,7 +368,7 @@ void main() {
     expect(find.text('See your steps'), findsOneWidget);
   });
 
-  testWidgets('a drop in danger; trained without an e1RM says how', (
+  testWidgets('a drop keeps its minus; trained without an e1RM says how', (
     tester,
   ) async {
     when(() => strength.state).thenReturn(
@@ -367,11 +384,7 @@ void main() {
       ),
     );
     await pumpProgress(tester);
-    final drop = tester.widget<Text>(find.text('−1 in 8 weeks'));
-    expect(
-      drop.style?.color,
-      ForgeStyle.of(tester.element(find.byType(ProgressPage))).colors.danger,
-    );
+    expect(find.text('−1 in 8 weeks'), findsOneWidget);
 
     when(() => strength.state).thenReturn(
       const ProgressStrengthState(

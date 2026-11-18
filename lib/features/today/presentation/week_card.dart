@@ -9,16 +9,11 @@ import '../../calendar/presentation/calendar_marks.dart';
 import '../../programs/domain/calendar_date.dart';
 import 'today_week_cubit.dart';
 
-/// The [TodayWeekCubit]'s week as day circles in a SectionCard; it, and
-/// every day of it, opens the calendar, which has no route for a given
-/// date. Today calls it "This week"; with [range] it is the Progress
-/// tab's "Calendar" card, the week's dates as its detail.
+/// The Progress tab's "Calendar" card: the [TodayWeekCubit]'s week as day
+/// circles in a SectionCard, its dates as the detail; it, and every day of
+/// it, opens the calendar, which has no route for a given date.
 class WeekCard extends StatelessWidget {
-  const WeekCard({super.key}) : range = false;
-
-  const WeekCard.range({super.key}) : range = true;
-
-  final bool range;
+  const WeekCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +21,7 @@ class WeekCard extends StatelessWidget {
     final weekdays = MaterialLocalizations.of(context).narrowWeekdays;
     final state = context.watch<TodayWeekCubit>().state;
     void open() => context.go(Routes.calendar);
-    final title = range ? l10n.progressCalendar : l10n.todayWeekTitle;
+    final title = l10n.progressCalendar;
     return switch (state.status) {
       TodayWeekStatus.loading => SectionCard.loading(title: title, onTap: open),
       TodayWeekStatus.failure => SectionCard.error(
@@ -38,7 +33,7 @@ class WeekCard extends StatelessWidget {
       ),
       TodayWeekStatus.ready => SectionCard(
         title: title,
-        detail: range ? _rangeText(context, state.days) : null,
+        detail: _rangeText(context, state.days),
         onTap: open,
         child: WeekStrip.plain(
           days: [

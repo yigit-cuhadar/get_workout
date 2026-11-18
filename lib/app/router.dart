@@ -242,19 +242,22 @@ abstract final class Routes {
   /// The automatic warm-up sets, from the settings.
   static const warmupSettings = '$profile/warmups';
 
-  /// The user's bars and plates, from the settings and the Plates
-  /// calculator.
+  /// The user's bars and plates, from the settings.
   static const barPlates = '$profile/bar-plates';
 
   static const profileDetails = '$profile/details';
   static String profileQuestion(ProfileField field) =>
       '$profileDetails/${field.name}';
 
-  static const calculators = '$profile/calculators';
+  /// The calculators, a tool of the Today tab.
+  static const calculators = '$today/calculators';
   static const calories = '$calculators/calories';
   static const bodyFat = '$calculators/body-fat';
   static const oneRepMax = '$calculators/one-rep-max';
   static const plates = '$calculators/plates';
+
+  /// [barPlates] above the Plates calculator, in its tab.
+  static const platesBarPlates = '$plates/bar-plates';
   static const macros = '$calculators/macros';
   static const bodyIndices = '$calculators/bmi-ffmi';
 
@@ -489,6 +492,22 @@ GoRouter buildRouter(
                       routes: Routes.todayEditing,
                     ),
                   ),
+                ],
+              ),
+              GoRoute(
+                path: 'calculators',
+                builder: (_, _) => const CalculatorsPage(),
+                routes: [
+                  _page('calories', const CaloriesPage()),
+                  _page('body-fat', const BodyFatPage()),
+                  _page('one-rep-max', const OneRepMaxPage()),
+                  GoRoute(
+                    path: 'plates',
+                    builder: (_, _) => const PlatesPage(),
+                    routes: [_page('bar-plates', const BarPlatesPage())],
+                  ),
+                  _page('macros', const MacrosPage()),
+                  _page('bmi-ffmi', const BodyIndicesPage()),
                 ],
               ),
             ],
@@ -765,18 +784,6 @@ GoRouter buildRouter(
                         _field(state) == null ? Routes.profileDetails : null,
                     builder: (_, state) => ProfileQuestionPage(_field(state)!),
                   ),
-                ],
-              ),
-              GoRoute(
-                path: 'calculators',
-                builder: (_, _) => const CalculatorsPage(),
-                routes: [
-                  _page('calories', const CaloriesPage()),
-                  _page('body-fat', const BodyFatPage()),
-                  _page('one-rep-max', const OneRepMaxPage()),
-                  _page('plates', const PlatesPage()),
-                  _page('macros', const MacrosPage()),
-                  _page('bmi-ffmi', const BodyIndicesPage()),
                 ],
               ),
             ],

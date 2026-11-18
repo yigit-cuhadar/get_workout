@@ -6,8 +6,8 @@ import '../../../../l10n/app_localizations.dart';
 /// Today on a day the program has no workout, in the featured block's
 /// place: the [next] day ("Pull, Mon, Nov 16"), a walk toward the step
 /// goal opening the Steps page ([onSteps]), Log cardio ([onLogCardio]),
-/// Start [nextDay] early ([onStartEarly]; with a lock when [locked], as it
-/// opens the paywall) and Start empty workout ([onStartEmpty]). Today's
+/// and Start [nextDay] early ([onStartEarly]; with a lock when [locked], as
+/// it opens the paywall); Today's own row starts an empty workout. Today's
 /// [steps] against the [goal]; null [steps] when the app cannot read them.
 class RestDayCard extends StatelessWidget {
   const RestDayCard({
@@ -19,7 +19,6 @@ class RestDayCard extends StatelessWidget {
     required this.onSteps,
     required this.onLogCardio,
     required this.onStartEarly,
-    required this.onStartEmpty,
     this.locked = false,
   });
 
@@ -30,7 +29,6 @@ class RestDayCard extends StatelessWidget {
   final VoidCallback onSteps;
   final VoidCallback onLogCardio;
   final VoidCallback onStartEarly;
-  final VoidCallback onStartEmpty;
   final bool locked;
 
   @override
@@ -104,14 +102,6 @@ class RestDayCard extends StatelessWidget {
               variant: ForgeButtonVariant.secondary,
               locked: locked,
               onPressed: onStartEarly,
-            ),
-          ),
-          SizedBox(
-            width: double.infinity,
-            child: ForgeButton(
-              label: l10n.workoutStartEmpty,
-              variant: ForgeButtonVariant.secondary,
-              onPressed: onStartEmpty,
             ),
           ),
         ],

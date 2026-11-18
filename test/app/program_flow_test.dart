@@ -69,14 +69,16 @@ void main() {
       await openTab(tester, 'Programs');
       await openTab(tester, 'Programs');
       expect(find.text('Program c1'), findsOneWidget);
-      expect(find.text('Start Push'), findsOneWidget);
+      // The band shows the plan; Today starts the day.
+      expect(find.text('Start Push'), findsNothing);
+      expect(find.text('Next'), findsOneWidget);
 
       await openTab(tester, 'Today');
       expect(find.text('Program c1'), findsOneWidget);
       expect(find.text('Start Push'), findsOneWidget);
 
       await openTab(tester, 'Programs');
-      await tapOn(tester, find.byTooltip('Program options'));
+      await tapOn(tester, find.bySemanticsLabel('Program options'));
       await tapText(tester, 'Stop program');
       expect(find.text('Stop this program?'), findsOneWidget);
       await tapOn(tester, inDialog('Stop program'));
@@ -121,41 +123,51 @@ void main() {
       expect(find.text('Do it today'), findsNothing);
       expect(find.text('Start Upper'), findsOneWidget);
       await openTab(tester, 'Programs');
-      expect(find.text('Start Upper'), findsOneWidget);
+      expect(find.text('Missed'), findsNothing);
+      expect(find.text('Start Upper'), findsNothing);
 
       await app.stop(tester);
     });
 
-    testWidgets('moves to the next training day from Programs', (tester) async {
-      final app = world();
-      await app.start(tester);
-      await openTab(tester, 'Programs');
-
-      await tapText(tester, 'Move to Monday');
-
-      expect(active(app).nextDayIndex, 0);
-      expect(active(app).nextDate, CalendarDate(2026, 11, 16));
-      expect(find.text('Do it today'), findsNothing);
-      await openTab(tester, 'Today');
-      expect(find.textContaining('You missed'), findsNothing);
-      expect(find.textContaining('Upper, Mon, Nov 16'), findsOneWidget);
-
-      await app.stop(tester);
-    });
-
-    testWidgets('is skipped from Programs, so the next day is today', (
+    testWidgets('is only a row on Programs, where nothing answers it', (
       tester,
     ) async {
       final app = world();
       await app.start(tester);
       await openTab(tester, 'Programs');
 
+      expect(find.text('Missed'), findsOneWidget);
+      expect(find.text('Do it today'), findsNothing);
+      expect(find.text('Skip'), findsNothing);
+
+      await app.stop(tester);
+    });
+
+    testWidgets('moves to the next training day from Today', (tester) async {
+      final app = world();
+      await app.start(tester);
+
+      await tapText(tester, 'Move to Monday');
+
+      expect(active(app).nextDayIndex, 0);
+      expect(active(app).nextDate, CalendarDate(2026, 11, 16));
+      expect(find.text('Do it today'), findsNothing);
+      expect(find.textContaining('You missed'), findsNothing);
+      expect(find.textContaining('Upper, Mon, Nov 16'), findsOneWidget);
+
+      await app.stop(tester);
+    });
+
+    testWidgets('is skipped from Today, so the next day is today', (
+      tester,
+    ) async {
+      final app = world();
+      await app.start(tester);
+
       await tapText(tester, 'Skip');
 
       expect(active(app).nextDayIndex, 1);
       expect(active(app).nextDate, wednesday);
-      expect(find.text('Start Lower'), findsOneWidget);
-      await openTab(tester, 'Today');
       expect(find.text('Start Lower'), findsOneWidget);
 
       await app.stop(tester);

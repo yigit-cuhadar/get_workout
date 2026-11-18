@@ -143,7 +143,7 @@ class _Equipment extends StatelessWidget {
                 state.plates.length,
               ),
               end: ListRowEnd.chevron,
-              onTap: () => context.push(Routes.barPlates),
+              onTap: () => context.push(Routes.platesBarPlates),
             ),
           ],
         ),

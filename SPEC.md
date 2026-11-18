@@ -724,6 +724,22 @@ Decisions (the canvases they were drawn on are deleted):
   (S6 A); PermissionPrompt gets a dialog form (icon circle, title, line,
   Allow, text "Not now") for in-app permission asks (S7 A); Progress's
   Strength and Cardio cards become StatTile (S8 A).
+- Tabs (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/NcABYovwub3DiYhWgVFgAa): each tab has one job:
+  Today is now, Progress how it is going, Programs the plan (P0 A). The
+  week strip is only Progress's Calendar card (P1 A); this week's sets are
+  only Progress's Weekly volume, which takes Today's four muscle bands (P2
+  A); a program day starts only from Today's workout card, the Programs
+  band has no Start (P3 A); a missed day is asked only on Today, the
+  Programs band keeps its Missed row (P4 A); steps are only Progress's
+  card, Today keeps the rest day's walk (P5 B); with no active program the
+  ways in and the list live on Programs and Today's card offers only its
+  one way (See your programs, or See ready-made programs), no Generate
+  (P6 A); "Start empty workout" is a row under Today's workout card every
+  day, gone from the rest-day card, the no-program card and Programs (P7
+  A); the calculators are only Today's card, Profile › More › Calculators
+  goes (P8, Today only). Supersedes the Today and Programs bullets of the
+  2026-11-13 to 15 design decisions above.
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
@@ -1814,7 +1830,8 @@ the feature you are about to touch, and keep it true when you change it.
   one prompt per page, so nothing asks twice.
 - **Profile tab** (UX pass, 2026-11-13, owner's pick; studio board
   2026-11-15): one page, top to bottom: the account header, the Premium
-  card, More (Your profile, Calculators), then the settings groups (Units,
+  card, More (Your profile; the calculators are Today's since the Tabs
+  picks), then the settings groups (Units,
   Workout, Reminders, Connected apps, Appearance), Privacy and, in debug
   builds, on the fake the Fake store rows. An Apple relay address
   (`@privaterelay.appleid.com`) is never shown: a named user shows the
@@ -2143,15 +2160,17 @@ the feature you are about to touch, and keep it true when you change it.
   premium copy), "Week n of N · <weekdays>" ("Week n" without a length,
   "Finished" once it ran its length; weeks count from the start date, as
   the length does, `ProgramSchedule.week`) with a progress bar when it has
-  a length, the next workout's Start <day> (the one Start of a program day
-  in this view), the locked notice or the missed-day prompt, then this
-  week's days by date, each Done, Missed, Next or planned, without Start;
-  another day than the next starts from its card on the program page. Then
-  one card with four rows, the same with or without programs: ready-made
-  programs, the generator (locked without premium), "New program" (the
-  builder) and "Start empty workout"; then the other programs ("Your
-  programs" without an active one) with their days and length. Without an
-  active program the rows come first; no floating button.
+  a length, the locked notice, then this week's days by date, each Done,
+  Missed, Next or planned; no Start and no missed-day choices (Tabs P3,
+  P4: Today's workout card starts the day and answers a missed one;
+  another day than the next starts from its card on the program page).
+  Then one card with three rows, the same with or without programs:
+  ready-made programs, the generator (locked without premium) and "New
+  program" (the builder); an empty workout starts on Today (P7). Then the
+  other programs ("Your programs" without an active one) under a
+  SectionLabel, with their days and length. Without an active program the
+  "No active program" prompt and the rows come first; no floating
+  button.
 - **Program page** (UX pass, 2026-11-13, variant B; Edit moved into the
   menu by the owner on 2026-11-15): a menu with Edit, Duplicate and Delete
   in the app bar; a summary card with the state
@@ -2882,9 +2901,11 @@ the feature you are about to touch, and keep it true when you change it.
 
 ### Today and progress
 
-- **Today tab** (`lib/features/today`): a scrolling list of independent
-  cards, each on its own data, so one failing leaves the others. Next
-  workout: while a workout is in progress (`ActiveWorkoutState.inProgress`,
+- **Today tab** (`lib/features/today`; Tabs picks 2026-11-18): what to do
+  now, three parts: the workout card, a "Start empty workout" row ("Pick
+  exercises as you go", every day, through `startFreeWorkout`, which asks
+  first while a workout is in progress) and the calculators card. The
+  week strip, this week's sets and steps are Progress's. Next workout: while a workout is in progress (`ActiveWorkoutState.inProgress`,
   so not an empty one) the card is that workout, labelled "Workout in
   progress", with "Resume workout", which opens it like the workout bar
   and never starts another. A workout stores no day name, so its program
@@ -2914,47 +2935,46 @@ the feature you are about to touch, and keep it true when you change it.
   premium status of a premium copy is unknown the card shows only its
   title, as the Programs tab waits, so a missed day never shows as a
   planned one with Start. A locked premium copy shows its day, locked,
-  with Start opening the paywall. Without a program, or once it finished: the
-  catalogue, the generator and "Start empty workout" (the app never calls
-  it "free": users read that as "at no cost"). Week strip: the
-  calendar's `calendarEntries` and marks over the current week from the
-  app's first weekday (see Week start), drawn by `MonthGrid` as one week; the strip and
-  every day open the calendar, which has no route for a given date. No
-  quick actions besides a calculators card (a chip per calculator) and,
-  on a rest day, the rest-day card's suggestions (owner's picks): an empty
-  workout starts from the Programs tab, cardio is logged under Progress →
-  Cardio, a past workout is added on the calendar. Volume
-  card: `WatchWeeklyVolume` with one week, never the trend, whatever the
-  user's premium: the trained muscles counted in, below and above the
-  band and the four most trained as band bars with the week's total
-  (owner's pick); it opens Weekly volume,
-  and has no model. Steps card: `GetTodaySteps` against
-  `settings.stepGoal` (read again when the goal changes), opening the
-  Steps page. Today only checks access and never asks the system: not
-  asked here yet, refused or Health Connect missing show one line, "See
-  your steps", that opens the Steps page to set it up; a device without a
-  health store shows no card. Cards show their title and shimmering grey
-  bars while loading (owner's pick, Çelişkiler, 2026-11-15); no spinner on
-  the home tab; cubits move to
-  the new day and week when the app resumes, and the week strip also when
-  a snapshot arrives after the week ended; steps are read again on
-  resume.
+  with Start opening the paywall. Without a program, or once it finished:
+  one way, See your programs (saved programs, none finished) or See
+  ready-made programs; the generator and the program list are on Programs
+  (P6), the empty workout is Today's row (the app never calls it "free":
+  users read that as "at no cost"). The today and done-today it needs come
+  from the week's `TodayWeekCubit` (the one Progress's Calendar card
+  shows). No quick actions besides the calculators card (a chip per
+  calculator; the calculator pages are routes of the Today tab,
+  `/today/calculators/...`, the Plates calculator's bar and plates page
+  too) and, on a rest day, the rest-day card's suggestions (owner's
+  picks): cardio is logged under Progress → Cardio, a past workout is
+  added on the calendar. The rest-day card's walk reads `GetTodaySteps`
+  against `settings.stepGoal` (read again when the goal changes and on
+  resume) and only checks access, never asks the system. The workout card
+  shows its title and shimmering grey bars while loading (owner's pick,
+  Çelişkiler, 2026-11-15); no spinner on the home tab; cubits move to the
+  new day when the app resumes.
 - **Progress tab** (UX pass, 2026-11-13; screen step 2026-11-15): one
   card per area, each opening its page from anywhere on the card. Body:
   the latest weight, the change since the previous weigh-in, the newest
   body fat, the weights of the last 12 weeks as a line, Log weight and
   Measurement day; the measurement-day prompt under it when due.
-  Calendar: this week's strip (the one Today shows), always, with the
-  week's dates as its detail; no month count. Weekly volume: this week's
-  sets against the active program's planned weekly sets (every day of a
-  week once, `ProgramListState.plannedWeeklySets`) as "96 / 120 sets" and
-  a bar, then how many trained muscles are in, below and above the band;
-  without a running program "96 sets" and no bar. Strength: the most
-  recently trained exercise with an estimated 1RM, its latest workout's
-  best e1RM and the change since the first e1RM of the last 12 weeks ("+3
-  in 8 weeks", none with one there); the card opens the strength list.
-  Cardio: this week's sessions, distance and minutes. Steps: today
-  against the goal; no card without a health store. Each card reads
+  Calendar: this week's strip (the app's only one, Tabs P1), always, with
+  the week's dates as its detail; no month count; the strip and every day
+  open the calendar. Weekly volume (the app's only this-week sets, P2):
+  `WatchWeeklyVolume` with one week, this week's sets against the active
+  program's planned weekly sets (every day of a week once,
+  `ProgramListState.plannedWeeklySets`) as "96 / 120 sets" and a bar, the
+  four most trained muscles as VolumeBands, then how many trained muscles
+  are in, below and above the band; without a running program "96 sets"
+  and no bar. Strength (a StatTile, S8): the most recently trained
+  exercise with an estimated 1RM as its detail ("Bench Press e1RM"), its
+  latest workout's best e1RM as the figure with the unit apart, and the
+  change since the first e1RM of the last 12 weeks as the caption ("+3 in
+  8 weeks"; "First estimate" with one there); the card opens the strength
+  list. Cardio (a StatTile, S8): this week's distance as the figure, "2
+  sessions · 74 min" as the caption; with no distance this week the
+  minutes are the figure and the sessions the caption. Steps (the app's
+  only steps card, P5): today against the goal; not set up shows "See
+  your steps"; no card without a health store. Each card reads
   through its own cubit and shows its own failure, so one area failing
   leaves the others.
 - **Calendar**: Progress → Calendar is one scrolling page (see Design ›

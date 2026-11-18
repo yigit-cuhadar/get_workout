@@ -15,7 +15,7 @@ import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/domain/program_schedule.dart';
 import '../../programs/domain/program_usecases.dart';
-import '../../programs/presentation/missed_day_prompt.dart';
+import '../../programs/presentation/resolve_missed_day.dart';
 import '../../programs/presentation/program_list_cubit.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/presentation/first_weekday.dart';

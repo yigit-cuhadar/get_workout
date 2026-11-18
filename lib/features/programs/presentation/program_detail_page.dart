@@ -15,7 +15,7 @@ import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
 import '../domain/program_schedule.dart';
 import '../domain/program_usecases.dart';
-import 'missed_day_prompt.dart';
+import 'resolve_missed_day.dart';
 import 'premium_prompt.dart';
 import 'program_day_section.dart';
 import 'program_detail_cubit.dart';

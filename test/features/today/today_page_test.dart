@@ -18,10 +18,8 @@ import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/steps/domain/steps.dart';
 import 'package:get_workout/features/today/presentation/today_page.dart';
 import 'package:get_workout/features/today/presentation/today_steps_cubit.dart';
-import 'package:get_workout/features/today/presentation/today_volume_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_week_cubit.dart';
 import 'package:get_workout/features/today/presentation/widgets/rest_day_card.dart';
-import 'package:get_workout/features/volume/domain/weekly_volume.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
@@ -31,9 +29,6 @@ import 'package:mocktail/mocktail.dart';
 import '../programs/fixtures.dart';
 
 class _WeekCubit extends MockCubit<TodayWeekState> implements TodayWeekCubit {}
-
-class _VolumeCubit extends MockCubit<TodayVolumeState>
-    implements TodayVolumeCubit {}
 
 class _StepsCubit extends MockCubit<TodayStepsState>
     implements TodayStepsCubit {}
@@ -74,7 +69,6 @@ void main() {
   setUpAll(() => registerFallbackValue(MissedDayChoice.skip));
 
   late _WeekCubit week;
-  late _VolumeCubit volume;
   late _StepsCubit steps;
   late _ProgramListCubit programs;
   late _WorkoutCubit workout;
@@ -111,18 +105,10 @@ void main() {
 
   setUp(() {
     week = _WeekCubit();
-    volume = _VolumeCubit();
     steps = _StepsCubit();
     programs = _ProgramListCubit();
     workout = _WorkoutCubit();
     when(() => week.state).thenReturn(weekOf());
-    when(() => volume.state).thenReturn(
-      TodayVolumeState(
-        weekStart: monday,
-        status: TodayVolumeStatus.ready,
-        week: WeekVolume(monday, const []),
-      ),
-    );
     when(() => steps.state).thenReturn(
       const TodayStepsState(
         status: TodayStepsStatus.ready,
@@ -136,7 +122,6 @@ void main() {
         .thenReturn(const ActiveWorkoutState(status: WorkoutStatus.none));
     sl
       ..registerFactoryParam<TodayWeekCubit, int, void>((_, _) => week)
-      ..registerFactoryParam<TodayVolumeCubit, int, void>((_, _) => volume)
       ..registerFactory<TodayStepsCubit>(() => steps)
       ..registerSingleton<ProgramListCubit>(programs);
   });
@@ -202,17 +187,20 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('a training day offers its day, the week\'s sets, the '
-      'calculators and the steps', (tester) async {
+  testWidgets('a training day offers its day, an empty workout and the '
+      'calculators; the week, its sets and steps are on Progress', (
+    tester,
+  ) async {
     await pumpToday(tester);
 
     expect(find.text('Start Lower'), findsOneWidget);
     expect(find.text('Fri, Nov 13'), findsOneWidget);
-    expect(find.text('0 total'), findsOneWidget);
-    expect(find.text('No sets yet this week.'), findsOneWidget);
+    expect(find.text('Start empty workout'), findsOneWidget);
+    expect(find.text('Pick exercises as you go'), findsOneWidget);
     expect(find.widgetWithText(ForgeChip, 'Calories'), findsOneWidget);
-    expect(find.text('6,240'), findsOneWidget);
-    expect(find.text('3,760 to go'), findsOneWidget);
+    expect(find.text('This week'), findsNothing);
+    expect(find.text('Sets this week'), findsNothing);
+    expect(find.text('3,760 to go'), findsNothing);
 
     await tester.tap(find.text('Upper Lower'));
     await tester.pumpAndSettle();
@@ -231,6 +219,8 @@ void main() {
     expect(find.text('3,760 steps to your goal'), findsOneWidget);
     expect(find.text('Start Lower early'), findsOneWidget);
     expect(find.text('Start Lower'), findsNothing);
+    // Once, as Today's own row.
+    expect(find.text('Start empty workout'), findsOneWidget);
 
     await tester.tap(find.text('Log cardio'));
     await tester.pumpAndSettle();
@@ -357,7 +347,8 @@ void main() {
     expect(find.text('Upper Lower · Lower'), findsNothing);
   });
 
-  testWidgets('without a program, three ways to train', (tester) async {
+  testWidgets('without a program, the ready-made ones and an empty workout; '
+      'the generator is on Programs', (tester) async {
     when(() => programs.state).thenReturn(
       const ProgramListState(status: ProgramListStatus.ready, premium: false),
     );
@@ -365,7 +356,7 @@ void main() {
 
     expect(find.text('Pick your first program'), findsOneWidget);
     expect(find.text('See ready-made programs'), findsOneWidget);
-    expect(find.text('Generate a program'), findsOneWidget);
+    expect(find.text('Generate a program'), findsNothing);
     expect(find.text('Start empty workout'), findsOneWidget);
 
     await tester.tap(find.text('See ready-made programs'));
@@ -392,7 +383,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Generate a program'), findsOneWidget);
+    expect(find.text('Generate a program'), findsNothing);
 
     await tester.tap(find.text('See your programs'));
     await tester.pumpAndSettle();
@@ -413,19 +404,17 @@ void main() {
     );
   });
 
-  testWidgets('each card loads on its own; calculators need nothing', (
+  testWidgets('the workout card loads on its own; the rest need nothing', (
     tester,
   ) async {
     when(() => week.state).thenReturn(weekOf(status: TodayWeekStatus.loading));
-    when(() => volume.state).thenReturn(TodayVolumeState(weekStart: monday));
     when(() => steps.state).thenReturn(const TodayStepsState());
     when(() => programs.state).thenReturn(const ProgramListState());
     await pumpToday(tester);
 
     expect(find.byType(SkeletonBar), findsWidgets);
     expect(find.text('Next workout'), findsOneWidget);
-    expect(find.text('Sets this week'), findsOneWidget);
+    expect(find.text('Start empty workout'), findsOneWidget);
     expect(find.widgetWithText(ForgeChip, 'Plates'), findsOneWidget);
-    expect(find.text('Steps'), findsOneWidget);
   });
 }

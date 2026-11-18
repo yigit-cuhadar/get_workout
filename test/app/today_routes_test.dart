@@ -6,7 +6,6 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_workout/app/router.dart';
 import 'package:get_workout/app/theme.dart';
-import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
@@ -18,9 +17,7 @@ import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/steps/domain/steps.dart';
 import 'package:get_workout/features/today/presentation/today_page.dart';
 import 'package:get_workout/features/today/presentation/today_steps_cubit.dart';
-import 'package:get_workout/features/today/presentation/today_volume_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_week_cubit.dart';
-import 'package:get_workout/features/volume/domain/weekly_volume.dart';
 import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -36,9 +33,6 @@ class MockProgramListCubit extends MockCubit<ProgramListState>
 
 class MockWeekCubit extends MockCubit<TodayWeekState>
     implements TodayWeekCubit {}
-
-class MockVolumeCubit extends MockCubit<TodayVolumeState>
-    implements TodayVolumeCubit {}
 
 class MockWorkoutCubit extends MockCubit<ActiveWorkoutState>
     implements ActiveWorkoutCubit {}
@@ -59,14 +53,12 @@ CalendarDate d(int year, int month, int day) => CalendarDate(year, month, day);
 /// Where Today's links lead; each a stub saying where it is, so this
 /// tests Today's links, not the pages behind them.
 const _targets = [
-  Routes.calendar,
-  Routes.volume,
+  Routes.calculators,
   Routes.catalogue,
   Routes.programGenerator,
   '/programs/p1',
   Routes.workout,
   Routes.paywall,
-  Routes.steps,
 ];
 
 /// Two seconds of frames, enough for a route transition or a snack bar
@@ -113,24 +105,6 @@ void main() {
     days: [for (var i = 0; i < 7; i++) sunday.addDays(i)],
     status: TodayWeekStatus.ready,
   );
-  // Quads 12 sets, glutes 6 as secondary.
-  final volume = TodayVolumeState(
-    weekStart: sunday,
-    status: TodayVolumeStatus.ready,
-    week: volumeWeeks(
-      [
-        workoutOf('w1', [
-          exercise('squat', List.filled(12, lift(100, 5))),
-        ], startedAt: DateTime(2026, 11, 10, 18)),
-      ],
-      first: sunday,
-      count: 1,
-      muscles: {
-        'squat': (main: const [Muscle.quads], secondary: const [Muscle.glute]),
-      },
-    ).single,
-  );
-
   late MockProgramListCubit list;
   late MockWorkoutCubit workout;
   late MockStepsCubit steps;
@@ -144,7 +118,9 @@ void main() {
   Future<void> start(
     WidgetTester tester, {
     required ProgramListState programs,
-    TodayVolumeState? volumeState,
+    ActiveWorkoutState workoutState = const ActiveWorkoutState(
+      status: WorkoutStatus.none,
+    ),
     TodayStepsState stepsState = const TodayStepsState(
       status: TodayStepsStatus.ready,
       progress: StepGoalProgress(steps: 4000, goal: 10000),
@@ -155,8 +131,7 @@ void main() {
     list = MockProgramListCubit();
     when(() => list.state).thenReturn(programs);
     workout = MockWorkoutCubit();
-    when(() => workout.state)
-        .thenReturn(const ActiveWorkoutState(status: WorkoutStatus.none));
+    when(() => workout.state).thenReturn(workoutState);
     when(() => workout.access(any())).thenReturn(access);
     when(() => workout.startFree(any())).thenReturn(true);
     when(
@@ -182,11 +157,6 @@ void main() {
         expect(firstWeekday, DateTime.sunday);
         final cubit = MockWeekCubit();
         when(() => cubit.state).thenReturn(week);
-        return cubit;
-      })
-      ..registerFactoryParam<TodayVolumeCubit, int, void>((_, _) {
-        final cubit = MockVolumeCubit();
-        when(() => cubit.state).thenReturn(volumeState ?? volume);
         return cubit;
       })
       ..registerFactory<TodayStepsCubit>(() => steps);
@@ -295,7 +265,7 @@ void main() {
       expectAt('/programs/p1');
     });
 
-    testWidgets('a missed day is resolved like in the Programs tab', (
+    testWidgets('a missed day is answered here, not on Programs', (
       tester,
     ) async {
       await start(tester, programs: missed);
@@ -347,88 +317,61 @@ void main() {
     });
   });
 
-  testWidgets('the week opens the calendar', (tester) async {
-    await start(tester, programs: planned);
-
-    await tap(tester, find.text('This week'));
-
-    expectAt(Routes.calendar);
-  });
-
-  testWidgets('a day of the week opens the calendar', (tester) async {
-    await start(tester, programs: planned);
-
-    await tap(tester, find.text('10'));
-
-    expectAt(Routes.calendar);
-  });
-
-  testWidgets('the volume card sums up the week and opens weekly volume', (
+  testWidgets('every day offers an empty workout under the workout card', (
     tester,
   ) async {
     await start(tester, programs: planned);
 
-    await reveal(tester, find.text('1 in the band · 1 below · 0 above'));
-    expect(find.text('Quads'), findsOneWidget);
-    await tap(tester, find.text('Sets this week'));
+    expect(find.text('Start Lower'), findsOneWidget);
+    await tap(tester, find.text('Start empty workout'));
 
-    expectAt(Routes.volume);
+    verify(() => workout.startFree('Workout')).called(1);
+    expectAt(Routes.workout);
   });
 
-  testWidgets('a volume card that failed leaves the next workout', (
+  testWidgets('with a workout in progress the empty workout asks first', (
     tester,
   ) async {
     await start(
       tester,
       programs: planned,
-      volumeState: TodayVolumeState(
-        weekStart: sunday,
-        status: TodayVolumeStatus.failure,
-        failure: const NetworkFailure('off'),
+      workoutState: ActiveWorkoutState(
+        status: WorkoutStatus.active,
+        workout: workoutOf('w1', [
+          exercise('squat', [lift(100, 5)]),
+        ]),
       ),
     );
 
-    expect(find.text('Start Lower'), findsOneWidget);
-    await reveal(tester, find.text("Couldn't load your workouts"));
+    await tap(tester, find.text('Start empty workout'));
+    expect(find.text('A workout is in progress'), findsOneWidget);
+    await tap(tester, find.text('Resume'));
+
+    verifyNever(() => workout.startFree(any()));
+    expectAt(Routes.workout);
   });
 
-  group('steps', () {
-    testWidgets('today against the goal, opening the Steps page', (
+  testWidgets('the calculators card opens the calculators', (tester) async {
+    await start(tester, programs: planned);
+
+    await tap(tester, find.text('Calculators'));
+
+    expectAt(Routes.calculators);
+  });
+
+  testWidgets('a rest day reads the steps for its walk', (tester) async {
+    await start(
       tester,
-    ) async {
-      await start(tester, programs: planned);
-      verify(() => steps.load(10000)).called(1);
+      programs: ProgramListState(
+        status: ProgramListStatus.ready,
+        programs: [upperLower],
+        active: active,
+        nextDate: d(2026, 11, 16),
+        premium: false,
+      ),
+    );
+    verify(() => steps.load(10000)).called(1);
 
-      await reveal(tester, find.text('4,000'));
-      expect(find.text('6,000 to go'), findsOneWidget);
-      await tap(tester, find.text('Steps'));
-
-      expectAt(Routes.steps);
-    });
-
-    testWidgets('not set up: an entry to the Steps page', (tester) async {
-      await start(
-        tester,
-        programs: planned,
-        stepsState: const TodayStepsState(status: TodayStepsStatus.setUp),
-      );
-
-      await tap(tester, find.text('See your steps'));
-
-      expectAt(Routes.steps);
-    });
-
-    testWidgets('no card without a health store', (tester) async {
-      await start(
-        tester,
-        programs: planned,
-        stepsState: const TodayStepsState(status: TodayStepsStatus.unavailable),
-      );
-      await reveal(tester, find.text('Sets this week'));
-      await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
-      await settle(tester);
-
-      expect(find.text('Steps'), findsNothing);
-    });
+    expect(find.text('6,000 steps to your goal'), findsOneWidget);
   });
 }
