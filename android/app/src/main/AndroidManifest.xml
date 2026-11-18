@@ -33,7 +33,7 @@
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"
         tools:node="remove"/>
     <application
-        android:label="Get Workout"
+        android:label="GetWorkout"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:dataExtractionRules="@xml/data_extraction_rules"
