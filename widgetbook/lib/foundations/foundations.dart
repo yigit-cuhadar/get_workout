@@ -36,6 +36,8 @@ class Foundations extends StatelessWidget {
       'success': c.success,
       'info': c.info,
       'danger': c.danger,
+      'heat-low': band.heatLow,
+      'heat-high': band.heatHigh,
       'band-below': band.bandBelow,
       'band-in': band.bandIn,
       'band-over': band.bandOver,

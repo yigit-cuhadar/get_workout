@@ -39,7 +39,7 @@ Widget muscleHeatPair(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: 'Ramp legend', type: MuscleHeatLegend)
+@widgetbook.UseCase(name: 'Scale legend', type: MuscleHeatLegend)
 Widget muscleHeatLegend(BuildContext context) =>
     const Padding(padding: EdgeInsets.all(Gap.md), child: MuscleHeatLegend());
 

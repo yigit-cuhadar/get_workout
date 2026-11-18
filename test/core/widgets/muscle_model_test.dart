@@ -58,27 +58,6 @@ void main() {
     expect(find.byType(ForgeSegmentedControl<bool>), findsNothing);
   });
 
-  testWidgets('outlined muscles are ringed in danger', (tester) async {
-    await pumpComponent(
-      tester,
-      framed(
-        MuscleModel(
-          model: body,
-          onOpen: (_) {},
-          semanticLabel: 'Body',
-          outlined: const {Muscle.abdominal},
-        ),
-      ),
-    );
-
-    final viewer = tester.widget<ModelViewer>(find.byType(ModelViewer));
-    final danger = ForgeStyle.of(tester.element(find.byType(ModelViewer)))
-        .colors
-        .danger;
-    expect(viewer.outlinedParts, {'abdominal'});
-    expect(viewer.outlineColor, danger);
-  });
-
   testWidgets('a tap on a muscle opens it', (tester) async {
     final opened = <Muscle>[];
     await pumpComponent(
@@ -127,29 +106,21 @@ void main() {
     expect(opened, [Muscle.pec]);
   });
 
-  testWidgets('the hint waits at the bottom until a slide', (tester) async {
+  testWidgets('the bottom bar shows only while sliding', (tester) async {
     await pumpComponent(
       tester,
-      framed(
-        MuscleModel(
-          model: body,
-          onOpen: (_) {},
-          semanticLabel: 'Body',
-          hint: 'Tap or slide across a muscle',
-        ),
-      ),
+      framed(MuscleModel(model: body, onOpen: (_) {}, semanticLabel: 'Body')),
     );
     final viewer = tester.widget<ModelViewer>(find.byType(ModelViewer));
-    expect(find.text('Tap or slide across a muscle'), findsOneWidget);
+    expect(find.text('release to open'), findsNothing);
 
     viewer.onScrub!('pec_right');
     await tester.pump();
-    expect(find.text('Tap or slide across a muscle'), findsNothing);
     expect(find.text('release to open'), findsOneWidget);
 
     viewer.onScrubEnd!(null);
     await tester.pump();
-    expect(find.text('Tap or slide across a muscle'), findsOneWidget);
+    expect(find.text('release to open'), findsNothing);
   });
 
   testWidgets('an interrupted slide opens nothing', (tester) async {

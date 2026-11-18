@@ -66,6 +66,10 @@ enum Tip {
 
   /// Once a workout has automatic warm-ups: they can be turned off.
   autoWarmups,
+
+  /// Under the Exercises tab's body model: tapping or sliding opens a
+  /// muscle's exercises.
+  muscleModel,
 }
 
 const kgPerLb = 0.45359237;

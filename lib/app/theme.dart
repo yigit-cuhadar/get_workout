@@ -7,13 +7,17 @@ enum AppPreset {
   slate(
     ForgePreset.slate,
     light: GwColors.light(
-      bandBelow: Color(0xFF9AA3B2),
-      bandIn: Color(0xFF222B38),
+      heatLow: Color(0xFFD3E3DA),
+      heatHigh: Color(0xFF3F7D62),
+      bandBelow: Color(0xFFB9D3C4),
+      bandIn: Color(0xFF3F7D62),
       bandOver: Color(0xFFA6473C),
     ),
     dark: GwColors.dark(
-      bandBelow: Color(0xFF6B7689),
-      bandIn: Color(0xFFEEF1F5),
+      heatLow: Color(0xFF3A4F47),
+      heatHigh: Color(0xFF79B597),
+      bandBelow: Color(0xFF3F5A4E),
+      bandIn: Color(0xFF79B597),
       bandOver: Color(0xFFE0907F),
     ),
   );
@@ -35,11 +39,15 @@ enum AppPreset {
       theme.copyWith(extensions: [...theme.extensions.values, colors]);
 }
 
-/// The app's own colour roles: the weekly volume band (below 10 sets,
-/// 10–20, above 20) and the plates, each in its muted competition colour.
+/// The app's own colour roles: the muscle heat scale (weekly sets on the
+/// body model, heat-low toward 0 to heat-high at 20 and over), the weekly
+/// volume band (below 10 sets, 10–20, above 20) and the plates, each in
+/// its muted competition colour.
 /// Read with [GwColors.of].
 class GwColors extends ThemeExtension<GwColors> {
   const GwColors({
+    required this.heatLow,
+    required this.heatHigh,
     required this.bandBelow,
     required this.bandIn,
     required this.bandOver,
@@ -53,10 +61,14 @@ class GwColors extends ThemeExtension<GwColors> {
   });
 
   const GwColors.light({
+    required Color heatLow,
+    required Color heatHigh,
     required Color bandBelow,
     required Color bandIn,
     required Color bandOver,
   }) : this(
+         heatLow: heatLow,
+         heatHigh: heatHigh,
          bandBelow: bandBelow,
          bandIn: bandIn,
          bandOver: bandOver,
@@ -70,10 +82,14 @@ class GwColors extends ThemeExtension<GwColors> {
        );
 
   const GwColors.dark({
+    required Color heatLow,
+    required Color heatHigh,
     required Color bandBelow,
     required Color bandIn,
     required Color bandOver,
   }) : this(
+         heatLow: heatLow,
+         heatHigh: heatHigh,
          bandBelow: bandBelow,
          bandIn: bandIn,
          bandOver: bandOver,
@@ -86,6 +102,8 @@ class GwColors extends ThemeExtension<GwColors> {
          plate1p25: const Color(0xFF6B7689),
        );
 
+  final Color heatLow;
+  final Color heatHigh;
   final Color bandBelow;
   final Color bandIn;
   final Color bandOver;
@@ -106,6 +124,8 @@ class GwColors extends ThemeExtension<GwColors> {
 
   @override
   GwColors copyWith({
+    Color? heatLow,
+    Color? heatHigh,
     Color? bandBelow,
     Color? bandIn,
     Color? bandOver,
@@ -117,6 +137,8 @@ class GwColors extends ThemeExtension<GwColors> {
     Color? plate2p5,
     Color? plate1p25,
   }) => GwColors(
+    heatLow: heatLow ?? this.heatLow,
+    heatHigh: heatHigh ?? this.heatHigh,
     bandBelow: bandBelow ?? this.bandBelow,
     bandIn: bandIn ?? this.bandIn,
     bandOver: bandOver ?? this.bandOver,
@@ -134,6 +156,8 @@ class GwColors extends ThemeExtension<GwColors> {
     if (other == null) return this;
     Color mix(Color a, Color b) => Color.lerp(a, b, t)!;
     return GwColors(
+      heatLow: mix(heatLow, other.heatLow),
+      heatHigh: mix(heatHigh, other.heatHigh),
       bandBelow: mix(bandBelow, other.bandBelow),
       bandIn: mix(bandIn, other.bandIn),
       bandOver: mix(bandOver, other.bandOver),

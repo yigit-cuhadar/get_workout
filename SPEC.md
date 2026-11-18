@@ -758,6 +758,20 @@ Decisions (the canvases they were drawn on are deleted):
   tap anywhere on the Programs tab's active-program band (not its ⋯ or
   day rows) opens the program's page, with no chevron or other mark
   (supersedes "the band opens nothing", 2026-11-15).
+- Renkler · 6 (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/PZUvzt8A5QH2MKSRgeyCxx): R1 A, R2 A, R3 B,
+  R4 A, R5 shared scale with the model's top end green. The muscle heat
+  map and its legend run from `heat-low` to `heat-high` (Slate light
+  #D3E3DA → #3F7D62, dark #3A4F47 → #79B597) by weekly sets, full at 20;
+  a muscle over 20 stays full green, with no danger outline and no red on
+  the model or legend (R1 A, R2 A, R5). Volume bars everywhere (Weekly
+  volume, Weekly sets, a program's weekly sets) fill `band-below` /
+  `band-in` / `band-over`: light #B9D3C4 / #3F7D62 / #A6473C, dark
+  #3F5A4E / #79B597 / #E0907F (R4 A). Model, legend and bars share the
+  band's numbers, 10 and 20 sets (R5). The Exercises tab's "Tap or slide
+  across a muscle" hint is a TipBanner under the model card, gone for
+  good after "Got it" (R3 B). Supersedes the accent ramp and danger
+  outline above.
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
@@ -2022,7 +2036,7 @@ the feature you are about to touch, and keep it true when you change it.
   `profile_questions.dart`).
 - **Birth year**: a plausibility range (age 13-100), not an age gate. An
   implausible year is only not accepted as an answer; nothing is blocked.
-- **First-use tips**: three inline banners (Material `MaterialBanner`,
+- **First-use tips**: four inline banners (Material `MaterialBanner`,
   never modal), each with "Got it", none until the user's settings have
   arrived: effort, inside the effort question the first time, in the
   rest strip or the bar (under the steps, scrolling with them, so the
@@ -2030,13 +2044,15 @@ the feature you are about to touch, and keep it true when you change it.
   effort is picked; set types, at the top of the add-set sheet, until a
   type is picked there; automatic warm-ups, at the top of the workout in
   progress once warm-ups were added to it automatically
-  (`warmupsAdded`), until the setting is changed. Dismissing or using the
+  (`warmupsAdded`), until the setting is changed; the body model, under
+  the Exercises tab's model once it has loaded, until it is dismissed or a
+  muscle is opened from the model. Dismissing or using the
   thing marks it seen for good, in `settings.seenTips` (codes `effort`,
-  `setTypes`, `autoWarmups`; the app has no local flag store, and this
+  `setTypes`, `autoWarmups`, `muscleModel`; the app has no local flag store, and this
   follows the user across devices). Tips are only ever added to that list,
   field by field (`arrayUnion`), never written with the other settings, so
   two devices and codes from newer versions are kept. Which tip is due is
-  pure logic (`workout_tips.dart`).
+  pure logic (`workout_tips.dart`, `exercise_tips.dart`).
 - **Explanations for beginners**: each set type has a one-line description
   under its name in the add-set sheet and the bubble's long-press menu
   (Normal "A regular working set.", Warm-up "A lighter set to get ready.
@@ -3061,9 +3077,10 @@ the feature you are about to touch, and keep it true when you change it.
   ones (custom exercises included), else, for a retired or deleted one,
   those stored with the workout. Each muscle is judged against 10-20 sets
   whatever the user's level: below, within (both ends inside) or above, in
-  the band colours on the bars; the model is painted by weekly sets on one
-  accent ramp with a danger outline over 20 (owner's pick); a muscle with no
-  sets keeps the body's colour. Tapping a muscle
+  the band colours on the bars; the model is painted by weekly sets on the
+  heat scale (heat-low to heat-high at 20, staying heat-high above it, no
+  outline; Design › Renkler · 6); a muscle with no sets keeps the body's
+  colour. Tapping a muscle
   lists the exercises and workouts that gave it sets. The 12-week trend
   (the week shown and the 11 before it) is Premium, a locked row opening
   the paywall otherwise. Only Premium reads those 12 weeks (again when
