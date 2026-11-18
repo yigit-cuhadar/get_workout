@@ -72,7 +72,7 @@
 		<string>remote-notification</string>
 	</array>
 	<key>NSHealthShareUsageDescription</key>
-	<string>GetWorkout reads your step count to show your daily steps against your goal. It never stores or shares them.</string>
+	<string>GetWorkout reads your steps, workouts and heart rate from Apple Health to show your activity. It never writes to Apple Health.</string>
 	<key>FlutterDeepLinkingEnabled</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
