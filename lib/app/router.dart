@@ -51,6 +51,8 @@ import '../features/programs/presentation/program_builder_page.dart';
 import '../features/programs/presentation/program_detail_page.dart';
 import '../features/programs/presentation/programs_page.dart';
 import '../features/progress/presentation/progress_page.dart';
+import '../features/settings/presentation/gesture_lab/gesture_lab_page.dart';
+import '../features/settings/presentation/gesture_lab/scroll_lab_page.dart';
 import '../features/settings/presentation/warmup_settings_page.dart';
 import '../features/steps/presentation/steps_page.dart';
 import '../features/strength/presentation/exercise_strength_page.dart';
@@ -249,6 +251,10 @@ abstract final class Routes {
   static String profileQuestion(ProfileField field) =>
       '$profileDetails/${field.name}';
 
+  /// Developer tooling, never in a release build.
+  static const gestureLab = '$profile/gesture-lab';
+  static const gestureLabScroll = '$gestureLab/scroll';
+
   /// The calculators, a tool of the Today tab.
   static const calculators = '$today/calculators';
   static const calories = '$calculators/calories';
@@ -343,14 +349,14 @@ String? selfEndedDestination(List<String> open) =>
 /// an account), so the gates are the splash while the session and then the
 /// user's profile resolve, a retry screen when the guest sign-in failed, and
 /// onboarding until the profile records it as completed.
-/// [profileDebugSection] ends the Profile tab in debug builds. While
+/// [profileDevTools] end the Profile tab outside release builds. While
 /// [deletionUnderway], nobody is moved: the deleted profile must not open
 /// onboarding before the user is signed out.
 GoRouter buildRouter(
   AuthCubit auth,
   ProfileCubit profile, {
   ValueListenable<bool>? deletionUnderway,
-  Widget? profileDebugSection,
+  List<Widget> profileDevTools = const [],
 }) {
   // Who onboarding was last shown to.
   String? onboardingUid;
@@ -742,7 +748,7 @@ GoRouter buildRouter(
           ),
           _tab(
             Routes.profile,
-            ProfilePage(debugSection: profileDebugSection),
+            ProfilePage(devTools: profileDevTools),
             routes: [
               GoRoute(
                 path: 'account',
@@ -772,6 +778,12 @@ GoRouter buildRouter(
                 path: 'warmups',
                 builder: (_, _) => const WarmupSettingsPage(),
               ),
+              if (!kReleaseMode)
+                GoRoute(
+                  path: 'gesture-lab',
+                  builder: (_, _) => const GestureLabPage(),
+                  routes: [_page('scroll', const ScrollLabPage())],
+                ),
               GoRoute(
                 path: 'details',
                 builder: (_, _) => const ProfileDetailsPage(),
