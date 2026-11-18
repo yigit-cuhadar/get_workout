@@ -667,6 +667,33 @@ Decisions (the canvases they were drawn on are deleted):
   with Apple linked confirms "Delete everything?" with "Continue with
   Apple" in place of Delete ("…Sign in with Apple to confirm."), which
   revokes the app's Apple sign-in before deleting (YG5 B).
+- Screen review (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/LTkRmeAmV7YSz6MdZJeS66): a workout open 4 h
+  ends itself at its last set with a notification, and its summary gets an
+  Edit button at the bottom right (K1 B, the button to be drawn); the
+  number keyboard has a Next/Done bar and one tap moves weight→reps
+  keeping the value (K2 A+B); notification permission is asked when Start
+  is tapped on the first workout (K3 B); the muscle model fills its box,
+  worked muscles in accent tones (K4 A); in dark mode the featured card
+  keeps its fill with a muted line-strong border (K5 B); the app is named
+  "GetWorkout" everywhere (K6 A); the Live Activity's names end with "…"
+  while the set count and time stay whole (K7 A); analytics consent is a
+  full-page step, also in onboarding, its buttons equal (K8, to be drawn);
+  analytics and crash reports stay asked (K9 A); the target-weight step
+  has its own title and a "Now 70 kg" marker on the ruler (K10 A);
+  equipment is a bottom-anchored radio list like the goal question, no
+  images, sub-equipment only in its details (K11, K12; to be drawn);
+  onboarding's single-choice questions keep radio rows and Continue (K13
+  withdrawn); Today without an active program but with saved programs
+  says "Choose a program to start" with "See your programs" (K14 B); an
+  Apple user's Profile header reads "Apple account" / "Signed in with
+  Apple" with a person icon (K15 A); a trend with one entry is hidden
+  until the second (K16 B); holding a bar shows a tooltip above it, others
+  fade, dragging moves it (K17 A); with no rest running the effort
+  question stays until answered, Settings can turn the question off, and
+  every setting's default option is labelled "(default)", e.g. "By feel
+  (default)" (K18 B); onboarding skips the reminder step when
+  notifications are allowed and leaves reminders off (K19 A).
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
