@@ -232,6 +232,9 @@ void main() {
     await tester.pump();
   }
 
+  ForgePalette colors(WidgetTester tester) =>
+      ForgeStyle.of(tester.element(find.byType(StatTile).first)).colors;
+
   testWidgets('every area as its card, as the board draws them', (
     tester,
   ) async {
@@ -252,7 +255,11 @@ void main() {
     // Strength and Cardio as StatTiles: the figure, its unit apart.
     expect(find.text('Bench Press e1RM'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '104'), findsOneWidget);
-    expect(find.text('+3 in 8 weeks'), findsOneWidget);
+    // A stronger lift is good: the change line in success.
+    expect(
+      tester.widget<Text>(find.text('+3 in 8 weeks')).style?.color,
+      colors(tester).success,
+    );
     expect(find.text('this week'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '47.2'), findsOneWidget);
     expect(find.text('2 sessions · 148 min'), findsOneWidget);
@@ -384,7 +391,10 @@ void main() {
       ),
     );
     await pumpProgress(tester);
-    expect(find.text('−1 in 8 weeks'), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.text('−1 in 8 weeks')).style?.color,
+      colors(tester).danger,
+    );
 
     when(() => strength.state).thenReturn(
       const ProgressStrengthState(

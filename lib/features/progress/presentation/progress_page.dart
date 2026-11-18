@@ -407,12 +407,19 @@ class _StrengthCard extends StatelessWidget {
         onTap: open,
         figure: l10n.estimatedWeightNumber(highlight.e1rmKg, unit),
         unit: l10n.weightUnitLabel(unit),
-        caption: switch (highlight.change) {
+        caption: highlight.change == null ? l10n.progressStrengthFirst : null,
+        change: switch (highlight.change) {
           final change? => l10n.progressStrengthChange(
             l10n.bodyWeightChangeNumber(change.kg, unit),
             l10n.progressWeeks(change.weeks),
           ),
-          null => l10n.progressStrengthFirst,
+          null => null,
+        },
+        // A stronger lift is good; no change has no colour.
+        changeIsGood: switch (highlight.change?.kg) {
+          final kg? when kg > 0 => true,
+          final kg? when kg < 0 => false,
+          _ => null,
         },
       ),
     };
