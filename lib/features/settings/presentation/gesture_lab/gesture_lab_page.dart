@@ -90,12 +90,12 @@ enum BackOption {
   blocked(
     'E',
     'Unsaved changes, swipe blocked',
-    'The app today: PopScope(canPop: false) turns the swipe off',
+    'PopScope(canPop: false) turns the swipe off',
   ),
   edgeConfirm(
     'F',
     'Unsaved changes, edge swipe asks',
-    'Swipe from the left edge; letting go asks to discard',
+    'The app today: swipe from the left edge; letting go asks to discard',
   ),
   fullWidthConfirm(
     'G',

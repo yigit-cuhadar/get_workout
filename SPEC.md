@@ -1870,6 +1870,22 @@ the feature you are about to touch, and keep it true when you change it.
   changes (an edit left as it opened, a page that saved), other tabs'
   stacks, pushes and tab switches are left alone. Back and the guard share
   one prompt per page, so nothing asks twice.
+- **Navigation gestures** (owner, 2026-11-18, after the developer Gesture
+  lab): every pushed page is the platform's page route (`AppPage`,
+  `lib/core/pages.dart`): on iOS the Cupertino slide with Flutter's left
+  edge back swipe and default scroll physics. Tab roots and the start
+  pages (splash, retry, onboarding, suggested program) have no
+  transition. go_router's page for a `builder` route had none either, so
+  no swipe: its MaterialApp check looks for `material_ui`'s class, not
+  Flutter's; every pushed route has a `pageBuilder` now. Pages over the
+  flow (the paywall, the exercise picker's Add and Leave out forms) are an
+  iOS sheet (`SheetPage`) that a drag down closes, from its list's top
+  too, and keep close; on Android a full-screen dialog. A page that
+  refuses to pop (unsaved changes, `PopScope`) still follows the edge
+  swipe; let go where it would leave, it springs back and the page's own
+  prompt asks (Keep editing stays, Discard leaves), as back does. The
+  analytics consent prompt stays a full-screen page that must be
+  answered.
 - **Profile tab** (UX pass, 2026-11-13, owner's pick; studio board
   2026-11-15): one page, top to bottom: the account header, the Premium
   card, More (Your profile; the calculators are Today's since the Tabs

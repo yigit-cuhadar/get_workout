@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/pages.dart';
 import '../core/unsaved_changes.dart';
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/account_auth_page.dart';
@@ -432,9 +433,12 @@ GoRouter buildRouter(
         routes: [
           GoRoute(
             path: 'sign-in',
-            builder: (context, _) => AccountAuthPage(
-              initialSignUp: false,
-              onSignedIn: () => context.pop(),
+            pageBuilder: (context, state) => _pushed(
+              state,
+              AccountAuthPage(
+                initialSignUp: false,
+                onSignedIn: () => context.pop(),
+              ),
             ),
           ),
         ],
@@ -446,7 +450,7 @@ GoRouter buildRouter(
       ),
       GoRoute(
         path: Routes.workout,
-        builder: (_, _) => const WorkoutPage(),
+        pageBuilder: (_, state) => _pushed(state, const WorkoutPage()),
         routes: [
           _pickerRoute(limit: WorkoutLimits.maxExercises),
           _workoutExercise(Routes.workoutExercise),
@@ -454,23 +458,25 @@ GoRouter buildRouter(
       ),
       GoRoute(
         path: Routes.programGenerator,
-        builder: (_, _) => const GeneratorPage(),
+        pageBuilder: (_, state) => _pushed(state, const GeneratorPage()),
         routes: [
           GoRoute(
             path: 'preview',
             redirect: (_, state) => state.extra is GeneratorAnswers
                 ? null
                 : Routes.programGenerator,
-            builder: (_, state) =>
-                GeneratorPreviewPage(answers: state.extra! as GeneratorAnswers),
+            pageBuilder: (_, state) => _pushed(
+              state,
+              GeneratorPreviewPage(answers: state.extra! as GeneratorAnswers),
+            ),
           ),
           _pickerRoute(limit: ProgramLimits.maxItemsPerDay),
         ],
       ),
       GoRoute(
         path: Routes.paywall,
-        pageBuilder: (_, _) =>
-            const MaterialPage(fullscreenDialog: true, child: PaywallPage()),
+        pageBuilder: (context, state) =>
+            _overFlow(context, state, const PaywallPage()),
       ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => RepositoryProvider.value(
@@ -486,30 +492,38 @@ GoRouter buildRouter(
               _workoutExercise(Routes.todayExercise),
               GoRoute(
                 path: 'workouts/:id',
-                builder: (_, state) => WorkoutDetailPage(
-                  id: state.pathParameters['id']!,
-                  routes: Routes.todayEditing,
+                pageBuilder: (_, state) => _pushed(
+                  state,
+                  WorkoutDetailPage(
+                    id: state.pathParameters['id']!,
+                    routes: Routes.todayEditing,
+                  ),
                 ),
                 routes: [
                   GoRoute(
                     path: 'edit',
-                    builder: (_, state) => WorkoutEditPage(
-                      id: state.pathParameters['id'],
-                      routes: Routes.todayEditing,
+                    pageBuilder: (_, state) => _pushed(
+                      state,
+                      WorkoutEditPage(
+                        id: state.pathParameters['id'],
+                        routes: Routes.todayEditing,
+                      ),
                     ),
                   ),
                 ],
               ),
               GoRoute(
                 path: 'calculators',
-                builder: (_, _) => const CalculatorsPage(),
+                pageBuilder: (_, state) =>
+                    _pushed(state, const CalculatorsPage()),
                 routes: [
                   _page('calories', const CaloriesPage()),
                   _page('body-fat', const BodyFatPage()),
                   _page('one-rep-max', const OneRepMaxPage()),
                   GoRoute(
                     path: 'plates',
-                    builder: (_, _) => const PlatesPage(),
+                    pageBuilder: (_, state) =>
+                        _pushed(state, const PlatesPage()),
                     routes: [_page('bar-plates', const BarPlatesPage())],
                   ),
                   _page('macros', const MacrosPage()),
@@ -525,35 +539,45 @@ GoRouter buildRouter(
               // Before ':id', which would match these too.
               GoRoute(
                 path: 'new',
-                builder: (_, state) => ProgramBuilderPage(
-                  returns: state.uri.queryParameters['return'] == 'true',
+                pageBuilder: (_, state) => _pushed(
+                  state,
+                  ProgramBuilderPage(
+                    returns: state.uri.queryParameters['return'] == 'true',
+                  ),
                 ),
               ),
               _pickerRoute(limit: ProgramLimits.maxItemsPerDay),
               GoRoute(
                 path: 'catalogue',
-                builder: (_, _) => const CataloguePage(),
+                pageBuilder: (_, state) =>
+                    _pushed(state, const CataloguePage()),
                 routes: [
                   GoRoute(
                     path: ':id',
-                    builder: (_, state) =>
-                        CatalogueDetailPage(id: state.pathParameters['id']!),
+                    pageBuilder: (_, state) => _pushed(
+                      state,
+                      CatalogueDetailPage(id: state.pathParameters['id']!),
+                    ),
                     routes: [
                       GoRoute(
                         path: 'volume',
-                        builder: (_, state) => CatalogueVolumePage(
-                          id: state.pathParameters['id']!,
+                        pageBuilder: (_, state) => _pushed(
+                          state,
+                          CatalogueVolumePage(id: state.pathParameters['id']!),
                         ),
                       ),
                       GoRoute(
                         path: 'exercises/:exerciseId',
-                        builder: (_, state) => ExerciseDetailPage(
-                          exerciseId: state.pathParameters['exerciseId']!,
-                          exerciseRoute: (exerciseId) =>
-                              Routes.catalogueExercise(
-                                state.pathParameters['id']!,
-                                exerciseId,
-                              ),
+                        pageBuilder: (_, state) => _pushed(
+                          state,
+                          ExerciseDetailPage(
+                            exerciseId: state.pathParameters['exerciseId']!,
+                            exerciseRoute: (exerciseId) =>
+                                Routes.catalogueExercise(
+                                  state.pathParameters['id']!,
+                                  exerciseId,
+                                ),
+                          ),
                         ),
                       ),
                     ],
@@ -563,23 +587,29 @@ GoRouter buildRouter(
               // Before ':id', which would match 'volume' too.
               GoRoute(
                 path: 'volume/:id',
-                builder: (_, state) =>
-                    ProgramVolumePage(id: state.pathParameters['id']!),
+                pageBuilder: (_, state) => _pushed(
+                  state,
+                  ProgramVolumePage(id: state.pathParameters['id']!),
+                ),
               ),
               GoRoute(
                 path: ':id',
-                builder: (_, state) => ProgramDetailPage(
-                  // Another program, e.g. a copy just made from this
-                  // page, gets a page of its own, not this one's state.
-                  key: ValueKey(state.pathParameters['id']),
-                  id: state.pathParameters['id']!,
-                  created: state.uri.queryParameters['created'] == 'true',
+                pageBuilder: (_, state) => _pushed(
+                  state,
+                  ProgramDetailPage(
+                    // Another program, e.g. a copy just made from this
+                    // page, gets a page of its own, not this one's state.
+                    key: ValueKey(state.pathParameters['id']),
+                    id: state.pathParameters['id']!,
+                    created: state.uri.queryParameters['created'] == 'true',
+                  ),
                 ),
                 routes: [
                   GoRoute(
                     path: 'edit',
-                    builder: (_, state) => ProgramBuilderPage(
-                      programId: state.pathParameters['id'],
+                    pageBuilder: (_, state) => _pushed(
+                      state,
+                      ProgramBuilderPage(programId: state.pathParameters['id']),
                     ),
                   ),
                 ],
@@ -593,12 +623,9 @@ GoRouter buildRouter(
               // Before ':id', which would match these too.
               GoRoute(
                 path: 'list',
-                // A MaterialPage, for a transition the search box's Hero
-                // flies in: go_router's default page for `builder`
-                // routes has none here.
-                pageBuilder: (_, state) => MaterialPage(
-                  key: state.pageKey,
-                  child: LibraryPage(
+                pageBuilder: (_, state) => _pushed(
+                  state,
+                  LibraryPage(
                     muscle: Muscle.values.byCode(
                       state.uri.queryParameters['muscle'],
                     ),
@@ -607,29 +634,41 @@ GoRouter buildRouter(
               ),
               GoRoute(
                 path: 'new',
-                builder: (_, state) => CustomExerciseNewPage(
-                  name: state.uri.queryParameters['name'],
+                pageBuilder: (_, state) => _pushed(
+                  state,
+                  CustomExerciseNewPage(
+                    name: state.uri.queryParameters['name'],
+                  ),
                 ),
               ),
               GoRoute(
                 path: 'new-program',
-                builder: (_, _) => const ProgramBuilderPage(
-                  returns: true,
-                  picker: Routes.exerciseProgramPicker,
+                pageBuilder: (_, state) => _pushed(
+                  state,
+                  const ProgramBuilderPage(
+                    returns: true,
+                    picker: Routes.exerciseProgramPicker,
+                  ),
                 ),
                 routes: [_pickerRoute(limit: ProgramLimits.maxItemsPerDay)],
               ),
               GoRoute(
                 path: ':id',
-                builder: (_, state) => ExerciseDetailPage(
-                  exerciseId: state.pathParameters['id']!,
-                  exerciseRoute: Routes.exercise,
+                pageBuilder: (_, state) => _pushed(
+                  state,
+                  ExerciseDetailPage(
+                    exerciseId: state.pathParameters['id']!,
+                    exerciseRoute: Routes.exercise,
+                  ),
                 ),
                 routes: [
                   GoRoute(
                     path: 'edit',
-                    builder: (_, state) => CustomExerciseEditPage(
-                      exerciseId: state.pathParameters['id']!,
+                    pageBuilder: (_, state) => _pushed(
+                      state,
+                      CustomExerciseEditPage(
+                        exerciseId: state.pathParameters['id']!,
+                      ),
                     ),
                   ),
                 ],
@@ -642,102 +681,136 @@ GoRouter buildRouter(
             routes: [
               GoRoute(
                 path: 'cardio',
-                builder: (_, _) => const CardioListPage(),
+                pageBuilder: (_, state) =>
+                    _pushed(state, const CardioListPage()),
                 routes: [
                   // Before ':id', which would match 'new' too.
                   GoRoute(
                     path: 'new',
-                    builder: (_, _) => const CardioNewPage(),
+                    pageBuilder: (_, state) =>
+                        _pushed(state, const CardioNewPage()),
                   ),
                   GoRoute(
                     path: ':id',
-                    builder: (_, state) =>
-                        CardioSessionPage(id: state.pathParameters['id']!),
-                    routes: [
-                      GoRoute(
-                        path: 'edit',
-                        builder: (_, state) =>
-                            CardioEditPage(id: state.pathParameters['id']!),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              GoRoute(path: 'volume', builder: (_, _) => const VolumePage()),
-              GoRoute(
-                path: Routes.strengthSegment,
-                builder: (_, _) => const StrengthListPage(),
-                routes: [
-                  GoRoute(
-                    path: ':exerciseId',
-                    builder: (_, state) => ExerciseStrengthPage(
-                      exerciseId: state.pathParameters['exerciseId']!,
-                    ),
-                  ),
-                ],
-              ),
-              GoRoute(
-                path: 'calendar',
-                builder: (_, _) => const CalendarPage(),
-                routes: [
-                  // Before ':id', which would match these too.
-                  GoRoute(
-                    path: 'new',
-                    builder: (_, state) => WorkoutEditPage(
-                      plan: state.extra as PastWorkoutPlan?,
-                      routes: Routes.calendarEditing,
-                    ),
-                  ),
-                  _pickerRoute(limit: WorkoutLimits.maxExercises),
-                  _workoutExercise(Routes.calendarExercise),
-                  GoRoute(
-                    path: ':id',
-                    builder: (_, state) => WorkoutDetailPage(
-                      id: state.pathParameters['id']!,
-                      routes: Routes.calendarEditing,
+                    pageBuilder: (_, state) => _pushed(
+                      state,
+                      CardioSessionPage(id: state.pathParameters['id']!),
                     ),
                     routes: [
                       GoRoute(
                         path: 'edit',
-                        builder: (_, state) => WorkoutEditPage(
-                          id: state.pathParameters['id'],
-                          routes: Routes.calendarEditing,
+                        pageBuilder: (_, state) => _pushed(
+                          state,
+                          CardioEditPage(id: state.pathParameters['id']!),
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
-              GoRoute(path: 'steps', builder: (_, _) => const StepsPage()),
+              GoRoute(
+                path: 'volume',
+                pageBuilder: (_, state) => _pushed(state, const VolumePage()),
+              ),
+              GoRoute(
+                path: Routes.strengthSegment,
+                pageBuilder: (_, state) =>
+                    _pushed(state, const StrengthListPage()),
+                routes: [
+                  GoRoute(
+                    path: ':exerciseId',
+                    pageBuilder: (_, state) => _pushed(
+                      state,
+                      ExerciseStrengthPage(
+                        exerciseId: state.pathParameters['exerciseId']!,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'calendar',
+                pageBuilder: (_, state) => _pushed(state, const CalendarPage()),
+                routes: [
+                  // Before ':id', which would match these too.
+                  GoRoute(
+                    path: 'new',
+                    pageBuilder: (_, state) => _pushed(
+                      state,
+                      WorkoutEditPage(
+                        plan: state.extra as PastWorkoutPlan?,
+                        routes: Routes.calendarEditing,
+                      ),
+                    ),
+                  ),
+                  _pickerRoute(limit: WorkoutLimits.maxExercises),
+                  _workoutExercise(Routes.calendarExercise),
+                  GoRoute(
+                    path: ':id',
+                    pageBuilder: (_, state) => _pushed(
+                      state,
+                      WorkoutDetailPage(
+                        id: state.pathParameters['id']!,
+                        routes: Routes.calendarEditing,
+                      ),
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        pageBuilder: (_, state) => _pushed(
+                          state,
+                          WorkoutEditPage(
+                            id: state.pathParameters['id'],
+                            routes: Routes.calendarEditing,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'steps',
+                pageBuilder: (_, state) => _pushed(state, const StepsPage()),
+              ),
               GoRoute(
                 path: 'body',
                 // One page whatever the query, so a link to Compare reuses
                 // the one there.
-                builder: (_, state) => BodyPage(
-                  compareAfter: state.uri.queryParameters['compare'],
+                pageBuilder: (_, state) => _pushed(
+                  state,
+                  BodyPage(compareAfter: state.uri.queryParameters['compare']),
                 ),
                 routes: [
                   // Before ':id', which would match these too; entry ids
                   // are Firestore auto ids.
                   GoRoute(
                     path: 'measure',
-                    builder: (_, _) => const MeasurementDayNewPage(),
+                    pageBuilder: (_, state) =>
+                        _pushed(state, const MeasurementDayNewPage()),
                   ),
                   // Right after a new measurement day is saved.
                   GoRoute(
                     path: 'summary/:id',
-                    builder: (_, state) =>
-                        MeasurementSummaryPage(id: state.pathParameters['id']!),
+                    pageBuilder: (_, state) => _pushed(
+                      state,
+                      MeasurementSummaryPage(id: state.pathParameters['id']!),
+                    ),
                   ),
                   GoRoute(
                     path: ':id',
-                    builder: (_, state) =>
-                        BodyEntryPage(id: state.pathParameters['id']!),
+                    pageBuilder: (_, state) => _pushed(
+                      state,
+                      BodyEntryPage(id: state.pathParameters['id']!),
+                    ),
                     routes: [
                       GoRoute(
                         path: 'measure',
-                        builder: (_, state) => MeasurementDayEditPage(
-                          id: state.pathParameters['id']!,
+                        pageBuilder: (_, state) => _pushed(
+                          state,
+                          MeasurementDayEditPage(
+                            id: state.pathParameters['id']!,
+                          ),
                         ),
                       ),
                     ],
@@ -752,41 +825,49 @@ GoRouter buildRouter(
             routes: [
               GoRoute(
                 path: 'account',
-                builder: (_, _) => const AccountPage(),
+                pageBuilder: (_, state) => _pushed(state, const AccountPage()),
                 routes: [
                   GoRoute(
                     path: 'auth',
                     // Full screen, over the tab bar.
                     parentNavigatorKey: root,
-                    builder: (context, state) => AccountAuthPage(
-                      initialSignUp:
-                          state.uri.queryParameters['mode'] != 'sign-in',
-                      onSignedIn: () => context.pop(),
+                    pageBuilder: (context, state) => _pushed(
+                      state,
+                      AccountAuthPage(
+                        initialSignUp:
+                            state.uri.queryParameters['mode'] != 'sign-in',
+                        onSignedIn: () => context.pop(),
+                      ),
                     ),
                   ),
                   GoRoute(
                     path: 'delete',
-                    builder: (_, _) => const DeleteAccountPage(),
+                    pageBuilder: (_, state) =>
+                        _pushed(state, const DeleteAccountPage()),
                   ),
                 ],
               ),
               GoRoute(
                 path: 'bar-plates',
-                builder: (_, _) => const BarPlatesPage(),
+                pageBuilder: (_, state) =>
+                    _pushed(state, const BarPlatesPage()),
               ),
               GoRoute(
                 path: 'warmups',
-                builder: (_, _) => const WarmupSettingsPage(),
+                pageBuilder: (_, state) =>
+                    _pushed(state, const WarmupSettingsPage()),
               ),
               if (!kReleaseMode)
                 GoRoute(
                   path: 'gesture-lab',
-                  builder: (_, _) => const GestureLabPage(),
+                  pageBuilder: (_, state) =>
+                      _pushed(state, const GestureLabPage()),
                   routes: [_page('scroll', const ScrollLabPage())],
                 ),
               GoRoute(
                 path: 'details',
-                builder: (_, _) => const ProfileDetailsPage(),
+                pageBuilder: (_, state) =>
+                    _pushed(state, const ProfileDetailsPage()),
                 routes: [
                   GoRoute(
                     path: ':field',
@@ -794,7 +875,8 @@ GoRouter buildRouter(
                     parentNavigatorKey: root,
                     redirect: (_, state) =>
                         _field(state) == null ? Routes.profileDetails : null,
-                    builder: (_, state) => ProfileQuestionPage(_field(state)!),
+                    pageBuilder: (_, state) =>
+                        _pushed(state, ProfileQuestionPage(_field(state)!)),
                   ),
                 ],
               ),
@@ -824,30 +906,30 @@ ProfileField? _field(GoRouterState state) =>
 /// the flow (close); Swap and Replace are steps of it (back).
 GoRoute _pickerRoute({required int limit}) => GoRoute(
   path: 'pick',
-  pageBuilder: (_, state) {
+  pageBuilder: (context, state) {
     final query = state.uri.queryParameters;
     final max = int.tryParse(query['max'] ?? '') ?? 1;
     final form = ExercisePickerForm.byName(query['form']);
-    return MaterialPage(
-      key: state.pageKey,
-      fullscreenDialog:
-          form == ExercisePickerForm.add || form == ExercisePickerForm.leaveOut,
-      child: ExercisePickerPage(
-        max: max < 1 ? 1 : max,
-        limit: limit,
-        multiple: query['multiple'] == 'true',
-        form: form,
-        exerciseId: query['exercise'],
-        logged: int.tryParse(query['logged'] ?? '') ?? 0,
-        warmups: int.tryParse(query['warmups'] ?? '') ?? 0,
-      ),
+    final page = ExercisePickerPage(
+      max: max < 1 ? 1 : max,
+      limit: limit,
+      multiple: query['multiple'] == 'true',
+      form: form,
+      exerciseId: query['exercise'],
+      logged: int.tryParse(query['logged'] ?? '') ?? 0,
+      warmups: int.tryParse(query['warmups'] ?? '') ?? 0,
     );
+    return form == ExercisePickerForm.add || form == ExercisePickerForm.leaveOut
+        ? _overFlow(context, state, page)
+        : _pushed(state, page);
   },
   routes: [
     GoRoute(
       path: 'new',
-      builder: (_, state) =>
-          CustomExerciseNewPage(name: state.uri.queryParameters['name']),
+      pageBuilder: (_, state) => _pushed(
+        state,
+        CustomExerciseNewPage(name: state.uri.queryParameters['name']),
+      ),
     ),
   ],
 );
@@ -857,14 +939,30 @@ GoRoute _pickerRoute({required int limit}) => GoRoute(
 /// other exercises.
 GoRoute _workoutExercise(String Function(String id) exerciseRoute) => GoRoute(
   path: 'exercises/:exerciseId',
-  builder: (_, state) => ExerciseDetailPage(
-    exerciseId: state.pathParameters['exerciseId']!,
-    exerciseRoute: exerciseRoute,
+  pageBuilder: (_, state) => _pushed(
+    state,
+    ExerciseDetailPage(
+      exerciseId: state.pathParameters['exerciseId']!,
+      exerciseRoute: exerciseRoute,
+    ),
   ),
 );
 
+/// Every pushed page; see [AppPage]. go_router's own page for a `builder`
+/// route has no transition here, so no back swipe: it looks for
+/// material_ui's MaterialApp, which is not Flutter's.
+Page<void> _pushed(GoRouterState state, Widget page) =>
+    AppPage(key: state.pageKey, child: page);
+
+/// A page opened over the flow, with close: on iOS a sheet that a drag
+/// down closes, elsewhere a full-screen dialog.
+Page<void> _overFlow(BuildContext context, GoRouterState state, Widget page) =>
+    Theme.of(context).platform == TargetPlatform.iOS
+    ? SheetPage(key: state.pageKey, child: page)
+    : AppPage(key: state.pageKey, fullscreenDialog: true, child: page);
+
 GoRoute _page(String path, Widget page) =>
-    GoRoute(path: path, builder: (_, _) => page);
+    GoRoute(path: path, pageBuilder: (_, state) => _pushed(state, page));
 
 StatefulShellBranch _tab(
   String path,
