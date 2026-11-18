@@ -347,8 +347,8 @@ void main() {
       expect(find.text('No sessions yet'), findsOneWidget);
     });
 
-    testWidgets('the Exercise row opens the sheet with this one ticked, and '
-        'another exercise replaces the page', (tester) async {
+    testWidgets('the Exercise row opens radio rows with this one picked, '
+        'and another exercise replaces the page', (tester) async {
       when(() => strength.state).thenReturn(ready);
       when(() => list.state).thenReturn(
         StrengthListState(
@@ -365,6 +365,11 @@ void main() {
               lastTrained: friday,
               exercise: plank,
             ),
+            StrengthItem(
+              exerciseId: 'gone',
+              lastTrained: lastYear,
+              removed: true,
+            ),
           ],
         ),
       );
@@ -375,9 +380,27 @@ void main() {
       final sheet = find.byType(ForgeBottomSheet);
       expect(sheet, findsOneWidget);
       expect(
-        find.descendant(of: sheet, matching: find.byType(ForgeIcon)),
-        findsWidgets,
+        find.descendant(of: sheet, matching: find.byType(ForgeSearchField)),
+        findsOneWidget,
       );
+      final grid = tester.widget<ChoiceGrid>(
+        find.descendant(of: sheet, matching: find.byType(ChoiceGrid)),
+      );
+      expect(grid.selected, 0);
+      expect(grid.form, ChoiceListForm.stacked);
+      // A removed exercise is a normal row, its last day as the hint.
+      expect(
+        [for (final option in grid.options) (option.label, option.hint)],
+        [
+          ('Bench Press', 'Last done Nov 13'),
+          ('Plank', 'Last done Nov 13'),
+          (
+            'Exercise no longer in your library',
+            'Last done Sep 3, ${year - 1}',
+          ),
+        ],
+      );
+      expect([for (final o in grid.options) o.enabled], [true, true, true]);
 
       await tester.tap(
         find.descendant(of: sheet, matching: find.text('Plank')),
