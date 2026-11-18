@@ -121,6 +121,10 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
       final rest? when workouts.draft != null => _restToJson(rest),
       _ => null,
     },
+    'lastSetAt': ?switch (workouts.lastSetAt) {
+      final at? when workouts.draft != null => at.millisecondsSinceEpoch,
+      _ => null,
+    },
     'finished': [for (final w in workouts.finished) _workoutToJson(w)],
     'staleStats': [...workouts.staleStats],
   };
@@ -147,6 +151,11 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
       rest: parsedDraft == null
           ? null
           : _restFromJson(json['rest'], parsedDraft, now),
+      lastSetAt: switch (json['lastSetAt']) {
+        final int ms when parsedDraft != null && ms.abs() <= _maxEpochMs =>
+          DateTime.fromMillisecondsSinceEpoch(ms),
+        _ => null,
+      },
       finished: [for (final w in parsedFinished) w!],
       staleStats: {
         for (final id in stale)

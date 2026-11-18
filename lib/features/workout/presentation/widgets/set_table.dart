@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import 'set_bubble.dart';
 
 /// One logged set of a [SetTable]: its bubble's [label] (W, 1, 4D…), its
 /// [values] as done ("80 kg × 8", "45 s"), its [effort] as the effort
@@ -134,8 +135,7 @@ class SetTable extends StatelessWidget {
   final VoidCallback? onToggle;
 
   /// Where a set's drops and note start: past its bubble and the gap.
-  static const _indent = _bubbleSize + 10;
-  static const _bubbleSize = 28.0;
+  static const _indent = SetBubble.smallDiameter + 10;
 
   @override
   Widget build(BuildContext context) {
@@ -234,7 +234,7 @@ class _Header extends StatelessWidget {
         child: Row(
           spacing: 10,
           children: [
-            if (group != null) _GroupLetter(group),
+            if (group != null) SetBubble.letter(group),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,34 +274,6 @@ class _Header extends StatelessWidget {
 }
 
 /// A group's A1 / A2 letter in a surface-sunken circle.
-class _GroupLetter extends StatelessWidget {
-  const _GroupLetter(this.letter);
-
-  final String letter;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = ForgeStyle.of(context);
-    return Container(
-      width: SetTable._bubbleSize,
-      height: SetTable._bubbleSize,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: style.colors.surfaceSunken,
-      ),
-      child: Text(
-        letter,
-        style: style.data.copyWith(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: style.colors.ink,
-        ),
-      ),
-    );
-  }
-}
-
 class _Row extends StatelessWidget {
   const _Row({required this.row});
 
@@ -319,7 +291,13 @@ class _Row extends StatelessWidget {
       child: Row(
         spacing: 10,
         children: [
-          _Bubble(row.label),
+          SetBubble(
+            label: row.label,
+            semanticLabel: row.label,
+            onTap: null,
+            done: true,
+            small: true,
+          ),
           Expanded(
             child: Text(
               row.values,
@@ -428,7 +406,7 @@ class _EditHeader extends StatelessWidget {
       child: Row(
         spacing: Gap.sm,
         children: [
-          if (group != null) _GroupLetter(group),
+          if (group != null) SetBubble.letter(group),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -505,7 +483,13 @@ class _EditRow extends StatelessWidget {
                   dimension: ForgeTheme.tapMin,
                   child: Center(
                     child: ExcludeSemantics(
-                      child: _Bubble(row.label, done: row.done),
+                      child: SetBubble(
+                        label: row.label,
+                        semanticLabel: row.label,
+                        onTap: null,
+                        done: row.done,
+                        small: true,
+                      ),
                     ),
                   ),
                 ),
@@ -615,32 +599,3 @@ class _AddSet extends StatelessWidget {
 /// A set's 28px bubble: its label in mono on accent when [done], else on
 /// a line-strong ring.
 // SetBubble's small done form, drawn here until that component lands.
-class _Bubble extends StatelessWidget {
-  const _Bubble(this.label, {this.done = true});
-
-  final String label;
-  final bool done;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = ForgeStyle.of(context);
-    final colors = style.colors;
-    return Container(
-      width: SetTable._bubbleSize,
-      height: SetTable._bubbleSize,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: done ? colors.accent : colors.surface,
-        border: done ? null : Border.all(color: colors.lineStrong, width: 1.5),
-      ),
-      child: Text(
-        label,
-        style: style.data.copyWith(
-          fontSize: 11,
-          color: done ? colors.onAccent : colors.ink,
-        ),
-      ),
-    );
-  }
-}

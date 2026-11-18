@@ -4,6 +4,8 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
 import 'package:get_workout/features/workout/presentation/widgets/effort_question.dart';
 import 'package:get_workout/features/workout/presentation/widgets/rest_panel.dart';
 import 'package:get_workout/features/workout/presentation/workout_page.dart';
@@ -79,6 +81,73 @@ void main() {
     ),
   );
 
+  testWidgets('the first Start asks about rest alerts before the workout', (
+    tester,
+  ) async {
+    final app = TrainingWorld(
+      exercises: exercises,
+      settings: UserSettings(
+        weightUnit: WeightUnit.kg,
+        lengthUnit: LengthUnit.cm,
+        warmups: const WarmupSettings(scheme: WarmupScheme.off),
+        seenTips: Tip.values.toSet(),
+      ),
+    )..notificationsAskedHere = false;
+    app.programs
+      ..add(upperLower)
+      ..active = ActiveProgram(
+        programId: 'p1',
+        weekdays: const [1, 3],
+        nextDayIndex: 1,
+        nextDate: dateOf(flowStart),
+        startedAt: DateTime(2026, 11, 2),
+      );
+    await app.start(tester);
+
+    await tapText(tester, 'Start Lower');
+    expect(find.text('Get alerts when rest ends?'), findsOneWidget);
+    expect(find.byType(WorkoutPage), findsNothing);
+    await tapOn(tester, inDialog('Not now'));
+    expect(find.byType(WorkoutPage), findsOneWidget);
+
+    // Asked once on this device: the log never asks.
+    await enterValue(tester, 'kg', '100');
+    await enterValue(tester, 'reps', '5');
+    await tapText(tester, 'Log set');
+    expect(find.text('Get alerts when rest ends?'), findsNothing);
+
+    await app.stop(tester);
+  });
+
+  testWidgets('a workout left open 4 h ends at its last set, its summary '
+      'offering Edit', (tester) async {
+    final app = world(restTimer: false);
+    await app.start(tester);
+    await tapText(tester, 'Start Lower');
+    await enterValue(tester, 'kg', '100');
+    await enterValue(tester, 'reps', '5');
+    app.now = flowStart.add(const Duration(minutes: 20));
+    await tapText(tester, 'Log set');
+    await answerEffort(tester);
+    expect(app.endNotice.scheduled?.title, 'Ended ${'Upper Lower · Lower'}');
+
+    app.now = flowStart.add(const Duration(hours: 5));
+    tester
+        .element(find.byType(WorkoutPage))
+        .read<ActiveWorkoutCubit>()
+        .appShown();
+    await settle(tester);
+
+    expect(find.text('Summary'), findsOneWidget);
+    expect(find.widgetWithText(ForgeButton, 'Edit'), findsOneWidget);
+    final stored = app.workouts.workouts.values.single;
+    expect(stored.finishedAt, flowStart.add(const Duration(minutes: 20)));
+    // The notice that told the user stays.
+    expect(app.endNotice.scheduled, isNotNull);
+
+    await app.stop(tester);
+  });
+
   testWidgets('today\'s day is logged with a rest, finished and shown done', (
     tester,
   ) async {
@@ -102,6 +171,7 @@ void main() {
     await tapOn(tester, inDialog('Finish'));
 
     expect(find.text('Workout done · Wed, Nov 11'), findsOneWidget);
+    expect(find.widgetWithText(ForgeButton, 'Edit'), findsNothing);
     final stored = app.workouts.workouts.values.single;
     expect(stored.exercises.single.sets.single.weightKg, 100);
     expect(stored.exercises.single.sets.single.reps, 5);

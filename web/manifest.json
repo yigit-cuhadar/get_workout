@@ -1,6 +1,6 @@
 {
-    "name": "get_workout",
-    "short_name": "get_workout",
+    "name": "GetWorkout",
+    "short_name": "GetWorkout",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

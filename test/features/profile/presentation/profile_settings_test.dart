@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:get_workout/core/widgets/choice_sheet.dart';
 import 'package:get_workout/core/widgets/featured_card.dart';
 import 'package:get_workout/features/notifications/presentation/notifications_cubit.dart';
 import 'package:get_workout/features/notifications/presentation/reminder_settings_group.dart';
@@ -81,7 +82,7 @@ void main() {
       expect(find.text('Default rest'), findsOneWidget);
       expect(find.text('1:30'), findsOneWidget);
       expect(find.text('Notify when rest is over'), findsOneWidget);
-      expect(find.text('Chime · vibrate'), findsOneWidget);
+      expect(find.text('Chime · vibrate (default)'), findsOneWidget);
 
       await pump(
         tester,
@@ -102,6 +103,56 @@ void main() {
         find.text('20 kg bar · 25, 20, 15, 10, 5, 2.5, 1.25'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('the effort question offers Off, its default marked', (
+      tester,
+    ) async {
+      await pump(tester, const WorkoutSettingsGroups());
+      expect(find.text('By feel (default)'), findsOneWidget);
+      await tester.tap(find.text('Effort question'));
+      await tester.pumpAndSettle();
+      expect(find.text('Asked after each set you log.'), findsOneWidget);
+      expect(find.text('0, 1, 2, 3 or 4+ reps left'), findsOneWidget);
+      // Off first, then the scales.
+      final labels = tester
+          .widgetList<ChoiceRow>(find.byType(ChoiceRow))
+          .map((row) => row.label);
+      expect(labels, [
+        'Off',
+        'By feel (default)',
+        'RIR · reps in reserve',
+        'RPE · rated effort',
+      ]);
+      await tester.tap(find.text('Off'));
+      await tester.pumpAndSettle();
+
+      final saved =
+          verify(() => settings.update(captureAny())).captured.single
+              as UserSettings;
+      expect(saved.askEffort, isFalse);
+      expect(saved.effortScale, EffortScale.byFeel);
+    });
+
+    testWidgets('a scale picked turns the effort question back on', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const WorkoutSettingsGroups(),
+        shown: metric.copyWith(askEffort: false),
+      );
+      expect(find.text('Off'), findsOneWidget);
+      await tester.tap(find.text('Effort question'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('RIR · reps in reserve'));
+      await tester.pumpAndSettle();
+
+      final saved =
+          verify(() => settings.update(captureAny())).captured.single
+              as UserSettings;
+      expect(saved.askEffort, isTrue);
+      expect(saved.effortScale, EffortScale.rir);
     });
 
     testWidgets('the rest sound is picked in a choice sheet', (tester) async {
@@ -309,5 +360,12 @@ void main() {
     expect(initialsOf('sam'), 'S');
     expect(initialsOf('sam@example.com'), 'S');
     expect(initialsOf('Ana María López'), 'AM');
+  });
+
+  test('an Apple relay address is told apart from a real one', () {
+    expect(isAppleRelay('x7k2@privaterelay.appleid.com'), isTrue);
+    expect(isAppleRelay('X7K2@PrivateRelay.AppleID.com'), isTrue);
+    expect(isAppleRelay('sam@icloud.com'), isFalse);
+    expect(isAppleRelay(null), isFalse);
   });
 }

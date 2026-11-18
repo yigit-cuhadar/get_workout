@@ -13,13 +13,15 @@ sealed class NextWorkout extends Equatable {
 }
 
 /// No program day to do: no active program (or it no longer exists or has
-/// no days), or it ran its length, then [finished].
+/// no days), or it ran its length, then [finished]; the user has [saved]
+/// programs of their own.
 class NoProgramDay extends NextWorkout {
-  const NoProgramDay({this.finished});
+  const NoProgramDay({this.finished, this.saved = 0});
   final Program? finished;
+  final int saved;
 
   @override
-  List<Object?> get props => [finished];
+  List<Object?> get props => [finished, saved];
 }
 
 /// The active [program]'s next day, planned for [date] (null when the
@@ -223,7 +225,10 @@ NextWorkout? nextWorkoutOf(
   final program = state.activeProgram;
   final dayIndex = state.nextDayIndex;
   if (program == null || dayIndex == null) {
-    return NoProgramDay(finished: state.finished ? program : null);
+    return NoProgramDay(
+      finished: state.finished ? program : null,
+      saved: state.programs.length,
+    );
   }
   final access = state.access(program);
   if (access == ProgramAccess.waiting) return null;

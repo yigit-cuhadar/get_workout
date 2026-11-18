@@ -76,10 +76,13 @@ class _OnboardingView extends StatelessWidget {
             step: state.step,
             count: state.questions.length,
             onBack: submitted ? null : cubit.back,
-            body: ProfileQuestion(
-              state.question,
-              key: ValueKey(state.question),
-              onboarding: true,
+            body: _StepSlide(
+              step: state.step,
+              child: ProfileQuestion(
+                state.question,
+                key: ValueKey(state.question),
+                onboarding: true,
+              ),
             ),
             actionLabel: l10n.onboardingContinue,
             loading: submitted,
@@ -181,4 +184,53 @@ class _Welcome extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The question of [step]: a later one slides in from the right as the
+/// one before leaves to the left, an earlier one (Back) the other way, so
+/// each step reads as a new page even where two look alike.
+class _StepSlide extends StatefulWidget {
+  const _StepSlide({required this.step, required this.child});
+
+  final int step;
+  final Widget child;
+
+  @override
+  State<_StepSlide> createState() => _StepSlideState();
+}
+
+class _StepSlideState extends State<_StepSlide> {
+  var _forward = true;
+
+  static const _duration = Duration(milliseconds: 280);
+
+  @override
+  void didUpdateWidget(_StepSlide old) {
+    super.didUpdateWidget(old);
+    if (old.step != widget.step) _forward = widget.step > old.step;
+  }
+
+  @override
+  Widget build(BuildContext context) => ClipRect(
+    child: AnimatedSwitcher(
+      duration: _duration,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (current, previous) =>
+          Stack(fit: StackFit.expand, children: [...previous, ?current]),
+      transitionBuilder: (child, animation) {
+        final incoming = child.key == ValueKey(widget.step);
+        // The leaving page runs its animation backwards, to this side.
+        final side = incoming == _forward ? 1.0 : -1.0;
+        return SlideTransition(
+          position: Tween(
+            begin: Offset(side, 0),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        );
+      },
+      child: KeyedSubtree(key: ValueKey(widget.step), child: widget.child),
+    ),
+  );
 }

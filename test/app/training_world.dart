@@ -65,6 +65,7 @@ import 'package:get_workout/features/workout/domain/rest_usecases.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_lock_screen.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
+import 'package:get_workout/features/workout/domain/workout_end_notice.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
 import 'package:get_workout/features/workout/presentation/rest_timer_cubit.dart';
@@ -352,6 +353,27 @@ class _MockCardioRepository extends Mock implements CardioRepository {}
 
 class _MockRestNotifications extends Mock implements RestNotifications {}
 
+/// Records the workout end notice instead of showing it.
+class FakeWorkoutEndNotice implements WorkoutEndNotice {
+  EndNotice? scheduled;
+
+  @override
+  Future<Result<void>> schedule(
+    DateTime at, {
+    required String title,
+    required String body,
+  }) async {
+    scheduled = (at: at, title: title, body: body);
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<void>> cancel() async {
+    scheduled = null;
+    return const Ok(null);
+  }
+}
+
 class _MockLockScreen extends Mock implements WorkoutLockScreen {}
 
 class _MockTelemetry extends Mock implements Telemetry {}
@@ -397,6 +419,11 @@ class TrainingWorld {
   final bool premium;
   final UserSettings settings;
   DateTime now = flowStart;
+
+  final endNotice = FakeWorkoutEndNotice();
+
+  /// Whether this device was asked to notify when a rest is over.
+  bool notificationsAskedHere = true;
 
   final programs = FakeProgramRepository();
   late final workouts = FakeWorkoutRepository(programs);
@@ -520,6 +547,12 @@ class TrainingWorld {
       newWorkoutId: NewWorkoutId(workouts),
       watchStats: WatchExerciseStats(workouts),
       finishWorkout: FinishWorkout(workouts, clock: _clock),
+      scheduleEndNotice: ScheduleWorkoutEndNotice(endNotice),
+      cancelEndNotice: CancelWorkoutEndNotice(endNotice),
+      endText: (workout, lastSetAt) => (
+        title: lastSetAt == null ? 'Removed' : 'Ended ${workout.name}',
+        body: '',
+      ),
       confirmStored: ConfirmStoredWorkout(workouts),
       rebuildStats: RebuildExerciseStats(workouts),
       saveAsProgram: SaveWorkoutAsProgram(SaveProgram(programs)),
@@ -531,7 +564,12 @@ class TrainingWorld {
       clock: _clock,
     );
     final notifications = _MockRestNotifications();
-    when(notifications.askedHere).thenAnswer((_) async => const Ok(true));
+    when(notifications.askedHere)
+        .thenAnswer((_) async => Ok(notificationsAskedHere));
+    when(notifications.markAskedHere).thenAnswer((_) async {
+      notificationsAskedHere = true;
+      return const Ok(null);
+    });
     when(notifications.cancel).thenAnswer((_) async => const Ok(null));
     when(
       () => notifications.schedule(

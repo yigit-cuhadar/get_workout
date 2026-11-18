@@ -143,8 +143,10 @@ class _Loading extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(
-              height: ForgeAppBar.valueHeight,
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: ForgeAppBar.valueHeight,
+              ),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, Gap.md, 14, Gap.xs),
                 child: Row(
@@ -367,7 +369,7 @@ class _Header extends StatelessWidget implements PreferredSizeWidget {
   final ActiveWorkoutState state;
 
   @override
-  Size get preferredSize => const Size.fromHeight(ForgeAppBar.valueHeight);
+  Size get preferredSize => ForgeAppBar.valuePreferredSize;
 
   @override
   Widget build(BuildContext context) {
@@ -495,10 +497,7 @@ class _Panel extends StatelessWidget {
     final unit = context.select(
       (SettingsCubit cubit) => cubit.state.settings.weightUnit,
     );
-    return BlocConsumer<RestTimerCubit, RestTimerState>(
-      listenWhen: (previous, current) =>
-          current.askNotify && !previous.askNotify,
-      listener: (context, _) => _askNotify(context),
+    return BlocBuilder<RestTimerCubit, RestTimerState>(
       buildWhen: (previous, current) =>
           previous.phase != current.phase ||
           previous.remainingS != current.remainingS ||
@@ -584,27 +583,4 @@ class _Panel extends StatelessWidget {
     reps: null,
     durationS: null,
   );
-
-  Future<void> _askNotify(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
-    final timer = context.read<RestTimerCubit>();
-    final allow = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => ForgeDialog(
-        title: l10n.restNotifyQuestion,
-        message: l10n.restNotifyBody,
-        action: ForgeButton(
-          label: l10n.restNotifyAllow,
-          onPressed: () => Navigator.pop(context, true),
-        ),
-        cancel: ForgeButton(
-          label: l10n.restNotifyLater,
-          onPressed: () => Navigator.pop(context, false),
-          variant: ForgeButtonVariant.secondary,
-        ),
-      ),
-    );
-    await timer.answerNotify(allow: allow ?? false);
-  }
 }

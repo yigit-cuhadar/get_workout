@@ -565,36 +565,7 @@ class FeaturedCard extends StatelessWidget {
       if (alert != null)
         Text(alert, style: text.bodySmall!.copyWith(color: p.danger)),
       if (progress != null) Progress.track(value: progress),
-      if (line != null)
-        Row(
-          spacing: _lineGap,
-          children: [
-            ForgeIcon(
-              line.icon ??
-                  (line.status == null
-                      ? ForgeIcons.fitnessCenter
-                      : ForgeIcons.event),
-              size: _chevronSize,
-              color: ink,
-            ),
-            Expanded(
-              child: Text(
-                line.text,
-                style: text.bodyMedium!.copyWith(color: ink),
-              ),
-            ),
-            if (line.data case final data?)
-              Text(data, style: style.data.copyWith(color: quiet)),
-            if (line.status case final status?)
-              Text(
-                status,
-                style: text.labelMedium!.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: p.danger,
-                ),
-              ),
-          ],
-        ),
+      if (line != null) _line(context, line, ink, quiet),
       if (error case final error?)
         Row(
           spacing: Gap.sm,
@@ -646,31 +617,11 @@ class FeaturedCard extends StatelessWidget {
         ),
       if (action != null)
         if (moreActions.length == 1)
-          Row(
-            spacing: Gap.sm,
-            children: [
-              Expanded(child: _button(action, main: true)),
-              Expanded(child: _button(moreActions.single, main: false)),
-            ],
-          )
+          _buttonRow(context, [action, moreActions.single], firstMain: true)
         else
           _button(action, main: true),
-      if (moreActions.length == 2)
-        Row(
-          spacing: Gap.sm,
-          children: [
-            for (final more in moreActions)
-              Expanded(child: _button(more, main: false)),
-          ],
-        ),
-      if (footActions.isNotEmpty)
-        Row(
-          spacing: Gap.sm,
-          children: [
-            for (final foot in footActions)
-              Expanded(child: _button(foot, main: false)),
-          ],
-        ),
+      if (moreActions.length == 2) _buttonRow(context, moreActions),
+      if (footActions.isNotEmpty) _buttonRow(context, footActions),
     ];
     if (children.isEmpty) return null;
     return Padding(
@@ -835,6 +786,110 @@ class FeaturedCard extends StatelessWidget {
       ],
     );
   }
+
+  /// The info line: its icon, text, data and status in a row; at larger
+  /// text the data and status go under the text, which wraps.
+  Widget _line(
+    BuildContext context,
+    FeaturedLine line,
+    Color ink,
+    Color quiet,
+  ) {
+    final style = ForgeStyle.of(context);
+    final text = Theme.of(context).textTheme;
+    final scaled = MediaQuery.textScalerOf(context).scale(1) > 1;
+    final label = Text(line.text, style: text.bodyMedium!.copyWith(color: ink));
+    final trailing = [
+      if (line.data case final data?)
+        Text(data, style: style.data.copyWith(color: quiet)),
+      if (line.status case final status?)
+        Text(
+          status,
+          style: text.labelMedium!.copyWith(
+            fontWeight: FontWeight.w600,
+            color: style.colors.danger,
+          ),
+        ),
+    ];
+    return Row(
+      crossAxisAlignment: scaled
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
+      spacing: _lineGap,
+      children: [
+        ForgeIcon(
+          line.icon ??
+              (line.status == null
+                  ? ForgeIcons.fitnessCenter
+                  : ForgeIcons.event),
+          size: _chevronSize,
+          color: ink,
+        ),
+        if (scaled)
+          Expanded(
+            child: Wrap(
+              spacing: _lineGap,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [label, ...trailing],
+            ),
+          )
+        else ...[
+          Expanded(child: label),
+          ...trailing,
+        ],
+      ],
+    );
+  }
+
+  /// [actions] side by side in equal halves, the first the main one when
+  /// [firstMain]; stacked full width when a label would not fit its half
+  /// (larger text).
+  Widget _buttonRow(
+    BuildContext context,
+    List<FeaturedAction> actions, {
+    bool firstMain = false,
+  }) {
+    final buttons = [
+      for (final (i, action) in actions.indexed)
+        _button(action, main: firstMain && i == 0),
+    ];
+    final scaler = MediaQuery.textScalerOf(context);
+    if (scaler.scale(1) <= 1) {
+      return Row(
+        spacing: Gap.sm,
+        children: [for (final button in buttons) Expanded(child: button)],
+      );
+    }
+    final labelStyle = Theme.of(context).textTheme.labelLarge!;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final half = (constraints.maxWidth - Gap.sm) / 2;
+        final fits = actions.every((action) {
+          final label = TextPainter(
+            text: TextSpan(text: action.label, style: labelStyle),
+            textScaler: scaler,
+            textDirection: Directionality.of(context),
+            maxLines: 1,
+          )..layout();
+          final width =
+              label.width + 2 * Gap.md + (action.locked ? _lockRoom : 0);
+          label.dispose();
+          return width <= half;
+        });
+        return fits
+            ? Row(
+                spacing: Gap.sm,
+                children: [
+                  for (final button in buttons) Expanded(child: button),
+                ],
+              )
+            : Column(spacing: Gap.sm, children: buttons);
+      },
+    );
+  }
+
+  /// The lock icon and its gap in a locked button.
+  static const double _lockRoom = 16 + Gap.xs;
 
   Widget _button(FeaturedAction action, {required bool main}) => SizedBox(
     width: double.infinity,

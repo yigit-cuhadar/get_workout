@@ -1128,56 +1128,55 @@ void main() {
   group('permission', () {
     final end = start.add(const Duration(seconds: 90));
 
-    test('is asked in the app the first time a rest starts, once', () {
+    /// Whether [cubit] would ask as a workout starts.
+    bool asks(FakeAsync async, RestTimerCubit cubit) {
+      bool? asked;
+      unawaited(cubit.shouldAskNotify().then((value) => asked = value));
+      async.flushMicrotasks();
+      return asked!;
+    }
+
+    test('is asked as the first workout starts, once', () {
+      setWish(null);
+      askedHere = false;
+      run((async, cubit) {
+        expect(asks(async, cubit), isTrue);
+        verifyNever(notifications.request);
+        unawaited(cubit.answerNotify(allow: false));
+        async.flushMicrotasks();
+        askedHere = true;
+        expect(asks(async, cubit), isFalse);
+      });
+    });
+
+    test('a rest starting never asks', () {
       setWish(null);
       askedHere = false;
       run((async, cubit) {
         emitRest(Rest(endsAt: end, after: first));
         async.flushMicrotasks();
-        expect(cubit.state.askNotify, isTrue);
         verifyNever(notifications.request);
-        unawaited(cubit.answerNotify(allow: false));
-        async.flushMicrotasks();
-        expect(cubit.state.askNotify, isFalse);
-        emitRest(Rest(endsAt: end.add(restExtension), after: first));
-        async.flushMicrotasks();
-        expect(cubit.state.askNotify, isFalse);
+        verifyNever(notifications.markAskedHere);
       });
     });
 
-    test('is not asked for a rest kept from before the start', () {
-      setWish(null);
+    test('is not asked with the rest timer off', () {
+      settingsState = SettingsState(
+        base.copyWith(restTimer: const RestTimerSettings(enabled: false)),
+      );
       askedHere = false;
-      workoutState = const ActiveWorkoutState(status: WorkoutStatus.loading);
-      run((async, cubit) {
-        emitRest(Rest(endsAt: end));
-        async.flushMicrotasks();
-        expect(cubit.state.askNotify, isFalse);
-      });
+      run((async, cubit) => expect(asks(async, cubit), isFalse));
     });
 
     test('"not now" stays on this device and stores no wish', () {
       setWish(null);
       askedHere = false;
       run((async, cubit) {
-        emitRest(Rest(endsAt: end));
-        async.flushMicrotasks();
         unawaited(cubit.answerNotify(allow: false));
         async.flushMicrotasks();
         verify(notifications.markAskedHere).called(1);
         expect(wish(), isNull);
         verifyNever(() => settings.update(any()));
-      });
-      // Another device (nothing asked there) still asks.
-      askedHere = false;
-      workoutState = ActiveWorkoutState(
-        status: WorkoutStatus.active,
-        workout: squats,
-      );
-      run((async, cubit) {
-        emitRest(Rest(endsAt: end));
-        async.flushMicrotasks();
-        expect(cubit.state.askNotify, isTrue);
       });
     });
 
@@ -1185,8 +1184,6 @@ void main() {
       setWish(null);
       askedHere = false;
       run((async, cubit) {
-        emitRest(Rest(endsAt: end));
-        async.flushMicrotasks();
         unawaited(cubit.answerNotify(allow: true));
         async.flushMicrotasks();
         verify(notifications.request).called(1);
@@ -1200,8 +1197,6 @@ void main() {
       askedHere = false;
       requestGrants = false;
       run((async, cubit) {
-        emitRest(Rest(endsAt: end));
-        async.flushMicrotasks();
         unawaited(cubit.answerNotify(allow: true));
         async.flushMicrotasks();
         expect(wish(), isTrue);
@@ -1225,43 +1220,25 @@ void main() {
       allowed = false;
       askedHere = false;
       run((async, cubit) {
-        emitRest(Rest(endsAt: end));
-        async.flushMicrotasks();
-        expect(cubit.state.askNotify, isTrue);
+        expect(asks(async, cubit), isTrue);
         verifyNever(notifications.request);
-        unawaited(cubit.answerNotify(allow: true));
-        async.flushMicrotasks();
-        verify(notifications.request).called(1);
       });
     });
 
     test('a yes on a device that allows it asks nothing', () {
       askedHere = false;
-      run((async, cubit) {
-        emitRest(Rest(endsAt: end));
-        async.flushMicrotasks();
-        expect(cubit.state.askNotify, isFalse);
-        verifyNever(notifications.request);
-      });
+      run((async, cubit) => expect(asks(async, cubit), isFalse));
     });
 
     test('a device asked before is not asked again', () {
       setWish(null);
-      run((async, cubit) {
-        emitRest(Rest(endsAt: end));
-        async.flushMicrotasks();
-        expect(cubit.state.askNotify, isFalse);
-      });
+      run((async, cubit) => expect(asks(async, cubit), isFalse));
     });
 
     test('a no is never asked about', () {
       setWish(false);
       askedHere = false;
-      run((async, cubit) {
-        emitRest(Rest(endsAt: end));
-        async.flushMicrotasks();
-        expect(cubit.state.askNotify, isFalse);
-      });
+      run((async, cubit) => expect(asks(async, cubit), isFalse));
     });
 
     test('the settings switch stores the wish and asks the device', () {

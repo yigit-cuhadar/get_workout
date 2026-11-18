@@ -54,6 +54,7 @@ class _AppState extends State<App> {
   late final AppLifecycleListener _lifecycle;
   late final StreamSubscription<String?> _taps;
   late final StreamSubscription<void> _lockScreenTaps;
+  late final StreamSubscription<bool> _selfEnded;
 
   /// A tapped notification or lock-screen activity, until the app is past
   /// its start: where it leads with the open pages ([openLocations]; null:
@@ -80,6 +81,17 @@ class _AppState extends State<App> {
     _lockScreenTaps = sl<WatchLockScreenTaps>()().listen(
       (_) => unawaited(_openLockScreenTap()),
     );
+    final workout = sl<ActiveWorkoutCubit>();
+    // A workout that ended itself opens its summary, once the app is past
+    // its start.
+    _selfEnded = workout.stream
+        .map((state) => state.selfEnded)
+        .distinct()
+        .where((ended) => ended)
+        .listen((_) {
+          _tapped = (to: selfEndedDestination, push: true);
+          _openTapped();
+        });
     _lifecycle = AppLifecycleListener(
       onResume: () {
         unawaited(sl<ExerciseCatalogueCubit>().appResumed());
@@ -88,7 +100,10 @@ class _AppState extends State<App> {
         unawaited(notifications.resumed());
       },
       onHide: rest.hidden,
-      onShow: rest.shown,
+      onShow: () {
+        rest.shown();
+        workout.appShown();
+      },
     );
   }
 
@@ -143,6 +158,7 @@ class _AppState extends State<App> {
   void dispose() {
     unawaited(_taps.cancel());
     unawaited(_lockScreenTaps.cancel());
+    unawaited(_selfEnded.cancel());
     _router.routerDelegate.removeListener(_openTapped);
     _lifecycle.dispose();
     _router.dispose();

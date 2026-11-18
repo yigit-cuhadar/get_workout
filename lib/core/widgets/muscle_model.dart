@@ -335,7 +335,8 @@ class _SkeletonFigure extends StatelessWidget {
 }
 
 /// The body's front and back side by side, still, under a [title]: the
-/// [main] muscles in accent, the [secondary] ones in a 40% accent tint,
+/// [main] muscles in accent, the [secondary] ones in a lighter accent tone
+/// and the rest of the body very light, each figure filling its half,
 /// with a legend naming them. The legend shows also while the model loads
 /// (a shimmering figure per side) and when it could not load (the error
 /// and Retry in place of the figures).
@@ -370,10 +371,13 @@ class MuscleModelPair extends StatelessWidget {
   final List<Muscle> secondary;
   final VoidCallback? onRetry;
 
-  static const double _width = 120;
-
   /// The model's height to width, as its figure stands.
   static const double _aspect = 330 / 170;
+
+  /// The zoom at which the figure fills its width: at zoom 1 the model's
+  /// bounding sphere fits it, and the body model's sphere is 2.1 times as
+  /// wide as the figure; a little under, as nearer parts look larger.
+  static const double _fill = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -381,7 +385,7 @@ class MuscleModelPair extends StatelessWidget {
     final p = style.colors;
     final text = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
-    final soft = Color.lerp(p.surface, p.accent, 0.4)!;
+    final soft = Color.lerp(p.surface, p.accent, 0.55)!;
     final colors = muscleMeshColors({
       for (final muscle in secondary) muscle: soft,
       for (final muscle in main) muscle: p.accent,
@@ -389,15 +393,15 @@ class MuscleModelPair extends StatelessWidget {
     Widget side(String label, {required bool back}) => Column(
       spacing: 6,
       children: [
-        SizedBox(
-          width: _width,
-          height: _width * _aspect,
+        AspectRatio(
+          aspectRatio: 1 / _aspect,
           child: switch (model) {
             final model? => StillMuscleModel(
               model: model,
               back: back,
-              base: muscleModelBase(p),
+              base: Color.lerp(p.surface, p.lineStrong, 0.25)!,
               colors: colors,
+              zoom: _fill,
             ),
             null => const FittedBox(child: _SkeletonFigure()),
           },
@@ -458,11 +462,10 @@ class MuscleModelPair extends StatelessWidget {
               label: l10n.muscleNames([...main, ...secondary]),
               child: ExcludeSemantics(
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   spacing: 28,
                   children: [
-                    side(l10n.libraryFront, back: false),
-                    side(l10n.libraryBack, back: true),
+                    Expanded(child: side(l10n.libraryFront, back: false)),
+                    Expanded(child: side(l10n.libraryBack, back: true)),
                   ],
                 ),
               ),
@@ -482,9 +485,9 @@ class MuscleModelPair extends StatelessWidget {
   }
 }
 
-/// The model held still, facing the front or the [back], in [base] with
-/// a colour per mesh in [colors] and the meshes in [outlined] ringed in
-/// danger.
+/// The model held still, facing the front or the [back], at [zoom], in
+/// [base] with a colour per mesh in [colors] and the meshes in [outlined]
+/// ringed in danger.
 class StillMuscleModel extends StatefulWidget {
   const StillMuscleModel({
     super.key,
@@ -493,6 +496,7 @@ class StillMuscleModel extends StatefulWidget {
     required this.base,
     required this.colors,
     this.outlined = const {},
+    this.zoom = 1,
   });
 
   final Model3D model;
@@ -500,13 +504,17 @@ class StillMuscleModel extends StatefulWidget {
   final Color base;
   final Map<String, Color> colors;
   final Set<String> outlined;
+  final double zoom;
 
   @override
   State<StillMuscleModel> createState() => _StillMuscleModelState();
 }
 
 class _StillMuscleModelState extends State<StillMuscleModel> {
-  late final _camera = ModelViewerController(yaw: widget.back ? math.pi : 0);
+  late final _camera = ModelViewerController(
+    yaw: widget.back ? math.pi : 0,
+    zoom: widget.zoom,
+  );
 
   @override
   void dispose() {

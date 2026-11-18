@@ -94,7 +94,6 @@ class ExerciseCard extends StatelessWidget {
   final String? group;
   final Widget Function(int item, Widget line)? wrapLine;
 
-  static const double _letterSize = 28;
   static const double _checkSize = 22;
 
   @override
@@ -196,7 +195,7 @@ class ExerciseCard extends StatelessWidget {
                           spacing: 10,
                           children: [
                             if (item.letter case final letter?)
-                              _Letter(letter)
+                              SetBubble.letter(letter)
                             else if (item.allDone)
                               const _DoneCheck(),
                             Expanded(
@@ -254,7 +253,7 @@ class ExerciseCard extends StatelessWidget {
                                 spacing: 10,
                                 children: [
                                   if (item.letter case final letter?)
-                                    _Letter(letter),
+                                    SetBubble.letter(letter),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -363,7 +362,7 @@ class ExerciseCard extends StatelessWidget {
               child: Row(
                 spacing: 10,
                 children: [
-                  if (item.letter case final letter?) _Letter(letter),
+                  if (item.letter case final letter?) SetBubble.letter(letter),
                   Expanded(child: _name(context, item)),
                   _count(context, item),
                 ],
@@ -429,35 +428,6 @@ class _Bar extends StatelessWidget {
 }
 
 /// An exercise's place in its group, e.g. `A1`, in a sunken circle.
-class _Letter extends StatelessWidget {
-  const _Letter(this.letter);
-
-  final String letter;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = ForgeStyle.of(context);
-    return Container(
-      width: ExerciseCard._letterSize,
-      height: ExerciseCard._letterSize,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: style.colors.surfaceSunken,
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        letter,
-        style: style.data.copyWith(
-          fontSize: 11,
-          height: 1,
-          fontWeight: FontWeight.w500,
-          color: style.colors.ink,
-        ),
-      ),
-    );
-  }
-}
-
 /// Every set done: a check in an accent circle.
 class _DoneCheck extends StatelessWidget {
   const _DoneCheck();

@@ -23,6 +23,7 @@ import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/rest.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
+import 'package:get_workout/features/workout/domain/workout_end_notice.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:get_workout/features/workout/presentation/active_workout_cubit.dart';
 import 'package:get_workout/features/workout/presentation/workout_editor.dart';
@@ -40,6 +41,8 @@ class MockWorkoutRepository extends Mock implements WorkoutRepository {}
 class MockProgramRepository extends Mock implements ProgramRepository {}
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
+
+class MockEndNotice extends Mock implements WorkoutEndNotice {}
 
 class MockProgramListCubit extends MockCubit<ProgramListState>
     implements ProgramListCubit {}
@@ -91,6 +94,7 @@ void main() {
   late StreamController<ExerciseCatalogueState> catalogueStates;
   late ExerciseCatalogueState catalogueState;
   late StreamController<UserSettings> settings;
+  late MockEndNotice endNotice;
   var clock = now;
   const retryDelay = Duration(milliseconds: 10);
 
@@ -113,6 +117,15 @@ void main() {
     catalogueStates = StreamController<ExerciseCatalogueState>.broadcast();
     catalogueState = CatalogueReady([squat, bench, plank]);
     settings = StreamController<UserSettings>.broadcast();
+    endNotice = MockEndNotice();
+    when(
+      () => endNotice.schedule(
+        any(),
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+      ),
+    ).thenAnswer((_) async => const Ok(null));
+    when(endNotice.cancel).thenAnswer((_) async => const Ok(null));
     when(() => store.load(any()))
         .thenAnswer((_) async => const Ok(LocalWorkouts()));
     when(() => store.save(any(), any()))
@@ -175,6 +188,12 @@ void main() {
       newWorkoutId: NewWorkoutId(repository),
       watchStats: WatchExerciseStats(repository),
       finishWorkout: FinishWorkout(repository, clock: () => clock),
+      scheduleEndNotice: ScheduleWorkoutEndNotice(endNotice),
+      cancelEndNotice: CancelWorkoutEndNotice(endNotice),
+      endText: (workout, lastSetAt) => (
+        title: lastSetAt == null ? 'removed' : 'ended',
+        body: '${lastSetAt?.difference(workout.startedAt).inMinutes}',
+      ),
       confirmStored: ConfirmStoredWorkout(repository),
       rebuildStats: RebuildExerciseStats(repository),
       saveAsProgram: SaveWorkoutAsProgram(SaveProgram(programRepository)),
@@ -824,6 +843,16 @@ void main() {
       return cubit;
     }
 
+    test('nothing is asked with the question turned off', () async {
+      final cubit = await withSquat(rests: false);
+      settings.add(noRest.copyWith(askEffort: false));
+      await pumpEventQueue();
+      cubit.toggleDone(first);
+      expect(cubit.state.questionRef, isNull);
+      expect(cubit.state.selection, second);
+      await cubit.close();
+    });
+
     group('with a rest', () {
       test('asks about that set while the next waits for the rest', () async {
         final cubit = await withSquat();
@@ -939,9 +968,9 @@ void main() {
           async.elapse(const Duration(seconds: 1));
           cubit.toggleDone(first);
           expect(cubit.state.askingWithRest, isTrue);
-          async.elapse(WorkoutEditor.effortQuestionTime * 3);
+          async.elapse(const Duration(minutes: 1));
           clock = clock.add(const Duration(minutes: 5));
-          async.elapse(WorkoutEditor.effortQuestionTime * 3);
+          async.elapse(const Duration(minutes: 1));
           expect(cubit.state.questionRef, first);
           unawaited(cubit.close());
           async.flushMicrotasks();
@@ -1014,42 +1043,15 @@ void main() {
         await cubit.close();
       });
 
-      test('it ends after the fallback, later when touched or in help', () {
+      test('without a rest it has no timeout either', () {
         fakeAsync((async) {
           late ActiveWorkoutCubit cubit;
           unawaited(withSquat(rests: false).then((built) => cubit = built));
           async.elapse(const Duration(seconds: 1));
           cubit.toggleDone(first);
-          const time = WorkoutEditor.effortQuestionTime;
-          async.elapse(time - const Duration(seconds: 1));
-          cubit.keepAsking();
-          async.elapse(time - const Duration(seconds: 1));
+          expect(cubit.state.askingWithRest, isFalse);
+          async.elapse(const Duration(minutes: 10));
           expect(cubit.state.questionRef, first);
-          cubit.pauseAsking();
-          async.elapse(time * 3);
-          expect(cubit.state.questionRef, first);
-          cubit.keepAsking();
-          async.elapse(time);
-          expect(cubit.state.questionRef, isNull);
-          unawaited(cubit.close());
-          async.flushMicrotasks();
-        });
-      });
-
-      test("an earlier question's time never ends a later one", () {
-        fakeAsync((async) {
-          late ActiveWorkoutCubit cubit;
-          unawaited(withSquat(rests: false).then((built) => cubit = built));
-          async.elapse(const Duration(seconds: 1));
-          cubit
-            ..toggleDone(first)
-            ..setEffort(first, const EffortStep.reserve(2));
-          async.elapse(const Duration(seconds: 5));
-          cubit.toggleDone(second);
-          async.elapse(
-            WorkoutEditor.effortQuestionTime - const Duration(seconds: 4),
-          );
-          expect(cubit.state.questionRef, second);
           unawaited(cubit.close());
           async.flushMicrotasks();
         });
@@ -1125,7 +1127,7 @@ void main() {
         async.flushMicrotasks();
         // Closing itself may still clear the stats.
         emitted.clear();
-        async.elapse(WorkoutEditor.effortQuestionTime * 2);
+        async.elapse(const Duration(minutes: 1));
         expect(emitted, isEmpty);
       });
     });
@@ -2242,6 +2244,119 @@ void main() {
         expect(cubit.state.doneSetPicked, isFalse);
         await cubit.close();
       });
+    });
+  });
+
+  group('left open', () {
+    final lastSet = now.add(const Duration(minutes: 52));
+    final draft = Workout(
+      id: 'w1',
+      startedAt: now,
+      name: 'Legs',
+      exercises: [
+        exercise('squat', [lift(100, 5), const WorkoutSet()]),
+      ],
+    );
+    final untouched = Workout(
+      id: 'w1',
+      startedAt: now,
+      name: 'Legs',
+      exercises: [
+        exercise('squat', [lift(100, 5, done: false)]),
+      ],
+    );
+
+    /// The notice last scheduled.
+    EndNotice scheduled() {
+      final captured = verify(
+        () => endNotice.schedule(
+          captureAny(),
+          title: captureAny(named: 'title'),
+          body: captureAny(named: 'body'),
+        ),
+      ).captured;
+      final [at, title, body] = captured.sublist(captured.length - 3);
+      return (at: at as DateTime, title: title as String, body: body as String);
+    }
+
+    test('a ticked set moves the notice to four hours after it', () async {
+      final cubit = await signedIn(draft: untouched);
+      clock = lastSet;
+      cubit.toggleDone((exercise: 0, set: 0));
+      final notice = scheduled();
+      expect(notice.at, lastSet.add(workoutIdleLimit));
+      expect(notice.title, 'ended');
+      expect(notice.body, '52');
+      expect(keptLocal().lastSetAt, lastSet);
+      await cubit.close();
+    });
+
+    test('with no set done it is announced as removed, four hours from '
+        'its start', () async {
+      final cubit = await signedIn(draft: untouched);
+      final notice = scheduled();
+      expect(notice.at, now.add(workoutIdleLimit));
+      expect(notice.title, 'removed');
+      await cubit.close();
+    });
+
+    test('past its time it ends at its last set, and its summary is '
+        'marked', () async {
+      clock = lastSet.add(workoutIdleLimit + const Duration(minutes: 5));
+      final cubit = await signedIn(
+        local: LocalWorkouts(draft: draft, lastSetAt: lastSet),
+      );
+      await pumpEventQueue();
+      expect(cubit.state.status, WorkoutStatus.finished);
+      expect(cubit.state.selfEnded, isTrue);
+      expect(cubit.state.workout!.finishedAt, lastSet);
+      // The notice that told the user stays.
+      verifyNever(endNotice.cancel);
+      cubit.summaryShown();
+      expect(cubit.state.selfEnded, isFalse);
+      await cubit.close();
+    });
+
+    test('past its time with no set done it is thrown away', () async {
+      clock = now.add(workoutIdleLimit);
+      final cubit = await signedIn(draft: untouched);
+      await pumpEventQueue();
+      expect(cubit.state.status, WorkoutStatus.none);
+      expect(kept(), isNull);
+      verifyNever(
+        () => repository.saveWorkout(
+          any(),
+          any(),
+          any(),
+          advance: any(named: 'advance'),
+        ),
+      );
+      await cubit.close();
+    });
+
+    test('ends when the app shows after its time passed', () async {
+      final cubit = await signedIn(
+        local: LocalWorkouts(draft: draft, lastSetAt: lastSet),
+      );
+      expect(cubit.state.status, WorkoutStatus.active);
+      clock = lastSet.add(workoutIdleLimit);
+      cubit.appShown();
+      await pumpEventQueue();
+      expect(cubit.state.status, WorkoutStatus.finished);
+      expect(cubit.state.workout!.finishedAt, lastSet);
+      await cubit.close();
+    });
+
+    test('finished by hand, the notice is cancelled and nothing is '
+        'marked', () async {
+      final cubit = await signedIn(
+        local: LocalWorkouts(draft: draft, lastSetAt: lastSet),
+      );
+      clock = end;
+      await cubit.finish();
+      expect(cubit.state.selfEnded, isFalse);
+      verify(endNotice.cancel).called(1);
+      await cubit.close();
     });
   });
 }

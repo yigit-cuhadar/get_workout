@@ -10,6 +10,7 @@ import '../../programs/domain/program_usecases.dart';
 import 'exercise_stats.dart';
 import 'workout.dart';
 import 'workout_editing.dart';
+import 'workout_end_notice.dart';
 import 'workout_lock_screen.dart';
 import 'workout_repository.dart';
 
@@ -22,7 +23,14 @@ typedef LocalWorkoutsSave = ({String uid, LocalWorkouts workouts});
 typedef KnownProgram = ({ActiveProgram? active, Program? program});
 
 /// [program] is null when the programs are not known (yet).
-typedef WorkoutFinish = ({String uid, Workout workout, KnownProgram? program});
+/// [at] ends the workout at that time instead of now, as when it ended
+/// itself (see [idleEnd]).
+typedef WorkoutFinish = ({
+  String uid,
+  Workout workout,
+  KnownProgram? program,
+  DateTime? at,
+});
 
 /// The stored workout, what it amounted to, and the exercises whose stats
 /// need rebuilding: those not confirmed by the server at finishing.
@@ -48,6 +56,26 @@ typedef ProgramDayUpdate = ({
   List<ProgramItem> items,
   Map<String, Exercise> catalogue,
 });
+
+/// A [WorkoutEndNotice] at [at].
+typedef EndNotice = ({DateTime at, String title, String body});
+
+class ScheduleWorkoutEndNotice implements UseCase<void, EndNotice> {
+  const ScheduleWorkoutEndNotice(this._notice);
+  final WorkoutEndNotice _notice;
+
+  @override
+  Future<Result<void>> call(EndNotice params) =>
+      _notice.schedule(params.at, title: params.title, body: params.body);
+}
+
+class CancelWorkoutEndNotice implements UseCase<void, NoParams> {
+  const CancelWorkoutEndNotice(this._notice);
+  final WorkoutEndNotice _notice;
+
+  @override
+  Future<Result<void>> call(NoParams params) => _notice.cancel();
+}
 
 class LoadLocalWorkouts implements UseCase<LocalWorkouts, String> {
   const LoadLocalWorkouts(this._store);
@@ -110,7 +138,7 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
 
   @override
   Future<Result<FinishedWorkout>> call(WorkoutFinish params) async {
-    final workout = finishWorkout(params.workout, _clock());
+    final workout = finishWorkout(params.workout, params.at ?? _clock());
     if (workout.exercises.isEmpty) {
       return const Err(ValidationFailure('no done set'));
     }

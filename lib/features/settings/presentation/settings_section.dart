@@ -62,15 +62,32 @@ class WorkoutSettingsGroups extends StatelessWidget {
           rows: [
             ChoiceSettingRow(
               title: l10n.settingsEffort,
-              values: EffortScale.values,
-              selected: settings.effortScale,
-              labelOf: (scale) => switch (scale) {
-                EffortScale.byFeel => l10n.effortByFeel,
-                EffortScale.rir => l10n.effortRir,
-                EffortScale.rpe => l10n.effortRpe,
+              subtitle: l10n.settingsEffortInfo,
+              values: _EffortChoice.values,
+              selected: settings.askEffort
+                  ? _EffortChoice.values.byName(settings.effortScale.name)
+                  : _EffortChoice.off,
+              labelOf: (choice) => switch (choice) {
+                _EffortChoice.off => l10n.effortOff,
+                _EffortChoice.byFeel => l10n.settingDefault(l10n.effortByFeel),
+                _EffortChoice.rir => l10n.effortRir,
+                _EffortChoice.rpe => l10n.effortRpe,
               },
-              onChanged: (scale) =>
-                  cubit.update(settings.copyWith(effortScale: scale)),
+              detailOf: (choice) => switch (choice) {
+                _EffortChoice.off => null,
+                _EffortChoice.byFeel => l10n.effortByFeelInfo,
+                _EffortChoice.rir => l10n.effortRirInfo,
+                _EffortChoice.rpe => l10n.effortRpeInfo,
+              },
+              // Off keeps the scale efforts are shown and picked in.
+              onChanged: (choice) => cubit.update(
+                choice == _EffortChoice.off
+                    ? settings.copyWith(askEffort: false)
+                    : settings.copyWith(
+                        askEffort: true,
+                        effortScale: EffortScale.values.byName(choice.name),
+                      ),
+              ),
             ),
             ListRow(
               title: l10n.settingsAutoWarmups,
@@ -108,7 +125,9 @@ class WorkoutSettingsGroups extends StatelessWidget {
                 title: l10n.settingsRestAlert,
                 values: RestAlert.values,
                 selected: rest.alert,
-                labelOf: l10n.restAlertLabel,
+                labelOf: (alert) => alert == const RestTimerSettings().alert
+                    ? l10n.settingDefault(l10n.restAlertLabel(alert))
+                    : l10n.restAlertLabel(alert),
                 onChanged: (alert) => updateRest(rest.copyWith(alert: alert)),
               ),
             ],
@@ -133,6 +152,10 @@ class WorkoutSettingsGroups extends StatelessWidget {
     );
   }
 }
+
+/// The effort setting's choices: a scale the question asks in, or no
+/// question.
+enum _EffortChoice { off, byFeel, rir, rpe }
 
 /// The Appearance group: light, dark or the system's, and the first day
 /// of the week. Needs [SettingsCubit] above it.

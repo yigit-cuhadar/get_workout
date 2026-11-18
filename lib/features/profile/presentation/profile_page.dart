@@ -97,7 +97,9 @@ class ProfilePage extends StatelessWidget {
 
 /// The account: a guest is asked to keep their workouts in an account (the
 /// guest account sheet); a named user shows the name over the email and
-/// opens Account; without a name the email stands in for it.
+/// opens Account; without a name the email stands in for it. An Apple
+/// relay address is never shown: a named user shows the name alone, an
+/// unnamed one is "Apple account" with a person icon.
 class _Header extends StatelessWidget {
   const _Header();
 
@@ -124,8 +126,22 @@ class _Header extends StatelessWidget {
         ),
       );
     }
-    final email = user.email ?? '';
     final name = user.displayName?.trim() ?? '';
+    // Apple shares no name and, unless the user lets it, only a relay
+    // address that means nothing to them.
+    final email = isAppleRelay(user.email) ? '' : user.email ?? '';
+    if (name.isEmpty &&
+        email.isEmpty &&
+        user.signInMethods.contains(SignInMethod.apple)) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.xs, Gap.xs, 0),
+        child: ProfileHeader.guest(
+          name: l10n.profileAppleName,
+          detail: l10n.profileAppleDetail,
+          onTap: open,
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.xs, Gap.xs, 0),
       child: ProfileHeader(
@@ -137,6 +153,12 @@ class _Header extends StatelessWidget {
     );
   }
 }
+
+/// Whether [email] is an address Sign in with Apple made up to hide the
+/// user's own.
+@visibleForTesting
+bool isAppleRelay(String? email) =>
+    email?.toLowerCase().endsWith('@privaterelay.appleid.com') ?? false;
 
 /// Up to two letters: the first of the first two words of [name], or of
 /// an email its first letter.

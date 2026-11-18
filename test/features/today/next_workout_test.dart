@@ -173,13 +173,13 @@ void main() {
 
     test('does not count while empty, nor once finished', () {
       final empty = Workout(id: 'w4', startedAt: started, name: 'Workout');
-      expect(next(ready(), running(empty)), const NoProgramDay());
+      expect(next(ready(), running(empty)), const NoProgramDay(saved: 1));
       expect(
         next(
           ready(),
           ActiveWorkoutState(status: WorkoutStatus.finished, workout: lower),
         ),
-        const NoProgramDay(),
+        const NoProgramDay(saved: 1),
       );
     });
 
@@ -255,9 +255,12 @@ void main() {
     );
   });
 
-  test('without an active program there is no program day', () {
-    expect(idle(ready()), const NoProgramDay());
-  });
+  test(
+    'without an active program there is no program day, the saved ones counted',
+    () {
+      expect(idle(ready()), const NoProgramDay(saved: 1));
+    },
+  );
 
   test('an active program that no longer exists is none', () {
     expect(
@@ -269,7 +272,7 @@ void main() {
   test('a finished program is named, with no day to do', () {
     expect(
       idle(ready(activeProgram: active, finished: true)),
-      NoProgramDay(finished: upperLower),
+      NoProgramDay(finished: upperLower, saved: 1),
     );
   });
 

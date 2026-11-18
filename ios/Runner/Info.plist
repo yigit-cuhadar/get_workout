@@ -19,7 +19,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Get Workout</string>
+	<string>GetWorkout</string>
 	<key>FirebaseMessagingAutoInitEnabled</key>
 	<false/>
 	<key>CFBundleExecutable</key>

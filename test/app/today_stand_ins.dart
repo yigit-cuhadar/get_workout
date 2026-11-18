@@ -10,9 +10,13 @@ import 'package:get_workout/features/today/presentation/today_steps_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_volume_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_week_cubit.dart';
 import 'package:get_workout/features/volume/domain/weekly_volume.dart';
+import 'package:get_workout/features/workout/presentation/rest_timer_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _WeekCubit extends MockCubit<TodayWeekState> implements TodayWeekCubit {}
+
+class _RestTimerCubit extends MockCubit<RestTimerState>
+    implements RestTimerCubit {}
 
 class _VolumeCubit extends MockCubit<TodayVolumeState>
     implements TodayVolumeCubit {}
@@ -95,4 +99,13 @@ BlocProvider<EntitlementCubit> unknownPremium() {
   final cubit = _EntitlementCubit();
   when(() => cubit.state).thenReturn(const EntitlementUnknown());
   return BlocProvider<EntitlementCubit>.value(value: cubit);
+}
+
+/// A rest timer that has nothing to ask as a workout starts, for tests
+/// that start one without testing the rest alerts.
+BlocProvider<RestTimerCubit> askedRestAlerts() {
+  final cubit = _RestTimerCubit();
+  when(() => cubit.state).thenReturn(const RestTimerState());
+  when(cubit.shouldAskNotify).thenAnswer((_) async => false);
+  return BlocProvider<RestTimerCubit>.value(value: cubit);
 }

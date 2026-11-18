@@ -241,11 +241,28 @@ class ProfileQuestion extends StatelessWidget {
         };
       },
     );
+    // In onboarding the target weight follows the weight with the same
+    // ruler, so it says plainly that this is another question.
+    final weightKg = context.select(
+      (ProfileFormCubit cubit) => cubit.state.answers.weightKg,
+    );
+    final unit = context.select(
+      (SettingsCubit cubit) => cubit.state.settings.weightUnit,
+    );
+    final goalWeight =
+        onboarding && field == ProfileField.targetWeight && weightKg != null;
     return OnboardingQuestionBody(
-      title: l10n.question(field),
-      info: onboarding && field == ProfileField.goal
-          ? l10n.onboardingGoalInfo
-          : l10n.questionInfo(field),
+      eyebrow: goalWeight ? l10n.onboardingTargetWeightEyebrow : null,
+      title: goalWeight
+          ? l10n.onboardingTargetWeightTitle
+          : l10n.question(field),
+      info: switch (field) {
+        ProfileField.goal when onboarding => l10n.onboardingGoalInfo,
+        _ when goalWeight => l10n.onboardingTargetWeightInfo(
+          l10n.weightText(weightKg, unit),
+        ),
+        _ => l10n.questionInfo(field),
+      },
       answer: answer,
       scrolls: switch (field) {
         ProfileField.goal ||

@@ -477,47 +477,39 @@ class _EffortQuestion extends StatelessWidget {
       settings.tipSeen(Tip.effort);
     }
 
-    return Listener(
-      onPointerDown: (_) => editor.keepAsking(),
-      child: BlocBuilder<RestTimerCubit, RestTimerState>(
-        buildWhen: (previous, current) =>
-            previous.phase != current.phase ||
-            previous.remainingS != current.remainingS ||
-            previous.totalS != current.totalS,
-        builder: (context, rest) {
-          final resting =
-              state.askingWithRest && rest.phase == RestPhase.running;
-          return EffortQuestion(
-            question: resting
-                ? l10n.effortAskTitle(scale, exercise, asked.set)
-                : l10n.effortQuestionText(scale),
-            values: resting
-                ? values
-                : l10n.effortDoneValues(
-                    workout,
-                    asked,
-                    state.selection,
-                    current.weightUnit,
-                  ),
-            options: options,
-            selected: chosen == null ? null : steps.indexOf(chosen),
-            onSelected: pick,
-            onHelp: () async {
-              editor.pauseAsking();
-              await openWorkoutHelp(context);
-              editor.keepAsking();
-            },
-            rest: resting ? _rest(context, rest) : null,
-            tip: tip
-                ? TipBanner(
-                    message: l10n.tipEffort,
-                    dismissLabel: l10n.tipDismiss,
-                    onDismiss: () => settings.tipSeen(Tip.effort),
-                  )
-                : null,
-          );
-        },
-      ),
+    return BlocBuilder<RestTimerCubit, RestTimerState>(
+      buildWhen: (previous, current) =>
+          previous.phase != current.phase ||
+          previous.remainingS != current.remainingS ||
+          previous.totalS != current.totalS,
+      builder: (context, rest) {
+        final resting = state.askingWithRest && rest.phase == RestPhase.running;
+        return EffortQuestion(
+          question: resting
+              ? l10n.effortAskTitle(scale, exercise, asked.set)
+              : l10n.effortQuestionText(scale),
+          values: resting
+              ? values
+              : l10n.effortDoneValues(
+                  workout,
+                  asked,
+                  state.selection,
+                  current.weightUnit,
+                ),
+          options: options,
+          selected: chosen == null ? null : steps.indexOf(chosen),
+          onSelected: pick,
+          onHelp: () => openWorkoutHelp(context),
+          rest: resting ? _rest(context, rest) : null,
+          tip: tip
+              ? TipBanner(
+                  message: l10n.tipEffort,
+                  dismissLabel: l10n.tipDismiss,
+                  onDismiss: () => settings.tipSeen(Tip.effort),
+                )
+              : null,
+        );
+      },
     );
   }
 

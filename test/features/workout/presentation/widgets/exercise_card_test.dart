@@ -11,6 +11,9 @@ Future<void> _pump(WidgetTester tester, ExerciseCard card) => tester.pumpWidget(
   ),
 );
 
+/// The set bubbles, not the group letters.
+final _setBubbles = find.byWidgetPredicate((w) => w is SetBubble && !w.letter);
+
 SetBubble _bubble(String label) =>
     SetBubble(label: label, semanticLabel: label, onTap: () {});
 
@@ -71,7 +74,7 @@ void main() {
     );
     expect(find.text('Goal: 4 × 6–8'), findsOneWidget);
     expect(find.text('Use the flat bench'), findsOneWidget);
-    expect(find.byType(SetBubble), findsNWidgets(6));
+    expect(_setBubbles, findsNWidgets(6));
   });
 
   testWidgets('a group shows its label and letters; open, a round grid', (
@@ -101,10 +104,10 @@ void main() {
     expect(find.text('Superset A'), findsOneWidget);
     // Each letter leads its line and its row of bubbles.
     expect(find.text('A1'), findsNWidgets(2));
-    expect(find.byType(SetBubble), findsNWidgets(8));
+    expect(_setBubbles, findsNWidgets(8));
     // A round's bubbles share a column.
-    final first = find.byType(SetBubble).at(0);
-    final below = find.byType(SetBubble).at(4);
+    final first = _setBubbles.at(0);
+    final below = _setBubbles.at(4);
     expect(tester.getTopLeft(first).dx, tester.getTopLeft(below).dx);
     await tester.tap(find.text('Triceps Pushdown'));
     expect(selected, [1]);

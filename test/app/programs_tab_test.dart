@@ -89,6 +89,7 @@ void main() {
       MultiBlocProvider(
         providers: [
           BlocProvider<ActiveWorkoutCubit>.value(value: cubit),
+          askedRestAlerts(),
           BlocProvider<ExerciseCatalogueCubit>.value(value: catalogue),
           BlocProvider<BodyModelCubit>.value(value: model),
           unknownPremium(),

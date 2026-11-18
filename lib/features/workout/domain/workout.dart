@@ -261,6 +261,8 @@ class Workout extends Equatable {
 
   bool get hasUndoneSets => exercises.any((e) => e.sets.any((s) => !s.done));
 
+  bool get hasDoneSets => exercises.any((e) => e.sets.any((s) => s.done));
+
   Workout copyWith({
     DateTime? startedAt,
     DateTime? finishedAt,

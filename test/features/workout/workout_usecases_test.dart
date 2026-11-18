@@ -87,7 +87,12 @@ void main() {
             }),
           );
 
-      final result = await finish((uid: 'u1', workout: draft, program: null));
+      final result = await finish((
+        uid: 'u1',
+        workout: draft,
+        program: null,
+        at: null,
+      ));
 
       final finished = result.valueOrNull!;
       expect(finished.workout.finishedAt, end);
@@ -144,6 +149,7 @@ void main() {
         uid: 'u1',
         workout: fromDay(0),
         program: (active: active, program: legs),
+        at: null,
       ));
       expect(result.isOk, isTrue);
       final advance =
@@ -165,6 +171,7 @@ void main() {
         uid: 'u1',
         workout: fromDay(1),
         program: (active: active, program: legs),
+        at: null,
       ));
       verify(() => repository.saveWorkout('u1', any(), any(), advance: null))
           .called(1);
@@ -175,6 +182,7 @@ void main() {
         uid: 'u1',
         workout: fromDay(0),
         program: null,
+        at: null,
       ));
       expect(result.valueOrNull!.summary.programUnknown, isTrue);
       verify(() => repository.saveWorkout('u1', any(), any(), advance: null))
@@ -188,6 +196,7 @@ void main() {
           exercise('squat', [lift(100, 5, done: false)]),
         ]),
         program: null,
+        at: null,
       ));
       expect(result.failureOrNull, isA<ValidationFailure>());
       verifyNever(() => repository.getStats(any(), any()));
@@ -200,6 +209,7 @@ void main() {
           exercise('squat', [const WorkoutSet(reps: 5, done: true)]),
         ]),
         program: null,
+        at: null,
       ));
       expect(result.failureOrNull, isA<ValidationFailure>());
     });
@@ -207,7 +217,12 @@ void main() {
     test('a failed read stores nothing', () async {
       when(() => repository.getStats(any(), any()))
           .thenAnswer((_) async => const Err(UnknownFailure()));
-      final result = await finish((uid: 'u1', workout: draft, program: null));
+      final result = await finish((
+        uid: 'u1',
+        workout: draft,
+        program: null,
+        at: null,
+      ));
       expect(result.failureOrNull, isA<UnknownFailure>());
       verifyNever(
         () => repository.saveWorkout(
@@ -246,6 +261,7 @@ void main() {
         uid: 'u1',
         workout: day,
         program: (active: active, program: legs),
+        at: null,
       ));
       await pumpEventQueue();
       // The program has moved on, so the second finish does not move it.
@@ -256,6 +272,7 @@ void main() {
         uid: 'u1',
         workout: day,
         program: (active: moved, program: legs),
+        at: null,
       ));
       await pumpEventQueue();
 

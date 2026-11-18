@@ -175,7 +175,7 @@ class _WorkoutCard extends StatelessWidget {
       RestDay() => _RestDayCard(next),
       DoneToday() => _DoneTodayCard(next),
       MissedProgramDay() => _MissedDayCard(next, busy: state.resolving),
-      NoProgramDay(:final finished) => _NoProgramDay(finished),
+      final NoProgramDay next => _NoProgramDay(next),
       null when state.status != ProgramListStatus.failure =>
         FeaturedCard.loading(eyebrow: l10n.todayNextTitle),
       null => SectionCard.error(
@@ -404,30 +404,41 @@ class _MissedDayCard extends StatelessWidget {
   }
 }
 
-/// No program day to do: the ways to a program, or to just train.
+/// No program day to do: the ways to a program, or to just train. With
+/// programs of their own and none finished, the user is pointed at those.
 class _NoProgramDay extends StatelessWidget {
-  const _NoProgramDay(this.finished);
-  final Program? finished;
+  const _NoProgramDay(this.next);
+  final NoProgramDay next;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final finished = this.finished;
+    final NoProgramDay(:finished, :saved) = next;
+    final own = finished == null && saved > 0;
     return FeaturedCard(
       form: FeaturedCardForm.prompt,
       eyebrow: finished == null
           ? l10n.todayGetStarted
           : l10n.todayProgramFinishedEyebrow,
-      title: finished == null
-          ? l10n.todayPickFirstProgram
-          : l10n.todayPickNextProgram,
-      note: finished == null
-          ? l10n.todayNoProgram
-          : l10n.todayProgramFinished(finished.name),
-      action: FeaturedAction(
-        l10n.todaySeeReadyMade,
-        () => context.go(Routes.catalogue),
-      ),
+      title: switch (finished) {
+        _ when own => l10n.todayChooseProgram,
+        null => l10n.todayPickFirstProgram,
+        _ => l10n.todayPickNextProgram,
+      },
+      note: switch (finished) {
+        _ when own => l10n.todaySavedPrograms(saved),
+        null => l10n.todayNoProgram,
+        final finished => l10n.todayProgramFinished(finished.name),
+      },
+      action: own
+          ? FeaturedAction(
+              l10n.todaySeeYourPrograms,
+              () => context.go(Routes.programs),
+            )
+          : FeaturedAction(
+              l10n.todaySeeReadyMade,
+              () => context.go(Routes.catalogue),
+            ),
       moreActions: [
         FeaturedAction(
           l10n.generatorTitle,

@@ -293,9 +293,7 @@ void main() {
     expect(find.byType(Progress), findsNWidgets(2));
   });
 
-  testWidgets('one weigh-in shows the box where the line will be', (
-    tester,
-  ) async {
+  testWidgets('one weigh-in has no trend until the second', (tester) async {
     when(() => body.state).thenReturn(
       ProgressBodyState(
         status: BodyListStatus.ready,
@@ -307,7 +305,8 @@ void main() {
     );
     await pumpProgress(tester);
 
-    expect(find.text('Log again to see the trend'), findsOneWidget);
+    expect(find.byType(app.Sparkline), findsNothing);
+    expect(find.text('82.4 kg'), findsOneWidget);
     expect(find.textContaining('since'), findsNothing);
   });
 
