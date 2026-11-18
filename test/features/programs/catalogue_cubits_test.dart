@@ -372,7 +372,7 @@ void main() {
       exercises: exercises,
       getDays: GetCatalogueDays(catalogueRepository),
       saveProgram: SaveProgram(programRepository),
-      startProgram: StartProgram(programRepository),
+      startProgram: StartProgram(programRepository, const NoCompletedDays()),
       getCurrentUser: GetCurrentUser(auth),
       retryDelay: Duration.zero,
     );

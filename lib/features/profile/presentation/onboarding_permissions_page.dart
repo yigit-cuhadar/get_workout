@@ -11,9 +11,10 @@ import '../../steps/domain/steps.dart';
 import '../../steps/presentation/health_access_cubit.dart';
 import '../domain/user_profile.dart';
 
-/// After the last onboarding question: the workout reminder, then the
-/// health store unless access is granted or there is none, then [next]
-/// (the program suggestion). A refused permission moves on silently.
+/// After the last onboarding question: the workout reminder unless the
+/// device already lets the app notify, then the health store unless access
+/// is granted or there is none, then [next] (the program suggestion). A
+/// refused permission moves on silently.
 class OnboardingPermissionsPage extends StatelessWidget {
   const OnboardingPermissionsPage({super.key, required this.next});
 
@@ -82,7 +83,12 @@ class _StepsState extends State<_Steps> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    switch (_step) {
+    final notifying = context.select(
+      (NotificationsCubit cubit) => cubit.state.allowed == true,
+    );
+    // Allowed already: nothing to ask, so the reminder stays as it is.
+    final step = _step == _Step.reminders && notifying ? _Step.health : _step;
+    switch (step) {
       case _Step.done:
         return widget.next;
       case _Step.reminders:

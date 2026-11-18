@@ -153,11 +153,17 @@ class DeleteProgram implements UseCase<void, ProgramDelete> {
 }
 
 /// Makes the program active from today, replacing any other, with one
-/// weekday per program day.
+/// weekday per program day. A first day already done today counts as
+/// done, as finishing it while active would have (see
+/// [ProgramSchedule.complete]), so the same day is never suggested twice.
 class StartProgram implements UseCase<void, ProgramStart> {
-  StartProgram(this._repository, {DateTime Function()? clock})
-    : _clock = clock ?? DateTime.now;
+  StartProgram(
+    this._repository,
+    this._completedDays, {
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now;
   final ProgramRepository _repository;
+  final CompletedDays _completedDays;
   final DateTime Function() _clock;
 
   @override
@@ -171,15 +177,35 @@ class StartProgram implements UseCase<void, ProgramStart> {
       return const Err(ValidationFailure('one weekday per program day'));
     }
     final now = _clock();
-    return _repository.startProgram(
-      params.uid,
-      ProgramSchedule.start(
-        programId: id,
-        weekdays: params.weekdays,
-        today: CalendarDate.of(now),
-        startedAt: now,
-      ),
+    final today = CalendarDate.of(now);
+    final dayCount = params.program.days.length;
+    final doneToday = await _completedDays
+        .watch(params.uid, id, from: today, to: today)
+        .first
+        .then(
+          (days) => {for (final day in days) day.dayIndex},
+          onError: (Object error) {
+            Log.e('programs', 'days done today unknown: $error');
+            return const <int>{};
+          },
+        );
+    var active = ProgramSchedule.start(
+      programId: id,
+      weekdays: params.weekdays,
+      today: today,
+      startedAt: now,
     );
+    for (
+      var i = 0;
+      i < dayCount && doneToday.contains(active.nextDayIndex);
+      i++
+    ) {
+      active = ProgramSchedule(
+        active,
+        dayCount: dayCount,
+      ).complete(dayIndex: active.nextDayIndex, on: today);
+    }
+    return _repository.startProgram(params.uid, active);
   }
 }
 

@@ -4,7 +4,9 @@ import 'package:get_workout/core/text_length.dart';
 import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
+import 'package:get_workout/features/programs/data/no_completed_days.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
+import 'package:get_workout/features/programs/domain/completed_days.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/core/grouping.dart';
 import 'package:get_workout/features/programs/domain/program_editing.dart';
@@ -14,6 +16,8 @@ import 'package:get_workout/features/programs/domain/program_validation.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
+
+class _CompletedDays extends Mock implements CompletedDays {}
 
 class MockProgramRepository extends Mock implements ProgramRepository {}
 
@@ -787,27 +791,97 @@ void main() {
           .called(1);
     });
 
-    test('starting plans the first day on the first weekday from today', () {
-      // Wednesday 11 November 2026, 20:15.
+    test(
+      'starting plans the first day on the first weekday from today',
+      () async {
+        // Wednesday 11 November 2026, 20:15.
+        final now = DateTime(2026, 11, 11, 20, 15);
+        final start = StartProgram(
+          repository,
+          const NoCompletedDays(),
+          clock: () => now,
+        );
+        await start((
+          uid: 'u1',
+          program: program(id: 'p1'),
+          weekdays: const [5, 1],
+        ));
+        verify(
+          () => repository.startProgram(
+            'u1',
+            ActiveProgram(
+              programId: 'p1',
+              weekdays: const [1, 5],
+              nextDayIndex: 0,
+              nextDate: CalendarDate(2026, 11, 13),
+              startedAt: now,
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    test('starting after the first day was done today plans the next day, '
+        'as finishing it would have', () async {
+      // Wednesday 11 November 2026, 20:15; trains Monday and Wednesday.
       final now = DateTime(2026, 11, 11, 20, 15);
-      final start = StartProgram(repository, clock: () => now);
-      start((uid: 'u1', program: program(id: 'p1'), weekdays: const [5, 1]));
+      final today = CalendarDate.of(now);
+      final completed = _CompletedDays();
+      when(() => completed.watch('u1', 'p1', from: today, to: today))
+          .thenAnswer(
+            (_) => Stream.value([CompletedDay(date: today, dayIndex: 0)]),
+          );
+      final start = StartProgram(repository, completed, clock: () => now);
+      await start((
+        uid: 'u1',
+        program: program(id: 'p1'),
+        weekdays: const [1, 3],
+      ));
       verify(
         () => repository.startProgram(
           'u1',
           ActiveProgram(
             programId: 'p1',
-            weekdays: const [1, 5],
-            nextDayIndex: 0,
-            nextDate: CalendarDate(2026, 11, 13),
+            weekdays: const [1, 3],
+            nextDayIndex: 1,
+            nextDate: CalendarDate(2026, 11, 16),
             startedAt: now,
           ),
         ),
       ).called(1);
     });
 
+    test(
+      'starting when the done days cannot be read plans the first day',
+      () async {
+        final now = DateTime(2026, 11, 11, 20, 15);
+        final today = CalendarDate.of(now);
+        final completed = _CompletedDays();
+        when(() => completed.watch('u1', 'p1', from: today, to: today))
+            .thenAnswer((_) => Stream.error(Exception('offline')));
+        final start = StartProgram(repository, completed, clock: () => now);
+        await start((
+          uid: 'u1',
+          program: program(id: 'p1'),
+          weekdays: const [1, 3],
+        ));
+        verify(
+          () => repository.startProgram(
+            'u1',
+            ActiveProgram(
+              programId: 'p1',
+              weekdays: const [1, 3],
+              nextDayIndex: 0,
+              nextDate: CalendarDate(2026, 11, 11),
+              startedAt: now,
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
     test('starting needs one distinct weekday per day', () async {
-      final start = StartProgram(repository);
+      final start = StartProgram(repository, const NoCompletedDays());
       for (final weekdays in [
         const [1],
         const [1, 3, 5],

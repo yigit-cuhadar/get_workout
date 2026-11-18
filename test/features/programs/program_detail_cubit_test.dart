@@ -112,7 +112,11 @@ void main() {
   ProgramDetailCubit build([String id = 'p1']) => ProgramDetailCubit(
     id,
     list: list,
-    startProgram: StartProgram(repository, clock: () => now),
+    startProgram: StartProgram(
+      repository,
+      const NoCompletedDays(),
+      clock: () => now,
+    ),
     changeWeekdays: ChangeWeekdays(repository, clock: () => now),
     stopProgram: StopProgram(repository),
     duplicateProgram: DuplicateProgram(repository),

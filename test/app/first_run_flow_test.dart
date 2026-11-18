@@ -20,6 +20,15 @@ final slowLine = find.byWidgetPredicate(
   (widget) => widget.runtimeType.toString() == 'RunnerLine',
 );
 
+/// Every choice question answered, so Continue goes through them.
+const choicesAnswered = UserProfile(
+  goal: Goal.buildMuscle,
+  level: Level.beginner,
+  daysPerWeek: 3,
+  equipment: {Equipment.dumbbell, Equipment.bench},
+  sex: Sex.male,
+);
+
 /// The question on screen, from 1.
 int question(WidgetTester tester) =>
     tester.widget<StepProgress>(find.byType(StepProgress)).current;
@@ -43,7 +52,8 @@ void main() {
           profile: EquipmentProfile.bodyweight,
         ),
       ]
-      ..healthAccess = StepsAccess.explain;
+      ..healthAccess = StepsAccess.explain
+      ..notificationsAllowed = false;
   });
 
   tearDown(() => app.dispose());
@@ -155,15 +165,43 @@ void main() {
     expect(find.byType(ForgeNavigationBar), findsOneWidget);
   });
 
+  testWidgets('with notifications allowed already the reminder step is not '
+      'asked; with health granted neither is that one', (tester) async {
+    app
+      ..storedProfile = choicesAnswered
+      ..notificationsAllowed = true
+      ..healthAccess = StepsAccess.granted;
+    await app.startAs(tester, guest);
+    await tapText(tester, 'Get started');
+    for (var i = 0; i < ProfileField.values.length; i++) {
+      await next(tester);
+    }
+
+    expect(find.text('Remind you on training days?'), findsNothing);
+    expect(find.text('Bring in steps and cardio?'), findsNothing);
+    expect(find.text('Your plan is ready'), findsOneWidget);
+    verifyNever(() => app.notifications.allow());
+  });
+
+  testWidgets('with notifications allowed already it goes on to health', (
+    tester,
+  ) async {
+    app
+      ..storedProfile = choicesAnswered
+      ..notificationsAllowed = true;
+    await app.startAs(tester, guest);
+    await tapText(tester, 'Get started');
+    for (var i = 0; i < ProfileField.values.length; i++) {
+      await next(tester);
+    }
+
+    expect(find.text('Remind you on training days?'), findsNothing);
+    expect(find.text('Bring in steps and cardio?'), findsOneWidget);
+  });
+
   testWidgets('Not now skips the reminders; Connect asks for health access; '
       'See other programs opens the catalogue', (tester) async {
-    app.storedProfile = const UserProfile(
-      goal: Goal.buildMuscle,
-      level: Level.beginner,
-      daysPerWeek: 3,
-      equipment: {Equipment.dumbbell, Equipment.bench},
-      sex: Sex.male,
-    );
+    app.storedProfile = choicesAnswered;
     await app.startAs(tester, guest);
     await tapText(tester, 'Get started');
     for (var i = 0; i < ProfileField.values.length; i++) {

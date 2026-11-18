@@ -459,7 +459,7 @@ void main() {
           exercises: catalogue,
           getDays: GetCatalogueDays(readyMadePrograms),
           saveProgram: SaveProgram(programs),
-          startProgram: StartProgram(programs),
+          startProgram: StartProgram(programs, const NoCompletedDays()),
           getCurrentUser: GetCurrentUser(programAuth),
         ),
       )
@@ -1730,6 +1730,8 @@ void main() {
     ) async {
       storedProfile = choicesAnswered;
       await startAsGuest(tester);
+      when(() => notifications.state)
+          .thenReturn(const NotificationsState(allowed: false));
       when(() => notifications.allow()).thenAnswer((_) async => false);
       await tester.tap(find.text('Get started'));
       await tester.pumpAndSettle();

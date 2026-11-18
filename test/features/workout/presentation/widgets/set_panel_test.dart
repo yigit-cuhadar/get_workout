@@ -138,40 +138,42 @@ void main() {
     expect(at, isNotNull);
   });
 
-  testWidgets('a missing value rings its field, says why, Log set off', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      SetPanel(
-        title: 'Bench Press · set 3 of 4',
-        details: const [],
-        labels: _labels,
-        values: [_value(null, 'kg', invalid: true), _value(8, 'reps')],
-        error: "Enter the set's values first.",
-        onOptions: () {},
-        onLog: null,
-      ),
-    );
-    // Under the row of fields, not under one of them.
-    final error = find.widgetWithText(
-      StepperFieldError,
-      "Enter the set's values first.",
-    );
-    expect(error, findsOneWidget);
-    expect(
-      tester.getTopLeft(error).dx,
-      tester.getTopLeft(find.byType(StepperField).first).dx,
-    );
-    expect(
-      tester.getTopLeft(error).dy,
-      greaterThan(tester.getBottomLeft(find.byType(StepperField).last).dy),
-    );
-    final fields = tester.widgetList<StepperField>(find.byType(StepperField));
-    expect(fields.map((field) => field.invalid), [true, false]);
-    final log = tester.widget<ForgeButton>(find.byType(ForgeButton).last);
-    expect(log.onPressed, isNull);
-  });
+  testWidgets(
+    'a missing value rings its field and says why; Log set stays on',
+    (tester) async {
+      var logged = 0;
+      await _pump(
+        tester,
+        SetPanel(
+          title: 'Bench Press · set 3 of 4',
+          details: const [],
+          labels: _labels,
+          values: [_value(null, 'kg', invalid: true), _value(8, 'reps')],
+          error: "Enter the set's values first.",
+          onOptions: () {},
+          onLog: () => logged++,
+        ),
+      );
+      // Under the row of fields, not under one of them.
+      final error = find.widgetWithText(
+        StepperFieldError,
+        "Enter the set's values first.",
+      );
+      expect(error, findsOneWidget);
+      expect(
+        tester.getTopLeft(error).dx,
+        tester.getTopLeft(find.byType(StepperField).first).dx,
+      );
+      expect(
+        tester.getTopLeft(error).dy,
+        greaterThan(tester.getBottomLeft(find.byType(StepperField).last).dy),
+      );
+      final fields = tester.widgetList<StepperField>(find.byType(StepperField));
+      expect(fields.map((field) => field.invalid), [true, false]);
+      await tester.tap(find.text('Log set'));
+      expect(logged, 1);
+    },
+  );
 
   testWidgets('a done set shows Done and its effort', (tester) async {
     var unticked = 0;

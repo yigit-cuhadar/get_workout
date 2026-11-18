@@ -71,7 +71,7 @@ class ProgramsModule implements FeatureModule {
       ..registerFactory(() => SaveProgram(sl()))
       ..registerFactory(() => DuplicateProgram(sl()))
       ..registerFactory(() => DeleteProgram(sl()))
-      ..registerFactory(() => StartProgram(sl()))
+      ..registerFactory(() => StartProgram(sl(), sl()))
       ..registerFactory(() => ChangeWeekdays(sl()))
       ..registerFactory(() => StopProgram(sl()))
       ..registerFactory(() => ResolveMissedDay(sl()))

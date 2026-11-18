@@ -428,17 +428,14 @@ Where it stands (2026-11-18, end of Group 11):
   studio #128; Forge v0.23.0–v0.24.3. The picks are under Design ›
   "Formlar, before the build" and "during the build"; the device check's
   own pick: Log cardio asks "Discard this cardio session?" when left with
-  changes. GetWorkout Studio's published link is behind main: publish
-  design/studio.html from the owner's account.
+  changes.
 - Kurulum, hesap ve abonelik: done, checked on the iOS simulator and
   approved by the owner (2026-11-17); merged as #136 (the check branch
   joining #133 splash, onboarding, sign-in, guest sheet; #132 calculators;
   #134 account, delete account, paywall, generator preview; and the
   device-check fixes), studio #135; Forge v0.25.0–v0.25.6. The picks are
   under Design › "Kurulum, hesap ve abonelik, before the build", "during
-  the build" and "Device check of Kurulum". GetWorkout Studio's published
-  link is behind main: publish design/studio.html from the owner's
-  account; MobileAppForge Studio likewise (Forge design/studio.html).
+  the build" and "Device check of Kurulum".
 - Not checked on a device: Account and Delete account (need a real
   account; covered by #138's flow tests), the real Apple Health / Health
   Connect prompts, Android, large text.
@@ -466,10 +463,10 @@ Where it stands (2026-11-18, end of Group 11):
      on the owner's iPhone.)
   5. An Android round: Google sign-in, Health Connect, the launch screen.
   6. Release: the first prod content import, then the store automation.
-- Owner to do: publish both studios from the owner's account (their links
-  are behind main), or share them with edit access so a session can; the
-  Play Console Health declaration (above); the female body model before
-  release.
+- Both studios' links match main again (published 2026-11-18 from a
+  session: they belong to the owner's account, so a session publishes
+  them directly). Owner to do: the Play Console Health declaration
+  (above); the female body model before release.
 - Small: the Forge Widgetbook use case "ListRow · Info hint" is broken.
 
 ## Design
@@ -707,7 +704,7 @@ Decisions (the canvases they were drawn on are deleted):
   program workout's summary also offers Save as program; Delete account opens
   its page, then a dialog; the custom exercise detail has no history card;
   Strength ranges are 12 weeks free and 6 months, 1 year, All Premium; the
-  effort question keeps its own Skip; the onboarding health step says the app
+  effort question keeps its own Skip (removed by the owner, 2026-11-18); the onboarding health step says the app
   reads steps and cardio sessions and writes nothing; while one sign-in runs
   the other options are disabled; catalogue programs are list rows.
 - Feature and flow decisions made during the design phase (owner's picks,
@@ -796,7 +793,8 @@ Decisions (the canvases they were drawn on are deleted):
   studios: the set panel's weight is typed on a tap and a plate button
   beside it (barbell, EZ bar and trap bar exercises only, not the Smith
   machine) opens the plate breakdown; a done set's
-  effort has no Skip, and the no-rest effort question one Skip; a card's
+  effort has no Skip, and the no-rest effort question one Skip (removed by
+  the owner, 2026-11-18); a card's
   count includes warm-ups; a collapsed group with every set done keeps its
   letter with a muted name; a lifted card leaves an empty gap; a superset or
   circuit keeps its items in step (one rounds count, one rest after the
@@ -848,8 +846,9 @@ Decisions (the canvases they were drawn on are deleted):
   Bar and the info card's muted note "Lighter than the 20 kg bar."; at the bar "Each side · No
   plates". The rest-alert question is "Notify when a rest ends?" with "Get
   a notification when a rest is over while GetWorkout is in the
-  background." (Allow · Not now). Log set stays off while a value is
-  missing. Dialogs' Cancel is the secondary button; every ⋯ menu row has
+  background." (Allow · Not now). Log set is always on (owner,
+  2026-11-18): an empty value is logged as its hint, and one with neither
+  is refused with the field ringed and the reason under it. Dialogs' Cancel is the secondary button; every ⋯ menu row has
   an icon (exercise ⋯: Swap sync, Exercise details info, Add note edit,
   Superset / Circuit with next dragHandle, Ungroup remove, Rest time timer,
   Warm-up sets trendingUp, Remove exercise delete; Discard workout delete).
@@ -1898,7 +1897,9 @@ the feature you are about to touch, and keep it true when you change it.
   only in onboarding "We use it to pick your first program." under it.
   After the last question (`afterOnboarding`,
   `OnboardingPermissionsPage`), the progress bar full: "Remind you on
-  training days?" (Turn on reminders asks the system and, if allowed,
+  training days?", only while the device does not let the app notify yet
+  (allowed already, the step is left out and the reminder stays as it is)
+  (Turn on reminders asks the system and, if allowed,
   turns the workout reminder on at its default time; refused or Not now
   moves on silently, ON6), then "Bring in steps and cardio?" naming
   Apple Health or Health Connect (ON5), shown wherever a health store
@@ -1925,9 +1926,9 @@ the feature you are about to touch, and keep it true when you change it.
 - **First-use tips**: three inline banners (Material `MaterialBanner`,
   never modal), each with "Got it", none until the user's settings have
   arrived: effort, inside the effort question the first time, in the
-  rest strip or the bar (under the steps, so the countdown, Skip and the
-  steps stay in view), until it is dismissed, an effort is picked or the
-  question skipped; set types, at the top of the add-set sheet, until a
+  rest strip or the bar (under the steps, scrolling with them, so the
+  countdown and every step stay in view), until it is dismissed or an
+  effort is picked; set types, at the top of the add-set sheet, until a
   type is picked there; automatic warm-ups, at the top of the workout in
   progress once warm-ups were added to it automatically
   (`warmupsAdded`), until the setting is changed. Dismissing or using the
@@ -2135,7 +2136,10 @@ the feature you are about to touch, and keep it true when you change it.
   `startedAt` is a device-clock timestamp because starting a program must
   work offline. A missed next day stays the next day until the user does
   it today, moves it to the next training weekday or skips it; the week
-  plan shows it once, on its date. A program with a length ends that many
+  plan shows it once, on its date. Starting a program whose first day was
+  already done today (a workout of that program and day started today)
+  counts it as done, as finishing it would have: the next day comes next,
+  from the next training weekday (`StartProgram` reads today's done days). A program with a length ends that many
   weeks after its start date.
 - **Catalogue rules** (`lib/features/programs/domain/catalogue_rules.dart`):
   every catalogue program must pass the app's own `validateProgram`, and
@@ -2444,7 +2448,8 @@ the feature you are about to touch, and keep it true when you change it.
   ticked in the workout in progress it is asked in one of two places
   (owner's design pick, superseding both places below: it is asked in the
   set panel as rows with their one-line meaning while the rest runs as a
-  thin line above; once answered or skipped the panel becomes the large
+  thin line above (time, +15 s and Skip rest); the question has no Skip
+  (owner, 2026-11-18); once answered the panel becomes the large
   countdown with +15 s and Skip rest, and the next set's entry returns when
   it ends; the rest strip is not on the workout screen):
   - **Its tick started a rest** (`restStartedBy`, `askingWithRest`): in
@@ -2452,7 +2457,7 @@ the feature you are about to touch, and keep it true when you change it.
     naming the set with its values and the scale's short question ("Set 1
     · 80 kg × 8 — how hard?", "… — reps left?", "… — RPE?", the exercise
     first when the selection is on another one), the "?" help and the
-    steps with Failed, and its own Skip (owner's pick, 2026-11-15). The set bar meanwhile shows the
+    steps with Failed. The set bar meanwhile shows the
     next set as usual, so its weight can be set during the rest. It lasts
     as long as that rest (`restQuestionSet`: the rest still that set's and
     running, so "+15 s" extends it): gone when the rest runs out or is
@@ -2473,10 +2478,10 @@ the feature you are about to touch, and keep it true when you change it.
     × 8" ("Drop set 2 done · …", the exercise first when the selection
     moved on: "Squat · Set 3 done · 100 kg × 5"), the scale's question
     ("How hard was it?", "How many more reps could you have done?", "How
-    hard was it, from 1 to 10?") with the "?" help, the steps with Failed,
-    and Skip; no fields and no tick, the keyboard already closed by the
-    tick. The bar returns to the next set when a step is picked, Skip is
-    tapped, any set is picked or an exercise opened, an edit moves sets,
+    hard was it, from 1 to 10?") with the "?" help and the steps with
+    Failed; no fields and no tick, the keyboard already closed by the
+    tick. The bar returns to the next set when a step is picked, any set
+    is picked or an exercise opened, an edit moves sets,
     or after `WorkoutEditor.effortQuestionTime` (20 s) untouched; any
     touch restarts that time and it waits while the help is open.
   Neither shows while edits are refused (finishing), and an answer refused
@@ -2722,7 +2727,8 @@ the feature you are about to touch, and keep it true when you change it.
   leaves "last time", which holds working sets only. A drop set's volume
   includes its drops, its other records use its first part. A record must be
   beaten, not equalled; an exercise's first workout sets its records but
-  celebrates none.
+  celebrates none, in its summary or as tags on its page (`heldRecordSets`
+  skips the exercise's first history point).
 - **Workout summary**: duration ("< 1 min" under a minute), volume (weight ×
   reps of the working sets of `weight_reps` and `weighted_bodyweight`;
   assistance is no load), working sets and records, laid out as SPEC ›
