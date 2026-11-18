@@ -165,7 +165,7 @@ reader has an active entitlement.
 
 **`users/{uid}`**: `profile` (goal, level, daysPerWeek, equipment[], sex,
 birthYear, heightCm, weightKg, targetWeightKg), `settings` (units,
-effortScale, weekStart (`monday` \| `sunday` \| `saturday`; absent, or a
+effortScale, askEffort (absent is true), weekStart (`monday` \| `sunday` \| `saturday`; absent, or a
 value this version does not know, is automatic), restTimer, warmups
 (autoWarmups for older versions), seenTips[],
 keepScreenOn, bar and plates (`barWeightKg`, `ezBarWeightKg`, `trapBarWeightKg`,
@@ -975,8 +975,8 @@ Decisions (the canvases they were drawn on are deleted):
   band (the latest weight as its title, the change since the previous
   weigh-in as its line, "−0.4 since Nov 8", with the newest body fat at
   its end, the app's own bare line, Log weight and Measurement day); the
-  whole band opens Body; a single weigh-in shows a dashed box "Log again to
-  see the trend"; a failed body list keeps the band's eyebrow, the error
+  whole band opens Body; a single weigh-in has no trend at all until the
+  second (K16 B); a failed body list keeps the band's eyebrow, the error
   with Retry on one line and both buttons; the measurement-day prompt
   (TipBanner) shows under Body while the measurement reminder is on, from
   two days before its next date through that day, until a measurement
@@ -994,7 +994,9 @@ Decisions (the canvases they were drawn on are deleted):
   the page opens from the pill on an empty search, filters and sort kept;
   rows sit in one card; loading is shimmering rows and an error ErrorView
   in a card, both under the search. Exercise detail: the model's pair form
-  (Worked muscles, Front / Back, Main / Secondary) for every exercise;
+  (Worked muscles, Front / Back, Main / Secondary) for every exercise,
+  each figure filling its half of the card, the body very light and the
+  secondary muscles a 55% accent tone (K4 A);
   facts as plain rows (label left, value right), equipment alternatives
   as extra lines and Also called last; a custom exercise shows its Custom
   tag with "Logged as …" under the model and only Equipment as a fact;
@@ -1784,7 +1786,11 @@ the feature you are about to touch, and keep it true when you change it.
   2026-11-15): one page, top to bottom: the account header, the Premium
   card, More (Your profile, Calculators), then the settings groups (Units,
   Workout, Reminders, Connected apps, Appearance), Privacy and, in debug
-  builds, on the fake the Fake store rows. A
+  builds, on the fake the Fake store rows. An Apple relay address
+  (`@privaterelay.appleid.com`) is never shown: a named user shows the
+  name alone, and a user with no name and no other address who signed in
+  with Apple reads "Apple account" / "Signed in with Apple" with the
+  guest's person icon (K15 A). A
   guest's header opens the guest account sheet (forge_auth
   `showLinkAccountSheet`: "Keep your workouts safe", Google, Use email
   instead, Not now); Use email instead opens Sign in on the email form
@@ -1895,6 +1901,10 @@ the feature you are about to touch, and keep it true when you change it.
   question's action is Continue; the goal question reads "What is your
   main goal?" with subtitles, Lose fat first (also in Your profile), and
   only in onboarding "We use it to pick your first program." under it.
+  Only in onboarding, the target weight reads "Your goal" over "Now,
+  where do you want your weight to be?" and "You weigh 70 kg now. Leave it
+  there to hold your weight." (K10 A; its ruler's "Now 70 kg" marker
+  waits on Forge).
   After the last question (`afterOnboarding`,
   `OnboardingPermissionsPage`), the progress bar full: "Remind you on
   training days?", only while the device does not let the app notify yet
@@ -2319,7 +2329,11 @@ the feature you are about to touch, and keep it true when you change it.
   day, a program's page any of its days, the Programs tab also an empty
   workout (Today only while there is no program day to do), and an
   exercise's page adds it to the workout in progress or, after
-  asking, starts one with it. A program day waits until the user's custom
+  asking, starts one with it. With no program day to do, Today's card
+  points a user who has programs of their own at them: "Choose a program
+  to start", "You have 2 saved programs. Start one to set your training
+  days.", "See your programs" opening the Programs tab (K14 B); without
+  any it still offers the ready-made ones. A program day waits until the user's custom
   exercises are loaded; exercises really gone are left out and the user is
   told how many. Starting while a workout is in progress asks to resume it
   or discard it.
@@ -2430,9 +2444,16 @@ the feature you are about to touch, and keep it true when you change it.
   `/progress/calendar/exercises/:id` above the edit page), so back returns
   to the workout as it was.
 - **Effort scale**: optional per set, picked in the set bar (picking the
-  chosen step again clears it). Settings → "Effort per set": By feel
-  (default), RIR or RPE; there is no "Off" (`settings.effortScale` codes
-  `feel`, `rir`, `rpe`; the older `off` reads as by feel). Every scale is
+  chosen step again clears it). Settings → "Effort question" ("Asked
+  after each set you log."): "By feel (default)", RIR, RPE or Off
+  (`settings.effortScale` codes `feel`, `rir`, `rpe`, the older `off`
+  reading as by feel; Off is `settings.askEffort` false, which only stops
+  the question: efforts are still shown and picked in the kept scale, and
+  picking a scale turns the question on again) (L4 A). A choice setting
+  marks its default option "(default)": the effort and the rest sound
+  ("Chime · vibrate (default)"); units (from the device's region), the
+  default rest and the week start are not marked, as the board draws
+  them. The option titles stay until they are redrawn. Every scale is
   stored the same way, as RIR (`rpe = 10 - rir`): by feel Easy ("4+ reps
   left") stores 4, Moderate ("2–3 left") 2, Hard ("1 left") 1, Max ("0
   left") 0, and a stored RIR shows as Easy from 4, Moderate at 2-3, Hard at
@@ -2482,8 +2503,8 @@ the feature you are about to touch, and keep it true when you change it.
     Failed; no fields and no tick, the keyboard already closed by the
     tick. The bar returns to the next set when a step is picked, any set
     is picked or an exercise opened, an edit moves sets,
-    or after `WorkoutEditor.effortQuestionTime` (20 s) untouched; any
-    touch restarts that time and it waits while the help is open.
+    with or without a rest; it has no timeout (K18 B). Leaving the page
+    drops a question whose tick started no rest.
   Neither shows while edits are refused (finishing), and an answer refused
   then leaves it open. Editing a past workout never asks on a tick. A
   selected done set shows its effort row under its values, named: "Set 1 ·
@@ -2599,8 +2620,10 @@ the feature you are about to touch, and keep it true when you change it.
   app is killed in front gets none. The wish is the user's
   (`settings.restTimer.notify`, written only by their answer or the
   settings switch); the permission is the device's and is never written
-  to Firestore. On a device not asked yet, the first rest the user starts
-  asks in the app with one line, unless they said no or said yes and the
+  to Firestore. On a device not asked yet, tapping Start on a workout
+  (any start: program day, empty, from an exercise) asks in the app
+  first, "Get alerts when rest ends?", before the workout opens (K3 B),
+  only while the rest timer is on, unless they said no or said yes and the
   device already allows it; the system is asked only after "Allow", never
   on its own. "Not now" is remembered on that device only (a marker file
   in app support), so other devices still ask; a device refusal leaves
@@ -2677,7 +2700,9 @@ the feature you are about to touch, and keep it true when you change it.
   while the app runs; its texts come from the app. Lock screen and Dynamic
   Island (compact, minimal, expanded) show the same two modes: the
   workout (dumbbell, name, elapsed time counted up by the system, the set
-  to do now) or the rest (timer, "Rest", countdown, the next set). No push
+  to do now) or the rest (timer, "Rest", countdown, the next set). A set
+  line ends a long exercise name with "…" and never cuts its part from
+  the last " · " on ("· set 2 of 4") (K7 A). No push
   updates (no APNs yet), so the app cannot change it while suspended: the
   content state carries the rest with its end, the activity's stale date
   is that end, and the widget draws the rest only while it is not stale
