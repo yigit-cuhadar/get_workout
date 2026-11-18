@@ -1,8 +1,4 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forge_model_viewer/forge_model_viewer.dart';
-import 'package:get_workout/core/widgets/muscle_heat.dart';
 import 'package:get_workout/core/widgets/program_volume_card.dart';
 import 'package:get_workout/core/widgets/volume_band.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
@@ -10,20 +6,11 @@ import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import '../../component_harness.dart';
 
 void main() {
-  late Model3D body;
-
-  setUpAll(() async {
-    body = await Model3D.fromGlb(
-      File('assets/models/body_male.glb').readAsBytesSync(),
-    );
-  });
-
   var taps = 0;
 
   Future<void> show(WidgetTester tester) => pumpComponent(
     tester,
     ProgramVolumeCard(
-      model: body,
       sets: const {
         Muscle.pec: 14,
         Muscle.lat: 12,
@@ -44,7 +31,7 @@ void main() {
     expect(find.text('96 sets'), findsOneWidget);
   });
 
-  testWidgets('the three busiest muscles as bands, ties in order', (
+  testWidgets('the five busiest muscles as bands, ties in order', (
     tester,
   ) async {
     await show(tester);
@@ -52,17 +39,18 @@ void main() {
     final bands = tester.widgetList<VolumeBand>(find.byType(VolumeBand));
     expect(
       [for (final band in bands) band.muscle],
-      [Muscle.frontDelt, Muscle.pec, Muscle.lat],
+      [Muscle.frontDelt, Muscle.pec, Muscle.lat, Muscle.triceps, Muscle.biceps],
     );
     expect({for (final band in bands) band.scale}, {25});
   });
 
-  testWidgets('front and back painted by sets', (tester) async {
+  testWidgets('full-width bars, no body model', (tester) async {
     await show(tester);
 
+    // The card's width less its 14px padding on each side.
     expect(
-      tester.widget<MuscleHeatPair>(find.byType(MuscleHeatPair)).sets,
-      containsPair(Muscle.frontDelt, 22),
+      tester.getSize(find.byType(VolumeBand).first).width,
+      tester.getSize(find.byType(ProgramVolumeCard)).width - 28,
     );
   });
 

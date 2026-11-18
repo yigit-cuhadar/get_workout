@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
+import 'package:get_workout/core/widgets/featured_card.dart';
 import 'package:get_workout/features/exercises/presentation/body_model_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
@@ -196,19 +198,30 @@ void main() {
     expect(find.text('Start empty workout'), findsNothing);
     expect(find.text('Done'), findsOneWidget);
     expect(find.text('Next'), findsOneWidget);
-    expect(find.text('Weekly sets in this program'), findsOneWidget);
+    // The program page holds the weekly sets.
+    expect(find.text('Weekly sets in this program'), findsNothing);
     expect(find.text('Other programs'), findsOneWidget);
     expect(find.text('Arms'), findsOneWidget);
   });
 
-  testWidgets('the weekly sets card opens the program\'s volume page', (
+  testWidgets('a tap on the band opens the program, with no chevron', (
     tester,
   ) async {
     await pump(tester, ready(activeProgram: active));
 
-    await tester.tap(find.text('Weekly sets in this program'));
+    final band = find.byType(FeaturedCard);
+    expect(
+      find.descendant(
+        of: band,
+        matching: find.byWidgetPredicate(
+          (w) => w is ForgeIcon && w.icon == ForgeIcons.chevronRight,
+        ),
+      ),
+      findsNothing,
+    );
+    await tester.tap(find.text('Active program · week 2 of 8'));
     await settle(tester);
-    expect(find.text('at /programs/volume/p1'), findsOneWidget);
+    expect(find.text('at /programs/p1'), findsOneWidget);
   });
 
   testWidgets('a missed day is its row alone; Today asks about it', (

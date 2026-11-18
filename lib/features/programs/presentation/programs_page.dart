@@ -14,7 +14,6 @@ import 'premium_prompt.dart';
 import 'program_detail_cubit.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
-import 'program_volume_section.dart';
 import 'stop_program_dialog.dart';
 import 'weekday_dialog.dart';
 
@@ -140,13 +139,6 @@ class _Programs extends StatelessWidget {
               ),
             ),
           ],
-          if (!state.finished && access != ProgramAccess.waiting) ...[
-            const SizedBox(height: Gap.sm),
-            ProgramVolumeSection(
-              program: active,
-              onOpen: () => context.go(Routes.programVolume(active.id!)),
-            ),
-          ],
         ],
         const SizedBox(height: Gap.sm),
         ListRowCard(
@@ -242,6 +234,7 @@ class _ActiveProgram extends StatelessWidget {
         title: program.name,
         locked: locked,
         menu: _ProgramMenuButton(state, program, premium: premium),
+        onTap: () => context.go(Routes.program(program.id!)),
         progress: !state.finished && weeks != null && week != null
             ? week / weeks
             : null,

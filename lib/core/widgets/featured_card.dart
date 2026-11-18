@@ -104,7 +104,8 @@ class FeaturedStat {
 /// buttons. The first button is the main one; one of [moreActions]
 /// sits beside [action], two sit side by side under it; a prompt stacks
 /// them all. With [onTap] the whole card opens something and shows a
-/// chevron; a band may show its [menu] there instead.
+/// chevron; a band with a [menu] shows the menu there instead, with no
+/// other mark.
 class FeaturedCard extends StatelessWidget {
   const FeaturedCard({
     super.key,
@@ -136,7 +137,6 @@ class FeaturedCard extends StatelessWidget {
                  alert == null),
          'Only a band has progress, a chart, a menu and an alert.',
        ),
-       assert(menu == null || onTap == null, 'A menu or a chevron, not both.'),
        assert(onOrigin == null || origin != null, 'A link needs its text.'),
        assert(
          form == FeaturedCardForm.prompt || titleTone == FeaturedTitleTone.ink,
@@ -465,7 +465,7 @@ class FeaturedCard extends StatelessWidget {
               ],
             ),
           ),
-          if (onTap != null)
+          if (onTap != null && menu == null)
             ForgeIcon(
               ForgeIcons.chevronRight,
               size: _chevronSize,
