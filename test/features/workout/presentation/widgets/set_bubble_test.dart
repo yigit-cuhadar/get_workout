@@ -62,6 +62,19 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('a group letter is small and does nothing on a tap', (
+    tester,
+  ) async {
+    await _pump(tester, const SetBubble.letter('A'));
+    expect(find.text('A'), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(SetBubble)),
+      const Size.square(SetBubble.smallDiameter),
+    );
+    await tester.tap(find.byType(SetBubble));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the add bubble is off without an action', (tester) async {
     final semantics = tester.ensureSemantics();
     await _pump(

@@ -9,7 +9,9 @@ import 'package:forge_ui/forge_ui.dart';
 /// pending set ringed 1.5px in line-strong; a [warmup]'s ring is dashed. A
 /// selected done set gets an accent ring 2.5px off it, dashed for a
 /// warm-up. [SetBubble.add] ends a row of them. A [small] bubble (28px)
-/// stands for a set in a line of text, such as a warm-up set's row.
+/// stands for a set in a line of text, such as a warm-up set's row or the
+/// set table. [SetBubble.letter] is a superset's group letter: small, on
+/// the sunken fill, no ring.
 ///
 /// [actions], also offered by [onLongPress], reach screen readers as
 /// custom actions.
@@ -25,7 +27,7 @@ class SetBubble extends StatelessWidget {
     this.onLongPress,
     this.actions,
     this.small = false,
-  });
+  }) : letter = false;
 
   /// The add bubble: the add icon on a pending ring.
   const SetBubble.add({
@@ -38,7 +40,20 @@ class SetBubble extends StatelessWidget {
        warmup = false,
        onLongPress = null,
        actions = null,
-       small = false;
+       small = false,
+       letter = false;
+
+  /// A group letter: no set, nothing to tap.
+  const SetBubble.letter(String this.label, {super.key})
+    : semanticLabel = label,
+      onTap = null,
+      done = false,
+      selected = false,
+      warmup = false,
+      onLongPress = null,
+      actions = null,
+      small = true,
+      letter = true;
 
   final String? label;
   final String semanticLabel;
@@ -51,6 +66,7 @@ class SetBubble extends StatelessWidget {
   final VoidCallback? onLongPress;
   final Map<CustomSemanticsAction, VoidCallback>? actions;
   final bool small;
+  final bool letter;
 
   static const double diameter = 48;
   static const double smallDiameter = 28;
@@ -67,7 +83,7 @@ class SetBubble extends StatelessWidget {
     final colors = style.colors;
     final current = selected && !done;
     final size = sizeOf(context, small: small);
-    final ring = done
+    final ring = done || letter
         ? null
         : current
         ? (colors.accent, 2.5)
@@ -103,7 +119,11 @@ class SetBubble extends StatelessWidget {
         child: CustomPaint(
           size: Size.square(size),
           painter: _BubblePainter(
-            fill: done ? colors.accent : colors.surface,
+            fill: done
+                ? colors.accent
+                : letter
+                ? colors.surfaceSunken
+                : colors.surface,
             ring: ring?.$1,
             ringWidth: ring?.$2 ?? 0,
             outline: selected && done ? colors.accent : null,

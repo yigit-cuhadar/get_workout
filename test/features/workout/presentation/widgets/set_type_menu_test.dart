@@ -77,11 +77,11 @@ void main() {
     expect(find.text('3D'), findsOneWidget);
     expect(
       tester.getTopLeft(find.byType(SetTypeMenu)).dy,
-      greaterThan(tester.getBottomLeft(find.byType(SetBubble)).dy),
+      greaterThan(tester.getBottomLeft(find.byType(SetBubble).first).dy),
     );
     expect(
       tester.getTopLeft(find.byType(SetTypeMenu)).dx,
-      tester.getTopLeft(find.byType(SetBubble)).dx,
+      tester.getTopLeft(find.byType(SetBubble).first).dx,
     );
   });
 

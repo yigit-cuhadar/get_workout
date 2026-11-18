@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
 
@@ -151,9 +149,12 @@ class SetTypeMenu extends StatelessWidget {
                             color: colors.ink,
                           )
                         : ExcludeSemantics(
-                            child: _MiniBubble(
+                            child: SetBubble(
                               label: type.bubble,
-                              dashed: type.warmup,
+                              semanticLabel: type.bubble,
+                              onTap: null,
+                              warmup: type.warmup,
+                              small: true,
                             ),
                           ),
                   ),
@@ -215,10 +216,12 @@ class SetTypeList extends StatelessWidget {
                       )
                     else
                       ExcludeSemantics(
-                        child: _MiniBubble(
+                        child: SetBubble(
                           label: type.bubble,
-                          dashed: type.warmup,
-                          size: 24,
+                          semanticLabel: type.bubble,
+                          onTap: null,
+                          warmup: type.warmup,
+                          small: true,
                         ),
                       ),
                   ],
@@ -232,67 +235,6 @@ class SetTypeList extends StatelessWidget {
 }
 
 /// The bubble a type would give the set, small and pending.
-class _MiniBubble extends StatelessWidget {
-  const _MiniBubble({
-    required this.label,
-    required this.dashed,
-    this.size = 22,
-  });
-
-  final String label;
-  final bool dashed;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = ForgeStyle.of(context);
-    return CustomPaint(
-      painter: _RingPainter(style.colors.lineStrong, dashed: dashed),
-      child: SizedBox.square(
-        dimension: size,
-        child: Center(
-          child: Text(
-            label,
-            maxLines: 1,
-            style: style.data.copyWith(
-              fontSize: 10,
-              height: 1,
-              fontWeight: FontWeight.w500,
-              color: style.colors.inkMuted,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RingPainter extends CustomPainter {
-  const _RingPainter(this.color, {required this.dashed});
-
-  final Color color;
-  final bool dashed;
-
-  static const int _dashes = 8;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke;
-    final rect = (Offset.zero & size).deflate(0.5);
-    if (!dashed) return canvas.drawOval(rect, paint);
-    const sweep = math.pi / _dashes;
-    for (var i = 0; i < _dashes; i++) {
-      canvas.drawArc(rect, i * 2 * sweep, sweep, false, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_RingPainter old) =>
-      old.color != color || old.dashed != dashed;
-}
-
 class _MenuRoute extends PopupRoute<void> {
   _MenuRoute({
     required this.anchor,

@@ -115,3 +115,25 @@ Widget setBubbleSmallWarmup(BuildContext context) => const Center(
     small: true,
   ),
 );
+
+@widgetbook.UseCase(name: 'Small, done and pending', type: SetBubble)
+Widget setBubbleSmall(BuildContext context) => const Center(
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    spacing: 8,
+    children: [
+      SetBubble(
+        label: '1',
+        semanticLabel: 'Set 1',
+        onTap: null,
+        done: true,
+        small: true,
+      ),
+      SetBubble(label: '2', semanticLabel: 'Set 2', onTap: null, small: true),
+    ],
+  ),
+);
+
+@widgetbook.UseCase(name: 'Group letter', type: SetBubble)
+Widget setBubbleLetter(BuildContext context) =>
+    const Center(child: SetBubble.letter('A'));
