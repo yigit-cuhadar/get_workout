@@ -658,7 +658,10 @@ Decisions (the canvases they were drawn on are deleted):
   password confirms with their provider in the same "Confirm it's you"
   dialog, its field replaced by "Continue with Google" or "… Apple", and
   deletion goes on by itself after it (YG1 A); a user with a password
-  also gets "or" and a button per linked provider under the field (YG2 B).
+  also gets "or" and a button per linked provider under the field (YG2 B); the
+  "or" is a new Forge component, OrDivider (YG3 B); picking another
+  account in the provider's sheet brings the dialog back with "That's a
+  different account. Sign in with the one you use here." (YG4 A).
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
