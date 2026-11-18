@@ -70,10 +70,7 @@ class RestDayCard extends StatelessWidget {
                 header: true,
                 child: Text(
                   l10n.restDayCardTitle,
-                  style: text.titleLarge!.copyWith(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: ForgeStyle.of(context).heading,
                 ),
               ),
               Text(l10n.restDayCardNext(next), style: text.bodySmall),

@@ -73,14 +73,12 @@ class CustomExerciseEditPage extends StatelessWidget {
               CatalogueFailed() => ListView(
                 padding: _padding,
                 children: [
-                  SurfaceCard(
-                    child: ErrorView(
-                      title: l10n.libraryLoadFailed,
-                      message: l10n.loadFailedDetail,
-                      retryLabel: l10n.retry,
-                      onRetry: context.read<ExerciseCatalogueCubit>().retry,
-                      compact: true,
-                    ),
+                  ErrorView(
+                    title: l10n.libraryLoadFailed,
+                    message: l10n.loadFailedDetail,
+                    retryLabel: l10n.retry,
+                    onRetry: context.read<ExerciseCatalogueCubit>().retry,
+                    card: true,
                   ),
                 ],
               ),

@@ -205,18 +205,10 @@ class _FocusAnswer extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: Gap.sm,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
-          child: Text(
-            l10n.generatorFocusCount(
-              state.focus.length,
-              GeneratorLimits.maxFocusMuscles,
-            ),
-            style: Theme.of(context).textTheme.labelMedium!.copyWith(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: ForgeStyle.of(context).colors.inkMuted,
-            ),
+        SectionLabel(
+          l10n.generatorFocusCount(
+            state.focus.length,
+            GeneratorLimits.maxFocusMuscles,
           ),
         ),
         Wrap(
@@ -269,7 +261,8 @@ class _ExcludedAnswer extends StatelessWidget {
                   title:
                       exercises[id]?.localized(context).name ??
                       l10n.programExerciseUnavailable,
-                  trailing: _RemoveButton(
+                  trailing: ForgeIconButton(
+                    icon: ForgeIcons.close,
                     label: l10n.generatorExcludedRemove,
                     onPressed: () => cubit.include(id),
                   ),
@@ -290,33 +283,4 @@ class _ExcludedAnswer extends StatelessWidget {
       ],
     );
   }
-}
-
-/// The × that takes a left-out exercise back: an 18px ink-muted icon over a
-/// 44px target.
-class _RemoveButton extends StatelessWidget {
-  const _RemoveButton({required this.label, required this.onPressed});
-
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    label: label,
-    child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onPressed,
-      child: SizedBox.square(
-        dimension: ForgeTheme.tapMin,
-        child: Center(
-          child: ForgeIcon(
-            ForgeIcons.close,
-            size: 18,
-            color: ForgeStyle.of(context).colors.inkMuted,
-          ),
-        ),
-      ),
-    ),
-  );
 }

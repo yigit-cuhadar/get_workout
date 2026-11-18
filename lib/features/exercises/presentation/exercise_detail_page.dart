@@ -20,7 +20,6 @@ import 'exercise_notes_cubit.dart';
 import 'favorites_cubit.dart';
 import 'vocabulary_labels.dart';
 import 'widgets/exercise_tile.dart';
-import 'widgets/library_list_view.dart';
 
 class ExerciseDetailPage extends StatelessWidget {
   const ExerciseDetailPage({
@@ -81,16 +80,27 @@ class _DetailView extends StatelessWidget {
         ),
         body: switch (state) {
           DetailLoading() || DetailDeleted() => const _Loading(),
-          DetailFailed() => _InCard(
-            ErrorView(
-              title: l10n.libraryLoadFailed,
-              message: l10n.loadFailedDetail,
-              retryLabel: l10n.retry,
-              onRetry: context.read<ExerciseCatalogueCubit>().retry,
-            ),
+          DetailFailed() => ListView(
+            padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
+            children: [
+              ErrorView(
+                title: l10n.libraryLoadFailed,
+                message: l10n.loadFailedDetail,
+                retryLabel: l10n.retry,
+                onRetry: context.read<ExerciseCatalogueCubit>().retry,
+                card: true,
+              ),
+            ],
           ),
-          DetailNotFound() => _InCard(
-            EmptyView(icon: ForgeIcons.search, message: l10n.detailNotFound),
+          DetailNotFound() => ListView(
+            padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
+            children: [
+              EmptyView(
+                icon: ForgeIcons.search,
+                message: l10n.detailNotFound,
+                card: true,
+              ),
+            ],
           ),
           DetailReady() => _DetailBody(state, exerciseRoute),
         },
@@ -313,7 +323,7 @@ class _DetailBody extends StatelessWidget {
           if (!exercise.isCustom) _OwnNote(exercise),
         ]) ...[part, const SizedBox(height: Gap.sm)],
         if (similar.isNotEmpty) ...[
-          ListSectionLabel(l10n.detailSimilar),
+          SectionLabel(l10n.detailSimilar),
           ListRowCard(
             children: [
               for (final (other, relation) in similar)
@@ -443,21 +453,6 @@ class _Loading extends StatelessWidget {
       ],
     );
   }
-}
-
-/// An error or empty state in a card.
-class _InCard extends StatelessWidget {
-  const _InCard(this.child);
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
-    children: [
-      ListRowCard(children: [child]),
-    ],
-  );
 }
 
 /// The model from the front and from the back side by side, with the worked

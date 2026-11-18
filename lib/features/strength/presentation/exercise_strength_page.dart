@@ -9,7 +9,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
-import '../../exercises/presentation/widgets/library_list_view.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -179,7 +178,7 @@ class _StrengthView extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ListSectionLabel(l10n.strengthSessions),
+            SectionLabel(l10n.strengthSessions),
             ListRowCard(
               children: [
                 for (final session in state.sessions)

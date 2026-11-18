@@ -219,23 +219,47 @@ class _CalendarViewState extends State<_CalendarView> {
         ? calendarDay(tapped, state.entriesOn(tapped))
         : null;
     final empty = switch (state.filter) {
-      _ when !logged => _EmptyCard(
+      _ when !logged => EmptyView(
+        icon: ForgeIcons.event,
         title: l10n.calendarEmptyTitle(monthName),
         message: l10n.calendarEmptyDetail,
-        action: l10n.calendarAddPast,
-        onPressed: _addPast,
+        actions: [
+          ForgeButton(
+            label: l10n.calendarAddPast,
+            variant: ForgeButtonVariant.secondary,
+            onPressed: _addPast,
+          ),
+        ],
+        compact: true,
+        card: true,
       ),
-      CalendarFilter.workouts when sections.isEmpty => _EmptyCard(
+      CalendarFilter.workouts when sections.isEmpty => EmptyView(
+        icon: ForgeIcons.event,
         title: l10n.calendarNoWorkouts(monthName),
         message: l10n.calendarNoWorkoutsDetail,
-        action: l10n.calendarAddPast,
-        onPressed: _addPast,
+        actions: [
+          ForgeButton(
+            label: l10n.calendarAddPast,
+            variant: ForgeButtonVariant.secondary,
+            onPressed: _addPast,
+          ),
+        ],
+        compact: true,
+        card: true,
       ),
-      CalendarFilter.cardio when sections.isEmpty => _EmptyCard(
+      CalendarFilter.cardio when sections.isEmpty => EmptyView(
+        icon: ForgeIcons.event,
         title: l10n.calendarNoCardio(monthName),
         message: l10n.calendarNoCardioDetail,
-        action: l10n.cardioLog,
-        onPressed: () => context.go(Routes.cardioNew),
+        actions: [
+          ForgeButton(
+            label: l10n.cardioLog,
+            variant: ForgeButtonVariant.secondary,
+            onPressed: () => context.go(Routes.cardioNew),
+          ),
+        ],
+        compact: true,
+        card: true,
       ),
       _ => null,
     };
@@ -373,39 +397,6 @@ class _Filter extends StatelessWidget {
       ],
     );
   }
-}
-
-/// A month or filter with nothing to list: its line and an action, in a
-/// card.
-class _EmptyCard extends StatelessWidget {
-  const _EmptyCard({
-    required this.title,
-    required this.message,
-    required this.action,
-    required this.onPressed,
-  });
-
-  final String title;
-  final String message;
-  final String action;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => SurfaceCard(
-    child: EmptyView(
-      icon: ForgeIcons.event,
-      title: title,
-      message: message,
-      compact: true,
-      actions: [
-        ForgeButton(
-          label: action,
-          variant: ForgeButtonVariant.secondary,
-          onPressed: onPressed,
-        ),
-      ],
-    ),
-  );
 }
 
 /// One entry of a date: its date box (today's ringed), then a workout or a

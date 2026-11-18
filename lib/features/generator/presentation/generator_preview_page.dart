@@ -101,31 +101,29 @@ class _PreviewView extends StatelessWidget {
             PreviewStatus.libraryFailed => ListView(
               padding: padding,
               children: [
-                SurfaceCard(
-                  child: ErrorView(
-                    title: l10n.libraryLoadFailed,
-                    message: l10n.loadFailedDetail,
-                    retryLabel: l10n.retry,
-                    onRetry: cubit.retry,
-                  ),
+                ErrorView(
+                  title: l10n.libraryLoadFailed,
+                  message: l10n.loadFailedDetail,
+                  retryLabel: l10n.retry,
+                  onRetry: cubit.retry,
+                  card: true,
                 ),
               ],
             ),
             PreviewStatus.impossible => ListView(
               padding: padding,
               children: [
-                SurfaceCard(
-                  child: EmptyView(
-                    icon: ForgeIcons.info,
-                    message: l10n.generationIssueText(state.issue!),
-                    actions: [
-                      ForgeButton(
-                        label: l10n.generatorChangeAnswers,
-                        variant: ForgeButtonVariant.secondary,
-                        onPressed: () => context.pop(),
-                      ),
-                    ],
-                  ),
+                EmptyView(
+                  icon: ForgeIcons.info,
+                  message: l10n.generationIssueText(state.issue!),
+                  actions: [
+                    ForgeButton(
+                      label: l10n.generatorChangeAnswers,
+                      variant: ForgeButtonVariant.secondary,
+                      onPressed: () => context.pop(),
+                    ),
+                  ],
+                  card: true,
                 ),
               ],
             ),
@@ -205,11 +203,7 @@ class _Program extends StatelessWidget {
                       l10n.splitName(program.split),
                       answers.daysPerWeek,
                     ),
-                    // The board's 22px sans heading.
-                    style: text.titleLarge!.copyWith(
-                      fontSize: 22,
-                      height: 28 / 22,
-                    ),
+                    style: ForgeStyle.of(context).heading,
                   ),
                   Text(
                     l10n.generatorAnswersLine(

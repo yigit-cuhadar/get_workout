@@ -162,16 +162,17 @@ class _LibraryListViewState extends State<LibraryListView> {
         if (catalogue is CatalogueLoading) {
           body = const _Loading();
         } else if (catalogue is CatalogueFailed) {
-          body = _InCard(
+          body = _StateList(
             ErrorView(
               title: l10n.libraryLoadFailed,
               message: l10n.loadFailedDetail,
               retryLabel: l10n.retry,
               onRetry: context.read<ExerciseCatalogueCubit>().retry,
+              card: true,
             ),
           );
         } else if (filtered) {
-          body = _InCard(
+          body = _StateList(
             EmptyView(
               icon: ForgeIcons.tune,
               title: l10n.libraryNoResultsTitle,
@@ -184,10 +185,11 @@ class _LibraryListViewState extends State<LibraryListView> {
                 ),
                 if (create != null) _CreateButton(create),
               ],
+              card: true,
             ),
           );
         } else if (searched) {
-          body = _InCard(
+          body = _StateList(
             EmptyView(
               icon: ForgeIcons.search,
               title: l10n.librarySearchNoResultsTitle(state.query),
@@ -195,13 +197,15 @@ class _LibraryListViewState extends State<LibraryListView> {
                   ? l10n.librarySearchNoResults
                   : l10n.pickerSearchNoResults,
               actions: [_CreateButton(create)],
+              card: true,
             ),
           );
         } else if (state.results.isEmpty) {
-          body = _InCard(
+          body = _StateList(
             EmptyView(
               title: l10n.libraryNoResultsTitle,
               message: l10n.libraryNoResults,
+              card: true,
             ),
           );
         } else if (similar != null) {
@@ -386,7 +390,10 @@ class _SimilarFirst extends StatelessWidget {
     ];
     List<Widget> part(String label, List<Exercise> exercises) => [
       if (exercises.isNotEmpty) ...[
-        SliverToBoxAdapter(child: ListSectionLabel(label)),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+          sliver: SliverToBoxAdapter(child: SectionLabel(label)),
+        ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.sm),
           sliver: ListRowCard.sliver(
@@ -406,27 +413,6 @@ class _SimilarFirst extends StatelessWidget {
   }
 }
 
-/// The muted label over a list on a page, e.g. "Similar exercises".
-class ListSectionLabel extends StatelessWidget {
-  const ListSectionLabel(this.text, {super.key});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(
-      Gap.md + Gap.xs,
-      Gap.sm,
-      Gap.md + Gap.xs,
-      Gap.sm,
-    ),
-    child: Semantics(
-      header: true,
-      child: Text(text, style: Theme.of(context).textTheme.titleSmall),
-    ),
-  );
-}
-
 /// The rows' shimmering stand-ins while the catalogue loads.
 class _Loading extends StatelessWidget {
   const _Loading();
@@ -443,19 +429,17 @@ class _Loading extends StatelessWidget {
   );
 }
 
-/// An empty or error state in a card under the search.
-class _InCard extends StatelessWidget {
-  const _InCard(this.child);
+/// An empty or error state on its card under the search.
+class _StateList extends StatelessWidget {
+  const _StateList(this.view);
 
-  final Widget child;
+  final Widget view;
 
   @override
   Widget build(BuildContext context) => ListView(
     keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
     padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
-    children: [
-      Semantics(liveRegion: true, child: ListRowCard(children: [child])),
-    ],
+    children: [Semantics(liveRegion: true, child: view)],
   );
 }
 

@@ -19,7 +19,6 @@ import '../domain/body_entry.dart';
 import '../domain/body_stats.dart';
 import 'body_chart_cubit.dart';
 import 'body_list_cubit.dart';
-import 'body_state_card.dart';
 import 'body_text.dart';
 import 'weight_sheet.dart';
 import 'measurement_comparison.dart';
@@ -138,13 +137,17 @@ class _BodyViewState extends State<_BodyView> {
                     const _Empty(),
                   _ when _compare => const MeasurementComparison(compare: true),
                   BodyListStatus.loading => const _OverviewLoading(),
-                  BodyListStatus.failure => BodyStateCard(
-                    ErrorView(
-                      title: l10n.bodyLoadFailed,
-                      message: l10n.loadFailedDetail,
-                      retryLabel: l10n.retry,
-                      onRetry: context.read<BodyListCubit>().retry,
-                    ),
+                  BodyListStatus.failure => ListView(
+                    padding: const EdgeInsets.all(Gap.md),
+                    children: [
+                      ErrorView(
+                        title: l10n.bodyLoadFailed,
+                        message: l10n.loadFailedDetail,
+                        retryLabel: l10n.retry,
+                        onRetry: context.read<BodyListCubit>().retry,
+                        card: true,
+                      ),
+                    ],
                   ),
                   BodyListStatus.ready => _Overview(state),
                 },
@@ -165,13 +168,18 @@ class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return BodyStateCard(
-      EmptyView(
-        icon: ForgeIcons.monitorWeight,
-        title: l10n.bodyEmptyTitle,
-        message: l10n.bodyEmptyDetail,
-      ),
-      below: const _LogButtons(),
+    return ListView(
+      padding: const EdgeInsets.all(Gap.md),
+      children: [
+        EmptyView(
+          icon: ForgeIcons.monitorWeight,
+          title: l10n.bodyEmptyTitle,
+          message: l10n.bodyEmptyDetail,
+          card: true,
+        ),
+        const SizedBox(height: 10),
+        const _LogButtons(),
+      ],
     );
   }
 }
@@ -202,22 +210,6 @@ class _LogButtons extends StatelessWidget {
       ],
     );
   }
-}
-
-/// A muted section label over a card.
-class _Label extends StatelessWidget {
-  const _Label(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.sm, Gap.xs, 0),
-    child: Text(
-      text,
-      style: Theme.of(context).textTheme.titleSmall!
-          .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
-    ),
-  );
 }
 
 const _rowGap = SizedBox(height: 10);
@@ -280,8 +272,7 @@ class _Overview extends StatelessWidget {
               _rowGap,
               const _LogButtons(),
               _rowGap,
-              _Label(l10n.bodyHistory),
-              _rowGap,
+              SectionLabel(l10n.bodyHistory),
             ],
           ),
         ),
@@ -639,7 +630,7 @@ class _AddSheet extends StatelessWidget {
               children: [
                 for (final group in BodySeriesGroup.values)
                   if (state.available.any((s) => s.group == group)) ...[
-                    _Label(l10n.seriesGroupName(group)),
+                    SectionLabel(l10n.seriesGroupName(group)),
                     for (final series in state.available)
                       if (series.group == group) row(series),
                   ],

@@ -576,13 +576,7 @@ void main() {
     when(() => list.state)
         .thenReturn(const BodyListState(status: BodyListStatus.failure));
     await pump(tester, const BodyPage());
-    expect(
-      find.descendant(
-        of: find.byType(ListRowCard),
-        matching: find.byType(ErrorView),
-      ),
-      findsOneWidget,
-    );
+    expect(tester.widget<ErrorView>(find.byType(ErrorView)).card, isTrue);
   });
 
   testWidgets('an empty range keeps the range control and locked caption', (

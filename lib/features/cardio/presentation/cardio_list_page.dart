@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/router.dart';
-import '../../../core/page_parts.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../programs/domain/calendar_date.dart';
@@ -146,13 +145,12 @@ class _Sessions extends StatelessWidget {
     final rows = <WidgetBuilder>[
       (_) => _ThisWeek(thisWeek, empty: state.sessions.isEmpty),
       if (state.sessions.isEmpty)
-        (_) => SurfaceCard(
-          child: EmptyView(
-            icon: ForgeIcons.directionsRun,
-            title: l10n.cardioEmpty,
-            message: l10n.cardioEmptyDetail,
-            compact: true,
-          ),
+        (_) => EmptyView(
+          icon: ForgeIcons.directionsRun,
+          title: l10n.cardioEmpty,
+          message: l10n.cardioEmptyDetail,
+          compact: true,
+          card: true,
         )
       else
         (_) => _WeeksChart(state.chart),
