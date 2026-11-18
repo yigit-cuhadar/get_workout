@@ -1404,9 +1404,9 @@ void main() {
         );
         await tester.tap(find.text('Add exercises'));
         await tester.pumpAndSettle();
-        // The picker too stays in the tab.
+        // The picker opens over the whole app, tab bar too.
         expect(front(), picker);
-        expect(selectedTab(tester), tab);
+        expect(find.byType(ForgeNavigationBar), findsNothing);
         await tester.tap(find.text('Back Squat'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Add 1 exercise'));

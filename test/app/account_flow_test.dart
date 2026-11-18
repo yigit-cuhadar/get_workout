@@ -362,6 +362,59 @@ void main() {
       expect(find.byType(OnboardingPage), findsOneWidget);
     });
 
+    testWidgets('a failed Apple confirmation names being offline or another '
+        'account, else only that deleting failed; a closed sheet says '
+        'nothing', (tester) async {
+      const appleUser = AuthUser(
+        id: 'u1',
+        email: 'a@icloud.com',
+        signInMethods: {SignInMethod.apple},
+      );
+      await openAccount(tester, appleUser);
+      for (final (failure, text) in [
+        (
+          const NetworkFailure(),
+          "You're offline, so nothing was deleted. Connect to the internet "
+              'and try again.',
+        ),
+        (
+          const AuthFailure('other', code: 'user-mismatch'),
+          "That's a different account. Sign in with the one you use here.",
+        ),
+        (
+          const AuthFailure('refused', code: 'invalid-credential'),
+          "Couldn't delete your data. Try again",
+        ),
+        (
+          const AuthFailure('refused', code: 'wrong-password'),
+          "Couldn't delete your data. Try again",
+        ),
+        (const AuthFailure('odd'), "Couldn't delete your data. Try again"),
+        (const AuthFailure('closed', code: cancelledCode), null),
+      ]) {
+        when(() => app.repository.revokeAppleSignIn())
+            .thenAnswer((_) async => Err(failure));
+        if (find.text('Delete everything?').evaluate().isEmpty) {
+          if (find.byType(DeleteAccountPage).evaluate().isEmpty) {
+            await tapText(tester, 'Delete account');
+          }
+          await tapButton(tester, 'Delete account');
+        }
+        await tapText(tester, 'Continue with Apple');
+
+        expect(find.text('That password is incorrect'), findsNothing);
+        if (text == null) {
+          expect(find.byType(SnackBar), findsNothing, reason: '$failure');
+        } else {
+          expect(find.text(text), findsOneWidget, reason: '$failure');
+        }
+        verifyNever(() => app.account.deleteAccount());
+        ScaffoldMessenger.of(tester.element(find.byType(DeleteAccountPage)))
+            .removeCurrentSnackBar();
+        await tester.pumpAndSettle();
+      }
+    });
+
     testWidgets('a user with a password and Google may confirm with either', (
       tester,
     ) async {

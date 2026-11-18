@@ -669,9 +669,12 @@ Decisions (the canvases they were drawn on are deleted):
   revokes the app's Apple sign-in before deleting (YG5 B). The revocation
   asks Apple natively for a fresh authorization code (Forge v0.31.0; the
   code from FlutterFire's provider flow was refused with
-  `invalid-credential` on the owner's iPhone). Any failure on this path
-  shows the generic "deleting failed" text, never the password one; a
-  closed Apple sheet says nothing.
+  `invalid-credential` on the owner's iPhone). A failure on this path never
+  shows the password text: offline keeps "You're offline…", another
+  Apple account keeps "That's a different account…", and the
+  password-looking codes (`invalid-credential`, `wrong-password`) and
+  anything else show "Couldn't delete your data"; a closed Apple sheet
+  says nothing.
 - Screen review (owner's picks, 2026-11-18, canvas
   https://claude.ai/artifact/LTkRmeAmV7YSz6MdZJeS66): a workout open 4 h
   ends itself at its last set with a notification, and its summary gets an
@@ -796,6 +799,20 @@ Decisions (the canvases they were drawn on are deleted):
   days (X6 B). Same pass: the workout card's and generator row's ⋯ and the
   set panel's plates are ForgeIconButtons, and the program name field has
   no hint repeating its label.
+- Egzersizler · 8 (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/LACjPRwMzutXTieTMxgQZS): Y1 A, Y2 B, Y3 A
+  kept, Y4 A. On the exercise list page only the search field and its
+  filter button stay pinned under the title; the active filter chips,
+  Clear all, Main · N / Also works · N, the count and the sort scroll away
+  with the rows, and once they have gone a selected chip between the
+  pill and the filter button names them ("5 filters", "Chest · Main"), a
+  tap on it scrolling back to the top (ForgeSearchField summary, Forge
+  v0.33.0) (Y1 A). The exercise picker's Add and Leave out forms open from
+  the root navigator, so from inside a tab the iOS sheet (and Android's
+  full-screen dialog) covers the tab bar too; Swap and Replace stay pushed
+  in their tab, at `…/swap` (Y2 B). The analytics consent page stays a
+  full-screen page (Y3 A); "New exercise" from the picker stays a full
+  page over it (Y4 A).
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
@@ -2217,11 +2234,16 @@ the feature you are about to touch, and keep it true when you change it.
   filters and the sort stay); its field claims focus for the first frames
   after the page is in, since the route's own focus and the Hero's flight
   land after the first request. Every exercise list in the app is this
-  widget (`LibraryListView`); the exercise picker (`ExercisePickerPage`,
+  widget (`LibraryListView`): one scroll view under the pinned search,
+  the filters, sections, count and sort scrolling with the rows and named
+  by the search's summary chip once out of sight (Egzersizler · 8 Y1 A);
+  the exercise picker (`ExercisePickerPage`,
   for programs, the generator, the workout and workout history) uses it
   with its own cubit and no sections. The picker's route (`…/pick`) takes
   `max`, `multiple` and a `form` (`add`, `leaveOut`, `swap`, `replace`,
-  with `exercise` and, for swap, `logged`); each place declares the most
+  with `exercise` and, for swap, `logged`); Add and Leave out open there
+  from the root navigator, over the tab bar, while Swap and Replace open
+  at the sibling `…/swap` inside their tab; each place declares the most
   its list holds (40 a workout, 20 a program day or a leave-out pick).
   `pickSwap` and `pickReplacement` open the Swap and Replace forms and
   return the picked exercise. "Create custom exercise" opens the form

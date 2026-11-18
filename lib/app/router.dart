@@ -452,7 +452,7 @@ GoRouter buildRouter(
         path: Routes.workout,
         pageBuilder: (_, state) => _pushed(state, const WorkoutPage()),
         routes: [
-          _pickerRoute(limit: WorkoutLimits.maxExercises),
+          ..._pickerRoutes(limit: WorkoutLimits.maxExercises, root: root),
           _workoutExercise(Routes.workoutExercise),
         ],
       ),
@@ -470,7 +470,7 @@ GoRouter buildRouter(
               GeneratorPreviewPage(answers: state.extra! as GeneratorAnswers),
             ),
           ),
-          _pickerRoute(limit: ProgramLimits.maxItemsPerDay),
+          ..._pickerRoutes(limit: ProgramLimits.maxItemsPerDay, root: root),
         ],
       ),
       GoRoute(
@@ -488,7 +488,7 @@ GoRouter buildRouter(
             Routes.today,
             const TodayPage(),
             routes: [
-              _pickerRoute(limit: WorkoutLimits.maxExercises),
+              ..._pickerRoutes(limit: WorkoutLimits.maxExercises, root: root),
               _workoutExercise(Routes.todayExercise),
               GoRoute(
                 path: 'workouts/:id',
@@ -546,7 +546,7 @@ GoRouter buildRouter(
                   ),
                 ),
               ),
-              _pickerRoute(limit: ProgramLimits.maxItemsPerDay),
+              ..._pickerRoutes(limit: ProgramLimits.maxItemsPerDay, root: root),
               GoRoute(
                 path: 'catalogue',
                 pageBuilder: (_, state) =>
@@ -650,7 +650,12 @@ GoRouter buildRouter(
                     picker: Routes.exerciseProgramPicker,
                   ),
                 ),
-                routes: [_pickerRoute(limit: ProgramLimits.maxItemsPerDay)],
+                routes: [
+                  ..._pickerRoutes(
+                    limit: ProgramLimits.maxItemsPerDay,
+                    root: root,
+                  ),
+                ],
               ),
               GoRoute(
                 path: ':id',
@@ -743,7 +748,10 @@ GoRouter buildRouter(
                       ),
                     ),
                   ),
-                  _pickerRoute(limit: WorkoutLimits.maxExercises),
+                  ..._pickerRoutes(
+                    limit: WorkoutLimits.maxExercises,
+                    root: root,
+                  ),
                   _workoutExercise(Routes.calendarExercise),
                   GoRoute(
                     path: ':id',
@@ -902,37 +910,51 @@ ProfileField? _field(GoRouterState state) =>
     ProfileField.values.asNameMap()[state.pathParameters['field']];
 
 /// The exercise picker of a page whose lists hold at most [limit]
-/// exercises, with a custom exercise created above it. Adding opens over
-/// the flow (close); Swap and Replace are steps of it (back).
-GoRoute _pickerRoute({required int limit}) => GoRoute(
-  path: 'pick',
-  pageBuilder: (context, state) {
+/// exercises, with a custom exercise created above it as a full page.
+/// Adding (and leaving out) opens over the flow (close) from the [root]
+/// navigator, so a picker opened inside a tab covers the tab bar too; Swap
+/// and Replace are steps of their page (back), at `swap`.
+List<GoRoute> _pickerRoutes({
+  required int limit,
+  required GlobalKey<NavigatorState> root,
+}) {
+  ExercisePickerPage page(GoRouterState state) {
     final query = state.uri.queryParameters;
     final max = int.tryParse(query['max'] ?? '') ?? 1;
-    final form = ExercisePickerForm.byName(query['form']);
-    final page = ExercisePickerPage(
+    return ExercisePickerPage(
       max: max < 1 ? 1 : max,
       limit: limit,
       multiple: query['multiple'] == 'true',
-      form: form,
+      form: ExercisePickerForm.byName(query['form']),
       exerciseId: query['exercise'],
       logged: int.tryParse(query['logged'] ?? '') ?? 0,
       warmups: int.tryParse(query['warmups'] ?? '') ?? 0,
     );
-    return form == ExercisePickerForm.add || form == ExercisePickerForm.leaveOut
-        ? _overFlow(context, state, page)
-        : _pushed(state, page);
-  },
-  routes: [
-    GoRoute(
-      path: 'new',
-      pageBuilder: (_, state) => _pushed(
-        state,
-        CustomExerciseNewPage(name: state.uri.queryParameters['name']),
-      ),
+  }
+
+  GoRoute create({GlobalKey<NavigatorState>? over}) => GoRoute(
+    path: 'new',
+    parentNavigatorKey: over,
+    pageBuilder: (_, state) => _pushed(
+      state,
+      CustomExerciseNewPage(name: state.uri.queryParameters['name']),
     ),
-  ],
-);
+  );
+
+  return [
+    GoRoute(
+      path: 'pick',
+      parentNavigatorKey: root,
+      pageBuilder: (context, state) => _overFlow(context, state, page(state)),
+      routes: [create(over: root)],
+    ),
+    GoRoute(
+      path: pickStepPath,
+      pageBuilder: (_, state) => _pushed(state, page(state)),
+      routes: [create()],
+    ),
+  ];
+}
 
 /// An exercise's detail page pushed above a workout (in progress or being
 /// edited), so going back returns to it; [exerciseRoute] is where it opens

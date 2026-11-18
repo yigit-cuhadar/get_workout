@@ -36,8 +36,9 @@ class DeleteAccountState extends Equatable {
   List<Object?> get props => [status, failure];
 }
 
-/// Signing in again with Apple or revoking its sign-in failed. Its codes
-/// are not a password's, so the page shows only that deleting failed.
+/// Signing in again with Apple or revoking its sign-in failed, for [cause].
+/// Its codes are not a password's: the page names only being offline and
+/// another account, else that deleting failed.
 final class AppleRevokeFailure extends Failure {
   const AppleRevokeFailure(Failure cause)
     : super('Apple revocation failed', cause: cause);

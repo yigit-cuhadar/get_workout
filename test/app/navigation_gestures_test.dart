@@ -101,6 +101,49 @@ void main() {
     );
 
     testWidgets(
+      'the sheet from inside a tab covers the tab bar; after it the tab '
+      'still asks before dropping changes',
+      (tester) => onIOS(() async {
+        final app = await openBuilder(tester);
+        await tester.enterText(
+          find.widgetWithText(ForgeTextField, 'Program name'),
+          'Push Pull',
+        );
+        await tester.pump();
+        final programsTab = find.descendant(
+          of: find.byType(ForgeNavigationBar),
+          matching: find.text('Programs'),
+        );
+
+        await tapOn(tester, find.text('Add exercises').last);
+        final sheet = routeOf(tester, ExercisePickerPage);
+        expect(sheet, isA<CupertinoSheetRoute<Object?>>());
+        // From the root navigator, over the tab's own.
+        final builderNavigator = Navigator.of(
+          tester.element(find.byType(ProgramBuilderPage)),
+        );
+        expect(sheet.navigator, isNot(builderNavigator));
+        expect(
+          sheet.navigator,
+          Navigator.of(builderNavigator.context, rootNavigator: true),
+        );
+        expect(programsTab.hitTestable(), findsNothing);
+
+        await tapOn(tester, find.bySemanticsLabel('Close'));
+        expect(find.byType(ExercisePickerPage), findsNothing);
+        expect(find.text('Push Pull'), findsOneWidget);
+
+        await tapOn(tester, programsTab);
+        expect(find.text('Discard changes?'), findsOneWidget);
+        await tapOn(tester, inDialog('Keep editing'));
+        expect(find.byType(ProgramBuilderPage), findsOneWidget);
+        expect(find.text('Push Pull'), findsOneWidget);
+
+        await app.stop(tester);
+      }),
+    );
+
+    testWidgets(
       'the edge swipe of a page with unsaved changes asks first',
       (tester) => onIOS(() async {
         final app = await openBuilder(tester);
