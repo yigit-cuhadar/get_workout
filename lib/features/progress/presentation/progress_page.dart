@@ -201,12 +201,13 @@ class _BodyCard extends StatelessWidget {
           ),
         ),
         line: _changeLine(context, snapshot),
+        // A single weigh-in has no trend: the card goes without one.
         chart: snapshot.weights.length > 1
             ? Sparkline(
                 values: [for (final point in snapshot.weights) point.kg],
                 color: ForgeStyle.of(context).colors.accent,
               )
-            : SparklineEmptyBox(message: l10n.progressBodyTrendEmpty),
+            : null,
         action: logWeight,
         moreActions: [measure],
         onTap: open,

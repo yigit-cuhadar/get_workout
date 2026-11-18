@@ -279,27 +279,33 @@ Widget featuredBandRows(BuildContext context) => _page(
 );
 
 @widgetbook.UseCase(name: 'Band · figure and chart', type: FeaturedCard)
-Widget featuredBandChart(BuildContext context) => _page(
-  FeaturedCard(
-    form: FeaturedCardForm.band,
-    eyebrow: 'Body',
-    title: '82.4 kg',
-    line: const FeaturedLine(
-      '−0.4 since Nov 8',
-      data: '19.5 % fat',
-      icon: ForgeIcons.trendingUp,
+Widget featuredBandChart(BuildContext context) {
+  // A single weigh-in has no change and no trend yet.
+  final one = context.knobs.boolean(label: 'One weigh-in');
+  return _page(
+    FeaturedCard(
+      form: FeaturedCardForm.band,
+      eyebrow: 'Body',
+      title: '82.4 kg',
+      line: one
+          ? null
+          : const FeaturedLine(
+              '−0.4 since Nov 8',
+              data: '19.5 % fat',
+              icon: ForgeIcons.trendingUp,
+            ),
+      chart: one
+          ? null
+          : Sparkline(
+              values: const [86.3, 85.9, 85.1, 84.6, 83.9, 83.2, 82.8, 82.4],
+              color: ForgeStyle.of(context).colors.accent,
+            ),
+      action: FeaturedAction('Log weight', () {}),
+      moreActions: [FeaturedAction('Measurement day', () {})],
+      onTap: () {},
     ),
-    chart: context.knobs.boolean(label: 'One weigh-in')
-        ? const SparklineEmptyBox(message: 'Log again to see the trend')
-        : Sparkline(
-            values: const [86.3, 85.9, 85.1, 84.6, 83.9, 83.2, 82.8, 82.4],
-            color: ForgeStyle.of(context).colors.accent,
-          ),
-    action: FeaturedAction('Log weight', () {}),
-    moreActions: [FeaturedAction('Measurement day', () {})],
-    onTap: () {},
-  ),
-);
+  );
+}
 
 @widgetbook.UseCase(name: 'Band · error', type: FeaturedCard)
 Widget featuredBandError(BuildContext context) => _page(

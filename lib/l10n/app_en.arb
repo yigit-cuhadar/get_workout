@@ -416,7 +416,6 @@
   "progressBodySince": "{change} since {date}",
   "@progressBodySince": {"placeholders": {"change": {"type": "String"}, "date": {"type": "String"}}},
   "progressBodyEmptyNote": "Log your weight to start the trend",
-  "progressBodyTrendEmpty": "Log again to see the trend",
   "progressThisWeek": "this week",
   "progressWeekRange": "{start}–{end}",
   "@progressWeekRange": {"placeholders": {"start": {"type": "String"}, "end": {"type": "String"}}},
