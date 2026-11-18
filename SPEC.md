@@ -428,17 +428,14 @@ Where it stands (2026-11-18, end of Group 11):
   studio #128; Forge v0.23.0–v0.24.3. The picks are under Design ›
   "Formlar, before the build" and "during the build"; the device check's
   own pick: Log cardio asks "Discard this cardio session?" when left with
-  changes. GetWorkout Studio's published link is behind main: publish
-  design/studio.html from the owner's account.
+  changes.
 - Kurulum, hesap ve abonelik: done, checked on the iOS simulator and
   approved by the owner (2026-11-17); merged as #136 (the check branch
   joining #133 splash, onboarding, sign-in, guest sheet; #132 calculators;
   #134 account, delete account, paywall, generator preview; and the
   device-check fixes), studio #135; Forge v0.25.0–v0.25.6. The picks are
   under Design › "Kurulum, hesap ve abonelik, before the build", "during
-  the build" and "Device check of Kurulum". GetWorkout Studio's published
-  link is behind main: publish design/studio.html from the owner's
-  account; MobileAppForge Studio likewise (Forge design/studio.html).
+  the build" and "Device check of Kurulum".
 - Not checked on a device: Account and Delete account (need a real
   account; covered by #138's flow tests), the real Apple Health / Health
   Connect prompts, Android, large text.
@@ -466,10 +463,10 @@ Where it stands (2026-11-18, end of Group 11):
      on the owner's iPhone.)
   5. An Android round: Google sign-in, Health Connect, the launch screen.
   6. Release: the first prod content import, then the store automation.
-- Owner to do: publish both studios from the owner's account (their links
-  are behind main), or share them with edit access so a session can; the
-  Play Console Health declaration (above); the female body model before
-  release.
+- Both studios' links match main again (published 2026-11-18 from a
+  session: they belong to the owner's account, so a session publishes
+  them directly). Owner to do: the Play Console Health declaration
+  (above); the female body model before release.
 - Small: the Forge Widgetbook use case "ListRow · Info hint" is broken.
 
 ## Design
