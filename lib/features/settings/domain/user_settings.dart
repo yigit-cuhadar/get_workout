@@ -418,6 +418,7 @@ class UserSettings extends Equatable {
     required this.lengthUnit,
     this.themePreference = ThemePreference.system,
     this.effortScale = EffortScale.byFeel,
+    this.askEffort = true,
     this.weekStart = WeekStart.automatic,
     this.restTimer = const RestTimerSettings(),
     this.keepScreenOn = true,
@@ -448,6 +449,10 @@ class UserSettings extends Equatable {
   final LengthUnit lengthUnit;
   final ThemePreference themePreference;
   final EffortScale effortScale;
+
+  /// Whether ticking a working set asks its effort; off, efforts are still
+  /// shown and picked in [effortScale].
+  final bool askEffort;
   final WeekStart weekStart;
   final RestTimerSettings restTimer;
 
@@ -544,6 +549,7 @@ class UserSettings extends Equatable {
     LengthUnit? lengthUnit,
     ThemePreference? themePreference,
     EffortScale? effortScale,
+    bool? askEffort,
     WeekStart? weekStart,
     RestTimerSettings? restTimer,
     bool? keepScreenOn,
@@ -562,6 +568,7 @@ class UserSettings extends Equatable {
     lengthUnit: lengthUnit ?? this.lengthUnit,
     themePreference: themePreference ?? this.themePreference,
     effortScale: effortScale ?? this.effortScale,
+    askEffort: askEffort ?? this.askEffort,
     weekStart: weekStart ?? this.weekStart,
     restTimer: restTimer ?? this.restTimer,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
@@ -592,6 +599,7 @@ class UserSettings extends Equatable {
     lengthUnit: lengthUnit,
     themePreference: themePreference,
     effortScale: effortScale,
+    askEffort: askEffort,
     weekStart: weekStart,
     restTimer: restTimer,
     keepScreenOn: keepScreenOn,
@@ -609,6 +617,7 @@ class UserSettings extends Equatable {
     lengthUnit,
     themePreference,
     effortScale,
+    askEffort,
     weekStart,
     restTimer,
     keepScreenOn,

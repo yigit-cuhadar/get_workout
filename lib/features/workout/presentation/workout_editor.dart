@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/grouping.dart' as grouping;
@@ -26,13 +24,13 @@ abstract interface class EditedWorkout {
 
   /// The working set just ticked without an effort, whose effort the set
   /// bar asks (see [questionSet]) until answered, skipped or a set is
-  /// picked; when its tick started no rest ([askingWithRest]), also until
-  /// [WorkoutEditor.effortQuestionTime] passes. Another tick, unticking it
-  /// or an edit that moves sets ends it too.
+  /// picked, with or without a rest. Another tick, unticking it or an edit
+  /// that moves sets ends it too.
   SetRef? get asking;
 
-  /// Whether the tick of [asking] started a rest, so the question waits
-  /// for an answer however long it takes; see [restStartedBy].
+  /// Whether the tick of [asking] started a rest, so the question shows
+  /// the rest under it and stays when the page is left; see
+  /// [restStartedBy].
   bool get askingWithRest;
 
   /// The stats of the workout's exercises that have arrived.
@@ -126,44 +124,9 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
   /// Keyed by set and drop (null for the set's own weight).
   final _retyped = RetypedWeights<(SetRef, int?)>();
 
-  /// How long the set bar asks the effort of a set just ticked when left
-  /// alone, when its tick started no rest.
-  static const effortQuestionTime = Duration(seconds: 20);
-
-  /// Ends the effort question after [effortQuestionTime].
-  Timer? _questionTimer;
-
-  /// Asks the effort of [ref], or of none: until answered when its tick
-  /// started a rest, else for [effortQuestionTime].
+  /// Asks the effort of [ref], or of none.
   void _ask(SetRef? ref) {
-    _questionTimer?.cancel();
-    _questionTimer = null;
     if (state.asking != ref) emitAsking(ref);
-    if (ref != null && !state.askingWithRest) {
-      _questionTimer = Timer(effortQuestionTime, () {
-        if (!isClosed && state.asking == ref) emitAsking(null);
-      });
-    }
-  }
-
-  /// The user is answering the effort question: it waits another
-  /// [effortQuestionTime].
-  void keepAsking() {
-    final asking = state.asking;
-    if (asking != null) _ask(asking);
-  }
-
-  /// The effort question waits, e.g. while its help is open, until
-  /// [keepAsking].
-  void pauseAsking() {
-    _questionTimer?.cancel();
-    _questionTimer = null;
-  }
-
-  @override
-  Future<void> close() {
-    _questionTimer?.cancel();
-    return super.close();
   }
 
   void selectSet(SetRef ref) {

@@ -824,6 +824,16 @@ void main() {
       return cubit;
     }
 
+    test('nothing is asked with the question turned off', () async {
+      final cubit = await withSquat(rests: false);
+      settings.add(noRest.copyWith(askEffort: false));
+      await pumpEventQueue();
+      cubit.toggleDone(first);
+      expect(cubit.state.questionRef, isNull);
+      expect(cubit.state.selection, second);
+      await cubit.close();
+    });
+
     group('with a rest', () {
       test('asks about that set while the next waits for the rest', () async {
         final cubit = await withSquat();
@@ -939,9 +949,9 @@ void main() {
           async.elapse(const Duration(seconds: 1));
           cubit.toggleDone(first);
           expect(cubit.state.askingWithRest, isTrue);
-          async.elapse(WorkoutEditor.effortQuestionTime * 3);
+          async.elapse(const Duration(minutes: 1));
           clock = clock.add(const Duration(minutes: 5));
-          async.elapse(WorkoutEditor.effortQuestionTime * 3);
+          async.elapse(const Duration(minutes: 1));
           expect(cubit.state.questionRef, first);
           unawaited(cubit.close());
           async.flushMicrotasks();
@@ -1014,42 +1024,15 @@ void main() {
         await cubit.close();
       });
 
-      test('it ends after the fallback, later when touched or in help', () {
+      test('without a rest it has no timeout either', () {
         fakeAsync((async) {
           late ActiveWorkoutCubit cubit;
           unawaited(withSquat(rests: false).then((built) => cubit = built));
           async.elapse(const Duration(seconds: 1));
           cubit.toggleDone(first);
-          const time = WorkoutEditor.effortQuestionTime;
-          async.elapse(time - const Duration(seconds: 1));
-          cubit.keepAsking();
-          async.elapse(time - const Duration(seconds: 1));
+          expect(cubit.state.askingWithRest, isFalse);
+          async.elapse(const Duration(minutes: 10));
           expect(cubit.state.questionRef, first);
-          cubit.pauseAsking();
-          async.elapse(time * 3);
-          expect(cubit.state.questionRef, first);
-          cubit.keepAsking();
-          async.elapse(time);
-          expect(cubit.state.questionRef, isNull);
-          unawaited(cubit.close());
-          async.flushMicrotasks();
-        });
-      });
-
-      test("an earlier question's time never ends a later one", () {
-        fakeAsync((async) {
-          late ActiveWorkoutCubit cubit;
-          unawaited(withSquat(rests: false).then((built) => cubit = built));
-          async.elapse(const Duration(seconds: 1));
-          cubit
-            ..toggleDone(first)
-            ..setEffort(first, const EffortStep.reserve(2));
-          async.elapse(const Duration(seconds: 5));
-          cubit.toggleDone(second);
-          async.elapse(
-            WorkoutEditor.effortQuestionTime - const Duration(seconds: 4),
-          );
-          expect(cubit.state.questionRef, second);
           unawaited(cubit.close());
           async.flushMicrotasks();
         });
@@ -1125,7 +1108,7 @@ void main() {
         async.flushMicrotasks();
         // Closing itself may still clear the stats.
         emitted.clear();
-        async.elapse(WorkoutEditor.effortQuestionTime * 2);
+        async.elapse(const Duration(minutes: 1));
         expect(emitted, isEmpty);
       });
     });

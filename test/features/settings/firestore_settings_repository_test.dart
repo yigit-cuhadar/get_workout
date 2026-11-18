@@ -81,6 +81,7 @@ void main() {
       lengthUnit: LengthUnit.inch,
       themePreference: ThemePreference.dark,
       effortScale: EffortScale.rpe,
+      askEffort: false,
     );
 
     final result = await repository.saveSettings('u1', settings);
@@ -92,6 +93,7 @@ void main() {
         'lengthUnit': 'in',
         'themeMode': 'dark',
         'effortScale': 'rpe',
+        'askEffort': false,
         'restTimer': {'enabled': true, 'defaultS': 90, 'alert': 'chimeVibrate'},
         'keepScreenOn': true,
         'warmups': {
@@ -108,6 +110,13 @@ void main() {
       },
     });
     expect(await repository.watchSettings('u1').first, settings);
+  });
+
+  test('the effort question is asked unless turned off', () async {
+    await user().set({
+      'settings': {'effortScale': 'rir'},
+    });
+    expect((await repository.watchSettings('u1').first).askEffort, isTrue);
   });
 
   group('week start', () {
@@ -578,6 +587,7 @@ void main() {
         'lengthUnit': 'in',
         'themeMode': 'system',
         'effortScale': 'feel',
+        'askEffort': true,
         'restTimer': {'enabled': true, 'defaultS': 90, 'alert': 'chimeVibrate'},
         'keepScreenOn': true,
         'warmups': {

@@ -479,7 +479,6 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
 
   @override
   Future<void> close() async {
-    pauseAsking();
     await _userSubscription.cancel();
     await _workoutSubscription?.cancel();
     return super.close();

@@ -102,6 +102,10 @@ class FirestoreSettingsRepository implements SettingsRepository {
       effortScale: map['effortScale'] == 'off'
           ? EffortScale.byFeel
           : _decode(_effortCodes, map['effortScale'], defaults.effortScale),
+      askEffort: switch (map['askEffort']) {
+        final bool ask => ask,
+        _ => defaults.askEffort,
+      },
       weekStart: _decode(_weekStartCodes, map['weekStart'], defaults.weekStart),
       restTimer: _restTimer(map['restTimer']),
       keepScreenOn: switch (map['keepScreenOn']) {
@@ -139,6 +143,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
     'lengthUnit': _lengthCodes[settings.lengthUnit],
     'themeMode': _themeCodes[settings.themePreference],
     'effortScale': _effortCodes[settings.effortScale],
+    'askEffort': settings.askEffort,
     'weekStart': _weekStartCodes[settings.weekStart] ?? FieldValue.delete(),
     'restTimer': {
       'enabled': settings.restTimer.enabled,

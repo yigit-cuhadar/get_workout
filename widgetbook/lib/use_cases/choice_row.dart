@@ -9,7 +9,7 @@ Widget choiceRows(BuildContext context) {
   final selected = context.knobs.int.slider(
     label: 'Selected',
     initialValue: 0,
-    max: 2,
+    max: 3,
   );
   return Padding(
     padding: const EdgeInsets.all(Gap.md),
@@ -17,9 +17,10 @@ Widget choiceRows(BuildContext context) {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final (i, label) in const [
-          'By feel',
+          'By feel (default)',
           'Reps in reserve (RIR)',
           'RPE (1-10)',
+          'Off',
         ].indexed)
           ChoiceRow(label: label, selected: i == selected, onTap: () {}),
       ],

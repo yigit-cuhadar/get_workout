@@ -81,7 +81,7 @@ void main() {
       expect(find.text('Default rest'), findsOneWidget);
       expect(find.text('1:30'), findsOneWidget);
       expect(find.text('Notify when rest is over'), findsOneWidget);
-      expect(find.text('Chime · vibrate'), findsOneWidget);
+      expect(find.text('Chime · vibrate (default)'), findsOneWidget);
 
       await pump(
         tester,
@@ -102,6 +102,46 @@ void main() {
         find.text('20 kg bar · 25, 20, 15, 10, 5, 2.5, 1.25'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('the effort question offers Off, its default marked', (
+      tester,
+    ) async {
+      await pump(tester, const WorkoutSettingsGroups());
+      expect(find.text('By feel (default)'), findsOneWidget);
+      await tester.tap(find.text('Effort question'));
+      await tester.pumpAndSettle();
+      expect(find.text('Asked after each set you log.'), findsOneWidget);
+      expect(find.text('RPE (1-10)'), findsOneWidget);
+      await tester.tap(find.text('Off'));
+      await tester.pumpAndSettle();
+
+      final saved =
+          verify(() => settings.update(captureAny())).captured.single
+              as UserSettings;
+      expect(saved.askEffort, isFalse);
+      expect(saved.effortScale, EffortScale.byFeel);
+    });
+
+    testWidgets('a scale picked turns the effort question back on', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const WorkoutSettingsGroups(),
+        shown: metric.copyWith(askEffort: false),
+      );
+      expect(find.text('Off'), findsOneWidget);
+      await tester.tap(find.text('Effort question'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Reps in reserve (RIR)'));
+      await tester.pumpAndSettle();
+
+      final saved =
+          verify(() => settings.update(captureAny())).captured.single
+              as UserSettings;
+      expect(saved.askEffort, isTrue);
+      expect(saved.effortScale, EffortScale.rir);
     });
 
     testWidgets('the rest sound is picked in a choice sheet', (tester) async {

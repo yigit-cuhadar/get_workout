@@ -568,7 +568,6 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   /// whose tick started no rest; one whose tick started a rest stays.
   void pageOpened() {
     final dropsQuestion = state.asking != null && !state.askingWithRest;
-    if (dropsQuestion) pauseAsking();
     if (state.picked == null && !dropsQuestion && !state.doneSetPicked) {
       return;
     }
@@ -973,7 +972,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   }
 
   @override
-  bool get asksEffort => true;
+  bool get asksEffort => _settings?.askEffort ?? true;
 
   @override
   void emitAsking(SetRef? asking) => emit(
@@ -1149,8 +1148,6 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   @override
   Future<void> close() async {
-    // Nothing may be asked while closing.
-    pauseAsking();
     _retry?.cancel();
     await _userSubscription.cancel();
     await _settingsSubscription?.cancel();
