@@ -106,7 +106,7 @@ void main() {
       (tester) => onIOS(() async {
         final app = await openBuilder(tester);
         await tester.enterText(
-          find.widgetWithText(TextField, 'Program name'),
+          find.widgetWithText(ForgeTextField, 'Program name'),
           'Push Pull',
         );
         await tester.pump();
@@ -135,7 +135,7 @@ void main() {
       (tester) => onIOS(() async {
         final app = await openBuilder(tester);
         await tester.enterText(
-          find.widgetWithText(TextField, 'Program name'),
+          find.widgetWithText(ForgeTextField, 'Program name'),
           'Push Pull',
         );
         await tester.pump();
