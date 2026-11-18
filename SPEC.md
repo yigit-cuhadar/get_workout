@@ -694,6 +694,18 @@ Decisions (the canvases they were drawn on are deleted):
   every setting's default option is labelled "(default)", e.g. "By feel
   (default)" (K18 B); onboarding skips the reminder step when
   notifications are allowed and leaves reminders off (K19 A).
+- Screen review, follow-up (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/3968osDfaNKbbUwkmvXVXL): the self-ended
+  workout's summary has Edit as an AppBar text action at the top right
+  (L1 B); onboarding's analytics step comes right after the target-weight
+  question, before the notification step, drawn like the other permission
+  steps (L2 A); equipment rows look like the goal question's, a row tap
+  selects and an info button opens the set's equipment as checkboxes (L3
+  A); the effort setting's choices start with "Off", the default marked
+  "(default)", its option titles to be redrawn (L4 A); at large text the
+  value AppBar grows with the text, timer, line and Finish stacking (L5
+  B); a card header's detail that does not fit moves under the title,
+  right-aligned (L6 A).
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
