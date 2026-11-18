@@ -51,6 +51,7 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
     required this._deleteAccount,
     required this._reauthenticate,
     required this._reauthenticateWithProvider,
+    required this._revokeAppleSignIn,
     required this._underway,
     required this._releaseWorkouts,
     required this._resumeWorkouts,
@@ -60,6 +61,7 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
   final DeleteUserAccount _deleteAccount;
   final Reauthenticate _reauthenticate;
   final ReauthenticateWithProvider _reauthenticateWithProvider;
+  final RevokeAppleSignIn _revokeAppleSignIn;
   final DeletionUnderway _underway;
 
   /// Stops the workout in progress from writing for the user, and starts
@@ -70,6 +72,24 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
   Future<void> delete() async {
     if (state.status case DeleteStatus.deleting || DeleteStatus.done) return;
     emit(const DeleteAccountState(DeleteStatus.deleting));
+    await _delete();
+  }
+
+  /// Signs in again with Apple and revokes the app's Apple sign-in, which
+  /// the App Store requires, then deletes. A closed Apple sheet deletes
+  /// nothing and says nothing.
+  Future<void> deleteWithApple() async {
+    if (state.status case DeleteStatus.deleting || DeleteStatus.done) return;
+    emit(const DeleteAccountState(DeleteStatus.deleting));
+    final failure = (await _revokeAppleSignIn()).failureOrNull;
+    if (isClosed) return;
+    if (failure != null) {
+      return emit(
+        failure is AuthFailure && failure.code == cancelledCode
+            ? const DeleteAccountState(DeleteStatus.idle)
+            : DeleteAccountState(DeleteStatus.failed, failure: failure),
+      );
+    }
     await _delete();
   }
 

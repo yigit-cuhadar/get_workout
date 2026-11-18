@@ -221,6 +221,7 @@ class FlowApp {
         deleteAccount: DeleteUserAccount(account, local, accountTelemetry),
         reauthenticate: Reauthenticate(repository),
         reauthenticateWithProvider: ReauthenticateWithProvider(repository),
+        revokeAppleSignIn: RevokeAppleSignIn(repository),
         underway: deletionUnderway,
         releaseWorkouts: (_) async {},
         resumeWorkouts: () async {},

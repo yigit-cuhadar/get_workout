@@ -68,6 +68,7 @@ void main() {
     deleteAccount: DeleteUserAccount(account, local, telemetry),
     reauthenticate: Reauthenticate(auth),
     reauthenticateWithProvider: ReauthenticateWithProvider(auth),
+    revokeAppleSignIn: RevokeAppleSignIn(auth),
     underway: underway,
     releaseWorkouts: (uid) async => workouts.add('release $uid'),
     resumeWorkouts: () async => workouts.add('resume'),
@@ -303,4 +304,55 @@ void main() {
       expect(underway.value, isFalse);
     },
   );
+
+  group('deleteWithApple', () {
+    setUp(
+      () =>
+          when(() => auth.revokeAppleSignIn())
+              .thenAnswer((_) async => const Ok(null)),
+    );
+
+    blocTest<DeleteAccountCubit, DeleteAccountState>(
+      'revokes the Apple sign-in, then deletes',
+      build: build,
+      act: (cubit) => cubit.deleteWithApple(),
+      expect: () => [deleting, done],
+      verify: (_) {
+        verifyInOrder([
+          () => auth.revokeAppleSignIn(),
+          () => account.deleteAccount(),
+        ]);
+      },
+    );
+
+    blocTest<DeleteAccountCubit, DeleteAccountState>(
+      'a closed Apple sheet deletes nothing and says nothing',
+      setUp: () => when(() => auth.revokeAppleSignIn()).thenAnswer(
+        (_) async => const Err(AuthFailure('closed', code: cancelledCode)),
+      ),
+      build: build,
+      act: (cubit) => cubit.deleteWithApple(),
+      expect: () => [deleting, const DeleteAccountState(DeleteStatus.idle)],
+      verify: (_) => verifyNever(() => account.deleteAccount()),
+    );
+
+    blocTest<DeleteAccountCubit, DeleteAccountState>(
+      'a failed revocation deletes nothing and fails',
+      setUp: () => when(() => auth.revokeAppleSignIn()).thenAnswer(
+        (_) async =>
+            const Err(AuthFailure('no key', code: 'invalid-credential')),
+      ),
+      build: build,
+      act: (cubit) => cubit.deleteWithApple(),
+      expect: () => [
+        deleting,
+        isA<DeleteAccountState>().having(
+          (s) => s.status,
+          'status',
+          DeleteStatus.failed,
+        ),
+      ],
+      verify: (_) => verifyNever(() => account.deleteAccount()),
+    );
+  });
 }

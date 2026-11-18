@@ -661,7 +661,10 @@ Decisions (the canvases they were drawn on are deleted):
   also gets "or" and a button per linked provider under the field (YG2 B); the
   "or" is a new Forge component, OrDivider (YG3 B); picking another
   account in the provider's sheet brings the dialog back with "That's a
-  different account. Sign in with the one you use here." (YG4 A).
+  different account. Sign in with the one you use here." (YG4 A). A user
+  with Apple linked confirms "Delete everything?" with "Continue with
+  Apple" in place of Delete ("…Sign in with Apple to confirm."), which
+  revokes the app's Apple sign-in before deleting (YG5 B).
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
@@ -1678,7 +1681,12 @@ the feature you are about to touch, and keep it true when you change it.
   has one, and a button per linked provider (`AuthUser.signInMethods`)
   that renews it with that provider (`forge_auth`'s
   `ReauthenticateWithProvider`); a cancelled provider sheet leaves the
-  dialog open and asks nothing. A guest is deleted
+  dialog open and asks nothing. A user with Apple linked always goes
+  through Apple first: `RevokeAppleSignIn` signs in again with Apple and
+  revokes the app's Apple tokens (App Store 5.1.1(v)); a closed sheet
+  deletes nothing, a failed revocation deletes nothing and shows the
+  delete failure. Revocation needs Apple's code flow key (Team ID, Key ID,
+  .p8) in each Firebase project's Apple provider. A guest is deleted
   the same way, without that check. Once the server deleted the data,
   still signed in (so nothing of the next guest is touched), the app
   removes the user's kept workouts file (unreadable copies too), cancels

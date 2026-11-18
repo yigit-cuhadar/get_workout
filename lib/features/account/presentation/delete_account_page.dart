@@ -135,19 +135,36 @@ class _DeleteAccountView extends StatelessWidget {
     );
   }
 
+  /// "Delete everything?". A user with Apple linked confirms with Apple,
+  /// whose sign-in is revoked before deleting (App Store rule), so the
+  /// Delete button is "Continue with Apple" for them.
   Future<void> _confirm(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<DeleteAccountCubit>();
+    final apple =
+        context.read<AuthCubit>().user?.signInMethods.contains(
+          SignInMethod.apple,
+        ) ??
+        false;
     final confirmed = await showForgeDialog<bool>(
       context: context,
       builder: (dialog) => ForgeDialog(
         title: l10n.deleteConfirmTitle,
-        message: l10n.deleteConfirmBody,
-        action: ForgeButton(
-          label: l10n.deleteConfirm,
-          variant: ForgeButtonVariant.danger,
-          onPressed: () => Navigator.pop(dialog, true),
-        ),
+        message: apple ? l10n.deleteConfirmAppleBody : l10n.deleteConfirmBody,
+        action: apple
+            ? SignInProviderButtons(
+                apple: SignInProvider(
+                  mark: const ProviderMark(SocialProvider.apple, enabled: true),
+                  label: l10n.authContinueWithApple,
+                  onPressed: () => Navigator.pop(dialog, true),
+                ),
+                signingInLabel: l10n.authSigningIn,
+              )
+            : ForgeButton(
+                label: l10n.deleteConfirm,
+                variant: ForgeButtonVariant.danger,
+                onPressed: () => Navigator.pop(dialog, true),
+              ),
         cancel: ForgeButton(
           label: l10n.cancel,
           variant: ForgeButtonVariant.secondary,
@@ -155,7 +172,8 @@ class _DeleteAccountView extends StatelessWidget {
         ),
       ),
     );
-    if (confirmed == true) await cubit.delete();
+    if (confirmed != true) return;
+    await (apple ? cubit.deleteWithApple() : cubit.delete());
   }
 
   /// Asks for the password, the linked providers, or both. A user with

@@ -55,6 +55,7 @@
   "deleteAfter": "You'll start over as a new guest. This can't be undone.",
   "deleteConfirmTitle": "Delete everything?",
   "deleteConfirmBody": "Your data will be gone for good.",
+  "deleteConfirmAppleBody": "Your data will be gone for good. Sign in with Apple to confirm.",
   "deleteConfirm": "Delete",
   "deletePasswordTitle": "Confirm it's you",
   "deletePasswordBody": "Enter your password to delete your account.",
