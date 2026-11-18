@@ -331,6 +331,11 @@ String? notificationDestination(NotificationTarget target, List<String> open) =>
 String? lockScreenDestination(List<String> open, {required bool inProgress}) =>
     !inProgress || _workoutOpen(open) ? null : Routes.workout;
 
+/// Where the summary of a workout that ended itself opens with the [open]
+/// pages: the workout page, unless it is open already.
+String? selfEndedDestination(List<String> open) =>
+    _workoutOpen(open) ? null : Routes.workout;
+
 /// All routes live here. There is always a user (a guest until they create
 /// an account), so the gates are the splash while the session and then the
 /// user's profile resolve, a retry screen when the guest sign-in failed, and

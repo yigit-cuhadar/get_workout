@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 import 'package:get_it/get_it.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../core/device_localizations.dart';
@@ -12,6 +13,7 @@ import '../settings/presentation/settings_section.dart';
 import 'data/android_workout_lock_screen.dart';
 import 'data/audio_rest_chime.dart';
 import 'data/device_rest_notifications.dart';
+import 'data/device_workout_end_notice.dart';
 import 'data/file_local_workout_store.dart';
 import 'data/firestore_workout_repository.dart';
 import 'data/ios_workout_lock_screen.dart';
@@ -22,6 +24,7 @@ import 'domain/rest_notifications.dart';
 import 'domain/rest_usecases.dart';
 import 'domain/workout_lock_screen.dart';
 import 'domain/workout_editing.dart';
+import 'domain/workout_end_notice.dart';
 import 'domain/workout_repository.dart';
 import 'domain/workout_usecases.dart';
 import 'presentation/active_workout_cubit.dart';
@@ -89,6 +92,11 @@ class WorkoutModule implements FeatureModule {
       ..registerFactory(() => GetHeldRecords(sl()))
       ..registerFactory(() => WatchAllExerciseStats(sl()))
       ..registerFactory(() => FinishWorkout(sl()))
+      ..registerLazySingleton<WorkoutEndNotice>(
+        () => DeviceWorkoutEndNotice(sl.getAsync<Notifications>()),
+      )
+      ..registerFactory(() => ScheduleWorkoutEndNotice(sl()))
+      ..registerFactory(() => CancelWorkoutEndNotice(sl()))
       ..registerFactory(() => SaveWorkoutAsProgram(sl()))
       ..registerFactory(() => UpdateProgramDay(sl()))
       // One workout in progress for the whole app.
@@ -108,6 +116,26 @@ class WorkoutModule implements FeatureModule {
           catalogue: sl(),
           watchSettings: sl(),
           loadPlates: sl(),
+          scheduleEndNotice: sl(),
+          cancelEndNotice: sl(),
+          endText: (workout, lastSetAt) {
+            final l10n = deviceLocalizations();
+            if (lastSetAt == null) {
+              return (
+                title: l10n.workoutSelfDiscardedTitle(workout.name),
+                body: l10n.workoutSelfDiscardedBody,
+              );
+            }
+            return (
+              title: l10n.workoutSelfEndedTitle(
+                workout.name,
+                DateFormat.jm(l10n.localeName).format(lastSetAt),
+              ),
+              body: l10n.workoutSelfEndedBody(
+                l10n.durationMinutes(lastSetAt.difference(workout.startedAt)),
+              ),
+            );
+          },
         ),
       )
       ..registerLazySingleton(

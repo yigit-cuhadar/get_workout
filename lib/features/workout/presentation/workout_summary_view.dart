@@ -28,7 +28,8 @@ import 'workout_text.dart';
 /// figures and their change since the program day's last workout, the
 /// records, the muscles worked, and Done over Save as program (a free
 /// workout) or Save changes to the day (a program day done differently).
-/// Back does what Done does.
+/// Back does what Done does. A workout that ended itself also offers Edit,
+/// which opens it in the editor.
 class WorkoutSummaryView extends StatefulWidget {
   const WorkoutSummaryView(this.state, {super.key});
 
@@ -128,7 +129,22 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
         if (!didPop) cubit.summaryShown();
       },
       child: Scaffold(
-        appBar: ForgeAppBar(title: l10n.summaryTitle),
+        appBar: ForgeAppBar(
+          title: l10n.summaryTitle,
+          actions: [
+            // Ended by itself at its last set: the user may want to fix it.
+            if (state.selfEnded)
+              ForgeButton(
+                label: l10n.summaryEdit,
+                variant: ForgeButtonVariant.text,
+                size: ForgeButtonSize.small,
+                onPressed: () {
+                  cubit.summaryShown();
+                  context.go(Routes.todayWorkoutEdit(workout.id));
+                },
+              ),
+          ],
+        ),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
           children: [

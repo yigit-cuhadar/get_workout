@@ -20,6 +20,7 @@ import '../domain/set_selection.dart';
 import '../domain/warmups.dart';
 import '../domain/workout.dart';
 import '../domain/workout_editing.dart' as editing;
+import '../domain/workout_end_notice.dart';
 import '../domain/workout_repository.dart';
 import '../domain/workout_usecases.dart';
 import '../domain/progression.dart';
@@ -69,6 +70,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.warmupsAdded = false,
     this.weightUnit,
     this.warmupSteps = const [],
+    this.selfEnded = false,
   });
 
   final WorkoutStatus status;
@@ -144,6 +146,10 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   /// ([WarmupSettings.rampSteps]); set with [weightUnit].
   final List<WarmupStep> warmupSteps;
 
+  /// The finished workout ended itself, left open past
+  /// [workoutIdleLimit]: its summary opens by itself and offers Edit.
+  final bool selfEnded;
+
   /// A workout is in progress (or being finished), so another cannot start.
   /// An empty one is not ([Workout.isEmpty]): it is not kept, shows nowhere
   /// and another simply replaces it.
@@ -198,6 +204,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     bool? warmupsAdded,
     WeightUnit? Function()? weightUnit,
     List<WarmupStep>? warmupSteps,
+    bool? selfEnded,
   }) => ActiveWorkoutState(
     status: status ?? this.status,
     workout: workout != null ? workout() : this.workout,
@@ -223,6 +230,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     warmupsAdded: warmupsAdded ?? this.warmupsAdded,
     weightUnit: weightUnit != null ? weightUnit() : this.weightUnit,
     warmupSteps: warmupSteps ?? this.warmupSteps,
+    selfEnded: selfEnded ?? this.selfEnded,
   );
 
   @override
@@ -249,8 +257,16 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     warmupsAdded,
     weightUnit,
     warmupSteps,
+    selfEnded,
   ];
 }
+
+/// The notice that [workout] ended itself: stored at [lastSetAt], or,
+/// with none, discarded.
+typedef WorkoutEndText = ({String title, String body}) Function(
+  Workout workout,
+  DateTime? lastSetAt,
+);
 
 /// The workout in progress of whoever is signed in, for the whole app: one
 /// at a time, kept on the device after every change and brought back on the
@@ -282,6 +298,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     required this._catalogue,
     required this._watchSettings,
     required this._loadPlates,
+    required this._scheduleEndNotice,
+    required this._cancelEndNotice,
+    required this._endText,
     DateTime Function()? clock,
     this.retryDelay = const Duration(minutes: 1),
   }) : _clock = clock ?? DateTime.now,
@@ -305,7 +324,22 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   final ExerciseCatalogueCubit _catalogue;
   final WatchSettings _watchSettings;
   final LoadPlates _loadPlates;
+  final ScheduleWorkoutEndNotice _scheduleEndNotice;
+  final CancelWorkoutEndNotice _cancelEndNotice;
+  final WorkoutEndText _endText;
   final DateTime Function() _clock;
+
+  /// When a set of the workout in progress was last ticked done; null
+  /// before any. Kept on the device only.
+  DateTime? _lastSetAt;
+
+  /// Ends the workout in progress once it has been left
+  /// [workoutIdleLimit]; see [_followIdle].
+  Timer? _idleTimer;
+
+  /// The notice now scheduled, so an edit that changes nothing of it
+  /// does not schedule it again.
+  EndNotice? _notice;
 
   /// How long to wait before syncing again after the server could not be
   /// asked.
@@ -418,6 +452,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         ? kept.copyWith(draft: () => null, rest: () => null)
         : kept;
     _local = local;
+    // Kept by a version that did not note it: the sets count from now.
+    _lastSetAt =
+        local.lastSetAt ??
+        (local.draft?.hasDoneSets ?? false ? _clock() : null);
     if (result.failureOrNull case final failure?) {
       Log.e('workout', 'kept workouts unreadable: ${failure.message}');
       emit(state.copyWith(localUnreadable: true));
@@ -427,6 +465,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       status: local.draft == null ? WorkoutStatus.none : WorkoutStatus.active,
       rest: () => local.rest,
     );
+    _followIdle();
     unawaited(_sync(uid));
   }
 
@@ -559,7 +598,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       // A new workout has warm-ups only when they were added to it.
       warmupsAdded: workout.exercises.any((e) => e.sets.any((s) => s.isWarmup)),
     );
+    _lastSetAt = null;
     _keep();
+    _followIdle();
     return true;
   }
 
@@ -594,7 +635,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     final uid = _uid;
     if (uid == null || state.status != WorkoutStatus.active) return;
     _emitWorkout(null, status: WorkoutStatus.none, rest: () => null);
+    _lastSetAt = null;
     _keep();
+    _followIdle();
     unawaited(_sync(uid));
   }
 
@@ -636,7 +679,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   /// Finishes and stores the workout; its unticked sets are left out. The
   /// program moves on with it when the programs are known now; otherwise
   /// the summary says it did not.
-  Future<void> finish() async {
+  Future<void> finish() => _finish();
+
+  /// [finish] at [at] (null: now); [selfEnded] when it ended itself.
+  Future<void> _finish({DateTime? at, bool selfEnded = false}) async {
     final uid = _uid;
     final workout = state.workout;
     final local = _local;
@@ -661,6 +707,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       program: programs.status == ProgramListStatus.ready
           ? (active: programs.active, program: programs.activeProgram)
           : null,
+      at: at,
     ));
     if (isClosed || _uid != uid) return;
     switch (result) {
@@ -668,6 +715,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         emit(
           state.copyWith(status: WorkoutStatus.active, failure: () => failure),
         );
+        // One that ended itself tries again when the app shows next.
+        if (!selfEnded) _followIdle();
       case Ok(:final value):
         _stopStats();
         _local = LocalWorkouts(
@@ -686,9 +735,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
             summary: () => value.summary,
             dayChanges: () => dayChanges,
             invalidSet: () => null,
+            selfEnded: selfEnded,
           ),
         );
+        _lastSetAt = null;
         _keep();
+        _followIdle();
         unawaited(_sync(uid));
     }
   }
@@ -932,6 +984,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       changed,
       movesSets: movesSets,
     );
+    if (newlyDone(workout, changed) != null) _lastSetAt = _clock();
     _emitWorkout(
       changed,
       status: WorkoutStatus.active,
@@ -947,6 +1000,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
           newlyDone(workout, changed) == null,
     );
     _keep();
+    _followIdle();
   }
 
   /// A new pick drops the message of a set that could not be ticked and
@@ -1091,6 +1145,58 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     _followStats();
   }
 
+  /// The app came to the front: a workout left open past its time while
+  /// the app was away ends now.
+  void appShown() => _followIdle();
+
+  /// Ends the workout in progress once [idleEnd] has come, and until then
+  /// keeps a timer and the device's notice for that moment; with none in
+  /// progress, cancels both.
+  void _followIdle() {
+    _idleTimer?.cancel();
+    _idleTimer = null;
+    final workout = state.workout;
+    if (state.status != WorkoutStatus.active ||
+        workout == null ||
+        !state.inProgress) {
+      if (_notice != null) {
+        _notice = null;
+        unawaited(_log(_cancelEndNotice(const NoParams())));
+      }
+      return;
+    }
+    final lastSetAt = workout.hasDoneSets ? _lastSetAt : null;
+    final end = idleEnd(workout, lastSetAt);
+    final wait = end.difference(_clock());
+    if (wait <= Duration.zero) {
+      _endIdle(workout, lastSetAt);
+      return;
+    }
+    _idleTimer = Timer(wait, _followIdle);
+    final text = _endText(workout, lastSetAt);
+    final notice = (at: end, title: text.title, body: text.body);
+    if (notice == _notice) return;
+    _notice = notice;
+    unawaited(_log(_scheduleEndNotice(notice)));
+  }
+
+  /// [workout] was left open past its time: stored at its last set, or,
+  /// with no set done, thrown away. The notice already told the user.
+  void _endIdle(Workout workout, DateTime? lastSetAt) {
+    _notice = null;
+    if (lastSetAt == null) {
+      unawaited(discard());
+      return;
+    }
+    unawaited(_finish(at: lastSetAt, selfEnded: true));
+  }
+
+  Future<void> _log(Future<Result<void>> call) async {
+    if ((await call).failureOrNull case final failure?) {
+      Log.e('workout', 'end notice not set: ${failure.message}');
+    }
+  }
+
   /// Writes what the device keeps, with the workout in progress as shown;
   /// the store writes only the latest of quick changes.
   void _keep() {
@@ -1101,6 +1207,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     final kept = local.copyWith(
       draft: () => draft,
       rest: () => draft == null ? null : state.rest,
+      lastSetAt: () => draft == null ? null : _lastSetAt,
     );
     _local = kept;
     unawaited(
@@ -1149,6 +1256,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   @override
   Future<void> close() async {
     _retry?.cancel();
+    _idleTimer?.cancel();
     await _userSubscription.cancel();
     await _settingsSubscription?.cancel();
     _stopStats();

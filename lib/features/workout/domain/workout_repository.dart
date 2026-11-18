@@ -5,6 +5,7 @@ import '../../programs/domain/calendar_date.dart';
 import 'exercise_stats.dart';
 import 'rest.dart';
 import 'workout.dart';
+import 'workout_end_notice.dart';
 
 /// Stats as read at finishing: [current] when the server confirmed them,
 /// false when they came from the device's cache and may be stale.
@@ -133,6 +134,7 @@ class LocalWorkouts extends Equatable {
   const LocalWorkouts({
     this.draft,
     this.rest,
+    this.lastSetAt,
     this.finished = const [],
     this.staleStats = const {},
   });
@@ -141,6 +143,10 @@ class LocalWorkouts extends Equatable {
 
   /// The rest of [draft]; never without it.
   final Rest? rest;
+
+  /// When a set of [draft] was last ticked done, by this device's clock;
+  /// never without it, and never stored anywhere else. See [idleEnd].
+  final DateTime? lastSetAt;
   final List<Workout> finished;
 
   /// Exercise ids whose stats were computed from what the device knew, or
@@ -150,17 +156,19 @@ class LocalWorkouts extends Equatable {
   LocalWorkouts copyWith({
     Workout? Function()? draft,
     Rest? Function()? rest,
+    DateTime? Function()? lastSetAt,
     List<Workout>? finished,
     Set<String>? staleStats,
   }) => LocalWorkouts(
     draft: draft != null ? draft() : this.draft,
     rest: rest != null ? rest() : this.rest,
+    lastSetAt: lastSetAt != null ? lastSetAt() : this.lastSetAt,
     finished: finished ?? this.finished,
     staleStats: staleStats ?? this.staleStats,
   );
 
   @override
-  List<Object?> get props => [draft, rest, finished, staleStats];
+  List<Object?> get props => [draft, rest, lastSetAt, finished, staleStats];
 }
 
 /// [LocalWorkouts] per user on the device, so a crash or a killed app never

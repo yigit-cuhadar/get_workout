@@ -379,6 +379,19 @@ service cloud.firestore {
       },
     );
 
+    test('keeps the last set\'s time with the draft only', () async {
+      final at = DateTime.fromMillisecondsSinceEpoch(1700000000000);
+      final withTime = kept.copyWith(lastSetAt: () => at);
+      await store.save('u1', withTime);
+      expect((await store.load('u1')).valueOrNull, withTime);
+
+      await store.save('u1', LocalWorkouts(lastSetAt: at, finished: [full]));
+      expect(
+        (await store.load('u1')).valueOrNull,
+        LocalWorkouts(finished: [full]),
+      );
+    });
+
     group('the rest', () {
       // The store's clock reads 42 ms.
       final endsAt = DateTime.fromMillisecondsSinceEpoch(42 + 90000);

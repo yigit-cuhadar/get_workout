@@ -102,6 +102,7 @@ void main() {
         }
 
         expect(lockScreenDestination(open(router), inProgress: true), isNull);
+        expect(selfEndedDestination(open(router)), isNull);
         expect(
           notificationDestination(NotificationTarget.workout, open(router)),
           isNull,
@@ -124,6 +125,7 @@ void main() {
       notificationDestination(NotificationTarget.workout, open(router)),
       Routes.today,
     );
+    expect(selfEndedDestination(open(router)), Routes.workout);
     // One left behind with no workout in progress only opens the app.
     expect(lockScreenDestination(open(router), inProgress: false), isNull);
   });
