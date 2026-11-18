@@ -67,6 +67,10 @@
 	<!-- The workout in progress on the lock screen (RestTimer extension). -->
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>NSHealthShareUsageDescription</key>
 	<string>GetWorkout reads your step count to show your daily steps against your goal. It never stores or shares them.</string>
 	<key>FlutterDeepLinkingEnabled</key>

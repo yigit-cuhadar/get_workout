@@ -456,9 +456,14 @@ Where it stands (2026-11-18, end of Group 11):
      deploy `revenueCatWebhook` with its secret and try purchase and
      restore on the phone. Google Play waits for the Play Console.
   2. Deploy `deleteAccount` to dev, check deletion on the phone, then prod.
+     (2026-11-18: live on dev; a Google-only account was deleted from the
+     owner's iPhone with the provider re-sign-in (#145); prod waits for the
+     owner.)
   3. Photo backup: create the default bucket, deploy `storage.rules`, check
      the camera and backup on the phone.
   4. iOS push and the workout Live Activity on the phone (paid team).
+     (2026-11-18: the Live Activity shows on the owner's iPhone; push
+     waits for the APNs key.)
   5. An Android round: Google sign-in, Health Connect, the launch screen.
   6. Release: the first prod content import, then the store automation.
 - Owner to do: publish both studios from the owner's account (their links
@@ -1278,10 +1283,11 @@ Decisions (the canvases they were drawn on are deleted):
   alone: Apple there would need a Services ID. Checked on the owner's
   iPhone the same day: a guest linked with Apple and kept their data.
 - A guest who signs in to an existing account leaves an orphaned anonymous user and its data behind; clean these up with a scheduled function when Cloud Functions arrive.
-- Photo backup: `storage.rules` and the `storage` entry in `firebase.json`
-  are written but not deployed, and the default bucket is not created yet
-  (both projects). `deleteAccount` already deletes `users/{uid}/` in the
-  bucket; the orphaned-guest cleanup must do the same.
+- Photo backup: the default bucket and `storage.rules` are live in both
+  projects (since 2026-11-12). On the owner's iPhone (2026-11-18) a
+  measurement day's four photos uploaded to the dev bucket. `deleteAccount`
+  already deletes `users/{uid}/` in the bucket; the orphaned-guest cleanup
+  must do the same.
 - Body feature, not yet run on a device: the camera permission prompt and
   denial text, the ghost's alignment (front-camera previews are mirrored,
   saved photos are not; `mirrorGhost` in `forge_camera`), retake,
@@ -1295,10 +1301,12 @@ Decisions (the canvases they were drawn on are deleted):
   flutter/flutter#196204, after checking the iPhone 17 front camera with
   it. Until then do not bump `camera` past what 0.11.1 satisfies without
   re-copying the new release and re-applying the `PATCH` lines.
-- The projects are on the Blaze plan. `deleteAccount` is written but not
-  deployed: the Architect deploys `functions/` to dev, checks deletion on a
-  device (including the "not available" message before the deploy), then
-  prod.
+- The projects are on the Blaze plan. `deleteAccount` is live on dev,
+  not on prod. On the owner's iPhone (2026-11-18) a Google-only user whose
+  sign-in was older than the function allows got the password prompt and
+  then "Please sign in again", with no way to do so from the page. Fixed
+  in #145 (provider re-sign-in, Forge v0.26.0) and checked the same day:
+  the Auth user, `users/{uid}` and the bucket's `users/{uid}/` were gone.
 - Female body model with the same mesh names: the user supplies it before release.
 - `revenueCatWebhook` is written and unit-tested, not deployed or tried
   against RevenueCat. Deploying all of `functions/` needs its secret: an
@@ -1341,10 +1349,13 @@ Decisions (the canvases they were drawn on are deleted):
   target (hand-added to `project.pbxproj`; bundle id
   `com.getworkout.app.RestTimer`, iOS 16.2, embedded before Thin Binary),
   `NSSupportsLiveActivities`, ActivityKit weak-linked in the Runner, and
-  `POST_PROMOTED_NOTIFICATIONS` on Android. A device build needs the
-  extension's App ID under the team (automatic signing); untestable until
-  the Apple Developer account: behaviour on a real device while
-  suspended.
+  `POST_PROMOTED_NOTIFICATIONS` on Android. Shows on the owner's iPhone
+  since 2026-11-18. It did not at first: the extension still carried a
+  7-day profile from the free team, so iOS refused to launch it (amfid
+  "not valid", seen only in the device log) and ended each activity at
+  once; an `xcodebuild -allowProvisioningUpdates` build after deleting that
+  profile fetched a paid-team one. Signing problems of the extension show
+  only in the device log (`sudo log collect --device-udid …`).
 - Workout on the lock screen (iOS), not built yet: the two widget files
   were renamed (`WorkoutActivityAttributes.swift`,
   `WorkoutLiveActivity.swift`, same entries in `project.pbxproj`), and the
@@ -1407,11 +1418,11 @@ Decisions (the canvases they were drawn on are deleted):
   the record reads `sent`, and tapping it from the background opens Today.
   Still open: the admin panel's Announcements page has not been opened in a
   browser (the function was called directly), and prod has none of the
-  functions or the newer Firestore rules. iOS push still needs the Apple
-  Developer account: the Push Notifications capability (`aps-environment`
-  in `Runner.entitlements`, not added yet, as it breaks device signing
-  without it) and an APNs key uploaded to both Firebase projects. Until
-  then iOS follows no topic.
+  functions or the newer Firestore rules. iOS push: `aps-environment` is
+  in `Runner.entitlements` and `remote-notification` in the background
+  modes (2026-11-18, signs with the paid team). Still needed: an APNs key
+  uploaded to both Firebase projects (the owner; no API). Until then iOS
+  has no APNs token and follows no topic.
 - On a fresh Android install the first topic subscription failed twice on
   the emulator with "FCM Registration failed" and succeeded when the app
   next resumed (the existing retry). If real devices show it too, retry
