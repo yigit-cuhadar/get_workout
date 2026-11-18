@@ -462,8 +462,8 @@ Where it stands (2026-11-18, end of Group 11):
   3. Photo backup: create the default bucket, deploy `storage.rules`, check
      the camera and backup on the phone.
   4. iOS push and the workout Live Activity on the phone (paid team).
-     (2026-11-18: the Live Activity shows on the owner's iPhone; push
-     waits for the APNs key.)
+     (2026-11-18: the Live Activity and an announcement push both arrive
+     on the owner's iPhone.)
   5. An Android round: Google sign-in, Health Connect, the launch screen.
   6. Release: the first prod content import, then the store automation.
 - Owner to do: publish both studios from the owner's account (their links
@@ -1432,9 +1432,12 @@ Decisions (the canvases they were drawn on are deleted):
   browser (the function was called directly), and prod has none of the
   functions or the newer Firestore rules. iOS push: `aps-environment` is
   in `Runner.entitlements` and `remote-notification` in the background
-  modes (2026-11-18, signs with the paid team). Still needed: an APNs key
-  uploaded to both Firebase projects (the owner; no API). Until then iOS
-  has no APNs token and follows no topic.
+  modes (2026-11-18, signs with the paid team). The APNs key 699QV25PQM
+  is uploaded to both Firebase projects (development and production). An
+  announcement sent to `announcements_en` on dev arrived on the owner's
+  iPhone the same day once the app had been opened with notifications
+  allowed. The first follow right after allowing may find no APNs token
+  yet and subscribe only at the next start or resume.
 - On a fresh Android install the first topic subscription failed twice on
   the emulator with "FCM Registration failed" and succeeded when the app
   next resumed (the existing retry). If real devices show it too, retry
