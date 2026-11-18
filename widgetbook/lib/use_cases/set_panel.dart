@@ -45,7 +45,6 @@ Widget _panel(
   List<SetPanelValue> values, {
   List<SetPanelDrop>? drops,
   bool done = false,
-  bool off = false,
   String? error,
   Widget? effort,
   EffortRest? rest,
@@ -63,7 +62,7 @@ Widget _panel(
     effort: effort,
     rest: rest,
     onOptions: () {},
-    onLog: off ? null : () {},
+    onLog: () {},
   ),
 );
 
@@ -99,7 +98,6 @@ Widget setPanelMissing(BuildContext context) => _panel(
   'Bench Press · set 3 of 4',
   'Last time: 80 kg × 8',
   [_kg(null, invalid: true), _value(8, 'reps')],
-  off: true,
   error: "Enter the set's values first.",
 );
 

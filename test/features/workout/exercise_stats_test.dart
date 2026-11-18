@@ -461,6 +461,51 @@ void main() {
       expect(heldRecordSets(push, stats), {(0, 1), (0, 3)});
     });
 
+    test('the exercise\'s first workout holds no record to show, as its '
+        'summary counted none', () {
+      final first = workout('w1', [
+        exercise('bench', [lift(80, 8)]),
+      ]);
+      ExerciseStats stats(List<String> workouts) => ExerciseStats(
+        records: {RecordKind.heaviestWeight: held(80, 'w1')},
+        history: [
+          for (final (i, id) in workouts.indexed)
+            HistoryPoint(
+              date: monday.add(Duration(days: i)),
+              workoutId: id,
+            ),
+        ],
+      );
+      expect(
+        heldRecordSets(first, {
+          'bench': stats(['w1']),
+        }),
+        isEmpty,
+      );
+      expect(
+        heldRecordSets(first, {
+          'bench': stats(['w1', 'w2']),
+        }),
+        isEmpty,
+      );
+      expect(
+        heldRecordSets(first, {
+          'bench': stats(['w0', 'w1']),
+        }),
+        {(0, 0)},
+      );
+      expect(
+        summarizeWorkout(
+          first,
+          before: {'bench': null},
+          after: {
+            'bench': stats(['w1']),
+          },
+        ).records,
+        isEmpty,
+      );
+    });
+
     test('no stats, no records', () {
       final push = workout('w1', [
         exercise('bench', [lift(80, 8)]),

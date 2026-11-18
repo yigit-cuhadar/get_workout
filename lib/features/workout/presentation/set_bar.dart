@@ -80,9 +80,10 @@ class SetBarLayout extends StatelessWidget {
 /// drops, its effort when it is done, its options and the tick, under the
 /// line of a running [rest]; nothing while no set is selected. Right
 /// after a working set is
-/// ticked it shows [_EffortQuestion] instead. A tick refused for missing
-/// values turns Log set off, rings the empty fields and says so under
-/// them until the set can be ticked. With [loadPlates], the weight of a
+/// ticked it shows [_EffortQuestion] instead. Log set is always on: empty
+/// values are logged as their hints; a tick refused for a value with
+/// neither rings the empty fields and says so under them until the set
+/// can be ticked. With [loadPlates], the weight of a
 /// set (weight × reps or time) of an exercise on a barbell, trap bar or EZ
 /// bar has a plate button showing its breakdown on the user's bar of that
 /// kind and plates; the workout keeps no equipment, so the exercise is
@@ -253,7 +254,7 @@ class SetBar extends StatelessWidget {
               editor: editor,
             ),
       done: set.done,
-      onLog: blocked ? null : () => _toggle(context, ref),
+      onLog: () => _toggle(context, ref),
       rest: rest,
       onPlates: switch ((loadPlates, bar, set.weightKg ?? hint.weightKg)) {
         (final loadPlates?, final bar?, final kg?)
@@ -369,7 +370,7 @@ class SetBar extends StatelessWidget {
 
 /// The effort of the selected set [rated], which is done: which set it
 /// is, the help, and the steps as the same rows, each with its meaning, as
-/// the [EffortQuestion], without Skip.
+/// the [EffortQuestion].
 class _EffortRow extends StatelessWidget {
   const _EffortRow({
     required this.rated,
@@ -486,7 +487,7 @@ class _EffortQuestion extends StatelessWidget {
         builder: (context, rest) {
           final resting =
               state.askingWithRest && rest.phase == RestPhase.running;
-          final question = EffortQuestion(
+          return EffortQuestion(
             question: resting
                 ? l10n.effortAskTitle(scale, exercise, asked.set)
                 : l10n.effortQuestionText(scale),
@@ -501,32 +502,19 @@ class _EffortQuestion extends StatelessWidget {
             options: options,
             selected: chosen == null ? null : steps.indexOf(chosen),
             onSelected: pick,
-            onSkip: () {
-              editor.skipEffort();
-              settings.tipSeen(Tip.effort);
-            },
             onHelp: () async {
               editor.pauseAsking();
               await openWorkoutHelp(context);
               editor.keepAsking();
             },
             rest: resting ? _rest(context, rest) : null,
-          );
-          if (!tip) return question;
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Flexible(child: question),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, Gap.md),
-                child: TipBanner(
-                  message: l10n.tipEffort,
-                  dismissLabel: l10n.tipDismiss,
-                  onDismiss: () => settings.tipSeen(Tip.effort),
-                ),
-              ),
-            ],
+            tip: tip
+                ? TipBanner(
+                    message: l10n.tipEffort,
+                    dismissLabel: l10n.tipDismiss,
+                    onDismiss: () => settings.tipSeen(Tip.effort),
+                  )
+                : null,
           );
         },
       ),

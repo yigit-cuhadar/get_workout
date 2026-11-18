@@ -160,9 +160,6 @@ mixin WorkoutEditor<S extends EditedWorkout> on Cubit<S> {
     _questionTimer = null;
   }
 
-  /// Leaves the effort question unanswered.
-  void skipEffort() => _ask(null);
-
   @override
   Future<void> close() {
     _questionTimer?.cancel();

@@ -62,6 +62,21 @@ Widget rpeEffortQuestion(BuildContext context) => _Question(
   selected: 2,
 );
 
+@widgetbook.UseCase(name: 'First time, with its tip', type: EffortQuestion)
+Widget tipEffortQuestion(BuildContext context) => _Question(
+  question: 'How hard was set 1?',
+  values: '82.5 kg × 8',
+  options: _byFeel,
+  rest: _rest,
+  tip: TipBanner(
+    message:
+        'Optional: rate the set you just did. Your answer is saved with '
+        'that set.',
+    dismissLabel: 'Got it',
+    onDismiss: () {},
+  ),
+);
+
 @widgetbook.UseCase(name: 'No rest', type: EffortQuestion)
 Widget noRestEffortQuestion(BuildContext context) => const _Question(
   question: 'How hard was it?',
@@ -105,6 +120,7 @@ class _Question extends StatefulWidget {
     required this.options,
     this.rest,
     this.selected,
+    this.tip,
   });
 
   final String question;
@@ -112,6 +128,7 @@ class _Question extends StatefulWidget {
   final List<ChoiceOption> options;
   final EffortRest? rest;
   final int? selected;
+  final Widget? tip;
 
   @override
   State<_Question> createState() => _QuestionState();
@@ -134,9 +151,9 @@ class _QuestionState extends State<_Question> {
           options: widget.options,
           selected: _selected,
           onSelected: (i) => setState(() => _selected = i),
-          onSkip: () {},
           onHelp: () {},
           rest: widget.rest,
+          tip: widget.tip,
         ),
       ),
     ],

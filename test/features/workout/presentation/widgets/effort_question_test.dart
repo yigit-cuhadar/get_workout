@@ -18,18 +18,18 @@ void main() {
   Widget question({
     int? selected,
     ValueChanged<int>? onSelected,
-    VoidCallback? onSkip,
     VoidCallback? onHelp,
     EffortRest? rest,
+    Widget? tip,
   }) => EffortQuestion(
     question: rest == null ? 'How hard was it?' : 'How hard was set 3?',
     values: rest == null ? 'Set 1 done · 82.5 kg × 8' : '82.5 kg × 8',
     options: byFeel,
     selected: selected,
     onSelected: onSelected ?? (_) {},
-    onSkip: onSkip ?? () {},
     onHelp: onHelp ?? () {},
     rest: rest,
+    tip: tip,
   );
 
   testWidgets('a tap on a row answers with its index', (tester) async {
@@ -62,17 +62,49 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('Skip and the help call back', (tester) async {
-    var skipped = 0;
+  testWidgets('the help calls back; the question has no Skip', (tester) async {
     var helped = 0;
+    await pumpComponent(tester, question(onHelp: () => helped++));
+
+    await tester.tap(find.bySemanticsLabel('Explain'));
+    expect(helped, 1);
+    expect(find.textContaining('Skip'), findsNothing);
+  });
+
+  testWidgets('the tip scrolls under the steps, never hiding one', (
+    tester,
+  ) async {
     await pumpComponent(
       tester,
-      question(onSkip: () => skipped++, onHelp: () => helped++),
+      SizedBox(
+        height: 420,
+        child: question(
+          rest: EffortRest(
+            time: '1:45',
+            progress: 0.85,
+            onAddTime: () {},
+            onSkip: () {},
+          ),
+          tip: const SizedBox(height: 200, child: Text('The tip')),
+        ),
+      ),
     );
 
-    await tester.tap(find.text('Skip'));
-    await tester.tap(find.bySemanticsLabel('Explain'));
-    expect((skipped, helped), (1, 1));
+    final panel = tester.getRect(find.byType(EffortQuestion));
+    for (final step in ['Easy', 'Moderate', 'Hard', 'Max', 'Failed']) {
+      final row = tester.getRect(find.text(step));
+      expect(row.bottom, lessThanOrEqualTo(panel.bottom), reason: step);
+    }
+    expect(
+      tester.getTopLeft(find.text('The tip')).dy,
+      greaterThan(tester.getBottomLeft(find.text('Failed')).dy),
+    );
+    await tester.drag(find.text('Failed'), const Offset(0, -300));
+    await tester.pump();
+    expect(
+      tester.getRect(find.text('The tip')).bottom,
+      lessThanOrEqualTo(panel.bottom),
+    );
   });
 
   testWidgets('without a rest the set comes first and no rest line shows', (
@@ -86,16 +118,14 @@ void main() {
     expect(done.dy, lessThan(asked.dy));
   });
 
-  testWidgets('with a rest its line sits on top with +15 s and Skip', (
+  testWidgets('with a rest its line sits on top with +15 s and Skip rest', (
     tester,
   ) async {
     var added = 0;
     var skippedRest = 0;
-    var skipped = 0;
     await pumpComponent(
       tester,
       question(
-        onSkip: () => skipped++,
         rest: EffortRest(
           time: '1:45',
           progress: 0.85,
@@ -112,8 +142,36 @@ void main() {
     expect(asked.dy, lessThan(values.dy));
 
     await tester.tap(find.text('+15 s'));
-    await tester.tap(find.text('Skip').first);
-    await tester.tap(find.text('Skip').last);
-    expect((added, skippedRest, skipped), (1, 1, 1));
+    await tester.tap(find.text('Skip rest'));
+    expect((added, skippedRest), (1, 1));
+    expect(find.text('Skip'), findsNothing);
   });
+
+  for (final scale in [2.0, 3.0]) {
+    testWidgets('at ${scale}x text the rest line scales to fit', (
+      tester,
+    ) async {
+      await pumpComponent(
+        tester,
+        MediaQuery.withClampedTextScaling(
+          minScaleFactor: scale,
+          maxScaleFactor: scale,
+          child: question(
+            rest: EffortRest(
+              time: '1:45',
+              progress: 0.85,
+              onAddTime: () {},
+              onSkip: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getSize(find.byType(RestTrack)).width,
+        greaterThanOrEqualTo(RestLine.minTrack),
+      );
+    });
+  }
 }

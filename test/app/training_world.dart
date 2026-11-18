@@ -570,7 +570,11 @@ class TrainingWorld {
     final telemetry = _MockTelemetry();
     when(() => telemetry.logEvent(any(), any())).thenAnswer((_) async {});
     final saveProgram = SaveProgram(programs);
-    final startProgram = StartProgram(programs, clock: _clock);
+    final startProgram = StartProgram(
+      programs,
+      WorkoutCompletedDays(workouts),
+      clock: _clock,
+    );
 
     sl
       ..registerSingleton<ProgramListCubit>(list)

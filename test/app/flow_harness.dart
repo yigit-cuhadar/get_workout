@@ -155,6 +155,9 @@ class FlowApp {
   /// Step access as the onboarding health step finds it.
   StepsAccess healthAccess = StepsAccess.granted;
 
+  /// Whether the device lets the app notify.
+  bool notificationsAllowed = true;
+
   /// Whether this device's writes are on the server, for Account.
   final backedUp = StreamController<bool>.broadcast();
   final deletionUnderway = DeletionUnderway();
@@ -324,7 +327,7 @@ class FlowApp {
         .thenAnswer((_) async {});
     notifications = _NotificationsStandIn();
     when(() => notifications.state)
-        .thenReturn(const NotificationsState(allowed: true));
+        .thenReturn(NotificationsState(allowed: notificationsAllowed));
     sl.registerFactory<HealthAccessCubit>(() {
       health = HealthStandIn();
       when(() => health.state).thenReturn(healthAccess);
@@ -424,7 +427,7 @@ class FlowApp {
           exercises: catalogue,
           getDays: GetCatalogueDays(readyMadePrograms),
           saveProgram: SaveProgram(programs),
-          startProgram: StartProgram(programs),
+          startProgram: StartProgram(programs, const NoCompletedDays()),
           getCurrentUser: GetCurrentUser(programAuth),
         ),
       );
