@@ -69,16 +69,14 @@ void main() {
     await tester.pump();
   }
 
-  /// Skips the effort question a ticked working set asks; its Skip comes
-  /// after the rest line's.
-  Future<void> skipEffort(WidgetTester tester) => tapOn(
+  /// Answers the effort question a ticked working set asks; it has no
+  /// Skip.
+  Future<void> answerEffort(WidgetTester tester) => tapOn(
     tester,
-    find
-        .descendant(
-          of: find.byType(EffortQuestion),
-          matching: find.text('Skip'),
-        )
-        .last,
+    find.descendant(
+      of: find.byType(EffortQuestion),
+      matching: find.text('Moderate'),
+    ),
   );
 
   testWidgets('today\'s day is logged with a rest, finished and shown done', (
@@ -95,7 +93,7 @@ void main() {
     await enterValue(tester, 'reps', '5');
     await tapText(tester, 'Log set');
     // The effort question comes first; the rest runs under it.
-    await skipEffort(tester);
+    await answerEffort(tester);
     expect(find.byType(RestPanel), findsOneWidget);
 
     app.now = flowStart.add(const Duration(minutes: 40));
@@ -127,7 +125,7 @@ void main() {
     await enterValue(tester, 'kg', '100');
     await enterValue(tester, 'reps', '5');
     await tapText(tester, 'Log set');
-    await skipEffort(tester);
+    await answerEffort(tester);
 
     expect(find.byType(RestPanel), findsNothing);
     expect(find.text('Log set'), findsOneWidget);
@@ -161,7 +159,7 @@ void main() {
     await enterValue(tester, 'kg', '100');
     await enterValue(tester, 'reps', '5');
     await tapText(tester, 'Log set');
-    await skipEffort(tester);
+    await answerEffort(tester);
 
     await tapOn(tester, find.bySemanticsLabel('Workout options'));
     await tapText(tester, 'Discard workout');
@@ -191,7 +189,7 @@ void main() {
     await enterValue(tester, 'kg', '60');
     await enterValue(tester, 'reps', '8');
     await tapText(tester, 'Log set');
-    await skipEffort(tester);
+    await answerEffort(tester);
     await tapText(tester, 'Finish');
 
     // Every set done: nothing to confirm.

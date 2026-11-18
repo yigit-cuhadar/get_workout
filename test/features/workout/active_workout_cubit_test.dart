@@ -848,17 +848,6 @@ void main() {
         await cubit.close();
       });
 
-      test('skipping it leaves the rest alone too', () async {
-        final cubit = await withSquat();
-        cubit
-          ..toggleDone(first)
-          ..skipEffort();
-        expect(cubit.state.questionRef, isNull);
-        expect(cubit.state.rest, isNotNull);
-        expect(cubit.state.entryWaitsForRest, isTrue);
-        await cubit.close();
-      });
-
       test('it outlasts the rest, run out or skipped', () async {
         final cubit = await withSquat();
         cubit.toggleDone(first);
@@ -868,7 +857,7 @@ void main() {
         cubit.skipRest();
         expect(cubit.state.rest, isNull);
         expect(cubit.state.questionRef, first);
-        cubit.skipEffort();
+        cubit.setEffort(first, const EffortStep.reserve(2));
         expect(cubit.state.questionRef, isNull);
         await cubit.close();
       });
@@ -999,13 +988,13 @@ void main() {
     });
 
     group('without a rest', () {
-      test('asks about that set; skip or a pick ends it', () async {
+      test('asks about that set; an answer or a pick ends it', () async {
         final cubit = await withSquat(rests: false);
         cubit.toggleDone(first);
         expect(cubit.state.rest, isNull);
         expect(cubit.state.questionRef, first);
         expect(cubit.state.entryWaitsForRest, isFalse);
-        cubit.skipEffort();
+        cubit.setEffort(first, const EffortStep.reserve(2));
         expect(cubit.state.questionRef, isNull);
         cubit
           ..toggleDone(second)
@@ -1054,7 +1043,7 @@ void main() {
           async.elapse(const Duration(seconds: 1));
           cubit
             ..toggleDone(first)
-            ..skipEffort();
+            ..setEffort(first, const EffortStep.reserve(2));
           async.elapse(const Duration(seconds: 5));
           cubit.toggleDone(second);
           async.elapse(

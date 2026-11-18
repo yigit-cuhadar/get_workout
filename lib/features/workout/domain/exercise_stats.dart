@@ -129,6 +129,12 @@ class ExerciseStats extends Equatable {
         (point) => point.bestSet == null || point.workoutName == null,
       );
 
+  /// Whether [workoutId] is the exercise's first workout; never once the
+  /// oldest points were dropped.
+  bool isFirstWorkout(String workoutId) =>
+      history.length < maxHistory &&
+      history.firstOrNull?.workoutId == workoutId;
+
   @override
   List<Object?> get props => [records, last, history];
 }
@@ -357,14 +363,19 @@ Map<RecordKind, ({double value, WorkoutSet set})> sessionBests(
 /// The sets of [workout] holding a record its exercise still keeps:
 /// for each record of [stats] (by exercise id) set by [workout], the
 /// first done working set with that record's value, as (exercise index,
-/// set index).
+/// set index). As in [summarizeWorkout], an exercise's first workout
+/// beat nothing, so its records are not shown.
 Set<(int, int)> heldRecordSets(
   Workout workout,
   Map<String, ExerciseStats> stats,
 ) {
   final held = <(int, int)>{};
   for (final (e, exercise) in workout.exercises.indexed) {
-    final records = stats[exercise.exerciseId]?.records ?? const {};
+    final exerciseStats = stats[exercise.exerciseId];
+    if (exerciseStats == null || exerciseStats.isFirstWorkout(workout.id)) {
+      continue;
+    }
+    final records = exerciseStats.records;
     final type = exercise.loggingType;
     for (final MapEntry(key: kind, value: record) in records.entries) {
       if (record.workoutId != workout.id) continue;

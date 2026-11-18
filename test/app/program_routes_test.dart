@@ -201,7 +201,7 @@ void main() {
         (id, _) => ProgramDetailCubit(
           id,
           list: sl(),
-          startProgram: StartProgram(repository),
+          startProgram: StartProgram(repository, const NoCompletedDays()),
           changeWeekdays: ChangeWeekdays(repository),
           stopProgram: StopProgram(repository),
           duplicateProgram: DuplicateProgram(repository),

@@ -91,7 +91,7 @@ class SetPanel extends StatelessWidget {
     required List<SetPanelValue> this.values,
     required SetPanelLabels this.labels,
     required VoidCallback this.onOptions,
-    required this.onLog,
+    required VoidCallback this.onLog,
     this.error,
     this.done = false,
     this.drops,
@@ -126,7 +126,7 @@ class SetPanel extends StatelessWidget {
   final SetPanelLabels? labels;
   final VoidCallback? onOptions;
 
-  /// Null turns Log set off, until the missing values are filled.
+  /// Always on: a set lacking a value is refused with an [error].
   final VoidCallback? onLog;
   final String? error;
   final bool done;
