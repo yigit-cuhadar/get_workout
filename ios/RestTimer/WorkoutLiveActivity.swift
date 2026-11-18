@@ -24,7 +24,7 @@ struct WorkoutLiveActivity: Widget {
         VStack(alignment: .leading, spacing: 4) {
           Text(rest?.title ?? state.name).font(.headline).lineLimit(1)
           if let line = detail(state, rest) {
-            Text(line).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+            SetLine(line: line).font(.subheadline).foregroundStyle(.secondary)
           }
         }
         .layoutPriority(1)
@@ -47,7 +47,7 @@ struct WorkoutLiveActivity: Widget {
         }
         DynamicIslandExpandedRegion(.bottom) {
           if let line = detail(state, rest) {
-            Text(line).foregroundStyle(.secondary).lineLimit(1)
+            SetLine(line: line).foregroundStyle(.secondary)
           }
         }
       } compactLeading: {
@@ -67,6 +67,24 @@ struct WorkoutLiveActivity: Widget {
     _ rest: WorkoutActivityAttributes.ContentState.Rest?
   ) -> String? {
     rest == nil ? state.current : rest?.detail
+  }
+}
+
+/// A set as the app names it, "Bench Press · set 2 of 3", on one line: a
+/// long exercise name ends with "…", the part from the last " · " on is
+/// never cut.
+struct SetLine: View {
+  let line: String
+
+  var body: some View {
+    if let split = line.range(of: " · ", options: .backwards) {
+      HStack(spacing: 0) {
+        Text(line[..<split.lowerBound]).lineLimit(1)
+        Text(line[split.lowerBound...]).lineLimit(1).fixedSize()
+      }
+    } else {
+      Text(line).lineLimit(1)
+    }
   }
 }
 
