@@ -158,7 +158,7 @@ class _Answer extends StatelessWidget {
       GeneratorStep.equipment => EquipmentAnswer(
         owned: state.equipment,
         onPreset: cubit.applyPreset,
-        onToggle: cubit.toggleEquipment,
+        onEquipment: cubit.setEquipment,
       ),
       GeneratorStep.focus => _FocusAnswer(state),
       GeneratorStep.excluded => _ExcludedAnswer(state.excluded),

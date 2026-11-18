@@ -191,16 +191,9 @@ class GeneratorQuestionsCubit extends Cubit<GeneratorQuestionsState> {
   void applyPreset(EquipmentProfile profile) =>
       emit(state.copyWith(equipment: profile.equipment));
 
-  void toggleEquipment(Equipment item) {
-    final owned = state.equipment ?? const <Equipment>{};
-    emit(
-      state.copyWith(
-        equipment: owned.contains(item)
-            ? owned.difference({item})
-            : {...owned, item},
-      ),
-    );
-  }
+  /// A preset tuned item by item.
+  void setEquipment(Set<Equipment> owned) =>
+      emit(state.copyWith(equipment: owned));
 
   /// Up to [GeneratorLimits.maxFocusMuscles]; never a muscle of the area to
   /// go easy on.

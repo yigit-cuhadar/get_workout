@@ -1748,6 +1748,9 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('You weigh '), findsOneWidget);
+      // The ruler marks the weight now.
+      final picker = tester.widget<NumberPicker>(find.byType(NumberPicker));
+      expect(picker.marker?.label, startsWith('Now '));
     });
 
     testWidgets('a next question slides in from the right, Back from the left', (
@@ -2095,18 +2098,27 @@ void main() {
     ]) async {
       setUpAuth();
       consents = MockConsentRepository();
+      // As Firestore's cache does, a saved answer comes back at once.
+      final watched = <String, StreamController<StoredConsent>>{};
       when(() => consents.watchConsent(any())).thenAnswer((call) {
         final uid = call.positionalArguments.first as String;
-        return Stream.value(
-          uid == 'u1'
-              ? (consent: true, fromServer: true)
-              : answers.containsKey(uid)
-              ? (consent: answers[uid], fromServer: true)
-              : unanswered,
-        );
+        final controller = StreamController<StoredConsent>()
+          ..add(
+            uid == 'u1'
+                ? (consent: true, fromServer: true)
+                : answers.containsKey(uid)
+                ? (consent: answers[uid], fromServer: true)
+                : unanswered,
+          );
+        addTearDown(controller.close);
+        watched[uid] = controller;
+        return controller.stream;
       });
-      when(() => consents.saveConsent(any(), any()))
-          .thenAnswer((_) async => const Ok(null));
+      when(() => consents.saveConsent(any(), any())).thenAnswer((call) async {
+        final [uid as String, consent as bool] = call.positionalArguments;
+        watched[uid]?.add((consent: consent, fromServer: false));
+        return const Ok(null);
+      });
       final telemetry = MockTelemetry();
       when(() => telemetry.follow(any()))
           .thenAnswer((_) async => const Ok(null));
@@ -2129,7 +2141,7 @@ void main() {
       expect(dialog, findsNothing);
     }
 
-    testWidgets('a new guest after sign-out is asked only on Today, once', (
+    testWidgets('a new guest after sign-out is asked once, in onboarding', (
       tester,
     ) async {
       await start(tester);
@@ -2151,14 +2163,24 @@ void main() {
       expect(find.byType(OnboardingPage), findsOneWidget);
       expect(dialog, findsNothing);
 
-      await finishOnboarding(tester);
-      expect(find.byType(TodayPage), findsOneWidget);
+      // Right after the last question, before the reminder.
+      await tester.tap(find.text('Get started'));
+      await tester.pumpAndSettle();
+      for (var i = 0; i < ProfileField.values.length; i++) {
+        await tester.tap(find.text('Continue'));
+        await tester.pumpAndSettle();
+      }
       expect(dialog, findsOneWidget);
-
       await tester.tap(find.text("Don't allow"));
       await tester.pumpAndSettle();
-      expect(dialog, findsNothing);
       verify(() => consents.saveConsent('u2', false)).called(1);
+      if (find.text('Remind you on training days?').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Not now'));
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.byType(TodayPage), findsOneWidget);
+      expect(dialog, findsNothing);
     });
 
     testWidgets('an account signed in from the tabs is asked once its '
@@ -2172,7 +2194,9 @@ void main() {
 
       profileStream.add(onboarded);
       await tester.pumpAndSettle();
-      expect(find.byType(TodayPage), findsOneWidget);
+      // A full page over the tabs.
+      expect(find.byType(TodayPage, skipOffstage: false), findsOneWidget);
+      expect(find.byType(TodayPage), findsNothing);
       expect(dialog, findsOneWidget);
     });
   });

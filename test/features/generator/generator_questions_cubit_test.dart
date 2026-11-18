@@ -71,8 +71,7 @@ void main() {
     expect(cubit.state.step, GeneratorStep.equipment);
     expect(cubit.state.answered, isFalse);
     // Bodyweight only is an answer.
-    cubit.toggleEquipment(Equipment.dumbbell);
-    cubit.toggleEquipment(Equipment.dumbbell);
+    cubit.setEquipment(const {});
     expect(cubit.state.equipment, isEmpty);
     expect(cubit.state.answered, isTrue);
   });
@@ -143,7 +142,7 @@ void main() {
 
   test('a preset replaces the equipment', () {
     final cubit = GeneratorQuestionsCubit(none)
-      ..toggleEquipment(Equipment.sled)
+      ..setEquipment(const {Equipment.sled})
       ..applyPreset(EquipmentProfile.dumbbells);
     expect(cubit.state.equipment, EquipmentProfile.dumbbells.equipment);
   });
@@ -185,7 +184,7 @@ void main() {
     expect(cubit.state.daysPerWeek, isNull);
     expect(cubit.state.equipment, {Equipment.rings});
     cubit
-      ..toggleEquipment(Equipment.rings)
+      ..setEquipment(const {})
       ..prefill((
         goal: null,
         level: null,

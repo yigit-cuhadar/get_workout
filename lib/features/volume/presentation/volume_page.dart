@@ -454,6 +454,10 @@ class _Trend extends StatelessWidget {
               label: '${week.start.day}',
               value: sets[i],
               valueLabel: numbers.format(sets[i]),
+              tooltip: l10n.volumeTrendTooltip(
+                l10n.setsText(sets[i]),
+                dates.formatShortMonthDay(week.start.toLocalDateTime()),
+              ),
             ),
         ],
         semanticLabel: l10n.volumeTrendLabel(

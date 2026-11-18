@@ -8,6 +8,7 @@ import 'package:get_workout/features/workout/presentation/widgets/set_panel.dart
 const _labels = SetPanelLabels(
   log: 'Log set',
   done: 'Done',
+  next: 'Next',
   options: 'Set options',
   addDrop: 'Add drop',
   removeDrop: 'Remove drop',
@@ -86,6 +87,49 @@ void main() {
       tester.widget<ForgeButton>(find.byType(ForgeButton)).leadingIcon,
       ForgeIcons.check,
     );
+  });
+
+  testWidgets('typing the weight, Next types the reps and Done closes the '
+      'keyboard; a drop\'s values come next', (tester) async {
+    await _pump(
+      tester,
+      SetPanel(
+        title: 'Bench Press · set 3 of 4',
+        details: const [],
+        labels: _labels,
+        values: [_value(82.5, 'kg'), _value(8, 'reps')],
+        drops: [
+          SetPanelDrop(
+            label: 'Drop 1',
+            values: [_value(60, 'kg'), _value(6, 'reps')],
+            onRemove: () {},
+          ),
+        ],
+        onAddDrop: () {},
+        onOptions: () {},
+        onLog: () {},
+      ),
+    );
+    bool typing(int i) => tester
+        .widget<EditableText>(find.byType(EditableText).at(i))
+        .focusNode
+        .hasFocus;
+
+    await tester.tap(find.text('82.5'));
+    await tester.pump();
+    expect(typing(0), isTrue);
+
+    await tester.tap(find.text('Next'));
+    await tester.pump();
+    expect(typing(1), isTrue);
+    await tester.tap(find.text('Next'));
+    await tester.pump();
+    expect(typing(2), isTrue);
+
+    await tester.tap(find.text('Done'));
+    await tester.pump();
+    expect(find.text('Next'), findsNothing);
+    expect([for (var i = 0; i < 4; i++) typing(i)], everyElement(isFalse));
   });
 
   testWidgets('a load added to the body shows its sign', (tester) async {

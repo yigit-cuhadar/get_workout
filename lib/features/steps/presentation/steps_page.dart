@@ -442,6 +442,8 @@ class _WeekChart extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final letter = DateFormat.EEEEE(l10n.localeName);
     final compact = NumberFormat.compact(locale: l10n.localeName);
+    final number = NumberFormat.decimalPattern(l10n.localeName);
+    final day = DateFormat.MMMEd(l10n.localeName);
     final today = this.today;
     final todayDate = today == null ? null : CalendarDate.of(today);
     bool future(DailySteps day) =>
@@ -454,13 +456,17 @@ class _WeekChart extends StatelessWidget {
       title: title,
       detail: l10n.stepsGoalDetail(goal),
       bars: [
-        for (final day in days)
-          future(day)
-              ? ChartBar(label: letter.format(day.day))
+        for (final steps in days)
+          future(steps)
+              ? ChartBar(label: letter.format(steps.day))
               : ChartBar(
-                  label: letter.format(day.day),
-                  value: day.count.toDouble(),
-                  valueLabel: compact.format(day.count),
+                  label: letter.format(steps.day),
+                  value: steps.count.toDouble(),
+                  valueLabel: compact.format(steps.count),
+                  tooltip: l10n.stepsTooltip(
+                    number.format(steps.count),
+                    day.format(steps.day),
+                  ),
                 ),
       ],
       current: current == null || current < 0 ? null : current,
@@ -477,7 +483,7 @@ class _WeekChart extends StatelessWidget {
 }
 
 /// The last 30 days as Forge's dense bars, today in accent, the goal
-/// across; a tap names a day's steps.
+/// across; holding a bar names its day's steps.
 class _MonthChart extends StatelessWidget {
   const _MonthChart({required this.days, required this.goal});
 
@@ -489,6 +495,7 @@ class _MonthChart extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final number = NumberFormat.decimalPattern(l10n.localeName);
     final dayLabel = DateFormat.MMMd(l10n.localeName);
+    final dayLong = DateFormat.MMMEd(l10n.localeName);
     final title = l10n.stepsLastDays(stepHistoryDays);
     return Chart.barDense(
       title: title,
@@ -498,8 +505,10 @@ class _MonthChart extends StatelessWidget {
           ChartBar(
             label: dayLabel.format(day.day),
             value: day.count.toDouble(),
-            valueLabel:
-                '${number.format(day.count)} · ${dayLabel.format(day.day)}',
+            tooltip: l10n.stepsTooltip(
+              number.format(day.count),
+              dayLong.format(day.day),
+            ),
           ),
       ],
       current: days.isEmpty ? null : days.length - 1,

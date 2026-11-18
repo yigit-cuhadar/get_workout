@@ -6,7 +6,8 @@ import '../../../l10n/app_localizations.dart';
 import 'notifications_cubit.dart';
 
 /// Turns on something that notifies, after making sure the device lets the
-/// app notify: asked in the app first with one line, the [reason], and
+/// app notify: asked in the app first in a permission dialog with one line,
+/// the [reason], and
 /// pointed to the system settings when the device refuses. [store] keeps
 /// the wish either way, so it works once notifications are allowed; "Not
 /// now" leaves everything as it was. Needs [NotificationsCubit] above.
@@ -30,18 +31,14 @@ Future<bool> _explain(BuildContext context, String reason) async {
   final l10n = AppLocalizations.of(context);
   final allow = await showForgeDialog<bool>(
     context: context,
-    builder: (context) => ForgeDialog(
+    builder: (context) => PermissionPrompt.dialog(
+      icon: ForgeIcons.notifications,
       title: l10n.remindersPermissionTitle,
       message: reason,
-      action: ForgeButton(
-        label: l10n.remindersAllow,
-        onPressed: () => Navigator.pop(context, true),
-      ),
-      cancel: ForgeButton(
-        label: l10n.remindersLater,
-        variant: ForgeButtonVariant.secondary,
-        onPressed: () => Navigator.pop(context, false),
-      ),
+      allowLabel: l10n.remindersAllow,
+      onAllow: () => Navigator.pop(context, true),
+      notNowLabel: l10n.remindersLater,
+      onNotNow: () => Navigator.pop(context, false),
     ),
   );
   return allow ?? false;

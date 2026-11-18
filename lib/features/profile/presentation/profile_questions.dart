@@ -223,7 +223,7 @@ class ProfileQuestion extends StatelessWidget {
           ProfileField.equipment => EquipmentAnswer(
             owned: state.answers.equipment,
             onPreset: cubit.applyPreset,
-            onToggle: cubit.toggleEquipment,
+            onEquipment: cubit.setEquipment,
           ),
           ProfileField.sex => OnboardingChoices(
             values: Sex.values,
@@ -237,6 +237,7 @@ class ProfileQuestion extends StatelessWidget {
           ProfileField.targetWeight => _WeightAnswer(
             field,
             state.answers.targetWeightKg,
+            nowKg: state.answers.weightKg,
           ),
         };
       },
@@ -279,23 +280,93 @@ class ProfileQuestion extends StatelessWidget {
   }
 }
 
-/// The equipment owned: presets as chips, then the common items and every
-/// item owned as rows with a square checkbox in front, and Show all
-/// equipment, which lists every item. Bodyweight is always owned, so it is not offered.
+/// The equipment owned, as the closest set: one radio row per preset, like
+/// the goal question. A tap picks the set; its info button opens the set's
+/// items as checkboxes ([showEquipmentSheet]), and Done there picks the set
+/// with the items ticked, so the opened row stays selected. Bodyweight is
+/// always owned, so it is not offered.
 class EquipmentAnswer extends StatefulWidget {
   const EquipmentAnswer({
     super.key,
     required this.owned,
     required this.onPreset,
-    required this.onToggle,
+    required this.onEquipment,
   });
 
   /// Null until answered.
   final Set<Equipment>? owned;
   final ValueChanged<EquipmentProfile> onPreset;
-  final ValueChanged<Equipment> onToggle;
+  final ValueChanged<Set<Equipment>> onEquipment;
 
-  /// The items listed before Show all equipment.
+  @override
+  State<EquipmentAnswer> createState() => _EquipmentAnswerState();
+}
+
+class _EquipmentAnswerState extends State<EquipmentAnswer> {
+  /// The set picked; a set tuned in its sheet no longer matches a preset
+  /// but stays the one picked.
+  late EquipmentProfile? _picked = switch (widget.owned) {
+    final owned? => EquipmentProfile.matching(owned),
+    null => null,
+  };
+
+  void _pick(EquipmentProfile preset) {
+    setState(() => _picked = preset);
+    widget.onPreset(preset);
+  }
+
+  Future<void> _details(EquipmentProfile preset) async {
+    final owned = widget.owned;
+    final picked = await showEquipmentSheet(
+      context,
+      preset: preset,
+      owned: preset == _picked && owned != null ? owned : preset.equipment,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _picked = preset);
+    widget.onEquipment(picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    const presets = EquipmentProfile.values;
+    final picked = _picked;
+    return ChoiceGrid.list(
+      form: ChoiceListForm.stacked,
+      options: [
+        for (final preset in presets)
+          ChoiceOption(
+            label: l10n.presetName(preset),
+            onInfo: () => _details(preset),
+            infoLabel: l10n.equipmentPresetDetails(l10n.presetName(preset)),
+          ),
+      ],
+      selected: picked == null ? null : presets.indexOf(picked),
+      onSelected: (i) => _pick(presets[i]),
+    );
+  }
+}
+
+/// The items of [preset] as checkboxes, [owned] ticked: the common items and
+/// every item ticked, then More equipment, which lists every item. Done
+/// closes it with the items ticked; null when closed without Done.
+Future<Set<Equipment>?> showEquipmentSheet(
+  BuildContext context, {
+  required EquipmentProfile preset,
+  required Set<Equipment> owned,
+}) => showForgeBottomSheet<Set<Equipment>>(
+  context: context,
+  builder: (_) => _EquipmentSheet(preset: preset, owned: owned),
+);
+
+class _EquipmentSheet extends StatefulWidget {
+  const _EquipmentSheet({required this.preset, required this.owned});
+
+  final EquipmentProfile preset;
+  final Set<Equipment> owned;
+
+  /// The items listed before More equipment.
   static const common = [
     Equipment.barbell,
     Equipment.plate,
@@ -307,60 +378,61 @@ class EquipmentAnswer extends StatefulWidget {
   ];
 
   @override
-  State<EquipmentAnswer> createState() => _EquipmentAnswerState();
+  State<_EquipmentSheet> createState() => _EquipmentSheetState();
 }
 
-class _EquipmentAnswerState extends State<EquipmentAnswer> {
+class _EquipmentSheetState extends State<_EquipmentSheet> {
+  late final Set<Equipment> _ticked = {...widget.owned};
   var _all = false;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final owned = widget.owned;
     // Collapsed, the common items and everything owned, in vocabulary
     // order after the common ones.
     final items = [
-      ...EquipmentAnswer.common,
+      ..._EquipmentSheet.common,
       for (final item in Equipment.values)
         if (item != Equipment.bodyweight &&
-            !EquipmentAnswer.common.contains(item) &&
-            (_all || (owned?.contains(item) ?? false)))
+            !_EquipmentSheet.common.contains(item) &&
+            (_all || widget.owned.contains(item)))
           item,
     ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 12,
-      children: [
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
+    return ForgeBottomSheet(
+      title: l10n.presetName(widget.preset),
+      subtitle: l10n.equipmentSheetInfo,
+      action: ForgeButton(
+        label: l10n.equipmentSheetDone,
+        onPressed: () => Navigator.pop(context, {
+          for (final item in Equipment.values)
+            if (_ticked.contains(item)) item,
+        }),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final preset in EquipmentProfile.values)
-              ForgeChip(
-                label: l10n.presetName(preset),
-                showCheck: false,
-                selected:
-                    owned != null && EquipmentProfile.matching(owned) == preset,
-                onPressed: () => widget.onPreset(preset),
-              ),
-          ],
-        ),
-        ListRowCard(
-          children: [
-            for (final item in items)
-              ListRow(
+            for (final (i, item) in items.indexed) ...[
+              if (i > 0) const Divider(),
+              ListRow.check(
                 title: l10n.equipmentName(item),
-                checked: owned?.contains(item) ?? false,
-                onTap: () => widget.onToggle(item),
+                checked: _ticked.contains(item),
+                onChanged: (checked) => setState(
+                  () => checked ? _ticked.add(item) : _ticked.remove(item),
+                ),
               ),
-            if (items.length < Equipment.values.length - 1)
+            ],
+            if (items.length < Equipment.values.length - 1) ...[
+              const Divider(),
               ListRow(
                 title: l10n.equipmentShowAll,
                 onTap: () => setState(() => _all = true),
               ),
+            ],
           ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -491,14 +563,16 @@ class _HeightAnswer extends StatelessWidget {
   return (feet: feet, inches: (tenths - feet * 120) / 10);
 }
 
-/// The body weight or the target weight.
+/// The body weight or the target weight, the target's ruler marking the
+/// weight [nowKg] when known ("Now 70 kg").
 class _WeightAnswer extends StatelessWidget {
-  const _WeightAnswer(this.field, this.kg);
+  const _WeightAnswer(this.field, this.kg, {this.nowKg});
 
   final ProfileField field;
 
   /// Answered as soon as the question shows.
   final double? kg;
+  final double? nowKg;
 
   static const _step = 0.1;
 
@@ -537,6 +611,13 @@ class _WeightAnswer extends StatelessWidget {
         max: range.max,
         step: _step,
         value: value,
+        marker: switch (nowKg) {
+          final now? => (
+            value: unit.fromKg(now),
+            label: l10n.onboardingTargetWeightNow(l10n.weightText(now, unit)),
+          ),
+          null => null,
+        },
         onChanged: (value) => target
             ? cubit.setTargetWeight(value, unit)
             : cubit.setWeight(value, unit),

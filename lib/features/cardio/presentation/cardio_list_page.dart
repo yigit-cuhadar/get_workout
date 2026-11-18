@@ -230,6 +230,10 @@ class _WeeksChart extends StatelessWidget {
             value: week.duration.inMinutes.toDouble(),
             // An empty week has no figure over its bar.
             valueLabel: minutes(week) == 0 ? null : '${minutes(week)}',
+            tooltip: l10n.cardioChartTooltip(
+              l10n.cardioMinutes(minutes(week)),
+              label.format(week.start),
+            ),
           ),
       ],
       current: last,

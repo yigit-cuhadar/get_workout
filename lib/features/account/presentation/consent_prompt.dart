@@ -16,9 +16,33 @@ import 'consent_cubit.dart';
 bool consentDue(ConsentState consent, ProfileState profile) =>
     consent.unanswered && consent.uid == profile.uid && profile.pastOnboarding;
 
-/// Asks for analytics consent once [consentDue]: two equal choices, no
-/// dismissing. Wraps the tabs and asks only while they are the top route,
-/// never over onboarding, the workout, the paywall or another dialog; it
+/// The analytics consent question as a full-page step: two equal choices,
+/// Allow on top. Onboarding asks it after the last question; [ConsentPrompt]
+/// asks it of anyone past onboarding who never answered.
+class AnalyticsConsentPrompt extends StatelessWidget {
+  const AnalyticsConsentPrompt({super.key, required this.onAnswer});
+
+  final ValueChanged<bool> onAnswer;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return PermissionPrompt.consent(
+      icon: ForgeIcons.barChart,
+      title: l10n.consentTitle,
+      message: l10n.consentBody,
+      allowLabel: l10n.consentAllow,
+      onAllow: () => onAnswer(true),
+      declineLabel: l10n.consentDeny,
+      onDecline: () => onAnswer(false),
+      page: true,
+    );
+  }
+}
+
+/// Asks for analytics consent once [consentDue], as a full page with no
+/// way back but an answer. Wraps the tabs and asks only while they are the top route,
+/// never over onboarding, the workout, the paywall or a dialog; it
 /// asks once they are on top again. Needs [ConsentCubit] and [ProfileCubit]
 /// above it.
 class ConsentPrompt extends StatefulWidget {
@@ -34,7 +58,7 @@ class _ConsentPromptState extends State<ConsentPrompt> {
   bool _open = false;
 
   /// The answer just given, until the cubit's state shows it: saving takes a
-  /// moment, and the tabs become the top route again the instant the dialog
+  /// moment, and the tabs become the top route again the instant the page
   /// closes, which would ask a second time.
   bool _answered = false;
 
@@ -60,25 +84,17 @@ class _ConsentPromptState extends State<ConsentPrompt> {
     if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
     _open = true;
     final cubit = context.read<ConsentCubit>();
-    final l10n = AppLocalizations.of(context);
-    // Two equal choices, so both are secondary; no dismissing.
-    final consent = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => PopScope(
-        canPop: false,
-        child: ForgeDialog(
-          title: l10n.consentTitle,
-          message: l10n.consentBody,
-          action: ForgeButton(
-            label: l10n.consentAllow,
-            variant: ForgeButtonVariant.secondary,
-            onPressed: () => Navigator.pop(context, true),
-          ),
-          cancel: ForgeButton(
-            label: l10n.consentDeny,
-            variant: ForgeButtonVariant.secondary,
-            onPressed: () => Navigator.pop(context, false),
+    final consent = await Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute<bool>(
+        fullscreenDialog: true,
+        builder: (context) => PopScope(
+          canPop: false,
+          child: Scaffold(
+            body: SafeArea(
+              child: AnalyticsConsentPrompt(
+                onAnswer: (consent) => Navigator.pop(context, consent),
+              ),
+            ),
           ),
         ),
       ),
