@@ -1725,6 +1725,26 @@ void main() {
       expect(path(), Routes.program('p1'));
     });
 
+    testWidgets('the target weight asks as its own step, naming the weight', (
+      tester,
+    ) async {
+      storedProfile = choicesAnswered;
+      await startAsGuest(tester);
+      await tester.tap(find.text('Get started'));
+      await tester.pumpAndSettle();
+      for (var i = 0; i < ProfileField.values.length - 1; i++) {
+        await tester.tap(find.text('Continue'));
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.text('Your goal'), findsOneWidget);
+      expect(
+        find.text('Now, where do you want your weight to be?'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('You weigh '), findsOneWidget);
+    });
+
     testWidgets('the reminder step turns reminders on, then moves on', (
       tester,
     ) async {
