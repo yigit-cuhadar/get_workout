@@ -97,4 +97,59 @@ void main() {
     expect(tuned, isEmpty);
     expect(selected(tester), EquipmentProfile.fullGym.index);
   });
+
+  final custom = {
+    ...EquipmentProfile.homeGym.equipment,
+    Equipment.cable,
+    Equipment.kettlebell,
+  };
+
+  testWidgets('a set tuned before selects no row and counts it under the '
+      'list', (tester) async {
+    await pump(tester, custom);
+
+    expect(selected(tester), isNull);
+    expect(find.text('Custom equipment · 7 items'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget);
+  });
+
+  testWidgets('a set that matches shows no custom line', (tester) async {
+    await pump(tester, EquipmentProfile.bands.equipment);
+
+    expect(find.textContaining('Custom equipment'), findsNothing);
+  });
+
+  testWidgets('Edit opens the custom items as checkboxes; Done keeps them', (
+    tester,
+  ) async {
+    await pump(tester, custom);
+
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    expect(find.text('Custom equipment'), findsOneWidget);
+    expect(
+      tester.widget<ListRow>(find.widgetWithText(ListRow, 'Cable')).checked,
+      isTrue,
+    );
+    await tester.tap(find.text('Cable'));
+    await tester.pump();
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+
+    expect(tuned, [
+      {...EquipmentProfile.homeGym.equipment, Equipment.kettlebell},
+    ]);
+    expect(presets, isEmpty);
+  });
+
+  testWidgets('picking a set replaces the custom line', (tester) async {
+    await pump(tester, custom);
+
+    await tester.tap(find.text('Full gym'));
+    await tester.pump();
+
+    expect(presets, [EquipmentProfile.fullGym]);
+    expect(selected(tester), EquipmentProfile.fullGym.index);
+    expect(find.textContaining('Custom equipment'), findsNothing);
+  });
 }

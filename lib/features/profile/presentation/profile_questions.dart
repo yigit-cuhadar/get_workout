@@ -283,8 +283,10 @@ class ProfileQuestion extends StatelessWidget {
 /// The equipment owned, as the closest set: one radio row per preset, like
 /// the goal question. A tap picks the set; its info button opens the set's
 /// items as checkboxes ([showEquipmentSheet]), and Done there picks the set
-/// with the items ticked, so the opened row stays selected. Bodyweight is
-/// always owned, so it is not offered.
+/// with the items ticked, so the opened row stays selected. Equipment that
+/// matches no set when the question opens selects no row; a muted line
+/// under the list counts it, and its Edit opens the items as checkboxes.
+/// Bodyweight is always owned, so it is not offered.
 class EquipmentAnswer extends StatefulWidget {
   const EquipmentAnswer({
     super.key,
@@ -319,11 +321,22 @@ class _EquipmentAnswerState extends State<EquipmentAnswer> {
     final owned = widget.owned;
     final picked = await showEquipmentSheet(
       context,
-      preset: preset,
+      title: AppLocalizations.of(context).presetName(preset),
       owned: preset == _picked && owned != null ? owned : preset.equipment,
     );
     if (picked == null || !mounted) return;
     setState(() => _picked = preset);
+    widget.onEquipment(picked);
+  }
+
+  Future<void> _editCustom(Set<Equipment> owned) async {
+    final picked = await showEquipmentSheet(
+      context,
+      title: AppLocalizations.of(context).equipmentCustomTitle,
+      owned: owned,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _picked = EquipmentProfile.matching(picked));
     widget.onEquipment(picked);
   }
 
@@ -332,7 +345,8 @@ class _EquipmentAnswerState extends State<EquipmentAnswer> {
     final l10n = AppLocalizations.of(context);
     const presets = EquipmentProfile.values;
     final picked = _picked;
-    return ChoiceGrid.list(
+    final owned = widget.owned;
+    final grid = ChoiceGrid.list(
       form: ChoiceListForm.stacked,
       options: [
         for (final preset in presets)
@@ -345,25 +359,56 @@ class _EquipmentAnswerState extends State<EquipmentAnswer> {
       selected: picked == null ? null : presets.indexOf(picked),
       onSelected: (i) => _pick(presets[i]),
     );
+    if (picked != null ||
+        owned == null ||
+        EquipmentProfile.matching(owned) != null) {
+      return grid;
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        grid,
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: 12, top: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.equipmentCustom(owned.length),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              ForgeButton(
+                label: l10n.equipmentCustomEdit,
+                variant: ForgeButtonVariant.text,
+                size: ForgeButtonSize.small,
+                onPressed: () => _editCustom(owned),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
-/// The items of [preset] as checkboxes, [owned] ticked: the common items and
-/// every item ticked, then More equipment, which lists every item. Done
-/// closes it with the items ticked; null when closed without Done.
+/// The equipment as checkboxes under [title], [owned] ticked: the common
+/// items and every item ticked, then More equipment, which lists every
+/// item. Done closes it with the items ticked; null when closed without
+/// Done.
 Future<Set<Equipment>?> showEquipmentSheet(
   BuildContext context, {
-  required EquipmentProfile preset,
+  required String title,
   required Set<Equipment> owned,
 }) => showForgeBottomSheet<Set<Equipment>>(
   context: context,
-  builder: (_) => _EquipmentSheet(preset: preset, owned: owned),
+  builder: (_) => _EquipmentSheet(title: title, owned: owned),
 );
 
 class _EquipmentSheet extends StatefulWidget {
-  const _EquipmentSheet({required this.preset, required this.owned});
+  const _EquipmentSheet({required this.title, required this.owned});
 
-  final EquipmentProfile preset;
+  final String title;
   final Set<Equipment> owned;
 
   /// The items listed before More equipment.
@@ -399,7 +444,7 @@ class _EquipmentSheetState extends State<_EquipmentSheet> {
           item,
     ];
     return ForgeBottomSheet(
-      title: l10n.presetName(widget.preset),
+      title: widget.title,
       subtitle: l10n.equipmentSheetInfo,
       action: ForgeButton(
         label: l10n.equipmentSheetDone,
