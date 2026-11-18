@@ -653,6 +653,12 @@ Decisions (the canvases they were drawn on are deleted):
   Yearly first with Best value at the row's end (Forge v0.25.5); the
   generator preview title in sans; calorie rates unrounded ("0.25 kg");
   calculator rows "Weight", values sans muted.
+- Delete account's sign-in check (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/NWzAVU8uZU6aUd9JdYx3w1): a user without a
+  password confirms with their provider in the same "Confirm it's you"
+  dialog, its field replaced by "Continue with Google" or "… Apple", and
+  deletion goes on by itself after it (YG1 A); a user with a password
+  also gets "or" and a button per linked provider under the field (YG2 B).
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
@@ -1431,9 +1437,6 @@ Decisions (the canvases they were drawn on are deleted):
   not verified on either platform yet.
 - Forge tasks; the app's own versions are accepted deviations, to be
   replaced once these exist:
-  - `forge_auth`: the user's sign-in methods on `AuthUser`, so account
-    deletion asks only a user with a password for it and tells a Google
-    or Apple only user to sign in again straight away.
   - The Live Activity bridge (`AppDelegate.swift`'s `WorkoutActivity`,
     `WorkoutActivityTaps` and a generic attributes type) could move to a package with a native iOS
     plugin once a second app needs one; the widget views stay in the app.
@@ -1668,11 +1671,11 @@ the feature you are about to touch, and keep it true when you change it.
   writes are sent (10 s at most; offline fails with nothing asked or
   deleted); the callable `deleteAccount` deletes. For an account with a
   credential it wants a sign-in from the last 5 minutes, else the app asks
-  for the password (`forge_auth`'s `Reauthenticate`) and tries again. A
-  user without a password (Google only) is still asked for one once;
-  `Reauthenticate` then fails with `noPasswordCode` and the app tells them
-  to sign in again, which renews the sign-in. Skipping the dialog for them
-  needs the sign-in methods on `AuthUser` (forge task). A guest is deleted
+  for a renewed sign-in and tries again: the password field when the user
+  has one, and a button per linked provider (`AuthUser.signInMethods`)
+  that renews it with that provider (`forge_auth`'s
+  `ReauthenticateWithProvider`); a cancelled provider sheet leaves the
+  dialog open and asks nothing. A guest is deleted
   the same way, without that check. Once the server deleted the data,
   still signed in (so nothing of the next guest is touched), the app
   removes the user's kept workouts file (unreadable copies too), cancels

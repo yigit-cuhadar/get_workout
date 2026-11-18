@@ -189,10 +189,13 @@ void main() {
   });
 
   group('account', () {
-    Future<void> openAccount(WidgetTester tester) async {
-      await app.startAs(tester, member);
+    Future<void> openAccount(
+      WidgetTester tester, [
+      AuthUser user = member,
+    ]) async {
+      await app.startAs(tester, user);
       await app.tapTab(tester, 'Profile');
-      await tester.tap(find.text('a@b.co'));
+      await tester.tap(find.text(user.email!));
       await tester.pump();
       await tester.pump();
       expect(find.byType(AccountPage), findsOneWidget);
@@ -297,6 +300,96 @@ void main() {
       expect(find.byType(DeleteAccountPage), findsNothing);
       expect(find.byType(OnboardingPage), findsOneWidget);
       expect(find.text('Get started'), findsOneWidget);
+    });
+
+    /// The first deletion wants a recent sign-in, the next one deletes and
+    /// signs out; returns how many deletions ran.
+    int Function() deleteAfterSignIn() {
+      signOutStartsNewGuest();
+      var deletes = 0;
+      when(() => app.account.deleteAccount()).thenAnswer(
+        (_) async => ++deletes == 1
+            ? const Err(AuthFailure('stale', code: recentLoginRequiredCode))
+            : const Ok(null),
+      );
+      when(() => app.account.signOut()).thenAnswer((_) async {
+        app.users.add(null);
+        return const Ok(null);
+      });
+      return () => deletes;
+    }
+
+    testWidgets('a Google-only user confirms with Google, asked again after '
+        'a closed sheet, and deletes', (tester) async {
+      const googleUser = AuthUser(
+        id: 'u1',
+        email: 'a@gmail.com',
+        signInMethods: {SignInMethod.google},
+      );
+      await openAccount(tester, googleUser);
+      final deletes = deleteAfterSignIn();
+      var sheets = 0;
+      when(() => app.repository.reauthenticateWithProvider(any())).thenAnswer(
+        (_) async => ++sheets == 1
+            ? const Err(AuthFailure('closed', code: cancelledCode))
+            : const Ok(null),
+      );
+
+      await tapText(tester, 'Delete account');
+      await tapButton(tester, 'Delete account');
+      await tapText(tester, 'Delete');
+
+      expect(find.text("Confirm it's you"), findsOneWidget);
+      expect(
+        find.text('Sign in with Google again to delete your account.'),
+        findsOneWidget,
+      );
+      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(OrDivider), findsNothing);
+      expect(find.text('Continue with Apple'), findsNothing);
+      await tapText(tester, 'Continue with Google');
+      verify(
+        () => app.repository.reauthenticateWithProvider(SocialProvider.google),
+      ).called(1);
+      // The closed sheet says nothing; the dialog is back.
+      expect(find.text("Confirm it's you"), findsOneWidget);
+      expect(deletes(), 1);
+
+      await tapText(tester, 'Continue with Google');
+
+      expect(deletes(), 2);
+      expect(find.byType(DeleteAccountPage), findsNothing);
+      expect(find.byType(OnboardingPage), findsOneWidget);
+    });
+
+    testWidgets('a user with a password and Google may confirm with either', (
+      tester,
+    ) async {
+      const linked = AuthUser(
+        id: 'u1',
+        email: 'a@b.co',
+        signInMethods: {SignInMethod.email, SignInMethod.google},
+      );
+      await openAccount(tester, linked);
+      final deletes = deleteAfterSignIn();
+      when(() => app.repository.reauthenticateWithProvider(any()))
+          .thenAnswer((_) async => const Ok(null));
+
+      await tapText(tester, 'Delete account');
+      await tapButton(tester, 'Delete account');
+      await tapText(tester, 'Delete');
+
+      expect(
+        find.text('Enter your password to delete your account.'),
+        findsOneWidget,
+      );
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(OrDivider), findsOneWidget);
+      await tapText(tester, 'Continue with Google');
+
+      verifyNever(() => app.repository.reauthenticate(any()));
+      expect(deletes(), 2);
+      expect(find.byType(OnboardingPage), findsOneWidget);
     });
 
     testWidgets('a deletion that leaves the sign-in shows Almost done with '

@@ -220,6 +220,7 @@ class FlowApp {
         getCurrentUser: GetCurrentUser(repository),
         deleteAccount: DeleteUserAccount(account, local, accountTelemetry),
         reauthenticate: Reauthenticate(repository),
+        reauthenticateWithProvider: ReauthenticateWithProvider(repository),
         underway: deletionUnderway,
         releaseWorkouts: (_) async {},
         resumeWorkouts: () async {},

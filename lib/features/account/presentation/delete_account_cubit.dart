@@ -10,8 +10,9 @@ enum DeleteStatus {
   idle,
   deleting,
 
-  /// The server wants a recent sign-in; the password is asked.
-  needsPassword,
+  /// The server wants a recent sign-in; the user signs in again with
+  /// their password or a linked provider.
+  needsSignIn,
   failed,
 
   /// The data is gone but the sign-in is not; only deleting again is
@@ -27,8 +28,8 @@ class DeleteAccountState extends Equatable {
 
   final DeleteStatus status;
 
-  /// Why the last attempt failed, also a wrong password on
-  /// [DeleteStatus.needsPassword].
+  /// Why the last attempt failed, also a failed sign-in on
+  /// [DeleteStatus.needsSignIn].
   final Failure? failure;
 
   @override
@@ -49,6 +50,7 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
     required this._getCurrentUser,
     required this._deleteAccount,
     required this._reauthenticate,
+    required this._reauthenticateWithProvider,
     required this._underway,
     required this._releaseWorkouts,
     required this._resumeWorkouts,
@@ -57,6 +59,7 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
   final GetCurrentUser _getCurrentUser;
   final DeleteUserAccount _deleteAccount;
   final Reauthenticate _reauthenticate;
+  final ReauthenticateWithProvider _reauthenticateWithProvider;
   final DeletionUnderway _underway;
 
   /// Stops the workout in progress from writing for the user, and starts
@@ -91,7 +94,7 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
     emit(switch (failure) {
       null => const DeleteAccountState(DeleteStatus.done),
       AuthFailure(code: recentLoginRequiredCode) => const DeleteAccountState(
-        DeleteStatus.needsPassword,
+        DeleteStatus.needsSignIn,
       ),
       PartlyDeletedFailure() => DeleteAccountState(
         DeleteStatus.partlyDeleted,
@@ -101,28 +104,36 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
     });
   }
 
-  /// Signs in again with [password], then deletes. A user without a
-  /// password (Google or Apple only) must sign in again instead, so is not
-  /// asked again.
-  Future<void> confirmPassword(String password) async {
-    if (state.status != DeleteStatus.needsPassword) return;
+  /// Signs in again with [password], then deletes.
+  Future<void> confirmPassword(String password) =>
+      _signInAgain(() => _reauthenticate(password));
+
+  /// Signs in again with [provider], then deletes. A closed provider sheet
+  /// asks again without a failure.
+  Future<void> confirmWithProvider(SocialProvider provider) =>
+      _signInAgain(() => _reauthenticateWithProvider(provider));
+
+  Future<void> _signInAgain(Future<Result<void>> Function() signIn) async {
+    if (state.status != DeleteStatus.needsSignIn) return;
     emit(const DeleteAccountState(DeleteStatus.deleting));
-    final failure = (await _reauthenticate(password)).failureOrNull;
+    final failure = (await signIn()).failureOrNull;
     if (isClosed) return;
     if (failure != null) {
       return emit(
-        DeleteAccountState(switch (failure) {
-          AuthFailure(code: noPasswordCode) => DeleteStatus.failed,
-          _ => DeleteStatus.needsPassword,
-        }, failure: failure),
+        DeleteAccountState(
+          DeleteStatus.needsSignIn,
+          failure: failure is AuthFailure && failure.code == cancelledCode
+              ? null
+              : failure,
+        ),
       );
     }
     await _delete();
   }
 
-  /// Back from the password prompt without deleting.
+  /// Back from the sign-in prompt without deleting.
   void cancel() {
-    if (state.status != DeleteStatus.needsPassword) return;
+    if (state.status != DeleteStatus.needsSignIn) return;
     emit(const DeleteAccountState(DeleteStatus.idle));
   }
 }

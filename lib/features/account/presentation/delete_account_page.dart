@@ -11,8 +11,8 @@ import '../../../l10n/app_localizations.dart';
 import '../domain/account_repository.dart';
 import 'delete_account_cubit.dart';
 
-/// What deleting removes, then a confirmation, the password when the
-/// server wants a recent sign-in, and the deletion. Afterwards the app
+/// What deleting removes, then a confirmation, a sign-in again (password or
+/// a linked provider) when the server wants a recent one, and the deletion. Afterwards the app
 /// starts over as a new guest, which the router shows as onboarding.
 class DeleteAccountPage extends StatelessWidget {
   const DeleteAccountPage({super.key});
@@ -35,8 +35,8 @@ class _DeleteAccountView extends StatelessWidget {
     return BlocConsumer<DeleteAccountCubit, DeleteAccountState>(
       listenWhen: (previous, current) => previous != current,
       listener: (context, state) {
-        if (state.status == DeleteStatus.needsPassword) {
-          unawaited(_askPassword(context, state.failure));
+        if (state.status == DeleteStatus.needsSignIn) {
+          unawaited(_askSignIn(context, state.failure));
         } else if (state case DeleteAccountState(
           status: DeleteStatus.failed,
           :final failure?,
@@ -158,44 +158,69 @@ class _DeleteAccountView extends StatelessWidget {
     if (confirmed == true) await cubit.delete();
   }
 
-  Future<void> _askPassword(BuildContext context, Failure? failure) async {
+  /// Asks for the password, the linked providers, or both. A user with
+  /// neither known is asked for the password, as before sign-in methods.
+  Future<void> _askSignIn(BuildContext context, Failure? failure) async {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<DeleteAccountCubit>();
-    final password = await showForgeDialog<String>(
+    final methods =
+        context.read<AuthCubit>().user?.signInMethods ?? const <SignInMethod>{};
+    final providers = {
+      if (methods.contains(SignInMethod.google)) SocialProvider.google,
+      if (methods.contains(SignInMethod.apple)) SocialProvider.apple,
+    };
+    // A String is a password, a SocialProvider a provider to sign in with.
+    final answer = await showForgeDialog<Object>(
       context: context,
-      builder: (context) => _PasswordDialog(
+      builder: (context) => _SignInDialog(
+        password: methods.contains(SignInMethod.email) || providers.isEmpty,
+        providers: providers,
         error: failure == null ? null : _failureText(l10n, failure),
       ),
     );
-    if (password == null) return cubit.cancel();
-    await cubit.confirmPassword(password);
+    switch (answer) {
+      case final String password:
+        await cubit.confirmPassword(password);
+      case final SocialProvider provider:
+        await cubit.confirmWithProvider(provider);
+      default:
+        cubit.cancel();
+    }
   }
 
   static String _failureText(AppLocalizations l10n, Failure failure) =>
       switch (failure) {
         DeletionUnavailableFailure() => l10n.deleteUnavailable,
         NetworkFailure() => l10n.deleteOffline,
-        AuthFailure(
-          code: 'invalid-credential' || 'wrong-password' || 'user-mismatch',
-        ) =>
+        AuthFailure(code: 'invalid-credential' || 'wrong-password') =>
           l10n.deletePasswordWrong,
+        AuthFailure(code: 'user-mismatch') => l10n.deleteOtherAccount,
         AuthFailure(code: 'too-many-requests') => l10n.authErrorTooManyRequests,
-        AuthFailure(code: noPasswordCode) => l10n.authErrorRecentLogin,
         _ => l10n.deleteFailed,
       };
 }
 
-class _PasswordDialog extends StatefulWidget {
-  const _PasswordDialog({this.error});
+/// "Confirm it's you": the password field and Delete when the user has a
+/// password, then "or" and a button per linked provider; without a password
+/// only the provider buttons, which sign in and delete at once.
+class _SignInDialog extends StatefulWidget {
+  const _SignInDialog({
+    required this.password,
+    required this.providers,
+    this.error,
+  });
 
-  /// Why the previous password did not work.
+  final bool password;
+  final Set<SocialProvider> providers;
+
+  /// Why the previous sign-in did not work.
   final String? error;
 
   @override
-  State<_PasswordDialog> createState() => _PasswordDialogState();
+  State<_SignInDialog> createState() => _SignInDialogState();
 }
 
-class _PasswordDialogState extends State<_PasswordDialog> {
+class _SignInDialogState extends State<_SignInDialog> {
   final _password = TextEditingController();
 
   @override
@@ -209,9 +234,54 @@ class _PasswordDialogState extends State<_PasswordDialog> {
     Navigator.pop(context, _password.text);
   }
 
+  SignInProvider? _provider(AppLocalizations l10n, SocialProvider provider) =>
+      widget.providers.contains(provider)
+      ? SignInProvider(
+          mark: ProviderMark(provider, enabled: true),
+          label: switch (provider) {
+            SocialProvider.google => l10n.authContinueWithGoogle,
+            SocialProvider.apple => l10n.authContinueWithApple,
+          },
+          onPressed: () => Navigator.pop(context, provider),
+        )
+      : null;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final providers = widget.providers.isEmpty
+        ? null
+        : SignInProviderButtons(
+            apple: _provider(l10n, SocialProvider.apple),
+            google: _provider(l10n, SocialProvider.google),
+            signingInLabel: l10n.authSigningIn,
+          );
+    final cancel = ForgeButton(
+      label: l10n.cancel,
+      variant: ForgeButtonVariant.secondary,
+      onPressed: () => Navigator.pop(context),
+    );
+    if (!widget.password && providers != null) {
+      final error = widget.error;
+      return ForgeDialog(
+        title: l10n.deletePasswordTitle,
+        message: switch (widget.providers.toList()) {
+          [SocialProvider.google] => l10n.deleteSignInGoogleBody,
+          [SocialProvider.apple] => l10n.deleteSignInAppleBody,
+          _ => l10n.deleteSignInBody,
+        },
+        field: error == null
+            ? null
+            : Text(
+                error,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall!
+                    .copyWith(color: ForgeStyle.of(context).colors.danger),
+              ),
+        action: providers,
+        cancel: cancel,
+      );
+    }
     return ForgeDialog(
       title: l10n.deletePasswordTitle,
       message: l10n.deletePasswordBody,
@@ -229,11 +299,17 @@ class _PasswordDialogState extends State<_PasswordDialog> {
         variant: ForgeButtonVariant.danger,
         onPressed: _submit,
       ),
-      cancel: ForgeButton(
-        label: l10n.cancel,
-        variant: ForgeButtonVariant.secondary,
-        onPressed: () => Navigator.pop(context),
-      ),
+      alternative: providers == null
+          ? null
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: Gap.md,
+              children: [
+                OrDivider(label: l10n.deleteSignInOr),
+                providers,
+              ],
+            ),
+      cancel: cancel,
     );
   }
 }

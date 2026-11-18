@@ -89,6 +89,7 @@ class AccountModule implements FeatureModule {
           getCurrentUser: sl(),
           deleteAccount: sl(),
           reauthenticate: sl(),
+          reauthenticateWithProvider: sl(),
           underway: sl(),
           releaseWorkouts: sl<ActiveWorkoutCubit>().releaseUser,
           resumeWorkouts: sl<ActiveWorkoutCubit>().resumeUser,
