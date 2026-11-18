@@ -740,6 +740,24 @@ Decisions (the canvases they were drawn on are deleted):
   A); the calculators are only Today's card, Profile › More › Calculators
   goes (P8, Today only). Supersedes the Today and Programs bullets of the
   2026-11-13 to 15 design decisions above.
+- Kararlar · 5 (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/SY61cw8E47RXMbs2vKFem9): Strength's Exercise
+  sheet is a Forge ChoiceGrid list of radio rows ("Last done Nov 13" under
+  each name) under the search; a removed exercise is a normal row (M1 B).
+  Forge StatTile's regular form gets the compact form's coloured change
+  line, used by Progress › Strength: mono, success when the lift goes up,
+  danger when it drops (M2 A, Forge v0.30.0). In the equipment question
+  (onboarding and generator), equipment that matches no set selects no
+  row, and a muted line under the list reads "Custom equipment · 9 items"
+  with an Edit that opens the items as checkboxes (M3 A). The compact
+  "Weekly sets in this program" card (program page, ready-made program)
+  drops its two small body models: the five busiest muscles as
+  full-width bars (label, sets, band bar), header "49 sets" and chevron
+  unchanged; the full weekly sets page keeps its model (N1 B). The
+  Programs tab no longer shows that card; it stays on the program page. A
+  tap anywhere on the Programs tab's active-program band (not its ⋯ or
+  day rows) opens the program's page, with no chevron or other mark
+  (supersedes "the band opens nothing", 2026-11-15).
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
@@ -1323,7 +1341,9 @@ Decisions (the canvases they were drawn on are deleted):
   program's weekly sets page: "Drag to turn" and "target 10–20 per muscle".
 - Strength (owner's picks, 2026-11-16): the title is "Strength"; an
   "Exercise" row opens the Exercise sheet (search and the Strength list's
-  rows, this one ticked, its height following the rows; another exercise replaces the page, so Back still
+  rows as Forge ChoiceGrid radio rows, M1 B: "Last done Nov 13" under
+  each name, this one selected, a removed exercise a normal row, its
+  height following the rows; another exercise replaces the page, so Back still
   returns to the list); a removed exercise's row reads "Exercise no longer
   in your library". Ranges are Forge SegmentedControl (locked segments open
   the paywall); the chart is Forge Chart.line "Estimated 1RM", one dot per
@@ -1965,9 +1985,13 @@ the feature you are about to touch, and keep it true when you change it.
   by the set, "Untick what you don't have, tick anything extra.", the
   seven common items and every item ticked as checkboxes, More equipment
   for the rest and Done, which picks the tuned set; the row it was opened
-  from stays selected while the question shows (a tuned set matches no
-  preset, so coming back to the question shows none selected). The
-  generator's equipment question is the same.
+  from stays selected while the question shows. Coming back with
+  equipment that matches no set (M3 A) selects no row; a muted line under
+  the list reads "Custom equipment · 9 items" (the items owned, bodyweight
+  aside) with an Edit opening the same checkbox sheet titled "Custom
+  equipment"; Done there keeps the items, selecting a set's row if they
+  now match one, and picking a set replaces the line. The generator's
+  equipment question is the same.
   After the last question (`afterOnboarding`,
   `OnboardingPermissionsPage`), the progress bar full: "Help improve
   GetWorkout?" (the analytics consent page, only while the server says
@@ -2169,8 +2193,9 @@ the feature you are about to touch, and keep it true when you change it.
   logging type changed are fitted to the new type when the builder loads
   them, and the user is told. The Programs tab (UX pass,
   2026-11-13, variant A) shows the active program first as one card: "Active
-  program" and its name (opening its page, a lock when it is a locked
-  premium copy), "Week n of N · <weekdays>" ("Week n" without a length,
+  program" and its name (a lock when it is a locked premium copy; a tap
+  anywhere on the band but its ⋯ and day rows opens the program's page,
+  with no chevron, Kararlar · 5), "Week n of N · <weekdays>" ("Week n" without a length,
   "Finished" once it ran its length; weeks count from the start date, as
   the length does, `ProgramSchedule.week`) with a progress bar when it has
   a length, the locked notice, then this week's days by date, each Done,
@@ -2180,7 +2205,8 @@ the feature you are about to touch, and keep it true when you change it.
   Then one card with three rows, the same with or without programs:
   ready-made programs, the generator (locked without premium) and "New
   program" (the builder); an empty workout starts on Today (P7). Then the
-  other programs ("Your programs" without an active one) under a
+  other programs ("Your programs" without an active one; the weekly sets
+  card is only on the program page, Kararlar · 5) under a
   SectionLabel, with their days and length. Without an active program the
   "No active program" prompt and the rows come first; no floating
   button.
@@ -2986,9 +3012,10 @@ the feature you are about to touch, and keep it true when you change it.
   and no bar. Strength (a StatTile, S8): the most recently trained
   exercise with an estimated 1RM as its detail ("Bench Press e1RM"), its
   latest workout's best e1RM as the figure with the unit apart, and the
-  change since the first e1RM of the last 12 weeks as the caption ("+3 in
-  8 weeks"; "First estimate" with one there); the card opens the strength
-  list. Cardio (a StatTile, S8): this week's distance as the figure, "2
+  change since the first e1RM of the last 12 weeks as its change line
+  ("+3 in 8 weeks", success when up, danger when down, ink-muted when
+  none, M2 A; "First estimate" as the caption with one there); the card
+  opens the strength list. Cardio (a StatTile, S8): this week's distance as the figure, "2
   sessions · 74 min" as the caption; with no distance this week the
   minutes are the figure and the sessions the caption. Steps (the app's
   only steps card, P5): today against the goal; not set up shows "See
