@@ -2022,6 +2022,8 @@
   "historyDiscardBody": "Your changes to this workout will be lost.",
   "profileGuestName": "Guest",
   "profileGuestDetail": "Create an account to keep your workouts",
+  "profileAppleName": "Apple account",
+  "profileAppleDetail": "Signed in with Apple",
   "profileMore": "More",
   "settingsRestAlert": "Rest sound and vibration",
   "restAlertChimeVibrate": "Chime · vibrate",

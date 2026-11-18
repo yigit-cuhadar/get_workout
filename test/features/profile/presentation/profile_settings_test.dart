@@ -310,4 +310,11 @@ void main() {
     expect(initialsOf('sam@example.com'), 'S');
     expect(initialsOf('Ana María López'), 'AM');
   });
+
+  test('an Apple relay address is told apart from a real one', () {
+    expect(isAppleRelay('x7k2@privaterelay.appleid.com'), isTrue);
+    expect(isAppleRelay('X7K2@PrivateRelay.AppleID.com'), isTrue);
+    expect(isAppleRelay('sam@icloud.com'), isFalse);
+    expect(isAppleRelay(null), isFalse);
+  });
 }
