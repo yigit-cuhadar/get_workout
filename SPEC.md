@@ -456,8 +456,9 @@ Where it stands (2026-11-18, end of Group 11):
      deploy `revenueCatWebhook` with its secret and try purchase and
      restore on the phone. Google Play waits for the Play Console.
   2. Deploy `deleteAccount` to dev, check deletion on the phone, then prod.
-     (2026-11-18: live on dev; a Google or Apple only user is stuck at
-     "sign in again", see Open questions.)
+     (2026-11-18: live on dev; a Google-only account was deleted from the
+     owner's iPhone with the provider re-sign-in (#145); prod waits for the
+     owner.)
   3. Photo backup: create the default bucket, deploy `storage.rules`, check
      the camera and backup on the phone.
   4. iOS push and the workout Live Activity on the phone (paid team).
@@ -1303,9 +1304,9 @@ Decisions (the canvases they were drawn on are deleted):
 - The projects are on the Blaze plan. `deleteAccount` is live on dev,
   not on prod. On the owner's iPhone (2026-11-18) a Google-only user whose
   sign-in was older than the function allows got the password prompt and
-  then "Please sign in again", with no way to do so from the page: such a
-  user must be signed in again with their provider (the `forge_auth` task
-  below) before deletion can be checked on a device and deployed to prod.
+  then "Please sign in again", with no way to do so from the page. Fixed
+  in #145 (provider re-sign-in, Forge v0.26.0) and checked the same day:
+  the Auth user, `users/{uid}` and the bucket's `users/{uid}/` were gone.
 - Female body model with the same mesh names: the user supplies it before release.
 - `revenueCatWebhook` is written and unit-tested, not deployed or tried
   against RevenueCat. Deploying all of `functions/` needs its secret: an
