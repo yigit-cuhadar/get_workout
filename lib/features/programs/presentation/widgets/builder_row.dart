@@ -167,31 +167,20 @@ class BuilderRow extends StatelessWidget {
             ),
           ),
           Builder(
-            builder: (context) => Semantics(
-              container: true,
-              button: true,
-              label: l10n.programItemActions,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => showForgeMenu(context: context, items: menu),
-                child: SizedBox(
-                  width: Gap.lg,
-                  height: ForgeTheme.tapMin,
-                  child: Center(
-                    child: ForgeIcon(
-                      ForgeIcons.moreHoriz,
-                      size: 18,
-                      color: colors.inkMuted,
-                    ),
-                  ),
-                ),
+            builder: (context) => TapBandIconButton(
+              width: Gap.lg,
+              height: ForgeTheme.tapMin,
+              button: ForgeIconButton(
+                icon: ForgeIcons.moreHoriz,
+                label: l10n.programItemActions,
+                onPressed: () => showForgeMenu(context: context, items: menu),
               ),
             ),
           ),
         ],
       ),
     );
-    // The handle and the chips take taps across a 44px band around them.
+    // The handle, the chips and the menu take taps across a 44px band.
     final banded = TapBandArea(child: row);
     final scaled = lifted
         ? Transform.scale(scale: 1.02, child: banded)

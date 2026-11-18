@@ -234,20 +234,13 @@ class SetPanel extends StatelessWidget {
             ),
             // Drawn at the title's height, so a set without details
             // leaves no gap under it; its band takes the 44px.
-            TapBand(
-              child: Semantics(
-                button: true,
+            TapBandIconButton(
+              width: ForgeIconButton.iconSize,
+              height: ForgeIconButton.iconSize,
+              button: ForgeIconButton(
+                icon: ForgeIcons.moreHoriz,
                 label: labels.options,
-                excludeSemantics: true,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: onOptions,
-                  child: ForgeIcon(
-                    ForgeIcons.moreHoriz,
-                    size: 20,
-                    color: colors.inkMuted,
-                  ),
-                ),
+                onPressed: onOptions,
               ),
             ),
           ],
@@ -347,28 +340,15 @@ class SetPanel extends StatelessWidget {
         ),
         for (final value in drop.values)
           Expanded(child: _field(value, compact: true)),
-        // Drawn in a 30 × 32 box, the icon 9px in, so the row keeps the
-        // compact fields' 40px; its band reaches past the panel's padding.
-        TapBand(
-          child: Semantics(
-            button: true,
+        // Laid out 30 × 32, so the row keeps the compact fields' 40px; its
+        // band reaches past the panel's padding.
+        TapBandIconButton(
+          width: 30,
+          height: 32,
+          button: ForgeIconButton(
+            icon: ForgeIcons.close,
             label: labels!.removeDrop,
-            excludeSemantics: true,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: drop.onRemove,
-              child: Container(
-                width: 30,
-                height: 32,
-                padding: const EdgeInsets.only(left: 9),
-                alignment: AlignmentDirectional.centerStart,
-                child: ForgeIcon(
-                  ForgeIcons.close,
-                  size: 18,
-                  color: colors.inkMuted,
-                ),
-              ),
-            ),
+            onPressed: drop.onRemove,
           ),
         ),
       ],

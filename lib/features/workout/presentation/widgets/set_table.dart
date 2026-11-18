@@ -424,24 +424,10 @@ class _EditHeader extends StatelessWidget {
             ),
           ),
           Builder(
-            builder: (context) => Semantics(
-              button: true,
+            builder: (context) => ForgeIconButton(
+              icon: ForgeIcons.moreHoriz,
               label: AppLocalizations.of(context).setTableOptions,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => showForgeMenu(context: context, items: menu),
-                child: SizedBox.square(
-                  dimension: ForgeTheme.tapMin,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: ForgeIcon(
-                      ForgeIcons.moreHoriz,
-                      size: 20,
-                      color: style.colors.inkMuted,
-                    ),
-                  ),
-                ),
-              ),
+              onPressed: () => showForgeMenu(context: context, items: menu),
             ),
           ),
         ],

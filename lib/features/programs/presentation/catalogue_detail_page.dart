@@ -202,15 +202,7 @@ class _ProgramState extends State<_Program> {
             children: [
               Semantics(
                 header: true,
-                child: Text(
-                  copy.name,
-                  style: text.headlineMedium!.copyWith(
-                    fontSize: 24,
-                    height: 30 / 24,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.48,
-                  ),
-                ),
+                child: Text(copy.name, style: text.headlineMedium),
               ),
               Wrap(
                 spacing: 6,

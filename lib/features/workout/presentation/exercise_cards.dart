@@ -611,9 +611,19 @@ class ExerciseMenu {
                 style: Theme.of(context).textTheme.bodySmall!
                     .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
               ),
-              _RestChoices(
-                current: current,
-                onPicked: (seconds) => Navigator.pop(context, seconds),
+              ChoiceGrid.list(
+                form: ChoiceListForm.inline,
+                options: [
+                  for (final seconds in restChoicesS)
+                    ChoiceOption(
+                      label: l10n.elapsedText(Duration(seconds: seconds)),
+                    ),
+                ],
+                selected: switch (restChoicesS.indexOf(current)) {
+                  -1 => null,
+                  final i => i,
+                },
+                onSelected: (i) => Navigator.pop(context, restChoicesS[i]),
               ),
             ],
           ),
@@ -684,63 +694,3 @@ class ExerciseMenu {
 
 /// The rests offered for an exercise in the workout, in seconds.
 const restChoicesS = [60, 90, 120, 150, 180, 240];
-
-/// [restChoicesS] as rows in mono, the [current] one ticked in accent.
-class _RestChoices extends StatelessWidget {
-  const _RestChoices({required this.current, required this.onPicked});
-
-  final int current;
-  final ValueChanged<int> onPicked;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final style = ForgeStyle.of(context);
-    final colors = style.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final (i, seconds) in restChoicesS.indexed)
-          Semantics(
-            selected: seconds == current,
-            button: true,
-            child: InkWell(
-              onTap: () => onPicked(seconds),
-              child: Container(
-                constraints: const BoxConstraints(minHeight: ForgeTheme.tapMin),
-                padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
-                decoration: i == 0
-                    ? null
-                    : BoxDecoration(
-                        border: Border(top: BorderSide(color: colors.line)),
-                      ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.elapsedText(Duration(seconds: seconds)),
-                        style: style.data.copyWith(
-                          fontSize: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .fontSize,
-                          color: colors.ink,
-                        ),
-                      ),
-                    ),
-                    if (seconds == current)
-                      ForgeIcon(
-                        ForgeIcons.check,
-                        size: 18,
-                        weight: 3,
-                        color: colors.accent,
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}

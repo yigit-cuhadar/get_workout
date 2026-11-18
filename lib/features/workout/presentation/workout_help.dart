@@ -28,10 +28,6 @@ class WorkoutHelpSheet extends StatelessWidget {
     final scale = context.select(
       (SettingsCubit cubit) => cubit.state.settings.effortScale,
     );
-    Widget heading(String title) => Padding(
-      padding: const EdgeInsets.only(top: Gap.sm),
-      child: Text(title, style: text.titleMedium),
-    );
     return ForgeBottomSheet(
       title: l10n.helpTitle,
       child: SingleChildScrollView(
@@ -39,7 +35,7 @@ class WorkoutHelpSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: Gap.sm,
           children: [
-            heading(l10n.helpEffortTitle),
+            SectionLabel(l10n.helpEffortTitle),
             Text(l10n.helpEffortBody),
             Text(switch (scale) {
               EffortScale.byFeel => l10n.helpScaleFeel,
@@ -64,9 +60,9 @@ class WorkoutHelpSheet extends StatelessWidget {
               l10n.helpSettingsHint,
               style: text.bodySmall!.copyWith(color: colors.inkMuted),
             ),
-            heading(l10n.helpWarmupTitle),
+            SectionLabel(l10n.helpWarmupTitle),
             Text(l10n.helpWarmupBody),
-            heading(l10n.helpDropTitle),
+            SectionLabel(l10n.helpDropTitle),
             Text(l10n.helpDropBody),
           ],
         ),

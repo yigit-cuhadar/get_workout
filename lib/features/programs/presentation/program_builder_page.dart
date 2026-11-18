@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../core/grouping.dart';
 import '../../../core/max_length_formatter.dart';
+import '../../../core/page_parts.dart';
 import '../../../core/unsaved_changes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
@@ -194,7 +195,7 @@ class _Skeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget card(List<(double, double)> bars) => _Card(
+    Widget card(List<(double, double)> bars) => SurfaceCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: Gap.sm,
@@ -226,28 +227,6 @@ class _Skeleton extends StatelessWidget {
           card([(0.5, 14), (0.65, 10), (0.45, 10)]),
         ],
       ),
-    );
-  }
-}
-
-/// A surface card around [child], as the day's rows sit in.
-class _Card extends StatelessWidget {
-  const _Card({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = ForgeStyle.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: style.colors.surface,
-        borderRadius: BorderRadius.circular(style.radii.lg),
-        border: style.cardBorder == 0
-            ? null
-            : Border.all(color: style.colors.line, width: style.cardBorder),
-      ),
-      child: Padding(padding: const EdgeInsets.all(Gap.md), child: child),
     );
   }
 }
@@ -481,13 +460,12 @@ class _FormState extends State<_Form> {
                   ),
                 for (final issue in dayIssues) danger(l10n.dayIssueText(issue)),
                 if (items.isEmpty && !dayIssues.contains(DayIssue.noItems))
-                  _Card(
-                    child: EmptyView(
-                      icon: ForgeIcons.fitnessCenter,
-                      title: l10n.builderDayEmptyTitle,
-                      message: l10n.builderDayEmptyBody,
-                      compact: true,
-                    ),
+                  EmptyView(
+                    icon: ForgeIcons.fitnessCenter,
+                    title: l10n.builderDayEmptyTitle,
+                    message: l10n.builderDayEmptyBody,
+                    compact: true,
+                    card: true,
                   ),
               ],
             ),

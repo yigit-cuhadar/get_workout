@@ -62,23 +62,11 @@ class ProgramDayCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (onStart case final start?)
-                Semantics(
-                  button: true,
+                ForgeIconButton(
+                  icon: ForgeIcons.playArrow,
                   label: l10n.workoutStartThisDay,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: start,
-                    child: SizedBox.square(
-                      dimension: ForgeTheme.tapMin,
-                      child: Center(
-                        child: ForgeIcon(
-                          ForgeIcons.playArrow,
-                          size: 18,
-                          color: style.colors.ink,
-                        ),
-                      ),
-                    ),
-                  ),
+                  onPressed: start,
+                  variant: ForgeIconButtonVariant.ink,
                 ),
               Semantics(
                 label: open ? l10n.programDayHide : l10n.programDayShow,
@@ -138,10 +126,14 @@ List<Widget> programDayRows(
   return [
     for (final (start, end) in groupBlocks(items))
       if (items[start].group case final group? when end - start > 1) ...[
-        _GroupLabel(
-          l10n.workoutGroupRest(
-            l10n.groupLabel(group, end - start),
-            l10n.elapsedText(Duration(seconds: items[end - 1].restS)),
+        // Inside the card, in line with the rows' text.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Gap.md - Gap.xs),
+          child: SectionLabel(
+            l10n.workoutGroupRest(
+              l10n.groupLabel(group, end - start),
+              l10n.elapsedText(Duration(seconds: items[end - 1].restS)),
+            ),
           ),
         ),
         for (var i = start; i < end; i++) row(items[i], grouped: true),
@@ -161,23 +153,4 @@ String _name(
   return exercise == null
       ? l10n.programExerciseUnavailable
       : exercise.localized(context).name;
-}
-
-/// The muted line over a superset's or circuit's exercises.
-class _GroupLabel extends StatelessWidget {
-  const _GroupLabel(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, Gap.sm),
-    child: Text(
-      text,
-      style: Theme.of(context).textTheme.labelMedium!.copyWith(
-        fontWeight: FontWeight.w600,
-        color: ForgeStyle.of(context).colors.inkMuted,
-      ),
-    ),
-  );
 }

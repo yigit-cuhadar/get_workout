@@ -233,10 +233,14 @@ void main() {
     ]);
     // A drop row keeps the compact fields' height.
     final remove = find.bySemanticsLabel('Remove drop');
-    expect(tester.getSize(remove.first), const Size(30, 32));
+    final box = find.ancestor(
+      of: remove.first,
+      matching: find.byType(TapBandIconButton),
+    );
+    expect(tester.getSize(box), const Size(30, 32));
     await tester.tap(remove.last);
-    // Its band reaches past the drawn box.
-    await tester.tapAt(tester.getTopRight(remove.first) + const Offset(6, 0));
+    // Its band reaches past the laid-out box.
+    await tester.tapAt(tester.getTopRight(box) + const Offset(6, 0));
     await tester.tap(find.text('Add drop'));
     expect(removed, [1, 0]);
     expect(added, 1);
