@@ -36,6 +36,13 @@ class DeleteAccountState extends Equatable {
   List<Object?> get props => [status, failure];
 }
 
+/// Signing in again with Apple or revoking its sign-in failed. Its codes
+/// are not a password's, so the page shows only that deleting failed.
+final class AppleRevokeFailure extends Failure {
+  const AppleRevokeFailure(Failure cause)
+    : super('Apple revocation failed', cause: cause);
+}
+
 /// True from the start of a deletion until it ends with the user signed
 /// out or nothing deleted. Meanwhile the router keeps the user where they
 /// are: the vanished profile must not open onboarding, which would write
@@ -87,7 +94,10 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
       return emit(
         failure is AuthFailure && failure.code == cancelledCode
             ? const DeleteAccountState(DeleteStatus.idle)
-            : DeleteAccountState(DeleteStatus.failed, failure: failure),
+            : DeleteAccountState(
+                DeleteStatus.failed,
+                failure: AppleRevokeFailure(failure),
+              ),
       );
     }
     await _delete();

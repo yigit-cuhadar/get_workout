@@ -346,11 +346,9 @@ void main() {
       act: (cubit) => cubit.deleteWithApple(),
       expect: () => [
         deleting,
-        isA<DeleteAccountState>().having(
-          (s) => s.status,
-          'status',
-          DeleteStatus.failed,
-        ),
+        isA<DeleteAccountState>()
+            .having((s) => s.status, 'status', DeleteStatus.failed)
+            .having((s) => s.failure, 'failure', isA<AppleRevokeFailure>()),
       ],
       verify: (_) => verifyNever(() => account.deleteAccount()),
     );

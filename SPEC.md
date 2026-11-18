@@ -666,7 +666,12 @@ Decisions (the canvases they were drawn on are deleted):
   different account. Sign in with the one you use here." (YG4 A). A user
   with Apple linked confirms "Delete everything?" with "Continue with
   Apple" in place of Delete ("…Sign in with Apple to confirm."), which
-  revokes the app's Apple sign-in before deleting (YG5 B).
+  revokes the app's Apple sign-in before deleting (YG5 B). The revocation
+  asks Apple natively for a fresh authorization code (Forge v0.31.0; the
+  code from FlutterFire's provider flow was refused with
+  `invalid-credential` on the owner's iPhone). Any failure on this path
+  shows the generic "deleting failed" text, never the password one; a
+  closed Apple sheet says nothing.
 - Screen review (owner's picks, 2026-11-18, canvas
   https://claude.ai/artifact/LTkRmeAmV7YSz6MdZJeS66): a workout open 4 h
   ends itself at its last set with a notification, and its summary gets an

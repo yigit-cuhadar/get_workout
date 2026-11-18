@@ -209,6 +209,7 @@ class _DeleteAccountView extends StatelessWidget {
   static String _failureText(AppLocalizations l10n, Failure failure) =>
       switch (failure) {
         DeletionUnavailableFailure() => l10n.deleteUnavailable,
+        AppleRevokeFailure() => l10n.deleteFailed,
         NetworkFailure() => l10n.deleteOffline,
         AuthFailure(code: 'invalid-credential' || 'wrong-password') =>
           l10n.deletePasswordWrong,
