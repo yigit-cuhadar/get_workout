@@ -1435,7 +1435,8 @@ Decisions (the canvases they were drawn on are deleted):
   modes (2026-11-18, signs with the paid team). The APNs key 699QV25PQM
   is uploaded to both Firebase projects (development and production). An
   announcement sent to `announcements_en` on dev arrived on the owner's
-  iPhone the same day once the app had been opened with notifications
+  iPhone the same day, in front (shown by the app) and in the background
+  (shown by iOS), once the app had been opened with notifications
   allowed. The first follow right after allowing may find no APNs token
   yet and subscribe only at the next start or resume.
 - On a fresh Android install the first topic subscription failed twice on
