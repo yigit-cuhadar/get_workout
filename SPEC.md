@@ -1697,7 +1697,10 @@ the feature you are about to touch, and keep it true when you change it.
   revokes the app's Apple tokens (App Store 5.1.1(v)); a closed sheet
   deletes nothing, a failed revocation deletes nothing and shows the
   delete failure. Revocation needs Apple's code flow key (Team ID, Key ID,
-  .p8) in each Firebase project's Apple provider. A guest is deleted
+  .p8) in each Firebase project's Apple provider: set in dev and prod on
+  2026-11-18 (key 699QV25PQM, which also has APNs). Checked that day on the
+  owner's iPhone: a guest linked with Apple was deleted, its Apple
+  sign-in revoked. A guest is deleted
   the same way, without that check. Once the server deleted the data,
   still signed in (so nothing of the next guest is touched), the app
   removes the user's kept workouts file (unreadable copies too), cancels
