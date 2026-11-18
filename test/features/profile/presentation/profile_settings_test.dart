@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:get_workout/core/widgets/choice_sheet.dart';
 import 'package:get_workout/core/widgets/featured_card.dart';
 import 'package:get_workout/features/notifications/presentation/notifications_cubit.dart';
 import 'package:get_workout/features/notifications/presentation/reminder_settings_group.dart';
@@ -112,7 +113,17 @@ void main() {
       await tester.tap(find.text('Effort question'));
       await tester.pumpAndSettle();
       expect(find.text('Asked after each set you log.'), findsOneWidget);
-      expect(find.text('RPE (1-10)'), findsOneWidget);
+      expect(find.text('0, 1, 2, 3 or 4+ reps left'), findsOneWidget);
+      // Off first, then the scales.
+      final labels = tester
+          .widgetList<ChoiceRow>(find.byType(ChoiceRow))
+          .map((row) => row.label);
+      expect(labels, [
+        'Off',
+        'By feel (default)',
+        'RIR · reps in reserve',
+        'RPE · rated effort',
+      ]);
       await tester.tap(find.text('Off'));
       await tester.pumpAndSettle();
 
@@ -134,7 +145,7 @@ void main() {
       expect(find.text('Off'), findsOneWidget);
       await tester.tap(find.text('Effort question'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Reps in reserve (RIR)'));
+      await tester.tap(find.text('RIR · reps in reserve'));
       await tester.pumpAndSettle();
 
       final saved =

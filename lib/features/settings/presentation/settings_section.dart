@@ -68,10 +68,16 @@ class WorkoutSettingsGroups extends StatelessWidget {
                   ? _EffortChoice.values.byName(settings.effortScale.name)
                   : _EffortChoice.off,
               labelOf: (choice) => switch (choice) {
+                _EffortChoice.off => l10n.effortOff,
                 _EffortChoice.byFeel => l10n.settingDefault(l10n.effortByFeel),
                 _EffortChoice.rir => l10n.effortRir,
                 _EffortChoice.rpe => l10n.effortRpe,
-                _EffortChoice.off => l10n.effortOff,
+              },
+              detailOf: (choice) => switch (choice) {
+                _EffortChoice.off => null,
+                _EffortChoice.byFeel => l10n.effortByFeelInfo,
+                _EffortChoice.rir => l10n.effortRirInfo,
+                _EffortChoice.rpe => l10n.effortRpeInfo,
               },
               // Off keeps the scale efforts are shown and picked in.
               onChanged: (choice) => cubit.update(
@@ -149,7 +155,7 @@ class WorkoutSettingsGroups extends StatelessWidget {
 
 /// The effort setting's choices: a scale the question asks in, or no
 /// question.
-enum _EffortChoice { byFeel, rir, rpe, off }
+enum _EffortChoice { off, byFeel, rir, rpe }
 
 /// The Appearance group: light, dark or the system's, and the first day
 /// of the week. Needs [SettingsCubit] above it.

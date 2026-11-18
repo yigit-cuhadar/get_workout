@@ -8,7 +8,7 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 Widget choiceRows(BuildContext context) {
   final selected = context.knobs.int.slider(
     label: 'Selected',
-    initialValue: 0,
+    initialValue: 1,
     max: 3,
   );
   return Padding(
@@ -16,13 +16,18 @@ Widget choiceRows(BuildContext context) {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final (i, label) in const [
-          'By feel (default)',
-          'Reps in reserve (RIR)',
-          'RPE (1-10)',
-          'Off',
+        for (final (i, (label, detail)) in const [
+          ('Off', null),
+          ('By feel (default)', 'Easy, moderate, hard or max'),
+          ('RIR · reps in reserve', '0, 1, 2, 3 or 4+ reps left'),
+          ('RPE · rated effort', 'From 6 or less up to 10'),
         ].indexed)
-          ChoiceRow(label: label, selected: i == selected, onTap: () {}),
+          ChoiceRow(
+            label: label,
+            detail: detail,
+            selected: i == selected,
+            onTap: () {},
+          ),
       ],
     ),
   );
