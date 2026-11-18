@@ -288,9 +288,11 @@ class _ActiveWorkout extends StatelessWidget {
                         if (workout.isEmpty)
                           Padding(
                             padding: const EdgeInsets.all(Gap.sm),
+                            // In place of the exercise cards.
                             child: EmptyView(
                               icon: ForgeIcons.fitnessCenter,
                               message: l10n.workoutEmpty,
+                              card: true,
                               actions: [
                                 ForgeButton(
                                   label: l10n.programAddExercises,

@@ -1141,8 +1141,7 @@ Decisions (the canvases they were drawn on are deleted):
   page with the mono "n / 9" counter after the progress (onboarding too)
   and "Generate a program" over each question; Continue, "Create my
   program" on the last; the equipment answer is the OnboardingQuestion
-  card's (preset chips, ListRow checkboxes in front, seven common items
-  and every item owned, then Show all equipment for the rest; onboarding and Your profile too); focus muscles
+  question's (one radio row per set; see Onboarding, L3); focus muscles
   as chips under "Focus muscles (2 of 3)"; left-out exercises as rows with
   × and a secondary "Add exercises to leave out".
 - Program builder (owner's picks, 2026-11-15): the name, then "Length in
@@ -1238,7 +1237,8 @@ Decisions (the canvases they were drawn on are deleted):
   when out of range), the zero hint as a NoticeBanner ("No steps showing?",
   Open Settings), This week / Last 30 days as a segmented control over the
   chart (the week as Forge Chart.bar with "goal 10,000", the 30 days as
-  Forge Chart.barDense, a tap naming "10,500 · Nov 3"), then "Daily average" and
+  Forge Chart.barDense; holding a bar of either names it, "5,739 steps ·
+  Mon, Nov 3", K17), then "Daily average" and
   "Goal reached · n of m days" rows on both views. Access is Forge
   PermissionPrompt: ask ("See your steps here", "GetWorkout reads steps and
   cardio from Apple Health. Nothing else is read.", Allow access, which
@@ -1742,10 +1742,13 @@ the feature you are about to touch, and keep it true when you change it.
   server (not a cached copy, which may predate an answer from another
   device) says there is no answer and the same user's profile is past
   onboarding (never while a new user's profile loads in the tabs after
-  signing out, deleting the account or switching accounts), in a dialog
-  over the tabs only while they are the top route (never over onboarding,
-  the workout, the paywall or another dialog), with two equal choices and
-  no dismissing. While an account is being deleted (`DeletionUnderway`)
+  signing out, deleting the account or switching accounts), as a full page
+  (`AnalyticsConsentPrompt`, Forge `PermissionPrompt.consent`, K8/L2) over
+  the tabs only while they are the top route (never over onboarding, the
+  workout, the paywall or a dialog), with two equal choices and no way
+  back but an answer. Onboarding asks the same page right after the last
+  question when the server already says there is no answer; an answer
+  that does not save there is asked again over the tabs. While an account is being deleted (`DeletionUnderway`)
   its consent is not followed, so the deleted document neither asks nor
   records an answer; a deletion that failed follows it again. Changed
   with the switch under Profile → Privacy. The settings feature leaves the
@@ -1950,15 +1953,25 @@ the feature you are about to touch, and keep it true when you change it.
   only in onboarding "We use it to pick your first program." under it.
   Only in onboarding, the target weight reads "Your goal" over "Now,
   where do you want your weight to be?" and "You weigh 70 kg now. Leave it
-  there to hold your weight." (K10 A; its ruler's "Now 70 kg" marker
-  waits on Forge). Every next question slides in from the right as the
+  there to hold your weight." (K10 A); the target's ruler marks the
+  weight now, "Now 70 kg" (Forge `NumberPicker.ruler(marker:)`, also in
+  Your profile). Every next question slides in from the right as the
   one before leaves to the left, and Back slides the other way, so a step
   that looks like the last still reads as a new page (K10).
-  Equipment (L3 A, waiting on Forge's info button): after a set's
-  equipment is changed in its sheet, the row it was opened from stays
-  selected, and Done selects that row.
+  Equipment (L3 A): the sets (Full gym, Home gym, Dumbbells and a bench,
+  Pull-up bar and dip bars, Resistance bands) as ChoiceGrid list rows
+  like the goal question, the one matching the answer selected; a row tap
+  picks its set; its info button ("Details of <set>") opens a sheet titled
+  by the set, "Untick what you don't have, tick anything extra.", the
+  seven common items and every item ticked as checkboxes, More equipment
+  for the rest and Done, which picks the tuned set; the row it was opened
+  from stays selected while the question shows (a tuned set matches no
+  preset, so coming back to the question shows none selected). The
+  generator's equipment question is the same.
   After the last question (`afterOnboarding`,
-  `OnboardingPermissionsPage`), the progress bar full: "Remind you on
+  `OnboardingPermissionsPage`), the progress bar full: "Help improve
+  GetWorkout?" (the analytics consent page, only while the server says
+  there is no answer; L2), then "Remind you on
   training days?", only while the device does not let the app notify yet
   (allowed already, the step is left out and the reminder stays as it is)
   (Turn on reminders asks the system and, if allowed,
@@ -2498,7 +2511,11 @@ the feature you are about to touch, and keep it true when you change it.
   normal and drop sets stay in place (`retypedSetPosition`); the selection
   follows the moved set, and a running rest forgets the set it followed as
   for any move. The **set bar** sits at the bottom of the page above the rest
-  strip and the safe area; while the keyboard is up the rest strip steps
+  strip and the safe area; typing a value, the keyboard carries Forge
+  StepperField's Next / Done bar: Next types the following value (weight,
+  then reps, then a drop's values in order; greyed on the last), Done
+  closes the keyboard, and one tap on another value moves the typing there
+  keeping what was typed (K2 A+B); while the keyboard is up the rest strip steps
   aside (still mounted) so the bar sits right on the keyboard, the list
   above shrinks and stays scrollable, and the selected bubble is
   scrolled into view. It shows the selected set ("Squat · set 2 of 3", last
@@ -2693,7 +2710,8 @@ the feature you are about to touch, and keep it true when you change it.
   settings switch); the permission is the device's and is never written
   to Firestore. On a device not asked yet, tapping Start on a workout
   (any start: program day, empty, from an exercise) asks in the app
-  first, "Get alerts when rest ends?", before the workout opens (K3 B),
+  first, "Get alerts when rest ends?" (a Forge `PermissionPrompt.dialog`,
+  S7; closing it is a Not now), before the workout opens (K3 B),
   only while the rest timer is on, unless they said no or said yes and the
   device already allows it; the system is asked only after "Allow", never
   on its own. "Not now" is remembered on that device only (a marker file
