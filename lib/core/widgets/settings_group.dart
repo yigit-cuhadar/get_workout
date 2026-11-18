@@ -22,36 +22,13 @@ class SettingsGroup extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      SettingsHeader(title),
+      SectionLabel(title),
       if (notice case final notice?) ...[
         notice,
         const SizedBox(height: settingsGap),
       ],
       ListRowCard(children: rows),
     ],
-  );
-}
-
-/// The title of a settings group over the part it names, which follows it
-/// directly.
-class SettingsHeader extends StatelessWidget {
-  const SettingsHeader(this.title, {super.key});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    // The title sits closer to its part than the parts to each other.
-    padding: const EdgeInsets.fromLTRB(
-      Gap.xs,
-      Gap.sm,
-      Gap.xs,
-      settingsGap - Gap.xs,
-    ),
-    child: Semantics(
-      header: true,
-      child: Text(title, style: Theme.of(context).textTheme.titleSmall),
-    ),
   );
 }
 

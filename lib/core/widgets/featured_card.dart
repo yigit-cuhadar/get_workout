@@ -312,8 +312,6 @@ class FeaturedCard extends StatelessWidget {
   static const double _bodyGap = 14;
   static const double _lineGap = 10;
   static const double _chevronSize = 18;
-  static const double _promptTitleSize = 20;
-  static const double _promptTitleHeight = 26;
   static const double _loadingBandHeight = 78;
 
   /// A band's figures sit side by side, four at most.
@@ -640,7 +638,7 @@ class FeaturedCard extends StatelessWidget {
   }
 
   /// The prompt: a surface card in the accent outline, the eyebrow over a
-  /// 20px title, the note and every button stacked full width.
+  /// heading, the note and every button stacked full width.
   Widget _prompt(BuildContext context) {
     final style = ForgeStyle.of(context);
     final p = style.colors;
@@ -667,10 +665,7 @@ class FeaturedCard extends StatelessWidget {
               header: true,
               child: Text(
                 title!,
-                style: text.titleLarge!.copyWith(
-                  fontSize: _promptTitleSize,
-                  height: _promptTitleHeight / _promptTitleSize,
-                  letterSpacing: -0.02 * _promptTitleSize,
+                style: style.heading.copyWith(
                   color: switch (titleTone) {
                     FeaturedTitleTone.ink => p.ink,
                     FeaturedTitleTone.muted => p.inkMuted,
