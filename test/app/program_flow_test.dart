@@ -84,7 +84,7 @@ void main() {
       expect(app.programs.active, isNull);
       expect(find.text('No active program'), findsOneWidget);
       await openTab(tester, 'Today');
-      expect(find.text('Pick your first program'), findsOneWidget);
+      expect(find.text('Choose a program to start'), findsOneWidget);
 
       await app.stop(tester);
     });

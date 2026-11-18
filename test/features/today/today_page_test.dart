@@ -373,6 +373,32 @@ void main() {
     expect(find.text('at /programs/catalogue'), findsOneWidget);
   });
 
+  testWidgets('saved programs but none active: see your programs', (
+    tester,
+  ) async {
+    when(() => programs.state).thenReturn(
+      ProgramListState(
+        status: ProgramListStatus.ready,
+        programs: [upperLower, upperLower],
+        premium: false,
+      ),
+    );
+    await pumpToday(tester);
+
+    expect(find.text('Choose a program to start'), findsOneWidget);
+    expect(
+      find.text(
+        'You have 2 saved programs. Start one to set your training days.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Generate a program'), findsOneWidget);
+
+    await tester.tap(find.text('See your programs'));
+    await tester.pumpAndSettle();
+    expect(find.text('at /programs'), findsOneWidget);
+  });
+
   testWidgets('a finished program names itself', (tester) async {
     when(() => programs.state).thenReturn(plan(finished: true));
     await pumpToday(tester);
