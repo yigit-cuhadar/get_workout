@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/workout/presentation/widgets/exercise_card.dart';
 import 'package:get_workout/features/workout/presentation/widgets/set_bubble.dart';
@@ -48,6 +49,13 @@ void main() {
       ),
     );
     expect(find.text('0/3'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is ForgeIconButton && widget.label == 'Exercise options',
+      ),
+      findsOneWidget,
+    );
     await tester.tap(find.text('Overhead Press'));
     await tester.tap(find.bySemanticsLabel('Exercise options'));
     expect(opened, 1);

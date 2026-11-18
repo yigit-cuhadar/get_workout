@@ -229,17 +229,16 @@ class _LibraryListViewState extends State<LibraryListView> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.sm),
-              child: LibrarySearchHero(
-                child: ForgeSearchField(
-                  hint: l10n.librarySearch,
-                  clearLabel: l10n.librarySearchClear,
-                  onChanged: library.setQuery,
-                  controller: _search,
-                  focusNode: _focus,
-                  onFilters: () => showFilterSheet(context),
-                  filtersLabel: l10n.libraryFilters,
-                  activeFilters: _activeCount(state.filter),
-                ),
+              child: ForgeSearchField(
+                hint: l10n.librarySearch,
+                clearLabel: l10n.librarySearchClear,
+                onChanged: library.setQuery,
+                controller: _search,
+                focusNode: _focus,
+                onFilters: () => showFilterSheet(context),
+                filtersLabel: l10n.libraryFilters,
+                activeFilters: _activeCount(state.filter),
+                heroTag: librarySearchHeroTag,
               ),
             ),
             if (ready && !state.filter.isEmpty) _ActiveFilters(state.filter),
@@ -457,24 +456,9 @@ class _CreateButton extends StatelessWidget {
   );
 }
 
-/// The search field flying between the Exercises tab's tap-only pill and
-/// the list page. In flight it is drawn as the pill; the page's field takes
-/// focus only once its route is in.
-class LibrarySearchHero extends StatelessWidget {
-  const LibrarySearchHero({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Hero(
-    tag: LibrarySearchHero,
-    flightShuttleBuilder: (context, _, _, _, _) => ForgeSearchField.tapOnly(
-      hint: AppLocalizations.of(context).librarySearch,
-      onTap: () {},
-    ),
-    child: child,
-  );
-}
+/// The search pill flying between the Exercises tab's tap-only field and
+/// the list page's; the page's field takes focus only once its route is in.
+const librarySearchHeroTag = #librarySearch;
 
 /// One removable chip per active filter value, then "Clear all" under them.
 class _ActiveFilters extends StatelessWidget {

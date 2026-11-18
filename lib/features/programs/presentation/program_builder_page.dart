@@ -380,7 +380,6 @@ class _FormState extends State<_Form> {
               children: [
                 ForgeTextField(
                   label: l10n.programName,
-                  hint: l10n.programName,
                   controller: _name,
                   inputFormatters: [
                     maxLengthFormatter(ProgramLimits.maxNameLength),

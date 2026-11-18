@@ -777,6 +777,25 @@ Decisions (the canvases they were drawn on are deleted):
   across a muscle" hint is a TipBanner under the model card, gone for
   good after "Got it" (R3 B). Supersedes the accent ramp and danger
   outline above.
+- Egzersiz · 7 (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/4aGCQch1LfGQFd78xFe3Fh): X1 A, X2 A, X3 A, X4
+  Similar exercises card with Variations and Alternatives as separate
+  groups and a see-all, X5 all favourite stars ink-muted when off and
+  accent when on, X6 B. The exercise detail keeps only the star (and a
+  custom exercise's ⋯) in its app bar; a stacked ForgeBottomActionBar holds
+  "Add to workout" (primary) above "Add to program" (secondary) (X1 A).
+  Models without a heat map use the green family: main muscles
+  `heat-high`, secondary `muscle-secondary` (light #8FB3A0, dark
+  #567A6A), the muscle under the finger `heat-high` ringed in `ink` and
+  the scrub bar's dot `heat-high` (X2 A). Only the grey search pill flies
+  between the Exercises tab and the list page (ForgeSearchField heroTag),
+  its width easing; the filter button moves with its page (X3 A). The
+  library row's star is a toggled ForgeIconButton; ForgeAppBar's toggled
+  star is ink-muted while off too (X5). On Compare without photos the
+  dates line ends in a small text button "Later day" opening the later
+  days (X6 B). Same pass: the workout card's and generator row's ⋯ and the
+  set panel's plates are ForgeIconButtons, and the program name field has
+  no hint repeating its label.
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
@@ -1079,7 +1098,8 @@ Decisions (the canvases they were drawn on are deleted):
   in a card, both under the search. Exercise detail: the model's pair form
   (Worked muscles, Front / Back, Main / Secondary) for every exercise,
   each figure filling its half of the card, the body very light and the
-  secondary muscles a 55% accent tone (K4 A);
+  main muscles heat-high and secondary muscle-secondary (Egzersiz · 7
+  X2 A, superseding K4 A's accent tones);
   facts as plain rows (label left, value right), equipment alternatives
   as extra lines and Also called last; a custom exercise shows its Custom
   tag with "Logged as …" under the model and only Equipment as a fact;
@@ -1087,9 +1107,12 @@ Decisions (the canvases they were drawn on are deleted):
   Cues as bulleted lines in plain cards; a catalogue exercise has a "Your
   note" card (only its title and Add while empty; the note with Edit
   once written; a sheet with Save);
-  Similar rows end in their tag and a chevron; the app bar's star is an
-  outline that fills when a favourite, Add opens a menu and a custom
-  exercise has ⋯ (Edit, Delete after a dialog); the program and day
+  a "Similar exercises" SectionCard (total count and chevron) previews
+  Variations · N and Alternatives · N, up to three names each, and opens
+  a sheet listing every one by group, a row closing it and opening that
+  exercise; the app bar's star is an ink-muted outline that fills accent
+  when a favourite, a custom exercise has ⋯ (Edit, Delete after a dialog),
+  and the bottom bar stacks Add to workout over Add to program; the program and day
   sheets are list rows, a full day shown off ("Lower A · Full") and not
   tappable, the day sheet titled "Add to which day of Upper Lower?"; no
   programs asks "No programs yet" first; not found is one untitled line.
@@ -1319,8 +1342,9 @@ Decisions (the canvases they were drawn on are deleted):
   lacks "Photo not on this device"); no photos on either day: a card "No progress photos
   on these days" and a muted mono "Oct 18 → Nov 1" under the
   Previous / First / Other date control; Other date (also when chosen)
-  and, on Compare, the later date (accent in the photo card's line, the
-  plain mono line without photos) open sheets "Compare with" / "Later
+  and, on Compare, the later date (accent in the photo card's line;
+  without photos a small text button "Later day" at the end of the mono
+  line, Egzersiz · 7 X6 B) open sheets "Compare with" / "Later
   day" listing the days with the current one ticked; change boxes
   (change large, "84.1 → 82.9 kg" under it, "—" for a side not
   measured): Weight, Body fat, Lean mass, Fat mass, then the
@@ -2168,7 +2192,9 @@ the feature you are about to touch, and keep it true when you change it.
   + for a custom exercise; there is no model on it. Opened from the box,
   its search field takes focus once the page's route animation has
   completed (one keyboard request, after the transition). The box and the
-  page's search field are one Hero, drawn as the pill in flight. One
+  page's search field share a ForgeSearchField heroTag
+  (`librarySearchHeroTag`): only the grey pill flies, its width easing
+  between the two ends; the filter button moves with its page. One
   gesture on the model opens one page: a muscle opens nothing while a page
   already covers the model. A muscle opens the same page at
   `/exercises/list?muscle=<code>`, without the keyboard. State: the list
@@ -2201,11 +2227,11 @@ the feature you are about to touch, and keep it true when you change it.
   return the picked exercise. "Create custom exercise" opens the form
   above the picker (`…/pick/new?name=`), which pops with the new id; the
   picker chooses it once the catalogue holds it (5 s at most).
-- **Exercise detail** (UX pass, 2026-11-13, owner's pick): the app bar
-  holds the name, the favourite star, one Add button whose menu offers
-  "Add to workout" (the workout in progress, else asking to start one) and
-  "Add to program", the same in every place the page opens, and, for a
-  custom exercise, a menu with Edit and Delete. The body: the model
+- **Exercise detail** (UX pass, 2026-11-13, owner's pick; Egzersiz · 7):
+  the app bar holds the name, the favourite star and, for a custom
+  exercise, a menu with Edit and Delete; the bottom bar (stacked) offers
+  "Add to workout" (the workout in progress, else asking to start one)
+  over "Add to program", the same in every place the page opens. The body: the model
   (front and back) with Main muscles and Also works; for a custom
   exercise the "Custom" tag and its logging type; a card of facts
   (equipment with its alternative sets; for a catalogue exercise also
@@ -2213,9 +2239,12 @@ the feature you are about to touch, and keep it true when you change it.
   to do it as numbered steps; Common mistakes, Safety and Cues as
   bulleted lines, each its own card; the custom exercise's Note, or on a
   catalogue exercise the user's own note ("Your note", stored in
-  `users/{uid}.exerciseNotes`, trimmed, blank removes it); then one Similar
-  exercises list, alternatives first, each tagged Alternative or
-  Variation. An alternative of the same family is listed once, as a
+  `users/{uid}.exerciseNotes`, trimmed, blank removes it); then one
+  "Similar exercises" card: its total, then Variations and Alternatives as
+  two groups with their counts and their first three names; a tap opens
+  a sheet with every one by group (rows without tags, as the group names
+  the relation), a row closing it and opening that exercise in the same
+  tab. An alternative of the same family is listed once, as a
   variation. Anything an exercise lacks is left out, so a custom exercise
   shows the model, its tag, equipment, Note and nothing below. Records and
   progress left the page; an exercise's strength page opens from Progress.

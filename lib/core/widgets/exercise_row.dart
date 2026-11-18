@@ -107,7 +107,14 @@ class ExerciseRow extends StatelessWidget {
         ),
         if (relation != null) ForgeTag(relation),
         if (onFavorite case final onFavorite?)
-          _Star(favorite: favorite, onTap: onFavorite),
+          ForgeIconButton(
+            icon: ForgeIcons.star,
+            label: favorite
+                ? AppLocalizations.of(context).favoriteRemove
+                : AppLocalizations.of(context).favoriteAdd,
+            toggled: favorite,
+            onPressed: onFavorite,
+          ),
         if (selected == null)
           ForgeIcon(ForgeIcons.chevronRight, size: 18, color: p.inkMuted),
       ],
@@ -135,40 +142,5 @@ class ExerciseRow extends StatelessWidget {
       );
     }
     return result;
-  }
-}
-
-/// The favourite toggle: a star over a 44px target, filled when [favorite].
-class _Star extends StatelessWidget {
-  const _Star({required this.favorite, required this.onTap});
-
-  final bool favorite;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = ForgeStyle.of(context).colors;
-    final l10n = AppLocalizations.of(context);
-    return Semantics(
-      container: true,
-      button: true,
-      toggled: favorite,
-      label: favorite ? l10n.favoriteRemove : l10n.favoriteAdd,
-      child: InkResponse(
-        onTap: onTap,
-        radius: ForgeTheme.tapMin / 2,
-        child: SizedBox.square(
-          dimension: ForgeTheme.tapMin,
-          child: Center(
-            child: ForgeIcon(
-              ForgeIcons.star,
-              size: 20,
-              filled: favorite,
-              color: favorite ? p.accent : p.inkMuted,
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

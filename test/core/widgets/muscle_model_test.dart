@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/core/widgets/muscle_model.dart';
+import 'package:get_workout/features/exercises/domain/muscle_meshes.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 
 import '../../component_harness.dart';
@@ -99,6 +101,28 @@ void main() {
     await tester.pump();
     expect(find.text('release to open'), findsOneWidget);
     expect(opened, isEmpty);
+    // The muscle under the finger in heat-high, ringed in ink; the bar's
+    // dot in heat-high too.
+    final gw = GwColors.of(tester.element(find.byType(MuscleModel)));
+    final ink = ForgeStyle.of(tester.element(find.byType(MuscleModel)))
+        .colors
+        .ink;
+    final scrubbing = tester.widget<ModelViewer>(find.byType(ModelViewer));
+    for (final mesh in Muscle.pec.meshNames) {
+      expect(scrubbing.partColors[mesh], gw.heatHigh, reason: mesh);
+    }
+    expect(scrubbing.outlinedParts, Muscle.pec.meshNames.toSet());
+    expect(scrubbing.outlineColor, ink);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Container &&
+            widget.decoration is BoxDecoration &&
+            (widget.decoration! as BoxDecoration).shape == BoxShape.circle &&
+            (widget.decoration! as BoxDecoration).color == gw.heatHigh,
+      ),
+      findsOneWidget,
+    );
 
     viewer.onScrubEnd!('pec_right');
     await tester.pump();
@@ -187,6 +211,15 @@ void main() {
     }
     final viewers = tester.widgetList<ModelViewer>(find.byType(ModelViewer));
     expect(viewers.every((viewer) => !viewer.interactive), isTrue);
+    // The green family: main in heat-high, secondary in muscle-secondary.
+    final gw = GwColors.of(tester.element(find.byType(MuscleModelPair)));
+    final colors = viewers.first.partColors;
+    for (final mesh in Muscle.pec.meshNames) {
+      expect(colors[mesh], gw.heatHigh, reason: mesh);
+    }
+    for (final mesh in Muscle.triceps.meshNames) {
+      expect(colors[mesh], gw.muscleSecondary, reason: mesh);
+    }
   });
 
   testWidgets('side by side while loading: shimmer, the legend shows', (

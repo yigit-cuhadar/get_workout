@@ -9,6 +9,7 @@ enum AppPreset {
     light: GwColors.light(
       heatLow: Color(0xFFD3E3DA),
       heatHigh: Color(0xFF3F7D62),
+      muscleSecondary: Color(0xFF8FB3A0),
       bandBelow: Color(0xFFB9D3C4),
       bandIn: Color(0xFF3F7D62),
       bandOver: Color(0xFFA6473C),
@@ -16,6 +17,7 @@ enum AppPreset {
     dark: GwColors.dark(
       heatLow: Color(0xFF3A4F47),
       heatHigh: Color(0xFF79B597),
+      muscleSecondary: Color(0xFF567A6A),
       bandBelow: Color(0xFF3F5A4E),
       bandIn: Color(0xFF79B597),
       bandOver: Color(0xFFE0907F),
@@ -40,7 +42,8 @@ enum AppPreset {
 }
 
 /// The app's own colour roles: the muscle heat scale (weekly sets on the
-/// body model, heat-low toward 0 to heat-high at 20 and over), the weekly
+/// body model, heat-low toward 0 to heat-high at 20 and over; heat-high and
+/// muscle-secondary also colour every other model), the weekly
 /// volume band (below 10 sets, 10–20, above 20) and the plates, each in
 /// its muted competition colour.
 /// Read with [GwColors.of].
@@ -48,6 +51,7 @@ class GwColors extends ThemeExtension<GwColors> {
   const GwColors({
     required this.heatLow,
     required this.heatHigh,
+    required this.muscleSecondary,
     required this.bandBelow,
     required this.bandIn,
     required this.bandOver,
@@ -63,12 +67,14 @@ class GwColors extends ThemeExtension<GwColors> {
   const GwColors.light({
     required Color heatLow,
     required Color heatHigh,
+    required Color muscleSecondary,
     required Color bandBelow,
     required Color bandIn,
     required Color bandOver,
   }) : this(
          heatLow: heatLow,
          heatHigh: heatHigh,
+         muscleSecondary: muscleSecondary,
          bandBelow: bandBelow,
          bandIn: bandIn,
          bandOver: bandOver,
@@ -84,12 +90,14 @@ class GwColors extends ThemeExtension<GwColors> {
   const GwColors.dark({
     required Color heatLow,
     required Color heatHigh,
+    required Color muscleSecondary,
     required Color bandBelow,
     required Color bandIn,
     required Color bandOver,
   }) : this(
          heatLow: heatLow,
          heatHigh: heatHigh,
+         muscleSecondary: muscleSecondary,
          bandBelow: bandBelow,
          bandIn: bandIn,
          bandOver: bandOver,
@@ -104,6 +112,9 @@ class GwColors extends ThemeExtension<GwColors> {
 
   final Color heatLow;
   final Color heatHigh;
+
+  /// An exercise's secondary muscles beside its main ones in heat-high.
+  final Color muscleSecondary;
   final Color bandBelow;
   final Color bandIn;
   final Color bandOver;
@@ -126,6 +137,7 @@ class GwColors extends ThemeExtension<GwColors> {
   GwColors copyWith({
     Color? heatLow,
     Color? heatHigh,
+    Color? muscleSecondary,
     Color? bandBelow,
     Color? bandIn,
     Color? bandOver,
@@ -139,6 +151,7 @@ class GwColors extends ThemeExtension<GwColors> {
   }) => GwColors(
     heatLow: heatLow ?? this.heatLow,
     heatHigh: heatHigh ?? this.heatHigh,
+    muscleSecondary: muscleSecondary ?? this.muscleSecondary,
     bandBelow: bandBelow ?? this.bandBelow,
     bandIn: bandIn ?? this.bandIn,
     bandOver: bandOver ?? this.bandOver,
@@ -158,6 +171,7 @@ class GwColors extends ThemeExtension<GwColors> {
     return GwColors(
       heatLow: mix(heatLow, other.heatLow),
       heatHigh: mix(heatHigh, other.heatHigh),
+      muscleSecondary: mix(muscleSecondary, other.muscleSecondary),
       bandBelow: mix(bandBelow, other.bandBelow),
       bandIn: mix(bandIn, other.bandIn),
       bandOver: mix(bandOver, other.bandOver),

@@ -193,7 +193,7 @@ void main() {
       await tapText(tester, 'New program');
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Program name'),
+        find.widgetWithText(ForgeTextField, 'Program name'),
         'Push Pull',
       );
       await addExercise(tester, 'Bench Press');

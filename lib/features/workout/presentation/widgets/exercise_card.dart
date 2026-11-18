@@ -457,23 +457,10 @@ class _Options extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
+  Widget build(BuildContext context) => ForgeIconButton(
+    icon: ForgeIcons.moreHoriz,
     label: label,
-    excludeSemantics: true,
-    child: InkResponse(
-      onTap: () => item.onOptions(context),
-      child: SizedBox.square(
-        dimension: ForgeTheme.tapMin,
-        child: Center(
-          child: ForgeIcon(
-            ForgeIcons.moreHoriz,
-            size: 20,
-            color: ForgeStyle.of(context).colors.inkMuted,
-          ),
-        ),
-      ),
-    ),
+    onPressed: () => item.onOptions(context),
   );
 }
 

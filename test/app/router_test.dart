@@ -38,6 +38,7 @@ import 'package:get_workout/features/exercises/presentation/exercise_detail_cubi
 import 'package:get_workout/features/exercises/presentation/exercise_notes_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_page.dart';
 import 'package:get_workout/features/exercises/presentation/exercises_page.dart';
+import 'package:get_workout/features/exercises/presentation/widgets/library_list_view.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_page.dart';
@@ -888,10 +889,15 @@ void main() {
       await startAsGuest(tester);
       await openExercises(tester);
       expect(find.byTooltip('New custom exercise'), findsNothing);
+      // The pill flies between the two fields.
+      ForgeSearchField field() =>
+          tester.widget<ForgeSearchField>(find.byType(ForgeSearchField));
+      expect(field().heroTag, librarySearchHeroTag);
 
       await tester.tap(find.byType(ForgeSearchField));
       await tester.pumpAndSettle();
       expect(find.byType(LibraryPage), findsOneWidget);
+      expect(field().heroTag, librarySearchHeroTag);
       expect(front(), Routes.exerciseList);
       expect(selectedTab(tester), 2);
       // The field is focused once the page is in, after the last frame.
@@ -1363,8 +1369,6 @@ void main() {
         await startAsGuest(tester);
         router.go(exercise);
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Add'));
-        await tester.pumpAndSettle();
         await tester.tap(find.text('Add to program'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Create program'));
@@ -1395,7 +1399,7 @@ void main() {
       testWidgets('saving the program returns to the exercise', (tester) async {
         await createProgram(tester);
         await tester.enterText(
-          find.widgetWithText(TextField, 'Program name'),
+          find.widgetWithText(ForgeTextField, 'Program name'),
           'Push',
         );
         await tester.tap(find.text('Add exercises'));
@@ -1420,7 +1424,7 @@ void main() {
       ) async {
         await createProgram(tester);
         await tester.enterText(
-          find.widgetWithText(TextField, 'Program name'),
+          find.widgetWithText(ForgeTextField, 'Program name'),
           'Push',
         );
         // The page refuses to pop from the next frame on.

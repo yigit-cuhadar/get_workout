@@ -169,6 +169,12 @@ void main() {
     await pump(plates: true);
     final button = find.bySemanticsLabel('Plates');
     expect(tester.getSize(button), const Size.square(44));
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is ForgeIconButton && widget.label == 'Plates',
+      ),
+      findsOneWidget,
+    );
     // Between the weight and the reps.
     expect(
       tester.getCenter(button).dx,

@@ -339,7 +339,7 @@ void main() {
     expect(target.note, 'At this pace, around Dec 28.');
   });
 
-  testWidgets('Compare without photos: the dates line opens the later days', (
+  testWidgets('Compare without photos: Later day opens the later days', (
     tester,
   ) async {
     final later = BodyEntry(
@@ -369,9 +369,25 @@ void main() {
 
     expect(find.text('No progress photos on these days'), findsOneWidget);
     expect(find.text('Oct 18 → Nov 1'), findsOneWidget);
-    await tester.tap(find.text('Oct 18 → Nov 1'));
+    // A small text button at the end of the dates line.
+    final button = find.widgetWithText(ForgeButton, 'Later day');
+    expect(tester.widget<ForgeButton>(button).variant, ForgeButtonVariant.text);
+    expect(
+      tester.getCenter(button).dy,
+      moreOrLessEquals(
+        tester.getCenter(find.text('Oct 18 → Nov 1')).dy,
+        epsilon: 1,
+      ),
+    );
+    await tester.tap(button);
     await tester.pumpAndSettle();
-    expect(find.text('Later day'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(ForgeBottomSheet),
+        matching: find.text('Later day'),
+      ),
+      findsOneWidget,
+    );
     await tester.tap(find.text('Nov 8, $year'));
     await tester.pumpAndSettle();
     verify(() => summary.chooseAfter('later')).called(1);

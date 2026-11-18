@@ -409,7 +409,8 @@ class _BaselinePicker extends StatelessWidget {
 }
 
 /// The compared dates in data, when there are no photos to carry them;
-/// on Compare, a tap on the later one picks another later day.
+/// on Compare, a small Later day button at the line's end picks another
+/// later day.
 class _DateLine extends StatelessWidget {
   const _DateLine(this.state, {required this.compare});
   final MeasurementSummaryState state;
@@ -432,9 +433,16 @@ class _DateLine extends StatelessWidget {
       ),
     );
     if (!compare || state.laterCandidates.length < 2) return line;
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: InkWell(onTap: () => _pickLater(context, state), child: line),
+    return Row(
+      children: [
+        Expanded(child: line),
+        ForgeButton(
+          label: l10n.bodyCompareLater,
+          variant: ForgeButtonVariant.text,
+          size: ForgeButtonSize.small,
+          onPressed: () => _pickLater(context, state),
+        ),
+      ],
     );
   }
 }

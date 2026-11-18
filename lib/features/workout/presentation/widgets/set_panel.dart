@@ -317,7 +317,7 @@ class SetPanel extends StatelessWidget {
     ],
   );
 
-  /// Ink-muted, no fill, 44px square, centred on the 50px pill.
+  /// Centred on the 50px pill.
   Widget _platesButton(
     BuildContext context,
     ValueChanged<BuildContext> onPlates,
@@ -325,24 +325,11 @@ class SetPanel extends StatelessWidget {
     padding: const EdgeInsets.symmetric(
       vertical: (StepperField.height - ForgeTheme.tapMin) / 2,
     ),
-    child: Semantics(
-      button: true,
-      label: labels!.plates,
-      excludeSemantics: true,
-      child: Builder(
-        builder: (button) => InkResponse(
-          onTap: () => onPlates(button),
-          child: SizedBox.square(
-            dimension: ForgeTheme.tapMin,
-            child: Center(
-              child: ForgeIcon(
-                ForgeIcons.fitnessCenter,
-                size: 20,
-                color: ForgeStyle.of(context).colors.inkMuted,
-              ),
-            ),
-          ),
-        ),
+    child: Builder(
+      builder: (button) => ForgeIconButton(
+        icon: ForgeIcons.fitnessCenter,
+        label: labels!.plates,
+        onPressed: () => onPlates(button),
       ),
     ),
   );

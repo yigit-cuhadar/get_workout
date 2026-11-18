@@ -80,11 +80,10 @@ class _ExercisesViewState extends State<_ExercisesView> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, 10),
-            child: LibrarySearchHero(
-              child: ForgeSearchField.tapOnly(
-                hint: l10n.librarySearch,
-                onTap: () => context.push(Routes.exerciseList),
-              ),
+            child: ForgeSearchField.tapOnly(
+              hint: l10n.librarySearch,
+              heroTag: librarySearchHeroTag,
+              onTap: () => context.push(Routes.exerciseList),
             ),
           ),
           const Expanded(child: BodyView()),

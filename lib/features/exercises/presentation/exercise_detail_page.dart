@@ -73,11 +73,13 @@ class _DetailView extends StatelessWidget {
           actions: [
             if (state is DetailReady) ...[
               _FavoriteAction(state.exercise.id),
-              _AddAction(state.exercise),
               if (state.exercise.isCustom) _CustomActions(state),
             ],
           ],
         ),
+        bottomNavigationBar: state is DetailReady
+            ? _AddBar(state.exercise)
+            : null,
         body: switch (state) {
           DetailLoading() || DetailDeleted() => const _Loading(),
           DetailFailed() => ListView(
@@ -130,32 +132,25 @@ class _FavoriteAction extends StatelessWidget {
   }
 }
 
-/// The one Add action: a menu adding to the workout in progress (or a new
-/// one) or to a program.
-class _AddAction extends StatelessWidget {
-  const _AddAction(this.exercise);
+/// The page's bottom bar: add the exercise to the workout in progress (or
+/// a new one), or to a program.
+class _AddBar extends StatelessWidget {
+  const _AddBar(this.exercise);
 
   final Exercise exercise;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return ForgeAppBarAction.text(
-      label: l10n.detailAdd,
-      onPressed: () => showForgeMenu(
-        context: context,
-        items: [
-          ForgeMenuItem(
-            label: l10n.addToWorkout,
-            icon: ForgeIcons.fitnessCenter,
-            onTap: () => addToWorkout(context, exercise),
-          ),
-          ForgeMenuItem(
-            label: l10n.addToProgram,
-            icon: ForgeIcons.add,
-            onTap: () => _addToProgram(context),
-          ),
-        ],
+    return ForgeBottomActionBar.stacked(
+      primary: ForgeButton(
+        label: l10n.addToWorkout,
+        onPressed: () => addToWorkout(context, exercise),
+      ),
+      secondary: ForgeButton(
+        label: l10n.addToProgram,
+        variant: ForgeButtonVariant.secondary,
+        onPressed: () => _addToProgram(context),
       ),
     );
   }
@@ -261,10 +256,6 @@ class _DetailBody extends StatelessWidget {
           (l10n.detailAliases, l10n.inlineList(text.aliases)),
       ],
     ];
-    final similar = [
-      for (final other in detail.alternatives) (other, l10n.detailAlternative),
-      for (final other in detail.variations) (other, l10n.detailVariation),
-    ];
     return ListView(
       padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.lg),
       children: [
@@ -322,16 +313,97 @@ class _DetailBody extends StatelessWidget {
             SectionCard.plain(title: l10n.detailNote, child: Text(note)),
           if (!exercise.isCustom) _OwnNote(exercise),
         ]) ...[part, const SizedBox(height: Gap.sm)],
-        if (similar.isNotEmpty) ...[
-          SectionLabel(l10n.detailSimilar),
-          ListRowCard(
+        if (detail.variations.isNotEmpty || detail.alternatives.isNotEmpty)
+          _Similar(detail, exerciseRoute),
+      ],
+    );
+  }
+}
+
+/// The exercise's variations and alternatives as two groups, each with its
+/// count and its first few names; the card opens a sheet listing them all.
+class _Similar extends StatelessWidget {
+  const _Similar(this.detail, this.exerciseRoute);
+
+  final DetailReady detail;
+  final String Function(String id) exerciseRoute;
+
+  static const int _preview = 3;
+
+  List<(String, List<Exercise>)> _groups(AppLocalizations l10n) => [
+    if (detail.variations.isNotEmpty)
+      (l10n.detailVariations(detail.variations.length), detail.variations),
+    if (detail.alternatives.isNotEmpty)
+      (
+        l10n.detailAlternatives(detail.alternatives.length),
+        detail.alternatives,
+      ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final muted = ForgeStyle.of(context).colors.inkMuted;
+    return SectionCard(
+      title: l10n.detailSimilar,
+      detail: '${detail.variations.length + detail.alternatives.length}',
+      onTap: () => _showAll(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: Gap.md,
+        children: [
+          for (final (label, exercises) in _groups(l10n))
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: Gap.xs,
+              children: [
+                Text(label, style: text.labelMedium!.copyWith(color: muted)),
+                for (final exercise in exercises.take(_preview))
+                  Text(
+                    exercise.localized(context).name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.bodyMedium,
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Every variation and alternative, by group; a row closes the sheet and
+  /// opens that exercise.
+  Future<void> _showAll(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return showForgeBottomSheet<void>(
+      context: context,
+      builder: (sheet) => ForgeBottomSheet(
+        title: l10n.detailSimilar,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final (other, relation) in similar)
-                ExerciseTile(other, route: exerciseRoute, tag: relation),
+              for (final (label, exercises) in _groups(l10n)) ...[
+                SectionLabel(label),
+                ListRowCard(
+                  children: [
+                    for (final exercise in exercises)
+                      ExerciseTile(
+                        exercise,
+                        onOpen: () {
+                          Navigator.pop(sheet);
+                          context.push(exerciseRoute(exercise.id));
+                        },
+                      ),
+                  ],
+                ),
+              ],
             ],
           ),
-        ],
-      ],
+        ),
+      ),
     );
   }
 }

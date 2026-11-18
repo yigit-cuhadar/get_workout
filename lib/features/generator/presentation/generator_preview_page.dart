@@ -374,52 +374,39 @@ class _ItemRow extends StatelessWidget {
       dataDetail: true,
       detailNote: kept ? l10n.generatorKept : null,
       trailing: Builder(
-        builder: (context) => Semantics(
-          button: true,
+        builder: (context) => ForgeIconButton(
+          icon: ForgeIcons.moreHoriz,
           label: l10n.programItemActions,
-          excludeSemantics: true,
-          child: InkResponse(
-            onTap: exercise == null
-                ? null
-                : () => showForgeMenu(
-                    context: context,
-                    items: [
+          onPressed: exercise == null
+              ? null
+              : () => showForgeMenu(
+                  context: context,
+                  items: [
+                    ForgeMenuItem(
+                      label: l10n.generatorSwap,
+                      icon: ForgeIcons.sync,
+                      onTap: () => _swap(context, cubit),
+                    ),
+                    ForgeMenuItem(
+                      label: l10n.generatorKeep,
+                      icon: ForgeIcons.history,
+                      selected: kept,
+                      onTap: () => cubit.toggleKept(day, index),
+                    ),
+                    ForgeMenuItem(
+                      label: l10n.generatorChangeTargets,
+                      icon: ForgeIcons.tune,
+                      onTap: () => _editTargets(context, cubit, exercise),
+                    ),
+                    if (removable)
                       ForgeMenuItem(
-                        label: l10n.generatorSwap,
-                        icon: ForgeIcons.sync,
-                        onTap: () => _swap(context, cubit),
+                        label: l10n.programRemoveItem,
+                        icon: ForgeIcons.delete,
+                        destructive: true,
+                        onTap: () => cubit.removeItem(day, index),
                       ),
-                      ForgeMenuItem(
-                        label: l10n.generatorKeep,
-                        icon: ForgeIcons.history,
-                        selected: kept,
-                        onTap: () => cubit.toggleKept(day, index),
-                      ),
-                      ForgeMenuItem(
-                        label: l10n.generatorChangeTargets,
-                        icon: ForgeIcons.tune,
-                        onTap: () => _editTargets(context, cubit, exercise),
-                      ),
-                      if (removable)
-                        ForgeMenuItem(
-                          label: l10n.programRemoveItem,
-                          icon: ForgeIcons.delete,
-                          destructive: true,
-                          onTap: () => cubit.removeItem(day, index),
-                        ),
-                    ],
-                  ),
-            child: SizedBox.square(
-              dimension: ForgeTheme.tapMin,
-              child: Center(
-                child: ForgeIcon(
-                  ForgeIcons.moreHoriz,
-                  size: 20,
-                  color: ForgeStyle.of(context).colors.inkMuted,
+                  ],
                 ),
-              ),
-            ),
-          ),
         ),
       ),
     );
