@@ -391,7 +391,7 @@ void main() {
     await openPrograms(tester);
     await tap(tester, find.text('New program'));
     await tester.enterText(
-      find.widgetWithText(TextField, 'Program name'),
+      find.widgetWithText(ForgeTextField, 'Program name'),
       'Push',
     );
     // The page refuses to pop from the next frame on.
@@ -448,7 +448,7 @@ void main() {
     await openPrograms(tester);
     await tap(tester, find.text('New program'));
     await tester.enterText(
-      find.widgetWithText(TextField, 'Program name'),
+      find.widgetWithText(ForgeTextField, 'Program name'),
       'Push',
     );
     await tester.pump();
@@ -579,13 +579,16 @@ void main() {
 
     // 40 emoji are 80 code units; 30 fit, none is cut in half.
     await tester.enterText(
-      find.widgetWithText(TextField, 'Program name'),
+      find.widgetWithText(ForgeTextField, 'Program name'),
       '💪' * 40,
     );
     await tester.pump();
 
     final field = tester.widget<TextField>(
-      find.widgetWithText(TextField, 'Program name'),
+      find.descendant(
+        of: find.widgetWithText(ForgeTextField, 'Program name'),
+        matching: find.byType(TextField),
+      ),
     );
     expect(field.controller!.text, '💪' * 30);
   });

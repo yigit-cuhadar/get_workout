@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router.dart';
 import '../../../../core/widgets/muscle_model.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../settings/domain/user_settings.dart';
+import '../../../settings/presentation/settings_cubit.dart';
+import '../../domain/exercise_tips.dart';
 import '../../domain/vocabulary.dart';
 import '../body_model_cubit.dart';
 
@@ -19,7 +22,8 @@ void openMuscleList(BuildContext context, Muscle muscle) {
 }
 
 /// The body model: tap a muscle, or press and slide across muscles, to open
-/// the exercise list filtered to it.
+/// the exercise list filtered to it. Under it, until dismissed or a muscle
+/// is opened, a tip says so.
 class BodyView extends StatefulWidget {
   const BodyView({super.key});
 
@@ -37,6 +41,13 @@ class _BodyViewState extends State<BodyView> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final settings = context.read<SettingsCubit>();
+    final tipDue = muscleModelTipDue(
+      context.select(
+        (SettingsCubit cubit) =>
+            cubit.state.loaded ? cubit.state.settings.seenTips : null,
+      ),
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
       child: BlocBuilder<BodyModelCubit, BodyModelState>(
@@ -46,11 +57,27 @@ class _BodyViewState extends State<BodyView> {
             message: l10n.muscleModelSearchStillWorks,
             onRetry: context.read<BodyModelCubit>().load,
           ),
-          BodyModelReady(:final model) => MuscleModel(
-            model: model,
-            onOpen: (muscle) => openMuscleList(context, muscle),
-            semanticLabel: l10n.libraryModelLabel,
-            hint: l10n.muscleModelHint,
+          BodyModelReady(:final model) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: Gap.sm,
+            children: [
+              Expanded(
+                child: MuscleModel(
+                  model: model,
+                  onOpen: (muscle) {
+                    settings.tipSeen(Tip.muscleModel);
+                    openMuscleList(context, muscle);
+                  },
+                  semanticLabel: l10n.libraryModelLabel,
+                ),
+              ),
+              if (tipDue)
+                TipBanner(
+                  message: l10n.tipMuscleModel,
+                  dismissLabel: l10n.tipDismiss,
+                  onDismiss: () => settings.tipSeen(Tip.muscleModel),
+                ),
+            ],
           ),
         },
       ),

@@ -1,28 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../features/exercises/domain/vocabulary.dart';
 import '../../features/volume/presentation/volume_charts.dart';
 import '../../features/volume/presentation/volume_text.dart';
 import '../../l10n/app_localizations.dart';
-import 'muscle_heat.dart';
 import 'volume_band.dart';
 
-/// How a program spreads its weekly [sets] per muscle: small front and
-/// back models painted by sets beside the busiest muscles (ties in
-/// vocabulary order) as VolumeBands, under the title and the program's
-/// [total] sets and a chevron. A tap opens the full list through [onTap].
+/// How a program spreads its weekly [sets] per muscle: the busiest muscles
+/// (ties in vocabulary order) as full-width VolumeBands, under the title
+/// and the program's [total] sets and a chevron. A tap opens the full list,
+/// with the body model, through [onTap].
 class ProgramVolumeCard extends StatelessWidget {
   const ProgramVolumeCard({
     super.key,
-    required this.model,
     required this.sets,
     required this.total,
     required this.onTap,
   });
 
-  final Model3D model;
   final Map<Muscle, double> sets;
 
   /// The working sets of a week of the program, each once.
@@ -30,7 +26,7 @@ class ProgramVolumeCard extends StatelessWidget {
   final VoidCallback onTap;
 
   /// The busiest muscles shown.
-  static const _shown = 3;
+  static const _shown = 5;
 
   @override
   Widget build(BuildContext context) {
@@ -83,23 +79,10 @@ class ProgramVolumeCard extends StatelessWidget {
                   ),
                 ],
               ),
-              Row(
-                spacing: 12,
-                children: [
-                  MuscleHeatPair(model: model, sets: sets),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      spacing: Gap.sm,
-                      children: [
-                        for (final MapEntry(key: muscle, value: count)
-                            in busiest.take(_shown))
-                          VolumeBand(muscle: muscle, sets: count, scale: scale),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              for (final MapEntry(key: muscle, value: count) in busiest.take(
+                _shown,
+              ))
+                VolumeBand(muscle: muscle, sets: count, scale: scale),
             ],
           ),
         ),

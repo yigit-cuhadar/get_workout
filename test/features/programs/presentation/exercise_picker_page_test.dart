@@ -279,4 +279,69 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('Swap and Replace open beside the picker, at its step path', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/tab',
+          builder: (context, _) => Column(
+            children: [
+              TextButton(
+                onPressed: () => pickSwap(
+                  context,
+                  exerciseId: 'bench',
+                  logged: 1,
+                  warmups: 0,
+                  picker: ({required max, required multiple}) =>
+                      '/tab/pick?max=$max&multiple=$multiple',
+                ),
+                child: const Text('swap'),
+              ),
+              TextButton(
+                onPressed: () => pickReplacement(
+                  context,
+                  exerciseId: 'bench',
+                  picker: ({required max, required multiple}) =>
+                      '/tab/pick?max=$max&multiple=$multiple',
+                ),
+                child: const Text('replace'),
+              ),
+            ],
+          ),
+          routes: [
+            GoRoute(
+              path: pickStepPath,
+              builder: (_, state) => Text('at ${state.uri}'),
+            ),
+          ],
+        ),
+      ],
+      initialLocation: '/tab',
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+
+    await tester.tap(find.text('swap'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'at /tab/swap?max=1&multiple=false&form=swap&exercise=bench&logged=1',
+      ),
+      findsOneWidget,
+    );
+
+    router.go('/tab');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('replace'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'at /tab/swap?max=1&multiple=false&form=replace&exercise=bench',
+      ),
+      findsOneWidget,
+    );
+  });
 }

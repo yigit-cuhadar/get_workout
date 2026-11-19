@@ -145,27 +145,24 @@ class WarmupSettingsPage extends StatelessWidget {
             children: [
               SettingsColumn(
                 children: [
-                  ListRowCard(
-                    children: [
+                  ChoiceGrid.list(
+                    form: ChoiceListForm.inline,
+                    options: [
                       for (final option in WarmupScheme.values)
-                        Semantics(
-                          inMutuallyExclusiveGroup: true,
-                          checked: option == scheme,
-                          child: ListRow(
-                            leading: RadioMark(selected: option == scheme),
-                            title: l10n.warmupSchemeLabel(option),
-                            value: l10n.warmupSchemeValue(
-                              option,
-                              warmups.custom,
-                            ),
-                            onTap: () => set(
-                              option == WarmupScheme.custom
-                                  ? warmups.toCustom()
-                                  : warmups.copyWith(scheme: option),
-                            ),
-                          ),
+                        ChoiceOption(
+                          label: l10n.warmupSchemeLabel(option),
+                          hint: l10n.warmupSchemeValue(option, warmups.custom),
                         ),
                     ],
+                    selected: WarmupScheme.values.indexOf(scheme),
+                    onSelected: (i) {
+                      final option = WarmupScheme.values[i];
+                      set(
+                        option == WarmupScheme.custom
+                            ? warmups.toCustom()
+                            : warmups.copyWith(scheme: option),
+                      );
+                    },
                   ),
                   switch (scheme) {
                     WarmupScheme.off => null,
@@ -179,7 +176,7 @@ class WarmupSettingsPage extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SettingsHeader(l10n.warmupScopeTitle),
+                      SectionLabel(l10n.warmupScopeTitle),
                       ForgeSegmentedControl<WarmupScope>(
                         segments: [
                           for (final scope in WarmupScope.values)
@@ -337,8 +334,6 @@ class _StepRowState extends State<_StepRow> {
   late final _reps = TextEditingController(text: '${widget.step.reps}');
   Set<WarmupStepIssue> _issues = const {};
 
-  static const _removeSize = 32.0;
-
   @override
   void dispose() {
     _percent.dispose();
@@ -397,32 +392,10 @@ class _StepRowState extends State<_StepRow> {
             Text(l10n.warmupPercentUnit, style: unitStyle),
             field(_reps, l10n.warmupReps, WarmupStepIssue.repsOutOfRange),
             Text(l10n.warmupRepsUnit, style: unitStyle),
-            Semantics(
-              button: true,
-              enabled: remove != null,
+            ForgeIconButton(
+              icon: ForgeIcons.close,
               label: l10n.warmupRemoveSet,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: remove,
-                // Drawn 32px; the padding takes taps across the tap minimum.
-                child: Padding(
-                  padding: const EdgeInsets.all(
-                    (ForgeTheme.tapMin - _removeSize) / 2,
-                  ),
-                  child: SizedBox.square(
-                    dimension: _removeSize,
-                    child: Center(
-                      child: ForgeIcon(
-                        ForgeIcons.close,
-                        size: 18,
-                        color: remove == null
-                            ? colors.lineStrong
-                            : colors.inkMuted,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              onPressed: remove,
             ),
           ],
         ),

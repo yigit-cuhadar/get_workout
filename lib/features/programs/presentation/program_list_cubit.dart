@@ -112,10 +112,6 @@ class ProgramListState extends Equatable {
     return active!.nextDayIndex % days;
   }
 
-  /// The day the active program's Start begins: [nextDayIndex], but none
-  /// while a [missed] day waits for the user's choice.
-  int? get startDayIndex => missed == null ? nextDayIndex : null;
-
   List<Program> get otherPrograms => [
     for (final program in programs)
       if (program.id != active?.programId) program,

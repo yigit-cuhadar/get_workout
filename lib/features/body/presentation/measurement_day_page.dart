@@ -262,8 +262,7 @@ class _MeasurementDayViewState extends State<_MeasurementDayView> {
 
   /// The step's 20px heading, as the board draws it.
   static TextStyle _heading(BuildContext context) =>
-      Theme.of(context).textTheme.titleLarge!
-          .copyWith(fontSize: 20, height: 26 / 20);
+      ForgeStyle.of(context).heading;
 
   static String _stepName(AppLocalizations l10n, MeasureStep step) =>
       switch (step) {

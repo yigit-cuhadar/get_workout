@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/core/widgets/muscle_heat.dart';
 import 'package:get_workout/core/widgets/muscle_model.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
@@ -28,12 +29,8 @@ Widget _panel(Widget child) => Padding(
 @widgetbook.UseCase(name: 'Slide and release to open', type: MuscleModel)
 Widget muscleModelExplore(BuildContext context) => _panel(
   _withModel(
-    (model) => MuscleModel(
-      model: model,
-      onOpen: (_) {},
-      semanticLabel: 'Body model',
-      hint: 'Tap or slide across a muscle',
-    ),
+    (model) =>
+        MuscleModel(model: model, onOpen: (_) {}, semanticLabel: 'Body model'),
   ),
 );
 
@@ -45,7 +42,7 @@ Widget muscleModelHeat(BuildContext context) => _panel(
       onOpen: (_) {},
       semanticLabel: 'Body model',
       sides: false,
-      colors: muscleHeatColors(ForgeStyle.of(context).colors, const {
+      colors: muscleHeatColors(GwColors.of(context), const {
         Muscle.pec: 14,
         Muscle.frontDelt: 22,
         Muscle.midDelt: 22,
@@ -53,7 +50,6 @@ Widget muscleModelHeat(BuildContext context) => _panel(
         Muscle.biceps: 6,
         Muscle.abdominal: 4,
       }),
-      outlined: const {Muscle.frontDelt, Muscle.midDelt},
       footer: const _VolumeFooter(),
     ),
   ),

@@ -7,23 +7,17 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../core/text_length.dart';
 import '../../../core/widgets/featured_card.dart';
-import '../../../core/widgets/volume_band.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calculators/presentation/calculator_list.dart';
-import '../../generator/presentation/generator_entry.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/domain/program_editing.dart';
 import '../../programs/domain/program_usecases.dart';
-import '../../programs/presentation/missed_day_prompt.dart';
+import '../../programs/presentation/resolve_missed_day.dart';
 import '../../programs/presentation/program_list_cubit.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
-import '../../steps/domain/steps.dart';
-import '../../subscription/presentation/premium.dart';
-import '../../volume/domain/weekly_volume.dart';
-import '../../volume/presentation/volume_charts.dart';
 import '../../workout/domain/exercise_stats.dart';
 import '../../workout/domain/workout.dart';
 import '../../workout/presentation/active_workout_cubit.dart';
@@ -32,14 +26,12 @@ import '../../workout/presentation/start_workout.dart';
 import '../../workout/presentation/workout_text.dart';
 import 'next_workout.dart';
 import 'today_steps_cubit.dart';
-import 'today_volume_cubit.dart';
 import 'today_week_cubit.dart';
-import 'week_card.dart';
 import 'widgets/rest_day_card.dart';
 
-/// The Today tab: this week, the next workout, this week's volume, the
-/// calculators and steps, each card on its own data, so one failing leaves
-/// the others.
+/// The Today tab, what to do now: the workout card, an empty workout and
+/// the calculators. How it is going lives on Progress, the plan on
+/// Programs.
 class TodayPage extends StatelessWidget {
   const TodayPage({super.key});
 
@@ -51,15 +43,12 @@ class TodayPage extends StatelessWidget {
         // The Programs tab's, so both show the same plan.
         BlocProvider.value(value: sl<ProgramListCubit>()),
         BlocProvider(create: (_) => sl<TodayWeekCubit>(param1: firstWeekday)),
-        BlocProvider(create: (_) => sl<TodayVolumeCubit>(param1: firstWeekday)),
         BlocProvider(create: (_) => sl<TodayStepsCubit>()),
       ],
       child: FirstWeekdayListener(
         created: firstWeekday,
-        onChanged: (context, firstWeekday) {
-          context.read<TodayWeekCubit>().changeFirstWeekday(firstWeekday);
-          context.read<TodayVolumeCubit>().changeFirstWeekday(firstWeekday);
-        },
+        onChanged: (context, firstWeekday) =>
+            context.read<TodayWeekCubit>().changeFirstWeekday(firstWeekday),
         child: const _TodayView(),
       ),
     );
@@ -77,13 +66,7 @@ class _TodayViewState extends State<_TodayView> {
   late final AppLifecycleListener _lifecycle;
 
   /// Independent cards, in order.
-  static const _cards = [
-    WeekCard(),
-    _WorkoutCard(),
-    _VolumeCard(),
-    _CalculatorsCard(),
-    _StepsCard(),
-  ];
+  static const _cards = [_WorkoutCard(), _StartEmptyRow(), _CalculatorsCard()];
 
   /// Today moves on while the app sleeps, without a new snapshot to
   /// recompute it.
@@ -98,8 +81,7 @@ class _TodayViewState extends State<_TodayView> {
   void _refreshNow() {
     context.read<ProgramListCubit>().refreshNow();
     context.read<TodayWeekCubit>().refreshNow();
-    context.read<TodayVolumeCubit>().refreshNow();
-    // Steps are read, never followed, and may change in the health store.
+    // The rest day's walk; steps are read, never followed, and may change in the health store.
     _loadSteps();
   }
 
@@ -273,7 +255,7 @@ String _daySummary(AppLocalizations l10n, ProgramDay day) =>
     l10n.todayDaySummary(day.items.length, l10n.estimateText(estimateDay(day)));
 
 /// A day without a planned workout: the next day and its date, today's
-/// steps toward the goal, cardio, the next day early and an empty workout.
+/// steps toward the goal, cardio and the next day early.
 class _RestDayCard extends StatelessWidget {
   const _RestDayCard(this.next);
   final RestDay next;
@@ -298,7 +280,6 @@ class _RestDayCard extends StatelessWidget {
       onSteps: () => context.go(Routes.steps),
       onLogCardio: () => context.go(Routes.cardioNew),
       onStartEarly: () => startProgramDay(context, program, dayIndex),
-      onStartEmpty: () => startFreeWorkout(context),
     );
   }
 }
@@ -404,8 +385,9 @@ class _MissedDayCard extends StatelessWidget {
   }
 }
 
-/// No program day to do: the ways to a program, or to just train. With
-/// programs of their own and none finished, the user is pointed at those.
+/// No program day to do: the one way to a program; the others live on
+/// Programs. With programs of their own and none finished, the user is
+/// pointed at those.
 class _NoProgramDay extends StatelessWidget {
   const _NoProgramDay(this.next);
   final NoProgramDay next;
@@ -439,80 +421,26 @@ class _NoProgramDay extends StatelessWidget {
               l10n.todaySeeReadyMade,
               () => context.go(Routes.catalogue),
             ),
-      moreActions: [
-        FeaturedAction(
-          l10n.generatorTitle,
-          () => openGenerator(context),
-          locked: context.watchPremium() == PremiumStatus.free,
-        ),
-        FeaturedAction(l10n.workoutStartEmpty, () => startFreeWorkout(context)),
-      ],
     );
   }
 }
 
-/// This week's sets: the total, the most trained muscles against the band
-/// and how many trained muscles are in, below and above it. Opens weekly
-/// volume.
-class _VolumeCard extends StatelessWidget {
-  const _VolumeCard();
-
-  /// The most trained muscles shown.
-  static const _topMuscles = 4;
+/// An empty workout, every day under the workout card: the one place it
+/// starts.
+class _StartEmptyRow extends StatelessWidget {
+  const _StartEmptyRow();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final state = context.watch<TodayVolumeCubit>().state;
-    final title = l10n.todayVolumeTitle;
-    void open() => context.go(Routes.volume);
-    return switch ((state.status, state.week)) {
-      (TodayVolumeStatus.failure, _) => SectionCard.error(
-        title: title,
-        onTap: open,
-        message: l10n.volumeLoadFailed,
-        retryLabel: l10n.retry,
-        onRetry: context.read<TodayVolumeCubit>().retry,
-      ),
-      (TodayVolumeStatus.ready, final week?) => SectionCard(
-        title: title,
-        detail: l10n.todayVolumeTotal(week.totalSets),
-        onTap: open,
-        child: week.sets.isEmpty
-            ? Text(
-                l10n.todayVolumeEmpty,
-                style: Theme.of(context).textTheme.bodySmall,
-              )
-            : _WeekVolume(week),
-      ),
-      _ => SectionCard.loading(title: title, onTap: open),
-    };
-  }
-}
-
-class _WeekVolume extends StatelessWidget {
-  const _WeekVolume(this.week);
-  final WeekVolume week;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final zones = week.zoneCounts;
-    final scale = volumeScale(week.sets.values);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: Gap.sm,
+    return ListRowCard(
       children: [
-        for (final muscle in week.musclesBySets.take(_VolumeCard._topMuscles))
-          if (week.setsOf(muscle) > 0)
-            VolumeBand(muscle: muscle, sets: week.setsOf(muscle), scale: scale),
-        Text(
-          l10n.todayVolumeZones(
-            zones[VolumeZone.within]!,
-            zones[VolumeZone.below]!,
-            zones[VolumeZone.above]!,
-          ),
-          style: Theme.of(context).textTheme.bodySmall,
+        ListRow(
+          leading: const ForgeIcon(ForgeIcons.fitnessCenter),
+          title: l10n.workoutStartEmpty,
+          detail: l10n.todayStartEmptyDetail,
+          end: ListRowEnd.chevron,
+          onTap: () => startFreeWorkout(context),
         ),
       ],
     );
@@ -538,61 +466,6 @@ class _CalculatorsCard extends StatelessWidget {
             ForgeChip(label: title, onPressed: () => context.go(route)),
         ],
       ),
-    );
-  }
-}
-
-/// Today's steps against the daily goal; opens the Steps page, which also
-/// sets access up. No card on a device without a health store.
-class _StepsCard extends StatelessWidget {
-  const _StepsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final state = context.watch<TodayStepsCubit>().state;
-    void open() => context.go(Routes.steps);
-    final title = l10n.stepsTitle;
-    return switch ((state.status, state.progress)) {
-      (TodayStepsStatus.unavailable, _) => const SizedBox.shrink(),
-      (TodayStepsStatus.setUp, _) => SectionCard.empty(
-        title: title,
-        onTap: open,
-        message: l10n.todayStepsSetUp,
-      ),
-      (TodayStepsStatus.failure, _) => SectionCard.error(
-        title: title,
-        onTap: open,
-        message: l10n.stepsLoadFailed,
-        retryLabel: l10n.retry,
-        onRetry: () => context.read<TodayStepsCubit>().load(
-          context.read<SettingsCubit>().state.settings.stepGoal,
-        ),
-      ),
-      (TodayStepsStatus.ready, final progress?) => SectionCard(
-        title: title,
-        onTap: open,
-        child: _StepsProgress(progress),
-      ),
-      _ => SectionCard.loading(title: title, onTap: open),
-    };
-  }
-}
-
-class _StepsProgress extends StatelessWidget {
-  const _StepsProgress(this.progress);
-  final StepGoalProgress progress;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Progress.bar(
-      value: progress.steps.toDouble(),
-      goal: progress.goal.toDouble(),
-      figure: l10n.todayStepsFigure(progress.steps),
-      caption: progress.reached
-          ? l10n.stepsGoalReached
-          : l10n.stepsToGo(progress.remaining),
     );
   }
 }

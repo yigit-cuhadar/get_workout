@@ -478,7 +478,7 @@ void main() {
       await pumpEventQueue();
       expect(cubit.state.finished, isTrue);
       expect(cubit.state.workoutCount, isNull);
-      expect(cubit.state.startDayIndex, isNull);
+      expect(cubit.state.nextDayIndex, isNull);
       completed.add([
         CompletedDay(date: CalendarDate(2026, 11, 2), dayIndex: 0),
         CompletedDay(date: CalendarDate(2026, 11, 5), dayIndex: 1),
@@ -513,7 +513,7 @@ void main() {
     },
     verify: (cubit) {
       expect(cubit.state.workoutCount, isNull);
-      expect(cubit.state.startDayIndex, 1);
+      expect(cubit.state.nextDayIndex, 1);
       expect(cubit.state.today, CalendarDate(2026, 11, 11));
     },
   );
@@ -545,9 +545,9 @@ void main() {
         expect(cubit.state.moveDate, CalendarDate(2026, 11, 16));
         // Until resolved it comes first again, on the next training day.
         expect(cubit.state.nextDate, CalendarDate(2026, 11, 16));
-        // Start waits for the answer.
+        // Today asks about it before the next day starts.
         expect(cubit.state.nextDayIndex, 1);
-        expect(cubit.state.startDayIndex, isNull);
+        expect(cubit.state.missed, isNotNull);
       },
     );
 

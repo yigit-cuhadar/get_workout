@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/number_text.dart';
-import '../../../core/page_parts.dart';
 import '../../../core/widgets/plate_calculator.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/user_settings.dart';
@@ -144,7 +143,7 @@ class _Equipment extends StatelessWidget {
                 state.plates.length,
               ),
               end: ListRowEnd.chevron,
-              onTap: () => context.push(Routes.barPlates),
+              onTap: () => context.push(Routes.platesBarPlates),
             ),
           ],
         ),

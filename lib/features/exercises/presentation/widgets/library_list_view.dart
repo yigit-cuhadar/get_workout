@@ -14,6 +14,10 @@ import 'filter_sheet.dart';
 
 /// Search, filters, sort and the resulting exercises. Everything the model
 /// offers is reachable here too, which makes it the screen reader's path.
+/// Only the search stays put: the active filters, the muscle's sections and
+/// the count scroll away with the list, and once they are gone a chip
+/// beside the search names them ("5 filters", "Chest · Main"); a tap on it
+/// scrolls back to the top.
 ///
 /// Each result is an [ExerciseTile] opening its detail, or what [tileBuilder]
 /// builds, e.g. to select exercises instead. While the catalogue loads or
@@ -23,6 +27,7 @@ class LibraryListView extends StatefulWidget {
     super.key,
     this.tileBuilder,
     this.focusSearch = false,
+    this.searchHero = false,
     this.searchWhileLoading = false,
     this.sectionsFor,
     this.similar,
@@ -34,6 +39,10 @@ class LibraryListView extends StatefulWidget {
 
   /// Whether the search field takes focus once the page's route is in.
   final bool focusSearch;
+
+  /// Whether the search field flies in from the Exercises tab's; only a
+  /// page pushed from that tab has one to fly from.
+  final bool searchHero;
 
   final bool searchWhileLoading;
 
@@ -70,6 +79,34 @@ class _LibraryListViewState extends State<LibraryListView> {
 
   /// In the muscle's sections, whether "Also works" is shown.
   var _alsoWorks = false;
+
+  /// The filters, sections and count over the rows, and whether they have
+  /// scrolled out of sight.
+  final _header = GlobalKey();
+  var _headerGone = false;
+
+  bool _onScroll(Notification notification) {
+    final metrics = switch (notification) {
+      ScrollNotification(:final metrics) => metrics,
+      ScrollMetricsNotification(:final metrics) => metrics,
+      _ => null,
+    };
+    if (metrics == null || metrics.axis != Axis.vertical) return false;
+    final height = _header.currentContext?.size?.height;
+    final gone = height != null && height > 0 && metrics.pixels >= height;
+    if (gone != _headerGone) setState(() => _headerGone = gone);
+    return false;
+  }
+
+  void _toTop() {
+    if (_header.currentContext case final header?) {
+      Scrollable.ensureVisible(
+        header,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -158,116 +195,169 @@ class _LibraryListViewState extends State<LibraryListView> {
             state.results.isEmpty && state.filter.isEmpty && create != null;
         final noMatch = filtered || searched;
         final similar = widget.similar;
-        final Widget body;
+        final List<Widget> body;
         if (catalogue is CatalogueLoading) {
-          body = const _Loading();
+          body = const [_Loading()];
         } else if (catalogue is CatalogueFailed) {
-          body = _InCard(
-            ErrorView(
-              title: l10n.libraryLoadFailed,
-              message: l10n.loadFailedDetail,
-              retryLabel: l10n.retry,
-              onRetry: context.read<ExerciseCatalogueCubit>().retry,
+          body = [
+            _StateList(
+              ErrorView(
+                title: l10n.libraryLoadFailed,
+                message: l10n.loadFailedDetail,
+                retryLabel: l10n.retry,
+                onRetry: context.read<ExerciseCatalogueCubit>().retry,
+                card: true,
+              ),
             ),
-          );
+          ];
         } else if (filtered) {
-          body = _InCard(
-            EmptyView(
-              icon: ForgeIcons.tune,
-              title: l10n.libraryNoResultsTitle,
-              message: l10n.libraryFilteredNoResults,
-              actions: [
-                ForgeButton(
-                  label: l10n.libraryClearFilters,
-                  variant: ForgeButtonVariant.secondary,
-                  onPressed: library.clearFilters,
-                ),
-                if (create != null) _CreateButton(create),
-              ],
+          body = [
+            _StateList(
+              EmptyView(
+                icon: ForgeIcons.tune,
+                title: l10n.libraryNoResultsTitle,
+                message: l10n.libraryFilteredNoResults,
+                actions: [
+                  ForgeButton(
+                    label: l10n.libraryClearFilters,
+                    variant: ForgeButtonVariant.secondary,
+                    onPressed: library.clearFilters,
+                  ),
+                  if (create != null) _CreateButton(create),
+                ],
+                card: true,
+              ),
             ),
-          );
+          ];
         } else if (searched) {
-          body = _InCard(
-            EmptyView(
-              icon: ForgeIcons.search,
-              title: l10n.librarySearchNoResultsTitle(state.query),
-              message: widget.tileBuilder == null
-                  ? l10n.librarySearchNoResults
-                  : l10n.pickerSearchNoResults,
-              actions: [_CreateButton(create)],
+          body = [
+            _StateList(
+              EmptyView(
+                icon: ForgeIcons.search,
+                title: l10n.librarySearchNoResultsTitle(state.query),
+                message: widget.tileBuilder == null
+                    ? l10n.librarySearchNoResults
+                    : l10n.pickerSearchNoResults,
+                actions: [_CreateButton(create)],
+                card: true,
+              ),
             ),
-          );
+          ];
         } else if (state.results.isEmpty) {
-          body = _InCard(
-            EmptyView(
-              title: l10n.libraryNoResultsTitle,
-              message: l10n.libraryNoResults,
+          body = [
+            _StateList(
+              EmptyView(
+                title: l10n.libraryNoResultsTitle,
+                message: l10n.libraryNoResults,
+                card: true,
+              ),
             ),
-          );
+          ];
         } else if (similar != null) {
-          body = _SimilarFirst(
+          body = _similarFirst(
+            l10n,
             similar: similar,
             results: [
               for (final exercise in results)
                 if (exercise.id != widget.replacing) exercise,
             ],
-            tile: _tile,
           );
         } else {
-          body = CustomScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            slivers: [_rows(results)],
-          );
+          body = [_rows(results)];
         }
-        if (!ready && !widget.searchWhileLoading) return body;
+        if (!ready && !widget.searchWhileLoading) return _list(body);
+        final header = [
+          if (ready && !state.filter.isEmpty) _ActiveFilters(state.filter),
+          if (ready && sections != null && !noMatch)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.sm),
+              child: ForgeSegmentedControl<bool>(
+                segments: [
+                  ForgeSegment(
+                    value: false,
+                    label: l10n.libraryMuscleMainCount(sections.main.length),
+                  ),
+                  ForgeSegment(
+                    value: true,
+                    label: l10n.libraryMuscleAlsoWorksCount(
+                      sections.alsoWorks.length,
+                    ),
+                  ),
+                ],
+                selected: _alsoWorks,
+                onChanged: (alsoWorks) =>
+                    setState(() => _alsoWorks = alsoWorks),
+              ),
+            ),
+          if (ready && !noMatch && similar == null)
+            _CountAndSort(count: results.length, sort: state.sort),
+        ];
+        final muscle = sections == null ? null : widget.sectionsFor;
+        final summary = !_headerGone
+            ? null
+            : muscle != null
+            ? l10n.libraryMuscleSummary(
+                l10n.muscleName(muscle),
+                _alsoWorks
+                    ? l10n.libraryMuscleAlsoWorks
+                    : l10n.libraryMuscleMain,
+              )
+            : state.filter.isEmpty
+            ? null
+            : l10n.libraryFiltersSummary(_activeCount(state.filter));
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.sm),
-              child: LibrarySearchHero(
-                child: ForgeSearchField(
-                  hint: l10n.librarySearch,
-                  clearLabel: l10n.librarySearchClear,
-                  onChanged: library.setQuery,
-                  controller: _search,
-                  focusNode: _focus,
-                  onFilters: () => showFilterSheet(context),
-                  filtersLabel: l10n.libraryFilters,
-                  activeFilters: _activeCount(state.filter),
-                ),
+              child: ForgeSearchField(
+                hint: l10n.librarySearch,
+                clearLabel: l10n.librarySearchClear,
+                onChanged: library.setQuery,
+                controller: _search,
+                focusNode: _focus,
+                onFilters: () => showFilterSheet(context),
+                filtersLabel: l10n.libraryFilters,
+                activeFilters: _activeCount(state.filter),
+                heroTag: widget.searchHero ? librarySearchHeroTag : null,
+                summary: summary == null
+                    ? null
+                    : ForgeChip(
+                        label: summary,
+                        selected: true,
+                        showCheck: false,
+                        onPressed: _toTop,
+                      ),
               ),
             ),
-            if (ready && !state.filter.isEmpty) _ActiveFilters(state.filter),
-            if (ready && sections != null && !noMatch)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.sm),
-                child: ForgeSegmentedControl<bool>(
-                  segments: [
-                    ForgeSegment(
-                      value: false,
-                      label: l10n.libraryMuscleMainCount(sections.main.length),
-                    ),
-                    ForgeSegment(
-                      value: true,
-                      label: l10n.libraryMuscleAlsoWorksCount(
-                        sections.alsoWorks.length,
+            Expanded(
+              child: NotificationListener<Notification>(
+                onNotification: _onScroll,
+                child: _list([
+                  if (header.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Column(
+                        key: _header,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: header,
                       ),
                     ),
-                  ],
-                  selected: _alsoWorks,
-                  onChanged: (alsoWorks) =>
-                      setState(() => _alsoWorks = alsoWorks),
-                ),
+                  ...body,
+                ]),
               ),
-            if (ready && !noMatch && similar == null)
-              _CountAndSort(count: results.length, sort: state.sort),
-            Expanded(child: body),
+            ),
           ],
         );
       },
     );
   }
+
+  /// The page's one scroll view; on a sheet it is the primary one, so a
+  /// drag down from its top closes the sheet.
+  static Widget _list(List<Widget> slivers) => CustomScrollView(
+    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+    slivers: slivers,
+  );
 
   Widget _rows(List<Exercise> exercises) => SliverPadding(
     padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
@@ -276,6 +366,45 @@ class _LibraryListViewState extends State<LibraryListView> {
       itemBuilder: (context, index) => _tile(context, exercises[index]),
     ),
   );
+
+  /// The swap and replace forms' list: [similar] as far as the search and
+  /// filters keep them, then the other [results]; each part with its label
+  /// only while it has rows.
+  List<Widget> _similarFirst(
+    AppLocalizations l10n, {
+    required List<Exercise> similar,
+    required List<Exercise> results,
+  }) {
+    final found = {for (final exercise in results) exercise.id};
+    final first = [
+      for (final exercise in similar)
+        if (found.contains(exercise.id)) exercise,
+    ];
+    final firstIds = {for (final exercise in first) exercise.id};
+    final rest = [
+      for (final exercise in results)
+        if (!firstIds.contains(exercise.id)) exercise,
+    ];
+    List<Widget> part(String label, List<Exercise> exercises) => [
+      if (exercises.isNotEmpty) ...[
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: Gap.md),
+          sliver: SliverToBoxAdapter(child: SectionLabel(label)),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.sm),
+          sliver: ListRowCard.sliver(
+            itemCount: exercises.length,
+            itemBuilder: (context, index) => _tile(context, exercises[index]),
+          ),
+        ),
+      ],
+    ];
+    return [
+      ...part(l10n.pickerSimilar, first),
+      ...part(l10n.pickerAllExercises, rest),
+    ];
+  }
 
   Widget _tile(BuildContext context, Exercise exercise) =>
       widget.tileBuilder?.call(context, exercise) ??
@@ -357,76 +486,6 @@ class _CountAndSort extends StatelessWidget {
   }
 }
 
-/// The swap and replace forms' list: [similar] as far as the search and
-/// filters keep them, then the other [results]; each part with its label
-/// only while it has rows.
-class _SimilarFirst extends StatelessWidget {
-  const _SimilarFirst({
-    required this.similar,
-    required this.results,
-    required this.tile,
-  });
-
-  final List<Exercise> similar;
-  final List<Exercise> results;
-  final Widget Function(BuildContext context, Exercise exercise) tile;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final found = {for (final exercise in results) exercise.id};
-    final first = [
-      for (final exercise in similar)
-        if (found.contains(exercise.id)) exercise,
-    ];
-    final firstIds = {for (final exercise in first) exercise.id};
-    final rest = [
-      for (final exercise in results)
-        if (!firstIds.contains(exercise.id)) exercise,
-    ];
-    List<Widget> part(String label, List<Exercise> exercises) => [
-      if (exercises.isNotEmpty) ...[
-        SliverToBoxAdapter(child: ListSectionLabel(label)),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.sm),
-          sliver: ListRowCard.sliver(
-            itemCount: exercises.length,
-            itemBuilder: (context, index) => tile(context, exercises[index]),
-          ),
-        ),
-      ],
-    ];
-    return CustomScrollView(
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      slivers: [
-        ...part(l10n.pickerSimilar, first),
-        ...part(l10n.pickerAllExercises, rest),
-      ],
-    );
-  }
-}
-
-/// The muted label over a list on a page, e.g. "Similar exercises".
-class ListSectionLabel extends StatelessWidget {
-  const ListSectionLabel(this.text, {super.key});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(
-      Gap.md + Gap.xs,
-      Gap.sm,
-      Gap.md + Gap.xs,
-      Gap.sm,
-    ),
-    child: Semantics(
-      header: true,
-      child: Text(text, style: Theme.of(context).textTheme.titleSmall),
-    ),
-  );
-}
-
 /// The rows' shimmering stand-ins while the catalogue loads.
 class _Loading extends StatelessWidget {
   const _Loading();
@@ -434,28 +493,26 @@ class _Loading extends StatelessWidget {
   static const _rows = 7;
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    physics: const NeverScrollableScrollPhysics(),
+  Widget build(BuildContext context) => SliverPadding(
     padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
-    child: ListRowCard(
-      children: [for (var i = 0; i < _rows; i++) ListRow.loading(index: i)],
+    sliver: SliverToBoxAdapter(
+      child: ListRowCard(
+        children: [for (var i = 0; i < _rows; i++) ListRow.loading(index: i)],
+      ),
     ),
   );
 }
 
-/// An empty or error state in a card under the search.
-class _InCard extends StatelessWidget {
-  const _InCard(this.child);
+/// An empty or error state on its card under the search.
+class _StateList extends StatelessWidget {
+  const _StateList(this.view);
 
-  final Widget child;
+  final Widget view;
 
   @override
-  Widget build(BuildContext context) => ListView(
-    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+  Widget build(BuildContext context) => SliverPadding(
     padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, Gap.md),
-    children: [
-      Semantics(liveRegion: true, child: ListRowCard(children: [child])),
-    ],
+    sliver: SliverToBoxAdapter(child: Semantics(liveRegion: true, child: view)),
   );
 }
 
@@ -473,24 +530,9 @@ class _CreateButton extends StatelessWidget {
   );
 }
 
-/// The search field flying between the Exercises tab's tap-only pill and
-/// the list page. In flight it is drawn as the pill; the page's field takes
-/// focus only once its route is in.
-class LibrarySearchHero extends StatelessWidget {
-  const LibrarySearchHero({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Hero(
-    tag: LibrarySearchHero,
-    flightShuttleBuilder: (context, _, _, _, _) => ForgeSearchField.tapOnly(
-      hint: AppLocalizations.of(context).librarySearch,
-      onTap: () {},
-    ),
-    child: child,
-  );
-}
+/// The search pill flying between the Exercises tab's tap-only field and
+/// the list page's; the page's field takes focus only once its route is in.
+const librarySearchHeroTag = #librarySearch;
 
 /// One removable chip per active filter value, then "Clear all" under them.
 class _ActiveFilters extends StatelessWidget {

@@ -166,11 +166,9 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
   void applyPreset(EquipmentProfile preset) =>
       _answer(state.answers.copyWith(equipment: preset.equipment));
 
-  void toggleEquipment(Equipment item) {
-    final owned = {...?state.answers.equipment};
-    if (!owned.remove(item)) owned.add(item);
-    _answer(state.answers.copyWith(equipment: owned));
-  }
+  /// A preset tuned item by item.
+  void setEquipment(Set<Equipment> owned) =>
+      _answer(state.answers.copyWith(equipment: owned));
 
   /// Ignores a year outside [birthYearRange].
   void setBirthYear(int year) {

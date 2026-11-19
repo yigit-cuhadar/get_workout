@@ -303,16 +303,14 @@ void main() {
       expect(cubit.state.answers.daysPerWeek, 3);
     });
 
-    test('a preset fills the equipment, which can then be tuned', () {
+    test('a preset fills the equipment, which its sheet then tunes', () {
       final cubit = onboarding()..applyPreset(EquipmentProfile.dumbbells);
       expect(cubit.state.answers.equipment, {
         Equipment.dumbbell,
         Equipment.bench,
       });
 
-      cubit
-        ..toggleEquipment(Equipment.box)
-        ..toggleEquipment(Equipment.dumbbell);
+      cubit.setEquipment(const {Equipment.bench, Equipment.box});
       expect(cubit.state.answers.equipment, {Equipment.bench, Equipment.box});
     });
 
@@ -321,8 +319,7 @@ void main() {
       expect(cubit.state.canContinue, isFalse);
       cubit
         ..applyPreset(EquipmentProfile.bodyweight)
-        ..toggleEquipment(Equipment.pullUpBar)
-        ..toggleEquipment(Equipment.dipStation);
+        ..setEquipment(const {});
       expect(cubit.state.answers.equipment, isEmpty);
       expect(cubit.state.canContinue, isTrue);
     });

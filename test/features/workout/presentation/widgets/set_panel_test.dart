@@ -8,6 +8,7 @@ import 'package:get_workout/features/workout/presentation/widgets/set_panel.dart
 const _labels = SetPanelLabels(
   log: 'Log set',
   done: 'Done',
+  next: 'Next',
   options: 'Set options',
   addDrop: 'Add drop',
   removeDrop: 'Remove drop',
@@ -88,6 +89,49 @@ void main() {
     );
   });
 
+  testWidgets('typing the weight, Next types the reps and Done closes the '
+      'keyboard; a drop\'s values come next', (tester) async {
+    await _pump(
+      tester,
+      SetPanel(
+        title: 'Bench Press · set 3 of 4',
+        details: const [],
+        labels: _labels,
+        values: [_value(82.5, 'kg'), _value(8, 'reps')],
+        drops: [
+          SetPanelDrop(
+            label: 'Drop 1',
+            values: [_value(60, 'kg'), _value(6, 'reps')],
+            onRemove: () {},
+          ),
+        ],
+        onAddDrop: () {},
+        onOptions: () {},
+        onLog: () {},
+      ),
+    );
+    bool typing(int i) => tester
+        .widget<EditableText>(find.byType(EditableText).at(i))
+        .focusNode
+        .hasFocus;
+
+    await tester.tap(find.text('82.5'));
+    await tester.pump();
+    expect(typing(0), isTrue);
+
+    await tester.tap(find.text('Next'));
+    await tester.pump();
+    expect(typing(1), isTrue);
+    await tester.tap(find.text('Next'));
+    await tester.pump();
+    expect(typing(2), isTrue);
+
+    await tester.tap(find.text('Done'));
+    await tester.pump();
+    expect(find.text('Next'), findsNothing);
+    expect([for (var i = 0; i < 4; i++) typing(i)], everyElement(isFalse));
+  });
+
   testWidgets('a load added to the body shows its sign', (tester) async {
     await _pump(
       tester,
@@ -125,6 +169,12 @@ void main() {
     await pump(plates: true);
     final button = find.bySemanticsLabel('Plates');
     expect(tester.getSize(button), const Size.square(44));
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is ForgeIconButton && widget.label == 'Plates',
+      ),
+      findsOneWidget,
+    );
     // Between the weight and the reps.
     expect(
       tester.getCenter(button).dx,
@@ -233,10 +283,14 @@ void main() {
     ]);
     // A drop row keeps the compact fields' height.
     final remove = find.bySemanticsLabel('Remove drop');
-    expect(tester.getSize(remove.first), const Size(30, 32));
+    final box = find.ancestor(
+      of: remove.first,
+      matching: find.byType(TapBandIconButton),
+    );
+    expect(tester.getSize(box), const Size(30, 32));
     await tester.tap(remove.last);
-    // Its band reaches past the drawn box.
-    await tester.tapAt(tester.getTopRight(remove.first) + const Offset(6, 0));
+    // Its band reaches past the laid-out box.
+    await tester.tapAt(tester.getTopRight(box) + const Offset(6, 0));
     await tester.tap(find.text('Add drop'));
     expect(removed, [1, 0]);
     expect(added, 1);

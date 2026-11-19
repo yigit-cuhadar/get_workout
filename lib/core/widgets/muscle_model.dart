@@ -8,6 +8,7 @@ import 'package:forge_ui/forge_ui.dart';
 import '../../features/exercises/domain/muscle_meshes.dart';
 import '../../features/exercises/domain/vocabulary.dart';
 import '../../features/exercises/presentation/vocabulary_labels.dart';
+import '../../app/theme.dart';
 import '../../l10n/app_localizations.dart';
 
 /// The body's colour where no muscle colour is given.
@@ -20,29 +21,21 @@ Map<String, Color> muscleMeshColors(Map<Muscle, Color> colors) => {
     for (final mesh in muscle.meshNames) mesh: color,
 };
 
-/// Every mesh of [muscles].
-Set<String> muscleMeshes(Iterable<Muscle> muscles) => {
-  for (final muscle in muscles) ...muscle.meshNames,
-};
-
 /// The one rotatable body model where muscles are explored (Exercises,
 /// Weekly volume), in a framed panel with Front / Back in its corner. A
 /// tap on a muscle, or a slide across muscles and its release, opens it
 /// through [onOpen]; while sliding, the muscle under the finger shows in
-/// a bar at the bottom, where a [hint] waits while nothing slides; without
-/// [onOpen] it only turns. Muscles in [colors] are painted so, those in
-/// [outlined] ringed in danger. With [sides] Front / Back sit in the
-/// corner. A [footer] (Weekly volume's hint and legend) sits under the
-/// model inside the panel.
+/// a bar at the bottom; without [onOpen] it only turns. Muscles in
+/// [colors] are painted so. With [sides] Front / Back sit in the corner. A
+/// [footer] (Weekly volume's hint and legend) sits under the model inside
+/// the panel.
 class MuscleModel extends StatefulWidget {
   const MuscleModel({
     super.key,
     required Model3D this.model,
     this.onOpen,
     required String this.semanticLabel,
-    this.hint,
     this.colors = const {},
-    this.outlined = const {},
     this.sides = true,
     this.footer,
   }) : onRetry = null,
@@ -53,9 +46,7 @@ class MuscleModel extends StatefulWidget {
     : model = null,
       onOpen = null,
       semanticLabel = null,
-      hint = null,
       colors = const {},
-      outlined = const {},
       onRetry = null,
       message = null;
 
@@ -70,17 +61,13 @@ class MuscleModel extends StatefulWidget {
        model = null,
        onOpen = null,
        semanticLabel = null,
-       hint = null,
-       colors = const {},
-       outlined = const {};
+       colors = const {};
 
   final Model3D? model;
   final ValueChanged<Muscle>? onOpen;
   final String? semanticLabel;
-  final String? hint;
   final String? message;
   final Map<Muscle, Color> colors;
-  final Set<Muscle> outlined;
   final VoidCallback? onRetry;
   final bool sides;
   final Widget? footer;
@@ -157,10 +144,10 @@ class _MuscleModelState extends State<MuscleModel> {
               baseColor: muscleModelBase(p),
               partColors: {
                 ...muscleMeshColors(widget.colors),
-                ...muscleMeshColors({?scrubbed: p.accent}),
+                ...muscleMeshColors({?scrubbed: GwColors.of(context).heatHigh}),
               },
-              outlinedParts: muscleMeshes(widget.outlined),
-              outlineColor: p.danger,
+              outlinedParts: {...?scrubbed?.meshNames},
+              outlineColor: p.ink,
               selectable: opens ? (part) => muscleOfMesh(part) != null : null,
               onPartTap: opens ? _open : null,
               onScrub: opens ? _onScrub : null,
@@ -169,16 +156,12 @@ class _MuscleModelState extends State<MuscleModel> {
             ),
           ),
           if (widget.sides) Positioned(top: 10, right: 10, child: segments),
-          if (scrubbed != null || widget.hint != null)
+          if (scrubbed != null)
             Positioned(
               left: 12,
               right: 12,
               bottom: 12,
-              child: IgnorePointer(
-                child: scrubbed != null
-                    ? _ScrubBar(scrubbed)
-                    : _HintBar(widget.hint!),
-              ),
+              child: IgnorePointer(child: _ScrubBar(scrubbed)),
             ),
         ],
       );
@@ -264,7 +247,10 @@ class _ScrubBar extends StatelessWidget {
           Container(
             width: 10,
             height: 10,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: p.accent),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: GwColors.of(context).heatHigh,
+            ),
           ),
           Expanded(
             child: Text(l10n.muscleName(muscle), style: text.titleMedium),
@@ -277,35 +263,6 @@ class _ScrubBar extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// What the model does, waiting at its bottom while nothing slides.
-class _HintBar extends StatelessWidget {
-  const _HintBar(this.hint);
-  final String hint;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = ForgeStyle.of(context);
-    final p = style.colors;
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      alignment: AlignmentDirectional.centerStart,
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(style.radii.md),
-        border: Border.all(color: p.line),
-      ),
-      child: Text(
-        hint,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.bodySmall!
-            .copyWith(color: p.inkMuted),
       ),
     );
   }
@@ -335,8 +292,8 @@ class _SkeletonFigure extends StatelessWidget {
 }
 
 /// The body's front and back side by side, still, under a [title]: the
-/// [main] muscles in accent, the [secondary] ones in a lighter accent tone
-/// and the rest of the body very light, each figure filling its half,
+/// [main] muscles in heat-high, the [secondary] ones in the lighter green
+/// of the same family and the rest of the body very light, each figure filling its half,
 /// with a legend naming them. The legend shows also while the model loads
 /// (a shimmering figure per side) and when it could not load (the error
 /// and Retry in place of the figures).
@@ -385,10 +342,10 @@ class MuscleModelPair extends StatelessWidget {
     final p = style.colors;
     final text = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
-    final soft = Color.lerp(p.surface, p.accent, 0.55)!;
+    final gw = GwColors.of(context);
     final colors = muscleMeshColors({
-      for (final muscle in secondary) muscle: soft,
-      for (final muscle in main) muscle: p.accent,
+      for (final muscle in secondary) muscle: gw.muscleSecondary,
+      for (final muscle in main) muscle: gw.heatHigh,
     });
     Widget side(String label, {required bool back}) => Column(
       spacing: 6,
@@ -474,9 +431,13 @@ class MuscleModelPair extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: 6,
             children: [
-              legend(p.accent, l10n.muscleModelMain, main),
+              legend(gw.heatHigh, l10n.muscleModelMain, main),
               if (secondary.isNotEmpty)
-                legend(soft, l10n.muscleModelSecondary, secondary),
+                legend(
+                  gw.muscleSecondary,
+                  l10n.muscleModelSecondary,
+                  secondary,
+                ),
             ],
           ),
         ],
@@ -486,8 +447,7 @@ class MuscleModelPair extends StatelessWidget {
 }
 
 /// The model held still, facing the front or the [back], at [zoom], in
-/// [base] with a colour per mesh in [colors] and the meshes in [outlined]
-/// ringed in danger.
+/// [base] with a colour per mesh in [colors].
 class StillMuscleModel extends StatefulWidget {
   const StillMuscleModel({
     super.key,
@@ -495,7 +455,6 @@ class StillMuscleModel extends StatefulWidget {
     required this.back,
     required this.base,
     required this.colors,
-    this.outlined = const {},
     this.zoom = 1,
   });
 
@@ -503,7 +462,6 @@ class StillMuscleModel extends StatefulWidget {
   final bool back;
   final Color base;
   final Map<String, Color> colors;
-  final Set<String> outlined;
   final double zoom;
 
   @override
@@ -529,7 +487,5 @@ class _StillMuscleModelState extends State<StillMuscleModel> {
     interactive: false,
     baseColor: widget.base,
     partColors: widget.colors,
-    outlinedParts: widget.outlined,
-    outlineColor: ForgeStyle.of(context).colors.danger,
   );
 }

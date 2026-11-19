@@ -209,6 +209,12 @@ class _DeleteAccountView extends StatelessWidget {
   static String _failureText(AppLocalizations l10n, Failure failure) =>
       switch (failure) {
         DeletionUnavailableFailure() => l10n.deleteUnavailable,
+        // Apple's codes are not a password's: only offline and another
+        // account keep their own words.
+        AppleRevokeFailure(cause: NetworkFailure()) => l10n.deleteOffline,
+        AppleRevokeFailure(cause: AuthFailure(code: 'user-mismatch')) =>
+          l10n.deleteOtherAccount,
+        AppleRevokeFailure() => l10n.deleteFailed,
         NetworkFailure() => l10n.deleteOffline,
         AuthFailure(code: 'invalid-credential' || 'wrong-password') =>
           l10n.deletePasswordWrong,

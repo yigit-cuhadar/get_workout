@@ -5,24 +5,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/core/widgets/muscle_heat.dart';
-import 'package:get_workout/features/exercises/domain/muscle_meshes.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
-import 'package:forge_ui/forge_ui.dart';
 
 import '../../component_harness.dart';
 
 void main() {
-  final p = AppPreset.shipped.lightTheme().extension<ForgeStyle>()!.colors;
+  final c = AppPreset.shipped.light;
 
-  test('one accent ramp from a faint tint to full accent at 20', () {
-    expect(muscleHeatColor(p, 0), Color.lerp(p.surface, p.accent, 0.15));
-    expect(muscleHeatColor(p, 10), Color.lerp(p.surface, p.accent, 0.575));
-    expect(muscleHeatColor(p, 20), p.accent);
-    expect(muscleHeatColor(p, 26), p.accent);
+  test('the scale runs heat-low to heat-high at the band top', () {
+    expect(muscleHeatColor(c, 0), c.heatLow);
+    expect(muscleHeatColor(c, 10), Color.lerp(c.heatLow, c.heatHigh, 0.5));
+    expect(muscleHeatColor(c, 20), c.heatHigh);
+  });
+
+  test('over the band the model stays heat-high, never band-over', () {
+    expect(muscleHeatColor(c, 26), c.heatHigh);
+    expect(muscleHeatColor(c, 26), isNot(c.bandOver));
   });
 
   test('untrained muscles stay neutral', () {
-    expect(muscleHeatColors(p, {Muscle.pec: 14, Muscle.biceps: 0}).keys, [
+    expect(muscleHeatColors(c, {Muscle.pec: 14, Muscle.biceps: 0}).keys, [
       Muscle.pec,
     ]);
   });
@@ -41,18 +43,11 @@ void main() {
     final viewers = tester.widgetList<ModelViewer>(find.byType(ModelViewer));
     expect(viewers, hasLength(2));
     for (final viewer in viewers) {
-      expect(viewer.partColors['pec_left'], muscleHeatColor(p, 14));
+      expect(viewer.partColors['pec_left'], muscleHeatColor(c, 14));
     }
   });
 
-  test('only muscles over 20 sets are outlined', () {
-    expect(
-      muscleHeatOver({Muscle.pec: 20, Muscle.frontDelt: 22, Muscle.lat: 4}),
-      {Muscle.frontDelt},
-    );
-  });
-
-  testWidgets('a muscle over 20 keeps full accent with a danger outline', (
+  testWidgets('a muscle over 20 is full heat-high with no outline', (
     tester,
   ) async {
     final body = await tester.runAsync(
@@ -71,14 +66,12 @@ void main() {
     for (final viewer in tester.widgetList<ModelViewer>(
       find.byType(ModelViewer),
     )) {
-      expect(viewer.partColors['front_delt_left'], p.accent);
-      expect(viewer.outlinedParts, Muscle.frontDelt.meshNames.toSet());
-      expect(viewer.outlineColor, p.danger);
-      expect(viewer.outlineWidth, 2);
+      expect(viewer.partColors['front_delt_left'], c.heatHigh);
+      expect(viewer.outlinedParts, isEmpty);
     }
   });
 
-  testWidgets('the legend labels the ramp', (tester) async {
+  testWidgets('the legend labels the band numbers', (tester) async {
     await pumpComponent(tester, const MuscleHeatLegend());
 
     for (final text in ['0', '10', '20 sets']) {

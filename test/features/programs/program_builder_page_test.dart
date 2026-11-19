@@ -113,7 +113,16 @@ void main() {
 
     expect(find.text('Edit program'), findsOneWidget);
     expect(find.text('Save'), findsOneWidget);
-    expect(find.text('Program name'), findsWidgets);
+    // The label alone: no hint repeating it.
+    expect(find.text('Program name'), findsOneWidget);
+    expect(
+      tester
+          .widget<ForgeTextField>(
+            find.widgetWithText(ForgeTextField, 'Program name'),
+          )
+          .hint,
+      isNull,
+    );
     expect(find.text('Length in weeks (optional)'), findsOneWidget);
     expect(find.text('Leave empty to run until you stop it'), findsOneWidget);
     expect(find.text('Upper'), findsOneWidget);

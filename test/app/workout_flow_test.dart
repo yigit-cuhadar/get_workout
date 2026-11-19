@@ -244,12 +244,12 @@ void main() {
     await app.stop(tester);
   });
 
-  testWidgets('an empty workout from Programs is filled, logged and saved', (
+  testWidgets('an empty workout from Today is filled, logged and saved', (
     tester,
   ) async {
     final app = world();
     await app.start(tester);
-    await openTab(tester, 'Programs');
+    await openTab(tester, 'Today');
 
     await tapText(tester, 'Start empty workout');
     expect(find.text('Add exercises to start logging.'), findsOneWidget);

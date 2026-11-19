@@ -51,8 +51,12 @@ class OnboardingQuestion extends StatelessWidget {
                 children: [
                   Transform.translate(
                     offset: const Offset(-10, 0),
-                    child: _BackButton(
+                    child: ForgeIconButton(
+                      icon: ForgeIcons.chevronLeft,
+                      label: AppLocalizations.of(context)
+                          .onboardingQuestionBack,
                       onPressed: onBack ?? () => Navigator.maybePop(context),
+                      variant: ForgeIconButtonVariant.ink,
                     ),
                   ),
                   Expanded(
@@ -92,32 +96,6 @@ class OnboardingQuestion extends StatelessWidget {
   );
 }
 
-class _BackButton extends StatelessWidget {
-  const _BackButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    label: AppLocalizations.of(context).onboardingQuestionBack,
-    child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onPressed,
-      child: SizedBox.square(
-        dimension: ForgeTheme.tapMin,
-        child: Center(
-          child: ForgeIcon(
-            ForgeIcons.chevronLeft,
-            size: 22,
-            color: ForgeStyle.of(context).colors.ink,
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
 /// A question: its [title] under an optional [eyebrow] (the flow's name)
 /// and the line under it ([info]) at the top, the [answer] anchored to the
 /// bottom, near the thumb, with empty space between. With [scrolls], a
@@ -151,24 +129,8 @@ class OnboardingQuestionBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 6,
         children: [
-          if (eyebrow != null)
-            Text(
-              eyebrow,
-              style: text.labelMedium!.copyWith(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: muted,
-              ),
-            ),
-          Text(
-            title,
-            style: text.headlineMedium!.copyWith(
-              fontSize: 24,
-              height: 30 / 24,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.48,
-            ),
-          ),
+          if (eyebrow != null) Text(eyebrow, style: text.titleSmall),
+          Text(title, style: ForgeStyle.of(context).heading),
           if (info != null)
             Text(info, style: text.bodyMedium!.copyWith(color: muted)),
         ],

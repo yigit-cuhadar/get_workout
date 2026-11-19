@@ -2,40 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../../app/theme.dart';
 import '../../features/exercises/domain/vocabulary.dart';
+import '../../features/volume/domain/weekly_volume.dart';
 import '../../l10n/app_localizations.dart';
 import 'muscle_model.dart';
 
-/// The weekly sets at which the ramp reaches full accent.
-const int muscleHeatFull = 20;
+/// A muscle's colour for its weekly [sets] on the heat scale, which shares
+/// the volume band's numbers: heat-low toward 0 to heat-high at
+/// [VolumeRange.max]. Over the band it stays heat-high; only the bars mark
+/// it.
+Color muscleHeatColor(GwColors c, num sets) =>
+    Color.lerp(c.heatLow, c.heatHigh, (sets / VolumeRange.max).clamp(0, 1))!;
 
-/// Share of accent in the ramp's faint end.
-const double _faint = 0.15;
-
-/// A muscle's colour for its weekly [sets]: one accent ramp mixed into
-/// surface, from a faint tint toward 0 to full accent at
-/// [muscleHeatFull] and over.
-Color muscleHeatColor(ForgePalette p, num sets) => Color.lerp(
-  p.surface,
-  p.accent,
-  _faint + (1 - _faint) * (sets / muscleHeatFull).clamp(0, 1),
-)!;
-
-/// The ramp's colour for each trained muscle of [sets]; untrained ones are
+/// The scale's colour for each trained muscle of [sets]; untrained ones are
 /// left out and stay neutral.
-Map<Muscle, Color> muscleHeatColors(ForgePalette p, Map<Muscle, num> sets) => {
+Map<Muscle, Color> muscleHeatColors(GwColors c, Map<Muscle, num> sets) => {
   for (final MapEntry(key: muscle, value: count) in sets.entries)
-    if (count > 0) muscle: muscleHeatColor(p, count),
+    if (count > 0) muscle: muscleHeatColor(c, count),
 };
 
-/// The trained muscles of [sets] over [muscleHeatFull], ringed in danger.
-Set<Muscle> muscleHeatOver(Map<Muscle, num> sets) => {
-  for (final MapEntry(key: muscle, value: count) in sets.entries)
-    if (count > muscleHeatFull) muscle,
-};
-
-/// Small front and back models painted by weekly [sets], side by side;
-/// a muscle over [muscleHeatFull] sets is ringed in danger.
+/// Small front and back models painted by weekly [sets], side by side.
 class MuscleHeatPair extends StatelessWidget {
   const MuscleHeatPair({super.key, required this.model, required this.sets});
 
@@ -48,8 +35,9 @@ class MuscleHeatPair extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = ForgeStyle.of(context).colors;
-    final colors = muscleMeshColors(muscleHeatColors(p, sets));
-    final outlined = muscleMeshes(muscleHeatOver(sets));
+    final colors = muscleMeshColors(
+      muscleHeatColors(GwColors.of(context), sets),
+    );
     final base = Color.lerp(p.surface, p.lineStrong, 0.35)!;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -64,7 +52,6 @@ class MuscleHeatPair extends StatelessWidget {
               back: back,
               base: base,
               colors: colors,
-              outlined: outlined,
             ),
           ),
       ],
@@ -72,7 +59,9 @@ class MuscleHeatPair extends StatelessWidget {
   }
 }
 
-/// The ramp as a bar from 0 to 20 sets.
+/// The scale as a bar from 0 sets (the body's colour) to
+/// [VolumeRange.max], labelled at 0, [VolumeRange.min] and
+/// [VolumeRange.max].
 class MuscleHeatLegend extends StatelessWidget {
   const MuscleHeatLegend({super.key});
 
@@ -80,6 +69,7 @@ class MuscleHeatLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = ForgeStyle.of(context);
     final p = style.colors;
+    final heat = GwColors.of(context);
     final l10n = AppLocalizations.of(context);
     final label = style.data.copyWith(fontSize: 11, color: p.inkMuted);
     return Column(
@@ -90,7 +80,10 @@ class MuscleHeatLegend extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(4),
-            gradient: LinearGradient(colors: [muscleHeatColor(p, 0), p.accent]),
+            gradient: LinearGradient(
+              colors: [muscleModelBase(p), heat.heatLow, heat.heatHigh],
+              stops: const [0, 1 / VolumeRange.max, 1],
+            ),
           ),
         ),
         SizedBox(
@@ -101,10 +94,16 @@ class MuscleHeatLegend extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Text('0', style: label),
               ),
-              Align(child: Text('${muscleHeatFull ~/ 2}', style: label)),
+              Align(
+                alignment: const Alignment(
+                  2 * VolumeRange.min / VolumeRange.max - 1,
+                  0,
+                ),
+                child: Text('${VolumeRange.min}', style: label),
+              ),
               Align(
                 alignment: Alignment.centerRight,
-                child: Text(l10n.muscleHeatFull(muscleHeatFull), style: label),
+                child: Text(l10n.muscleHeatFull(VolumeRange.max), style: label),
               ),
             ],
           ),

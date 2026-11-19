@@ -117,6 +117,11 @@ void main() {
       expect(chart.bars!.first.value, 0);
       expect(chart.bars!.first.valueLabel, isNull);
       expect(chart.bars!.last.valueLabel, '74');
+      // Holding a bar names its minutes and week.
+      expect(
+        chart.bars!.last.tooltip,
+        '74 min · week of ${DateFormat.MMMd().format(weekStart(now, 1))}',
+      );
       expect(find.text('Outdoor run · 5.2 km'), findsOneWidget);
       expect(find.text('Strava'), findsOneWidget);
       expect(find.text('Log cardio'), findsOneWidget);

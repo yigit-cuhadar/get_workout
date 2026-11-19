@@ -282,7 +282,12 @@ void main() {
   ) async {
     await pump(tester, active([squat], picked: (exercise: 0, set: 1)));
     when(() => cubit.setNote(any())).thenReturn(null);
-    await tester.scrollUntilVisible(find.text('Workout note'), 200);
+    // The page's list, not a field's own scrollable.
+    await tester.scrollUntilVisible(
+      find.text('Workout note'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Add'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).last, 'Tight shoulder');

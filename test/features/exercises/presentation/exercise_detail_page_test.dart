@@ -99,6 +99,10 @@ void main() {
             exerciseRoute: (id) => '/$id',
           ),
         ),
+        GoRoute(
+          path: '/:id',
+          builder: (_, state) => Text('Opened ${state.pathParameters['id']}'),
+        ),
       ],
     );
     addTearDown(router.dispose);
@@ -139,27 +143,104 @@ void main() {
     expect(find.text('• Bouncing the bar.'), findsOneWidget);
     expect(find.text('• Use a spotter.'), findsOneWidget);
     expect(find.text('Similar exercises'), findsOneWidget);
-    expect(find.text('Alternative'), findsOneWidget);
+    expect(find.text('Alternatives · 1'), findsOneWidget);
+    expect(find.text('Dumbbell Bench Press'), findsOneWidget);
     expect(find.text('Custom'), findsNothing);
     expect(find.text('Exercise options'), findsNothing);
   });
 
-  testWidgets('the star toggles the favourite', (tester) async {
+  testWidgets('the ⋯ menu makes it a favourite', (tester) async {
     await pump(tester, DetailReady(bench));
 
-    await tester.tap(find.bySemanticsLabel('Add to favourites'));
+    await tester.tap(find.bySemanticsLabel('Exercise options'));
+    await settle(tester);
+    await tester.tap(find.text('Add to favourites'));
     verify(() => favorites.toggle('bench')).called(1);
   });
 
-  testWidgets('Add offers the workout and a program', (tester) async {
-    await pump(tester, DetailReady(bench));
+  testWidgets('Similar shows each group with its count and first three', (
+    tester,
+  ) async {
+    final variations = [
+      for (var i = 1; i <= 4; i++) exercise('v$i', name: 'Variation $i'),
+    ];
+    await pump(
+      tester,
+      DetailReady(bench, variations: variations, alternatives: [dumbbell]),
+    );
+
+    final card = find.ancestor(
+      of: find.text('Similar exercises'),
+      matching: find.byType(SectionCard),
+    );
+    expect(find.descendant(of: card, matching: find.text('5')), findsOneWidget);
+    expect(find.text('Variations · 4'), findsOneWidget);
+    expect(find.text('Alternatives · 1'), findsOneWidget);
+    expect(find.text('Variation 3'), findsOneWidget);
+    expect(find.text('Variation 4'), findsNothing);
+    // Variations come first.
+    expect(
+      tester.getTopLeft(find.text('Variations · 4')).dy,
+      lessThan(tester.getTopLeft(find.text('Alternatives · 1')).dy),
+    );
+  });
+
+  testWidgets('the Similar card opens every one; a row opens it', (
+    tester,
+  ) async {
+    final variations = [
+      for (var i = 1; i <= 4; i++) exercise('v$i', name: 'Variation $i'),
+    ];
+    await pump(
+      tester,
+      DetailReady(bench, variations: variations, alternatives: [dumbbell]),
+    );
+
+    await tester.tap(find.text('Similar exercises'));
+    await settle(tester);
+    final sheet = find.byType(ForgeBottomSheet);
+    for (final name in [
+      'Variations · 4',
+      'Variation 4',
+      'Alternatives · 1',
+      'Dumbbell Bench Press',
+    ]) {
+      expect(
+        find.descendant(of: sheet, matching: find.text(name)),
+        findsOneWidget,
+        reason: name,
+      );
+    }
 
     await tester.tap(
-      find.descendant(of: find.byType(ForgeAppBar), matching: find.text('Add')),
+      find.descendant(of: sheet, matching: find.text('Variation 4')),
     );
     await settle(tester);
-    expect(find.text('Add to workout'), findsOneWidget);
-    expect(find.text('Add to program'), findsOneWidget);
+    expect(find.byType(ForgeBottomSheet), findsNothing);
+    expect(find.text('Opened v4'), findsOneWidget);
+  });
+
+  testWidgets('no Similar card without variations or alternatives', (
+    tester,
+  ) async {
+    await pump(tester, DetailReady(bench));
+    expect(find.text('Similar exercises'), findsNothing);
+  });
+
+  testWidgets('the ⋯ menu adds to a workout or a program; no bottom bar', (
+    tester,
+  ) async {
+    await pump(tester, DetailReady(bench));
+
+    expect(find.byType(ForgeBottomActionBar), findsNothing);
+    await tester.tap(find.bySemanticsLabel('Exercise options'));
+    await settle(tester);
+    expect(
+      tester.getTopLeft(find.text('Add to workout')).dy,
+      lessThan(tester.getTopLeft(find.text('Add to program')).dy),
+    );
+    expect(find.text('Add to favourites'), findsOneWidget);
+    expect(find.text('Edit'), findsNothing);
   });
 
   testWidgets('without a note, Your note offers Add; Save stores it', (

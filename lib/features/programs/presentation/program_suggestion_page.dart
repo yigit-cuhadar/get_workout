@@ -217,10 +217,7 @@ class _Suggestion extends StatelessWidget {
         return _Layout(
           title: Text(
             l10n.suggestionTitle,
-            style: text.headlineMedium!.copyWith(
-              fontSize: 26,
-              letterSpacing: -0.52,
-            ),
+            style: ForgeStyle.of(context).heading,
           ),
           card: FeaturedCard(
             form: FeaturedCardForm.outline,

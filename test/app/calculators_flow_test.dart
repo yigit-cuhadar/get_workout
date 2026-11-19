@@ -31,7 +31,7 @@ void main() {
   testWidgets('Calories fills in row by row; the result replaces the missing '
       'card, which a cleared input brings back', (tester) async {
     await app.startAs(tester, guest);
-    await app.tapTab(tester, 'Profile');
+    await app.tapTab(tester, 'Today');
     await tapText(tester, 'Calculators');
     await tapText(tester, 'Calories');
     expect(find.byType(CaloriesPage), findsOneWidget);

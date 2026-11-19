@@ -8,9 +8,10 @@ import '../strength_list_cubit.dart';
 import '../strength_text.dart';
 
 /// The exercises with stats as the Strength list shows them, with their
-/// search: rows of [StrengthListCubit]'s state, each calling [onPick]; the
-/// [selected] one ticked (in the Exercise sheet) or every row with a
-/// chevron (on the list page). Inside a scrolling parent.
+/// search: rows of [StrengthListCubit]'s state, each calling [onPick]. On
+/// the list page every row has a chevron and a removed exercise is muted;
+/// in the Exercise sheet they are radio rows with the [selected] one
+/// picked, a removed exercise as a normal row. Inside a scrolling parent.
 class StrengthExercises extends StatelessWidget {
   const StrengthExercises({
     super.key,
@@ -59,13 +60,17 @@ class StrengthExercises extends StatelessWidget {
           ),
           if (state.items.isEmpty)
             EmptyView(message: l10n.strengthNoResults)
+          else if (selected case final selected?)
+            _Choices(items: state.items, selected: selected, onPick: onPick)
           else
             ListRowCard(
               children: [
                 for (final item in state.items)
-                  _Row(
-                    item: item,
-                    selected: selected,
+                  ListRow(
+                    title: _name(context, item),
+                    detail: _lastDone(l10n, item),
+                    muted: item.removed,
+                    end: ListRowEnd.chevron,
                     onTap: () => onPick(item.exerciseId),
                   ),
               ],
@@ -76,32 +81,40 @@ class StrengthExercises extends StatelessWidget {
   }
 }
 
-class _Row extends StatelessWidget {
-  const _Row({required this.item, required this.selected, required this.onTap});
+String _name(BuildContext context, StrengthItem item) =>
+    item.exercise?.localized(context).name ??
+    AppLocalizations.of(context).strengthRemovedExercise;
 
-  final StrengthItem item;
-  final String? selected;
-  final VoidCallback onTap;
+String _lastDone(AppLocalizations l10n, StrengthItem item) =>
+    l10n.strengthLastDone(l10n.shortDate(item.lastTrained));
+
+/// The sheet's radio rows, the last day done under each name.
+class _Choices extends StatelessWidget {
+  const _Choices({
+    required this.items,
+    required this.selected,
+    required this.onPick,
+  });
+
+  final List<StrengthItem> items;
+  final String selected;
+  final ValueChanged<String> onPick;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final colors = ForgeStyle.of(context).colors;
-    final picked = item.exerciseId == selected;
-    return Semantics(
-      selected: selected == null ? null : picked,
-      child: ListRow(
-        title:
-            item.exercise?.localized(context).name ??
-            l10n.strengthRemovedExercise,
-        detail: l10n.strengthLastDone(l10n.shortDate(item.lastTrained)),
-        muted: item.removed,
-        trailing: picked
-            ? ForgeIcon(ForgeIcons.check, size: 18, color: colors.accent)
-            : null,
-        end: selected == null ? ListRowEnd.chevron : ListRowEnd.none,
-        onTap: onTap,
-      ),
+    final index = items.indexWhere((item) => item.exerciseId == selected);
+    return ChoiceGrid.list(
+      form: ChoiceListForm.stacked,
+      options: [
+        for (final item in items)
+          ChoiceOption(
+            label: _name(context, item),
+            hint: _lastDone(l10n, item),
+          ),
+      ],
+      selected: index < 0 ? null : index,
+      onSelected: (i) => onPick(items[i].exerciseId),
     );
   }
 }

@@ -272,6 +272,35 @@ void main() {
     expect(taps, ['menu', 'start', 'pull']);
   });
 
+  testWidgets('a band with a menu and a tap opens on a tap, menu in place '
+      'of the chevron', (tester) async {
+    final taps = <String>[];
+    await pumpComponent(
+      tester,
+      FeaturedCard(
+        form: FeaturedCardForm.band,
+        eyebrow: 'Active program · week 3 of 8',
+        title: 'Push Pull Legs',
+        menu: IconButton(
+          tooltip: 'Program options',
+          onPressed: () => taps.add('menu'),
+          icon: const ForgeIcon(ForgeIcons.moreHoriz),
+        ),
+        onTap: () => taps.add('open'),
+      ),
+    );
+
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is ForgeIcon && w.icon == ForgeIcons.chevronRight,
+      ),
+      findsNothing,
+    );
+    await tester.tap(find.byTooltip('Program options'));
+    await tester.tap(find.text('Push Pull Legs'));
+    expect(taps, ['menu', 'open']);
+  });
+
   testWidgets('loading shows the eyebrow over shimmering bars, no button', (
     tester,
   ) async {

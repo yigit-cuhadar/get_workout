@@ -38,6 +38,7 @@ import 'package:get_workout/features/exercises/presentation/exercise_detail_cubi
 import 'package:get_workout/features/exercises/presentation/exercise_notes_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_page.dart';
 import 'package:get_workout/features/exercises/presentation/exercises_page.dart';
+import 'package:get_workout/features/exercises/presentation/widgets/library_list_view.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_page.dart';
@@ -888,10 +889,15 @@ void main() {
       await startAsGuest(tester);
       await openExercises(tester);
       expect(find.byTooltip('New custom exercise'), findsNothing);
+      // The pill flies between the two fields.
+      ForgeSearchField field() =>
+          tester.widget<ForgeSearchField>(find.byType(ForgeSearchField));
+      expect(field().heroTag, librarySearchHeroTag);
 
       await tester.tap(find.byType(ForgeSearchField));
       await tester.pumpAndSettle();
       expect(find.byType(LibraryPage), findsOneWidget);
+      expect(field().heroTag, librarySearchHeroTag);
       expect(front(), Routes.exerciseList);
       expect(selectedTab(tester), 2);
       // The field is focused once the page is in, after the last frame.
@@ -1363,7 +1369,7 @@ void main() {
         await startAsGuest(tester);
         router.go(exercise);
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Add'));
+        await tester.tap(find.bySemanticsLabel('Exercise options'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Add to program'));
         await tester.pumpAndSettle();
@@ -1395,14 +1401,14 @@ void main() {
       testWidgets('saving the program returns to the exercise', (tester) async {
         await createProgram(tester);
         await tester.enterText(
-          find.widgetWithText(TextField, 'Program name'),
+          find.widgetWithText(ForgeTextField, 'Program name'),
           'Push',
         );
         await tester.tap(find.text('Add exercises'));
         await tester.pumpAndSettle();
-        // The picker too stays in the tab.
+        // The picker opens over the whole app, tab bar too.
         expect(front(), picker);
-        expect(selectedTab(tester), tab);
+        expect(find.byType(ForgeNavigationBar), findsNothing);
         await tester.tap(find.text('Back Squat'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Add 1 exercise'));
@@ -1420,7 +1426,7 @@ void main() {
       ) async {
         await createProgram(tester);
         await tester.enterText(
-          find.widgetWithText(TextField, 'Program name'),
+          find.widgetWithText(ForgeTextField, 'Program name'),
           'Push',
         );
         // The page refuses to pop from the next frame on.
@@ -1528,10 +1534,15 @@ void main() {
     expect(find.text('This exercise is no longer available.'), findsOneWidget);
   });
 
-  testWidgets('Profile opens the calculators inside the tab', (tester) async {
+  testWidgets('Today opens the calculators inside the tab', (tester) async {
     await startAsGuest(tester);
-    await tapTab(tester, 'Profile');
+    await tapTab(tester, 'Today');
 
+    await tester.scrollUntilVisible(
+      find.text('Calculators'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Calculators'));
     await tester.pumpAndSettle();
     expect(find.byType(CalculatorsPage), findsOneWidget);
@@ -1546,7 +1557,7 @@ void main() {
     expect(find.byType(CalculatorsPage), findsOneWidget);
   });
 
-  testWidgets('every calculator has a route under Profile', (tester) async {
+  testWidgets('every calculator has a route under Today', (tester) async {
     await startAsGuest(tester);
     final pages = {
       Routes.calories: CaloriesPage,
@@ -1570,12 +1581,11 @@ void main() {
     tester,
   ) async {
     await startAsGuest(tester);
-    await tapTab(tester, 'Profile');
     router.go(Routes.plates);
     await tester.pumpAndSettle();
 
-    await tapTab(tester, 'Today');
     await tapTab(tester, 'Profile');
+    await tapTab(tester, 'Today');
 
     expect(find.byType(PlatesPage), findsOneWidget);
   });
@@ -1744,6 +1754,9 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('You weigh '), findsOneWidget);
+      // The ruler marks the weight now.
+      final picker = tester.widget<NumberPicker>(find.byType(NumberPicker));
+      expect(picker.marker?.label, startsWith('Now '));
     });
 
     testWidgets('a next question slides in from the right, Back from the left', (
@@ -2091,18 +2104,27 @@ void main() {
     ]) async {
       setUpAuth();
       consents = MockConsentRepository();
+      // As Firestore's cache does, a saved answer comes back at once.
+      final watched = <String, StreamController<StoredConsent>>{};
       when(() => consents.watchConsent(any())).thenAnswer((call) {
         final uid = call.positionalArguments.first as String;
-        return Stream.value(
-          uid == 'u1'
-              ? (consent: true, fromServer: true)
-              : answers.containsKey(uid)
-              ? (consent: answers[uid], fromServer: true)
-              : unanswered,
-        );
+        final controller = StreamController<StoredConsent>()
+          ..add(
+            uid == 'u1'
+                ? (consent: true, fromServer: true)
+                : answers.containsKey(uid)
+                ? (consent: answers[uid], fromServer: true)
+                : unanswered,
+          );
+        addTearDown(controller.close);
+        watched[uid] = controller;
+        return controller.stream;
       });
-      when(() => consents.saveConsent(any(), any()))
-          .thenAnswer((_) async => const Ok(null));
+      when(() => consents.saveConsent(any(), any())).thenAnswer((call) async {
+        final [uid as String, consent as bool] = call.positionalArguments;
+        watched[uid]?.add((consent: consent, fromServer: false));
+        return const Ok(null);
+      });
       final telemetry = MockTelemetry();
       when(() => telemetry.follow(any()))
           .thenAnswer((_) async => const Ok(null));
@@ -2125,7 +2147,7 @@ void main() {
       expect(dialog, findsNothing);
     }
 
-    testWidgets('a new guest after sign-out is asked only on Today, once', (
+    testWidgets('a new guest after sign-out is asked once, in onboarding', (
       tester,
     ) async {
       await start(tester);
@@ -2147,14 +2169,24 @@ void main() {
       expect(find.byType(OnboardingPage), findsOneWidget);
       expect(dialog, findsNothing);
 
-      await finishOnboarding(tester);
-      expect(find.byType(TodayPage), findsOneWidget);
+      // Right after the last question, before the reminder.
+      await tester.tap(find.text('Get started'));
+      await tester.pumpAndSettle();
+      for (var i = 0; i < ProfileField.values.length; i++) {
+        await tester.tap(find.text('Continue'));
+        await tester.pumpAndSettle();
+      }
       expect(dialog, findsOneWidget);
-
       await tester.tap(find.text("Don't allow"));
       await tester.pumpAndSettle();
-      expect(dialog, findsNothing);
       verify(() => consents.saveConsent('u2', false)).called(1);
+      if (find.text('Remind you on training days?').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Not now'));
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.byType(TodayPage), findsOneWidget);
+      expect(dialog, findsNothing);
     });
 
     testWidgets('an account signed in from the tabs is asked once its '
@@ -2168,7 +2200,9 @@ void main() {
 
       profileStream.add(onboarded);
       await tester.pumpAndSettle();
-      expect(find.byType(TodayPage), findsOneWidget);
+      // A full page over the tabs.
+      expect(find.byType(TodayPage, skipOffstage: false), findsOneWidget);
+      expect(find.byType(TodayPage), findsNothing);
       expect(dialog, findsOneWidget);
     });
   });

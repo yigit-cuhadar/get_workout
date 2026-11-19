@@ -83,6 +83,10 @@ void main() {
     expect(find.text('3,760 to go'), findsOneWidget);
     expect(find.text('daily goal'), findsOneWidget);
     expect(find.text('This week'), findsWidgets);
+    // Holding a day's bar names its steps and date.
+    final chart = tester.widget<Chart>(find.byType(Chart));
+    final today = chart.bars![chart.current!];
+    expect(today.tooltip, startsWith('6,240 steps · '));
   });
 
   testWidgets('says the goal is reached', (tester) async {

@@ -83,29 +83,25 @@ Future<void> startWorkout(
 }
 
 /// Before the first workout on this device, whether to notify when a rest
-/// is over: asked here rather than mid-set, where the system's own question
-/// that a yes brings would cover the workout.
+/// is over, as a permission dialog: asked here rather than mid-set, where
+/// the system's own question that a yes brings would cover the workout.
 Future<void> _askNotify(BuildContext context) async {
   final timer = context.read<RestTimerCubit>();
   if (!await timer.shouldAskNotify() || !context.mounted) return;
   final l10n = AppLocalizations.of(context);
-  final allow = await showDialog<bool>(
+  final allow = await showForgeDialog<bool>(
     context: context,
-    barrierDismissible: false,
-    builder: (context) => ForgeDialog(
+    builder: (context) => PermissionPrompt.dialog(
+      icon: ForgeIcons.notifications,
       title: l10n.restNotifyQuestion,
       message: l10n.restNotifyBody,
-      action: ForgeButton(
-        label: l10n.restNotifyAllow,
-        onPressed: () => Navigator.pop(context, true),
-      ),
-      cancel: ForgeButton(
-        label: l10n.restNotifyLater,
-        onPressed: () => Navigator.pop(context, false),
-        variant: ForgeButtonVariant.secondary,
-      ),
+      allowLabel: l10n.restNotifyAllow,
+      onAllow: () => Navigator.pop(context, true),
+      notNowLabel: l10n.restNotifyLater,
+      onNotNow: () => Navigator.pop(context, false),
     ),
   );
+  // Closed without an answer is a "Not now".
   await timer.answerNotify(allow: allow ?? false);
 }
 

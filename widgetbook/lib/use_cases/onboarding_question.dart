@@ -52,17 +52,11 @@ class _EquipmentState extends State<_Equipment> {
     body: OnboardingQuestionBody(
       eyebrow: 'Generate a program',
       title: 'What equipment do you have?',
-      info:
-          'Pick the closest set, then adjust it. Bodyweight exercises are '
-          'always included.',
+      info: 'Pick the closest set. Bodyweight exercises are always included.',
       answer: EquipmentAnswer(
         owned: _owned,
         onPreset: (preset) => setState(() => _owned = {...preset.equipment}),
-        onToggle: (item) => setState(
-          () => _owned = _owned.contains(item)
-              ? ({..._owned}..remove(item))
-              : {..._owned, item},
-        ),
+        onEquipment: (owned) => setState(() => _owned = owned),
       ),
     ),
     actionLabel: 'Continue',

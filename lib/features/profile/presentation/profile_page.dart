@@ -19,13 +19,13 @@ import '../../steps/presentation/health_access_cubit.dart';
 import '../../subscription/presentation/premium_card.dart';
 import 'profile_cubit.dart';
 
-/// The Profile tab: the account header, the Premium card, the profile and
-/// calculators, then every setting in groups and any [debugSection].
+/// The Profile tab: the account header, the Premium card, the profile,
+/// then every setting in groups and the [devTools].
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key, this.debugSection});
+  const ProfilePage({super.key, this.devTools = const []});
 
-  /// Developer tools, only ever given in debug builds.
-  final Widget? debugSection;
+  /// Developer tools, never given in release builds.
+  final List<Widget> devTools;
 
   @override
   Widget build(BuildContext context) {
@@ -72,11 +72,6 @@ class ProfilePage extends StatelessWidget {
                         end: ListRowEnd.chevron,
                         onTap: () => context.go(Routes.profileDetails),
                       ),
-                      ListRow(
-                        title: l10n.profileCalculators,
-                        end: ListRowEnd.chevron,
-                        onTap: () => context.go(Routes.calculators),
-                      ),
                     ],
                   ),
                   const WorkoutSettingsGroups(),
@@ -84,7 +79,7 @@ class ProfilePage extends StatelessWidget {
                   const ConnectedAppsGroup(),
                   const AppearanceGroup(),
                   const PrivacySection(),
-                  ?debugSection,
+                  ...devTools,
                 ],
               ),
             ],

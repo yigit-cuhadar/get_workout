@@ -82,6 +82,11 @@ Future<Exercise?> pickReplacement(
   return picked?.firstOrNull;
 }
 
+/// The Swap and Replace forms' path, beside the picker's own (`pick`):
+/// they are steps of their page, while adding opens over the flow.
+const pickStepPath = 'swap';
+
+/// [location], the picker's, in [form] at [pickStepPath].
 String _withForm(
   String location,
   ExercisePickerForm form, {
@@ -92,6 +97,8 @@ String _withForm(
   final uri = Uri.parse(location);
   return uri
       .replace(
+        path:
+            '${uri.path.substring(0, uri.path.lastIndexOf('/'))}/$pickStepPath',
         queryParameters: {
           ...uri.queryParameters,
           'form': form.name,

@@ -60,6 +60,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
     Tip.effort: 'effort',
     Tip.setTypes: 'setTypes',
     Tip.autoWarmups: 'autoWarmups',
+    Tip.muscleModel: 'muscleModel',
   };
 
   @override

@@ -239,6 +239,7 @@ void main() {
     expect(chart.bars!.length, trendWeeks);
     expect(chart.bars!.last.label, '9');
     expect(chart.bars!.last.value, 12);
+    expect(chart.bars!.last.tooltip, startsWith('12 sets · week of '));
   });
 
   testWidgets('a past week\'s sheet trend ends with that week', (tester) async {

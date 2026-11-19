@@ -8,22 +8,19 @@ import '../../../app/router.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../generator/presentation/generator_entry.dart';
-import '../../workout/presentation/start_workout.dart';
 import '../domain/program.dart';
 import '../domain/program_schedule.dart';
-import 'missed_day_prompt.dart';
 import 'premium_prompt.dart';
 import 'program_detail_cubit.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
-import 'program_volume_section.dart';
 import 'stop_program_dialog.dart';
 import 'weekday_dialog.dart';
 
-/// The Programs tab's first page: the active program in a header band with
-/// this week's days, its weekly sets, then the ways into the ready-made
-/// programs, the generator and the builder and an empty workout, then the
-/// other programs.
+/// The Programs tab's first page, the plan: the active program in a header
+/// band with this week's days, its weekly sets, then the ways into the
+/// ready-made programs, the generator and the builder, then the other
+/// programs. A program day starts, and a missed one is answered, on Today.
 class ProgramsPage extends StatelessWidget {
   const ProgramsPage({super.key});
 
@@ -142,13 +139,6 @@ class _Programs extends StatelessWidget {
               ),
             ),
           ],
-          if (!state.finished && access != ProgramAccess.waiting) ...[
-            const SizedBox(height: Gap.sm),
-            ProgramVolumeSection(
-              program: active,
-              onOpen: () => context.go(Routes.programVolume(active.id!)),
-            ),
-          ],
         ],
         const SizedBox(height: Gap.sm),
         ListRowCard(
@@ -166,10 +156,6 @@ class _Programs extends StatelessWidget {
               end: ListRowEnd.chevron,
               onTap: () => context.go(Routes.programNew),
             ),
-            ListRow(
-              title: l10n.workoutStartEmpty,
-              onTap: () => startFreeWorkout(context),
-            ),
           ],
         ),
         if (state.programs.isEmpty) ...[
@@ -178,16 +164,13 @@ class _Programs extends StatelessWidget {
           EmptyView(
             title: l10n.programsEmptyTitle,
             message: l10n.programsEmptyDetail,
+            card: true,
+            compact: true,
           ),
         ],
         if (others.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.md, Gap.xs, Gap.xs),
-            child: Text(
-              active == null ? l10n.programsMine : l10n.programsOther,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-          ),
+          const SizedBox(height: Gap.sm),
+          SectionLabel(active == null ? l10n.programsMine : l10n.programsOther),
           ListRowCard(
             children: [
               for (final program in others)
@@ -203,10 +186,9 @@ class _Programs extends StatelessWidget {
   }
 }
 
-/// The active program's band: where it stands, the one Start of a program
-/// day here (hidden while a missed day waits for its answer) and this
-/// week's days, or once it finished its result and the ways on; its
-/// options in ⋯.
+/// The active program's band: where it stands and this week's days, or
+/// once it finished its result and the ways on; its options in ⋯. No
+/// Start: Today's workout card starts the day.
 class _ActiveProgram extends StatelessWidget {
   const _ActiveProgram(this.state, this.program, {required this.premium});
 
@@ -252,6 +234,7 @@ class _ActiveProgram extends StatelessWidget {
         title: program.name,
         locked: locked,
         menu: _ProgramMenuButton(state, program, premium: premium),
+        onTap: () => context.go(Routes.program(program.id!)),
         progress: !state.finished && weeks != null && week != null
             ? week / weeks
             : null,
@@ -270,14 +253,7 @@ class _ActiveProgram extends StatelessWidget {
                 ).runAgain(),
                 locked: locked,
               )
-            : switch (state.startDayIndex) {
-                final day? => FeaturedAction(
-                  l10n.workoutStartDay(l10n.dayName(program.days[day], day)),
-                  () => startProgramDay(context, program, day),
-                  locked: locked,
-                ),
-                null => null,
-              },
+            : null,
         moreActions: [
           if (state.finished)
             FeaturedAction(
@@ -305,11 +281,11 @@ class _ProgramMenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final busy = context.watch<ProgramDetailCubit>().state.isBusy;
-    final ink = ForgeStyle.of(context).colors.onFeatured;
     return Builder(
-      builder: (anchor) => IconButton(
-        tooltip: l10n.programOptions,
-        icon: ForgeIcon(ForgeIcons.moreHoriz, color: ink),
+      builder: (anchor) => ForgeIconButton(
+        icon: ForgeIcons.moreHoriz,
+        label: l10n.programOptions,
+        variant: ForgeIconButtonVariant.onFeatured,
         onPressed: busy
             ? null
             : () => _ProgramActions(anchor, state, program, premium).menu(),
@@ -410,9 +386,9 @@ class _ProgramActions {
 }
 
 /// This week's planned and done days of the active program as date-box
-/// rows with their state, a missed day's prompt under its row; none
-/// starts, the band's Start does. While the premium status of a premium
-/// copy is unknown, loading rows.
+/// rows with their state; a missed day says so, Today asks what to do with
+/// it. None starts. While the premium status of a premium copy is unknown,
+/// loading rows.
 List<Widget> weekDayRows(
   BuildContext context,
   ProgramListState state,
@@ -453,19 +429,11 @@ List<Widget> weekDayRows(
         ? ForgeIcon(ForgeIcons.check, size: 16, color: success)
         : null,
   );
-  final prompt = missed == null
-      ? null
-      : MissedDayPrompt(moveDate: state.moveDate!, busy: state.resolving);
-  // The prompt belongs to its row: no line between them.
-  Widget withPrompt(Widget row) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [row, ?prompt],
-  );
   final plan = state.weekPlan;
   return [
     // A day missed in an earlier week waits above this week's.
-    if (missed != null && !plan.contains(missed)) withPrompt(row(missed)),
-    for (final day in plan) day == missed ? withPrompt(row(day)) : row(day),
+    if (missed != null && !plan.contains(missed)) row(missed),
+    for (final day in plan) row(day),
     if (plan.isEmpty && missed == null) ListRow(title: l10n.programWeekEmpty),
   ];
 }

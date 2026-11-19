@@ -123,3 +123,34 @@ class _RenderTapBandArea extends RenderProxyBox {
     return super.hitTest(result, position: position);
   }
 }
+
+/// A [ForgeIconButton] laid out in a [width] × [height] box smaller than
+/// its target, so a compact row keeps its height; its [TapBandArea] takes
+/// taps across the full band.
+class TapBandIconButton extends StatelessWidget {
+  const TapBandIconButton({
+    super.key,
+    required this.width,
+    required this.height,
+    required this.button,
+  });
+
+  final double width;
+  final double height;
+  final ForgeIconButton button;
+
+  @override
+  Widget build(BuildContext context) => TapBand(
+    child: SizedBox(
+      width: width,
+      height: height,
+      child: OverflowBox(
+        minWidth: ForgeTheme.tapMin,
+        maxWidth: ForgeTheme.tapMin,
+        minHeight: ForgeTheme.tapMin,
+        maxHeight: ForgeTheme.tapMin,
+        child: button,
+      ),
+    ),
+  );
+}

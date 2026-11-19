@@ -56,10 +56,17 @@ extension ProgramText on AppLocalizations {
   String estimatedWeightText(double kg, WeightUnit unit) =>
       _weightText(unit.estimatedFromKg(kg), unit, 2);
 
+  /// [estimatedWeightText]'s number alone, for a figure with its unit apart.
+  String estimatedWeightNumber(double kg, WeightUnit unit) =>
+      _weightNumber(unit.estimatedFromKg(kg), 2);
+
+  String _weightNumber(double value, int maxDecimals) =>
+      (NumberFormat.decimalPattern(
+        localeName,
+      )..maximumFractionDigits = maxDecimals).format(value);
+
   String _weightText(double value, WeightUnit unit, int maxDecimals) {
-    final number = (NumberFormat.decimalPattern(
-      localeName,
-    )..maximumFractionDigits = maxDecimals).format(value);
+    final number = _weightNumber(value, maxDecimals);
     return switch (unit) {
       WeightUnit.kg => programWeightKg(number),
       WeightUnit.lb => programWeightLb(number),

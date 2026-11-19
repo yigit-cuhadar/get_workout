@@ -258,7 +258,14 @@ only, JPEG, max 5 MB.
   machine-readable `details.reason`, which the app maps on: `recent-sign-in`
   (`failed-precondition`, a non-guest signed in more than 5 minutes ago)
   and `sign-in-not-deleted` (`internal`, the data is gone but the auth user
-  is not; calling again finishes). Once the auth user is gone it deletes
+  is not; calling again finishes), and `apple-revoke-failed`
+  (`failed-precondition`, nothing deleted). With `data.appleCode` (a fresh
+  Apple authorization code) it first, after the recent sign-in check,
+  exchanges the code at Apple and revokes the refresh token (else the
+  access token) with a client secret it signs (ES256) with the
+  `APPLE_SIGN_IN_KEY` secret (the .p8 PEM of key W3KP8AP8K2; team, key and
+  client id are constants in `functions/src/apple.ts`); a refusal logs
+  Apple's status and body and deletes nothing. Once the auth user is gone it deletes
   `entitlements/{uid}` once more (a failure is logged), so a webhook event
   racing the deletion leaves nothing; later events skip the uid. RevenueCat
   keeps its customer and its events keep coming until the store
@@ -666,7 +673,15 @@ Decisions (the canvases they were drawn on are deleted):
   different account. Sign in with the one you use here." (YG4 A). A user
   with Apple linked confirms "Delete everything?" with "Continue with
   Apple" in place of Delete ("…Sign in with Apple to confirm."), which
-  revokes the app's Apple sign-in before deleting (YG5 B).
+  revokes the app's Apple sign-in before deleting (YG5 B). The revocation
+  asks Apple natively for a fresh authorization code, which the
+  `deleteAccount` function revokes at Apple (Firebase's revocation refused
+  it with `invalid-credential` on the owner's iPhone). A failure on this path never
+  shows the password text: offline keeps "You're offline…", another
+  Apple account keeps "That's a different account…", and the
+  password-looking codes (`invalid-credential`, `wrong-password`) and
+  anything else show "Couldn't delete your data"; a closed Apple sheet
+  says nothing.
 - Screen review (owner's picks, 2026-11-18, canvas
   https://claude.ai/artifact/LTkRmeAmV7YSz6MdZJeS66): a workout open 4 h
   ends itself at its last set with a notification, and its summary gets an
@@ -724,6 +739,93 @@ Decisions (the canvases they were drawn on are deleted):
   (S6 A); PermissionPrompt gets a dialog form (icon circle, title, line,
   Allow, text "Not now") for in-app permission asks (S7 A); Progress's
   Strength and Cardio cards become StatTile (S8 A).
+- Tabs (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/NcABYovwub3DiYhWgVFgAa): each tab has one job:
+  Today is now, Progress how it is going, Programs the plan (P0 A). The
+  week strip is only Progress's Calendar card (P1 A); this week's sets are
+  only Progress's Weekly volume, which takes Today's four muscle bands (P2
+  A); a program day starts only from Today's workout card, the Programs
+  band has no Start (P3 A); a missed day is asked only on Today, the
+  Programs band keeps its Missed row (P4 A); steps are only Progress's
+  card, Today keeps the rest day's walk (P5 B); with no active program the
+  ways in and the list live on Programs and Today's card offers only its
+  one way (See your programs, or See ready-made programs), no Generate
+  (P6 A); "Start empty workout" is a row under Today's workout card every
+  day, gone from the rest-day card, the no-program card and Programs (P7
+  A); the calculators are only Today's card, Profile › More › Calculators
+  goes (P8, Today only). Supersedes the Today and Programs bullets of the
+  2026-11-13 to 15 design decisions above.
+- Kararlar · 5 (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/SY61cw8E47RXMbs2vKFem9): Strength's Exercise
+  sheet is a Forge ChoiceGrid list of radio rows ("Last done Nov 13" under
+  each name) under the search; a removed exercise is a normal row (M1 B).
+  Forge StatTile's regular form gets the compact form's coloured change
+  line, used by Progress › Strength: mono, success when the lift goes up,
+  danger when it drops (M2 A, Forge v0.30.0). In the equipment question
+  (onboarding and generator), equipment that matches no set selects no
+  row, and a muted line under the list reads "Custom equipment · 9 items"
+  with an Edit that opens the items as checkboxes (M3 A). The compact
+  "Weekly sets in this program" card (program page, ready-made program)
+  drops its two small body models: the five busiest muscles as
+  full-width bars (label, sets, band bar), header "49 sets" and chevron
+  unchanged; the full weekly sets page keeps its model (N1 B). The
+  Programs tab no longer shows that card; it stays on the program page. A
+  tap anywhere on the Programs tab's active-program band (not its ⋯ or
+  day rows) opens the program's page, with no chevron or other mark
+  (supersedes "the band opens nothing", 2026-11-15).
+- Renkler · 6 (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/PZUvzt8A5QH2MKSRgeyCxx): R1 A, R2 A, R3 B,
+  R4 A, R5 shared scale with the model's top end green. The muscle heat
+  map and its legend run from `heat-low` to `heat-high` (Slate light
+  #D3E3DA → #3F7D62, dark #3A4F47 → #79B597) by weekly sets, full at 20;
+  a muscle over 20 stays full green, with no danger outline and no red on
+  the model or legend (R1 A, R2 A, R5). Volume bars everywhere (Weekly
+  volume, Weekly sets, a program's weekly sets) fill `band-below` /
+  `band-in` / `band-over`: light #B9D3C4 / #3F7D62 / #A6473C, dark
+  #3F5A4E / #79B597 / #E0907F (R4 A). Model, legend and bars share the
+  band's numbers, 10 and 20 sets (R5). The Exercises tab's "Tap or slide
+  across a muscle" hint is a TipBanner under the model card, gone for
+  good after "Got it" (R3 B). Supersedes the accent ramp and danger
+  outline above.
+- Egzersiz · 7 (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/4aGCQch1LfGQFd78xFe3Fh): X1 A, X2 A, X3 A, X4
+  Similar exercises card with Variations and Alternatives as separate
+  groups and a see-all, X5 all favourite stars ink-muted when off and
+  accent when on, X6 B. The exercise detail keeps only the star (and a
+  custom exercise's ⋯) in its app bar; a stacked ForgeBottomActionBar holds
+  "Add to workout" (primary) above "Add to program" (secondary) (X1 A).
+  Models without a heat map use the green family: main muscles
+  `heat-high`, secondary `muscle-secondary` (light #8FB3A0, dark
+  #567A6A), the muscle under the finger `heat-high` ringed in `ink` and
+  the scrub bar's dot `heat-high` (X2 A). Only the grey search pill flies
+  between the Exercises tab and the list page (ForgeSearchField heroTag),
+  its width easing; the filter button moves with its page (X3 A). The
+  library row's star is a toggled ForgeIconButton; ForgeAppBar's toggled
+  star is ink-muted while off too (X5). On Compare without photos the
+  dates line ends in a small text button "Later day" opening the later
+  days (X6 B). Same pass: the workout card's and generator row's ⋯ and the
+  set panel's plates are ForgeIconButtons, and the program name field has
+  no hint repeating its label.
+- Egzersizler · 8 (owner's picks, 2026-11-18, canvas
+  https://claude.ai/artifact/LACjPRwMzutXTieTMxgQZS): Y1 A, Y2 B, Y3 A
+  kept, Y4 A. On the exercise list page only the search field and its
+  filter button stay pinned under the title; the active filter chips,
+  Clear all, Main · N / Also works · N, the count and the sort scroll away
+  with the rows, and once they have gone a selected chip between the
+  pill and the filter button names them ("5 filters", "Chest · Main"), a
+  tap on it scrolling back to the top (ForgeSearchField summary, Forge
+  v0.33.0) (Y1 A). The exercise picker's Add and Leave out forms open from
+  the root navigator, so from inside a tab the iOS sheet (and Android's
+  full-screen dialog) covers the tab bar too; Swap and Replace stay pushed
+  in their tab, at `…/swap` (Y2 B). The analytics consent page stays a
+  full-screen page (Y3 A); "New exercise" from the picker stays a full
+  page over it (Y4 A).
+- Egzersiz · düğmeler (owner's pick, 2026-11-19, canvas
+  https://claude.ai/artifact/TDYNW9cLpTVgihVFauueeN): EB1 G, the owner's
+  own answer after A–F were turned down. The exercise detail's app bar
+  holds only ⋯, its menu: Add to workout, Add to program, Add to / Remove
+  from favourites, and for a custom exercise Edit and Delete. No bottom
+  bar. Supersedes X1 A.
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
@@ -1026,7 +1128,8 @@ Decisions (the canvases they were drawn on are deleted):
   in a card, both under the search. Exercise detail: the model's pair form
   (Worked muscles, Front / Back, Main / Secondary) for every exercise,
   each figure filling its half of the card, the body very light and the
-  secondary muscles a 55% accent tone (K4 A);
+  main muscles heat-high and secondary muscle-secondary (Egzersiz · 7
+  X2 A, superseding K4 A's accent tones);
   facts as plain rows (label left, value right), equipment alternatives
   as extra lines and Also called last; a custom exercise shows its Custom
   tag with "Logged as …" under the model and only Equipment as a fact;
@@ -1034,9 +1137,12 @@ Decisions (the canvases they were drawn on are deleted):
   Cues as bulleted lines in plain cards; a catalogue exercise has a "Your
   note" card (only its title and Add while empty; the note with Edit
   once written; a sheet with Save);
-  Similar rows end in their tag and a chevron; the app bar's star is an
-  outline that fills when a favourite, Add opens a menu and a custom
-  exercise has ⋯ (Edit, Delete after a dialog); the program and day
+  a "Similar exercises" SectionCard (total count and chevron) previews
+  Variations · N and Alternatives · N, up to three names each, and opens
+  a sheet listing every one by group, a row closing it and opening that
+  exercise; the app bar's star is an ink-muted outline that fills accent
+  when a favourite, a custom exercise has ⋯ (Edit, Delete after a dialog),
+  and the bottom bar stacks Add to workout over Add to program; the program and day
   sheets are list rows, a full day shown off ("Lower A · Full") and not
   tappable, the day sheet titled "Add to which day of Upper Lower?"; no
   programs asks "No programs yet" first; not found is one untitled line.
@@ -1125,8 +1231,7 @@ Decisions (the canvases they were drawn on are deleted):
   page with the mono "n / 9" counter after the progress (onboarding too)
   and "Generate a program" over each question; Continue, "Create my
   program" on the last; the equipment answer is the OnboardingQuestion
-  card's (preset chips, ListRow checkboxes in front, seven common items
-  and every item owned, then Show all equipment for the rest; onboarding and Your profile too); focus muscles
+  question's (one radio row per set; see Onboarding, L3); focus muscles
   as chips under "Focus muscles (2 of 3)"; left-out exercises as rows with
   × and a secondary "Add exercises to leave out".
 - Program builder (owner's picks, 2026-11-15): the name, then "Length in
@@ -1222,7 +1327,8 @@ Decisions (the canvases they were drawn on are deleted):
   when out of range), the zero hint as a NoticeBanner ("No steps showing?",
   Open Settings), This week / Last 30 days as a segmented control over the
   chart (the week as Forge Chart.bar with "goal 10,000", the 30 days as
-  Forge Chart.barDense, a tap naming "10,500 · Nov 3"), then "Daily average" and
+  Forge Chart.barDense; holding a bar of either names it, "5,739 steps ·
+  Mon, Nov 3", K17), then "Daily average" and
   "Goal reached · n of m days" rows on both views. Access is Forge
   PermissionPrompt: ask ("See your steps here", "GetWorkout reads steps and
   cardio from Apple Health. Nothing else is read.", Allow access, which
@@ -1266,8 +1372,9 @@ Decisions (the canvases they were drawn on are deleted):
   lacks "Photo not on this device"); no photos on either day: a card "No progress photos
   on these days" and a muted mono "Oct 18 → Nov 1" under the
   Previous / First / Other date control; Other date (also when chosen)
-  and, on Compare, the later date (accent in the photo card's line, the
-  plain mono line without photos) open sheets "Compare with" / "Later
+  and, on Compare, the later date (accent in the photo card's line;
+  without photos a small text button "Later day" at the end of the mono
+  line, Egzersiz · 7 X6 B) open sheets "Compare with" / "Later
   day" listing the days with the current one ticked; change boxes
   (change large, "84.1 → 82.9 kg" under it, "—" for a side not
   measured): Weight, Body fat, Lean mass, Fat mass, then the
@@ -1307,7 +1414,9 @@ Decisions (the canvases they were drawn on are deleted):
   program's weekly sets page: "Drag to turn" and "target 10–20 per muscle".
 - Strength (owner's picks, 2026-11-16): the title is "Strength"; an
   "Exercise" row opens the Exercise sheet (search and the Strength list's
-  rows, this one ticked, its height following the rows; another exercise replaces the page, so Back still
+  rows as Forge ChoiceGrid radio rows, M1 B: "Last done Nov 13" under
+  each name, this one selected, a removed exercise a normal row, its
+  height following the rows; another exercise replaces the page, so Back still
   returns to the list); a removed exercise's row reads "Exercise no longer
   in your library". Ranges are Forge SegmentedControl (locked segments open
   the paywall); the chart is Forge Chart.line "Estimated 1RM", one dot per
@@ -1492,7 +1601,7 @@ Decisions (the canvases they were drawn on are deleted):
   browser (the function was called directly), and prod has none of the
   functions or the newer Firestore rules. iOS push: `aps-environment` is
   in `Runner.entitlements` and `remote-notification` in the background
-  modes (2026-11-18, signs with the paid team). The APNs key 699QV25PQM
+  modes (2026-11-18, signs with the paid team). The APNs key W3KP8AP8K2
   is uploaded to both Firebase projects (development and production). An
   announcement sent to `announcements_en` on dev arrived on the owner's
   iPhone the same day, in front (shown by the app) and in the background
@@ -1726,10 +1835,13 @@ the feature you are about to touch, and keep it true when you change it.
   server (not a cached copy, which may predate an answer from another
   device) says there is no answer and the same user's profile is past
   onboarding (never while a new user's profile loads in the tabs after
-  signing out, deleting the account or switching accounts), in a dialog
-  over the tabs only while they are the top route (never over onboarding,
-  the workout, the paywall or another dialog), with two equal choices and
-  no dismissing. While an account is being deleted (`DeletionUnderway`)
+  signing out, deleting the account or switching accounts), as a full page
+  (`AnalyticsConsentPrompt`, Forge `PermissionPrompt.consent`, K8/L2) over
+  the tabs only while they are the top route (never over onboarding, the
+  workout, the paywall or a dialog), with two equal choices and no way
+  back but an answer. Onboarding asks the same page right after the last
+  question when the server already says there is no answer; an answer
+  that does not save there is asked again over the tabs. While an account is being deleted (`DeletionUnderway`)
   its consent is not followed, so the deleted document neither asks nor
   records an answer; a deletion that failed follows it again. Changed
   with the switch under Profile → Privacy. The settings feature leaves the
@@ -1757,14 +1869,18 @@ the feature you are about to touch, and keep it true when you change it.
   that renews it with that provider (`forge_auth`'s
   `ReauthenticateWithProvider`); a cancelled provider sheet leaves the
   dialog open and asks nothing. A user with Apple linked always goes
-  through Apple first: `RevokeAppleSignIn` signs in again with Apple and
-  revokes the app's Apple tokens (App Store 5.1.1(v)); a closed sheet
-  deletes nothing, a failed revocation deletes nothing and shows the
-  delete failure. Revocation needs Apple's code flow key (Team ID, Key ID,
-  .p8) in each Firebase project's Apple provider: set in dev and prod on
-  2026-11-18 (key 699QV25PQM, which also has APNs). Checked that day on the
-  owner's iPhone: a guest linked with Apple was deleted, its Apple
-  sign-in revoked. A guest is deleted
+  through Apple first: `forge_auth`'s `ReauthenticateWithAppleCode` signs
+  in again with Apple natively and returns a fresh authorization code,
+  which `deleteAccount` uses to revoke the app's Apple tokens at Apple
+  before deleting anything (App Store 5.1.1(v)); the Apple button of the
+  renewed sign-in dialog does the same. A closed sheet deletes nothing; a
+  failed Apple sign-in or a refused revocation deletes nothing and shows
+  the delete failure. Firebase's own revocation
+  (`revokeTokenWithAuthorizationCode`) failed on the owner's iPhone with
+  `invalid-credential` and hid Apple's answer, so the function does it
+  with the `APPLE_SIGN_IN_KEY` secret (set per Firebase project before
+  deploying `deleteAccount`) and logs Apple's answer on failure. A guest
+  is deleted
   the same way, without that check. Once the server deleted the data,
   still signed in (so nothing of the next guest is touched), the app
   removes the user's kept workouts file (unreadable copies too), cancels
@@ -1812,9 +1928,26 @@ the feature you are about to touch, and keep it true when you change it.
   changes (an edit left as it opened, a page that saved), other tabs'
   stacks, pushes and tab switches are left alone. Back and the guard share
   one prompt per page, so nothing asks twice.
+- **Navigation gestures** (owner, 2026-11-18, after the developer Gesture
+  lab): every pushed page is the platform's page route (`AppPage`,
+  `lib/core/pages.dart`): on iOS the Cupertino slide with Flutter's left
+  edge back swipe and default scroll physics. Tab roots and the start
+  pages (splash, retry, onboarding, suggested program) have no
+  transition. go_router's page for a `builder` route had none either, so
+  no swipe: its MaterialApp check looks for `material_ui`'s class, not
+  Flutter's; every pushed route has a `pageBuilder` now. Pages over the
+  flow (the paywall, the exercise picker's Add and Leave out forms) are an
+  iOS sheet (`SheetPage`) that a drag down closes, from its list's top
+  too, and keep close; on Android a full-screen dialog. A page that
+  refuses to pop (unsaved changes, `PopScope`) still follows the edge
+  swipe; let go where it would leave, it springs back and the page's own
+  prompt asks (Keep editing stays, Discard leaves), as back does. The
+  analytics consent prompt stays a full-screen page that must be
+  answered.
 - **Profile tab** (UX pass, 2026-11-13, owner's pick; studio board
   2026-11-15): one page, top to bottom: the account header, the Premium
-  card, More (Your profile, Calculators), then the settings groups (Units,
+  card, More (Your profile; the calculators are Today's since the Tabs
+  picks), then the settings groups (Units,
   Workout, Reminders, Connected apps, Appearance), Privacy and, in debug
   builds, on the fake the Fake store rows. An Apple relay address
   (`@privaterelay.appleid.com`) is never shown: a named user shows the
@@ -1933,15 +2066,29 @@ the feature you are about to touch, and keep it true when you change it.
   only in onboarding "We use it to pick your first program." under it.
   Only in onboarding, the target weight reads "Your goal" over "Now,
   where do you want your weight to be?" and "You weigh 70 kg now. Leave it
-  there to hold your weight." (K10 A; its ruler's "Now 70 kg" marker
-  waits on Forge). Every next question slides in from the right as the
+  there to hold your weight." (K10 A); the target's ruler marks the
+  weight now, "Now 70 kg" (Forge `NumberPicker.ruler(marker:)`, also in
+  Your profile). Every next question slides in from the right as the
   one before leaves to the left, and Back slides the other way, so a step
   that looks like the last still reads as a new page (K10).
-  Equipment (L3 A, waiting on Forge's info button): after a set's
-  equipment is changed in its sheet, the row it was opened from stays
-  selected, and Done selects that row.
+  Equipment (L3 A): the sets (Full gym, Home gym, Dumbbells and a bench,
+  Pull-up bar and dip bars, Resistance bands) as ChoiceGrid list rows
+  like the goal question, the one matching the answer selected; a row tap
+  picks its set; its info button ("Details of <set>") opens a sheet titled
+  by the set, "Untick what you don't have, tick anything extra.", the
+  seven common items and every item ticked as checkboxes, More equipment
+  for the rest and Done, which picks the tuned set; the row it was opened
+  from stays selected while the question shows. Coming back with
+  equipment that matches no set (M3 A) selects no row; a muted line under
+  the list reads "Custom equipment · 9 items" (the items owned, bodyweight
+  aside) with an Edit opening the same checkbox sheet titled "Custom
+  equipment"; Done there keeps the items, selecting a set's row if they
+  now match one, and picking a set replaces the line. The generator's
+  equipment question is the same.
   After the last question (`afterOnboarding`,
-  `OnboardingPermissionsPage`), the progress bar full: "Remind you on
+  `OnboardingPermissionsPage`), the progress bar full: "Help improve
+  GetWorkout?" (the analytics consent page, only while the server says
+  there is no answer; L2), then "Remind you on
   training days?", only while the device does not let the app notify yet
   (allowed already, the step is left out and the reminder stays as it is)
   (Turn on reminders asks the system and, if allowed,
@@ -1968,7 +2115,7 @@ the feature you are about to touch, and keep it true when you change it.
   `profile_questions.dart`).
 - **Birth year**: a plausibility range (age 13-100), not an age gate. An
   implausible year is only not accepted as an answer; nothing is blocked.
-- **First-use tips**: three inline banners (Material `MaterialBanner`,
+- **First-use tips**: four inline banners (Material `MaterialBanner`,
   never modal), each with "Got it", none until the user's settings have
   arrived: effort, inside the effort question the first time, in the
   rest strip or the bar (under the steps, scrolling with them, so the
@@ -1976,13 +2123,15 @@ the feature you are about to touch, and keep it true when you change it.
   effort is picked; set types, at the top of the add-set sheet, until a
   type is picked there; automatic warm-ups, at the top of the workout in
   progress once warm-ups were added to it automatically
-  (`warmupsAdded`), until the setting is changed. Dismissing or using the
+  (`warmupsAdded`), until the setting is changed; the body model, under
+  the Exercises tab's model once it has loaded, until it is dismissed or a
+  muscle is opened from the model. Dismissing or using the
   thing marks it seen for good, in `settings.seenTips` (codes `effort`,
-  `setTypes`, `autoWarmups`; the app has no local flag store, and this
+  `setTypes`, `autoWarmups`, `muscleModel`; the app has no local flag store, and this
   follows the user across devices). Tips are only ever added to that list,
   field by field (`arrayUnion`), never written with the other settings, so
   two devices and codes from newer versions are kept. Which tip is due is
-  pure logic (`workout_tips.dart`).
+  pure logic (`workout_tips.dart`, `exercise_tips.dart`).
 - **Explanations for beginners**: each set type has a one-line description
   under its name in the add-set sheet and the bubble's long-press menu
   (Normal "A regular working set.", Warm-up "A lighter set to get ready.
@@ -2077,7 +2226,9 @@ the feature you are about to touch, and keep it true when you change it.
   + for a custom exercise; there is no model on it. Opened from the box,
   its search field takes focus once the page's route animation has
   completed (one keyboard request, after the transition). The box and the
-  page's search field are one Hero, drawn as the pill in flight. One
+  page's search field share a ForgeSearchField heroTag
+  (`librarySearchHeroTag`): only the grey pill flies, its width easing
+  between the two ends; the filter button moves with its page. One
   gesture on the model opens one page: a muscle opens nothing while a page
   already covers the model. A muscle opens the same page at
   `/exercises/list?muscle=<code>`, without the keyboard. State: the list
@@ -2100,21 +2251,26 @@ the feature you are about to touch, and keep it true when you change it.
   filters and the sort stay); its field claims focus for the first frames
   after the page is in, since the route's own focus and the Hero's flight
   land after the first request. Every exercise list in the app is this
-  widget (`LibraryListView`); the exercise picker (`ExercisePickerPage`,
+  widget (`LibraryListView`): one scroll view under the pinned search,
+  the filters, sections, count and sort scrolling with the rows and named
+  by the search's summary chip once out of sight (Egzersizler · 8 Y1 A);
+  the exercise picker (`ExercisePickerPage`,
   for programs, the generator, the workout and workout history) uses it
   with its own cubit and no sections. The picker's route (`…/pick`) takes
   `max`, `multiple` and a `form` (`add`, `leaveOut`, `swap`, `replace`,
-  with `exercise` and, for swap, `logged`); each place declares the most
+  with `exercise` and, for swap, `logged`); Add and Leave out open there
+  from the root navigator, over the tab bar, while Swap and Replace open
+  at the sibling `…/swap` inside their tab; each place declares the most
   its list holds (40 a workout, 20 a program day or a leave-out pick).
   `pickSwap` and `pickReplacement` open the Swap and Replace forms and
   return the picked exercise. "Create custom exercise" opens the form
   above the picker (`…/pick/new?name=`), which pops with the new id; the
   picker chooses it once the catalogue holds it (5 s at most).
-- **Exercise detail** (UX pass, 2026-11-13, owner's pick): the app bar
-  holds the name, the favourite star, one Add button whose menu offers
-  "Add to workout" (the workout in progress, else asking to start one) and
-  "Add to program", the same in every place the page opens, and, for a
-  custom exercise, a menu with Edit and Delete. The body: the model
+- **Exercise detail** (UX pass, 2026-11-13, owner's pick; Egzersiz · 7):
+  the app bar holds the name and ⋯, whose menu offers "Add to workout"
+  (the workout in progress, else asking to start one), "Add to program",
+  the favourite and, for a custom exercise, Edit and Delete, the same in
+  every place the page opens (EB1 G). The body: the model
   (front and back) with Main muscles and Also works; for a custom
   exercise the "Custom" tag and its logging type; a card of facts
   (equipment with its alternative sets; for a catalogue exercise also
@@ -2122,9 +2278,12 @@ the feature you are about to touch, and keep it true when you change it.
   to do it as numbered steps; Common mistakes, Safety and Cues as
   bulleted lines, each its own card; the custom exercise's Note, or on a
   catalogue exercise the user's own note ("Your note", stored in
-  `users/{uid}.exerciseNotes`, trimmed, blank removes it); then one Similar
-  exercises list, alternatives first, each tagged Alternative or
-  Variation. An alternative of the same family is listed once, as a
+  `users/{uid}.exerciseNotes`, trimmed, blank removes it); then one
+  "Similar exercises" card: its total, then Variations and Alternatives as
+  two groups with their counts and their first three names; a tap opens
+  a sheet with every one by group (rows without tags, as the group names
+  the relation), a row closing it and opening that exercise in the same
+  tab. An alternative of the same family is listed once, as a
   variation. Anything an exercise lacks is left out, so a custom exercise
   shows the model, its tag, equipment, Note and nothing below. Records and
   progress left the page; an exercise's strength page opens from Progress.
@@ -2139,19 +2298,23 @@ the feature you are about to touch, and keep it true when you change it.
   logging type changed are fitted to the new type when the builder loads
   them, and the user is told. The Programs tab (UX pass,
   2026-11-13, variant A) shows the active program first as one card: "Active
-  program" and its name (opening its page, a lock when it is a locked
-  premium copy), "Week n of N · <weekdays>" ("Week n" without a length,
+  program" and its name (a lock when it is a locked premium copy; a tap
+  anywhere on the band but its ⋯ and day rows opens the program's page,
+  with no chevron, Kararlar · 5), "Week n of N · <weekdays>" ("Week n" without a length,
   "Finished" once it ran its length; weeks count from the start date, as
   the length does, `ProgramSchedule.week`) with a progress bar when it has
-  a length, the next workout's Start <day> (the one Start of a program day
-  in this view), the locked notice or the missed-day prompt, then this
-  week's days by date, each Done, Missed, Next or planned, without Start;
-  another day than the next starts from its card on the program page. Then
-  one card with four rows, the same with or without programs: ready-made
-  programs, the generator (locked without premium), "New program" (the
-  builder) and "Start empty workout"; then the other programs ("Your
-  programs" without an active one) with their days and length. Without an
-  active program the rows come first; no floating button.
+  a length, the locked notice, then this week's days by date, each Done,
+  Missed, Next or planned; no Start and no missed-day choices (Tabs P3,
+  P4: Today's workout card starts the day and answers a missed one;
+  another day than the next starts from its card on the program page).
+  Then one card with three rows, the same with or without programs:
+  ready-made programs, the generator (locked without premium) and "New
+  program" (the builder); an empty workout starts on Today (P7). Then the
+  other programs ("Your programs" without an active one; the weekly sets
+  card is only on the program page, Kararlar · 5) under a
+  SectionLabel, with their days and length. Without an active program the
+  "No active program" prompt and the rows come first; no floating
+  button.
 - **Program page** (UX pass, 2026-11-13, variant B; Edit moved into the
   menu by the owner on 2026-11-15): a menu with Edit, Duplicate and Delete
   in the app bar; a summary card with the state
@@ -2479,7 +2642,11 @@ the feature you are about to touch, and keep it true when you change it.
   normal and drop sets stay in place (`retypedSetPosition`); the selection
   follows the moved set, and a running rest forgets the set it followed as
   for any move. The **set bar** sits at the bottom of the page above the rest
-  strip and the safe area; while the keyboard is up the rest strip steps
+  strip and the safe area; typing a value, the keyboard carries Forge
+  StepperField's Next / Done bar: Next types the following value (weight,
+  then reps, then a drop's values in order; greyed on the last), Done
+  closes the keyboard, and one tap on another value moves the typing there
+  keeping what was typed (K2 A+B); while the keyboard is up the rest strip steps
   aside (still mounted) so the bar sits right on the keyboard, the list
   above shrinks and stays scrollable, and the selected bubble is
   scrolled into view. It shows the selected set ("Squat · set 2 of 3", last
@@ -2674,7 +2841,8 @@ the feature you are about to touch, and keep it true when you change it.
   settings switch); the permission is the device's and is never written
   to Firestore. On a device not asked yet, tapping Start on a workout
   (any start: program day, empty, from an exercise) asks in the app
-  first, "Get alerts when rest ends?", before the workout opens (K3 B),
+  first, "Get alerts when rest ends?" (a Forge `PermissionPrompt.dialog`,
+  S7; closing it is a Not now), before the workout opens (K3 B),
   only while the rest timer is on, unless they said no or said yes and the
   device already allows it; the system is asked only after "Allow", never
   on its own. "Not now" is remembered on that device only (a marker file
@@ -2882,9 +3050,11 @@ the feature you are about to touch, and keep it true when you change it.
 
 ### Today and progress
 
-- **Today tab** (`lib/features/today`): a scrolling list of independent
-  cards, each on its own data, so one failing leaves the others. Next
-  workout: while a workout is in progress (`ActiveWorkoutState.inProgress`,
+- **Today tab** (`lib/features/today`; Tabs picks 2026-11-18): what to do
+  now, three parts: the workout card, a "Start empty workout" row ("Pick
+  exercises as you go", every day, through `startFreeWorkout`, which asks
+  first while a workout is in progress) and the calculators card. The
+  week strip, this week's sets and steps are Progress's. Next workout: while a workout is in progress (`ActiveWorkoutState.inProgress`,
   so not an empty one) the card is that workout, labelled "Workout in
   progress", with "Resume workout", which opens it like the workout bar
   and never starts another. A workout stores no day name, so its program
@@ -2914,47 +3084,47 @@ the feature you are about to touch, and keep it true when you change it.
   premium status of a premium copy is unknown the card shows only its
   title, as the Programs tab waits, so a missed day never shows as a
   planned one with Start. A locked premium copy shows its day, locked,
-  with Start opening the paywall. Without a program, or once it finished: the
-  catalogue, the generator and "Start empty workout" (the app never calls
-  it "free": users read that as "at no cost"). Week strip: the
-  calendar's `calendarEntries` and marks over the current week from the
-  app's first weekday (see Week start), drawn by `MonthGrid` as one week; the strip and
-  every day open the calendar, which has no route for a given date. No
-  quick actions besides a calculators card (a chip per calculator) and,
-  on a rest day, the rest-day card's suggestions (owner's picks): an empty
-  workout starts from the Programs tab, cardio is logged under Progress →
-  Cardio, a past workout is added on the calendar. Volume
-  card: `WatchWeeklyVolume` with one week, never the trend, whatever the
-  user's premium: the trained muscles counted in, below and above the
-  band and the four most trained as band bars with the week's total
-  (owner's pick); it opens Weekly volume,
-  and has no model. Steps card: `GetTodaySteps` against
-  `settings.stepGoal` (read again when the goal changes), opening the
-  Steps page. Today only checks access and never asks the system: not
-  asked here yet, refused or Health Connect missing show one line, "See
-  your steps", that opens the Steps page to set it up; a device without a
-  health store shows no card. Cards show their title and shimmering grey
-  bars while loading (owner's pick, Çelişkiler, 2026-11-15); no spinner on
-  the home tab; cubits move to
-  the new day and week when the app resumes, and the week strip also when
-  a snapshot arrives after the week ended; steps are read again on
-  resume.
+  with Start opening the paywall. Without a program, or once it finished:
+  one way, See your programs (saved programs, none finished) or See
+  ready-made programs; the generator and the program list are on Programs
+  (P6), the empty workout is Today's row (the app never calls it "free":
+  users read that as "at no cost"). The today and done-today it needs come
+  from the week's `TodayWeekCubit` (the one Progress's Calendar card
+  shows). No quick actions besides the calculators card (a chip per
+  calculator; the calculator pages are routes of the Today tab,
+  `/today/calculators/...`, the Plates calculator's bar and plates page
+  too) and, on a rest day, the rest-day card's suggestions (owner's
+  picks): cardio is logged under Progress → Cardio, a past workout is
+  added on the calendar. The rest-day card's walk reads `GetTodaySteps`
+  against `settings.stepGoal` (read again when the goal changes and on
+  resume) and only checks access, never asks the system. The workout card
+  shows its title and shimmering grey bars while loading (owner's pick,
+  Çelişkiler, 2026-11-15); no spinner on the home tab; cubits move to the
+  new day when the app resumes.
 - **Progress tab** (UX pass, 2026-11-13; screen step 2026-11-15): one
   card per area, each opening its page from anywhere on the card. Body:
   the latest weight, the change since the previous weigh-in, the newest
   body fat, the weights of the last 12 weeks as a line, Log weight and
   Measurement day; the measurement-day prompt under it when due.
-  Calendar: this week's strip (the one Today shows), always, with the
-  week's dates as its detail; no month count. Weekly volume: this week's
-  sets against the active program's planned weekly sets (every day of a
-  week once, `ProgramListState.plannedWeeklySets`) as "96 / 120 sets" and
-  a bar, then how many trained muscles are in, below and above the band;
-  without a running program "96 sets" and no bar. Strength: the most
-  recently trained exercise with an estimated 1RM, its latest workout's
-  best e1RM and the change since the first e1RM of the last 12 weeks ("+3
-  in 8 weeks", none with one there); the card opens the strength list.
-  Cardio: this week's sessions, distance and minutes. Steps: today
-  against the goal; no card without a health store. Each card reads
+  Calendar: this week's strip (the app's only one, Tabs P1), always, with
+  the week's dates as its detail; no month count; the strip and every day
+  open the calendar. Weekly volume (the app's only this-week sets, P2):
+  `WatchWeeklyVolume` with one week, this week's sets against the active
+  program's planned weekly sets (every day of a week once,
+  `ProgramListState.plannedWeeklySets`) as "96 / 120 sets" and a bar, the
+  four most trained muscles as VolumeBands, then how many trained muscles
+  are in, below and above the band; without a running program "96 sets"
+  and no bar. Strength (a StatTile, S8): the most recently trained
+  exercise with an estimated 1RM as its detail ("Bench Press e1RM"), its
+  latest workout's best e1RM as the figure with the unit apart, and the
+  change since the first e1RM of the last 12 weeks as its change line
+  ("+3 in 8 weeks", success when up, danger when down, ink-muted when
+  none, M2 A; "First estimate" as the caption with one there); the card
+  opens the strength list. Cardio (a StatTile, S8): this week's distance as the figure, "2
+  sessions · 74 min" as the caption; with no distance this week the
+  minutes are the figure and the sessions the caption. Steps (the app's
+  only steps card, P5): today against the goal; not set up shows "See
+  your steps"; no card without a health store. Each card reads
   through its own cubit and shows its own failure, so one area failing
   leaves the others.
 - **Calendar**: Progress → Calendar is one scrolling page (see Design ›
@@ -2996,9 +3166,10 @@ the feature you are about to touch, and keep it true when you change it.
   ones (custom exercises included), else, for a retired or deleted one,
   those stored with the workout. Each muscle is judged against 10-20 sets
   whatever the user's level: below, within (both ends inside) or above, in
-  the band colours on the bars; the model is painted by weekly sets on one
-  accent ramp with a danger outline over 20 (owner's pick); a muscle with no
-  sets keeps the body's colour. Tapping a muscle
+  the band colours on the bars; the model is painted by weekly sets on the
+  heat scale (heat-low to heat-high at 20, staying heat-high above it, no
+  outline; Design › Renkler · 6); a muscle with no sets keeps the body's
+  colour. Tapping a muscle
   lists the exercises and workouts that gave it sets. The 12-week trend
   (the week shown and the 11 before it) is Premium, a locked row opening
   the paywall otherwise. Only Premium reads those 12 weeks (again when

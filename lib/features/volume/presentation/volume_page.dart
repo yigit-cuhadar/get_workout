@@ -4,6 +4,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/theme.dart';
 import '../../../core/widgets/muscle_heat.dart';
 import '../../../core/widgets/muscle_model.dart';
 import '../../../core/widgets/volume_band.dart';
@@ -233,8 +234,8 @@ class VolumeMuscleList extends StatelessWidget {
 }
 
 /// The model in its card with each trained muscle of [sets] in the heat
-/// ramp's colour (an untrained one keeps the body's colour), what it does
-/// and the ramp under it. Tapping a muscle calls [onOpen]; without it the
+/// scale's colour (an untrained one keeps the body's colour), what it does
+/// and the scale under it. Tapping a muscle calls [onOpen]; without it the
 /// model only turns, and its hint says so. Before the body model loads,
 /// and while [sets] are unknown (no [semanticLabel]), it shimmers.
 class VolumeModel extends StatefulWidget {
@@ -266,7 +267,6 @@ class _VolumeModelState extends State<VolumeModel> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final p = ForgeStyle.of(context).colors;
     final sets = widget.sets;
     final label = widget.semanticLabel;
     final model = context.watch<BodyModelCubit>().state;
@@ -280,8 +280,7 @@ class _VolumeModelState extends State<VolumeModel> {
         ),
         BodyModelReady(:final model) when label != null => MuscleModel(
           model: model,
-          colors: muscleHeatColors(p, sets),
-          outlined: muscleHeatOver(sets),
+          colors: muscleHeatColors(GwColors.of(context), sets),
           sides: false,
           onOpen: widget.onOpen,
           semanticLabel: label,
@@ -300,7 +299,7 @@ class _VolumeModelState extends State<VolumeModel> {
   }
 }
 
-/// What the model does, over the heat ramp.
+/// What the model does, over the heat scale.
 class _Footer extends StatelessWidget {
   const _Footer(this.hint);
   final String hint;
@@ -454,6 +453,10 @@ class _Trend extends StatelessWidget {
               label: '${week.start.day}',
               value: sets[i],
               valueLabel: numbers.format(sets[i]),
+              tooltip: l10n.volumeTrendTooltip(
+                l10n.setsText(sets[i]),
+                dates.formatShortMonthDay(week.start.toLocalDateTime()),
+              ),
             ),
         ],
         semanticLabel: l10n.volumeTrendLabel(

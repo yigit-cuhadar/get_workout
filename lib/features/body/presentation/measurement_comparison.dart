@@ -6,6 +6,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/widgets/choice_sheet.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/domain/user_settings.dart';
@@ -13,7 +14,6 @@ import '../../settings/presentation/settings_cubit.dart';
 import '../domain/body_entry.dart';
 import '../domain/entry_body_fat.dart';
 import '../domain/measurement_summary.dart';
-import 'body_state_card.dart';
 import 'body_text.dart';
 import 'measurement_summary_cubit.dart';
 
@@ -35,30 +35,45 @@ class MeasurementComparison extends StatelessWidget {
     return BlocBuilder<MeasurementSummaryCubit, MeasurementSummaryState>(
       builder: (context, state) => switch (state.status) {
         MeasurementSummaryStatus.loading => _Loading(compare: compare),
-        MeasurementSummaryStatus.failure => BodyStateCard(
-          ErrorView(
-            title: l10n.bodyLoadFailed,
-            message: l10n.loadFailedDetail,
-            retryLabel: l10n.retry,
-            onRetry: context.read<MeasurementSummaryCubit>().retry,
-          ),
+        MeasurementSummaryStatus.failure => ListView(
+          padding: const EdgeInsets.all(Gap.md),
+          children: [
+            ErrorView(
+              title: l10n.bodyLoadFailed,
+              message: l10n.loadFailedDetail,
+              retryLabel: l10n.retry,
+              onRetry: context.read<MeasurementSummaryCubit>().retry,
+              card: true,
+            ),
+          ],
         ),
-        MeasurementSummaryStatus.notFound => BodyStateCard(
-          EmptyView(icon: ForgeIcons.event, message: l10n.bodyNotFound),
+        MeasurementSummaryStatus.notFound => ListView(
+          padding: const EdgeInsets.all(Gap.md),
+          children: [
+            EmptyView(
+              icon: ForgeIcons.event,
+              message: l10n.bodyNotFound,
+              card: true,
+            ),
+          ],
         ),
-        MeasurementSummaryStatus.noMeasurementDays => BodyStateCard(
-          EmptyView(
-            icon: ForgeIcons.event,
-            title: l10n.bodyNoMeasurementDaysTitle,
-            message: l10n.bodyNoMeasurementDays,
-            actions: [
-              ForgeButton(
-                label: l10n.bodyMeasurementDay,
-                variant: ForgeButtonVariant.secondary,
-                onPressed: () => context.go(Routes.bodyMeasureNew),
-              ),
-            ],
-          ),
+        MeasurementSummaryStatus.noMeasurementDays => ListView(
+          padding: const EdgeInsets.all(Gap.md),
+          children: [
+            EmptyView(
+              icon: ForgeIcons.event,
+              title: l10n.bodyNoMeasurementDaysTitle,
+              message: l10n.bodyNoMeasurementDays,
+              actions: [
+                ForgeButton(
+                  label: l10n.bodyMeasurementDay,
+                  variant: ForgeButtonVariant.secondary,
+                  onPressed: () => context.go(Routes.bodyMeasureNew),
+                ),
+              ],
+              card: true,
+            ),
+          ],
         ),
         MeasurementSummaryStatus.ready => _Summary(state, compare: compare),
       },
@@ -67,24 +82,6 @@ class MeasurementComparison extends StatelessWidget {
 }
 
 const _gap = SizedBox(height: 10);
-
-/// A section label over a card: muted, or in ink for the one-day values.
-class _Label extends StatelessWidget {
-  const _Label(this.text, {this.muted = true});
-  final String text;
-  final bool muted;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.fromLTRB(Gap.xs, muted ? Gap.sm : 0, Gap.xs, 0),
-    child: Text(
-      text,
-      style: Theme.of(context).textTheme.titleSmall!.copyWith(
-        color: muted ? ForgeStyle.of(context).colors.inkMuted : null,
-      ),
-    ),
-  );
-}
 
 /// [children] two to a row, each row as tall as its taller box.
 class _Grid extends StatelessWidget {
@@ -209,7 +206,7 @@ class _Summary extends StatelessWidget {
         ...head,
         if (reason != null) ...[_gap, reason],
         _gap,
-        if (before == null) ...[_Label(l10n.bodyValues, muted: false), _gap],
+        if (before == null) SectionLabel(l10n.bodyValues),
         _Grid(_boxes(l10n, summary, settings)),
         if (target != null) ...[
           _gap,
@@ -229,7 +226,7 @@ class _Summary extends StatelessWidget {
                   },
           ),
         ],
-        if (!compare) ...[_gap, _Label(l10n.bodyPhotos), _gap, photos],
+        if (!compare) ...[_gap, SectionLabel(l10n.bodyPhotos), photos],
       ],
     );
   }
@@ -412,7 +409,8 @@ class _BaselinePicker extends StatelessWidget {
 }
 
 /// The compared dates in data, when there are no photos to carry them;
-/// on Compare, a tap on the later one picks another later day.
+/// on Compare, a small Later day button at the line's end picks another
+/// later day.
 class _DateLine extends StatelessWidget {
   const _DateLine(this.state, {required this.compare});
   final MeasurementSummaryState state;
@@ -435,9 +433,16 @@ class _DateLine extends StatelessWidget {
       ),
     );
     if (!compare || state.laterCandidates.length < 2) return line;
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: InkWell(onTap: () => _pickLater(context, state), child: line),
+    return Row(
+      children: [
+        Expanded(child: line),
+        ForgeButton(
+          label: l10n.bodyCompareLater,
+          variant: ForgeButtonVariant.text,
+          size: ForgeButtonSize.small,
+          onPressed: () => _pickLater(context, state),
+        ),
+      ],
     );
   }
 }
@@ -464,33 +469,16 @@ Future<String?> _pickDay(
   required String title,
   required List<BodyEntry> days,
   required String? current,
-}) {
+}) async {
   final l10n = AppLocalizations.of(context);
-  return showForgeBottomSheet<String>(
-    context: context,
-    builder: (context) => ForgeBottomSheet(
-      title: title,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final entry in days)
-              ListRow(
-                title: l10n.bodyFullDate(entry.date),
-                trailing: entry.id == current
-                    ? ForgeIcon(
-                        ForgeIcons.check,
-                        size: 18,
-                        color: ForgeStyle.of(context).colors.accent,
-                      )
-                    : null,
-                onTap: () => Navigator.pop(context, entry.id),
-              ),
-          ],
-        ),
-      ),
-    ),
+  final picked = await showChoiceSheet(
+    context,
+    title: title,
+    values: days,
+    selected: days.where((entry) => entry.id == current).firstOrNull,
+    labelOf: (entry) => l10n.bodyFullDate(entry.date),
   );
+  return picked?.id;
 }
 
 /// The photos of every pose either day has, compared on Forge's slider; a
@@ -511,14 +499,11 @@ class _Photos extends StatelessWidget {
       (SettingsCubit cubit) => cubit.state.settings.weightUnit,
     );
     if (summary.poses.isEmpty) {
-      return ListRowCard(
-        children: [
-          EmptyView(
-            icon: ForgeIcons.image,
-            message: l10n.bodyNoPhotosOnDays,
-            compact: true,
-          ),
-        ],
+      return EmptyView(
+        icon: ForgeIcons.image,
+        message: l10n.bodyNoPhotosOnDays,
+        compact: true,
+        card: true,
       );
     }
     ComparedPhoto photo(BodyEntry entry, PhotoPose pose) {

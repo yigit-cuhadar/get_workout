@@ -101,31 +101,29 @@ class _PreviewView extends StatelessWidget {
             PreviewStatus.libraryFailed => ListView(
               padding: padding,
               children: [
-                SurfaceCard(
-                  child: ErrorView(
-                    title: l10n.libraryLoadFailed,
-                    message: l10n.loadFailedDetail,
-                    retryLabel: l10n.retry,
-                    onRetry: cubit.retry,
-                  ),
+                ErrorView(
+                  title: l10n.libraryLoadFailed,
+                  message: l10n.loadFailedDetail,
+                  retryLabel: l10n.retry,
+                  onRetry: cubit.retry,
+                  card: true,
                 ),
               ],
             ),
             PreviewStatus.impossible => ListView(
               padding: padding,
               children: [
-                SurfaceCard(
-                  child: EmptyView(
-                    icon: ForgeIcons.info,
-                    message: l10n.generationIssueText(state.issue!),
-                    actions: [
-                      ForgeButton(
-                        label: l10n.generatorChangeAnswers,
-                        variant: ForgeButtonVariant.secondary,
-                        onPressed: () => context.pop(),
-                      ),
-                    ],
-                  ),
+                EmptyView(
+                  icon: ForgeIcons.info,
+                  message: l10n.generationIssueText(state.issue!),
+                  actions: [
+                    ForgeButton(
+                      label: l10n.generatorChangeAnswers,
+                      variant: ForgeButtonVariant.secondary,
+                      onPressed: () => context.pop(),
+                    ),
+                  ],
+                  card: true,
                 ),
               ],
             ),
@@ -205,11 +203,7 @@ class _Program extends StatelessWidget {
                       l10n.splitName(program.split),
                       answers.daysPerWeek,
                     ),
-                    // The board's 22px sans heading.
-                    style: text.titleLarge!.copyWith(
-                      fontSize: 22,
-                      height: 28 / 22,
-                    ),
+                    style: ForgeStyle.of(context).heading,
                   ),
                   Text(
                     l10n.generatorAnswersLine(
@@ -380,52 +374,39 @@ class _ItemRow extends StatelessWidget {
       dataDetail: true,
       detailNote: kept ? l10n.generatorKept : null,
       trailing: Builder(
-        builder: (context) => Semantics(
-          button: true,
+        builder: (context) => ForgeIconButton(
+          icon: ForgeIcons.moreHoriz,
           label: l10n.programItemActions,
-          excludeSemantics: true,
-          child: InkResponse(
-            onTap: exercise == null
-                ? null
-                : () => showForgeMenu(
-                    context: context,
-                    items: [
+          onPressed: exercise == null
+              ? null
+              : () => showForgeMenu(
+                  context: context,
+                  items: [
+                    ForgeMenuItem(
+                      label: l10n.generatorSwap,
+                      icon: ForgeIcons.sync,
+                      onTap: () => _swap(context, cubit),
+                    ),
+                    ForgeMenuItem(
+                      label: l10n.generatorKeep,
+                      icon: ForgeIcons.history,
+                      selected: kept,
+                      onTap: () => cubit.toggleKept(day, index),
+                    ),
+                    ForgeMenuItem(
+                      label: l10n.generatorChangeTargets,
+                      icon: ForgeIcons.tune,
+                      onTap: () => _editTargets(context, cubit, exercise),
+                    ),
+                    if (removable)
                       ForgeMenuItem(
-                        label: l10n.generatorSwap,
-                        icon: ForgeIcons.sync,
-                        onTap: () => _swap(context, cubit),
+                        label: l10n.programRemoveItem,
+                        icon: ForgeIcons.delete,
+                        destructive: true,
+                        onTap: () => cubit.removeItem(day, index),
                       ),
-                      ForgeMenuItem(
-                        label: l10n.generatorKeep,
-                        icon: ForgeIcons.history,
-                        selected: kept,
-                        onTap: () => cubit.toggleKept(day, index),
-                      ),
-                      ForgeMenuItem(
-                        label: l10n.generatorChangeTargets,
-                        icon: ForgeIcons.tune,
-                        onTap: () => _editTargets(context, cubit, exercise),
-                      ),
-                      if (removable)
-                        ForgeMenuItem(
-                          label: l10n.programRemoveItem,
-                          icon: ForgeIcons.delete,
-                          destructive: true,
-                          onTap: () => cubit.removeItem(day, index),
-                        ),
-                    ],
-                  ),
-            child: SizedBox.square(
-              dimension: ForgeTheme.tapMin,
-              child: Center(
-                child: ForgeIcon(
-                  ForgeIcons.moreHoriz,
-                  size: 20,
-                  color: ForgeStyle.of(context).colors.inkMuted,
+                  ],
                 ),
-              ),
-            ),
-          ),
         ),
       ),
     );

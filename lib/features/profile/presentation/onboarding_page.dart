@@ -135,14 +135,7 @@ class _Welcome extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            Text(
-              l10n.onboardingWelcomeTitle,
-              style: text.headlineMedium!.copyWith(
-                fontSize: 30,
-                height: 34 / 30,
-                letterSpacing: -0.9,
-              ),
-            ),
+            Text(l10n.onboardingWelcomeTitle, style: text.headlineMedium),
             const SizedBox(height: 18),
             Text(
               l10n.onboardingWelcomeSubtitle,

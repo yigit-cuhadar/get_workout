@@ -19,7 +19,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../features/programs/fixtures.dart' show program;
-import '../features/workout/fixtures.dart';
 import 'today_stand_ins.dart';
 
 class MockWorkoutCubit extends MockCubit<ActiveWorkoutState>
@@ -109,40 +108,14 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> tap(WidgetTester tester, Finder finder) async {
-    await tester.tap(finder);
-    await tester.pumpAndSettle();
-  }
-
-  testWidgets('Programs starts an empty workout and opens it', (tester) async {
+  testWidgets('an empty workout starts on Today, not here', (tester) async {
     await start(tester);
 
-    await tap(tester, find.text('Start empty workout'));
-
-    verify(() => cubit.startFree('Workout')).called(1);
-    expect(find.text('at workout'), findsOneWidget);
+    expect(find.text('Ready-made programs'), findsOneWidget);
+    expect(find.text('Start empty workout'), findsNothing);
   });
 
-  testWidgets('with a workout in progress it asks first', (tester) async {
-    await start(
-      tester,
-      state: ActiveWorkoutState(
-        status: WorkoutStatus.active,
-        workout: workout('w1', [
-          exercise('squat', [lift(100, 5)]),
-        ]),
-      ),
-    );
-
-    await tap(tester, find.text('Start empty workout'));
-    expect(find.text('A workout is in progress'), findsOneWidget);
-    await tap(tester, find.text('Resume'));
-
-    verifyNever(() => cubit.startFree(any()));
-    expect(find.text('at workout'), findsOneWidget);
-  });
-
-  testWidgets('the active program comes first, then the four rows', (
+  testWidgets('the active program comes first, then the three ways in', (
     tester,
   ) async {
     await start(
@@ -165,20 +138,23 @@ void main() {
     double top(String text) => tester.getTopLeft(find.text(text)).dy;
     final order = [
       'Upper Lower',
-      'Start Lower',
       'Ready-made programs',
+      'Generate a program',
       'New program',
-      'Start empty workout',
     ].map(top).toList();
     expect(order, [...order]..sort());
+    // Today starts the day.
+    expect(find.text('Start Lower'), findsNothing);
   });
 
-  testWidgets('without an active program the rows come first', (tester) async {
+  testWidgets('without an active program the prompt, then the ways in', (
+    tester,
+  ) async {
     await start(tester);
 
     expect(
-      tester.getTopLeft(find.text('Ready-made programs')).dy,
-      lessThan(tester.getTopLeft(find.text('Start empty workout')).dy),
+      tester.getTopLeft(find.text('No active program')).dy,
+      lessThan(tester.getTopLeft(find.text('Ready-made programs')).dy),
     );
     expect(find.text('Active program'), findsNothing);
   });

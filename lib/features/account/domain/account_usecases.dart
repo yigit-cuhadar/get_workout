@@ -6,6 +6,10 @@ import 'sync_repository.dart';
 
 typedef ConsentAnswer = ({String uid, bool consent});
 
+/// Whose account to delete, and the Apple code to revoke their Apple
+/// sign-in with, if they have one.
+typedef AccountDeletion = ({String uid, String? appleCode});
+
 class WatchAnalyticsConsent {
   const WatchAnalyticsConsent(this._repository);
   final ConsentRepository _repository;
@@ -50,7 +54,7 @@ class ApplyAnalyticsConsent implements UseCase<void, ConsentAnswer> {
       _telemetry.apply(params.uid, params.consent);
 }
 
-/// Holds this device's writes for user [String] (their photo backup), so
+/// Holds this device's writes for the user (their photo backup), so
 /// none lands after the server deleted their files, and releases them if
 /// the deletion did not happen. Then deletes the account on the server,
 /// then, still signed in so
@@ -61,22 +65,25 @@ class ApplyAnalyticsConsent implements UseCase<void, ConsentAnswer> {
 /// sign-in is left ([PartlyDeletedFailure], returned, without signing
 /// out, so the user can delete again). A local leftover is logged, not
 /// reported: the account is gone.
-class DeleteUserAccount implements UseCase<void, String> {
+class DeleteUserAccount implements UseCase<void, AccountDeletion> {
   const DeleteUserAccount(this._repository, this._local, this._telemetry);
   final AccountRepository _repository;
   final LocalAccountData _local;
   final Telemetry _telemetry;
 
   @override
-  Future<Result<void>> call(String params) async {
-    await _local.holdWrites(params);
-    final deleted = await _repository.deleteAccount();
+  Future<Result<void>> call(AccountDeletion params) async {
+    final uid = params.uid;
+    await _local.holdWrites(uid);
+    final deleted = await _repository.deleteAccount(
+      appleCode: params.appleCode,
+    );
     final failure = deleted.failureOrNull;
     if (failure != null && failure is! PartlyDeletedFailure) {
-      await _local.releaseWrites(params);
+      await _local.releaseWrites(uid);
       return deleted;
     }
-    for (final cleanup in [_local.clear(params), _telemetry.forget(params)]) {
+    for (final cleanup in [_local.clear(uid), _telemetry.forget(uid)]) {
       _logLeftover(await cleanup);
     }
     if (failure != null) return deleted;

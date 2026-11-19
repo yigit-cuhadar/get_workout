@@ -15,7 +15,6 @@ Widget _card({required int? steps, bool locked = false}) =>
         onSteps: () {},
         onLogCardio: () {},
         onStartEarly: () {},
-        onStartEmpty: () {},
         locked: locked,
       ),
     );

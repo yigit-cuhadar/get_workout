@@ -23,25 +23,3 @@ class SurfaceCard extends StatelessWidget {
     );
   }
 }
-
-/// A muted label over a list's section ("This week", "Earlier").
-class SectionLabel extends StatelessWidget {
-  const SectionLabel(this.text, {super.key});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.sm, Gap.xs, 0),
-    child: Semantics(
-      header: true,
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-          fontWeight: FontWeight.w600,
-          color: ForgeStyle.of(context).colors.inkMuted,
-        ),
-      ),
-    ),
-  );
-}

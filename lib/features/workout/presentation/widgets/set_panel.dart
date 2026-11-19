@@ -52,6 +52,7 @@ class SetPanelLabels {
   const SetPanelLabels({
     required this.log,
     required this.done,
+    required this.next,
     required this.options,
     required this.addDrop,
     required this.removeDrop,
@@ -59,7 +60,12 @@ class SetPanelLabels {
   });
 
   final String log;
+
+  /// Log set's label once the set is done, and the keyboard bar's Done.
   final String done;
+
+  /// The keyboard bar's Next, which types the following value.
+  final String next;
   final String options;
   final String addDrop;
   final String removeDrop;
@@ -70,7 +76,9 @@ class SetPanelLabels {
 
 /// The set entry fixed at the bottom of the workout screen: which set it
 /// is ([title]) with its [details] (the last time) under it and a ⋯ menu,
-/// its [values] as pill steppers (one full width, or two), a drop set's
+/// its [values] as pill steppers (one full width, or two; typing one, the
+/// keyboard bar's Next types the following value, a drop's too, and Done
+/// closes the keyboard), a drop set's
 /// [drops] right under them with Add drop, a done set's [effort], and Log
 /// set, or Done once the set is done. An [error] says under the values
 /// what to do about the [SetPanelValue.invalid] ones. With [onPlates], a
@@ -172,15 +180,38 @@ class SetPanel extends StatelessWidget {
   }
 
   Widget _entry(BuildContext context) {
+    final values = this.values!;
+    final drops = this.drops ?? const <SetPanelDrop>[];
+    // Every typed value in order, a drop's after the set's, so Next moves
+    // from one to the next.
+    final firsts = <int>[];
+    var count = values.length;
+    for (final drop in drops) {
+      firsts.add(count);
+      count += drop.values.length;
+    }
+    return _FocusChain(
+      count: count,
+      builder: (focus) => _entryWith(context, focus, firsts),
+    );
+  }
+
+  Widget _entryWith(
+    BuildContext context,
+    List<FocusNode> focus,
+    List<int> dropFirsts,
+  ) {
     final style = ForgeStyle.of(context);
     final colors = style.colors;
     final labels = this.labels!;
     final drops = this.drops;
+    final values = this.values!;
     // What does not fit the panel's share of the page scrolls between the
     // values and Log set.
     final middle = [
       if (drops != null) ...[
-        for (final drop in drops) _drop(context, drop),
+        for (final (i, drop) in drops.indexed)
+          _drop(context, drop, focus, dropFirsts[i]),
         Align(
           alignment: AlignmentDirectional.centerStart,
           child: ForgeButton(
@@ -234,25 +265,18 @@ class SetPanel extends StatelessWidget {
             ),
             // Drawn at the title's height, so a set without details
             // leaves no gap under it; its band takes the 44px.
-            TapBand(
-              child: Semantics(
-                button: true,
+            TapBandIconButton(
+              width: ForgeIconButton.iconSize,
+              height: ForgeIconButton.iconSize,
+              button: ForgeIconButton(
+                icon: ForgeIcons.moreHoriz,
                 label: labels.options,
-                excludeSemantics: true,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: onOptions,
-                  child: ForgeIcon(
-                    ForgeIcons.moreHoriz,
-                    size: 20,
-                    color: colors.inkMuted,
-                  ),
-                ),
+                onPressed: onOptions,
               ),
             ),
           ],
         ),
-        _values(context, values!),
+        _values(context, values, focus),
         if (error case final error?) StepperFieldError(error),
         if (middle.isNotEmpty)
           Flexible(
@@ -277,19 +301,23 @@ class SetPanel extends StatelessWidget {
     );
   }
 
-  Widget _values(BuildContext context, List<SetPanelValue> values) => Row(
+  Widget _values(
+    BuildContext context,
+    List<SetPanelValue> values,
+    List<FocusNode> focus,
+  ) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     spacing: 10,
     children: [
       for (final (i, value) in values.indexed) ...[
-        Expanded(child: _field(value, compact: false)),
+        Expanded(child: _field(value, focus, i, compact: false)),
         if (i == 0)
           if (onPlates case final onPlates?) _platesButton(context, onPlates),
       ],
     ],
   );
 
-  /// Ink-muted, no fill, 44px square, centred on the 50px pill.
+  /// Centred on the 50px pill.
   Widget _platesButton(
     BuildContext context,
     ValueChanged<BuildContext> onPlates,
@@ -297,29 +325,25 @@ class SetPanel extends StatelessWidget {
     padding: const EdgeInsets.symmetric(
       vertical: (StepperField.height - ForgeTheme.tapMin) / 2,
     ),
-    child: Semantics(
-      button: true,
-      label: labels!.plates,
-      excludeSemantics: true,
-      child: Builder(
-        builder: (button) => InkResponse(
-          onTap: () => onPlates(button),
-          child: SizedBox.square(
-            dimension: ForgeTheme.tapMin,
-            child: Center(
-              child: ForgeIcon(
-                ForgeIcons.fitnessCenter,
-                size: 20,
-                color: ForgeStyle.of(context).colors.inkMuted,
-              ),
-            ),
-          ),
-        ),
+    child: Builder(
+      builder: (button) => ForgeIconButton(
+        icon: ForgeIcons.fitnessCenter,
+        label: labels!.plates,
+        onPressed: () => onPlates(button),
       ),
     ),
   );
 
-  Widget _field(SetPanelValue value, {required bool compact}) => StepperField(
+  Widget _field(
+    SetPanelValue value,
+    List<FocusNode> focus,
+    int index, {
+    required bool compact,
+  }) => StepperField(
+    focusNode: focus[index],
+    nextLabel: labels!.next,
+    onNext: index + 1 < focus.length ? focus[index + 1].requestFocus : null,
+    doneLabel: labels!.done,
     value: value.value,
     unit: value.unit,
     step: value.step,
@@ -332,7 +356,12 @@ class SetPanel extends StatelessWidget {
     compact: compact,
   );
 
-  Widget _drop(BuildContext context, SetPanelDrop drop) {
+  Widget _drop(
+    BuildContext context,
+    SetPanelDrop drop,
+    List<FocusNode> focus,
+    int first,
+  ) {
     final colors = ForgeStyle.of(context).colors;
     return Row(
       spacing: Gap.sm,
@@ -345,33 +374,52 @@ class SetPanel extends StatelessWidget {
                 .copyWith(fontWeight: FontWeight.w400, color: colors.inkMuted),
           ),
         ),
-        for (final value in drop.values)
-          Expanded(child: _field(value, compact: true)),
-        // Drawn in a 30 × 32 box, the icon 9px in, so the row keeps the
-        // compact fields' 40px; its band reaches past the panel's padding.
-        TapBand(
-          child: Semantics(
-            button: true,
+        for (final (i, value) in drop.values.indexed)
+          Expanded(child: _field(value, focus, first + i, compact: true)),
+        // Laid out 30 × 32, so the row keeps the compact fields' 40px; its
+        // band reaches past the panel's padding.
+        TapBandIconButton(
+          width: 30,
+          height: 32,
+          button: ForgeIconButton(
+            icon: ForgeIcons.close,
             label: labels!.removeDrop,
-            excludeSemantics: true,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: drop.onRemove,
-              child: Container(
-                width: 30,
-                height: 32,
-                padding: const EdgeInsets.only(left: 9),
-                alignment: AlignmentDirectional.centerStart,
-                child: ForgeIcon(
-                  ForgeIcons.close,
-                  size: 18,
-                  color: colors.inkMuted,
-                ),
-              ),
-            ),
+            onPressed: drop.onRemove,
           ),
         ),
       ],
     );
+  }
+}
+
+/// Owns one [FocusNode] per typed value of the panel, [count] of them, for
+/// as long as the panel shows; a drop added or removed adds or drops one.
+class _FocusChain extends StatefulWidget {
+  const _FocusChain({required this.count, required this.builder});
+
+  final int count;
+  final Widget Function(List<FocusNode> focus) builder;
+
+  @override
+  State<_FocusChain> createState() => _FocusChainState();
+}
+
+class _FocusChainState extends State<_FocusChain> {
+  final _focus = <FocusNode>[];
+
+  @override
+  Widget build(BuildContext context) {
+    while (_focus.length < widget.count) {
+      _focus.add(FocusNode());
+    }
+    return widget.builder(_focus.sublist(0, widget.count));
+  }
+
+  @override
+  void dispose() {
+    for (final node in _focus) {
+      node.dispose();
+    }
+    super.dispose();
   }
 }

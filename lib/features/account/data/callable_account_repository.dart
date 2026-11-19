@@ -37,16 +37,19 @@ class CallableAccountRepository implements AccountRepository {
   /// (`functions/src/delete_account.ts`).
   static const _recentSignIn = 'recent-sign-in';
   static const _signInNotDeleted = 'sign-in-not-deleted';
+  static const _appleRevokeFailed = 'apple-revoke-failed';
 
   @override
-  Future<Result<void>> deleteAccount() => guard(() async {
+  Future<Result<void>> deleteAccount({String? appleCode}) => guard(() async {
     // A write queued now would land after the deletion and bring data back.
     try {
       await _firestore.waitForPendingWrites().timeout(pendingWritesWait);
     } on TimeoutException catch (error) {
       throw NetworkFailure('pending writes not sent', error);
     }
-    await _functions.httpsCallable(function).call<void>();
+    await _functions
+        .httpsCallable(function)
+        .call<void>(appleCode == null ? null : {'appleCode': appleCode});
   }, mapper: _mapError);
 
   @override
@@ -64,6 +67,10 @@ class CallableAccountRepository implements AccountRepository {
         cause: error,
       ),
       (_, _signInNotDeleted) => PartlyDeletedFailure(
+        error.message ?? error.code,
+        error,
+      ),
+      (_, _appleRevokeFailed) => AppleNotRevokedFailure(
         error.message ?? error.code,
         error,
       ),

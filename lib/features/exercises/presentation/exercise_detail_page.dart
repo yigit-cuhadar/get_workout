@@ -20,7 +20,6 @@ import 'exercise_notes_cubit.dart';
 import 'favorites_cubit.dart';
 import 'vocabulary_labels.dart';
 import 'widgets/exercise_tile.dart';
-import 'widgets/library_list_view.dart';
 
 class ExerciseDetailPage extends StatelessWidget {
   const ExerciseDetailPage({
@@ -71,26 +70,31 @@ class _DetailView extends StatelessWidget {
           title: state is DetailReady
               ? state.exercise.localized(context).name
               : '',
-          actions: [
-            if (state is DetailReady) ...[
-              _FavoriteAction(state.exercise.id),
-              _AddAction(state.exercise),
-              if (state.exercise.isCustom) _CustomActions(state),
-            ],
-          ],
+          actions: [if (state is DetailReady) _MoreAction(state)],
         ),
         body: switch (state) {
           DetailLoading() || DetailDeleted() => const _Loading(),
-          DetailFailed() => _InCard(
-            ErrorView(
-              title: l10n.libraryLoadFailed,
-              message: l10n.loadFailedDetail,
-              retryLabel: l10n.retry,
-              onRetry: context.read<ExerciseCatalogueCubit>().retry,
-            ),
+          DetailFailed() => ListView(
+            padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
+            children: [
+              ErrorView(
+                title: l10n.libraryLoadFailed,
+                message: l10n.loadFailedDetail,
+                retryLabel: l10n.retry,
+                onRetry: context.read<ExerciseCatalogueCubit>().retry,
+                card: true,
+              ),
+            ],
           ),
-          DetailNotFound() => _InCard(
-            EmptyView(icon: ForgeIcons.search, message: l10n.detailNotFound),
+          DetailNotFound() => ListView(
+            padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
+            children: [
+              EmptyView(
+                icon: ForgeIcons.search,
+                message: l10n.detailNotFound,
+                card: true,
+              ),
+            ],
           ),
           DetailReady() => _DetailBody(state, exerciseRoute),
         },
@@ -99,39 +103,24 @@ class _DetailView extends StatelessWidget {
   }
 }
 
-/// The favourite star: an outline, filled once a favourite.
-class _FavoriteAction extends StatelessWidget {
-  const _FavoriteAction(this.exerciseId);
+/// The page's ⋯: add the exercise to the workout in progress (or a new
+/// one) or to a program, make it a favourite or not, and for a custom
+/// exercise Edit, and Delete after asking.
+class _MoreAction extends StatelessWidget {
+  const _MoreAction(this.detail);
 
-  final String exerciseId;
+  final DetailReady detail;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final exercise = detail.exercise;
     final favorite = context.select(
-      (FavoritesCubit cubit) => cubit.state.contains(exerciseId),
+      (FavoritesCubit cubit) => cubit.state.contains(exercise.id),
     );
     return ForgeAppBarAction.icon(
-      icon: ForgeIcons.star,
-      label: favorite ? l10n.favoriteRemove : l10n.favoriteAdd,
-      toggled: favorite,
-      onPressed: () => context.read<FavoritesCubit>().toggle(exerciseId),
-    );
-  }
-}
-
-/// The one Add action: a menu adding to the workout in progress (or a new
-/// one) or to a program.
-class _AddAction extends StatelessWidget {
-  const _AddAction(this.exercise);
-
-  final Exercise exercise;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return ForgeAppBarAction.text(
-      label: l10n.detailAdd,
+      icon: ForgeIcons.moreHoriz,
+      label: l10n.detailMore,
       onPressed: () => showForgeMenu(
         context: context,
         items: [
@@ -142,52 +131,40 @@ class _AddAction extends StatelessWidget {
           ),
           ForgeMenuItem(
             label: l10n.addToProgram,
-            icon: ForgeIcons.add,
-            onTap: () => _addToProgram(context),
+            icon: ForgeIcons.editCalendar,
+            onTap: () => _addToProgram(context, exercise),
           ),
+          ForgeMenuItem(
+            label: favorite ? l10n.favoriteRemove : l10n.favoriteAdd,
+            icon: ForgeIcons.star,
+            onTap: () => context.read<FavoritesCubit>().toggle(exercise.id),
+          ),
+          if (exercise.isCustom) ...[
+            ForgeMenuItem(
+              label: l10n.customEdit,
+              icon: ForgeIcons.edit,
+              onTap: () => context.push(Routes.customExerciseEdit(exercise.id)),
+            ),
+            if (!detail.deleting)
+              ForgeMenuItem(
+                label: l10n.customDelete,
+                icon: ForgeIcons.delete,
+                destructive: true,
+                onTap: () => _delete(context),
+              ),
+          ],
         ],
       ),
     );
   }
 
-  Future<void> _addToProgram(BuildContext context) async {
+  static Future<void> _addToProgram(
+    BuildContext context,
+    Exercise exercise,
+  ) async {
     final cubit = sl<AddToProgramCubit>();
     await addToProgram(context, exercise, cubit);
     await cubit.close();
-  }
-}
-
-/// A custom exercise's ⋯: Edit, and Delete after asking.
-class _CustomActions extends StatelessWidget {
-  const _CustomActions(this.detail);
-
-  final DetailReady detail;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return ForgeAppBarAction.icon(
-      icon: ForgeIcons.moreHoriz,
-      label: l10n.detailMore,
-      onPressed: () => showForgeMenu(
-        context: context,
-        items: [
-          ForgeMenuItem(
-            label: l10n.customEdit,
-            icon: ForgeIcons.edit,
-            onTap: () =>
-                context.push(Routes.customExerciseEdit(detail.exercise.id)),
-          ),
-          if (!detail.deleting)
-            ForgeMenuItem(
-              label: l10n.customDelete,
-              icon: ForgeIcons.delete,
-              destructive: true,
-              onTap: () => _delete(context),
-            ),
-        ],
-      ),
-    );
   }
 
   static Future<void> _delete(BuildContext context) async {
@@ -251,10 +228,6 @@ class _DetailBody extends StatelessWidget {
           (l10n.detailAliases, l10n.inlineList(text.aliases)),
       ],
     ];
-    final similar = [
-      for (final other in detail.alternatives) (other, l10n.detailAlternative),
-      for (final other in detail.variations) (other, l10n.detailVariation),
-    ];
     return ListView(
       padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.lg),
       children: [
@@ -312,16 +285,97 @@ class _DetailBody extends StatelessWidget {
             SectionCard.plain(title: l10n.detailNote, child: Text(note)),
           if (!exercise.isCustom) _OwnNote(exercise),
         ]) ...[part, const SizedBox(height: Gap.sm)],
-        if (similar.isNotEmpty) ...[
-          ListSectionLabel(l10n.detailSimilar),
-          ListRowCard(
+        if (detail.variations.isNotEmpty || detail.alternatives.isNotEmpty)
+          _Similar(detail, exerciseRoute),
+      ],
+    );
+  }
+}
+
+/// The exercise's variations and alternatives as two groups, each with its
+/// count and its first few names; the card opens a sheet listing them all.
+class _Similar extends StatelessWidget {
+  const _Similar(this.detail, this.exerciseRoute);
+
+  final DetailReady detail;
+  final String Function(String id) exerciseRoute;
+
+  static const int _preview = 3;
+
+  List<(String, List<Exercise>)> _groups(AppLocalizations l10n) => [
+    if (detail.variations.isNotEmpty)
+      (l10n.detailVariations(detail.variations.length), detail.variations),
+    if (detail.alternatives.isNotEmpty)
+      (
+        l10n.detailAlternatives(detail.alternatives.length),
+        detail.alternatives,
+      ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final muted = ForgeStyle.of(context).colors.inkMuted;
+    return SectionCard(
+      title: l10n.detailSimilar,
+      detail: '${detail.variations.length + detail.alternatives.length}',
+      onTap: () => _showAll(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: Gap.md,
+        children: [
+          for (final (label, exercises) in _groups(l10n))
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: Gap.xs,
+              children: [
+                Text(label, style: text.labelMedium!.copyWith(color: muted)),
+                for (final exercise in exercises.take(_preview))
+                  Text(
+                    exercise.localized(context).name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.bodyMedium,
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Every variation and alternative, by group; a row closes the sheet and
+  /// opens that exercise.
+  Future<void> _showAll(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return showForgeBottomSheet<void>(
+      context: context,
+      builder: (sheet) => ForgeBottomSheet(
+        title: l10n.detailSimilar,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final (other, relation) in similar)
-                ExerciseTile(other, route: exerciseRoute, tag: relation),
+              for (final (label, exercises) in _groups(l10n)) ...[
+                SectionLabel(label),
+                ListRowCard(
+                  children: [
+                    for (final exercise in exercises)
+                      ExerciseTile(
+                        exercise,
+                        onOpen: () {
+                          Navigator.pop(sheet);
+                          context.push(exerciseRoute(exercise.id));
+                        },
+                      ),
+                  ],
+                ),
+              ],
             ],
           ),
-        ],
-      ],
+        ),
+      ),
     );
   }
 }
@@ -443,21 +497,6 @@ class _Loading extends StatelessWidget {
       ],
     );
   }
-}
-
-/// An error or empty state in a card.
-class _InCard extends StatelessWidget {
-  const _InCard(this.child);
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md),
-    children: [
-      ListRowCard(children: [child]),
-    ],
-  );
 }
 
 /// The model from the front and from the back side by side, with the worked

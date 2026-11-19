@@ -54,14 +54,17 @@ void main() {
     ForgeIcon star() =>
         tester.widget<ForgeIcon>(find.byWidgetPredicate(isStar));
 
-    expect(star().filled, isFalse);
+    final colors = ForgeStyle.of(tester.element(find.byType(ExerciseRow)))
+        .colors;
+    expect(find.byType(ForgeIconButton), findsOneWidget);
+    expect((star().filled, star().color), (false, colors.inkMuted));
     expect(find.bySemanticsLabel('Add to favourites'), findsOneWidget);
 
     // The edge of the target, away from the icon.
     final centre = tester.getCenter(find.byWidgetPredicate(isStar));
     await tester.tapAt(centre + const Offset(0, 20));
     await tester.pump();
-    expect(star().filled, isTrue);
+    expect((star().filled, star().color), (true, colors.accent));
     expect(find.bySemanticsLabel('Remove from favourites'), findsOneWidget);
     expect(opened, 0);
 

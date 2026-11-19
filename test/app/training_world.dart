@@ -817,7 +817,7 @@ Future<void> tapOn(WidgetTester tester, Finder finder) async {
 
 /// [text] in the dialog in front.
 Finder inDialog(String text) =>
-    find.descendant(of: find.byType(ForgeDialog), matching: find.text(text));
+    find.descendant(of: find.byType(Dialog), matching: find.text(text));
 
 /// Opens a tab from the navigation bar.
 Future<void> openTab(WidgetTester tester, String label) => tapOn(

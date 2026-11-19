@@ -170,30 +170,16 @@ class RestLine extends StatelessWidget {
   }
 }
 
-/// The "?" opening the effort help: an 18px help icon in ink-muted across
-/// a 44px target.
+/// The "?" opening the effort help.
 class EffortHelpButton extends StatelessWidget {
   const EffortHelpButton({super.key, required this.onPressed});
 
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
+  Widget build(BuildContext context) => ForgeIconButton(
+    icon: ForgeIcons.help,
     label: AppLocalizations.of(context).workoutHelp,
-    child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onPressed,
-      child: SizedBox.square(
-        dimension: ForgeTheme.tapMin,
-        child: Center(
-          child: ForgeIcon(
-            ForgeIcons.help,
-            size: 18,
-            color: ForgeStyle.of(context).colors.inkMuted,
-          ),
-        ),
-      ),
-    ),
+    onPressed: onPressed,
   );
 }

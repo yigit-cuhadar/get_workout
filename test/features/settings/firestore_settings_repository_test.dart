@@ -434,14 +434,21 @@ void main() {
       await repository.markTipSeen('u1', Tip.effort);
       await repository.markTipSeen('u1', Tip.setTypes);
       await repository.markTipSeen('u1', Tip.effort);
+      await repository.markTipSeen('u1', Tip.muscleModel);
       // A whole save leaves them alone.
       await repository.saveSettings('u1', defaults);
 
       final stored = (await user().get()).data()!['settings'] as Map;
-      expect(stored['seenTips'], ['later', 'effort', 'setTypes']);
+      expect(stored['seenTips'], [
+        'later',
+        'effort',
+        'setTypes',
+        'muscleModel',
+      ]);
       expect((await repository.watchSettings('u1').first).seenTips, {
         Tip.effort,
         Tip.setTypes,
+        Tip.muscleModel,
       });
     });
 

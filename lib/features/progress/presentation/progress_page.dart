@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/router.dart';
+import '../../../core/number_text.dart';
 import '../../../core/sparkline.dart';
 import '../../../core/widgets/featured_card.dart';
+import '../../../core/widgets/volume_band.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../body/presentation/body_list_cubit.dart';
 import '../../body/presentation/body_text.dart';
@@ -24,6 +26,7 @@ import '../../today/presentation/today_volume_cubit.dart';
 import '../../today/presentation/today_week_cubit.dart';
 import '../../today/presentation/week_card.dart';
 import '../../volume/domain/weekly_volume.dart';
+import '../../volume/presentation/volume_charts.dart';
 import '../../volume/presentation/volume_text.dart';
 import '../domain/body_snapshot.dart';
 import '../domain/measurement_prompt.dart';
@@ -123,7 +126,7 @@ class _ProgressViewState extends State<_ProgressView> {
     final cards = [
       const _BodyCard(),
       if (prompt != null) _MeasurementPromptBanner(prompt),
-      const WeekCard.range(),
+      const WeekCard(),
       const _VolumeCard(),
       const _StrengthCard(),
       const _CardioCard(),
@@ -281,11 +284,14 @@ class _MeasurementPromptBanner extends StatelessWidget {
   }
 }
 
-/// This week's sets against the active program's planned weekly sets, and
-/// how many trained muscles are in, below and above the band. Opens weekly
-/// volume.
+/// This week's sets against the active program's planned weekly sets, the
+/// most trained muscles against their band and how many trained muscles
+/// are in, below and above it. Opens weekly volume.
 class _VolumeCard extends StatelessWidget {
   const _VolumeCard();
+
+  /// The most trained muscles shown.
+  static const _topMuscles = 4;
 
   @override
   Widget build(BuildContext context) {
@@ -328,6 +334,13 @@ class _VolumeCard extends StatelessWidget {
                 value: week.totalSets.toDouble(),
                 goal: planned.toDouble(),
               ),
+            for (final muscle in week.musclesBySets.take(_topMuscles))
+              if (week.setsOf(muscle) > 0)
+                VolumeBand(
+                  muscle: muscle,
+                  sets: week.setsOf(muscle),
+                  scale: volumeScale(week.sets.values),
+                ),
             Text(_zonesText(l10n, week), style: _quiet(context)),
           ],
         ),
@@ -361,90 +374,60 @@ class _StrengthCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<ProgressStrengthCubit>().state;
+    final unit = context.select(
+      (SettingsCubit cubit) => cubit.state.settings.weightUnit,
+    );
     final title = l10n.progressStrength;
     void open() => context.go(Routes.strength);
     return switch ((state.status, state.highlight)) {
-      (ProgressStrengthStatus.loading, _) => SectionCard.loading(
+      (ProgressStrengthStatus.loading, _) => StatTile.loading(
         title: title,
         onTap: open,
       ),
-      (ProgressStrengthStatus.failure, _) => SectionCard.error(
+      (ProgressStrengthStatus.failure, _) => StatTile.error(
         title: title,
         onTap: open,
         message: l10n.strengthLoadFailed,
         retryLabel: l10n.retry,
         onRetry: context.read<ProgressStrengthCubit>().retry,
       ),
-      (ProgressStrengthStatus.ready, null) => SectionCard.empty(
+      (ProgressStrengthStatus.ready, null) => StatTile.empty(
         title: title,
         onTap: open,
         message: state.trained
             ? l10n.progressStrengthNoE1rm
             : l10n.progressStrengthEmpty,
       ),
-      (ProgressStrengthStatus.ready, final highlight?) => SectionCard(
+      (ProgressStrengthStatus.ready, final highlight?) => StatTile(
         title: title,
         detail: l10n.progressStrengthDetail(
           state.exercise?.localized(context).name ??
               l10n.strengthRemovedExercise,
         ),
         onTap: open,
-        child: _StrengthFigure(highlight.e1rmKg, highlight.change),
+        figure: l10n.estimatedWeightNumber(highlight.e1rmKg, unit),
+        unit: l10n.weightUnitLabel(unit),
+        caption: highlight.change == null ? l10n.progressStrengthFirst : null,
+        change: switch (highlight.change) {
+          final change? => l10n.progressStrengthChange(
+            l10n.bodyWeightChangeNumber(change.kg, unit),
+            l10n.progressWeeks(change.weeks),
+          ),
+          null => null,
+        },
+        // A stronger lift is good; no change has no colour.
+        changeIsGood: switch (highlight.change?.kg) {
+          final kg? when kg > 0 => true,
+          final kg? when kg < 0 => false,
+          _ => null,
+        },
       ),
     };
   }
 }
 
-class _StrengthFigure extends StatelessWidget {
-  const _StrengthFigure(this.e1rmKg, this.change);
-  final double e1rmKg;
-  final ({double kg, int weeks})? change;
-
-  /// The board's figure: the Body band's sans hero, at 24px (-0.03em),
-  /// so the unit sits a normal space from the number.
-  static const _figureSize = 24.0;
-  static const _figureHeight = 28.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final text = Theme.of(context).textTheme;
-    final colors = ForgeStyle.of(context).colors;
-    final unit = context.select(
-      (SettingsCubit cubit) => cubit.state.settings.weightUnit,
-    );
-    final change = this.change;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      spacing: Gap.sm,
-      children: [
-        Text(
-          l10n.estimatedWeightText(e1rmKg, unit),
-          style: text.headlineMedium!.copyWith(
-            fontSize: _figureSize,
-            height: _figureHeight / _figureSize,
-            letterSpacing: -0.03 * _figureSize,
-          ),
-        ),
-        if (change != null)
-          Flexible(
-            child: Text(
-              l10n.progressStrengthChange(
-                l10n.bodyWeightChangeNumber(change.kg, unit),
-                l10n.progressWeeks(change.weeks),
-              ),
-              style: text.bodySmall!.copyWith(
-                color: change.kg < 0 ? colors.danger : colors.success,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-/// This week's sessions, distance and minutes; opens cardio.
+/// This week's distance, or minutes when no session has one, with the
+/// sessions under it; opens cardio.
 class _CardioCard extends StatelessWidget {
   const _CardioCard();
 
@@ -452,65 +435,53 @@ class _CardioCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<CardioListCubit>().state;
+    final unit = distanceUnitFor(
+      context.select((SettingsCubit cubit) => cubit.state.settings.lengthUnit),
+    );
     final title = l10n.progressCardio;
     void open() => context.go(Routes.cardio);
     return switch ((state.status, state.chart.lastOrNull)) {
-      (CardioListStatus.failure, _) => SectionCard.error(
+      (CardioListStatus.failure, _) => StatTile.error(
         title: title,
         onTap: open,
         message: l10n.cardioLoadFailed,
         retryLabel: l10n.retry,
         onRetry: context.read<CardioListCubit>().retry,
       ),
-      (CardioListStatus.ready, _) when state.sessions.isEmpty =>
-        SectionCard.empty(
-          title: title,
-          onTap: open,
-          message: l10n.progressCardioEmpty,
-        ),
+      (CardioListStatus.ready, _) when state.sessions.isEmpty => StatTile.empty(
+        title: title,
+        onTap: open,
+        message: l10n.progressCardioEmpty,
+      ),
       (CardioListStatus.ready, final week?) when week.sessions.isNotEmpty =>
-        SectionCard(
-          title: title,
-          detail: l10n.progressThisWeek,
-          onTap: open,
-          child: Text(
-            _line(
-              context,
-              l10n,
-              week.sessions.length,
-              week.distanceKm,
-              week.duration,
-            ),
-            style: ForgeStyle.of(context).data.copyWith(
-              fontSize: 15,
-              height: 20 / 15,
-              color: ForgeStyle.of(context).colors.ink,
+        switch (week.distanceKm) {
+          final km? => StatTile(
+            title: title,
+            detail: l10n.progressThisWeek,
+            onTap: open,
+            figure: formatDecimal(unit.fromKm(km), 2),
+            unit: l10n.distanceUnitLabel(unit),
+            caption: l10n.progressCardioLineNoDistance(
+              l10n.cardioSessions(week.sessions.length),
+              l10n.cardioMinutesOf(week.duration),
             ),
           ),
-        ),
-      (CardioListStatus.ready, _) => SectionCard.empty(
+          null => StatTile(
+            title: title,
+            detail: l10n.progressThisWeek,
+            onTap: open,
+            figure: '${(week.duration.inSeconds / 60).round()}',
+            unit: l10n.cardioMinutesShort,
+            caption: l10n.cardioSessions(week.sessions.length),
+          ),
+        },
+      (CardioListStatus.ready, _) => StatTile.empty(
         title: title,
         onTap: open,
         message: l10n.progressCardioNoneThisWeek,
       ),
-      _ => SectionCard.loading(title: title, onTap: open),
+      _ => StatTile.loading(title: title, onTap: open),
     };
-  }
-
-  String _line(
-    BuildContext context,
-    AppLocalizations l10n,
-    int sessions,
-    double? km,
-    Duration duration,
-  ) {
-    final count = l10n.cardioSessions(sessions);
-    final minutes = l10n.cardioMinutesOf(duration);
-    if (km == null) return l10n.progressCardioLineNoDistance(count, minutes);
-    final unit = distanceUnitFor(
-      context.select((SettingsCubit cubit) => cubit.state.settings.lengthUnit),
-    );
-    return l10n.progressCardioLine(count, l10n.distanceText(km, unit), minutes);
   }
 }
 
