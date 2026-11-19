@@ -1369,6 +1369,8 @@ void main() {
         await startAsGuest(tester);
         router.go(exercise);
         await tester.pumpAndSettle();
+        await tester.tap(find.bySemanticsLabel('Exercise options'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Add to program'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Create program'));
