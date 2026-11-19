@@ -32,6 +32,35 @@ void main() {
     });
   });
 
+  group('GetPremiumTrial', () {
+    test('is the trial of the plan the paywall shows first', () async {
+      const monthlyTrial = Plan(
+        id: 'premium_monthly',
+        period: PlanPeriod.monthly,
+        price: r'$4.99',
+        priceAmount: 4.99,
+        currencyCode: 'USD',
+        trial: OfferPeriod(3, PeriodUnit.day),
+      );
+      final store = FakePurchasesRepository(
+        plans: [monthlyTrial, fakePlans.last],
+      );
+
+      final trial = await GetPremiumTrial(GetPaywallOffering(store))();
+
+      expect(trial.valueOrNull, const OfferPeriod(7, PeriodUnit.day));
+    });
+
+    test('is null when no plan has one', () async {
+      final store = FakePurchasesRepository(plans: [fakePlans.first]);
+
+      final trial = await GetPremiumTrial(GetPaywallOffering(store))();
+
+      expect(trial.isOk, isTrue);
+      expect(trial.valueOrNull, isNull);
+    });
+  });
+
   group('GetPaywallLayout', () {
     late FakeRemoteConfigRepository config;
 

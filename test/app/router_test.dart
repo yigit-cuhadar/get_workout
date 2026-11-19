@@ -97,6 +97,7 @@ import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
 import 'package:get_workout/features/subscription/presentation/paywall_page.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
+import 'package:get_workout/features/subscription/presentation/premium_trial_cubit.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
 import 'package:get_workout/features/strength/presentation/exercise_strength_cubit.dart';
 import 'package:get_workout/features/strength/presentation/exercise_strength_page.dart';
@@ -579,6 +580,9 @@ void main() {
         logPurchase: LogPaywallPurchase(paywallTelemetry),
         isPremium: () => entitlement.isActive,
       ),
+    );
+    sl.registerFactory(
+      () => PremiumTrialCubit(GetPremiumTrial(GetPaywallOffering(store))),
     );
   }
 
@@ -2415,12 +2419,8 @@ void main() {
 
     testWidgets('a free user starts the yearly trial', (tester) async {
       await openProfileAsFreeGuest(tester);
-      expect(
-        find.text(
-          'Program generator, 19 more programs and charts beyond 12 weeks.',
-        ),
-        findsOneWidget,
-      );
+      expect(find.text('7 days free'), findsOneWidget);
+      expect(find.text('19 more ready-made programs'), findsOneWidget);
 
       await tapVisible(tester, 'Get Premium');
       expect(find.byType(PaywallPage), findsOneWidget);

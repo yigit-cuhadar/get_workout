@@ -12,6 +12,7 @@ import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/settings/presentation/settings_section.dart';
 import 'package:get_workout/features/subscription/presentation/premium_card.dart';
+import 'package:get_workout/features/subscription/presentation/premium_trial_cubit.dart';
 import 'package:get_workout/features/workout/presentation/rest_timer_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -25,6 +26,9 @@ class _NotificationsCubit extends MockCubit<NotificationsState>
 
 class _RestTimerCubit extends MockCubit<RestTimerState>
     implements RestTimerCubit {}
+
+class _TrialCubit extends MockCubit<OfferPeriod?>
+    implements PremiumTrialCubit {}
 
 class _EntitlementCubit extends MockCubit<EntitlementState>
     implements EntitlementCubit {}
@@ -283,13 +287,22 @@ void main() {
   });
 
   group('Premium card', () {
-    Future<void> pumpCard(WidgetTester tester, EntitlementState state) {
+    Future<void> pumpCard(
+      WidgetTester tester,
+      EntitlementState state, {
+      OfferPeriod? trial,
+    }) {
       final entitlement = _EntitlementCubit();
       when(() => entitlement.state).thenReturn(state);
+      final trials = _TrialCubit();
+      when(() => trials.state).thenReturn(trial);
       return pumpComponent(
         tester,
-        BlocProvider<EntitlementCubit>.value(
-          value: entitlement,
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<EntitlementCubit>.value(value: entitlement),
+            BlocProvider<PremiumTrialCubit>.value(value: trials),
+          ],
           child: const PremiumCard(),
         ),
       );
@@ -298,15 +311,28 @@ void main() {
     FeaturedCard card(WidgetTester tester) =>
         tester.widget(find.byType(FeaturedCard));
 
-    testWidgets('a free user sees what Premium is and Get Premium', (
-      tester,
-    ) async {
-      await pumpCard(tester, const EntitlementInactive());
-      expect(
-        card(tester).title,
-        'Program generator, 19 more programs and charts beyond 12 weeks.',
+    testWidgets('a free user sees Premium, its trial, its benefits and Get '
+        'Premium', (tester) async {
+      await pumpCard(
+        tester,
+        const EntitlementInactive(),
+        trial: const OfferPeriod(7, PeriodUnit.day),
       );
-      expect(card(tester).action?.label, 'Get Premium');
+      expect(find.byType(FeaturedCard), findsNothing);
+      expect(find.text('GetWorkout Premium'), findsOneWidget);
+      expect(find.widgetWithText(ForgeTag, '7 days free'), findsOneWidget);
+      expect(tester.widget<BenefitList>(find.byType(BenefitList)).lines, [
+        'Program generator',
+        '19 more ready-made programs',
+        'Charts beyond 12 weeks',
+      ]);
+      expect(find.widgetWithText(ForgeButton, 'Get Premium'), findsOneWidget);
+    });
+
+    testWidgets('a free user with no trial known sees no tag', (tester) async {
+      await pumpCard(tester, const EntitlementInactive());
+      expect(find.byType(ForgeTag), findsNothing);
+      expect(find.text('Get Premium'), findsOneWidget);
     });
 
     testWidgets('the status is muted and offers nothing while unknown', (

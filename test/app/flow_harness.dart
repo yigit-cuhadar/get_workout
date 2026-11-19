@@ -52,6 +52,7 @@ import 'package:get_workout/features/steps/domain/steps.dart';
 import 'package:get_workout/features/steps/presentation/health_access_cubit.dart';
 import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
+import 'package:get_workout/features/subscription/presentation/premium_trial_cubit.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -346,6 +347,9 @@ class FlowApp {
         logPurchase: LogPaywallPurchase(paywallTelemetry),
         isPremium: () => entitlement.isActive,
       ),
+    );
+    sl.registerFactory(
+      () => PremiumTrialCubit(GetPremiumTrial(GetPaywallOffering(store))),
     );
   }
 

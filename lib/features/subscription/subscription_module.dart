@@ -13,6 +13,7 @@ import 'domain/subscription_usecases.dart';
 import 'presentation/fake_store_controls.dart';
 import 'presentation/premium.dart';
 import 'presentation/premium_paywall_cubit.dart';
+import 'presentation/premium_trial_cubit.dart';
 import 'presentation/purchaser_session.dart';
 
 /// The RevenueCat entitlement every Premium product is attached to.
@@ -119,6 +120,8 @@ class SubscriptionModule implements FeatureModule {
       ..registerFactory(() => LogPaywallView(sl()))
       ..registerFactory(() => LogPaywallPurchase(sl()))
       ..registerFactory(() => GetPaywallOffering(sl()))
+      ..registerFactory(() => GetPremiumTrial(sl()))
+      ..registerFactory(() => PremiumTrialCubit(sl()))
       ..registerFactory(
         () => PremiumPaywallCubit(
           getOffering: sl<GetPaywallOffering>(),

@@ -53,6 +53,7 @@ import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
+import 'package:get_workout/features/subscription/presentation/premium_trial_cubit.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
 import 'package:get_workout/features/today/presentation/today_steps_cubit.dart';
 import 'package:get_workout/features/today/presentation/today_volume_cubit.dart';
@@ -700,6 +701,9 @@ class TrainingWorld {
           logPurchase: LogPaywallPurchase(telemetry),
           isPremium: () => premium,
         ),
+      )
+      ..registerFactory(
+        () => PremiumTrialCubit(GetPremiumTrial(GetPaywallOffering(store))),
       )
       ..registerFactoryParam<TodayWeekCubit, int, void>(
         (firstWeekday, _) => TodayWeekCubit(

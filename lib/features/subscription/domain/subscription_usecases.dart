@@ -68,3 +68,13 @@ class GetPaywallOffering extends GetOffering {
         ),
       );
 }
+
+/// The free trial the paywall offers first; null when no plan has one.
+class GetPremiumTrial {
+  const GetPremiumTrial(this._offering);
+  final GetPaywallOffering _offering;
+
+  Future<Result<OfferPeriod?>> call() async => (await _offering()).map(
+    (offering) => offering.plans.map((plan) => plan.trial).nonNulls.firstOrNull,
+  );
+}
