@@ -1024,6 +1024,17 @@ class _OneLineTitle extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         );
         if (aside == null) return name;
+        // At large text sizes the aside alone may leave the title too little
+        // room: it then goes under the title instead of beside it.
+        if (room < constraints.maxWidth / 2) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              name,
+              Text(aside, style: asideStyle),
+            ],
+          );
+        }
         return Row(
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
