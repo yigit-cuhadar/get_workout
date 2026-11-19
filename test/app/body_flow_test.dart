@@ -108,12 +108,7 @@ void main() {
     sl
       ..registerSingleton<BodyListCubit>(list)
       ..registerSingleton<CardioListCubit>(cardio)
-      ..registerFactory(
-        () => ProgressBodyCubit(
-          bodyList: list,
-          watchPremium: const WatchPremium(FixedPremium(false)),
-        ),
-      )
+      ..registerFactory(() => ProgressBodyCubit(bodyList: list))
       ..registerFactory<ProgressStrengthCubit>(() {
         final cubit = _StrengthStandIn();
         when(() => cubit.state).thenReturn(

@@ -6,6 +6,7 @@ import 'package:get_workout/features/account/domain/sync_repository.dart';
 import 'package:get_workout/features/account/presentation/sync_status_cubit.dart';
 import 'package:get_workout/features/body/presentation/weight_form_cubit.dart';
 import 'package:get_workout/features/body/presentation/weight_sheet.dart';
+import 'package:get_workout/features/progress/domain/progress_usecases.dart';
 import 'package:get_workout/features/progress/presentation/progress_page.dart';
 import 'package:get_workout/features/progress/presentation/progress_strength_cubit.dart';
 import 'package:flutter/material.dart';
@@ -2664,8 +2665,7 @@ void main() {
         ..registerFactory(
           () => ProgressStrengthCubit(
             watchAuthUser: WatchAuthUser(strengthAuth),
-            watchStats: WatchAllExerciseStats(workouts),
-            watchPremium: const WatchPremium(FixedPremium(false)),
+            watchHighlights: WatchStrengthHighlights(workouts),
             catalogue: catalogue,
           ),
         )

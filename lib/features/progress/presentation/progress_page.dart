@@ -13,6 +13,7 @@ import '../../../core/number_text.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../core/widgets/volume_band.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../body/domain/body_stats.dart';
 import '../../body/presentation/body_list_cubit.dart';
 import '../../body/presentation/body_text.dart';
 import '../../body/presentation/weight_sheet.dart';
@@ -32,7 +33,6 @@ import '../../today/presentation/week_card.dart';
 import '../../volume/domain/weekly_volume.dart';
 import '../../volume/presentation/volume_charts.dart';
 import '../../volume/presentation/volume_text.dart';
-import '../domain/body_snapshot.dart';
 import '../domain/measurement_prompt.dart';
 import 'measurement_prompt_cubit.dart';
 import 'progress_body_cubit.dart';
@@ -154,7 +154,7 @@ class _ProgressViewState extends State<_ProgressView> {
   }
 }
 
-/// The latest weight in a featured band with its change over the card's
+/// The latest weight in a featured band with its change over the last 2
 /// weeks beside it and the newest body fat under it, those weeks as a line
 /// with its highest and lowest weight and its first and last date, and the
 /// two ways to log; the whole card opens Body.
@@ -221,7 +221,7 @@ class _BodyCard extends StatelessWidget {
           null => null,
         },
         // A single weigh-in has no trend: the card goes without one.
-        chart: _trend(l10n, snapshot, unit),
+        chart: _trend(l10n, snapshot.weights, unit),
         action: logWeight,
         moreActions: [measure],
         onTap: open,
@@ -231,10 +231,9 @@ class _BodyCard extends StatelessWidget {
 
   Widget? _trend(
     AppLocalizations l10n,
-    BodySnapshot snapshot,
+    List<WeightPoint> weights,
     WeightUnit unit,
   ) {
-    final weights = snapshot.weights;
     if (weights.length < 2) return null;
     final values = [for (final point in weights) point.kg];
     return TrendLine.scaled(
@@ -243,7 +242,7 @@ class _BodyCard extends StatelessWidget {
       lowLabel: l10n.bodyWeightNumber(values.reduce(math.min), unit),
       startLabel: l10n.bodyShortDate(weights.first.date),
       endLabel: l10n.bodyShortDate(weights.last.date),
-      semanticLabel: l10n.progressBodyTrend(snapshot.weeks),
+      semanticLabel: l10n.progressBodyTrend,
     );
   }
 }
@@ -399,7 +398,7 @@ TextStyle _quiet(BuildContext context) =>
     Theme.of(context).textTheme.bodySmall!;
 
 /// The most recently trained exercise's latest estimated 1RM, its change
-/// over the card's weeks and those weeks as a line; opens the strength
+/// over the last 2 weeks and those weeks as a line; opens the strength
 /// list.
 class _StrengthCard extends StatelessWidget {
   const _StrengthCard();
@@ -455,7 +454,7 @@ class _StrengthCard extends StatelessWidget {
           final kg? when kg < 0 => false,
           _ => null,
         },
-        // A single e1RM in the card's weeks has no trend.
+        // A single e1RM in the 2 weeks has no trend.
         chart: highlight.trend.length > 1
             ? TrendLine(values: highlight.trend)
             : null,
