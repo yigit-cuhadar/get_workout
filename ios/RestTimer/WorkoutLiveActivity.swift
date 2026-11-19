@@ -91,8 +91,9 @@ enum ActivityColors {
 }
 
 /// While a set is due: the app's mark, the exercise's place and the
-/// elapsed time on top, the exercise large, the set with its values and
-/// one dot per set of the exercise. With every set done, the app sends
+/// elapsed time on top, the exercise large across the card, the set with
+/// its values and, at its end, one dot per set of the exercise. With every
+/// set done, the app sends
 /// "All sets done" and "Finish in the app" in their place, without dots
 /// (LA5 A); the workout's name shows only for content without a set.
 struct SetCard: View {
@@ -109,18 +110,17 @@ struct SetCard: View {
           .foregroundStyle(.secondary)
       }
       .font(.subheadline)
-      HStack(alignment: .bottom, spacing: 12) {
-        VStack(alignment: .leading, spacing: 4) {
-          Text(state.set?.exercise ?? state.name).font(.title3.weight(.semibold)).lineLimit(1)
-          if let set = state.set {
+      // The name takes the whole width; the dots sit at the end of the set
+      // line, which is cut before them.
+      VStack(alignment: .leading, spacing: 4) {
+        Text(state.set?.exercise ?? state.name).font(.title3.weight(.semibold)).lineLimit(1)
+        if let set = state.set {
+          HStack(spacing: 12) {
             Text(set.line).font(.subheadline).monospacedDigit().lineLimit(1)
               .foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+            SetDots(done: set.done).fixedSize()
           }
-        }
-        .layoutPriority(1)
-        Spacer(minLength: 0)
-        if let set = state.set {
-          SetDots(done: set.done)
         }
       }
     }

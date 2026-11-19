@@ -3013,8 +3013,9 @@ the feature you are about to touch, and keep it true when you change it.
   its values ("Set 2 of 3 · 80 kg × 8": "Drop set 2 of 3", "Warm-up 1 of
   2" or "Warm-up" as the set to do now counts them; the values entered,
   else the suggested ones, in the user's unit; none while both are empty)
-  and one dot per set of the exercise, filled where done (narrower above
-  five sets); never the workout's name. Once every set is done but the
+  and, right-aligned at the end of that line (cut before them, so the
+  name has the whole width), one dot per set of the exercise, filled
+  where done (narrower above five sets); never the workout's name. Once every set is done but the
   workout is not finished (LA5 A): the same top row (the last exercise's
   place), "All sets done" large and "Finish in the app" under it, no dots;
   the expanded island shows the same two lines. During a rest: "Rest" and the next set beside
