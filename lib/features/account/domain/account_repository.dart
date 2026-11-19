@@ -23,15 +23,27 @@ final class PartlyDeletedFailure extends Failure {
   ]) : super(cause: cause);
 }
 
+/// The server could not revoke the app's Apple sign-in at Apple, so it
+/// deleted nothing; deleting again with a fresh Apple code may succeed.
+final class AppleNotRevokedFailure extends Failure {
+  const AppleNotRevokedFailure([
+    super.message = 'Apple sign-in not revoked',
+    Object? cause,
+  ]) : super(cause: cause);
+}
+
 /// The signed-in user's account on the server.
 abstract interface class AccountRepository {
   /// Sends this device's pending writes first, failing with
   /// [NetworkFailure] when they cannot go (offline) and nothing was asked;
   /// then deletes the signed-in user's stored data, photos and sign-in,
-  /// guests included. Fails with [DeletionUnavailableFailure] while the
-  /// server cannot, [recentLoginRequiredCode] when the sign-in is too old
-  /// and [PartlyDeletedFailure] when only the sign-in is left.
-  Future<Result<void>> deleteAccount();
+  /// guests included. With an [appleCode] (`forge_auth`'s
+  /// `ReauthenticateWithAppleCode`) the server first revokes the app's
+  /// Apple sign-in with it. Fails with [DeletionUnavailableFailure] while
+  /// the server cannot, [recentLoginRequiredCode] when the sign-in is too
+  /// old, [AppleNotRevokedFailure] when Apple refused and
+  /// [PartlyDeletedFailure] when only the sign-in is left.
+  Future<Result<void>> deleteAccount({String? appleCode});
 
   /// Ends the session on this device.
   Future<Result<void>> signOut();

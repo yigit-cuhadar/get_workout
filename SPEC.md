@@ -258,7 +258,14 @@ only, JPEG, max 5 MB.
   machine-readable `details.reason`, which the app maps on: `recent-sign-in`
   (`failed-precondition`, a non-guest signed in more than 5 minutes ago)
   and `sign-in-not-deleted` (`internal`, the data is gone but the auth user
-  is not; calling again finishes). Once the auth user is gone it deletes
+  is not; calling again finishes), and `apple-revoke-failed`
+  (`failed-precondition`, nothing deleted). With `data.appleCode` (a fresh
+  Apple authorization code) it first, after the recent sign-in check,
+  exchanges the code at Apple and revokes the refresh token (else the
+  access token) with a client secret it signs (ES256) with the
+  `APPLE_SIGN_IN_KEY` secret (the .p8 PEM of key 699QV25PQM; team, key and
+  client id are constants in `functions/src/apple.ts`); a refusal logs
+  Apple's status and body and deletes nothing. Once the auth user is gone it deletes
   `entitlements/{uid}` once more (a failure is logged), so a webhook event
   racing the deletion leaves nothing; later events skip the uid. RevenueCat
   keeps its customer and its events keep coming until the store
@@ -667,9 +674,9 @@ Decisions (the canvases they were drawn on are deleted):
   with Apple linked confirms "Delete everything?" with "Continue with
   Apple" in place of Delete ("…Sign in with Apple to confirm."), which
   revokes the app's Apple sign-in before deleting (YG5 B). The revocation
-  asks Apple natively for a fresh authorization code (Forge v0.31.0; the
-  code from FlutterFire's provider flow was refused with
-  `invalid-credential` on the owner's iPhone). A failure on this path never
+  asks Apple natively for a fresh authorization code, which the
+  `deleteAccount` function revokes at Apple (Firebase's revocation refused
+  it with `invalid-credential` on the owner's iPhone). A failure on this path never
   shows the password text: offline keeps "You're offline…", another
   Apple account keeps "That's a different account…", and the
   password-looking codes (`invalid-credential`, `wrong-password`) and
@@ -1862,14 +1869,18 @@ the feature you are about to touch, and keep it true when you change it.
   that renews it with that provider (`forge_auth`'s
   `ReauthenticateWithProvider`); a cancelled provider sheet leaves the
   dialog open and asks nothing. A user with Apple linked always goes
-  through Apple first: `RevokeAppleSignIn` signs in again with Apple and
-  revokes the app's Apple tokens (App Store 5.1.1(v)); a closed sheet
-  deletes nothing, a failed revocation deletes nothing and shows the
-  delete failure. Revocation needs Apple's code flow key (Team ID, Key ID,
-  .p8) in each Firebase project's Apple provider: set in dev and prod on
-  2026-11-18 (key 699QV25PQM, which also has APNs). Checked that day on the
-  owner's iPhone: a guest linked with Apple was deleted, its Apple
-  sign-in revoked. A guest is deleted
+  through Apple first: `forge_auth`'s `ReauthenticateWithAppleCode` signs
+  in again with Apple natively and returns a fresh authorization code,
+  which `deleteAccount` uses to revoke the app's Apple tokens at Apple
+  before deleting anything (App Store 5.1.1(v)); the Apple button of the
+  renewed sign-in dialog does the same. A closed sheet deletes nothing; a
+  failed Apple sign-in or a refused revocation deletes nothing and shows
+  the delete failure. Firebase's own revocation
+  (`revokeTokenWithAuthorizationCode`) failed on the owner's iPhone with
+  `invalid-credential` and hid Apple's answer, so the function does it
+  with the `APPLE_SIGN_IN_KEY` secret (set per Firebase project before
+  deploying `deleteAccount`) and logs Apple's answer on failure. A guest
+  is deleted
   the same way, without that check. Once the server deleted the data,
   still signed in (so nothing of the next guest is touched), the app
   removes the user's kept workouts file (unreadable copies too), cancels

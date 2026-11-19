@@ -36,9 +36,9 @@ class DeleteAccountState extends Equatable {
   List<Object?> get props => [status, failure];
 }
 
-/// Signing in again with Apple or revoking its sign-in failed, for [cause].
-/// Its codes are not a password's: the page names only being offline and
-/// another account, else that deleting failed.
+/// Signing in again with Apple for the code that revokes its sign-in
+/// failed, for [cause]. Its codes are not a password's: the page names only
+/// being offline and another account, else that deleting failed.
 final class AppleRevokeFailure extends Failure {
   const AppleRevokeFailure(Failure cause)
     : super('Apple revocation failed', cause: cause);
@@ -59,7 +59,7 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
     required this._deleteAccount,
     required this._reauthenticate,
     required this._reauthenticateWithProvider,
-    required this._revokeAppleSignIn,
+    required this._reauthenticateWithAppleCode,
     required this._underway,
     required this._releaseWorkouts,
     required this._resumeWorkouts,
@@ -69,7 +69,7 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
   final DeleteUserAccount _deleteAccount;
   final Reauthenticate _reauthenticate;
   final ReauthenticateWithProvider _reauthenticateWithProvider;
-  final RevokeAppleSignIn _revokeAppleSignIn;
+  final ReauthenticateWithAppleCode _reauthenticateWithAppleCode;
   final DeletionUnderway _underway;
 
   /// Stops the workout in progress from writing for the user, and starts
@@ -83,28 +83,30 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
     await _delete();
   }
 
-  /// Signs in again with Apple and revokes the app's Apple sign-in, which
-  /// the App Store requires, then deletes. A closed Apple sheet deletes
-  /// nothing and says nothing.
+  /// Signs in again with Apple, then deletes, the server revoking the app's
+  /// Apple sign-in with the fresh code first, which the App Store requires.
+  /// A closed Apple sheet deletes nothing and says nothing.
   Future<void> deleteWithApple() async {
     if (state.status case DeleteStatus.deleting || DeleteStatus.done) return;
     emit(const DeleteAccountState(DeleteStatus.deleting));
-    final failure = (await _revokeAppleSignIn()).failureOrNull;
+    final code = await _reauthenticateWithAppleCode();
     if (isClosed) return;
-    if (failure != null) {
-      return emit(
-        failure is AuthFailure && failure.code == cancelledCode
-            ? const DeleteAccountState(DeleteStatus.idle)
-            : DeleteAccountState(
-                DeleteStatus.failed,
-                failure: AppleRevokeFailure(failure),
-              ),
-      );
+    switch (code) {
+      case Ok(:final value):
+        await _delete(appleCode: value);
+      case Err(failure: AuthFailure(code: cancelledCode)):
+        emit(const DeleteAccountState(DeleteStatus.idle));
+      case Err(:final failure):
+        emit(
+          DeleteAccountState(
+            DeleteStatus.failed,
+            failure: AppleRevokeFailure(failure),
+          ),
+        );
     }
-    await _delete();
   }
 
-  Future<void> _delete() async {
+  Future<void> _delete({String? appleCode}) async {
     final uid = _getCurrentUser()?.id;
     if (uid == null) {
       return emit(
@@ -116,7 +118,8 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
     }
     _underway.value = true;
     await _releaseWorkouts(uid);
-    final failure = (await _deleteAccount(uid)).failureOrNull;
+    final failure = (await _deleteAccount((uid: uid, appleCode: appleCode)))
+        .failureOrNull;
     if (failure is! PartlyDeletedFailure) {
       if (failure != null) await _resumeWorkouts();
       _underway.value = false;
@@ -136,30 +139,38 @@ class DeleteAccountCubit extends Cubit<DeleteAccountState> {
   }
 
   /// Signs in again with [password], then deletes.
-  Future<void> confirmPassword(String password) =>
-      _signInAgain(() => _reauthenticate(password));
+  Future<void> confirmPassword(String password) => _signInAgain(
+    () async => (await _reauthenticate(password)).map((_) => null),
+  );
 
-  /// Signs in again with [provider], then deletes. A closed provider sheet
-  /// asks again without a failure.
-  Future<void> confirmWithProvider(SocialProvider provider) =>
-      _signInAgain(() => _reauthenticateWithProvider(provider));
+  /// Signs in again with [provider], then deletes; with Apple, its fresh
+  /// code revokes the app's Apple sign-in as [deleteWithApple] does. A
+  /// closed provider sheet asks again without a failure.
+  Future<void> confirmWithProvider(SocialProvider provider) => _signInAgain(
+    () async => provider == SocialProvider.apple
+        ? await _reauthenticateWithAppleCode()
+        : (await _reauthenticateWithProvider(provider)).map((_) => null),
+  );
 
-  Future<void> _signInAgain(Future<Result<void>> Function() signIn) async {
+  /// [signIn] gives the Apple code to delete with, if any.
+  Future<void> _signInAgain(Future<Result<String?>> Function() signIn) async {
     if (state.status != DeleteStatus.needsSignIn) return;
     emit(const DeleteAccountState(DeleteStatus.deleting));
-    final failure = (await signIn()).failureOrNull;
+    final signedIn = await signIn();
     if (isClosed) return;
-    if (failure != null) {
-      return emit(
-        DeleteAccountState(
-          DeleteStatus.needsSignIn,
-          failure: failure is AuthFailure && failure.code == cancelledCode
-              ? null
-              : failure,
-        ),
-      );
+    switch (signedIn) {
+      case Ok(:final value):
+        await _delete(appleCode: value);
+      case Err(:final failure):
+        emit(
+          DeleteAccountState(
+            DeleteStatus.needsSignIn,
+            failure: failure is AuthFailure && failure.code == cancelledCode
+                ? null
+                : failure,
+          ),
+        );
     }
-    await _delete();
   }
 
   /// Back from the sign-in prompt without deleting.

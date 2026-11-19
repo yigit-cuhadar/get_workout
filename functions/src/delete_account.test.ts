@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
+import { logger } from "firebase-functions/v2";
 import { HttpsError } from "firebase-functions/v2/https";
 
+import { AppleError } from "./apple";
 import {
   AccountStore,
   Reason,
@@ -12,7 +14,22 @@ import {
 
 const now = 1_000_000;
 
+/** Records the codes revoked at Apple; refuses when [error] is given. */
+function fakeApple(error?: Error) {
+  const revoked: string[] = [];
+  const revoke = async (code: string) => {
+    if (error) throw error;
+    revoked.push(code);
+  };
+  return { revoke, revoked };
+}
+
+
 type Auth = Parameters<typeof deleteAccountOf>[0];
+
+/** Deletes without an Apple code. */
+const deleteOf = (auth: Auth, store: AccountStore, nowSeconds: number) =>
+  deleteAccountOf(auth, undefined, store, fakeApple().revoke, nowSeconds);
 
 const caller = (provider: string, authTime: number): Auth =>
   ({
@@ -40,7 +57,7 @@ function fakeStore(failing: string[] = []) {
 describe("deleteAccountOf", () => {
   test("deletes documents, entitlement and files, then the sign-in", async () => {
     const { store, done } = fakeStore();
-    await deleteAccountOf(caller("password", now - 10), store, now);
+    await deleteOf(caller("password", now - 10), store, now);
     assert.deepEqual(done.slice(0, 3).sort(), [
       "documents u1",
       "entitlement u1",
@@ -53,7 +70,7 @@ describe("deleteAccountOf", () => {
     // A webhook event that found the user before the sign-in went may have
     // written it again.
     const { store, done } = fakeStore();
-    await deleteAccountOf(caller("password", now), store, now);
+    await deleteOf(caller("password", now), store, now);
     assert.equal(done[4], "entitlement u1");
   });
 
@@ -64,14 +81,14 @@ describe("deleteAccountOf", () => {
       if (++calls === 2) throw new Error("unavailable");
       done.push(`entitlement ${uid}`);
     };
-    await deleteAccountOf(caller("password", now), store, now);
+    await deleteOf(caller("password", now), store, now);
     assert.equal(done.at(-1), "auth u1");
   });
 
   test("refuses a caller who is not signed in", async () => {
     const { store, done } = fakeStore();
     await assert.rejects(
-      deleteAccountOf(undefined, store, now),
+      deleteOf(undefined, store, now),
       (error: HttpsError) => error.code === "unauthenticated",
     );
     assert.deepEqual(done, []);
@@ -80,7 +97,7 @@ describe("deleteAccountOf", () => {
   test("asks for a recent sign-in and deletes nothing", async () => {
     const { store, done } = fakeStore();
     await assert.rejects(
-      deleteAccountOf(caller("password", now - 301), store, now),
+      deleteOf(caller("password", now - 301), store, now),
       (error: HttpsError) =>
         error.code === "failed-precondition" &&
         (error.details as { reason: string }).reason === Reason.recentSignIn,
@@ -90,14 +107,14 @@ describe("deleteAccountOf", () => {
 
   test("a guest is deleted whenever it signed in", async () => {
     const { store, done } = fakeStore();
-    await deleteAccountOf(caller("anonymous", 0), store, now);
+    await deleteOf(caller("anonymous", 0), store, now);
     assert.equal(done.length, 5);
   });
 
   test("keeps the sign-in when data is left, so a retry can finish", async () => {
     const { store, done } = fakeStore(["files"]);
     await assert.rejects(
-      deleteAccountOf(caller("password", now), store, now),
+      deleteOf(caller("password", now), store, now),
     );
     assert.ok(!done.includes("auth u1"));
   });
@@ -105,13 +122,103 @@ describe("deleteAccountOf", () => {
   test("says when only the sign-in is left, so the app retries", async () => {
     const { store, done } = fakeStore(["auth"]);
     await assert.rejects(
-      deleteAccountOf(caller("password", now), store, now),
+      deleteOf(caller("password", now), store, now),
       (error: HttpsError) =>
         error.code === "internal" &&
         (error.details as { reason: string }).reason ===
           Reason.signInNotDeleted,
     );
     assert.equal(done.length, 3);
+  });
+});
+
+describe("deleteAccountOf with an Apple code", () => {
+  test("revokes at Apple before deleting anything", async () => {
+    const { store, done } = fakeStore();
+    const apple = fakeApple();
+    await deleteAccountOf(
+      caller("apple.com", now),
+      "code-1",
+      store,
+      async (code) => {
+        assert.deepEqual(done, []);
+        await apple.revoke(code);
+      },
+      now,
+    );
+    assert.deepEqual(apple.revoked, ["code-1"]);
+    assert.equal(done.length, 5);
+  });
+
+  test("a refused revocation logs Apple's answer, deleting nothing", async (t) => {
+    const logged = t.mock.method(logger, "error", () => {});
+    const { store, done } = fakeStore();
+    const apple = fakeApple(
+      new AppleError("token", 400, '{"error":"invalid_grant"}'),
+    );
+    await assert.rejects(
+      deleteAccountOf(
+        caller("apple.com", now),
+        "code-1",
+        store,
+        apple.revoke,
+        now,
+      ),
+      (error: HttpsError) =>
+        error.code === "failed-precondition" &&
+        (error.details as { reason: string }).reason ===
+          Reason.appleRevokeFailed,
+    );
+    assert.deepEqual(done, []);
+    const [, fields] = logged.mock.calls[0].arguments;
+    assert.deepEqual(fields, {
+      uid: "u1",
+      endpoint: "token",
+      status: 400,
+      body: '{"error":"invalid_grant"}',
+    });
+    assert.ok(!JSON.stringify(logged.mock.calls).includes("code-1"));
+  });
+
+  test("an old sign-in is refused before asking Apple", async () => {
+    const { store } = fakeStore();
+    const apple = fakeApple();
+    await assert.rejects(
+      deleteAccountOf(
+        caller("apple.com", now - 301),
+        "code-1",
+        store,
+        apple.revoke,
+        now,
+      ),
+      (error: HttpsError) =>
+        (error.details as { reason: string }).reason === Reason.recentSignIn,
+    );
+    assert.deepEqual(apple.revoked, []);
+  });
+
+  test("without a code nothing is revoked", async () => {
+    const { store, done } = fakeStore();
+    const apple = fakeApple();
+    await deleteAccountOf(
+      caller("apple.com", now),
+      undefined,
+      store,
+      apple.revoke,
+      now,
+    );
+    assert.deepEqual(apple.revoked, []);
+    assert.equal(done.length, 5);
+  });
+
+  test("a code that is not a string is refused, deleting nothing", async () => {
+    const { store, done } = fakeStore();
+    const apple = fakeApple();
+    await assert.rejects(
+      deleteAccountOf(caller("apple.com", now), 42, store, apple.revoke, now),
+      (error: HttpsError) => error.code === "invalid-argument",
+    );
+    assert.deepEqual([...done, ...apple.revoked], []);
   });
 });
 

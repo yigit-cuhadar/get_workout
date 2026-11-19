@@ -19,7 +19,8 @@ void main() {
     account = MockAccountRepository();
     local = MockLocalAccountData();
     telemetry = MockTelemetry();
-    when(() => account.deleteAccount()).thenAnswer((_) async => const Ok(null));
+    when(() => account.deleteAccount(appleCode: any(named: 'appleCode')))
+        .thenAnswer((_) async => const Ok(null));
     when(() => local.clear(any())).thenAnswer((_) async => const Ok(null));
     when(() => local.holdWrites(any())).thenAnswer((_) async {});
     when(() => local.releaseWrites(any())).thenAnswer((_) async {});
@@ -35,7 +36,7 @@ void main() {
     );
 
     test('clears the device while still signed in, then signs out', () async {
-      expect((await delete()('u1')).isOk, isTrue);
+      expect((await delete()((uid: 'u1', appleCode: null))).isOk, isTrue);
       verifyInOrder([
         () => local.holdWrites('u1'),
         () => account.deleteAccount(),
@@ -45,10 +46,18 @@ void main() {
       ]);
     });
 
+    test('passes the Apple code on to the server', () async {
+      await delete()((uid: 'u1', appleCode: 'code-1'));
+      verify(() => account.deleteAccount(appleCode: 'code-1')).called(1);
+    });
+
     test('a server failure keeps everything and stays signed in', () async {
       when(() => account.deleteAccount())
           .thenAnswer((_) async => const Err(NetworkFailure()));
-      expect((await delete()('u1')).failureOrNull, isA<NetworkFailure>());
+      expect(
+        (await delete()((uid: 'u1', appleCode: null))).failureOrNull,
+        isA<NetworkFailure>(),
+      );
       verifyNever(() => local.clear(any()));
       verifyNever(() => telemetry.forget(any()));
       verifyNever(() => account.signOut());
@@ -63,7 +72,10 @@ void main() {
         'stays signed in to finish', () async {
       when(() => account.deleteAccount())
           .thenAnswer((_) async => const Err(PartlyDeletedFailure()));
-      expect((await delete()('u1')).failureOrNull, isA<PartlyDeletedFailure>());
+      expect(
+        (await delete()((uid: 'u1', appleCode: null))).failureOrNull,
+        isA<PartlyDeletedFailure>(),
+      );
       verify(() => local.clear('u1')).called(1);
       verify(() => telemetry.forget('u1')).called(1);
       verifyNever(() => account.signOut());
@@ -75,7 +87,7 @@ void main() {
           .thenAnswer((_) async => const Err(UnknownFailure()));
       when(() => telemetry.forget(any()))
           .thenAnswer((_) async => const Err(UnknownFailure()));
-      expect((await delete()('u1')).isOk, isTrue);
+      expect((await delete()((uid: 'u1', appleCode: null))).isOk, isTrue);
       verify(() => account.signOut()).called(1);
     });
   });

@@ -362,6 +362,49 @@ void main() {
       expect(find.byType(OnboardingPage), findsOneWidget);
     });
 
+    testWidgets('an Apple user confirms with Apple, which deletes with its '
+        'code; Apple refusing the revocation only says deleting failed', (
+      tester,
+    ) async {
+      const appleUser = AuthUser(
+        id: 'u1',
+        email: 'a@icloud.com',
+        signInMethods: {SignInMethod.apple},
+      );
+      await openAccount(tester, appleUser);
+      signOutStartsNewGuest();
+      var deletes = 0;
+      when(() => app.account.deleteAccount(appleCode: any(named: 'appleCode')))
+          .thenAnswer(
+            (_) async => ++deletes == 1
+                ? const Err(AppleNotRevokedFailure())
+                : const Ok(null),
+          );
+      when(() => app.account.signOut()).thenAnswer((_) async {
+        app.users.add(null);
+        return const Ok(null);
+      });
+      when(() => app.repository.reauthenticateWithAppleCode())
+          .thenAnswer((_) async => const Ok('code-1'));
+
+      await tapText(tester, 'Delete account');
+      await tapButton(tester, 'Delete account');
+      await tapText(tester, 'Continue with Apple');
+
+      expect(find.text("Couldn't delete your data. Try again"), findsOneWidget);
+      expect(find.byType(DeleteAccountPage), findsOneWidget);
+      ScaffoldMessenger.of(tester.element(find.byType(DeleteAccountPage)))
+          .removeCurrentSnackBar();
+      await tester.pumpAndSettle();
+
+      await tapButton(tester, 'Delete account');
+      await tapText(tester, 'Continue with Apple');
+
+      verify(() => app.account.deleteAccount(appleCode: 'code-1')).called(2);
+      expect(find.byType(DeleteAccountPage), findsNothing);
+      expect(find.byType(OnboardingPage), findsOneWidget);
+    });
+
     testWidgets('a failed Apple confirmation names being offline or another '
         'account, else only that deleting failed; a closed sheet says '
         'nothing', (tester) async {
@@ -392,7 +435,7 @@ void main() {
         (const AuthFailure('odd'), "Couldn't delete your data. Try again"),
         (const AuthFailure('closed', code: cancelledCode), null),
       ]) {
-        when(() => app.repository.revokeAppleSignIn())
+        when(() => app.repository.reauthenticateWithAppleCode())
             .thenAnswer((_) async => Err(failure));
         if (find.text('Delete everything?').evaluate().isEmpty) {
           if (find.byType(DeleteAccountPage).evaluate().isEmpty) {
@@ -408,7 +451,9 @@ void main() {
         } else {
           expect(find.text(text), findsOneWidget, reason: '$failure');
         }
-        verifyNever(() => app.account.deleteAccount());
+        verifyNever(
+          () => app.account.deleteAccount(appleCode: any(named: 'appleCode')),
+        );
         ScaffoldMessenger.of(tester.element(find.byType(DeleteAccountPage)))
             .removeCurrentSnackBar();
         await tester.pumpAndSettle();

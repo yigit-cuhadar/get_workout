@@ -63,6 +63,16 @@ void main() {
       verifyNever(() => auth.signOut());
     });
 
+    test('sends the Apple code when given', () async {
+      when(() => callable.call<void>(any()))
+          .thenAnswer((_) async => MockCallableResult());
+      expect(
+        (await repository.deleteAccount(appleCode: 'code-1')).isOk,
+        isTrue,
+      );
+      verify(() => callable.call<void>({'appleCode': 'code-1'})).called(1);
+    });
+
     test('offline, nothing is asked of the server', () async {
       when(() => firestore.waitForPendingWrites())
           .thenAnswer((_) => Completer<void>().future);
@@ -100,6 +110,13 @@ void main() {
       expect(
         (await repository.deleteAccount()).failureOrNull,
         isA<PartlyDeletedFailure>(),
+      );
+      when(() => callable.call<void>(any())).thenThrow(
+        FunctionsError('failed-precondition', reason: 'apple-revoke-failed'),
+      );
+      expect(
+        (await repository.deleteAccount(appleCode: 'code-1')).failureOrNull,
+        isA<AppleNotRevokedFailure>(),
       );
     });
 

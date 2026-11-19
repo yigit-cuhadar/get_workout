@@ -48,10 +48,11 @@ void main() {
     workouts = [];
     heldAtCall = [];
     when(() => auth.currentUser).thenReturn(member);
-    when(() => account.deleteAccount()).thenAnswer((_) async {
-      heldAtCall.add(underway.value);
-      return const Ok(null);
-    });
+    when(() => account.deleteAccount(appleCode: any(named: 'appleCode')))
+        .thenAnswer((_) async {
+          heldAtCall.add(underway.value);
+          return const Ok(null);
+        });
     when(() => auth.reauthenticate(any()))
         .thenAnswer((_) async => const Ok(null));
     when(() => auth.reauthenticateWithProvider(any()))
@@ -68,14 +69,15 @@ void main() {
     deleteAccount: DeleteUserAccount(account, local, telemetry),
     reauthenticate: Reauthenticate(auth),
     reauthenticateWithProvider: ReauthenticateWithProvider(auth),
-    revokeAppleSignIn: RevokeAppleSignIn(auth),
+    reauthenticateWithAppleCode: ReauthenticateWithAppleCode(auth),
     underway: underway,
     releaseWorkouts: (uid) async => workouts.add('release $uid'),
     resumeWorkouts: () async => workouts.add('resume'),
   );
 
   void failWith(Failure failure) =>
-      when(() => account.deleteAccount()).thenAnswer((_) async => Err(failure));
+      when(() => account.deleteAccount(appleCode: any(named: 'appleCode')))
+          .thenAnswer((_) async => Err(failure));
 
   const deleting = DeleteAccountState(DeleteStatus.deleting);
   const needsSignIn = DeleteAccountState(DeleteStatus.needsSignIn);
@@ -226,6 +228,27 @@ void main() {
   );
 
   blocTest<DeleteAccountCubit, DeleteAccountState>(
+    'signing in again with Apple deletes with its fresh code',
+    setUp: () {
+      final answers = [const Err<void>(recentLogin), const Ok<void>(null)];
+      when(() => account.deleteAccount(appleCode: any(named: 'appleCode')))
+          .thenAnswer((_) async => answers.removeAt(0));
+      when(() => auth.reauthenticateWithAppleCode())
+          .thenAnswer((_) async => const Ok('code-1'));
+    },
+    build: build,
+    act: (cubit) async {
+      await cubit.delete();
+      await cubit.confirmWithProvider(SocialProvider.apple);
+    },
+    expect: () => [deleting, needsSignIn, deleting, done],
+    verify: (_) {
+      verify(() => account.deleteAccount(appleCode: 'code-1')).called(1);
+      verifyNever(() => auth.reauthenticateWithProvider(any()));
+    },
+  );
+
+  blocTest<DeleteAccountCubit, DeleteAccountState>(
     'a closed provider sheet asks again, says nothing and deletes nothing',
     setUp: () {
       failWith(recentLogin);
@@ -235,7 +258,7 @@ void main() {
     build: build,
     act: (cubit) async {
       await cubit.delete();
-      await cubit.confirmWithProvider(SocialProvider.apple);
+      await cubit.confirmWithProvider(SocialProvider.google);
     },
     expect: () => [deleting, needsSignIn, deleting, needsSignIn],
     verify: (_) => verify(() => account.deleteAccount()).called(1),
@@ -308,39 +331,41 @@ void main() {
   group('deleteWithApple', () {
     setUp(
       () =>
-          when(() => auth.revokeAppleSignIn())
-              .thenAnswer((_) async => const Ok(null)),
+          when(() => auth.reauthenticateWithAppleCode())
+              .thenAnswer((_) async => const Ok('code-1')),
     );
 
     blocTest<DeleteAccountCubit, DeleteAccountState>(
-      'revokes the Apple sign-in, then deletes',
+      'signs in again with Apple, then deletes with its code for the server '
+      'to revoke',
       build: build,
       act: (cubit) => cubit.deleteWithApple(),
       expect: () => [deleting, done],
       verify: (_) {
         verifyInOrder([
-          () => auth.revokeAppleSignIn(),
-          () => account.deleteAccount(),
+          () => auth.reauthenticateWithAppleCode(),
+          () => account.deleteAccount(appleCode: 'code-1'),
         ]);
       },
     );
 
     blocTest<DeleteAccountCubit, DeleteAccountState>(
       'a closed Apple sheet deletes nothing and says nothing',
-      setUp: () => when(() => auth.revokeAppleSignIn()).thenAnswer(
+      setUp: () => when(() => auth.reauthenticateWithAppleCode()).thenAnswer(
         (_) async => const Err(AuthFailure('closed', code: cancelledCode)),
       ),
       build: build,
       act: (cubit) => cubit.deleteWithApple(),
       expect: () => [deleting, const DeleteAccountState(DeleteStatus.idle)],
-      verify: (_) => verifyNever(() => account.deleteAccount()),
+      verify: (_) => verifyNever(
+        () => account.deleteAccount(appleCode: any(named: 'appleCode')),
+      ),
     );
 
     blocTest<DeleteAccountCubit, DeleteAccountState>(
-      'a failed revocation deletes nothing and fails',
-      setUp: () => when(() => auth.revokeAppleSignIn()).thenAnswer(
-        (_) async =>
-            const Err(AuthFailure('no key', code: 'invalid-credential')),
+      'a failed Apple sign-in deletes nothing and fails',
+      setUp: () => when(() => auth.reauthenticateWithAppleCode()).thenAnswer(
+        (_) async => const Err(AuthFailure('other', code: 'user-mismatch')),
       ),
       build: build,
       act: (cubit) => cubit.deleteWithApple(),
@@ -350,7 +375,27 @@ void main() {
             .having((s) => s.status, 'status', DeleteStatus.failed)
             .having((s) => s.failure, 'failure', isA<AppleRevokeFailure>()),
       ],
-      verify: (_) => verifyNever(() => account.deleteAccount()),
+      verify: (_) => verifyNever(
+        () => account.deleteAccount(appleCode: any(named: 'appleCode')),
+      ),
+    );
+
+    blocTest<DeleteAccountCubit, DeleteAccountState>(
+      'Apple refusing the revocation fails with nothing deleted',
+      setUp: () => failWith(const AppleNotRevokedFailure()),
+      build: build,
+      act: (cubit) => cubit.deleteWithApple(),
+      expect: () => [
+        deleting,
+        const DeleteAccountState(
+          DeleteStatus.failed,
+          failure: AppleNotRevokedFailure(),
+        ),
+      ],
+      verify: (_) {
+        expect(workouts, ['release u1', 'resume']);
+        verifyNever(() => local.clear(any()));
+      },
     );
   });
 }
