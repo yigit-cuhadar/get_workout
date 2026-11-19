@@ -831,6 +831,29 @@ Decisions (the canvases they were drawn on are deleted):
   in their tab, at `…/swap` (Y2 B). The analytics consent page stays a
   full-screen page (Y3 A); "New exercise" from the picker stays a full
   page over it (Y4 A).
+- Programlar ve Profil (owner's picks, 2026-11-19, canvas
+  https://claude.ai/artifact/WmZQNYSPgohJ4y3wJSmR6w): PA1 A, PP1 A, PA2 A.
+  While a program day's workout runs, that day's row in the Programs
+  band reads "In progress · 23 min" with Resume at its end, and a tap
+  opens the workout (a free workout leaves the band as it is) (PA1). A
+  free user's Premium card on Profile is a light card: "GetWorkout
+  Premium", the store's trial as a tag when there is one, the three
+  benefits with checks, Get Premium (PP1; a subscriber's card is
+  unchanged). Cards titled with a program, workout or day name show it
+  on one line, shrinking from 26 px to 18 px at least, then ending in
+  "…" (PA2).
+- Live Activity ve antrenman sayfası (owner's picks, 2026-11-19, canvas
+  https://claude.ai/artifact/P7BEPoJoM524GsYGfBnqn6): LA1 A (without the
+  workout's name), LA2 A, LA3 B, LA4 B, WO1 B. Lock screen while a set
+  is due: the app icon with "Exercise 3 of 6" and the small elapsed time
+  on top, the exercise's name large, "Set 2 of 3 · 80 kg × 8" and one dot
+  per set (LA1). During a rest: the countdown, a bar emptying, and
+  −15 s, +15 s and Skip working without opening the app (iOS 17+) (LA2).
+  Compact Dynamic Island: as before while working; during a rest an
+  emptying ring instead of the timer symbol (LA3). Expanded island
+  during a rest: the large countdown and the emptying bar, no buttons
+  (LA4). The workout in progress opens full screen from the bottom with
+  ⌄ at the top left; a drag down closes it to the running bar (WO1).
 - Programlar · çift giriş (owner's pick, 2026-11-19, canvas
   https://claude.ai/artifact/YaFwy2eH5tHzVFa1H1pNAn): PR1 A. Without an
   active program the Programs tab's "No active program" card has no
