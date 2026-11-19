@@ -2573,6 +2573,25 @@ void main() {
       expect(find.byType(PaywallPage), findsNothing);
     });
 
+    testWidgets('a hard paywall waits for a pending purchase', (tester) async {
+      await openProfileAsFreeGuest(tester);
+      store.metadata = const {dismissibleKey: false};
+      unawaited(router.push(Routes.paywallAt(PaywallMoment.onboarding)));
+      await tester.pumpAndSettle();
+      store.failure = const PurchaseFailure(PurchaseFailureReason.pending);
+
+      await tapVisible(tester, 'Start 7-day free trial');
+      expect(find.textContaining('waiting for approval'), findsOneWidget);
+      expect(find.text('Got it'), findsNothing);
+      expect(find.bySemanticsLabel('Close'), findsNothing);
+
+      store
+        ..failure = null
+        ..approvePending();
+      await tester.pumpAndSettle();
+      expect(find.byType(PaywallPage), findsNothing);
+    });
+
     testWidgets('any other paywall stays closable', (tester) async {
       await openProfileAsFreeGuest(tester);
       store.metadata = const {dismissibleKey: false};

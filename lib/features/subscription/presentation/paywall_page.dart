@@ -218,12 +218,15 @@ class _PaywallViewState extends State<_PaywallView> {
           onAction: cubit.load,
         ),
         // Nothing more to do here: Premium unlocks by itself once approved.
+        // A paywall that cannot be closed waits for it.
         PaywallState(outcome: PaywallOutcome.pending) =>
           SubscriptionMessage.pending(
             title: l10n.paywallPendingTitle,
             message: l10n.paywallPending,
-            actionLabel: l10n.paywallGotIt,
-            onAction: () => _close(null, premium: false),
+            actionLabel: cubit.closable ? l10n.paywallGotIt : null,
+            onAction: cubit.closable
+                ? () => _close(null, premium: false)
+                : null,
           ),
         _ => null,
       },
