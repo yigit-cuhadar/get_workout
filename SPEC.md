@@ -2812,7 +2812,10 @@ the feature you are about to touch, and keep it true when you change it.
   Neither shows while edits are refused (finishing), and an answer refused
   then leaves it open. Editing a past workout never asks on a tick. A
   selected done set shows its effort row under its values, named: "Set 1 ·
-  how hard was it?" (`effortRowSet`); an undone set never has one.
+  how hard was it?" (`effortRowSet`); an undone set never has one. The
+  bar then takes its own height instead of its 60 % of the page
+  (`SetBarLayout.fullHeight`), so the steps show without scrolling; it
+  scrolls only when taller than the page (large text).
 - **Automatic warm-up sets**: Settings → "Automatic warm-up sets" (its
   row shows e.g. "Standard · Every exercise") opens a page
   (`/profile/warmups`) with:

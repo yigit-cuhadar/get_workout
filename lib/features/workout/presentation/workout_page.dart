@@ -267,6 +267,8 @@ class _ActiveWorkout extends StatelessWidget {
               Progress.indeterminate(label: l10n.workoutSaving),
             Expanded(
               child: SetBarLayout(
+                // A done set's effort steps show whole, without scrolling.
+                fullHeight: state.effortRowRef != null,
                 panel: workout.isEmpty
                     ? const SizedBox.shrink()
                     : _Panel(state: state),

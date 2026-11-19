@@ -279,4 +279,45 @@ void main() {
     await tester.tap(find.text('Hard'));
     verify(() => editor.setEffort((exercise: 0, set: 0), null)).called(1);
   });
+
+  group('SetBarLayout', () {
+    const panel = Key('panel');
+
+    Future<double> panelHeight(WidgetTester tester, bool fullHeight) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppPreset.slate.lightTheme(),
+          // The test screen is 600 tall.
+          home: SetBarLayout(
+            fullHeight: fullHeight,
+            content: const SizedBox.expand(),
+            panel: const SingleChildScrollView(
+              child: SizedBox(key: panel, height: 500),
+            ),
+          ),
+        ),
+      );
+      return tester
+          .getSize(
+            find.ancestor(
+              of: find.byKey(panel),
+              matching: find.byType(SingleChildScrollView),
+            ),
+          )
+          .height;
+    }
+
+    testWidgets('the panel takes at most its share of the page', (
+      tester,
+    ) async {
+      expect(
+        await panelHeight(tester, false),
+        600 * SetBarLayout.maxBottomShare,
+      );
+    });
+
+    testWidgets('a full-height panel takes its own height', (tester) async {
+      expect(await panelHeight(tester, true), 500);
+    });
+  });
 }
