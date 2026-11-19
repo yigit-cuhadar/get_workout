@@ -494,4 +494,40 @@ void main() {
       expect(weeks[7].duration, const Duration(minutes: 40));
     });
   });
+
+  group('CardioWeek.dailyDurations', () {
+    test('adds each day\'s sessions, the week\'s first day first', () {
+      final week = CardioWeek(DateTime(2026, 11, 16), [
+        session(date: DateTime(2026, 11, 17, 7)),
+        session(
+          date: DateTime(2026, 11, 17, 19),
+          duration: const Duration(minutes: 10),
+        ),
+        session(
+          date: DateTime(2026, 11, 22, 23, 30),
+          duration: const Duration(minutes: 44),
+        ),
+      ]);
+
+      expect(week.dailyDurations, const [
+        Duration.zero,
+        Duration(minutes: 40),
+        Duration.zero,
+        Duration.zero,
+        Duration.zero,
+        Duration.zero,
+        Duration(minutes: 44),
+      ]);
+    });
+
+    test('a week over a daylight saving change keeps its days', () {
+      // Spring forward in most zones falls in this week; in UTC it does
+      // not, which reads the same.
+      final week = CardioWeek(DateTime(2026, 3, 23), [
+        session(date: DateTime(2026, 3, 29, 20)),
+      ]);
+
+      expect(week.dailyDurations.last, const Duration(minutes: 30));
+    });
+  });
 }

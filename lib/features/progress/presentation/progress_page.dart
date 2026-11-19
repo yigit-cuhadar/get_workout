@@ -1,24 +1,29 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_ui/forge_ui.dart' hide Sparkline;
+import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/router.dart';
+import '../../../app/theme.dart';
 import '../../../core/number_text.dart';
-import '../../../core/sparkline.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../core/widgets/volume_band.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../body/domain/body_stats.dart';
 import '../../body/presentation/body_list_cubit.dart';
 import '../../body/presentation/body_text.dart';
 import '../../body/presentation/weight_sheet.dart';
+import '../../cardio/domain/cardio_week.dart';
 import '../../cardio/presentation/cardio_list_cubit.dart';
 import '../../cardio/presentation/cardio_text.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/presentation/program_list_cubit.dart';
 import '../../programs/presentation/program_text.dart';
+import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../today/presentation/today_steps_cubit.dart';
@@ -28,7 +33,6 @@ import '../../today/presentation/week_card.dart';
 import '../../volume/domain/weekly_volume.dart';
 import '../../volume/presentation/volume_charts.dart';
 import '../../volume/presentation/volume_text.dart';
-import '../domain/body_snapshot.dart';
 import '../domain/measurement_prompt.dart';
 import 'measurement_prompt_cubit.dart';
 import 'progress_body_cubit.dart';
@@ -150,9 +154,10 @@ class _ProgressViewState extends State<_ProgressView> {
   }
 }
 
-/// The latest weight in a featured band with its change since the
-/// weigh-in before, the newest body fat, the last 12 weeks as a line and
-/// the two ways to log; the whole card opens Body.
+/// The latest weight in a featured band with its change over the last 12
+/// weeks beside it and the newest body fat under it, those weeks as a line
+/// with its highest and lowest weight and its first and last date, and the
+/// two ways to log; the whole card opens Body.
 class _BodyCard extends StatelessWidget {
   const _BodyCard();
 
@@ -162,6 +167,9 @@ class _BodyCard extends StatelessWidget {
     final ProgressBodyState(:status, :snapshot) = context
         .watch<ProgressBodyCubit>()
         .state;
+    final unit = context.select(
+      (SettingsCubit cubit) => cubit.state.settings.weightUnit,
+    );
     final eyebrow = l10n.progressBody;
     void open() => context.go(Routes.body);
     final logWeight = FeaturedAction(
@@ -197,20 +205,23 @@ class _BodyCard extends StatelessWidget {
       (BodyListStatus.ready, final latest?) => FeaturedCard(
         form: FeaturedCardForm.band,
         eyebrow: eyebrow,
-        title: l10n.bodyWeight(
-          latest.kg,
-          context.select(
-            (SettingsCubit cubit) => cubit.state.settings.weightUnit,
+        title: l10n.bodyWeight(latest.kg, unit),
+        titleAside: switch (snapshot.change) {
+          (:final kg, :final weeks) => l10n.progressBodyChange(
+            l10n.bodyWeightChange(kg, unit),
+            l10n.progressWeeks(weeks),
           ),
-        ),
-        line: _changeLine(context, snapshot),
+          null => null,
+        },
+        when: switch (snapshot.latestBodyFat) {
+          (:final date, :final percent) => l10n.progressBodyFatOn(
+            l10n.bodyFat(percent),
+            l10n.bodyShortDate(date),
+          ),
+          null => null,
+        },
         // A single weigh-in has no trend: the card goes without one.
-        chart: snapshot.weights.length > 1
-            ? Sparkline(
-                values: [for (final point in snapshot.weights) point.kg],
-                color: ForgeStyle.of(context).colors.accent,
-              )
-            : null,
+        chart: _trend(l10n, snapshot.weights, unit),
         action: logWeight,
         moreActions: [measure],
         onTap: open,
@@ -218,35 +229,23 @@ class _BodyCard extends StatelessWidget {
     };
   }
 
-  /// "−0.4 since Nov 8" with the newest body fat at its end; none with a
-  /// single weigh-in.
-  FeaturedLine? _changeLine(BuildContext context, BodySnapshot snapshot) {
-    final (change, previous) = (snapshot.change, snapshot.previous);
-    if (change == null || previous == null) return null;
-    final l10n = AppLocalizations.of(context);
-    final unit = context.select(
-      (SettingsCubit cubit) => cubit.state.settings.weightUnit,
-    );
-    final fat = snapshot.latestBodyFat;
-    return FeaturedLine(
-      l10n.progressBodySince(
-        l10n.bodyWeightChangeNumber(change, unit),
-        _shortDate(l10n, previous.date),
-      ),
-      data: fat == null
-          ? null
-          : l10n.progressBodyFat(l10n.bodyFat(fat.percent)),
-      icon: change < 0 ? ForgeIcons.trendingDown : ForgeIcons.trendingUp,
+  Widget? _trend(
+    AppLocalizations l10n,
+    List<WeightPoint> weights,
+    WeightUnit unit,
+  ) {
+    if (weights.length < 2) return null;
+    final values = [for (final point in weights) point.kg];
+    return TrendLine.scaled(
+      values: values,
+      highLabel: l10n.bodyWeightNumber(values.reduce(math.max), unit),
+      lowLabel: l10n.bodyWeightNumber(values.reduce(math.min), unit),
+      startLabel: l10n.bodyShortDate(weights.first.date),
+      endLabel: l10n.bodyShortDate(weights.last.date),
+      semanticLabel: l10n.progressBodyTrend,
     );
   }
 }
-
-/// "Nov 8", with the year when it is not this year's.
-String _shortDate(AppLocalizations l10n, DateTime date) =>
-    (date.year == DateTime.now().year
-            ? DateFormat.MMMd(l10n.localeName)
-            : DateFormat.yMMMd(l10n.localeName))
-        .format(date);
 
 /// The next measurement day, the newest photos and Start; swiping it away
 /// hides it until the next one.
@@ -285,8 +284,9 @@ class _MeasurementPromptBanner extends StatelessWidget {
 }
 
 /// This week's sets against the active program's planned weekly sets, the
-/// most trained muscles against their band and how many trained muscles
-/// are in, below and above it. Opens weekly volume.
+/// most trained muscles against their band and a key of the band's
+/// colours with how many trained muscles are below, in and above it.
+/// Opens weekly volume.
 class _VolumeCard extends StatelessWidget {
   const _VolumeCard();
 
@@ -318,17 +318,31 @@ class _VolumeCard extends StatelessWidget {
         ),
       (TodayVolumeStatus.ready, final week?) => SectionCard(
         title: title,
-        detail: planned == null || planned == 0
-            ? l10n.setsText(week.totalSets.toDouble())
-            : l10n.progressVolumeOfPlanned(
-                _count(l10n, week.totalSets),
-                _count(l10n, planned),
-              ),
         onTap: open,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: Gap.sm,
           children: [
+            Row(
+              spacing: Gap.sm,
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.progressVolumeThisWeek,
+                    style: _quiet(context),
+                  ),
+                ),
+                Text(
+                  planned == null || planned == 0
+                      ? l10n.setsText(week.totalSets.toDouble())
+                      : l10n.progressVolumeOfPlanned(
+                          _count(l10n, week.totalSets),
+                          _count(l10n, planned),
+                        ),
+                  style: ForgeStyle.of(context).data,
+                ),
+              ],
+            ),
             if (planned != null && planned > 0)
               Progress.track(
                 value: week.totalSets.toDouble(),
@@ -341,7 +355,8 @@ class _VolumeCard extends StatelessWidget {
                   sets: week.setsOf(muscle),
                   scale: volumeScale(week.sets.values),
                 ),
-            Text(_zonesText(l10n, week), style: _quiet(context)),
+            const Divider(height: 1),
+            _zoneKey(context, week),
           ],
         ),
       ),
@@ -349,12 +364,29 @@ class _VolumeCard extends StatelessWidget {
     };
   }
 
-  String _zonesText(AppLocalizations l10n, WeekVolume week) {
+  Widget _zoneKey(BuildContext context, WeekVolume week) {
+    final l10n = AppLocalizations.of(context);
+    final band = GwColors.of(context);
     final zones = week.zoneCounts;
-    return l10n.todayVolumeZones(
-      zones[VolumeZone.within]!,
-      zones[VolumeZone.below]!,
-      zones[VolumeZone.above]!,
+    return ColorKey(
+      entries: [
+        ColorKeyEntry(
+          band.bandBelow,
+          l10n.progressVolumeUnder(VolumeRange.min, zones[VolumeZone.below]!),
+        ),
+        ColorKeyEntry(
+          band.bandIn,
+          l10n.progressVolumeWithin(
+            VolumeRange.min,
+            VolumeRange.max,
+            zones[VolumeZone.within]!,
+          ),
+        ),
+        ColorKeyEntry(
+          band.bandOver,
+          l10n.progressVolumeOver(VolumeRange.max, zones[VolumeZone.above]!),
+        ),
+      ],
     );
   }
 }
@@ -365,8 +397,9 @@ String _count(AppLocalizations l10n, int value) =>
 TextStyle _quiet(BuildContext context) =>
     Theme.of(context).textTheme.bodySmall!;
 
-/// The most recently trained exercise's latest estimated 1RM and its
-/// change over the last 12 weeks; opens the strength list.
+/// The most recently trained exercise's latest estimated 1RM, its change
+/// over the last 12 weeks and those weeks as a line; opens the strength
+/// list.
 class _StrengthCard extends StatelessWidget {
   const _StrengthCard();
 
@@ -421,13 +454,17 @@ class _StrengthCard extends StatelessWidget {
           final kg? when kg < 0 => false,
           _ => null,
         },
+        // A single e1RM in the 12 weeks has no trend.
+        chart: highlight.trend.length > 1
+            ? TrendLine(values: highlight.trend)
+            : null,
       ),
     };
   }
 }
 
 /// This week's distance, or minutes when no session has one, with the
-/// sessions under it; opens cardio.
+/// sessions under it and each day's minutes as a bar; opens cardio.
 class _CardioCard extends StatelessWidget {
   const _CardioCard();
 
@@ -465,6 +502,7 @@ class _CardioCard extends StatelessWidget {
               l10n.cardioSessions(week.sessions.length),
               l10n.cardioMinutesOf(week.duration),
             ),
+            chart: _days(context, week),
           ),
           null => StatTile(
             title: title,
@@ -473,6 +511,7 @@ class _CardioCard extends StatelessWidget {
             figure: '${(week.duration.inSeconds / 60).round()}',
             unit: l10n.cardioMinutesShort,
             caption: l10n.cardioSessions(week.sessions.length),
+            chart: _days(context, week),
           ),
         },
       (CardioListStatus.ready, _) => StatTile.empty(
@@ -482,6 +521,34 @@ class _CardioCard extends StatelessWidget {
       ),
       _ => StatTile.loading(title: title, onTap: open),
     };
+  }
+
+  Widget _days(BuildContext context, CardioWeek week) {
+    final l10n = AppLocalizations.of(context);
+    final letter = DateFormat.EEEEE(l10n.localeName);
+    final weekday = DateFormat.EEEE(l10n.localeName);
+    final start = week.start;
+    final days = [
+      for (final (i, duration) in week.dailyDurations.indexed)
+        (
+          date: DateTime(start.year, start.month, start.day + i),
+          duration: duration,
+        ),
+    ];
+    return DayBars(
+      days: [
+        for (final (:date, :duration) in days)
+          (label: letter.format(date), value: duration.inSeconds / 60),
+      ],
+      color: ForgeStyle.of(context).colors.info,
+      semanticLabel: l10n.progressCardioDays(
+        [
+          for (final (:date, :duration) in days)
+            if (duration > Duration.zero)
+              '${weekday.format(date)} ${l10n.cardioMinutesOf(duration)}',
+        ].join(', '),
+      ),
+    );
   }
 }
 

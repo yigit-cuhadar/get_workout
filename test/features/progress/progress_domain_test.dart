@@ -45,6 +45,7 @@ void main() {
       }, now: now);
 
       expect(highlight?.change, (kg: 3.0, weeks: 8));
+      expect(highlight?.trend, [101, 104]);
     });
 
     test('one e1RM in the 12 weeks has no change', () {
@@ -63,6 +64,7 @@ void main() {
         ]),
       }, now: now);
       expect(old?.change, isNull);
+      expect(old?.trend, isEmpty);
     });
 
     test('ties go by id; none without stats', () {
@@ -98,7 +100,7 @@ void main() {
     )('u1').first;
     expect(
       highlight,
-      const StrengthHighlight(exerciseId: 'squat', e1rmKg: 100),
+      const StrengthHighlight(exerciseId: 'squat', e1rmKg: 100, trend: [100]),
     );
     expect(trained, isTrue);
   });
@@ -127,8 +129,8 @@ void main() {
       }, now: now);
 
       expect(snapshot.latest, (date: DateTime(2026, 11, 12), kg: 80.0));
-      expect(snapshot.previous, (date: DateTime(2026, 10, 1), kg: 82.0));
-      expect(snapshot.change, -2);
+      // Over the 12 weeks' weights, not since the weigh-in before.
+      expect(snapshot.change, (kg: -2.0, weeks: 6));
       // 1 August is more than 12 weeks back.
       expect(snapshot.weights, [
         (date: DateTime(2026, 10, 1), kg: 82.0),
@@ -146,7 +148,6 @@ void main() {
         const {},
         now: now,
       );
-      expect(snapshot.previous, isNull);
       expect(snapshot.change, isNull);
     });
 

@@ -97,7 +97,11 @@ void main() {
         cubit.state,
         ProgressStrengthState(
           status: ProgressStrengthStatus.ready,
-          highlight: const StrengthHighlight(exerciseId: 'bench', e1rmKg: 90),
+          highlight: const StrengthHighlight(
+            exerciseId: 'bench',
+            e1rmKg: 90,
+            trend: [90],
+          ),
           exercise: bench,
           trained: true,
         ),
@@ -116,7 +120,11 @@ void main() {
       cubit.state,
       const ProgressStrengthState(
         status: ProgressStrengthStatus.ready,
-        highlight: StrengthHighlight(exerciseId: 'ex_retired', e1rmKg: 50),
+        highlight: StrengthHighlight(
+          exerciseId: 'ex_retired',
+          e1rmKg: 50,
+          trend: [50],
+        ),
         trained: true,
       ),
     );

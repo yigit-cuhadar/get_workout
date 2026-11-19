@@ -4,25 +4,33 @@ import '../../strength/domain/strength.dart';
 import '../../workout/domain/exercise_stats.dart';
 import '../../workout/domain/workout_repository.dart';
 
-/// How an exercise's estimated one-rep max moved: [kg] over [weeks].
-typedef E1rmChange = ({double kg, int weeks});
+/// How a value in kg moved over the last 12 weeks: [kg] over [weeks].
+typedef KgChange = ({double kg, int weeks});
+
+/// The whole weeks from [first] to [last], 1 to 12: a change within a week
+/// still reads "in 1 week".
+int changeWeeks(DateTime first, DateTime last) =>
+    (last.difference(first).inDays / 7).round().clamp(1, 12);
 
 /// The exercise the Progress tab's Strength card shows: its latest
-/// workout's best estimated one-rep max, in kg, and its [change] since the
-/// first one of the last 12 weeks; null with a single one there.
+/// workout's best estimated one-rep max, in kg, its [change] since the
+/// first one of the last 12 weeks (null with a single one there) and its
+/// [trend], the bests of those 12 weeks, oldest first.
 class StrengthHighlight extends Equatable {
   const StrengthHighlight({
     required this.exerciseId,
     required this.e1rmKg,
     this.change,
+    this.trend = const [],
   });
 
   final String exerciseId;
   final double e1rmKg;
-  final E1rmChange? change;
+  final KgChange? change;
+  final List<double> trend;
 
   @override
-  List<Object?> get props => [exerciseId, e1rmKg, change];
+  List<Object?> get props => [exerciseId, e1rmKg, change, trend];
 }
 
 /// The most recently trained exercise of [stats] that has an estimated
@@ -52,22 +60,21 @@ StrengthHighlight? strengthHighlight(
   if (newest == null) return null;
   final latest = newest.points.last;
   final start = StrengthRange.weeks12.start(now)!;
-  // The latest is the last point, so one in the 12 weeks exists if it is.
-  final first = latest.date.isBefore(start)
-      ? latest
-      : newest.points.firstWhere((point) => !point.date.isBefore(start));
+  final recent = [
+    for (final point in newest.points)
+      if (!point.date.isBefore(start)) point,
+  ];
+  final first = recent.firstOrNull;
   return StrengthHighlight(
     exerciseId: newest.id,
     e1rmKg: latest.bestE1rmKg!,
-    change: identical(first, latest)
+    change: first == null || identical(first, latest)
         ? null
         : (
             kg: latest.bestE1rmKg! - first.bestE1rmKg!,
-            // A change within a week still reads "in 1 week".
-            weeks: (latest.date.difference(first.date).inDays / 7)
-                .round()
-                .clamp(1, 12),
+            weeks: changeWeeks(first.date, latest.date),
           ),
+    trend: [for (final point in recent) point.bestE1rmKg!],
   );
 }
 

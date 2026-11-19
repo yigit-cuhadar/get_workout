@@ -14,6 +14,25 @@ class CardioWeek extends Equatable {
   Duration get duration =>
       sessions.fold(Duration.zero, (sum, session) => sum + session.duration);
 
+  /// The duration of each of the week's seven days, its first day first.
+  /// Days are calendar days, so a daylight saving change does not shift
+  /// them.
+  List<Duration> get dailyDurations {
+    final days = List.filled(DateTime.daysPerWeek, Duration.zero);
+    for (final session in sessions) {
+      final local = session.date.toLocal();
+      final day = DateTime(
+        local.year,
+        local.month,
+        local.day,
+      ).difference(start).inHours;
+      // Hours, rounded, as a daylight saving day is 23 or 25 of them.
+      final index = (day / 24).round();
+      if (index >= 0 && index < days.length) days[index] += session.duration;
+    }
+    return days;
+  }
+
   /// The distance of the sessions that have one; null when none has.
   double? get distanceKm {
     final distances = sessions.map((s) => s.distanceKm).nonNulls;
