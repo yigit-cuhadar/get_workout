@@ -114,10 +114,6 @@ class _Programs extends StatelessWidget {
             eyebrow: l10n.programsStartEyebrow,
             title: l10n.programsStartTitle,
             note: l10n.programsStartDetail,
-            action: FeaturedAction(
-              l10n.programsSeeCatalogue,
-              () => context.go(Routes.catalogue),
-            ),
           )
         else ...[
           BlocProvider(
@@ -160,7 +156,7 @@ class _Programs extends StatelessWidget {
         ),
         if (state.programs.isEmpty) ...[
           const SizedBox(height: Gap.sm),
-          // The prompt above already leads to the catalogue.
+          // The rows above lead to the catalogue.
           EmptyView(
             title: l10n.programsEmptyTitle,
             message: l10n.programsEmptyDetail,

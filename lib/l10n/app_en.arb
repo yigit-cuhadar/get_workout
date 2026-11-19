@@ -817,7 +817,6 @@
   "programsStartTitle": "No active program",
   "programsStartEyebrow": "Get started",
   "programsStartDetail": "Pick a ready-made plan, generate one or build your own.",
-  "programsSeeCatalogue": "See ready-made programs",
   "programsCatalogueInfo": "Plans for every goal and level",
   "programsLoadFailedTitle": "Couldn't load your programs.",
   "programDaysThisWeek": "{done} of {total} days this week",

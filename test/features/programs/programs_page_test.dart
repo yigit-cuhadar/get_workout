@@ -354,17 +354,19 @@ void main() {
     expect(paywalls, 1);
   });
 
-  testWidgets('without an active program a prompt leads to the catalogue', (
-    tester,
-  ) async {
-    await pump(tester, ready());
+  testWidgets(
+    'without an active program the prompt has no action; the row leads to the catalogue',
+    (tester) async {
+      await pump(tester, ready());
 
-    expect(find.text('No active program'), findsOneWidget);
-    expect(find.text('Your programs'), findsOneWidget);
-    await tester.tap(find.text('See ready-made programs'));
-    await settle(tester);
-    expect(find.text('at /programs/catalogue'), findsOneWidget);
-  });
+      expect(find.text('No active program'), findsOneWidget);
+      expect(find.text('Your programs'), findsOneWidget);
+      expect(find.text('See ready-made programs'), findsNothing);
+      await tester.tap(find.text('Ready-made programs'));
+      await settle(tester);
+      expect(find.text('at /programs/catalogue'), findsOneWidget);
+    },
+  );
 
   testWidgets('without any program it says so', (tester) async {
     await pump(tester, ready(programs: const []));
