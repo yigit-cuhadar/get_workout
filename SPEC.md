@@ -2901,7 +2901,9 @@ the feature you are about to touch, and keep it true when you change it.
   group's last exercise with a working set in that round starts the rest,
   for the rest of the group's last exercise (as the program estimate
   counts it); the next set follows the same rounds, the group's warm-ups
-  first. Warm-ups start none and leave a running one alone; a drop set
+  first. The workout's last set to do starts none and ends a running
+  one, as nothing is left to rest for (rests between exercises stay).
+  Warm-ups start none and leave a running one alone; a drop set
   rests like any set. Rest start and end are decided in one place, from
   the workout before and after each edit: a new tick replaces the running
   rest; the set that started it no longer done (unticked, or edited

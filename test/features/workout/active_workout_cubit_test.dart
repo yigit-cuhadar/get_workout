@@ -935,14 +935,16 @@ void main() {
         await cubit.close();
       });
 
-      test('after the last set to do, that set stays in the bar', () async {
+      test('the last set to do starts no rest and stays in the bar', () async {
         final cubit = await withSquat();
         cubit
           ..toggleDone(first)
           ..setEffort(first, const EffortStep.reserve(2))
           ..toggleDone(second);
-        expect(cubit.state.rest?.after, second);
+        expect(cubit.state.rest, isNull);
         expect(cubit.state.selection, second);
+        expect(cubit.state.questionRef, second);
+        expect(cubit.state.askingWithRest, isFalse);
         expect(cubit.state.entryWaitsForRest, isFalse);
         await cubit.close();
       });
@@ -1759,6 +1761,7 @@ void main() {
       final cubit = await signedIn();
       cubit
         ..startWith(squat, 'Workout', 'en')
+        ..addSet(0, SetType.normal)
         ..setWeight(first, '100', WeightUnit.kg)
         ..setReps(first, '5')
         ..toggleDone(first);
@@ -1778,6 +1781,7 @@ void main() {
       await pumpEventQueue();
       cubit
         ..startWith(mine, 'Workout', 'en')
+        ..addSet(0, SetType.normal)
         ..setReps(first, '10')
         ..toggleDone(first);
       expect(cubit.state.rest!.endsAt, now.add(const Duration(seconds: 75)));
@@ -1798,6 +1802,7 @@ void main() {
       await pumpEventQueue();
       cubit
         ..startWith(mine, 'Workout', 'en')
+        ..addSet(0, SetType.normal)
         ..setReps(first, '10')
         ..toggleDone(first);
       // Bob's settings have not arrived: the defaults, not Alice's 75 s.
@@ -1821,6 +1826,7 @@ void main() {
     test('unticking the set ends its rest, another set\'s does not', () async {
       final cubit = await withSquat();
       cubit
+        ..addSet(0, SetType.normal)
         ..toggleDone(first)
         ..toggleDone(second);
       expect(cubit.state.rest!.after, second);
@@ -1844,7 +1850,9 @@ void main() {
 
     test('a new tick starts the rest again', () async {
       final cubit = await withSquat();
-      cubit.toggleDone(first);
+      cubit
+        ..addSet(0, SetType.normal)
+        ..toggleDone(first);
       clock = now.add(const Duration(seconds: 30));
       cubit.toggleDone(second);
       expect(
@@ -1867,8 +1875,9 @@ void main() {
 
     test('a warm-up leaves the running rest alone', () async {
       final cubit = await withSquat();
-      // The first set made a warm-up stays where it is.
+      // The first set made a warm-up stays where it is; a third is left.
       cubit
+        ..addSet(0, SetType.normal)
         ..setType(first, SetType.warmup)
         ..toggleDone(second)
         ..toggleDone(first);
@@ -1937,6 +1946,7 @@ void main() {
       final cubit = await signedIn();
       cubit
         ..startWith(squat, 'Workout', 'en')
+        ..addSet(0, SetType.normal)
         ..setWeight(first, '100', WeightUnit.kg)
         ..setReps(first, '5')
         ..toggleDone(first);

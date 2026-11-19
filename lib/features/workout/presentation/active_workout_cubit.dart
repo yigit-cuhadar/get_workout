@@ -1007,7 +1007,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       keepQuestion: !movesSets,
       entryWaitsForRest: started
           ? nextSet(changed, null) != null
-          : state.entryWaitsForRest,
+          : rest != null && state.entryWaitsForRest,
       doneSetPicked:
           state.doneSetPicked &&
           !changed.hasUndoneSets &&
@@ -1107,7 +1107,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   /// The rest once an edit made [after] of [before], and whether the edit
   /// started it: a set ticked done starts the rest [restAfterTick] gives,
-  /// replacing the running one; otherwise the running one goes on, ends
+  /// replacing the running one, and the last set to do ends the running
+  /// one; otherwise the running one goes on, ends
   /// when the set that started it is no longer done, or forgets that set
   /// when the edit [movesSets] (see [Rest.followEdit]).
   (Rest?, bool) _restAfterEdit(
@@ -1127,6 +1128,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       if (duration != null) {
         return (Rest(endsAt: _clock().add(duration), after: ticked), true);
       }
+      // The last set to do: nothing is left to rest for.
+      if (!after.hasUndoneSets) return (null, false);
     }
     return (state.rest?.followEdit(after, movesSets: movesSets), false);
   }
