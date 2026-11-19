@@ -50,6 +50,7 @@ import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/steps/domain/steps.dart';
 import 'package:get_workout/features/steps/presentation/health_access_cubit.dart';
+import 'package:get_workout/features/subscription/domain/paywall_moment.dart';
 import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
 import 'package:get_workout/features/subscription/presentation/premium_trial_cubit.dart';
@@ -337,8 +338,8 @@ class FlowApp {
       when(health.openSettings).thenAnswer((_) async {});
       return health;
     });
-    sl.registerFactory(
-      () => PremiumPaywallCubit(
+    sl.registerFactoryParam<PremiumPaywallCubit, PaywallMoment?, void>(
+      (moment, _) => PremiumPaywallCubit(
         getOffering: GetPaywallOffering(store),
         purchasePlan: PurchasePlan(store),
         restorePurchases: RestorePurchases(store),
@@ -346,6 +347,7 @@ class FlowApp {
         logView: LogPaywallView(paywallTelemetry),
         logPurchase: LogPaywallPurchase(paywallTelemetry),
         isPremium: () => entitlement.isActive,
+        moment: moment,
       ),
     );
     sl.registerFactory(
