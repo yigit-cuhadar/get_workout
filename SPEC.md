@@ -354,7 +354,7 @@ Group 5, workout
 Group 6, progress
 - [x] Calendar — month view of planned and done workouts and cardio
 - [x] Weekly volume — model coloring and bar list against the 10-20 band; 12-week trend (Premium)
-- [x] Strength — per-exercise records and e1RM chart (beyond 12 weeks Premium)
+- [x] Strength — per-exercise records and e1RM chart (beyond 2 weeks Premium)
 - [x] Today tab — next workout and week strip, quick actions, volume card, steps card
 
 Group 7, programs for everyone
@@ -536,7 +536,7 @@ Decisions (the canvases they were drawn on are deleted):
   program, finished, Premium ended), the Front / Back toggle, exercise stars,
   favourites, Setup and Safety, own notes, workout minimize, the exercise ⋯
   menu, Add exercise and the workout note, circuits, reminder rows, Strength
-  ranges (12 weeks free; 6 months, 1 year and All Premium), cardio session detail, the steps
+  ranges (12 weeks free, 2 weeks since Monetization; 6 months, 1 year and All Premium), cardio session detail, the steps
   no-permission state, the workout edit page, Estimate body fat. New: the
   rest-day card, Duplicate program and day, the program's weekly sets, "Fits
   you" and a recommended row, the progress photo reminder, rest sound and
@@ -921,7 +921,7 @@ Decisions (the canvases they were drawn on are deleted):
   the owner: the program page's ⋯ holds Edit, Duplicate and Delete; a
   program workout's summary also offers Save as program; Delete account opens
   its page, then a dialog; the custom exercise detail has no history card;
-  Strength ranges are 12 weeks free and 6 months, 1 year, All Premium; the
+  Strength ranges are 12 weeks free (2 weeks since Monetization) and 6 months, 1 year, All Premium; the
   effort question keeps its own Skip (removed by the owner, 2026-11-18); the onboarding health step says the app
   reads steps and cardio sessions and writes nothing; while one sign-in runs
   the other options are disabled; catalogue programs are list rows.
@@ -1438,7 +1438,7 @@ Decisions (the canvases they were drawn on are deleted):
   target line in weight's colour labelled "Target"; a series chip opens
   "Add to chart" (Forge sheet, checkbox rows; at three picked the others
   dim and take no taps, the last one stays); the range control shows
-  only with entries older than 12 weeks, a free user then sees locked
+  only with entries older than 2 weeks, a free user then sees locked
   ranges and the caption "See your older results with Premium" (opens
   the paywall); chart empty, series error and loading are Forge's forms;
   Log weight and Measurement day side by side; History rows: weight
@@ -1851,6 +1851,38 @@ the feature you are about to touch, and keep it true when you change it.
     account, grants the server nothing until the next renewal; two
     concurrent subscriptions are tracked as one `productId`). Revisit if
     one of these shows up.
+- **Paywall moments** (Monetization, 2026-11-19): besides a Premium
+  feature (`requirePremium`) and Profile's card, the app offers the
+  paywall by itself twice, each once per user: `onboarding` when the
+  program suggestion is left (whichever way: Start, See other programs,
+  or nothing to suggest; the router passes it to `ProgramSuggestionPage`
+  so programs never imports subscription), and `firstWorkout` when the
+  summary of the user's first workout ever is left (Done, back, Edit or
+  Open programs; the paywall first, then the summary goes).
+  `FinishWorkout` marks a summary `firstEver` when none of its exercises
+  had stats and `hasWorkouts` (server, else cache) finds no stored
+  workout; unreadable is not first. A moment shows only to a user known
+  to be free whose settings have loaded (`paywallMomentDue`), and is
+  marked shown at once in `settings.seenTips` (`onboardingPaywall`,
+  `firstWorkoutPaywall`), so it follows the account across devices and
+  reinstalls. Premium, or a status still unknown, skips it unmarked.
+- **Hard paywall from the store setup**: the current RevenueCat
+  offering's metadata, carried by Forge's `Offering.metadata`, decides
+  whether the onboarding moment's paywall can be closed: `dismissible`
+  false (a JSON bool, or the string "false") hides the close button and
+  blocks back and the iOS sheet drag (`PopScope`; `SheetPage` drags only
+  a page that can pop) until a purchase or restore; absent or anything
+  else is closable (`offeringDismissible`). While the plans load that
+  paywall has no close; a failed load is closable, so nobody is trapped.
+  Every other paywall is always closable, whatever the metadata. The
+  route carries the moment (`/paywall?moment=onboarding`). Debug builds
+  on the fake store switch it with "Onboarding paywall dismissible" among
+  the Fake store rows. Which installs get a hard paywall is RevenueCat's
+  targeting, set up in its dashboard, not in the app.
+- **Prices and trial**: the store's (monthly 7.99 USD, yearly 39.99 USD
+  with a 7-day trial on yearly only); the app shows what the store
+  returns, and the fake store's plans use these numbers. The trial shows
+  only with the yearly plan (its row's terms, card and button).
 - **Paywall**: full-screen `/paywall`, yearly listed first (the app sorts
   yearly before monthly, whatever the store's order) and selected by
   default, prices as
@@ -1868,10 +1900,10 @@ the feature you are about to touch, and keep it true when you change it.
   store offers (two today), C shows one plan (yearly) with its benefits and
   "See monthly plan" under it (PW-Q1, 2026-11-17, replacing "Or monthly,
   <price>"). The page is Forge's `SubscriptionPlans` fed from
-  `PremiumPaywallCubit` (PW-F1): rows "Yearly" / "$59.99 / year" with
-  "Best value" on yearly when there is a monthly plan, tiles "$59.99"
+  `PremiumPaywallCubit` (PW-F1): rows "Yearly" / "$39.99 / year" with
+  "Best value" on yearly when there is a monthly plan, tiles "$39.99"
   over "7 days free" (else the intro offer, else "billed monthly"), the
-  single plan "Yearly · 7 days free" / "$59.99 / year" / "That is $5.00 a
+  single plan "Yearly · 7 days free" / "$39.99 / year" / "That is $3.33 a
   month."; the button "Start 7-day free trial", "Start for <price>" or
   "Subscribe"; the full renewal terms under it (PW-Q2). Prices failed:
   the "Couldn't load plans" card and a disabled "Subscribe" without terms
@@ -2081,8 +2113,9 @@ the feature you are about to touch, and keep it true when you change it.
   instead, Not now); Use email instead opens Sign in on the email form
   in create mode, which links the guest (GA6, GA7). Every
   change saves at once; a failed save shows a snackbar. The Premium card
-  (`PremiumCard`, a FeaturedCard prompt) says what Premium brings with
-  "Get Premium" (the paywall) to a free user; otherwise the user's state
+  (`PremiumCard`) is, for a free user, Forge's `PlanCard`: Premium's
+  name, the store's trial as its tag, three benefits and "Get Premium"
+  (the paywall); otherwise, as a FeaturedCard prompt, the user's state
   (checking, trial, renews, ends, lifetime, payment problem) is its title
   over that line, and a subscriber (trial, renewing, ending, payment
   problem) gets "Manage subscription" (the store's manage page); lifetime
@@ -2249,7 +2282,8 @@ the feature you are about to touch, and keep it true when you change it.
   the Exercises tab's model once it has loaded, until it is dismissed or a
   muscle is opened from the model. Dismissing or using the
   thing marks it seen for good, in `settings.seenTips` (codes `effort`,
-  `setTypes`, `autoWarmups`, `muscleModel`; the app has no local flag store, and this
+  `setTypes`, `autoWarmups`, `muscleModel`; the paywall moments use the
+  same list, see Subscription and paywall; the app has no local flag store, and this
   follows the user across devices). Tips are only ever added to that list,
   field by field (`arrayUnion`), never written with the other settings, so
   two devices and codes from newer versions are kept. Which tip is due is
@@ -3293,7 +3327,7 @@ the feature you are about to touch, and keep it true when you change it.
 - **Progress tab** (UX pass, 2026-11-13; screen step 2026-11-15): one
   card per area, each opening its page from anywhere on the card. Body:
   the latest weight, the change since the previous weigh-in, the newest
-  body fat, the weights of the last 12 weeks as a line, Log weight and
+  body fat, the weights of the card's weeks as a line, Log weight and
   Measurement day; the measurement-day prompt under it when due.
   Calendar: this week's strip (the app's only one, Tabs P1), always, with
   the week's dates as its detail; no month count; the strip and every day
@@ -3306,7 +3340,7 @@ the feature you are about to touch, and keep it true when you change it.
   and no bar. Strength (a StatTile, S8): the most recently trained
   exercise with an estimated 1RM as its detail ("Bench Press e1RM"), its
   latest workout's best e1RM as the figure with the unit apart, and the
-  change since the first e1RM of the last 12 weeks as its change line
+  change since the first e1RM of the card's weeks as its change line
   ("+3 in 8 weeks", success when up, danger when down, ink-muted when
   none, M2 A; "First estimate" as the caption with one there); the card
   opens the strength list. Cardio (a StatTile, S8): this week's distance as the figure, "2
@@ -3315,7 +3349,9 @@ the feature you are about to touch, and keep it true when you change it.
   only steps card, P5): today against the goal; not set up shows "See
   your steps"; no card without a health store. Each card reads
   through its own cubit and shows its own failure, so one area failing
-  leaves the others.
+  leaves the others. The Body and Strength cards' lines cover the free
+  charts' 2 weeks, and 12 with Premium (`cardWeeks`; the 12 is kept from
+  before the free window shrank), redrawn when Premium comes or goes.
 - **Calendar**: Progress → Calendar is one scrolling page (see Design ›
   Calendar): the month card and the month's list, both from one
   `CalendarCubit` that follows the month's dates plus six days on each side
@@ -3387,12 +3423,13 @@ the feature you are about to touch, and keep it true when you change it.
   the longest time, or the heaviest timed set (then the longer); a
   record's set among equal values is the heavier one (for the heaviest
   weight the one with more reps).
-  Ranges: 12 weeks free; 6 months, 1 year and all Premium; a range starts
+  Ranges: 2 weeks free (12 until the Monetization pick of 2026-11-19); 6
+  months, 1 year and all Premium; a range starts
   at local midnight of the same day that many months back, or that
   month's last day when it is shorter. Records are all-time and free (the
-  workout summary shows them too); only the chart beyond 12 weeks is
+  workout summary shows them too); only the chart beyond 2 weeks is
   Premium, and a free user with older results (any workout before the
-  last 12 weeks) is told so and offered the paywall. The gate is client-side: one stats document holds the whole
+  last 2 weeks) is told so and offered the paywall. The gate is client-side: one stats document holds the whole
   history, so the rules cannot withhold old points without splitting it,
   and no server refusal can occur here.
 - **Charts**: `lib/core/line_chart.dart` is a small `CustomPainter` line
@@ -3475,7 +3512,7 @@ the feature you are about to touch, and keep it true when you change it.
   by field as above; entry and compare show them on one row (L / R).
 - **Body page** (UX pass, 2026-11-13; screen step 2026-11-16): two views
   behind one segmented control. Overview: three boxes, one chart (range
-  control only with entries older than 12 weeks; 12 weeks free), Log
+  control only with entries older than 2 weeks; 2 weeks free), Log
   weight, Measurement day and the history; the looks are in SPEC › Design.
   The boxes (`bodyOverview`): the latest weigh-in's weight, the newest
   body fat and the lean mass of the two, each changed against the
@@ -3535,7 +3572,7 @@ the feature you are about to touch, and keep it true when you change it.
   weight as the profile (30-300 kg), measurements 10-250 cm; values are
   typed to one decimal in the user's unit, so half a shown lb or inch
   step of slack lets the limits as shown pass (66.1 and 661.4 lb, 3.9 in).
-  The Body chart has the strength ranges: 12 weeks free, longer Premium
+  The Body chart has the strength ranges: 2 weeks free, longer Premium
   (confirmed by the user); the profile's target weight shows as its line.
   Comparing is the measurement summary (below). Saving or deleting an entry sets `profile.weightKg` to
   the weight of the most recent dated entry that has one, through the
