@@ -810,6 +810,83 @@ void main() {
     });
   });
 
+  group('moving the next day', () {
+    // Monday A, Tuesday B, Thursday A, Friday B; Thursday's A is next.
+    final thursday = ab(nextDate: d(2026, 11, 12));
+    ProgramSchedule plan(ActiveProgram active) => schedule(active, dayCount: 2);
+
+    test('earlier: it takes its date along, so that weekday rests', () {
+      final moved = plan(thursday).moveNext(d(2026, 11, 11));
+      expect(
+        moved,
+        thursday.copyWith(
+          nextDate: d(2026, 11, 11),
+          movedFrom: () => d(2026, 11, 12),
+        ),
+      );
+      expect(take(plan(moved), 3, today: d(2026, 11, 10)), [
+        (0, d(2026, 11, 11)),
+        (1, d(2026, 11, 13)),
+        (0, d(2026, 11, 16)),
+      ]);
+      expect(
+        plan(moved).weekPlan(d(2026, 11, 10), firstWeekday: DateTime.monday),
+        [planned(d(2026, 11, 11), 0), planned(d(2026, 11, 13), 1)],
+      );
+    });
+
+    test('earlier: done, the weekday after its own date comes next', () {
+      final moved = plan(thursday).moveNext(d(2026, 11, 11));
+      expect(
+        plan(moved).complete(on: d(2026, 11, 11)),
+        ab(nextDayIndex: 1, nextDate: d(2026, 11, 13)),
+      );
+    });
+
+    test('earlier twice: it keeps the first date it came from', () {
+      final once = plan(thursday).moveNext(d(2026, 11, 11));
+      final twice = plan(once).moveNext(d(2026, 11, 10));
+      expect(twice.movedFrom, d(2026, 11, 12));
+      expect(take(plan(twice), 2, today: d(2026, 11, 10)), [
+        (0, d(2026, 11, 10)),
+        (1, d(2026, 11, 13)),
+      ]);
+    });
+
+    test('later: the training weekdays between are left out', () {
+      final moved = plan(thursday).moveNext(d(2026, 11, 14));
+      expect(moved, thursday.copyWith(nextDate: d(2026, 11, 14)));
+      expect(take(plan(moved), 3), [
+        (0, d(2026, 11, 14)),
+        (0, d(2026, 11, 16)),
+        (1, d(2026, 11, 17)),
+      ]);
+    });
+
+    test('earlier, then missed: it comes back on its own date', () {
+      final moved = plan(thursday).moveNext(d(2026, 11, 11));
+      final missed = plan(moved);
+      expect(missed.isMissed(d(2026, 11, 12)), isTrue);
+      expect(take(missed, 2, today: d(2026, 11, 12)), [
+        (0, d(2026, 11, 12)),
+        (1, d(2026, 11, 13)),
+      ]);
+      // Skipped, its own date still rests.
+      expect(
+        missed.skip(d(2026, 11, 12)),
+        ab(nextDayIndex: 1, nextDate: d(2026, 11, 13)),
+      );
+    });
+
+    test('new training days forget where it came from', () {
+      final moved = plan(thursday).moveNext(d(2026, 11, 11));
+      expect(
+        plan(moved).withSchedule(const {4: 0, 5: 1}, d(2026, 11, 10)),
+        active(schedule: const {4: 0, 5: 1}, nextDate: d(2026, 11, 12)),
+      );
+    });
+  });
+
   group('withSchedule', () {
     test('replans a missed day from today, with today\'s day', () {
       final plan = schedule(active(nextDate: d(2026, 11, 9)));

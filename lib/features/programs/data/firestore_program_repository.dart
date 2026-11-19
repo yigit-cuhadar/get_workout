@@ -289,13 +289,15 @@ class FirestoreProgramRepository implements ProgramRepository {
     },
     'nextDayIndex': active.nextDayIndex,
     'nextDate': active.nextDate.toIso(),
+    if (active.movedFrom case final movedFrom?) 'movedFrom': movedFrom.toIso(),
     'startedAt': Timestamp.fromDate(active.startedAt),
   };
 
   /// Writes [active] over the stored active program of [user] in [batch],
   /// keeping fields the app does not know. The schedule is removed first,
-  /// as a merge would keep weekdays it dropped, and the `weekdays` of older
-  /// versions go, as `schedule` replaces them.
+  /// as a merge would keep weekdays it dropped, `movedFrom` goes when
+  /// unset, and the `weekdays` of older versions go, as `schedule` replaces
+  /// them.
   static void writeActive(
     WriteBatch batch,
     DocumentReference<Map<String, dynamic>> user,
@@ -305,13 +307,18 @@ class FirestoreProgramRepository implements ProgramRepository {
       _active: {'schedule': FieldValue.delete()},
     }, SetOptions(merge: true))
     ..set(user, {
-      _active: {...activeToMap(active), 'weekdays': FieldValue.delete()},
+      _active: {
+        'movedFrom': FieldValue.delete(),
+        ...activeToMap(active),
+        'weekdays': FieldValue.delete(),
+      },
     }, SetOptions(merge: true));
 
   /// Null for anything but a map with a program id, at least one training
   /// weekday from 1 to 7, a `YYYY-MM-DD` next date and a start time.
-  /// Weekdays out of range or without a day index of 0 or more are dropped
-  /// and a missing next day index reads as the first day.
+  /// Weekdays out of range or without a day index of 0 or more are dropped,
+  /// a missing next day index reads as the first day and an unreadable
+  /// `movedFrom` as none.
   static ActiveProgram? activeFromMap(Object? raw) {
     if (raw is! Map) return null;
     final programId = raw['programId'];
@@ -332,6 +339,7 @@ class FirestoreProgramRepository implements ProgramRepository {
       schedule: schedule,
       nextDayIndex: index == null || index < 0 ? 0 : index,
       nextDate: nextDate,
+      movedFrom: CalendarDate.tryParse(raw['movedFrom']),
       startedAt: startedAt.toDate(),
     );
   }

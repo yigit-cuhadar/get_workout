@@ -10,6 +10,7 @@ class ActiveProgram extends Equatable {
     required Map<int, int> schedule,
     required this.nextDayIndex,
     required this.nextDate,
+    this.movedFrom,
     required this.startedAt,
   }) : assert(schedule.isNotEmpty),
        schedule = Map.unmodifiable({
@@ -28,6 +29,11 @@ class ActiveProgram extends Equatable {
 
   /// The date that day is planned for; before today it was missed.
   final CalendarDate nextDate;
+
+  /// The date the next day was planned for before it moved to an earlier
+  /// one: it took that date's place along, so training weekdays up to it
+  /// rest.
+  final CalendarDate? movedFrom;
   final DateTime startedAt;
 
   /// The weekdays the user trains on, ascending.
@@ -37,11 +43,13 @@ class ActiveProgram extends Equatable {
     Map<int, int>? schedule,
     int? nextDayIndex,
     CalendarDate? nextDate,
+    CalendarDate? Function()? movedFrom,
   }) => ActiveProgram(
     programId: programId,
     schedule: schedule ?? this.schedule,
     nextDayIndex: nextDayIndex ?? this.nextDayIndex,
     nextDate: nextDate ?? this.nextDate,
+    movedFrom: movedFrom != null ? movedFrom() : this.movedFrom,
     startedAt: startedAt,
   );
 
@@ -51,6 +59,7 @@ class ActiveProgram extends Equatable {
     schedule,
     nextDayIndex,
     nextDate,
+    movedFrom,
     startedAt,
   ];
 }

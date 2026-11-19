@@ -25,8 +25,9 @@ class PlannedDay extends Equatable {
 /// When the days of an active program fall. The next day is planned for
 /// [ActiveProgram.nextDate]; after it, every training weekday does the day
 /// [ActiveProgram.schedule] gives it. A day moved to another date keeps
-/// its own day there, in place of that date's. Dates are calendar dates,
-/// so daylight saving changes never shift them.
+/// its own day there, in place of that date's; moved to an earlier date,
+/// it takes its own date's place along (see [ActiveProgram.movedFrom]).
+/// Dates are calendar dates, so daylight saving changes never shift them.
 class ProgramSchedule {
   ProgramSchedule(this.active, {required this.dayCount, this.lengthWeeks})
     : assert(dayCount > 0);
@@ -109,11 +110,27 @@ class ProgramSchedule {
   /// kept inside a program that lost days.
   int dayOn(int weekday) => active.schedule[weekday]! % dayCount;
 
-  /// The next day planned for the first training weekday from [from] on,
-  /// with that weekday's own day.
+  /// The first training weekday from [from] on that has its own day: not
+  /// one up to [ActiveProgram.movedFrom], whose place the next day took.
+  CalendarDate _trainingFrom(CalendarDate from) {
+    final movedFrom = active.movedFrom;
+    return nextWeekday(
+      active.weekdays,
+      from: movedFrom != null && !from.isAfter(movedFrom)
+          ? movedFrom.addDays(1)
+          : from,
+    );
+  }
+
+  /// The next day planned for the first training weekday from [from] on
+  /// (see [_trainingFrom]), with that weekday's own day.
   ActiveProgram _nextFrom(CalendarDate from) {
-    final date = nextWeekday(active.weekdays, from: from);
-    return active.copyWith(nextDayIndex: dayOn(date.weekday), nextDate: date);
+    final date = _trainingFrom(from);
+    return active.copyWith(
+      nextDayIndex: dayOn(date.weekday),
+      nextDate: date,
+      movedFrom: () => null,
+    );
   }
 
   /// The first date after the program, when it has a length: [lengthWeeks]
@@ -168,7 +185,7 @@ class ProgramSchedule {
         : active.nextDate;
     while (end == null || date.isBefore(end)) {
       yield (dayIndex: dayIndex, date: date);
-      date = nextWeekday(active.weekdays, from: date.addDays(1));
+      date = _trainingFrom(date.addDays(1));
       dayIndex = dayOn(date.weekday);
     }
   }
@@ -235,7 +252,19 @@ class ProgramSchedule {
   }
 
   /// The next day moved to [date]; the days after it follow from there.
-  ActiveProgram moveNext(CalendarDate date) => active.copyWith(nextDate: date);
+  /// Moved earlier, it takes its own date's place along: the training
+  /// weekdays up to that date rest.
+  ActiveProgram moveNext(CalendarDate date) {
+    final from = active.nextDate;
+    final movedFrom = active.movedFrom;
+    return active.copyWith(
+      nextDate: date,
+      movedFrom: date.isBefore(from)
+          ? () =>
+                movedFrom != null && movedFrom.isAfter(from) ? movedFrom : from
+          : null,
+    );
+  }
 
   /// The dates the next day may move to on [today]: from today to the
   /// last day of its planned date's week (today's when it was missed),
@@ -281,7 +310,7 @@ class ProgramSchedule {
   /// after today (today's day may be done), with that weekday's day.
   ActiveProgram withSchedule(Map<int, int> schedule, CalendarDate today) =>
       ProgramSchedule(
-        active.copyWith(schedule: schedule),
+        active.copyWith(schedule: schedule, movedFrom: () => null),
         dayCount: dayCount,
         lengthWeeks: lengthWeeks,
       )._nextFrom(active.nextDate.isAfter(today) ? today.addDays(1) : today);

@@ -417,6 +417,39 @@ void main() {
       );
     });
 
+    test(
+      'a day moved earlier keeps where it came from, until it goes',
+      () async {
+        final moved = active.copyWith(
+          nextDate: CalendarDate(2026, 11, 12),
+          movedFrom: () => CalendarDate(2026, 11, 13),
+        );
+        await repository.startProgram('u1', active);
+        await repository.updateActiveProgram('u1', moved);
+        await pumpEventQueue();
+        expect((await userData())!['activeProgram']['movedFrom'], '2026-11-13');
+        expect(await repository.watchActiveProgram('u1').first, moved);
+
+        await repository.updateActiveProgram('u1', active);
+        await pumpEventQueue();
+        expect(
+          (await userData())!['activeProgram'] as Map,
+          isNot(contains('movedFrom')),
+        );
+        expect(await repository.watchActiveProgram('u1').first, active);
+      },
+    );
+
+    test('an unreadable movedFrom reads as none', () {
+      expect(
+        FirestoreProgramRepository.activeFromMap({
+          ...FirestoreProgramRepository.activeToMap(active),
+          'movedFrom': 'Friday',
+        }),
+        active,
+      );
+    });
+
     group('a document of an older version', () {
       Map<String, Object?> old(Object? weekdays) => {
         'programId': 'p1',

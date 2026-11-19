@@ -176,7 +176,9 @@ trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
 characters),
 `activeProgram` (`programId`, `schedule` (ISO weekday `"1"`-`"7"` → the
 program day index done on it; 1-7 entries, a day may be on several
-weekdays or on none), `nextDayIndex`, `nextDate` `YYYY-MM-DD`, `startedAt`
+weekdays or on none), `nextDayIndex`, `nextDate` `YYYY-MM-DD`,
+`movedFrom?` `YYYY-MM-DD` (the date the next day was planned for before it
+was moved earlier; training weekdays up to it rest), `startedAt`
 device-clock timestamp). Documents written before 2026-11-19 have
 `weekdays[]` (ISO 1-7) instead: they read as those weekdays doing the days
 in turn by ascending weekday (0, 1, 2…), forever, and the next write of
@@ -2457,7 +2459,13 @@ the feature you are about to touch, and keep it true when you change it.
   training weekday after it with that weekday's day, whichever day was
   done. A day moved to another date (Do it today, Move, the calendar's
   move) keeps its own day there, in place of that date's own day, which
-  is left out that time; the weekdays after it do their own days again.
+  is left out that time; the weekdays after it do their own days again
+  (owner's pick, 2026-11-19). Moved earlier in its week with the
+  calendar's move, it takes its own date along (owner's pick, 2026-11-19):
+  Thursday's A moved to Wednesday leaves Thursday a rest day this week,
+  and the weekdays after Thursday do their own days
+  (`activeProgram.movedFrom`, cleared once the next day is planned anew).
+  Moved later, the training weekdays in between are left out.
   A missed next day stays the next day until the user does it today,
   moves it to the next training weekday or skips it (the first training
   weekday from today then does its own day); meanwhile it is planned on
