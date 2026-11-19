@@ -8,6 +8,8 @@ import '../../../app/router.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../generator/presentation/generator_entry.dart';
+import '../../workout/presentation/active_workout_cubit.dart';
+import '../../workout/presentation/elapsed_text.dart';
 import '../domain/program.dart';
 import '../domain/program_schedule.dart';
 import 'premium_prompt.dart';
@@ -200,6 +202,15 @@ class _ActiveProgram extends StatelessWidget {
     final weeks = program.lengthWeeks;
     final week = state.week;
     final locked = access == ProgramAccess.locked;
+    final running = context.select((ActiveWorkoutCubit cubit) {
+      final workout = cubit.state.workout;
+      return cubit.state.inProgress &&
+              workout != null &&
+              workout.programId == program.id &&
+              workout.dayIndex != null
+          ? (dayIndex: workout.dayIndex!, startedAt: workout.startedAt)
+          : null;
+    });
     return BlocListener<ProgramDetailCubit, ProgramDetailState>(
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, detail) {
@@ -266,7 +277,7 @@ class _ActiveProgram extends StatelessWidget {
         ],
         rows: state.finished || locked
             ? const []
-            : weekDayRows(context, state, program),
+            : weekDayRows(context, state, program, running: running),
       ),
     );
   }
@@ -388,15 +399,20 @@ class _ProgramActions {
   }
 }
 
+/// A program day's workout in progress: which day, since when.
+typedef RunningDay = ({int dayIndex, DateTime startedAt});
+
 /// This week's planned and done days of the active program as date-box
 /// rows with their state; a missed day says so, Today asks what to do with
-/// it. None starts. While the premium status of a premium copy is unknown,
-/// loading rows.
+/// it. None starts. The first day not done of the [running] workout's day
+/// says it is in progress, with Resume; it and its row open the workout.
+/// While the premium status of a premium copy is unknown, loading rows.
 List<Widget> weekDayRows(
   BuildContext context,
   ProgramListState state,
-  Program program,
-) {
+  Program program, {
+  required RunningDay? running,
+}) {
   if (state.access(program) == ProgramAccess.waiting) {
     return [for (var i = 0; i < 3; i++) ListRow.loading(index: i)];
   }
@@ -407,7 +423,23 @@ List<Widget> weekDayRows(
       day.status == PlannedStatus.planned &&
       day.dayIndex == state.nextDayIndex &&
       day.date == state.nextDate;
-  Widget row(PlannedDay day) => ListRow(
+  final plan = state.weekPlan;
+  final days = [
+    // A day missed in an earlier week waits above this week's.
+    if (missed != null && !plan.contains(missed)) missed,
+    ...plan,
+  ];
+  final runningDay = running == null
+      ? null
+      : days
+            .where(
+              (day) =>
+                  day.status != PlannedStatus.done &&
+                  day.dayIndex == running.dayIndex,
+            )
+            .firstOrNull;
+  void resume() => context.push(Routes.workout);
+  Widget row(PlannedDay day, {int? minutes}) => ListRow(
     leading: ListRowDateBox(
       weekday: l10n.weekdayShort(day.date.weekday),
       day: '${day.date.day}',
@@ -422,21 +454,39 @@ List<Widget> weekDayRows(
         ? l10n.dayName(program.days[day.dayIndex], day.dayIndex)
         : l10n.programDayDefault(day.dayIndex + 1),
     detail: switch (day.status) {
+      _ when minutes != null => l10n.programDayInProgress(minutes),
       PlannedStatus.done => l10n.programDayDone,
       PlannedStatus.missed => null,
       PlannedStatus.planned when isNext(day) => l10n.programDayNext,
       PlannedStatus.planned => l10n.programDayPlanned,
     },
-    error: day.status == PlannedStatus.missed ? l10n.programDayMissed : null,
+    error: day.status == PlannedStatus.missed && minutes == null
+        ? l10n.programDayMissed
+        : null,
     trailing: day.status == PlannedStatus.done
         ? ForgeIcon(ForgeIcons.check, size: 16, color: success)
+        : minutes != null
+        ? ForgeButton(
+            label: l10n.workoutResume,
+            variant: ForgeButtonVariant.text,
+            size: ForgeButtonSize.small,
+            onPressed: resume,
+          )
         : null,
+    onTap: minutes == null ? null : resume,
   );
-  final plan = state.weekPlan;
   return [
-    // A day missed in an earlier week waits above this week's.
-    if (missed != null && !plan.contains(missed)) row(missed),
-    for (final day in plan) row(day),
+    for (final day in days)
+      if (running != null && identical(day, runningDay))
+        EveryMinute(
+          since: running.startedAt,
+          builder: (_) => row(
+            day,
+            minutes: DateTime.now().difference(running.startedAt).inMinutes,
+          ),
+        )
+      else
+        row(day),
     if (plan.isEmpty && missed == null) ListRow(title: l10n.programWeekEmpty),
   ];
 }
