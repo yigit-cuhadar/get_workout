@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:forge_ui/forge_ui.dart' hide Sparkline;
-import 'package:get_workout/core/sparkline.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/core/widgets/featured_card.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
@@ -98,17 +97,22 @@ Widget featuredSummaryChanges(BuildContext context) => _page(
     form: FeaturedCardForm.block,
     eyebrow: 'Workout done · Fri, Nov 13',
     title: 'Push',
-    note: 'Push Pull Legs · week 3 · vs Fri, Nov 6',
+    note: 'Push Pull Legs · week 3',
     stats: [
-      FeaturedStat('Duration', '52 min', change: '−4 min'),
+      FeaturedStat('Duration', '1 h 12 min', change: '+8 min vs Nov 6'),
       FeaturedStat(
         'Volume',
         '12,400 kg',
-        change: '+6 %',
+        change: '+6 % vs Nov 6',
         tone: FeaturedChangeTone.gain,
       ),
-      FeaturedStat('Sets', '16', change: '−2', tone: FeaturedChangeTone.drop),
-      FeaturedStat('Records', '2'),
+      FeaturedStat(
+        'Sets',
+        '16',
+        change: '−2 vs Nov 6',
+        tone: FeaturedChangeTone.drop,
+      ),
+      FeaturedStat('Records', '2', change: 'Leg Press, Bench Press'),
     ],
   ),
 );
@@ -241,9 +245,12 @@ Widget featuredPromptState(BuildContext context) {
 Widget featuredBandRows(BuildContext context) => _page(
   FeaturedCard(
     form: FeaturedCardForm.band,
-    eyebrow: 'Active program · week 3 of 8',
+    eyebrow: 'Active program',
     title: 'Push Pull Legs',
-    progress: 0.37,
+    progress: (2 + 1 / 3) / 8,
+    progressSegments: 8,
+    progressLabel: 'Week 3 of 8',
+    progressDetail: '1 of 3 days this week',
     action: FeaturedAction('Start Push', () {}),
     menu: IconButton(
       tooltip: 'Program options',
@@ -287,18 +294,17 @@ Widget featuredBandChart(BuildContext context) {
       form: FeaturedCardForm.band,
       eyebrow: 'Body',
       title: '82.4 kg',
-      line: one
-          ? null
-          : const FeaturedLine(
-              '−0.4 since Nov 8',
-              data: '19.5 % fat',
-              icon: ForgeIcons.trendingUp,
-            ),
+      titleAside: one ? null : '−3.9 kg in 12 weeks',
+      when: '19.5 % body fat · Nov 14',
       chart: one
           ? null
-          : Sparkline(
-              values: const [86.3, 85.9, 85.1, 84.6, 83.9, 83.2, 82.8, 82.4],
-              color: ForgeStyle.of(context).colors.accent,
+          : const TrendLine.scaled(
+              values: [86.3, 85.9, 85.1, 84.6, 83.9, 83.2, 82.8, 82.4],
+              highLabel: '86.3',
+              lowLabel: '82.4',
+              startLabel: 'Aug 26',
+              endLabel: 'Nov 18',
+              semanticLabel: 'Weight, last 12 weeks',
             ),
       action: FeaturedAction('Log weight', () {}),
       moreActions: [FeaturedAction('Measurement day', () {})],

@@ -82,7 +82,7 @@ class FeaturedError {
 enum FeaturedChangeTone { gain, drop, neutral }
 
 /// One of the summary block's four figures, with its [change] since last
-/// time after the label.
+/// time under the value.
 class FeaturedStat {
   const FeaturedStat(
     this.label,
@@ -98,7 +98,9 @@ class FeaturedStat {
 }
 
 /// The one featured card of a screen in its [form]: an [eyebrow] (with a
-/// lock when [locked]) over the [title], then a band's [progress], the
+/// lock when [locked]) over the [title] and a band's [titleAside], then a
+/// band's [progress] (in [progressSegments] under [progressLabel] and
+/// [progressDetail]), the
 /// [line], a [note], the summary's four [stats] and its buttons, and a
 /// band's or an outline's [rows]; a band may hold a [chart] over its
 /// buttons. The first button is the main one; one of [moreActions]
@@ -112,6 +114,7 @@ class FeaturedCard extends StatelessWidget {
     required this.form,
     required String this.eyebrow,
     required String this.title,
+    this.titleAside,
     this.when,
     this.origin,
     this.onOrigin,
@@ -122,6 +125,9 @@ class FeaturedCard extends StatelessWidget {
     this.action,
     this.moreActions = const [],
     this.progress,
+    this.progressSegments,
+    this.progressLabel,
+    this.progressDetail,
     this.rows = const [],
     this.chart,
     this.menu,
@@ -132,10 +138,13 @@ class FeaturedCard extends StatelessWidget {
   }) : assert(
          form == FeaturedCardForm.band ||
              (progress == null &&
+                 progressLabel == null &&
+                 titleAside == null &&
                  menu == null &&
                  chart == null &&
                  alert == null),
-         'Only a band has progress, a chart, a menu and an alert.',
+         'Only a band has progress, a title aside, a chart, a menu and an '
+         'alert.',
        ),
        assert(onOrigin == null || origin != null, 'A link needs its text.'),
        assert(
@@ -164,6 +173,10 @@ class FeaturedCard extends StatelessWidget {
        note = null,
        stats = const [],
        progress = null,
+       progressSegments = null,
+       progressLabel = null,
+       progressDetail = null,
+       titleAside = null,
        rows = const [],
        chart = null,
        menu = null,
@@ -189,6 +202,10 @@ class FeaturedCard extends StatelessWidget {
        action = null,
        moreActions = const [],
        progress = null,
+       progressSegments = null,
+       progressLabel = null,
+       progressDetail = null,
+       titleAside = null,
        rows = const [],
        chart = null,
        menu = null,
@@ -214,6 +231,10 @@ class FeaturedCard extends StatelessWidget {
       action = null,
       moreActions = const [],
       progress = null,
+      progressSegments = null,
+      progressLabel = null,
+      progressDetail = null,
+      titleAside = null,
       rows = const [],
       chart = null,
       menu = null,
@@ -240,6 +261,10 @@ class FeaturedCard extends StatelessWidget {
       action = null,
       moreActions = const [],
       progress = null,
+      progressSegments = null,
+      progressLabel = null,
+      progressDetail = null,
+      titleAside = null,
       rows = const [],
       chart = null,
       menu = null,
@@ -254,8 +279,12 @@ class FeaturedCard extends StatelessWidget {
   final String? eyebrow;
   final String? title;
 
+  /// A band's mono value beside its [title], quieter: what changed
+  /// ("−2.1 kg in 12 weeks").
+  final String? titleAside;
+
   /// A band's muted line under its [title]: when it happens ("Today",
-  /// "Mon, Nov 16").
+  /// "Mon, Nov 16") or what goes with it ("18 % body fat · Nov 14").
   final String? when;
 
   /// A band's line under its [title] saying where it came from (a past
@@ -276,6 +305,15 @@ class FeaturedCard extends StatelessWidget {
   /// A band's progress through what it shows, from 0 to 1, as a bar over
   /// its line and buttons.
   final double? progress;
+
+  /// The parts the [progress] bar is cut into (a program's weeks).
+  final int? progressSegments;
+
+  /// A line over the [progress] bar: [progressLabel] at its start
+  /// ("Week 1 of 8"), a mono [progressDetail] at its end ("1 of 3 days
+  /// this week"). It stands without a bar too.
+  final String? progressLabel;
+  final String? progressDetail;
 
   /// A band's or an outline's rows under its buttons ([ListRow]s, e.g. a
   /// program's days), a line between each two and above the first.
@@ -454,8 +492,19 @@ class FeaturedCard extends StatelessWidget {
                 if (title case final title?)
                   Semantics(
                     header: true,
-                    child: Text(
-                      title,
+                    child: Text.rich(
+                      TextSpan(
+                        text: title,
+                        children: [
+                          if (titleAside case final aside?) ...[
+                            const WidgetSpan(child: SizedBox(width: 12)),
+                            TextSpan(
+                              text: aside,
+                              style: style.data.copyWith(color: headQuiet),
+                            ),
+                          ],
+                        ],
+                      ),
                       style: text.headlineMedium!.copyWith(color: headInk),
                     ),
                   ),
@@ -562,7 +611,24 @@ class FeaturedCard extends StatelessWidget {
     final children = [
       if (alert != null)
         Text(alert, style: text.bodySmall!.copyWith(color: p.danger)),
-      if (progress != null) Progress.track(value: progress),
+      if (progressLabel case final label?)
+        // The detail goes under the label when both do not fit (larger
+        // text).
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          spacing: Gap.sm,
+          runSpacing: 2,
+          children: [
+            Text(label, style: text.bodySmall!.copyWith(color: ink)),
+            if (progressDetail case final detail?)
+              Text(detail, style: style.data.copyWith(color: quiet)),
+          ],
+        ),
+      if (progress != null)
+        if (progressSegments case final segments?)
+          Progress.segmented(value: progress, segments: segments)
+        else
+          Progress.track(value: progress),
       if (line != null) _line(context, line, ink, quiet),
       if (error case final error?)
         Row(
@@ -696,31 +762,8 @@ class FeaturedCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 2,
       children: [
-        Text.rich(
-          TextSpan(
-            text: stat.label,
-            children: [
-              if (stat.change case final change?)
-                TextSpan(
-                  text: ' $change',
-                  style: TextStyle(
-                    color: switch (stat.tone) {
-                      FeaturedChangeTone.gain => Color.lerp(
-                        ink,
-                        style.colors.success,
-                        _changeTint,
-                      ),
-                      FeaturedChangeTone.drop => Color.lerp(
-                        ink,
-                        style.colors.danger,
-                        _changeTint,
-                      ),
-                      FeaturedChangeTone.neutral => quiet,
-                    },
-                  ),
-                ),
-            ],
-          ),
+        Text(
+          stat.label,
           style: text.labelMedium!.copyWith(
             fontWeight: FontWeight.w400,
             color: quiet,
@@ -730,6 +773,28 @@ class FeaturedCard extends StatelessWidget {
           stat.value,
           style: style.dataLg.copyWith(fontWeight: FontWeight.w500, color: ink),
         ),
+        if (stat.change case final change?)
+          Text(
+            change,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style.data.copyWith(
+              fontSize: 12,
+              color: switch (stat.tone) {
+                FeaturedChangeTone.gain => Color.lerp(
+                  ink,
+                  style.colors.success,
+                  _changeTint,
+                ),
+                FeaturedChangeTone.drop => Color.lerp(
+                  ink,
+                  style.colors.danger,
+                  _changeTint,
+                ),
+                FeaturedChangeTone.neutral => quiet,
+              },
+            ),
+          ),
       ],
     );
   }
