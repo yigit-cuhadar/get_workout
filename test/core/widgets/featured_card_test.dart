@@ -598,4 +598,38 @@ void main() {
       lineHeight,
     );
   });
+
+  testWidgets('a value beside the name is never cut; the name gives way', (
+    tester,
+  ) async {
+    await pumpComponent(
+      tester,
+      const FeaturedCard(
+        form: FeaturedCardForm.band,
+        eyebrow: 'Body weight',
+        title: 'A body weight name far too long for one line',
+        titleAside: '−2.1 kg in 12 weeks',
+      ),
+    );
+
+    final name = tester.widget<Text>(
+      find.text('A body weight name far too long for one line'),
+    );
+    expect(name.style!.fontSize, 18);
+    expect(name.overflow, TextOverflow.ellipsis);
+    final aside = find.text('−2.1 kg in 12 weeks');
+    final painter = TextPainter(
+      text: TextSpan(
+        text: '−2.1 kg in 12 weeks',
+        style: tester.widget<Text>(aside).style,
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    expect(tester.getSize(aside).width, closeTo(painter.width, 0.5));
+    painter.dispose();
+    expect(
+      tester.getTopRight(aside).dx,
+      lessThanOrEqualTo(tester.getTopRight(find.byType(FeaturedCard)).dx),
+    );
+  });
 }

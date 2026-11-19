@@ -961,9 +961,10 @@ class FeaturedCard extends StatelessWidget {
   );
 }
 
-/// [title] on one line with an [aside] after it: from [style]'s size down
-/// to [_minSize] until it fits, then cut with "…". The line keeps its
-/// height as the type shrinks.
+/// [title] on one line with an [aside] after it: the title alone shrinks
+/// from [style]'s size down to [_minSize] until both fit, then is cut with
+/// "…"; the aside keeps its whole width. The line keeps its height as the
+/// type shrinks.
 class _OneLineTitle extends StatelessWidget {
   const _OneLineTitle(
     this.title, {
@@ -1016,19 +1017,21 @@ class _OneLineTitle extends StatelessWidget {
             width(TextSpan(text: title, style: sized(size))) > room) {
           size = (size - 1).clamp(_minSize, base);
         }
-        return Text.rich(
-          TextSpan(
-            text: title,
-            children: [
-              if (aside != null) ...[
-                const WidgetSpan(child: SizedBox(width: _asideGap)),
-                TextSpan(text: aside, style: asideStyle),
-              ],
-            ],
-          ),
+        final name = Text(
+          title,
           style: sized(size),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+        );
+        if (aside == null) return name;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          spacing: _asideGap,
+          children: [
+            Flexible(child: name),
+            Text(aside, style: asideStyle, maxLines: 1),
+          ],
         );
       },
     );
