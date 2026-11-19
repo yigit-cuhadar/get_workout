@@ -842,6 +842,18 @@ Decisions (the canvases they were drawn on are deleted):
   unchanged). Cards titled with a program, workout or day name show it
   on one line, shrinking from 26 px to 18 px at least, then ending in
   "…" (PA2).
+  Also PD1 B, PC1 B, PU1 kept. A program's own page, while active, shows
+  in its top card only the training days as the eyebrow, "Next: <day>"
+  with its date, "Week 2 of 8" and "1 of 3 days this week" over the bar
+  in weeks, and Change days and Stop; no Start (it starts from Today)
+  (PD1). Ready-made programs lists the active program first under "Your
+  active program", "Week 2 of 8 · opens your copy", a tap opening the
+  user's copy; all programs follow (PC1). The catalogue page and the
+  copy's page keep their own layouts (PU1).
+  Focus on open: the workout, exercise, "Your note" and cardio note
+  sheets, the Bar weight dialog and the plate dialog's weight field;
+  Save as program and the new custom exercise page stay unfocused (the
+  set sheet's note too).
 - Live Activity ve antrenman sayfası (owner's picks, 2026-11-19, canvas
   https://claude.ai/artifact/P7BEPoJoM524GsYGfBnqn6): LA1 A (without the
   workout's name), LA2 A, LA3 B, LA4 B, WO1 B. Lock screen while a set
