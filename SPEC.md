@@ -1619,7 +1619,16 @@ Decisions (the canvases they were drawn on are deleted):
   progress a tap only opens the app, and with the workout page open (also
   under the exercise picker or the paywall) it stays as it is; Google
   sign-in still returns to the app; the clocks fit at 1:00:00 in every
-  presentation without squeezing the labels. An activity started by an older build (`RestActivityAttributes`)
+  presentation without squeezing the labels. Since LA1–LA4 (2026-11-19;
+  both targets compiled with `xcodebuild` for the simulator, nothing run):
+  the set card with its dots (also 6+ sets, a warm-up, a drop set, no
+  values yet, every set done), the rest card's bar emptying and the
+  compact island's ring; −15 s, +15 s and Skip on iOS 17+ with the app in
+  front, in the background and killed (the activity moves at once; the app
+  shows the same rest when opened, and the rest notification follows when
+  it ran), none below iOS 17; a tap beside the buttons still opens the
+  workout; a Live Activity started by the build before stays undrawable
+  until the app updates it (its content state changed). An activity started by an older build (`RestActivityAttributes`)
   is no longer seen by the app and stays until iOS ends it; only matters
   for a device that had one running across the update.
 - Workout on the lock screen (Android), not built yet; it needs
@@ -1979,7 +1988,13 @@ the feature you are about to touch, and keep it true when you change it.
   (and Today). Every location kept its path (the merged Train tab already
   used `/programs` and `/exercises`, and no notification payload or stored
   route ever held a Train path), so nothing needs a redirect. The active
-  workout is full-screen and can be minimized to a bar above the tabs.
+  workout is full-screen and can be minimized to a bar above the tabs: it
+  rises from the bottom over the tabs (`RisingPage`, both platforms; WO1
+  B) and goes back down to the bar on ⌄ at the top left, back, or a drag
+  down on its header (`DragToClose`: the page follows the finger and
+  closes when let go past half way or flung down, else springs back).
+  Pages opened above it (picker sheet, exercise detail) open and close as
+  before.
   Tapping the open tab returns it to its first page the way back would. A
   `go` (a link, a notification tap) replaces its tab's stack (each tab is
   its first path segment); a page there with unsaved changes
@@ -2895,7 +2910,10 @@ the feature you are about to touch, and keep it true when you change it.
   dropped, a set position not in the workout forgotten; the workout is
   never set aside for it. One that ended while the app was away ends
   quietly; one that reaches zero in front of the user buzzes and shows
-  "Rest over" for 3 s. +15 s moves the end; there is no −15 s.
+  "Rest over" for 3 s. +15 s moves the end. −15 s (the Live Activity's
+  button only) moves it earlier and ends the rest when 15 s or less is
+  left; a rest moved either way keeps its start, so its bar and the
+  panel's progress do not jump.
 - **Rest notification**: local, scheduled only when the app hides and
   cancelled when it shows or the rest changes, since the notifications
   package cannot hide one over the app in front; a schedule that lands
@@ -2981,12 +2999,38 @@ the feature you are about to touch, and keep it true when you change it.
   from when it showed rests only; `WorkoutActivityAttributes`,
   `WorkoutLiveActivity`), started by the app in front through
   `AppDelegate.swift` (`getworkout/workout_activity`), updated and ended
-  while the app runs; its texts come from the app. Lock screen and Dynamic
-  Island (compact, minimal, expanded) show the same two modes: the
-  workout (dumbbell, name, elapsed time counted up by the system, the set
-  to do now) or the rest (timer, "Rest", countdown, the next set). A set
+  while the app runs; its texts come from the app. Owner's picks
+  2026-11-19 (LA1 A, LA2 A, LA3 B, LA4 B). Lock screen, on a dark card in
+  every appearance: while a set is due, a top row with the app's mark (a
+  dumbbell on the muted green), the exercise's place ("Exercise 3 of 6")
+  and the small elapsed time, then the exercise's name large, the set and
+  its values ("Set 2 of 3 · 80 kg × 8": "Drop set 2 of 3", "Warm-up 1 of
+  2" or "Warm-up" as the set to do now counts them; the values entered,
+  else the suggested ones, in the user's unit; none while both are empty)
+  and one dot per set of the exercise, filled where done (narrower above
+  five sets); never the workout's name, except in the exercise's place
+  once every set is done. During a rest: "Rest" and the next set beside
+  the countdown, a bar emptying from the rest's start to its end
+  (`ProgressView(timerInterval:)`), and −15 s, +15 s and Skip (iOS 17+,
+  hidden below). Dynamic Island compact: the dumbbell and the elapsed
+  time, during a rest a ring emptying over it and the countdown (minimal
+  shows the same symbol); expanded: the exercise with the elapsed time and
+  the set line with its dots, during a rest "Rest" with the large
+  countdown, the emptying bar and the next set, no buttons. A next-set
   line ends a long exercise name with "…" and never cuts its part from
-  the last " · " on ("· set 2 of 4") (K7 A). No push
+  the last " · " on ("· set 2 of 4") (K7 A). The buttons are
+  `LiveActivityIntent` App Intents (`WorkoutActivityIntents.swift`, in
+  both targets, not shown in Shortcuts), so they run in the app's process
+  without opening it: the Runner moves the rest shown at once (the app's
+  rule: 15 s more up to 30 min ahead, 15 s less ending it when less is
+  left, Skip ending it) and hands the press to Dart on
+  `getworkout/workout_activity_rest`; Dart applies it to the workout's
+  rest (`RestTimerCubit` through `WatchLockScreenRestActions`, waiting
+  until the workout is loaded), which keeps it, moves the rest
+  notification and shows the activity again. A press while Flutter does
+  not run (the app launched in the background for it) or before Dart
+  listens is kept in the Runner's user defaults and taken when Dart starts
+  listening. Android's notification has no buttons. No push
   updates (no APNs yet), so the app cannot change it while suspended: the
   content state carries the rest with its end, the activity's stale date
   is that end, and the widget draws the rest only while it is not stale
@@ -2996,9 +3040,8 @@ the feature you are about to touch, and keep it true when you change it.
   (kept on the lock screen up to 4 h more); the next update the app makes
   in front then starts a new one, as it does after the user swiped it
   away. Users can turn Live Activities off per app; then nothing shows.
-  During a rest it carries +15 s and Skip on the right (owner's pick,
-  Çelişkiler, 2026-11-15; App Intents, iOS 17; Android notification actions);
-  logging a set and Finish stay in the app. Elsewhere, a tap on it (lock
+  Logging a set and Finish stay in the app. Elsewhere (not on a
+  button), a tap on it (lock
   screen and every Dynamic Island presentation, in both
   modes) opens the app with `getworkout://workout` (its widgetURL; the
   `getworkout` scheme next to Google sign-in's in `CFBundleURLTypes`).
