@@ -19,16 +19,19 @@ class ProgramCard extends StatelessWidget {
     required this.onTap,
   }) : assert(match == null || recommended),
        fits = false,
+       active = false,
        _row = false;
 
-  /// The catalogue's list row: the [name] with a Fits you or Premium tag,
-  /// the [facts] under it and, where it applies, a recommended row's
+  /// The catalogue's list row: the [name] with an Active tag when it is
+  /// [active] and a Fits you or Premium tag, the [facts] under it and,
+  /// where it applies, a recommended row's
   /// [match]; a chevron unless [locked]. Put rows in a ListRowCard.
   const ProgramCard.row({
     super.key,
     required this.name,
     required this.facts,
     this.fits = false,
+    this.active = false,
     this.locked = false,
     this.recommended = false,
     this.match,
@@ -48,6 +51,9 @@ class ProgramCard extends StatelessWidget {
 
   /// It suits the user's answers: the Fits you tag.
   final bool fits;
+
+  /// It is the user's active program.
+  final bool active;
   final VoidCallback onTap;
   final bool _row;
 
@@ -117,6 +123,11 @@ class ProgramCard extends StatelessWidget {
                             style: text.titleMedium,
                           ),
                         ),
+                        if (active)
+                          ForgeTag(
+                            l10n.programStateActive,
+                            kind: ForgeTagKind.strong,
+                          ),
                         if (fits)
                           ForgeTag(
                             l10n.programCardFits,

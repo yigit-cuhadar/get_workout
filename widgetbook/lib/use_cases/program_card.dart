@@ -37,6 +37,13 @@ Widget programRows(BuildContext context) => _page([
         onTap: () {},
       ),
       ProgramCard.row(
+        name: 'Full Body Basics',
+        facts: 'Week 2 of 8 · opens your copy',
+        active: true,
+        fits: true,
+        onTap: () {},
+      ),
+      ProgramCard.row(
         name: 'Upper Lower Strength',
         facts: '4 days · Advanced · 12 weeks',
         locked: true,

@@ -142,6 +142,7 @@ void main() {
 
     expect(find.text('Your active program'), findsOneWidget);
     expect(find.text('Week 2 of 8 · opens your copy'), findsOneWidget);
+    expect(find.text('Active'), findsOneWidget);
     expect(find.text('All programs'), findsOneWidget);
     // Lifted out of the list below.
     expect(find.text('3 days · Intermediate · 8 weeks'), findsOneWidget);

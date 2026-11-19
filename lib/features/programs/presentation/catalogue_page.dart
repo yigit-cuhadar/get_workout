@@ -267,6 +267,7 @@ class _CatalogueViewState extends State<_CatalogueView> {
           ? l10n.catalogueOpensCopy
           : l10n.catalogueActiveCopy(facts),
       fits: state.profile.suits(program),
+      active: copyId != null,
       locked: program.premium && state.premium == false,
       recommended: recommended,
       match: match,
