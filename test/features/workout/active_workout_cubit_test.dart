@@ -1060,15 +1060,31 @@ void main() {
       });
     });
 
-    test('opening the page again selects the next set to do', () async {
+    test('opening the page again goes on where the user left it', () async {
       final cubit = await withSquat();
       cubit
         ..addExercises([bench], 'en')
         ..openExercise(1);
       expect(cubit.state.selection, (exercise: 1, set: 0));
       cubit.pageOpened();
-      expect(cubit.state.picked, isNull);
-      expect(cubit.state.selection, first);
+      expect(cubit.state.selection, (exercise: 1, set: 0));
+      await pumpEventQueue();
+      expect(keptLocal().picked, (exercise: 1, set: 0));
+      await cubit.close();
+    });
+
+    test('the pick is kept with the workout and comes back with it', () async {
+      // The squat's second set is the next to do; the bench was open.
+      final draft = workout('w0', [
+        exercise('squat', [lift(100, 5), lift(100, 5, done: false)]),
+        exercise('bench', [lift(60, 8, done: false)]),
+      ]);
+      const bench = (exercise: 1, set: 0);
+      final cubit = await signedIn(
+        local: LocalWorkouts(draft: draft, picked: bench),
+      );
+      cubit.pageOpened();
+      expect(cubit.state.selection, bench);
       await cubit.close();
     });
 
@@ -2244,7 +2260,7 @@ void main() {
         return cubit;
       }
 
-      test('a done set picked shows until the page opens anew', () async {
+      test('a done set picked shows, also when the page opens anew', () async {
         final cubit = await done();
         expect(cubit.state.doneSetPicked, isFalse);
         cubit.selectSet(first);
@@ -2252,7 +2268,8 @@ void main() {
         cubit.setEffort(first, const EffortStep.reserve(1));
         expect(cubit.state.doneSetPicked, isTrue);
         cubit.pageOpened();
-        expect(cubit.state.doneSetPicked, isFalse);
+        expect(cubit.state.doneSetPicked, isTrue);
+        expect(cubit.state.selection, first);
         await cubit.close();
       });
 

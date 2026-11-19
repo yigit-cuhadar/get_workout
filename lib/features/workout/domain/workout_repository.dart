@@ -4,6 +4,7 @@ import '../../programs/domain/active_program.dart';
 import '../../programs/domain/calendar_date.dart';
 import 'exercise_stats.dart';
 import 'rest.dart';
+import 'set_selection.dart';
 import 'workout.dart';
 import 'workout_end_notice.dart';
 
@@ -135,6 +136,7 @@ class LocalWorkouts extends Equatable {
     this.draft,
     this.rest,
     this.lastSetAt,
+    this.picked,
     this.finished = const [],
     this.staleStats = const {},
   });
@@ -147,6 +149,10 @@ class LocalWorkouts extends Equatable {
   /// When a set of [draft] was last ticked done, by this device's clock;
   /// never without it, and never stored anywhere else. See [idleEnd].
   final DateTime? lastSetAt;
+
+  /// What the user last picked in [draft], so the workout opens where they
+  /// left it; never without it.
+  final SetSelection? picked;
   final List<Workout> finished;
 
   /// Exercise ids whose stats were computed from what the device knew, or
@@ -157,18 +163,27 @@ class LocalWorkouts extends Equatable {
     Workout? Function()? draft,
     Rest? Function()? rest,
     DateTime? Function()? lastSetAt,
+    SetSelection? Function()? picked,
     List<Workout>? finished,
     Set<String>? staleStats,
   }) => LocalWorkouts(
     draft: draft != null ? draft() : this.draft,
     rest: rest != null ? rest() : this.rest,
     lastSetAt: lastSetAt != null ? lastSetAt() : this.lastSetAt,
+    picked: picked != null ? picked() : this.picked,
     finished: finished ?? this.finished,
     staleStats: staleStats ?? this.staleStats,
   );
 
   @override
-  List<Object?> get props => [draft, rest, lastSetAt, finished, staleStats];
+  List<Object?> get props => [
+    draft,
+    rest,
+    lastSetAt,
+    picked,
+    finished,
+    staleStats,
+  ];
 }
 
 /// [LocalWorkouts] per user on the device, so a crash or a killed app never

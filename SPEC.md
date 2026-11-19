@@ -2700,15 +2700,17 @@ the feature you are about to touch, and keep it true when you change it.
   sets and exercises keeps it on its set or exercise (removing the selected
   set selects the one that took its place, else the one before; removing its
   exercise falls back to the next set to do); skipping the rest leaves it.
-  Each time the workout page opens (from the minimized bar, Today's
-  "Resume workout", a lock-screen or notification tap, or a relaunch, when
-  nothing is kept anyway) the pick is forgotten, so the exercise with the
-  next set to do is open on that set (`pageOpened`, called as the page is
-  built anew); pages opened above it (the exercise picker or details, the
-  sheets, the paywall) and closed leave it exactly as it was, as the page
-  is not built anew. An effort question left in the bar (its tick started
-  no rest) is dropped then too; one in the rest strip stays while its rest
-  runs, as the minimized bar shows that rest. The edit page is unaffected.
+  The pick (the set or exercise the user last picked or opened, or where a
+  tick moved it) is kept with the workout in progress in the local file
+  (optional `picked` field, still version 2; one that no longer points
+  into the workout is dropped), so each time the workout page opens (from
+  the minimized bar, Today's "Resume workout", a lock-screen or
+  notification tap, or a relaunch) it goes on where the user left it
+  (owner, 2026-11-19; it used to reopen on the next set to do). Opening
+  the page (`pageOpened`) drops an effort question left in the bar (its
+  tick started no rest) and an invalid tick's message; one in the rest
+  strip stays while its rest runs, as the minimized bar shows that rest.
+  The edit page is unaffected.
   The open card shows its sets as **bubbles** (the owner's pick; the
   "selected set only" view was tried and deleted): a wrapping row of round
   bubbles, a warm-up dashed with "W", a drop set "2D", done ones filled without a tick (owner's pick), the
