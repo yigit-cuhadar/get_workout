@@ -192,7 +192,14 @@ void main() {
       ),
     );
 
-    expect(find.text('Active program · week 2 of 8'), findsOneWidget);
+    // The week over a bar with a part per week, this one filled by its
+    // days done.
+    expect(find.text('Active program'), findsOneWidget);
+    expect(find.text('Week 2 of 8'), findsOneWidget);
+    expect(find.text('1 of 2 days this week'), findsOneWidget);
+    final bar = tester.widget<Progress>(find.byType(Progress));
+    expect(bar.segments, 8);
+    expect(bar.value, closeTo((1 + 1 / 2) / 8, 1e-9));
     // Today starts the day; Programs shows the plan.
     expect(find.text('Start Lower'), findsNothing);
     expect(find.text('Start empty workout'), findsNothing);
@@ -219,7 +226,7 @@ void main() {
       ),
       findsNothing,
     );
-    await tester.tap(find.text('Active program · week 2 of 8'));
+    await tester.tap(find.text('Week 2 of 8'));
     await settle(tester);
     expect(find.text('at /programs/p1'), findsOneWidget);
   });
@@ -335,7 +342,7 @@ void main() {
       ready(programs: [arms, copy], activeProgram: active, premium: false),
     );
 
-    expect(find.text('Active program · week 2 of 8'), findsOneWidget);
+    expect(find.text('Week 2 of 8'), findsOneWidget);
     expect(find.text('Premium has ended'), findsOneWidget);
     await tester.tap(find.bySemanticsLabel('Program options'));
     await settle(tester);

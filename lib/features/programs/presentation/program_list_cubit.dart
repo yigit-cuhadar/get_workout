@@ -105,6 +105,21 @@ class ProgramListState extends Equatable {
         : programVolume(program, const {}).total;
   }
 
+  /// The days of this week's plan done so far.
+  int get weekDaysDone =>
+      weekPlan.where((day) => day.status == PlannedStatus.done).length;
+
+  /// How far the active program has run, from 0 to 1: its past weeks in
+  /// full and this one by its days done. Null without a length or a week,
+  /// or once it finished.
+  double? get runProgress {
+    final weeks = activeProgram?.lengthWeeks;
+    final week = this.week;
+    if (weeks == null || week == null || finished) return null;
+    final thisWeek = weekPlan.isEmpty ? 0 : weekDaysDone / weekPlan.length;
+    return ((week - 1 + thisWeek) / weeks).clamp(0.0, 1.0);
+  }
+
   /// The active program's day to do next, unless it has run its length.
   int? get nextDayIndex {
     final days = activeProgram?.days.length ?? 0;

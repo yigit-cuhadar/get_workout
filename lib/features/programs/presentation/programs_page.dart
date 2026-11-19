@@ -186,9 +186,10 @@ class _Programs extends StatelessWidget {
   }
 }
 
-/// The active program's band: where it stands and this week's days, or
-/// once it finished its result and the ways on; its options in ⋯. No
-/// Start: Today's workout card starts the day.
+/// The active program's band: its week and this week's days done over a
+/// bar with a part per week, then this week's days, or once it finished
+/// its result and the ways on; its options in ⋯. No Start: Today's workout
+/// card starts the day.
 class _ActiveProgram extends StatelessWidget {
   const _ActiveProgram(this.state, this.program, {required this.premium});
 
@@ -226,18 +227,24 @@ class _ActiveProgram extends StatelessWidget {
         form: FeaturedCardForm.band,
         eyebrow: state.finished
             ? l10n.programFinishedWeeks(weeks ?? 0)
-            : week == null
-            ? l10n.programActive
-            : weeks == null
-            ? l10n.programActiveWeek(week)
-            : l10n.programActiveWeekOf(week, weeks),
+            : l10n.programActive,
         title: program.name,
         locked: locked,
         menu: _ProgramMenuButton(state, program, premium: premium),
         onTap: () => context.go(Routes.program(program.id!)),
-        progress: !state.finished && weeks != null && week != null
-            ? week / weeks
-            : null,
+        progress: state.runProgress,
+        progressSegments: weeks,
+        progressLabel: state.finished || week == null
+            ? null
+            : weeks == null
+            ? l10n.programWeekNumber(week)
+            : l10n.programWeekOf(week, weeks),
+        progressDetail: state.finished || state.weekPlan.isEmpty
+            ? null
+            : l10n.programDaysThisWeek(
+                state.weekDaysDone,
+                state.weekPlan.length,
+              ),
         note: switch (state.workoutCount) {
           final count? => l10n.programWorkoutCount(count),
           null => null,
