@@ -6,7 +6,7 @@ import { defineSecret } from "firebase-functions/params";
 export const APPLE_TEAM_ID = "A8J42TV74R";
 
 /** The Sign in with Apple key the client secret is signed with. */
-export const APPLE_KEY_ID = "699QV25PQM";
+export const APPLE_KEY_ID = "W3KP8AP8K2";
 
 /** The app's bundle id, the client the authorization codes are issued to. */
 export const APPLE_CLIENT_ID = "com.getworkout.app";

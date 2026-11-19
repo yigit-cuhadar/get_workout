@@ -263,7 +263,7 @@ only, JPEG, max 5 MB.
   Apple authorization code) it first, after the recent sign-in check,
   exchanges the code at Apple and revokes the refresh token (else the
   access token) with a client secret it signs (ES256) with the
-  `APPLE_SIGN_IN_KEY` secret (the .p8 PEM of key 699QV25PQM; team, key and
+  `APPLE_SIGN_IN_KEY` secret (the .p8 PEM of key W3KP8AP8K2; team, key and
   client id are constants in `functions/src/apple.ts`); a refusal logs
   Apple's status and body and deletes nothing. Once the auth user is gone it deletes
   `entitlements/{uid}` once more (a failure is logged), so a webhook event
@@ -1601,7 +1601,7 @@ Decisions (the canvases they were drawn on are deleted):
   browser (the function was called directly), and prod has none of the
   functions or the newer Firestore rules. iOS push: `aps-environment` is
   in `Runner.entitlements` and `remote-notification` in the background
-  modes (2026-11-18, signs with the paid team). The APNs key 699QV25PQM
+  modes (2026-11-18, signs with the paid team). The APNs key W3KP8AP8K2
   is uploaded to both Firebase projects (development and production). An
   announcement sent to `announcements_en` on dev arrived on the owner's
   iPhone the same day, in front (shown by the app) and in the background
