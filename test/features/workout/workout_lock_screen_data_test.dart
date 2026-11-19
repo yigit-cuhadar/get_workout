@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
@@ -355,7 +357,9 @@ void main() {
           'listening', () async {
         kept = ['extend', 'skip'];
         final actions = <LockScreenRestAction>[];
-        final subscription = ios().restActions().listen(actions.add);
+        final subscription = ios().restActions().listen(
+          (press) => actions.add(press.action),
+        );
         await pumpEventQueue();
         expect(calls.single.method, 'takeRestActions');
         expect(actions, [
@@ -367,12 +371,30 @@ void main() {
 
       test('later ones come as the Runner sends them', () async {
         final actions = <LockScreenRestAction>[];
-        final subscription = ios().restActions().listen(actions.add);
+        final subscription = ios().restActions().listen((press) {
+          actions.add(press.action);
+          press.handled();
+        });
         await pumpEventQueue();
         await nativeSays('shorten');
         await nativeSays('unknown');
         await pumpEventQueue();
         expect(actions, [LockScreenRestAction.shorten]);
+        await subscription.cancel();
+      });
+
+      test('the Runner is answered once the press is handled', () async {
+        final presses = <LockScreenRestPress>[];
+        final subscription = ios().restActions().listen(presses.add);
+        await pumpEventQueue();
+        var answered = false;
+        unawaited(nativeSays('extend').then((_) => answered = true));
+        await pumpEventQueue();
+        expect(presses.single.action, LockScreenRestAction.extend);
+        expect(answered, isFalse);
+        presses.single.handled();
+        await pumpEventQueue();
+        expect(answered, isTrue);
         await subscription.cancel();
       });
     });

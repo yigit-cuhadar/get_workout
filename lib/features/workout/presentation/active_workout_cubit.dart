@@ -131,7 +131,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
 
   /// A set was picked while every set was done, so the panel shows it
   /// instead of offering to finish (see [workoutPanel]); until a set is
-  /// to do again or the page opens anew.
+  /// to do again or the app starts anew.
   final bool doneSetPicked;
 
   /// Warm-ups were added to this workout automatically, which its tip
@@ -464,6 +464,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       local.draft,
       status: local.draft == null ? WorkoutStatus.none : WorkoutStatus.active,
       rest: () => local.rest,
+      picked: local.picked,
     );
     _followIdle();
     unawaited(_sync(uid));
@@ -604,20 +605,17 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     return true;
   }
 
-  /// The workout page opened, anew after it was left: what the user picked
-  /// before goes, so the next set to do is selected, and so does a question
-  /// whose tick started no rest; one whose tick started a rest stays.
+  /// The workout page opened, anew after it was left: it goes on where the
+  /// user left it, as what they picked stays (kept on the device, so also
+  /// after a relaunch). A question whose tick started no rest goes; one
+  /// whose tick started a rest stays.
   void pageOpened() {
     final dropsQuestion = state.asking != null && !state.askingWithRest;
-    if (state.picked == null && !dropsQuestion && !state.doneSetPicked) {
-      return;
-    }
+    if (state.invalidSet == null && !dropsQuestion) return;
     emit(
       state.copyWith(
-        picked: () => null,
         invalidSet: () => null,
         asking: dropsQuestion ? () => null : null,
-        doneSetPicked: false,
       ),
     );
   }
@@ -1007,7 +1005,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       keepQuestion: !movesSets,
       entryWaitsForRest: started
           ? nextSet(changed, null) != null
-          : state.entryWaitsForRest,
+          : rest != null && state.entryWaitsForRest,
       doneSetPicked:
           state.doneSetPicked &&
           !changed.hasUndoneSets &&
@@ -1018,17 +1016,22 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   }
 
   /// A new pick drops the message of a set that could not be ticked and
-  /// the effort question, and shows the picked set even while resting.
+  /// the effort question, and shows the picked set even while resting. It
+  /// is kept, so the workout opens on it again.
   @override
-  void emitPicked(SetSelection? picked) => emit(
-    state.copyWith(
-      picked: () => picked,
-      invalidSet: () => null,
-      asking: () => null,
-      entryWaitsForRest: false,
-      doneSetPicked: picked != null && !(state.workout?.hasUndoneSets ?? true),
-    ),
-  );
+  void emitPicked(SetSelection? picked) {
+    emit(
+      state.copyWith(
+        picked: () => picked,
+        invalidSet: () => null,
+        asking: () => null,
+        entryWaitsForRest: false,
+        doneSetPicked:
+            picked != null && !(state.workout?.hasUndoneSets ?? true),
+      ),
+    );
+    _keep();
+  }
 
   /// The set added is shown even while resting.
   @override
@@ -1107,7 +1110,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   /// The rest once an edit made [after] of [before], and whether the edit
   /// started it: a set ticked done starts the rest [restAfterTick] gives,
-  /// replacing the running one; otherwise the running one goes on, ends
+  /// replacing the running one, and the last set to do ends the running
+  /// one; otherwise the running one goes on, ends
   /// when the set that started it is no longer done, or forgets that set
   /// when the edit [movesSets] (see [Rest.followEdit]).
   (Rest?, bool) _restAfterEdit(
@@ -1127,6 +1131,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       if (duration != null) {
         return (Rest(endsAt: _clock().add(duration), after: ticked), true);
       }
+      // The last set to do: nothing is left to rest for.
+      if (!after.hasUndoneSets) return (null, false);
     }
     return (state.rest?.followEdit(after, movesSets: movesSets), false);
   }
@@ -1222,6 +1228,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       draft: () => draft,
       rest: () => draft == null ? null : state.rest,
       lastSetAt: () => draft == null ? null : _lastSetAt,
+      picked: () => draft == null ? null : state.picked,
     );
     _local = kept;
     unawaited(

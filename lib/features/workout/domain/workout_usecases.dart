@@ -345,5 +345,5 @@ class WatchLockScreenRestActions {
   const WatchLockScreenRestActions(this._lockScreen);
   final WorkoutLockScreen _lockScreen;
 
-  Stream<LockScreenRestAction> call() => _lockScreen.restActions();
+  Stream<LockScreenRestPress> call() => _lockScreen.restActions();
 }

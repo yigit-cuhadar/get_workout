@@ -34,9 +34,8 @@ import 'workout_text.dart';
 /// The workout in progress, risen from the bottom over the tabs; ⌄, back
 /// or a drag down on its header minimizes it to the bar, or ends it while
 /// it is empty. Once finished it shows the
-/// summary. Each time it opens it starts on the next set to do (see
-/// [ActiveWorkoutCubit.pageOpened]); pages opened above it and closed
-/// again leave it as it was.
+/// summary. Each time it opens it goes on where the user left it (see
+/// [ActiveWorkoutCubit.pageOpened]).
 class WorkoutPage extends StatefulWidget {
   const WorkoutPage({super.key});
 
@@ -267,6 +266,8 @@ class _ActiveWorkout extends StatelessWidget {
               Progress.indeterminate(label: l10n.workoutSaving),
             Expanded(
               child: SetBarLayout(
+                // A done set's effort steps show whole, without scrolling.
+                fullHeight: state.effortRowRef != null,
                 panel: workout.isEmpty
                     ? const SizedBox.shrink()
                     : _Panel(state: state),

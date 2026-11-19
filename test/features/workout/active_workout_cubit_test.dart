@@ -936,14 +936,16 @@ void main() {
         await cubit.close();
       });
 
-      test('after the last set to do, that set stays in the bar', () async {
+      test('the last set to do starts no rest and stays in the bar', () async {
         final cubit = await withSquat();
         cubit
           ..toggleDone(first)
           ..setEffort(first, const EffortStep.reserve(2))
           ..toggleDone(second);
-        expect(cubit.state.rest?.after, second);
+        expect(cubit.state.rest, isNull);
         expect(cubit.state.selection, second);
+        expect(cubit.state.questionRef, second);
+        expect(cubit.state.askingWithRest, isFalse);
         expect(cubit.state.entryWaitsForRest, isFalse);
         await cubit.close();
       });
@@ -1059,15 +1061,31 @@ void main() {
       });
     });
 
-    test('opening the page again selects the next set to do', () async {
+    test('opening the page again goes on where the user left it', () async {
       final cubit = await withSquat();
       cubit
         ..addExercises([bench], 'en')
         ..openExercise(1);
       expect(cubit.state.selection, (exercise: 1, set: 0));
       cubit.pageOpened();
-      expect(cubit.state.picked, isNull);
-      expect(cubit.state.selection, first);
+      expect(cubit.state.selection, (exercise: 1, set: 0));
+      await pumpEventQueue();
+      expect(keptLocal().picked, (exercise: 1, set: 0));
+      await cubit.close();
+    });
+
+    test('the pick is kept with the workout and comes back with it', () async {
+      // The squat's second set is the next to do; the bench was open.
+      final draft = workout('w0', [
+        exercise('squat', [lift(100, 5), lift(100, 5, done: false)]),
+        exercise('bench', [lift(60, 8, done: false)]),
+      ]);
+      const bench = (exercise: 1, set: 0);
+      final cubit = await signedIn(
+        local: LocalWorkouts(draft: draft, picked: bench),
+      );
+      cubit.pageOpened();
+      expect(cubit.state.selection, bench);
       await cubit.close();
     });
 
@@ -1760,6 +1778,7 @@ void main() {
       final cubit = await signedIn();
       cubit
         ..startWith(squat, 'Workout', 'en')
+        ..addSet(0, SetType.normal)
         ..setWeight(first, '100', WeightUnit.kg)
         ..setReps(first, '5')
         ..toggleDone(first);
@@ -1779,6 +1798,7 @@ void main() {
       await pumpEventQueue();
       cubit
         ..startWith(mine, 'Workout', 'en')
+        ..addSet(0, SetType.normal)
         ..setReps(first, '10')
         ..toggleDone(first);
       expect(cubit.state.rest!.endsAt, now.add(const Duration(seconds: 75)));
@@ -1799,6 +1819,7 @@ void main() {
       await pumpEventQueue();
       cubit
         ..startWith(mine, 'Workout', 'en')
+        ..addSet(0, SetType.normal)
         ..setReps(first, '10')
         ..toggleDone(first);
       // Bob's settings have not arrived: the defaults, not Alice's 75 s.
@@ -1822,6 +1843,7 @@ void main() {
     test('unticking the set ends its rest, another set\'s does not', () async {
       final cubit = await withSquat();
       cubit
+        ..addSet(0, SetType.normal)
         ..toggleDone(first)
         ..toggleDone(second);
       expect(cubit.state.rest!.after, second);
@@ -1845,7 +1867,9 @@ void main() {
 
     test('a new tick starts the rest again', () async {
       final cubit = await withSquat();
-      cubit.toggleDone(first);
+      cubit
+        ..addSet(0, SetType.normal)
+        ..toggleDone(first);
       clock = now.add(const Duration(seconds: 30));
       cubit.toggleDone(second);
       expect(
@@ -1868,8 +1892,9 @@ void main() {
 
     test('a warm-up leaves the running rest alone', () async {
       final cubit = await withSquat();
-      // The first set made a warm-up stays where it is.
+      // The first set made a warm-up stays where it is; a third is left.
       cubit
+        ..addSet(0, SetType.normal)
         ..setType(first, SetType.warmup)
         ..toggleDone(second)
         ..toggleDone(first);
@@ -1938,6 +1963,7 @@ void main() {
       final cubit = await signedIn();
       cubit
         ..startWith(squat, 'Workout', 'en')
+        ..addSet(0, SetType.normal)
         ..setWeight(first, '100', WeightUnit.kg)
         ..setReps(first, '5')
         ..toggleDone(first);
@@ -2235,7 +2261,7 @@ void main() {
         return cubit;
       }
 
-      test('a done set picked shows until the page opens anew', () async {
+      test('a done set picked shows, also when the page opens anew', () async {
         final cubit = await done();
         expect(cubit.state.doneSetPicked, isFalse);
         cubit.selectSet(first);
@@ -2243,7 +2269,8 @@ void main() {
         cubit.setEffort(first, const EffortStep.reserve(1));
         expect(cubit.state.doneSetPicked, isTrue);
         cubit.pageOpened();
-        expect(cubit.state.doneSetPicked, isFalse);
+        expect(cubit.state.doneSetPicked, isTrue);
+        expect(cubit.state.selection, first);
         await cubit.close();
       });
 

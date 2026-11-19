@@ -29,6 +29,9 @@ class IosWorkoutLockScreen implements WorkoutLockScreen {
   final MethodChannel _channel;
   final MethodChannel _restChannel;
 
+  /// How long a press is waited for before it is answered anyway.
+  static const pressWait = Duration(seconds: 5);
+
   @override
   Future<Result<void>> show(LockScreenWorkout workout) => guard(() async {
     final set = workout.set;
@@ -96,13 +99,17 @@ class IosWorkoutLockScreen implements WorkoutLockScreen {
 
   /// Presses while the app did not run, or before this listened, are
   /// taken when listening starts; later ones the Runner sends as
-  /// "restAction".
+  /// "restAction", which is answered once the press is handled (at most
+  /// after [pressWait]): iOS keeps the app awake until then.
   @override
-  Stream<LockScreenRestAction> restActions() {
-    late final StreamController<LockScreenRestAction> controller;
+  Stream<LockScreenRestPress> restActions() {
+    late final StreamController<LockScreenRestPress> controller;
+    LockScreenRestAction? action(Object? name) =>
+        LockScreenRestAction.values.asNameMap()[name];
     void add(Object? name) {
-      final action = LockScreenRestAction.values.asNameMap()[name];
-      if (action != null) controller.add(action);
+      if (action(name) case final action?) {
+        controller.add(LockScreenRestPress(action));
+      }
     }
 
     Future<void> takeKept() async {
@@ -123,7 +130,19 @@ class IosWorkoutLockScreen implements WorkoutLockScreen {
     controller = StreamController(
       onListen: () {
         _restChannel.setMethodCallHandler((call) async {
-          if (call.method == 'restAction') add(call.arguments);
+          if (call.method != 'restAction') return;
+          final pressed = action(call.arguments);
+          if (pressed == null) return;
+          final handled = Completer<void>();
+          controller.add(
+            LockScreenRestPress(
+              pressed,
+              onHandled: () {
+                if (!handled.isCompleted) handled.complete();
+              },
+            ),
+          );
+          await handled.future.timeout(pressWait, onTimeout: () {});
         });
         unawaited(takeKept());
       },

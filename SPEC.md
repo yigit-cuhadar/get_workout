@@ -2747,15 +2747,17 @@ the feature you are about to touch, and keep it true when you change it.
   sets and exercises keeps it on its set or exercise (removing the selected
   set selects the one that took its place, else the one before; removing its
   exercise falls back to the next set to do); skipping the rest leaves it.
-  Each time the workout page opens (from the minimized bar, Today's
-  "Resume workout", a lock-screen or notification tap, or a relaunch, when
-  nothing is kept anyway) the pick is forgotten, so the exercise with the
-  next set to do is open on that set (`pageOpened`, called as the page is
-  built anew); pages opened above it (the exercise picker or details, the
-  sheets, the paywall) and closed leave it exactly as it was, as the page
-  is not built anew. An effort question left in the bar (its tick started
-  no rest) is dropped then too; one in the rest strip stays while its rest
-  runs, as the minimized bar shows that rest. The edit page is unaffected.
+  The pick (the set or exercise the user last picked or opened, or where a
+  tick moved it) is kept with the workout in progress in the local file
+  (optional `picked` field, still version 2; one that no longer points
+  into the workout is dropped), so each time the workout page opens (from
+  the minimized bar, Today's "Resume workout", a lock-screen or
+  notification tap, or a relaunch) it goes on where the user left it
+  (owner, 2026-11-19; it used to reopen on the next set to do). Opening
+  the page (`pageOpened`) drops an effort question left in the bar (its
+  tick started no rest) and an invalid tick's message; one in the rest
+  strip stays while its rest runs, as the minimized bar shows that rest.
+  The edit page is unaffected.
   The open card shows its sets as **bubbles** (the owner's pick; the
   "selected set only" view was tried and deleted): a wrapping row of round
   bubbles, a warm-up dashed with "W", a drop set "2D", done ones filled without a tick (owner's pick), the
@@ -2859,7 +2861,10 @@ the feature you are about to touch, and keep it true when you change it.
   Neither shows while edits are refused (finishing), and an answer refused
   then leaves it open. Editing a past workout never asks on a tick. A
   selected done set shows its effort row under its values, named: "Set 1 ·
-  how hard was it?" (`effortRowSet`); an undone set never has one.
+  how hard was it?" (`effortRowSet`); an undone set never has one. The
+  bar then takes its own height instead of its 60 % of the page
+  (`SetBarLayout.fullHeight`), so the steps show without scrolling; it
+  scrolls only when taller than the page (large text).
 - **Automatic warm-up sets**: Settings → "Automatic warm-up sets" (its
   row shows e.g. "Standard · Every exercise") opens a page
   (`/profile/warmups`) with:
@@ -2948,7 +2953,9 @@ the feature you are about to touch, and keep it true when you change it.
   group's last exercise with a working set in that round starts the rest,
   for the rest of the group's last exercise (as the program estimate
   counts it); the next set follows the same rounds, the group's warm-ups
-  first. Warm-ups start none and leave a running one alone; a drop set
+  first. The workout's last set to do starts none and ends a running
+  one, as nothing is left to rest for (rests between exercises stay).
+  Warm-ups start none and leave a running one alone; a drop set
   rests like any set. Rest start and end are decided in one place, from
   the workout before and after each edit: a new tick replaces the running
   rest; the set that started it no longer done (unticked, or edited
@@ -2968,9 +2975,12 @@ the feature you are about to touch, and keep it true when you change it.
   left; a rest moved either way keeps its start, so its bar and the
   panel's progress do not jump.
 - **Rest notification**: local, scheduled only when the app hides and
-  cancelled when it shows or the rest changes, since the notifications
-  package cannot hide one over the app in front; a schedule that lands
-  after such a change is cancelled again. A rest left running when the
+  cancelled when it shows or the rest ends, since the notifications
+  package cannot hide one over the app in front. A rest moved while the
+  app is hidden (a Live Activity button) reschedules it in place, never
+  cancelling it first, so a suspension in between cannot leave none; the
+  calls run one after another, each for the state when it runs, so a
+  late one cannot undo a newer change. A rest left running when the
   app is killed in front gets none. The wish is the user's
   (`settings.restTimer.notify`, written only by their answer or the
   settings switch); the permission is the device's and is never written
@@ -3060,8 +3070,9 @@ the feature you are about to touch, and keep it true when you change it.
   its values ("Set 2 of 3 · 80 kg × 8": "Drop set 2 of 3", "Warm-up 1 of
   2" or "Warm-up" as the set to do now counts them; the values entered,
   else the suggested ones, in the user's unit; none while both are empty)
-  and one dot per set of the exercise, filled where done (narrower above
-  five sets); never the workout's name. Once every set is done but the
+  and, right-aligned at the end of that line (cut before them, so the
+  name has the whole width), one dot per set of the exercise, filled
+  where done (narrower above five sets); never the workout's name. Once every set is done but the
   workout is not finished (LA5 A): the same top row (the last exercise's
   place), "All sets done" large and "Finish in the app" under it, no dots;
   the expanded island shows the same two lines. During a rest: "Rest" and the next set beside
@@ -3079,8 +3090,10 @@ the feature you are about to touch, and keep it true when you change it.
   without opening it: the Runner moves the rest shown at once (the app's
   rule: 15 s more up to 30 min ahead, 15 s less ending it when less is
   left, Skip ending it) and hands the press to Dart on
-  `getworkout/workout_activity_rest`; Dart applies it to the workout's
-  rest (`RestTimerCubit` through `WatchLockScreenRestActions`, waiting
+  `getworkout/workout_activity_rest`, which answers only once the press
+  is applied and the rest notification moved (`LockScreenRestPress`, at
+  most 5 s), so iOS keeps the app awake until then; Dart applies it to
+  the workout's rest (`RestTimerCubit` through `WatchLockScreenRestActions`, waiting
   until the workout is loaded), which keeps it, moves the rest
   notification and shows the activity again. A press while Flutter does
   not run (the app launched in the background for it) or before Dart

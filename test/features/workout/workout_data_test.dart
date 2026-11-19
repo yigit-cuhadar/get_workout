@@ -14,6 +14,7 @@ import 'package:get_workout/features/workout/data/firestore_workout_repository.d
 import 'package:get_workout/features/workout/data/workout_completed_days.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/rest.dart';
+import 'package:get_workout/features/workout/domain/set_selection.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 
@@ -390,6 +391,53 @@ service cloud.firestore {
         (await store.load('u1')).valueOrNull,
         LocalWorkouts(finished: [full]),
       );
+    });
+
+    group('the pick', () {
+      /// What is picked after loading the kept file with [picked] as its
+      /// pick.
+      Future<SetSelection?> loadWithPick(Object? picked) async {
+        await store.save('u1', kept);
+        final path = file('workouts_u1.json');
+        final json = jsonDecode(path.readAsStringSync()) as Map;
+        path.writeAsStringSync(jsonEncode({...json, 'picked': picked}));
+        return (await store.load('u1')).valueOrNull?.picked;
+      }
+
+      test('is kept with the draft only', () async {
+        final withPick = kept.copyWith(picked: () => (exercise: 1, set: 0));
+        await store.save('u1', withPick);
+        expect((await store.load('u1')).valueOrNull, withPick);
+
+        await store.save(
+          'u1',
+          LocalWorkouts(picked: (exercise: 0, set: 0), finished: [full]),
+        );
+        expect(
+          (await store.load('u1')).valueOrNull,
+          LocalWorkouts(finished: [full]),
+        );
+      });
+
+      test('one not in the draft is forgotten, the workout kept', () async {
+        // The draft has two exercises; the squat has three sets.
+        for (final picked in [
+          {'exercise': -1, 'set': 0},
+          {'exercise': 2, 'set': 0},
+          {'exercise': 0, 'set': 3},
+          {'exercise': 0, 'set': -1},
+          // No set of an exercise that has sets.
+          {'exercise': 0},
+          {'exercise': 'squat', 'set': 0},
+          'picked',
+        ]) {
+          expect(await loadWithPick(picked), isNull, reason: '$picked');
+        }
+        expect(await loadWithPick({'exercise': 0, 'set': 2}), (
+          exercise: 0,
+          set: 2,
+        ));
+      });
     });
 
     group('the rest', () {
