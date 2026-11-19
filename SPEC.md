@@ -1628,7 +1628,12 @@ Decisions (the canvases they were drawn on are deleted):
   shows the same rest when opened, and the rest notification follows when
   it ran), none below iOS 17; a tap beside the buttons still opens the
   workout; a Live Activity started by the build before stays undrawable
-  until the app updates it (its content state changed). An activity started by an older build (`RestActivityAttributes`)
+  until the app updates it (its content state changed); "All sets done"
+  with "Finish in the app" once the last set is ticked (LA5).
+- `ForgeGrabber` is on Forge branch `feat/forge-grabber` (PR #75, not
+  merged or tagged); `feat/live-activity` uses it through a local
+  `pubspec_overrides.yaml` only. Merge and tag it, then move every forge
+  `ref` (app and `widgetbook/`) to the tag before this app's PR. An activity started by an older build (`RestActivityAttributes`)
   is no longer seen by the app and stays until iOS ends it; only matters
   for a device that had one running across the update.
 - Workout on the lock screen (Android), not built yet; it needs
@@ -1990,8 +1995,9 @@ the feature you are about to touch, and keep it true when you change it.
   route ever held a Train path), so nothing needs a redirect. The active
   workout is full-screen and can be minimized to a bar above the tabs: it
   rises from the bottom over the tabs (`RisingPage`, both platforms; WO1
-  B) and goes back down to the bar on ⌄ at the top left, back, or a drag
-  down on its header (`DragToClose`: the page follows the finger and
+  B) with a grabber (Forge `ForgeGrabber`, the bottom sheet's) above its
+  header, and goes back down to the bar on ⌄ at the top left, back, or a
+  drag down on the grabber or the header (`DragToClose`: the page follows the finger and
   closes when let go past half way or flung down, else springs back).
   Pages opened above it (picker sheet, exercise detail) open and close as
   before.
@@ -3008,8 +3014,10 @@ the feature you are about to touch, and keep it true when you change it.
   2" or "Warm-up" as the set to do now counts them; the values entered,
   else the suggested ones, in the user's unit; none while both are empty)
   and one dot per set of the exercise, filled where done (narrower above
-  five sets); never the workout's name, except in the exercise's place
-  once every set is done. During a rest: "Rest" and the next set beside
+  five sets); never the workout's name. Once every set is done but the
+  workout is not finished (LA5 A): the same top row (the last exercise's
+  place), "All sets done" large and "Finish in the app" under it, no dots;
+  the expanded island shows the same two lines. During a rest: "Rest" and the next set beside
   the countdown, a bar emptying from the rest's start to its end
   (`ProgressView(timerInterval:)`), and −15 s, +15 s and Skip (iOS 17+,
   hidden below). Dynamic Island compact: the dumbbell and the elapsed
