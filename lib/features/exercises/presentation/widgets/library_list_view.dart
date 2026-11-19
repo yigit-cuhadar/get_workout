@@ -27,6 +27,7 @@ class LibraryListView extends StatefulWidget {
     super.key,
     this.tileBuilder,
     this.focusSearch = false,
+    this.searchHero = false,
     this.searchWhileLoading = false,
     this.sectionsFor,
     this.similar,
@@ -38,6 +39,10 @@ class LibraryListView extends StatefulWidget {
 
   /// Whether the search field takes focus once the page's route is in.
   final bool focusSearch;
+
+  /// Whether the search field flies in from the Exercises tab's; only a
+  /// page pushed from that tab has one to fly from.
+  final bool searchHero;
 
   final bool searchWhileLoading;
 
@@ -314,7 +319,7 @@ class _LibraryListViewState extends State<LibraryListView> {
                 onFilters: () => showFilterSheet(context),
                 filtersLabel: l10n.libraryFilters,
                 activeFilters: _activeCount(state.filter),
-                heroTag: librarySearchHeroTag,
+                heroTag: widget.searchHero ? librarySearchHeroTag : null,
                 summary: summary == null
                     ? null
                     : ForgeChip(

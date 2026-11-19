@@ -76,6 +76,7 @@ class _LibraryPageState extends State<LibraryPage> {
         ),
         body: LibraryListView(
           focusSearch: widget.muscle == null,
+          searchHero: true,
           searchWhileLoading: true,
           sectionsFor: widget.muscle,
           onCreate: (name) => context.push(Routes.customExerciseNamed(name)),
