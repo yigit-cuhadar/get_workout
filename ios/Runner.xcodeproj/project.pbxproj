@@ -20,6 +20,8 @@
 		5A1C0D000000000000000005 /* WorkoutActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000001 /* WorkoutActivityAttributes.swift */; };
 		5A1C0D000000000000000006 /* WorkoutActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000001 /* WorkoutActivityAttributes.swift */; };
 		5A1C0D000000000000000007 /* WorkoutLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000002 /* WorkoutLiveActivity.swift */; };
+		5A1C0D000000000000000016 /* WorkoutActivityIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000015 /* WorkoutActivityIntents.swift */; };
+		5A1C0D000000000000000017 /* WorkoutActivityIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000015 /* WorkoutActivityIntents.swift */; };
 		5A1C0D000000000000000008 /* RestTimer.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000004 /* RestTimer.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -86,6 +88,7 @@
 		7884E8692EC3CC0400C636F2 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		5A1C0D000000000000000001 /* WorkoutActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutActivityAttributes.swift; sourceTree = "<group>"; };
 		5A1C0D000000000000000002 /* WorkoutLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLiveActivity.swift; sourceTree = "<group>"; };
+		5A1C0D000000000000000015 /* WorkoutActivityIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutActivityIntents.swift; sourceTree = "<group>"; };
 		5A1C0D000000000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5A1C0D000000000000000004 /* RestTimer.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RestTimer.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -173,6 +176,7 @@
 			children = (
 				5A1C0D000000000000000001 /* WorkoutActivityAttributes.swift */,
 				5A1C0D000000000000000002 /* WorkoutLiveActivity.swift */,
+				5A1C0D000000000000000015 /* WorkoutActivityIntents.swift */,
 				5A1C0D000000000000000003 /* Info.plist */,
 			);
 			path = RestTimer;
@@ -404,6 +408,7 @@
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
 				5A1C0D000000000000000005 /* WorkoutActivityAttributes.swift in Sources */,
+				5A1C0D000000000000000016 /* WorkoutActivityIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -413,6 +418,7 @@
 			files = (
 				5A1C0D000000000000000006 /* WorkoutActivityAttributes.swift in Sources */,
 				5A1C0D000000000000000007 /* WorkoutLiveActivity.swift in Sources */,
+				5A1C0D000000000000000017 /* WorkoutActivityIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -525,6 +531,8 @@
 					"$(inherited)",
 					"-weak_framework",
 					ActivityKit,
+					"-weak_framework",
+					AppIntents,
 				);
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -713,6 +721,8 @@
 					"$(inherited)",
 					"-weak_framework",
 					ActivityKit,
+					"-weak_framework",
+					AppIntents,
 				);
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -742,6 +752,8 @@
 					"$(inherited)",
 					"-weak_framework",
 					ActivityKit,
+					"-weak_framework",
+					AppIntents,
 				);
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

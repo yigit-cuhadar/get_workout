@@ -222,8 +222,8 @@ abstract final class Routes {
       '$calendar/exercises/${Uri.encodeComponent(id)}';
   static const profile = '/profile';
 
-  /// The workout in progress, full screen above the tabs; push it so going
-  /// back minimizes it.
+  /// The workout in progress, risen from the bottom over the tabs
+  /// ([RisingPage]); push it so closing it minimizes it.
   static const workout = '/workout';
 
   /// [exercisePicker] above the workout.
@@ -446,7 +446,8 @@ GoRouter buildRouter(
       ),
       GoRoute(
         path: Routes.workout,
-        pageBuilder: (_, state) => _pushed(state, const WorkoutPage()),
+        pageBuilder: (_, state) =>
+            RisingPage(key: state.pageKey, child: const WorkoutPage()),
         routes: [
           ..._pickerRoutes(limit: WorkoutLimits.maxExercises, root: root),
           _workoutExercise(Routes.workoutExercise),

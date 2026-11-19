@@ -19,6 +19,7 @@ import 'data/firestore_workout_repository.dart';
 import 'data/ios_workout_lock_screen.dart';
 import 'data/workout_completed_days.dart';
 import 'domain/history_usecases.dart';
+import 'domain/rest.dart';
 import 'domain/rest_chime.dart';
 import 'domain/rest_notifications.dart';
 import 'domain/rest_usecases.dart';
@@ -68,7 +69,17 @@ class WorkoutModule implements FeatureModule {
       ..registerLazySingleton<RestChime>(AudioRestChime.new)
       ..registerLazySingleton<WorkoutLockScreen>(
         () => defaultTargetPlatform == TargetPlatform.iOS
-            ? const IosWorkoutLockScreen()
+            ? IosWorkoutLockScreen(
+                restButtons: () {
+                  final l10n = deviceLocalizations();
+                  final seconds = restExtension.inSeconds;
+                  return (
+                    shorten: l10n.lockScreenRestShorten(seconds),
+                    extend: l10n.restAdd(seconds),
+                    skip: l10n.lockScreenRestSkip,
+                  );
+                },
+              )
             : AndroidWorkoutLockScreen(
                 sl.getAsync<Notifications>(),
                 payload: NotificationPayloads.activeWorkout,
@@ -77,6 +88,7 @@ class WorkoutModule implements FeatureModule {
       ..registerFactory(() => ShowWorkoutOnLockScreen(sl()))
       ..registerFactory(() => ClearWorkoutFromLockScreen(sl()))
       ..registerFactory(() => WatchLockScreenTaps(sl()))
+      ..registerFactory(() => WatchLockScreenRestActions(sl()))
       ..registerFactory(() => ShouldAskRestNotifications(sl()))
       ..registerFactory(() => AllowRestNotifications(sl()))
       ..registerFactory(() => DeclineRestNotifications(sl()))
@@ -161,19 +173,32 @@ class WorkoutModule implements FeatureModule {
           },
           showOnLockScreen: sl(),
           clearLockScreen: sl(),
-          lockScreenText: (workout, next) {
+          lockScreenText: (active, next, unit) {
             final l10n = deviceLocalizations();
             final rest = l10n.restLockScreenTitle;
+            final workout = active.workout!;
             if (next == null) {
-              return (current: null, rest: rest, afterRest: null);
+              return (
+                current: null,
+                set: l10n.lockScreenFinished(workout),
+                rest: rest,
+                afterRest: null,
+              );
             }
             final exercise = workout.exercises[next.exercise];
             return (
               current: l10n.setToDo(exercise, next.set),
+              set: l10n.lockScreenSet(
+                workout,
+                next,
+                active.suggestion(next),
+                unit,
+              ),
               rest: rest,
               afterRest: l10n.restNextText(exercise, next.set),
             );
           },
+          watchRestActions: sl(),
         ),
       )
       ..registerFactory(() => WatchWorkoutsBetween(sl()))

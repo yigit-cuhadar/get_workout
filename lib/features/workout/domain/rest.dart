@@ -4,7 +4,8 @@ import '../../../core/grouping.dart';
 import '../../settings/domain/user_settings.dart';
 import 'workout.dart';
 
-/// What "+15 s" adds to a running rest.
+/// What "+15 s" adds to a running rest, and "−15 s" (lock screen) takes
+/// off.
 const restExtension = Duration(seconds: 15);
 
 /// How far ahead a rest can end: the longest rest (600 s) plus room for
@@ -37,6 +38,14 @@ class Rest extends Equatable {
       endsAt: extended.isAfter(latest) ? latest : extended,
       after: after,
     );
+  }
+
+  /// "−15 s"; null when that leaves nothing of it at [now].
+  Rest? shortenedAt(DateTime now) {
+    final shortened = endsAt.subtract(restExtension);
+    return shortened.isAfter(now)
+        ? Rest(endsAt: shortened, after: after)
+        : null;
   }
 
   Rest detached() => Rest(endsAt: endsAt);

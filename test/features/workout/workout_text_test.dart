@@ -8,6 +8,7 @@ import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/workout/domain/effort.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/features/workout/domain/workout.dart';
+import 'package:get_workout/features/workout/domain/workout_lock_screen.dart';
 import 'package:get_workout/features/workout/presentation/workout_text.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 
@@ -173,6 +174,72 @@ void main() {
         ],
       );
       expect(l10n.setToDo(warmed, 1), 'Bench Press · Warm-up 2 of 2');
+    });
+
+    test('the lock screen shows the set to do now in parts', () {
+      const none = (weightKg: null, reps: null, durationS: null);
+      final w = workout('w', [
+        exercise('Squat', [lift(100, 5)]),
+        bench,
+      ]);
+      expect(
+        l10n.lockScreenSet(
+          w,
+          (exercise: 1, set: 3),
+          (weightKg: 90, reps: 6, durationS: null),
+          WeightUnit.kg,
+        ),
+        const LockScreenSet(
+          exercise: 'Bench Press',
+          position: 'Exercise 2 of 2',
+          // Entered values before the suggestion.
+          line: 'Set 3 of 3 · 80 kg × 8',
+          done: [true, true, true, false],
+        ),
+      );
+      final empty = workout('w', [
+        exercise('Bench Press', [
+          const WorkoutSet(type: SetType.warmup),
+          const WorkoutSet(type: SetType.warmup),
+          const WorkoutSet(type: SetType.drop),
+        ]),
+      ]);
+      expect(
+        l10n
+            .lockScreenSet(
+              empty,
+              (exercise: 0, set: 1),
+              (weightKg: 40, reps: 10, durationS: null),
+              WeightUnit.lb,
+            )
+            .line,
+        'Warm-up 2 of 2 · 88 lb × 10',
+      );
+      expect(
+        l10n.lockScreenSet(empty, (exercise: 0, set: 2), none, WeightUnit.kg),
+        const LockScreenSet(
+          exercise: 'Bench Press',
+          position: 'Exercise 1 of 1',
+          line: 'Drop set 1 of 1',
+          done: [false, false, false],
+        ),
+      );
+    });
+
+    test('with every set done the lock screen says to finish', () {
+      final w = workout('w', [
+        exercise('Squat', [lift(100, 5)]),
+        bench,
+      ]);
+      expect(
+        l10n.lockScreenFinished(w),
+        const LockScreenSet(
+          exercise: 'All sets done',
+          position: 'Exercise 2 of 2',
+          line: 'Finish in the app',
+          done: [],
+        ),
+      );
     });
 
     test('the effort question and row name the set', () {
