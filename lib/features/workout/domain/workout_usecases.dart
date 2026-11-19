@@ -341,3 +341,12 @@ class WatchLockScreenTaps {
 
   Stream<void> call() => _lockScreen.taps();
 }
+
+/// The rest buttons pressed on the workout's lock-screen activity; for one
+/// listener.
+class WatchLockScreenRestActions {
+  const WatchLockScreenRestActions(this._lockScreen);
+  final WorkoutLockScreen _lockScreen;
+
+  Stream<LockScreenRestAction> call() => _lockScreen.restActions();
+}

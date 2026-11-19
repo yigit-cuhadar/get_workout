@@ -669,6 +669,20 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     _keep();
   }
 
+  /// Takes [restExtension] off the running rest, ending it when less is
+  /// left.
+  void shortenRest() {
+    final rest = state.rest;
+    final now = _clock();
+    if (state.status != WorkoutStatus.active ||
+        rest == null ||
+        !rest.runsAt(now)) {
+      return;
+    }
+    emit(state.copyWith(rest: () => rest.shortenedAt(now)));
+    _keep();
+  }
+
   /// Ends the rest now.
   void skipRest() {
     if (state.status != WorkoutStatus.active || state.rest == null) return;

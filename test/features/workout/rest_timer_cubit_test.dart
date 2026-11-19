@@ -47,6 +47,10 @@ void main() {
   late StreamController<SettingsState> settingsStates;
   late MockRestNotifications notifications;
   late MockWorkoutLockScreen lockScreen;
+  late StreamController<LockScreenRestAction> restActions;
+
+  /// The set to do now in parts, when a test wants it.
+  LockScreenSet Function(ActiveWorkoutState, SetRef, WeightUnit)? setText;
 
   /// What this device says: whether it lets the app notify, what a request
   /// answers, and whether the user was asked here.
@@ -89,6 +93,9 @@ void main() {
     lockScreen = MockWorkoutLockScreen();
     when(() => lockScreen.show(any())).thenAnswer((_) async => const Ok(null));
     when(lockScreen.clear).thenAnswer((_) async => const Ok(null));
+    restActions = StreamController.broadcast(sync: true);
+    setText = null;
+    when(lockScreen.restActions).thenAnswer((_) => restActions.stream);
 
     notifications = MockRestNotifications();
     allowed = true;
@@ -118,6 +125,7 @@ void main() {
   tearDown(() async {
     await workoutStates.close();
     await settingsStates.close();
+    await restActions.close();
   });
 
   bool? wish() => settingsState.settings.restTimer.notify;
@@ -158,16 +166,19 @@ void main() {
           ),
           showOnLockScreen: ShowWorkoutOnLockScreen(lockScreen),
           clearLockScreen: ClearWorkoutFromLockScreen(lockScreen),
-          lockScreenText: (workout, next) => (
+          lockScreenText: (active, next, unit) => (
             current: next == null
                 ? null
-                : '${workout.exercises[next.exercise].name} now '
+                : '${active.workout!.exercises[next.exercise].name} now '
                       '${next.set + 1}',
+            set: next == null ? null : setText?.call(active, next, unit),
             rest: 'Rest',
             afterRest: next == null
                 ? null
-                : '${workout.exercises[next.exercise].name} ${next.set + 1}',
+                : '${active.workout!.exercises[next.exercise].name} '
+                      '${next.set + 1}',
           ),
+          watchRestActions: WatchLockScreenRestActions(lockScreen),
           clock: async.getClock(start).now,
         );
         async.flushMicrotasks();
@@ -579,7 +590,12 @@ void main() {
       name: 'Workout w1',
       startedAt: start,
       current: 'squat now 2',
-      rest: RestCountdown(endsAt: endsAt, title: 'Rest', detail: 'squat 2'),
+      rest: RestCountdown(
+        startsAt: start,
+        endsAt: endsAt,
+        title: 'Rest',
+        detail: 'squat 2',
+      ),
     );
 
     void verifyShown(LockScreenWorkout shown) =>
@@ -698,7 +714,7 @@ void main() {
           LockScreenWorkout(
             name: 'Workout w1',
             startedAt: start,
-            rest: RestCountdown(endsAt: end, title: 'Rest'),
+            rest: RestCountdown(startsAt: start, endsAt: end, title: 'Rest'),
           ),
         );
       });
@@ -1121,6 +1137,81 @@ void main() {
         unawaited(cubit.setNotify(true));
         async.flushMicrotasks();
         verifyNotShown();
+      });
+    });
+
+    test('shows the set to do now in parts, weights in the user\'s unit', () {
+      settingsState = SettingsState(base.copyWith(weightUnit: WeightUnit.lb));
+      const parts = LockScreenSet(
+        exercise: 'squat',
+        position: 'Exercise 1 of 1',
+        line: 'Set 2 of 2 · lb',
+        done: [true, false],
+      );
+      setText = (active, next, unit) {
+        expect(active.workout, squats);
+        expect(next, (exercise: 0, set: 1));
+        return LockScreenSet(
+          exercise: 'squat',
+          position: 'Exercise 1 of 1',
+          line: 'Set 2 of 2 · ${unit.name}',
+          done: const [true, false],
+        );
+      };
+      run((async, cubit) {
+        verifyShown(
+          LockScreenWorkout(
+            name: 'Workout w1',
+            startedAt: start,
+            current: 'squat now 2',
+            set: parts,
+          ),
+        );
+      });
+    });
+
+    test('a rest shows from its start, kept when -15 s moves its end', () {
+      runStarted((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        async.elapse(const Duration(seconds: 20));
+        final shortened = end.subtract(restExtension);
+        emitRest(Rest(endsAt: shortened, after: first));
+        async.flushMicrotasks();
+        expect(cubit.state, running(55, of: 75));
+        verifyInOrder([
+          () => lockScreen.show(resting(end)),
+          () => lockScreen.show(resting(shortened)),
+        ]);
+      });
+    });
+  });
+
+  group('lock screen rest buttons', () {
+    test('-15 s, +15 s and Skip change the rest of the workout', () {
+      run((async, cubit) {
+        restActions
+          ..add(LockScreenRestAction.shorten)
+          ..add(LockScreenRestAction.extend)
+          ..add(LockScreenRestAction.skip);
+        async.flushMicrotasks();
+        verifyInOrder([
+          workoutCubit.shortenRest,
+          workoutCubit.extendRest,
+          workoutCubit.skipRest,
+        ]);
+      });
+    });
+
+    test('one pressed before the workout was loaded waits for it', () {
+      workoutState = const ActiveWorkoutState();
+      run((async, cubit) {
+        restActions.add(LockScreenRestAction.extend);
+        async.flushMicrotasks();
+        verifyNever(workoutCubit.extendRest);
+
+        emitRest(Rest(endsAt: start.add(const Duration(seconds: 60))));
+        async.flushMicrotasks();
+        verify(workoutCubit.extendRest).called(1);
       });
     });
   });

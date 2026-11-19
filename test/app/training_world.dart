@@ -583,6 +583,7 @@ class TrainingWorld {
     final lockScreen = _MockLockScreen();
     when(() => lockScreen.show(any())).thenAnswer((_) async => const Ok(null));
     when(lockScreen.clear).thenAnswer((_) async => const Ok(null));
+    when(lockScreen.restActions).thenAnswer((_) => const Stream.empty());
     final rest = RestTimerCubit(
       workout: workout,
       settings: settingsCubit,
@@ -594,7 +595,9 @@ class TrainingWorld {
       text: (_, _) => (title: 'Rest over', body: 'Back to it'),
       showOnLockScreen: ShowWorkoutOnLockScreen(lockScreen),
       clearLockScreen: ClearWorkoutFromLockScreen(lockScreen),
-      lockScreenText: (_, _) => (current: null, rest: 'Rest', afterRest: null),
+      lockScreenText: (_, _, _) =>
+          (current: null, set: null, rest: 'Rest', afterRest: null),
+      watchRestActions: WatchLockScreenRestActions(lockScreen),
       clock: _clock,
     );
     final cardio = _MockCardioRepository();

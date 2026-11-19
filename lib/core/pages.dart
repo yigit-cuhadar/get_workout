@@ -206,3 +206,181 @@ class _SheetRoute<T> extends CupertinoSheetRoute<T> {
   @override
   bool get fullscreenDialog => true;
 }
+
+/// A page that rises from the bottom over everything, full screen, and
+/// goes back down when it closes; a drag down on its [DragToClose] part
+/// closes it too. Pages pushed above it move it as the platform's pushed
+/// pages move the page below.
+class RisingPage<T> extends Page<T> {
+  const RisingPage({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Route<T> createRoute(BuildContext context) => _RisingRoute<T>(this);
+}
+
+class _RisingRoute<T> extends PageRoute<T> {
+  _RisingRoute(RisingPage<T> page) : super(settings: page);
+
+  RisingPage<T> get _page => settings as RisingPage<T>;
+
+  AnimationController get _controller => controller!;
+
+  // Cupertino's, as its full-screen dialog's.
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 500);
+
+  @override
+  Color? get barrierColor => null;
+
+  @override
+  String? get barrierLabel => null;
+
+  @override
+  bool get maintainState => true;
+
+  // Like the full-screen dialog it is: the page below stays where it is.
+  @override
+  bool get fullscreenDialog => true;
+
+  @override
+  String get debugLabel => '${super.debugLabel}(${_page.name})';
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) => _page.child;
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => CupertinoFullscreenDialogTransition(
+    primaryRouteAnimation: animation,
+    secondaryRouteAnimation: kAlwaysDismissedAnimation,
+    linearTransition: navigator!.userGestureInProgress,
+    // Pages above move it as the platform moves a page below.
+    child: Theme.of(context).pageTransitionsTheme.buildTransitions(
+      this,
+      context,
+      kAlwaysCompleteAnimation,
+      secondaryAnimation,
+      child,
+    ),
+  );
+}
+
+/// The part of a [RisingPage] a drag down closes it by: the page follows
+/// the finger and, let go far or fast enough, closes, else springs back. A
+/// page that refuses to close springs back and is asked. Elsewhere it does
+/// nothing.
+class DragToClose extends StatefulWidget {
+  const DragToClose({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<DragToClose> createState() => _DragToCloseState();
+}
+
+class _DragToCloseState extends State<DragToClose> {
+  // As the edge swipe's (_AskingSwipe): a fling in page heights per
+  // second, and how long the page takes to settle.
+  static const _minFling = 1.0;
+  static const _settle = Duration(milliseconds: 350);
+
+  /// The page being dragged.
+  _RisingRoute<dynamic>? _route;
+
+  @override
+  void dispose() {
+    final navigator = _route?.navigator;
+    if (navigator != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (navigator.mounted) navigator.didStopUserGesture();
+      });
+    }
+    super.dispose();
+  }
+
+  void _start(DragStartDetails details) {
+    final route = ModalRoute.of(context);
+    if (route is! _RisingRoute ||
+        !route.isCurrent ||
+        route.willHandlePopInternally ||
+        !route.animation!.isCompleted ||
+        route.navigator!.userGestureInProgress) {
+      return;
+    }
+    _route = route;
+    route.navigator!.didStartUserGesture();
+  }
+
+  void _update(DragUpdateDetails details) {
+    final route = _route;
+    if (route == null) return;
+    final height = MediaQuery.sizeOf(context).height;
+    route._controller.value -= details.primaryDelta! / height;
+  }
+
+  void _end(DragEndDetails details) =>
+      _finish(details.velocity.pixelsPerSecond.dy);
+
+  void _cancel() => _finish(0);
+
+  void _finish(double velocityPx) {
+    final route = _route;
+    if (route == null) return;
+    _route = null;
+    final controller = route._controller;
+    final navigator = route.navigator!;
+    final velocity = velocityPx / MediaQuery.sizeOf(context).height;
+    final close = velocity.abs() >= _minFling
+        ? velocity > 0
+        : controller.value < 0.5;
+    if (close && route.popDisposition != RoutePopDisposition.doNotPop) {
+      navigator.pop();
+      if (controller.isAnimating) {
+        controller.animateBack(
+          0,
+          duration: _settle,
+          curve: Curves.fastEaseInToSlowEaseOut,
+        );
+      }
+    } else {
+      controller.animateTo(
+        1,
+        duration: _settle,
+        curve: Curves.fastEaseInToSlowEaseOut,
+      );
+      // The page's PopScope hears the attempt and asks.
+      if (close) navigator.maybePop();
+    }
+    if (controller.isAnimating) {
+      void stop(AnimationStatus status) {
+        if (status.isAnimating) return;
+        controller.removeStatusListener(stop);
+        navigator.didStopUserGesture();
+      }
+
+      controller.addStatusListener(stop);
+    } else {
+      navigator.didStopUserGesture();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.translucent,
+    onVerticalDragStart: _start,
+    onVerticalDragUpdate: _update,
+    onVerticalDragEnd: _end,
+    onVerticalDragCancel: _cancel,
+    child: widget.child,
+  );
+}

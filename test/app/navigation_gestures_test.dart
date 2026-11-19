@@ -6,6 +6,8 @@ import 'package:get_workout/features/programs/presentation/exercise_picker_page.
 import 'package:get_workout/features/programs/presentation/program_builder_page.dart';
 import 'package:get_workout/features/programs/presentation/programs_page.dart';
 import 'package:get_workout/features/subscription/presentation/paywall_page.dart';
+import 'package:get_workout/features/workout/presentation/workout_bar.dart';
+import 'package:get_workout/features/workout/presentation/workout_page.dart';
 
 import '../features/programs/fixtures.dart';
 import 'flow_harness.dart' as flow;
@@ -42,6 +44,70 @@ void main() {
     await tapText(tester, 'New program');
     expect(find.byType(ProgramBuilderPage), findsOneWidget);
     return app;
+  }
+
+  /// A workout with one exercise, opened from Today.
+  Future<TrainingWorld> openWorkout(WidgetTester tester) async {
+    final app = TrainingWorld(exercises: exercises);
+    await app.start(tester);
+    await openTab(tester, 'Today');
+    await tapText(tester, 'Start empty workout');
+    await tapOn(tester, find.widgetWithText(ForgeButton, 'Add exercises'));
+    await tapText(tester, 'Back Squat');
+    await tapText(tester, 'Add 1 exercise');
+    expect(find.byType(WorkoutPage), findsOneWidget);
+    return app;
+  }
+
+  /// The workout page's header.
+  Finder workoutHeader() => find.descendant(
+    of: find.byType(WorkoutPage),
+    matching: find.byType(ForgeAppBar),
+  );
+
+  /// Whether the workout rises from the bottom as a full-screen page.
+  void expectRising(WidgetTester tester) {
+    // Its grabber above the header.
+    expect(
+      find.descendant(
+        of: find.byType(WorkoutPage),
+        matching: find.byType(ForgeGrabber),
+      ),
+      findsOneWidget,
+    );
+    final route = routeOf(tester, WorkoutPage);
+    expect(route, isA<PageRoute<Object?>>());
+    expect((route as PageRoute<Object?>).fullscreenDialog, isTrue);
+    expect(route.opaque, isTrue);
+    expect(
+      find.ancestor(
+        of: find.byType(WorkoutPage),
+        matching: find.byType(CupertinoFullscreenDialogTransition),
+      ),
+      findsWidgets,
+    );
+  }
+
+  /// A drag down on the workout's header closes it to its bar, which opens
+  /// it again; a short one springs back.
+  Future<void> dragsDownToItsBar(WidgetTester tester) async {
+    await tester.timedDrag(
+      workoutHeader(),
+      const Offset(0, 60),
+      const Duration(seconds: 1),
+    );
+    await settle(tester);
+    expect(find.byType(WorkoutPage), findsOneWidget);
+    expect(routeOf(tester, WorkoutPage).animation!.value, 1);
+
+    await tester.drag(workoutHeader(), const Offset(0, 500));
+    await settle(tester);
+    expect(find.byType(WorkoutPage), findsNothing);
+    expect(find.byType(RunningWorkoutBar), findsOneWidget);
+
+    await tapOn(tester, find.byType(RunningWorkoutBar));
+    expect(find.byType(WorkoutPage), findsOneWidget);
+    expect(find.text('Back Squat'), findsWidgets);
   }
 
   /// Runs [body] with the app on iOS.
@@ -195,6 +261,43 @@ void main() {
       }),
     );
 
+    testWidgets(
+      'the workout rises from the bottom and a drag down puts it back to '
+      'its bar',
+      (tester) => onIOS(() async {
+        final app = await openWorkout(tester);
+        expectRising(tester);
+        await dragsDownToItsBar(tester);
+
+        // ⌄ does the same.
+        await tapOn(tester, find.bySemanticsLabel('Minimize'));
+        expect(find.byType(WorkoutPage), findsNothing);
+        expect(find.byType(RunningWorkoutBar), findsOneWidget);
+
+        await app.stop(tester);
+      }),
+    );
+
+    testWidgets(
+      'the exercise picker opens over the workout and closes back to it',
+      (tester) => onIOS(() async {
+        final app = await openWorkout(tester);
+        await tapOn(
+          tester,
+          find.widgetWithText(ForgeAddButton, 'Add exercises'),
+        );
+        expect(
+          routeOf(tester, ExercisePickerPage),
+          isA<CupertinoSheetRoute<Object?>>(),
+        );
+        await tapOn(tester, find.bySemanticsLabel('Close'));
+        expect(find.byType(WorkoutPage), findsOneWidget);
+        expect(routeOf(tester, WorkoutPage).isCurrent, isTrue);
+
+        await app.stop(tester);
+      }),
+    );
+
     group('the paywall', () {
       late flow.FlowApp app;
 
@@ -218,6 +321,16 @@ void main() {
         }),
       );
     });
+  });
+
+  testWidgets('on Android, the workout rises from the bottom too', (
+    tester,
+  ) async {
+    final app = await openWorkout(tester);
+    expectRising(tester);
+    await dragsDownToItsBar(tester);
+
+    await app.stop(tester);
   });
 
   testWidgets('on Android, adding exercises opens a full-screen dialog', (
