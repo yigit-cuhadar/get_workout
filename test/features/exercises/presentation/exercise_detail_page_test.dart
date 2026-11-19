@@ -149,10 +149,12 @@ void main() {
     expect(find.text('Exercise options'), findsNothing);
   });
 
-  testWidgets('the star toggles the favourite', (tester) async {
+  testWidgets('the ⋯ menu makes it a favourite', (tester) async {
     await pump(tester, DetailReady(bench));
 
-    await tester.tap(find.bySemanticsLabel('Add to favourites'));
+    await tester.tap(find.bySemanticsLabel('Exercise options'));
+    await settle(tester);
+    await tester.tap(find.text('Add to favourites'));
     verify(() => favorites.toggle('bench')).called(1);
   });
 
@@ -225,28 +227,20 @@ void main() {
     expect(find.text('Similar exercises'), findsNothing);
   });
 
-  testWidgets('the bottom bar adds to a workout or a program; no Add on top', (
+  testWidgets('the ⋯ menu adds to a workout or a program; no bottom bar', (
     tester,
   ) async {
     await pump(tester, DetailReady(bench));
 
-    final bar = find.byType(ForgeBottomActionBar);
-    expect(
-      find.descendant(of: bar, matching: find.text('Add to workout')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: bar, matching: find.text('Add to program')),
-      findsOneWidget,
-    );
+    expect(find.byType(ForgeBottomActionBar), findsNothing);
+    await tester.tap(find.bySemanticsLabel('Exercise options'));
+    await settle(tester);
     expect(
       tester.getTopLeft(find.text('Add to workout')).dy,
       lessThan(tester.getTopLeft(find.text('Add to program')).dy),
     );
-    expect(
-      find.descendant(of: find.byType(ForgeAppBar), matching: find.text('Add')),
-      findsNothing,
-    );
+    expect(find.text('Add to favourites'), findsOneWidget);
+    expect(find.text('Edit'), findsNothing);
   });
 
   testWidgets('without a note, Your note offers Add; Save stores it', (

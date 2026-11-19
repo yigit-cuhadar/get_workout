@@ -85,7 +85,7 @@ void main() {
     expect(find.text('Clear all'), findsOneWidget);
     expect(find.text('40 exercises'), findsOneWidget);
     expect(field(tester).summary, isNull);
-    expect(field(tester).heroTag, librarySearchHeroTag);
+    expect(field(tester).heroTag, isNull);
 
     await scrollDown(tester);
     expect(tester.getTopLeft(find.byType(ForgeSearchField)).dy, searchTop);

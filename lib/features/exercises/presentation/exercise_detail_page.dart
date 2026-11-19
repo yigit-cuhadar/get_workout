@@ -70,16 +70,8 @@ class _DetailView extends StatelessWidget {
           title: state is DetailReady
               ? state.exercise.localized(context).name
               : '',
-          actions: [
-            if (state is DetailReady) ...[
-              _FavoriteAction(state.exercise.id),
-              if (state.exercise.isCustom) _CustomActions(state),
-            ],
-          ],
+          actions: [if (state is DetailReady) _MoreAction(state)],
         ),
-        bottomNavigationBar: state is DetailReady
-            ? _AddBar(state.exercise)
-            : null,
         body: switch (state) {
           DetailLoading() || DetailDeleted() => const _Loading(),
           DetailFailed() => ListView(
@@ -111,66 +103,21 @@ class _DetailView extends StatelessWidget {
   }
 }
 
-/// The favourite star: an outline, filled once a favourite.
-class _FavoriteAction extends StatelessWidget {
-  const _FavoriteAction(this.exerciseId);
-
-  final String exerciseId;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final favorite = context.select(
-      (FavoritesCubit cubit) => cubit.state.contains(exerciseId),
-    );
-    return ForgeAppBarAction.icon(
-      icon: ForgeIcons.star,
-      label: favorite ? l10n.favoriteRemove : l10n.favoriteAdd,
-      toggled: favorite,
-      onPressed: () => context.read<FavoritesCubit>().toggle(exerciseId),
-    );
-  }
-}
-
-/// The page's bottom bar: add the exercise to the workout in progress (or
-/// a new one), or to a program.
-class _AddBar extends StatelessWidget {
-  const _AddBar(this.exercise);
-
-  final Exercise exercise;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return ForgeBottomActionBar.stacked(
-      primary: ForgeButton(
-        label: l10n.addToWorkout,
-        onPressed: () => addToWorkout(context, exercise),
-      ),
-      secondary: ForgeButton(
-        label: l10n.addToProgram,
-        variant: ForgeButtonVariant.secondary,
-        onPressed: () => _addToProgram(context),
-      ),
-    );
-  }
-
-  Future<void> _addToProgram(BuildContext context) async {
-    final cubit = sl<AddToProgramCubit>();
-    await addToProgram(context, exercise, cubit);
-    await cubit.close();
-  }
-}
-
-/// A custom exercise's ⋯: Edit, and Delete after asking.
-class _CustomActions extends StatelessWidget {
-  const _CustomActions(this.detail);
+/// The page's ⋯: add the exercise to the workout in progress (or a new
+/// one) or to a program, make it a favourite or not, and for a custom
+/// exercise Edit, and Delete after asking.
+class _MoreAction extends StatelessWidget {
+  const _MoreAction(this.detail);
 
   final DetailReady detail;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final exercise = detail.exercise;
+    final favorite = context.select(
+      (FavoritesCubit cubit) => cubit.state.contains(exercise.id),
+    );
     return ForgeAppBarAction.icon(
       icon: ForgeIcons.moreHoriz,
       label: l10n.detailMore,
@@ -178,21 +125,46 @@ class _CustomActions extends StatelessWidget {
         context: context,
         items: [
           ForgeMenuItem(
-            label: l10n.customEdit,
-            icon: ForgeIcons.edit,
-            onTap: () =>
-                context.push(Routes.customExerciseEdit(detail.exercise.id)),
+            label: l10n.addToWorkout,
+            icon: ForgeIcons.fitnessCenter,
+            onTap: () => addToWorkout(context, exercise),
           ),
-          if (!detail.deleting)
+          ForgeMenuItem(
+            label: l10n.addToProgram,
+            icon: ForgeIcons.editCalendar,
+            onTap: () => _addToProgram(context, exercise),
+          ),
+          ForgeMenuItem(
+            label: favorite ? l10n.favoriteRemove : l10n.favoriteAdd,
+            icon: ForgeIcons.star,
+            onTap: () => context.read<FavoritesCubit>().toggle(exercise.id),
+          ),
+          if (exercise.isCustom) ...[
             ForgeMenuItem(
-              label: l10n.customDelete,
-              icon: ForgeIcons.delete,
-              destructive: true,
-              onTap: () => _delete(context),
+              label: l10n.customEdit,
+              icon: ForgeIcons.edit,
+              onTap: () => context.push(Routes.customExerciseEdit(exercise.id)),
             ),
+            if (!detail.deleting)
+              ForgeMenuItem(
+                label: l10n.customDelete,
+                icon: ForgeIcons.delete,
+                destructive: true,
+                onTap: () => _delete(context),
+              ),
+          ],
         ],
       ),
     );
+  }
+
+  static Future<void> _addToProgram(
+    BuildContext context,
+    Exercise exercise,
+  ) async {
+    final cubit = sl<AddToProgramCubit>();
+    await addToProgram(context, exercise, cubit);
+    await cubit.close();
   }
 
   static Future<void> _delete(BuildContext context) async {

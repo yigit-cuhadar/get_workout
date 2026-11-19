@@ -813,6 +813,12 @@ Decisions (the canvases they were drawn on are deleted):
   in their tab, at `…/swap` (Y2 B). The analytics consent page stays a
   full-screen page (Y3 A); "New exercise" from the picker stays a full
   page over it (Y4 A).
+- Egzersiz · düğmeler (owner's pick, 2026-11-19, canvas
+  https://claude.ai/artifact/TDYNW9cLpTVgihVFauueeN): EB1 G, the owner's
+  own answer after A–F were turned down. The exercise detail's app bar
+  holds only ⋯, its menu: Add to workout, Add to program, Add to / Remove
+  from favourites, and for a custom exercise Edit and Delete. No bottom
+  bar. Supersedes X1 A.
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
@@ -2250,10 +2256,10 @@ the feature you are about to touch, and keep it true when you change it.
   above the picker (`…/pick/new?name=`), which pops with the new id; the
   picker chooses it once the catalogue holds it (5 s at most).
 - **Exercise detail** (UX pass, 2026-11-13, owner's pick; Egzersiz · 7):
-  the app bar holds the name, the favourite star and, for a custom
-  exercise, a menu with Edit and Delete; the bottom bar (stacked) offers
-  "Add to workout" (the workout in progress, else asking to start one)
-  over "Add to program", the same in every place the page opens. The body: the model
+  the app bar holds the name and ⋯, whose menu offers "Add to workout"
+  (the workout in progress, else asking to start one), "Add to program",
+  the favourite and, for a custom exercise, Edit and Delete, the same in
+  every place the page opens (EB1 G). The body: the model
   (front and back) with Main muscles and Also works; for a custom
   exercise the "Custom" tag and its logging type; a card of facts
   (equipment with its alternative sets; for a catalogue exercise also
