@@ -524,4 +524,48 @@ void main() {
     );
     expect(find.byType(ForgeButton), findsNothing);
   });
+
+  testWidgets('a band sets its aside beside the title and its week over a '
+      'bar in parts', (tester) async {
+    await pumpComponent(
+      tester,
+      FeaturedCard(
+        form: FeaturedCardForm.band,
+        eyebrow: 'Active program',
+        title: '82.4 kg',
+        titleAside: '−2.1 kg in 12 weeks',
+        when: '18 % body fat · Nov 14',
+        progress: 0.25,
+        progressSegments: 4,
+        progressLabel: 'Week 1 of 4',
+        progressDetail: '1 of 3 days this week',
+        onTap: () {},
+      ),
+    );
+
+    final title = find.textContaining('82.4 kg');
+    expect(title, findsOneWidget);
+    expect(find.textContaining('−2.1 kg in 12 weeks'), findsOneWidget);
+    expect(find.text('18 % body fat · Nov 14'), findsOneWidget);
+    expect(find.text('Week 1 of 4'), findsOneWidget);
+    expect(find.text('1 of 3 days this week'), findsOneWidget);
+    expect(tester.widget<Progress>(find.byType(Progress)).segments, 4);
+  });
+
+  testWidgets('a summary stat sets its change under the value', (tester) async {
+    await pumpComponent(
+      tester,
+      const FeaturedCard(
+        form: FeaturedCardForm.block,
+        eyebrow: 'Workout done · Today',
+        title: 'Push',
+        stats: [FeaturedStat('Duration', '1 h 12 min', change: '+8 min')],
+      ),
+    );
+
+    expect(
+      tester.getTopLeft(find.text('+8 min')).dy,
+      greaterThan(tester.getBottomLeft(find.text('1 h 12 min')).dy - 1),
+    );
+  });
 }

@@ -831,6 +831,41 @@ Decisions (the canvases they were drawn on are deleted):
   in their tab, at `…/swap` (Y2 B). The analytics consent page stays a
   full-screen page (Y3 A); "New exercise" from the picker stays a full
   page over it (Y4 A).
+- Programlar ve Profil (owner's picks, 2026-11-19, canvas
+  https://claude.ai/artifact/WmZQNYSPgohJ4y3wJSmR6w): PA1 A, PP1 A, PA2 A.
+  While a program day's workout runs, that day's row in the Programs
+  band reads "In progress · 23 min" with Resume at its end, and a tap
+  opens the workout (a free workout leaves the band as it is) (PA1). A
+  free user's Premium card on Profile is a light card: "GetWorkout
+  Premium", the store's trial as a tag when there is one, the three
+  benefits with checks, Get Premium (PP1; a subscriber's card is
+  unchanged). Cards titled with a program, workout or day name show it
+  on one line, shrinking from 26 px to 18 px at least, then ending in
+  "…" (PA2).
+  Also PD1 B, PC1 B, PU1 kept. A program's own page, while active, shows
+  in its top card only the training days as the eyebrow, "Next: <day>"
+  with its date, "Week 2 of 8" and "1 of 3 days this week" over the bar
+  in weeks, and Change days and Stop; no Start (it starts from Today)
+  (PD1). Ready-made programs lists the active program first under "Your
+  active program", "Week 2 of 8 · opens your copy", a tap opening the
+  user's copy; all programs follow (PC1). The catalogue page and the
+  copy's page keep their own layouts (PU1).
+  Focus on open: the workout, exercise, "Your note" and cardio note
+  sheets, the Bar weight dialog and the plate dialog's weight field;
+  Save as program and the new custom exercise page stay unfocused (the
+  set sheet's note too).
+- Live Activity ve antrenman sayfası (owner's picks, 2026-11-19, canvas
+  https://claude.ai/artifact/P7BEPoJoM524GsYGfBnqn6): LA1 A (without the
+  workout's name), LA2 A, LA3 B, LA4 B, WO1 B. Lock screen while a set
+  is due: the app icon with "Exercise 3 of 6" and the small elapsed time
+  on top, the exercise's name large, "Set 2 of 3 · 80 kg × 8" and one dot
+  per set (LA1). During a rest: the countdown, a bar emptying, and
+  −15 s, +15 s and Skip working without opening the app (iOS 17+) (LA2).
+  Compact Dynamic Island: as before while working; during a rest an
+  emptying ring instead of the timer symbol (LA3). Expanded island
+  during a rest: the large countdown and the emptying bar, no buttons
+  (LA4). The workout in progress opens full screen from the bottom with
+  ⌄ at the top left; a drag down closes it to the running bar (WO1).
 - Programlar · çift giriş (owner's pick, 2026-11-19, canvas
   https://claude.ai/artifact/YaFwy2eH5tHzVFa1H1pNAn): PR1 A. Without an
   active program the Programs tab's "No active program" card has no
@@ -842,6 +877,19 @@ Decisions (the canvases they were drawn on are deleted):
   holds only ⋯, its menu: Add to workout, Add to program, Add to / Remove
   from favourites, and for a custom exercise Edit and Delete. No bottom
   bar. Supersedes X1 A.
+- Widget önerileri (owner's picks, 2026-11-19, canvas
+  https://claude.ai/artifact/NrdtEdUxNYu39V78ArNteh): W3 A, W5 A, W6 A,
+  W7 A, W12 A, W13 A; W1, W2, W4, W8, W9, W10, W11 and W14 stay as they
+  are. Progress's Body card shows the change and body fat beside the
+  weight in its dark band, and the 12-week line has its end values and
+  dates (W3). Weekly volume reads "7 of 49 planned sets" and keys its band
+  colours: Under 10 · N, 10–20 · N, Over 20 · N (W5). The Strength card
+  adds the e1RM's 12-week line, last point marked (W6). The Cardio card
+  adds Mon–Sun minute bars in the cardio colour, an empty day a grey line
+  (W7). The workout summary's top card shows each number's difference
+  from the same day's last session, and long durations as "1 h 12 min"
+  (W12). The active program band's bar has one segment per week, this week
+  filling by days, with "1 of 3 days this week" above it (W13).
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a

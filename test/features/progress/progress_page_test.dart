@@ -6,7 +6,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
-import 'package:get_workout/core/sparkline.dart' as app;
+import 'package:get_workout/core/widgets/featured_card.dart';
 import 'package:get_workout/core/widgets/volume_band.dart';
 import 'package:get_workout/features/body/domain/body_entry.dart';
 import 'package:get_workout/features/body/presentation/body_list_cubit.dart';
@@ -80,7 +80,6 @@ void main() {
     status: BodyListStatus.ready,
     snapshot: BodySnapshot(
       latest: (date: DateTime(2026, 11, 13), kg: 82.4),
-      previous: (date: DateTime(2026, 11, 8), kg: 82.8),
       weights: [
         (date: DateTime(2026, 11, 8), kg: 82.8),
         (date: DateTime(2026, 11, 13), kg: 82.4),
@@ -142,6 +141,7 @@ void main() {
           exerciseId: 'bench',
           e1rmKg: 104,
           change: (kg: 3, weeks: 8),
+          trend: [101, 104],
         ),
         exercise: bench,
         trained: true,
@@ -240,18 +240,32 @@ void main() {
   ) async {
     await pumpProgress(tester);
 
-    expect(find.text('82.4 kg'), findsOneWidget);
-    expect(find.text('−0.4 since Nov 8'), findsOneWidget);
-    expect(
-      tester.widgetList<ForgeIcon>(find.byType(ForgeIcon)).map((i) => i.icon),
-      contains(ForgeIcons.trendingDown),
+    // The change over the line's weeks beside the weight, the body fat
+    // with its date under it.
+    expect(find.textContaining('82.4 kg'), findsOneWidget);
+    expect(find.textContaining('−0.4 kg in 1 week'), findsOneWidget);
+    expect(find.text('19.5 % body fat · Nov 1'), findsOneWidget);
+    // The line's highest and lowest weight and its first and last date.
+    final bodyLine = find.descendant(
+      of: find.byType(FeaturedCard),
+      matching: find.byType(TrendLine),
     );
-    expect(find.text('19.5 % fat'), findsOneWidget);
-    expect(find.byType(app.Sparkline), findsOneWidget);
+    expect(bodyLine, findsOneWidget);
+    for (final label in ['82.8', '82.4', 'Nov 8', 'Nov 13']) {
+      expect(
+        find.descendant(of: bodyLine, matching: find.text(label)),
+        findsOneWidget,
+      );
+    }
     expect(find.text('Nov 9–15'), findsOneWidget);
     // The week's total, and the most trained muscle's band.
+    expect(find.text('This week'), findsOneWidget);
     expect(find.text('12 sets'), findsNWidgets(2));
     expect(find.byType(VolumeBand), findsOneWidget);
+    // The band's colours keyed, with how many muscles are in each.
+    expect(find.text('Under 10 · 0'), findsOneWidget);
+    expect(find.text('10–20 · 1'), findsOneWidget);
+    expect(find.text('Over 20 · 0'), findsOneWidget);
     // Strength and Cardio as StatTiles: the figure, its unit apart.
     expect(find.text('Bench Press e1RM'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '104'), findsOneWidget);
@@ -260,13 +274,22 @@ void main() {
       tester.widget<Text>(find.text('+3 in 8 weeks')).style?.color,
       colors(tester).success,
     );
+    // The e1RM's line beside it, the week's minutes per day beside cardio.
+    expect(
+      find.descendant(
+        of: find.widgetWithText(StatTile, '104'),
+        matching: find.byType(TrendLine),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(DayBars), findsOneWidget);
     expect(find.text('this week'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '47.2'), findsOneWidget);
     expect(find.text('2 sessions · 148 min'), findsOneWidget);
     expect(find.text('6,240 / 10,000'), findsOneWidget);
     expect(find.byType(TipBanner), findsNothing);
 
-    await tester.tap(find.text('82.4 kg'));
+    await tester.tap(find.textContaining('82.4 kg'));
     await tester.pumpAndSettle();
     expect(find.text('at /progress/body'), findsOneWidget);
   });
@@ -313,7 +336,7 @@ void main() {
     );
     await pumpProgress(tester);
 
-    expect(find.text('6 / 12 sets'), findsOneWidget);
+    expect(find.text('6 of 12 planned sets'), findsOneWidget);
     expect(find.byType(Progress), findsNWidgets(2));
   });
 
@@ -329,9 +352,15 @@ void main() {
     );
     await pumpProgress(tester);
 
-    expect(find.byType(app.Sparkline), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(FeaturedCard),
+        matching: find.byType(TrendLine),
+      ),
+      findsNothing,
+    );
     expect(find.text('82.4 kg'), findsOneWidget);
-    expect(find.textContaining('since'), findsNothing);
+    expect(find.textContaining('kg in'), findsNothing);
   });
 
   testWidgets('a body list that failed keeps the buttons and retries', (

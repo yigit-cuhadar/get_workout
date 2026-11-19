@@ -59,7 +59,6 @@ void main() {
         status: BodyListStatus.ready,
         snapshot: BodySnapshot(
           latest: (date: DateTime(2026, 11, 10), kg: 82.4),
-          previous: (date: DateTime(2026, 11, 3), kg: 82.8),
           weights: [
             (date: DateTime(2026, 11, 3), kg: 82.8),
             (date: DateTime(2026, 11, 10), kg: 82.4),
@@ -96,7 +95,7 @@ void main() {
       expect(find.text('Upper Lower Strength Builder'), findsWidgets);
 
       await openTab(tester, 'Progress');
-      expect(find.text('82.4 kg'), findsOneWidget);
+      expect(find.textContaining('82.4 kg'), findsOneWidget);
 
       await openTab(tester, 'Today');
       await tapText(tester, 'Start Lower body and core');

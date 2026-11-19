@@ -439,6 +439,15 @@ extension WorkoutText on AppLocalizations {
     return workoutMinutes((duration.inSeconds / 60).round());
   }
 
+  /// As [durationMinutes], an hour or more as "1 h 12 min" ("2 h" on the
+  /// hour).
+  String durationHours(Duration duration) {
+    final minutes = (duration.inSeconds / 60).round();
+    if (minutes < 60) return durationMinutes(duration);
+    final (hours, rest) = (minutes ~/ 60, minutes % 60);
+    return rest == 0 ? workoutHours(hours) : workoutHoursMinutes(hours, rest);
+  }
+
   /// The header of the set table of an exercise of [type]: set, the values
   /// [setValues] gives, then effort.
   List<String> setColumns(LoggingType type, WeightUnit unit) => [

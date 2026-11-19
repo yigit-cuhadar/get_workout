@@ -53,7 +53,6 @@ void main() {
         status: BodyListStatus.ready,
         snapshot: BodySnapshot(
           latest: (date: DateTime(2026, 11, 10), kg: 80.0),
-          previous: (date: DateTime(2026, 8, 25), kg: 85.0),
           weights: [
             (date: DateTime(2026, 8, 25), kg: 85.0),
             (date: DateTime(2026, 11, 10), kg: 80.0),

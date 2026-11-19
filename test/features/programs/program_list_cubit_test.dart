@@ -749,4 +749,37 @@ void main() {
     expect(ready(finished: true).nextDayIndex, isNull);
     expect(ready(programs: [other]).nextDayIndex, isNull);
   });
+
+  test('runProgress counts past weeks in full and this one by its days', () {
+    PlannedDay day(int d, PlannedStatus status) => PlannedDay(
+      date: CalendarDate(2026, 11, d),
+      dayIndex: 0,
+      status: status,
+    );
+    ProgramListState state({int? lengthWeeks, bool finished = false}) =>
+        ProgramListState(
+          status: ProgramListStatus.ready,
+          programs: [program(id: 'p1', lengthWeeks: lengthWeeks)],
+          active: active,
+          week: 2,
+          finished: finished,
+          weekPlan: [
+            day(9, PlannedStatus.done),
+            day(11, PlannedStatus.planned),
+            day(13, PlannedStatus.missed),
+          ],
+        );
+
+    expect(state(lengthWeeks: 4).weekDaysDone, 1);
+    expect(state(lengthWeeks: 4).runProgress, closeTo((1 + 1 / 3) / 4, 1e-9));
+    expect(state().runProgress, isNull);
+    expect(state(lengthWeeks: 4, finished: true).runProgress, isNull);
+    expect(
+      const ProgramListState(
+        week: 1,
+        status: ProgramListStatus.ready,
+      ).runProgress,
+      isNull,
+    );
+  });
 }
