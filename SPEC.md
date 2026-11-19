@@ -174,8 +174,14 @@ reminder times,
 trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
 `exerciseNotes` (exercise id → the user's own note, at most 500
 characters),
-`activeProgram` (`programId`, `weekdays[]` ISO 1-7, `nextDayIndex`,
-`nextDate` `YYYY-MM-DD`, `startedAt` device-clock timestamp).
+`activeProgram` (`programId`, `schedule` (ISO weekday `"1"`-`"7"` → the
+program day index done on it; 1-7 entries, a day may be on several
+weekdays or on none), `nextDayIndex`, `nextDate` `YYYY-MM-DD`, `startedAt`
+device-clock timestamp). Documents written before 2026-11-19 have
+`weekdays[]` (ISO 1-7) instead: they read as those weekdays doing the days
+in turn by ascending weekday (0, 1, 2…), forever, and the next write of
+the active program stores `schedule` and deletes `weekdays`. Rules check
+`schedule` (keys `"1"`-`"7"`, int values 0-6, 1-7 entries).
 
 **`users/{uid}/customExercises/{id}`**: `name`, `loggingType`,
 `mainMuscles[]`, `secondaryMuscles[]`, `equipment[]`, `note`. Max 500.
@@ -317,7 +323,7 @@ Group 3, exercises
 
 Group 4, programs
 - [x] Program builder — days, exercise picker, sets and rep range, rest, supersets and circuits, reorder
-- [x] My programs and schedule — start a program, pick weekdays, missed-day prompt (do today, move, skip)
+- [x] My programs and schedule — start a program, pick its training days (a fixed program day per weekday), missed-day prompt (do today, move, skip)
 
 Group 5, workout
 - [x] Active workout — single list, set rows with last time and goal, set types, drop sets, failure, RIR/RPE, notes, swap, add, reorder, minimize bar, crash recovery
@@ -1115,7 +1121,7 @@ Decisions (the canvases they were drawn on are deleted):
   Skip sit under its row; the band opens nothing, ⋯ holds Open program,
   Change days, Duplicate (opens the copy) and Stop program, which asks
   first (also on the program page); a finished band reads "n workouts"
-  with Run it again (weekday picker first) and New program (the builder);
+  with Run it again (Training days sheet first) and New program (the builder);
   a locked Premium copy keeps its band (lock in the eyebrow, Start opens
   the paywall) with a "Premium has ended" NoticeBanner under it; the
   program lists stay in every state; undrawn states use the components'
@@ -1232,9 +1238,9 @@ Decisions (the canvases they were drawn on are deleted):
   with a muted "Today" ("Mon, Nov 16" later) under it (K2), the week's progress, Start
   <day>, then Change days and Stop (danger) side by side; not active
   "8 weeks · 3 days" / "Not active" with Start program (Replace your
-  active program? first when another runs, then the weekday picker);
-  finished "… · Mon, Wed, Fri" / "Finished" with Run it again (weekday
-  picker) and New program, no Stop; a missed day takes the Today missed
+  active program? first when another runs, then the Training days sheet);
+  finished "… · Mon, Wed, Fri" / "Finished" with Run it again (Training
+  days sheet) and New program, no Stop; a missed day takes the Today missed
   form (You missed Legs on Wed, Nov 11, Missed, Do it today, Move to
   Monday and Skip, no Start; the progress bar stays) with Change days and
   Stop under it; the days
@@ -1249,8 +1255,8 @@ Decisions (the canvases they were drawn on are deleted):
   each round 1:30" over it and its exercises lose their own rest; ▶ on
   each day row, in front of the chevron, starts that day (a locked copy
   opens the paywall); ⋯ Edit,
-  Duplicate, Delete (each with an icon); dialogs are ForgeDialogs; the
-  weekday picker says "Workouts follow these days each week."; load
+  Duplicate, Delete (each with an icon); dialogs are ForgeDialogs; days
+  are picked on the Training days sheet (SD2 E); load
   error is ErrorView with its second line, not found an untitled
   EmptyView.
 - Ready-made program (owner's picks, 2026-11-15): no app-bar title; the
@@ -1265,7 +1271,7 @@ Decisions (the canvases they were drawn on are deleted):
   opening nothing, and no weekly sets; Start this program in the bottom
   bar (Get Premium to start when locked): the user's copy is offered
   first (Open my copy / Add another copy), then Replace your active
-  program?, then the weekday picker; only once the days are picked is
+  program?, then the Training days sheet; only once the days are picked is
   the copy made and started, then its page opens; cancelling leaves the
   page unchanged; a copy that cannot be started stays, not started, with
   "Added, but couldn't start the program. Try again."; ⋯ Duplicate copies it and opens the builder on the
@@ -1508,6 +1514,21 @@ Decisions (the canvases they were drawn on are deleted):
   ListRow.loading rows.
 - Sample dates follow November 2026 (Nov 13 is a Friday; Push is done that
   day).
+- Training days (owner's picks, 2026-11-19, canvas
+  https://claude.ai/artifact/PbEWe754pHbYU5EJ2yrzsJ, SD2 E; SD1 A, a
+  Rest / A / B segmented row per weekday, and SD1 B, weekday chips over a
+  day menu per weekday, were dropped): Start program, Run it again,
+  Change days and Start this program open a "Training days" bottom sheet:
+  "Tap the weekdays each day is done on; a weekday holds one day."; one
+  card per program day titled with its full name (wrapping when long)
+  over seven two-letter weekday chips in the user's week order, the
+  picked ones being the weekdays that day is done on; picking a weekday
+  another day holds moves it to this day; under the cards "5 days a week
+  · Wed and Sun rest" ("7 days a week" with no rest day, nothing while
+  none is picked); Cancel and Save (Start program when starting) side by
+  side, Save off while no weekday is picked. Starting suggests one
+  weekday per day spread over the week, the days in turn. The sheet
+  scrolls when its cards do not fit (large text).
 
 ## Open questions
 
@@ -2107,7 +2128,7 @@ the feature you are about to touch, and keep it true when you change it.
   volume, Cardio (summary, 12-week chart, week headers, Progress card), the
   Body chart's weekly bars and step averages, the Steps "This week" chart,
   the program week plan (and so the done days the workout reminders know),
-  and the order of weekdays in the program day picker, the weekdays of the
+  and the order of weekdays in the Training days sheet, the weekdays of the
   Programs tab's active program card and the program page, and
   the measurement reminder's day. Settings → Appearance → "Week starts on":
   Automatic (default, shown as "Automatic (Monday)" with the day it gives),
@@ -2427,13 +2448,31 @@ the feature you are about to touch, and keep it true when you change it.
 - **Schedule**: `activeProgram.nextDate` is a calendar date stored as a
   `YYYY-MM-DD` string, so it is the same date in every time zone, and
   `startedAt` is a device-clock timestamp because starting a program must
-  work offline. A missed next day stays the next day until the user does
-  it today, moves it to the next training weekday or skips it; the week
-  plan shows it once, on its date. Starting a program whose first day was
-  already done today (a workout of that program and day started today)
-  counts it as done, as finishing it would have: the next day comes next,
-  from the next training weekday (`StartProgram` reads today's done days). A program with a length ends that many
-  weeks after its start date.
+  work offline. Every training weekday does the fixed program day
+  `activeProgram.schedule` gives it, every week (2026-11-19: a 2-day A/B
+  program on Mon A, Tue B, Thu A, Fri B); a day may be on several
+  weekdays or on none. The next day (`nextDayIndex` on `nextDate`) comes
+  first; after it each training weekday does its own day
+  (`ProgramSchedule.upcoming`), so finishing a day plans the first
+  training weekday after it with that weekday's day, whichever day was
+  done. A day moved to another date (Do it today, Move, the calendar's
+  move) keeps its own day there, in place of that date's own day, which
+  is left out that time; the weekdays after it do their own days again.
+  A missed next day stays the next day until the user does it today,
+  moves it to the next training weekday or skips it (the first training
+  weekday from today then does its own day); meanwhile it is planned on
+  the first training weekday from today, and the week plan shows it
+  once, on its date, as missed. Starting a program plans the first
+  training weekday from today with its day; when that is today and the
+  day was already done today (a workout of that program and day started
+  today) it counts as done, as finishing it would have, and the next
+  training weekday comes next (`StartProgram` reads today's done days).
+  Changing the training days replans the next day as the new schedule
+  gives it, from today (from tomorrow when it was planned after today,
+  as today's day may be done). A schedule naming days the program no
+  longer has keeps them inside it (index modulo the day count) and the
+  program page asks to change the training days. A program with a length
+  ends that many weeks after its start date.
 - **Catalogue rules** (`lib/features/programs/domain/catalogue_rules.dart`):
   every catalogue program must pass the app's own `validateProgram`, and
   its session lengths are the app's `estimateDay`. On top: every exercise
@@ -2460,7 +2499,7 @@ the feature you are about to touch, and keep it true when you change it.
   "Start this program" waits for the exercise library and the user's
   programs, and is blocked with a message when a day uses an exercise no
   longer in the library (copying without it would change the program).
-  After the copy offer, the replace confirmation and the weekday picker it
+  After the copy offer, the replace confirmation and the Training days sheet it
   copies the program into `users/{uid}/programs` (`origin: catalog`,
   `sourceId`, `premium` for a premium one) through the builder's
   validation, starts the copy and opens it; when a copy from the same
