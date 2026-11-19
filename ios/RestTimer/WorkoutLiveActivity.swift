@@ -92,8 +92,9 @@ enum ActivityColors {
 
 /// While a set is due: the app's mark, the exercise's place and the
 /// elapsed time on top, the exercise large, the set with its values and
-/// one dot per set of the exercise. With every set done, the workout's
-/// name in the exercise's place.
+/// one dot per set of the exercise. With every set done, the app sends
+/// "All sets done" and "Finish in the app" in their place, without dots
+/// (LA5 A); the workout's name shows only for content without a set.
 struct SetCard: View {
   let state: WorkoutActivityAttributes.ContentState
 

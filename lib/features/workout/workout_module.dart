@@ -178,7 +178,12 @@ class WorkoutModule implements FeatureModule {
             final rest = l10n.restLockScreenTitle;
             final workout = active.workout!;
             if (next == null) {
-              return (current: null, set: null, rest: rest, afterRest: null);
+              return (
+                current: null,
+                set: l10n.lockScreenFinished(workout),
+                rest: rest,
+                afterRest: null,
+              );
             }
             final exercise = workout.exercises[next.exercise];
             return (

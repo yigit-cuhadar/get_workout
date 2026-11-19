@@ -116,6 +116,19 @@ extension WorkoutText on AppLocalizations {
     );
   }
 
+  /// [workout] on the lock screen once every set is done but it is not
+  /// finished: `All sets done` large, `Finish in the app` under it, the
+  /// last exercise's place on top, no dots.
+  LockScreenSet lockScreenFinished(Workout workout) {
+    final count = workout.exercises.length;
+    return LockScreenSet(
+      exercise: lockScreenAllDone,
+      position: lockScreenExercise(count, count),
+      line: lockScreenFinishInApp,
+      done: const [],
+    );
+  }
+
   /// After a rest, set [set] of [exercise] as [setToDo] names it, e.g.
   /// `Next: Bench Press · Warm-up 1 of 2`.
   String restNextText(WorkoutExercise exercise, int set) =>

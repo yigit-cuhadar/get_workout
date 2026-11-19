@@ -20,8 +20,8 @@ class LockScreenWorkout extends Equatable {
   /// when every set is done.
   final String? current;
 
-  /// The same set in parts, where there is room for them (iOS); null when
-  /// every set is done.
+  /// The same set in parts, where there is room for them (iOS); once
+  /// every set is done, that and what to do now in the same parts.
   final LockScreenSet? set;
 
   /// The running rest, shown instead of the workout until it ends.
@@ -34,7 +34,7 @@ class LockScreenWorkout extends Equatable {
 /// The set to do now in parts: its [exercise] large, the exercise's place
 /// in the workout ([position], "Exercise 3 of 6"), the set and its values
 /// ([line], "Set 2 of 3 · 80 kg × 8"), and one entry per set of the
-/// exercise, true where it is done.
+/// exercise, true where it is done (none once every set is done).
 class LockScreenSet extends Equatable {
   const LockScreenSet({
     required this.exercise,

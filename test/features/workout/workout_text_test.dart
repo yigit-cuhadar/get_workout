@@ -226,6 +226,22 @@ void main() {
       );
     });
 
+    test('with every set done the lock screen says to finish', () {
+      final w = workout('w', [
+        exercise('Squat', [lift(100, 5)]),
+        bench,
+      ]);
+      expect(
+        l10n.lockScreenFinished(w),
+        const LockScreenSet(
+          exercise: 'All sets done',
+          position: 'Exercise 2 of 2',
+          line: 'Finish in the app',
+          done: [],
+        ),
+      );
+    });
+
     test('the effort question and row name the set', () {
       final w = workout('w', [
         bench,

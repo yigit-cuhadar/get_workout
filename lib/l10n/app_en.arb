@@ -1655,6 +1655,8 @@
   "lockScreenRestShorten": "−{seconds} s",
   "@lockScreenRestShorten": {"placeholders": {"seconds": {"type": "int"}}},
   "lockScreenRestSkip": "Skip",
+  "lockScreenAllDone": "All sets done",
+  "lockScreenFinishInApp": "Finish in the app",
   "lockScreenChannelName": "Workout in progress",
   "lockScreenChannelDescription": "The workout in progress and its rests, on the lock screen",
   "notificationChannelName": "Workout",
