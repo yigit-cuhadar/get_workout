@@ -52,7 +52,7 @@ void main() {
   final upperLower = program(id: 'p1', lengthWeeks: 8);
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [1, 4],
+    schedule: const {1: 0, 4: 1},
     nextDayIndex: 1,
     nextDate: CalendarDate(2026, 11, 12),
     startedAt: DateTime(2026, 11, 2),
@@ -192,16 +192,23 @@ void main() {
     expect(find.text('Day 2 · Lower'), findsOneWidget);
   });
 
-  testWidgets('Start asks for the weekdays, then starts', (tester) async {
+  testWidgets('Start asks for the training days, then starts', (tester) async {
     await pump(tester, ready());
 
     await tester.tap(find.text('Start program'));
+    // The sheet rises in the frames after it opens.
     await settle(tester);
-    expect(find.text('Pick 2 training days'), findsOneWidget);
-    expect(find.text('Workouts follow these days each week.'), findsOneWidget);
+    await settle(tester);
+    expect(find.text('Training days'), findsOneWidget);
+    expect(
+      find.text(
+        'Tap the weekdays each day is done on; a weekday holds one day.',
+      ),
+      findsOneWidget,
+    );
     await tester.tap(find.text('Start program').last);
     await settle(tester);
-    verify(() => detail.start(ProgramSchedule.suggestedWeekdays(2))).called(1);
+    verify(() => detail.start(const {1: 0, 4: 1})).called(1);
   });
 
   testWidgets('another active program is replaced only once confirmed', (
@@ -214,7 +221,7 @@ void main() {
         programs: [upperLower, arms],
         activeProgram: ActiveProgram(
           programId: 'p2',
-          weekdays: const [1, 4],
+          schedule: const {1: 0, 4: 1},
           nextDayIndex: 0,
           nextDate: CalendarDate(2026, 11, 12),
           startedAt: DateTime(2026, 11, 2),
@@ -227,7 +234,7 @@ void main() {
     expect(find.text('Replace your active program?'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await settle(tester);
-    expect(find.text('Pick 2 training days'), findsNothing);
+    expect(find.text('Training days'), findsNothing);
     verifyNever(() => detail.start(any()));
   });
 
@@ -283,7 +290,8 @@ void main() {
       ready(
         activeProgram: ActiveProgram(
           programId: 'p1',
-          weekdays: const [1],
+          // Made for three days; the program now has two.
+          schedule: const {1: 0, 4: 2},
           nextDayIndex: 1,
           nextDate: CalendarDate(2026, 11, 12),
           startedAt: DateTime(2026, 11, 2),

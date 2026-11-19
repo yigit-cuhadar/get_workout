@@ -12,17 +12,31 @@ import 'package:get_workout/features/programs/domain/program_schedule.dart';
 // Fri 1 Jan 2027.
 CalendarDate d(int year, int month, int day) => CalendarDate(year, month, day);
 
+/// By default Monday day 0, Wednesday day 1, Friday day 2.
 ActiveProgram active({
-  List<int> weekdays = const [1, 3, 5],
+  Map<int, int> schedule = const {1: 0, 3: 1, 5: 2},
   int nextDayIndex = 0,
   required CalendarDate nextDate,
   DateTime? startedAt,
 }) => ActiveProgram(
   programId: 'p1',
-  weekdays: weekdays,
+  schedule: schedule,
   nextDayIndex: nextDayIndex,
   nextDate: nextDate,
   startedAt: startedAt ?? DateTime(2026, 11, 2, 18),
+);
+
+/// A two-day program on four days: Monday A, Tuesday B, Thursday A,
+/// Friday B.
+ActiveProgram ab({
+  int nextDayIndex = 0,
+  required CalendarDate nextDate,
+  DateTime? startedAt,
+}) => active(
+  schedule: const {1: 0, 2: 1, 4: 0, 5: 1},
+  nextDayIndex: nextDayIndex,
+  nextDate: nextDate,
+  startedAt: startedAt,
 );
 
 ProgramSchedule schedule(
@@ -149,30 +163,72 @@ void main() {
     });
   });
 
-  group('weekdays', () {
-    test('suggestions spread one weekday per day over the week', () {
-      expect(ProgramSchedule.suggestedWeekdays(1), [1]);
-      expect(ProgramSchedule.suggestedWeekdays(2), [1, 4]);
-      expect(ProgramSchedule.suggestedWeekdays(3), [1, 3, 5]);
+  group('ActiveProgram', () {
+    test('keeps its schedule by weekday, its weekdays ascending', () {
+      final program = active(
+        schedule: const {5: 1, 1: 0, 4: 0, 2: 1},
+        nextDate: d(2026, 11, 9),
+      );
+      expect(program.schedule.keys, [1, 2, 4, 5]);
+      expect(program.weekdays, [1, 2, 4, 5]);
+      expect(program, ab(nextDate: d(2026, 11, 9)));
+      expect(() => program.schedule[3] = 0, throwsUnsupportedError);
+    });
+  });
+
+  group('schedules', () {
+    test('suggestions do the days in turn, one weekday each', () {
+      expect(ProgramSchedule.suggestedSchedule(1), {1: 0});
+      expect(ProgramSchedule.suggestedSchedule(2), {1: 0, 4: 1});
+      expect(ProgramSchedule.suggestedSchedule(3), {1: 0, 3: 1, 5: 2});
       for (var days = 1; days <= 7; days++) {
+        final suggested = ProgramSchedule.suggestedSchedule(days);
+        expect(suggested.values.toSet(), hasLength(days), reason: '$days');
         expect(
-          ProgramSchedule.isValidWeekdays(
-            ProgramSchedule.suggestedWeekdays(days),
-            days,
-          ),
+          ProgramSchedule.isValidSchedule(suggested, days),
           isTrue,
           reason: '$days',
         );
       }
     });
 
-    test('valid weekdays are distinct, 1 to 7, one per day', () {
-      expect(ProgramSchedule.isValidWeekdays(const [7, 1], 2), isTrue);
-      expect(ProgramSchedule.isValidWeekdays(const [1, 1], 2), isFalse);
-      expect(ProgramSchedule.isValidWeekdays(const [1, 3], 3), isFalse);
-      expect(ProgramSchedule.isValidWeekdays(const [0, 3], 2), isFalse);
-      expect(ProgramSchedule.isValidWeekdays(const [3, 8], 2), isFalse);
-      expect(ProgramSchedule.isValidWeekdays(const [], 0), isTrue);
+    test('in turn: by ascending weekday, cycling through the days', () {
+      expect(ProgramSchedule.inTurn(const [5, 1, 3], 3), {1: 0, 3: 1, 5: 2});
+      expect(ProgramSchedule.inTurn(const [5, 1, 4, 2], 2), {
+        1: 0,
+        2: 1,
+        4: 0,
+        5: 1,
+      });
+      expect(ProgramSchedule.inTurn(const [3, 3, 1], 3), {1: 0, 3: 1});
+      expect(ProgramSchedule.inTurn(const [], 3), isEmpty);
+    });
+
+    test('valid: 1-7 weekdays from 1 to 7, each on a day the program has', () {
+      expect(ProgramSchedule.isValidSchedule(const {7: 0, 1: 1}, 2), isTrue);
+      expect(
+        ProgramSchedule.isValidSchedule(const {1: 0, 2: 1, 4: 0, 5: 1}, 2),
+        isTrue,
+      );
+      // Days may be left out, or done every day.
+      expect(ProgramSchedule.isValidSchedule(const {3: 2}, 3), isTrue);
+      expect(
+        ProgramSchedule.isValidSchedule({for (var w = 1; w <= 7; w++) w: 0}, 1),
+        isTrue,
+      );
+      for (final schedule in [
+        const <int, int>{},
+        const {1: 2},
+        const {1: -1},
+        const {0: 0},
+        const {8: 0},
+      ]) {
+        expect(
+          ProgramSchedule.isValidSchedule(schedule, 2),
+          isFalse,
+          reason: '$schedule',
+        );
+      }
     });
 
     test('the next weekday counts from the given date on', () {
@@ -194,34 +250,71 @@ void main() {
         d(2027, 1, 5),
       );
     });
+
+    test('a weekday does its own day, inside a program that lost days', () {
+      final plan = schedule(active(nextDate: d(2026, 11, 9)), dayCount: 2);
+      expect(
+        [
+          for (final w in const [1, 3, 5]) plan.dayOn(w),
+        ],
+        [0, 1, 0],
+      );
+    });
   });
 
   group('start', () {
-    test('plans day one for the first selected weekday from today', () {
+    test('plans the first training weekday from today, with its day', () {
       final now = DateTime(2026, 11, 11, 21);
       expect(
         ProgramSchedule.start(
           programId: 'p1',
-          weekdays: const [5, 1, 3],
+          schedule: const {5: 2, 1: 0, 3: 1},
           today: d(2026, 11, 11),
           startedAt: now,
         ),
-        active(nextDate: d(2026, 11, 11), startedAt: now),
+        active(nextDayIndex: 1, nextDate: d(2026, 11, 11), startedAt: now),
       );
       expect(
         ProgramSchedule.start(
           programId: 'p1',
-          weekdays: const [1, 3, 5],
+          schedule: const {1: 0, 3: 1, 5: 2},
           today: d(2026, 11, 14),
           startedAt: now,
-        ).nextDate,
-        d(2026, 11, 16),
+        ),
+        active(nextDate: d(2026, 11, 16), startedAt: now),
+      );
+    });
+
+    test('an A/B program started on a rest day begins with the next A', () {
+      final now = DateTime(2026, 11, 11, 21);
+      expect(
+        ProgramSchedule.start(
+          programId: 'p1',
+          schedule: const {1: 0, 2: 1, 4: 0, 5: 1},
+          today: d(2026, 11, 11),
+          startedAt: now,
+        ),
+        ab(nextDate: d(2026, 11, 12), startedAt: now),
       );
     });
   });
 
   group('upcoming', () {
-    test('each next day falls on the next selected weekday', () {
+    test('each training weekday does its own day, every week', () {
+      final plan = schedule(ab(nextDate: d(2026, 11, 9)), dayCount: 2);
+      expect(take(plan, 8), [
+        (0, d(2026, 11, 9)),
+        (1, d(2026, 11, 10)),
+        (0, d(2026, 11, 12)),
+        (1, d(2026, 11, 13)),
+        (0, d(2026, 11, 16)),
+        (1, d(2026, 11, 17)),
+        (0, d(2026, 11, 19)),
+        (1, d(2026, 11, 20)),
+      ]);
+    });
+
+    test('one day per weekday follows the weekdays', () {
       final plan = schedule(active(nextDate: d(2026, 11, 11), nextDayIndex: 1));
       expect(take(plan, 5), [
         (1, d(2026, 11, 11)),
@@ -232,66 +325,86 @@ void main() {
       ]);
     });
 
-    test('follows a next date off the selected weekdays', () {
+    test('a day moved off the training weekdays keeps its own day', () {
       final plan = schedule(active(nextDate: d(2026, 11, 12)));
-      expect(take(plan, 2), [(0, d(2026, 11, 12)), (1, d(2026, 11, 13))]);
+      expect(take(plan, 3), [
+        (0, d(2026, 11, 12)),
+        (2, d(2026, 11, 13)),
+        (0, d(2026, 11, 16)),
+      ]);
+    });
+
+    test('a day moved onto a training weekday takes that date\'s place', () {
+      final plan = schedule(active(nextDate: d(2026, 11, 13)));
+      expect(take(plan, 3), [
+        (0, d(2026, 11, 13)),
+        (0, d(2026, 11, 16)),
+        (1, d(2026, 11, 18)),
+      ]);
     });
 
     test('runs across month and year ends', () {
       final plan = schedule(
-        active(weekdays: const [4], nextDate: d(2026, 12, 24)),
+        active(
+          schedule: const {4: 1},
+          nextDayIndex: 1,
+          nextDate: d(2026, 12, 24),
+        ),
         dayCount: 2,
       );
       expect(take(plan, 3), [
-        (0, d(2026, 12, 24)),
+        (1, d(2026, 12, 24)),
         (1, d(2026, 12, 31)),
-        (0, d(2027, 1, 7)),
+        (1, d(2027, 1, 7)),
       ]);
     });
 
     test('keeps calendar dates across DST changes', () {
       final plan = schedule(
         active(
-          weekdays: const [1, 2, 3, 4, 5, 6, 7],
+          schedule: {for (var w = 1; w <= 7; w++) w: w - 1},
+          nextDayIndex: 5,
           nextDate: d(2026, 10, 24),
         ),
         dayCount: 7,
       );
+      final days = take(plan, 10);
       expect(
-        [for (final (_, date) in take(plan, 10)) date],
+        [for (final (_, date) in days) date],
         [for (var day = 24; day <= 33; day++) d(2026, 10, day)],
       );
+      expect([
+        for (final (index, date) in days) index == date.weekday - 1,
+      ], everyElement(isTrue));
     });
 
     test('a program that lost days continues inside it', () {
       final plan = schedule(
         active(nextDayIndex: 4, nextDate: d(2026, 11, 11)),
-        dayCount: 3,
+        dayCount: 2,
       );
-      expect(plan.nextDayIndex, 1);
-      expect(take(plan, 1), [(1, d(2026, 11, 11))]);
-    });
-
-    test('a missed next day comes first again, from today on', () {
-      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 9)));
-      expect(take(plan, 3, today: d(2026, 11, 12)), [
-        (1, d(2026, 11, 13)),
-        (2, d(2026, 11, 16)),
-        (0, d(2026, 11, 18)),
+      expect(plan.nextDayIndex, 0);
+      expect(take(plan, 3), [
+        (0, d(2026, 11, 11)),
+        (0, d(2026, 11, 13)),
+        (0, d(2026, 11, 16)),
       ]);
-      expect(take(plan, 1, today: d(2026, 11, 13)), [(1, d(2026, 11, 13))]);
     });
 
-    test('more days than weekdays cycle over the weeks', () {
-      final plan = schedule(
-        active(weekdays: const [2, 4], nextDate: d(2026, 11, 10)),
-        dayCount: 3,
-      );
-      expect(take(plan, 4), [
+    test('a missed next day comes first again, on the first training '
+        'weekday from today, in place of its own day', () {
+      final plan = schedule(ab(nextDate: d(2026, 11, 9)), dayCount: 2);
+      // Wednesday is a rest day: Monday's A goes on Thursday.
+      expect(take(plan, 3, today: d(2026, 11, 11)), [
+        (0, d(2026, 11, 12)),
+        (1, d(2026, 11, 13)),
+        (0, d(2026, 11, 16)),
+      ]);
+      // On Tuesday it comes in place of Tuesday's B.
+      expect(take(plan, 3, today: d(2026, 11, 10)), [
         (0, d(2026, 11, 10)),
-        (1, d(2026, 11, 12)),
-        (2, d(2026, 11, 17)),
-        (0, d(2026, 11, 19)),
+        (0, d(2026, 11, 12)),
+        (1, d(2026, 11, 13)),
       ]);
     });
   });
@@ -309,6 +422,30 @@ void main() {
         planned(d(2026, 11, 18), 1),
         planned(d(2026, 11, 20), 2),
       ]);
+    });
+
+    test('an A/B week: done days, then the rest as the weekdays give', () {
+      final plan = schedule(ab(nextDate: d(2026, 11, 12)), dayCount: 2);
+      final week = plan.weekPlan(
+        d(2026, 11, 11),
+        firstWeekday: DateTime.monday,
+        completed: [
+          CompletedDay(date: d(2026, 11, 9), dayIndex: 0),
+          CompletedDay(date: d(2026, 11, 10), dayIndex: 1),
+        ],
+      );
+      expect(week, [
+        done(d(2026, 11, 9), 0),
+        done(d(2026, 11, 10), 1),
+        planned(d(2026, 11, 12), 0),
+        planned(d(2026, 11, 13), 1),
+      ]);
+      // 2 of 4 days this week.
+      expect(
+        week.where((day) => day.status == PlannedStatus.done),
+        hasLength(2),
+      );
+      expect(week, hasLength(4));
     });
 
     test('marks done days and plans the rest of the week', () {
@@ -350,9 +487,9 @@ void main() {
     });
 
     test('today is planned, not missed', () {
-      final plan = schedule(active(nextDate: d(2026, 11, 13)));
+      final plan = schedule(active(nextDayIndex: 2, nextDate: d(2026, 11, 13)));
       expect(plan.weekPlan(d(2026, 11, 13), firstWeekday: DateTime.monday), [
-        planned(d(2026, 11, 13), 0),
+        planned(d(2026, 11, 13), 2),
       ]);
     });
 
@@ -360,13 +497,13 @@ void main() {
       final plan = schedule(active(nextDayIndex: 2, nextDate: d(2026, 11, 6)));
       expect(plan.weekPlan(d(2026, 11, 11), firstWeekday: DateTime.monday), [
         planned(d(2026, 11, 11), 2),
-        planned(d(2026, 11, 13), 0),
+        planned(d(2026, 11, 13), 2),
       ]);
     });
 
     test('shows nothing before the first planned day', () {
       final plan = schedule(
-        active(weekdays: const [3], nextDate: d(2026, 11, 11)),
+        active(schedule: const {3: 0}, nextDate: d(2026, 11, 11)),
         dayCount: 1,
       );
       expect(plan.weekPlan(d(2026, 11, 10), firstWeekday: DateTime.monday), [
@@ -391,7 +528,7 @@ void main() {
 
     test('a week across a month end', () {
       final plan = schedule(
-        active(weekdays: const [1, 4], nextDate: d(2026, 11, 30)),
+        active(schedule: const {1: 0, 4: 1}, nextDate: d(2026, 11, 30)),
         dayCount: 2,
       );
       expect(plan.weekPlan(d(2026, 12, 1), firstWeekday: DateTime.monday), [
@@ -403,7 +540,7 @@ void main() {
     test('a week across a year end', () {
       final plan = schedule(
         active(
-          weekdays: const [2, 5, 7],
+          schedule: const {2: 0, 5: 1, 7: 2},
           nextDayIndex: 1,
           nextDate: d(2027, 1, 1),
         ),
@@ -424,7 +561,7 @@ void main() {
 
     test('a week across a DST change', () {
       final plan = schedule(
-        active(weekdays: const [6, 7], nextDate: d(2026, 10, 24)),
+        active(schedule: const {6: 0, 7: 1}, nextDate: d(2026, 10, 24)),
         dayCount: 2,
       );
       expect(plan.weekPlan(d(2026, 10, 25), firstWeekday: DateTime.monday), [
@@ -454,14 +591,14 @@ void main() {
 
     test('a planned day done on its date shows only as done', () {
       // Done today, but the program did not move on.
-      final plan = schedule(active(nextDate: d(2026, 11, 11)));
+      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
       expect(
         plan.weekPlan(
           d(2026, 11, 11),
           firstWeekday: DateTime.monday,
-          completed: [CompletedDay(date: d(2026, 11, 11), dayIndex: 0)],
+          completed: [CompletedDay(date: d(2026, 11, 11), dayIndex: 1)],
         ),
-        [done(d(2026, 11, 11), 0), planned(d(2026, 11, 13), 1)],
+        [done(d(2026, 11, 11), 1), planned(d(2026, 11, 13), 2)],
       );
     });
 
@@ -479,7 +616,7 @@ void main() {
     });
 
     test('another day done on a planned date leaves it planned', () {
-      final plan = schedule(active(nextDate: d(2026, 11, 11)));
+      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
       expect(
         plan.weekPlan(
           d(2026, 11, 11),
@@ -488,21 +625,21 @@ void main() {
         ),
         [
           done(d(2026, 11, 11), 2),
-          planned(d(2026, 11, 11), 0),
-          planned(d(2026, 11, 13), 1),
+          planned(d(2026, 11, 11), 1),
+          planned(d(2026, 11, 13), 2),
         ],
       );
     });
 
     test('covers any range, both ends included', () {
-      final plan = schedule(active(nextDate: d(2026, 11, 11)));
+      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
       expect(
         plan.plan(d(2026, 11, 11), from: d(2026, 11, 13), to: d(2026, 11, 20)),
         [
-          planned(d(2026, 11, 13), 1),
-          planned(d(2026, 11, 16), 2),
-          planned(d(2026, 11, 18), 0),
-          planned(d(2026, 11, 20), 1),
+          planned(d(2026, 11, 13), 2),
+          planned(d(2026, 11, 16), 0),
+          planned(d(2026, 11, 18), 1),
+          planned(d(2026, 11, 20), 2),
         ],
       );
     });
@@ -522,7 +659,7 @@ void main() {
     test('ends with the program', () {
       // Four weeks from Monday 2 November: the last day is 27 November.
       final plan = schedule(
-        active(weekdays: const [5], nextDate: d(2026, 11, 13)),
+        active(schedule: const {5: 0}, nextDate: d(2026, 11, 13)),
         dayCount: 1,
         lengthWeeks: 4,
       );
@@ -538,139 +675,269 @@ void main() {
   });
 
   group('missed days', () {
-    final missedMonday = active(nextDayIndex: 1, nextDate: d(2026, 11, 9));
+    // Monday A, Tuesday B, Thursday A, Friday B; Monday's A missed.
+    final missedMonday = ab(nextDate: d(2026, 11, 9));
+    ProgramSchedule plan() => schedule(missedMonday, dayCount: 2);
 
     test('a next date before today is missed', () {
-      expect(schedule(missedMonday).isMissed(d(2026, 11, 10)), isTrue);
-      expect(schedule(missedMonday).isMissed(d(2026, 11, 9)), isFalse);
-      expect(schedule(missedMonday).isMissed(d(2026, 11, 8)), isFalse);
+      expect(plan().isMissed(d(2026, 11, 10)), isTrue);
+      expect(plan().isMissed(d(2026, 11, 9)), isFalse);
+      expect(plan().isMissed(d(2026, 11, 8)), isFalse);
     });
 
-    test('do it today: the following days follow from today', () {
-      final next = schedule(missedMonday).doToday(d(2026, 11, 12));
-      expect(next, missedMonday.copyWith(nextDate: d(2026, 11, 12)));
-      expect(take(schedule(next), 3), [
-        (1, d(2026, 11, 12)),
-        (2, d(2026, 11, 13)),
-        (0, d(2026, 11, 16)),
-      ]);
-      expect(schedule(next).isMissed(d(2026, 11, 12)), isFalse);
-    });
-
-    test('move: to the next selected weekday after today', () {
-      final fromThursday = schedule(missedMonday)
-          .moveToNextWeekday(d(2026, 11, 12));
-      expect(fromThursday.nextDate, d(2026, 11, 13));
-      expect(fromThursday.nextDayIndex, 1);
-      // Today is a training day: the missed day goes after it.
-      final fromWednesday = schedule(missedMonday)
-          .moveToNextWeekday(d(2026, 11, 11));
-      expect(take(schedule(fromWednesday), 3), [
+    test('do it today: today, then the weekdays\' own days', () {
+      final onRestDay = plan().doToday(d(2026, 11, 11));
+      expect(onRestDay, missedMonday.copyWith(nextDate: d(2026, 11, 11)));
+      expect(take(schedule(onRestDay, dayCount: 2), 3), [
+        (0, d(2026, 11, 11)),
+        (0, d(2026, 11, 12)),
         (1, d(2026, 11, 13)),
-        (2, d(2026, 11, 16)),
-        (0, d(2026, 11, 18)),
+      ]);
+      expect(
+        schedule(onRestDay, dayCount: 2).isMissed(d(2026, 11, 11)),
+        isFalse,
+      );
+      // On Tuesday, A takes the place of Tuesday's B.
+      final onTuesday = plan().doToday(d(2026, 11, 10));
+      expect(take(schedule(onTuesday, dayCount: 2), 2), [
+        (0, d(2026, 11, 10)),
+        (0, d(2026, 11, 12)),
       ]);
     });
 
-    test('skip: the day after comes next, from today on', () {
-      final onTrainingDay = schedule(missedMonday).skip(d(2026, 11, 11));
-      expect(
-        onTrainingDay,
-        missedMonday.copyWith(nextDayIndex: 2, nextDate: d(2026, 11, 11)),
-      );
-      final onRestDay = schedule(missedMonday).skip(d(2026, 11, 12));
-      expect(onRestDay.nextDate, d(2026, 11, 13));
+    test('move: to the next training weekday after today, keeping its day', () {
+      final fromTuesday = plan().moveToNextWeekday(d(2026, 11, 10));
+      expect(fromTuesday, missedMonday.copyWith(nextDate: d(2026, 11, 12)));
+      final fromThursday = plan().moveToNextWeekday(d(2026, 11, 12));
+      // A on Friday, in place of Friday's B.
+      expect(take(schedule(fromThursday, dayCount: 2), 3), [
+        (0, d(2026, 11, 13)),
+        (0, d(2026, 11, 16)),
+        (1, d(2026, 11, 17)),
+      ]);
     });
 
-    test('skipping the last day wraps to the first', () {
-      final last = active(nextDayIndex: 2, nextDate: d(2026, 11, 9));
-      expect(schedule(last).skip(d(2026, 11, 10)).nextDayIndex, 0);
+    test('skip: the first training weekday from today does its own day', () {
+      expect(
+        plan().skip(d(2026, 11, 10)),
+        missedMonday.copyWith(nextDayIndex: 1, nextDate: d(2026, 11, 10)),
+      );
+      expect(
+        plan().skip(d(2026, 11, 11)),
+        missedMonday.copyWith(nextDayIndex: 0, nextDate: d(2026, 11, 12)),
+      );
     });
 
     test('resolutions work across a year end', () {
       final missedNewYearsEve = active(
-        weekdays: const [4],
+        schedule: const {4: 1},
+        nextDayIndex: 1,
         nextDate: d(2026, 12, 31),
       );
       final today = d(2027, 1, 2);
       final plan = schedule(missedNewYearsEve, dayCount: 2);
-      expect(plan.moveToNextWeekday(today).nextDate, d(2027, 1, 7));
+      expect(
+        plan.moveToNextWeekday(today),
+        missedNewYearsEve.copyWith(nextDate: d(2027, 1, 7)),
+      );
       expect(
         plan.skip(today),
-        missedNewYearsEve.copyWith(nextDayIndex: 1, nextDate: d(2027, 1, 7)),
+        missedNewYearsEve.copyWith(nextDate: d(2027, 1, 7)),
       );
       expect(plan.doToday(today).nextDate, today);
     });
   });
 
   group('complete', () {
-    test('on a planned day: the next day on the next weekday', () {
+    test('on a planned day: the next training weekday with its day', () {
       final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
       expect(
-        plan.complete(dayIndex: 1, on: d(2026, 11, 11)),
+        plan.complete(on: d(2026, 11, 11)),
         active(nextDayIndex: 2, nextDate: d(2026, 11, 13)),
       );
     });
 
-    test('on a day off the plan still advances', () {
-      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
-      expect(
-        plan.complete(dayIndex: 1, on: d(2026, 11, 10)),
-        active(nextDayIndex: 2, nextDate: d(2026, 11, 11)),
-      );
-      expect(
-        plan.complete(dayIndex: 1, on: d(2026, 11, 14)),
-        active(nextDayIndex: 2, nextDate: d(2026, 11, 16)),
-      );
+    test('an A/B week: A, B, A, B and A again on Monday', () {
+      var program = ab(nextDate: d(2026, 11, 9));
+      final days = <(int, CalendarDate)>[];
+      for (var i = 0; i < 5; i++) {
+        days.add((program.nextDayIndex, program.nextDate));
+        program = schedule(program, dayCount: 2).complete(on: program.nextDate);
+      }
+      expect(days, [
+        (0, d(2026, 11, 9)),
+        (1, d(2026, 11, 10)),
+        (0, d(2026, 11, 12)),
+        (1, d(2026, 11, 13)),
+        (0, d(2026, 11, 16)),
+      ]);
     });
 
-    test('the last day wraps to the first', () {
-      final plan = schedule(active(nextDayIndex: 2, nextDate: d(2026, 11, 13)));
+    test('on a day off the plan still moves on from then', () {
+      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
       expect(
-        plan.complete(dayIndex: 2, on: d(2026, 11, 13)),
-        active(nextDayIndex: 0, nextDate: d(2026, 11, 16)),
+        plan.complete(on: d(2026, 11, 10)),
+        active(nextDayIndex: 1, nextDate: d(2026, 11, 11)),
+      );
+      expect(
+        plan.complete(on: d(2026, 11, 14)),
+        active(nextDate: d(2026, 11, 16)),
       );
     });
 
     test('one weekday a week: a week later, across the year end', () {
       final plan = schedule(
-        active(weekdays: const [4], nextDate: d(2026, 12, 31)),
+        active(schedule: const {4: 0}, nextDate: d(2026, 12, 31)),
         dayCount: 1,
       );
       expect(
-        plan.complete(dayIndex: 0, on: d(2026, 12, 31)),
-        active(weekdays: const [4], nextDate: d(2027, 1, 7)),
+        plan.complete(on: d(2026, 12, 31)),
+        active(schedule: const {4: 0}, nextDate: d(2027, 1, 7)),
       );
     });
 
-    test('a missed day done late moves the plan on from then', () {
-      final plan = schedule(active(nextDate: d(2026, 11, 9)));
+    test('a missed or moved day done late: the next weekday\'s own day', () {
+      final missedPlan = schedule(active(nextDate: d(2026, 11, 9)));
       expect(
-        plan.complete(dayIndex: 0, on: d(2026, 11, 12)),
-        active(nextDayIndex: 1, nextDate: d(2026, 11, 13)),
+        missedPlan.complete(on: d(2026, 11, 12)),
+        active(nextDayIndex: 2, nextDate: d(2026, 11, 13)),
+      );
+      final moved = schedule(active(nextDate: d(2026, 11, 12)));
+      expect(
+        moved.complete(on: d(2026, 11, 12)),
+        active(nextDayIndex: 2, nextDate: d(2026, 11, 13)),
       );
     });
   });
 
-  group('withWeekdays', () {
-    test('replans a missed day from today', () {
+  group('moving the next day', () {
+    // Monday A, Tuesday B, Thursday A, Friday B; Thursday's A is next.
+    final thursday = ab(nextDate: d(2026, 11, 12));
+    ProgramSchedule plan(ActiveProgram active) => schedule(active, dayCount: 2);
+
+    test('earlier: it takes its date along, so that weekday rests', () {
+      final moved = plan(thursday).moveNext(d(2026, 11, 11));
+      expect(
+        moved,
+        thursday.copyWith(
+          nextDate: d(2026, 11, 11),
+          movedFrom: () => d(2026, 11, 12),
+        ),
+      );
+      expect(take(plan(moved), 3, today: d(2026, 11, 10)), [
+        (0, d(2026, 11, 11)),
+        (1, d(2026, 11, 13)),
+        (0, d(2026, 11, 16)),
+      ]);
+      expect(
+        plan(moved).weekPlan(d(2026, 11, 10), firstWeekday: DateTime.monday),
+        [planned(d(2026, 11, 11), 0), planned(d(2026, 11, 13), 1)],
+      );
+    });
+
+    test('earlier: done, the weekday after its own date comes next', () {
+      final moved = plan(thursday).moveNext(d(2026, 11, 11));
+      expect(
+        plan(moved).complete(on: d(2026, 11, 11)),
+        ab(nextDayIndex: 1, nextDate: d(2026, 11, 13)),
+      );
+    });
+
+    test('earlier twice: it keeps the first date it came from', () {
+      final once = plan(thursday).moveNext(d(2026, 11, 11));
+      final twice = plan(once).moveNext(d(2026, 11, 10));
+      expect(twice.movedFrom, d(2026, 11, 12));
+      expect(take(plan(twice), 2, today: d(2026, 11, 10)), [
+        (0, d(2026, 11, 10)),
+        (1, d(2026, 11, 13)),
+      ]);
+    });
+
+    test('later: the training weekdays between are left out', () {
+      final moved = plan(thursday).moveNext(d(2026, 11, 14));
+      expect(moved, thursday.copyWith(nextDate: d(2026, 11, 14)));
+      expect(take(plan(moved), 3), [
+        (0, d(2026, 11, 14)),
+        (0, d(2026, 11, 16)),
+        (1, d(2026, 11, 17)),
+      ]);
+    });
+
+    test('earlier, then missed: it comes back on its own date', () {
+      final moved = plan(thursday).moveNext(d(2026, 11, 11));
+      final missed = plan(moved);
+      expect(missed.isMissed(d(2026, 11, 12)), isTrue);
+      expect(take(missed, 2, today: d(2026, 11, 12)), [
+        (0, d(2026, 11, 12)),
+        (1, d(2026, 11, 13)),
+      ]);
+      // Skipped, its own date still rests.
+      expect(
+        missed.skip(d(2026, 11, 12)),
+        ab(nextDayIndex: 1, nextDate: d(2026, 11, 13)),
+      );
+    });
+
+    test('new training days forget where it came from', () {
+      final moved = plan(thursday).moveNext(d(2026, 11, 11));
+      expect(
+        plan(moved).withSchedule(const {4: 0, 5: 1}, d(2026, 11, 10)),
+        active(schedule: const {4: 0, 5: 1}, nextDate: d(2026, 11, 12)),
+      );
+    });
+  });
+
+  group('withSchedule', () {
+    test('replans a missed day from today, with today\'s day', () {
       final plan = schedule(active(nextDate: d(2026, 11, 9)));
       expect(
-        plan.withWeekdays(const [2, 4, 6], d(2026, 11, 12)),
-        active(weekdays: const [2, 4, 6], nextDate: d(2026, 11, 12)),
+        plan.withSchedule(const {2: 0, 4: 1, 6: 2}, d(2026, 11, 12)),
+        active(
+          schedule: const {2: 0, 4: 1, 6: 2},
+          nextDayIndex: 1,
+          nextDate: d(2026, 11, 12),
+        ),
       );
     });
 
     test('a day planned after today stays after today', () {
-      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 13)));
+      final plan = schedule(active(nextDayIndex: 2, nextDate: d(2026, 11, 13)));
       expect(
-        plan.withWeekdays(const [2, 3, 7], d(2026, 11, 11)),
+        plan.withSchedule(const {2: 0, 3: 1, 7: 2}, d(2026, 11, 11)),
         active(
-          weekdays: const [2, 3, 7],
-          nextDayIndex: 1,
+          schedule: const {2: 0, 3: 1, 7: 2},
+          nextDayIndex: 2,
           nextDate: d(2026, 11, 15),
         ),
       );
+    });
+
+    test('today\'s day not done yet stays today, as the new one gives', () {
+      final plan = schedule(active(nextDayIndex: 1, nextDate: d(2026, 11, 11)));
+      expect(
+        plan.withSchedule(const {3: 0, 5: 1}, d(2026, 11, 11)),
+        active(schedule: const {3: 0, 5: 1}, nextDate: d(2026, 11, 11)),
+      );
+    });
+
+    test('an A/B program on four days', () {
+      final plan = schedule(
+        active(schedule: const {1: 0, 4: 1}, nextDate: d(2026, 11, 9)),
+        dayCount: 2,
+      );
+      final changed = plan.withSchedule(const {
+        1: 0,
+        2: 1,
+        4: 0,
+        5: 1,
+      }, d(2026, 11, 10));
+      expect(changed, ab(nextDayIndex: 1, nextDate: d(2026, 11, 10)));
+      expect(take(schedule(changed, dayCount: 2), 4), [
+        (1, d(2026, 11, 10)),
+        (0, d(2026, 11, 12)),
+        (1, d(2026, 11, 13)),
+        (0, d(2026, 11, 16)),
+      ]);
     });
   });
 

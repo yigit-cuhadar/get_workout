@@ -72,7 +72,7 @@ void main() {
   setUp(() {
     paywalls = 0;
     detail = _DetailCubit();
-    when(() => detail.copy(any(), weekdays: any(named: 'weekdays')))
+    when(() => detail.copy(any(), schedule: any(named: 'schedule')))
         .thenAnswer((_) async {});
     when(() => detail.existingCopyId).thenReturn(null);
     when(() => detail.activeProgramName).thenReturn(null);
@@ -189,18 +189,18 @@ void main() {
 
     await tester.tap(find.text('Start this program'));
     await settle(tester);
-    expect(find.text('Pick 2 training days'), findsOneWidget);
+    expect(find.text('Training days'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await settle(tester);
-    verifyNever(() => detail.copy(any(), weekdays: any(named: 'weekdays')));
+    verifyNever(() => detail.copy(any(), schedule: any(named: 'schedule')));
 
     await tester.tap(find.text('Start this program'));
     await settle(tester);
     await tester.tap(find.text('Start program'));
     await settle(tester);
-    verify(
-      () => detail.copy(CopyIntent.start, weekdays: any(named: 'weekdays')),
-    ).called(1);
+    // Two days suggest Monday and Thursday, doing the days in turn.
+    verify(() => detail.copy(CopyIntent.start, schedule: const {1: 0, 4: 1}))
+        .called(1);
   });
 
   testWidgets('the user\'s copy is offered first', (tester) async {
@@ -278,7 +278,7 @@ void main() {
     );
     await tester.tap(find.text('Start this program'));
     await settle(tester);
-    expect(find.text('Pick 2 training days'), findsNothing);
+    expect(find.text('Training days'), findsNothing);
   });
 
   testWidgets('unlocking shows the notice with Retry', (tester) async {

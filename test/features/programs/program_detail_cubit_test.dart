@@ -31,7 +31,7 @@ void main() {
   final paid = program(id: 'p3', name: 'Paid', premium: true);
   final armsActive = ActiveProgram(
     programId: 'p2',
-    weekdays: const [2, 5],
+    schedule: const {2: 0, 5: 1},
     nextDayIndex: 0,
     nextDate: CalendarDate(2026, 11, 13),
     startedAt: DateTime(2026, 11, 2),
@@ -117,7 +117,7 @@ void main() {
       const NoCompletedDays(),
       clock: () => now,
     ),
-    changeWeekdays: ChangeWeekdays(repository, clock: () => now),
+    changeSchedule: ChangeSchedule(repository, clock: () => now),
     stopProgram: StopProgram(repository),
     duplicateProgram: DuplicateProgram(repository),
     deleteProgram: DeleteProgram(repository),
@@ -126,10 +126,10 @@ void main() {
   );
 
   blocTest<ProgramDetailCubit, ProgramDetailState>(
-    'starts the program on the chosen weekdays, replacing any other',
+    'starts the program on the chosen schedule, replacing any other',
     setUp: () => activeIs(armsActive),
     build: build,
-    act: (cubit) => cubit.start(const [1, 3]),
+    act: (cubit) => cubit.start(const {1: 0, 3: 1}),
     expect: () => const [
       ProgramDetailState(status: ProgramDetailStatus.working),
       ProgramDetailState(),
@@ -139,8 +139,9 @@ void main() {
         'u1',
         ActiveProgram(
           programId: 'p1',
-          weekdays: const [1, 3],
-          nextDayIndex: 0,
+          schedule: const {1: 0, 3: 1},
+          // Today, Wednesday, does its own day.
+          nextDayIndex: 1,
           nextDate: CalendarDate(2026, 11, 11),
           startedAt: now,
         ),
@@ -158,7 +159,7 @@ void main() {
       'is not started without premium',
       setUp: () => premiumIs(false),
       build: () => build('p3'),
-      act: (cubit) => cubit.start(const [1, 3]),
+      act: (cubit) => cubit.start(const {1: 0, 3: 1}),
       expect: () => const <ProgramDetailState>[],
       verify: (cubit) {
         expect(cubit.access, ProgramAccess.locked);
@@ -170,7 +171,7 @@ void main() {
       'waits while premium is unknown',
       setUp: () => premiumIs(null),
       build: () => build('p3'),
-      act: (cubit) => cubit.start(const [1, 3]),
+      act: (cubit) => cubit.start(const {1: 0, 3: 1}),
       expect: () => const <ProgramDetailState>[],
       verify: (cubit) {
         expect(cubit.access, ProgramAccess.waiting);
@@ -182,7 +183,7 @@ void main() {
       'is started with premium',
       setUp: () => premiumIs(true),
       build: () => build('p3'),
-      act: (cubit) => cubit.start(const [1, 3]),
+      act: (cubit) => cubit.start(const {1: 0, 3: 1}),
       verify: (cubit) {
         expect(cubit.access, ProgramAccess.open);
         verify(() => repository.startProgram('u1', any())).called(1);
@@ -190,13 +191,13 @@ void main() {
     );
 
     blocTest<ProgramDetailCubit, ProgramDetailState>(
-      'active without premium keeps its weekdays',
+      'active without premium keeps its schedule',
       setUp: () async {
         premium.controller.add(false);
         await activeIs(
           ActiveProgram(
             programId: 'p3',
-            weekdays: const [2, 5],
+            schedule: const {2: 0, 5: 1},
             nextDayIndex: 0,
             nextDate: CalendarDate(2026, 11, 13),
             startedAt: DateTime(2026, 11, 2),
@@ -204,7 +205,7 @@ void main() {
         );
       },
       build: () => build('p3'),
-      act: (cubit) => cubit.changeWeekdays(const [1, 4]),
+      act: (cubit) => cubit.changeSchedule(const {1: 0, 4: 1}),
       verify: (_) =>
           verifyNever(() => repository.updateActiveProgram(any(), any())),
     );
@@ -218,7 +219,7 @@ void main() {
         premium.controller.add(true);
         await pumpEventQueue();
         expect(cubit.access, ProgramAccess.open);
-        await cubit.start(const [1, 3]);
+        await cubit.start(const {1: 0, 3: 1});
       },
       verify: (_) =>
           verify(() => repository.startProgram('u1', any())).called(1),
@@ -242,10 +243,10 @@ void main() {
   });
 
   blocTest<ProgramDetailCubit, ProgramDetailState>(
-    'refuses weekdays that do not match the days',
+    'refuses a schedule with a day the program does not have',
     setUp: () => activeIs(null),
     build: build,
-    act: (cubit) => cubit.start(const [1, 3, 5]),
+    act: (cubit) => cubit.start(const {1: 0, 3: 2}),
     expect: () => [
       const ProgramDetailState(status: ProgramDetailStatus.working),
       isA<ProgramDetailState>()
@@ -260,7 +261,7 @@ void main() {
     setUp: () => activeIs(armsActive),
     build: () => build('p2'),
     act: (cubit) async {
-      await cubit.changeWeekdays(const [1, 4]);
+      await cubit.changeSchedule(const {1: 0, 4: 1});
       await cubit.stop();
     },
     verify: (_) {
@@ -268,7 +269,8 @@ void main() {
         () => repository.updateActiveProgram(
           'u1',
           armsActive.copyWith(
-            weekdays: const [1, 4],
+            schedule: const {1: 0, 4: 1},
+            nextDayIndex: 1,
             nextDate: CalendarDate(2026, 11, 12),
           ),
         ),
@@ -278,12 +280,12 @@ void main() {
   );
 
   blocTest<ProgramDetailCubit, ProgramDetailState>(
-    'stop and change weekdays do nothing for an inactive program',
+    'stop and change schedule do nothing for an inactive program',
     setUp: () => activeIs(armsActive),
     build: build,
     act: (cubit) async {
       await cubit.stop();
-      await cubit.changeWeekdays(const [1, 4]);
+      await cubit.changeSchedule(const {1: 0, 4: 1});
     },
     expect: () => const <ProgramDetailState>[],
     verify: (_) {
@@ -385,7 +387,7 @@ void main() {
       when(() => auth.currentUser).thenReturn(null);
       users.add(const AuthUser(id: 'g2', isAnonymous: true));
       await pumpEventQueue();
-      await cubit.start(const [1, 4]);
+      await cubit.start(const {1: 0, 4: 1});
     },
     expect: () => const [
       ProgramDetailState(status: ProgramDetailStatus.closed),

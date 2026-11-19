@@ -31,7 +31,7 @@ void main() {
   final other = program(id: 'p2', name: 'Arms');
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [1, 4],
+    schedule: const {1: 0, 4: 1},
     nextDayIndex: 1,
     nextDate: CalendarDate(2026, 11, 12),
     startedAt: DateTime(2026, 11, 2),
@@ -338,16 +338,18 @@ void main() {
           status: PlannedStatus.missed,
         ),
       ]),
-      // Still missed: the missed day comes first again, from Monday on.
+      // Still missed: the missed day comes first again, on Monday in place
+      // of Monday's own day.
       isA<ProgramListState>().having((s) => s.weekPlan, 'weekPlan', [
         PlannedDay(
           date: CalendarDate(2026, 11, 16),
           dayIndex: 1,
           status: PlannedStatus.planned,
         ),
+        // Thursday does its own day again.
         PlannedDay(
           date: CalendarDate(2026, 11, 19),
-          dayIndex: 0,
+          dayIndex: 1,
           status: PlannedStatus.planned,
         ),
       ]),
@@ -450,9 +452,10 @@ void main() {
           dayIndex: 1,
           status: PlannedStatus.planned,
         ),
+        // Thursday does its own day again.
         PlannedDay(
           date: CalendarDate(2026, 11, 19),
-          dayIndex: 0,
+          dayIndex: 1,
           status: PlannedStatus.planned,
         ),
       ]);

@@ -17,7 +17,7 @@ import 'program_day_section.dart';
 import 'program_detail_page.dart';
 import 'program_text.dart';
 import 'program_volume_section.dart';
-import 'weekday_dialog.dart';
+import 'training_days_sheet.dart';
 
 /// One ready-made program: its name, tags and summary, its facts as rows,
 /// its weekly sets and its days, which open in place; Start this program
@@ -408,15 +408,16 @@ class _Action extends StatelessWidget {
       );
       if (replace != true || !context.mounted) return;
     }
-    final count = state.days.length;
-    final weekdays = await showWeekdayDialog(
+    final schedule = await showTrainingDays(
       context,
-      count: count,
-      initial: ProgramSchedule.suggestedWeekdays(count),
+      dayNames: [
+        for (final (index, day) in state.days.indexed) l10n.dayName(day, index),
+      ],
+      initial: ProgramSchedule.suggestedSchedule(state.days.length),
       confirmLabel: l10n.programStart,
     );
-    if (weekdays == null) return;
-    await cubit.copy(CopyIntent.start, weekdays: weekdays);
+    if (schedule == null) return;
+    await cubit.copy(CopyIntent.start, schedule: schedule);
   }
 }
 

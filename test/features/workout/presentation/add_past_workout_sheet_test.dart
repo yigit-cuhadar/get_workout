@@ -38,7 +38,7 @@ void main() {
         active: active
             ? ActiveProgram(
                 programId: 'p1',
-                weekdays: const [1, 3],
+                schedule: const {1: 0, 3: 1},
                 nextDayIndex: 0,
                 nextDate: CalendarDate(2026, 11, 16),
                 startedAt: DateTime(2026, 11, 1),

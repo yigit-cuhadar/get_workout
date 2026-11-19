@@ -54,7 +54,7 @@ void main() {
   final arms = program(id: 'p2', name: 'Arms');
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [1, 4],
+    schedule: const {1: 0, 4: 1},
     nextDayIndex: 1,
     nextDate: CalendarDate(2026, 11, 12),
     startedAt: DateTime(2026, 11, 2),
@@ -385,11 +385,13 @@ void main() {
     expect(find.text('Weekly sets in this program'), findsNothing);
 
     await tester.tap(find.text('Run it again'));
+    // The sheet rises in the frames after it opens.
     await settle(tester);
-    expect(find.text('Pick 2 training days'), findsOneWidget);
+    await settle(tester);
+    expect(find.text('Training days'), findsOneWidget);
     await tester.tap(find.text('Start program'));
     await settle(tester);
-    verify(() => detail.start(const [1, 4])).called(1);
+    verify(() => detail.start(const {1: 0, 4: 1})).called(1);
   });
 
   testWidgets('a locked Premium copy keeps its band with the notice', (

@@ -8,7 +8,7 @@ import 'fixtures.dart';
 void main() {
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [1, 5],
+    schedule: const {1: 0, 5: 1},
     nextDayIndex: 0,
     nextDate: CalendarDate(2026, 11, 13),
     startedAt: DateTime(2026, 11, 2),

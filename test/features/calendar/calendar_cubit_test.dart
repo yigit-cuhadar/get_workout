@@ -45,7 +45,7 @@ void main() {
   final upperLower = program(id: 'p1');
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [3],
+    schedule: const {3: 0},
     nextDayIndex: 0,
     nextDate: d(2026, 11, 18),
     startedAt: DateTime(2026, 11, 2),

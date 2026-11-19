@@ -44,7 +44,7 @@ void main() {
   // missed, so it comes again on Monday 16.
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [1, 4],
+    schedule: const {1: 0, 4: 1},
     nextDayIndex: 1,
     nextDate: d(2026, 11, 12),
     startedAt: DateTime(2026, 11, 2),

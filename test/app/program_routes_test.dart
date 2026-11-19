@@ -202,7 +202,7 @@ void main() {
           id,
           list: sl(),
           startProgram: StartProgram(repository, const NoCompletedDays()),
-          changeWeekdays: ChangeWeekdays(repository),
+          changeSchedule: ChangeSchedule(repository),
           stopProgram: StopProgram(repository),
           duplicateProgram: DuplicateProgram(repository),
           deleteProgram: DeleteProgram(repository),

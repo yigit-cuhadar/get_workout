@@ -16,7 +16,7 @@ void main() {
   final premiumCopy = program(id: 'p1', premium: true);
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [1, 4],
+    schedule: const {1: 0, 4: 1},
     nextDayIndex: 1,
     nextDate: CalendarDate(2026, 11, 12),
     startedAt: DateTime(2026, 11, 2),

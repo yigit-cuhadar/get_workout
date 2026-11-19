@@ -72,7 +72,7 @@ class ProgramsModule implements FeatureModule {
       ..registerFactory(() => DuplicateProgram(sl()))
       ..registerFactory(() => DeleteProgram(sl()))
       ..registerFactory(() => StartProgram(sl(), sl()))
-      ..registerFactory(() => ChangeWeekdays(sl()))
+      ..registerFactory(() => ChangeSchedule(sl()))
       ..registerFactory(() => StopProgram(sl()))
       ..registerFactory(() => ResolveMissedDay(sl()))
       ..registerFactory(() => MoveNextDay(sl()))
@@ -121,7 +121,7 @@ class ProgramsModule implements FeatureModule {
           programId,
           list: sl(),
           startProgram: sl(),
-          changeWeekdays: sl(),
+          changeSchedule: sl(),
           stopProgram: sl(),
           duplicateProgram: sl(),
           deleteProgram: sl(),

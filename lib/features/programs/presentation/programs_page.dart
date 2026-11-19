@@ -17,7 +17,7 @@ import 'program_detail_cubit.dart';
 import 'program_list_cubit.dart';
 import 'program_text.dart';
 import 'stop_program_dialog.dart';
-import 'weekday_dialog.dart';
+import 'training_days_sheet.dart';
 
 /// The Programs tab's first page, the plan: the active program in a header
 /// band with this week's days, its weekly sets, then the ways into the
@@ -356,11 +356,11 @@ class _ProgramActions {
 
   Future<void> changeDays() async {
     final active = state.active!;
-    final weekdays = await _pickWeekdays(
-      active.weekdays,
+    final schedule = await _pickSchedule(
+      active.schedule,
       AppLocalizations.of(context).programSave,
     );
-    if (weekdays != null) await _cubit.changeWeekdays(weekdays);
+    if (schedule != null) await _cubit.changeSchedule(schedule);
   }
 
   Future<void> stop() async {
@@ -373,11 +373,11 @@ class _ProgramActions {
   /// a locked copy opens the paywall instead.
   Future<void> runAgain() async {
     if (_locked()) return;
-    final weekdays = await _pickWeekdays(
-      state.active!.weekdays,
+    final schedule = await _pickSchedule(
+      state.active!.schedule,
       AppLocalizations.of(context).programStart,
     );
-    if (weekdays != null) await _cubit.start(weekdays);
+    if (schedule != null) await _cubit.start(schedule);
   }
 
   bool _locked() {
@@ -386,14 +386,18 @@ class _ProgramActions {
     return true;
   }
 
-  Future<List<int>?> _pickWeekdays(List<int> current, String confirmLabel) {
-    final count = program.days.length;
-    return showWeekdayDialog(
+  Future<Map<int, int>?> _pickSchedule(
+    Map<int, int> current,
+    String confirmLabel,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    return showTrainingDays(
       context,
-      count: count,
-      initial: current.length == count
-          ? current
-          : ProgramSchedule.suggestedWeekdays(count),
+      dayNames: [
+        for (final (index, day) in program.days.indexed)
+          l10n.dayName(day, index),
+      ],
+      initial: current,
       confirmLabel: confirmLabel,
     );
   }

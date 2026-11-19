@@ -23,7 +23,7 @@ import 'program_list_cubit.dart';
 import 'program_text.dart';
 import 'program_volume_section.dart';
 import 'stop_program_dialog.dart';
-import 'weekday_dialog.dart';
+import 'training_days_sheet.dart';
 
 /// One program: a header band with where it stands and what can be done
 /// with it (start, the next day, a missed day, change days, stop, run it
@@ -285,22 +285,22 @@ class _DetailActions {
       );
       if (replace != true || !context.mounted) return;
     }
-    final weekdays = await _pickWeekdays(
+    final schedule = await _pickSchedule(
       list.active?.programId == program.id
-          ? list.active!.weekdays
-          : ProgramSchedule.suggestedWeekdays(program.days.length),
+          ? list.active!.schedule
+          : ProgramSchedule.suggestedSchedule(program.days.length),
       l10n.programStart,
     );
-    if (weekdays != null) await cubit.start(weekdays);
+    if (schedule != null) await cubit.start(schedule);
   }
 
   Future<void> changeDays() async {
     final cubit = _cubit;
-    final weekdays = await _pickWeekdays(
-      list.active!.weekdays,
+    final schedule = await _pickSchedule(
+      list.active!.schedule,
       AppLocalizations.of(context).programSave,
     );
-    if (weekdays != null) await cubit.changeWeekdays(weekdays);
+    if (schedule != null) await cubit.changeSchedule(schedule);
   }
 
   Future<void> stop() async {
@@ -340,14 +340,18 @@ class _DetailActions {
     return true;
   }
 
-  Future<List<int>?> _pickWeekdays(List<int> current, String confirmLabel) {
-    final count = program.days.length;
-    return showWeekdayDialog(
+  Future<Map<int, int>?> _pickSchedule(
+    Map<int, int> current,
+    String confirmLabel,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    return showTrainingDays(
       context,
-      count: count,
-      initial: current.length == count
-          ? current
-          : ProgramSchedule.suggestedWeekdays(count),
+      dayNames: [
+        for (final (index, day) in program.days.indexed)
+          l10n.dayName(day, index),
+      ],
+      initial: current,
       confirmLabel: confirmLabel,
     );
   }
@@ -440,7 +444,8 @@ class _Band extends StatelessWidget {
       weekdays,
     ].join(' · ');
     final progress = weeks != null && week != null ? week / weeks : null;
-    final mismatch = active.weekdays.length != program.days.length
+    final mismatch =
+        active.schedule.values.any((day) => day >= program.days.length)
         ? l10n.programDaysMismatch(program.days.length)
         : null;
     final stop = FeaturedAction(

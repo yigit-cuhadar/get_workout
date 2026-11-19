@@ -6,6 +6,7 @@ import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/presentation/program_builder_page.dart';
 import 'package:get_workout/features/programs/presentation/program_detail_page.dart';
+import 'package:get_workout/features/programs/presentation/training_days_sheet.dart';
 
 import '../features/programs/fixtures.dart';
 import 'training_world.dart';
@@ -50,18 +51,29 @@ void main() {
       await tapText(tester, 'Ready-made programs');
       await tapText(tester, 'Program c1');
       await tapText(tester, 'Start this program');
-      expect(find.text('Pick 2 training days'), findsOneWidget);
-      // Monday and Thursday are offered; Wednesday is today.
-      await tapOn(tester, inDialog('Thu'));
-      await tapOn(tester, inDialog('Wed'));
-      await tapOn(tester, inDialog('Start program'));
+      expect(find.text('Training days'), findsOneWidget);
+      // Push on Monday and Pull on Thursday are offered; Thursday is
+      // dropped and Wednesday, today, does Push too.
+      await tapOn(tester, weekdayChip('Pull', 'Th'));
+      await tapOn(tester, weekdayChip('Push', 'We'));
+      expect(
+        find.text('2 days a week · Sun, Tue, Thu, Fri and Sat rest'),
+        findsOneWidget,
+      );
+      await tapOn(
+        tester,
+        find.descendant(
+          of: find.byType(TrainingDaysSheet),
+          matching: find.text('Start program'),
+        ),
+      );
 
       final copy = app.programs.programs.values.single;
       expect(copy.name, 'Program c1');
       expect(copy.sourceId, 'c1');
       expect(app.programs.active, isNotNull);
       expect(app.programs.active!.programId, copy.id);
-      expect(app.programs.active!.weekdays, [1, 3]);
+      expect(app.programs.active!.schedule, {1: 0, 3: 0});
       expect(app.programs.active!.nextDate, wednesday);
       expect(find.byType(ProgramDetailPage), findsOneWidget);
       expect(find.text('Next: Push'), findsOneWidget);
@@ -100,7 +112,7 @@ void main() {
         ..add(upperLower)
         ..active = ActiveProgram(
           programId: 'p1',
-          weekdays: const [1, 3],
+          schedule: const {1: 0, 3: 1},
           nextDayIndex: 0,
           nextDate: monday,
           startedAt: DateTime(2026, 11, 2),

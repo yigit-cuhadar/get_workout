@@ -156,7 +156,7 @@ void main() {
     );
     final active = ActiveProgram(
       programId: 'p1',
-      weekdays: const [1, 3, 5],
+      schedule: const {1: 0, 3: 1, 5: 2},
       nextDayIndex: 1,
       nextDate: today,
       startedAt: DateTime(2026, 11, 2, 18),
@@ -267,7 +267,7 @@ void main() {
       expect(entries(withProgram: false), isEmpty);
       final elsewhere = ActiveProgram(
         programId: 'p9',
-        weekdays: const [3],
+        schedule: const {3: 0},
         nextDayIndex: 0,
         nextDate: today,
         startedAt: DateTime(2026, 11, 2),
@@ -294,7 +294,7 @@ void main() {
       // Europe falls back on 25 October, the US on 1 November.
       final weekly = ActiveProgram(
         programId: 'p1',
-        weekdays: const [7],
+        schedule: const {7: 0},
         nextDayIndex: 0,
         nextDate: d(2026, 10, 18),
         startedAt: DateTime(2026, 10, 1),

@@ -60,7 +60,7 @@ enum CopyStatus {
   failed,
 }
 
-/// What a copy is made for: to start it on the weekdays picked, to edit it
+/// What a copy is made for: to start it on the training days picked, to edit it
 /// in the builder, or only to keep it among the user's programs.
 enum CopyIntent { start, edit, keep }
 
@@ -213,9 +213,9 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
       ?.id;
 
   /// Stores a copy of the program as one of the user's, through the
-  /// builder's validation, for [intent]: to start it at once on [weekdays]
-  /// (one per day), replacing any active program, or to edit it.
-  Future<void> copy(CopyIntent intent, {List<int>? weekdays}) async {
+  /// builder's validation, for [intent]: to start it at once on
+  /// [schedule], replacing any active program, or to edit it.
+  Future<void> copy(CopyIntent intent, {Map<int, int>? schedule}) async {
     final program = _program;
     final uid = _getCurrentUser()?.id;
     final exercises = _exercises.state;
@@ -225,7 +225,7 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
         program == null ||
         uid == null ||
         exercises is! CatalogueReady ||
-        (intent == CopyIntent.start && weekdays == null)) {
+        (intent == CopyIntent.start && schedule == null)) {
       return;
     }
     emit(
@@ -257,7 +257,7 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
           days: copy.days,
           premium: copy.premium,
         ),
-        weekdays: weekdays!,
+        schedule: schedule!,
       ));
       if (isClosed) return;
       if (started.failureOrNull case final failure?) {

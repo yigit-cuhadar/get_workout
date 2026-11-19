@@ -9,6 +9,7 @@ import '../domain/active_program.dart';
 import '../domain/calendar_date.dart';
 import '../domain/program.dart';
 import '../domain/program_repository.dart';
+import '../domain/program_schedule.dart';
 
 /// Programs live in `users/{uid}/programs/{id}`, the active program in the
 /// `activeProgram` map of `users/{uid}`, a document shared with other
@@ -128,10 +129,9 @@ class FirestoreProgramRepository implements ProgramRepository {
   @override
   Future<Result<void>> updateActiveProgram(String uid, ActiveProgram active) =>
       guard(() async {
-        _confirmLater(
-          _user(uid)
-              .set({_active: activeToMap(active)}, SetOptions(merge: true)),
-        );
+        final batch = _firestore.batch();
+        writeActive(batch, _user(uid), active);
+        _confirmLater(batch.commit());
       }, mapper: mapFirebaseError);
 
   @override
@@ -283,29 +283,51 @@ class FirestoreProgramRepository implements ProgramRepository {
 
   static Map<String, Object?> activeToMap(ActiveProgram active) => {
     'programId': active.programId,
-    'weekdays': active.weekdays,
+    'schedule': {
+      for (final MapEntry(:key, :value) in active.schedule.entries)
+        '$key': value,
+    },
     'nextDayIndex': active.nextDayIndex,
     'nextDate': active.nextDate.toIso(),
+    if (active.movedFrom case final movedFrom?) 'movedFrom': movedFrom.toIso(),
     'startedAt': Timestamp.fromDate(active.startedAt),
   };
 
-  /// Null for anything but a map with a program id, at least one weekday
-  /// from 1 to 7, a `YYYY-MM-DD` next date and a start time. Weekdays out of
-  /// range are dropped and a missing day index reads as the first day.
+  /// Writes [active] over the stored active program of [user] in [batch],
+  /// keeping fields the app does not know. The schedule is removed first,
+  /// as a merge would keep weekdays it dropped, `movedFrom` goes when
+  /// unset, and the `weekdays` of older versions go, as `schedule` replaces
+  /// them.
+  static void writeActive(
+    WriteBatch batch,
+    DocumentReference<Map<String, dynamic>> user,
+    ActiveProgram active,
+  ) => batch
+    ..set(user, {
+      _active: {'schedule': FieldValue.delete()},
+    }, SetOptions(merge: true))
+    ..set(user, {
+      _active: {
+        'movedFrom': FieldValue.delete(),
+        ...activeToMap(active),
+        'weekdays': FieldValue.delete(),
+      },
+    }, SetOptions(merge: true));
+
+  /// Null for anything but a map with a program id, at least one training
+  /// weekday from 1 to 7, a `YYYY-MM-DD` next date and a start time.
+  /// Weekdays out of range or without a day index of 0 or more are dropped,
+  /// a missing next day index reads as the first day and an unreadable
+  /// `movedFrom` as none.
   static ActiveProgram? activeFromMap(Object? raw) {
     if (raw is! Map) return null;
     final programId = raw['programId'];
-    final weekdays = raw['weekdays'];
     final nextDate = CalendarDate.tryParse(raw['nextDate']);
     final startedAt = raw['startedAt'];
-    final days = [
-      if (weekdays is List)
-        for (final day in weekdays)
-          if (day is int && day >= 1 && day <= 7) day,
-    ];
+    final schedule = _schedule(raw['schedule'], raw['weekdays']);
     if (programId is! String ||
         programId.isEmpty ||
-        days.isEmpty ||
+        schedule.isEmpty ||
         nextDate == null ||
         startedAt is! Timestamp) {
       if (raw.isNotEmpty) Log.e('programs', 'unreadable active program');
@@ -314,10 +336,31 @@ class FirestoreProgramRepository implements ProgramRepository {
     final index = _whole(raw['nextDayIndex']);
     return ActiveProgram(
       programId: programId,
-      weekdays: days,
+      schedule: schedule,
       nextDayIndex: index == null || index < 0 ? 0 : index,
       nextDate: nextDate,
+      movedFrom: CalendarDate.tryParse(raw['movedFrom']),
       startedAt: startedAt.toDate(),
     );
+  }
+
+  /// `schedule` maps ISO weekday strings to day indices. Documents of older
+  /// versions have only `weekdays`, one per program day doing the days in
+  /// turn.
+  static Map<int, int> _schedule(Object? schedule, Object? weekdays) {
+    if (schedule is Map) {
+      return {
+        for (final MapEntry(:key, :value) in schedule.entries)
+          if ((key is String ? int.tryParse(key) : null) case final weekday?
+              when weekday >= 1 && weekday <= 7 && value is int && value >= 0)
+            weekday: value,
+      };
+    }
+    final days = [
+      if (weekdays is List)
+        for (final day in weekdays)
+          if (day is int && day >= 1 && day <= 7) day,
+    ];
+    return ProgramSchedule.inTurn(days, days.length);
   }
 }

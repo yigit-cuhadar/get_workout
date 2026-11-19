@@ -42,7 +42,7 @@ void main() {
   final pushPull = program(id: 'p1', name: 'Push Pull');
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [1, 5],
+    schedule: const {1: 0, 5: 1},
     nextDayIndex: 0,
     nextDate: d(2026, 11, 9),
     startedAt: DateTime(2026, 11, 2),
