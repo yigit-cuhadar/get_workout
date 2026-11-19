@@ -30,10 +30,24 @@ App-wide decisions only. How each feature behaves is under Feature notes.
 - **Accounts**: starts as an anonymous Firebase user. Linking email, Google or
   Apple keeps the uid and all data. Signing in to an *existing* account from a
   guest session discards the guest data after a warning; there is no merge.
-- **Monetization**: freemium via RevenueCat. Monthly and yearly plans, 7-day
-  trial on yearly. Premium = program generator, 19 of 25 ready-made programs,
-  advanced statistics (charts beyond 12 weeks, volume trend). Everything else
-  is free. Until store accounts exist, purchases run against a fake gateway.
+- **Monetization** (owner's picks, 2026-11-19): freemium via RevenueCat with
+  a soft paywall. Monthly 7.99 USD and yearly 39.99 USD (regional prices per
+  store), a 7-day trial on yearly only. The paywall shows once at the end of
+  onboarding (after the program suggestion), once after the first workout's
+  summary, and whenever a Premium feature is touched or from Profile; it can
+  always be closed. Which paywall shows comes from RevenueCat offerings, not
+  from app code, so that later, once ads run, installs attributed to ads
+  (Apple Search Ads via AdServices, Play Install Referrer; an MMP only by a
+  later decision) can get a hard paywall without an app update.
+  Premium = the program generator, 19 of 25 ready-made programs, more than 3
+  own programs, history in charts beyond 2 weeks (every window that was 12
+  weeks free is now 2 weeks: strength, body weight, volume and their card
+  lines), the weekly volume trend, and later progressive overload
+  suggestions. Free forever: logging, history and calendar, exercises and
+  custom exercises, the 3D model, the summary's comparison, body measurements
+  and progress photos with compare, cardio and steps, calculators, the Live
+  Activity, and later the Watch app, home screen widgets and exercise videos.
+  Until store accounts exist, purchases run against a fake gateway.
 - **Backend**: Blaze plan. Cloud Functions are used only where a client cannot
   be trusted or cannot do the job: RevenueCat webhook, account deletion,
   sending push announcements. The program generator runs on device.
