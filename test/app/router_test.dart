@@ -2424,7 +2424,7 @@ void main() {
 
       await tapVisible(tester, 'Get Premium');
       expect(find.byType(PaywallPage), findsOneWidget);
-      expect(find.text(r'$4.99 / month'), findsOneWidget);
+      expect(find.text(r'$7.99 / month'), findsOneWidget);
       expect(find.text(r'$39.99 / year'), findsOneWidget);
       expect(find.text('Best value'), findsOneWidget);
       expect(find.text('Restore purchases'), findsOneWidget);
@@ -2451,7 +2451,7 @@ void main() {
       remoteConfig.values['paywall_layout'] = 'b';
 
       await tapVisible(tester, 'Get Premium');
-      expect(find.text(r'$4.99'), findsOneWidget);
+      expect(find.text(r'$7.99'), findsOneWidget);
       expect(find.text(r'$39.99'), findsOneWidget);
       expect(find.text('7 days free'), findsOneWidget);
       expect(find.text(r'$39.99 / year'), findsNothing);
@@ -2475,10 +2475,10 @@ void main() {
       expect(find.text('Yearly · 7 days free'), findsOneWidget);
       expect(find.text(r'$39.99 / year'), findsOneWidget);
       expect(find.text(r'That is $3.33 a month.'), findsOneWidget);
-      expect(find.text(r'$4.99 / month'), findsNothing);
+      expect(find.text(r'$7.99 / month'), findsNothing);
 
       await tapVisible(tester, 'See monthly plan');
-      expect(find.text(r'$4.99 / month'), findsOneWidget);
+      expect(find.text(r'$7.99 / month'), findsOneWidget);
       expect(find.text('See yearly plan'), findsOneWidget);
       expect(find.text('Subscribe'), findsOneWidget);
       verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'c'}))

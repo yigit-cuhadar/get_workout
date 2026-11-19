@@ -3,6 +3,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 
 import '../domain/paywall_layout.dart';
+import '../domain/paywall_moment.dart';
 
 /// Debug builds on the fake store only: steers the fake and picks the
 /// paywall layout for device checks. Developer tooling, so its text is not
@@ -52,6 +53,13 @@ class _FakeStoreControlsState extends State<FakeStoreControls> {
       ListTile(
         title: const Text('Turn off auto-renew'),
         onTap: widget.store.cancelRenewal,
+      ),
+      SwitchListTile(
+        title: const Text('Onboarding paywall dismissible'),
+        value: offeringDismissible(widget.store.metadata),
+        onChanged: (dismissible) => setState(
+          () => widget.store.metadata = {dismissibleKey: dismissible},
+        ),
       ),
       ListTile(
         title: const Text('Paywall layout'),

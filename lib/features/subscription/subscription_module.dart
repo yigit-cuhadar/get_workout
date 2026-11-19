@@ -9,6 +9,7 @@ import 'package:get_it/get_it.dart';
 import '../programs/domain/premium_status.dart' as programs;
 import 'data/unavailable_purchases_repository.dart';
 import 'domain/paywall_layout.dart';
+import 'domain/paywall_moment.dart';
 import 'domain/subscription_usecases.dart';
 import 'presentation/fake_store_controls.dart';
 import 'presentation/premium.dart';
@@ -41,8 +42,8 @@ const fakePlans = [
   Plan(
     id: 'premium_monthly',
     period: PlanPeriod.monthly,
-    price: r'$4.99',
-    priceAmount: 4.99,
+    price: r'$7.99',
+    priceAmount: 7.99,
     currencyCode: 'USD',
   ),
   Plan(
@@ -122,8 +123,8 @@ class SubscriptionModule implements FeatureModule {
       ..registerFactory(() => GetPaywallOffering(sl()))
       ..registerFactory(() => GetPremiumTrial(sl()))
       ..registerFactory(() => PremiumTrialCubit(sl()))
-      ..registerFactory(
-        () => PremiumPaywallCubit(
+      ..registerFactoryParam<PremiumPaywallCubit, PaywallMoment?, void>(
+        (moment, _) => PremiumPaywallCubit(
           getOffering: sl<GetPaywallOffering>(),
           purchasePlan: sl(),
           restorePurchases: sl(),
@@ -131,6 +132,7 @@ class SubscriptionModule implements FeatureModule {
           logView: sl(),
           logPurchase: sl(),
           isPremium: () => sl<EntitlementCubit>().isActive,
+          moment: moment,
         ),
       );
     if (kDebugMode) sl.registerLazySingleton(PaywallLayoutOverride.new);

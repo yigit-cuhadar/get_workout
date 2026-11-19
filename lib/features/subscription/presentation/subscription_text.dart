@@ -78,7 +78,7 @@ extension SubscriptionText on AppLocalizations {
     PlanPeriod.lifetime => paywallSeeLifetime,
   };
 
-  /// `$59.99 / year`, in a plan's box.
+  /// `$39.99 / year`, in a plan's box.
   String _planPriceShort(Plan plan) => switch (plan.period) {
     PlanPeriod.monthly => paywallPriceMonth(plan.price),
     PlanPeriod.yearly => paywallPriceYear(plan.price),

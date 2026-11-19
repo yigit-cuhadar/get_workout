@@ -56,7 +56,8 @@ const _saturdayRegions = {
 };
 const _fridayRegions = {'MV'};
 
-/// A first-use tip the app shows once (`settings.seenTips`).
+/// A first-use tip, or a paywall moment, the app shows once
+/// (`settings.seenTips`).
 enum Tip {
   /// After the first set is ticked: effort can be logged.
   effort,
@@ -70,6 +71,12 @@ enum Tip {
   /// Under the Exercises tab's body model: tapping or sliding opens a
   /// muscle's exercises.
   muscleModel,
+
+  /// The paywall at the end of onboarding.
+  onboardingPaywall,
+
+  /// The paywall after the first workout's summary.
+  firstWorkoutPaywall,
 }
 
 const kgPerLb = 0.45359237;
