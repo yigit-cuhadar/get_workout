@@ -22,6 +22,18 @@ Widget featuredBlock(BuildContext context) => _page(
   ),
 );
 
+@widgetbook.UseCase(name: 'Block · long name', type: FeaturedCard)
+Widget featuredBlockLongName(BuildContext context) => _page(
+  FeaturedCard(
+    form: FeaturedCardForm.block,
+    eyebrow: 'Gym Starter',
+    title: 'Gym Starter: Full Body 3-Day',
+    line: const FeaturedLine('6 exercises · ~31 min', data: 'Today'),
+    action: FeaturedAction('Start', () {}),
+    onTap: () {},
+  ),
+);
+
 @widgetbook.UseCase(name: 'Accent outline', type: FeaturedCard)
 Widget featuredOutline(BuildContext context) => _page(
   FeaturedCard(

@@ -568,4 +568,34 @@ void main() {
       greaterThan(tester.getBottomLeft(find.text('1 h 12 min')).dy - 1),
     );
   });
+
+  testWidgets('a name keeps one line: it shrinks to 18 px, then ends in …', (
+    tester,
+  ) async {
+    Text titleOf(String name) => tester.widget<Text>(find.textContaining(name));
+    Future<void> pump(String name) => pumpComponent(
+      tester,
+      FeaturedCard(form: FeaturedCardForm.block, eyebrow: 'Today', title: name),
+    );
+
+    await pump('Push');
+    final normal = titleOf('Push');
+    final normalSize = normal.style!.fontSize!;
+    final lineHeight = tester.getSize(find.text('Push')).height;
+
+    await pump('Upper Lower 4');
+    final shrunk = titleOf('Upper Lower 4');
+    expect(shrunk.style!.fontSize, lessThan(normalSize));
+    expect(shrunk.style!.fontSize, greaterThan(18));
+    expect(tester.getSize(find.text('Upper Lower 4')).height, lineHeight);
+
+    await pump('Gym Starter: Full Body 3-Day');
+    final cut = titleOf('Gym Starter: Full Body 3-Day');
+    expect(cut.style!.fontSize, 18);
+    expect((cut.maxLines, cut.overflow), (1, TextOverflow.ellipsis));
+    expect(
+      tester.getSize(find.text('Gym Starter: Full Body 3-Day')).height,
+      lineHeight,
+    );
+  });
 }

@@ -98,7 +98,8 @@ class FeaturedStat {
 }
 
 /// The one featured card of a screen in its [form]: an [eyebrow] (with a
-/// lock when [locked]) over the [title] and a band's [titleAside], then a
+/// lock when [locked]) over the [title] on one line and a band's
+/// [titleAside], then a
 /// band's [progress] (in [progressSegments] under [progressLabel] and
 /// [progressDetail]), the
 /// [line], a [note], the summary's four [stats] and its buttons, and a
@@ -492,20 +493,11 @@ class FeaturedCard extends StatelessWidget {
                 if (title case final title?)
                   Semantics(
                     header: true,
-                    child: Text.rich(
-                      TextSpan(
-                        text: title,
-                        children: [
-                          if (titleAside case final aside?) ...[
-                            const WidgetSpan(child: SizedBox(width: 12)),
-                            TextSpan(
-                              text: aside,
-                              style: style.data.copyWith(color: headQuiet),
-                            ),
-                          ],
-                        ],
-                      ),
+                    child: _OneLineTitle(
+                      title,
                       style: text.headlineMedium!.copyWith(color: headInk),
+                      aside: titleAside,
+                      asideStyle: style.data.copyWith(color: headQuiet),
                     ),
                   ),
                 if (when case final at?)
@@ -967,4 +959,78 @@ class FeaturedCard extends StatelessWidget {
           : ForgeButtonVariant.primary,
     ),
   );
+}
+
+/// [title] on one line with an [aside] after it: from [style]'s size down
+/// to [_minSize] until it fits, then cut with "…". The line keeps its
+/// height as the type shrinks.
+class _OneLineTitle extends StatelessWidget {
+  const _OneLineTitle(
+    this.title, {
+    required this.style,
+    required this.aside,
+    required this.asideStyle,
+  });
+
+  final String title;
+  final TextStyle style;
+  final String? aside;
+  final TextStyle asideStyle;
+
+  static const double _minSize = 18;
+  static const double _asideGap = 12;
+
+  @override
+  Widget build(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    final base = style.fontSize!;
+    final lineHeight = base * style.height!;
+    TextStyle sized(double size) => style.copyWith(
+      fontSize: size,
+      height: lineHeight / size,
+      letterSpacing: (style.letterSpacing ?? 0) * size / base,
+    );
+    double width(TextSpan span) {
+      final painter = TextPainter(
+        text: span,
+        textScaler: scaler,
+        textDirection: direction,
+        maxLines: 1,
+      )..layout();
+      final width = painter.width;
+      painter.dispose();
+      return width;
+    }
+
+    final aside = this.aside;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final room = aside == null
+            ? constraints.maxWidth
+            : constraints.maxWidth -
+                  _asideGap -
+                  width(TextSpan(text: aside, style: asideStyle));
+        var size = base;
+        while (size > _minSize &&
+            width(TextSpan(text: title, style: sized(size))) > room) {
+          size = (size - 1).clamp(_minSize, base);
+        }
+        return Text.rich(
+          TextSpan(
+            text: title,
+            children: [
+              if (aside != null) ...[
+                const WidgetSpan(child: SizedBox(width: _asideGap)),
+                TextSpan(text: aside, style: asideStyle),
+              ],
+            ],
+          ),
+          style: sized(size),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        );
+      },
+    );
+  }
 }
