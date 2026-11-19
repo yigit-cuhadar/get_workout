@@ -67,6 +67,14 @@ void main() {
 
   /// Whether the workout rises from the bottom as a full-screen page.
   void expectRising(WidgetTester tester) {
+    // Its grabber above the header.
+    expect(
+      find.descendant(
+        of: find.byType(WorkoutPage),
+        matching: find.byType(ForgeGrabber),
+      ),
+      findsOneWidget,
+    );
     final route = routeOf(tester, WorkoutPage);
     expect(route, isA<PageRoute<Object?>>());
     expect((route as PageRoute<Object?>).fullscreenDialog, isTrue);
