@@ -39,12 +39,16 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   from app code, so that later, once ads run, installs attributed to ads
   (Apple Search Ads via AdServices, Play Install Referrer; an MMP only by a
   later decision) can get a hard paywall without an app update.
-  Premium = the program generator, 19 of 25 ready-made programs, more than 3
-  own programs, history in charts beyond 2 weeks (every window that was 12
-  weeks free is now 2 weeks: strength, body weight, volume and their card
-  lines), the weekly volume trend, and later progressive overload
-  suggestions. Free forever: logging, history and calendar, exercises and
-  custom exercises, the 3D model, the summary's comparison, body measurements
+  Premium = the program generator, 19 of 25 ready-made programs, history
+  in charts beyond 2 weeks (every window that was 12 weeks free is now 2
+  weeks: the strength and body charts; the Progress cards' lines show 2
+  weeks for everyone, Premium too, longer history living on the chart
+  pages), the weekly volume trend (earlier weeks stay free to browse one
+  by one), and later progressive overload suggestions. There is no limit
+  on programs (the "more than 3 own programs" rule was dropped,
+  2026-11-19). A hard paywall (from the offering) stays open while a
+  purchase awaits approval. Free forever: logging, history and calendar,
+  exercises and custom exercises, the 3D model, the summary's comparison, body measurements
   and progress photos with compare, cardio and steps, calculators, the Live
   Activity, and later the Watch app, home screen widgets and exercise videos.
   Until store accounts exist, purchases run against a fake gateway.
@@ -1909,7 +1913,10 @@ the feature you are about to touch, and keep it true when you change it.
   the "Couldn't load plans" card and a disabled "Subscribe" without terms
   (PW-Q3); a store that cannot sell: the unavailable card; a pending
   purchase: the "Waiting for approval" card, whose "Got it" closes the
-  paywall (Premium unlocks by itself once approved). Restore's result is
+  paywall (Premium unlocks by itself once approved); a paywall that cannot
+  be closed (the hard onboarding one) shows the card without "Got it" and
+  stays open until the approval brings Premium and closes it (owner's
+  call, 2026-11-19). Restore's result is
   "Premium restored." (the paywall closes) or "Nothing to restore.".
 - **Paywall A/B/C test** (Firebase Remote Config + A/B Testing, owner's call,
   2026-11-13; `forge_remote_config`): the Remote Config string
@@ -3327,7 +3334,7 @@ the feature you are about to touch, and keep it true when you change it.
 - **Progress tab** (UX pass, 2026-11-13; screen step 2026-11-15): one
   card per area, each opening its page from anywhere on the card. Body:
   the latest weight, the change since the previous weigh-in, the newest
-  body fat, the weights of the card's weeks as a line, Log weight and
+  body fat, the weights of the last 2 weeks as a line, Log weight and
   Measurement day; the measurement-day prompt under it when due.
   Calendar: this week's strip (the app's only one, Tabs P1), always, with
   the week's dates as its detail; no month count; the strip and every day
@@ -3340,7 +3347,7 @@ the feature you are about to touch, and keep it true when you change it.
   and no bar. Strength (a StatTile, S8): the most recently trained
   exercise with an estimated 1RM as its detail ("Bench Press e1RM"), its
   latest workout's best e1RM as the figure with the unit apart, and the
-  change since the first e1RM of the card's weeks as its change line
+  change since the first e1RM of the last 2 weeks as its change line
   ("+3 in 8 weeks", success when up, danger when down, ink-muted when
   none, M2 A; "First estimate" as the caption with one there); the card
   opens the strength list. Cardio (a StatTile, S8): this week's distance as the figure, "2
@@ -3350,8 +3357,8 @@ the feature you are about to touch, and keep it true when you change it.
   your steps"; no card without a health store. Each card reads
   through its own cubit and shows its own failure, so one area failing
   leaves the others. The Body and Strength cards' lines cover the free
-  charts' 2 weeks, and 12 with Premium (`cardWeeks`; the 12 is kept from
-  before the free window shrank), redrawn when Premium comes or goes.
+  charts' 2 weeks (`StrengthRange.free`) for everyone, Premium too
+  (owner's call, 2026-11-19); longer history is on the chart pages.
 - **Calendar**: Progress → Calendar is one scrolling page (see Design ›
   Calendar): the month card and the month's list, both from one
   `CalendarCubit` that follows the month's dates plus six days on each side
