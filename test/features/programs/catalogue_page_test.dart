@@ -4,16 +4,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
+import 'package:get_workout/features/programs/domain/active_program.dart';
+import 'package:get_workout/features/programs/domain/calendar_date.dart';
 import 'package:get_workout/features/programs/domain/catalogue_queries.dart';
+import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/presentation/catalogue_page.dart';
 import 'package:get_workout/features/programs/presentation/program_catalogue_cubit.dart';
+import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
 
 class _CatalogueCubit extends MockCubit<ProgramCatalogueState>
     implements ProgramCatalogueCubit {}
+
+class _ListCubit extends MockCubit<ProgramListState>
+    implements ProgramListCubit {}
 
 void main() {
   final fits = card(
@@ -31,28 +39,70 @@ void main() {
   );
 
   late _CatalogueCubit cubit;
+  late _ListCubit list;
 
   setUp(() {
     cubit = _CatalogueCubit();
+    list = _ListCubit();
+    when(() => list.state).thenReturn(const ProgramListState());
     when(() => cubit.search(any())).thenReturn(null);
     when(cubit.clearFilters).thenReturn(null);
-    sl.registerSingleton<ProgramCatalogueCubit>(cubit);
+    sl
+      ..registerSingleton<ProgramCatalogueCubit>(cubit)
+      ..registerSingleton<ProgramListCubit>(list);
   });
 
   tearDown(sl.reset);
 
   Future<void> pump(WidgetTester tester, ProgramCatalogueState state) async {
     when(() => cubit.state).thenReturn(state);
+    final router = GoRouter(
+      initialLocation: '/catalogue',
+      routes: [
+        GoRoute(path: '/catalogue', builder: (_, _) => const CataloguePage()),
+        GoRoute(
+          path: '/:a/:b',
+          builder: (_, state) => Text('at ${state.uri.path}'),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
     await tester.pumpWidget(
-      MaterialApp(
+      MaterialApp.router(
         theme: AppPreset.slate.lightTheme(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const CataloguePage(),
+        routerConfig: router,
       ),
     );
     await tester.pump();
   }
+
+  /// The user's copy c1 of [fits], active in its second week.
+  void copyActive({bool finished = false}) => when(() => list.state).thenReturn(
+    ProgramListState(
+      status: ProgramListStatus.ready,
+      programs: [
+        Program(
+          id: 'c1',
+          name: 'Program fits',
+          origin: ProgramOrigin.catalog,
+          sourceId: 'fits',
+          lengthWeeks: 8,
+          days: program().days,
+        ),
+      ],
+      active: ActiveProgram(
+        programId: 'c1',
+        weekdays: const [1, 4],
+        nextDayIndex: 0,
+        nextDate: CalendarDate(2026, 11, 12),
+        startedAt: DateTime(2026, 11, 2),
+      ),
+      week: 2,
+      finished: finished,
+    ),
+  );
 
   ProgramCatalogueState ready({
     CatalogueFilter filter = const CatalogueFilter(),
@@ -83,6 +133,42 @@ void main() {
     expect(find.text('Fits you'), findsNWidgets(2));
     expect(find.text('Premium'), findsOneWidget);
     expect(find.text('3 days · Intermediate · 8 weeks'), findsNWidgets(2));
+  });
+
+  testWidgets('an active copy comes first and opens the copy; all programs '
+      'follow', (tester) async {
+    copyActive();
+    await pump(tester, ready());
+
+    expect(find.text('Your active program'), findsOneWidget);
+    expect(find.text('Week 2 of 8 · opens your copy'), findsOneWidget);
+    expect(find.text('All programs'), findsOneWidget);
+    // Lifted out of the list below.
+    expect(find.text('3 days · Intermediate · 8 weeks'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Your active program')).dy,
+      lessThan(tester.getTopLeft(find.text('All programs')).dy),
+    );
+
+    await tester.tap(find.text('Week 2 of 8 · opens your copy'));
+    await tester.pumpAndSettle();
+    expect(find.text('at /programs/c1'), findsOneWidget);
+  });
+
+  testWidgets('a finished copy says so', (tester) async {
+    copyActive(finished: true);
+    await pump(tester, ready());
+
+    expect(find.text('Finished · opens your copy'), findsOneWidget);
+  });
+
+  testWidgets('while searching the copy is not lifted out', (tester) async {
+    copyActive();
+    await pump(tester, ready(query: 'fits'));
+
+    expect(find.text('Your active program'), findsNothing);
+    expect(find.text('All programs'), findsNothing);
+    expect(find.text('Program fits'), findsOneWidget);
   });
 
   testWidgets('with Premium the count has no free part', (tester) async {
