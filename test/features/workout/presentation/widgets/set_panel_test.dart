@@ -132,6 +132,45 @@ void main() {
     expect([for (var i = 0; i < 4; i++) typing(i)], everyElement(isFalse));
   });
 
+  testWidgets('one tap on a value types it with the keyboard up and the '
+      'Next / Done bar on it', (tester) async {
+    addTearDown(tester.view.resetViewInsets);
+    await _pump(
+      tester,
+      SetPanel(
+        title: 'Bench Press · set 3 of 4',
+        details: const [],
+        labels: _labels,
+        values: [_value(82.5, 'kg'), _value(8, 'reps')],
+        onOptions: () {},
+        onLog: () {},
+      ),
+    );
+
+    await tester.tap(find.text('82.5'));
+    await tester.pump();
+    expect(
+      tester
+          .widget<EditableText>(find.byType(EditableText).first)
+          .focusNode
+          .hasFocus,
+      isTrue,
+    );
+    expect(tester.testTextInput.isVisible, isTrue);
+
+    // The keyboard rises; the Scaffold keeps its height from the panel.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 900);
+    await tester.pump();
+    final keyboardTop =
+        (tester.view.physicalSize.height - 900) / tester.view.devicePixelRatio;
+    expect(tester.getBottomLeft(find.text('Next')).dy, lessThan(keyboardTop));
+    expect(
+      tester.getBottomLeft(find.text('Done')).dy,
+      greaterThan(keyboardTop - StepperField.barHeight),
+    );
+    expect(tester.testTextInput.isVisible, isTrue);
+  });
+
   testWidgets('a load added to the body shows its sign', (tester) async {
     await _pump(
       tester,
