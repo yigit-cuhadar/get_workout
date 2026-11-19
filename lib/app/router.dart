@@ -52,8 +52,6 @@ import '../features/programs/presentation/program_builder_page.dart';
 import '../features/programs/presentation/program_detail_page.dart';
 import '../features/programs/presentation/programs_page.dart';
 import '../features/progress/presentation/progress_page.dart';
-import '../features/settings/presentation/gesture_lab/gesture_lab_page.dart';
-import '../features/settings/presentation/gesture_lab/scroll_lab_page.dart';
 import '../features/settings/presentation/warmup_settings_page.dart';
 import '../features/steps/presentation/steps_page.dart';
 import '../features/strength/presentation/exercise_strength_page.dart';
@@ -253,8 +251,6 @@ abstract final class Routes {
       '$profileDetails/${field.name}';
 
   /// Developer tooling, never in a release build.
-  static const gestureLab = '$profile/gesture-lab';
-  static const gestureLabScroll = '$gestureLab/scroll';
 
   /// The calculators, a tool of the Today tab.
   static const calculators = '$today/calculators';
@@ -865,13 +861,6 @@ GoRouter buildRouter(
                 pageBuilder: (_, state) =>
                     _pushed(state, const WarmupSettingsPage()),
               ),
-              if (!kReleaseMode)
-                GoRoute(
-                  path: 'gesture-lab',
-                  pageBuilder: (_, state) =>
-                      _pushed(state, const GestureLabPage()),
-                  routes: [_page('scroll', const ScrollLabPage())],
-                ),
               GoRoute(
                 path: 'details',
                 pageBuilder: (_, state) =>

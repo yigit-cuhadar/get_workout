@@ -23,7 +23,6 @@ import '../features/notifications/data/notification_payloads.dart';
 import '../features/notifications/presentation/notifications_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
 import '../features/settings/presentation/first_weekday.dart';
-import '../features/settings/presentation/gesture_lab/gesture_lab_page.dart';
 import '../features/settings/presentation/settings_cubit.dart';
 import '../features/workout/domain/rest_usecases.dart';
 import '../features/workout/domain/workout_usecases.dart';
@@ -48,10 +47,7 @@ class _AppState extends State<App> {
     sl<AuthCubit>(),
     sl<ProfileCubit>(),
     deletionUnderway: sl<DeletionUnderway>(),
-    profileDevTools: [
-      if (kDebugMode) ?SubscriptionModule.debugControls(sl),
-      ?gestureLabEntry(release: kReleaseMode),
-    ],
+    profileDevTools: [if (kDebugMode) ?SubscriptionModule.debugControls(sl)],
   );
   late final AppLifecycleListener _lifecycle;
   late final StreamSubscription<String?> _taps;

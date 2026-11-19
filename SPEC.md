@@ -476,6 +476,17 @@ Where it stands (2026-11-18, end of Group 11):
   (above); the female body model before release.
 - Small: the Forge Widgetbook use case "ListRow · Info hint" is broken.
 
+After release (owner's list, 2026-11-19; not before the first release):
+- Health improvements.
+- Apple Watch improvements.
+- Home screen widgets.
+- Streaks, weekly goals, achievements and the like.
+- Progressive overload suggestions.
+- Quick routines and templates outside programs.
+- Exercise images and videos.
+- Turkish and other languages.
+- Timers for time-based sets and exercises, and rest set per series.
+
 ## Design
 
 How anything looks lives only in the two studios; a design change is made
