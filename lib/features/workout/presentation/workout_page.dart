@@ -7,6 +7,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/pages.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../programs/domain/program.dart';
@@ -30,8 +31,9 @@ import 'workout_editor_view.dart';
 import 'workout_summary_view.dart';
 import 'workout_text.dart';
 
-/// The workout in progress, full screen above the tabs; back minimizes it
-/// to the bar, or ends it while it is empty. Once finished it shows the
+/// The workout in progress, risen from the bottom over the tabs; ⌄, back
+/// or a drag down on its header minimizes it to the bar, or ends it while
+/// it is empty. Once finished it shows the
 /// summary. Each time it opens it starts on the next set to do (see
 /// [ActiveWorkoutCubit.pageOpened]); pages opened above it and closed
 /// again leave it as it was.
@@ -381,46 +383,48 @@ class _Header extends StatelessWidget implements PreferredSizeWidget {
     final programs = context.select(
       (ProgramListCubit cubit) => cubit.state.programs,
     );
-    return EverySecond(
-      builder: (context) => ForgeAppBar.value(
-        leading: ForgeAppBarAction.icon(
-          icon: ForgeIcons.expandMore,
-          label: l10n.workoutMinimize,
-          onPressed: () => context.pop(),
-        ),
-        value: l10n.elapsedText(DateTime.now().difference(workout.startedAt)),
-        subtitle: l10n.workoutHeaderLine(
-          workout,
-          l10n.workoutShortName(workout, programs),
-          state.selection,
-        ),
-        actions: [
-          ForgeButton(
-            label: l10n.workoutFinish,
-            onPressed: () => finishWorkout(context, state),
-            size: ForgeButtonSize.small,
-            loading: finishing,
+    return DragToClose(
+      child: EverySecond(
+        builder: (context) => ForgeAppBar.value(
+          leading: ForgeAppBarAction.icon(
+            icon: ForgeIcons.expandMore,
+            label: l10n.workoutMinimize,
+            onPressed: () => context.pop(),
           ),
-          Builder(
-            builder: (button) => ForgeAppBarAction.icon(
-              icon: ForgeIcons.moreHoriz,
-              label: l10n.workoutMenu,
-              onPressed: finishing
-                  ? null
-                  : () => showForgeMenu(
-                      context: button,
-                      items: [
-                        ForgeMenuItem(
-                          label: l10n.workoutDiscard,
-                          icon: ForgeIcons.delete,
-                          destructive: true,
-                          onTap: () => _discard(context, state),
-                        ),
-                      ],
-                    ),
+          value: l10n.elapsedText(DateTime.now().difference(workout.startedAt)),
+          subtitle: l10n.workoutHeaderLine(
+            workout,
+            l10n.workoutShortName(workout, programs),
+            state.selection,
+          ),
+          actions: [
+            ForgeButton(
+              label: l10n.workoutFinish,
+              onPressed: () => finishWorkout(context, state),
+              size: ForgeButtonSize.small,
+              loading: finishing,
             ),
-          ),
-        ],
+            Builder(
+              builder: (button) => ForgeAppBarAction.icon(
+                icon: ForgeIcons.moreHoriz,
+                label: l10n.workoutMenu,
+                onPressed: finishing
+                    ? null
+                    : () => showForgeMenu(
+                        context: button,
+                        items: [
+                          ForgeMenuItem(
+                            label: l10n.workoutDiscard,
+                            icon: ForgeIcons.delete,
+                            destructive: true,
+                            onTap: () => _discard(context, state),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
