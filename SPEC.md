@@ -831,6 +831,11 @@ Decisions (the canvases they were drawn on are deleted):
   in their tab, at `…/swap` (Y2 B). The analytics consent page stays a
   full-screen page (Y3 A); "New exercise" from the picker stays a full
   page over it (Y4 A).
+- Programlar · çift giriş (owner's pick, 2026-11-19, canvas
+  https://claude.ai/artifact/YaFwy2eH5tHzVFa1H1pNAn): PR1 A. Without an
+  active program the Programs tab's "No active program" card has no
+  button; Ready-made programs, Generate a program and New program are the
+  rows below it, each once. Start empty workout stays on Today alone (P7).
 - Egzersiz · düğmeler (owner's pick, 2026-11-19, canvas
   https://claude.ai/artifact/TDYNW9cLpTVgihVFauueeN): EB1 G, the owner's
   own answer after A–F were turned down. The exercise detail's app bar
