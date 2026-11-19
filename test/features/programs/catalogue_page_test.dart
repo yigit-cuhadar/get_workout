@@ -94,7 +94,7 @@ void main() {
       ],
       active: ActiveProgram(
         programId: 'c1',
-        weekdays: const [1, 4],
+        schedule: const {1: 0, 4: 1},
         nextDayIndex: 0,
         nextDate: CalendarDate(2026, 11, 12),
         startedAt: DateTime(2026, 11, 2),

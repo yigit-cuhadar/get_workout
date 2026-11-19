@@ -75,7 +75,7 @@ void main() {
   final sunday = d(2026, 11, 8);
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [1, 4],
+    schedule: const {1: 0, 4: 1},
     nextDayIndex: 1,
     nextDate: d(2026, 11, 12),
     startedAt: DateTime(2026, 11, 2),

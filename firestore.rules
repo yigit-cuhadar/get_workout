@@ -30,12 +30,26 @@ rules_version = '2';
 //                            functions write, through the Admin SDK)
 //   announcements/{id}       admin claim                            allow deny
 //   announcements/{id}       anyone else                            deny  deny
+//   users/{uid}              owner (writes validated, see below)    allow allow
 //   users/{uid}/**           owner                                  allow allow
 //   users/{uid}/**           anyone else                            deny  deny
 //   anything else            anyone                                 deny  deny
 //
 // Firestore ORs every matching `allow`, so a path a validating rule guards
 // must not also match a broader rule that allows it.
+//
+// users/{uid}, as the signed-in user `uid` (anyone else: deny). Only
+// activeProgram.schedule is checked; older documents have weekdays[]
+// instead and stay valid.
+// | Request                                                        | Result |
+// |----------------------------------------------------------------|--------|
+// | read, delete own document                                      | allow  |
+// | create/update without activeProgram, or one without schedule   | allow  |
+// | ... with schedule a map of 1-7 entries, keys "1"-"7", each     | allow  |
+// | value an int 0-6                                               |        |
+// | schedule empty, not a map, a key outside "1"-"7", a value not  | deny   |
+// | an int or outside 0-6                                          |        |
+// | any request for another user's document, or signed out         | deny   |
 //
 // users/{uid}/cardio/{id}, as the signed-in user `uid` (anyone else: deny):
 // | Request                                                        | Result |
@@ -207,6 +221,31 @@ service cloud.firestore {
         && (!('photos' in data) || isPhotos(data.photos));
     }
 
+    function isScheduleDay(schedule, weekday) {
+      return !(weekday in schedule)
+        || (schedule[weekday] is int
+          && schedule[weekday] >= 0
+          && schedule[weekday] <= 6);
+    }
+
+    // ISO weekday ("1" Monday to "7" Sunday) to program day index; a
+    // program has at most 7 days.
+    function isSchedule(schedule) {
+      return schedule is map
+        && schedule.size() >= 1
+        && schedule.keys().hasOnly(['1', '2', '3', '4', '5', '6', '7'])
+        && isScheduleDay(schedule, '1') && isScheduleDay(schedule, '2')
+        && isScheduleDay(schedule, '3') && isScheduleDay(schedule, '4')
+        && isScheduleDay(schedule, '5') && isScheduleDay(schedule, '6')
+        && isScheduleDay(schedule, '7');
+    }
+
+    function isUser(data) {
+      return !('activeProgram' in data)
+        || !('schedule' in data.activeProgram)
+        || isSchedule(data.activeProgram.schedule);
+    }
+
     // Updates write only name, length, days and updatedAt; origin stays as
     // stored and is checked on the result.
     function isProgram(data) {
@@ -306,7 +345,8 @@ service cloud.firestore {
 
     // A user's own data, guest or not.
     match /users/{uid} {
-      allow read, write: if isOwner(uid);
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isUser(request.resource.data);
 
       // Validated; only reachable here, the rule below excludes it.
       match /cardio/{id} {

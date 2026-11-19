@@ -169,9 +169,11 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
       batch.set(_stats(uid).doc(id), statsToMap(value));
     }
     if (advance != null) {
-      batch.set(_firestore.collection('users').doc(uid), {
-        'activeProgram': FirestoreProgramRepository.activeToMap(advance),
-      }, SetOptions(merge: true));
+      FirestoreProgramRepository.writeActive(
+        batch,
+        _firestore.collection('users').doc(uid),
+        advance,
+      );
     }
     final commit = batch.commit();
     _commits['$uid/${workout.id}'] = commit;

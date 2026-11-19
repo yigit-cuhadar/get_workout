@@ -22,7 +22,7 @@ enum ProgramDetailStatus {
 }
 
 /// What a [ProgramDetailCubit] was asked to do.
-enum ProgramDetailAction { start, changeWeekdays, stop, duplicate, delete }
+enum ProgramDetailAction { start, changeSchedule, stop, duplicate, delete }
 
 class ProgramDetailState extends Equatable {
   const ProgramDetailState({
@@ -53,7 +53,7 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
     this.programId, {
     required this._list,
     required this._startProgram,
-    required this._changeWeekdays,
+    required this._changeSchedule,
     required this._stopProgram,
     required this._duplicateProgram,
     required this._deleteProgram,
@@ -73,7 +73,7 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
   final String programId;
   final ProgramListCubit _list;
   final StartProgram _startProgram;
-  final ChangeWeekdays _changeWeekdays;
+  final ChangeSchedule _changeSchedule;
   final StopProgram _stopProgram;
   final DuplicateProgram _duplicateProgram;
   final DeleteProgram _deleteProgram;
@@ -94,17 +94,17 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
   }
 
   /// Refused unless [access] is open.
-  Future<void> start(List<int> weekdays) {
+  Future<void> start(Map<int, int> schedule) {
     if (access != ProgramAccess.open) return Future.value();
     return _withProgram(
       ProgramDetailAction.start,
       (uid, program) =>
-          _startProgram((uid: uid, program: program, weekdays: weekdays)),
+          _startProgram((uid: uid, program: program, schedule: schedule)),
     );
   }
 
   /// Only for the active program, and refused unless [access] is open.
-  Future<void> changeWeekdays(List<int> weekdays) {
+  Future<void> changeSchedule(Map<int, int> schedule) {
     final active = _list.state.active;
     if (active == null ||
         active.programId != programId ||
@@ -112,12 +112,12 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
       return Future.value();
     }
     return _withProgram(
-      ProgramDetailAction.changeWeekdays,
-      (uid, program) => _changeWeekdays((
+      ProgramDetailAction.changeSchedule,
+      (uid, program) => _changeSchedule((
         uid: uid,
         active: active,
         dayCount: program.days.length,
-        weekdays: weekdays,
+        schedule: schedule,
       )),
     );
   }

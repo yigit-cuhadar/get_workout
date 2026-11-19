@@ -37,7 +37,8 @@ void main() {
   );
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [1, 3],
+    // Wednesday's first day, then Monday's second.
+    schedule: const {1: 1, 3: 0},
     nextDayIndex: 0,
     nextDate: CalendarDate(2026, 11, 11),
     startedAt: DateTime(2026, 11, 1),

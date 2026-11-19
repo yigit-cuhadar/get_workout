@@ -29,7 +29,7 @@ void main() {
     registerFallbackValue(
       ActiveProgram(
         programId: 'x',
-        weekdays: const [1],
+        schedule: const {1: 0},
         nextDayIndex: 0,
         nextDate: CalendarDate(2026, 1, 1),
         startedAt: DateTime(2026),
@@ -792,7 +792,7 @@ void main() {
     });
 
     test(
-      'starting plans the first day on the first weekday from today',
+      'starting plans the first training weekday from today with its day',
       () async {
         // Wednesday 11 November 2026, 20:15.
         final now = DateTime(2026, 11, 11, 20, 15);
@@ -804,15 +804,15 @@ void main() {
         await start((
           uid: 'u1',
           program: program(id: 'p1'),
-          weekdays: const [5, 1],
+          schedule: const {5: 1, 1: 0},
         ));
         verify(
           () => repository.startProgram(
             'u1',
             ActiveProgram(
               programId: 'p1',
-              weekdays: const [1, 5],
-              nextDayIndex: 0,
+              schedule: const {1: 0, 5: 1},
+              nextDayIndex: 1,
               nextDate: CalendarDate(2026, 11, 13),
               startedAt: now,
             ),
@@ -821,9 +821,9 @@ void main() {
       },
     );
 
-    test('starting after the first day was done today plans the next day, '
-        'as finishing it would have', () async {
-      // Wednesday 11 November 2026, 20:15; trains Monday and Wednesday.
+    test('starting after today\'s day was done plans the next training '
+        'weekday, as finishing it would have', () async {
+      // Wednesday 11 November 2026, 20:15; Monday B, Wednesday A.
       final now = DateTime(2026, 11, 11, 20, 15);
       final today = CalendarDate.of(now);
       final completed = _CompletedDays();
@@ -835,14 +835,14 @@ void main() {
       await start((
         uid: 'u1',
         program: program(id: 'p1'),
-        weekdays: const [1, 3],
+        schedule: const {1: 1, 3: 0},
       ));
       verify(
         () => repository.startProgram(
           'u1',
           ActiveProgram(
             programId: 'p1',
-            weekdays: const [1, 3],
+            schedule: const {1: 1, 3: 0},
             nextDayIndex: 1,
             nextDate: CalendarDate(2026, 11, 16),
             startedAt: now,
@@ -851,8 +851,36 @@ void main() {
       ).called(1);
     });
 
+    test('starting after another day was done today keeps today\'s', () async {
+      final now = DateTime(2026, 11, 11, 20, 15);
+      final today = CalendarDate.of(now);
+      final completed = _CompletedDays();
+      when(() => completed.watch('u1', 'p1', from: today, to: today))
+          .thenAnswer(
+            (_) => Stream.value([CompletedDay(date: today, dayIndex: 1)]),
+          );
+      final start = StartProgram(repository, completed, clock: () => now);
+      await start((
+        uid: 'u1',
+        program: program(id: 'p1'),
+        schedule: const {1: 1, 3: 0},
+      ));
+      verify(
+        () => repository.startProgram(
+          'u1',
+          ActiveProgram(
+            programId: 'p1',
+            schedule: const {1: 1, 3: 0},
+            nextDayIndex: 0,
+            nextDate: today,
+            startedAt: now,
+          ),
+        ),
+      ).called(1);
+    });
+
     test(
-      'starting when the done days cannot be read plans the first day',
+      'starting when the done days cannot be read plans today\'s day',
       () async {
         final now = DateTime(2026, 11, 11, 20, 15);
         final today = CalendarDate.of(now);
@@ -863,15 +891,15 @@ void main() {
         await start((
           uid: 'u1',
           program: program(id: 'p1'),
-          weekdays: const [1, 3],
+          schedule: const {1: 0, 3: 1},
         ));
         verify(
           () => repository.startProgram(
             'u1',
             ActiveProgram(
               programId: 'p1',
-              weekdays: const [1, 3],
-              nextDayIndex: 0,
+              schedule: const {1: 0, 3: 1},
+              nextDayIndex: 1,
               nextDate: CalendarDate(2026, 11, 11),
               startedAt: now,
             ),
@@ -880,40 +908,62 @@ void main() {
       },
     );
 
-    test('starting needs one distinct weekday per day', () async {
+    test('starting needs a schedule of the program\'s days', () async {
       final start = StartProgram(repository, const NoCompletedDays());
-      for (final weekdays in [
-        const [1],
-        const [1, 3, 5],
-        const [2, 2],
-        const [0, 3],
-        const [3, 8],
+      for (final schedule in [
+        const <int, int>{},
+        const {1: 0, 3: 2},
+        const {1: -1},
+        const {0: 0, 3: 1},
+        const {3: 0, 8: 1},
       ]) {
         final result = await start((
           uid: 'u1',
           program: program(id: 'p1'),
-          weekdays: weekdays,
+          schedule: schedule,
         ));
         expect(
           result.failureOrNull,
           isA<ValidationFailure>(),
-          reason: '$weekdays',
+          reason: '$schedule',
         );
       }
       final unsaved = await start((
         uid: 'u1',
         program: program(),
-        weekdays: const [1, 4],
+        schedule: const {1: 0, 4: 1},
       ));
       expect(unsaved.failureOrNull, isA<ValidationFailure>());
       verifyNever(() => repository.startProgram(any(), any()));
     });
 
+    test('a program day may be done on several weekdays, or on none', () async {
+      final now = DateTime(2026, 11, 11, 20, 15);
+      final start = StartProgram(
+        repository,
+        const NoCompletedDays(),
+        clock: () => now,
+      );
+      for (final schedule in [
+        const {1: 0, 2: 1, 4: 0, 5: 1},
+        const {6: 1},
+      ]) {
+        final result = await start((
+          uid: 'u1',
+          program: program(id: 'p1'),
+          schedule: schedule,
+        ));
+        expect(result.isOk, isTrue, reason: '$schedule');
+      }
+      verify(() => repository.startProgram('u1', any())).called(2);
+    });
+
     group('a missed day', () {
-      // Mon/Thu; Monday's day 0 missed; today is Wednesday 11 November.
+      // Monday A, Thursday B; Monday's A missed; today is Wednesday
+      // 11 November.
       final missed = ActiveProgram(
         programId: 'p1',
-        weekdays: const [1, 4],
+        schedule: const {1: 0, 4: 1},
         nextDayIndex: 0,
         nextDate: CalendarDate(2026, 11, 9),
         startedAt: DateTime(2026, 11, 2),
@@ -927,10 +977,12 @@ void main() {
             MissedDayChoice.doToday,
             missed.copyWith(nextDate: CalendarDate(2026, 11, 11)),
           ),
+          // A keeps its day on Thursday, in place of B.
           (
             MissedDayChoice.moveToNextWeekday,
             missed.copyWith(nextDate: CalendarDate(2026, 11, 12)),
           ),
+          // Thursday does its own B.
           (
             MissedDayChoice.skip,
             missed.copyWith(
@@ -971,15 +1023,15 @@ void main() {
       });
     });
 
-    test('changing weekdays replans the next day from today', () async {
+    test('changing the schedule replans the next day from today', () async {
       final active = ActiveProgram(
         programId: 'p1',
-        weekdays: const [1, 4],
+        schedule: const {1: 0, 4: 1},
         nextDayIndex: 1,
         nextDate: CalendarDate(2026, 11, 12),
         startedAt: DateTime(2026, 11, 2),
       );
-      final change = ChangeWeekdays(
+      final change = ChangeSchedule(
         repository,
         clock: () => DateTime(2026, 11, 11, 9),
       );
@@ -987,20 +1039,21 @@ void main() {
         uid: 'u1',
         active: active,
         dayCount: 2,
-        weekdays: const [2],
+        schedule: const {2: 2},
       ));
       expect(refused.failureOrNull, isA<ValidationFailure>());
       await change((
         uid: 'u1',
         active: active,
         dayCount: 2,
-        weekdays: const [2, 6],
+        schedule: const {2: 1, 6: 0},
       ));
       verify(
         () => repository.updateActiveProgram(
           'u1',
           active.copyWith(
-            weekdays: const [2, 6],
+            schedule: const {2: 1, 6: 0},
+            nextDayIndex: 0,
             nextDate: CalendarDate(2026, 11, 14),
           ),
         ),

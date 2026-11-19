@@ -54,7 +54,7 @@ void main() {
   );
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [1, 3, 5],
+    schedule: const {1: 0, 3: 1, 5: 2},
     nextDayIndex: 0,
     nextDate: today,
     startedAt: DateTime(2026, 11, 2),
@@ -533,7 +533,7 @@ void main() {
         ],
         active: ActiveProgram(
           programId: 'p2',
-          weekdays: const [4],
+          schedule: const {4: 0},
           nextDayIndex: 0,
           nextDate: CalendarDate(2026, 11, 12),
           startedAt: now,

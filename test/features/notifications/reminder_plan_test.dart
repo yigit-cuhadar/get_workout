@@ -21,7 +21,7 @@ void main() {
     ActiveProgram active({CalendarDate? next, int dayIndex = 0}) =>
         ActiveProgram(
           programId: 'p1',
-          weekdays: const [1, 3, 5],
+          schedule: const {1: 0, 3: 1, 5: 2},
           nextDayIndex: dayIndex,
           nextDate: next ?? today,
           startedAt: DateTime(2026, 11, 2),
@@ -117,11 +117,11 @@ void main() {
       expect(reminders.last.at, DateTime(2026, 11, 13, 8));
     });
 
-    test('new weekdays move the reminders with them', () {
+    test('new training days move the reminders with them', () {
       final changed = ProgramSchedule(
         active(),
         dayCount: 2,
-      ).withWeekdays(const [2, 4], today);
+      ).withSchedule(const {2: 0, 4: 1}, today);
 
       final reminders = run(activeProgram: changed);
 

@@ -168,10 +168,7 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
         ? ProgramSchedule(
             program.active!,
             dayCount: program.program!.days.length,
-          ).complete(
-            dayIndex: workout.dayIndex!,
-            on: CalendarDate.of(workout.startedAt),
-          )
+          ).complete(on: CalendarDate.of(workout.startedAt))
         : null;
     final previous = await _previousOfDay(params.uid, workout);
     final saved = await _repository.saveWorkout(

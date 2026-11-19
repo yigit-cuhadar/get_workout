@@ -31,12 +31,14 @@ typedef ProgramCopy = ({
 
 /// [activeProgramId] is the program active when the delete was asked for.
 typedef ProgramDelete = ({String uid, String id, String? activeProgramId});
-typedef ProgramStart = ({String uid, Program program, List<int> weekdays});
-typedef WeekdaysChange = ({
+
+/// [schedule]: see [ActiveProgram.schedule].
+typedef ProgramStart = ({String uid, Program program, Map<int, int> schedule});
+typedef ScheduleChange = ({
   String uid,
   ActiveProgram active,
   int dayCount,
-  List<int> weekdays,
+  Map<int, int> schedule,
 });
 
 /// The three ways to resolve a missed day; see [ProgramSchedule.doToday],
@@ -152,10 +154,10 @@ class DeleteProgram implements UseCase<void, ProgramDelete> {
   );
 }
 
-/// Makes the program active from today, replacing any other, with one
-/// weekday per program day. A first day already done today counts as
-/// done, as finishing it while active would have (see
-/// [ProgramSchedule.complete]), so the same day is never suggested twice.
+/// Makes the program active from today on its schedule, replacing any
+/// other. A first day already done today counts as done, as finishing it
+/// while active would have (see [ProgramSchedule.complete]), so the same
+/// day is never suggested twice.
 class StartProgram implements UseCase<void, ProgramStart> {
   StartProgram(
     this._repository,
@@ -170,11 +172,11 @@ class StartProgram implements UseCase<void, ProgramStart> {
   Future<Result<void>> call(ProgramStart params) async {
     final id = params.program.id;
     if (id == null ||
-        !ProgramSchedule.isValidWeekdays(
-          params.weekdays,
+        !ProgramSchedule.isValidSchedule(
+          params.schedule,
           params.program.days.length,
         )) {
-      return const Err(ValidationFailure('one weekday per program day'));
+      return const Err(ValidationFailure('not a schedule of the program'));
     }
     final now = _clock();
     final today = CalendarDate.of(now);
@@ -191,41 +193,34 @@ class StartProgram implements UseCase<void, ProgramStart> {
         );
     var active = ProgramSchedule.start(
       programId: id,
-      weekdays: params.weekdays,
+      schedule: params.schedule,
       today: today,
       startedAt: now,
     );
-    for (
-      var i = 0;
-      i < dayCount && doneToday.contains(active.nextDayIndex);
-      i++
-    ) {
-      active = ProgramSchedule(
-        active,
-        dayCount: dayCount,
-      ).complete(dayIndex: active.nextDayIndex, on: today);
+    if (active.nextDate == today && doneToday.contains(active.nextDayIndex)) {
+      active = ProgramSchedule(active, dayCount: dayCount).complete(on: today);
     }
     return _repository.startProgram(params.uid, active);
   }
 }
 
-/// Moves the active program to other weekdays; see
-/// [ProgramSchedule.withWeekdays].
-class ChangeWeekdays implements UseCase<void, WeekdaysChange> {
-  ChangeWeekdays(this._repository, {DateTime Function()? clock})
+/// Moves the active program to another schedule; see
+/// [ProgramSchedule.withSchedule].
+class ChangeSchedule implements UseCase<void, ScheduleChange> {
+  ChangeSchedule(this._repository, {DateTime Function()? clock})
     : _clock = clock ?? DateTime.now;
   final ProgramRepository _repository;
   final DateTime Function() _clock;
 
   @override
-  Future<Result<void>> call(WeekdaysChange params) async {
-    if (!ProgramSchedule.isValidWeekdays(params.weekdays, params.dayCount)) {
-      return const Err(ValidationFailure('one weekday per program day'));
+  Future<Result<void>> call(ScheduleChange params) async {
+    if (!ProgramSchedule.isValidSchedule(params.schedule, params.dayCount)) {
+      return const Err(ValidationFailure('not a schedule of the program'));
     }
     final schedule = ProgramSchedule(params.active, dayCount: params.dayCount);
     return _repository.updateActiveProgram(
       params.uid,
-      schedule.withWeekdays(params.weekdays, CalendarDate.of(_clock())),
+      schedule.withSchedule(params.schedule, CalendarDate.of(_clock())),
     );
   }
 }

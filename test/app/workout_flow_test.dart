@@ -46,7 +46,7 @@ void main() {
       ..add(upperLower)
       ..active = ActiveProgram(
         programId: 'p1',
-        weekdays: const [1, 3],
+        schedule: const {1: 0, 3: 1},
         nextDayIndex: 1,
         nextDate: dateOf(flowStart),
         startedAt: DateTime(2026, 11, 2),
@@ -97,7 +97,7 @@ void main() {
       ..add(upperLower)
       ..active = ActiveProgram(
         programId: 'p1',
-        weekdays: const [1, 3],
+        schedule: const {1: 0, 3: 1},
         nextDayIndex: 1,
         nextDate: dateOf(flowStart),
         startedAt: DateTime(2026, 11, 2),

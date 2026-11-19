@@ -26,7 +26,7 @@ void main() {
   final started = DateTime(2026, 11, 11, 18, 30);
   final active = ActiveProgram(
     programId: 'p1',
-    weekdays: const [1, 3, 5],
+    schedule: const {1: 0, 3: 1, 5: 0},
     nextDayIndex: 1,
     nextDate: CalendarDate(2026, 11, 13),
     startedAt: started,
@@ -295,7 +295,7 @@ void main() {
         'favoriteExerciseIds': ['a'],
         'activeProgram': {
           'programId': 'p1',
-          'weekdays': [1, 3, 5],
+          'schedule': {'1': 0, '3': 1, '5': 0},
           'nextDayIndex': 1,
           'nextDate': '2026-11-13',
           'startedAt': Timestamp.fromDate(started),
@@ -314,7 +314,7 @@ void main() {
 
       final other = ActiveProgram(
         programId: 'p2',
-        weekdays: const [2],
+        schedule: const {2: 0},
         nextDayIndex: 0,
         nextDate: CalendarDate(2026, 11, 17),
         startedAt: started,
@@ -339,7 +339,7 @@ void main() {
 
       await repository.updateActiveProgram(
         'u1',
-        active.copyWith(weekdays: const [2, 4, 6], nextDayIndex: 2),
+        active.copyWith(schedule: const {2: 0, 4: 1, 6: 2}, nextDayIndex: 2),
       );
       await pumpEventQueue();
 
@@ -347,7 +347,7 @@ void main() {
       expect(data['settings'], {'weightUnit': 'kg'});
       expect(data['activeProgram'], {
         'programId': 'p1',
-        'weekdays': [2, 4, 6],
+        'schedule': {'2': 0, '4': 1, '6': 2},
         'nextDayIndex': 2,
         'nextDate': '2026-11-13',
         'startedAt': Timestamp.fromDate(started),
@@ -384,9 +384,14 @@ void main() {
         'p1',
         <String, Object?>{},
         {...valid, 'programId': ''},
-        {...valid, 'weekdays': <int>[]},
+        {...valid, 'schedule': <String, int>{}},
         {
           ...valid,
+          'schedule': {'0': 0, '8': 1, 'x': 0, '3': -1, '4': '1', 5: 0},
+        },
+        {
+          for (final MapEntry(:key, :value) in valid.entries)
+            if (key != 'schedule') key: value,
           'weekdays': [0, 8, '3'],
         },
         {...valid, 'nextDate': '13.11.2026'},
@@ -400,13 +405,75 @@ void main() {
       }
     });
 
-    test('odd weekdays and day index read leniently', () {
+    test('odd schedule entries and day index read leniently', () {
       final read = FirestoreProgramRepository.activeFromMap({
         ...FirestoreProgramRepository.activeToMap(active),
-        'weekdays': [5, 9, 1, 5, 'x'],
+        'schedule': {'5': 1, '9': 0, '1': 0, 'x': 2, '3': -1, '6': 1.5},
         'nextDayIndex': -2,
       });
-      expect(read, active.copyWith(weekdays: const [1, 5], nextDayIndex: 0));
+      expect(
+        read,
+        active.copyWith(schedule: const {1: 0, 5: 1}, nextDayIndex: 0),
+      );
+    });
+
+    group('a document of an older version', () {
+      Map<String, Object?> old(Object? weekdays) => {
+        'programId': 'p1',
+        'weekdays': weekdays,
+        'nextDayIndex': 1,
+        'nextDate': '2026-11-13',
+        'startedAt': Timestamp.fromDate(started),
+      };
+
+      test('does its days in turn on its weekdays, by weekday', () {
+        expect(
+          FirestoreProgramRepository.activeFromMap(old([5, 1, 3])),
+          active.copyWith(schedule: const {1: 0, 3: 1, 5: 2}),
+        );
+      });
+
+      test('drops odd weekdays first', () {
+        expect(
+          FirestoreProgramRepository.activeFromMap(old([5, 9, 1, 5, 'x'])),
+          active.copyWith(schedule: const {1: 0, 5: 1}),
+        );
+      });
+
+      test('prefers a schedule written next to it', () {
+        expect(
+          FirestoreProgramRepository.activeFromMap({
+            ...old([2, 4]),
+            'schedule': {'1': 0, '3': 1, '5': 0},
+          }),
+          active,
+        );
+      });
+
+      test('is read from the store and written in the new shape', () async {
+        await user('u1').set({
+          'settings': {'weightUnit': 'kg'},
+          'activeProgram': old([1, 3, 5]),
+        });
+
+        final read = await repository.watchActiveProgram('u1').first;
+        expect(read!.schedule, {1: 0, 3: 1, 5: 2});
+
+        await repository.updateActiveProgram(
+          'u1',
+          read.copyWith(schedule: const {1: 0, 3: 1, 5: 0}),
+        );
+        await pumpEventQueue();
+
+        expect((await userData())!['activeProgram'], {
+          'programId': 'p1',
+          'schedule': {'1': 0, '3': 1, '5': 0},
+          'nextDayIndex': 1,
+          'nextDate': '2026-11-13',
+          'startedAt': Timestamp.fromDate(started),
+        });
+        expect(await repository.watchActiveProgram('u1').first, active);
+      });
     });
   });
 }

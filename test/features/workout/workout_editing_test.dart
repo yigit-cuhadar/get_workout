@@ -355,7 +355,7 @@ void main() {
   group('advancesProgram', () {
     final active = ActiveProgram(
       programId: 'p1',
-      weekdays: const [1, 3],
+      schedule: const {1: 0, 3: 1},
       nextDayIndex: 1,
       nextDate: CalendarDate(2026, 11, 11),
       startedAt: DateTime(2026, 11, 1),

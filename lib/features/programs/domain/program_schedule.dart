@@ -23,9 +23,10 @@ class PlannedDay extends Equatable {
 }
 
 /// When the days of an active program fall. The next day is planned for
-/// [ActiveProgram.nextDate]; every following one for the next selected
-/// weekday after the one before, cycling through the program's days. Dates
-/// are calendar dates, so daylight saving changes never shift them.
+/// [ActiveProgram.nextDate]; after it, every training weekday does the day
+/// [ActiveProgram.schedule] gives it. A day moved to another date keeps
+/// its own day there, in place of that date's. Dates are calendar dates,
+/// so daylight saving changes never shift them.
 class ProgramSchedule {
   ProgramSchedule(this.active, {required this.dayCount, this.lengthWeeks})
     : assert(dayCount > 0);
@@ -36,20 +37,23 @@ class ProgramSchedule {
   final int dayCount;
   final int? lengthWeeks;
 
-  /// A program started on [today]: its first day, on the first selected
-  /// weekday from today on.
+  /// A program started on [today]: the first training weekday from today
+  /// on, with its day.
   static ActiveProgram start({
     required String programId,
-    required List<int> weekdays,
+    required Map<int, int> schedule,
     required CalendarDate today,
     required DateTime startedAt,
-  }) => ActiveProgram(
-    programId: programId,
-    weekdays: weekdays,
-    nextDayIndex: 0,
-    nextDate: nextWeekday(weekdays, from: today),
-    startedAt: startedAt,
-  );
+  }) {
+    final date = nextWeekday(schedule.keys, from: today);
+    return ActiveProgram(
+      programId: programId,
+      schedule: schedule,
+      nextDayIndex: schedule[date.weekday]!,
+      nextDate: date,
+      startedAt: startedAt,
+    );
+  }
 
   /// Weekdays to offer for a program of [dayCount] days, spread over the
   /// week.
@@ -63,15 +67,32 @@ class ProgramSchedule {
     _ => const [1, 2, 3, 4, 5, 6, 7],
   };
 
-  /// One distinct ISO weekday per program day.
-  static bool isValidWeekdays(List<int> weekdays, int dayCount) =>
-      weekdays.length == dayCount &&
-      weekdays.toSet().length == weekdays.length &&
-      weekdays.every((day) => day >= 1 && day <= 7);
+  /// [weekdays] doing the program's days in turn, by ascending weekday:
+  /// the first day on the first weekday, the second on the next, and so on.
+  static Map<int, int> inTurn(Iterable<int> weekdays, int dayCount) {
+    final sorted = weekdays.toSet().toList()..sort();
+    return {for (final (i, weekday) in sorted.indexed) weekday: i % dayCount};
+  }
+
+  /// [suggestedWeekdays] doing the program's days in turn.
+  static Map<int, int> suggestedSchedule(int dayCount) =>
+      inTurn(suggestedWeekdays(dayCount), dayCount);
+
+  /// At least one training weekday, each from 1 to 7 doing a day of the
+  /// program.
+  static bool isValidSchedule(Map<int, int> schedule, int dayCount) =>
+      schedule.isNotEmpty &&
+      schedule.entries.every(
+        (entry) =>
+            entry.key >= 1 &&
+            entry.key <= 7 &&
+            entry.value >= 0 &&
+            entry.value < dayCount,
+      );
 
   /// The first date from [from] on, [from] included, on one of [weekdays].
   static CalendarDate nextWeekday(
-    List<int> weekdays, {
+    Iterable<int> weekdays, {
     required CalendarDate from,
   }) {
     for (var offset = 0; offset < 7; offset++) {
@@ -83,6 +104,17 @@ class ProgramSchedule {
 
   /// [ActiveProgram.nextDayIndex], kept inside a program that lost days.
   int get nextDayIndex => active.nextDayIndex % dayCount;
+
+  /// The day [ActiveProgram.schedule] gives training weekday [weekday],
+  /// kept inside a program that lost days.
+  int dayOn(int weekday) => active.schedule[weekday]! % dayCount;
+
+  /// The next day planned for the first training weekday from [from] on,
+  /// with that weekday's own day.
+  ActiveProgram _nextFrom(CalendarDate from) {
+    final date = nextWeekday(active.weekdays, from: from);
+    return active.copyWith(nextDayIndex: dayOn(date.weekday), nextDate: date);
+  }
 
   /// The first date after the program, when it has a length: [lengthWeeks]
   /// weeks after the date it was started.
@@ -123,8 +155,9 @@ class ProgramSchedule {
       !isFinished(today) && active.nextDate.isBefore(today);
 
   /// The program days from the next one on, with their dates, up to [end],
-  /// as planned on [today]. A missed next day is not done yet, so it comes
-  /// first again, on the first selected weekday from today on.
+  /// as planned on [today]: the next day, then each training weekday's own
+  /// day. A missed next day is not done yet, so it comes first again, on
+  /// the first training weekday from today on.
   Iterable<({int dayIndex, CalendarDate date})> upcoming(
     CalendarDate today,
   ) sync* {
@@ -135,8 +168,8 @@ class ProgramSchedule {
         : active.nextDate;
     while (end == null || date.isBefore(end)) {
       yield (dayIndex: dayIndex, date: date);
-      dayIndex = (dayIndex + 1) % dayCount;
       date = nextWeekday(active.weekdays, from: date.addDays(1));
+      dayIndex = dayOn(date.weekday);
     }
   }
 
@@ -227,38 +260,29 @@ class ProgramSchedule {
   ActiveProgram doToday(CalendarDate today) =>
       active.copyWith(nextDayIndex: nextDayIndex, nextDate: today);
 
-  /// Missed day, option 2: move it to the first selected weekday after
-  /// today, shifting the following days.
+  /// Missed day, option 2: move it to the first training weekday after
+  /// today, in place of that weekday's own day.
   ActiveProgram moveToNextWeekday(CalendarDate today) => active.copyWith(
     nextDayIndex: nextDayIndex,
     nextDate: nextWeekday(active.weekdays, from: today.addDays(1)),
   );
 
-  /// Missed day, option 3: leave it out and plan the day after it for the
-  /// first selected weekday from today on.
-  ActiveProgram skip(CalendarDate today) => active.copyWith(
-    nextDayIndex: (nextDayIndex + 1) % dayCount,
-    nextDate: nextWeekday(active.weekdays, from: today),
-  );
+  /// Missed day, option 3: leave it out; the first training weekday from
+  /// today on does its own day.
+  ActiveProgram skip(CalendarDate today) => _nextFrom(today);
 
-  /// Program day [dayIndex] was done [on] that date, planned or not: the day
-  /// after it comes next, on the first selected weekday after [on].
-  ActiveProgram complete({required int dayIndex, required CalendarDate on}) =>
-      active.copyWith(
-        nextDayIndex: (dayIndex + 1) % dayCount,
-        nextDate: nextWeekday(active.weekdays, from: on.addDays(1)),
-      );
+  /// The next day was done [on] that date, planned or not: the first
+  /// training weekday after [on] comes next, with its own day.
+  ActiveProgram complete({required CalendarDate on}) =>
+      _nextFrom(on.addDays(1));
 
-  /// Trains on [weekdays] from now on. The next day moves to the first of
-  /// them from today on, or from tomorrow when it was already planned
-  /// after today (today's day may be done).
-  ActiveProgram withWeekdays(List<int> weekdays, CalendarDate today) =>
-      active.copyWith(
-        weekdays: weekdays,
-        nextDayIndex: nextDayIndex,
-        nextDate: nextWeekday(
-          weekdays,
-          from: active.nextDate.isAfter(today) ? today.addDays(1) : today,
-        ),
-      );
+  /// Trains on [schedule] from now on. The next day is the first of its
+  /// weekdays from today on, or from tomorrow when it was already planned
+  /// after today (today's day may be done), with that weekday's day.
+  ActiveProgram withSchedule(Map<int, int> schedule, CalendarDate today) =>
+      ProgramSchedule(
+        active.copyWith(schedule: schedule),
+        dayCount: dayCount,
+        lengthWeeks: lengthWeeks,
+      )._nextFrom(active.nextDate.isAfter(today) ? today.addDays(1) : today);
 }

@@ -4,20 +4,24 @@ import 'calendar_date.dart';
 
 /// The program the user follows (`users/{uid}.activeProgram`).
 class ActiveProgram extends Equatable {
-  /// [weekdays] must not be empty.
+  /// [schedule] must not be empty.
   ActiveProgram({
     required this.programId,
-    required List<int> weekdays,
+    required Map<int, int> schedule,
     required this.nextDayIndex,
     required this.nextDate,
     required this.startedAt,
-  }) : assert(weekdays.isNotEmpty),
-       weekdays = List.unmodifiable(weekdays.toSet().toList()..sort());
+  }) : assert(schedule.isNotEmpty),
+       schedule = Map.unmodifiable({
+         for (final weekday in schedule.keys.toList()..sort())
+           weekday: schedule[weekday]!,
+       });
 
   final String programId;
 
-  /// ISO weekdays (1 Monday to 7 Sunday) the user trains on, ascending.
-  final List<int> weekdays;
+  /// The program day done on each ISO weekday (1 Monday to 7 Sunday) the
+  /// user trains on, by ascending weekday. A day may be on several.
+  final Map<int, int> schedule;
 
   /// The program day to do next.
   final int nextDayIndex;
@@ -26,13 +30,16 @@ class ActiveProgram extends Equatable {
   final CalendarDate nextDate;
   final DateTime startedAt;
 
+  /// The weekdays the user trains on, ascending.
+  List<int> get weekdays => schedule.keys.toList();
+
   ActiveProgram copyWith({
-    List<int>? weekdays,
+    Map<int, int>? schedule,
     int? nextDayIndex,
     CalendarDate? nextDate,
   }) => ActiveProgram(
     programId: programId,
-    weekdays: weekdays ?? this.weekdays,
+    schedule: schedule ?? this.schedule,
     nextDayIndex: nextDayIndex ?? this.nextDayIndex,
     nextDate: nextDate ?? this.nextDate,
     startedAt: startedAt,
@@ -41,7 +48,7 @@ class ActiveProgram extends Equatable {
   @override
   List<Object?> get props => [
     programId,
-    weekdays,
+    schedule,
     nextDayIndex,
     nextDate,
     startedAt,

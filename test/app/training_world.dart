@@ -649,7 +649,7 @@ class TrainingWorld {
           id,
           list: list,
           startProgram: startProgram,
-          changeWeekdays: ChangeWeekdays(programs, clock: _clock),
+          changeSchedule: ChangeSchedule(programs, clock: _clock),
           stopProgram: StopProgram(programs),
           duplicateProgram: DuplicateProgram(programs),
           deleteProgram: DeleteProgram(programs),
@@ -825,6 +825,13 @@ Future<void> tapOn(WidgetTester tester, Finder finder) async {
 /// [text] in the dialog in front.
 Finder inDialog(String text) =>
     find.descendant(of: find.byType(Dialog), matching: find.text(text));
+
+/// The chip of [weekday] (two letters) on [day]'s card in the training
+/// days sheet.
+Finder weekdayChip(String day, String weekday) => find.descendant(
+  of: find.widgetWithText(SectionCard, day),
+  matching: find.text(weekday),
+);
 
 /// Opens a tab from the navigation bar.
 Future<void> openTab(WidgetTester tester, String label) => tapOn(

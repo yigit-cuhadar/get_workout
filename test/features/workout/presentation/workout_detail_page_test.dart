@@ -140,7 +140,7 @@ void main() {
         programs: [programs.program(id: 'p1', name: 'Push Pull Legs')],
         active: ActiveProgram(
           programId: 'p1',
-          weekdays: const [1, 3, 5],
+          schedule: const {1: 0, 3: 1, 5: 2},
           nextDayIndex: 1,
           nextDate: CalendarDate(2026, 11, 16),
           startedAt: DateTime(2026, 10, 27, 9),

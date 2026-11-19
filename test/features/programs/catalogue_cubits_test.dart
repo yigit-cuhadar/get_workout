@@ -85,7 +85,7 @@ void main() {
     registerFallbackValue(
       ActiveProgram(
         programId: 'p1',
-        weekdays: const [1],
+        schedule: const {1: 0},
         nextDayIndex: 0,
         nextDate: CalendarDate(2026, 11, 16),
         startedAt: DateTime(2026, 11, 15),
@@ -576,10 +576,10 @@ void main() {
       expect(cubit.state.copyId, isNull);
     });
 
-    test('a copy to start is stored, then started on the weekdays', () async {
+    test('a copy to start is stored, then started on the schedule', () async {
       final cubit = await open(free.id);
 
-      await cubit.copy(CopyIntent.start, weekdays: const [1, 4]);
+      await cubit.copy(CopyIntent.start, schedule: const {1: 0, 4: 1});
 
       verify(() => programRepository.createProgram('u1', any())).called(1);
       final active =
@@ -588,13 +588,13 @@ void main() {
                   .single
               as ActiveProgram;
       expect(active.programId, 'copy1');
-      expect(active.weekdays, [1, 4]);
+      expect(active.schedule, {1: 0, 4: 1});
       expect(cubit.state.copyStatus, CopyStatus.copied);
       expect(cubit.state.copyIntent, CopyIntent.start);
       expect(cubit.state.copyId, 'copy1');
     });
 
-    test('no copy is made to start without weekdays', () async {
+    test('no copy is made to start without a schedule', () async {
       final cubit = await open(free.id);
 
       await cubit.copy(CopyIntent.start);
@@ -608,7 +608,7 @@ void main() {
           .thenAnswer((_) async => const Err(NetworkFailure()));
       final cubit = await open(free.id);
 
-      await cubit.copy(CopyIntent.start, weekdays: const [1, 4]);
+      await cubit.copy(CopyIntent.start, schedule: const {1: 0, 4: 1});
 
       verify(() => programRepository.createProgram('u1', any())).called(1);
       expect(cubit.state.copyStatus, CopyStatus.startFailed);
