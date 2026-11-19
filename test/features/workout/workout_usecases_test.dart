@@ -445,6 +445,14 @@ void main() {
       verify(lockScreen.clear).called(1);
     });
 
+    test('rest buttons are the lock screen\'s', () async {
+      when(lockScreen.restActions)
+          .thenAnswer((_) => Stream.value(LockScreenRestAction.skip));
+      expect(await WatchLockScreenRestActions(lockScreen)().toList(), [
+        LockScreenRestAction.skip,
+      ]);
+    });
+
     test('taps are the lock screen\'s', () async {
       when(lockScreen.taps).thenAnswer((_) => Stream.value(null));
       expect(await WatchLockScreenTaps(lockScreen)().length, 1);

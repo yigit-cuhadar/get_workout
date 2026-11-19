@@ -296,6 +296,19 @@ void main() {
       expect(rest.runsAt(now), isFalse);
     });
 
+    test('-15 s moves the end and keeps the set, ending it when less is '
+        'left', () {
+      final now = end.subtract(const Duration(minutes: 1));
+      expect(
+        rest.shortenedAt(now),
+        Rest(
+          endsAt: end.subtract(const Duration(seconds: 15)),
+          after: rest.after,
+        ),
+      );
+      expect(rest.shortenedAt(end.subtract(restExtension)), isNull);
+    });
+
     test('detached forgets the set', () {
       expect(rest.detached(), Rest(endsAt: end));
     });

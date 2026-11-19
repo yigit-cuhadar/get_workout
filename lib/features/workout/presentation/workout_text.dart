@@ -14,6 +14,7 @@ import '../domain/progression.dart';
 import '../domain/set_logging.dart';
 import '../domain/set_selection.dart';
 import '../domain/workout.dart';
+import '../domain/workout_lock_screen.dart';
 import '../domain/workout_editing.dart' as editing;
 
 extension WorkoutText on AppLocalizations {
@@ -68,6 +69,51 @@ extension WorkoutText on AppLocalizations {
     return type == SetType.drop
         ? workoutSetToDoDrop(exercise.name, number, working)
         : workoutLockScreenCurrent(exercise.name, '$number', working);
+  }
+
+  /// Set [next] of [workout] as the lock screen shows the set to do now,
+  /// in parts: `Bench Press`, `Exercise 3 of 6`, `Set 2 of 3 · 80 kg × 8`
+  /// (`Drop set 2 of 3`, `Warm-up 1 of 2`, `Warm-up` as [setToDo] counts
+  /// them) and which of the exercise's sets are done. The values are those
+  /// entered, else the [suggestion], in [unit]; none while both are empty.
+  LockScreenSet lockScreenSet(
+    Workout workout,
+    SetRef next,
+    SetValues suggestion,
+    WeightUnit unit,
+  ) {
+    final exercise = workout.exercises[next.exercise];
+    final sets = exercise.sets;
+    final set = sets[next.set];
+    final before = sets.take(next.set + 1);
+    final String name;
+    if (set.isWarmup) {
+      final warmups = sets.where((s) => s.isWarmup).length;
+      name = warmups == 1
+          ? lockScreenWarmup
+          : lockScreenWarmupOf(before.where((s) => s.isWarmup).length, warmups);
+    } else {
+      final number = before.where((s) => !s.isWarmup).length;
+      final working = sets.where((s) => !s.isWarmup).length;
+      name = set.type == SetType.drop
+          ? lockScreenDropSetOf(number, working)
+          : lockScreenSetOf(number, working);
+    }
+    final values = setWithUnitText(
+      WorkoutSet(
+        weightKg: set.weightKg ?? suggestion.weightKg,
+        reps: set.reps ?? suggestion.reps,
+        durationS: set.durationS ?? suggestion.durationS,
+      ),
+      exercise.loggingType,
+      unit,
+    );
+    return LockScreenSet(
+      exercise: exercise.name,
+      position: lockScreenExercise(next.exercise + 1, workout.exercises.length),
+      line: values.isEmpty ? name : lockScreenSetValues(name, values),
+      done: [for (final s in sets) s.done],
+    );
   }
 
   /// After a rest, set [set] of [exercise] as [setToDo] names it, e.g.

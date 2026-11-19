@@ -1891,6 +1891,23 @@ void main() {
       await cubit.close();
     });
 
+    test('-15 s moves the end, kept, and ends a rest with less left', () async {
+      final cubit = await withSquat();
+      cubit
+        ..toggleDone(first)
+        ..shortenRest();
+      final shortened = restEnd.subtract(restExtension);
+      expect(cubit.state.rest!.endsAt, shortened);
+      await pumpEventQueue();
+      expect(keptLocal().rest!.endsAt, shortened);
+      clock = shortened.subtract(const Duration(seconds: 10));
+      cubit.shortenRest();
+      expect(cubit.state.rest, isNull);
+      await pumpEventQueue();
+      expect(keptLocal().rest, isNull);
+      await cubit.close();
+    });
+
     test('+15 s does nothing once the rest is over', () async {
       final cubit = await withSquat();
       cubit.toggleDone(first);

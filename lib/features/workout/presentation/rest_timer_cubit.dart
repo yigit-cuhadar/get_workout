@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/rest.dart';
 import '../domain/rest_usecases.dart';
@@ -96,14 +97,13 @@ typedef RestNotificationText = ({String title, String body}) Function(
   SetRef? next,
 );
 
-/// The lock screen's texts for [workout] whose set to do now is [next]
-/// (null: none left): that set as the workout shows it ([current]), a rest's
-/// title, and that set as what follows the rest ([afterRest]).
+/// The lock screen's texts for the workout of [active] whose set to do now
+/// is [next] (null: none left), weights in [unit]: that set on one line
+/// ([current]) and in parts ([set]), a rest's title, and that set as what
+/// follows the rest ([afterRest]).
 typedef LockScreenText =
-    ({String? current, String rest, String? afterRest}) Function(
-      Workout workout,
-      SetRef? next,
-    );
+    ({String? current, LockScreenSet? set, String rest, String? afterRest})
+    Function(ActiveWorkoutState active, SetRef? next, WeightUnit unit);
 
 /// Counts down the rest of the workout in progress, from its end time on
 /// the device clock, and emits only that, so nothing else rebuilds every
@@ -123,7 +123,8 @@ typedef LockScreenText =
 /// while the rest timer is on in the settings. What is shown is settled
 /// once the workout is loaded, so one left from an earlier run is shown
 /// again or removed at start. It never alerts: a rest's end is the
-/// notification's.
+/// notification's. Its rest buttons (−15 s, +15 s, Skip) change the rest
+/// of the workout in progress, once it is loaded.
 class RestTimerCubit extends Cubit<RestTimerState> {
   RestTimerCubit({
     required ActiveWorkoutCubit workout,
@@ -137,6 +138,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     required this._showOnLockScreen,
     required this._clearLockScreen,
     required this._lockScreenText,
+    required WatchLockScreenRestActions watchRestActions,
     DateTime Function()? clock,
   }) : _workout = workout,
        _clock = clock ?? DateTime.now,
@@ -145,6 +147,9 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     _seen = workout.state.workout;
     _subscription = workout.stream.listen(_onWorkout);
     _settingsSubscription = _settings.stream.listen((_) => _syncLockScreen());
+    _restActions = watchRestActions().listen(
+      (action) => unawaited(_onRestAction(action)),
+    );
     unawaited(_cancelNotification());
     _tick();
   }
@@ -163,6 +168,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   final DateTime Function() _clock;
   late final StreamSubscription<ActiveWorkoutState> _subscription;
   late final StreamSubscription<SettingsState> _settingsSubscription;
+  late final StreamSubscription<LockScreenRestAction> _restActions;
   Rest? _rest;
 
   /// [RestTimerState.totalS] of the running rest; null until its first
@@ -267,19 +273,38 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   }
 
   /// The whole of [next] once it replaces [previous]: the same rest moved
-  /// later (+15 s, or unlinked from its set) keeps its start; any other
-  /// counts from its first tick (null).
+  /// (±15 s, or unlinked from its set) keeps its start; any other counts
+  /// from its first tick (null).
   int? _totalAfter(Rest? previous, Rest? next) {
     final total = _restTotalS;
     if (total == null ||
         previous == null ||
         next == null ||
         state.phase != RestPhase.running ||
-        (next.after != previous.after && next.after != null) ||
-        next.endsAt.isBefore(previous.endsAt)) {
+        (next.after != previous.after && next.after != null)) {
       return null;
     }
-    return total + next.endsAt.difference(previous.endsAt).inSeconds;
+    final moved = total + next.endsAt.difference(previous.endsAt).inSeconds;
+    return moved > 0 ? moved : null;
+  }
+
+  /// A rest button on the lock screen, pressed maybe before the app ran:
+  /// applied once the workout is loaded.
+  Future<void> _onRestAction(LockScreenRestAction action) async {
+    if (_workout.state.status == WorkoutStatus.loading) {
+      await _workout.stream.firstWhere(
+        (state) => state.status != WorkoutStatus.loading,
+      );
+    }
+    if (isClosed) return;
+    switch (action) {
+      case LockScreenRestAction.shorten:
+        _workout.shortenRest();
+      case LockScreenRestAction.extend:
+        _workout.extendRest();
+      case LockScreenRestAction.skip:
+        _workout.skipRest();
+    }
   }
 
   /// Puts the workout in progress, or its running rest, on the lock
@@ -316,20 +341,26 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     final workout = active.workout;
     if (!active.inProgress || workout == null) return null;
     final rest = _rest;
+    final settings = _settings.state.settings;
     final text = _lockScreenText(
-      workout,
+      active,
       nextSet(workout, _lastTicked ?? rest?.after),
+      settings.weightUnit,
     );
     final resting =
-        rest != null &&
-        rest.runsAt(_clock()) &&
-        _settings.state.settings.restTimer.enabled;
+        rest != null && rest.runsAt(_clock()) && settings.restTimer.enabled;
+    // Before its first tick a rest is whole: it starts now.
+    final total = _restTotalS;
     return LockScreenWorkout(
       name: workout.name,
       startedAt: workout.startedAt,
       current: text.current,
+      set: text.set,
       rest: resting
           ? RestCountdown(
+              startsAt: total == null
+                  ? _clock()
+                  : rest.endsAt.subtract(Duration(seconds: total)),
               endsAt: rest.endsAt,
               title: text.rest,
               detail: text.afterRest,
@@ -472,6 +503,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     _timer?.cancel();
     await _subscription.cancel();
     await _settingsSubscription.cancel();
+    await _restActions.cancel();
     return super.close();
   }
 }
