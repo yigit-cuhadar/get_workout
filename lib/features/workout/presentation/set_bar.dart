@@ -36,13 +36,23 @@ typedef PlateLoader = Calculation<PlateLoad> Function(
 /// A page logging a workout: [content] above, and at the bottom the
 /// [panel] (a [SetBar], or what the workout in progress shows in its place)
 /// over the safe area on the surface. The panel takes at most
-/// [maxBottomShare] of the page (of what the keyboard leaves); what does
-/// not fit scrolls inside it. What the panel leaves goes to [content].
+/// [maxBottomShare] of the page (of what the keyboard leaves), or with
+/// [fullHeight] all of it; what does not fit scrolls inside it. What the
+/// panel leaves goes to [content].
 class SetBarLayout extends StatelessWidget {
-  const SetBarLayout({super.key, required this.content, required this.panel});
+  const SetBarLayout({
+    super.key,
+    required this.content,
+    required this.panel,
+    this.fullHeight = false,
+  });
 
   final Widget content;
   final Widget panel;
+
+  /// For a panel that should show whole, as a done set with its effort
+  /// steps: it scrolls only when taller than the page.
+  final bool fullHeight;
 
   static const maxBottomShare = 0.6;
 
@@ -53,7 +63,9 @@ class SetBarLayout extends StatelessWidget {
         Expanded(child: content),
         ConstrainedBox(
           constraints: BoxConstraints(
-            maxHeight: constraints.maxHeight * maxBottomShare,
+            maxHeight: fullHeight
+                ? constraints.maxHeight
+                : constraints.maxHeight * maxBottomShare,
           ),
           child: Material(
             type: MaterialType.transparency,

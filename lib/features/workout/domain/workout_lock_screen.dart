@@ -84,6 +84,19 @@ enum LockScreenRestAction {
   skip,
 }
 
+/// A rest button pressed on the lock screen. The app may have been woken
+/// for it alone and be put back to sleep once it is answered, so
+/// [handled] is called once it is applied and what follows from it (the
+/// rest notification moved) is done.
+final class LockScreenRestPress {
+  LockScreenRestPress(this.action, {this._onHandled});
+
+  final LockScreenRestAction action;
+  final void Function()? _onHandled;
+
+  void handled() => _onHandled?.call();
+}
+
 /// The workout in progress on the lock screen. iOS shows all of it, a Live
 /// Activity from start to finish; Android only its rest, as an ongoing
 /// notification. Silent: a rest's end is announced by the rest
@@ -102,5 +115,5 @@ abstract interface class WorkoutLockScreen {
   /// Its rest buttons pressed without opening the app, including those
   /// pressed while the app did not run; for one listener. None where it
   /// has no buttons (Android, iOS below 17).
-  Stream<LockScreenRestAction> restActions();
+  Stream<LockScreenRestPress> restActions();
 }

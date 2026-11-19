@@ -100,8 +100,10 @@ SetRef? newlyDone(Workout before, Workout after) {
   return null;
 }
 
-/// How long to rest after ticking set [at] done; null for no rest.
+/// How long to rest after ticking set [at] of [workout] done; null for no
+/// rest.
 ///
+/// The workout's last set to do starts none: nothing is left to rest for.
 /// Warm-ups start none. In a superset or circuit, rounds count working
 /// sets (warm-ups are not in any round), and only the round's last item
 /// starts a rest: the group's last exercise that has that many working
@@ -112,7 +114,7 @@ Duration? restAfterTick(
   required RestTimerSettings settings,
   required int? Function(String exerciseId) exerciseRestS,
 }) {
-  if (!settings.enabled) return null;
+  if (!settings.enabled || !workout.hasUndoneSets) return null;
   final exercises = workout.exercises;
   final sets = exercises.elementAtOrNull(at.exercise)?.sets;
   final set = sets?.elementAtOrNull(at.set);

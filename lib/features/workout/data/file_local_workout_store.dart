@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:forge_core/forge_core.dart';
 
 import '../domain/rest.dart';
+import '../domain/set_selection.dart';
 import '../domain/workout.dart';
 import '../domain/workout_repository.dart';
 import 'workout_maps.dart';
@@ -125,6 +126,13 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
       final at? when workouts.draft != null => at.millisecondsSinceEpoch,
       _ => null,
     },
+    'picked': ?switch (workouts.picked) {
+      final picked? when workouts.draft != null => {
+        'exercise': picked.exercise,
+        'set': ?picked.set,
+      },
+      _ => null,
+    },
     'finished': [for (final w in workouts.finished) _workoutToJson(w)],
     'staleStats': [...workouts.staleStats],
   };
@@ -156,6 +164,9 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
           DateTime.fromMillisecondsSinceEpoch(ms),
         _ => null,
       },
+      picked: parsedDraft == null
+          ? null
+          : _pickedFromJson(json['picked'], parsedDraft),
       finished: [for (final w in parsedFinished) w!],
       staleStats: {
         for (final id in stale)
@@ -195,6 +206,26 @@ class FileLocalWorkoutStore implements LocalWorkoutStore {
       endsAt: end,
       after: known ? (exercise: exercise, set: set) : null,
     );
+  }
+
+  /// Null for anything that does not point into [draft]: an exercise of
+  /// it and one of its sets, or no set of one that has none. Never throws.
+  static SetSelection? _pickedFromJson(Object? json, Workout draft) {
+    if (json is! Map) return null;
+    final exercise = WorkoutMaps.whole(json['exercise']);
+    final sets = exercise == null || exercise < 0
+        ? null
+        : draft.exercises.elementAtOrNull(exercise)?.sets;
+    if (exercise == null || sets == null) return null;
+    final set = WorkoutMaps.whole(json['set']);
+    if (set == null) {
+      return json['set'] == null && sets.isEmpty
+          ? (exercise: exercise, set: null)
+          : null;
+    }
+    return set >= 0 && set < sets.length
+        ? (exercise: exercise, set: set)
+        : null;
   }
 
   static const _maxEpochMs = 8640000000000000;

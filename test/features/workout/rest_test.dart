@@ -25,7 +25,7 @@ void main() {
   group('restAfterTick', () {
     test('the program rest comes first', () {
       final w = workout('w', [
-        withGoal(exercise('squat', [lift(100, 5)]), 180),
+        withGoal(exercise('squat', [lift(100, 5), open()]), 180),
       ]);
       expect(rest(w, (exercise: 0, set: 0)), const Duration(seconds: 180));
     });
@@ -33,7 +33,7 @@ void main() {
     test('the rest chosen in the workout comes before the program\'s', () {
       final w = workout('w', [
         withGoal(
-          exercise('squat', [lift(100, 5)]),
+          exercise('squat', [lift(100, 5), open()]),
           180,
         ).copyWith(restS: () => 120),
       ]);
@@ -42,7 +42,7 @@ void main() {
 
     test('a group rests its last exercise\'s rest', () {
       final exercises = [
-        exercise('squat', [lift(100, 5)], group: 'A'),
+        exercise('squat', [lift(100, 5), open()], group: 'A'),
         exercise('bench', [lift(80, 8)], group: 'A'),
       ];
       expect(restSource(exercises, 0), 1);
@@ -54,28 +54,28 @@ void main() {
 
     test('without a program rest, the exercise default', () {
       final w = workout('w', [
-        exercise('squat', [lift(100, 5)]),
+        exercise('squat', [lift(100, 5), open()]),
       ]);
       expect(rest(w, (exercise: 0, set: 0)), const Duration(seconds: 150));
     });
 
     test('without either, the settings default', () {
       final w = workout('w', [
-        exercise('custom_1', [lift(20, 10)]),
+        exercise('custom_1', [lift(20, 10), open()]),
       ]);
       expect(rest(w, (exercise: 0, set: 0)), const Duration(seconds: 75));
     });
 
     test('a program rest of 0 means none', () {
       final w = workout('w', [
-        withGoal(exercise('squat', [lift(100, 5)]), 0),
+        withGoal(exercise('squat', [lift(100, 5), open()]), 0),
       ]);
       expect(rest(w, (exercise: 0, set: 0)), isNull);
     });
 
     test('none while the timer is off', () {
       final w = workout('w', [
-        exercise('squat', [lift(100, 5)]),
+        exercise('squat', [lift(100, 5), open()]),
       ]);
       expect(
         rest(w, (
@@ -91,15 +91,32 @@ void main() {
         exercise('squat', [
           lift(60, 5, type: SetType.warmup),
           lift(100, 8, type: SetType.drop, drops: const [Drop(weightKg: 80)]),
+          open(),
         ]),
       ]);
       expect(rest(w, (exercise: 0, set: 0)), isNull);
       expect(rest(w, (exercise: 0, set: 1)), const Duration(seconds: 150));
     });
 
+    test('the workout\'s last set starts none; the last of an exercise '
+        'still does', () {
+      final w = workout('w', [
+        exercise('squat', [lift(100, 5), lift(100, 5)]),
+        exercise('bench', [open()]),
+      ]);
+      expect(rest(w, (exercise: 0, set: 1)), const Duration(seconds: 150));
+      final done = workout('w', [
+        exercise('squat', [lift(100, 5), lift(100, 5)]),
+        exercise('bench', [lift(60, 8)]),
+      ]);
+      expect(rest(done, (exercise: 1, set: 0)), isNull);
+      // Ticked last, though an earlier set was the one left.
+      expect(rest(done, (exercise: 0, set: 0)), isNull);
+    });
+
     test('none for a set that does not exist', () {
       final w = workout('w', [
-        exercise('squat', [lift(100, 5)]),
+        exercise('squat', [lift(100, 5), open()]),
       ]);
       expect(rest(w, (exercise: 0, set: 3)), isNull);
       expect(rest(w, (exercise: 2, set: 0)), isNull);

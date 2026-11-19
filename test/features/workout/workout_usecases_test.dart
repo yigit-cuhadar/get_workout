@@ -446,11 +446,9 @@ void main() {
     });
 
     test('rest buttons are the lock screen\'s', () async {
-      when(lockScreen.restActions)
-          .thenAnswer((_) => Stream.value(LockScreenRestAction.skip));
-      expect(await WatchLockScreenRestActions(lockScreen)().toList(), [
-        LockScreenRestAction.skip,
-      ]);
+      final press = LockScreenRestPress(LockScreenRestAction.skip);
+      when(lockScreen.restActions).thenAnswer((_) => Stream.value(press));
+      expect(await WatchLockScreenRestActions(lockScreen)().toList(), [press]);
     });
 
     test('taps are the lock screen\'s', () async {
