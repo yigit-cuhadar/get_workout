@@ -50,3 +50,51 @@ class _EverySecondState extends State<EverySecond> {
   @override
   Widget build(BuildContext context) => widget.builder(context);
 }
+
+/// Builds with [builder] again each time another whole minute since
+/// [since] passes.
+class EveryMinute extends StatefulWidget {
+  const EveryMinute({super.key, required this.since, required this.builder});
+
+  final DateTime since;
+  final WidgetBuilder builder;
+
+  @override
+  State<EveryMinute> createState() => _EveryMinuteState();
+}
+
+class _EveryMinuteState extends State<EveryMinute> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _schedule();
+  }
+
+  @override
+  void didUpdateWidget(EveryMinute old) {
+    super.didUpdateWidget(old);
+    if (old.since != widget.since) _schedule();
+  }
+
+  void _schedule() {
+    _timer?.cancel();
+    const minute = Duration.millisecondsPerMinute;
+    final into =
+        DateTime.now().difference(widget.since).inMilliseconds % minute;
+    _timer = Timer(Duration(milliseconds: minute - into), () {
+      setState(() {});
+      _schedule();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context);
+}

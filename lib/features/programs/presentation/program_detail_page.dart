@@ -354,7 +354,8 @@ class _DetailActions {
 }
 
 /// Where the program stands, in the FeaturedCard band: not active (Start
-/// program), active (its next day and Start, Change days and Stop), a
+/// program), active (its training days, next day, week and this week's
+/// days over a bar in weeks, Change days and Stop), a
 /// missed day to answer first, finished (Run it again, New program) or a
 /// locked premium copy (Start opens the paywall).
 class _Band extends StatelessWidget {
@@ -454,7 +455,7 @@ class _Band extends StatelessWidget {
       stop,
     ];
 
-    // A locked copy keeps its next day and Start, which opens the paywall.
+    // A locked copy keeps its next day, not a missed one.
     final missed = locked ? null : list.missed;
     if (missed != null) {
       final name = _dayName(l10n, missed.dayIndex);
@@ -486,12 +487,13 @@ class _Band extends StatelessWidget {
       );
     }
 
+    // Today starts the day; the band says where the program stands.
     final next = list.nextDayIndex;
     final date = list.nextDate;
     final dayName = next == null ? null : _dayName(l10n, next);
     return FeaturedCard(
       form: FeaturedCardForm.band,
-      eyebrow: eyebrow,
+      eyebrow: weekdays,
       title: dayName == null
           ? l10n.programStateActive
           : l10n.programNextDay(dayName),
@@ -503,15 +505,16 @@ class _Band extends StatelessWidget {
       locked: locked,
       note: note,
       alert: mismatch,
-      progress: progress,
-      action: dayName == null
+      progress: list.runProgress,
+      progressSegments: weeks,
+      progressLabel: week == null
           ? null
-          : FeaturedAction(
-              l10n.workoutStartDay(dayName),
-              unlessBusy(() => startProgramDay(context, program, next!)),
-              locked: locked,
-              loading: waiting,
-            ),
+          : weeks == null
+          ? l10n.programWeekNumber(week)
+          : l10n.programWeekOf(week, weeks),
+      progressDetail: list.weekPlan.isEmpty
+          ? null
+          : l10n.programDaysThisWeek(list.weekDaysDone, list.weekPlan.length),
       footActions: footActions,
     );
   }

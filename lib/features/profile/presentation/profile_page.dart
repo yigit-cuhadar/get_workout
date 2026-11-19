@@ -17,6 +17,7 @@ import '../../settings/presentation/settings_section.dart';
 import '../../steps/presentation/connected_apps_group.dart';
 import '../../steps/presentation/health_access_cubit.dart';
 import '../../subscription/presentation/premium_card.dart';
+import '../../subscription/presentation/premium_trial_cubit.dart';
 import 'profile_cubit.dart';
 
 /// The Profile tab: the account header, the Premium card, the profile,
@@ -53,8 +54,12 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
       ],
-      child: BlocProvider(
-        create: (_) => sl<HealthAccessCubit>(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => sl<HealthAccessCubit>()),
+          // Read, and so loaded, only while the user is free.
+          BlocProvider(create: (_) => sl<PremiumTrialCubit>()..load()),
+        ],
         child: Scaffold(
           appBar: ForgeAppBar(title: l10n.tabProfile),
           body: ListView(

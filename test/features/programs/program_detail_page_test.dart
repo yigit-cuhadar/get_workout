@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_workout/app/theme.dart';
@@ -71,11 +72,13 @@ void main() {
     ActiveProgram? activeProgram,
     bool finished = false,
     PlannedDay? missed,
+    List<PlannedDay> weekPlan = const [],
     bool? premium = true,
   }) => ProgramListState(
     status: ProgramListStatus.ready,
     programs: programs ?? [upperLower],
     active: activeProgram,
+    weekPlan: weekPlan,
     finished: finished,
     today: today,
     week: activeProgram == null ? null : 2,
@@ -228,15 +231,37 @@ void main() {
     verifyNever(() => detail.start(any()));
   });
 
-  testWidgets('the active program: week, next day, Start, Change days, Stop', (
-    tester,
-  ) async {
-    await pump(tester, ready(activeProgram: active));
+  testWidgets('the active program: its days, next day, week over a bar in '
+      'weeks, Change days and Stop; Today starts the day', (tester) async {
+    await pump(
+      tester,
+      ready(
+        activeProgram: active,
+        weekPlan: [
+          PlannedDay(
+            date: CalendarDate(2026, 11, 9),
+            dayIndex: 0,
+            status: PlannedStatus.done,
+          ),
+          PlannedDay(
+            date: CalendarDate(2026, 11, 12),
+            dayIndex: 1,
+            status: PlannedStatus.planned,
+          ),
+        ],
+      ),
+    );
 
-    expect(find.textContaining('Active · week 2 of 8 · '), findsOneWidget);
+    expect(find.text('Mon, Thu'), findsOneWidget);
+    expect(find.textContaining('Active'), findsNothing);
     expect(find.text('Next: Lower'), findsOneWidget);
     expect(find.text('Thu, Nov 12'), findsOneWidget);
-    expect(find.text('Start Lower'), findsOneWidget);
+    expect(find.text('Week 2 of 8'), findsOneWidget);
+    expect(find.text('1 of 2 days this week'), findsOneWidget);
+    final bar = tester.widget<Progress>(find.byType(Progress));
+    expect(bar.segments, 8);
+    expect(bar.value, closeTo((1 + 1 / 2) / 8, 1e-9));
+    expect(find.text('Start Lower'), findsNothing);
     expect(find.text('Change days'), findsOneWidget);
     expect(find.text('Stop'), findsOneWidget);
   });
@@ -307,15 +332,14 @@ void main() {
     expect(find.text('Change days'), findsNothing);
   });
 
-  testWidgets('a locked Premium copy: Start opens the paywall, no Change '
-      'days', (tester) async {
+  testWidgets('a locked Premium copy: no Start or Change days', (tester) async {
     final copy = program(id: 'p1', lengthWeeks: 8, premium: true);
     await pump(
       tester,
       ready(programs: [copy], activeProgram: active, premium: false),
     );
 
-    expect(find.text('Start Lower'), findsOneWidget);
+    expect(find.text('Start Lower'), findsNothing);
     expect(find.text('Change days'), findsNothing);
     expect(find.text('Stop'), findsOneWidget);
     expect(

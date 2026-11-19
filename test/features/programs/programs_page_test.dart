@@ -24,6 +24,7 @@ import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../workout/fixtures.dart' as workouts;
 import 'fixtures.dart';
 
 class _ListCubit extends MockCubit<ProgramListState>
@@ -107,7 +108,13 @@ void main() {
 
   tearDown(sl.reset);
 
-  Future<void> pump(WidgetTester tester, ProgramListState state) async {
+  Future<void> pump(
+    WidgetTester tester,
+    ProgramListState state, {
+    ActiveWorkoutState running = const ActiveWorkoutState(
+      status: WorkoutStatus.none,
+    ),
+  }) async {
     tester.view
       ..physicalSize = const Size(1200, 4800)
       ..devicePixelRatio = 3;
@@ -119,8 +126,7 @@ void main() {
     when(() => model.state).thenReturn(const BodyModelLoading());
     when(model.load).thenAnswer((_) async {});
     final workout = _WorkoutCubit();
-    when(() => workout.state)
-        .thenReturn(const ActiveWorkoutState(status: WorkoutStatus.none));
+    when(() => workout.state).thenReturn(running);
     final settings = _SettingsCubit();
     when(() => settings.state)
         .thenReturn(SettingsState(UserSettings.defaultsFor(null)));
@@ -229,6 +235,59 @@ void main() {
     await tester.tap(find.text('Week 2 of 8'));
     await settle(tester);
     expect(find.text('at /programs/p1'), findsOneWidget);
+  });
+
+  group('a workout in progress', () {
+    final week = ready(
+      activeProgram: active,
+      weekPlan: [
+        PlannedDay(
+          date: CalendarDate(2026, 11, 12),
+          dayIndex: 1,
+          status: PlannedStatus.planned,
+        ),
+      ],
+    );
+    ActiveWorkoutState runningOf({String? programId}) => ActiveWorkoutState(
+      status: WorkoutStatus.active,
+      workout: workouts.workout(
+        'w1',
+        [
+          workouts.exercise('c', [workouts.lift(80, 8)]),
+        ],
+        startedAt: DateTime.now().subtract(const Duration(minutes: 23)),
+        programId: programId,
+        dayIndex: 1,
+      ),
+    );
+
+    testWidgets('of its day says so on its row; Resume opens it', (
+      tester,
+    ) async {
+      await pump(tester, week, running: runningOf(programId: 'p1'));
+
+      expect(find.text('In progress · 23 min'), findsOneWidget);
+      expect(find.text('Next'), findsNothing);
+      await tester.tap(find.text('Resume'));
+      await settle(tester);
+      expect(find.text('at /workout'), findsOneWidget);
+    });
+
+    testWidgets('of its day opens on a tap on the row', (tester) async {
+      await pump(tester, week, running: runningOf(programId: 'p1'));
+
+      await tester.tap(find.text('In progress · 23 min'));
+      await settle(tester);
+      expect(find.text('at /workout'), findsOneWidget);
+    });
+
+    testWidgets('without a program leaves the band as it is', (tester) async {
+      await pump(tester, week, running: runningOf());
+
+      expect(find.textContaining('In progress'), findsNothing);
+      expect(find.text('Resume'), findsNothing);
+      expect(find.text('Next'), findsOneWidget);
+    });
   });
 
   testWidgets('a missed day is its row alone; Today asks about it', (

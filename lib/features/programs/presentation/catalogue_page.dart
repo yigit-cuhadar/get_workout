@@ -11,19 +11,48 @@ import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../profile/presentation/profile_questions.dart';
 import '../domain/catalogue_program.dart';
+import '../domain/program.dart';
 import 'catalogue_text.dart';
 import 'program_catalogue_cubit.dart';
+import 'program_list_cubit.dart';
 
 /// The ready-made programs: a search by name, the filters as one sideways
-/// line of chips, the best match (hidden while filtering or searching)
-/// and the count, then every program as a list row.
+/// line of chips, then while neither filters nor a search are on the
+/// user's active program when it is a copy of one (which opens the copy),
+/// the best match and the count; then every program as a list row.
 class CataloguePage extends StatelessWidget {
   const CataloguePage({super.key});
 
   @override
-  Widget build(BuildContext context) => BlocProvider.value(
-    value: sl<ProgramCatalogueCubit>(),
+  Widget build(BuildContext context) => MultiBlocProvider(
+    providers: [
+      BlocProvider.value(value: sl<ProgramCatalogueCubit>()),
+      BlocProvider.value(value: sl<ProgramListCubit>()),
+    ],
     child: const _CatalogueView(),
+  );
+}
+
+/// The user's active program when it is a copy of a ready-made one.
+typedef _ActiveCopy = ({
+  String id,
+  String sourceId,
+  int? week,
+  int? weeks,
+  bool finished,
+});
+
+_ActiveCopy? _activeCopyOf(ProgramListState list) {
+  final program = list.activeProgram;
+  if (program == null || program.origin != ProgramOrigin.catalog) return null;
+  final (id, sourceId) = (program.id, program.sourceId);
+  if (id == null || sourceId == null) return null;
+  return (
+    id: id,
+    sourceId: sourceId,
+    week: list.week,
+    weeks: program.lengthWeeks,
+    finished: list.finished,
   );
 }
 
@@ -100,8 +129,16 @@ class _CatalogueViewState extends State<_CatalogueView> {
   List<Widget> _programs(BuildContext context, ProgramCatalogueState state) {
     final l10n = AppLocalizations.of(context);
     final language = Localizations.localeOf(context).languageCode;
-    final shown = state.shown(language);
     final plain = !state.filtering && !state.searching;
+    final active = context.select(
+      (ProgramListCubit cubit) => _activeCopyOf(cubit.state),
+    );
+    final copy = plain ? active : null;
+    final source = copy == null ? null : state.program(copy.sourceId);
+    final shown = [
+      for (final program in state.shown(language))
+        if (program != source) program,
+    ];
     final best = plain ? state.recommended.firstOrNull : null;
     final free = state.programs.where((program) => !program.premium).length;
     return [
@@ -128,6 +165,30 @@ class _CatalogueViewState extends State<_CatalogueView> {
           ),
         ),
       const SizedBox(height: Gap.sm),
+      if (copy != null && source != null) ...[
+        SectionLabel(l10n.catalogueActiveProgram),
+        ListRowCard(
+          children: [
+            _row(
+              context,
+              state,
+              source,
+              facts: copy.finished
+                  ? l10n.programFinished
+                  : switch ((copy.week, copy.weeks)) {
+                      (final week?, final weeks?) => l10n.programWeekOf(
+                        week,
+                        weeks,
+                      ),
+                      (final week?, null) => l10n.programWeekNumber(week),
+                      _ => null,
+                    },
+              copyId: copy.id,
+            ),
+          ],
+        ),
+        const SizedBox(height: Gap.sm),
+      ],
       if (best != null) ...[
         ListRowCard(
           children: [
@@ -153,6 +214,7 @@ class _CatalogueViewState extends State<_CatalogueView> {
                 .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
           ),
         ),
+      if (source != null) SectionLabel(l10n.catalogueAllPrograms),
       if (shown.isEmpty)
         EmptyView(
           icon: ForgeIcons.search,
@@ -184,23 +246,36 @@ class _CatalogueViewState extends State<_CatalogueView> {
     ];
   }
 
+  /// A program's row; with a [copyId] the user's active copy of it, whose
+  /// row says how far it has run ([facts]) and opens the copy.
   Widget _row(
     BuildContext context,
     ProgramCatalogueState state,
     CatalogueProgram program, {
     bool recommended = false,
     String? match,
+    String? facts,
+    String? copyId,
   }) {
     final l10n = AppLocalizations.of(context);
     final language = Localizations.localeOf(context).languageCode;
     return ProgramCard.row(
       name: program.text(language).name,
-      facts: l10n.catalogueRowFacts(program),
+      facts: copyId == null
+          ? l10n.catalogueRowFacts(program)
+          : facts == null
+          ? l10n.catalogueOpensCopy
+          : l10n.catalogueActiveCopy(facts),
       fits: state.profile.suits(program),
+      active: copyId != null,
       locked: program.premium && state.premium == false,
       recommended: recommended,
       match: match,
-      onTap: () => context.go(Routes.catalogueProgram(program.id)),
+      onTap: () => context.go(
+        copyId == null
+            ? Routes.catalogueProgram(program.id)
+            : Routes.program(copyId),
+      ),
     );
   }
 }

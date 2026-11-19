@@ -22,6 +22,18 @@ Widget featuredBlock(BuildContext context) => _page(
   ),
 );
 
+@widgetbook.UseCase(name: 'Block · long name', type: FeaturedCard)
+Widget featuredBlockLongName(BuildContext context) => _page(
+  FeaturedCard(
+    form: FeaturedCardForm.block,
+    eyebrow: 'Gym Starter',
+    title: 'Gym Starter: Full Body 3-Day',
+    line: const FeaturedLine('6 exercises · ~31 min', data: 'Today'),
+    action: FeaturedAction('Start', () {}),
+    onTap: () {},
+  ),
+);
+
 @widgetbook.UseCase(name: 'Accent outline', type: FeaturedCard)
 Widget featuredOutline(BuildContext context) => _page(
   FeaturedCard(
@@ -335,13 +347,16 @@ Widget featuredBandError(BuildContext context) => _page(
 Widget featuredFootActions(BuildContext context) => _page(
   FeaturedCard(
     form: FeaturedCardForm.band,
-    eyebrow: 'Active · week 3 of 8 · Mon, Wed, Fri',
-    title: 'Next: Push, today',
-    progress: 3 / 8,
+    eyebrow: 'Mon, Wed, Fri',
+    title: 'Next: Push',
+    when: 'Today',
+    progress: (2 + 1 / 3) / 8,
+    progressSegments: 8,
+    progressLabel: 'Week 3 of 8',
+    progressDetail: '1 of 3 days this week',
     alert: context.knobs.boolean(label: 'Days mismatch')
         ? 'The program now has 4 days. Change your training days to match.'
         : null,
-    action: FeaturedAction('Start Push', () {}),
     footActions: [
       FeaturedAction('Change days', () {}),
       FeaturedAction('Stop', () {}, danger: true),
@@ -379,14 +394,17 @@ Widget featuredMissedFoot(BuildContext context) => _page(
 Widget featuredLockedStop(BuildContext context) => _page(
   FeaturedCard(
     form: FeaturedCardForm.band,
-    eyebrow: 'Active · week 3 of 12 · Mon, Tue, Thu, Fri',
-    title: 'Next: Upper A, today',
+    eyebrow: 'Mon, Tue, Thu, Fri',
+    title: 'Next: Upper A',
+    when: 'Today',
     locked: true,
-    progress: 3 / 12,
+    progress: 2 / 12,
+    progressSegments: 12,
+    progressLabel: 'Week 3 of 12',
+    progressDetail: '0 of 4 days this week',
     note:
         'This program came from Premium, which has ended. It carries on '
         'once you get Premium again.',
-    action: FeaturedAction('Start Upper A', () {}, locked: true),
     footActions: [FeaturedAction('Stop', () {}, danger: true)],
   ),
 );

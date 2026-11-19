@@ -49,7 +49,8 @@ Future<bool> confirmChoice(
 }
 
 /// A note as a multi-line [ForgeTextField] of at most [maxLength]
-/// characters that applies every change at once.
+/// characters that applies every change at once; [autofocus] raises the
+/// keyboard as it appears.
 class NoteField extends StatefulWidget {
   const NoteField({
     super.key,
@@ -58,6 +59,7 @@ class NoteField extends StatefulWidget {
     required this.hint,
     required this.maxLength,
     required this.onChanged,
+    this.autofocus = false,
   });
 
   final String? initial;
@@ -65,6 +67,7 @@ class NoteField extends StatefulWidget {
   final String hint;
   final int maxLength;
   final ValueChanged<String> onChanged;
+  final bool autofocus;
 
   @override
   State<NoteField> createState() => _NoteFieldState();
@@ -106,6 +109,7 @@ class _NoteFieldState extends State<NoteField> {
     controller: _controller,
     multiline: true,
     maxLength: widget.maxLength,
+    autofocus: widget.autofocus,
   );
 }
 
@@ -150,6 +154,7 @@ class WorkoutNoteCard extends StatelessWidget {
           hint: l10n.workoutNoteHint,
           maxLength: WorkoutLimits.maxNoteLength,
           onChanged: (changed) => text = changed,
+          autofocus: true,
         ),
       ),
     );

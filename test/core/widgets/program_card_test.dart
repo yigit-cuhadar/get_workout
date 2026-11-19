@@ -82,4 +82,38 @@ void main() {
     await tester.tap(find.text('Push Pull Legs'));
     expect(opened, 1);
   });
+
+  testWidgets('an active row carries Active before Fits you and Premium', (
+    tester,
+  ) async {
+    await pumpComponent(
+      tester,
+      ProgramCard.row(
+        name: 'Push Pull Legs',
+        facts: 'Week 2 of 8 · opens your copy',
+        active: true,
+        fits: true,
+        locked: true,
+        onTap: () {},
+      ),
+    );
+
+    final active = find.widgetWithText(ForgeTag, 'Active');
+    expect(tester.widget<ForgeTag>(active).kind, ForgeTagKind.strong);
+    for (final next in ['Fits you', 'Premium']) {
+      expect(
+        tester.getCenter(active).dx,
+        lessThan(tester.getCenter(find.widgetWithText(ForgeTag, next)).dx),
+      );
+    }
+  });
+
+  testWidgets('a row is not active unless said', (tester) async {
+    await pumpComponent(
+      tester,
+      ProgramCard.row(name: 'Push Pull Legs', facts: 'facts', onTap: () {}),
+    );
+
+    expect(find.text('Active'), findsNothing);
+  });
 }

@@ -419,6 +419,7 @@ class _OwnNote extends StatelessWidget {
           hint: l10n.workoutNoteHint,
           maxLength: maxExerciseNoteLength,
           onChanged: (changed) => text = changed,
+          autofocus: true,
         ),
       ),
     );

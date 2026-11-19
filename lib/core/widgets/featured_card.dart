@@ -98,7 +98,8 @@ class FeaturedStat {
 }
 
 /// The one featured card of a screen in its [form]: an [eyebrow] (with a
-/// lock when [locked]) over the [title] and a band's [titleAside], then a
+/// lock when [locked]) over the [title] on one line and a band's
+/// [titleAside], then a
 /// band's [progress] (in [progressSegments] under [progressLabel] and
 /// [progressDetail]), the
 /// [line], a [note], the summary's four [stats] and its buttons, and a
@@ -492,20 +493,11 @@ class FeaturedCard extends StatelessWidget {
                 if (title case final title?)
                   Semantics(
                     header: true,
-                    child: Text.rich(
-                      TextSpan(
-                        text: title,
-                        children: [
-                          if (titleAside case final aside?) ...[
-                            const WidgetSpan(child: SizedBox(width: 12)),
-                            TextSpan(
-                              text: aside,
-                              style: style.data.copyWith(color: headQuiet),
-                            ),
-                          ],
-                        ],
-                      ),
+                    child: _OneLineTitle(
+                      title,
                       style: text.headlineMedium!.copyWith(color: headInk),
+                      aside: titleAside,
+                      asideStyle: style.data.copyWith(color: headQuiet),
                     ),
                   ),
                 if (when case final at?)
@@ -967,4 +959,92 @@ class FeaturedCard extends StatelessWidget {
           : ForgeButtonVariant.primary,
     ),
   );
+}
+
+/// [title] on one line with an [aside] after it: the title alone shrinks
+/// from [style]'s size down to [_minSize] until both fit, then is cut with
+/// "…"; the aside keeps its whole width. The line keeps its height as the
+/// type shrinks.
+class _OneLineTitle extends StatelessWidget {
+  const _OneLineTitle(
+    this.title, {
+    required this.style,
+    required this.aside,
+    required this.asideStyle,
+  });
+
+  final String title;
+  final TextStyle style;
+  final String? aside;
+  final TextStyle asideStyle;
+
+  static const double _minSize = 18;
+  static const double _asideGap = 12;
+
+  @override
+  Widget build(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    final base = style.fontSize!;
+    final lineHeight = base * style.height!;
+    TextStyle sized(double size) => style.copyWith(
+      fontSize: size,
+      height: lineHeight / size,
+      letterSpacing: (style.letterSpacing ?? 0) * size / base,
+    );
+    double width(TextSpan span) {
+      final painter = TextPainter(
+        text: span,
+        textScaler: scaler,
+        textDirection: direction,
+        maxLines: 1,
+      )..layout();
+      final width = painter.width;
+      painter.dispose();
+      return width;
+    }
+
+    final aside = this.aside;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final room = aside == null
+            ? constraints.maxWidth
+            : constraints.maxWidth -
+                  _asideGap -
+                  width(TextSpan(text: aside, style: asideStyle));
+        var size = base;
+        while (size > _minSize &&
+            width(TextSpan(text: title, style: sized(size))) > room) {
+          size = (size - 1).clamp(_minSize, base);
+        }
+        final name = Text(
+          title,
+          style: sized(size),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        );
+        if (aside == null) return name;
+        // At large text sizes the aside alone may leave the title too little
+        // room: it then goes under the title instead of beside it.
+        if (room < constraints.maxWidth / 2) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              name,
+              Text(aside, style: asideStyle),
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          spacing: _asideGap,
+          children: [
+            Flexible(child: name),
+            Text(aside, style: asideStyle, maxLines: 1),
+          ],
+        );
+      },
+    );
+  }
 }

@@ -669,6 +669,7 @@ class ExerciseMenu {
           hint: l10n.workoutNoteHint,
           maxLength: WorkoutLimits.maxExerciseNoteLength,
           onChanged: (changed) => text = changed,
+          autofocus: true,
         ),
       ),
     );
