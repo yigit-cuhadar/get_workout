@@ -826,6 +826,19 @@ Decisions (the canvases they were drawn on are deleted):
   holds only ⋯, its menu: Add to workout, Add to program, Add to / Remove
   from favourites, and for a custom exercise Edit and Delete. No bottom
   bar. Supersedes X1 A.
+- Widget önerileri (owner's picks, 2026-11-19, canvas
+  https://claude.ai/artifact/NrdtEdUxNYu39V78ArNteh): W3 A, W5 A, W6 A,
+  W7 A, W12 A, W13 A; W1, W2, W4, W8, W9, W10, W11 and W14 stay as they
+  are. Progress's Body card shows the change and body fat beside the
+  weight in its dark band, and the 12-week line has its end values and
+  dates (W3). Weekly volume reads "7 of 49 planned sets" and keys its band
+  colours: Under 10 · N, 10–20 · N, Over 20 · N (W5). The Strength card
+  adds the e1RM's 12-week line, last point marked (W6). The Cardio card
+  adds Mon–Sun minute bars in the cardio colour, an empty day a grey line
+  (W7). The workout summary's top card shows each number's difference
+  from the same day's last session, and long durations as "1 h 12 min"
+  (W12). The active program band's bar has one segment per week, this week
+  filling by days, with "1 of 3 days this week" above it (W13).
 - Device check of Antrenman ve programlar (2026-11-15): K1 the swap note
   names logged warm-ups apart; K2 a program band's title is the day
   alone, when it is ("Today", "Mon, Nov 16") muted under it; K3 a
