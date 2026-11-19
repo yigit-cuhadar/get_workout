@@ -73,11 +73,9 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
         .where((p) => p.id == workout.programId)
         .firstOrNull;
     final date = DateFormat.MMMEd(l10n.localeName);
-    final previous = summary.previous;
     final compare = [
       ?program?.name,
       if (summary.programWeek case final week?) l10n.summaryWeek(week),
-      if (previous != null) l10n.summaryVs(date.format(previous.startedAt)),
     ];
     final busiest = summary.muscleSets.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -153,7 +151,7 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
               eyebrow: l10n.summaryDoneOn(date.format(workout.startedAt)),
               title: day,
               note: compare.isEmpty ? null : compare.join(' · '),
-              stats: _stats(l10n, summary, unit),
+              stats: _stats(l10n, summary, unit, date),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(Gap.xs, 18, Gap.xs, Gap.sm),
@@ -225,42 +223,49 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
   }
 
   /// Duration, volume, sets and records; the first three with their
-  /// change since [WorkoutSummary.previous]: more volume or sets a gain,
-  /// less a drop, a duration neither.
+  /// change since [WorkoutSummary.previous] and its [date] under them
+  /// (more volume or sets a gain, less a drop, a duration neither), the
+  /// records with the exercises that set them.
   List<FeaturedStat> _stats(
     AppLocalizations l10n,
     WorkoutSummary summary,
     WeightUnit unit,
+    DateFormat date,
   ) {
     final previous = summary.previous;
+    final on = previous == null ? null : date.format(previous.startedAt);
     String? change(num now, num before, String Function(num) format) {
-      if (now == before) return l10n.summaryChangeSame;
+      if (on == null) return null;
+      if (now == before) return l10n.summarySameAs(on);
       final text = format((now - before).abs());
-      return now > before
-          ? l10n.summaryChangeUp(text)
-          : l10n.summaryChangeDown(text);
+      return l10n.summaryChangeVs(
+        now > before
+            ? l10n.summaryChangeUp(text)
+            : l10n.summaryChangeDown(text),
+        on,
+      );
     }
 
-    FeaturedChangeTone tone(num now, num before) => now > before
+    FeaturedChangeTone tone(num now, num before) => on == null || now == before
+        ? FeaturedChangeTone.neutral
+        : now > before
         ? FeaturedChangeTone.gain
-        : now < before
-        ? FeaturedChangeTone.drop
-        : FeaturedChangeTone.neutral;
-    final minutes = summary.duration.inMinutes;
+        : FeaturedChangeTone.drop;
     final numbers = NumberFormat.decimalPattern(l10n.localeName);
     final percent = previous == null || previous.volumeKg == 0
         ? null
         : (summary.volumeKg / previous.volumeKg * 100).round() - 100;
+    final records = summary.records.map((record) => record.name).toSet();
     return [
       FeaturedStat(
         l10n.workoutDuration,
-        l10n.durationMinutes(summary.duration),
+        l10n.durationHours(summary.duration),
         change: previous == null
             ? null
             : change(
-                minutes,
+                summary.duration.inMinutes,
                 previous.duration.inMinutes,
-                (m) => l10n.durationMinutes(Duration(minutes: m.toInt())),
+                (m) => l10n.durationHours(Duration(minutes: m.toInt())),
               ),
       ),
       FeaturedStat(
@@ -285,7 +290,11 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
             ? FeaturedChangeTone.neutral
             : tone(summary.setCount, previous.setCount),
       ),
-      FeaturedStat(l10n.summaryRecords, '${summary.records.length}'),
+      FeaturedStat(
+        l10n.summaryRecords,
+        '${summary.records.length}',
+        change: records.isEmpty ? null : records.join(', '),
+      ),
     ];
   }
 

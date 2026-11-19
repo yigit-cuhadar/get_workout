@@ -429,14 +429,41 @@ void main() {
         ),
         programs: const [program],
       );
-      expect(
-        find.text('Push Pull Legs · week 3 · vs Fri, Nov 6'),
-        findsOneWidget,
-      );
-      expect(find.textContaining('−4 min'), findsOneWidget);
-      expect(find.textContaining('+6 %'), findsOneWidget);
+      expect(find.text('Push Pull Legs · week 3'), findsOneWidget);
+      // Each change with the day it compares with, under its number.
+      expect(find.text('−4 min vs Fri, Nov 6'), findsOneWidget);
+      expect(find.text('+6 % vs Fri, Nov 6'), findsOneWidget);
+      expect(find.text('same as Fri, Nov 6'), findsOneWidget);
       expect(find.text('Chest 10 sets · Triceps 6'), findsOneWidget);
       expect(find.text('Save as program'), findsNothing);
+    });
+
+    testWidgets('an hour or more reads in hours, records name their '
+        'exercises; no change without a last workout', (tester) async {
+      await pump(
+        tester,
+        finished(
+          summary: const WorkoutSummary(
+            duration: Duration(minutes: 72),
+            volumeKg: 12400,
+            setCount: 18,
+            exerciseCount: 6,
+            records: [
+              SummaryRecord(
+                exerciseId: 'leg_press',
+                name: 'Leg Press',
+                set: WorkoutSet(weightKg: 140, reps: 8),
+                loggingType: LoggingType.weightReps,
+                kinds: [RecordKind.heaviestWeight],
+                gain: (kind: RecordKind.heaviestWeight, amount: 5),
+              ),
+            ],
+          ),
+        ),
+      );
+      expect(find.text('1 h 12 min'), findsOneWidget);
+      expect(find.text('Leg Press'), findsWidgets);
+      expect(find.textContaining(' vs '), findsNothing);
     });
 
     testWidgets('a changed program day asks before saving the changes', (

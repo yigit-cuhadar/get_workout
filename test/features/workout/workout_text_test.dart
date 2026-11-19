@@ -24,6 +24,12 @@ void main() {
     expect(l10n.durationMinutes(const Duration(minutes: 52)), '52 min');
   });
 
+  test('an hour or more reads in hours and minutes', () {
+    expect(l10n.durationHours(const Duration(minutes: 59)), '59 min');
+    expect(l10n.durationHours(const Duration(minutes: 72)), '1 h 12 min');
+    expect(l10n.durationHours(const Duration(minutes: 120)), '2 h');
+  });
+
   test('225 lb typed and stored in kg shows 225 again', () {
     final kg = WeightUnit.lb.toKg(225);
     expect(l10n.weightField(kg, WeightUnit.lb), '225');
