@@ -11,12 +11,12 @@ dependencies:
   forge_ui:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: 83483dce6efb8dfd4346824e8eef8c02c1a40916
+      ref: 8ab038da1cfa6576b9b3f8557c050a74ec145c56
       path: packages/forge_ui
   forge_model_viewer:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
-      ref: 83483dce6efb8dfd4346824e8eef8c02c1a40916
+      ref: 8ab038da1cfa6576b9b3f8557c050a74ec145c56
       path: packages/forge_model_viewer
   get_workout:
     path: ..

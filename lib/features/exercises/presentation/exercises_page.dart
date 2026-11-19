@@ -79,7 +79,7 @@ class _ExercisesViewState extends State<_ExercisesView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, 10),
+            padding: const EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, 10),
             child: ForgeSearchField.tapOnly(
               hint: l10n.librarySearch,
               heroTag: librarySearchHeroTag,
