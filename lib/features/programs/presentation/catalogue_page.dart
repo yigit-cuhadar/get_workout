@@ -139,7 +139,10 @@ class _CatalogueViewState extends State<_CatalogueView> {
       for (final program in state.shown(language))
         if (program != source) program,
     ];
-    final best = plain ? state.recommended.firstOrNull : null;
+    // The active program already leads the page: recommend the next one.
+    final best = plain
+        ? state.recommended.where((r) => r.program != source).firstOrNull
+        : null;
     final free = state.programs.where((program) => !program.premium).length;
     return [
       _FilterChips(state),
