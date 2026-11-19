@@ -422,6 +422,7 @@ class _CardioFormViewState extends State<_CardioFormView> {
           hint: l10n.cardioNoteHint,
           maxLength: CardioLimits.maxNoteLength,
           onChanged: (changed) => text = changed,
+          autofocus: true,
         ),
       ),
     );

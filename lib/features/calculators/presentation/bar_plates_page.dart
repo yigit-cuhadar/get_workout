@@ -200,6 +200,7 @@ class _BarDialogState extends State<_BarDialog> {
           label: l10n.calcBarWeight(format.weightUnitLabel),
           controller: _text,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          autofocus: true,
           validator: (text) => format.errorFor(
             CalculatorInput.barWeight,
             // Empty reads as out of range, which says what is allowed.
@@ -301,6 +302,7 @@ class _PlateSheetState extends State<_PlateSheet> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
+              autofocus: true,
               validator: (_) =>
                   format.errorFor(CalculatorInput.plateWeight, _check()),
             ),
