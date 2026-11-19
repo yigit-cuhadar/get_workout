@@ -93,7 +93,7 @@ class AndroidWorkoutLockScreen implements WorkoutLockScreen {
 
   /// The notification has no rest buttons.
   @override
-  Stream<LockScreenRestAction> restActions() => const Stream.empty();
+  Stream<LockScreenRestPress> restActions() => const Stream.empty();
 
   /// Runs [calls] in order until one fails.
   static Future<Result<void>> _all(

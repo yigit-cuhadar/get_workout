@@ -2928,9 +2928,12 @@ the feature you are about to touch, and keep it true when you change it.
   left; a rest moved either way keeps its start, so its bar and the
   panel's progress do not jump.
 - **Rest notification**: local, scheduled only when the app hides and
-  cancelled when it shows or the rest changes, since the notifications
-  package cannot hide one over the app in front; a schedule that lands
-  after such a change is cancelled again. A rest left running when the
+  cancelled when it shows or the rest ends, since the notifications
+  package cannot hide one over the app in front. A rest moved while the
+  app is hidden (a Live Activity button) reschedules it in place, never
+  cancelling it first, so a suspension in between cannot leave none; the
+  calls run one after another, each for the state when it runs, so a
+  late one cannot undo a newer change. A rest left running when the
   app is killed in front gets none. The wish is the user's
   (`settings.restTimer.notify`, written only by their answer or the
   settings switch); the permission is the device's and is never written
@@ -3040,8 +3043,10 @@ the feature you are about to touch, and keep it true when you change it.
   without opening it: the Runner moves the rest shown at once (the app's
   rule: 15 s more up to 30 min ahead, 15 s less ending it when less is
   left, Skip ending it) and hands the press to Dart on
-  `getworkout/workout_activity_rest`; Dart applies it to the workout's
-  rest (`RestTimerCubit` through `WatchLockScreenRestActions`, waiting
+  `getworkout/workout_activity_rest`, which answers only once the press
+  is applied and the rest notification moved (`LockScreenRestPress`, at
+  most 5 s), so iOS keeps the app awake until then; Dart applies it to
+  the workout's rest (`RestTimerCubit` through `WatchLockScreenRestActions`, waiting
   until the workout is loaded), which keeps it, moves the rest
   notification and shows the activity again. A press while Flutter does
   not run (the app launched in the background for it) or before Dart

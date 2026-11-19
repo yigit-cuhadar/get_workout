@@ -110,9 +110,9 @@ typedef LockScreenText =
 /// second.
 ///
 /// A notification for the end is scheduled only while the app is hidden
-/// ([hidden]) and cancelled when it shows again ([shown]) or the rest
-/// changes (which includes a user change), so it never appears over the
-/// app. It needs the user's yes (`settings.restTimer.notify`); the device's
+/// ([hidden]), moved with the rest meanwhile (+15 s from the lock screen),
+/// and cancelled when the app shows again ([shown]) or the rest ends
+/// (which includes a user change), so it never appears over the app. It needs the user's yes (`settings.restTimer.notify`); the device's
 /// permission is asked only after they say yes in the app, at most once
 /// per device.
 ///
@@ -148,9 +148,9 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     _subscription = workout.stream.listen(_onWorkout);
     _settingsSubscription = _settings.stream.listen((_) => _syncLockScreen());
     _restActions = watchRestActions().listen(
-      (action) => unawaited(_onRestAction(action)),
+      (press) => unawaited(_onRestPress(press)),
     );
-    unawaited(_cancelNotification());
+    _settleNotification();
     _tick();
   }
 
@@ -168,7 +168,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   final DateTime Function() _clock;
   late final StreamSubscription<ActiveWorkoutState> _subscription;
   late final StreamSubscription<SettingsState> _settingsSubscription;
-  late final StreamSubscription<LockScreenRestAction> _restActions;
+  late final StreamSubscription<LockScreenRestPress> _restActions;
   Rest? _rest;
 
   /// [RestTimerState.totalS] of the running rest; null until its first
@@ -185,9 +185,16 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   Timer? _timer;
   bool _hidden = false;
 
-  /// Bumped whenever a scheduled notification may no longer be wanted: the
-  /// rest changed or the app showed.
-  int _generation = 0;
+  /// Calls on the rest notification run one after another, each settling
+  /// it as things are when it runs, so the last one wins.
+  Future<void> _notificationCalls = Future.value();
+
+  /// The notification scheduled last, until it is cancelled.
+  RestNotice? _scheduled;
+
+  /// Whether one may be pending: unknown at start (one left from an
+  /// earlier run), and from each schedule until a cancel.
+  bool _mayBePending = true;
 
   /// What the lock screen shows (or was last asked to), null for nothing.
   /// Unknown until the first sync, which so also replaces or removes one
@@ -225,10 +232,8 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     }
     _restTotalS = _totalAfter(_rest, workout.rest);
     _rest = workout.rest;
-    _generation++;
-    unawaited(_cancelNotification());
+    _settleNotification();
     _tick();
-    if (_hidden) unawaited(_scheduleNotification());
   }
 
   void _tick() {
@@ -289,21 +294,30 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   }
 
   /// A rest button on the lock screen, pressed maybe before the app ran:
-  /// applied once the workout is loaded.
-  Future<void> _onRestAction(LockScreenRestAction action) async {
-    if (_workout.state.status == WorkoutStatus.loading) {
-      await _workout.stream.firstWhere(
-        (state) => state.status != WorkoutStatus.loading,
-      );
-    }
-    if (isClosed) return;
-    switch (action) {
-      case LockScreenRestAction.shorten:
-        _workout.shortenRest();
-      case LockScreenRestAction.extend:
-        _workout.extendRest();
-      case LockScreenRestAction.skip:
-        _workout.skipRest();
+  /// applied once the workout is loaded, and handled once the rest
+  /// notification follows the moved rest, as the app may be put back to
+  /// sleep as soon as the press is handled.
+  Future<void> _onRestPress(LockScreenRestPress press) async {
+    try {
+      if (_workout.state.status == WorkoutStatus.loading) {
+        await _workout.stream.firstWhere(
+          (state) => state.status != WorkoutStatus.loading,
+        );
+      }
+      if (isClosed) return;
+      switch (press.action) {
+        case LockScreenRestAction.shorten:
+          _workout.shortenRest();
+        case LockScreenRestAction.extend:
+          _workout.extendRest();
+        case LockScreenRestAction.skip:
+          _workout.skipRest();
+      }
+      // The moved rest reaches [_onWorkout] after this turn.
+      await Future<void>.delayed(Duration.zero);
+      await _notificationCalls;
+    } finally {
+      press.handled();
     }
   }
 
@@ -401,14 +415,13 @@ class RestTimerCubit extends Cubit<RestTimerState> {
   /// The app went to the background: notify at the end of a running rest.
   void hidden() {
     _hidden = true;
-    unawaited(_scheduleNotification());
+    _settleNotification();
   }
 
   /// The app is in front again.
   void shown() {
     _hidden = false;
-    _generation++;
-    unawaited(_cancelNotification());
+    _settleNotification();
     if (_lockScreenFailing) _lockScreenKnown = false;
     _tick();
   }
@@ -463,39 +476,56 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     );
   }
 
-  Future<void> _scheduleNotification() async {
+  /// Schedules the notification for the end of the running rest while
+  /// the app is hidden and the user wants it, else cancels it, after the
+  /// calls before.
+  void _settleNotification() {
+    _notificationCalls = _notificationCalls
+        .then((_) => _applyNotification())
+        .onError<Object>(
+          (error, stack) =>
+              Log.e('rest', 'rest notification not settled', error, stack),
+        );
+  }
+
+  Future<void> _applyNotification() async {
     final rest = _rest;
     final workout = _workout.state.workout;
-    if (rest == null ||
+    final settings = _settings.state.settings.restTimer;
+    if (isClosed ||
+        !_hidden ||
+        rest == null ||
         workout == null ||
         !rest.runsAt(_clock()) ||
-        _settings.state.settings.restTimer.notify != true) {
+        settings.notify != true) {
+      if (!_mayBePending) return;
+      _mayBePending = false;
+      _scheduled = null;
+      final result = await _cancel(const NoParams());
+      if (result.failureOrNull case final failure?) {
+        _mayBePending = true;
+        Log.e('rest', 'rest notification not cancelled: ${failure.message}');
+      }
       return;
     }
-    final generation = _generation;
     final text = _text(workout, nextSet(workout, rest.after));
-    final result = await _schedule((
+    final notice = (
       at: rest.endsAt,
       title: text.title,
       body: text.body,
-      alert: _settings.state.settings.restTimer.alert,
-    ));
+      alert: settings.alert,
+    );
+    if (notice == _scheduled) return;
+    // Replaces the one pending: cancelling it first could leave none if
+    // the app is suspended in between, as after a lock-screen press.
+    _mayBePending = true;
+    final result = await _schedule(notice);
     if (result.failureOrNull case final failure?) {
+      _scheduled = null;
       Log.e('rest', 'rest notification not scheduled: ${failure.message}');
       return;
     }
-    // The rest changed, the user changed or the app came back meanwhile,
-    // and that cancel may have run before this schedule took effect.
-    if (isClosed || !_hidden || generation != _generation) {
-      await _cancelNotification();
-    }
-  }
-
-  Future<void> _cancelNotification() async {
-    final result = await _cancel(const NoParams());
-    if (result.failureOrNull case final failure?) {
-      Log.e('rest', 'rest notification not cancelled: ${failure.message}');
-    }
+    _scheduled = notice;
   }
 
   @override

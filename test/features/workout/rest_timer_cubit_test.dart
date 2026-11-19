@@ -47,7 +47,7 @@ void main() {
   late StreamController<SettingsState> settingsStates;
   late MockRestNotifications notifications;
   late MockWorkoutLockScreen lockScreen;
-  late StreamController<LockScreenRestAction> restActions;
+  late StreamController<LockScreenRestPress> restActions;
 
   /// The set to do now in parts, when a test wants it.
   LockScreenSet Function(ActiveWorkoutState, SetRef, WeightUnit)? setText;
@@ -432,7 +432,7 @@ void main() {
       });
     });
 
-    test('a change while hidden cancels and schedules again', () {
+    test('a change while hidden moves it, never cancelling it first', () {
       run((async, cubit) {
         emitRest(Rest(endsAt: end, after: first));
         cubit.hidden();
@@ -441,15 +441,34 @@ void main() {
         final later = end.add(restExtension);
         emitRest(Rest(endsAt: later, after: first));
         async.flushMicrotasks();
-        verifyInOrder([
-          notifications.cancel,
-          () => notifications.schedule(
-            later,
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-            alert: any(named: 'alert'),
+        verifyScheduled(later);
+        verifyNever(notifications.cancel);
+      });
+    });
+
+    test('a lock-screen press is handled once the notification moved', () {
+      run((async, cubit) {
+        emitRest(Rest(endsAt: end, after: first));
+        cubit.hidden();
+        async.flushMicrotasks();
+
+        final moved = delaySchedule();
+        var handled = false;
+        when(workoutCubit.extendRest).thenAnswer(
+          (_) => emitRest(Rest(endsAt: end.add(restExtension), after: first)),
+        );
+        restActions.add(
+          LockScreenRestPress(
+            LockScreenRestAction.extend,
+            onHandled: () => handled = true,
           ),
-        ]);
+        );
+        async.elapse(Duration.zero);
+        verifyScheduled(end.add(restExtension));
+        expect(handled, isFalse);
+        moved.complete(const Ok(null));
+        async.flushMicrotasks();
+        expect(handled, isTrue);
       });
     });
 
@@ -1190,9 +1209,9 @@ void main() {
     test('-15 s, +15 s and Skip change the rest of the workout', () {
       run((async, cubit) {
         restActions
-          ..add(LockScreenRestAction.shorten)
-          ..add(LockScreenRestAction.extend)
-          ..add(LockScreenRestAction.skip);
+          ..add(LockScreenRestPress(LockScreenRestAction.shorten))
+          ..add(LockScreenRestPress(LockScreenRestAction.extend))
+          ..add(LockScreenRestPress(LockScreenRestAction.skip));
         async.flushMicrotasks();
         verifyInOrder([
           workoutCubit.shortenRest,
@@ -1205,7 +1224,7 @@ void main() {
     test('one pressed before the workout was loaded waits for it', () {
       workoutState = const ActiveWorkoutState();
       run((async, cubit) {
-        restActions.add(LockScreenRestAction.extend);
+        restActions.add(LockScreenRestPress(LockScreenRestAction.extend));
         async.flushMicrotasks();
         verifyNever(workoutCubit.extendRest);
 
