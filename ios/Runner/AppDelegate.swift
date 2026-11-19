@@ -8,6 +8,9 @@ import UserNotifications
   /// Kept here: the registrar does not keep scene delegates alive.
   private var workoutActivityTaps: WorkoutActivityTaps?
 
+  /// The Live Activity's rest buttons to Dart, once Flutter runs.
+  private var workoutActivityRest: FlutterMethodChannel?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -15,6 +18,11 @@ import UserNotifications
     // flutter_local_notifications: deliver and report taps of local
     // notifications.
     UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
+    // Set at launch: a rest button may launch the app in the background,
+    // where Flutter does not start.
+    RestActions.handler = { [weak self] action in
+      await self?.restButtonPressed(action)
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
@@ -28,9 +36,22 @@ import UserNotifications
   /// (lib/features/workout/data/ios_workout_lock_screen.dart): "show"
   /// starts or updates it and answers whether it shows (false with Live
   /// Activities off), "end" removes it, "takeTap" answers whether it was
-  /// tapped since last asked. Below iOS 16.2 none shows.
+  /// tapped since last asked. Below iOS 16.2 none shows. Its rest buttons
+  /// go on `getworkout/workout_activity_rest` (restButtonPressed).
   private func registerWorkoutActivity(_ registry: FlutterPluginRegistry) {
     guard let registrar = registry.registrar(forPlugin: "WorkoutActivity") else { return }
+    let restChannel = FlutterMethodChannel(
+      name: "getworkout/workout_activity_rest",
+      binaryMessenger: registrar.messenger()
+    )
+    restChannel.setMethodCallHandler { call, result in
+      guard call.method == "takeRestActions" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      result(RestPresses.take().map(\.rawValue))
+    }
+    workoutActivityRest = restChannel
     let channel = FlutterMethodChannel(
       name: "getworkout/workout_activity",
       binaryMessenger: registrar.messenger()
@@ -56,15 +77,11 @@ import UserNotifications
           result(FlutterError(code: "bad-args", message: "show needs name and startedAt", details: nil))
           return
         }
-        var rest: WorkoutActivityAttributes.ContentState.Rest?
-        if let endsAt = args["restEndsAt"] as? NSNumber, let title = args["restTitle"] as? String {
-          rest = .init(endsAt: date(endsAt), title: title, detail: args["restDetail"] as? String)
-        }
         let state = WorkoutActivityAttributes.ContentState(
           name: name,
           startedAt: date(startedAt),
-          current: args["current"] as? String,
-          rest: rest
+          set: activitySet(args["set"]),
+          rest: activityRest(args["rest"])
         )
         Task { @MainActor in
           do {
@@ -81,6 +98,30 @@ import UserNotifications
       default:
         result(FlutterMethodNotImplemented)
       }
+    }
+  }
+
+  /// A rest button pressed on the Live Activity: the activity shows the
+  /// moved rest at once, and Dart moves the workout's rest, now when it
+  /// listens, else once it does (kept until then, also across launches).
+  @MainActor private func restButtonPressed(_ action: RestAction) async {
+    if #available(iOS 16.2, *) {
+      await WorkoutActivity.move(action)
+    }
+    guard let channel = workoutActivityRest else {
+      RestPresses.keep(action)
+      return
+    }
+    let taken = await withCheckedContinuation { continuation in
+      channel.invokeMethod("restAction", arguments: action.rawValue) { result in
+        continuation.resume(
+          returning: !(result is FlutterError)
+            && (result as AnyObject?) !== FlutterMethodNotImplemented
+        )
+      }
+    }
+    if !taken {
+      RestPresses.keep(action)
     }
   }
 
@@ -108,6 +149,57 @@ import UserNotifications
         result(FlutterError(code: "exclude-failed", message: error.localizedDescription, details: nil))
       }
     }
+  }
+}
+
+/// The set to do now from Dart; nil when every set is done.
+@available(iOS 16.2, *)
+private func activitySet(_ argument: Any?) -> WorkoutActivityAttributes.ContentState.SetToDo? {
+  guard let set = argument as? [String: Any],
+    let exercise = set["exercise"] as? String,
+    let position = set["position"] as? String,
+    let line = set["line"] as? String,
+    let done = set["done"] as? [Bool]
+  else { return nil }
+  return .init(exercise: exercise, position: position, line: line, done: done)
+}
+
+/// The running rest from Dart; nil when none runs.
+@available(iOS 16.2, *)
+private func activityRest(_ argument: Any?) -> WorkoutActivityAttributes.ContentState.Rest? {
+  guard let rest = argument as? [String: Any],
+    let startsAt = rest["startsAt"] as? NSNumber,
+    let endsAt = rest["endsAt"] as? NSNumber,
+    let title = rest["title"] as? String,
+    let shorten = rest["shorten"] as? String,
+    let extend = rest["extend"] as? String,
+    let skip = rest["skip"] as? String
+  else { return nil }
+  return .init(
+    startsAt: date(startsAt),
+    endsAt: date(endsAt),
+    title: title,
+    detail: rest["detail"] as? String,
+    shorten: shorten,
+    extend: extend,
+    skip: skip
+  )
+}
+
+/// Rest presses Dart has not taken yet, kept across launches: one pressed
+/// while the app did not run moves the workout's rest when it next starts.
+enum RestPresses {
+  private static let key = "workoutActivityRestPresses"
+
+  static func keep(_ action: RestAction) {
+    let kept = UserDefaults.standard.stringArray(forKey: key) ?? []
+    UserDefaults.standard.set(kept + [action.rawValue], forKey: key)
+  }
+
+  static func take() -> [RestAction] {
+    let kept = UserDefaults.standard.stringArray(forKey: key) ?? []
+    UserDefaults.standard.removeObject(forKey: key)
+    return kept.compactMap(RestAction.init(rawValue:))
   }
 }
 
@@ -149,6 +241,15 @@ enum WorkoutActivity {
       pushType: nil
     )
     return true
+  }
+
+  /// The rest shown moved as [action] does, before the app moves it.
+  static func move(_ action: RestAction) async {
+    for activity in Activity<WorkoutActivityAttributes>.activities
+    where activity.activityState == .active {
+      let state = activity.content.state.moved(action)
+      await activity.update(ActivityContent(state: state, staleDate: state.rest?.endsAt))
+    }
   }
 
   static func end() async {
