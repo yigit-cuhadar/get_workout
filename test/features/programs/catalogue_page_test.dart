@@ -144,8 +144,10 @@ void main() {
     expect(find.text('Week 2 of 8 · opens your copy'), findsOneWidget);
     expect(find.text('Active'), findsOneWidget);
     expect(find.text('All programs'), findsOneWidget);
-    // Lifted out of the list below.
-    expect(find.text('3 days · Intermediate · 8 weeks'), findsOneWidget);
+    // Lifted out of the list below and not recommended again: shown once,
+    // with its week in place of its facts.
+    expect(find.text('Program fits'), findsOneWidget);
+    expect(find.text('3 days · Intermediate · 8 weeks'), findsNothing);
     expect(
       tester.getTopLeft(find.text('Your active program')).dy,
       lessThan(tester.getTopLeft(find.text('All programs')).dy),
