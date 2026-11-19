@@ -15,7 +15,7 @@ void main() {
 
   group('StrengthRange', () {
     test('starts at local midnight of the first day shown', () {
-      expect(StrengthRange.weeks12.start(now), DateTime(2026, 8, 20));
+      expect(StrengthRange.weeks2.start(now), DateTime(2026, 10, 29));
       expect(StrengthRange.months6.start(now), DateTime(2026, 5, 12));
       expect(StrengthRange.year1.start(now), DateTime(2025, 11, 12));
       expect(StrengthRange.all.start(now), isNull);
@@ -40,8 +40,8 @@ void main() {
       );
     });
 
-    test('only the 12 weeks are free', () {
-      expect(StrengthRange.free, StrengthRange.weeks12);
+    test('only the 2 weeks are free', () {
+      expect(StrengthRange.free, StrengthRange.weeks2);
       expect(
         [for (final range in StrengthRange.values) range.premium],
         [false, true, true, true],
@@ -52,28 +52,28 @@ void main() {
       expect(StrengthRange.year1.allowed(true), StrengthRange.year1);
       expect(StrengthRange.year1.allowed(false), StrengthRange.free);
       expect(StrengthRange.all.allowed(null), StrengthRange.free);
-      expect(StrengthRange.weeks12.allowed(false), StrengthRange.weeks12);
+      expect(StrengthRange.weeks2.allowed(false), StrengthRange.weeks2);
     });
   });
 
   group('e1rmSeries', () {
     final history = [
       point(DateTime(2026, 1, 5), 90),
-      point(DateTime(2026, 8, 19, 23, 59), 95),
-      point(DateTime(2026, 8, 20), 100),
-      point(DateTime(2026, 9, 1), null),
+      point(DateTime(2026, 10, 28, 23, 59), 95),
+      point(DateTime(2026, 10, 29), 100),
+      point(DateTime(2026, 11, 1), null),
       point(DateTime(2026, 11, 12, 9), 110),
     ];
 
-    test('the 12 weeks from midnight of their first day, with an e1RM', () {
+    test('the 2 weeks from midnight of their first day, with an e1RM', () {
       final series = e1rmSeries(
         history,
-        range: StrengthRange.weeks12,
+        range: StrengthRange.weeks2,
         now: now,
         unit: WeightUnit.kg,
       );
       expect(series, [
-        (date: DateTime(2026, 8, 20), value: 100.0, workoutId: 'w8-20'),
+        (date: DateTime(2026, 10, 29), value: 100.0, workoutId: 'w10-29'),
         (date: DateTime(2026, 11, 12, 9), value: 110.0, workoutId: 'w11-12'),
       ]);
     });
@@ -91,7 +91,7 @@ void main() {
     test('values in whole pounds for a user who lifts in pounds', () {
       final series = e1rmSeries(
         [point(DateTime(2026, 11, 1), 100)],
-        range: StrengthRange.weeks12,
+        range: StrengthRange.weeks2,
         now: now,
         unit: WeightUnit.lb,
       );
@@ -115,8 +115,8 @@ void main() {
     test('a workout before the range starts, with an e1RM or not', () {
       expect(
         hasResultsBefore(
-          [point(DateTime(2026, 8, 19, 23, 59), null)],
-          range: StrengthRange.weeks12,
+          [point(DateTime(2026, 10, 28, 23, 59), null)],
+          range: StrengthRange.weeks2,
           now: now,
         ),
         isTrue,
@@ -126,8 +126,8 @@ void main() {
     test('not for workouts inside the range', () {
       expect(
         hasResultsBefore(
-          [point(DateTime(2026, 8, 20), 99)],
-          range: StrengthRange.weeks12,
+          [point(DateTime(2026, 10, 29), 99)],
+          range: StrengthRange.weeks2,
           now: now,
         ),
         isFalse,
@@ -149,14 +149,14 @@ void main() {
   group('sessionsFrom', () {
     final history = [
       point(DateTime(2026, 8, 19), 95),
-      point(DateTime(2026, 8, 20), null),
+      point(DateTime(2026, 10, 29), null),
       point(DateTime(2026, 11, 1), 100),
     ];
 
     test('the workouts from the start on, newest first', () {
       expect(
-        [for (final p in sessionsFrom(history, DateTime(2026, 8, 20))) p.date],
-        [DateTime(2026, 11, 1), DateTime(2026, 8, 20)],
+        [for (final p in sessionsFrom(history, DateTime(2026, 10, 29))) p.date],
+        [DateTime(2026, 11, 1), DateTime(2026, 10, 29)],
       );
     });
 

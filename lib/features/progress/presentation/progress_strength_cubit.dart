@@ -7,6 +7,9 @@ import 'package:forge_core/forge_core.dart';
 import '../../../core/user_stream_follower.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
+import '../../programs/domain/program_usecases.dart';
+import '../../workout/domain/exercise_stats.dart';
+import '../../workout/domain/workout_usecases.dart';
 import '../domain/progress_usecases.dart';
 
 enum ProgressStrengthStatus { loading, ready, failure }
@@ -36,26 +39,30 @@ class ProgressStrengthState extends Equatable {
   List<Object?> get props => [status, highlight, exercise, trained];
 }
 
-/// The [strengthHighlight] of whoever is signed in, named from the
-/// catalogue, for the Progress tab. Loading until its exercise is named
-/// or known to be gone; a user change starts over. A failed stream shows
-/// as a failure until it delivers again, by itself or at once on [retry].
+/// The [strengthHighlight] of whoever is signed in over [cardWeeks] (again
+/// when Premium comes or goes), named from the catalogue, for the Progress
+/// tab. Loading until its exercise is named or known to be gone; a user
+/// change starts over. A failed stream shows as a failure until it
+/// delivers again, by itself or at once on [retry].
 class ProgressStrengthCubit extends Cubit<ProgressStrengthState> {
   ProgressStrengthCubit({
     required WatchAuthUser watchAuthUser,
-    required WatchStrengthHighlights watchHighlights,
+    required WatchAllExerciseStats watchStats,
+    required WatchPremium watchPremium,
     required this._catalogue,
-  }) : super(const ProgressStrengthState()) {
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now,
+       super(const ProgressStrengthState()) {
     _follower = UserStreamFollower(
       userIds: watchAuthUser().map((user) => user?.id),
-      watch: watchHighlights.call,
+      watch: watchStats.call,
       onUser: (_) {
-        _highlights = null;
+        _stats = null;
         _failed = false;
         _publish();
       },
-      onData: (highlights) {
-        _highlights = highlights;
+      onData: (stats) {
+        _stats = stats;
         _failed = false;
         _publish();
       },
@@ -66,12 +73,19 @@ class ProgressStrengthCubit extends Cubit<ProgressStrengthState> {
       logTag: 'progress',
     );
     _catalogueSubscription = _catalogue.stream.listen((_) => _publish());
+    _premiumSubscription = watchPremium().listen((premium) {
+      _premium = premium;
+      _publish();
+    });
   }
 
   final ExerciseCatalogueCubit _catalogue;
-  late final UserStreamFollower<StrengthHighlights> _follower;
+  final DateTime Function() _clock;
+  late final UserStreamFollower<Map<String, ExerciseStats>> _follower;
   late final StreamSubscription<ExerciseCatalogueState> _catalogueSubscription;
-  StrengthHighlights? _highlights;
+  late final StreamSubscription<bool?> _premiumSubscription;
+  Map<String, ExerciseStats>? _stats;
+  bool? _premium;
   bool _failed = false;
 
   void retry() {
@@ -80,17 +94,21 @@ class ProgressStrengthCubit extends Cubit<ProgressStrengthState> {
   }
 
   void _publish() {
-    final highlights = _highlights;
+    final stats = _stats;
     final catalogue = _catalogue.state;
     if (_failed || catalogue is CatalogueFailed) {
       return emit(
         const ProgressStrengthState(status: ProgressStrengthStatus.failure),
       );
     }
-    if (highlights == null || catalogue is! CatalogueReady) {
+    if (stats == null || catalogue is! CatalogueReady) {
       return emit(const ProgressStrengthState());
     }
-    final highlight = highlights.highlight;
+    final highlight = strengthHighlight(
+      stats,
+      now: _clock(),
+      weeks: cardWeeks(_premium),
+    );
     final id = highlight?.exerciseId;
     final exercise = catalogue.exercises.where((e) => e.id == id).firstOrNull;
     // A custom exercise is not known to be gone before those load.
@@ -102,7 +120,7 @@ class ProgressStrengthCubit extends Cubit<ProgressStrengthState> {
         status: ProgressStrengthStatus.ready,
         highlight: highlight,
         exercise: exercise,
-        trained: highlights.trained,
+        trained: stats.isNotEmpty,
       ),
     );
   }
@@ -111,6 +129,7 @@ class ProgressStrengthCubit extends Cubit<ProgressStrengthState> {
   Future<void> close() async {
     await _follower.cancel();
     await _catalogueSubscription.cancel();
+    await _premiumSubscription.cancel();
     return super.close();
   }
 }

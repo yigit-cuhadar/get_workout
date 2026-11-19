@@ -10,8 +10,12 @@ import 'package:get_workout/features/progress/presentation/progress_strength_cub
 import 'package:get_workout/features/progress/progress_module.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
+import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
+import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../programs/fixtures.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -46,7 +50,8 @@ void main() {
       ..registerSingleton<SettingsCubit>(settings)
       ..registerSingleton<ExerciseCatalogueCubit>(catalogue)
       ..registerSingleton<BodyListCubit>(bodyList)
-      ..registerSingleton<WorkoutRepository>(MockWorkoutRepository());
+      ..registerFactory(() => WatchAllExerciseStats(MockWorkoutRepository()))
+      ..registerFactory(() => const WatchPremium(FixedPremium(false)));
 
     final strength = sl<ProgressStrengthCubit>();
     final prompt = sl<MeasurementPromptCubit>();

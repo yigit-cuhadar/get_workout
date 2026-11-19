@@ -93,7 +93,7 @@ class AskedPrompt implements StepsPrompt {
 
 void main() {
   const user = AuthUser(id: 'u1', isAnonymous: true);
-  // A Thursday; 12 weeks back is Thursday, August 20.
+  // A Thursday; 2 weeks back is Thursday, October 29.
   final now = DateTime(2026, 11, 12, 9);
   final recent = BodyEntry(
     id: 'r',
@@ -172,7 +172,7 @@ void main() {
     await start();
 
     expect(cubit.state.shown, [BodySeries.weight]);
-    expect(cubit.state.from, DateTime(2026, 8, 20));
+    expect(cubit.state.from, DateTime(2026, 10, 29));
     expect(cubit.state.to, now);
     expect(cubit.state.points, {
       BodySeries.weight: [SeriesPoint(recent.date, 80)],
@@ -269,8 +269,8 @@ void main() {
           verify(() => volume(captureAny())).captured.single as VolumeQuery;
       expect(query.uid, 'u1');
       expect(query.lastWeek, CalendarDate(2026, 11, 9));
-      expect(query.weeks, 13);
-      expect(cubit.state.from, DateTime(2026, 8, 17));
+      expect(query.weeks, 3);
+      expect(cubit.state.from, DateTime(2026, 10, 26));
       expect(cubit.state.to, DateTime(2026, 11, 16));
       expect(cubit.state.points[BodySeries.weeklySets], isEmpty);
 
@@ -362,7 +362,7 @@ void main() {
       final query =
           verify(() => volume(captureAny())).captured.single as VolumeQuery;
       expect(query.lastWeek, CalendarDate(2026, 11, 8));
-      expect(cubit.state.from, DateTime(2026, 8, 16));
+      expect(cubit.state.from, DateTime(2026, 10, 25));
       expect(cubit.state.to, DateTime(2026, 11, 15));
     });
   });
@@ -557,8 +557,8 @@ void main() {
       await pumpEventQueue();
 
       final points = cubit.state.points[BodySeries.dailySteps]!;
-      expect(points, hasLength(13));
-      expect(points.first, SeriesPoint(DateTime(2026, 8, 17), 7000));
+      expect(points, hasLength(3));
+      expect(points.first, SeriesPoint(DateTime(2026, 10, 26), 7000));
     });
 
     test('a read for another range stops between its spans', () async {
@@ -583,9 +583,9 @@ void main() {
       health.gate!.complete();
       await pumpEventQueue();
 
-      // The 12 weeks were read; nothing more of All.
-      expect(health.reads, [DateTime(2023, 1, 2), DateTime(2026, 8, 17)]);
-      expect(cubit.state.points[BodySeries.dailySteps], hasLength(13));
+      // The 2 weeks were read; nothing more of All.
+      expect(health.reads, [DateTime(2023, 1, 2), DateTime(2026, 10, 26)]);
+      expect(cubit.state.points[BodySeries.dailySteps], hasLength(3));
     });
 
     test('only the latest read applies, also back to the same range', () async {
@@ -605,7 +605,7 @@ void main() {
       await start();
 
       await bodyIs(ready);
-      // The 12 weeks' steps are gone with their weeks.
+      // The 2 weeks' steps are gone with their weeks.
       expect(cubit.state.loading, {BodySeries.dailySteps});
       await bodyIs(all);
       health.gate!.complete();

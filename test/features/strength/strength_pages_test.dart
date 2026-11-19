@@ -231,7 +231,7 @@ void main() {
       expect(find.text('Aug 24 – Nov 13'), findsOneWidget);
       expect(
         find.text(
-          'Your results from before the last 12 weeks are part of Premium.',
+          'Your results from before the last 2 weeks are part of Premium.',
         ),
         findsOneWidget,
       );
@@ -276,7 +276,7 @@ void main() {
       );
       await pump(tester, '/progress/strength/bench');
 
-      expect(find.text('No estimated 1RM in these 12 weeks'), findsOneWidget);
+      expect(find.text('No estimated 1RM in these 2 weeks'), findsOneWidget);
       final today = DateFormat.MMMd('en').format(DateTime.now());
       expect(find.text('Aug 24 – $today'), findsOneWidget);
       expect(

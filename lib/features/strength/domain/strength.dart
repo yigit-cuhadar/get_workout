@@ -7,18 +7,21 @@ import '../../workout/domain/exercise_stats.dart';
 /// The time ranges of an exercise's e1RM chart. Free users see
 /// [StrengthRange.free]; the longer ones are Premium.
 enum StrengthRange {
-  weeks12,
+  weeks2,
   months6,
   year1,
   all;
 
-  static const free = weeks12;
+  static const free = weeks2;
+
+  /// How many weeks [free] covers.
+  static const freeWeeks = 2;
 
   bool get premium => this != free;
 
   /// The first day shown, from its local midnight; null for [all].
   DateTime? start(DateTime now) => switch (this) {
-    weeks12 => DateTime(now.year, now.month, now.day - 7 * 12),
+    weeks2 => weeksBefore(now, freeWeeks),
     months6 => _monthsBefore(now, 6),
     year1 => _monthsBefore(now, 12),
     all => null,
@@ -29,6 +32,10 @@ enum StrengthRange {
   StrengthRange allowed(bool? premium) =>
       this.premium && premium != true ? free : this;
 }
+
+/// Midnight of [now]'s day [weeks] weeks earlier.
+DateTime weeksBefore(DateTime now, int weeks) =>
+    DateTime(now.year, now.month, now.day - 7 * weeks);
 
 /// [now]'s day [months] months earlier, at midnight; past the end of that
 /// month (August 31 to February), its last day.

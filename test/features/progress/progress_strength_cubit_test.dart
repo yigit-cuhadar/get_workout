@@ -8,7 +8,9 @@ import 'package:get_workout/features/exercises/presentation/exercise_catalogue_c
 import 'package:get_workout/features/progress/domain/progress_usecases.dart';
 import 'package:get_workout/features/progress/presentation/progress_strength_cubit.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
+import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
+import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../programs/fixtures.dart';
@@ -38,11 +40,13 @@ void main() {
   late StreamController<ExerciseCatalogueState> catalogueStates;
   late MockWorkoutRepository repository;
   late MockCatalogueCubit catalogue;
+  late FakePremium premium;
 
   setUp(() {
     users = StreamController<AuthUser?>.broadcast();
     stats = StreamController<Map<String, ExerciseStats>>.broadcast();
     catalogueStates = StreamController<ExerciseCatalogueState>.broadcast();
+    premium = FakePremium();
     repository = MockWorkoutRepository();
     when(() => repository.watchAllStats(any())).thenAnswer((_) => stats.stream);
     catalogue = MockCatalogueCubit();
@@ -64,11 +68,10 @@ void main() {
     when(auth.watchUser).thenAnswer((_) => users.stream);
     return ProgressStrengthCubit(
       watchAuthUser: WatchAuthUser(auth),
-      watchHighlights: WatchStrengthHighlights(
-        repository,
-        clock: () => DateTime(2026, 11, 13, 12),
-      ),
+      watchStats: WatchAllExerciseStats(repository),
+      watchPremium: WatchPremium(premium),
       catalogue: catalogue,
+      clock: () => DateTime(2026, 11, 13, 12),
     );
   }
 
@@ -110,6 +113,39 @@ void main() {
       await cubit.close();
     },
   );
+
+  test('the trend covers 2 weeks, 12 once Premium is known', () async {
+    final cubit = build();
+    await signIn(alice);
+    await show({
+      'bench': ExerciseStats(
+        history: [
+          HistoryPoint(
+            date: DateTime(2026, 10, 1),
+            workoutId: 'w1',
+            bestE1rmKg: 80,
+          ),
+          HistoryPoint(
+            date: DateTime(2026, 11, 10),
+            workoutId: 'w2',
+            bestE1rmKg: 90,
+          ),
+        ],
+      ),
+    });
+    expect(cubit.state.highlight?.trend, [90]);
+    expect(cubit.state.highlight?.change, isNull);
+
+    premium.controller.add(true);
+    await pumpEventQueue();
+    expect(cubit.state.highlight?.trend, [80, 90]);
+    expect(cubit.state.highlight?.change, (kg: 10.0, weeks: 6));
+
+    premium.controller.add(false);
+    await pumpEventQueue();
+    expect(cubit.state.highlight?.trend, [90]);
+    await cubit.close();
+  });
 
   test('an exercise no longer in the library has no name', () async {
     final cubit = build();

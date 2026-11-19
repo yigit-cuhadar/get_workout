@@ -6,7 +6,6 @@ import 'package:get_workout/features/account/domain/sync_repository.dart';
 import 'package:get_workout/features/account/presentation/sync_status_cubit.dart';
 import 'package:get_workout/features/body/presentation/weight_form_cubit.dart';
 import 'package:get_workout/features/body/presentation/weight_sheet.dart';
-import 'package:get_workout/features/progress/domain/progress_usecases.dart';
 import 'package:get_workout/features/progress/presentation/progress_page.dart';
 import 'package:get_workout/features/progress/presentation/progress_strength_cubit.dart';
 import 'package:flutter/material.dart';
@@ -95,6 +94,7 @@ import 'package:get_workout/features/settings/domain/settings_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
+import 'package:get_workout/features/subscription/domain/paywall_moment.dart';
 import 'package:get_workout/features/subscription/presentation/paywall_page.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
 import 'package:get_workout/features/subscription/presentation/premium_trial_cubit.dart';
@@ -570,8 +570,8 @@ void main() {
       when(health.openSettings).thenAnswer((_) async {});
       return health;
     });
-    sl.registerFactory(
-      () => PremiumPaywallCubit(
+    sl.registerFactoryParam<PremiumPaywallCubit, PaywallMoment?, void>(
+      (moment, _) => PremiumPaywallCubit(
         getOffering: GetPaywallOffering(store),
         purchasePlan: PurchasePlan(store),
         restorePurchases: RestorePurchases(store),
@@ -579,6 +579,7 @@ void main() {
         logView: LogPaywallView(paywallTelemetry),
         logPurchase: LogPaywallPurchase(paywallTelemetry),
         isPremium: () => entitlement.isActive,
+        moment: moment,
       ),
     );
     sl.registerFactory(
@@ -2554,6 +2555,35 @@ void main() {
       expect(find.text('You have Premium.'), findsOneWidget);
     });
 
+    testWidgets('the onboarding paywall is hard when the offering says so', (
+      tester,
+    ) async {
+      await openProfileAsFreeGuest(tester);
+      store.metadata = const {dismissibleKey: false};
+      unawaited(router.push(Routes.paywallAt(PaywallMoment.onboarding)));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PaywallPage), findsOneWidget);
+      expect(find.bySemanticsLabel('Close'), findsNothing);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(PaywallPage), findsOneWidget);
+
+      await tapVisible(tester, 'Start 7-day free trial');
+      expect(find.byType(PaywallPage), findsNothing);
+    });
+
+    testWidgets('any other paywall stays closable', (tester) async {
+      await openProfileAsFreeGuest(tester);
+      store.metadata = const {dismissibleKey: false};
+      unawaited(router.push(Routes.paywallAt(PaywallMoment.firstWorkout)));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('Close'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PaywallPage), findsNothing);
+    });
+
     testWidgets('the paywall closes at once for a subscriber', (tester) async {
       await openProfileAsFreeGuest(tester);
       unawaited(store.purchase(fakePlans.first));
@@ -2615,7 +2645,8 @@ void main() {
         ..registerFactory(
           () => ProgressStrengthCubit(
             watchAuthUser: WatchAuthUser(strengthAuth),
-            watchHighlights: WatchStrengthHighlights(workouts),
+            watchStats: WatchAllExerciseStats(workouts),
+            watchPremium: const WatchPremium(FixedPremium(false)),
             catalogue: catalogue,
           ),
         )

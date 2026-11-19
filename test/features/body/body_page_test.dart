@@ -223,7 +223,7 @@ void main() {
     expect(lean.changeIsGood, isFalse);
 
     final card = tester.widget<MultiSeriesChart>(find.byType(MultiSeriesChart));
-    expect(card.title, '12 weeks');
+    expect(card.title, '2 weeks');
     expect(card.detail, 'target 78 kg');
     expect(card.series!.single.average, isNotNull);
     // Only a pair has its own tap tag.

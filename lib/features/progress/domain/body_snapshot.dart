@@ -13,14 +13,16 @@ class BodySnapshot extends Equatable {
   const BodySnapshot({
     this.latest,
     this.weights = const [],
+    this.weeks = StrengthRange.freeWeeks,
     this.latestBodyFat,
   });
 
   /// The newest weigh-in.
   final WeightPoint? latest;
 
-  /// The weights of the last 12 weeks, oldest first.
+  /// The weights of the last [weeks] ([cardWeeks]), oldest first.
   final List<WeightPoint> weights;
+  final int weeks;
 
   /// The newest entry's body fat that has one, with that entry's date.
   final BodyFatPoint? latestBodyFat;
@@ -35,15 +37,16 @@ class BodySnapshot extends Equatable {
         );
 
   @override
-  List<Object?> get props => [latest, weights, latestBodyFat];
+  List<Object?> get props => [latest, weights, weeks, latestBodyFat];
 }
 
-/// The [BodySnapshot] of [entries] (newest first), whose body fat by entry
-/// id is [bodyFat] (see [bodyFatByEntry]).
+/// The [BodySnapshot] of [entries] (newest first) over the last [weeks],
+/// whose body fat by entry id is [bodyFat] (see [bodyFatByEntry]).
 BodySnapshot bodySnapshot(
   List<BodyEntry> entries,
   Map<String, double> bodyFat, {
   required DateTime now,
+  required int weeks,
 }) {
   BodyFatPoint? latestBodyFat;
   for (final entry in entries) {
@@ -55,7 +58,8 @@ BodySnapshot bodySnapshot(
   final latest = entries.where((entry) => entry.weightKg != null).firstOrNull;
   return BodySnapshot(
     latest: latest == null ? null : (date: latest.date, kg: latest.weightKg!),
-    weights: weightSeries(entries, range: StrengthRange.weeks12, now: now),
+    weights: weightsSince(entries, weeksBefore(now, weeks)),
+    weeks: weeks,
     latestBodyFat: latestBodyFat,
   );
 }

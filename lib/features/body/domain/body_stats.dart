@@ -13,15 +13,16 @@ List<WeightPoint> weightSeries(
   List<BodyEntry> entries, {
   required StrengthRange range,
   required DateTime now,
-}) {
-  final start = range.start(now);
-  return [
-    for (final entry in entries.reversed)
-      if (entry.weightKg case final kg?)
-        if (start == null || !entry.date.isBefore(start))
-          (date: entry.date, kg: kg),
-  ];
-}
+}) => weightsSince(entries, range.start(now));
+
+/// The weights of [entries] (newest first) from [start] on (null: all),
+/// oldest first.
+List<WeightPoint> weightsSince(List<BodyEntry> entries, DateTime? start) => [
+  for (final entry in entries.reversed)
+    if (entry.weightKg case final kg?)
+      if (start == null || !entry.date.isBefore(start))
+        (date: entry.date, kg: kg),
+];
 
 /// Whether any of [entries] is from before [range] starts: results a free
 /// user is told exist, behind Premium.
