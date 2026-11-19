@@ -246,6 +246,20 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
 
   /// One equality filter, which needs no composite index.
   @override
+  Future<Result<bool>> hasWorkouts(String uid) => guard(() async {
+    final query = _workouts(uid).limit(1);
+    QuerySnapshot<Map<String, dynamic>> snap;
+    try {
+      snap = await query
+          .get(const GetOptions(source: Source.server))
+          .timeout(serverWait);
+    } on Object {
+      snap = await query.get(const GetOptions(source: Source.cache));
+    }
+    return snap.docs.isNotEmpty;
+  }, mapper: mapFirebaseError);
+
+  @override
   Future<Result<List<Workout>>> programWorkouts(String uid, String programId) =>
       guard(() async {
         final query = _workouts(uid).where('programId', isEqualTo: programId);

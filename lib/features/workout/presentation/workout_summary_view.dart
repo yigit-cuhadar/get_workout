@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -19,6 +21,8 @@ import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../strength/presentation/strength_text.dart';
 import '../../settings/presentation/settings_cubit.dart';
+import '../../subscription/domain/paywall_moment.dart';
+import '../../subscription/presentation/premium.dart';
 import '../../volume/presentation/volume_text.dart';
 import '../domain/exercise_stats.dart';
 import 'active_workout_cubit.dart';
@@ -29,7 +33,8 @@ import 'workout_text.dart';
 /// records, the muscles worked, and Done over Save as program (a free
 /// workout) or Save changes to the day (a program day done differently).
 /// Back does what Done does. A workout that ended itself also offers Edit,
-/// which opens it in the editor.
+/// which opens it in the editor. Leaving the user's first workout ever
+/// shows the paywall first, once ([PaywallMoment.firstWorkout]).
 class WorkoutSummaryView extends StatefulWidget {
   const WorkoutSummaryView(this.state, {super.key});
 
@@ -49,12 +54,25 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
     context.read<BodyModelCubit>().load();
   }
 
+  bool _leaving = false;
+
+  /// Puts the summary away, then does [then].
+  Future<void> _leave([VoidCallback? then]) async {
+    if (_leaving) return;
+    _leaving = true;
+    if (widget.state.summary!.firstEver) {
+      await context.paywallMoment(PaywallMoment.firstWorkout);
+      if (!mounted) return;
+    }
+    context.read<ActiveWorkoutCubit>().summaryShown();
+    then?.call();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final colors = ForgeStyle.of(context).colors;
-    final cubit = context.read<ActiveWorkoutCubit>();
     final state = widget.state;
     final workout = state.workout!;
     final summary = state.summary!;
@@ -118,13 +136,13 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
         : null;
     final done = ForgeButton(
       label: l10n.libraryDone,
-      onPressed: cubit.summaryShown,
+      onPressed: _leave,
       size: ForgeButtonSize.large,
     );
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) cubit.summaryShown();
+        if (!didPop) unawaited(_leave());
       },
       child: Scaffold(
         appBar: ForgeAppBar(
@@ -136,10 +154,9 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
                 label: l10n.summaryEdit,
                 variant: ForgeButtonVariant.text,
                 size: ForgeButtonSize.small,
-                onPressed: () {
-                  cubit.summaryShown();
-                  context.go(Routes.todayWorkoutEdit(workout.id));
-                },
+                onPressed: () => _leave(
+                  () => context.go(Routes.todayWorkoutEdit(workout.id)),
+                ),
               ),
           ],
         ),
@@ -197,10 +214,7 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
                 action: ForgeButton(
                   label: l10n.summaryOpenPrograms,
                   variant: ForgeButtonVariant.secondary,
-                  onPressed: () {
-                    cubit.summaryShown();
-                    context.go(Routes.programs);
-                  },
+                  onPressed: () => _leave(() => context.go(Routes.programs)),
                 ),
               ),
             ],

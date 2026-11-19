@@ -195,6 +195,7 @@ class WorkoutSummary extends Equatable {
     this.records = const [],
     this.closest,
     this.firstWorkout = false,
+    this.firstEver = false,
     this.programUnknown = false,
     this.programWeek,
     this.previous,
@@ -215,6 +216,9 @@ class WorkoutSummary extends Equatable {
   /// None of its exercises had been done before: records start now.
   final bool firstWorkout;
 
+  /// The user had no other workout: their first one ever.
+  final bool firstEver;
+
   /// The workout came from a program whose state was not known when it
   /// finished, so the program was not moved on.
   final bool programUnknown;
@@ -230,6 +234,7 @@ class WorkoutSummary extends Equatable {
   final Map<Muscle, double> muscleSets;
 
   WorkoutSummary copyWith({
+    bool? firstEver,
     int? Function()? programWeek,
     WorkoutTotals? Function()? previous,
   }) => WorkoutSummary(
@@ -240,6 +245,7 @@ class WorkoutSummary extends Equatable {
     records: records,
     closest: closest,
     firstWorkout: firstWorkout,
+    firstEver: firstEver ?? this.firstEver,
     programUnknown: programUnknown,
     programWeek: programWeek != null ? programWeek() : this.programWeek,
     previous: previous != null ? previous() : this.previous,
@@ -255,6 +261,7 @@ class WorkoutSummary extends Equatable {
     records,
     closest,
     firstWorkout,
+    firstEver,
     programUnknown,
     programWeek,
     previous,

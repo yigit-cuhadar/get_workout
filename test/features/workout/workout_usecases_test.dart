@@ -58,6 +58,8 @@ void main() {
     finish = FinishWorkout(repository, clock: () => end);
     when(() => repository.programWorkouts(any(), any()))
         .thenAnswer((_) async => const Ok([]));
+    when(() => repository.hasWorkouts(any()))
+        .thenAnswer((_) async => const Ok(true));
     when(
       () => repository.saveWorkout(
         any(),
@@ -190,6 +192,59 @@ void main() {
           .called(1);
     });
 
+    test('is the first ever with no stats and no stored workout', () async {
+      when(() => repository.hasWorkouts('u1'))
+          .thenAnswer((_) async => const Ok(false));
+      final result = await finish((
+        uid: 'u1',
+        workout: fromDay(0),
+        program: null,
+        at: null,
+      ));
+      expect(result.valueOrNull!.summary.firstEver, isTrue);
+    });
+
+    test('is not the first ever with a stored workout', () async {
+      final result = await finish((
+        uid: 'u1',
+        workout: fromDay(0),
+        program: null,
+        at: null,
+      ));
+      expect(result.valueOrNull!.summary.firstEver, isFalse);
+    });
+
+    test('is not the first ever when the workouts cannot be read', () async {
+      when(() => repository.hasWorkouts('u1'))
+          .thenAnswer((_) async => const Err(NetworkFailure()));
+      final result = await finish((
+        uid: 'u1',
+        workout: fromDay(0),
+        program: null,
+        at: null,
+      ));
+      expect(result.valueOrNull!.summary.firstEver, isFalse);
+    });
+
+    test('an exercise done before is never the first ever', () async {
+      when(() => repository.getStats('u1', ['squat'])).thenAnswer(
+        (_) async => Ok({
+          'squat': (
+            stats: applyWorkout(null, previous, 'squat'),
+            current: true,
+          ),
+        }),
+      );
+      final result = await finish((
+        uid: 'u1',
+        workout: fromDay(0),
+        program: null,
+        at: null,
+      ));
+      expect(result.valueOrNull!.summary.firstEver, isFalse);
+      verifyNever(() => repository.hasWorkouts(any()));
+    });
+
     test('refuses a workout without a done set', () async {
       final result = await finish((
         uid: 'u1',
@@ -278,7 +333,9 @@ void main() {
       await pumpEventQueue();
 
       expect(first.valueOrNull!.summary.records, isEmpty);
+      expect(first.valueOrNull!.summary.firstEver, isTrue);
       expect(second.valueOrNull!.summary.records, isEmpty);
+      expect(second.valueOrNull!.summary.firstEver, isFalse);
       expect(
         (await firestore.collection('users/u1/workouts').get()).docs,
         hasLength(1),

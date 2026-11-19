@@ -260,6 +260,10 @@ class FakeWorkoutRepository extends LiveData implements WorkoutRepository {
   ) => throw UnimplementedError();
 
   @override
+  Future<Result<bool>> hasWorkouts(String uid) async =>
+      Ok(workouts.isNotEmpty);
+
+  @override
   Future<Result<List<Workout>>> programWorkouts(
     String uid,
     String programId,
