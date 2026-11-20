@@ -1745,6 +1745,39 @@ Decisions (the canvases they were drawn on are deleted):
 - `forge_purchases` has no "unavailable" backend; the app swaps in its own
   repository for release builds without keys. Move it into the package when
   it is next changed.
+- App Check (2026-11-20), monitoring first (owner's decision); enforcement
+  is turned on before release. Live in code: `initFirebase` (forge_firebase)
+  activates it before any Firestore, Storage or Functions call, with App
+  Attest (DeviceCheck below iOS 14) on iOS, Play Integrity on Android and
+  the debug provider in debug builds, the simulator included. Profile builds
+  on the owner's iPhone use App Attest against dev. Runner.entitlements
+  carries `com.apple.developer.devicecheck.appattest-environment` from the
+  `APP_ATTEST_ENVIRONMENT` build setting (development for Debug and Profile,
+  production for Release); the next `-allowProvisioningUpdates` build adds
+  the capability to the App ID. The admin web build does not activate it
+  (its own bootstrap, no reCAPTCHA key), so `sendAnnouncement` and the
+  admin's Firestore writes must stay unenforced until the web gets a
+  reCAPTCHA Enterprise provider. Not done yet, per project (dev and prod):
+  - Register the iOS app for App Attest and DeviceCheck (App Check › Apps,
+    or the App Check API's `appAttestConfig` / `deviceCheckConfig` on
+    `projects/<p>/apps/<iosAppId>`; DeviceCheck needs a DeviceCheck key
+    (.p8) of team A8J42TV74R, stored with `tools/secret.sh`).
+  - Register the Android app for Play Integrity (`playIntegrityConfig`)
+    once the Play Console exists: link the Cloud project in Play Console ›
+    App integrity and add the Play app signing SHA-256 to the Android app.
+  - Debug tokens: run a debug build; the token is in the native log, on
+    iOS as "App Check debug token: '…'" (Xcode console or `flutter run`),
+    on Android `adb logcat | grep DebugAppCheckProvider`. Add it under App
+    Check › Apps › Manage debug tokens on dev (or the API's
+    `debugTokens`). A token lives per install, so a reinstall prints a new
+    one.
+  - Watch the App Check metrics per product, then enforce per product
+    (Firestore, Storage, Authentication; API `services/<service>`
+    `enforcementMode: ENFORCED`). Callable functions: add
+    `enforceAppCheck: true` to `deleteAccount`'s `onCall` options
+    (`functions/src/delete_account.ts`); not to `sendAnnouncement` while
+    the admin web has no App Check. `revenueCatWebhook` is an HTTP
+    endpoint and stays as it is.
 
 ## Feature notes
 
