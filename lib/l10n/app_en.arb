@@ -2259,5 +2259,6 @@
   "summaryOpenPrograms": "Open Programs",
   "historyChangedTitle": "Changed elsewhere",
   "historyDeletedTitle": "Deleted elsewhere",
-  "workoutSaving": "Saving"
+  "workoutSaving": "Saving",
+  "verifyEmailTooMany": "Wait a minute before sending another email."
 }
