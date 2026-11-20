@@ -21,28 +21,43 @@ Widget _sheet(
   ),
 );
 
-@widgetbook.UseCase(name: 'Two days on four weekdays', type: TrainingDaysSheet)
+@widgetbook.UseCase(name: 'Simple, a weekday per day', type: TrainingDaysSheet)
+Widget trainingDaysSimple(BuildContext context) => _sheet(
+  context,
+  dayNames: const ['Item title A', 'Item title B', 'Item title C'],
+  initial: const {1: 0, 3: 1, 5: 2},
+);
+
+@widgetbook.UseCase(
+  name: 'Simple, no weekday picked (Save off)',
+  type: TrainingDaysSheet,
+)
+Widget trainingDaysNone(BuildContext context) => _sheet(
+  context,
+  dayNames: const ['Item title A', 'Item title B', 'Item title C'],
+  initial: const {},
+);
+
+@widgetbook.UseCase(
+  name: 'Custom, two days on four weekdays',
+  type: TrainingDaysSheet,
+)
 Widget trainingDaysAb(BuildContext context) => _sheet(
   context,
   dayNames: const ['Item title A', 'Item title B'],
   initial: const {1: 0, 2: 1, 4: 0, 5: 1},
 );
 
-@widgetbook.UseCase(name: 'Seven long day names', type: TrainingDaysSheet)
+@widgetbook.UseCase(
+  name: 'Custom, seven long day names',
+  type: TrainingDaysSheet,
+)
 Widget trainingDaysLong(BuildContext context) => _sheet(
   context,
   dayNames: [
     for (var i = 1; i <= 7; i++)
       'Day $i · Heavy compound strength and accessory volume work',
   ],
-  initial: {
-    for (var weekday = 1; weekday <= 7; weekday++) weekday: weekday - 1,
-  },
-);
-
-@widgetbook.UseCase(name: 'No day picked (Save off)', type: TrainingDaysSheet)
-Widget trainingDaysNone(BuildContext context) => _sheet(
-  context,
-  dayNames: const ['Item title A', 'Item title B', 'Item title C'],
-  initial: const {},
+  // The first day on Monday and Sunday, so it opens Custom.
+  initial: const {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 0},
 );

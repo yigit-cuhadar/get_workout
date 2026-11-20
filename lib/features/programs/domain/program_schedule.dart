@@ -75,6 +75,29 @@ class ProgramSchedule {
     return {for (final (i, weekday) in sorted.indexed) weekday: i % dayCount};
   }
 
+  /// One day per weekday of [weekdays], in the order [week] lists them:
+  /// the first day on the earliest, the second on the next, and so on.
+  static Map<int, int> inWeekOrder(Iterable<int> weekdays, List<int> week) => {
+    for (final (i, weekday) in week.where(weekdays.contains).indexed)
+      weekday: i,
+  };
+
+  /// Whether each of the [dayCount] days is on exactly one weekday.
+  static bool hasEachDayOnce(Map<int, int> schedule, int dayCount) =>
+      schedule.length == dayCount && schedule.values.toSet().length == dayCount;
+
+  /// Whether [schedule] is [inWeekOrder]: each of the [dayCount] days on one
+  /// weekday, the first day on the earliest weekday of [week].
+  static bool isInWeekOrder(
+    Map<int, int> schedule,
+    int dayCount,
+    List<int> week,
+  ) {
+    if (schedule.length != dayCount) return false;
+    final ordered = inWeekOrder(schedule.keys, week);
+    return ordered.entries.every((entry) => schedule[entry.key] == entry.value);
+  }
+
   /// [suggestedWeekdays] doing the program's days in turn.
   static Map<int, int> suggestedSchedule(int dayCount) =>
       inTurn(suggestedWeekdays(dayCount), dayCount);

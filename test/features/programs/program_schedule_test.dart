@@ -204,6 +204,50 @@ void main() {
       expect(ProgramSchedule.inTurn(const [], 3), isEmpty);
     });
 
+    test('in week order: one day per weekday from the week start', () {
+      const monday = [1, 2, 3, 4, 5, 6, 7];
+      const sunday = [7, 1, 2, 3, 4, 5, 6];
+      expect(ProgramSchedule.inWeekOrder(const {5, 1, 3}, monday), {
+        1: 0,
+        3: 1,
+        5: 2,
+      });
+      expect(ProgramSchedule.inWeekOrder(const {7, 3}, sunday), {7: 0, 3: 1});
+      expect(ProgramSchedule.inWeekOrder(const <int>{}, monday), isEmpty);
+
+      expect(
+        ProgramSchedule.isInWeekOrder(const {1: 0, 4: 1}, 2, monday),
+        isTrue,
+      );
+      expect(
+        ProgramSchedule.isInWeekOrder(const {7: 0, 3: 1}, 2, sunday),
+        isTrue,
+      );
+      for (final schedule in [
+        const {7: 0, 3: 1}, // Not in a Monday week's order.
+        const {1: 1, 4: 0},
+        const {1: 0}, // A day on no weekday.
+        const {1: 0, 4: 1, 5: 0}, // A day on two weekdays.
+        const <int, int>{},
+      ]) {
+        expect(
+          ProgramSchedule.isInWeekOrder(schedule, 2, monday),
+          isFalse,
+          reason: '$schedule',
+        );
+      }
+    });
+
+    test('each day once: as many weekdays as days, each day on one', () {
+      expect(ProgramSchedule.hasEachDayOnce(const {1: 1, 4: 0}, 2), isTrue);
+      expect(ProgramSchedule.hasEachDayOnce(const {1: 0, 4: 0}, 2), isFalse);
+      expect(ProgramSchedule.hasEachDayOnce(const {1: 0}, 2), isFalse);
+      expect(
+        ProgramSchedule.hasEachDayOnce(const {1: 0, 2: 1, 4: 0}, 2),
+        isFalse,
+      );
+    });
+
     test('valid: 1-7 weekdays from 1 to 7, each on a day the program has', () {
       expect(ProgramSchedule.isValidSchedule(const {7: 0, 1: 1}, 2), isTrue);
       expect(
