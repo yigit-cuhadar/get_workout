@@ -37,6 +37,8 @@ import '../features/generator/domain/generator_answers.dart';
 import '../features/notifications/data/notification_payloads.dart';
 import '../features/generator/presentation/generator_page.dart';
 import '../features/generator/presentation/generator_preview_page.dart';
+import '../features/feedback/domain/feedback.dart';
+import '../features/feedback/presentation/feedback_page.dart';
 import '../features/profile/domain/user_profile.dart';
 import '../features/profile/presentation/onboarding_page.dart';
 import '../features/profile/presentation/onboarding_permissions_page.dart';
@@ -241,6 +243,9 @@ abstract final class Routes {
   /// An exercise's detail page above the workout.
   static String workoutExercise(String id) =>
       '$workout/exercises/${Uri.encodeComponent(id)}';
+
+  /// Help & feedback above the summary, from the review prompt.
+  static const workoutFeedback = '$workout/feedback';
   static const account = '$profile/account';
 
   /// Opens in sign-up mode; [accountSignIn] opens it in sign-in mode.
@@ -255,6 +260,9 @@ abstract final class Routes {
   static const barPlates = '$profile/bar-plates';
 
   static const profileDetails = '$profile/details';
+
+  /// Help & feedback, from the Profile tab.
+  static const profileFeedback = '$profile/feedback';
   static String profileQuestion(ProfileField field) =>
       '$profileDetails/${field.name}';
 
@@ -494,6 +502,7 @@ GoRouter buildRouter(
         routes: [
           ..._pickerRoutes(limit: WorkoutLimits.maxExercises, root: root),
           _workoutExercise(Routes.workoutExercise),
+          _feedback(FeedbackSource.rating),
         ],
       ),
       GoRoute(
@@ -906,6 +915,7 @@ GoRouter buildRouter(
                 pageBuilder: (_, state) =>
                     _pushed(state, const BarPlatesPage()),
               ),
+              _feedback(FeedbackSource.profile),
               GoRoute(
                 path: 'warmups',
                 pageBuilder: (_, state) =>
@@ -1007,6 +1017,11 @@ GoRoute _workoutExercise(String Function(String id) exerciseRoute) => GoRoute(
       exerciseRoute: exerciseRoute,
     ),
   ),
+);
+
+GoRoute _feedback(FeedbackSource source) => GoRoute(
+  path: 'feedback',
+  pageBuilder: (_, state) => _pushed(state, FeedbackPage(source: source)),
 );
 
 /// Every pushed page; see [AppPage]. go_router's own page for a `builder`

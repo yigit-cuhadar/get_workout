@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_core/forge_core.dart';
+import 'package:forge_review/forge_review.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -13,6 +15,7 @@ import '../../../core/widgets/featured_card.dart';
 import '../../../core/widgets/muscle_heat.dart';
 import '../../../core/widgets/records.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../feedback/presentation/review_prompt.dart';
 import '../../exercises/presentation/body_model_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/domain/program.dart';
@@ -34,7 +37,9 @@ import 'workout_text.dart';
 /// workout) or Save changes to the day (a program day done differently).
 /// Back does what Done does. A workout that ended itself also offers Edit,
 /// which opens it in the editor. Leaving the user's first workout ever
-/// shows the paywall first, once ([PaywallMoment.firstWorkout]).
+/// shows the paywall first, once ([PaywallMoment.firstWorkout]). Every
+/// summary is a review moment, a highlight with a record; the first
+/// workout's, with its paywall, never asks.
 class WorkoutSummaryView extends StatefulWidget {
   const WorkoutSummaryView(this.state, {super.key});
 
@@ -139,7 +144,7 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
       onPressed: _leave,
       size: ForgeButtonSize.large,
     );
-    return PopScope(
+    final page = PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) unawaited(_leave());
@@ -232,6 +237,22 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
         bottomNavigationBar: secondary == null
             ? ForgeBottomActionBar(primary: done)
             : ForgeBottomActionBar.stacked(primary: done, secondary: secondary),
+      ),
+    );
+    return BlocProvider(
+      create: (_) => sl<ReviewPromptCubit>()
+        ..moment(
+          id: workout.id,
+          highlight: summary.records.isNotEmpty,
+          canAsk: !summary.firstEver,
+        ),
+      child: BlocListener<ReviewPromptCubit, ReviewPromptState>(
+        listener: (context, state) {
+          if (state == ReviewPromptState.ask) {
+            unawaited(askForReview(context, Routes.workoutFeedback));
+          }
+        },
+        child: page,
       ),
     );
   }

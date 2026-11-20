@@ -64,6 +64,7 @@ import 'answered_consent.dart';
 import 'body_stand_in.dart';
 import 'no_workout.dart';
 import 'progress_stand_ins.dart';
+import 'review_prompt_stand_in.dart';
 import 'today_stand_ins.dart';
 
 class MockAuth extends Mock implements AuthRepository {}
@@ -377,6 +378,7 @@ class FlowApp {
     sl.registerFactory(
       () => PremiumTrialCubit(GetPremiumTrial(GetPaywallOffering(store))),
     );
+    registerReviewPrompt();
   }
 
   /// The user has no programs of their own; the catalogue holds

@@ -250,6 +250,18 @@ measurement day fills all three.
 
 **`users/{uid}/pushTokens/{token}`**: `platform`, `updatedAt`.
 
+**`users/{uid}/feedback/{id}`** (Help & feedback): `uid` (equal to the
+path's), `email?` (where to reply, 3-254 characters; absent when left
+empty), `message` (1-2000 characters), `source` (`profile` \| `rating`),
+`appVersion` ("1.0.0+1"), `platform` (`ios` \| `android`), `osVersion`,
+`deviceModel`, `locale` (the device's, "en-GB"; each detail a string of at
+most 100, empty when unreadable), `status` (`open` \| `closed`),
+`createdAt` (server time). The owner, guests included, may only create
+them (validated, `status` open); nobody reads them back but admins, who
+read them as the collection group `feedback` (index on `status`,
+`createdAt` descending in `firestore.indexes.json`) and change only
+`status`. Deleting the account deletes them with the rest of `users/{uid}`.
+
 ### Server-written
 
 **`entitlements/{uid}`**: `premium`, `expiresAt` (a Firestore timestamp; the
@@ -276,7 +288,7 @@ only, JPEG, max 5 MB.
   writes `entitlements/{uid}`; see the RevenueCat webhook decision.
 - `deleteAccount` (callable, `functions/src/delete_account.ts`) → for the
   signed-in caller: `users/{uid}` with every subcollection (customExercises,
-  programs, workouts, exerciseStats, cardio, bodyEntries, pushTokens and any
+  programs, workouts, exerciseStats, cardio, bodyEntries, pushTokens, feedback and any
   added later) by recursive delete, `entitlements/{uid}`, Storage
   `users/{uid}/` (photos; a project without a default bucket has none,
   logged), then the auth user last, so a partial failure can be retried;
@@ -3917,6 +3929,55 @@ the feature you are about to touch, and keep it true when you change it.
   calculator opens; a value arriving late fills only inputs the user has
   not changed (even one they cleared stays empty). A source that cannot
   be read adds nothing.
+
+### Help, feedback and the review prompt
+
+- **Help & feedback** (`lib/features/feedback`; canvas
+  https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ, rows S1, S2): Profile ›
+  More › "Help & feedback" (under Your profile, detail "Report a problem
+  or share an idea") opens the page (`Routes.profileFeedback`, source
+  `profile`); "Write to us" in the review prompt opens it above the
+  workout summary (`Routes.workoutFeedback`, source `rating`). A
+  multi-line Message (hint "Tell us what happened or what you would
+  like…", at most 2000 characters), "Email for our reply" (the account's
+  email when it has one, an Apple relay address included; empty for a
+  guest, and optional), the note "We add your app version, device and
+  account ID so we can help faster." and Send. No topic. Send with an
+  empty message or an email that does not look like one (one "@", text on
+  both sides, a dot after it) only marks the field ("Write a message
+  first", "Enter a valid email, or leave it empty") and keeps marking as
+  the user types. Sending writes `users/{uid}/feedback/{id}` (see Data
+  model) without waiting for the server, like every write: offline it goes
+  out later. Then a snackbar "Thanks! Your message is on its way." and
+  back. Device details that cannot be read are sent empty rather than
+  stopping the message; a write the rules refuse after that is only
+  logged (the form checks what the rules check). No email or push
+  notification of new messages (owner's choice).
+- **Admin panel › Feedback** (`lib/admin/feedback`, `/feedback`, in the
+  nav after Announcements): Open or Closed (Open first), the latest 100 of
+  that status, newest first, live; each card shows the message (selectable),
+  sent time, reply email (with Copy email) or "none", source, user id,
+  app version, platform, OS version, device model and locale, and Close or
+  Reopen, which moves it to the other list. Stream errors retry like the
+  other lists.
+- **Review prompt** (forge_review; canvas rows R1, R2): moments are the
+  workout summaries. Every summary counts once on the device (by workout
+  id); the first summary to ask is any one once three were counted, later
+  only a summary with a new record (a highlight) at least 30 days after
+  the last ask, and never twice in one app version
+  (`FeedbackModule.reviewRules`). The summary of the user's first workout
+  ever, which leaves through the paywall, counts but never asks. An ask is
+  recorded when it is decided, so closing the app on it still counts.
+  The history lives in shared preferences, so a reinstall starts it again.
+  A dialog over the summary (ForgeDialog.choice): "Enjoying GetWorkout?",
+  "Your answer helps us improve.", "Not really" (secondary) beside "Yes!"
+  (primary), and ✕. Yes! opens the platform's review prompt
+  (`in_app_review`: SKStoreReviewController on iOS, Play in-app review on
+  Android, nothing where neither exists); the platform decides whether it
+  shows (iOS: at most 3 times a year; never in TestFlight). Not really
+  turns the same dialog into "Thanks for telling us" / "Tell us what to
+  improve and we will look into it." with Write to us (the form, source
+  `rating`) over Close.
 
 ### Notifications
 

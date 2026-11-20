@@ -77,6 +77,12 @@ class ProfilePage extends StatelessWidget {
                         end: ListRowEnd.chevron,
                         onTap: () => context.go(Routes.profileDetails),
                       ),
+                      ListRow(
+                        title: l10n.profileFeedback,
+                        detail: l10n.profileFeedbackDetail,
+                        end: ListRowEnd.chevron,
+                        onTap: () => context.go(Routes.profileFeedback),
+                      ),
                     ],
                   ),
                   const WorkoutSettingsGroups(),

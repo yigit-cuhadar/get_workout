@@ -7,6 +7,7 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 import 'package:forge_remote_config/forge_remote_config.dart';
+import 'package:forge_review/forge_review.dart';
 
 import '../features/body/body_module.dart';
 import '../features/account/account_module.dart';
@@ -14,6 +15,7 @@ import '../features/calculators/calculators_module.dart';
 import '../features/calendar/calendar_module.dart';
 import '../features/cardio/cardio_module.dart';
 import '../features/exercises/exercises_module.dart';
+import '../features/feedback/feedback_module.dart';
 import '../features/generator/generator_module.dart';
 import '../features/notifications/notifications_module.dart';
 import '../features/profile/profile_module.dart';
@@ -81,6 +83,8 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     healthModule(platform: defaultTargetPlatform, release: kReleaseMode),
     const StepsModule(),
     const BodyModule(),
+    const FeedbackModule(),
+    const ReviewModule(rules: FeedbackModule.reviewRules),
     SubscriptionModule(
       backend: purchasesBackend(
         platform: defaultTargetPlatform,
