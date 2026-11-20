@@ -7,11 +7,13 @@ import 'package:get_workout/features/notifications/data/notification_payloads.da
 import 'package:go_router/go_router.dart';
 
 void main() {
-  test('the start is the splash, retry, onboarding and its suggestion', () {
+  test('the start is the splash, retry, email verification, onboarding and '
+      'its suggestion', () {
     for (final location in [
       '',
       Routes.splash,
       Routes.startFailed,
+      Routes.verifyEmail,
       Routes.onboarding,
       Routes.onboardingSignIn,
       Routes.afterOnboarding,

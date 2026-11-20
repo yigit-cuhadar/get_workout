@@ -2112,6 +2112,59 @@ the feature you are about to touch, and keep it true when you change it.
   "deleting accounts isn't available yet", never as done; anything else
   that failed before the data went gives the workout back.
 
+- **Email verification** (blocking, owner's decision; `forge_auth`'s
+  `EmailVerificationPage`, route `/verify-email`): only an email and
+  password account must verify; Google or Apple next to it counts as
+  verified (`AuthUser.needsEmailVerification`), and guests are unchanged.
+  Creating or linking an email account mails the link at once
+  (`SignUpWithEmail`; a failed send still signs up, Resend covers it).
+  Until verified the router shows the page instead of the app, at start
+  too (existing unverified users included) and after signing in to an
+  unverified account; once verified it goes on like the splash gate
+  (Today, or onboarding for a profile without it).
+  - Page (owner's pick, canvas
+    https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ row V1, board A'):
+    mail icon, "Check your email", the line, a "Sent to" card with the
+    address, the moving "Waiting for confirmation…" line, "Resend email"
+    (secondary) and "Use another email" (text). No "I've verified"
+    button: the page reloads the user every 4 s while the app is
+    visible, stops while it is hidden, and reloads at once when it shows
+    again. Resend counts down 60 s from the last link this session sent
+    (so from the page's first frame right after sign-up or linking), or
+    after a `too-many-requests` answer; a page opened in a later session
+    can send at once.
+  - "Use another email" (row V2, board A) opens the "Change email" sheet:
+    "We will send a new link. Your workouts stay with this account.", a
+    "New email" field, "Send link" (primary) and "Sign out instead"
+    (text; signs out at once, a new guest starts on onboarding; nothing
+    is deleted, the account and its data wait for its next sign-in).
+    Send link calls Firebase's verify-before-update-email on the same
+    account (same uid, same data); the sheet closes, "Sent to" shows the
+    new address, Resend then resends to it, and the page keeps waiting.
+    Opening the link makes it the account's verified email and the app
+    goes on. Errors under the field: a malformed address (checked before
+    sending), `invalid-email`, `email-already-in-use` (Firebase may not
+    report this with email enumeration protection on; the link then
+    fails when opened), and `requires-recent-login`, which the
+    repository first answers by signing in again with the password this
+    session used (sign-up, link, sign-in or re-authentication; kept in
+    memory only, dropped on sign-out or deletion); without it the sheet
+    says "Please sign in again to continue".
+  - Confirming an email change revokes the session and Firebase signs the
+    user out; with the password from this session, the guest start signs
+    in to the new address instead of a new guest, so the user lands back
+    in the app. Without it (the app was restarted since), the user lands
+    as a new guest on onboarding and signs in with the new address; the
+    data stays on the account. Not checked on a device yet.
+  - Email templates are Firebase's defaults in both projects: sender
+    `noreply@<project>.firebaseapp.com`, subject "Verify your email for
+    %APP_NAME%", the link handled at
+    `https://<project>.firebaseapp.com/__/auth/action` (no custom
+    domain), locale en; the email-change template is the default too. To
+    customise later in the console (Authentication > Templates): sender
+    name, subject and text, the action URL (a custom domain on Hosting),
+    and a custom sender domain.
+
 ### App shell, settings and onboarding
 
 - **Navigation** (owner, 2026-11-13): five tabs, Today / Programs /
