@@ -4390,8 +4390,10 @@ not in a separate dashboard tool.
   `personal_record`, `measurement_day_save`, `cardio_log`,
   `custom_exercise_create`, `steps_connect`, `notification_open`,
   `feedback_send`, `manage_subscription`, Android. Every `app_exception`
-  seen came from the Programs tab crash fixed in #183. Crash reports from
-  release builds stay unreadable until their dSYMs are uploaded: the
-  Runner's `flutterfire upload-crashlytics-symbols` phase needs the
-  FlutterFire config in `firebase.json`, which the app does not have.
+  seen came from the Programs tab crash fixed in #183. Symbol upload works:
+  the Runner's `flutterfire upload-crashlytics-symbols` phase reads
+  `firebase.json` (Debug/Profile → dev app, Release → prod app) and a
+  release build validated and uploaded its dSYMs to getworkout-prod.
+  Debug builds make no dSYM, so the dev console lists those as missing;
+  that only affects simulator crash reports.
 
