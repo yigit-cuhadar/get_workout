@@ -2583,20 +2583,27 @@ void main() {
       expect(find.byType(PaywallPage), findsNothing);
     });
 
-    testWidgets('on iOS the onboarding paywall is full screen: a drag down '
-        'does not close it', (tester) async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-      addTearDown(() => debugDefaultTargetPlatformOverride = null);
-      await openProfileAsFreeGuest(tester);
-      store.metadata = const {dismissibleKey: false};
-      unawaited(router.push(Routes.paywallAt(PaywallMoment.onboarding)));
-      await tester.pumpAndSettle();
+    for (final moment in [PaywallMoment.onboarding, PaywallMoment.appOpen]) {
+      testWidgets('on iOS the ${moment.name} paywall is full screen: a drag '
+          'down does not close it', (tester) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        addTearDown(() => debugDefaultTargetPlatformOverride = null);
+        await openProfileAsFreeGuest(tester);
+        store.metadata = const {dismissibleKey: false};
+        unawaited(router.push(Routes.paywallAt(moment)));
+        await tester.pumpAndSettle();
 
-      await tester.fling(find.byType(PaywallPage), const Offset(0, 600), 2000);
-      await tester.pumpAndSettle();
-      expect(find.byType(PaywallPage), findsOneWidget);
-      debugDefaultTargetPlatformOverride = null;
-    });
+        await tester.fling(
+          find.byType(PaywallPage),
+          const Offset(0, 600),
+          2000,
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(PaywallPage), findsOneWidget);
+        expect(find.bySemanticsLabel('Close'), findsNothing);
+        debugDefaultTargetPlatformOverride = null;
+      });
+    }
 
     testWidgets('a hard paywall waits for a pending purchase', (tester) async {
       await openProfileAsFreeGuest(tester);

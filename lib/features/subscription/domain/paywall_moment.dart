@@ -1,18 +1,26 @@
 import '../../settings/domain/user_settings.dart';
 
-/// The moments the app offers the paywall by itself, each once per user,
-/// marked shown as its [tip] in `settings.seenTips`.
+/// The moments the app shows the paywall by itself.
 enum PaywallMoment {
-  /// After onboarding's program suggestion. The only moment the store setup
-  /// can make not dismissible (see [offeringDismissible]).
+  /// After onboarding's program suggestion.
   onboarding(Tip.onboardingPaywall),
 
   /// When the user leaves the summary of their first workout ever.
-  firstWorkout(Tip.firstWorkoutPaywall);
+  firstWorkout(Tip.firstWorkoutPaywall),
+
+  /// Every app open of a free user while the offering is hard, until they
+  /// have Premium (`HardPaywallGate`).
+  appOpen(null);
 
   const PaywallMoment(this.tip);
 
-  final Tip tip;
+  /// Marks a moment shown once per user in `settings.seenTips`; null for
+  /// one that is not once.
+  final Tip? tip;
+
+  /// Whether the store setup can make this moment's paywall not
+  /// dismissible ([offeringDismissible]); every other paywall always is.
+  bool get offeringDecides => this != firstWorkout;
 }
 
 /// Whether [moment] shows now: only to a user known to be free ([premium]

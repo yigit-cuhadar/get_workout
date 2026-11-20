@@ -142,6 +142,7 @@ class SubscriptionModule implements FeatureModule {
       ..registerFactory(() => LogPaywallPurchase(sl()))
       ..registerFactory(() => GetPaywallOffering(sl()))
       ..registerFactory(() => GetPremiumTrial(sl()))
+      ..registerFactory(() => GetOfferingHard(sl()))
       ..registerFactory(() => PremiumTrialCubit(sl()))
       ..registerFactoryParam<PremiumPaywallCubit, PaywallMoment?, void>(
         (moment, _) => PremiumPaywallCubit(

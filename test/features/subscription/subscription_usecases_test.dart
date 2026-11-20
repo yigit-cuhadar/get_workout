@@ -10,6 +10,30 @@ import 'package:mocktail/mocktail.dart';
 class MockTelemetry extends Mock implements Telemetry {}
 
 void main() {
+  group('GetOfferingHard', () {
+    test('is true only when the metadata says not dismissible', () async {
+      final store = FakePurchasesRepository(plans: fakePlans);
+      final hard = GetOfferingHard(GetPaywallOffering(store));
+
+      expect((await hard()).valueOrNull, isFalse);
+      store.metadata = const {'dismissible': false};
+      expect((await hard()).valueOrNull, isTrue);
+      store.metadata = const {'dismissible': 'false'};
+      expect((await hard()).valueOrNull, isTrue);
+    });
+
+    test('passes a failure through', () async {
+      final store = FakePurchasesRepository(plans: fakePlans)
+        ..metadata = const {'dismissible': false}
+        ..failure = const NetworkFailure();
+
+      expect(
+        (await GetOfferingHard(GetPaywallOffering(store))()).isOk,
+        isFalse,
+      );
+    });
+  });
+
   group('GetPaywallOffering', () {
     test('puts yearly before monthly, whatever the store\'s order', () async {
       final store = FakePurchasesRepository(plans: fakePlans);

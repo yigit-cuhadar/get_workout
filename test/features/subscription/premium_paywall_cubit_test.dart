@@ -148,10 +148,11 @@ void main() {
       }
     });
 
-    test(
-      'at onboarding, not while loading, then as the offering says',
-      () async {
-        final cubit = build(fakePlans, moment: PaywallMoment.onboarding);
+    test('at onboarding and on app open, not while loading, then as the '
+        'offering says', () async {
+      for (final moment in [PaywallMoment.onboarding, PaywallMoment.appOpen]) {
+        store.metadata = const {};
+        final cubit = build(fakePlans, moment: moment);
         expect(cubit.closable, isFalse);
         await cubit.load();
         expect(cubit.closable, isTrue);
@@ -160,8 +161,8 @@ void main() {
         await cubit.load();
         expect(cubit.closable, isFalse);
         await cubit.close();
-      },
-    );
+      }
+    });
 
     test('the hard paywall offers and starts the trial as the soft one '
         'does', () async {

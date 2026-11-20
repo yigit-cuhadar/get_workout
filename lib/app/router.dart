@@ -531,9 +531,10 @@ GoRouter buildRouter(
           final moment = PaywallMoment.values
               .asNameMap()[state.uri.queryParameters['moment']];
           final page = PaywallPage(moment: moment);
-          // Onboarding's may be the hard paywall, so it is full screen and no
-          // drag closes it; only its close button does, when it has one.
-          return moment == PaywallMoment.onboarding
+          // One the offering decides may be the hard paywall, so it is full
+          // screen and no drag closes it; only its close button does, when
+          // it has one.
+          return moment?.offeringDecides ?? false
               ? AppPage(key: state.pageKey, fullscreenDialog: true, child: page)
               : _overFlow(context, state, page);
         },

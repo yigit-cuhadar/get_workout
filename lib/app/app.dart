@@ -30,6 +30,7 @@ import '../features/workout/domain/workout_usecases.dart';
 import '../features/workout/presentation/active_workout_cubit.dart';
 import '../features/workout/presentation/keep_screen_on.dart';
 import '../features/workout/presentation/rest_timer_cubit.dart';
+import '../features/subscription/presentation/hard_paywall_gate.dart';
 import '../features/subscription/presentation/purchaser_session.dart';
 import '../features/subscription/subscription_module.dart';
 import '../l10n/app_localizations.dart';
@@ -51,6 +52,8 @@ class _AppState extends State<App> {
     profileDevTools: [if (kDebugMode) ?SubscriptionModule.debugControls(sl)],
   );
   late final AppLifecycleListener _lifecycle;
+  late final HardPaywallGate _hardPaywall;
+  late final StreamSubscription<AppGateState> _appGate;
   late final StreamSubscription<String?> _taps;
   late final StreamSubscription<void> _lockScreenTaps;
   late final StreamSubscription<bool> _selfEnded;
@@ -69,6 +72,22 @@ class _AppState extends State<App> {
     BodyModule.startPhotoBackup(sl);
     // Created now so reminders follow the user from the first auth event.
     final notifications = sl<NotificationsCubit>();
+    final appGate = sl<AppGateCubit>();
+    final deletionUnderway = sl<DeletionUnderway>();
+    _hardPaywall = HardPaywallGate(
+      router: _router,
+      entitlement: sl(),
+      offeringHard: sl(),
+      // Never over the gate's update or maintenance page, nor during an
+      // account deletion.
+      blocked: () =>
+          deletionUnderway.value ||
+          switch (appGate.state.status) {
+            UpdateRequired() || Maintenance() => true,
+            AppOpen() || UpdateRecommended() => false,
+          },
+    );
+    _appGate = appGate.stream.listen((_) => _hardPaywall.check());
     _router.routerDelegate.addListener(_openTapped);
     _taps = sl<NotificationTaps>().stream.listen((payload) {
       if (payload == NotificationPayloads.activeWorkout) {
@@ -100,6 +119,7 @@ class _AppState extends State<App> {
       },
       onHide: rest.hidden,
       onShow: () {
+        _hardPaywall.appOpened();
         rest.shown();
         workout.appShown();
       },
@@ -158,6 +178,8 @@ class _AppState extends State<App> {
     unawaited(_taps.cancel());
     unawaited(_lockScreenTaps.cancel());
     unawaited(_selfEnded.cancel());
+    unawaited(_appGate.cancel());
+    unawaited(_hardPaywall.cancel());
     _router.routerDelegate.removeListener(_openTapped);
     _lifecycle.dispose();
     _router.dispose();

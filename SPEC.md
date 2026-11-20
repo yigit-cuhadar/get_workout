@@ -43,7 +43,14 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   Ads campaigns get the hard (not dismissible) onboarding paywall, with the
   same plans and the yearly 7-day trial; everyone else, and anything
   uncertain, keeps the soft one. Apple Search Ads only for now: no
-  tracking prompt (ATT), no MMP, no Play Install Referrer yet.
+  tracking prompt (ATT), no MMP, no Play Install Referrer yet. A hard
+  paywall locks the app (owner's pick, 2026-11-20): past onboarding, a
+  user whose current offering is hard and who has no Premium (a trial
+  counts as Premium) gets the full-screen hard paywall on every app open,
+  cold start or back from the background, until they start the trial or
+  subscribe, and again if Premium lapses; Restore stays on it. Anything
+  not known (the entitlement or the offering: loading, offline, an
+  error) lets the user in until it is known or the next open.
   Premium = the program generator, 19 of 25 ready-made programs, history
   in charts beyond 2 weeks (every window that was 12 weeks free is now 2
   weeks: the strength and body charts; the Progress cards' lines show 2
@@ -1970,7 +1977,8 @@ the feature you are about to touch, and keep it true when you change it.
   reinstalls. Premium, or a status still unknown, skips it unmarked.
 - **Hard paywall from the store setup**: the current RevenueCat
   offering's metadata, carried by Forge's `Offering.metadata`, decides
-  whether the onboarding moment's paywall can be closed: `dismissible`
+  whether the onboarding moment's paywall (and the app-open one below)
+  can be closed: `dismissible`
   false (a JSON bool, or the string "false") hides the close button and
   blocks back and the iOS sheet drag (`PopScope`; `SheetPage` drags only
   a page that can pop) until a purchase or restore; absent or anything
@@ -1978,7 +1986,7 @@ the feature you are about to touch, and keep it true when you change it.
   paywall has no close; a failed load is closable, so nobody is trapped.
   Every other paywall is always closable, whatever the metadata. The
   route carries the moment (`/paywall?moment=onboarding`). Debug builds
-  on the fake store switch it with "Onboarding paywall dismissible" among
+  on the fake store switch it with "Offering dismissible" among
   the Fake store rows. Which installs get a hard paywall is RevenueCat's
   targeting, set up in its dashboard, not in the app.
 - **Hard paywall for paid traffic** (Monetization, 2026-11-20): Apple
@@ -2042,6 +2050,31 @@ the feature you are about to touch, and keep it true when you change it.
     API, so the privacy manifest is unchanged. The privacy policy should
     say that installs from Apple Search Ads are recognised to choose the
     subscription offer.
+- **Hard paywall on every app open** (Monetization, 2026-11-20): the
+  onboarding moment is marked shown before it opens, so killing the app
+  on it used to get a hard-offering user in for free. `HardPaywallGate`
+  (created by `App` with the router) opens the paywall at moment
+  `appOpen` (`/paywall?moment=appOpen`, never marked in `seenTips`; like
+  onboarding's it is full screen and the offering's metadata decides
+  whether it closes: `PaywallMoment.offeringDecides`) when an open is
+  due: each launch, each return from the background (`onShow`), each
+  time the entitlement turns inactive (Premium lapsed, another user) and
+  each time the gate's paywall is gone without Premium (a `go` from a
+  notification tap, a redirect, a failed load that let it close). A due
+  open is checked when every open page is past the start (`isPastStart`:
+  not over onboarding, its end with the onboarding paywall, the
+  verification page or the splash), Forge's app gate shows no update or
+  maintenance page, no account deletion runs and no other paywall is
+  open (`paywallOpen`, the same guard as `openPaywall`), and re-checked
+  on every navigation and app gate change until then (after the frame).
+  Premium ends it; an unknown entitlement waits; a free user's offering
+  is loaded once (`GetOfferingHard`): soft or failed ends it until the
+  next due open, hard opens the paywall. On it, a pending purchase shows
+  its waiting card with no Got it and the paywall stays until approved;
+  coming back while it is open opens no second one. A pending purchase
+  is not remembered across a relaunch: the new paywall shows the plans
+  again. The fake store's "Offering dismissible" row switches it in
+  debug builds.
 - **Prices and trial**: the store's (monthly 7.99 USD, yearly 39.99 USD
   with a 7-day trial on yearly only); the app shows what the store
   returns, and the fake store's plans use these numbers. The trial shows
