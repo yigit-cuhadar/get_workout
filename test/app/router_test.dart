@@ -9,6 +9,7 @@ import 'package:get_workout/features/body/presentation/weight_sheet.dart';
 import 'package:get_workout/features/progress/domain/progress_usecases.dart';
 import 'package:get_workout/features/progress/presentation/progress_page.dart';
 import 'package:get_workout/features/progress/presentation/progress_strength_cubit.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -2580,6 +2581,21 @@ void main() {
 
       await tapVisible(tester, 'Start 7-day free trial');
       expect(find.byType(PaywallPage), findsNothing);
+    });
+
+    testWidgets('on iOS the onboarding paywall is full screen: a drag down '
+        'does not close it', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      await openProfileAsFreeGuest(tester);
+      store.metadata = const {dismissibleKey: false};
+      unawaited(router.push(Routes.paywallAt(PaywallMoment.onboarding)));
+      await tester.pumpAndSettle();
+
+      await tester.fling(find.byType(PaywallPage), const Offset(0, 600), 2000);
+      await tester.pumpAndSettle();
+      expect(find.byType(PaywallPage), findsOneWidget);
+      debugDefaultTargetPlatformOverride = null;
     });
 
     testWidgets('a hard paywall waits for a pending purchase', (tester) async {
