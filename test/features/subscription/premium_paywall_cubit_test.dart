@@ -62,7 +62,7 @@ void main() {
     final cubit = build([monthly]);
     await cubit.load();
 
-    expect(cubit.state.selected, monthly);
+    expect(cubit.state.selected?.id, monthly.id);
     await cubit.close();
   });
 

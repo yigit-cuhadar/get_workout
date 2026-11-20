@@ -481,6 +481,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.3+15"
+  firebase_app_check:
+    dependency: transitive
+    description:
+      name: firebase_app_check
+      sha256: "224ace3355e6d1601b4f385cc115f56cca91b75c2b53438ed34d36d8d6d72742"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.2"
+  firebase_app_check_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_app_check_platform_interface
+      sha256: "238254f0b35a0ddb85e2ee1a36ca4cb51be48bb90b05b27383fb22f2b5a25885"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.2+4"
+  firebase_app_check_web:
+    dependency: transitive
+    description:
+      name: firebase_app_check_web
+      sha256: "384282ab3b0265ad738f8c78f45b2109e0c3e011f3858fed7614dfacc77135c4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.2+4"
   firebase_auth:
     dependency: transitive
     description:
@@ -717,12 +741,21 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  forge_app_gate:
+    dependency: transitive
+    description:
+      path: "packages/forge_app_gate"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
+    source: git
+    version: "0.1.0"
   forge_auth:
     dependency: transitive
     description:
       path: "packages/forge_auth"
-      ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
-      resolved-ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -730,8 +763,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_camera"
-      ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
-      resolved-ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -739,8 +772,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_core"
-      ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
-      resolved-ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -748,8 +781,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_firebase"
-      ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
-      resolved-ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -757,8 +790,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_health"
-      ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
-      resolved-ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -766,8 +799,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_model_viewer"
-      ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
-      resolved-ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.1"
@@ -775,8 +808,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_notifications"
-      ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
-      resolved-ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -784,8 +817,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_purchases"
-      ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
-      resolved-ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -793,8 +826,17 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_remote_config"
-      ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
-      resolved-ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
+    source: git
+    version: "0.1.0"
+  forge_review:
+    dependency: transitive
+    description:
+      path: "packages/forge_review"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -802,8 +844,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_ui"
-      ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
-      resolved-ref: "3b5ae99cf493b52be4e49bb7788da41dd1d03c0a"
+      ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
+      resolved-ref: f2d1c4bf1cb37be76ace5dbc2d351833732bac81
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -894,6 +936,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.13.1"
+  in_app_review:
+    dependency: transitive
+    description:
+      name: in_app_review
+      sha256: "364db0c160b37fe7fad9cdaa18f968473924b17368869010af902760421b6bf8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.12"
+  in_app_review_platform_interface:
+    dependency: transitive
+    description:
+      name: in_app_review_platform_interface
+      sha256: fed2c755f2125caa9ae10495a3c163aa7fab5af3585a9c62ef4a6920c5b45f10
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.5"
   inspector:
     dependency: transitive
     description:
@@ -1194,10 +1252,18 @@ packages:
     dependency: transitive
     description:
       name: purchases_flutter
-      sha256: "703170fc93a10ce2e6f82792bd93eb9ce3174130880d852874d672e0f640c95d"
+      sha256: bb41c8938153258f9d1b7a77eaac8a9869d87563dcac8b379d4a29531a075a08
       url: "https://pub.dev"
     source: hosted
-    version: "11.0.2"
+    version: "11.0.4"
+  purchases_ui_flutter:
+    dependency: transitive
+    description:
+      name: purchases_ui_flutter
+      sha256: d78950734967c20a2fbd9380507a96bdfd18e09797b06f0685a26f96d1d8d792
+      url: "https://pub.dev"
+    source: hosted
+    version: "11.0.4"
   record_use:
     dependency: transitive
     description:
@@ -1214,6 +1280,62 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.5"
+  shared_preferences:
+    dependency: transitive
+    description:
+      name: shared_preferences
+      sha256: "1e85e0dccf5b4a016077fea7dfbb4a7cb39c759ac1596fcf60c06deadb7da91f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.6"
+  shared_preferences_android:
+    dependency: transitive
+    description:
+      name: shared_preferences_android
+      sha256: "137dedccacb394b8f470d6c9b435ffc3d33faaa6ce2949c4f54a61007d64396d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.5"
+  shared_preferences_foundation:
+    dependency: transitive
+    description:
+      name: shared_preferences_foundation
+      sha256: "89435cb71ecb1ad1bf29ef73a381f871a06f433d4182b7e2ba7243b02b2c544b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.6.2"
+  shared_preferences_linux:
+    dependency: transitive
+    description:
+      name: shared_preferences_linux
+      sha256: "580abfd40f415611503cae30adf626e6656dfb2f0cee8f465ece7b6defb40f2f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.1"
+  shared_preferences_platform_interface:
+    dependency: transitive
+    description:
+      name: shared_preferences_platform_interface
+      sha256: "649dc798a33931919ea356c4305c2d1f81619ea6e92244070b520187b5140ef9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.2"
+  shared_preferences_web:
+    dependency: transitive
+    description:
+      name: shared_preferences_web
+      sha256: c49bd060261c9a3f0ff445892695d6212ff603ef3115edbb448509d407600019
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.3"
+  shared_preferences_windows:
+    dependency: transitive
+    description:
+      name: shared_preferences_windows
+      sha256: "94ef0f72b2d71bc3e700e025db3710911bd51a71cefb65cc609dd0d9a982e3c1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.1"
   shelf:
     dependency: transitive
     description:

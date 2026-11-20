@@ -10,6 +10,7 @@ import '../core/pages.dart';
 import '../core/unsaved_changes.dart';
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/account_auth_page.dart';
+import '../features/account/presentation/auth_strings.dart';
 import '../features/body/presentation/body_entry_page.dart';
 import '../features/body/presentation/body_page.dart';
 import '../features/body/presentation/measurement_day_page.dart';
@@ -36,6 +37,8 @@ import '../features/generator/domain/generator_answers.dart';
 import '../features/notifications/data/notification_payloads.dart';
 import '../features/generator/presentation/generator_page.dart';
 import '../features/generator/presentation/generator_preview_page.dart';
+import '../features/feedback/domain/feedback.dart';
+import '../features/feedback/presentation/feedback_page.dart';
 import '../features/profile/domain/user_profile.dart';
 import '../features/profile/presentation/onboarding_page.dart';
 import '../features/profile/presentation/onboarding_permissions_page.dart';
@@ -66,12 +69,17 @@ import '../features/workout/presentation/workout_detail_page.dart';
 import '../features/workout/domain/workout_editing.dart';
 import '../features/workout/presentation/workout_edit_page.dart';
 import '../features/workout/presentation/workout_page.dart';
+import '../l10n/app_localizations.dart';
 import 'app_shell.dart';
 import 'splash.dart';
 
 abstract final class Routes {
   static const splash = '/splash';
   static const startFailed = '/start-failed';
+
+  /// Stands in for the app while an email account's address is not
+  /// verified.
+  static const verifyEmail = '/verify-email';
   static const home = today;
   static const onboarding = '/onboarding';
 
@@ -235,6 +243,12 @@ abstract final class Routes {
   /// An exercise's detail page above the workout.
   static String workoutExercise(String id) =>
       '$workout/exercises/${Uri.encodeComponent(id)}';
+
+  /// Help & feedback above the summary, from the review prompt.
+  static const workoutFeedback = '$workout/feedback';
+
+  /// Help & feedback above Today, from the review prompt.
+  static const todayFeedback = '$today/feedback';
   static const account = '$profile/account';
 
   /// Opens in sign-up mode; [accountSignIn] opens it in sign-in mode.
@@ -249,6 +263,9 @@ abstract final class Routes {
   static const barPlates = '$profile/bar-plates';
 
   static const profileDetails = '$profile/details';
+
+  /// Help & feedback, from the Profile tab.
+  static const profileFeedback = '$profile/feedback';
   static String profileQuestion(ProfileField field) =>
       '$profileDetails/${field.name}';
 
@@ -282,6 +299,7 @@ bool isPastStart(String location) =>
     location.isNotEmpty &&
     location != Routes.splash &&
     location != Routes.startFailed &&
+    location != Routes.verifyEmail &&
     location != Routes.afterOnboarding &&
     location != Routes.onboarding &&
     !location.startsWith('${Routes.onboarding}/');
@@ -350,7 +368,8 @@ String? selfEndedDestination(List<String> open) =>
 
 /// All routes live here. There is always a user (a guest until they create
 /// an account), so the gates are the splash while the session and then the
-/// user's profile resolve, a retry screen when the guest sign-in failed, and
+/// user's profile resolve, a retry screen when the guest sign-in failed, the
+/// verification page while an email account is not verified, and
 /// onboarding until the profile records it as completed.
 /// [profileDevTools] end the Profile tab outside release builds. While
 /// [deletionUnderway], nobody is moved: the deleted profile must not open
@@ -374,30 +393,47 @@ GoRouter buildRouter(
     // auth change (AuthPage.onSignedIn), it restores that page. A pending
     // profile never changes the redirect; a new user's settled profile can,
     // even when its gate equals the previous user's (the splash after a
-    // retried guest start), hence the uid in the key.
+    // retried guest start), hence the uid in the key, and so can the same
+    // user's after a pending spell (signed in again after an email change
+    // ended the session), hence distinct before the filter.
     refreshListenable: Listenable.merge([
       deletionUnderway,
       _StreamListenable(
-        auth.stream.map((state) => state.runtimeType).distinct(),
+        auth.stream
+            .map(
+              (state) => (
+                type: state.runtimeType,
+                unverified: switch (state) {
+                  Authenticated(:final user) => user.needsEmailVerification,
+                  _ => false,
+                },
+              ),
+            )
+            .distinct(),
       ),
       _StreamListenable(
         profile.stream
             .map((state) => (uid: state.uid, gate: _profileGate(state)))
-            .where((key) => key.gate != _ProfileGate.pending)
-            .distinct(),
+            .distinct()
+            .where((key) => key.gate != _ProfileGate.pending),
       ),
     ]),
     redirect: (context, state) {
       if (deletionUnderway?.value ?? false) return null;
       final location = state.matchedLocation;
       final atGate =
-          location == Routes.splash || location == Routes.startFailed;
+          location == Routes.splash ||
+          location == Routes.startFailed ||
+          location == Routes.verifyEmail;
       final atOnboarding =
           location == Routes.onboarding ||
           location.startsWith('${Routes.onboarding}/');
       return switch (auth.state) {
         AuthUnknown() => Routes.splash,
         Unauthenticated() => Routes.startFailed,
+        // Nothing else opens until the address is verified.
+        Authenticated(:final user) when user.needsEmailVerification =>
+          location == Routes.verifyEmail ? null : Routes.verifyEmail,
         Authenticated(:final user) => switch (_profileGate(
           profile.state,
           uid: user.id,
@@ -405,7 +441,9 @@ GoRouter buildRouter(
           // Wait for the first snapshot, so a returning user never sees
           // onboarding flash. Someone already in the app stays where they are.
           _ProfileGate.pending =>
-            location == Routes.startFailed ? Routes.splash : null,
+            location == Routes.startFailed || location == Routes.verifyEmail
+                ? Routes.splash
+                : null,
           _ProfileGate.onboarding => () {
             onboardingUid = user.id;
             return atOnboarding ? null : Routes.onboarding;
@@ -428,6 +466,12 @@ GoRouter buildRouter(
       GoRoute(
         path: Routes.startFailed,
         builder: (_, _) => AppStartFailed(onRetry: auth.retryGuestSignIn),
+      ),
+      GoRoute(
+        path: Routes.verifyEmail,
+        builder: (context, _) => EmailVerificationPage(
+          strings: localizedAuthStrings(AppLocalizations.of(context)),
+        ),
       ),
       GoRoute(
         path: Routes.onboarding,
@@ -461,6 +505,7 @@ GoRouter buildRouter(
         routes: [
           ..._pickerRoutes(limit: WorkoutLimits.maxExercises, root: root),
           _workoutExercise(Routes.workoutExercise),
+          _feedback(FeedbackSource.rating),
         ],
       ),
       GoRoute(
@@ -543,6 +588,7 @@ GoRouter buildRouter(
                   _page('bmi-ffmi', const BodyIndicesPage()),
                 ],
               ),
+              _feedback(FeedbackSource.rating),
             ],
           ),
           _tab(
@@ -873,6 +919,7 @@ GoRouter buildRouter(
                 pageBuilder: (_, state) =>
                     _pushed(state, const BarPlatesPage()),
               ),
+              _feedback(FeedbackSource.profile),
               GoRoute(
                 path: 'warmups',
                 pageBuilder: (_, state) =>
@@ -974,6 +1021,11 @@ GoRoute _workoutExercise(String Function(String id) exerciseRoute) => GoRoute(
       exerciseRoute: exerciseRoute,
     ),
   ),
+);
+
+GoRoute _feedback(FeedbackSource source) => GoRoute(
+  path: 'feedback',
+  pageBuilder: (_, state) => _pushed(state, FeedbackPage(source: source)),
 );
 
 /// Every pushed page; see [AppPage]. go_router's own page for a `builder`

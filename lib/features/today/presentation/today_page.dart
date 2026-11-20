@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_review/forge_review.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +12,7 @@ import '../../../core/text_length.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../calculators/presentation/calculator_list.dart';
+import '../../feedback/presentation/review_prompt.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/domain/program_editing.dart';
@@ -44,6 +48,7 @@ class TodayPage extends StatelessWidget {
         BlocProvider.value(value: sl<ProgramListCubit>()),
         BlocProvider(create: (_) => sl<TodayWeekCubit>(param1: firstWeekday)),
         BlocProvider(create: (_) => sl<TodayStepsCubit>()),
+        BlocProvider(create: (_) => sl<ReviewPromptCubit>()),
       ],
       child: FirstWeekdayListener(
         created: firstWeekday,
@@ -69,13 +74,15 @@ class _TodayViewState extends State<_TodayView> {
   static const _cards = [_WorkoutCard(), _StartEmptyRow(), _CalculatorsCard()];
 
   /// Today moves on while the app sleeps, without a new snapshot to
-  /// recompute it.
+  /// recompute it. Launching and resuming count as opening the app for
+  /// the review prompt.
   @override
   void initState() {
     super.initState();
     _lifecycle = AppLifecycleListener(onResume: _refreshNow);
     context.read<ProgramListCubit>().refreshNow();
     _loadSteps();
+    _opened();
   }
 
   void _refreshNow() {
@@ -83,7 +90,19 @@ class _TodayViewState extends State<_TodayView> {
     context.read<TodayWeekCubit>().refreshNow();
     // The rest day's walk; steps are read, never followed, and may change in the health store.
     _loadSteps();
+    _opened();
   }
+
+  /// After the frame, so a page the start pushes (the consent page) is
+  /// already over the tabs.
+  void _opened() => WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!mounted) return;
+    unawaited(
+      context.read<ReviewPromptCubit>().opened(
+        canAsk: tabInFront(context, Routes.today),
+      ),
+    );
+  });
 
   void _loadSteps() => context.read<TodayStepsCubit>().load(
     context.read<SettingsCubit>().state.settings.stepGoal,
@@ -98,10 +117,23 @@ class _TodayViewState extends State<_TodayView> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: ForgeAppBar(title: AppLocalizations.of(context).tabToday),
-    body: BlocListener<SettingsCubit, SettingsState>(
-      listenWhen: (previous, current) =>
-          previous.settings.stepGoal != current.settings.stepGoal,
-      listener: (_, _) => _loadSteps(),
+    body: MultiBlocListener(
+      listeners: [
+        BlocListener<SettingsCubit, SettingsState>(
+          listenWhen: (previous, current) =>
+              previous.settings.stepGoal != current.settings.stepGoal,
+          listener: (_, _) => _loadSteps(),
+        ),
+        BlocListener<ReviewPromptCubit, ReviewPromptState>(
+          listener: (context, state) {
+            // Covered meanwhile: this version's ask is spent unseen.
+            if (state == ReviewPromptState.ask &&
+                tabInFront(context, Routes.today)) {
+              unawaited(askForReview(context, Routes.todayFeedback));
+            }
+          },
+        ),
+      ],
       child: ListView.separated(
         padding: const EdgeInsets.all(Gap.md),
         itemCount: _cards.length,

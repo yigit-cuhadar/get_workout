@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
+import 'package:forge_review/forge_review.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/calendar/domain/calendar_month.dart';
@@ -26,6 +27,7 @@ import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../app/review_prompt_stand_in.dart';
 import '../programs/fixtures.dart';
 
 class _WeekCubit extends MockCubit<TodayWeekState> implements TodayWeekCubit {}
@@ -103,6 +105,8 @@ void main() {
     },
   );
 
+  late MockReviews review;
+
   setUp(() {
     week = _WeekCubit();
     steps = _StepsCubit();
@@ -124,6 +128,7 @@ void main() {
       ..registerFactoryParam<TodayWeekCubit, int, void>((_, _) => week)
       ..registerFactory<TodayStepsCubit>(() => steps)
       ..registerSingleton<ProgramListCubit>(programs);
+    review = registerReviewPrompt();
   });
 
   tearDown(sl.reset);
@@ -147,7 +152,10 @@ void main() {
         GoRoute(
           path: '/today',
           builder: (_, _) => const TodayPage(),
-          routes: [GoRoute(path: 'workouts/:id', builder: location)],
+          routes: [
+            GoRoute(path: 'workouts/:id', builder: location),
+            GoRoute(path: 'feedback', builder: location),
+          ],
         ),
         GoRoute(
           path: '/:a',
@@ -205,6 +213,39 @@ void main() {
     await tester.tap(find.text('Upper Lower'));
     await tester.pumpAndSettle();
     expect(find.text('at /programs/p1'), findsOneWidget);
+  });
+
+  testWidgets('opened on a third day, Today asks for a review; Not really '
+      'leads to the feedback form', (tester) async {
+    sl.unregister<ReviewPromptCubit>();
+    review = registerReviewPrompt(
+      history: ReviewHistory(openDays: 2, lastOpenDay: DateTime(2000)),
+    );
+    await pumpToday(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enjoying GetWorkout?'), findsOneWidget);
+    await tester.tap(find.text('Not really'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Write to us'));
+    await tester.pumpAndSettle();
+    expect(find.text('at /today/feedback'), findsOneWidget);
+  });
+
+  testWidgets('a day already counted asks nothing', (tester) async {
+    final now = DateTime.now();
+    sl.unregister<ReviewPromptCubit>();
+    review = registerReviewPrompt(
+      history: ReviewHistory(
+        openDays: 2,
+        lastOpenDay: DateTime(now.year, now.month, now.day),
+      ),
+    );
+    await pumpToday(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enjoying GetWorkout?'), findsNothing);
+    verifyNever(() => review.save(any()));
   });
 
   testWidgets('a rest day offers recovery, the next day early and cardio', (

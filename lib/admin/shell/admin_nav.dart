@@ -15,6 +15,7 @@ class AdminNav extends StatelessWidget {
     ('Exercises', AdminRoutes.exercises),
     ('Programs', AdminRoutes.programs),
     ('Announcements', AdminRoutes.announcements),
+    ('Feedback', AdminRoutes.feedback),
   ];
 
   @override

@@ -78,6 +78,7 @@ import 'package:mocktail/mocktail.dart';
 import '../features/body/body_fakes.dart' show FakeProfileRepository;
 import '../features/programs/fixtures.dart' show FixedPremium;
 import 'answered_consent.dart';
+import 'review_prompt_stand_in.dart';
 
 /// Wednesday, 18:00: the day every flow runs on.
 final flowStart = DateTime(2026, 11, 11, 18);
@@ -460,6 +461,7 @@ class TrainingWorld {
     addTearDown(tester.view.reset);
     addTearDown(sl.reset);
     _registerFallbacks();
+    registerReviewPrompt();
 
     // Like Firebase, the user arrives on subscription.
     final session = _MockAuthRepository();

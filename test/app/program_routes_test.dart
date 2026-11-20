@@ -161,6 +161,7 @@ void main() {
       reset: ResetPurchaser(store),
       refresh: RefreshEntitlement(store),
       getManagementUrl: GetManagementUrl(store),
+      presentCustomerCenter: PresentCustomerCenter(store),
     );
     appCubits = [
       settings,

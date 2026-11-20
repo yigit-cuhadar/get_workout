@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_app_gate/forge_app_gate.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_notifications/forge_notifications.dart';
@@ -167,6 +168,7 @@ class _AppState extends State<App> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider.value(value: sl<AppGateCubit>()),
         BlocProvider.value(value: sl<AuthCubit>()),
         BlocProvider.value(value: sl<SettingsCubit>()),
         // Created at start, so consent is applied whatever the tab.
@@ -224,6 +226,10 @@ class _AppState extends State<App> {
                         ThemePreference.dark => ThemeMode.dark,
                       },
                       routerConfig: _router,
+                      builder: (context, child) => AppGate(
+                        strings: appGateStrings(AppLocalizations.of(context)),
+                        child: child!,
+                      ),
                     ),
                   ),
             ),
@@ -233,3 +239,16 @@ class _AppState extends State<App> {
     );
   }
 }
+
+/// The gate's text from the app's strings.
+AppGateStrings appGateStrings(AppLocalizations l10n) => AppGateStrings(
+  updateRequiredTitle: l10n.gateUpdateRequiredTitle,
+  updateRequiredMessage: l10n.gateUpdateRequiredMessage,
+  updateAvailableTitle: l10n.gateUpdateAvailableTitle,
+  updateAvailableMessage: l10n.gateUpdateAvailableMessage,
+  update: l10n.gateUpdate,
+  later: l10n.gateLater,
+  maintenanceTitle: l10n.gateMaintenanceTitle,
+  maintenanceMessage: l10n.gateMaintenanceMessage,
+  retry: l10n.gateTryAgain,
+);

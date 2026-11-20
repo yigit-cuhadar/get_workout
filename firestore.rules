@@ -30,6 +30,10 @@ rules_version = '2';
 //                            functions write, through the Admin SDK)
 //   announcements/{id}       admin claim                            allow deny
 //   announcements/{id}       anyone else                            deny  deny
+//   users/{uid}/feedback/{id} owner: create only, validated below   deny  allow
+//   users/*/feedback/{id}    admin claim (also as a collection      allow update
+//                            group): update changes status only,          status
+//                            to open or closed
 //   users/{uid}              owner (writes validated, see below)    allow allow
 //   users/{uid}/**           owner                                  allow allow
 //   users/{uid}/**           anyone else                            deny  deny
@@ -143,6 +147,23 @@ rules_version = '2';
 // | equipment twice, or bodyweight with anything else              | deny   |
 // | note empty, longer than 500 or not a string                    | deny   |
 // | any request for another user's custom exercises, or signed out | deny   |
+// users/{uid}/feedback/{id}, as the signed-in user `uid`, guests included
+// (anyone else, admins aside: deny):
+// | Request                                                        | Result |
+// |----------------------------------------------------------------|--------|
+// | create: uid equal to the path's, message string 1-2000, source | allow  |
+// | profile or rating, appVersion, platform, osVersion,            |        |
+// | deviceModel and locale strings of at most 100, status "open",  |        |
+// | createdAt the server time                                      |        |
+// | ... plus email string of 3-254 characters                      | allow  |
+// | a field missing (email excepted) or any other field            | deny   |
+// | uid of another user; message empty, too long or not a string   | deny   |
+// | another source; a detail too long or not a string              | deny   |
+// | status other than "open"; createdAt not the server time        | deny   |
+// | read, list, update or delete of the owner's own messages       | deny   |
+// | admin: read, list (collection group `feedback`)                | allow  |
+// | admin: update changing only status, to "open" or "closed"      | allow  |
+// | admin: update of any other field; create; delete               | deny   |
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -343,6 +364,35 @@ service cloud.firestore {
           || (data.note is string && data.note.size() >= 1 && data.note.size() <= 500));
     }
 
+    function isFeedbackDetail(value) {
+      return value is string && value.size() <= 100;
+    }
+
+    // Mirrors FeedbackDraft and FirestoreFeedbackRepository.toMap in
+    // lib/features/feedback.
+    function isFeedback(uid, data) {
+      return data.keys().hasAll(['uid', 'message', 'source', 'appVersion',
+          'platform', 'osVersion', 'deviceModel', 'locale', 'status',
+          'createdAt'])
+        && data.keys().hasOnly(['uid', 'email', 'message', 'source',
+          'appVersion', 'platform', 'osVersion', 'deviceModel', 'locale',
+          'status', 'createdAt'])
+        && data.uid == uid
+        && data.message is string
+        && data.message.size() >= 1
+        && data.message.size() <= 2000
+        && (!('email' in data)
+          || (data.email is string && data.email.size() >= 3 && data.email.size() <= 254))
+        && data.source in ['profile', 'rating']
+        && isFeedbackDetail(data.appVersion)
+        && isFeedbackDetail(data.platform)
+        && isFeedbackDetail(data.osVersion)
+        && isFeedbackDetail(data.deviceModel)
+        && isFeedbackDetail(data.locale)
+        && data.status == 'open'
+        && data.createdAt == request.time;
+    }
+
     // A user's own data, guest or not.
     match /users/{uid} {
       allow read, delete: if isOwner(uid);
@@ -386,10 +436,16 @@ service cloud.firestore {
           && isCustomExercise(id, request.resource.data);
       }
 
+      // Sent once, never read back; admins read them below. Only
+      // reachable here, the rule below excludes it.
+      match /feedback/{id} {
+        allow create: if isOwner(uid) && isFeedback(uid, request.resource.data);
+      }
+
       // Every other subcollection, at any depth, as before.
       match /{collection}/{document=**} {
         allow read, write: if isOwner(uid)
-          && !(collection in ['cardio', 'bodyEntries', 'programs', 'workouts', 'exerciseStats', 'customExercises']);
+          && !(collection in ['cardio', 'bodyEntries', 'programs', 'workouts', 'exerciseStats', 'customExercises', 'feedback']);
       }
     }
 
@@ -419,6 +475,15 @@ service cloud.firestore {
     // `premium` false so older events cannot grant it again.
     match /entitlements/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Every user's feedback, also as the admin panel's collection-group
+    // query; admins only close and reopen.
+    match /{path=**}/feedback/{id} {
+      allow read: if isAdmin();
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['open', 'closed'];
     }
 
     // The history of sent announcements, written only by the

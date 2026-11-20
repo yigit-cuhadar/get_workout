@@ -13,6 +13,8 @@ import 'package:get_workout/features/volume/domain/weekly_volume.dart';
 import 'package:get_workout/features/workout/presentation/rest_timer_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'review_prompt_stand_in.dart';
+
 class _WeekCubit extends MockCubit<TodayWeekState> implements TodayWeekCubit {}
 
 class _RestTimerCubit extends MockCubit<RestTimerState>
@@ -39,6 +41,7 @@ class _ProgramListCubit extends MockCubit<ProgramListState>
 /// steps have no health store, and the program list, unless
 /// the test has its own, is ready and empty.
 void registerTodayStandIns() {
+  registerReviewPrompt();
   final monday = CalendarDate(2026, 11, 9);
   sl
     ..registerFactoryParam<TodayWeekCubit, int, void>((_, _) {

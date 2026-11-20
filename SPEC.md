@@ -62,7 +62,7 @@ App-wide decisions only. How each feature behaves is under Feature notes.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk). Remote Config (the paywall A/B
-  test) sends the Firebase installation ID for every user, consent or not.
+  test, the update and maintenance gate) sends the Firebase installation ID for every user, consent or not.
 - **Cloud Functions** (`functions/`): TypeScript, Node 22, 2nd gen, all in
   `europe-west1` (`src/config.ts`, set once with `setGlobalOptions`; the
   app's one Dart constant `functionsRegion` in
@@ -250,6 +250,18 @@ measurement day fills all three.
 
 **`users/{uid}/pushTokens/{token}`**: `platform`, `updatedAt`.
 
+**`users/{uid}/feedback/{id}`** (Help & feedback): `uid` (equal to the
+path's), `email?` (where to reply, 3-254 characters; absent when left
+empty), `message` (1-2000 characters), `source` (`profile` \| `rating`),
+`appVersion` ("1.0.0+1"), `platform` (`ios` \| `android`), `osVersion`,
+`deviceModel`, `locale` (the device's, "en-GB"; each detail a string of at
+most 100, empty when unreadable), `status` (`open` \| `closed`),
+`createdAt` (server time). The owner, guests included, may only create
+them (validated, `status` open); nobody reads them back but admins, who
+read them as the collection group `feedback` (index on `status`,
+`createdAt` descending in `firestore.indexes.json`) and change only
+`status`. Deleting the account deletes them with the rest of `users/{uid}`.
+
 ### Server-written
 
 **`entitlements/{uid}`**: `premium`, `expiresAt` (a Firestore timestamp; the
@@ -276,7 +288,7 @@ only, JPEG, max 5 MB.
   writes `entitlements/{uid}`; see the RevenueCat webhook decision.
 - `deleteAccount` (callable, `functions/src/delete_account.ts`) → for the
   signed-in caller: `users/{uid}` with every subcollection (customExercises,
-  programs, workouts, exerciseStats, cardio, bodyEntries, pushTokens and any
+  programs, workouts, exerciseStats, cardio, bodyEntries, pushTokens, feedback and any
   added later) by recursive delete, `entitlements/{uid}`, Storage
   `users/{uid}/` (photos; a project without a default bucket has none,
   logged), then the auth user last, so a partial failure can be retried;
@@ -1549,7 +1561,27 @@ Decisions (the canvases they were drawn on are deleted):
   side, Save off while no weekday is picked. Starting suggests one
   weekday per day spread over the week, the days in turn. The sheet
   scrolls when its cards do not fit (large text).
+- Update and maintenance (owner's picks, 2026-11-20, canvas
+  https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ, U1–U3): U1 a full
+  "Update required" page with one Update button and no what's-new list;
+  U2 a bottom sheet, not a banner, with Update and Later; U3 a full
+  "We'll be right back" page with the configured message and Try again.
+  Behaviour and texts are under Feature notes › App shell, settings and
+  onboarding › Update and maintenance gate.
 
+- Release readiness (2026-11-20, canvas
+  https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ): U1 A (update required:
+  one-button page), U2 B (update offer: a sheet once at start), U3 A
+  (maintenance with Try again), V1 A' (verify email: no "I've verified",
+  detects it by itself), V2 A (wrong address: change it on the same
+  account), S1 A (Help & feedback under Profile › More), S2 B (message and
+  email only), R1 B (the review question as a dialog over the summary),
+  R2 B' (the same dialog thanks and offers "Write to us"), review timing
+  (after the 2nd workout or on the 3rd distinct day of use, then records 30
+  days apart), W1 A (RevenueCat Customer Center with a 1-month-free offer at
+  cancel), W2 A (win-back tag on the plan cards), D1 A (in dark mode the body
+  model is halfway between surface and ink). Explicit consent for body data
+  was dropped by the owner.
 ## Open questions
 
 - Google sign-in is offered next to email (`socialProviders` in
@@ -1610,6 +1642,18 @@ Decisions (the canvases they were drawn on are deleted):
   then the Subscription feature stays unticked. Android / Play is not set
   up (products, service account in RevenueCat, license testers, the
   merged manifest's BILLING permission).
+  Win-back (W1, W2, 2026-11-20): promotional offers "1 month free" (free,
+  one month) exist on both plans for the Customer Center's cancel path:
+  `retention_1m_free` (monthly) and `retention_1m_free_yearly` (yearly;
+  offer codes are unique per app). The win-back offers cannot be created
+  until the subscriptions are approved (App Store Connect refuses with
+  STATE_ERROR.NON_APPROVED_SUBSCRIPTION); after the first approval create
+  one per plan: 1 month free, eligibility paid at least 1 month and
+  lapsed 1 to 12 months, no wait between offers, priority high, not
+  promoted on the App Store. RevenueCat (dashboard only): enable Customer
+  Center (Pro plan, free below 2.5k USD monthly revenue), set its accent
+  to the app's, and map both products to their promotional offer on the
+  Cancel path.
 - The first Android build after the rest timer needs Android platform 37
   (compileSdk, for flutter_local_notifications 23) and AGP 9.1.1
   downloaded; the disk is nearly full, so free space first. CI does not
@@ -1745,6 +1789,39 @@ Decisions (the canvases they were drawn on are deleted):
 - `forge_purchases` has no "unavailable" backend; the app swaps in its own
   repository for release builds without keys. Move it into the package when
   it is next changed.
+- App Check (2026-11-20), monitoring first (owner's decision); enforcement
+  is turned on before release. Live in code: `initFirebase` (forge_firebase)
+  activates it before any Firestore, Storage or Functions call, with App
+  Attest (DeviceCheck below iOS 14) on iOS, Play Integrity on Android and
+  the debug provider in debug builds, the simulator included. Profile builds
+  on the owner's iPhone use App Attest against dev. Runner.entitlements
+  carries `com.apple.developer.devicecheck.appattest-environment` from the
+  `APP_ATTEST_ENVIRONMENT` build setting (development for Debug and Profile,
+  production for Release); the next `-allowProvisioningUpdates` build adds
+  the capability to the App ID. The admin web build does not activate it
+  (its own bootstrap, no reCAPTCHA key), so `sendAnnouncement` and the
+  admin's Firestore writes must stay unenforced until the web gets a
+  reCAPTCHA Enterprise provider. Not done yet, per project (dev and prod):
+  - Register the iOS app for App Attest and DeviceCheck (App Check › Apps,
+    or the App Check API's `appAttestConfig` / `deviceCheckConfig` on
+    `projects/<p>/apps/<iosAppId>`; DeviceCheck needs a DeviceCheck key
+    (.p8) of team A8J42TV74R, stored with `tools/secret.sh`).
+  - Register the Android app for Play Integrity (`playIntegrityConfig`)
+    once the Play Console exists: link the Cloud project in Play Console ›
+    App integrity and add the Play app signing SHA-256 to the Android app.
+  - Debug tokens: run a debug build; the token is in the native log, on
+    iOS as "App Check debug token: '…'" (Xcode console or `flutter run`),
+    on Android `adb logcat | grep DebugAppCheckProvider`. Add it under App
+    Check › Apps › Manage debug tokens on dev (or the API's
+    `debugTokens`). A token lives per install, so a reinstall prints a new
+    one.
+  - Watch the App Check metrics per product, then enforce per product
+    (Firestore, Storage, Authentication; API `services/<service>`
+    `enforcementMode: ENFORCED`). Callable functions: add
+    `enforceAppCheck: true` to `deleteAccount`'s `onCall` options
+    (`functions/src/delete_account.ts`); not to `sendAnnouncement` while
+    the admin web has no App Check. `revenueCatWebhook` is an HTTP
+    endpoint and stays as it is.
 
 ## Feature notes
 
@@ -1907,6 +1984,27 @@ the feature you are about to touch, and keep it true when you change it.
   stays open until the approval brings Premium and closes it (owner's
   call, 2026-11-19). Restore's result is
   "Premium restored." (the paywall closes) or "Nothing to restore.".
+- **Win-back offer** (W2, owner's pick, 2026-11-20): a lapsed subscriber
+  the App Store offers a win-back (iOS 18+, Apple decides eligibility) sees
+  it on the paywall: every plan that carries one gets the record tag
+  "Welcome back · 1 month free"; in A the price line is "1 month free,
+  then $39.99 / year", in B the tile's line is "1 month free", in C the
+  name is "Yearly · 1 month free"; the button is "Start free month" (a
+  longer free period "Start N-month free trial", a paid one "Start for
+  <price>"), the terms "Free for 1 month, then <price per period>" and
+  the renewal. Buying the plan applies the offer. Everyone else, and
+  Android, sees the paywall unchanged. Forge carries it as `Plan.winBack`
+  (only when eligible, in place of any trial or intro). The fake store
+  offers its plans' free month once the user's subscription has ended
+  ("End subscription now (win-back)" among the Fake store rows).
+- **Manage subscription** (W1, owner's pick, 2026-11-20): on iOS it
+  presents RevenueCat's Customer Center (themed in the RevenueCat
+  dashboard), whose cancel path first offers the "1 month free"
+  promotional offer (Claim free month / No thanks, cancel); a claimed
+  month or a change arrives through the entitlement stream. Where the
+  Customer Center cannot show (the fake store, an error) and on Android
+  (until Play is set up) the store's manage page opens instead; if that
+  fails too, "Couldn't open your subscription settings.".
 - **Paywall A/B/C test** (Firebase Remote Config + A/B Testing, owner's call,
   2026-11-13; `forge_remote_config`): the Remote Config string
   `paywall_layout` picks the layout, `a` (list), `b` (cards) or `c` (one
@@ -1950,7 +2048,7 @@ the feature you are about to touch, and keep it true when you change it.
   the server takes within 2 s backed up, so a normal write never flashes
   "Waiting". Then "Subscription" with the GetWorkout Premium row, "You are
   on Free" or the Profile card's state; it opens the paywall when free and
-  the store's manage page for a subscription, nothing while checking or
+  Manage subscription for a subscription, nothing while checking or
   for lifetime Premium (AC-Q2). Then Sign out (a dialog; a failure is a
   snackbar "Couldn't sign out." whose Retry signs out without asking
   again) and Delete account. A guest gets the guest card (Create account,
@@ -2039,6 +2137,59 @@ the feature you are about to touch, and keep it true when you change it.
   "deleting accounts isn't available yet", never as done; anything else
   that failed before the data went gives the workout back.
 
+- **Email verification** (blocking, owner's decision; `forge_auth`'s
+  `EmailVerificationPage`, route `/verify-email`): only an email and
+  password account must verify; Google or Apple next to it counts as
+  verified (`AuthUser.needsEmailVerification`), and guests are unchanged.
+  Creating or linking an email account mails the link at once
+  (`SignUpWithEmail`; a failed send still signs up, Resend covers it).
+  Until verified the router shows the page instead of the app, at start
+  too (existing unverified users included) and after signing in to an
+  unverified account; once verified it goes on like the splash gate
+  (Today, or onboarding for a profile without it).
+  - Page (owner's pick, canvas
+    https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ row V1, board A'):
+    mail icon, "Check your email", the line, a "Sent to" card with the
+    address, the moving "Waiting for confirmation…" line, "Resend email"
+    (secondary) and "Use another email" (text). No "I've verified"
+    button: the page reloads the user every 4 s while the app is
+    visible, stops while it is hidden, and reloads at once when it shows
+    again. Resend counts down 60 s from the last link this session sent
+    (so from the page's first frame right after sign-up or linking), or
+    after a `too-many-requests` answer; a page opened in a later session
+    can send at once.
+  - "Use another email" (row V2, board A) opens the "Change email" sheet:
+    "We will send a new link. Your workouts stay with this account.", a
+    "New email" field, "Send link" (primary) and "Sign out instead"
+    (text; signs out at once, a new guest starts on onboarding; nothing
+    is deleted, the account and its data wait for its next sign-in).
+    Send link calls Firebase's verify-before-update-email on the same
+    account (same uid, same data); the sheet closes, "Sent to" shows the
+    new address, Resend then resends to it, and the page keeps waiting.
+    Opening the link makes it the account's verified email and the app
+    goes on. Errors under the field: a malformed address (checked before
+    sending), `invalid-email`, `email-already-in-use` (Firebase may not
+    report this with email enumeration protection on; the link then
+    fails when opened), and `requires-recent-login`, which the
+    repository first answers by signing in again with the password this
+    session used (sign-up, link, sign-in or re-authentication; kept in
+    memory only, dropped on sign-out or deletion); without it the sheet
+    says "Please sign in again to continue".
+  - Confirming an email change revokes the session and Firebase signs the
+    user out; with the password from this session, the guest start signs
+    in to the new address instead of a new guest, so the user lands back
+    in the app. Without it (the app was restarted since), the user lands
+    as a new guest on onboarding and signs in with the new address; the
+    data stays on the account. Not checked on a device yet.
+  - Email templates are Firebase's defaults in both projects: sender
+    `noreply@<project>.firebaseapp.com`, subject "Verify your email for
+    %APP_NAME%", the link handled at
+    `https://<project>.firebaseapp.com/__/auth/action` (no custom
+    domain), locale en; the email-change template is the default too. To
+    customise later in the console (Authentication > Templates): sender
+    name, subject and text, the action URL (a custom domain on Hosting),
+    and a custom sender domain.
+
 ### App shell, settings and onboarding
 
 - **Navigation** (owner, 2026-11-13): five tabs, Today / Programs /
@@ -2114,7 +2265,7 @@ the feature you are about to touch, and keep it true when you change it.
   (the paywall); otherwise, as a FeaturedCard prompt, the user's state
   (checking, trial, renews, ends, lifetime, payment problem) is its title
   over that line, and a subscriber (trial, renewing, ending, payment
-  problem) gets "Manage subscription" (the store's manage page); lifetime
+  problem) gets "Manage subscription" (see Manage subscription); lifetime
   or granted Premium (no expiry, nothing to manage) and an unknown status
   get no action. Workout group: effort, warm-ups, the rest timer and,
   while it is on, its default rest, rest notification and rest sound
@@ -2298,6 +2449,57 @@ the feature you are about to touch, and keep it true when you change it.
   what effort is and what the app does with it, every step of the user's
   scale and what it means, Failed, warm-up sets (with the automatic ramp)
   and drop sets.
+
+- **Update and maintenance gate** (owner's call, 2026-11-20; picks U1–U3
+  on the canvas https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ;
+  `forge_app_gate`): three rules from Firebase Remote Config, checked by
+  `AppGateCubit` against the installed version (`package_info_plus`, the
+  marketing version only: `1.2.0` of `1.2.0+7`; the build number is not
+  compared, since a store release always raises the version).
+  - Keys (all with in-app defaults that ask nothing, so an absent key
+    never blocks; `AppGateModule.remoteConfigDefaults`, merged into
+    `RemoteConfigModule`'s defaults in `bootstrap`):
+    `min_version_ios`, `min_version_android`, `recommended_version_ios`,
+    `recommended_version_android` (strings, default `''`: a version such
+    as `1.2.0`; missing parts are 0, a value that is not a version asks
+    nothing), `maintenance` (boolean, default `false`, one switch for
+    both platforms; per platform only through a console condition) and
+    `maintenance_message` (string, default `''`: the app's own text; a
+    language is added later with a console condition on the device
+    language). Created on getworkout-dev (2026-11-20, group "App gate",
+    "use in-app default"); not on prod yet.
+  - Order: maintenance first (an update does not help while it lasts),
+    then the minimum, then the recommended version.
+  - U1 Update required: below the minimum the app is replaced by a page,
+    "Update required" / "This version of GetWorkout is no longer
+    supported. Update to keep training; your workouts are safe." and one
+    Update button opening the store (App Store
+    `https://apps.apple.com/app/id6836913044`, Google Play
+    `https://play.google.com/store/apps/details?id=com.getworkout.app`).
+    Nothing else is reachable; Back does nothing.
+  - U2 Recommended update: below the recommended version (and at or above
+    the minimum) a bottom sheet over the app, at most once per launch:
+    "A new version is available" / "Update GetWorkout for the latest
+    fixes and features.", Update (the store; the sheet closes for this
+    launch only) and Later. Later, a swipe down, a tap on the scrim or
+    Back dismiss it for that `recommended_version_*` value for good
+    (`app_gate.json` in the app support directory); a new value offers
+    it again.
+  - U3 Maintenance: while `maintenance` is true a page "We'll be right
+    back" with `maintenance_message`, or "GetWorkout is down for
+    maintenance. Try again in a little while.", and Try again, which
+    fetches Remote Config at once (busy meanwhile) and opens the app if
+    maintenance is off. Back does nothing.
+  - When: `bootstrap` checks before `runApp` from what the last launch
+    fetched (local only, so offline the app opens as before), then the
+    rules are fetched in the background, on every resume and on Try
+    again, ignoring the 12 h fetch interval; a failed fetch keeps the last
+    rules. Only the gate's keys take a fetched value mid-session
+    (`RemoteConfigRepository.refresh`); `paywall_layout` keeps one value
+    per session.
+  - The gate sits in `MaterialApp.builder` around the router: the app
+    stays mounted and hidden under a page and comes back as it was. Its
+    cubits start as usual underneath (auth, Firestore listeners).
 
 ### Exercises and content
 
@@ -3740,6 +3942,65 @@ the feature you are about to touch, and keep it true when you change it.
   calculator opens; a value arriving late fills only inputs the user has
   not changed (even one they cleared stays empty). A source that cannot
   be read adds nothing.
+
+### Help, feedback and the review prompt
+
+- **Help & feedback** (`lib/features/feedback`; canvas
+  https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ, rows S1, S2): Profile ›
+  More › "Help & feedback" (under Your profile, detail "Report a problem
+  or share an idea") opens the page (`Routes.profileFeedback`, source
+  `profile`); "Write to us" in the review prompt opens it above the
+  workout summary (`Routes.workoutFeedback`, source `rating`). A
+  multi-line Message (hint "Tell us what happened or what you would
+  like…", at most 2000 characters), "Email for our reply" (the account's
+  email when it has one, an Apple relay address included; empty for a
+  guest, and optional), the note "We add your app version, device and
+  account ID so we can help faster." and Send. No topic. Send with an
+  empty message or an email that does not look like one (one "@", text on
+  both sides, a dot after it) only marks the field ("Write a message
+  first", "Enter a valid email, or leave it empty") and keeps marking as
+  the user types. Sending writes `users/{uid}/feedback/{id}` (see Data
+  model) without waiting for the server, like every write: offline it goes
+  out later. Then a snackbar "Thanks! Your message is on its way." and
+  back. Device details that cannot be read are sent empty rather than
+  stopping the message; a write the rules refuse after that is only
+  logged (the form checks what the rules check). No email or push
+  notification of new messages (owner's choice).
+- **Admin panel › Feedback** (`lib/admin/feedback`, `/feedback`, in the
+  nav after Announcements): Open or Closed (Open first), the latest 100 of
+  that status, newest first, live; each card shows the message (selectable),
+  sent time, reply email (with Copy email) or "none", source, user id,
+  app version, platform, OS version, device model and locale, and Close or
+  Reopen, which moves it to the other list. Stream errors retry like the
+  other lists.
+- **Review prompt** (forge_review; canvas rows R1, R2; first-ask rule
+  changed by the owner 2026-11-20): two kinds of moment. Every workout
+  summary counts once on the device (by workout id); every app open
+  (Today shown at launch, and each resume) counts the local calendar day
+  once. The first ask comes at the first moment that can ask once two
+  workouts were counted or the app was opened on three different days,
+  whichever comes first: the second workout's summary, or Today at an
+  open on or after the third day. Later asks only at a summary with a
+  new record (a highlight) at least 30 days after the last ask; never
+  twice in one app version (`FeedbackModule.reviewRules`). The summary of
+  the user's first workout ever, which leaves through the paywall, counts
+  but never asks. Today asks only while it is in front with nothing over
+  the tabs (no paywall, workout, consent page, dialog or sheet; onboarding
+  and the start pages come before the tabs); a day counted while covered
+  asks at the next open that is not. An ask is recorded when it is
+  decided, so closing the app on it still counts, and one covered in the
+  instant between deciding and showing is spent unseen. The history
+  lives in shared preferences, so a reinstall starts it again.
+  A dialog over the summary or Today (ForgeDialog.choice): "Enjoying GetWorkout?",
+  "Your answer helps us improve.", "Not really" (secondary) beside "Yes!"
+  (primary), and ✕. Yes! opens the platform's review prompt
+  (`in_app_review`: SKStoreReviewController on iOS, Play in-app review on
+  Android, nothing where neither exists); the platform decides whether it
+  shows (iOS: at most 3 times a year; never in TestFlight). Not really
+  turns the same dialog into "Thanks for telling us" / "Tell us what to
+  improve and we will look into it." with Write to us (the form, source
+  `rating`, above the page that asked)
+  over Close.
 
 ### Notifications
 

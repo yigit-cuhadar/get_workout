@@ -2,6 +2,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_core/forge_core.dart';
+import 'package:forge_review/forge_review.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
@@ -23,6 +25,7 @@ import 'package:get_workout/features/workout/presentation/workout_page.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../app/review_prompt_stand_in.dart';
 import '../fixtures.dart';
 
 class _MockWorkout extends MockCubit<ActiveWorkoutState>
@@ -75,17 +78,22 @@ void main() {
     weightUnit: WeightUnit.kg,
   );
 
+  late MockReviews review;
+
   Future<void> pump(
     WidgetTester tester,
     ActiveWorkoutState state, {
     RestTimerState rest = const RestTimerState(),
     ({double kg, int reps})? progression,
     List<Program> programs = const [],
+    ReviewHistory reviews = askedThisVersion,
   }) async {
     tester.view
       ..physicalSize = const Size(1200, 2600)
       ..devicePixelRatio = 3;
     addTearDown(tester.view.reset);
+    addTearDown(sl.reset);
+    review = registerReviewPrompt(history: reviews);
     cubit = _MockWorkout();
     whenListen(
       cubit,
@@ -405,6 +413,65 @@ void main() {
       when(() => cubit.summaryShown()).thenReturn(null);
       await tester.tap(find.text('Done'));
       verify(() => cubit.summaryShown()).called(1);
+    });
+
+    testWidgets('the second workout asks for a review; Yes! opens the '
+        'store\'s prompt', (tester) async {
+      await pump(
+        tester,
+        finished(),
+        reviews: const ReviewHistory(events: 1, lastEventId: 'v'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Enjoying GetWorkout?'), findsOneWidget);
+      await tester.tap(find.text('Yes!'));
+      await tester.pumpAndSettle();
+      expect(find.text('Enjoying GetWorkout?'), findsNothing);
+      verify(review.requestReview).called(1);
+    });
+
+    testWidgets('Not really thanks in the same dialog; Close leaves the '
+        'summary', (tester) async {
+      await pump(
+        tester,
+        finished(),
+        reviews: const ReviewHistory(events: 1, lastEventId: 'v'),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Not really'));
+      await tester.pumpAndSettle();
+      expect(find.text('Thanks for telling us'), findsOneWidget);
+      expect(find.text('Write to us'), findsOneWidget);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      expect(find.text('Thanks for telling us'), findsNothing);
+      expect(find.text('Save as program'), findsOneWidget);
+      verifyNever(review.requestReview);
+    });
+
+    testWidgets('the first workout ever, with its paywall, counts without '
+        'asking', (tester) async {
+      await pump(
+        tester,
+        finished(
+          summary: const WorkoutSummary(
+            duration: Duration(minutes: 52),
+            volumeKg: 12400,
+            setCount: 18,
+            exerciseCount: 6,
+            firstEver: true,
+          ),
+        ),
+        reviews: const ReviewHistory(events: 1, lastEventId: 'v'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Enjoying GetWorkout?'), findsNothing);
+      verify(
+        () => review.save(const ReviewHistory(events: 2, lastEventId: 'w')),
+      ).called(1);
     });
 
     testWidgets('compares with the day\'s last workout', (tester) async {
