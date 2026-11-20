@@ -163,9 +163,9 @@ class OnboardingQuestionBody extends StatelessWidget {
 }
 
 /// One answer of [values] as Forge's stacked choice rows: each its
-/// [title] and, when it has one, the line under it ([subtitle]). A value
-/// not [enabled] is faded and takes no tap. Null may be one of them, e.g.
-/// "none".
+/// [title] and, when it has one, a soft [tag] after the title and the line
+/// under it ([subtitle]). A value not [enabled] is faded and takes no tap.
+/// Null may be one of them, e.g. "none".
 class OnboardingChoices<T> extends StatelessWidget {
   const OnboardingChoices({
     super.key,
@@ -174,6 +174,7 @@ class OnboardingChoices<T> extends StatelessWidget {
     required this.title,
     required this.onChanged,
     this.subtitle,
+    this.tag,
     this.enabled,
   });
 
@@ -181,6 +182,7 @@ class OnboardingChoices<T> extends StatelessWidget {
   final T? selected;
   final String Function(T value) title;
   final String? Function(T value)? subtitle;
+  final String? Function(T value)? tag;
   final bool Function(T value)? enabled;
   final ValueChanged<T> onChanged;
 
@@ -194,6 +196,10 @@ class OnboardingChoices<T> extends StatelessWidget {
           ChoiceOption(
             label: title(value),
             hint: subtitle?.call(value),
+            tag: switch (tag?.call(value)) {
+              final tag? => ForgeTag(tag, kind: ForgeTagKind.record),
+              null => null,
+            },
             enabled: enabled?.call(value) ?? true,
           ),
       ],

@@ -52,6 +52,15 @@ abstract final class ProfileLimits {
   static bool weightKg(double kg) => kg >= minWeightKg && kg <= maxWeightKg;
 }
 
+/// The days a week most lifters at this level train.
+extension RecommendedDays on Level {
+  int get recommendedDaysPerWeek => switch (this) {
+    Level.beginner => 3,
+    Level.intermediate => 4,
+    Level.advanced => 5,
+  };
+}
+
 /// What the user told us about themselves. Every answer is optional until
 /// given; [onboardingCompletedAt] is set once onboarding is finished.
 class UserProfile extends Equatable {

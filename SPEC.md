@@ -1582,6 +1582,11 @@ Decisions (the canvases they were drawn on are deleted):
   cancel), W2 A (win-back tag on the plan cards), D1 A (in dark mode the body
   model is halfway between surface and ink). Explicit consent for body data
   was dropped by the owner.
+
+- Days per week recommendation (2026-11-20, canvas
+  https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ): DW1 C (an info line
+  under the question and a Recommended tag on the row), DW2 A (nothing
+  preselected), DW3 A (beginner 3, intermediate 4, advanced 5 days).
 ## Open questions
 
 - Google sign-in is offered next to email (`socialProviders` in
@@ -2415,6 +2420,17 @@ the feature you are about to touch, and keep it true when you change it.
   (`QuestionScaffold`, `QuestionLayout`, `ChoiceAnswer` in
   `lib/core/question_page.dart`; `EquipmentAnswer` in
   `profile_questions.dart`).
+- **Days per week recommendation** (DW1 C, DW2 A, DW3 A; canvas under
+  Design): "How many days a week can you train?" recommends the days most
+  lifters at the user's level train (`Level.recommendedDaysPerWeek`:
+  beginner 3, intermediate 4, advanced 5). Under the question "Most
+  beginners train 3 days a week." ("Most intermediate lifters …", "Most
+  advanced lifters …"), and that row carries a soft Recommended tag
+  (`ForgeTagKind.record`, Forge `ChoiceOption.tag`). Nothing is
+  preselected: the user still picks, and a saved answer stays the one
+  selected. Onboarding uses the level just answered (changing it and
+  coming back moves the recommendation); Your profile › Training days
+  uses the saved level. With no level known neither shows.
 - **Birth year**: a plausibility range (age 13-100), not an age gate. An
   implausible year is only not accepted as an answer; nothing is blocked.
 - **First-use tips**: four inline banners (Material `MaterialBanner`,
