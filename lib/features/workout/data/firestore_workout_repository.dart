@@ -260,10 +260,15 @@ class FirestoreWorkoutRepository implements WorkoutRepository {
   }, mapper: mapFirebaseError);
 
   @override
-  Future<Result<int>> countWorkouts(String uid) => guard(() async {
-    final snap = await _workouts(uid).count().get().timeout(serverWait);
-    return snap.count ?? 0;
-  }, mapper: mapFirebaseError);
+  Future<Result<int>> countWorkouts(String uid, {required DateTime before}) =>
+      guard(() async {
+        final snap = await _workouts(uid)
+            .where('finishedAt', isLessThan: Timestamp.fromDate(before))
+            .count()
+            .get()
+            .timeout(serverWait);
+        return snap.count ?? 0;
+      }, mapper: mapFirebaseError);
 
   @override
   Future<Result<List<Workout>>> programWorkouts(String uid, String programId) =>

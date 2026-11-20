@@ -49,6 +49,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(workout('x', const []));
     registerFallbackValue(<String, ExerciseStats>{});
+    registerFallbackValue(DateTime(2026));
     registerFallbackValue(const Program(name: 'x', days: []));
     registerFallbackValue(active);
   });
@@ -60,7 +61,7 @@ void main() {
         .thenAnswer((_) async => const Ok([]));
     when(() => repository.hasWorkouts(any()))
         .thenAnswer((_) async => const Ok(true));
-    when(() => repository.countWorkouts(any()))
+    when(() => repository.countWorkouts(any(), before: any(named: 'before')))
         .thenAnswer((_) async => const Ok(4));
     when(
       () => repository.saveWorkout(
@@ -196,15 +197,25 @@ void main() {
 
     test('counts the workouts with this one; none when the server '
         'does not answer', () async {
-      Future<int?> count() async => (await finish((
-        uid: 'u1',
-        workout: fromDay(0),
-        program: null,
-        at: null,
-      ))).valueOrNull!.workoutCount;
+      FinishedWorkout? last;
+      Future<int?> count() async {
+        last = (await finish((
+          uid: 'u1',
+          workout: fromDay(0),
+          program: null,
+          at: null,
+        ))).valueOrNull;
+        return last!.workoutCount;
+      }
 
       expect(await count(), 5);
-      when(() => repository.countWorkouts('u1'))
+      // Only those finished before this one: it may already be written.
+      final before = verify(
+        () =>
+            repository.countWorkouts('u1', before: captureAny(named: 'before')),
+      ).captured.single;
+      expect(before, last!.workout.finishedAt);
+      when(() => repository.countWorkouts('u1', before: any(named: 'before')))
           .thenAnswer((_) async => const Err(NetworkFailure()));
       expect(await count(), isNull);
     });
