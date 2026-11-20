@@ -52,6 +52,13 @@ void main() {
       await tapText(tester, 'Program c1');
       await tapText(tester, 'Start this program');
       expect(find.text('Training days'), findsOneWidget);
+      await tapOn(
+        tester,
+        find.descendant(
+          of: find.byType(TrainingDaysSheet),
+          matching: find.text('Custom'),
+        ),
+      );
       // Push on Monday and Pull on Thursday are offered; Thursday is
       // dropped and Wednesday, today, does Push too.
       await tapOn(tester, weekdayChip('Pull', 'Th'));

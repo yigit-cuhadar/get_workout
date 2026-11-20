@@ -1561,6 +1561,27 @@ Decisions (the canvases they were drawn on are deleted):
   side, Save off while no weekday is picked. Starting suggests one
   weekday per day spread over the week, the days in turn. The sheet
   scrolls when its cards do not fit (large text).
+- Training days, Simple and Custom (owner's picks, 2026-11-20, canvas
+  https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ, SD3 B, SD4 C, SD5):
+  a "Simple | Custom" segmented control tops the sheet, above its
+  scrolling part so it stays in view. Custom is the SD2 E sheet above.
+  Simple: "Pick the N weekdays you train on." ("Pick the weekday you
+  train on." for one day), one row of seven weekday chips and the same
+  summary line; no per-day list. Exactly as many weekdays as the
+  program has days: Save is on only at that count; at it, an unpicked
+  weekday does nothing (it stays enabled, so nothing greys out), a
+  picked one turns off. The days go onto the picked weekdays in the
+  user's week order, the first day on the earliest
+  (`ProgramSchedule.inWeekOrder`). The sheet opens Simple when the
+  schedule is exactly that (`isInWeekOrder`) or empty, else Custom; the
+  suggestion when starting is in order, so starting opens Simple
+  (except a 7-day program in a Sunday-first week, whose ISO-ordered
+  suggestion opens Custom). Simple to Custom carries the picks over in
+  week order (too few picks leave the last days on no weekday); but if
+  nothing was picked since Simple opened, Custom comes back as it was,
+  so a look at Simple loses nothing. Custom to Simple keeps the
+  weekdays when each day is on exactly one (`hasEachDayOnce`, then put
+  in week order on Save), else starts with none picked.
 - Update and maintenance (owner's picks, 2026-11-20, canvas
   https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ, U1–U3): U1 a full
   "Update required" page with one Update button and no what's-new list;

@@ -200,12 +200,8 @@ void main() {
     await settle(tester);
     await settle(tester);
     expect(find.text('Training days'), findsOneWidget);
-    expect(
-      find.text(
-        'Tap the weekdays each day is done on; a weekday holds one day.',
-      ),
-      findsOneWidget,
-    );
+    // The suggestion is one weekday per day in order, so it opens Simple.
+    expect(find.text('Pick the 2 weekdays you train on.'), findsOneWidget);
     await tester.tap(find.text('Start program').last);
     await settle(tester);
     verify(() => detail.start(const {1: 0, 4: 1})).called(1);
