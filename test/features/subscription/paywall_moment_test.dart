@@ -5,13 +5,16 @@ import 'package:get_workout/features/subscription/domain/paywall_moment.dart';
 void main() {
   group('paywallMomentDue', () {
     test('only for a known free user who has not had it', () {
-      for (final moment in PaywallMoment.values) {
+      for (final moment in [
+        PaywallMoment.onboarding,
+        PaywallMoment.firstWorkout,
+      ]) {
         expect(paywallMomentDue(moment, premium: false, seen: {}), isTrue);
         expect(paywallMomentDue(moment, premium: true, seen: {}), isFalse);
         expect(paywallMomentDue(moment, premium: null, seen: {}), isFalse);
         expect(paywallMomentDue(moment, premium: false, seen: null), isFalse);
         expect(
-          paywallMomentDue(moment, premium: false, seen: {moment.tip}),
+          paywallMomentDue(moment, premium: false, seen: {moment.tip!}),
           isFalse,
         );
       }
@@ -27,6 +30,13 @@ void main() {
         isTrue,
       );
     });
+  });
+
+  test('the offering decides at onboarding and on app open only', () {
+    expect(PaywallMoment.onboarding.offeringDecides, isTrue);
+    expect(PaywallMoment.appOpen.offeringDecides, isTrue);
+    expect(PaywallMoment.firstWorkout.offeringDecides, isFalse);
+    expect(PaywallMoment.appOpen.tip, isNull);
   });
 
   group('offeringDismissible', () {

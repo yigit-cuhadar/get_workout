@@ -3,6 +3,7 @@ import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_remote_config/forge_remote_config.dart';
 
 import 'paywall_layout.dart';
+import 'paywall_moment.dart';
 
 /// This session's paywall layout: Remote Config's, A for an unknown or
 /// empty value; a debug build's [PaywallLayoutOverride] wins.
@@ -77,5 +78,16 @@ class GetPremiumTrial {
 
   Future<Result<OfferPeriod?>> call() async => (await _offering()).map(
     (offering) => offering.plans.map((plan) => plan.trial).nonNulls.firstOrNull,
+  );
+}
+
+/// Whether the current offering's paywall cannot be closed: its metadata
+/// says it is not [offeringDismissible].
+class GetOfferingHard {
+  const GetOfferingHard(this._offering);
+  final GetPaywallOffering _offering;
+
+  Future<Result<bool>> call() async => (await _offering()).map(
+    (offering) => !offeringDismissible(offering.metadata),
   );
 }

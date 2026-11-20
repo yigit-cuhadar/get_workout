@@ -90,6 +90,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
         platform: defaultTargetPlatform,
         release: kReleaseMode,
       ),
+      pastOnboarding: ProfileModule.pastOnboarding,
     ),
   ]);
   // Local only, from what the last launch fetched; the fetch runs behind.

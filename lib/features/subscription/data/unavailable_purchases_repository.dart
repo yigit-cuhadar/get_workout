@@ -33,6 +33,10 @@ class UnavailablePurchasesRepository implements PurchasesRepository {
   Future<Result<Offering>> offering() async => _unavailable;
 
   @override
+  Future<Result<bool>> recordAdAttribution({required bool lookUp}) async =>
+      const Ok(false);
+
+  @override
   Future<Result<Entitlement>> purchase(Plan plan) async => _unavailable;
 
   @override

@@ -12,6 +12,8 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockEntitlementCubit extends Mock implements EntitlementCubit {}
 
+class MockRecordAdAttribution extends Mock implements RecordAdAttribution {}
+
 void main() {
   const guest = AuthUser(id: 'g1', isAnonymous: true);
   const linked = AuthUser(id: 'g1', email: 'a@b.co');
@@ -20,7 +22,9 @@ void main() {
   late StreamController<AuthUser?> users;
   late MockAuthRepository auth;
   late MockEntitlementCubit entitlement;
+  late MockRecordAdAttribution recordAdAttribution;
   late PurchaserSession session;
+  late Future<bool> Function(String uid) pastOnboarding;
 
   setUp(() {
     users = StreamController<AuthUser?>();
@@ -30,12 +34,18 @@ void main() {
     when(() => entitlement.identify(any()))
         .thenAnswer((_) async => const Ok(null));
     when(entitlement.reset).thenAnswer((_) async => const Ok(null));
+    pastOnboarding = (_) async => false;
+    recordAdAttribution = MockRecordAdAttribution();
+    when(() => recordAdAttribution(lookUp: any(named: 'lookUp')))
+        .thenAnswer((_) async => const Ok(true));
   });
 
   // Called inside fakeAsync where timing matters, so its timers are fake.
   void start() => session = PurchaserSession(
     watchAuthUser: WatchAuthUser(auth),
     entitlement: entitlement,
+    recordAdAttribution: recordAdAttribution,
+    pastOnboarding: (uid) => pastOnboarding(uid),
     retryDelay: const Duration(seconds: 1),
     maxRetryDelay: const Duration(seconds: 2),
   );
@@ -56,6 +66,79 @@ void main() {
       () => entitlement.identify('u2'),
       entitlement.reset,
     ]);
+  });
+
+  test('records the ad attribution once per identified uid', () async {
+    start();
+    for (final user in [null, guest, linked, other, guest]) {
+      users.add(user);
+      await pumpEventQueue();
+    }
+
+    await session.cancel();
+    // Once for g1 (linking and coming back do not repeat it), once for u2,
+    // never while signed out.
+    verify(() => recordAdAttribution(lookUp: any(named: 'lookUp'))).called(2);
+  });
+
+  test('records the ad attribution only after the switch succeeds', () {
+    fakeAsync((async) {
+      start();
+      var attempts = 0;
+      when(() => entitlement.identify('g1')).thenAnswer(
+        (_) async =>
+            ++attempts < 2 ? const Err(NetworkFailure()) : const Ok(null),
+      );
+      users.add(guest);
+      async.flushMicrotasks();
+      verifyNever(() => recordAdAttribution(lookUp: any(named: 'lookUp')));
+
+      async.elapse(const Duration(seconds: 1));
+      verify(() => recordAdAttribution(lookUp: any(named: 'lookUp'))).called(1);
+      session.cancel();
+    });
+  });
+
+  test('looks the attribution up only before onboarding is done', () async {
+    pastOnboarding = (uid) async => uid == 'u2';
+    start();
+    users.add(guest);
+    await pumpEventQueue();
+    users.add(other);
+    await pumpEventQueue();
+
+    await session.cancel();
+    verifyInOrder([
+      () => recordAdAttribution(lookUp: true),
+      () => recordAdAttribution(lookUp: false),
+    ]);
+  });
+
+  test('a user switch while the profile loads drops the attribution', () async {
+    final profile = Completer<bool>();
+    pastOnboarding = (uid) => uid == 'g1' ? profile.future : Future.value(true);
+    start();
+    users.add(guest);
+    await pumpEventQueue();
+    users.add(other);
+    await pumpEventQueue();
+    profile.complete(false);
+    await pumpEventQueue();
+
+    await session.cancel();
+    verify(() => recordAdAttribution(lookUp: false)).called(1);
+    verifyNever(() => recordAdAttribution(lookUp: true));
+  });
+
+  test('a failed attribution is left at that', () async {
+    when(() => recordAdAttribution(lookUp: any(named: 'lookUp')))
+        .thenAnswer((_) async => const Err(NetworkFailure()));
+    start();
+    users.add(guest);
+    await pumpEventQueue();
+
+    await session.cancel();
+    verify(() => recordAdAttribution(lookUp: any(named: 'lookUp'))).called(1);
   });
 
   test('linking keeps the uid, so the store user is not switched', () async {

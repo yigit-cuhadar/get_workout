@@ -91,9 +91,9 @@ extension PremiumGate on BuildContext {
     return unlocked == true || (mounted && read<EntitlementCubit>().isActive);
   }
 
-  /// Shows the paywall at [moment] if it is due ([paywallMomentDue]) and
-  /// marks it shown, so it never shows again for this user; completes once
-  /// it closed, at once when not due.
+  /// Shows the paywall at a once-per-user [moment] if it is due
+  /// ([paywallMomentDue]) and marks it shown, so it never shows again for
+  /// this user; completes once it closed, at once when not due.
   Future<void> paywallMoment(PaywallMoment moment) async {
     final settings = read<SettingsCubit>();
     final due = paywallMomentDue(
@@ -106,7 +106,7 @@ extension PremiumGate on BuildContext {
       seen: settings.state.loaded ? settings.state.settings.seenTips : null,
     );
     if (!due) return;
-    unawaited(settings.tipSeen(moment.tip));
+    if (moment.tip case final tip?) unawaited(settings.tipSeen(tip));
     await openPaywall(moment: moment);
   }
 
@@ -132,6 +132,9 @@ extension PremiumGate on BuildContext {
 /// One paywall at a time per router, whoever asks for it: true from the
 /// call until the paywall has left the page stack.
 final _paywallOpen = Expando<bool>();
+
+/// Whether a paywall is open on [router] ([PremiumGate.openPaywall]).
+bool paywallOpen(GoRouter router) => _paywallOpen[router] ?? false;
 
 /// Pushes the paywall at [location] on [router] and completes once that
 /// push has left the page stack: with its result when popped, with null when a `go` (a

@@ -38,7 +38,19 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   always be closed. Which paywall shows comes from RevenueCat offerings, not
   from app code, so that later, once ads run, installs attributed to ads
   (Apple Search Ads via AdServices, Play Install Referrer; an MMP only by a
-  later decision) can get a hard paywall without an app update.
+  later decision) can get a hard paywall without an app update. Paid
+  traffic (owner's pick, 2026-11-20): installs attributed to Apple Search
+  Ads campaigns get the hard (not dismissible) onboarding paywall, with the
+  same plans and the yearly 7-day trial; everyone else, and anything
+  uncertain, keeps the soft one. Apple Search Ads only for now: no
+  tracking prompt (ATT), no MMP, no Play Install Referrer yet. A hard
+  paywall locks the app (owner's pick, 2026-11-20): past onboarding, a
+  user whose current offering is hard and who has no Premium (a trial
+  counts as Premium) gets the full-screen hard paywall on every app open,
+  cold start or back from the background, until they start the trial or
+  subscribe, and again if Premium lapses; Restore stays on it. Anything
+  not known (the entitlement or the offering: loading, offline, an
+  error) lets the user in until it is known or the next open.
   Premium = the program generator, 19 of 25 ready-made programs, history
   in charts beyond 2 weeks (every window that was 12 weeks free is now 2
   weeks: the strength and body charts; the Progress cards' lines show 2
@@ -1755,7 +1767,8 @@ Decisions (the canvases they were drawn on are deleted):
   Turkish law and Istanbul courts. Not reviewed by a lawyer. Still open
   before release: the App Store / Play privacy labels must say that the app
   contacts Firebase Remote Config with a Firebase installation ID for all
-  users; App Store Connect's Privacy Policy URL and custom EULA; KVKK
+  users, and declare Advertising Data for the Apple Search Ads
+  attribution (Subscription and paywall › Hard paywall for paid traffic); App Store Connect's Privacy Policy URL and custom EULA; KVKK
   (VERBİS, notifying transfer contracts) and the explicit-consent basis for
   body data, which the policy claims without an in-app consent step.
 - Release blockers for steps: Health Connect's privacy-policy link opens
@@ -1964,7 +1977,8 @@ the feature you are about to touch, and keep it true when you change it.
   reinstalls. Premium, or a status still unknown, skips it unmarked.
 - **Hard paywall from the store setup**: the current RevenueCat
   offering's metadata, carried by Forge's `Offering.metadata`, decides
-  whether the onboarding moment's paywall can be closed: `dismissible`
+  whether the onboarding moment's paywall (and the app-open one below)
+  can be closed: `dismissible`
   false (a JSON bool, or the string "false") hides the close button and
   blocks back and the iOS sheet drag (`PopScope`; `SheetPage` drags only
   a page that can pop) until a purchase or restore; absent or anything
@@ -1972,9 +1986,95 @@ the feature you are about to touch, and keep it true when you change it.
   paywall has no close; a failed load is closable, so nobody is trapped.
   Every other paywall is always closable, whatever the metadata. The
   route carries the moment (`/paywall?moment=onboarding`). Debug builds
-  on the fake store switch it with "Onboarding paywall dismissible" among
+  on the fake store switch it with "Offering dismissible" among
   the Fake store rows. Which installs get a hard paywall is RevenueCat's
   targeting, set up in its dashboard, not in the app.
+- **Hard paywall for paid traffic** (Monetization, 2026-11-20): Apple
+  Search Ads is asked once per install whether it came from a campaign:
+  the AdServices token (iOS 14.3+, no consent or ATT needed) sent from the
+  device to Apple's attribution API (404 means not ready: three attempts
+  5 s apart). Apple's final answer (the campaign id, or not attributed; a
+  device without a token counts as not attributed) is kept on the device
+  (shared preferences, Forge's); with no final answer (offline, Apple
+  down) it is asked again on later launches, but only while the signed-in
+  user is not past onboarding (`ProfileModule.pastOnboarding`, waiting
+  for the profile to load; owner's call, 2026-11-20). After
+  `PurchaserSession` identifies a uid (once per uid and launch, so also
+  after signing in to another account), Forge's `RecordAdAttribution`
+  applies the kept answer to that RevenueCat user: if attributed, the
+  custom attributes `ad_network` = `apple_search_ads` and
+  `ad_campaign_id` = the campaign id are set and
+  `syncAttributesAndOfferingsIfNeeded` reloads the offering, so the
+  targeting rule serves offering `hard` (same `$rc_monthly`/`$rc_annual`
+  packages and products as `default`, metadata `{"dismissible": false}`).
+  An offering load (the onboarding paywall) waits up to 5 s for an
+  attribution in progress; slower, failed, not attributed, Android and
+  the fake leave the current offering, the soft one. Not attributed never
+  clears the attributes. Why not RevenueCat's own Apple Search Ads data
+  (`enableAdServicesAttributionTokenCollection`, also turned on, for its
+  charts): RevenueCat asks Apple "within a 24 hour period", too late for
+  the paywall at the end of onboarding, and its docs do not say which
+  value it writes to `$mediaSource`. No Cloud Function: Apple's API takes
+  the device's token without credentials, and a forged attribution only
+  makes the forger's own paywall hard. Which campaigns get the hard
+  paywall is the targeting rule's list of campaign ids, changed in the
+  RevenueCat dashboard without an app update; a device in developer mode
+  gets Apple's test record, campaign 1234567890, which a test rule can
+  list. The hard paywall is the soft one's page with the same plans, so
+  it shows and starts the 7-day trial exactly as the soft one ("Start
+  7-day free trial", "Free for 7 days, then ..." and the renewal terms);
+  only the close button and back are gone.
+  - Done by API (2026-11-20): offering `hard` (ofrng478c2e07b1) with
+    `$rc_annual` (pkge2616eb39e1) and `$rc_monthly` (pkge1e366b665a), each
+    with the App Store and Test Store products of `default`; `default`
+    unchanged and still current.
+  - Left for the dashboard (RevenueCat, project GetWorkout): (1)
+    Integrations › Apple AdServices › Add Apple Search Ads integration
+    (Basic; Advanced only with an Apple Ads account, via Sign in with
+    Apple), for RevenueCat's charts. (2) Once a build with this change has
+    set the attributes for one customer (a developer-mode device sets
+    campaign 1234567890), Targeting › New rule "Apple Search Ads → hard":
+    Audience source Custom filters, `ad_network` is `apple_search_ads` AND
+    `ad_campaign_id` is any of <the campaign ids to make hard>, Offering
+    `hard`, all placements; save Live (the Default Offering stays
+    `default`). Testing: add 1234567890 to a rule limited to a TestFlight
+    app version, check the hard paywall on a developer-mode device, then
+    remove it. Apple Ads ad groups must not use age or gender targeting
+    (Apple returns no attribution for them since 2026-09).
+  - App Store privacy (before release, with the labels in Open
+    questions): the app sends the AdServices token to Apple and the
+    campaign id to RevenueCat linked to the account, so App Privacy gets
+    Usage Data › Advertising Data, linked to the user, purposes Analytics
+    and App Functionality, not used for tracking; no ATT prompt and no
+    `NSUserTrackingUsageDescription`. AdServices is not a required-reason
+    API, so the privacy manifest is unchanged. The privacy policy should
+    say that installs from Apple Search Ads are recognised to choose the
+    subscription offer.
+- **Hard paywall on every app open** (Monetization, 2026-11-20): the
+  onboarding moment is marked shown before it opens, so killing the app
+  on it used to get a hard-offering user in for free. `HardPaywallGate`
+  (created by `App` with the router) opens the paywall at moment
+  `appOpen` (`/paywall?moment=appOpen`, never marked in `seenTips`; like
+  onboarding's it is full screen and the offering's metadata decides
+  whether it closes: `PaywallMoment.offeringDecides`) when an open is
+  due: each launch, each return from the background (`onShow`), each
+  time the entitlement turns inactive (Premium lapsed, another user) and
+  each time the gate's paywall is gone without Premium (a `go` from a
+  notification tap, a redirect, a failed load that let it close). A due
+  open is checked when every open page is past the start (`isPastStart`:
+  not over onboarding, its end with the onboarding paywall, the
+  verification page or the splash), Forge's app gate shows no update or
+  maintenance page, no account deletion runs and no other paywall is
+  open (`paywallOpen`, the same guard as `openPaywall`), and re-checked
+  on every navigation and app gate change until then (after the frame).
+  Premium ends it; an unknown entitlement waits; a free user's offering
+  is loaded once (`GetOfferingHard`): soft or failed ends it until the
+  next due open, hard opens the paywall. On it, a pending purchase shows
+  its waiting card with no Got it and the paywall stays until approved;
+  coming back while it is open opens no second one. A pending purchase
+  is not remembered across a relaunch: the new paywall shows the plans
+  again. The fake store's "Offering dismissible" row switches it in
+  debug builds.
 - **Prices and trial**: the store's (monthly 7.99 USD, yearly 39.99 USD
   with a 7-day trial on yearly only); the app shows what the store
   returns, and the fake store's plans use these numbers. The trial shows

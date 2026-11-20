@@ -25,11 +25,12 @@ class PremiumPaywallCubit extends PaywallCubit {
 
   final PaywallMoment? moment;
 
-  /// Whether the user can close the paywall. Always, but at the onboarding
-  /// moment, where the offering's metadata decides ([offeringDismissible]):
-  /// not until it is known, and always when it could not be loaded.
+  /// Whether the user can close the paywall. Always, but at a moment the
+  /// offering decides ([PaywallMoment.offeringDecides]), where its metadata
+  /// does ([offeringDismissible]): not until it is known, and always when it
+  /// could not be loaded.
   bool get closable =>
-      moment != PaywallMoment.onboarding ||
+      !(moment?.offeringDecides ?? false) ||
       state.status == PaywallStatus.loadFailed ||
       state.status != PaywallStatus.loading &&
           offeringDismissible(state.metadata);

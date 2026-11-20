@@ -527,14 +527,17 @@ GoRouter buildRouter(
       ),
       GoRoute(
         path: Routes.paywall,
-        pageBuilder: (context, state) => _overFlow(
-          context,
-          state,
-          PaywallPage(
-            moment: PaywallMoment.values
-                .asNameMap()[state.uri.queryParameters['moment']],
-          ),
-        ),
+        pageBuilder: (context, state) {
+          final moment = PaywallMoment.values
+              .asNameMap()[state.uri.queryParameters['moment']];
+          final page = PaywallPage(moment: moment);
+          // One the offering decides may be the hard paywall, so it is full
+          // screen and no drag closes it; only its close button does, when
+          // it has one.
+          return moment?.offeringDecides ?? false
+              ? AppPage(key: state.pageKey, fullscreenDialog: true, child: page)
+              : _overFlow(context, state, page);
+        },
       ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => RepositoryProvider.value(

@@ -59,7 +59,7 @@ class _FakeStoreControlsState extends State<FakeStoreControls> {
         onTap: widget.store.lapse,
       ),
       SwitchListTile(
-        title: const Text('Onboarding paywall dismissible'),
+        title: const Text('Offering dismissible'),
         value: offeringDismissible(widget.store.metadata),
         onChanged: (dismissible) => setState(
           () => widget.store.metadata = {dismissibleKey: dismissible},
