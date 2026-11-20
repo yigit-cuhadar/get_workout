@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "dev": "getworkout-dev",
+    "prod": "getworkout-prod"
+  },
+  "targets": {
+    "getworkout-dev": {
+      "hosting": {
+        "admin": ["getworkout-dev"]
+      }
+    },
+    "getworkout-prod": {
+      "hosting": {
+        "legal": ["getworkout-prod"]
+      }
+    }
+  }
+}
