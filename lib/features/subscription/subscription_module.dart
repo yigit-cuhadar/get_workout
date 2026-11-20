@@ -37,7 +37,8 @@ PurchasesBackend? purchasesBackend({
   return release ? null : const FakeBackend(fakePlans);
 }
 
-/// The fake store's plans, as SPEC's monetization decision describes them.
+/// The fake store's plans, as SPEC's monetization decision describes them,
+/// each with the App Store's win-back offer of a free month.
 const fakePlans = [
   Plan(
     id: 'premium_monthly',
@@ -45,6 +46,7 @@ const fakePlans = [
     price: r'$7.99',
     priceAmount: 7.99,
     currencyCode: 'USD',
+    winBack: _freeMonth,
   ),
   Plan(
     id: 'premium_yearly',
@@ -53,8 +55,14 @@ const fakePlans = [
     priceAmount: 39.99,
     currencyCode: 'USD',
     trial: OfferPeriod(7, PeriodUnit.day),
+    winBack: _freeMonth,
   ),
 ];
+
+const _freeMonth = WinBackOffer.free(
+  'winback_1m_free',
+  OfferPeriod(1, PeriodUnit.month),
+);
 
 /// Registers purchases on [backend] (null: unavailable), the session that
 /// keeps the store's user in step with the signed-in user, and the paywall.

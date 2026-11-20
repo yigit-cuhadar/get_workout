@@ -21,7 +21,9 @@ extension SubscriptionText on AppLocalizations {
     PlanPeriod.lifetime => paywallOnce(plan.price),
   };
 
-  /// [plan] worded for the paywall's [layout]; [bestValue] tags a row.
+  /// [plan] worded for the paywall's [layout]; [bestValue] tags a row. A
+  /// win-back offer (W2) tags the plan in every layout and takes the
+  /// trial's place in its lines.
   SubscriptionPlan paywallPlan(
     Plan plan,
     PaywallLayout layout, {
@@ -29,34 +31,45 @@ extension SubscriptionText on AppLocalizations {
   }) {
     final terms = purchaseTerms(plan).join(' ');
     final trial = plan.trial;
+    final winBack = plan.winBack == null ? null : _winBackOffer(plan.winBack!);
+    final offer = winBack == null ? null : paywallWinBackTag(winBack);
     return switch (layout) {
       PaywallLayout.list => SubscriptionPlan(
         name: planName(plan),
-        price: _planPriceShort(plan),
+        price: winBack == null
+            ? _planPriceShort(plan)
+            : paywallThen(winBack, _planPriceShort(plan)),
         terms: terms,
         tag: bestValue ? paywallBestValue : null,
+        offer: offer,
       ),
       PaywallLayout.cards => SubscriptionPlan(
         name: planName(plan),
         price: plan.price,
         terms: terms,
-        detail: trial != null
-            ? paywallCardTrial(offerPeriod(trial))
-            : plan.intro != null
-            ? introOffer(plan.intro!)
-            : switch (plan.period) {
-                PlanPeriod.monthly => paywallBilledMonthly,
-                PlanPeriod.yearly => paywallBilledYearly,
-                PlanPeriod.lifetime => paywallCardOnce,
-              },
+        offer: offer,
+        detail:
+            winBack ??
+            (trial != null
+                ? paywallCardTrial(offerPeriod(trial))
+                : plan.intro != null
+                ? introOffer(plan.intro!)
+                : switch (plan.period) {
+                    PlanPeriod.monthly => paywallBilledMonthly,
+                    PlanPeriod.yearly => paywallBilledYearly,
+                    PlanPeriod.lifetime => paywallCardOnce,
+                  }),
       ),
       PaywallLayout.single => SubscriptionPlan(
-        name: trial == null
+        name: winBack != null
+            ? paywallPlanTrial(planName(plan), winBack)
+            : trial == null
             ? planName(plan)
             : paywallPlanTrial(
                 planName(plan),
                 paywallCardTrial(offerPeriod(trial)),
               ),
+        offer: offer,
         price: _planPriceShort(plan),
         terms: terms,
         detail: plan.period == PlanPeriod.yearly
@@ -103,9 +116,24 @@ extension SubscriptionText on AppLocalizations {
     PeriodUnit.year => periodYears(period.count),
   };
 
+  /// A win-back offer: `1 month free` or `$0.99 for 1 month`.
+  String _winBackOffer(WinBackOffer offer) => switch (offer) {
+    WinBackOffer(free: final free?) => paywallCardTrial(offerPeriod(free)),
+    WinBackOffer(discount: final discount?) => introOffer(discount),
+    _ => throw StateError('A win-back offer is free or a discount'),
+  };
+
   String purchaseButton(Plan plan) {
     final intro = plan.intro;
     final trial = plan.trial;
+    switch (plan.winBack) {
+      case WinBackOffer(free: final free?):
+        return free.count == 1
+            ? paywallStartWinBack(free.unit.name)
+            : paywallStartTrial(_trialLength(free));
+      case WinBackOffer(discount: final discount?):
+        return paywallStartIntro(discount.price);
+    }
     return trial != null
         ? paywallStartTrial(_trialLength(trial))
         : intro != null
@@ -130,12 +158,18 @@ extension SubscriptionText on AppLocalizations {
     }
     final trial = plan.trial;
     final intro = plan.intro;
+    final winBack = plan.winBack;
     return [
-      trial != null
-          ? paywallTrialTerms(offerPeriod(trial), _afterTrial(plan))
-          : intro != null
-          ? paywallIntroTerms(introOffer(intro), planPrice(plan))
-          : paywallChargeTerms,
+      if (winBack?.free case final free?)
+        paywallTrialTerms(offerPeriod(free), planPrice(plan))
+      else if (winBack?.discount case final discount?)
+        paywallIntroTerms(introOffer(discount), planPrice(plan))
+      else if (trial != null)
+        paywallTrialTerms(offerPeriod(trial), _afterTrial(plan))
+      else if (intro != null)
+        paywallIntroTerms(introOffer(intro), planPrice(plan))
+      else
+        paywallChargeTerms,
       paywallRenewTerms(planPrice(plan)),
     ];
   }

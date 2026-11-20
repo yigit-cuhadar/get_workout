@@ -54,6 +54,10 @@ class _FakeStoreControlsState extends State<FakeStoreControls> {
         title: const Text('Turn off auto-renew'),
         onTap: widget.store.cancelRenewal,
       ),
+      ListTile(
+        title: const Text('End subscription now (win-back)'),
+        onTap: widget.store.lapse,
+      ),
       SwitchListTile(
         title: const Text('Onboarding paywall dismissible'),
         value: offeringDismissible(widget.store.metadata),

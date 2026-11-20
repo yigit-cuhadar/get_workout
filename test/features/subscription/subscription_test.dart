@@ -85,12 +85,21 @@ void main() {
 
   group('SubscriptionText', () {
     final l10n = AppLocalizationsEn();
-    final monthly = fakePlans.firstWhere(
-      (plan) => plan.period == PlanPeriod.monthly,
-    );
-    final yearly = fakePlans.firstWhere(
-      (plan) => plan.period == PlanPeriod.yearly,
-    );
+    // As offered to a user who never subscribed: no win-back offer.
+    Plan offered(PlanPeriod period) {
+      final plan = fakePlans.firstWhere((plan) => plan.period == period);
+      return Plan(
+        id: plan.id,
+        period: plan.period,
+        price: plan.price,
+        priceAmount: plan.priceAmount,
+        currencyCode: plan.currencyCode,
+        trial: plan.trial,
+      );
+    }
+
+    final monthly = offered(PlanPeriod.monthly);
+    final yearly = offered(PlanPeriod.yearly);
 
     test('names the trial on the button', () {
       expect(l10n.purchaseButton(monthly), 'Subscribe');
@@ -157,6 +166,74 @@ void main() {
       expect(terms.first, contains(r'Free for 7 days, then $39.99 per year'));
       expect(terms.last, contains(r'renews automatically at $39.99 per year'));
       expect(l10n.purchaseTerms(monthly).first, l10n.paywallChargeTerms);
+    });
+
+    group('a win-back offer (W2)', () {
+      final lapsed = fakePlans.firstWhere(
+        (plan) => plan.period == PlanPeriod.yearly,
+      );
+
+      test('tags the plan and takes the trial\'s place', () {
+        expect(l10n.purchaseButton(lapsed), 'Start free month');
+        final row = l10n.paywallPlan(
+          lapsed,
+          PaywallLayout.list,
+          bestValue: true,
+        );
+        expect(row.offer, 'Welcome back · 1 month free');
+        expect(row.price, r'1 month free, then $39.99 / year');
+        expect(row.tag, 'Best value');
+        final tile = l10n.paywallPlan(
+          lapsed,
+          PaywallLayout.cards,
+          bestValue: true,
+        );
+        expect(tile.detail, '1 month free');
+        expect(tile.offer, row.offer);
+        final single = l10n.paywallPlan(
+          lapsed,
+          PaywallLayout.single,
+          bestValue: true,
+        );
+        expect(single.name, 'Yearly · 1 month free');
+        expect(single.offer, row.offer);
+        expect(
+          l10n.purchaseTerms(lapsed).first,
+          contains(r'Free for 1 month, then $39.99 per year'),
+        );
+      });
+
+      test('a plan without one is unchanged', () {
+        expect(
+          l10n.paywallPlan(yearly, PaywallLayout.list, bestValue: true).offer,
+          isNull,
+        );
+      });
+
+      test('a discount is stated as a price', () {
+        const discounted = Plan(
+          id: 'm',
+          period: PlanPeriod.monthly,
+          price: r'$7.99',
+          priceAmount: 7.99,
+          currencyCode: 'USD',
+          winBack: WinBackOffer.discount(
+            'w',
+            IntroOffer(
+              price: r'$0.99',
+              period: OfferPeriod(1, PeriodUnit.month),
+              cycles: 1,
+            ),
+          ),
+        );
+        expect(l10n.purchaseButton(discounted), r'Start for $0.99');
+        expect(
+          l10n
+              .paywallPlan(discounted, PaywallLayout.list, bestValue: false)
+              .offer,
+          r'Welcome back · $0.99 for 1 month',
+        );
+      });
     });
 
     group('a paid intro offer', () {

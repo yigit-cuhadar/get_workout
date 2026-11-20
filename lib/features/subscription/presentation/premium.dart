@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_purchases/forge_purchases.dart';
@@ -109,10 +110,18 @@ extension PremiumGate on BuildContext {
     await openPaywall(moment: moment);
   }
 
-  /// Opens the store's page for managing the subscription.
+  /// Manages the subscription: on iOS RevenueCat's Customer Center, whose
+  /// cancel path offers a free month; elsewhere, or where it cannot show,
+  /// the store's page. Google Play keeps the store's page until Play is set
+  /// up.
   Future<void> manageSubscription() async {
     final failed = AppLocalizations.of(this).premiumManageFailed;
-    final url = await read<EntitlementCubit>().managementUrl();
+    final entitlement = read<EntitlementCubit>();
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final presented = await entitlement.presentCustomerCenter();
+      if (presented.valueOrNull ?? false) return;
+    }
+    final url = await entitlement.managementUrl();
     final opened = url.valueOrNull != null && await openLink(url.valueOrNull!);
     if (!opened && mounted) {
       showForgeSnackbar(this, message: failed, error: true);

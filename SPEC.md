@@ -1610,6 +1610,18 @@ Decisions (the canvases they were drawn on are deleted):
   then the Subscription feature stays unticked. Android / Play is not set
   up (products, service account in RevenueCat, license testers, the
   merged manifest's BILLING permission).
+  Win-back (W1, W2, 2026-11-20): promotional offers "1 month free" (free,
+  one month) exist on both plans for the Customer Center's cancel path:
+  `retention_1m_free` (monthly) and `retention_1m_free_yearly` (yearly;
+  offer codes are unique per app). The win-back offers cannot be created
+  until the subscriptions are approved (App Store Connect refuses with
+  STATE_ERROR.NON_APPROVED_SUBSCRIPTION); after the first approval create
+  one per plan: 1 month free, eligibility paid at least 1 month and
+  lapsed 1 to 12 months, no wait between offers, priority high, not
+  promoted on the App Store. RevenueCat (dashboard only): enable Customer
+  Center (Pro plan, free below 2.5k USD monthly revenue), set its accent
+  to the app's, and map both products to their promotional offer on the
+  Cancel path.
 - The first Android build after the rest timer needs Android platform 37
   (compileSdk, for flutter_local_notifications 23) and AGP 9.1.1
   downloaded; the disk is nearly full, so free space first. CI does not
@@ -1907,6 +1919,27 @@ the feature you are about to touch, and keep it true when you change it.
   stays open until the approval brings Premium and closes it (owner's
   call, 2026-11-19). Restore's result is
   "Premium restored." (the paywall closes) or "Nothing to restore.".
+- **Win-back offer** (W2, owner's pick, 2026-11-20): a lapsed subscriber
+  the App Store offers a win-back (iOS 18+, Apple decides eligibility) sees
+  it on the paywall: every plan that carries one gets the record tag
+  "Welcome back · 1 month free"; in A the price line is "1 month free,
+  then $39.99 / year", in B the tile's line is "1 month free", in C the
+  name is "Yearly · 1 month free"; the button is "Start free month" (a
+  longer free period "Start N-month free trial", a paid one "Start for
+  <price>"), the terms "Free for 1 month, then <price per period>" and
+  the renewal. Buying the plan applies the offer. Everyone else, and
+  Android, sees the paywall unchanged. Forge carries it as `Plan.winBack`
+  (only when eligible, in place of any trial or intro). The fake store
+  offers its plans' free month once the user's subscription has ended
+  ("End subscription now (win-back)" among the Fake store rows).
+- **Manage subscription** (W1, owner's pick, 2026-11-20): on iOS it
+  presents RevenueCat's Customer Center (themed in the RevenueCat
+  dashboard), whose cancel path first offers the "1 month free"
+  promotional offer (Claim free month / No thanks, cancel); a claimed
+  month or a change arrives through the entitlement stream. Where the
+  Customer Center cannot show (the fake store, an error) and on Android
+  (until Play is set up) the store's manage page opens instead; if that
+  fails too, "Couldn't open your subscription settings.".
 - **Paywall A/B/C test** (Firebase Remote Config + A/B Testing, owner's call,
   2026-11-13; `forge_remote_config`): the Remote Config string
   `paywall_layout` picks the layout, `a` (list), `b` (cards) or `c` (one
@@ -1950,7 +1983,7 @@ the feature you are about to touch, and keep it true when you change it.
   the server takes within 2 s backed up, so a normal write never flashes
   "Waiting". Then "Subscription" with the GetWorkout Premium row, "You are
   on Free" or the Profile card's state; it opens the paywall when free and
-  the store's manage page for a subscription, nothing while checking or
+  Manage subscription for a subscription, nothing while checking or
   for lifetime Premium (AC-Q2). Then Sign out (a dialog; a failure is a
   snackbar "Couldn't sign out." whose Retry signs out without asking
   again) and Delete account. A guest gets the guest card (Create account,
@@ -2114,7 +2147,7 @@ the feature you are about to touch, and keep it true when you change it.
   (the paywall); otherwise, as a FeaturedCard prompt, the user's state
   (checking, trial, renews, ends, lifetime, payment problem) is its title
   over that line, and a subscriber (trial, renewing, ending, payment
-  problem) gets "Manage subscription" (the store's manage page); lifetime
+  problem) gets "Manage subscription" (see Manage subscription); lifetime
   or granted Premium (no expiry, nothing to manage) and an unknown status
   get no action. Workout group: effort, warm-ups, the rest timer and,
   while it is on, its default rest, rest notification and rest sound

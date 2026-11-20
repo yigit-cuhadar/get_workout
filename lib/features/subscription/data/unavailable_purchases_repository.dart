@@ -40,4 +40,7 @@ class UnavailablePurchasesRepository implements PurchasesRepository {
 
   @override
   Future<Result<Uri>> managementUrl() async => _unavailable;
+
+  @override
+  Future<Result<bool>> presentCustomerCenter() async => _unavailable;
 }

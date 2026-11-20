@@ -315,6 +315,7 @@ class FlowApp {
       reset: ResetPurchaser(store),
       refresh: RefreshEntitlement(store),
       getManagementUrl: GetManagementUrl(store),
+      presentCustomerCenter: PresentCustomerCenter(store),
       // Past every expiry, so no expiry timer outlives a test.
       clock: () => DateTime(9999),
     );
