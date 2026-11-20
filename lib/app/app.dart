@@ -14,6 +14,8 @@ import 'package:forge_purchases/forge_purchases.dart';
 import '../features/body/body_module.dart';
 import '../features/account/presentation/consent_cubit.dart';
 import '../features/account/presentation/delete_account_cubit.dart';
+import '../features/analytics/domain/analytics.dart';
+import '../features/analytics/presentation/analytics_session.dart';
 import '../features/exercises/presentation/body_model_cubit.dart';
 import '../features/exercises/presentation/equipment_cubit.dart';
 import '../features/exercises/presentation/exercise_catalogue_cubit.dart';
@@ -57,6 +59,10 @@ class _AppState extends State<App> {
   late final StreamSubscription<String?> _taps;
   late final StreamSubscription<void> _lockScreenTaps;
   late final StreamSubscription<bool> _selfEnded;
+  late final Analytics _analytics;
+
+  /// The page in front when a screen view was last logged.
+  LocalKey? _screenShown;
 
   /// A tapped notification or lock-screen activity, until the app is past
   /// its start: where it leads with the open pages ([openLocations]; null:
@@ -68,6 +74,10 @@ class _AppState extends State<App> {
     super.initState();
     // Created now so the store follows the user from the first auth event.
     final purchaser = sl<PurchaserSession>();
+    _analytics = sl<Analytics>();
+    // Created now so the user properties follow from the first auth event.
+    sl<AnalyticsSession>();
+    _router.routerDelegate.addListener(_logScreen);
     final rest = sl<RestTimerCubit>();
     BodyModule.startPhotoBackup(sl);
     // Created now so reminders follow the user from the first auth event.
@@ -91,14 +101,23 @@ class _AppState extends State<App> {
     _router.routerDelegate.addListener(_openTapped);
     _taps = sl<NotificationTaps>().stream.listen((payload) {
       if (payload == NotificationPayloads.activeWorkout) {
+        unawaited(_analytics.notificationOpen(NotificationKind.activeWorkout));
         unawaited(_openLockScreenTap());
       } else if (NotificationPayloads.targetOf(payload) case final target?) {
+        unawaited(
+          _analytics.notificationOpen(switch (target) {
+            NotificationTarget.workout => NotificationKind.workout,
+            NotificationTarget.measurement => NotificationKind.measurement,
+            NotificationTarget.announcement => NotificationKind.announcement,
+          }),
+        );
         _openNotification(target);
       }
     });
-    _lockScreenTaps = sl<WatchLockScreenTaps>()().listen(
-      (_) => unawaited(_openLockScreenTap()),
-    );
+    _lockScreenTaps = sl<WatchLockScreenTaps>()().listen((_) {
+      unawaited(_analytics.notificationOpen(NotificationKind.activeWorkout));
+      unawaited(_openLockScreenTap());
+    });
     final workout = sl<ActiveWorkoutCubit>();
     // A workout that ended itself opens its summary, once the app is past
     // its start.
@@ -124,6 +143,15 @@ class _AppState extends State<App> {
         workout.appShown();
       },
     );
+  }
+
+  /// A `screen_view` whenever another page comes in front, a tab switch
+  /// included.
+  void _logScreen() {
+    final screen = screenInFront(_router.routerDelegate.currentConfiguration);
+    if (screen == null || screen.page == _screenShown) return;
+    _screenShown = screen.page;
+    unawaited(_analytics.screen(screen.name));
   }
 
   void _openNotification(NotificationTarget target) {
@@ -180,7 +208,9 @@ class _AppState extends State<App> {
     unawaited(_selfEnded.cancel());
     unawaited(_appGate.cancel());
     unawaited(_hardPaywall.cancel());
-    _router.routerDelegate.removeListener(_openTapped);
+    _router.routerDelegate
+      ..removeListener(_openTapped)
+      ..removeListener(_logScreen);
     _lifecycle.dispose();
     _router.dispose();
     super.dispose();
@@ -190,6 +220,7 @@ class _AppState extends State<App> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        RepositoryProvider.value(value: _analytics),
         BlocProvider.value(value: sl<AppGateCubit>()),
         BlocProvider.value(value: sl<AuthCubit>()),
         BlocProvider.value(value: sl<SettingsCubit>()),

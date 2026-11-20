@@ -133,8 +133,11 @@ class _PaywallViewState extends State<_PaywallView> {
         ),
       ],
       child: BlocBuilder<PaywallCubit, PaywallState>(
-        builder: (context, state) => PopScope(
+        builder: (context, state) => PopScope<bool>(
           canPop: widget.cubit.closable,
+          onPopInvokedWithResult: (didPop, premium) {
+            if (didPop && premium != true) widget.cubit.dismissed();
+          },
           child: _plans(context, l10n, state),
         ),
       ),

@@ -10,6 +10,7 @@ import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_text.dart';
+import '../../analytics/domain/analytics.dart';
 import '../../subscription/presentation/premium.dart';
 import '../domain/workout.dart';
 import 'active_workout_cubit.dart';
@@ -114,7 +115,10 @@ Future<void> startProgramDay(
   int dayIndex,
 ) async {
   final access = context.read<ActiveWorkoutCubit>().access(program);
-  if (access != ProgramAccess.open && !await context.requirePremium()) return;
+  if (access != ProgramAccess.open &&
+      !await context.requirePremium(PremiumFeature.premiumProgram)) {
+    return;
+  }
   if (!context.mounted) return;
   final l10n = AppLocalizations.of(context);
   final language = Localizations.localeOf(context).languageCode;

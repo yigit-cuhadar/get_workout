@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../../profile/domain/user_profile.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/body_entry.dart';
@@ -151,6 +152,7 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
     required RestoreBodyPhoto restorePhoto,
     required GetCurrentUser getCurrentUser,
     required WatchAuthUser watchAuthUser,
+    required this._analytics,
     DateTime Function()? clock,
   }) : _initial = setup.initial,
        _weightUnit = setup.weightUnit,
@@ -170,6 +172,7 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
   }
 
   final SaveBodyEntry _saveEntry;
+  final Analytics _analytics;
   final NewBodyEntryId _newEntryId;
   final DiscardCapture _discardCapture;
   final BodyEntry? _initial;
@@ -451,12 +454,16 @@ class MeasurementDayCubit extends Cubit<MeasurementDayState> {
       photos: state.keptPhotos,
     );
     emit(state.copyWith(status: MeasurementDayStatus.saving));
+    final photos = state.keptPhotos.length + state.newPhotos.length;
     final failure = (await _saveEntry((
       uid: uid,
       entry: entry,
       newPhotos: state.newPhotos,
       isNew: initial == null,
     ))).failureOrNull;
+    if (failure == null && initial == null) {
+      unawaited(_analytics.measurementDaySave(photos: photos));
+    }
     if (isClosed || state.status == MeasurementDayStatus.closed) return;
     emit(
       failure == null

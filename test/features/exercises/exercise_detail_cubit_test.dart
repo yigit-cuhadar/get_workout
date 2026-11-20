@@ -15,6 +15,9 @@ import 'package:get_workout/features/exercises/presentation/exercise_detail_cubi
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
+import '../../fake_analytics.dart';
+
+import 'package:get_workout/features/analytics/domain/analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -96,6 +99,8 @@ void main() {
   });
 
   ExerciseDetailCubit build(String id) => ExerciseDetailCubit(
+    analytics: fakeAnalytics(),
+    from: ExerciseViewSource.library,
     id,
     catalogue: catalogue,
     equipment: equipment,

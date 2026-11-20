@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../settings/domain/user_settings.dart';
@@ -143,6 +144,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
     required this._saveChange,
     required this._changed,
     required this._catalogue,
+    required this._analytics,
     DateTime Function()? clock,
   }) : _uid = getCurrentUser()?.id,
        _clock = clock ?? DateTime.now,
@@ -172,6 +174,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
   final SaveWorkoutChange _saveChange;
   final StoredWorkoutChanged _changed;
   final ExerciseCatalogueCubit _catalogue;
+  final Analytics _analytics;
   final DateTime Function() _clock;
 
   /// The user the page was opened for.
@@ -435,6 +438,7 @@ class WorkoutEditCubit extends Cubit<WorkoutEditState>
         );
       case Ok(value: final stale):
         unawaited(_workoutSubscription?.cancel());
+        if (id == null) unawaited(_analytics.workoutStart(WorkoutSource.past));
         _changed(uid, workout.id, deleted: false, staleStats: stale);
         emit(state.copyWith(status: WorkoutEditStatus.saved));
     }

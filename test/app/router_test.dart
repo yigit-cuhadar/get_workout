@@ -126,6 +126,9 @@ import 'body_stand_in.dart';
 import 'no_workout.dart';
 import 'progress_stand_ins.dart';
 import 'today_stand_ins.dart';
+import '../fake_analytics.dart';
+
+import 'package:get_workout/features/analytics/domain/analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -261,7 +264,7 @@ void main() {
 
   late DeletionUnderway deletionUnderway;
 
-  /// A real consent cubit for the consent prompt's tests; otherwise every
+  /// A real consent cubit for the no-consent-page tests; otherwise every
   /// user has answered.
   ConsentCubit? consent;
 
@@ -379,6 +382,7 @@ void main() {
       )
       ..registerFactoryParam<ProgramBuilderCubit, String?, WeightUnit>(
         (id, unit) => ProgramBuilderCubit(
+          analytics: fakeAnalytics(),
           programId: id,
           getProgram: GetProgram(programs),
           saveProgram: SaveProgram(programs),
@@ -393,6 +397,7 @@ void main() {
       )
       ..registerFactory(
         () => LibraryCubit(
+          analytics: fakeAnalytics(),
           watchAuthUser: WatchAuthUser(settingsAuth),
           catalogue: catalogue,
           favorites: favorites,
@@ -457,6 +462,7 @@ void main() {
       )
       ..registerFactoryParam<CatalogueDetailCubit, String, String>(
         (id, language) => CatalogueDetailCubit(
+          analytics: fakeAnalytics(),
           id,
           language: language,
           catalogue: sl(),
@@ -470,6 +476,7 @@ void main() {
       )
       ..registerLazySingleton(
         () => LibraryCubit(
+          analytics: fakeAnalytics(),
           watchAuthUser: WatchAuthUser(settingsAuth),
           catalogue: catalogue,
           favorites: favorites,
@@ -493,6 +500,8 @@ void main() {
       )
       ..registerFactoryParam<ExerciseDetailCubit, String, void>(
         (id, _) => ExerciseDetailCubit(
+          analytics: fakeAnalytics(),
+          from: ExerciseViewSource.library,
           id,
           catalogue: catalogue,
           equipment: equipment,
@@ -502,6 +511,7 @@ void main() {
       )
       ..registerFactoryParam<CustomExerciseFormCubit, CustomExercise?, void>(
         (exercise, _) => CustomExerciseFormCubit(
+          analytics: fakeAnalytics(),
           saveExercise: SaveCustomExercise(customExercises),
           getCurrentUser: GetCurrentUser(settingsAuth),
           watchAuthUser: WatchAuthUser(settingsAuth),
@@ -575,12 +585,11 @@ void main() {
     });
     sl.registerFactoryParam<PremiumPaywallCubit, PaywallMoment?, void>(
       (moment, _) => PremiumPaywallCubit(
+        analytics: Analytics(paywallTelemetry),
         getOffering: GetPaywallOffering(store),
         purchasePlan: PurchasePlan(store),
         restorePurchases: RestorePurchases(store),
         getLayout: GetPaywallLayout(remoteConfig),
-        logView: LogPaywallView(paywallTelemetry),
-        logPurchase: LogPaywallPurchase(paywallTelemetry),
         isPremium: () => entitlement.isActive,
         moment: moment,
       ),
@@ -588,6 +597,7 @@ void main() {
     sl.registerFactory(
       () => PremiumTrialCubit(GetPremiumTrial(GetPaywallOffering(store))),
     );
+    sl.registerSingleton(fakeAnalytics());
   }
 
   tearDown(() async {
@@ -608,6 +618,7 @@ void main() {
   Future<void> pumpApp(WidgetTester tester) => tester.pumpWidget(
     MultiBlocProvider(
       providers: [
+        RepositoryProvider.value(value: fakeAnalytics()),
         BlocProvider.value(value: auth),
         BlocProvider.value(value: settings),
         if (consent case final consent?)
@@ -1256,6 +1267,27 @@ void main() {
       await tester.pumpAndSettle();
       expect(selectedTab(tester), 1);
       expect(find.byType(ProgramsPage), findsOneWidget);
+    });
+
+    testWidgets('the screen in front is named by its route, a tab switch '
+        'and a pushed page included', (tester) async {
+      await startAsGuest(tester);
+      String? screen() =>
+          screenInFront(router.routerDelegate.currentConfiguration)?.name;
+
+      expect(screen(), 'today');
+      await tapTab(tester, 'Exercises');
+      expect(screen(), 'exercises');
+      unawaited(router.push(Routes.exercise('squat')));
+      await tester.pumpAndSettle();
+      expect(screen(), 'exercise_detail');
+      await tapTab(tester, 'Programs');
+      expect(screen(), 'programs');
+      await tapTab(tester, 'Exercises');
+      expect(screen(), 'exercise_detail');
+      router.go(Routes.catalogue);
+      await tester.pumpAndSettle();
+      expect(screen(), 'catalogue');
     });
 
     testWidgets('deep locations open inside their tab', (tester) async {
@@ -2106,41 +2138,25 @@ void main() {
     expect(find.byType(ForgeNavigationBar), findsOneWidget);
   });
 
-  group('consent prompt', () {
+  group('no consent page', () {
     const unanswered = (consent: null, fromServer: true);
-    final dialog = find.text('Help improve GetWorkout?');
+    final page = find.text('Help improve GetWorkout?');
     late MockConsentRepository consents;
+    late MockTelemetry telemetry;
 
-    /// Starts as onboarded guest u1, who answered; [answers] are the
-    /// server's answers of the other users (none: not answered).
-    Future<void> start(
-      WidgetTester tester, [
-      Map<String, bool> answers = const {},
-    ]) async {
+    /// Starts as onboarded guest u1, who answered; every other user never
+    /// answered.
+    Future<void> start(WidgetTester tester) async {
       setUpAuth();
       consents = MockConsentRepository();
-      // As Firestore's cache does, a saved answer comes back at once.
-      final watched = <String, StreamController<StoredConsent>>{};
       when(() => consents.watchConsent(any())).thenAnswer((call) {
         final uid = call.positionalArguments.first as String;
         final controller = StreamController<StoredConsent>()
-          ..add(
-            uid == 'u1'
-                ? (consent: true, fromServer: true)
-                : answers.containsKey(uid)
-                ? (consent: answers[uid], fromServer: true)
-                : unanswered,
-          );
+          ..add(uid == 'u1' ? (consent: true, fromServer: true) : unanswered);
         addTearDown(controller.close);
-        watched[uid] = controller;
         return controller.stream;
       });
-      when(() => consents.saveConsent(any(), any())).thenAnswer((call) async {
-        final [uid as String, consent as bool] = call.positionalArguments;
-        watched[uid]?.add((consent: consent, fromServer: false));
-        return const Ok(null);
-      });
-      final telemetry = MockTelemetry();
+      telemetry = MockTelemetry();
       when(() => telemetry.follow(any()))
           .thenAnswer((_) async => const Ok(null));
       when(() => telemetry.apply(any(), any()))
@@ -2159,10 +2175,10 @@ void main() {
       users.add(guest);
       await tester.pumpAndSettle();
       expect(find.byType(TodayPage), findsOneWidget);
-      expect(dialog, findsNothing);
     }
 
-    testWidgets('a new guest after sign-out is asked once, in onboarding', (
+    testWidgets('a new guest after sign-out goes from the last onboarding '
+        'question to the reminder, collected without being asked', (
       tester,
     ) async {
       await start(tester);
@@ -2170,55 +2186,45 @@ void main() {
         users.add(const AuthUser(id: 'u2', isAnonymous: true));
         return const Ok(guest);
       });
-      // The new guest's profile arrives after their consent.
       storedProfile = null;
 
       users.add(null);
       await tester.pumpAndSettle();
-      // Still on the tabs, the new guest's profile loading.
-      expect(find.byType(ForgeNavigationBar), findsOneWidget);
-      expect(dialog, findsNothing);
-
       profileStream.add(choicesAnswered);
       await tester.pumpAndSettle();
       expect(find.byType(OnboardingPage), findsOneWidget);
-      expect(dialog, findsNothing);
 
-      // Right after the last question, before the reminder.
       await tester.tap(find.text('Get started'));
       await tester.pumpAndSettle();
       for (var i = 0; i < ProfileField.values.length; i++) {
         await tester.tap(find.text('Continue'));
         await tester.pumpAndSettle();
       }
-      expect(dialog, findsOneWidget);
-      await tester.tap(find.text("Don't allow"));
-      await tester.pumpAndSettle();
-      verify(() => consents.saveConsent('u2', false)).called(1);
+      expect(page, findsNothing);
       if (find.text('Remind you on training days?').evaluate().isNotEmpty) {
         await tester.tap(find.text('Not now'));
         await tester.pumpAndSettle();
       }
 
       expect(find.byType(TodayPage), findsOneWidget);
-      expect(dialog, findsNothing);
+      expect(page, findsNothing);
+      verify(() => telemetry.apply('u2', null)).called(1);
+      verifyNever(() => consents.saveConsent(any(), any()));
     });
 
-    testWidgets('an account signed in from the tabs is asked once its '
-        'profile shows it onboarded', (tester) async {
+    testWidgets('an account that never answered signs in from the tabs and '
+        'stays on them', (tester) async {
       await start(tester);
       storedProfile = null;
 
       users.add(const AuthUser(id: 'u2', email: 'b@c.de'));
       await tester.pumpAndSettle();
-      expect(dialog, findsNothing);
-
       profileStream.add(onboarded);
       await tester.pumpAndSettle();
-      // A full page over the tabs.
-      expect(find.byType(TodayPage, skipOffstage: false), findsOneWidget);
-      expect(find.byType(TodayPage), findsNothing);
-      expect(dialog, findsOneWidget);
+
+      expect(find.byType(TodayPage), findsOneWidget);
+      expect(page, findsNothing);
+      verify(() => telemetry.apply('u2', null)).called(1);
     });
   });
 
@@ -2447,12 +2453,17 @@ void main() {
       expect(find.byType(PaywallPage), findsNothing);
       expect(find.text('Welcome to Premium!'), findsOneWidget);
       expect(find.textContaining('Free trial until'), findsOneWidget);
-      verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'a'}))
-          .called(1);
+      verify(
+        () => paywallTelemetry.logEvent('paywall_view', {
+          'layout': 'a',
+          'moment': 'user',
+        }),
+      ).called(1);
       verify(
         () => paywallTelemetry.logEvent('paywall_purchase', {
           'plan': 'yearly',
           'layout': 'a',
+          'moment': 'user',
         }),
       ).called(1);
     });
@@ -2472,8 +2483,12 @@ void main() {
       await tester.tap(find.text('Monthly'));
       await tester.pump();
       expect(find.text('Subscribe'), findsOneWidget);
-      verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'b'}))
-          .called(1);
+      verify(
+        () => paywallTelemetry.logEvent('paywall_view', {
+          'layout': 'b',
+          'moment': 'user',
+        }),
+      ).called(1);
     });
 
     testWidgets('layout C shows one plan and links to the other', (
@@ -2492,8 +2507,12 @@ void main() {
       expect(find.text(r'$7.99 / month'), findsOneWidget);
       expect(find.text('See yearly plan'), findsOneWidget);
       expect(find.text('Subscribe'), findsOneWidget);
-      verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'c'}))
-          .called(1);
+      verify(
+        () => paywallTelemetry.logEvent('paywall_view', {
+          'layout': 'c',
+          'moment': 'user',
+        }),
+      ).called(1);
     });
 
     testWidgets('with large text the whole paywall scrolls', (tester) async {

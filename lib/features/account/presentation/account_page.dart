@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
@@ -9,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../core/widgets/settings_group.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../analytics/domain/analytics.dart';
 import '../../subscription/presentation/premium.dart';
 import '../../subscription/presentation/subscription_summary.dart';
 import '../../subscription/presentation/subscription_text.dart';
@@ -107,7 +110,10 @@ class AccountPage extends StatelessWidget {
         ),
       ),
     );
-    if (confirmed == true && context.mounted) await _runSignOut(context, auth);
+    if (confirmed != true || !context.mounted) return;
+    // Logged while still the user's: after it, the new guest's.
+    unawaited(context.read<Analytics>().signOut());
+    await _runSignOut(context, auth);
   }
 
   /// Retry signs out again without asking: the user already said yes.

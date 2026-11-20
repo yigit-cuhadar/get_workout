@@ -65,6 +65,9 @@ import 'body_stand_in.dart';
 import 'no_workout.dart';
 import 'progress_stand_ins.dart';
 import 'today_stand_ins.dart';
+import '../fake_analytics.dart';
+
+import 'package:get_workout/features/analytics/domain/analytics.dart';
 
 class MockAuth extends Mock implements AuthRepository {}
 
@@ -246,7 +249,12 @@ class FlowApp {
     sl.registerFactory(
       () => DeleteAccountCubit(
         getCurrentUser: GetCurrentUser(repository),
-        deleteAccount: DeleteUserAccount(account, local, accountTelemetry),
+        deleteAccount: DeleteUserAccount(
+          account,
+          local,
+          accountTelemetry,
+          fakeAnalytics(),
+        ),
         reauthenticate: Reauthenticate(repository),
         reauthenticateWithProvider: ReauthenticateWithProvider(repository),
         reauthenticateWithAppleCode: ReauthenticateWithAppleCode(repository),
@@ -255,6 +263,7 @@ class FlowApp {
         resumeWorkouts: () async {},
       ),
     );
+    sl.registerSingleton(fakeAnalytics());
     const CalculatorsModule().register(sl);
     // Settings stay at their defaults, and calculators start signed out, so
     // they ask for no known values.
@@ -364,12 +373,11 @@ class FlowApp {
     });
     sl.registerFactoryParam<PremiumPaywallCubit, PaywallMoment?, void>(
       (moment, _) => PremiumPaywallCubit(
+        analytics: Analytics(paywallTelemetry),
         getOffering: GetPaywallOffering(store),
         purchasePlan: PurchasePlan(store),
         restorePurchases: RestorePurchases(store),
         getLayout: GetPaywallLayout(remoteConfig),
-        logView: LogPaywallView(paywallTelemetry),
-        logPurchase: LogPaywallPurchase(paywallTelemetry),
         isPremium: () => entitlement.isActive,
         moment: moment,
       ),
@@ -450,6 +458,7 @@ class FlowApp {
       )
       ..registerFactoryParam<CatalogueDetailCubit, String, String>(
         (id, language) => CatalogueDetailCubit(
+          analytics: fakeAnalytics(),
           id,
           language: language,
           catalogue: sl(),
@@ -481,6 +490,7 @@ class FlowApp {
   Future<void> pump(WidgetTester tester) => tester.pumpWidget(
     MultiBlocProvider(
       providers: [
+        RepositoryProvider.value(value: fakeAnalytics()),
         BlocProvider.value(value: auth),
         BlocProvider.value(value: settings),
         answeredConsent(),

@@ -12,6 +12,9 @@ import 'package:get_workout/features/subscription/subscription_module.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:get_workout/features/analytics/domain/analytics.dart';
+
+import '../../fake_analytics.dart';
 
 class MockSettingsCubit extends MockCubit<SettingsState>
     implements SettingsCubit {}
@@ -70,8 +73,9 @@ void main() {
             body: Column(
               children: [
                 TextButton(
-                  onPressed: () async =>
-                      allowed = await context.requirePremium(),
+                  onPressed: () async => allowed = await context.requirePremium(
+                    PremiumFeature.generator,
+                  ),
                   child: const Text('Open'),
                 ),
                 TextButton(
@@ -115,6 +119,7 @@ void main() {
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
+          RepositoryProvider.value(value: fakeAnalytics()),
           BlocProvider.value(value: entitlement),
           BlocProvider<SettingsCubit>.value(value: settings),
         ],

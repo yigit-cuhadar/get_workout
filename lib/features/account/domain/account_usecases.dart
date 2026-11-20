@@ -1,10 +1,15 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import 'account_repository.dart';
 import 'consent_repository.dart';
 import 'sync_repository.dart';
 
 typedef ConsentAnswer = ({String uid, bool consent});
+
+/// A user's stored answer as collection applies it: null when they never
+/// answered, which collects.
+typedef StoredConsentAnswer = ({String uid, bool? consent});
 
 /// Whose account to delete, and the Apple code to revoke their Apple
 /// sign-in with, if they have one.
@@ -45,12 +50,12 @@ class FollowAnalyticsUser implements UseCase<void, String?> {
   Future<Result<void>> call(String? params) => _telemetry.follow(params);
 }
 
-class ApplyAnalyticsConsent implements UseCase<void, ConsentAnswer> {
+class ApplyAnalyticsConsent implements UseCase<void, StoredConsentAnswer> {
   const ApplyAnalyticsConsent(this._telemetry);
   final Telemetry _telemetry;
 
   @override
-  Future<Result<void>> call(ConsentAnswer params) =>
+  Future<Result<void>> call(StoredConsentAnswer params) =>
       _telemetry.apply(params.uid, params.consent);
 }
 
@@ -59,17 +64,24 @@ class ApplyAnalyticsConsent implements UseCase<void, ConsentAnswer> {
 /// the deletion did not happen. Then deletes the account on the server,
 /// then, still signed in so
 /// nothing of the next user is touched, what this device keeps of them,
-/// and only then signs out.
+/// and only then signs out. `account_delete` is logged once the server
+/// has deleted the data, before collection for the user stops.
 ///
 /// Once the server has deleted the data the device is cleared even if the
 /// sign-in is left ([PartlyDeletedFailure], returned, without signing
 /// out, so the user can delete again). A local leftover is logged, not
 /// reported: the account is gone.
 class DeleteUserAccount implements UseCase<void, AccountDeletion> {
-  const DeleteUserAccount(this._repository, this._local, this._telemetry);
+  const DeleteUserAccount(
+    this._repository,
+    this._local,
+    this._telemetry,
+    this._analytics,
+  );
   final AccountRepository _repository;
   final LocalAccountData _local;
   final Telemetry _telemetry;
+  final Analytics _analytics;
 
   @override
   Future<Result<void>> call(AccountDeletion params) async {
@@ -83,6 +95,7 @@ class DeleteUserAccount implements UseCase<void, AccountDeletion> {
       await _local.releaseWrites(uid);
       return deleted;
     }
+    await _analytics.accountDelete();
     for (final cleanup in [_local.clear(uid), _telemetry.forget(uid)]) {
       _logLeftover(await cleanup);
     }

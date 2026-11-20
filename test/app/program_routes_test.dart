@@ -51,6 +51,7 @@ import '../features/programs/fixtures.dart';
 import 'answered_consent.dart';
 import 'no_workout.dart';
 import 'today_stand_ins.dart';
+import '../fake_analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -200,6 +201,8 @@ void main() {
       )
       ..registerFactoryParam<ProgramDetailCubit, String, void>(
         (id, _) => ProgramDetailCubit(
+          analytics: fakeAnalytics(),
+          onboarding: false,
           id,
           list: sl(),
           startProgram: StartProgram(repository, const NoCompletedDays()),
@@ -213,6 +216,7 @@ void main() {
       )
       ..registerFactoryParam<ProgramBuilderCubit, String?, WeightUnit>(
         (id, unit) => ProgramBuilderCubit(
+          analytics: fakeAnalytics(),
           programId: id,
           getProgram: GetProgram(repository),
           saveProgram: SaveProgram(repository),
@@ -230,6 +234,7 @@ void main() {
       )
       ..registerFactory(
         () => LibraryCubit(
+          analytics: fakeAnalytics(),
           watchAuthUser: WatchAuthUser(idle),
           catalogue: catalogue,
           favorites: favorites,

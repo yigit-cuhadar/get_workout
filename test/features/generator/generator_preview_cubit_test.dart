@@ -15,6 +15,7 @@ import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
+import '../../fake_analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -53,6 +54,7 @@ void main() {
     final auth = MockAuthRepository();
     when(() => auth.currentUser).thenReturn(user);
     return GeneratorPreviewCubit(
+      analytics: fakeAnalytics(),
       answers ?? given,
       catalogue: catalogue,
       generateProgram: const GenerateProgram(),

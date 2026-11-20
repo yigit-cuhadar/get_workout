@@ -11,6 +11,7 @@ import 'package:forge_review/forge_review.dart';
 
 import '../features/body/body_module.dart';
 import '../features/account/account_module.dart';
+import '../features/analytics/analytics_module.dart';
 import '../features/calculators/calculators_module.dart';
 import '../features/calendar/calendar_module.dart';
 import '../features/cardio/cardio_module.dart';
@@ -36,8 +37,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
   final telemetry = await initFirebase(
     options: options,
     env: env,
-    // Opt-in until Group 12's opt-out lands.
-    collectUnanswered: false,
+    collectUnanswered: true,
   );
   await AccountModule.clearDeletedAccountCache();
   const RemoteConfigModule(
@@ -80,6 +80,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     const GeneratorModule(),
     const WorkoutModule(),
     AccountModule(telemetry: telemetry),
+    const AnalyticsModule(),
     const VolumeModule(),
     const StrengthModule(),
     const CalendarModule(),

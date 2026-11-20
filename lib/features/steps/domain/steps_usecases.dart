@@ -1,6 +1,7 @@
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_health/forge_health.dart';
 
+import '../../analytics/domain/analytics.dart';
 import 'steps.dart';
 import 'steps_prompt.dart';
 
@@ -44,11 +45,14 @@ class GetStepsAccess implements UseCase<StepsAccess, NoParams> {
 /// The user said yes in the app: remembers that they were asked here, then
 /// shows the system's prompt where it still can, for steps and then for
 /// workouts (the Cardio page's sessions). Only the steps answer counts: a
-/// workouts refusal leaves the steps as they are.
+/// workouts refusal leaves the steps as they are. The answer is a
+/// `steps_connect`, granted when steps can be read: iOS never tells a
+/// refusal apart.
 class AllowStepsAccess implements UseCase<StepsAccess, NoParams> {
-  const AllowStepsAccess(this._health, this._prompt);
+  const AllowStepsAccess(this._health, this._prompt, this._analytics);
   final HealthSteps _health;
   final StepsPrompt _prompt;
+  final Analytics _analytics;
 
   @override
   Future<Result<StepsAccess>> call([NoParams params = const NoParams()]) async {
@@ -56,6 +60,9 @@ class AllowStepsAccess implements UseCase<StepsAccess, NoParams> {
       Log.e('steps', 'not remembered as asked: ${failure.message}');
     }
     final steps = (await _health.requestPermission()).map(_access);
+    if (steps.valueOrNull case final access?) {
+      await _analytics.stepsConnect(granted: access.readable);
+    }
     if (steps case Ok(value: StepsAccess.granted || StepsAccess.undetermined)) {
       if ((await _health.requestWorkoutsPermission()).failureOrNull
           case final failure?) {

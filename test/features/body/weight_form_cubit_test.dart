@@ -10,6 +10,7 @@ import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'body_fakes.dart';
+import '../../fake_analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -34,6 +35,7 @@ void main() {
     double startKg = 80,
     WeightUnit unit = WeightUnit.kg,
   }) => WeightFormCubit(
+    analytics: fakeAnalytics(),
     setup: (initial: initial, startKg: startKg),
     saveEntry: world.save(() => now),
     newEntryId: NewBodyEntryId(world.repository),

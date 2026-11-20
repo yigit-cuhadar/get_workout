@@ -45,6 +45,7 @@ class CardioModule implements FeatureModule {
           getCurrentUser: sl(),
           watchAuthUser: sl(),
           unit: unit,
+          analytics: sl(),
           initial: session,
         ),
       );

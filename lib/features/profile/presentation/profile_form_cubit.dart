@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/profile_usecases.dart';
@@ -86,13 +89,16 @@ class ProfileFormState extends Equatable {
 /// has to start somewhere, and a user already there just moves on.
 class ProfileFormCubit extends Cubit<ProfileFormState> {
   /// The welcome, then every question. Next on the last one completes
-  /// onboarding with the answers.
+  /// onboarding with the answers. Logs `onboarding_start`, then each step
+  /// as it shows.
   ProfileFormCubit.onboarding({
     required String uid,
     required UserProfile initial,
     required CompleteOnboarding completeOnboarding,
+    required Analytics analytics,
     this._now = DateTime.now,
-  }) : _save = ((answers) => completeOnboarding((uid: uid, answers: answers))),
+  }) : _analytics = analytics,
+       _save = ((answers) => completeOnboarding((uid: uid, answers: answers))),
        _storedBirthYear = initial.birthYear,
        _targetSet = initial.answered(ProfileField.targetWeight),
        super(
@@ -102,7 +108,10 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
            onboarding: true,
            welcome: true,
          ),
-       );
+       ) {
+    unawaited(analytics.onboardingStart());
+    _logStep();
+  }
 
   /// The one question [field]. Finishing only marks the answer submitted;
   /// the page hands it to the app-wide `ProfileCubit`, which outlives the
@@ -111,7 +120,8 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     required ProfileField field,
     required UserProfile initial,
     this._now = DateTime.now,
-  }) : _save = null,
+  }) : _analytics = null,
+       _save = null,
        _storedBirthYear = initial.birthYear,
        _targetSet = initial.answered(ProfileField.targetWeight),
        super(
@@ -126,6 +136,9 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
 
   final DateTime Function() _now;
   final Future<Result<void>> Function(UserProfile answers)? _save;
+
+  /// Onboarding's; editing logs nothing.
+  final Analytics? _analytics;
 
   /// The year already given, kept selectable when it has since left the
   /// plausible range, so the wheel never shows one year and saves another.
@@ -248,11 +261,32 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     } else if (state.onboarding) {
       emit(state.copyWith(welcome: true));
     }
+    _logStep();
   }
 
   void _show({required int step}) {
     emit(state.copyWith(welcome: false, step: step));
+    _logStep();
     _prefill();
+  }
+
+  void _logStep() {
+    final step = state.welcome
+        ? OnboardingStep.welcome
+        : switch (state.question) {
+            ProfileField.goal => OnboardingStep.goal,
+            ProfileField.level => OnboardingStep.level,
+            ProfileField.daysPerWeek => OnboardingStep.days,
+            ProfileField.equipment => OnboardingStep.equipment,
+            ProfileField.sex => OnboardingStep.sex,
+            ProfileField.birthYear => OnboardingStep.birthYear,
+            ProfileField.height => OnboardingStep.height,
+            ProfileField.weight => OnboardingStep.weight,
+            ProfileField.targetWeight => OnboardingStep.targetWeight,
+          };
+    if (_analytics case final analytics?) {
+      unawaited(analytics.onboardingStep(step));
+    }
   }
 
   /// Answers a number question that shows unanswered with where its input

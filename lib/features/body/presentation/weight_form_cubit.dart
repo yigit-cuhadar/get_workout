@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../../settings/domain/user_settings.dart';
 import '../domain/body_entry.dart';
 import '../domain/body_usecases.dart';
@@ -64,6 +65,7 @@ class WeightFormCubit extends Cubit<WeightFormState> {
     required GetCurrentUser getCurrentUser,
     required WatchAuthUser watchAuthUser,
     required this._unit,
+    required this._analytics,
     DateTime Function()? clock,
   }) : _initial = setup.initial,
        _getCurrentUser = getCurrentUser,
@@ -96,6 +98,7 @@ class WeightFormCubit extends Cubit<WeightFormState> {
 
   /// Fixed at the first save, so a retry saves the same entry.
   String? _entryId;
+  final Analytics _analytics;
 
   bool get isEditing => _initial != null;
 
@@ -150,6 +153,9 @@ class WeightFormCubit extends Cubit<WeightFormState> {
       newPhotos: const {},
       isNew: initial == null,
     ))).failureOrNull;
+    if (failure == null && initial == null) {
+      unawaited(_analytics.weightLog());
+    }
     if (isClosed || state.status == WeightFormStatus.closed) return;
     emit(
       failure == null

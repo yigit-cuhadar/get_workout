@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../domain/exercise.dart';
 import '../domain/exercise_queries.dart';
 import '../domain/vocabulary.dart';
@@ -112,6 +113,7 @@ class LibraryCubit extends Cubit<LibraryState> {
     required ExerciseCatalogueCubit catalogue,
     required FavoritesCubit favorites,
     required EquipmentCubit equipment,
+    required this._analytics,
   }) : super(const LibraryState()) {
     _catalogue = _exercisesOf(catalogue.state) ?? const [];
     _favorites = favorites.state.ids;
@@ -142,6 +144,7 @@ class LibraryCubit extends Cubit<LibraryState> {
     ];
   }
 
+  final Analytics _analytics;
   late final List<StreamSubscription<Object?>> _subscriptions;
   late List<Exercise> _catalogue;
   late Set<String> _favorites;
@@ -158,14 +161,23 @@ class LibraryCubit extends Cubit<LibraryState> {
     _recompute();
   }
 
-  void setQuery(String query) => _recompute(query: query);
+  /// A search typed into an empty field is an `exercise_search`.
+  void setQuery(String query) {
+    if (state.query.trim().isEmpty && query.trim().isNotEmpty) {
+      unawaited(_analytics.exerciseSearch());
+    }
+    _recompute(query: query);
+  }
 
   /// Browses [muscle], picked on the model: the muscle filter becomes it
   /// alone and the search is cleared; the other filters and the sort stay.
-  void openMuscle(Muscle muscle) => _recompute(
-    query: '',
-    filter: state.filter.copyWith(muscles: {muscle}),
-  );
+  void openMuscle(Muscle muscle) {
+    unawaited(_analytics.muscleSelect(muscle));
+    _recompute(
+      query: '',
+      filter: state.filter.copyWith(muscles: {muscle}),
+    );
+  }
 
   /// Ends browsing [muscle]: its filter goes, unless the user changed the
   /// muscle filter meanwhile.

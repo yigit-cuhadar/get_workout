@@ -22,7 +22,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
     <!-- Photos never touch shared storage, and analytics never uses an
-         advertising ID or ad attribution (see the consent decision). -->
+         advertising ID or ad attribution (see Decisions › Privacy). -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove"/>
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove"/>
@@ -94,7 +94,8 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
         </receiver>
-        <!-- Analytics and Crashlytics collect nothing until the user agrees;
+        <!-- Analytics and Crashlytics collect nothing until the signed-in
+             user's answer is known (no answer collects, a no never does);
              the app turns them on (forge_firebase's FirebaseTelemetry). -->
         <meta-data
             android:name="firebase_analytics_collection_enabled"
@@ -102,7 +103,7 @@
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"
             android:value="false" />
-        <!-- With consent, still no advertising ID, Android ID or ad
+        <!-- When collecting, still no advertising ID, Android ID or ad
              personalisation signals. -->
         <meta-data
             android:name="google_analytics_adid_collection_enabled"

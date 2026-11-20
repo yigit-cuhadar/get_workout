@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../domain/catalogue_program.dart';
 import '../domain/program.dart';
@@ -142,6 +143,7 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
     required this._saveProgram,
     required this._startProgram,
     required this._getCurrentUser,
+    required this._analytics,
     this.retryDelay = const Duration(seconds: 2),
   }) : _catalogue = catalogue,
        super(const CatalogueDetailState()) {
@@ -167,6 +169,7 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
   final SaveProgram _saveProgram;
   final StartProgram _startProgram;
   final GetCurrentUser _getCurrentUser;
+  final Analytics _analytics;
   late final StreamSubscription<ProgramCatalogueState> _catalogueSubscription;
   late final StreamSubscription<ProgramListState> _listSubscription;
   late final StreamSubscription<ExerciseCatalogueState> _exercisesSubscription;
@@ -246,19 +249,23 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
       },
     ));
     if (saved case Ok(value: final id) when intent == CopyIntent.start) {
+      final stored = Program(
+        id: id,
+        name: copy.name,
+        origin: copy.origin,
+        sourceId: copy.sourceId,
+        lengthWeeks: copy.lengthWeeks,
+        days: copy.days,
+        premium: copy.premium,
+      );
       final started = await _startProgram((
         uid: uid,
-        program: Program(
-          id: id,
-          name: copy.name,
-          origin: copy.origin,
-          sourceId: copy.sourceId,
-          lengthWeeks: copy.lengthWeeks,
-          days: copy.days,
-          premium: copy.premium,
-        ),
+        program: stored,
         schedule: schedule!,
       ));
+      if (started.isOk) {
+        unawaited(_analytics.programStart(stored, onboarding: false));
+      }
       if (isClosed) return;
       if (started.failureOrNull case final failure?) {
         return emit(

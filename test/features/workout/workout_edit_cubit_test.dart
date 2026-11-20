@@ -18,6 +18,7 @@ import 'package:get_workout/features/workout/presentation/workout_editor.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
+import '../../fake_analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -83,6 +84,7 @@ void main() {
     final catalogue = MockCatalogueCubit();
     when(() => catalogue.state).thenReturn(CatalogueReady([move('row')]));
     return WorkoutEditCubit(
+      analytics: fakeAnalytics(),
       id: id,
       plan: plan ?? WorkoutEditCubit.defaultPlan('Workout', now, 'en'),
       getCurrentUser: GetCurrentUser(auth),

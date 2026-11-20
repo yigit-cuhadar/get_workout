@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../domain/feedback.dart';
 import '../domain/feedback_usecases.dart';
 
@@ -50,6 +53,7 @@ class FeedbackCubit extends Cubit<FeedbackState> {
     required this._sendFeedback,
     required GetCurrentUser getCurrentUser,
     required FeedbackSource source,
+    required this._analytics,
   }) : _getCurrentUser = getCurrentUser,
        super(
          FeedbackState(
@@ -61,6 +65,7 @@ class FeedbackCubit extends Cubit<FeedbackState> {
        );
 
   final SendFeedback _sendFeedback;
+  final Analytics _analytics;
   final GetCurrentUser _getCurrentUser;
 
   void setMessage(String message) =>
@@ -97,6 +102,7 @@ class FeedbackCubit extends Cubit<FeedbackState> {
     }
     emit(state.copyWith(status: FeedbackFormStatus.sending));
     final result = await _sendFeedback((uid: uid, draft: state.draft));
+    if (result.isOk) unawaited(_analytics.feedbackSend());
     if (isClosed) return;
     emit(
       state.copyWith(

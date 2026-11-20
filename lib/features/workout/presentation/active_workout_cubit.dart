@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../../calculators/domain/calculation.dart';
 import '../../calculators/domain/calculators_usecases.dart';
 import '../../calculators/domain/plates.dart';
@@ -301,6 +302,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     required this._scheduleEndNotice,
     required this._cancelEndNotice,
     required this._endText,
+    required this._analytics,
     DateTime Function()? clock,
     this.retryDelay = const Duration(minutes: 1),
   }) : _clock = clock ?? DateTime.now,
@@ -327,6 +329,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   final ScheduleWorkoutEndNotice _scheduleEndNotice;
   final CancelWorkoutEndNotice _cancelEndNotice;
   final WorkoutEndText _endText;
+  final Analytics _analytics;
   final DateTime Function() _clock;
 
   /// When a set of the workout in progress was last ticked done; null
@@ -490,12 +493,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
 
   /// Starts an empty workout named [name]; false while another is in
   /// progress. It is not in progress itself until an exercise is added.
-  bool startFree(String name) =>
-      _start((id, now) => Workout(id: id, startedAt: now, name: name));
+  bool startFree(String name) => _start(
+    WorkoutSource.free,
+    (id, now) => Workout(id: id, startedAt: now, name: name),
+  );
 
   /// Starts an empty workout named [name] with [exercise] in it, named in
   /// [language]; false while another is in progress.
   bool startWith(Exercise exercise, String name, String language) => _start(
+    WorkoutSource.free,
     (id, now) => Workout(
       id: id,
       startedAt: now,
@@ -562,6 +568,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     if (isClosed) return notStarted;
     final catalogue = knownExercises;
     final started = _start(
+      WorkoutSource.program,
       (id, now) => editing.workoutFromProgramDay(
         id: id,
         startedAt: now,
@@ -583,6 +590,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   }
 
   bool _start(
+    WorkoutSource source,
     Workout Function(String id, DateTime now) build, {
     bool allowEmpty = true,
   }) {
@@ -602,6 +610,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     _lastSetAt = null;
     _keep();
     _followIdle();
+    unawaited(_analytics.workoutStart(source));
     return true;
   }
 
@@ -624,12 +633,19 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   /// in progress stays, minimized.
   Future<void> leave() async {
     if (state.status == WorkoutStatus.active && !state.inProgress) {
-      await discard();
+      await _discard();
     }
   }
 
-  /// Throws the workout in progress away.
+  /// Throws the workout in progress away, as the user asked.
   Future<void> discard() async {
+    if (state.inProgress && state.status == WorkoutStatus.active) {
+      unawaited(_analytics.workoutDiscard());
+    }
+    await _discard();
+  }
+
+  Future<void> _discard() async {
     final uid = _uid;
     if (uid == null || state.status != WorkoutStatus.active) return;
     _emitWorkout(null, status: WorkoutStatus.none, rest: () => null);
@@ -686,6 +702,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
     if (state.status != WorkoutStatus.active || state.rest == null) return;
     emit(state.copyWith(rest: () => null));
     _keep();
+    unawaited(_analytics.restSkip());
   }
 
   /// Finishes and stores the workout; its unticked sets are left out. The
@@ -754,6 +771,34 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         _keep();
         _followIdle();
         unawaited(_sync(uid));
+        _logFinished(value);
+    }
+  }
+
+  /// `workout_complete`, `first_workout_complete` with the user's first
+  /// one, and a `personal_record` for each record it set.
+  void _logFinished(FinishedWorkout finished) {
+    final summary = finished.summary;
+    final count = finished.workoutCount;
+    unawaited(
+      _analytics.workoutComplete(
+        source: finished.workout.isFromProgram
+            ? WorkoutSource.program
+            : WorkoutSource.free,
+        duration: summary.duration,
+        exercises: summary.exerciseCount,
+        sets: summary.setCount,
+        records: summary.records.length,
+        workoutCount: count ?? (summary.firstEver ? 1 : null),
+      ),
+    );
+    if (count == 1 || (count == null && summary.firstEver)) {
+      unawaited(_analytics.firstWorkoutComplete());
+    }
+    for (final record in summary.records) {
+      for (final kind in record.kinds) {
+        unawaited(_analytics.personalRecord(record.exerciseId, kind));
+      }
     }
   }
 
@@ -1205,7 +1250,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
   void _endIdle(Workout workout, DateTime? lastSetAt) {
     _notice = null;
     if (lastSetAt == null) {
-      unawaited(discard());
+      unawaited(_discard());
       return;
     }
     unawaited(_finish(at: lastSetAt, selfEnded: true));

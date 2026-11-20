@@ -31,6 +31,7 @@ import '../features/body/body_fakes.dart';
 import '../features/body/fake_camera.dart';
 import '../features/programs/fixtures.dart' show FixedPremium;
 import 'training_world.dart';
+import '../fake_analytics.dart';
 
 /// Entries in memory whose stream follows every write.
 class _LiveBodyRepository extends FakeBodyRepository {
@@ -129,6 +130,7 @@ void main() {
       })
       ..registerFactoryParam<WeightFormCubit, WeightFormSetup, WeightUnit>(
         (setup, unit) => WeightFormCubit(
+          analytics: fakeAnalytics(),
           setup: setup,
           saveEntry: save,
           newEntryId: NewBodyEntryId(entries),
@@ -140,6 +142,7 @@ void main() {
       )
       ..registerFactoryParam<MeasurementDayCubit, MeasurementDaySetup, void>(
         (setup, _) => MeasurementDayCubit(
+          analytics: fakeAnalytics(),
           setup: setup,
           saveEntry: save,
           newEntryId: NewBodyEntryId(entries),

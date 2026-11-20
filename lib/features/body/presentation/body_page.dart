@@ -13,6 +13,7 @@ import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../strength/domain/strength.dart';
 import '../../strength/presentation/strength_text.dart';
+import '../../analytics/domain/analytics.dart';
 import '../../subscription/presentation/premium.dart';
 import '../domain/body_chart.dart';
 import '../domain/body_entry.dart';
@@ -463,7 +464,7 @@ class _ChartCardState extends State<_ChartCard> {
         final range = state.hasOlder ? _RangePicker(state.range) : null;
         final lockedCaption = state.olderLocked ? l10n.bodyOlderLocked : null;
         final VoidCallback? onLockedCaptionTap = state.olderLocked
-            ? () => context.requirePremium()
+            ? () => context.requirePremium(PremiumFeature.bodyHistory)
             : null;
         if (from == null || to == null || waiting) {
           return waiting
@@ -652,7 +653,9 @@ class _AddSheet extends StatelessWidget {
 
   /// A training series asks for Premium first, as the ranges do.
   Future<void> _unlock(BodyChartCubit cubit, BodySeries series) async {
-    if (await gate.requirePremium()) await cubit.add(series);
+    if (await gate.requirePremium(PremiumFeature.bodySeries)) {
+      await cubit.add(series);
+    }
   }
 }
 
@@ -679,7 +682,9 @@ class _RangePicker extends StatelessWidget {
       selected: range,
       onChanged: cubit.selectRange,
       onLocked: (option) async {
-        if (await context.requirePremium()) cubit.selectRange(option);
+        if (await context.requirePremium(PremiumFeature.bodyRange)) {
+          cubit.selectRange(option);
+        }
       },
     );
   }

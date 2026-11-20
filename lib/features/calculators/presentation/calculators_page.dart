@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:forge_ui/forge_ui.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import 'calculator_list.dart';
@@ -21,13 +20,14 @@ class CalculatorsPage extends StatelessWidget {
         const SizedBox(height: calculatorGap - Gap.xs),
         ListRowCard(
           children: [
-            for (final (:title, :subtitle, :route, training: _)
-                in calculators.where((entry) => entry.training == training))
+            for (final entry in calculators.where(
+              (entry) => entry.training == training,
+            ))
               ListRow(
-                title: title,
-                detail: subtitle,
+                title: entry.title,
+                detail: entry.subtitle,
                 end: ListRowEnd.chevron,
-                onTap: () => context.go(route),
+                onTap: () => openCalculator(context, entry),
               ),
           ],
         ),

@@ -25,6 +25,7 @@ class GeneratorModule implements FeatureModule {
           generateProgram: sl(),
           saveProgram: sl(),
           getCurrentUser: sl(),
+          analytics: sl(),
         ),
       );
   }

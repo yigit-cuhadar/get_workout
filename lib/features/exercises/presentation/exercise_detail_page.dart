@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../core/widgets/muscle_model.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../analytics/domain/analytics.dart';
 import '../../programs/presentation/add_to_program.dart';
 import '../../programs/presentation/add_to_program_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
@@ -26,9 +27,13 @@ class ExerciseDetailPage extends StatelessWidget {
     super.key,
     required this.exerciseId,
     required this.exerciseRoute,
+    required this.from,
   });
 
   final String exerciseId;
+
+  /// Where the page was opened, for analytics.
+  final ExerciseViewSource from;
 
   /// Where another exercise opens, so it stays in the tab hosting this one.
   final String Function(String id) exerciseRoute;
@@ -36,7 +41,10 @@ class ExerciseDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MultiBlocProvider(
     providers: [
-      BlocProvider(create: (_) => sl<ExerciseDetailCubit>(param1: exerciseId)),
+      BlocProvider(
+        create: (_) =>
+            sl<ExerciseDetailCubit>(param1: exerciseId, param2: from),
+      ),
       BlocProvider.value(value: sl<ExerciseNotesCubit>()),
     ],
     child: _DetailView(exerciseRoute),

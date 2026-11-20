@@ -72,7 +72,7 @@ class AccountModule implements FeatureModule {
       ..registerFactory(() => FollowAnalyticsUser(sl()))
       ..registerFactory(() => ApplyAnalyticsConsent(sl()))
       ..registerLazySingleton(DeletionUnderway.new)
-      ..registerFactory(() => DeleteUserAccount(sl(), sl(), sl()))
+      ..registerFactory(() => DeleteUserAccount(sl(), sl(), sl(), sl()))
       ..registerLazySingleton(
         () => ConsentCubit(
           watchAuthUser: sl(),

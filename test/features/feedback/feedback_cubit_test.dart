@@ -8,6 +8,8 @@ import 'package:get_workout/features/feedback/domain/feedback_usecases.dart';
 import 'package:get_workout/features/feedback/presentation/feedback_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../fake_analytics.dart';
+
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockFeedbackRepository extends Mock implements FeedbackRepository {}
@@ -34,6 +36,7 @@ void main() {
 
   FeedbackCubit build([FeedbackSource source = FeedbackSource.profile]) =>
       FeedbackCubit(
+        analytics: fakeAnalytics(),
         sendFeedback: SendFeedback(repository),
         getCurrentUser: GetCurrentUser(auth),
         source: source,

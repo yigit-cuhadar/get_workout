@@ -19,6 +19,8 @@ import 'package:mocktail/mocktail.dart';
 
 import '../fixtures.dart';
 
+import 'package:get_workout/features/analytics/domain/analytics.dart';
+
 class _CatalogueCubit extends MockCubit<ExerciseCatalogueState>
     implements ExerciseCatalogueCubit {}
 
@@ -95,6 +97,7 @@ void main() {
         GoRoute(
           path: '/',
           builder: (_, _) => ExerciseDetailPage(
+            from: ExerciseViewSource.library,
             exerciseId: 'bench',
             exerciseRoute: (id) => '/$id',
           ),

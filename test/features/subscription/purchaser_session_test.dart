@@ -8,6 +8,8 @@ import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_workout/features/subscription/presentation/purchaser_session.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../fake_analytics.dart';
+
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockEntitlementCubit extends Mock implements EntitlementCubit {}
@@ -42,6 +44,7 @@ void main() {
 
   // Called inside fakeAsync where timing matters, so its timers are fake.
   void start() => session = PurchaserSession(
+    analytics: fakeAnalytics(),
     watchAuthUser: WatchAuthUser(auth),
     entitlement: entitlement,
     recordAdAttribution: recordAdAttribution,

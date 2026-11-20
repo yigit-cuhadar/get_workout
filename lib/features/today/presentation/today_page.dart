@@ -93,7 +93,7 @@ class _TodayViewState extends State<_TodayView> {
     _opened();
   }
 
-  /// After the frame, so a page the start pushes (the consent page) is
+  /// After the frame, so a page the start pushes (the app-open paywall) is
   /// already over the tabs.
   void _opened() => WidgetsBinding.instance.addPostFrameCallback((_) {
     if (!mounted) return;
@@ -493,9 +493,11 @@ class _CalculatorsCard extends StatelessWidget {
         spacing: Gap.sm,
         runSpacing: Gap.sm,
         children: [
-          for (final (:title, subtitle: _, :route, training: _)
-              in calculatorsOf(l10n))
-            ForgeChip(label: title, onPressed: () => context.go(route)),
+          for (final entry in calculatorsOf(l10n))
+            ForgeChip(
+              label: entry.title,
+              onPressed: () => openCalculator(context, entry),
+            ),
         ],
       ),
     );

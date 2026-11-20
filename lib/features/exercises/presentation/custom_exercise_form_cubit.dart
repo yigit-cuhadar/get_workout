@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../domain/custom_exercise.dart';
 import '../domain/exercise_usecases.dart';
 import '../domain/vocabulary.dart';
@@ -106,6 +107,7 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
     required this._saveExercise,
     required GetCurrentUser getCurrentUser,
     required WatchAuthUser watchAuthUser,
+    required this._analytics,
     this._initial,
   }) : _getCurrentUser = getCurrentUser,
        _uid = getCurrentUser()?.id,
@@ -121,6 +123,7 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
   }
 
   final SaveCustomExercise _saveExercise;
+  final Analytics _analytics;
   final GetCurrentUser _getCurrentUser;
   final CustomExercise? _initial;
 
@@ -213,6 +216,9 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
     );
     final result = await _saveExercise((uid: uid, exercise: exercise));
     if (isClosed || state.isDone) return;
+    if (result.isOk && _initial == null) {
+      unawaited(_analytics.customExerciseCreate());
+    }
     emit(switch (result) {
       Ok(:final value) => state.copyWith(
         status: CustomExerciseFormStatus.saved,

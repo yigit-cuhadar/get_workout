@@ -60,6 +60,8 @@ void main() {
         .thenAnswer((_) async => const Ok([]));
     when(() => repository.hasWorkouts(any()))
         .thenAnswer((_) async => const Ok(true));
+    when(() => repository.countWorkouts(any()))
+        .thenAnswer((_) async => const Ok(4));
     when(
       () => repository.saveWorkout(
         any(),
@@ -190,6 +192,21 @@ void main() {
       expect(result.valueOrNull!.summary.programUnknown, isTrue);
       verify(() => repository.saveWorkout('u1', any(), any(), advance: null))
           .called(1);
+    });
+
+    test('counts the workouts with this one; none when the server '
+        'does not answer', () async {
+      Future<int?> count() async => (await finish((
+        uid: 'u1',
+        workout: fromDay(0),
+        program: null,
+        at: null,
+      ))).valueOrNull!.workoutCount;
+
+      expect(await count(), 5);
+      when(() => repository.countWorkouts('u1'))
+          .thenAnswer((_) async => const Err(NetworkFailure()));
+      expect(await count(), isNull);
     });
 
     test('is the first ever with no stats and no stored workout', () async {

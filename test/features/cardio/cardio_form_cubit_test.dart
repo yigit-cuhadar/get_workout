@@ -12,6 +12,8 @@ import 'package:get_workout/features/cardio/domain/cardio_validation.dart';
 import 'package:get_workout/features/cardio/presentation/cardio_form_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../fake_analytics.dart';
+
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockCardioRepository extends Mock implements CardioRepository {}
@@ -66,6 +68,7 @@ void main() {
     CardioSession? initial,
     DistanceUnit unit = DistanceUnit.km,
   }) => CardioFormCubit(
+    analytics: fakeAnalytics(),
     saveSession: SaveCardioSession(cardio, clock: () => now),
     deleteSession: DeleteCardioSession(cardio),
     getCurrentUser: GetCurrentUser(auth),

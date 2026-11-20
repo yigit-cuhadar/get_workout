@@ -4,12 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../analytics/domain/analytics.dart';
 import '../../subscription/presentation/premium.dart';
 
 /// Opens the generator for a user with premium; others get the paywall
 /// first and go on only if they unlocked it there.
 Future<void> openGenerator(BuildContext context) async {
-  if (await context.requirePremium() && context.mounted) {
+  if (await context.requirePremium(PremiumFeature.generator) &&
+      context.mounted) {
     await context.push(Routes.programGenerator);
   }
 }

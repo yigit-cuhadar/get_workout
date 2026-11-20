@@ -12,6 +12,7 @@ import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
+import '../../analytics/domain/analytics.dart';
 import '../../subscription/presentation/premium.dart';
 import '../domain/strength.dart';
 import 'exercise_strength_cubit.dart';
@@ -249,7 +250,10 @@ class _RangePicker extends StatelessWidget {
 
   static Future<void> _select(BuildContext context, StrengthRange range) async {
     final cubit = context.read<ExerciseStrengthCubit>();
-    if (range.premium && !await context.requirePremium()) return;
+    if (range.premium &&
+        !await context.requirePremium(PremiumFeature.strengthRange)) {
+      return;
+    }
     cubit.selectRange(range);
   }
 }

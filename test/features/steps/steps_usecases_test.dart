@@ -5,6 +5,7 @@ import 'package:get_workout/features/steps/domain/steps.dart';
 import 'package:get_workout/features/steps/domain/steps_usecases.dart';
 
 import 'steps_fakes.dart';
+import '../../fake_analytics.dart';
 
 void main() {
   final now = DateTime(2026, 11, 12, 15);
@@ -70,7 +71,7 @@ void main() {
 
   group('AllowStepsAccess', () {
     test('remembers the asking, then asks the platform', () async {
-      final result = await AllowStepsAccess(health, prompt)();
+      final result = await AllowStepsAccess(health, prompt, fakeAnalytics())();
       expect(prompt.asked, isTrue);
       expect(result.valueOrNull, StepsAccess.granted);
     });
@@ -78,33 +79,33 @@ void main() {
     test('a refusal is denied; iOS stays undetermined', () async {
       health.grantOnRequest = HealthPermission.denied;
       expect(
-        (await AllowStepsAccess(health, prompt)()).valueOrNull,
+        (await AllowStepsAccess(health, prompt, fakeAnalytics())()).valueOrNull,
         StepsAccess.denied,
       );
       health
         ..permissionStatus = HealthPermission.undetermined
         ..grantOnRequest = HealthPermission.undetermined;
       expect(
-        (await AllowStepsAccess(health, prompt)()).valueOrNull,
+        (await AllowStepsAccess(health, prompt, fakeAnalytics())()).valueOrNull,
         StepsAccess.undetermined,
       );
     });
 
     test('asks for workouts too once steps may be read', () async {
-      await AllowStepsAccess(health, prompt)();
+      await AllowStepsAccess(health, prompt, fakeAnalytics())();
       expect(health.workoutsPermissionStatus, HealthPermission.granted);
     });
 
     test('a steps refusal does not ask for workouts', () async {
       health.grantOnRequest = HealthPermission.denied;
-      await AllowStepsAccess(health, prompt)();
+      await AllowStepsAccess(health, prompt, fakeAnalytics())();
       expect(health.workoutsPermissionStatus, HealthPermission.denied);
     });
 
     test('asks even when the marker cannot be written', () async {
       prompt.failure = const UnknownFailure('disk');
       expect(
-        (await AllowStepsAccess(health, prompt)()).valueOrNull,
+        (await AllowStepsAccess(health, prompt, fakeAnalytics())()).valueOrNull,
         StepsAccess.granted,
       );
     });

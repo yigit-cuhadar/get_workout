@@ -31,9 +31,17 @@ import 'training_days_sheet.dart';
 /// Edit, Duplicate and Delete in the app bar's ⋯. Taken from the shared
 /// list, so it opens at once from the list and also works from a bare link.
 class ProgramDetailPage extends StatefulWidget {
-  const ProgramDetailPage({super.key, required this.id, this.created = false});
+  const ProgramDetailPage({
+    super.key,
+    required this.id,
+    this.created = false,
+    this.onboarding = false,
+  });
 
   final String id;
+
+  /// Opened from onboarding's suggestion: starting it says so.
+  final bool onboarding;
 
   /// The program was just stored: the list may not show it yet, so the page
   /// waits for it, for up to [createdWait], before saying it does not exist.
@@ -78,7 +86,8 @@ class _ProgramDetailPageState extends State<ProgramDetailPage> {
         final program = state.program(id);
         if (program != null) {
           return BlocProvider(
-            create: (_) => sl<ProgramDetailCubit>(param1: id),
+            create: (_) =>
+                sl<ProgramDetailCubit>(param1: id, param2: widget.onboarding),
             child: _ProgramDetailView(
               program: program,
               list: state,

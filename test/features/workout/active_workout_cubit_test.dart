@@ -31,6 +31,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../fake_time.dart';
 import 'fixtures.dart';
+import '../../fake_analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -96,6 +97,7 @@ void main() {
   late ExerciseCatalogueState catalogueState;
   late StreamController<UserSettings> settings;
   late MockEndNotice endNotice;
+  late RecordingTelemetry telemetry;
   var clock = now;
   const retryDelay = Duration(milliseconds: 10);
 
@@ -109,6 +111,7 @@ void main() {
 
   setUp(() {
     clock = now;
+    telemetry = RecordingTelemetry();
     users = StreamController<AuthUser?>();
     store = MockStore();
     repository = MockWorkoutRepository();
@@ -152,6 +155,8 @@ void main() {
         .thenAnswer((_) async => const Ok([]));
     when(() => repository.hasWorkouts(any()))
         .thenAnswer((_) async => const Ok(true));
+    when(() => repository.countWorkouts(any()))
+        .thenAnswer((_) async => const Ok(4));
     when(
       () => repository.saveWorkout(
         any(),
@@ -185,6 +190,7 @@ void main() {
     when(() => settingsRepository.watchSettings(any()))
         .thenAnswer((_) => settings.stream);
     return ActiveWorkoutCubit(
+      analytics: fakeAnalytics(telemetry),
       watchAuthUser: WatchAuthUser(auth),
       loadLocal: LoadLocalWorkouts(store),
       keepLocal: KeepLocalWorkouts(store),
@@ -361,6 +367,28 @@ void main() {
       expect(cubit.state.inProgress, isFalse);
       await pumpEventQueue();
       expect(kept(), isNull);
+      await cubit.close();
+    });
+
+    test('starts are logged with where they came from', () async {
+      final cubit = await signedIn();
+      cubit.startFree('Workout');
+      await cubit.leave();
+      await cubit.startProgramDay(legs, 0, name: 'Legs', language: 'en');
+      // Leaving an empty one is not the user discarding it; this is.
+      await cubit.discard();
+      await pumpEventQueue();
+      expect(telemetry.logged, [
+        [
+          'workout_start',
+          {'source': 'free'},
+        ],
+        [
+          'workout_start',
+          {'source': 'program'},
+        ],
+        ['workout_discard', <String, Object>{}],
+      ]);
       await cubit.close();
     });
 
@@ -1624,6 +1652,41 @@ void main() {
         await cubit.close();
       },
     );
+
+    test('a finish is logged with the count of workouts', () async {
+      final cubit = await signedIn(draft: draft);
+      clock = end;
+      await cubit.finish();
+      await pumpEventQueue();
+
+      expect(telemetry.logged.first, [
+        'workout_complete',
+        {
+          'source': 'program',
+          'duration_min': end.difference(now).inMinutes,
+          'exercises': 1,
+          'sets': 1,
+          'records': 0,
+          'workout_count': 5,
+        },
+      ]);
+      expect(telemetry.names, isNot(contains('first_workout_complete')));
+      await cubit.close();
+    });
+
+    test('the first workout ever is logged as such', () async {
+      when(() => repository.hasWorkouts(any()))
+          .thenAnswer((_) async => const Ok(false));
+      when(() => repository.countWorkouts(any()))
+          .thenAnswer((_) async => const Ok(0));
+      final cubit = await signedIn(draft: draft);
+      await cubit.finish();
+      await pumpEventQueue();
+
+      expect(telemetry.names, ['workout_complete', 'first_workout_complete']);
+      expect(telemetry.events.first.$2['workout_count'], 1);
+      await cubit.close();
+    });
 
     test(
       'programs not yet loaded leave the program, said in the summary',

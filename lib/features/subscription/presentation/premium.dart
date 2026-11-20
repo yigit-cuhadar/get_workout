@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../core/open_link.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../analytics/domain/analytics.dart';
 import '../../programs/domain/premium_status.dart' as programs;
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/paywall_moment.dart';
@@ -52,10 +53,11 @@ extension PremiumGate on BuildContext {
   PremiumStatus watchPremium() =>
       select((EntitlementCubit cubit) => premiumStatusOf(cubit.state));
 
-  /// True when the user has Premium. A free user gets the paywall and true
-  /// only if they unlocked it there; while the status is unknown the user is
-  /// asked to wait and it is false, as it is while a paywall is open.
-  Future<bool> requirePremium() async {
+  /// True when the user has Premium. A free user gets the paywall (a
+  /// lock tap on [feature]) and true only if they unlocked it there; while
+  /// the status is unknown the user is asked to wait and it is false, as it
+  /// is while a paywall is open.
+  Future<bool> requirePremium(PremiumFeature feature) async {
     switch (premiumStatusOf(read<EntitlementCubit>().state)) {
       case PremiumStatus.premium:
         return true;
@@ -67,8 +69,14 @@ extension PremiumGate on BuildContext {
         );
         return false;
       case PremiumStatus.free:
-        return openPaywall();
+        return unlockPremium(feature);
     }
+  }
+
+  /// The paywall for a free user's tap on the locked [feature].
+  Future<bool> unlockPremium(PremiumFeature feature) {
+    unawaited(read<Analytics>().premiumLockTap(feature));
+    return openPaywall();
   }
 
   /// Opens the paywall unless one is already open, and tells whether the
@@ -115,6 +123,7 @@ extension PremiumGate on BuildContext {
   /// the store's page. Google Play keeps the store's page until Play is set
   /// up.
   Future<void> manageSubscription() async {
+    unawaited(read<Analytics>().manageSubscription());
     final failed = AppLocalizations.of(this).premiumManageFailed;
     final entitlement = read<EntitlementCubit>();
     if (defaultTargetPlatform == TargetPlatform.iOS) {

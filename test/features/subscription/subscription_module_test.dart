@@ -2,14 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_it/get_it.dart';
 import 'package:get_workout/features/subscription/data/unavailable_purchases_repository.dart';
-import 'package:forge_core/forge_core.dart';
 import 'package:forge_remote_config/forge_remote_config.dart';
 import 'package:get_workout/features/subscription/domain/paywall_layout.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
 
-class MockTelemetry extends Mock implements Telemetry {}
+import '../../fake_analytics.dart';
 
 void main() {
   late GetIt sl;
@@ -47,7 +45,7 @@ void main() {
       defaults: SubscriptionModule.remoteConfigDefaults,
       backend: FakeRemoteConfigBackend(),
     ).register(sl);
-    sl.registerSingleton<Telemetry>(MockTelemetry());
+    sl.registerSingleton(fakeAnalytics());
     const SubscriptionModule(
       backend: FakeBackend(fakePlans),
       pastOnboarding: _past,

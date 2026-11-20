@@ -34,11 +34,11 @@ import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'answered_consent.dart';
 import 'body_stand_in.dart';
 import 'no_workout.dart';
 import 'progress_stand_ins.dart';
 import 'today_stand_ins.dart';
+import '../fake_analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -122,6 +122,7 @@ void main() {
       )
       ..registerFactoryParam<CardioFormCubit, CardioSession?, DistanceUnit>(
         (session, unit) => CardioFormCubit(
+          analytics: fakeAnalytics(),
           saveSession: SaveCardioSession(cardio),
           deleteSession: DeleteCardioSession(cardio),
           getCurrentUser: GetCurrentUser(sessionAuth),
@@ -139,8 +140,6 @@ void main() {
         providers: [
           BlocProvider.value(value: auth),
           BlocProvider.value(value: settings),
-          answeredConsent(),
-          // For the shell's consent prompt.
           BlocProvider.value(value: profile),
           programList(),
           unknownPremium(),

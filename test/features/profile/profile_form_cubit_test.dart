@@ -13,6 +13,8 @@ import 'package:get_workout/features/profile/presentation/profile_form_cubit.dar
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../fake_analytics.dart';
+
 class MockProfileRepository extends Mock implements ProfileRepository {}
 
 class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
@@ -27,7 +29,10 @@ void main() {
     registerFallbackValue(<Equipment>{});
   });
 
+  late RecordingTelemetry telemetry;
+
   setUp(() {
+    telemetry = RecordingTelemetry();
     profiles = MockProfileRepository();
     library = MockUserLibraryRepository();
     when(() => library.saveEquipment(any(), any()))
@@ -40,6 +45,7 @@ void main() {
 
   ProfileFormCubit onboarding([UserProfile initial = const UserProfile()]) =>
       ProfileFormCubit.onboarding(
+        analytics: fakeAnalytics(telemetry),
         uid: 'u1',
         initial: initial,
         completeOnboarding: CompleteOnboarding(
@@ -55,6 +61,39 @@ void main() {
         initial: initial,
         now: () => DateTime(2026, 11, 11),
       );
+
+  test('onboarding logs its start, then each step as it shows', () async {
+    final cubit = onboarding()
+      ..start()
+      ..setGoal(Goal.buildMuscle);
+    await cubit.next();
+    cubit
+      ..back()
+      ..back();
+    expect(telemetry.logged, [
+      ['onboarding_start', <String, Object>{}],
+      for (final (step, index) in [
+        ('welcome', 0),
+        ('goal', 1),
+        ('level', 2),
+        ('goal', 1),
+        ('welcome', 0),
+      ])
+        [
+          'onboarding_step',
+          {'step': step, 'index': index},
+        ],
+    ]);
+    await cubit.close();
+  });
+
+  test('editing one answer logs nothing', () async {
+    final cubit = edit(ProfileField.level, const UserProfile())
+      ..setLevel(Level.advanced);
+    await cubit.next();
+    expect(telemetry.events, isEmpty);
+    await cubit.close();
+  });
 
   const complete = UserProfile(
     goal: Goal.buildMuscle,
