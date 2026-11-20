@@ -1586,47 +1586,30 @@ Decisions (the canvases they were drawn on are deleted):
   it. Until then do not bump `camera` past what 0.11.1 satisfies without
   re-copying the new release and re-applying the `PATCH` lines.
 - The projects are on the Blaze plan. `deleteAccount` is live on dev
-  and, since 2026-11-18, on prod (with a random placeholder
-  `REVENUECAT_WEBHOOK_AUTHORIZATION`, which every deploy checks; the
-  webhook itself is not deployed there; artifact cleanup policy set). On the owner's iPhone (2026-11-18) a Google-only user whose
+  and, since 2026-11-18, on prod (with `revenueCatWebhook` since 2026-11-19; artifact cleanup policy
+  set). On the owner's iPhone (2026-11-18) a Google-only user whose
   sign-in was older than the function allows got the password prompt and
   then "Please sign in again", with no way to do so from the page. Fixed
   in #145 (provider re-sign-in, Forge v0.26.0) and checked the same day:
   the Auth user, `users/{uid}` and the bucket's `users/{uid}/` were gone.
 - Female body model with the same mesh names: the user supplies it before release.
-- `revenueCatWebhook` is written and unit-tested, not deployed or tried
-  against RevenueCat. Deploying all of `functions/` needs its secret: an
-  interactive `firebase deploy` prompts for a missing one, a
-  non-interactive deploy (CI, an agent) fails. Until step 1 is done,
-  deploy the others by name (`--only
-  functions:deleteAccount,functions:sendAnnouncement`), or do step 1 early
-  (with a random value nothing is accepted until RevenueCat has it). Once
-  the RevenueCat project exists, per Firebase project (dev first):
-  1. Make a random value (`openssl rand -hex 32`) and set the secret to the
-     exact header value: `firebase functions:secrets:set
-     REVENUECAT_WEBHOOK_AUTHORIZATION --project <id>` (e.g. `Bearer
-     <value>`; dev and prod get different values).
-  2. Deploy `functions/` (the Architect).
-  3. In RevenueCat, Integrations → Webhooks, one webhook per project: URL
-     `https://europe-west1-<project-id>.cloudfunctions.net/revenueCatWebhook`
-     (2nd gen also has a `run.app` URL; either works), the same
-     Authorization header value; dev: Sandbox; prod: both Production and
-     Sandbox (App Review and TestFlight buy in the sandbox against prod);
-     all apps, all events.
-  4. Send the dashboard's test event (answers `test-event`), then a sandbox
-     purchase with a debug build on dev: `entitlements/<uid>` appears and a
-     premium program's days open; cancel and wait for EXPIRATION.
-  Check then whether RevenueCat sends the header verbatim and
-  `Content-Type: application/json` (the docs say neither; anything else is
-  answered 401/415 and shows in the delivery log).
-- Store setup once the accounts exist: products (monthly, yearly with a
-  7-day trial) in App Store Connect and Play Console, one RevenueCat project
-  with entitlement `premium` and a current offering, the In-App Purchase
-  capability on the App ID, the .p8 key and Play service account in
-  RevenueCat, server notifications to RevenueCat, license testers. Check that
-  `com.android.vending.BILLING` is in the merged Android manifest on the
-  first build. Android launchMode (`singleTop`), Kotlin 2.4 and compileSdk 36
-  already meet the SDK's needs; iOS uses Swift Package Manager.
+- Subscriptions (2026-11-20). App Store: group "GetWorkout Premium" with
+  `getworkout.premium.monthly` (7.99 USD) and `getworkout.premium.yearly`
+  (39.99 USD, 7-day free trial), 175 territories, equalized prices; the
+  Paid Apps agreement is active. The App Store review screenshot on both is
+  a placeholder (an old Profile screen): replace it with the paywall before
+  submission. RevenueCat: iOS app with the In-App Purchase key, entitlement
+  `premium`, offering `default` ($rc_monthly, $rc_annual, metadata
+  `dismissible: true`). Webhooks: sandbox → dev, production → prod, each
+  with its own REVENUECAT_WEBHOOK_AUTHORIZATION; both deployed and answer
+  401 without the header. Device builds use the real store only with
+  `--dart-define=REVENUECAT_IOS_KEY=...`. On the owner's iPhone both plans
+  load. Not done yet: a completed sandbox purchase (the sandbox tester's
+  sign-in loops after the verification code), then `entitlements/<uid>` on
+  dev, Premium unlocking, the trial, restore, renewal and EXPIRATION. Until
+  then the Subscription feature stays unticked. Android / Play is not set
+  up (products, service account in RevenueCat, license testers, the
+  merged manifest's BILLING permission).
 - The first Android build after the rest timer needs Android platform 37
   (compileSdk, for flutter_local_notifications 23) and AGP 9.1.1
   downloaded; the disk is nearly full, so free space first. CI does not
@@ -1718,7 +1701,7 @@ Decisions (the canvases they were drawn on are deleted):
   because `purchases_flutter` registers a web plugin. Harmless; revisit if
   the admin build is split from the app.
 - `sendAnnouncement` is deployed on dev (with `deleteAccount`,
-  `revenueCatWebhook` under a placeholder secret, and the rules) and was
+  `revenueCatWebhook`, and the rules) and was
   run end to end on the Android emulator: a non-admin is refused, an admin
   send arrives on channel `workout`, the same request id is not sent twice,
   the record reads `sent`, and tapping it from the background opens Today.
