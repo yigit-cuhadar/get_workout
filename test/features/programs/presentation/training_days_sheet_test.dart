@@ -19,6 +19,7 @@ void main() {
     Map<int, int> initial = const {1: 0, 4: 1},
     int firstWeekday = DateTime.monday,
     double textScale = 1,
+    bool custom = true,
   }) async {
     result = null;
     closed = false;
@@ -59,6 +60,10 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
+    if (custom) {
+      await tester.tap(find.text('Custom'));
+      await tester.pumpAndSettle();
+    }
   }
 
   Finder card(String day) => find.widgetWithText(SectionCard, day);
@@ -71,6 +76,23 @@ void main() {
     for (final chip in tester.widgetList<ForgeChip>(
       find.descendant(of: card(day), matching: find.byType(ForgeChip)),
     ))
+      if (chip.selected) chip.label,
+  ];
+
+  bool simple(WidgetTester tester) => tester
+      .widget<ForgeSegmentedControl<bool>>(
+        find.byType(ForgeSegmentedControl<bool>),
+      )
+      .selected;
+
+  Finder weekday(String weekday) => find.descendant(
+    of: find.byType(TrainingDaysSheet),
+    matching: find.text(weekday),
+  );
+
+  /// The two-letter weekdays picked in Simple, in the week's order.
+  List<String> pickedSimple(WidgetTester tester) => [
+    for (final chip in tester.widgetList<ForgeChip>(find.byType(ForgeChip)))
       if (chip.selected) chip.label,
   ];
 
@@ -250,5 +272,156 @@ void main() {
     expect(find.text('Save'), findsOneWidget);
     await tap(tester, find.text('Save'));
     expect(result, {1: 6, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6});
+  });
+
+  group('Simple', () {
+    const simpleHint = 'Pick the 2 weekdays you train on.';
+
+    testWidgets('opens when each day is on one weekday in order', (
+      tester,
+    ) async {
+      await open(tester, custom: false);
+
+      expect(simple(tester), isTrue);
+      expect(find.text(simpleHint), findsOneWidget);
+      expect(find.text(hint), findsNothing);
+      expect(find.byType(SectionCard), findsNothing);
+      expect(find.byType(ForgeChip), findsNWidgets(7));
+      expect(pickedSimple(tester), ['Mo', 'Th']);
+      expect(
+        find.text('2 days a week · Tue, Wed, Fri, Sat and Sun rest'),
+        findsOneWidget,
+      );
+      await tap(tester, find.text('Save'));
+      expect(result, {1: 0, 4: 1});
+    });
+
+    testWidgets('a new program opens it with nothing picked', (tester) async {
+      await open(tester, initial: const {}, custom: false);
+
+      expect(simple(tester), isTrue);
+      expect(pickedSimple(tester), isEmpty);
+      expect(save(tester).onPressed, isNull);
+      expect(find.textContaining('days a week'), findsNothing);
+    });
+
+    testWidgets('a schedule out of order opens Custom', (tester) async {
+      await open(tester, initial: const {1: 1, 4: 0}, custom: false);
+
+      expect(simple(tester), isFalse);
+      expect(find.byType(SectionCard), findsNWidgets(2));
+    });
+
+    testWidgets('a day on two weekdays opens Custom', (tester) async {
+      await open(tester, initial: const {1: 0, 2: 1, 4: 0}, custom: false);
+
+      expect(simple(tester), isFalse);
+    });
+
+    testWidgets('Save needs exactly as many weekdays as days', (tester) async {
+      await open(tester, initial: const {}, custom: false);
+
+      await tap(tester, weekday('Fr'));
+      expect(save(tester).onPressed, isNull);
+      expect(
+        find.text('1 day a week · Mon, Tue, Wed, Thu, Sat and Sun rest'),
+        findsOneWidget,
+      );
+      await tap(tester, weekday('Tu'));
+      expect(save(tester).onPressed, isNotNull);
+
+      // A third weekday is not taken; a picked one turns off.
+      await tap(tester, weekday('Sa'));
+      expect(pickedSimple(tester), ['Tu', 'Fr']);
+      await tap(tester, weekday('Tu'));
+      expect(pickedSimple(tester), ['Fr']);
+      expect(save(tester).onPressed, isNull);
+      await tap(tester, weekday('Sa'));
+
+      // The days go onto the weekdays in the week's order.
+      await tap(tester, find.text('Save'));
+      expect(result, {5: 0, 6: 1});
+    });
+
+    testWidgets('in order from the first weekday of the week', (tester) async {
+      await open(
+        tester,
+        initial: const {},
+        firstWeekday: DateTime.sunday,
+        custom: false,
+      );
+
+      await tap(tester, weekday('We'));
+      await tap(tester, weekday('Su'));
+      await tap(tester, find.text('Save'));
+      expect(result, {7: 0, 3: 1});
+    });
+
+    testWidgets('to Custom, the picked weekdays in order', (tester) async {
+      await open(tester, initial: const {}, custom: false);
+
+      await tap(tester, weekday('Fr'));
+      await tap(tester, weekday('Tu'));
+      await tap(tester, find.text('Custom'));
+
+      expect(simple(tester), isFalse);
+      expect(picked(tester, upperLower[0]), ['Tu']);
+      expect(picked(tester, upperLower[1]), ['Fr']);
+    });
+
+    testWidgets('to Custom with too few weekdays, the first days get them', (
+      tester,
+    ) async {
+      await open(tester, initial: const {}, custom: false);
+
+      await tap(tester, weekday('We'));
+      await tap(tester, find.text('Custom'));
+
+      expect(picked(tester, upperLower[0]), ['We']);
+      expect(picked(tester, upperLower[1]), isEmpty);
+      await tap(tester, find.text('Save'));
+      expect(result, {3: 0});
+    });
+
+    testWidgets('from Custom, each day on one weekday keeps the weekdays', (
+      tester,
+    ) async {
+      await open(tester, initial: const {1: 1, 4: 0}, custom: false);
+
+      await tap(tester, find.text('Simple'));
+
+      expect(pickedSimple(tester), ['Mo', 'Th']);
+      await tap(tester, find.text('Save'));
+      expect(result, {1: 0, 4: 1});
+    });
+
+    testWidgets('from Custom, any other schedule starts empty', (tester) async {
+      await open(tester);
+      // Thursday moves to the first day, so it is done twice.
+      await tap(tester, chip(upperLower[0], 'Th'));
+
+      await tap(tester, find.text('Simple'));
+
+      expect(pickedSimple(tester), isEmpty);
+      expect(save(tester).onPressed, isNull);
+    });
+
+    testWidgets('back to Custom without picking, Custom is as it was', (
+      tester,
+    ) async {
+      await open(tester, initial: const {1: 0, 2: 1, 4: 0}, custom: false);
+
+      await tap(tester, find.text('Simple'));
+      await tap(tester, find.text('Custom'));
+
+      expect(picked(tester, upperLower[0]), ['Mo', 'Th']);
+      expect(picked(tester, upperLower[1]), ['Tu']);
+
+      await tap(tester, find.text('Simple'));
+      await tap(tester, weekday('Sa'));
+      await tap(tester, find.text('Custom'));
+      expect(picked(tester, upperLower[0]), ['Sa']);
+      expect(picked(tester, upperLower[1]), isEmpty);
+    });
   });
 }
