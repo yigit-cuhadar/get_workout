@@ -4292,6 +4292,62 @@ not in a separate dashboard tool.
     `premium_lock_tap` {`feature`}; `manage_subscription`.
   - Engagement: `notification_open` {`kind`}; `review_prompt`;
     `feedback_send`.
+- **In code** (`lib/features/analytics`): `Analytics` holds every name
+  and parameter; cubits get it injected, a widget without a cubit reads it
+  from the app's provider. `AnalyticsSession` sets the user properties
+  (`acquisition` comes from the purchaser session's ad attribution) and
+  tells `sign_up` from `login` on the auth stream. Screen names sit on the
+  routes in `router.dart`; the app logs one whenever another page comes in
+  front, a tab switch included. A dialog or sheet the app opens without a
+  route logs none. Parameter values are codes; flags are `"true"` /
+  `"false"` strings, as Analytics takes no booleans. Fires when:
+  - `onboarding_start`: onboarding opens for a user. `onboarding_step`:
+    each time a step shows, Back included; `index` is the step's place in
+    the flow as it runs (welcome 0, the nine questions 1–9, `permissions`
+    10, `program` 11: the permission prompts come before the suggestion).
+    `permissions` once, when the first permission prompt shows; `program`
+    when the suggestion shows. `onboarding_complete`: when the suggestion
+    is left, with `program_id` (the ready-made program) when it was saved.
+  - `sign_up` / `login`: `method` is the account's way in; an account with
+    several names one (Apple, then Google, then email). `sign_out`: the
+    confirmed sign-out, logged before it so it is still the user's.
+    `account_delete`: once the server deleted the data, before collection
+    for the user stops.
+  - `program_start`: a start that went through, from the program page or a
+    ready-made program's Start; `onboarding` when the program page was
+    opened from the suggestion. `program_generate`: every program the
+    generator makes, Regenerate included. `program_create` /
+    `program_edit`: the builder's save of a new / an existing program.
+  - `workout_start`: `free` and `program` when the workout starts (an empty
+    one left again is no discard); `past` when a new past workout is saved.
+    `workout_complete` is for live workouts only (a past one has no
+    records); `workout_count` is the server's count before it plus one,
+    left out when the server does not answer, and then `first_workout_complete`
+    follows the summary's first-ever. `personal_record`: one per record
+    kind beaten. `workout_discard`: the user throwing a non-empty workout
+    away. `rest_skip`: Skip, also on the lock screen.
+  - `muscle_select`: the exercise list opening on a muscle from the model.
+    `exercise_view`: an exercise page opening; `from` is `library`,
+    `catalogue`, `workout` or `history` (a stored workout being edited).
+    `exercise_search`: a search typed into an empty field, in the library
+    or the picker. `custom_exercise_create`: a new custom exercise saved.
+  - `weight_log`, `measurement_day_save` and `cardio_log`: a new entry
+    saved (edits are not logged); `photos` counts the day's photos.
+    `calculator_use`: a calculator opened from Today or the Calculators
+    page. `steps_connect`: the answer to the system prompt; `granted` is
+    whether steps can be read (iOS never tells a refusal).
+  - `paywall_view` / `paywall_purchase` / `paywall_close`: `moment` is
+    `onboarding`, `first_workout`, `app_open`, or `user` for one the user
+    opened. `offering` is not sent yet: Forge's `Offering` carries no id.
+    `paywall_close`: the user closing it without Premium.
+    `restore`: a restore that answered. `premium_lock_tap`: a free user's
+    tap on a lock; `feature` is `generator`, `premium_program`,
+    `body_history`, `body_series`, `body_range` or `strength_range`.
+    `manage_subscription`: Manage subscription tapped.
+  - `notification_open`: `kind` is `workout`, `measurement`,
+    `announcement`, or `active_workout` (the workout's lock-screen activity
+    or notification). `review_prompt`: the app's review question shows.
+    `feedback_send`: feedback sent.
 - **BigQuery**: daily export of prod (and dev, for checks) into the
   `analytics_<property>` dataset in the EU, tables kept 14 months; the
   privacy policy's retention says so.
