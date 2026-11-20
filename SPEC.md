@@ -4369,9 +4369,29 @@ not in a separate dashboard tool.
   policy states. Google Analytics' own retention is 14 months for event
   and user data on both properties (prod 565341735, dev 565325900, account
   "Default Account for Firebase" 146870395).
-- **Reports**: the admin panel's Dashboard reads BigQuery and RevenueCat's
-  metrics through an admin-only callable, never from the browser
-  directly. What it shows is drawn and picked before it is built.
+- **Reports** (owner's picks, 2026-11-21, canvas
+  https://claude.ai/artifact/DNxPob6inYxQPTGwLVC6mJ): the admin panel's
+  Dashboard reads BigQuery and RevenueCat's metrics through admin-only
+  functions, never from the browser directly.
+  - Each project has its own panel: the prod panel shows prod data, the
+    dev panel dev data. The panel opens on Dashboard, first in the menu.
+  - One page: ten tiles on top (daily and monthly active users, new
+    users, onboarding completed, first workout, workouts completed, trial
+    starts, paid conversion, MRR, crash-free users), then Growth, Funnel,
+    Retention, Revenue, Usage and Quality sections.
+  - Period: 7, 30 or 90 days, or a custom date range; every tile shows
+    its change against the period just before.
+  - Funnel (install → onboarding → first workout → paywall → trial →
+    paid) switches between bars and a table; Retention (day 1/7/30 by
+    weekly install cohort) between the cohort table and curves.
+  - Data: a nightly function queries BigQuery for the preset periods and
+    stores the results in Firestore, which the page reads at once; a
+    custom range is queried live by a callable. Revenue comes from
+    RevenueCat's API v2 overview metrics.
+  - Datasets: the 14-month expiry is set as the default partition
+    expiration of `firebase_crashlytics` and `firebase_sessions` on dev
+    and prod (2026-11-21); `analytics_<property>` (daily `events_` tables)
+    gets a 14-month default table expiration once its first export lands.
 - **Held until the answer is known** (Forge v0.49.0): a new install
   collects only once the user's stored answer is read, and Analytics drops
   what comes before, so `FirebaseTelemetry` holds events and screens (at
