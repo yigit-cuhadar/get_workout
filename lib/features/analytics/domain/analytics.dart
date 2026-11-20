@@ -264,7 +264,7 @@ class Analytics {
   static String _moment(PaywallMoment? moment) => switch (moment) {
     null => 'user',
     PaywallMoment.onboarding => 'onboarding',
-    PaywallMoment.firstWorkout => 'first_workout',
+    PaywallMoment.workoutDone => 'workout_done',
     PaywallMoment.appOpen => 'app_open',
   };
 

@@ -452,15 +452,19 @@ void main() {
       });
     });
 
-    test('the paywall moments are kept as tips', () async {
+    test('the onboarding paywall is kept as a tip; a retired one is '
+        'ignored', () async {
       await repository.markTipSeen('u1', Tip.onboardingPaywall);
-      await repository.markTipSeen('u1', Tip.firstWorkoutPaywall);
+      await user().set({
+        'settings': {
+          'seenTips': FieldValue.arrayUnion(['firstWorkoutPaywall']),
+        },
+      }, SetOptions(merge: true));
 
       final stored = (await user().get()).data()!['settings'] as Map;
       expect(stored['seenTips'], ['onboardingPaywall', 'firstWorkoutPaywall']);
       expect((await repository.watchSettings('u1').first).seenTips, {
         Tip.onboardingPaywall,
-        Tip.firstWorkoutPaywall,
       });
     });
 

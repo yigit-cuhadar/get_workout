@@ -36,10 +36,10 @@ import 'workout_text.dart';
 /// records, the muscles worked, and Done over Save as program (a free
 /// workout) or Save changes to the day (a program day done differently).
 /// Back does what Done does. A workout that ended itself also offers Edit,
-/// which opens it in the editor. Leaving the user's first workout ever
-/// shows the paywall first, once ([PaywallMoment.firstWorkout]). Every
-/// summary is a review moment, a highlight with a record; the first
-/// workout's, with its paywall, never asks.
+/// which opens it in the editor. Leaving it, except by Edit, shows a free
+/// user the paywall first ([PaywallMoment.workoutDone]). Every summary is
+/// a review moment, a highlight with a record; the first workout's never
+/// asks.
 class WorkoutSummaryView extends StatefulWidget {
   const WorkoutSummaryView(this.state, {super.key});
 
@@ -61,12 +61,13 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
 
   bool _leaving = false;
 
-  /// Puts the summary away, then does [then].
-  Future<void> _leave([VoidCallback? then]) async {
+  /// Puts the summary away, then does [then]; first the paywall for a
+  /// free user, unless [toEdit].
+  Future<void> _leave([VoidCallback? then, bool toEdit = false]) async {
     if (_leaving) return;
     _leaving = true;
-    if (widget.state.summary!.firstEver) {
-      await context.paywallMoment(PaywallMoment.firstWorkout);
+    if (!toEdit) {
+      await context.paywallMoment(PaywallMoment.workoutDone);
       if (!mounted) return;
     }
     context.read<ActiveWorkoutCubit>().summaryShown();
@@ -161,6 +162,7 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
                 size: ForgeButtonSize.small,
                 onPressed: () => _leave(
                   () => context.go(Routes.todayWorkoutEdit(workout.id)),
+                  true,
                 ),
               ),
           ],

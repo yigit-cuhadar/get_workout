@@ -62,7 +62,6 @@ class FirestoreSettingsRepository implements SettingsRepository {
     Tip.autoWarmups: 'autoWarmups',
     Tip.muscleModel: 'muscleModel',
     Tip.onboardingPaywall: 'onboardingPaywall',
-    Tip.firstWorkoutPaywall: 'firstWorkoutPaywall',
   };
 
   @override

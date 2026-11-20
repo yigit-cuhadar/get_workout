@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_review/forge_review.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -36,6 +37,9 @@ class _MockRestTimer extends MockCubit<RestTimerState>
     implements RestTimerCubit {}
 
 class _MockSettings extends MockCubit<SettingsState> implements SettingsCubit {}
+
+class _MockEntitlement extends MockCubit<EntitlementState>
+    implements EntitlementCubit {}
 
 class _MockCatalogue extends MockCubit<ExerciseCatalogueState>
     implements ExerciseCatalogueCubit {}
@@ -128,6 +132,10 @@ void main() {
     final body = _MockBodyModel();
     when(() => body.state).thenReturn(const BodyModelFailed());
     when(body.load).thenAnswer((_) async {});
+    // A Premium user: the summary leaves without the workout paywall.
+    final entitlement = _MockEntitlement();
+    when(() => entitlement.state)
+        .thenReturn(const EntitlementActive(Entitlement(isActive: true)));
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
@@ -139,6 +147,7 @@ void main() {
           BlocProvider<EquipmentCubit>.value(value: equipment),
           BlocProvider<ProgramListCubit>.value(value: programList),
           BlocProvider<BodyModelCubit>.value(value: body),
+          BlocProvider<EntitlementCubit>.value(value: entitlement),
         ],
         child: MaterialApp(
           theme: AppPreset.shipped.lightTheme(),

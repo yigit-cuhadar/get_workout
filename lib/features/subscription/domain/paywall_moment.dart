@@ -5,8 +5,9 @@ enum PaywallMoment {
   /// After onboarding's program suggestion.
   onboarding(Tip.onboardingPaywall),
 
-  /// When the user leaves the summary of their first workout ever.
-  firstWorkout(Tip.firstWorkoutPaywall),
+  /// Every time a free user leaves a workout's summary (Done, back or
+  /// Open programs; not Edit).
+  workoutDone(null),
 
   /// Every app open of a free user while the offering is hard, until they
   /// have Premium (`HardPaywallGate`).
@@ -20,12 +21,12 @@ enum PaywallMoment {
 
   /// Whether the store setup can make this moment's paywall not
   /// dismissible ([offeringDismissible]); every other paywall always is.
-  bool get offeringDecides => this != firstWorkout;
+  bool get offeringDecides => this != workoutDone;
 }
 
 /// Whether [moment] shows now: only to a user known to be free ([premium]
 /// false; null while unknown) whose settings are known ([seen] non-null)
-/// and who has not had it yet.
+/// and, for a once-per-user moment, who has not had it yet.
 bool paywallMomentDue(
   PaywallMoment moment, {
   required bool? premium,

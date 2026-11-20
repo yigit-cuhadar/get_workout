@@ -177,6 +177,8 @@ void main() {
     expect(stored.exercises.single.sets.single.reps, 5);
 
     await tapText(tester, 'Done');
+    // A free user gets the paywall first, after every workout.
+    await tapOn(tester, find.bySemanticsLabel('Close'));
     expect(find.byType(WorkoutPage), findsNothing);
     expect(find.text('Done today · Lower'), findsOneWidget);
     expect(find.text('Next: Upper'), findsOneWidget);
@@ -271,6 +273,7 @@ void main() {
     expect(app.programs.active!.nextDayIndex, 1);
 
     await tapText(tester, 'Done');
+    await tapOn(tester, find.bySemanticsLabel('Close'));
     expect(find.text('Start empty workout'), findsOneWidget);
 
     await app.stop(tester);
