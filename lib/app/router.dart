@@ -246,6 +246,9 @@ abstract final class Routes {
 
   /// Help & feedback above the summary, from the review prompt.
   static const workoutFeedback = '$workout/feedback';
+
+  /// Help & feedback above Today, from the review prompt.
+  static const todayFeedback = '$today/feedback';
   static const account = '$profile/account';
 
   /// Opens in sign-up mode; [accountSignIn] opens it in sign-in mode.
@@ -585,6 +588,7 @@ GoRouter buildRouter(
                   _page('bmi-ffmi', const BodyIndicesPage()),
                 ],
               ),
+              _feedback(FeedbackSource.rating),
             ],
           ),
           _tab(

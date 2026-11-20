@@ -15,10 +15,13 @@ import 'presentation/feedback_cubit.dart';
 class FeedbackModule implements FeatureModule {
   const FeedbackModule();
 
-  /// When the review prompt asks: after the third finished workout, later
-  /// after one with a new record at least 30 days on, once per version.
+  /// When the review prompt asks: first after the second finished workout
+  /// or on the third different day the app is opened, whichever comes
+  /// first; later after a workout with a new record at least 30 days on;
+  /// once per version.
   static const reviewRules = ReviewRules(
-    firstAfter: 3,
+    firstAfterEvents: 2,
+    firstAfterDays: 3,
     cooldown: Duration(days: 30),
   );
 
