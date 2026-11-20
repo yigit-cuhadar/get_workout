@@ -128,6 +128,14 @@ const member = AuthUser(
   id: 'u1',
   email: 'a@b.co',
   signInMethods: {SignInMethod.email},
+  emailVerified: true,
+);
+
+/// [member] before opening the verification link.
+const unverifiedMember = AuthUser(
+  id: 'u1',
+  email: 'a@b.co',
+  signInMethods: {SignInMethod.email},
 );
 final onboarded = UserProfile(onboardingCompletedAt: DateTime(2026));
 
@@ -192,6 +200,11 @@ class FlowApp {
     users = StreamController<AuthUser?>.broadcast();
     when(() => repository.watchUser()).thenAnswer((_) => users.stream);
     when(() => repository.currentUser).thenReturn(guest);
+    when(() => repository.sendEmailVerification())
+        .thenAnswer((_) async => const Ok(null));
+    // The verification page reloads quietly; tests that verify say so.
+    when(() => repository.reloadUser())
+        .thenAnswer((_) async => const Err(NetworkFailure()));
     auth = AuthCubit(
       watchAuthUser: WatchAuthUser(repository),
       signOut: SignOut(repository),
@@ -210,6 +223,13 @@ class FlowApp {
         sendPasswordReset: SendPasswordReset(repository),
         getCurrentUser: GetCurrentUser(repository),
         signInAnonymously: SignInAnonymously(repository),
+      ),
+    );
+    sl.registerFactory(
+      () => EmailVerificationCubit(
+        reloadUser: ReloadUser(repository),
+        sendEmailVerification: SendEmailVerification(repository),
+        signOut: SignOut(repository),
       ),
     );
     account = MockAccount();

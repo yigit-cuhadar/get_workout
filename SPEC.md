@@ -2039,6 +2039,34 @@ the feature you are about to touch, and keep it true when you change it.
   "deleting accounts isn't available yet", never as done; anything else
   that failed before the data went gives the workout back.
 
+- **Email verification** (blocking, owner's decision; `forge_auth`'s
+  `EmailVerificationPage`, route `/verify-email`): only an email and
+  password account must verify; Google or Apple next to it counts as
+  verified (`AuthUser.needsEmailVerification`), and guests are unchanged.
+  Creating or linking an email account mails the link at once
+  (`SignUpWithEmail`; a failed send still signs up, Resend covers it).
+  Until verified the router shows the page instead of the app, at start
+  too (existing unverified users included) and after signing in to an
+  unverified account; once verified it goes on like the splash gate
+  (Today, or onboarding for a profile without it). Page (owner's pick,
+  canvas https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ row V1, board
+  A'): mail icon, "Check your email", the line, a "Sent to" card with the
+  address, the moving "Waiting for confirmation…" line, "Resend email"
+  (secondary; 60 s countdown after a send or a `too-many-requests`
+  answer) and "Use another email" (text). No "I've verified" button: the
+  page reloads the user every 4 s while the app is visible, stops while it
+  is hidden, and reloads at once when it shows again. "Use another email"
+  signs out at once (no dialog) and a new guest starts on onboarding. A
+  guest who linked the email keeps their data on the account (nothing is
+  deleted or unlinked); signing in again with that email and password
+  brings it back, on this page until verified. Email templates are
+  Firebase's defaults in both projects: sender
+  `noreply@<project>.firebaseapp.com`, subject "Verify your email for %APP_NAME%", the link handled at
+  `https://<project>.firebaseapp.com/__/auth/action` (no custom domain),
+  locale en. To customise later in the console (Authentication >
+  Templates): sender name, subject and text, the action URL (a custom
+  domain on Hosting), and a custom sender domain.
+
 ### App shell, settings and onboarding
 
 - **Navigation** (owner, 2026-11-13): five tabs, Today / Programs /

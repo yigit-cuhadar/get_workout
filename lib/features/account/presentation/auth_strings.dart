@@ -19,7 +19,7 @@ AuthStrings localizedAuthStrings(AppLocalizations l10n) => AuthStrings(
   otherOptions: l10n.authOtherOptions,
   continueAsGuest: l10n.authContinueAsGuest,
   signingIn: l10n.authSigningIn,
-  // AuthStrings puts the links where these two markers stand.
+  // AuthStrings puts the links where these markers stand.
   terms: l10n.authTerms('{terms}', '{privacy}'),
   termsLink: l10n.authTermsLink,
   privacyLink: l10n.authPrivacyLink,
@@ -34,6 +34,16 @@ AuthStrings localizedAuthStrings(AppLocalizations l10n) => AuthStrings(
   replaceGuestBody: l10n.authReplaceGuestBody,
   replaceGuestConfirm: l10n.authReplaceGuestConfirm,
   cancel: l10n.cancel,
+  verifyEmailTitle: l10n.authVerifyEmailTitle,
+  verifyEmailBody: l10n.authVerifyEmailBody,
+  sentTo: l10n.authSentTo,
+  waitingForVerification: l10n.authWaitingForVerification,
+  resendEmail: l10n.authResendEmail,
+  // AuthStrings puts the count where this marker stands.
+  resendIn: l10n.authResendIn('{seconds}'),
+  emailSent: l10n.authEmailSent,
+  useAnotherAccount: l10n.authUseAnotherAccount,
+  verificationFailed: l10n.errorGeneric,
   errorFor: (failure) => switch (failure) {
     NetworkFailure() => l10n.errorNetwork,
     AuthFailure(:final code) => switch (code) {

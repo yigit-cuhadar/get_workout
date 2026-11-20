@@ -10,6 +10,7 @@ import '../core/pages.dart';
 import '../core/unsaved_changes.dart';
 import '../features/account/presentation/account_page.dart';
 import '../features/account/presentation/account_auth_page.dart';
+import '../features/account/presentation/auth_strings.dart';
 import '../features/body/presentation/body_entry_page.dart';
 import '../features/body/presentation/body_page.dart';
 import '../features/body/presentation/measurement_day_page.dart';
@@ -66,12 +67,17 @@ import '../features/workout/presentation/workout_detail_page.dart';
 import '../features/workout/domain/workout_editing.dart';
 import '../features/workout/presentation/workout_edit_page.dart';
 import '../features/workout/presentation/workout_page.dart';
+import '../l10n/app_localizations.dart';
 import 'app_shell.dart';
 import 'splash.dart';
 
 abstract final class Routes {
   static const splash = '/splash';
   static const startFailed = '/start-failed';
+
+  /// Stands in for the app while an email account's address is not
+  /// verified.
+  static const verifyEmail = '/verify-email';
   static const home = today;
   static const onboarding = '/onboarding';
 
@@ -282,6 +288,7 @@ bool isPastStart(String location) =>
     location.isNotEmpty &&
     location != Routes.splash &&
     location != Routes.startFailed &&
+    location != Routes.verifyEmail &&
     location != Routes.afterOnboarding &&
     location != Routes.onboarding &&
     !location.startsWith('${Routes.onboarding}/');
@@ -350,7 +357,8 @@ String? selfEndedDestination(List<String> open) =>
 
 /// All routes live here. There is always a user (a guest until they create
 /// an account), so the gates are the splash while the session and then the
-/// user's profile resolve, a retry screen when the guest sign-in failed, and
+/// user's profile resolve, a retry screen when the guest sign-in failed, the
+/// verification page while an email account is not verified, and
 /// onboarding until the profile records it as completed.
 /// [profileDevTools] end the Profile tab outside release builds. While
 /// [deletionUnderway], nobody is moved: the deleted profile must not open
@@ -378,7 +386,17 @@ GoRouter buildRouter(
     refreshListenable: Listenable.merge([
       deletionUnderway,
       _StreamListenable(
-        auth.stream.map((state) => state.runtimeType).distinct(),
+        auth.stream
+            .map(
+              (state) => (
+                type: state.runtimeType,
+                unverified: switch (state) {
+                  Authenticated(:final user) => user.needsEmailVerification,
+                  _ => false,
+                },
+              ),
+            )
+            .distinct(),
       ),
       _StreamListenable(
         profile.stream
@@ -391,13 +409,18 @@ GoRouter buildRouter(
       if (deletionUnderway?.value ?? false) return null;
       final location = state.matchedLocation;
       final atGate =
-          location == Routes.splash || location == Routes.startFailed;
+          location == Routes.splash ||
+          location == Routes.startFailed ||
+          location == Routes.verifyEmail;
       final atOnboarding =
           location == Routes.onboarding ||
           location.startsWith('${Routes.onboarding}/');
       return switch (auth.state) {
         AuthUnknown() => Routes.splash,
         Unauthenticated() => Routes.startFailed,
+        // Nothing else opens until the address is verified.
+        Authenticated(:final user) when user.needsEmailVerification =>
+          location == Routes.verifyEmail ? null : Routes.verifyEmail,
         Authenticated(:final user) => switch (_profileGate(
           profile.state,
           uid: user.id,
@@ -405,7 +428,9 @@ GoRouter buildRouter(
           // Wait for the first snapshot, so a returning user never sees
           // onboarding flash. Someone already in the app stays where they are.
           _ProfileGate.pending =>
-            location == Routes.startFailed ? Routes.splash : null,
+            location == Routes.startFailed || location == Routes.verifyEmail
+                ? Routes.splash
+                : null,
           _ProfileGate.onboarding => () {
             onboardingUid = user.id;
             return atOnboarding ? null : Routes.onboarding;
@@ -428,6 +453,12 @@ GoRouter buildRouter(
       GoRoute(
         path: Routes.startFailed,
         builder: (_, _) => AppStartFailed(onRetry: auth.retryGuestSignIn),
+      ),
+      GoRoute(
+        path: Routes.verifyEmail,
+        builder: (context, _) => EmailVerificationPage(
+          strings: localizedAuthStrings(AppLocalizations.of(context)),
+        ),
       ),
       GoRoute(
         path: Routes.onboarding,

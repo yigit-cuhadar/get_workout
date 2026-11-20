@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:get_workout/app/router.dart';
 import 'package:get_workout/features/account/domain/account_repository.dart';
 import 'package:get_workout/features/account/presentation/account_page.dart';
 import 'package:get_workout/features/account/presentation/delete_account_page.dart';
@@ -15,6 +16,11 @@ import 'flow_harness.dart';
 
 const _other = AuthUser(id: 'u2', email: 'b@c.de');
 const _newGuest = AuthUser(id: 'u2', isAnonymous: true);
+const _unverifiedOther = AuthUser(
+  id: 'u2',
+  email: 'b@c.de',
+  signInMethods: {SignInMethod.email},
+);
 
 void main() {
   late FlowApp app;
@@ -185,6 +191,201 @@ void main() {
       ).called(1);
       expect(find.text('Keep your workouts safe'), findsNothing);
       expect(find.text('b@c.de'), findsOneWidget);
+    });
+  });
+
+  group('email verification', () {
+    Finder verificationPage() => find.byType(EmailVerificationPage);
+
+    /// The page's waiting line never stops moving, so it is pumped through
+    /// rather than settled.
+    Future<void> settle(WidgetTester tester) async {
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+
+    Future<void> startUnverified(WidgetTester tester) async {
+      app.start();
+      when(() => app.repository.currentUser).thenReturn(unverifiedMember);
+      await app.pump(tester);
+      app.users.add(unverifiedMember);
+      await settle(tester);
+    }
+
+    /// Reloading finds [user], as Firebase now has them.
+    void reloadFinds(AuthUser user) =>
+        when(() => app.repository.reloadUser()).thenAnswer((_) async {
+          app.users.add(user);
+          return Ok(user);
+        });
+
+    /// Signing out starts a new guest, on onboarding.
+    void signOutWorks() {
+      signOutStartsNewGuest();
+      when(() => app.repository.signOut()).thenAnswer((_) async {
+        app.users.add(null);
+        return const Ok(null);
+      });
+    }
+
+    testWidgets('a guest who creates an email account is mailed, waits on '
+        'Check your email, and goes on by itself once verified, keeping '
+        'their data', (tester) async {
+      await app.startAs(tester, guest);
+      await app.tapTab(tester, 'Profile');
+      await tapText(tester, 'Create an account to keep your workouts');
+      await tapText(tester, 'Use email instead');
+      when(() => app.repository.signUpWithEmail(any(), any()))
+          .thenAnswer((_) async {
+            app.users.add(unverifiedMember);
+            return const Ok(unverifiedMember);
+          });
+      reloadFinds(unverifiedMember);
+
+      await tester.enterText(find.byType(TextField).first, 'a@b.co');
+      await tester.enterText(find.byType(TextField).last, 'secret1');
+      await tester.tap(find.widgetWithText(ForgeButton, 'Create account'));
+      await settle(tester);
+
+      verify(() => app.repository.sendEmailVerification()).called(1);
+      expect(verificationPage(), findsOneWidget);
+      expect(find.byType(AuthPage), findsNothing);
+      expect(find.byType(ForgeNavigationBar), findsNothing);
+      expect(find.text('a@b.co'), findsOneWidget);
+      expect(find.text('Waiting for confirmation…'), findsOneWidget);
+
+      // Still unverified on the next check: it waits.
+      await tester.pump(EmailVerificationCubit.checkEvery);
+      await settle(tester);
+      expect(verificationPage(), findsOneWidget);
+
+      // Verified in the mail app: the next check opens the app on the same
+      // profile.
+      reloadFinds(member);
+      await tester.pump(EmailVerificationCubit.checkEvery);
+      await tester.pumpAndSettle();
+      expect(verificationPage(), findsNothing);
+      expect(find.byType(ForgeNavigationBar), findsOneWidget);
+      verify(() => app.profiles.watchProfile('u1')).called(1);
+      verifyNever(() => app.profiles.completeOnboarding(any(), any()));
+    });
+
+    testWidgets('an unverified account waits on it from the start; coming '
+        'back to the app checks at once', (tester) async {
+      await startUnverified(tester);
+      expect(verificationPage(), findsOneWidget);
+
+      tester.binding
+        ..handleAppLifecycleStateChanged(AppLifecycleState.inactive)
+        ..handleAppLifecycleStateChanged(AppLifecycleState.hidden)
+        ..handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      reloadFinds(member);
+      clearInteractions(app.repository);
+      // Hidden, it does not check.
+      await tester.pump(EmailVerificationCubit.checkEvery * 2);
+      verifyNever(() => app.repository.reloadUser());
+
+      tester.binding
+        ..handleAppLifecycleStateChanged(AppLifecycleState.hidden)
+        ..handleAppLifecycleStateChanged(AppLifecycleState.inactive)
+        ..handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+
+      expect(verificationPage(), findsNothing);
+      expect(find.byType(ForgeNavigationBar), findsOneWidget);
+    });
+
+    testWidgets('Resend mails again, then counts down', (tester) async {
+      await startUnverified(tester);
+
+      await tester.tap(find.text('Resend email'));
+      await settle(tester);
+
+      verify(() => app.repository.sendEmailVerification()).called(1);
+      expect(find.text('Email sent'), findsOneWidget);
+      expect(find.textContaining('Resend in 5'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 60));
+      expect(find.text('Resend email'), findsOneWidget);
+    });
+
+    testWidgets('Use another email signs out to a new guest; the account '
+        'and its data stay', (tester) async {
+      await startUnverified(tester);
+      signOutWorks();
+
+      await tester.tap(find.text('Use another email'));
+      await tester.pumpAndSettle();
+
+      verify(() => app.repository.signOut()).called(1);
+      verifyNever(() => app.repository.deleteAccount());
+      verifyNever(
+        () => app.account.deleteAccount(appleCode: any(named: 'appleCode')),
+      );
+      expect(verificationPage(), findsNothing);
+      expect(find.byType(OnboardingPage), findsOneWidget);
+    });
+
+    testWidgets('after signing out, password reset still works', (
+      tester,
+    ) async {
+      await startUnverified(tester);
+      signOutWorks();
+      when(() => app.repository.sendPasswordReset('a@b.co'))
+          .thenAnswer((_) async => const Ok(null));
+      await tester.tap(find.text('Use another email'));
+      await tester.pumpAndSettle();
+
+      app.router.go(Routes.onboardingSignIn);
+      await tester.pumpAndSettle();
+      await tapText(tester, 'Use email instead');
+      await tester.enterText(find.byType(TextField).first, 'a@b.co');
+      await tapText(tester, 'Forgot password?');
+
+      verify(() => app.repository.sendPasswordReset('a@b.co')).called(1);
+      expect(find.text('Password reset email sent'), findsOneWidget);
+    });
+
+    testWidgets('signing in to an unverified account from onboarding lands '
+        'on it', (tester) async {
+      app.storedProfile = const UserProfile();
+      await app.startAs(tester, guest);
+      expect(find.byType(OnboardingPage), findsOneWidget);
+      app.router.go(Routes.onboardingSignIn);
+      await tester.pumpAndSettle();
+      await tapText(tester, 'Use email instead');
+      when(() => app.repository.signInWithEmail(any(), any()))
+          .thenAnswer((_) async {
+            app.storedProfile = onboarded;
+            app.users.add(_unverifiedOther);
+            return const Ok(_unverifiedOther);
+          });
+      when(() => app.repository.currentUser).thenReturn(null);
+
+      await tester.enterText(find.byType(TextField).first, 'b@c.de');
+      await tester.enterText(find.byType(TextField).last, 'secret1');
+      await tester.tap(find.widgetWithText(ForgeButton, 'Sign in').last);
+      await settle(tester);
+
+      expect(verificationPage(), findsOneWidget);
+      expect(find.text('b@c.de'), findsOneWidget);
+      verifyNever(() => app.repository.sendEmailVerification());
+    });
+
+    testWidgets('a Google account with an unverified email goes straight in', (
+      tester,
+    ) async {
+      await app.startAs(
+        tester,
+        const AuthUser(
+          id: 'u1',
+          email: 'a@b.co',
+          signInMethods: {SignInMethod.email, SignInMethod.google},
+        ),
+      );
+
+      expect(verificationPage(), findsNothing);
+      expect(find.byType(ForgeNavigationBar), findsOneWidget);
     });
   });
 
