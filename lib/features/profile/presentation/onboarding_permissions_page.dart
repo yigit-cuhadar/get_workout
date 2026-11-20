@@ -17,8 +17,8 @@ import '../domain/user_profile.dart';
 
 /// After the last onboarding question: analytics consent unless the user
 /// already answered, the workout reminder unless the device already lets
-/// the app notify, then the health store unless access is granted or there
-/// is none, then [next] (the program suggestion). A refused permission
+/// the app notify, then the health store unless access is granted, was
+/// already asked for on this device, or there is none, then [next] (the program suggestion). A refused permission
 /// moves on silently; a consent that did not save is asked again in the
 /// tabs.
 class OnboardingPermissionsPage extends StatelessWidget {
@@ -158,8 +158,12 @@ class _StepsState extends State<_Steps> {
   }
 }
 
+/// iOS never tells whether read access was given, so once the user was
+/// asked on this device ([StepsAccess.undetermined]) asking again would only
+/// repeat a question HealthKit no longer shows.
 bool _asksHealth(StepsAccess? access) => switch (access) {
-  StepsAccess.explain || StepsAccess.denied || StepsAccess.undetermined => true,
+  StepsAccess.explain || StepsAccess.denied => true,
+  StepsAccess.undetermined ||
   StepsAccess.granted ||
   StepsAccess.unsupported ||
   StepsAccess.notInstalled ||
