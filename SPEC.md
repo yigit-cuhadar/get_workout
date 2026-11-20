@@ -1569,6 +1569,19 @@ Decisions (the canvases they were drawn on are deleted):
   Behaviour and texts are under Feature notes › App shell, settings and
   onboarding › Update and maintenance gate.
 
+- Release readiness (2026-11-20, canvas
+  https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ): U1 A (update required:
+  one-button page), U2 B (update offer: a sheet once at start), U3 A
+  (maintenance with Try again), V1 A' (verify email: no "I've verified",
+  detects it by itself), V2 A (wrong address: change it on the same
+  account), S1 A (Help & feedback under Profile › More), S2 B (message and
+  email only), R1 B (the review question as a dialog over the summary),
+  R2 B' (the same dialog thanks and offers "Write to us"), review timing
+  (after the 2nd workout or on the 3rd distinct day of use, then records 30
+  days apart), W1 A (RevenueCat Customer Center with a 1-month-free offer at
+  cancel), W2 A (win-back tag on the plan cards), D1 A (in dark mode the body
+  model is halfway between surface and ink). Explicit consent for body data
+  was dropped by the owner.
 ## Open questions
 
 - Google sign-in is offered next to email (`socialProviders` in

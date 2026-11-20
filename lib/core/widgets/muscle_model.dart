@@ -11,9 +11,12 @@ import '../../features/exercises/presentation/vocabulary_labels.dart';
 import '../../app/theme.dart';
 import '../../l10n/app_localizations.dart';
 
-/// The body's colour where no muscle colour is given.
-Color muscleModelBase(ForgePalette p) =>
-    Color.lerp(p.surface, p.lineStrong, 0.45)!;
+/// The body's colour where no muscle colour is given. On a dark surface it is
+/// halfway to the ink, so the lit model reads as a light grey sculpture
+/// (owner's pick D1 A, 2026-11-20).
+Color muscleModelBase(ForgePalette p) => p.surface.computeLuminance() < 0.5
+    ? Color.lerp(p.surface, p.ink, 0.55)!
+    : Color.lerp(p.surface, p.lineStrong, 0.45)!;
 
 /// Every mesh of each muscle in [colors] in that muscle's colour.
 Map<String, Color> muscleMeshColors(Map<Muscle, Color> colors) => {
