@@ -2264,7 +2264,6 @@
   "historyChangedTitle": "Changed elsewhere",
   "historyDeletedTitle": "Deleted elsewhere",
   "workoutSaving": "Saving",
-
   "gateUpdateRequiredTitle": "Update required",
   "gateUpdateRequiredMessage": "This version of GetWorkout is no longer supported. Update to keep training; your workouts are safe.",
   "gateUpdateAvailableTitle": "A new version is available",
@@ -2291,5 +2290,6 @@
   "reviewNo": "Not really",
   "reviewThanksTitle": "Thanks for telling us",
   "reviewThanksMessage": "Tell us what to improve and we will look into it.",
-  "reviewWriteToUs": "Write to us"
+  "reviewWriteToUs": "Write to us",
+  "verifyEmailTooMany": "Wait a minute before sending another email."
 }

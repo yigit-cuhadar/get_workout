@@ -49,6 +49,7 @@ AuthStrings localizedAuthStrings(AppLocalizations l10n) => AuthStrings(
   sendLink: l10n.authSendLink,
   signOutInstead: l10n.authSignOutInstead,
   verificationFailed: l10n.errorGeneric,
+  tooManyEmails: l10n.verifyEmailTooMany,
   errorFor: (failure) => switch (failure) {
     NetworkFailure() => l10n.errorNetwork,
     AuthFailure(:final code) => switch (code) {
