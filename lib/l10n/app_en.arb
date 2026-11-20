@@ -120,6 +120,11 @@
   "@authResendIn": {"placeholders": {"seconds": {"type": "String"}}},
   "authEmailSent": "Email sent",
   "authUseAnotherAccount": "Use another email",
+  "authChangeEmailTitle": "Change email",
+  "authChangeEmailBody": "We will send a new link. Your workouts stay with this account.",
+  "authNewEmail": "New email",
+  "authSendLink": "Send link",
+  "authSignOutInstead": "Sign out instead",
   "guestSheetTitle": "Keep your workouts safe",
   "guestSheetMessage": "Create an account to back up and use GetWorkout on every device. Your workouts stay as they are.",
 

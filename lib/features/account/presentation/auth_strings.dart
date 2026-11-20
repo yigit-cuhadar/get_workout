@@ -43,6 +43,11 @@ AuthStrings localizedAuthStrings(AppLocalizations l10n) => AuthStrings(
   resendIn: l10n.authResendIn('{seconds}'),
   emailSent: l10n.authEmailSent,
   useAnotherAccount: l10n.authUseAnotherAccount,
+  changeEmailTitle: l10n.authChangeEmailTitle,
+  changeEmailBody: l10n.authChangeEmailBody,
+  newEmail: l10n.authNewEmail,
+  sendLink: l10n.authSendLink,
+  signOutInstead: l10n.authSignOutInstead,
   verificationFailed: l10n.errorGeneric,
   errorFor: (failure) => switch (failure) {
     NetworkFailure() => l10n.errorNetwork,

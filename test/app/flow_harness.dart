@@ -202,6 +202,7 @@ class FlowApp {
     when(() => repository.currentUser).thenReturn(guest);
     when(() => repository.sendEmailVerification())
         .thenAnswer((_) async => const Ok(null));
+    when(() => repository.verificationSentAt).thenReturn(null);
     // The verification page reloads quietly; tests that verify say so.
     when(() => repository.reloadUser())
         .thenAnswer((_) async => const Err(NetworkFailure()));
@@ -229,6 +230,8 @@ class FlowApp {
       () => EmailVerificationCubit(
         reloadUser: ReloadUser(repository),
         sendEmailVerification: SendEmailVerification(repository),
+        changeEmail: ChangeEmail(repository),
+        getVerificationSentAt: GetVerificationSentAt(repository),
         signOut: SignOut(repository),
       ),
     );

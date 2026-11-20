@@ -382,7 +382,9 @@ GoRouter buildRouter(
     // auth change (AuthPage.onSignedIn), it restores that page. A pending
     // profile never changes the redirect; a new user's settled profile can,
     // even when its gate equals the previous user's (the splash after a
-    // retried guest start), hence the uid in the key.
+    // retried guest start), hence the uid in the key, and so can the same
+    // user's after a pending spell (signed in again after an email change
+    // ended the session), hence distinct before the filter.
     refreshListenable: Listenable.merge([
       deletionUnderway,
       _StreamListenable(
@@ -401,8 +403,8 @@ GoRouter buildRouter(
       _StreamListenable(
         profile.stream
             .map((state) => (uid: state.uid, gate: _profileGate(state)))
-            .where((key) => key.gate != _ProfileGate.pending)
-            .distinct(),
+            .distinct()
+            .where((key) => key.gate != _ProfileGate.pending),
       ),
     ]),
     redirect: (context, state) {

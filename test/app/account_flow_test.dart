@@ -220,6 +220,103 @@ void main() {
           return Ok(user);
         });
 
+    Future<void> openChangeEmail(WidgetTester tester) async {
+      await tester.tap(find.text('Use another email'));
+      await settle(tester);
+      expect(find.text('Change email'), findsOneWidget);
+      expect(
+        find.text(
+          'We will send a new link. Your workouts stay with this account.',
+        ),
+        findsOneWidget,
+      );
+    }
+
+    Future<void> signOutFromSheet(WidgetTester tester) async {
+      await openChangeEmail(tester);
+      await tester.tap(find.text('Sign out instead'));
+      await tester.pumpAndSettle();
+    }
+
+    const changed = AuthUser(
+      id: 'u1',
+      email: 'new@b.co',
+      signInMethods: {SignInMethod.email},
+      emailVerified: true,
+    );
+
+    testWidgets('Change email sends the link to the new address of the same '
+        'account; once confirmed the app goes on', (tester) async {
+      await startUnverified(tester);
+      when(() => app.repository.changeEmail('new@b.co'))
+          .thenAnswer((_) async => const Ok(null));
+
+      await openChangeEmail(tester);
+      await tester.enterText(find.byType(TextField), 'new@b.co');
+      await tester.tap(find.text('Send link'));
+      await settle(tester);
+
+      verify(() => app.repository.changeEmail('new@b.co')).called(1);
+      expect(find.text('Change email'), findsNothing);
+      expect(find.text('new@b.co'), findsOneWidget);
+      expect(find.text('a@b.co'), findsNothing);
+      expect(find.textContaining('Resend in'), findsOneWidget);
+
+      reloadFinds(changed);
+      await tester.pump(EmailVerificationCubit.checkEvery);
+      await tester.pumpAndSettle();
+      expect(verificationPage(), findsNothing);
+      expect(find.byType(ForgeNavigationBar), findsOneWidget);
+      verifyNever(() => app.repository.signOut());
+      verifyNever(() => app.profiles.completeOnboarding(any(), any()));
+    });
+
+    testWidgets('when confirming the change ends the session, the account '
+        'comes straight back, not a new guest', (tester) async {
+      await startUnverified(tester);
+      when(() => app.repository.changeEmail('new@b.co'))
+          .thenAnswer((_) async => const Ok(null));
+      await openChangeEmail(tester);
+      await tester.enterText(find.byType(TextField), 'new@b.co');
+      await tester.tap(find.text('Send link'));
+      await settle(tester);
+      // The repository signs in to the new address in place of a guest.
+      when(() => app.repository.signInAnonymously()).thenAnswer((_) async {
+        app.users.add(changed);
+        return const Ok(changed);
+      });
+
+      app.users.add(null);
+      await tester.pumpAndSettle();
+
+      expect(verificationPage(), findsNothing);
+      expect(find.byType(OnboardingPage), findsNothing);
+      expect(find.byType(ForgeNavigationBar), findsOneWidget);
+    });
+
+    for (final (code, message) in [
+      ('email-already-in-use', 'This email is already registered'),
+      ('invalid-email', 'Email address is not valid'),
+      ('requires-recent-login', 'Please sign in again to continue'),
+    ]) {
+      testWidgets('a refused new address ($code) says why in the sheet', (
+        tester,
+      ) async {
+        await startUnverified(tester);
+        when(() => app.repository.changeEmail(any()))
+            .thenAnswer((_) async => Err(AuthFailure('x', code: code)));
+        await openChangeEmail(tester);
+
+        await tester.enterText(find.byType(TextField), 'new@b.co');
+        await tester.tap(find.text('Send link'));
+        await settle(tester);
+
+        expect(find.text(message), findsOneWidget);
+        expect(find.text('Change email'), findsOneWidget);
+        expect(find.text('a@b.co'), findsOneWidget);
+      });
+    }
+
     /// Signing out starts a new guest, on onboarding.
     void signOutWorks() {
       signOutStartsNewGuest();
@@ -238,6 +335,9 @@ void main() {
       await tapText(tester, 'Use email instead');
       when(() => app.repository.signUpWithEmail(any(), any()))
           .thenAnswer((_) async {
+            // The link goes out with the sign-up.
+            when(() => app.repository.verificationSentAt)
+                .thenReturn(DateTime.now());
             app.users.add(unverifiedMember);
             return const Ok(unverifiedMember);
           });
@@ -254,6 +354,8 @@ void main() {
       expect(find.byType(ForgeNavigationBar), findsNothing);
       expect(find.text('a@b.co'), findsOneWidget);
       expect(find.text('Waiting for confirmation…'), findsOneWidget);
+      // The link just went out, so Resend counts down from the start.
+      expect(find.textContaining('Resend in'), findsOneWidget);
 
       // Still unverified on the next check: it waits.
       await tester.pump(EmailVerificationCubit.checkEvery);
@@ -309,13 +411,12 @@ void main() {
       expect(find.text('Resend email'), findsOneWidget);
     });
 
-    testWidgets('Use another email signs out to a new guest; the account '
+    testWidgets('Sign out instead signs out to a new guest; the account '
         'and its data stay', (tester) async {
       await startUnverified(tester);
       signOutWorks();
 
-      await tester.tap(find.text('Use another email'));
-      await tester.pumpAndSettle();
+      await signOutFromSheet(tester);
 
       verify(() => app.repository.signOut()).called(1);
       verifyNever(() => app.repository.deleteAccount());
@@ -333,8 +434,7 @@ void main() {
       signOutWorks();
       when(() => app.repository.sendPasswordReset('a@b.co'))
           .thenAnswer((_) async => const Ok(null));
-      await tester.tap(find.text('Use another email'));
-      await tester.pumpAndSettle();
+      await signOutFromSheet(tester);
 
       app.router.go(Routes.onboardingSignIn);
       await tester.pumpAndSettle();
