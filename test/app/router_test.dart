@@ -261,7 +261,7 @@ void main() {
 
   late DeletionUnderway deletionUnderway;
 
-  /// A real consent cubit for the consent prompt's tests; otherwise every
+  /// A real consent cubit for the no-consent-page tests; otherwise every
   /// user has answered.
   ConsentCubit? consent;
 
@@ -2106,41 +2106,25 @@ void main() {
     expect(find.byType(ForgeNavigationBar), findsOneWidget);
   });
 
-  group('consent prompt', () {
+  group('no consent page', () {
     const unanswered = (consent: null, fromServer: true);
-    final dialog = find.text('Help improve GetWorkout?');
+    final page = find.text('Help improve GetWorkout?');
     late MockConsentRepository consents;
+    late MockTelemetry telemetry;
 
-    /// Starts as onboarded guest u1, who answered; [answers] are the
-    /// server's answers of the other users (none: not answered).
-    Future<void> start(
-      WidgetTester tester, [
-      Map<String, bool> answers = const {},
-    ]) async {
+    /// Starts as onboarded guest u1, who answered; every other user never
+    /// answered.
+    Future<void> start(WidgetTester tester) async {
       setUpAuth();
       consents = MockConsentRepository();
-      // As Firestore's cache does, a saved answer comes back at once.
-      final watched = <String, StreamController<StoredConsent>>{};
       when(() => consents.watchConsent(any())).thenAnswer((call) {
         final uid = call.positionalArguments.first as String;
         final controller = StreamController<StoredConsent>()
-          ..add(
-            uid == 'u1'
-                ? (consent: true, fromServer: true)
-                : answers.containsKey(uid)
-                ? (consent: answers[uid], fromServer: true)
-                : unanswered,
-          );
+          ..add(uid == 'u1' ? (consent: true, fromServer: true) : unanswered);
         addTearDown(controller.close);
-        watched[uid] = controller;
         return controller.stream;
       });
-      when(() => consents.saveConsent(any(), any())).thenAnswer((call) async {
-        final [uid as String, consent as bool] = call.positionalArguments;
-        watched[uid]?.add((consent: consent, fromServer: false));
-        return const Ok(null);
-      });
-      final telemetry = MockTelemetry();
+      telemetry = MockTelemetry();
       when(() => telemetry.follow(any()))
           .thenAnswer((_) async => const Ok(null));
       when(() => telemetry.apply(any(), any()))
@@ -2159,10 +2143,10 @@ void main() {
       users.add(guest);
       await tester.pumpAndSettle();
       expect(find.byType(TodayPage), findsOneWidget);
-      expect(dialog, findsNothing);
     }
 
-    testWidgets('a new guest after sign-out is asked once, in onboarding', (
+    testWidgets('a new guest after sign-out goes from the last onboarding '
+        'question to the reminder, collected without being asked', (
       tester,
     ) async {
       await start(tester);
@@ -2170,55 +2154,45 @@ void main() {
         users.add(const AuthUser(id: 'u2', isAnonymous: true));
         return const Ok(guest);
       });
-      // The new guest's profile arrives after their consent.
       storedProfile = null;
 
       users.add(null);
       await tester.pumpAndSettle();
-      // Still on the tabs, the new guest's profile loading.
-      expect(find.byType(ForgeNavigationBar), findsOneWidget);
-      expect(dialog, findsNothing);
-
       profileStream.add(choicesAnswered);
       await tester.pumpAndSettle();
       expect(find.byType(OnboardingPage), findsOneWidget);
-      expect(dialog, findsNothing);
 
-      // Right after the last question, before the reminder.
       await tester.tap(find.text('Get started'));
       await tester.pumpAndSettle();
       for (var i = 0; i < ProfileField.values.length; i++) {
         await tester.tap(find.text('Continue'));
         await tester.pumpAndSettle();
       }
-      expect(dialog, findsOneWidget);
-      await tester.tap(find.text("Don't allow"));
-      await tester.pumpAndSettle();
-      verify(() => consents.saveConsent('u2', false)).called(1);
+      expect(page, findsNothing);
       if (find.text('Remind you on training days?').evaluate().isNotEmpty) {
         await tester.tap(find.text('Not now'));
         await tester.pumpAndSettle();
       }
 
       expect(find.byType(TodayPage), findsOneWidget);
-      expect(dialog, findsNothing);
+      expect(page, findsNothing);
+      verify(() => telemetry.apply('u2', null)).called(1);
+      verifyNever(() => consents.saveConsent(any(), any()));
     });
 
-    testWidgets('an account signed in from the tabs is asked once its '
-        'profile shows it onboarded', (tester) async {
+    testWidgets('an account that never answered signs in from the tabs and '
+        'stays on them', (tester) async {
       await start(tester);
       storedProfile = null;
 
       users.add(const AuthUser(id: 'u2', email: 'b@c.de'));
       await tester.pumpAndSettle();
-      expect(dialog, findsNothing);
-
       profileStream.add(onboarded);
       await tester.pumpAndSettle();
-      // A full page over the tabs.
-      expect(find.byType(TodayPage, skipOffstage: false), findsOneWidget);
-      expect(find.byType(TodayPage), findsNothing);
-      expect(dialog, findsOneWidget);
+
+      expect(find.byType(TodayPage), findsOneWidget);
+      expect(page, findsNothing);
+      verify(() => telemetry.apply('u2', null)).called(1);
     });
   });
 

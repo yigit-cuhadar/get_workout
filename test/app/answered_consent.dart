@@ -6,8 +6,8 @@ import 'package:mocktail/mocktail.dart';
 class _AnsweredConsentCubit extends MockCubit<ConsentState>
     implements ConsentCubit {}
 
-/// A consent cubit whose user has answered, for the shell's consent prompt
-/// and the Profile tab's privacy section.
+/// A consent cubit whose user has answered, for the Profile tab's privacy
+/// section.
 BlocProvider<ConsentCubit> answeredConsent() {
   final cubit = _AnsweredConsentCubit();
   when(

@@ -127,7 +127,7 @@ void main() {
 
   FirebaseTelemetry telemetry() => FirebaseTelemetry(
     allowed: true,
-    collectUnanswered: false,
+    collectUnanswered: true,
     directory: () async => directory,
     analytics: analytics,
     crashlytics: crashlytics,
@@ -177,7 +177,29 @@ void main() {
     await signIn(guestA);
     await answer('a', true);
     expect(collecting, isTrue);
-    expect(cubit.state.consent, isTrue);
+    expect(cubit.state.sharing, isTrue);
+    await cubit.close();
+  });
+
+  test(
+    'a user who never answered is collected, and shown as sharing',
+    () async {
+      final cubit = build();
+      await signIn(guestA);
+      await answer('a', null);
+      expect(collecting, isTrue);
+      expect(cubit.state.sharing, isTrue);
+      await cubit.close();
+    },
+  );
+
+  test('a no stops collection for that user', () async {
+    final cubit = build();
+    await signIn(guestA);
+    await answer('a', null);
+    await answer('a', false);
+    expect(collecting, isFalse);
+    expect(cubit.state.sharing, isFalse);
     await cubit.close();
   });
 
@@ -252,12 +274,11 @@ void main() {
     },
   );
 
-  test('the deleted user\'s vanished answer neither asks nor applies, and '
-      'the next guest is asked once the server says so', () async {
+  test('the deleted user\'s vanished answer does not turn collection on, '
+      'and the next guest is collected once the server says so', () async {
     final cubit = build();
     await signIn(guestA);
-    await answer('a', null);
-    expect(cubit.state.unanswered, isTrue);
+    await answer('a', false);
     history.clear();
 
     deleting.value = true;
@@ -265,7 +286,7 @@ void main() {
     expect(cubit.state, const ConsentState());
     // The server deleted A's document.
     await answer('a', null);
-    expect(cubit.state.unanswered, isFalse);
+    expect(cubit.state.loaded, isFalse);
     expect(history, isEmpty);
 
     // Signed out before the deletion ends; A is not followed again.
@@ -277,7 +298,7 @@ void main() {
     await signIn(guestB);
     await answer('b', null);
     expect(cubit.state.uid, 'b');
-    expect(cubit.state.unanswered, isTrue);
+    expect(collecting, isTrue);
     await cubit.close();
   });
 
@@ -294,22 +315,21 @@ void main() {
     stored.remove('a');
     deleting.value = false;
     await answer('a', true);
-    expect(cubit.state.consent, isTrue);
+    expect(cubit.state.sharing, isTrue);
     expect(collecting, isTrue);
     await cubit.close();
   });
 
-  test('a cached copy without an answer neither asks nor applies', () async {
+  test('a cached copy without an answer changes nothing until the server '
+      'confirms it', () async {
     final cubit = build();
     await signIn(guestA);
     history.clear();
     await answer('a', null, fromServer: false);
-    expect(cubit.state.unanswered, isFalse);
     expect(history, isEmpty);
 
     await answer('a', null);
-    expect(cubit.state.unanswered, isTrue);
-    expect(collecting, isFalse);
+    expect(collecting, isTrue);
     await cubit.close();
   });
 
@@ -381,7 +401,7 @@ void main() {
     final cubit = build();
     await signIn(guestA);
     await answer('a', null);
-    // A dialog asked A; B signs in before the answer comes.
+    // The switch showed A's; B signs in before it is turned.
     await signIn(guestB);
     await cubit.answer(true);
     await signIn(null);
@@ -405,7 +425,7 @@ void main() {
     expect: () => [
       const ConsentState(uid: 'a', stored: (consent: false, fromServer: true)),
       isA<ConsentState>()
-          .having((s) => s.consent, 'consent', false)
+          .having((s) => s.sharing, 'sharing', false)
           .having((s) => s.failure, 'failure', isA<NetworkFailure>()),
     ],
   );

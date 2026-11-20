@@ -72,10 +72,6 @@
   "privacyShareUsageInfo": "Usage statistics and crash reports",
   "privacyPolicy": "Privacy policy",
   "privacySaveFailed": "Couldn't save your choice. Try again",
-  "consentTitle": "Help improve GetWorkout?",
-  "consentBody": "Share usage statistics and crash reports from this device with us. They are not used for advertising. Nothing is shared unless you allow it, and you can change this any time in Profile.",
-  "consentAllow": "Allow",
-  "consentDeny": "Don't allow",
 
   "authSignIn": "Sign in",
   "authSignUp": "Create account",

@@ -6,8 +6,6 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../../account/presentation/consent_cubit.dart';
-import '../../account/presentation/consent_prompt.dart';
 import '../../notifications/domain/reminder_settings_changes.dart';
 import '../../notifications/presentation/notifications_cubit.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -15,12 +13,10 @@ import '../../steps/domain/steps.dart';
 import '../../steps/presentation/health_access_cubit.dart';
 import '../domain/user_profile.dart';
 
-/// After the last onboarding question: analytics consent unless the user
-/// already answered, the workout reminder unless the device already lets
-/// the app notify, then the health store unless access is granted, was
-/// already asked for on this device, or there is none, then [next] (the program suggestion). A refused permission
-/// moves on silently; a consent that did not save is asked again in the
-/// tabs.
+/// After the last onboarding question: the workout reminder unless the
+/// device already lets the app notify, then the health store unless access
+/// is granted, was already asked for on this device, or there is none, then
+/// [next] (the program suggestion). A refused permission moves on silently.
 class OnboardingPermissionsPage extends StatelessWidget {
   const OnboardingPermissionsPage({super.key, required this.next});
 
@@ -33,7 +29,7 @@ class OnboardingPermissionsPage extends StatelessWidget {
   );
 }
 
-enum _Step { consent, reminders, health, done }
+enum _Step { reminders, health, done }
 
 class _Steps extends StatefulWidget {
   const _Steps({required this.next});
@@ -45,11 +41,7 @@ class _Steps extends StatefulWidget {
 }
 
 class _StepsState extends State<_Steps> {
-  var _step = _Step.consent;
-
-  /// Taken when the step is reached: an answer read later is asked in the
-  /// tabs instead.
-  late final bool _asksConsent = context.read<ConsentCubit>().state.unanswered;
+  var _step = _Step.reminders;
 
   /// Told while the reminder step shows, so the health step rarely waits.
   late final Future<void> _healthKnown;
@@ -62,11 +54,6 @@ class _StepsState extends State<_Steps> {
 
   void _go(_Step step) {
     if (mounted) setState(() => _step = step);
-  }
-
-  void _answerConsent(bool consent) {
-    unawaited(context.read<ConsentCubit>().answer(consent));
-    _go(_Step.reminders);
   }
 
   Future<void> _turnOnReminders() async {
@@ -102,8 +89,6 @@ class _StepsState extends State<_Steps> {
       (NotificationsCubit cubit) => cubit.state.allowed == true,
     );
     final step = switch (_step) {
-      _Step.consent when !_asksConsent =>
-        notifying ? _Step.health : _Step.reminders,
       // Allowed already: nothing to ask, so the reminder stays as it is.
       _Step.reminders when notifying => _Step.health,
       final step => step,
@@ -111,8 +96,6 @@ class _StepsState extends State<_Steps> {
     switch (step) {
       case _Step.done:
         return widget.next;
-      case _Step.consent:
-        return _StepPage(AnalyticsConsentPrompt(onAnswer: _answerConsent));
       case _Step.reminders:
         return _StepPage(
           PermissionPrompt.ask(

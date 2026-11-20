@@ -36,8 +36,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
   final telemetry = await initFirebase(
     options: options,
     env: env,
-    // Opt-in until Group 12's opt-out lands.
-    collectUnanswered: false,
+    collectUnanswered: true,
   );
   await AccountModule.clearDeletedAccountCache();
   const RemoteConfigModule(
