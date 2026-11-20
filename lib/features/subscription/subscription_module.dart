@@ -69,9 +69,16 @@ const _freeMonth = WinBackOffer.free(
 /// Needs `AuthModule`, `AccountModule` (telemetry) and a
 /// `RemoteConfigRepository` with [remoteConfigDefaults].
 class SubscriptionModule implements FeatureModule {
-  const SubscriptionModule({required this.backend});
+  const SubscriptionModule({
+    required this.backend,
+    required this.pastOnboarding,
+  });
 
   final PurchasesBackend? backend;
+
+  /// Whether a user is past onboarding, once known: the install's ad
+  /// attribution is looked up only before (the profile feature's).
+  final Future<bool> Function(GetIt sl, String uid) pastOnboarding;
 
   /// The Remote Config keys this feature reads, with their defaults.
   static const remoteConfigDefaults = <String, Object>{
@@ -121,6 +128,7 @@ class SubscriptionModule implements FeatureModule {
           watchAuthUser: sl(),
           entitlement: sl(),
           recordAdAttribution: sl(),
+          pastOnboarding: (uid) => pastOnboarding(sl, uid),
         ),
         dispose: (session) => session.cancel(),
       )

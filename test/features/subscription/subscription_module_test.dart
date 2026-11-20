@@ -19,7 +19,7 @@ void main() {
   tearDown(() => sl.reset());
 
   test('without a backend the store is unavailable, never the fake', () async {
-    const SubscriptionModule(backend: null).register(sl);
+    const SubscriptionModule(backend: null, pastOnboarding: _past).register(sl);
 
     expect(sl<PurchasesRepository>(), isA<UnavailablePurchasesRepository>());
     expect(sl.isRegistered<FakePurchasesRepository>(), isFalse);
@@ -32,7 +32,10 @@ void main() {
   });
 
   test('the fake backend registers the fake and its debug controls', () {
-    const SubscriptionModule(backend: FakeBackend(fakePlans)).register(sl);
+    const SubscriptionModule(
+      backend: FakeBackend(fakePlans),
+      pastOnboarding: _past,
+    ).register(sl);
 
     expect(sl<PurchasesRepository>(), isA<FakePurchasesRepository>());
     expect(SubscriptionModule.debugControls(sl), isNotNull);
@@ -45,7 +48,10 @@ void main() {
       backend: FakeRemoteConfigBackend(),
     ).register(sl);
     sl.registerSingleton<Telemetry>(MockTelemetry());
-    const SubscriptionModule(backend: FakeBackend(fakePlans)).register(sl);
+    const SubscriptionModule(
+      backend: FakeBackend(fakePlans),
+      pastOnboarding: _past,
+    ).register(sl);
 
     Future<PaywallLayout> layout() async {
       final cubit = sl<PremiumPaywallCubit>();
@@ -61,3 +67,5 @@ void main() {
     expect(await layout(), PaywallLayout.list);
   });
 }
+
+Future<bool> _past(GetIt sl, String uid) async => true;

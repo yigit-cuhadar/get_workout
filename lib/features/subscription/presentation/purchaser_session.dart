@@ -9,13 +9,16 @@ import 'package:forge_purchases/forge_purchases.dart';
 /// and resets when nobody is signed in. Until a switch succeeds the
 /// entitlement stays unknown, so a failed switch is retried after
 /// [retryDelay], doubling up to [maxRetryDelay], or at once on [resume].
-/// Once a uid is identified, its install's ad attribution is recorded
-/// (once per uid and launch) for the store's targeting of paid traffic.
+/// Once a uid is identified (once per uid and launch), the install's ad
+/// attribution is applied to it for the store's targeting of paid traffic;
+/// the ad network is asked only while that user is not [pastOnboarding] and
+/// the install has no final answer yet.
 class PurchaserSession {
   PurchaserSession({
     required WatchAuthUser watchAuthUser,
     required this._entitlement,
     required this._recordAdAttribution,
+    required this._pastOnboarding,
     this.retryDelay = const Duration(seconds: 1),
     this.maxRetryDelay = const Duration(seconds: 30),
   }) : _nextDelay = retryDelay {
@@ -29,6 +32,7 @@ class PurchaserSession {
   final Duration maxRetryDelay;
   final EntitlementCubit _entitlement;
   final RecordAdAttribution _recordAdAttribution;
+  final Future<bool> Function(String uid) _pastOnboarding;
   final _attributed = <String>{};
   late final StreamSubscription<String?> _users;
   Timer? _retry;
@@ -56,7 +60,7 @@ class PurchaserSession {
     // A later user change has started its own switch.
     if (_cancelled || uid != _uid) return;
     if (result.isOk) {
-      if (uid != null && _attributed.add(uid)) unawaited(_attribute());
+      if (uid != null && _attributed.add(uid)) unawaited(_attribute(uid));
       return;
     }
     final failure = result.failureOrNull!;
@@ -75,8 +79,15 @@ class PurchaserSession {
   }
 
   /// Not attributed, or unknown: the default offering stays.
-  Future<void> _attribute() async {
-    final result = await _recordAdAttribution();
+  Future<void> _attribute(String uid) async {
+    final lookUp = !await _pastOnboarding(uid);
+    // The store has switched to another user meanwhile: this one gets it
+    // when they are back.
+    if (_cancelled || uid != _uid) {
+      _attributed.remove(uid);
+      return;
+    }
+    final result = await _recordAdAttribution(lookUp: lookUp);
     Log.d('purchases', 'Ad attribution: ${result.valueOrNull ?? result}');
   }
 

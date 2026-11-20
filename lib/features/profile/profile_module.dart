@@ -12,6 +12,18 @@ import 'presentation/profile_cubit.dart';
 class ProfileModule implements FeatureModule {
   const ProfileModule();
 
+  /// Whether [uid] is past onboarding, once their profile has loaded; true
+  /// when another user is signed in by then.
+  static Future<bool> pastOnboarding(GetIt sl, String uid) async {
+    bool settled(ProfileState state) =>
+        state.uid != uid || state.status != ProfileStatus.loading;
+    final profile = sl<ProfileCubit>();
+    final state = settled(profile.state)
+        ? profile.state
+        : await profile.stream.firstWhere(settled);
+    return state.uid != uid || state.pastOnboarding;
+  }
+
   @override
   void register(GetIt sl) {
     sl

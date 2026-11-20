@@ -1981,12 +1981,19 @@ the feature you are about to touch, and keep it true when you change it.
   on the fake store switch it with "Onboarding paywall dismissible" among
   the Fake store rows. Which installs get a hard paywall is RevenueCat's
   targeting, set up in its dashboard, not in the app.
-- **Hard paywall for paid traffic** (Monetization, 2026-11-20): after
-  `PurchaserSession` identifies a uid (once per uid and launch), Forge's
-  `RecordAdAttribution` asks Apple Search Ads whether this install came
-  from a campaign: the AdServices token (iOS 14.3+, no consent or ATT
-  needed) sent from the device to Apple's attribution API (404 means not
-  ready: three attempts 5 s apart). If Apple attributes it, the RevenueCat
+- **Hard paywall for paid traffic** (Monetization, 2026-11-20): Apple
+  Search Ads is asked once per install whether it came from a campaign:
+  the AdServices token (iOS 14.3+, no consent or ATT needed) sent from the
+  device to Apple's attribution API (404 means not ready: three attempts
+  5 s apart). Apple's final answer (the campaign id, or not attributed; a
+  device without a token counts as not attributed) is kept on the device
+  (shared preferences, Forge's); with no final answer (offline, Apple
+  down) it is asked again on later launches, but only while the signed-in
+  user is not past onboarding (`ProfileModule.pastOnboarding`, waiting
+  for the profile to load; owner's call, 2026-11-20). After
+  `PurchaserSession` identifies a uid (once per uid and launch, so also
+  after signing in to another account), Forge's `RecordAdAttribution`
+  applies the kept answer to that RevenueCat user: if attributed, the
   custom attributes `ad_network` = `apple_search_ads` and
   `ad_campaign_id` = the campaign id are set and
   `syncAttributesAndOfferingsIfNeeded` reloads the offering, so the
