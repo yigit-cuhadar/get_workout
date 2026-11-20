@@ -31,6 +31,41 @@ Widget eyebrowOnboardingQuestion(BuildContext context) => OnboardingQuestion(
   onAction: () {},
 );
 
+@widgetbook.UseCase(name: 'Recommended choice', type: OnboardingQuestion)
+Widget recommendedOnboardingQuestion(BuildContext context) =>
+    const _Recommended();
+
+class _Recommended extends StatefulWidget {
+  const _Recommended();
+
+  @override
+  State<_Recommended> createState() => _RecommendedState();
+}
+
+class _RecommendedState extends State<_Recommended> {
+  int? _days;
+
+  @override
+  Widget build(BuildContext context) => OnboardingQuestion(
+    step: 2,
+    count: 9,
+    onBack: () {},
+    body: OnboardingQuestionBody(
+      title: 'How many days a week can you train?',
+      info: 'Most beginners train 3 days a week.',
+      answer: OnboardingChoices<int>(
+        values: const [2, 3, 4, 5, 6],
+        selected: _days,
+        title: (days) => '$days days',
+        tag: (days) => days == 3 ? 'Recommended' : null,
+        onChanged: (days) => setState(() => _days = days),
+      ),
+    ),
+    actionLabel: 'Continue',
+    onAction: _days == null ? null : () {},
+  );
+}
+
 @widgetbook.UseCase(name: 'Equipment question', type: OnboardingQuestion)
 Widget equipmentOnboardingQuestion(BuildContext context) => const _Equipment();
 

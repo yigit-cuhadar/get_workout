@@ -3,6 +3,15 @@ import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
 
 void main() {
+  test('the recommended days a week rise with the level', () {
+    expect(Level.beginner.recommendedDaysPerWeek, 3);
+    expect(Level.intermediate.recommendedDaysPerWeek, 4);
+    expect(Level.advanced.recommendedDaysPerWeek, 5);
+    for (final level in Level.values) {
+      expect(ProfileLimits.daysPerWeek(level.recommendedDaysPerWeek), isTrue);
+    }
+  });
+
   group('limits', () {
     test('days per week are 2 to 6', () {
       expect(ProfileLimits.daysPerWeek(1), isFalse);

@@ -36,6 +36,17 @@ extension ProfileLabels on AppLocalizations {
     Level.advanced => levelAdvancedInfo,
   };
 
+  /// How many days most lifters at [level] train, as the days question's
+  /// info line.
+  String daysPerWeekInfo(Level level) {
+    final days = level.recommendedDaysPerWeek;
+    return switch (level) {
+      Level.beginner => questionDaysPerWeekBeginner(days),
+      Level.intermediate => questionDaysPerWeekIntermediate(days),
+      Level.advanced => questionDaysPerWeekAdvanced(days),
+    };
+  }
+
   String sexName(Sex sex) => switch (sex) {
     Sex.male => calcSexMale,
     Sex.female => calcSexFemale,
@@ -218,6 +229,10 @@ class ProfileQuestion extends StatelessWidget {
             ],
             selected: state.answers.daysPerWeek,
             title: l10n.profileDays,
+            // Only marked: the user still picks.
+            tag: (days) => days == state.answers.level?.recommendedDaysPerWeek
+                ? l10n.questionDaysPerWeekRecommended
+                : null,
             onChanged: cubit.setDaysPerWeek,
           ),
           ProfileField.equipment => EquipmentAnswer(
@@ -247,6 +262,9 @@ class ProfileQuestion extends StatelessWidget {
     final weightKg = context.select(
       (ProfileFormCubit cubit) => cubit.state.answers.weightKg,
     );
+    final level = context.select(
+      (ProfileFormCubit cubit) => cubit.state.answers.level,
+    );
     final unit = context.select(
       (SettingsCubit cubit) => cubit.state.settings.weightUnit,
     );
@@ -261,6 +279,9 @@ class ProfileQuestion extends StatelessWidget {
         ProfileField.goal when onboarding => l10n.onboardingGoalInfo,
         _ when goalWeight => l10n.onboardingTargetWeightInfo(
           l10n.weightText(weightKg, unit),
+        ),
+        ProfileField.daysPerWeek when level != null => l10n.daysPerWeekInfo(
+          level,
         ),
         _ => l10n.questionInfo(field),
       },
