@@ -78,7 +78,7 @@
   <li>You can use the app without giving your name or email: it starts as a guest account.</li>
   <li>Your workouts, programs, body entries and progress photos are stored in your account so they are backed up and synced. Only you can read them.</li>
   <li>We read steps and workouts from Apple Health or Health Connect only if you allow it, only to show them to you. We never write to them and never send that data to our servers.</li>
-  <li>Usage analytics and crash reports are sent only if you say yes, and you can change your answer at any time.</li>
+  <li>Usage analytics and crash reports are on by default and linked to your user ID. You can turn them off at any time in <strong>Profile → Privacy</strong>.</li>
   <li>We do not sell your data, do not show ads and do not collect advertising identifiers.</li>
   <li>You can delete your account and all its data from inside the app.</li>
 </ul>
@@ -119,18 +119,18 @@
       <td>Contract</td>
     </tr>
     <tr>
-      <td><strong>Usage analytics</strong> (only if you say yes): app events such as opening the app, screens and sessions, and paywall events (which layout you saw, whether you subscribed and to which plan period), with device model, OS version, app version, language and approximate country. Not linked to your user ID or email.</td>
-      <td>Understanding how the app is used and improving it, including testing paywall layouts.</td>
-      <td>Consent</td>
+      <td><strong>Usage analytics</strong> (on unless you turn it off in Profile → Privacy): the screens you open and app events: onboarding steps, sign-up, sign-in and account deletion, programs started, generated or edited, workouts started, finished or discarded (with their duration and counts of exercises, sets and records), personal records, muscles and exercises viewed, searches (not what you typed), body and cardio entries (that one was logged and its kind, not your values), connecting a health store, calculators used, subscription page events (which layout you saw, whether you subscribed and to which plan period), notification opens, review prompts and feedback sent. Also a few properties of your account (training level, goal, days per week, subscription state, sign-in method, whether you follow a program, whether you came from an Apple Search Ads campaign), with device model, OS version, app version, language and approximate country. Linked to your user ID (not your email), so we can relate it to your account and subscription data. Events carry no free text you typed and no health store data.</td>
+      <td>Understanding how the app is used and improving it, including testing paywall layouts and measuring which features and offers work.</td>
+      <td>Legitimate interest (you can object by turning it off)</td>
     </tr>
     <tr>
-      <td><strong>Crash reports</strong> (only if you say yes): the error, where it happened in the code, device model, OS and app version, and a random crash-reporting ID.</td>
+      <td><strong>Crash reports</strong> (on unless you turn them off in Profile → Privacy): the error, where it happened in the code, device model, OS and app version, a random crash-reporting ID and your user ID.</td>
       <td>Finding and fixing bugs.</td>
-      <td>Consent</td>
+      <td>Legitimate interest (you can object by turning them off)</td>
     </tr>
     <tr>
       <td><strong>Firebase installation ID</strong> (all users): a random ID for this installation of the app, sent with app version, platform and language when the app fetches its configuration from Firebase Remote Config.</td>
-      <td>Choosing which app layout you see (for example, the layout of the subscription page in an A/B test) and delivering configuration. This happens whatever your analytics answer is; if you said no, your layout is still chosen but nothing about what you do with it is measured.</td>
+      <td>Choosing which app layout you see (for example, the layout of the subscription page in an A/B test) and delivering configuration. This happens whether or not you share usage data; if you turned it off, your layout is still chosen but nothing about what you do with it is measured.</td>
       <td>Legitimate interest</td>
     </tr>
     <tr>
@@ -177,8 +177,9 @@
       <li>Cloud Firestore: your account data;</li>
       <li>Cloud Storage: progress photo backup;</li>
       <li>Cloud Functions: account deletion, subscription updates, announcements;</li>
-      <li>Google Analytics for Firebase: usage analytics, only with your consent;</li>
-      <li>Crashlytics: crash reports, only with your consent;</li>
+      <li>Google Analytics for Firebase: usage analytics, unless you turn them off;</li>
+      <li>Google BigQuery: a copy of the raw analytics events, stored in the European Union, which we query to analyse usage;</li>
+      <li>Crashlytics: crash reports, unless you turn them off;</li>
       <li>Remote Config (with A/B Testing): app configuration, using the Firebase installation ID, for all users;</li>
       <li>Cloud Messaging: announcement notifications, if you allow notifications.</li>
     </ul>
@@ -192,7 +193,7 @@
 <ul>
   <li><strong>Account, training data, body entries, photos, subscription status</strong>: until you delete your account (or guest data) in the app; then deleted right away, see below.</li>
   <li><strong>Guest accounts</strong>: kept like any account. If you sign in to an existing account from a guest session, the guest's data is left behind and is no longer reachable from the app; contact us to have it deleted.</li>
-  <li><strong>Analytics</strong>: event data is kept for 2 months.</li>
+  <li><strong>Analytics</strong>: event data is kept in Google Analytics for 2 months, and the raw copy in Google BigQuery for 14 months. When you delete your account, the analytics ID on your device is reset.</li>
   <li><strong>Crash reports</strong>: kept by Crashlytics for up to 90 days.</li>
   <li><strong>Technical logs</strong>: about 30 days.</li>
   <li><strong>Backups</strong>: our database keeps no backups, so deleted data cannot be restored.</li>
@@ -212,7 +213,8 @@
   <li>have incorrect data corrected (most of it you can edit in the app);</li>
   <li>have your data deleted (see above);</li>
   <li>restrict or object to processing, including processing based on legitimate interest;</li>
-  <li>withdraw consent at any time (analytics and crash reports: Profile → Privacy; Health and notifications: your device settings), without affecting processing done before;</li>
+  <li>turn off usage analytics and crash reports at any time in Profile → Privacy;</li>
+  <li>withdraw consent at any time (Health and notifications: your device settings), without affecting processing done before;</li>
   <li>data portability;</li>
   <li>under KVKK Art. 11, also learn the purpose of processing and whether it is used accordingly, know the third parties data is transferred to in Turkey or abroad, object to a result against you arising solely from automated analysis, and claim compensation for damage from unlawful processing;</li>
   <li>complain to a supervisory authority: in Turkey the Personal Data Protection Authority (KVKK, <a href="https://www.kvkk.gov.tr">kvkk.gov.tr</a>); in the EU, your local data protection authority.</li>
@@ -220,7 +222,7 @@
 <p>Write to getworkout.support@gmail.com. We answer within 30 days.</p>
 
 <h2 id="transfers">9. International transfers</h2>
-<p>Your account data is stored by Google in the European Union (Firestore: multi-region eur3; Cloud Storage and Cloud Functions: Belgium, europe-west1). Analytics, crash reports, Remote Config and Cloud Messaging, and RevenueCat, may process data in the United States and other countries. Where data leaves Turkey or the EEA, we rely on the providers' Standard Contractual Clauses and, for Google, the EU-U.S. Data Privacy Framework where applicable.</p>
+<p>Your account data is stored by Google in the European Union (Firestore: multi-region eur3; Cloud Storage and Cloud Functions: Belgium, europe-west1), and the raw analytics copy in BigQuery in the European Union. Analytics, crash reports, Remote Config and Cloud Messaging, and RevenueCat, may process data in the United States and other countries. Where data leaves Turkey or the EEA, we rely on the providers' Standard Contractual Clauses and, for Google, the EU-U.S. Data Privacy Framework where applicable.</p>
 
 <h2 id="children">10. Children</h2>
 <p>The app is not directed at children. Do not use it if you are under 13, or under the age of digital consent in your country without a parent's permission. If you believe a child has given us data, contact us and we will delete it.</p>

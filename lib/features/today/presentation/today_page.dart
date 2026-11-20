@@ -93,7 +93,7 @@ class _TodayViewState extends State<_TodayView> {
     _opened();
   }
 
-  /// After the frame, so a page the start pushes (the consent page) is
+  /// After the frame, so a page the start pushes (the app-open paywall) is
   /// already over the tabs.
   void _opened() => WidgetsBinding.instance.addPostFrameCallback((_) {
     if (!mounted) return;

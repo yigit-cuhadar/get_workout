@@ -31,7 +31,7 @@ class PrivacySection extends StatelessWidget {
             title: l10n.privacyShareUsage,
             detail: l10n.privacyShareUsageInfo,
             trailing: ForgeSwitch(
-              value: state.consent ?? false,
+              value: state.sharing,
               onChanged: state.loaded
                   ? context.read<ConsentCubit>().answer
                   : null,

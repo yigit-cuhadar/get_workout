@@ -7,6 +7,10 @@ import 'sync_repository.dart';
 
 typedef ConsentAnswer = ({String uid, bool consent});
 
+/// A user's stored answer as collection applies it: null when they never
+/// answered, which collects.
+typedef StoredConsentAnswer = ({String uid, bool? consent});
+
 /// Whose account to delete, and the Apple code to revoke their Apple
 /// sign-in with, if they have one.
 typedef AccountDeletion = ({String uid, String? appleCode});
@@ -46,12 +50,12 @@ class FollowAnalyticsUser implements UseCase<void, String?> {
   Future<Result<void>> call(String? params) => _telemetry.follow(params);
 }
 
-class ApplyAnalyticsConsent implements UseCase<void, ConsentAnswer> {
+class ApplyAnalyticsConsent implements UseCase<void, StoredConsentAnswer> {
   const ApplyAnalyticsConsent(this._telemetry);
   final Telemetry _telemetry;
 
   @override
-  Future<Result<void>> call(ConsentAnswer params) =>
+  Future<Result<void>> call(StoredConsentAnswer params) =>
       _telemetry.apply(params.uid, params.consent);
 }
 

@@ -11,7 +11,7 @@ import '../../analytics/domain/analytics.dart';
 
 /// Whether the tab page at [context] is what the user sees: its tab is in
 /// front at [location], and nothing covers the tabs (a paywall, the
-/// workout, the consent page, a dialog or a sheet).
+/// workout, a dialog or a sheet).
 bool tabInFront(BuildContext context, String location) {
   final shell = ModalRoute.of(Navigator.of(context).context);
   return (ModalRoute.of(context)?.isCurrent ?? false) &&

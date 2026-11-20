@@ -21,23 +21,21 @@ class ConsentState extends Equatable {
   final Failure? failure;
 
   bool get loaded => stored != null;
-  bool? get consent => stored?.consent;
 
-  /// Time to ask: the server says the user has not answered. A cached copy
-  /// without an answer may predate one given on another device.
-  bool get unanswered =>
-      stored?.consent == null && (stored?.fromServer ?? false);
+  /// Whether the user shares usage data: on unless they said no.
+  bool get sharing => stored?.consent ?? true;
 
   @override
   List<Object?> get props => [uid, stored, failure];
 }
 
 /// App-wide: follows the signed-in user's analytics consent, guests
-/// included, and applies it to collection. Collection is per user: from a
-/// user change until the new user's answer is read it is off, and it stays
-/// off when that read fails. While an account is being deleted its consent
-/// is not followed: the server deleting the user's document would read as
-/// no answer, ask for one and record it for the deleted user.
+/// included, and applies it to collection; no answer collects. Collection
+/// is per user: from a user change until the new user's answer is read it
+/// is off, and it stays off when that read fails. While an account is being
+/// deleted its consent is not followed: the server deleting the user's
+/// document would read as no answer and turn collection back on for the
+/// deleted user.
 class ConsentCubit extends Cubit<ConsentState> {
   ConsentCubit({
     required WatchAuthUser watchAuthUser,
@@ -92,11 +90,10 @@ class ConsentCubit extends Cubit<ConsentState> {
     _consentSubscription = _watchConsent(uid).listen(
       (stored) {
         emit(ConsentState(uid: uid, stored: stored));
-        // A cached copy without an answer changes nothing yet.
+        // A cached copy without an answer may predate a no given on
+        // another device, so it changes nothing yet.
         if (stored.consent == null && !stored.fromServer) return;
-        unawaited(
-          _log(_applyConsent((uid: uid, consent: stored.consent ?? false))),
-        );
+        unawaited(_log(_applyConsent((uid: uid, consent: stored.consent))));
       },
       // The repository logs it; collection stays as it is.
       onError: (Object _) {},
@@ -109,12 +106,12 @@ class ConsentCubit extends Cubit<ConsentState> {
     }
   }
 
-  /// For the user who was asked ([ConsentState.uid]); dropped once another
-  /// user is signed in. Applied through the consent stream, which Firestore's local cache
+  /// For the user the switch showed ([ConsentState.uid]); dropped once
+  /// another user is signed in. Applied through the consent stream, which Firestore's local cache
   /// answers at once; only a failure is emitted here.
   Future<void> answer(bool consent) async {
     final uid = _uid;
-    // The session changed while the user was being asked.
+    // The session changed while the switch was shown.
     if (uid == null || uid != state.uid) return;
     final result = await _saveConsent((uid: uid, consent: consent));
     if (result.failureOrNull case final failure? when !isClosed) {

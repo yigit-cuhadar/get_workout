@@ -1775,7 +1775,12 @@ Decisions (the canvases they were drawn on are deleted):
   Turkish law and Istanbul courts. Not reviewed by a lawyer. Still open
   before release: the App Store / Play privacy labels must say that the app
   contacts Firebase Remote Config with a Firebase installation ID for all
-  users, and declare Advertising Data for the Apple Search Ads
+  users, declare Usage Data (Product Interaction) and Diagnostics (Crash
+  Data) as collected by default (an opt-out, not opt-in), linked to the
+  user (the uid is the Analytics user id), for Analytics and App
+  Functionality, not tracking (Play Data safety: App activity and App info
+  and performance › Crash logs, collected and linked to the user), and
+  declare Advertising Data for the Apple Search Ads
   attribution (Subscription and paywall › Hard paywall for paid traffic); App Store Connect's Privacy Policy URL and custom EULA; KVKK
   (VERBİS, notifying transfer contracts) and the explicit-consent basis for
   body data, which the policy claims without an in-app consent step.
@@ -2164,10 +2169,10 @@ the feature you are about to touch, and keep it true when you change it.
   product ids differ), `layout`} on each purchase or trial start that
   granted Premium on the paywall: the goal. A pending purchase approved
   later and a restore are not counted. Events follow the analytics consent
-  below, so only prod release builds, for signed-in users (guests
-  included) who agreed to share usage data, are counted. Remote Config
+  below, so prod counts only release builds, for signed-in users (guests
+  included) who did not turn "Share usage data" off, are counted. Remote Config
   itself is fetched for every user, whatever their answer to "Share usage
-  data" (owner's call, 2026-11-13): a user who declines still gets a
+  data" (owner's call, 2026-11-13): a user who turned it off still gets a
   layout but is never measured; the privacy policy says so instead of the
   fetch being gated. The Remote Config parameter and the experiment are
   set up in the console, not by the app.
@@ -2192,35 +2197,38 @@ the feature you are about to touch, and keep it true when you change it.
   `settings.analyticsConsent` of each user, guests included (a guest has a
   uid and a user document; linking keeps it, signing in to an existing
   account takes that account's answer). Consent is per user, never per
-  device. Null is not answered, which collects nothing. Analytics and
-  Crashlytics start off natively (Info.plist, AndroidManifest.xml) and
-  collect only in prod release builds, for the signed-in user, after their
-  yes; never the advertising ID, Android ID or IDFV, and no ad
-  personalisation signals (the `AD_ID` permission is removed). At start,
-  collection is what the last applied answer left (the SDKs keep it), or
-  the native default (off) on a fresh install; `forge_firebase`'s
-  `initFirebase` does not change it, and `FirebaseTelemetry.restore` then
-  applies the answer the user signed in at launch last gave on this device
-  (one file per uid in app support). Whenever the signed-in user changes
-  or is unknown, collection goes off until that user's stored answer is
-  read, and stays off when the read fails. `ConsentCubit` (app-wide)
-  applies each answer as it arrives; changes run one at a time and the
-  latest wins. A yes first deletes the crash reports recorded before it
-  and is saved last, so a failure never leaves a saved yes. Asked once the
-  server (not a cached copy, which may predate an answer from another
-  device) says there is no answer and the same user's profile is past
-  onboarding (never while a new user's profile loads in the tabs after
-  signing out, deleting the account or switching accounts), as a full page
-  (`AnalyticsConsentPrompt`, Forge `PermissionPrompt.consent`, K8/L2) over
-  the tabs only while they are the top route (never over onboarding, the
-  workout, the paywall or a dialog), with two equal choices and no way
-  back but an answer. Onboarding asks the same page right after the last
-  question when the server already says there is no answer; an answer
-  that does not save there is asked again over the tabs. While an account is being deleted (`DeletionUnderway`)
-  its consent is not followed, so the deleted document neither asks nor
-  records an answer; a deletion that failed follows it again. Changed
-  with the switch under Profile → Privacy. The settings feature leaves the
-  field alone: its writes merge, and `UserSettings` does not carry it.
+  device. Opt-out (Feature notes › Analytics): false is off; true and null
+  (never answered, so everyone not asked before) collect, through
+  `initFirebase(collectUnanswered: true)`. Users who said no before keep
+  no. Never asked: there is no consent page, in onboarding or over the
+  tabs. Analytics and Crashlytics collect in prod release builds and, so
+  events can be checked in DebugView, in debug and profile builds into the
+  dev project (owner's pick, 2026-11-20; Forge v0.46.0), for the signed-in
+  user, with their uid as the user id; never the advertising
+  ID, Android ID or IDFV, and no ad personalisation signals (the `AD_ID`
+  permission is removed). They still start off natively (Info.plist,
+  AndroidManifest.xml): on a fresh install nothing is collected until the
+  signed-in user's answer is known, so a user who said no on another
+  device is never collected for a moment. At start, collection is what the
+  last applied answer left (the SDKs keep it), or that native off on a
+  fresh install; `initFirebase` does not change it, and
+  `FirebaseTelemetry.restore` then applies the answer the user signed in
+  at launch last gave on this device (one file per uid in app support, a
+  saved null collecting). Whenever the signed-in user changes or is
+  unknown, collection goes off until that user's stored answer is read,
+  and stays off when the read fails. `ConsentCubit` (app-wide) applies
+  each answer as it arrives, null included, but a missing answer only
+  from the server: a cached copy without one may predate a no from
+  another device. Changes run one at a time and the latest wins. Turning
+  on first deletes the crash reports recorded before it and is saved
+  last, so a failure never leaves it saved. While an account is being
+  deleted (`DeletionUnderway`) its consent is not followed, so the deleted
+  document (read as no answer) never turns collection back on for the
+  deleted user; a deletion that failed follows it again. Changed with the
+  "Share usage data" switch under Profile → Privacy: on for true and null,
+  off for false; turning it saves an explicit true or false. The settings
+  feature leaves the field alone: its writes merge, and `UserSettings` does
+  not carry it.
 - **Privacy policy link**: Profile → Privacy, in the browser.
   `LegalLinks.privacyUrl` (`lib/app/legal_links.dart`) is the one place the
   address is written; the Android build reads it from that line into
@@ -2376,9 +2384,7 @@ the feature you are about to touch, and keep it true when you change it.
   too, and keep close; on Android a full-screen dialog. A page that
   refuses to pop (unsaved changes, `PopScope`) still follows the edge
   swipe; let go where it would leave, it springs back and the page's own
-  prompt asks (Keep editing stays, Discard leaves), as back does. The
-  analytics consent prompt stays a full-screen page that must be
-  answered.
+  prompt asks (Keep editing stays, Discard leaves), as back does.
 - **Profile tab** (UX pass, 2026-11-13, owner's pick; studio board
   2026-11-15): one page, top to bottom: the account header, the Premium
   card, More (Your profile; the calculators are Today's since the Tabs
@@ -2522,9 +2528,7 @@ the feature you are about to touch, and keep it true when you change it.
   now match one, and picking a set replaces the line. The generator's
   equipment question is the same.
   After the last question (`afterOnboarding`,
-  `OnboardingPermissionsPage`), the progress bar full: "Help improve
-  GetWorkout?" (the analytics consent page, only while the server says
-  there is no answer; L2), then "Remind you on
+  `OnboardingPermissionsPage`), the progress bar full: "Remind you on
   training days?", only while the device does not let the app notify yet
   (allowed already, the step is left out and the reminder stays as it is)
   (Turn on reminders asks the system and, if allowed,
@@ -4130,7 +4134,7 @@ the feature you are about to touch, and keep it true when you change it.
   twice in one app version (`FeedbackModule.reviewRules`). The summary of
   the user's first workout ever, which leaves through the paywall, counts
   but never asks. Today asks only while it is in front with nothing over
-  the tabs (no paywall, workout, consent page, dialog or sheet; onboarding
+  the tabs (no paywall, workout, dialog or sheet; onboarding
   and the start pages come before the tabs); a day counted while covered
   asks at the next open that is not. An ask is recorded when it is
   decided, so closing the app on it still counts, and one covered in the
@@ -4348,9 +4352,16 @@ not in a separate dashboard tool.
     `announcement`, or `active_workout` (the workout's lock-screen activity
     or notification). `review_prompt`: the app's review question shows.
     `feedback_send`: feedback sent.
-- **BigQuery**: daily export of prod (and dev, for checks) into the
-  `analytics_<property>` dataset in the EU, tables kept 14 months; the
-  privacy policy's retention says so.
+- **BigQuery** (owner's picks, 2026-11-20): Firebase is linked to BigQuery
+  on prod and dev (2026-11-20). Google Analytics exports daily only (no
+  streaming: the Dashboard shows up to yesterday), all three apps, no
+  advertising identifiers, into `analytics_<property>` in the `europe`
+  multi-region. Crashlytics exports too (`europe`), for crash-free rates on
+  the Dashboard. The datasets appear with the first export; once they do,
+  set their default table expiration to 14 months, which the privacy
+  policy states. Google Analytics' own retention is 14 months for event
+  and user data on both properties (prod 565341735, dev 565325900, account
+  "Default Account for Firebase" 146870395).
 - **Reports**: the admin panel's Dashboard reads BigQuery and RevenueCat's
   metrics through an admin-only callable, never from the browser
   directly. What it shows is drawn and picked before it is built.
