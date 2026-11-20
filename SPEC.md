@@ -2169,7 +2169,7 @@ the feature you are about to touch, and keep it true when you change it.
   product ids differ), `layout`} on each purchase or trial start that
   granted Premium on the paywall: the goal. A pending purchase approved
   later and a restore are not counted. Events follow the analytics consent
-  below, so only prod release builds, for signed-in users (guests
+  below, so prod counts only release builds, for signed-in users (guests
   included) who did not turn "Share usage data" off, are counted. Remote Config
   itself is fetched for every user, whatever their answer to "Share usage
   data" (owner's call, 2026-11-13): a user who turned it off still gets a
@@ -2201,8 +2201,10 @@ the feature you are about to touch, and keep it true when you change it.
   (never answered, so everyone not asked before) collect, through
   `initFirebase(collectUnanswered: true)`. Users who said no before keep
   no. Never asked: there is no consent page, in onboarding or over the
-  tabs. Analytics and Crashlytics collect only in prod release builds, for
-  the signed-in user, with their uid as the user id; never the advertising
+  tabs. Analytics and Crashlytics collect in prod release builds and, so
+  events can be checked in DebugView, in debug and profile builds into the
+  dev project (owner's pick, 2026-11-20; Forge v0.46.0), for the signed-in
+  user, with their uid as the user id; never the advertising
   ID, Android ID or IDFV, and no ad personalisation signals (the `AD_ID`
   permission is removed). They still start off natively (Info.plist,
   AndroidManifest.xml): on a fresh install nothing is collected until the
@@ -4294,9 +4296,16 @@ not in a separate dashboard tool.
     `premium_lock_tap` {`feature`}; `manage_subscription`.
   - Engagement: `notification_open` {`kind`}; `review_prompt`;
     `feedback_send`.
-- **BigQuery**: daily export of prod (and dev, for checks) into the
-  `analytics_<property>` dataset in the EU, tables kept 14 months; the
-  privacy policy's retention says so.
+- **BigQuery** (owner's picks, 2026-11-20): Firebase is linked to BigQuery
+  on prod and dev (2026-11-20). Google Analytics exports daily only (no
+  streaming: the Dashboard shows up to yesterday), all three apps, no
+  advertising identifiers, into `analytics_<property>` in the `europe`
+  multi-region. Crashlytics exports too (`europe`), for crash-free rates on
+  the Dashboard. The datasets appear with the first export; once they do,
+  set their default table expiration to 14 months, which the privacy
+  policy states. Google Analytics' own retention is 14 months for event
+  and user data on both properties (prod 565341735, dev 565325900, account
+  "Default Account for Firebase" 146870395).
 - **Reports**: the admin panel's Dashboard reads BigQuery and RevenueCat's
   metrics through an admin-only callable, never from the browser
   directly. What it shows is drawn and picked before it is built.
