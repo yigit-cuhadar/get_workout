@@ -3783,16 +3783,25 @@ the feature you are about to touch, and keep it true when you change it.
   app version, platform, OS version, device model and locale, and Close or
   Reopen, which moves it to the other list. Stream errors retry like the
   other lists.
-- **Review prompt** (forge_review; canvas rows R1, R2): moments are the
-  workout summaries. Every summary counts once on the device (by workout
-  id); the first summary to ask is any one once three were counted, later
-  only a summary with a new record (a highlight) at least 30 days after
-  the last ask, and never twice in one app version
-  (`FeedbackModule.reviewRules`). The summary of the user's first workout
-  ever, which leaves through the paywall, counts but never asks. An ask is
-  recorded when it is decided, so closing the app on it still counts.
-  The history lives in shared preferences, so a reinstall starts it again.
-  A dialog over the summary (ForgeDialog.choice): "Enjoying GetWorkout?",
+- **Review prompt** (forge_review; canvas rows R1, R2; first-ask rule
+  changed by the owner 2026-11-20): two kinds of moment. Every workout
+  summary counts once on the device (by workout id); every app open
+  (Today shown at launch, and each resume) counts the local calendar day
+  once. The first ask comes at the first moment that can ask once two
+  workouts were counted or the app was opened on three different days,
+  whichever comes first: the second workout's summary, or Today at an
+  open on or after the third day. Later asks only at a summary with a
+  new record (a highlight) at least 30 days after the last ask; never
+  twice in one app version (`FeedbackModule.reviewRules`). The summary of
+  the user's first workout ever, which leaves through the paywall, counts
+  but never asks. Today asks only while it is in front with nothing over
+  the tabs (no paywall, workout, consent page, dialog or sheet; onboarding
+  and the start pages come before the tabs); a day counted while covered
+  asks at the next open that is not. An ask is recorded when it is
+  decided, so closing the app on it still counts, and one covered in the
+  instant between deciding and showing is spent unseen. The history
+  lives in shared preferences, so a reinstall starts it again.
+  A dialog over the summary or Today (ForgeDialog.choice): "Enjoying GetWorkout?",
   "Your answer helps us improve.", "Not really" (secondary) beside "Yes!"
   (primary), and ✕. Yes! opens the platform's review prompt
   (`in_app_review`: SKStoreReviewController on iOS, Play in-app review on
@@ -3800,7 +3809,8 @@ the feature you are about to touch, and keep it true when you change it.
   shows (iOS: at most 3 times a year; never in TestFlight). Not really
   turns the same dialog into "Thanks for telling us" / "Tell us what to
   improve and we will look into it." with Write to us (the form, source
-  `rating`) over Close.
+  `rating`, above the page that asked)
+  over Close.
 
 ### Notifications
 

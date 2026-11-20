@@ -415,12 +415,12 @@ void main() {
       verify(() => cubit.summaryShown()).called(1);
     });
 
-    testWidgets('the third workout asks for a review; Yes! opens the '
+    testWidgets('the second workout asks for a review; Yes! opens the '
         'store\'s prompt', (tester) async {
       await pump(
         tester,
         finished(),
-        reviews: const ReviewHistory(events: 2, lastEventId: 'v'),
+        reviews: const ReviewHistory(events: 1, lastEventId: 'v'),
       );
       await tester.pumpAndSettle();
 
@@ -436,7 +436,7 @@ void main() {
       await pump(
         tester,
         finished(),
-        reviews: const ReviewHistory(events: 2, lastEventId: 'v'),
+        reviews: const ReviewHistory(events: 1, lastEventId: 'v'),
       );
       await tester.pumpAndSettle();
 
@@ -464,13 +464,13 @@ void main() {
             firstEver: true,
           ),
         ),
-        reviews: const ReviewHistory(events: 2, lastEventId: 'v'),
+        reviews: const ReviewHistory(events: 1, lastEventId: 'v'),
       );
       await tester.pumpAndSettle();
 
       expect(find.text('Enjoying GetWorkout?'), findsNothing);
       verify(
-        () => review.save(const ReviewHistory(events: 3, lastEventId: 'w')),
+        () => review.save(const ReviewHistory(events: 2, lastEventId: 'w')),
       ).called(1);
     });
 

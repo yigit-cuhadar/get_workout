@@ -26,6 +26,7 @@ import 'package:mocktail/mocktail.dart';
 import '../features/programs/fixtures.dart';
 import '../features/workout/fixtures.dart' as fixtures show workout;
 import '../features/workout/fixtures.dart' show exercise, lift;
+import 'review_prompt_stand_in.dart';
 import 'today_stand_ins.dart' show askedRestAlerts;
 
 class MockProgramListCubit extends MockCubit<ProgramListState>
@@ -160,6 +161,7 @@ void main() {
         return cubit;
       })
       ..registerFactory<TodayStepsCubit>(() => steps);
+    registerReviewPrompt();
     router = GoRouter(
       initialLocation: Routes.today,
       routes: [
