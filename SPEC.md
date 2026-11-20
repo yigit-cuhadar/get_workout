@@ -110,13 +110,17 @@ Stored as these string codes.
 
 - **loggingType**: `reps`, `weight_reps`, `weighted_bodyweight`,
   `assisted_bodyweight`, `duration`, `weight_duration`
-- **muscle** (19, equal to the model's groups): `pec`, `lat`, `trap`,
+- **muscle** (18, equal to the model's groups): `pec`, `lat`, `trap`,
   `front_delt`, `mid_delt`, `rear_delt`, `biceps`, `triceps`, `forearm`,
-  `abdominal`, `oblique`, `erector`, `glute`, `hip_flexor`, `abductor`,
-  `adductor`, `quads`, `hamstring`, `calf`. Muscles the model lacks are filed
-  under the nearest group (rhomboids → `trap`, serratus → `pec`, neck → `trap`,
+  `abdominal`, `oblique`, `erector`, `glute`, `abductor`, `adductor`,
+  `quads`, `hamstring`, `calf`. Muscles the model lacks are filed under the
+  nearest group (rhomboids → `trap`, serratus → `pec`, neck → `trap`,
   tibialis → `calf`, rotator cuff → `rear_delt`, brachioradialis →
-  `forearm`). The mesh for `forearm` is named `wrist_*`.
+  `forearm`). Hip flexors have no group (`hip_flexor` was removed
+  2026-11-20 with the new body model): exercises that also train another
+  main muscle dropped it, and the three whose only main muscle it was are
+  retired. Readers skip codes they do not know, so old documents that still
+  list `hip_flexor` load without it.
 - **equipment** (25): `barbell`, `ez_bar`, `trap_bar`, `dumbbell`,
   `kettlebell`, `plate`, `cable`, `machine`, `smith_machine`, `bench`, `box`,
   `back_extension_bench`, `pull_up_bar`, `dip_station`, `resistance_band`,
@@ -1671,7 +1675,16 @@ Decisions (the canvases they were drawn on are deleted):
   then "Please sign in again", with no way to do so from the page. Fixed
   in #145 (provider re-sign-in, Forge v0.26.0) and checked the same day:
   the Auth user, `users/{uid}` and the bucket's `users/{uid}/` were gone.
-- Female body model with the same mesh names: the user supplies it before release. The 4-view drawings both new models (male and female) were generated from in Tripo 3D are in `design/body_models/{male,female}/{front,right,back,left}.png` (2026-11-20).
+- Body models (2026-11-20): `body_male.glb` replaced by the owner's Tripo
+  model, split into 36 parts by transferring the old model's split and
+  then corrected by hand in Blender. Parts are named by muscle code:
+  `<code>_left`/`<code>_right`, the single `abdominal`, and the body
+  `none`. The 4-view drawings the Tripo models were generated from are in
+  `design/body_models/{male,female}/{front,right,back,left}.png`.
+  Open: the female model is being corrected by the owner and is not in the
+  app yet; picking the model by the profile's sex is not built. The
+  exercise import and `firestore.rules` (without `hip_flexor`) still have
+  to be run and deployed on dev and prod.
 - Subscriptions (2026-11-20). App Store: group "GetWorkout Premium" with
   `getworkout.premium.monthly` (7.99 USD) and `getworkout.premium.yearly`
   (39.99 USD, 7-day free trial), 175 territories, equalized prices; the
@@ -2679,17 +2692,17 @@ the feature you are about to touch, and keep it true when you change it.
   are front-delt exercises) and bodyweight × forearm (dead hang, false grip
   hang). The script exits non-zero on a shortfall, and
   `test/tool/content_coverage_test.dart` runs the rule on the content files
-  in CI. Seed after the audit: 416 exercises, 415 live (279 beginner, 104
-  intermediate, 32 advanced); doable per profile: full gym 415, home gym
-  240, dumbbells 180, bodyweight 123, bands 141. Hammer curls have main
+  in CI. Seed after the audit: 416 exercises, 412 live (276 beginner, 104
+  intermediate, 32 advanced); doable per profile: full gym 412, home gym
+  239, dumbbells 179, bodyweight 122, bands 139. Hammer curls have main
   muscles biceps and forearm (brachioradialis is filed under forearm), and
   pike and handstand presses list mid delt as secondary like every other
   overhead press. The weekly-set warnings of the arm focus, glute focus,
   calisthenics and kettlebell programs stay: each is a focus or
   equipment-limited program whose summary says so.
 - **3D model**: our own renderer, written in Dart, built first because it is
-  the riskiest part. Source model has 37 meshes: 19 muscle groups (left/right
-  split except abdominal and oblique) plus the body. A female model with the
+  the riskiest part. Source model has 36 meshes: 18 muscle groups (left/right
+  split except abdominal) plus the body. A female model with the
   same mesh names is required before release; the user supplies it. The
   exercise page shows it twice, front and back side by side with the worked
   muscles coloured, both fixed (`interactive: false`, the back through a

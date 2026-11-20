@@ -543,7 +543,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 180,
     "incrementKg": 2.5,
-    "popularity": 167,
+    "popularity": 166,
     "l10n": {
       "en": {
         "name": "Clean and Jerk",
@@ -601,7 +601,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 176,
+    "popularity": 175,
     "l10n": {
       "en": {
         "name": "Turkish Get-Up",
@@ -657,7 +657,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 4,
-    "popularity": 187,
+    "popularity": 186,
     "l10n": {
       "en": {
         "name": "Kettlebell Snatch",
@@ -710,7 +710,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 10,
-    "popularity": 199,
+    "popularity": 198,
     "l10n": {
       "en": {
         "name": "Sled Push",
@@ -761,7 +761,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 201,
+    "popularity": 200,
     "l10n": {
       "en": {
         "name": "Wall Ball",
@@ -813,7 +813,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 211,
+    "popularity": 210,
     "l10n": {
       "en": {
         "name": "Battle Rope Waves",
@@ -871,7 +871,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2,
-    "popularity": 222,
+    "popularity": 221,
     "l10n": {
       "en": {
         "name": "Suitcase Carry",
@@ -922,7 +922,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 233,
+    "popularity": 232,
     "l10n": {
       "en": {
         "name": "Broad Jump",
@@ -961,8 +961,7 @@
       "bodyweight"
     ],
     "mainMuscles": [
-      "quads",
-      "hip_flexor"
+      "quads"
     ],
     "secondaryMuscles": [
       "glute",
@@ -974,7 +973,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 244,
+    "popularity": 243,
     "l10n": {
       "en": {
         "name": "Tuck Jump",
@@ -1025,7 +1024,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 258,
+    "popularity": 257,
     "l10n": {
       "en": {
         "name": "Renegade Row",
@@ -1074,7 +1073,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 271,
+    "popularity": 270,
     "l10n": {
       "en": {
         "name": "Bear Crawl",
@@ -1126,7 +1125,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 283,
+    "popularity": 282,
     "l10n": {
       "en": {
         "name": "Dumbbell Snatch",
@@ -1178,7 +1177,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 297,
+    "popularity": 296,
     "l10n": {
       "en": {
         "name": "Split Jump",
@@ -1231,7 +1230,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 313,
+    "popularity": 312,
     "l10n": {
       "en": {
         "name": "Lateral Bound",
@@ -1290,7 +1289,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 329,
+    "popularity": 328,
     "l10n": {
       "en": {
         "name": "Dumbbell Overhead Carry",
@@ -1344,7 +1343,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 5,
-    "popularity": 347,
+    "popularity": 346,
     "l10n": {
       "en": {
         "name": "Trap Bar Carry",
@@ -1394,7 +1393,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 356,
+    "popularity": 355,
     "l10n": {
       "en": {
         "name": "Medicine Ball Chest Pass",
@@ -1446,7 +1445,7 @@
     ],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 364,
+    "popularity": 363,
     "l10n": {
       "en": {
         "name": "Medicine Ball Rotational Throw",
@@ -1503,7 +1502,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 180,
     "incrementKg": 2.5,
-    "popularity": 372,
+    "popularity": 371,
     "l10n": {
       "en": {
         "name": "Power Snatch",
@@ -1558,7 +1557,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 379,
+    "popularity": 377,
     "l10n": {
       "en": {
         "name": "Kettlebell Clean",
@@ -1609,7 +1608,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 387,
+    "popularity": 384,
     "l10n": {
       "en": {
         "name": "Kettlebell Front Rack Carry",
@@ -1667,7 +1666,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 4,
-    "popularity": 395,
+    "popularity": 392,
     "l10n": {
       "en": {
         "name": "Kettlebell Waiter's Walk",
@@ -1718,7 +1717,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 397,
+    "popularity": 394,
     "l10n": {
       "en": {
         "name": "Backward Sled Drag",
@@ -1770,7 +1769,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 398,
+    "popularity": 395,
     "l10n": {
       "en": {
         "name": "Forward Sled Drag",
@@ -1823,7 +1822,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 399,
+    "popularity": 396,
     "l10n": {
       "en": {
         "name": "Sled Rope Pull",
@@ -1880,7 +1879,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 301,
+    "popularity": 300,
     "l10n": {
       "en": {
         "name": "Single-Arm Kettlebell Swing",
@@ -1934,7 +1933,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 401,
+    "popularity": 398,
     "l10n": {
       "en": {
         "name": "Zercher Carry",
@@ -1983,7 +1982,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 402,
+    "popularity": 399,
     "l10n": {
       "en": {
         "name": "Plate Pinch Carry",
@@ -2034,7 +2033,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 5,
-    "popularity": 403,
+    "popularity": 400,
     "l10n": {
       "en": {
         "name": "Trap Bar Jump",

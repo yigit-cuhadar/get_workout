@@ -72,7 +72,7 @@ void main() {
     test('has the sizes SPEC.md lists', () {
       expect(lists.map((name, values) => MapEntry(name, values.length)), {
         'loggingType': 6,
-        'muscle': 19,
+        'muscle': 18,
         'equipment': 25,
         'movementPattern': 14,
         'mechanic': 2,

@@ -31,7 +31,6 @@ coverage: abdominal has 0, needs 12
 coverage: oblique has 0, needs 12
 coverage: erector has 0, needs 12
 coverage: glute has 0, needs 12
-coverage: hip_flexor has 0, needs 12
 coverage: abductor has 0, needs 12
 coverage: adductor has 0, needs 12
 coverage: quads has 0, needs 12
@@ -87,7 +86,6 @@ coverage: home_gym: abdominal has 0, needs 3
 coverage: home_gym: oblique has 0, needs 3
 coverage: home_gym: erector has 0, needs 3
 coverage: home_gym: glute has 0, needs 3
-coverage: home_gym: hip_flexor has 0, needs 3
 coverage: home_gym: abductor has 0, needs 3
 coverage: home_gym: adductor has 0, needs 3
 coverage: home_gym: quads has 0, needs 3
@@ -106,7 +104,6 @@ coverage: dumbbells: abdominal has 0, needs 3
 coverage: dumbbells: oblique has 0, needs 3
 coverage: dumbbells: erector has 0, needs 3
 coverage: dumbbells: glute has 0, needs 3
-coverage: dumbbells: hip_flexor has 0, needs 3
 coverage: dumbbells: abductor has 0, needs 3
 coverage: dumbbells: adductor has 0, needs 3
 coverage: dumbbells: quads has 0, needs 3
@@ -125,7 +122,6 @@ coverage: bodyweight: abdominal has 0, needs 3
 coverage: bodyweight: oblique has 0, needs 3
 coverage: bodyweight: erector has 0, needs 3
 coverage: bodyweight: glute has 0, needs 3
-coverage: bodyweight: hip_flexor has 0, needs 3
 coverage: bodyweight: abductor has 0, needs 3
 coverage: bodyweight: adductor has 0, needs 3
 coverage: bodyweight: quads has 0, needs 3
@@ -144,7 +140,6 @@ coverage: bands: abdominal has 0, needs 3
 coverage: bands: oblique has 0, needs 3
 coverage: bands: erector has 0, needs 3
 coverage: bands: glute has 0, needs 3
-coverage: bands: hip_flexor has 0, needs 3
 coverage: bands: abductor has 0, needs 3
 coverage: bands: adductor has 0, needs 3
 coverage: bands: quads has 0, needs 3

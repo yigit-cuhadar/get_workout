@@ -222,7 +222,7 @@
     ],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 158,
+    "popularity": 157,
     "l10n": {
       "en": {
         "name": "Leg Press Calf Raise",
@@ -273,7 +273,7 @@
     ],
     "defaultRestS": 45,
     "incrementKg": 2,
-    "popularity": 166,
+    "popularity": 165,
     "l10n": {
       "en": {
         "name": "Dumbbell Single-Leg Calf Raise",
@@ -321,7 +321,7 @@
     ],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 198,
+    "popularity": 197,
     "l10n": {
       "en": {
         "name": "Smith Machine Calf Raise",
@@ -366,7 +366,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 243,
+    "popularity": 242,
     "l10n": {
       "en": {
         "name": "Tibialis Raise",
@@ -417,7 +417,7 @@
     ],
     "defaultRestS": 45,
     "incrementKg": 2,
-    "popularity": 270,
+    "popularity": 269,
     "l10n": {
       "en": {
         "name": "Seated Dumbbell Calf Raise",
@@ -464,7 +464,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 296,
+    "popularity": 295,
     "l10n": {
       "en": {
         "name": "Pogo Hop",
@@ -512,7 +512,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 327,
+    "popularity": 326,
     "l10n": {
       "en": {
         "name": "Band Calf Press",
@@ -562,7 +562,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 345,
+    "popularity": 344,
     "l10n": {
       "en": {
         "name": "Jump Rope",

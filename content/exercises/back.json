@@ -1372,7 +1372,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 155,
+    "popularity": 154,
     "l10n": {
       "en": {
         "name": "Band-Assisted Pull-Up",
@@ -1425,7 +1425,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 159,
+    "popularity": 158,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Row",
@@ -1476,7 +1476,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 163,
+    "popularity": 162,
     "l10n": {
       "en": {
         "name": "Scapular Pull-Up",
@@ -1528,7 +1528,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 184,
+    "popularity": 183,
     "l10n": {
       "en": {
         "name": "Ring Row",
@@ -1583,7 +1583,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 194,
+    "popularity": 193,
     "l10n": {
       "en": {
         "name": "Close-Grip Chin-Up",
@@ -1638,7 +1638,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
-    "popularity": 196,
+    "popularity": 195,
     "l10n": {
       "en": {
         "name": "Bar Muscle-Up",
@@ -1694,7 +1694,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2.5,
-    "popularity": 208,
+    "popularity": 207,
     "l10n": {
       "en": {
         "name": "Single-Arm Cable Row",
@@ -1746,7 +1746,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 219,
+    "popularity": 218,
     "l10n": {
       "en": {
         "name": "Band Lat Pulldown",
@@ -1798,7 +1798,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 226,
+    "popularity": 225,
     "l10n": {
       "en": {
         "name": "Band Seated Row",
@@ -1854,7 +1854,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 240,
+    "popularity": 239,
     "l10n": {
       "en": {
         "name": "Seal Row",
@@ -1908,7 +1908,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 5,
-    "popularity": 246,
+    "popularity": 245,
     "l10n": {
       "en": {
         "name": "Wide-Grip Seated Cable Row",
@@ -1962,7 +1962,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2.5,
-    "popularity": 254,
+    "popularity": 253,
     "l10n": {
       "en": {
         "name": "Meadows Row",
@@ -2018,7 +2018,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 266,
+    "popularity": 265,
     "l10n": {
       "en": {
         "name": "Kettlebell Row",
@@ -2069,7 +2069,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 5,
-    "popularity": 273,
+    "popularity": 272,
     "l10n": {
       "en": {
         "name": "Back Extension Machine",
@@ -2120,7 +2120,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2.5,
-    "popularity": 281,
+    "popularity": 280,
     "l10n": {
       "en": {
         "name": "Single-Arm Kneeling Lat Pulldown",
@@ -2170,7 +2170,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 288,
+    "popularity": 287,
     "l10n": {
       "en": {
         "name": "Stability Ball Back Extension",
@@ -2223,7 +2223,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 310,
+    "popularity": 309,
     "l10n": {
       "en": {
         "name": "Flexed-Arm Hang",
@@ -2275,7 +2275,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 307,
+    "popularity": 306,
     "l10n": {
       "en": {
         "name": "Trap Bar Shrug",
@@ -2327,7 +2327,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 322,
+    "popularity": 321,
     "l10n": {
       "en": {
         "name": "Cable Shrug",
@@ -2375,7 +2375,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 335,
+    "popularity": 334,
     "l10n": {
       "en": {
         "name": "Swimmer",
@@ -2428,7 +2428,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 340,
+    "popularity": 339,
     "l10n": {
       "en": {
         "name": "Band Single-Arm Row",
@@ -2475,7 +2475,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 357,
+    "popularity": 356,
     "l10n": {
       "en": {
         "name": "Band Shrug",
@@ -2523,7 +2523,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 365,
+    "popularity": 364,
     "l10n": {
       "en": {
         "name": "Band Straight-Arm Pulldown",
@@ -2576,7 +2576,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 373,
+    "popularity": 372,
     "l10n": {
       "en": {
         "name": "Archer Pull-Up",
@@ -2628,7 +2628,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
-    "popularity": 380,
+    "popularity": 378,
     "l10n": {
       "en": {
         "name": "Ring Muscle-Up",
@@ -2681,7 +2681,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 388,
+    "popularity": 385,
     "l10n": {
       "en": {
         "name": "Dip Shrug",
