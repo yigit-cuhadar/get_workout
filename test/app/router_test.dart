@@ -1824,7 +1824,6 @@ void main() {
     for (final (access, settings) in [
       (StepsAccess.explain, false),
       (StepsAccess.denied, true),
-      (StepsAccess.undetermined, true),
     ]) {
       testWidgets('the health step shows while access is ${access.name}', (
         tester,
@@ -1838,13 +1837,9 @@ void main() {
         await tester.tap(find.textContaining('Connect '));
         await tester.pumpAndSettle();
 
-        // iOS never asks twice; a refusal still asks on Android, where the
-        // stand-in stays refused and so leads to the settings.
-        if (access == StepsAccess.undetermined) {
-          verifyNever(health.allow);
-        } else {
-          verify(health.allow).called(1);
-        }
+        // A refusal still asks on Android, where the stand-in stays refused
+        // and so leads to the settings.
+        verify(health.allow).called(1);
         if (settings) {
           verify(health.openSettings).called(1);
         } else {
@@ -1854,6 +1849,18 @@ void main() {
         expect(find.byType(TodayPage), findsOneWidget);
       });
     }
+
+    testWidgets('once asked on this iPhone (access undetermined), the health '
+        'step is skipped', (tester) async {
+      healthAccess = StepsAccess.undetermined;
+      storedProfile = choicesAnswered;
+      await startAsGuest(tester);
+      await finishOnboarding(tester);
+
+      expect(find.text('Bring in steps and cardio?'), findsNothing);
+      verifyNever(health.allow);
+      expect(find.byType(TodayPage), findsOneWidget);
+    });
 
     testWidgets('onboarding goes forward and back one question at a time', (
       tester,
