@@ -4437,12 +4437,27 @@ not in a separate dashboard tool.
   `weight_log`, `premium_lock_tap`, `paywall_view` (`layout`, `moment`,
   `offering`), `paywall_close`, `restore`, `program_start`,
   `workout_start`, `rest_skip`, `workout_complete` (with `workout_count`),
-  `first_workout_complete`, `review_prompt`. Not yet seen: the account
-  events, `program_generate`/`create`/`edit`, `workout_discard`,
-  `personal_record`, `measurement_day_save`, `cardio_log`,
-  `custom_exercise_create`, `steps_connect`, `notification_open`,
-  `feedback_send`, `manage_subscription`, Android. Every `app_exception`
-  seen came from the Programs tab crash fixed in #183. Symbol upload works:
+  `first_workout_complete`, `review_prompt`. Second pass (2026-11-21,
+  dev, the Analytics log of the simulator): `sign_up`, `login`,
+  `sign_out`, `account_delete` (collection pauses and resumes for each
+  new user, the user id and properties follow), `steps_connect`,
+  `paywall_purchase`, `program_generate`, `program_create`,
+  `program_edit`, `workout_discard`, `personal_record`,
+  `measurement_day_save`, `cardio_log`, `feedback_send`,
+  `manage_subscription`. It found and #188 fixed: `login` sent under the
+  discarded guest's id; `onboarding_start` logged for an onboarded user
+  signing in from onboarding; a first workout logged `workout_count: 2`
+  and no `first_workout_complete` (the count raced the save);
+  `custom_exercise_create` missing when created from a search; and
+  `notification_open`, a name Analytics reserves, never recorded (now
+  `notification_tap`). Not seen yet: `notification_tap` and
+  `custom_exercise_create` after the fix (next build), Android. Known
+  and left as is: `sign_up` fires when an email account is linked,
+  before its address is verified; deleting an account resets Analytics,
+  so the next guest is a new `first_open`; Save as program after a
+  workout logs no `program_create` (only the builder's save does).
+  Every `app_exception` seen came from the Programs tab crash fixed in
+  #183 (Crashlytics', a reserved name). Symbol upload works:
   the Runner's `flutterfire upload-crashlytics-symbols` phase reads
   `firebase.json` (Debug/Profile → dev app, Release → prod app) and a
   release build validated and uploaded its dSYMs to getworkout-prod.
