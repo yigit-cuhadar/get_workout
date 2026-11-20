@@ -101,6 +101,29 @@ void main() {
     await cubit.close();
   });
 
+  test("a view names the store's offering", () async {
+    final cubit = PremiumPaywallCubit(
+      analytics: Analytics(telemetry),
+      getOffering: _NamedOffering(),
+      purchasePlan: PurchasePlan(FakePurchasesRepository(plans: fakePlans)),
+      restorePurchases: RestorePurchases(
+        FakePurchasesRepository(plans: fakePlans),
+      ),
+      getLayout: GetPaywallLayout(config),
+      isPremium: () => false,
+    );
+    await cubit.load();
+
+    verify(
+      () => telemetry.logEvent('paywall_view', {
+        'layout': 'a',
+        'moment': 'user',
+        'offering': 'default',
+      }),
+    ).called(1);
+    await cubit.close();
+  });
+
   test('a view at a moment names it', () async {
     final cubit = build(fakePlans, moment: PaywallMoment.firstWorkout);
     await cubit.load();
@@ -239,4 +262,11 @@ void main() {
       await cubit.close();
     });
   });
+}
+
+/// The store's offering, named as RevenueCat names one.
+class _NamedOffering implements GetOffering {
+  @override
+  Future<Result<Offering>> call([NoParams params = const NoParams()]) async =>
+      const Ok(Offering(fakePlans, id: 'default'));
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 
 import '../../analytics/domain/analytics.dart';
@@ -14,15 +15,33 @@ import '../domain/subscription_usecases.dart';
 /// purchase; and each restore and the user closing it. Opened at [moment]
 /// (null: by the user), see [closable].
 class PremiumPaywallCubit extends PaywallCubit {
-  PremiumPaywallCubit({
-    required super.getOffering,
+  factory PremiumPaywallCubit({
+    required GetOffering getOffering,
+    required PurchasePlan purchasePlan,
+    required RestorePurchases restorePurchases,
+    required GetPaywallLayout getLayout,
+    required Analytics analytics,
+    required bool Function() isPremium,
+    PaywallMoment? moment,
+  }) => PremiumPaywallCubit._(
+    _KeptOffering(getOffering),
+    purchasePlan: purchasePlan,
+    restorePurchases: restorePurchases,
+    layout: getLayout(),
+    analytics: analytics,
+    isPremium: isPremium,
+    moment: moment,
+  );
+
+  PremiumPaywallCubit._(
+    this._offering, {
     required super.purchasePlan,
     required super.restorePurchases,
-    required GetPaywallLayout getLayout,
+    required this.layout,
     required this._analytics,
     required this._isPremium,
     this.moment,
-  }) : layout = getLayout();
+  }) : super(getOffering: _offering);
 
   final PaywallMoment? moment;
 
@@ -38,6 +57,7 @@ class PremiumPaywallCubit extends PaywallCubit {
 
   /// Read once, when the paywall opens.
   final PaywallLayout layout;
+  final _KeptOffering _offering;
   final Analytics _analytics;
   final bool Function() _isPremium;
   bool _viewLogged = false;
@@ -48,7 +68,13 @@ class PremiumPaywallCubit extends PaywallCubit {
     if (isClosed) return;
     if (state.status == PaywallStatus.ready && !_viewLogged && !_isPremium()) {
       _viewLogged = true;
-      unawaited(_analytics.paywallView(layout: layout, moment: moment));
+      unawaited(
+        _analytics.paywallView(
+          layout: layout,
+          moment: moment,
+          offering: _offering.id,
+        ),
+      );
     }
   }
 
@@ -82,4 +108,20 @@ class PremiumPaywallCubit extends PaywallCubit {
 
   /// The user closed the paywall without Premium.
   void dismissed() => unawaited(_analytics.paywallClose(moment));
+}
+
+/// [GetOffering] keeping the id of the offering it last loaded, which the
+/// paywall's state does not carry.
+class _KeptOffering implements GetOffering {
+  _KeptOffering(this._getOffering);
+
+  final GetOffering _getOffering;
+  String? id;
+
+  @override
+  Future<Result<Offering>> call([NoParams params = const NoParams()]) async {
+    final result = await _getOffering(params);
+    id = result.valueOrNull?.id;
+    return result;
+  }
 }

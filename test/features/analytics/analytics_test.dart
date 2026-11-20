@@ -243,7 +243,16 @@ void main() {
   });
 
   test('paywall events keep the A/B names and name the moment', () async {
-    await analytics.paywallView(layout: PaywallLayout.cards, moment: null);
+    await analytics.paywallView(
+      layout: PaywallLayout.cards,
+      moment: null,
+      offering: null,
+    );
+    await analytics.paywallView(
+      layout: PaywallLayout.list,
+      moment: PaywallMoment.firstWorkout,
+      offering: 'default',
+    );
     await analytics.paywallPurchase(
       plan: PlanPeriod.yearly,
       layout: PaywallLayout.single,
@@ -254,6 +263,10 @@ void main() {
       [
         'paywall_view',
         {'layout': 'b', 'moment': 'user'},
+      ],
+      [
+        'paywall_view',
+        {'layout': 'a', 'moment': 'first_workout', 'offering': 'default'},
       ],
       [
         'paywall_purchase',

@@ -4342,7 +4342,8 @@ not in a separate dashboard tool.
     whether steps can be read (iOS never tells a refusal).
   - `paywall_view` / `paywall_purchase` / `paywall_close`: `moment` is
     `onboarding`, `first_workout`, `app_open`, or `user` for one the user
-    opened. `offering` is not sent yet: Forge's `Offering` carries no id.
+    opened. `offering` (view only) is RevenueCat's offering id, left out
+    when the store gives none (the fake).
     `paywall_close`: the user closing it without Premium.
     `restore`: a restore that answered. `premium_lock_tap`: a free user's
     tap on a lock; `feature` is `generator`, `premium_program`,

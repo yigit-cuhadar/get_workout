@@ -23,7 +23,7 @@ class GetPaywallLayout {
 }
 
 /// The store's offering with yearly before monthly, as the paywall shows
-/// them whatever order the store gives, and its metadata.
+/// them whatever order the store gives, its metadata and its id.
 class GetPaywallOffering extends GetOffering {
   const GetPaywallOffering(super.repository);
 
@@ -42,6 +42,7 @@ class GetPaywallOffering extends GetOffering {
                 _order.indexOf(a.period).compareTo(_order.indexOf(b.period)),
           ),
           metadata: offering.metadata,
+          id: offering.id,
         ),
       );
 }

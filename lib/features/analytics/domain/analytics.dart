@@ -215,12 +215,17 @@ class Analytics {
 
   // Monetization.
 
-  /// The A/B test's activation event: the paywall showed its plans.
+  /// The A/B test's activation event: the paywall showed its plans, those
+  /// of the store's [offering] (null: the store named none).
   Future<void> paywallView({
     required PaywallLayout layout,
     required PaywallMoment? moment,
-  }) =>
-      _log('paywall_view', {'layout': layout.code, 'moment': _moment(moment)});
+    required String? offering,
+  }) => _log('paywall_view', {
+    'layout': layout.code,
+    'moment': _moment(moment),
+    'offering': ?offering,
+  });
 
   Future<void> paywallClose(PaywallMoment? moment) =>
       _log('paywall_close', {'moment': _moment(moment)});
