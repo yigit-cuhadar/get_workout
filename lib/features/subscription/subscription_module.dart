@@ -117,7 +117,11 @@ class SubscriptionModule implements FeatureModule {
     }
     sl
       ..registerLazySingleton(
-        () => PurchaserSession(watchAuthUser: sl(), entitlement: sl()),
+        () => PurchaserSession(
+          watchAuthUser: sl(),
+          entitlement: sl(),
+          recordAdAttribution: sl(),
+        ),
         dispose: (session) => session.cancel(),
       )
       ..registerFactory(

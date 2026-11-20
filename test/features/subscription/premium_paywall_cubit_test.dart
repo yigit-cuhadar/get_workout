@@ -6,7 +6,9 @@ import 'package:get_workout/features/subscription/domain/paywall_layout.dart';
 import 'package:get_workout/features/subscription/domain/paywall_moment.dart';
 import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
+import 'package:get_workout/features/subscription/presentation/subscription_text.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
+import 'package:get_workout/l10n/app_localizations_en.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockTelemetry extends Mock implements Telemetry {}
@@ -160,6 +162,35 @@ void main() {
         await cubit.close();
       },
     );
+
+    test('the hard paywall offers and starts the trial as the soft one '
+        'does', () async {
+      final soft = build(fakePlans, moment: PaywallMoment.onboarding);
+      await soft.load();
+      final hard = build(fakePlans, moment: PaywallMoment.onboarding);
+      store.metadata = const {dismissibleKey: false};
+      await store.configure();
+      await hard.load();
+
+      expect(hard.closable, isFalse);
+      // The same plans, so the same copy: trial, button and renewal terms.
+      expect(hard.state.plans, soft.state.plans);
+      expect(hard.state.selected, soft.state.selected);
+      final yearly = hard.state.selected!;
+      expect(yearly.trial, const OfferPeriod(7, PeriodUnit.day));
+      final l10n = AppLocalizationsEn();
+      expect(l10n.purchaseButton(yearly), 'Start 7-day free trial');
+      expect(
+        l10n.purchaseTerms(yearly).first,
+        contains(r'Free for 7 days, then $39.99 per year'),
+      );
+
+      await hard.purchase();
+      expect(hard.state.outcome, PaywallOutcome.purchased);
+      expect((await store.refresh()).valueOrNull?.isInTrial, isTrue);
+      await soft.close();
+      await hard.close();
+    });
 
     test('at onboarding, when the plans could not be loaded', () async {
       final cubit = build(const [], moment: PaywallMoment.onboarding);

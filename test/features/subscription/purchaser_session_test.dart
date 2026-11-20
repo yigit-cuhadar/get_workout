@@ -12,6 +12,8 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockEntitlementCubit extends Mock implements EntitlementCubit {}
 
+class MockRecordAdAttribution extends Mock implements RecordAdAttribution {}
+
 void main() {
   const guest = AuthUser(id: 'g1', isAnonymous: true);
   const linked = AuthUser(id: 'g1', email: 'a@b.co');
@@ -20,6 +22,7 @@ void main() {
   late StreamController<AuthUser?> users;
   late MockAuthRepository auth;
   late MockEntitlementCubit entitlement;
+  late MockRecordAdAttribution recordAdAttribution;
   late PurchaserSession session;
 
   setUp(() {
@@ -30,12 +33,15 @@ void main() {
     when(() => entitlement.identify(any()))
         .thenAnswer((_) async => const Ok(null));
     when(entitlement.reset).thenAnswer((_) async => const Ok(null));
+    recordAdAttribution = MockRecordAdAttribution();
+    when(() => recordAdAttribution()).thenAnswer((_) async => const Ok(true));
   });
 
   // Called inside fakeAsync where timing matters, so its timers are fake.
   void start() => session = PurchaserSession(
     watchAuthUser: WatchAuthUser(auth),
     entitlement: entitlement,
+    recordAdAttribution: recordAdAttribution,
     retryDelay: const Duration(seconds: 1),
     maxRetryDelay: const Duration(seconds: 2),
   );
@@ -56,6 +62,51 @@ void main() {
       () => entitlement.identify('u2'),
       entitlement.reset,
     ]);
+  });
+
+  test('records the ad attribution once per identified uid', () async {
+    start();
+    users
+      ..add(null)
+      ..add(guest)
+      ..add(linked)
+      ..add(other)
+      ..add(guest);
+    await pumpEventQueue();
+
+    await session.cancel();
+    // Once for g1 (linking and coming back do not repeat it), once for u2,
+    // never while signed out.
+    verify(() => recordAdAttribution()).called(2);
+  });
+
+  test('records the ad attribution only after the switch succeeds', () {
+    fakeAsync((async) {
+      start();
+      var attempts = 0;
+      when(() => entitlement.identify('g1')).thenAnswer(
+        (_) async =>
+            ++attempts < 2 ? const Err(NetworkFailure()) : const Ok(null),
+      );
+      users.add(guest);
+      async.flushMicrotasks();
+      verifyNever(() => recordAdAttribution());
+
+      async.elapse(const Duration(seconds: 1));
+      verify(() => recordAdAttribution()).called(1);
+      session.cancel();
+    });
+  });
+
+  test('a failed attribution is left at that', () async {
+    when(() => recordAdAttribution())
+        .thenAnswer((_) async => const Err(NetworkFailure()));
+    start();
+    users.add(guest);
+    await pumpEventQueue();
+
+    await session.cancel();
+    verify(() => recordAdAttribution()).called(1);
   });
 
   test('linking keeps the uid, so the store user is not switched', () async {

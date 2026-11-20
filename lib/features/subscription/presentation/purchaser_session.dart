@@ -9,10 +9,13 @@ import 'package:forge_purchases/forge_purchases.dart';
 /// and resets when nobody is signed in. Until a switch succeeds the
 /// entitlement stays unknown, so a failed switch is retried after
 /// [retryDelay], doubling up to [maxRetryDelay], or at once on [resume].
+/// Once a uid is identified, its install's ad attribution is recorded
+/// (once per uid and launch) for the store's targeting of paid traffic.
 class PurchaserSession {
   PurchaserSession({
     required WatchAuthUser watchAuthUser,
     required this._entitlement,
+    required this._recordAdAttribution,
     this.retryDelay = const Duration(seconds: 1),
     this.maxRetryDelay = const Duration(seconds: 30),
   }) : _nextDelay = retryDelay {
@@ -25,6 +28,8 @@ class PurchaserSession {
   final Duration retryDelay;
   final Duration maxRetryDelay;
   final EntitlementCubit _entitlement;
+  final RecordAdAttribution _recordAdAttribution;
+  final _attributed = <String>{};
   late final StreamSubscription<String?> _users;
   Timer? _retry;
   Duration _nextDelay;
@@ -49,7 +54,11 @@ class PurchaserSession {
         ? await _entitlement.reset()
         : await _entitlement.identify(uid);
     // A later user change has started its own switch.
-    if (_cancelled || uid != _uid || result.isOk) return;
+    if (_cancelled || uid != _uid) return;
+    if (result.isOk) {
+      if (uid != null && _attributed.add(uid)) unawaited(_attribute());
+      return;
+    }
     final failure = result.failureOrNull!;
     final message = 'Switching the store user failed; retrying in $_nextDelay';
     // Being offline is expected; anything else is reported once per user,
@@ -63,6 +72,12 @@ class PurchaserSession {
     _retry = Timer(_nextDelay, resume);
     final doubled = _nextDelay * 2;
     _nextDelay = doubled > maxRetryDelay ? maxRetryDelay : doubled;
+  }
+
+  /// Not attributed, or unknown: the default offering stays.
+  Future<void> _attribute() async {
+    final result = await _recordAdAttribution();
+    Log.d('purchases', 'Ad attribution: ${result.valueOrNull ?? result}');
   }
 
   /// Retries a failed switch at once, e.g. when the app comes back.
