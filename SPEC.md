@@ -72,7 +72,9 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   Derived numbers are computed from workouts on read wherever the query is
   small; the only stored summary is `exerciseStats`.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
-  consent for analytics and crash reports. No age gate, health notice or data
+  analytics and crash reports on by default with an opt-out switch
+  (owner's pick, 2026-11-20, replacing the asked consent; see Feature
+  notes › Analytics). No age gate, health notice or data
   export (the user accepted the EU risk). Remote Config (the paywall A/B
   test, the update and maintenance gate) sends the Firebase installation ID for every user, consent or not.
 - **Cloud Functions** (`functions/`): TypeScript, Node 22, 2nd gen, all in
@@ -525,6 +527,12 @@ Where it stands (2026-11-18, end of Group 11):
   them directly). Owner to do: the Play Console Health declaration
   (above); the female body model before release.
 - Small: the Forge Widgetbook use case "ListRow · Info hint" is broken.
+
+Group 12, analytics (owner's plan, 2026-11-20; before the admin panel rework)
+- [ ] Opt-out collection — analytics and crash reports on by default for every user, the Profile → Privacy switch turns them off; the onboarding and over-the-tabs consent page removed; privacy policy and labels updated
+- [ ] Event plan in code — one typed analytics API in the app, screen views from the router, user properties and the user id, every event of the catalog (Feature notes › Analytics) — each event seen in DebugView on dev
+- [ ] BigQuery export — Firebase Analytics linked to BigQuery daily on prod (and dev for checks) — raw events queryable
+- [ ] Admin dashboard — a Dashboard page in the admin panel (drawn first) fed by an admin-only function over BigQuery and RevenueCat's metrics — funnel, retention, conversion and revenue at a glance
 
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
@@ -4229,3 +4237,65 @@ the feature you are about to touch, and keep it true when you change it.
   Messages carry the Android channel `workout`, APNs `sound: default`, and
   a time to live of 3 days (Android `ttl`, `apns-expiration`), so a dated
   announcement is dropped rather than arriving weeks late.
+
+### Analytics
+
+Owner's picks (2026-11-20): Firebase Analytics with the BigQuery export
+(no second analytics tool), collection on by default with an opt-out, the
+full event plan below, and reports in the admin panel (a Dashboard page),
+not in a separate dashboard tool.
+
+- **Collection**: Analytics and Crashlytics collect for every user in prod
+  release builds unless that user turned "Share usage data" off (Profile →
+  Privacy). `settings.analyticsConsent` keeps its meaning per user: false
+  is off, true or null (never answered, including everyone who has not
+  been asked) is on. Users who said no before keep no. No consent page is
+  shown, in onboarding or over the tabs. Still never the advertising ID,
+  Android ID or IDFV, and no ad personalisation signals. Legal basis in the
+  privacy policy: legitimate interest with an opt-out; the owner accepts
+  the KVKK/GDPR risk of not asking first.
+- **User id**: the Firebase uid is set as the Analytics user id, so events
+  can be joined with Firestore and RevenueCat in BigQuery; it is cleared
+  on sign-out and reset on account deletion (`Telemetry.forget`).
+- **Screen views**: `screen_view` from a router observer on every page,
+  sheet and dialog route, named by the route (`today`, `program_detail`,
+  `workout`, `paywall`, …), not by widget class.
+- **User properties** (set when they change): `level`, `goal`,
+  `days_per_week`, `premium` (`free`|`trial`|`premium`), `acquisition`
+  (`apple_search_ads`|`organic`), `account` (`guest`|`email`|`google`|
+  `apple`), `has_program` (`true`|`false`).
+- **Events** (snake_case; parameters only as listed; ids are content ids,
+  never free text):
+  - Onboarding: `onboarding_start`; `onboarding_step` {`step`: `welcome`,
+    `goal`, `level`, `days`, `equipment`, `sex`, `birth_year`, `height`,
+    `weight`, `target_weight`, `program`, `permissions`; `index`} when a
+    step shows; `onboarding_complete` {`program_id` or none}.
+  - Account: `sign_up` {`method`} when a guest links, `login` {`method`}
+    on signing in to an existing account, `sign_out`, `account_delete`.
+  - Programs: `program_start` {`source`: `onboarding`|`catalog`|
+    `generator`|`custom`, `program_id` for ready-made ones, `premium`};
+    `program_generate` {`goal`, `days`}; `program_create`; `program_edit`.
+  - Workout: `workout_start` {`source`: `program`|`free`|`past`};
+    `workout_complete` {`source`, `duration_min`, `exercises`, `sets`,
+    `records`, `workout_count` (the user's total after this one)};
+    `first_workout_complete` alongside the first; `workout_discard`;
+    `personal_record` {`exercise_id`, `kind`}; `rest_skip`.
+  - Library and model: `muscle_select` {`muscle`}; `exercise_view`
+    {`exercise_id`, `from`}; `exercise_search`; `custom_exercise_create`.
+  - Body and progress: `weight_log`; `measurement_day_save` {`photos`};
+    `cardio_log` {`kind`}; `calculator_use` {`calculator`};
+    `steps_connect` {`granted`}.
+  - Monetization: `paywall_view` {`layout`, `moment`, `offering`} (the A/B
+    test's activation event, name and `layout` unchanged);
+    `paywall_close` {`moment`}; `paywall_purchase` {`plan`, `layout`,
+    `moment`} (the goal, unchanged); `restore` {`premium`};
+    `premium_lock_tap` {`feature`}; `manage_subscription`.
+  - Engagement: `notification_open` {`kind`}; `review_prompt`;
+    `feedback_send`.
+- **BigQuery**: daily export of prod (and dev, for checks) into the
+  `analytics_<property>` dataset in the EU, tables kept 14 months; the
+  privacy policy's retention says so.
+- **Reports**: the admin panel's Dashboard reads BigQuery and RevenueCat's
+  metrics through an admin-only callable, never from the browser
+  directly. What it shows is drawn and picked before it is built.
+
