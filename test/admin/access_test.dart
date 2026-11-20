@@ -191,10 +191,10 @@ void main() {
       expect(redirect(admitted, atAccess), link);
     });
 
-    test('without a deep link an admin lands on the list', () {
-      expect(redirect(signedOut, '/exercises'), '/sign-in');
-      expect(redirect(admitted, '/sign-in'), '/exercises');
-      expect(redirect(admitted, '/access'), '/exercises');
+    test('without a deep link an admin lands on the dashboard', () {
+      expect(redirect(signedOut, '/dashboard'), '/sign-in');
+      expect(redirect(admitted, '/sign-in'), '/dashboard');
+      expect(redirect(admitted, '/access'), '/dashboard');
     });
 
     test('a user without the claim stays at the access page', () {
@@ -208,9 +208,9 @@ void main() {
     test('never leaves the app', () {
       expect(
         redirect(admitted, '/access?from=https://evil.example'),
-        '/exercises',
+        '/dashboard',
       );
-      expect(redirect(admitted, '/access?from=//evil.example'), '/exercises');
+      expect(redirect(admitted, '/access?from=//evil.example'), '/dashboard');
     });
   });
 }

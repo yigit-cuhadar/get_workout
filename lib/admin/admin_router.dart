@@ -9,6 +9,7 @@ import 'access/presentation/access_cubit.dart';
 import 'access/presentation/access_page.dart';
 import 'access/presentation/sign_in_page.dart';
 import 'announcements/presentation/announcements_page.dart';
+import 'dashboard/presentation/dashboard_page.dart';
 import 'exercises/presentation/exercise_editor_page.dart';
 import 'exercises/presentation/exercise_list_cubit.dart';
 import 'exercises/presentation/exercise_list_page.dart';
@@ -20,6 +21,7 @@ import 'programs/presentation/program_list_page.dart';
 abstract final class AdminRoutes {
   static const signIn = '/sign-in';
   static const access = '/access';
+  static const dashboard = '/dashboard';
   static const exercises = '/exercises';
   static const newExercise = '$exercises/new';
   static String exercise(String id) => '$exercises/$id';
@@ -41,8 +43,8 @@ String? adminRedirect(AccessState access, Uri location) {
   // Only paths of this app, never a full URL.
   final target = from != null && from.startsWith('/') && !from.startsWith('//')
       ? from
-      : AdminRoutes.exercises;
-  String gate(String gatePath) => target == AdminRoutes.exercises
+      : AdminRoutes.dashboard;
+  String gate(String gatePath) => target == AdminRoutes.dashboard
       ? gatePath
       : Uri(path: gatePath, queryParameters: {'from': target}).toString();
   return switch (access) {
@@ -55,13 +57,17 @@ String? adminRedirect(AccessState access, Uri location) {
 /// Every route of the panel.
 GoRouter buildAdminRouter(AccessCubit access) {
   return GoRouter(
-    initialLocation: AdminRoutes.exercises,
+    initialLocation: AdminRoutes.dashboard,
     refreshListenable: _StreamListenable(access.stream),
     redirect: (_, state) => adminRedirect(access.state, state.uri),
     routes: [
-      GoRoute(path: '/', redirect: (_, _) => AdminRoutes.exercises),
+      GoRoute(path: '/', redirect: (_, _) => AdminRoutes.dashboard),
       GoRoute(path: AdminRoutes.signIn, builder: (_, _) => const SignInPage()),
       GoRoute(path: AdminRoutes.access, builder: (_, _) => const AccessPage()),
+      GoRoute(
+        path: AdminRoutes.dashboard,
+        builder: (_, _) => const DashboardPage(),
+      ),
       // The list lives while any exercise page is open, so its search and
       // filters survive a trip to the editor.
       ShellRoute(
