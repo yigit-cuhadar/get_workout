@@ -1689,15 +1689,21 @@ Decisions (the canvases they were drawn on are deleted):
   no workout in progress only opens the app; the channel shows as
   "Workout in progress" in the system settings (renamed from "Rest
   timer").
-- Release blocker: the Terms of Use and Privacy Policy links in
-  `lib/app/legal_links.dart` are placeholders; publish the pages and
-  replace them (Android picks up `privacyUrl` by itself). The published
-  privacy policy and the App Store / Play privacy labels must say that the
-  app contacts Firebase Remote Config with a Firebase installation ID for
-  all users, to choose between app layouts.
+- Legal pages (2026-11-20): `legal/privacy.html` and `legal/terms.html`
+  are live at https://getworkout-prod.web.app/privacy and `/terms`
+  (hosting target `legal` on prod; deploy with `firebase deploy --only
+  hosting:legal --project getworkout-prod`; the admin panel is target
+  `admin`, dev only). Contact getworkout.support@gmail.com, minimum age 13
+  (or the local age of digital consent), the Terms are the iOS custom EULA,
+  Turkish law and Istanbul courts. Not reviewed by a lawyer. Still open
+  before release: the App Store / Play privacy labels must say that the app
+  contacts Firebase Remote Config with a Firebase installation ID for all
+  users; App Store Connect's Privacy Policy URL and custom EULA; KVKK
+  (VERBİS, notifying transfer contracts) and the explicit-consent basis for
+  body data, which the policy claims without an in-app consent step.
 - Release blockers for steps: Health Connect's privacy-policy link opens
   `PrivacyPolicyActivity`, which opens `LegalLinks.privacyUrl` (passed in
-  by the build, still a placeholder); Play Console
+  by the build, now the live page); Play Console
   needs the Health apps declaration for READ_STEPS; the App ID needs the
   HealthKit capability (the Runner now carries the entitlement, so a
   device build signed by a team without it fails; the simulator does
