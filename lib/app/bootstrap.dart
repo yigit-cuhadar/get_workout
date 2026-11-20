@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:forge_app_gate/forge_app_gate.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
@@ -33,7 +34,10 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
   final telemetry = await initFirebase(options: options, env: env);
   await AccountModule.clearDeletedAccountCache();
   const RemoteConfigModule(
-    defaults: SubscriptionModule.remoteConfigDefaults,
+    defaults: {
+      ...SubscriptionModule.remoteConfigDefaults,
+      ...AppGateModule.remoteConfigDefaults,
+    },
     backend: FirebaseRemoteConfigBackend(
       // Debug builds pick up a console change on the second launch after it.
       minimumFetchInterval: kReleaseMode
@@ -48,6 +52,12 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
   await remoteConfig;
   sl.registerSingleton<AppEnv>(env);
   registerModules([
+    AppGateModule(
+      appStore: Uri.parse('https://apps.apple.com/app/id6836913044'),
+      playStore: Uri.parse(
+        'https://play.google.com/store/apps/details?id=com.getworkout.app',
+      ),
+    ),
     const AuthModule(guestStart: true),
     const SettingsModule(),
     const NotificationsModule(),
@@ -78,5 +88,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
       ),
     ),
   ]);
+  // Local only, from what the last launch fetched; the fetch runs behind.
+  await sl<AppGateCubit>().start();
   runApp(const App());
 }

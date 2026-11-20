@@ -2249,5 +2249,15 @@
   "summaryOpenPrograms": "Open Programs",
   "historyChangedTitle": "Changed elsewhere",
   "historyDeletedTitle": "Deleted elsewhere",
-  "workoutSaving": "Saving"
+  "workoutSaving": "Saving",
+
+  "gateUpdateRequiredTitle": "Update required",
+  "gateUpdateRequiredMessage": "This version of GetWorkout is no longer supported. Update to keep training; your workouts are safe.",
+  "gateUpdateAvailableTitle": "A new version is available",
+  "gateUpdateAvailableMessage": "Update GetWorkout for the latest fixes and features.",
+  "gateUpdate": "Update",
+  "gateLater": "Later",
+  "gateMaintenanceTitle": "We'll be right back",
+  "gateMaintenanceMessage": "GetWorkout is down for maintenance. Try again in a little while.",
+  "gateTryAgain": "Try again"
 }
