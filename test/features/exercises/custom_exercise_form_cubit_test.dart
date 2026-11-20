@@ -62,6 +62,42 @@ void main() {
         initial: initial,
       );
 
+  group('custom_exercise_create', () {
+    Future<List<String>> saved(CustomExercise? initial) async {
+      final telemetry = RecordingTelemetry();
+      final cubit = CustomExerciseFormCubit(
+        analytics: fakeAnalytics(telemetry),
+        saveExercise: SaveCustomExercise(repository),
+        getCurrentUser: GetCurrentUser(auth),
+        watchAuthUser: WatchAuthUser(auth),
+        initial: initial,
+      )..setMainMuscles({Muscle.frontDelt});
+      if (initial == null) cubit.setName('Zercher Squat');
+      await cubit.save();
+      await cubit.close();
+      return telemetry.names;
+    }
+
+    test('a new one prefilled with a search is a create', () async {
+      expect(
+        await saved(
+          const CustomExercise(
+            name: 'Zercher Squat',
+            loggingType: LoggingType.weightReps,
+            mainMuscles: [],
+            secondaryMuscles: [],
+            equipment: [],
+          ),
+        ),
+        ['custom_exercise_create'],
+      );
+    });
+
+    test('an edit is not', () async {
+      expect(await saved(stored), isEmpty);
+    });
+  });
+
   test('a new one starts empty, logged with weight and reps', () {
     final cubit = build();
     expect(cubit.state, const CustomExerciseFormState());

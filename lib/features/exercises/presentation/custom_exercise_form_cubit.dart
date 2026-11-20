@@ -216,7 +216,8 @@ class CustomExerciseFormCubit extends Cubit<CustomExerciseFormState> {
     );
     final result = await _saveExercise((uid: uid, exercise: exercise));
     if (isClosed || state.isDone) return;
-    if (result.isOk && _initial == null) {
+    // A new exercise, prefilled (a search's name) or not.
+    if (result.isOk && !isEditing) {
       unawaited(_analytics.customExerciseCreate());
     }
     emit(switch (result) {

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 
+import '../../account/domain/account_usecases.dart';
+
 import '../../exercises/domain/vocabulary.dart';
 import '../../profile/presentation/profile_cubit.dart';
 import '../../programs/presentation/program_list_cubit.dart';
@@ -13,12 +15,17 @@ import '../domain/analytics.dart';
 /// to another account (`login`), told apart on the auth user stream.
 /// `acquisition` comes from the purchaser session, which applies the ad
 /// attribution.
+///
+/// A new user is followed here before anything is logged for them, so their
+/// events are held for their consent and sent under their id, whichever
+/// listener of the auth stream runs first (the `ConsentCubit` follows too).
 class AnalyticsSession {
   AnalyticsSession({
     required WatchAuthUser watchAuthUser,
     required ProfileCubit profile,
     required EntitlementCubit entitlement,
     required ProgramListCubit programs,
+    required this._followUser,
     required this._analytics,
   }) {
     _subscriptions = [
@@ -37,6 +44,7 @@ class AnalyticsSession {
     ];
   }
 
+  final FollowAnalyticsUser _followUser;
   final Analytics _analytics;
   late final List<StreamSubscription<Object?>> _subscriptions;
 
@@ -62,6 +70,7 @@ class AnalyticsSession {
     _user = user;
     _userSeen = true;
     if (user == null) return;
+    if (previous?.id != user.id) unawaited(_followUser(user.id));
     final method = signInMethodOf(user);
     if (previous?.id != user.id || previous?.isAnonymous != user.isAnonymous) {
       unawaited(_analytics.account(method));

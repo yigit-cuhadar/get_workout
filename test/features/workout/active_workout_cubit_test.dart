@@ -104,6 +104,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(saved);
     registerFallbackValue(<String, ExerciseStats>{});
+    registerFallbackValue(DateTime(2026));
     registerFallbackValue(active);
     registerFallbackValue(const Program(name: 'x', days: []));
     registerFallbackValue(const LocalWorkouts());
@@ -155,7 +156,7 @@ void main() {
         .thenAnswer((_) async => const Ok([]));
     when(() => repository.hasWorkouts(any()))
         .thenAnswer((_) async => const Ok(true));
-    when(() => repository.countWorkouts(any()))
+    when(() => repository.countWorkouts(any(), before: any(named: 'before')))
         .thenAnswer((_) async => const Ok(4));
     when(
       () => repository.saveWorkout(
@@ -1677,7 +1678,7 @@ void main() {
     test('the first workout ever is logged as such', () async {
       when(() => repository.hasWorkouts(any()))
           .thenAnswer((_) async => const Ok(false));
-      when(() => repository.countWorkouts(any()))
+      when(() => repository.countWorkouts(any(), before: any(named: 'before')))
           .thenAnswer((_) async => const Ok(0));
       final cubit = await signedIn(draft: draft);
       await cubit.finish();

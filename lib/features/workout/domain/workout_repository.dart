@@ -94,9 +94,10 @@ abstract interface class WorkoutRepository {
   /// answers quickly, else from the device's cache.
   Future<Result<bool>> hasWorkouts(String uid);
 
-  /// How many finished workouts the server holds for the user; fails
-  /// when it does not answer quickly.
-  Future<Result<int>> countWorkouts(String uid);
+  /// How many workouts the server holds for the user finished [before];
+  /// fails when it does not answer quickly. Bounded, so a workout written
+  /// while it counts (the one being finished) is never counted.
+  Future<Result<int>> countWorkouts(String uid, {required DateTime before});
 
   /// The finished workouts of program [programId], from the server when it
   /// answers quickly, else from the device's cache.

@@ -216,7 +216,7 @@ void main() {
         {'feature': 'strength_range'},
       ],
       [
-        'notification_open',
+        'notification_tap',
         {'kind': 'active_workout'},
       ],
     ]);

@@ -4310,7 +4310,7 @@ not in a separate dashboard tool.
     `paywall_close` {`moment`}; `paywall_purchase` {`plan`, `layout`,
     `moment`} (the goal, unchanged); `restore` {`premium`};
     `premium_lock_tap` {`feature`}; `manage_subscription`.
-  - Engagement: `notification_open` {`kind`}; `review_prompt`;
+  - Engagement: `notification_tap` {`kind`}; `review_prompt`;
     `feedback_send`.
 - **In code** (`lib/features/analytics`): `Analytics` holds every name
   and parameter; cubits get it injected, a widget without a cubit reads it
@@ -4365,7 +4365,8 @@ not in a separate dashboard tool.
     tap on a lock; `feature` is `generator`, `premium_program`,
     `body_history`, `body_series`, `body_range` or `strength_range`.
     `manage_subscription`: Manage subscription tapped.
-  - `notification_open`: `kind` is `workout`, `measurement`,
+  - `notification_tap` (not `notification_open`, a name Analytics
+    reserves for FCM and refuses): `kind` is `workout`, `measurement`,
     `announcement`, or `active_workout` (the workout's lock-screen activity
     or notification). `review_prompt`: the app's review question shows.
     `feedback_send`: feedback sent.
