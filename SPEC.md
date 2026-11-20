@@ -4412,6 +4412,18 @@ not in a separate dashboard tool.
   Crashlytics installations against Analytics' active app instances.
   Deploying needs the `REVENUECAT_API_KEY` Functions secret (a v2 key
   with `charts_metrics:overview:read`) on both projects.
+- **Dashboard page** (`lib/admin/dashboard`, `/dashboard`, the panel's
+  landing page): reads every `dashboard` document once on open and again
+  after Refresh now (`dashboardRefresh`, client timeout 540 s); Custom…
+  picks a range in the 14 months up to the last day and asks
+  `dashboardRange` (timeout 300 s; longer than 366 days is refused before
+  asking). Before the first export (no reports, status missing or
+  `no-data`) it shows "No data yet" and the revenue snapshot only. Tile
+  changes: counts in whole percent (nothing when the previous period is
+  unknown or zero), shares in points to one decimal; a change that rounds
+  to zero is muted. Growth and Retention curves are one Forge line chart
+  per series (Forge has no multi-line chart). The most started program
+  shows its id. The Funnel and Retention toggles live as long as the page.
 - **Held until the answer is known** (Forge v0.49.0): a new install
   collects only once the user's stored answer is read, and Analytics drops
   what comes before, so `FirebaseTelemetry` holds events and screens (at

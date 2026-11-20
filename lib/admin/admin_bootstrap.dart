@@ -6,6 +6,7 @@ import 'package:forge_core/forge_core.dart';
 import 'access/access_module.dart';
 import 'admin_app.dart';
 import 'announcements/announcement_admin_module.dart';
+import 'dashboard/dashboard_admin_module.dart';
 import 'exercises/exercise_admin_module.dart';
 import 'feedback/feedback_admin_module.dart';
 import 'programs/program_admin_module.dart';
@@ -17,9 +18,11 @@ Future<void> bootstrapAdmin(AppEnv env, FirebaseOptions options) async {
   // Not forge_firebase's initFirebase: Crashlytics has no web support, and
   // an internal tool collects no analytics.
   await Firebase.initializeApp(options: options);
+  sl.registerSingleton<AppEnv>(env);
   registerModules(const [
     AuthModule(),
     AdminAccessModule(),
+    DashboardAdminModule(),
     ExerciseAdminModule(),
     ProgramAdminModule(),
     AnnouncementAdminModule(),
