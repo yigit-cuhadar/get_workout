@@ -5,6 +5,7 @@ import {
   EntitlementStore,
   NEVER_EXPIRES_MS,
   Reason,
+  RevenueEventRecord,
   StoredEntitlement,
   TEMPORARY_GRANT_MS,
   WebhookRequest,
@@ -47,13 +48,14 @@ const post = (
 function fakeStore(
   options: {
     users?: string[];
-    failing?: "userExists" | "apply";
+    failing?: "userExists" | "apply" | "record";
     duringApply?: (users: Set<string>) => void;
   } = {},
 ) {
   const users = new Set(options.users ?? ["u1", "u2", "u3"]);
   const docs = new Map<string, StoredEntitlement>();
   const deleted: string[] = [];
+  const records = new Map<string, RevenueEventRecord>();
   const store: EntitlementStore = {
     async userExists(uid) {
       if (options.failing === "userExists") throw new Error("auth down");
@@ -70,8 +72,12 @@ function fakeStore(
       deleted.push(uid);
       docs.delete(uid);
     },
+    async record(id, record) {
+      if (options.failing === "record") throw new Error("write failed");
+      records.set(id, record);
+    },
   };
-  return { store, docs, users, deleted };
+  return { store, docs, users, deleted, records };
 }
 
 type Fake = ReturnType<typeof fakeStore>;
@@ -700,7 +706,7 @@ describe("TRANSFER", () => {
 
 describe("failures", () => {
   test("Auth or Firestore failing is a 500, so RevenueCat retries", async () => {
-    for (const failing of ["userExists", "apply"] as const) {
+    for (const failing of ["userExists", "apply", "record"] as const) {
       const fake = fakeStore({ failing });
       const response = await deliver(
         fake,
@@ -711,5 +717,83 @@ describe("failures", () => {
         body: { reason: Reason.retry },
       });
     }
+  });
+});
+
+describe("revenueEvents", () => {
+  test("a trial purchase is recorded with its period, user and price", async () => {
+    const fake = fakeStore();
+    const trial = event(samples.INITIAL_PURCHASE, {
+      period_type: "TRIAL",
+      price: 0,
+    });
+    await expect200(fake, trial, Reason.applied);
+    assert.deepEqual(fake.records.get(samples.INITIAL_PURCHASE.id), {
+      type: "INITIAL_PURCHASE",
+      periodType: "TRIAL",
+      appUserId: "u1",
+      productId: "com.subscription.weekly",
+      store: "APP_STORE",
+      environment: "PRODUCTION",
+      atMillis: samples.INITIAL_PURCHASE.event_timestamp_ms,
+      priceUsd: 0,
+    });
+  });
+
+  test("a renewal carries isTrialConversion; no price is null", async () => {
+    const fake = fakeStore();
+    await expect200(
+      fake,
+      event(samples.RENEWAL, { is_trial_conversion: true }),
+      Reason.applied,
+    );
+    const record = fake.records.get(samples.RENEWAL.id);
+    assert.equal(record?.isTrialConversion, true);
+    assert.equal(record?.priceUsd, null);
+  });
+
+  test("only RENEWAL has isTrialConversion", async () => {
+    const fake = fakeStore();
+    await expect200(
+      fake,
+      event(samples.INITIAL_PURCHASE, { is_trial_conversion: true }),
+      Reason.applied,
+    );
+    const record = fake.records.get(samples.INITIAL_PURCHASE.id);
+    assert.ok(record && !("isTrialConversion" in record));
+  });
+
+  test("the uid comes from the aliases when app_user_id is anonymous", async () => {
+    const fake = fakeStore();
+    await expect200(fake, samples.CANCELLATION, Reason.applied);
+    assert.equal(fake.records.get(samples.CANCELLATION.id)?.appUserId, "u1");
+  });
+
+  test("events that change nothing are recorded too; redelivery rewrites", async () => {
+    const fake = fakeStore({ users: [] });
+    await expect200(fake, samples.INITIAL_PURCHASE, Reason.deletedUser);
+    await expect200(fake, samples.INITIAL_PURCHASE, Reason.deletedUser);
+    assert.equal(fake.records.size, 1);
+  });
+
+  test("ignored types and refused requests record nothing", async () => {
+    const fake = fakeStore();
+    const testEvent = { ...samples.INITIAL_PURCHASE, type: "TEST" };
+    await expect200(fake, testEvent, Reason.testEvent);
+    await deliver(
+      fake,
+      post(webhookBody(samples.INITIAL_PURCHASE), { authorization: "x" }),
+    );
+    assert.equal(fake.records.size, 0);
+  });
+
+  test("an id that cannot name a document is not an event", async () => {
+    const fake = fakeStore();
+    const response = await deliver(
+      fake,
+      post(webhookBody(event(samples.INITIAL_PURCHASE, { id: "a/b" }))),
+    );
+    assert.equal(response.status, 400);
+    assert.equal(fake.records.size, 0);
   });
 });

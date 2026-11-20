@@ -4392,6 +4392,26 @@ not in a separate dashboard tool.
     expiration of `firebase_crashlytics` and `firebase_sessions` on dev
     and prod (2026-11-21); `analytics_<property>` (daily `events_` tables)
     gets a 14-month default table expiration once its first export lands.
+- **Dashboard functions** (`functions/src/dashboard`, not deployed yet):
+  `revenueCatWebhook` also keeps every event it reads in
+  `revenueEvents/{event id}` (type, period type, `isTrialConversion` on
+  renewals, the uid, product, store, environment, time, USD price).
+  `dashboardNightly` (09:00 Europe/Istanbul) and the admin-only
+  `dashboardRefresh` store `dashboard/p7`, `p30`, `p90` (ranges ending at
+  the latest `events_` day), `dashboard/retention` (8 complete weekly
+  install cohorts, day 1/7/30), `dashboard/revenue` with a daily copy in
+  `dashboardRevenue/{day}` (RevenueCat's overview metrics; the one
+  RevenueCat project serves both panels) and `dashboard/status` (`ok`,
+  `no-data` before the first export, or `error` naming the parts that
+  failed; the others are still written). The admin-only `dashboardRange`
+  answers a custom range of at most 366 days. Admins read `dashboard`;
+  `revenueEvents` and `dashboardRevenue` stay server-only. Trials and
+  paid purchases count production events on prod and sandbox ones too on
+  dev; they join Analytics through the user id (the uid, which is also
+  RevenueCat's app user id). Users in crash-free and top issues are
+  Crashlytics installations against Analytics' active app instances.
+  Deploying needs the `REVENUECAT_API_KEY` Functions secret (a v2 key
+  with `charts_metrics:overview:read`) on both projects.
 - **Held until the answer is known** (Forge v0.49.0): a new install
   collects only once the user's stored answer is read, and Analytics drops
   what comes before, so `FirebaseTelemetry` holds events and screens (at

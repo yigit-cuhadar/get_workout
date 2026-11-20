@@ -30,6 +30,10 @@ rules_version = '2';
 //                            functions write, through the Admin SDK)
 //   announcements/{id}       admin claim                            allow deny
 //   announcements/{id}       anyone else                            deny  deny
+//   dashboard/{id}           admin claim                            allow deny
+//   dashboard/{id}           anyone else                            deny  deny
+//   revenueEvents/{id},      anyone, admins included (only the      deny  deny
+//   dashboardRevenue/{day}   functions write and read them)
 //   users/{uid}/feedback/{id} owner: create only, validated below   deny  allow
 //   users/*/feedback/{id}    admin claim (also as a collection      allow update
 //                            group): update changes status only,          status
@@ -489,6 +493,12 @@ service cloud.firestore {
     // The history of sent announcements, written only by the
     // sendAnnouncement function through the Admin SDK.
     match /announcements/{id} {
+      allow read: if isAdmin();
+    }
+
+    // The admin panel's Dashboard: reports the dashboard functions store.
+    // revenueEvents and dashboardRevenue, their inputs, stay denied.
+    match /dashboard/{id} {
       allow read: if isAdmin();
     }
   }

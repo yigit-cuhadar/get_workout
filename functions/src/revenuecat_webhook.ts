@@ -112,6 +112,26 @@ export interface RevenueCatEvent {
   gracePeriodExpirationMs: number | null;
   transferredFrom: string[];
   transferredTo: string[];
+  periodType?: string;
+  store?: string;
+  /** RENEWAL only: whether the renewal ended a free trial. */
+  isTrialConversion?: boolean;
+  /** `price`, which RevenueCat gives in USD. */
+  priceUsd: number | null;
+}
+
+/** `revenueEvents/{id}`, one per event received, for the Dashboard. */
+export interface RevenueEventRecord {
+  type: string;
+  periodType: string | null;
+  isTrialConversion?: boolean;
+  /** The uid the event is about ([targetUid]), null when none. */
+  appUserId: string | null;
+  productId: string | null;
+  store: string | null;
+  environment: string | null;
+  atMillis: number;
+  priceUsd: number | null;
 }
 
 /** `entitlements/{uid}`, with `expiresAt` in milliseconds. */
@@ -154,6 +174,8 @@ export interface EntitlementStore {
   ): Promise<Plan>;
   /** Deletes `entitlements/{uid}`; nothing to delete is fine. */
   delete(uid: string): Promise<void>;
+  /** Sets `revenueEvents/{id}`; a redelivery writes the same again. */
+  record(id: string, record: RevenueEventRecord): Promise<void>;
 }
 
 export interface WebhookRequest {
@@ -207,7 +229,10 @@ export function parseEvent(body: unknown): RevenueCatEvent | null {
   const fields = eventFields(body);
   if (fields === null) return null;
   const { id, type, event_timestamp_ms: timestampMs } = fields;
-  if (typeof id !== "string" || id.length === 0) return null;
+  // The id names the event's `revenueEvents` document.
+  if (typeof id !== "string" || id.length === 0 || id.includes("/")) {
+    return null;
+  }
   if (typeof type !== "string" || !isMillis(timestampMs)) return null;
   const nullableMillis = (value: unknown): number | null | undefined =>
     value === null || value === undefined
@@ -240,8 +265,34 @@ export function parseEvent(body: unknown): RevenueCatEvent | null {
     gracePeriodExpirationMs,
     transferredFrom: strings(fields.transferred_from),
     transferredTo: strings(fields.transferred_to),
+    periodType: optionalString(fields.period_type),
+    store: optionalString(fields.store),
+    ...(type === "RENEWAL"
+      ? { isTrialConversion: fields.is_trial_conversion === true }
+      : {}),
+    priceUsd:
+      typeof fields.price === "number" && Number.isFinite(fields.price)
+        ? fields.price
+        : null,
   };
 }
+
+/** What `revenueEvents/{id}` holds for [event]. */
+export const revenueEventRecord = (
+  event: RevenueCatEvent,
+): RevenueEventRecord => ({
+  type: event.type,
+  periodType: event.periodType ?? null,
+  ...(event.isTrialConversion === undefined
+    ? {}
+    : { isTrialConversion: event.isTrialConversion }),
+  appUserId: targetUid(event) ?? null,
+  productId: event.productId ?? null,
+  store: event.store ?? null,
+  environment: event.environment ?? null,
+  atMillis: event.timestampMs,
+  priceUsd: event.priceUsd,
+});
 
 /**
  * Whether [id] can be a Firebase uid: the app identifies the store user by
@@ -541,7 +592,8 @@ async function applyEvent(
  * ignored answers 200, a request that is not RevenueCat's 4xx, and only a
  * failure a retry may fix 500. Sandbox and production events are treated
  * alike: with a release build only testers and App Review can buy in the
- * sandbox, and their purchases must unlock what they paid for.
+ * sandbox, and their purchases must unlock what they paid for. Every
+ * event read is also kept in `revenueEvents` before it is applied.
  */
 export async function revenueCatWebhookOf(
   request: WebhookRequest,
@@ -568,6 +620,7 @@ export async function revenueCatWebhookOf(
     return respond(400, Reason.invalidEvent);
   }
   try {
+    await deps.store.record(event.id, revenueEventRecord(event));
     return await applyEvent(event, deps.store);
   } catch (error) {
     logger.error("revenuecat event not applied", {
@@ -633,6 +686,9 @@ export const firebaseEntitlementStore = (
       }),
     async delete(uid) {
       await entitlements.doc(uid).delete();
+    },
+    async record(id, record) {
+      await db.collection("revenueEvents").doc(id).set(record);
     },
   };
 };
