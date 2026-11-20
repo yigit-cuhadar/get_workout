@@ -4136,8 +4136,10 @@ the feature you are about to touch, and keep it true when you change it.
   open on or after the third day. Later asks only at a summary with a
   new record (a highlight) at least 30 days after the last ask; never
   twice in one app version (`FeedbackModule.reviewRules`). The summary of
-  the user's first workout ever, which leaves through the paywall, counts
-  but never asks. Today asks only while it is in front with nothing over
+  the user's first workout ever counts but never asks. A free user's
+  summary that asks still leaves through the workout paywall: the ask
+  while the summary shows, the paywall on Done (owner's pick R1,
+  2026-11-20, canvas https://claude.ai/artifact/CayPEwTYFTHCX55XSMU3Nx). Today asks only while it is in front with nothing over
   the tabs (no paywall, workout, dialog or sheet; onboarding
   and the start pages come before the tabs); a day counted while covered
   asks at the next open that is not. An ask is recorded when it is
@@ -4370,4 +4372,26 @@ not in a separate dashboard tool.
 - **Reports**: the admin panel's Dashboard reads BigQuery and RevenueCat's
   metrics through an admin-only callable, never from the browser
   directly. What it shows is drawn and picked before it is built.
+- **Held until the answer is known** (Forge v0.49.0): a new install
+  collects only once the user's stored answer is read, and Analytics drops
+  what comes before, so `FirebaseTelemetry` holds events and screens (at
+  most 100) while the followed user's answer is unknown, sends them in
+  order on collect and drops them on no or a user change. The user id
+  and the user properties are set after collection starts and replayed
+  then (v0.48.0), for the same reason.
+- **Checked on the simulator** (2026-11-20, dev, DebugView): screen views
+  and the user properties, the onboarding steps and `onboarding_complete`,
+  `calculator_use`, `muscle_select`, `exercise_view`, `exercise_search`,
+  `weight_log`, `premium_lock_tap`, `paywall_view` (`layout`, `moment`,
+  `offering`), `paywall_close`, `restore`, `program_start`,
+  `workout_start`, `rest_skip`, `workout_complete` (with `workout_count`),
+  `first_workout_complete`, `review_prompt`. Not yet seen: the account
+  events, `program_generate`/`create`/`edit`, `workout_discard`,
+  `personal_record`, `measurement_day_save`, `cardio_log`,
+  `custom_exercise_create`, `steps_connect`, `notification_open`,
+  `feedback_send`, `manage_subscription`, Android. Every `app_exception`
+  seen came from the Programs tab crash fixed in #183. Crash reports from
+  release builds stay unreadable until their dSYMs are uploaded: the
+  Runner's `flutterfire upload-crashlytics-symbols` phase needs the
+  FlutterFire config in `firebase.json`, which the app does not have.
 
