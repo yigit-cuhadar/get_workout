@@ -7,6 +7,10 @@ class RecordingTelemetry implements Telemetry {
   final screens = <String>[];
   final properties = <String, String?>{};
 
+  /// Every user followed and event logged, in order: `follow:<uid>`,
+  /// `event:<name>`.
+  final calls = <String>[];
+
   /// The names of [events].
   List<String> get names => [for (final (name, _) in events) name];
 
@@ -16,7 +20,10 @@ class RecordingTelemetry implements Telemetry {
   ];
 
   @override
-  Future<Result<void>> follow(String? uid) async => const Ok(null);
+  Future<Result<void>> follow(String? uid) async {
+    calls.add('follow:$uid');
+    return const Ok(null);
+  }
 
   @override
   Future<Result<void>> apply(String uid, bool? consent) async => const Ok(null);
@@ -28,7 +35,10 @@ class RecordingTelemetry implements Telemetry {
   Future<void> logEvent(
     String name, [
     Map<String, Object> parameters = const {},
-  ]) async => events.add((name, parameters));
+  ]) async {
+    calls.add('event:$name');
+    events.add((name, parameters));
+  }
 
   @override
   Future<void> logScreen(String name) async => screens.add(name);

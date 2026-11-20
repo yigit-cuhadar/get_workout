@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_purchases/forge_purchases.dart';
+import 'package:get_workout/features/account/domain/account_usecases.dart';
 import 'package:get_workout/features/analytics/presentation/analytics_session.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
@@ -59,6 +60,7 @@ void main() {
       profile: profile,
       entitlement: entitlement,
       programs: programs,
+      followUser: FollowAnalyticsUser(telemetry),
       analytics: fakeAnalytics(telemetry),
     );
   });
@@ -99,6 +101,18 @@ void main() {
           'login',
           {'method': 'apple'},
         ],
+      ]);
+    });
+
+    test('the new account is followed before its login is logged', () async {
+      users
+        ..add(guest)
+        ..add(const AuthUser(id: 'u2', signInMethods: {SignInMethod.apple}));
+      await settle();
+      expect(telemetry.calls, [
+        'follow:${guest.id}',
+        'follow:u2',
+        'event:login',
       ]);
     });
 
