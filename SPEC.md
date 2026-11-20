@@ -1631,6 +1631,16 @@ Decisions (the canvases they were drawn on are deleted):
   preselected), DW3 A (beginner 3, intermediate 4, advanced 5 days).
 ## Open questions
 
+- **Bug, onboarding's health step hangs after access is given**
+  (simulator, 2026-11-21): Connect Apple Health shows HealthKit's sheet
+  for steps; after Allow, `AllowStepsAccess` asks for workouts and heart
+  rate at once (`requestWorkoutsPermission`), no second sheet shows and
+  the call never returns, so the page stays (Skip still works);
+  `steps_connect {granted: true}` is logged. Likely the second
+  `requestAuthorization` right after the first sheet closes. Not yet
+  seen on a device. Fix to decide: one request for steps, workouts and
+  heart rate together (a `forge_health` change) or not waiting for the
+  workouts answer.
 - Google sign-in is offered next to email (`socialProviders` in
   `lib/app/router.dart`); both providers are enabled in both Firebase
   projects. It runs through Firebase Auth's browser flow, so iOS returns
