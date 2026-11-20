@@ -62,7 +62,7 @@ App-wide decisions only. How each feature behaves is under Feature notes.
 - **Privacy**: minimal set. In-app account deletion, privacy policy link,
   consent for analytics and crash reports. No age gate, health notice or data
   export (the user accepted the EU risk). Remote Config (the paywall A/B
-  test) sends the Firebase installation ID for every user, consent or not.
+  test, the update and maintenance gate) sends the Firebase installation ID for every user, consent or not.
 - **Cloud Functions** (`functions/`): TypeScript, Node 22, 2nd gen, all in
   `europe-west1` (`src/config.ts`, set once with `setGlobalOptions`; the
   app's one Dart constant `functionsRegion` in
@@ -1549,6 +1549,13 @@ Decisions (the canvases they were drawn on are deleted):
   side, Save off while no weekday is picked. Starting suggests one
   weekday per day spread over the week, the days in turn. The sheet
   scrolls when its cards do not fit (large text).
+- Update and maintenance (owner's picks, 2026-11-20, canvas
+  https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ, U1–U3): U1 a full
+  "Update required" page with one Update button and no what's-new list;
+  U2 a bottom sheet, not a banner, with Update and Later; U3 a full
+  "We'll be right back" page with the configured message and Try again.
+  Behaviour and texts are under Feature notes › App shell, settings and
+  onboarding › Update and maintenance gate.
 
 ## Open questions
 
@@ -2298,6 +2305,57 @@ the feature you are about to touch, and keep it true when you change it.
   what effort is and what the app does with it, every step of the user's
   scale and what it means, Failed, warm-up sets (with the automatic ramp)
   and drop sets.
+
+- **Update and maintenance gate** (owner's call, 2026-11-20; picks U1–U3
+  on the canvas https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ;
+  `forge_app_gate`): three rules from Firebase Remote Config, checked by
+  `AppGateCubit` against the installed version (`package_info_plus`, the
+  marketing version only: `1.2.0` of `1.2.0+7`; the build number is not
+  compared, since a store release always raises the version).
+  - Keys (all with in-app defaults that ask nothing, so an absent key
+    never blocks; `AppGateModule.remoteConfigDefaults`, merged into
+    `RemoteConfigModule`'s defaults in `bootstrap`):
+    `min_version_ios`, `min_version_android`, `recommended_version_ios`,
+    `recommended_version_android` (strings, default `''`: a version such
+    as `1.2.0`; missing parts are 0, a value that is not a version asks
+    nothing), `maintenance` (boolean, default `false`, one switch for
+    both platforms; per platform only through a console condition) and
+    `maintenance_message` (string, default `''`: the app's own text; a
+    language is added later with a console condition on the device
+    language). Created on getworkout-dev (2026-11-20, group "App gate",
+    "use in-app default"); not on prod yet.
+  - Order: maintenance first (an update does not help while it lasts),
+    then the minimum, then the recommended version.
+  - U1 Update required: below the minimum the app is replaced by a page,
+    "Update required" / "This version of GetWorkout is no longer
+    supported. Update to keep training; your workouts are safe." and one
+    Update button opening the store (App Store
+    `https://apps.apple.com/app/id6836913044`, Google Play
+    `https://play.google.com/store/apps/details?id=com.getworkout.app`).
+    Nothing else is reachable; Back does nothing.
+  - U2 Recommended update: below the recommended version (and at or above
+    the minimum) a bottom sheet over the app, at most once per launch:
+    "A new version is available" / "Update GetWorkout for the latest
+    fixes and features.", Update (the store; the sheet closes for this
+    launch only) and Later. Later, a swipe down, a tap on the scrim or
+    Back dismiss it for that `recommended_version_*` value for good
+    (`app_gate.json` in the app support directory); a new value offers
+    it again.
+  - U3 Maintenance: while `maintenance` is true a page "We'll be right
+    back" with `maintenance_message`, or "GetWorkout is down for
+    maintenance. Try again in a little while.", and Try again, which
+    fetches Remote Config at once (busy meanwhile) and opens the app if
+    maintenance is off. Back does nothing.
+  - When: `bootstrap` checks before `runApp` from what the last launch
+    fetched (local only, so offline the app opens as before), then the
+    rules are fetched in the background, on every resume and on Try
+    again, ignoring the 12 h fetch interval; a failed fetch keeps the last
+    rules. Only the gate's keys take a fetched value mid-session
+    (`RemoteConfigRepository.refresh`); `paywall_layout` keeps one value
+    per session.
+  - The gate sits in `MaterialApp.builder` around the router: the app
+    stays mounted and hidden under a page and comes back as it was. Its
+    cubits start as usual underneath (auth, Firestore listeners).
 
 ### Exercises and content
 
