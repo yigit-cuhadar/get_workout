@@ -49,7 +49,7 @@ class TrackedTelemetry implements Telemetry {
   Future<Result<void>> follow(String? uid) => _track(_telemetry.follow(uid));
 
   @override
-  Future<Result<void>> apply(String uid, bool consent) =>
+  Future<Result<void>> apply(String uid, bool? consent) =>
       _track(_telemetry.apply(uid, consent));
 
   @override
@@ -60,6 +60,13 @@ class TrackedTelemetry implements Telemetry {
     String name, [
     Map<String, Object> parameters = const {},
   ]) => _telemetry.logEvent(name, parameters);
+
+  @override
+  Future<void> logScreen(String name) => _telemetry.logScreen(name);
+
+  @override
+  Future<void> setUserProperty(String name, String? value) =>
+      _telemetry.setUserProperty(name, value);
 }
 
 /// The cubit over the real [FirebaseTelemetry], with the Firebase SDKs
@@ -108,6 +115,9 @@ void main() {
           history.add(collecting!);
         });
     when(() => analytics.resetAnalyticsData()).thenAnswer((_) async {});
+    when(() => analytics.setUserId(id: any(named: 'id')))
+        .thenAnswer((_) async {});
+    when(() => crashlytics.setUserIdentifier(any())).thenAnswer((_) async {});
     when(() => crashlytics.setCrashlyticsCollectionEnabled(any()))
         .thenAnswer((_) async {});
     when(() => crashlytics.deleteUnsentReports()).thenAnswer((_) async {});
@@ -117,6 +127,7 @@ void main() {
 
   FirebaseTelemetry telemetry() => FirebaseTelemetry(
     allowed: true,
+    collectUnanswered: false,
     directory: () async => directory,
     analytics: analytics,
     crashlytics: crashlytics,

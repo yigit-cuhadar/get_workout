@@ -33,7 +33,12 @@ import 'app.dart';
 /// Composition root: every feature module is registered here.
 Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
   WidgetsFlutterBinding.ensureInitialized();
-  final telemetry = await initFirebase(options: options, env: env);
+  final telemetry = await initFirebase(
+    options: options,
+    env: env,
+    // Opt-in until Group 12's opt-out lands.
+    collectUnanswered: false,
+  );
   await AccountModule.clearDeletedAccountCache();
   const RemoteConfigModule(
     defaults: {
