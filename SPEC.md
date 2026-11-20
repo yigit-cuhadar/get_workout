@@ -1650,7 +1650,7 @@ Decisions (the canvases they were drawn on are deleted):
   then "Please sign in again", with no way to do so from the page. Fixed
   in #145 (provider re-sign-in, Forge v0.26.0) and checked the same day:
   the Auth user, `users/{uid}` and the bucket's `users/{uid}/` were gone.
-- Female body model with the same mesh names: the user supplies it before release.
+- Female body model with the same mesh names: the user supplies it before release. The 4-view drawings both new models (male and female) were generated from in Tripo 3D are in `design/body_models/{male,female}/{front,right,back,left}.png` (2026-11-20).
 - Subscriptions (2026-11-20). App Store: group "GetWorkout Premium" with
   `getworkout.premium.monthly` (7.99 USD) and `getworkout.premium.yearly`
   (39.99 USD, 7-day free trial), 175 territories, equalized prices; the
