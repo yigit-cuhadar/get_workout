@@ -77,7 +77,7 @@ export const sql = (project: string, analytics: string) => {
         COUNTIF(event_name = 'program_start') AS programStarts,
         COUNTIF(event_name = 'custom_exercise_create') AS customExercisesCreated,
         COUNTIF(event_name = 'weight_log') AS weightsLogged,
-        COUNTIF(event_name = 'notification_open') AS notificationsOpened
+        COUNTIF(event_name = 'notification_tap') AS notificationsOpened
       FROM ${events}
       WHERE ${inRange}`,
     topProgram: `
