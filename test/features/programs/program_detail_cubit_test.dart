@@ -15,6 +15,7 @@ import 'package:get_workout/features/programs/presentation/program_list_cubit.da
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
+import '../../fake_analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -43,6 +44,7 @@ void main() {
   late StreamController<ActiveProgram?> active;
   late ProgramListCubit list;
   late FakePremium premium;
+  late RecordingTelemetry telemetry;
 
   setUpAll(() {
     registerFallbackValue(upperLower);
@@ -50,6 +52,7 @@ void main() {
   });
 
   setUp(() async {
+    telemetry = RecordingTelemetry();
     auth = MockAuthRepository();
     repository = MockProgramRepository();
     users = StreamController<AuthUser?>.broadcast();
@@ -109,21 +112,24 @@ void main() {
     await pumpEventQueue();
   }
 
-  ProgramDetailCubit build([String id = 'p1']) => ProgramDetailCubit(
-    id,
-    list: list,
-    startProgram: StartProgram(
-      repository,
-      const NoCompletedDays(),
-      clock: () => now,
-    ),
-    changeSchedule: ChangeSchedule(repository, clock: () => now),
-    stopProgram: StopProgram(repository),
-    duplicateProgram: DuplicateProgram(repository),
-    deleteProgram: DeleteProgram(repository),
-    getCurrentUser: GetCurrentUser(auth),
-    watchAuthUser: WatchAuthUser(auth),
-  );
+  ProgramDetailCubit build([String id = 'p1', bool onboarding = false]) =>
+      ProgramDetailCubit(
+        analytics: fakeAnalytics(telemetry),
+        onboarding: onboarding,
+        id,
+        list: list,
+        startProgram: StartProgram(
+          repository,
+          const NoCompletedDays(),
+          clock: () => now,
+        ),
+        changeSchedule: ChangeSchedule(repository, clock: () => now),
+        stopProgram: StopProgram(repository),
+        duplicateProgram: DuplicateProgram(repository),
+        deleteProgram: DeleteProgram(repository),
+        getCurrentUser: GetCurrentUser(auth),
+        watchAuthUser: WatchAuthUser(auth),
+      );
 
   blocTest<ProgramDetailCubit, ProgramDetailState>(
     'starts the program on the chosen schedule, replacing any other',
@@ -147,6 +153,19 @@ void main() {
         ),
       ),
     ).called(1),
+  );
+
+  blocTest<ProgramDetailCubit, ProgramDetailState>(
+    'a start is logged, from onboarding when opened there',
+    setUp: () => activeIs(null),
+    build: () => build('p1', true),
+    act: (cubit) => cubit.start(const {1: 0, 3: 1}),
+    verify: (_) => expect(telemetry.logged, [
+      [
+        'program_start',
+        {'source': 'onboarding', 'premium': 'false'},
+      ],
+    ]),
   );
 
   group('a premium copy', () {

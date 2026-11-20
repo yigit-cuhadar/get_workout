@@ -130,6 +130,7 @@ class WorkoutModule implements FeatureModule {
           loadPlates: sl(),
           scheduleEndNotice: sl(),
           cancelEndNotice: sl(),
+          analytics: sl(),
           endText: (workout, lastSetAt) {
             final l10n = deviceLocalizations();
             if (lastSetAt == null) {
@@ -228,6 +229,7 @@ class WorkoutModule implements FeatureModule {
           saveChange: sl(),
           changed: sl<ActiveWorkoutCubit>().storedWorkoutChanged,
           catalogue: sl(),
+          analytics: sl(),
         ),
       );
   }

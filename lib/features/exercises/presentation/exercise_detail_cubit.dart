@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../domain/exercise.dart';
 import '../domain/exercise_queries.dart';
 import '../domain/exercise_usecases.dart';
@@ -82,10 +83,13 @@ final class DetailDeleted extends ExerciseDetailState {
 
 /// One exercise with its alternatives (preferring the user's equipment) and
 /// variations, kept current as the catalogue and the equipment change. A
-/// custom exercise can be deleted here.
+/// custom exercise can be deleted here. Opening it, [from] somewhere, is
+/// an `exercise_view`.
 class ExerciseDetailCubit extends Cubit<ExerciseDetailState> {
   ExerciseDetailCubit(
     this.exerciseId, {
+    required ExerciseViewSource from,
+    required Analytics analytics,
     required ExerciseCatalogueCubit catalogue,
     required EquipmentCubit equipment,
     required this._getCurrentUser,
@@ -93,6 +97,7 @@ class ExerciseDetailCubit extends Cubit<ExerciseDetailState> {
   }) : _catalogue = catalogue.state,
        _owned = equipment.state.owned,
        super(const DetailLoading()) {
+    unawaited(analytics.exerciseView(exerciseId, from));
     _update();
     _subscriptions = [
       catalogue.stream.listen((state) {

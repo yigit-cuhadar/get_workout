@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/account/domain/account_repository.dart';
 import 'package:get_workout/features/account/domain/account_usecases.dart';
+import 'package:get_workout/features/analytics/domain/analytics.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAccountRepository extends Mock implements AccountRepository {}
@@ -15,6 +16,8 @@ void main() {
   late MockLocalAccountData local;
   late MockTelemetry telemetry;
 
+  setUpAll(() => registerFallbackValue(<String, Object>{}));
+
   setUp(() {
     account = MockAccountRepository();
     local = MockLocalAccountData();
@@ -25,10 +28,12 @@ void main() {
     when(() => local.holdWrites(any())).thenAnswer((_) async {});
     when(() => local.releaseWrites(any())).thenAnswer((_) async {});
     when(() => telemetry.forget(any())).thenAnswer((_) async => const Ok(null));
+    when(() => telemetry.logEvent(any(), any())).thenAnswer((_) async {});
   });
 
   group('DeleteUserAccount', () {
-    DeleteUserAccount delete() => DeleteUserAccount(account, local, telemetry);
+    DeleteUserAccount delete() =>
+        DeleteUserAccount(account, local, telemetry, Analytics(telemetry));
 
     setUp(
       () =>
@@ -46,6 +51,15 @@ void main() {
       ]);
     });
 
+    test('logs the deletion before collection for the user stops', () async {
+      await delete()((uid: 'u1', appleCode: null));
+      verifyInOrder([
+        () => account.deleteAccount(),
+        () => telemetry.logEvent('account_delete', {}),
+        () => telemetry.forget('u1'),
+      ]);
+    });
+
     test('passes the Apple code on to the server', () async {
       await delete()((uid: 'u1', appleCode: 'code-1'));
       verify(() => account.deleteAccount(appleCode: 'code-1')).called(1);
@@ -60,6 +74,7 @@ void main() {
       );
       verifyNever(() => local.clear(any()));
       verifyNever(() => telemetry.forget(any()));
+      verifyNever(() => telemetry.logEvent(any(), any()));
       verifyNever(() => account.signOut());
       verifyInOrder([
         () => local.holdWrites('u1'),

@@ -29,6 +29,7 @@ import 'package:get_workout/features/programs/presentation/program_list_cubit.da
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
+import '../../fake_analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -365,6 +366,7 @@ void main() {
 
   group('CatalogueDetailCubit', () {
     CatalogueDetailCubit detail(String id) => CatalogueDetailCubit(
+      analytics: fakeAnalytics(),
       id,
       language: 'en',
       catalogue: catalogue,

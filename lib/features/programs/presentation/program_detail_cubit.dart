@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../domain/program.dart';
 import '../domain/program_usecases.dart';
 import 'program_list_cubit.dart';
@@ -51,6 +52,8 @@ class ProgramDetailState extends Equatable {
 class ProgramDetailCubit extends Cubit<ProgramDetailState> {
   ProgramDetailCubit(
     this.programId, {
+    required this._onboarding,
+    required this._analytics,
     required this._list,
     required this._startProgram,
     required this._changeSchedule,
@@ -71,6 +74,10 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
   }
 
   final String programId;
+
+  /// The page was opened from onboarding's suggestion.
+  final bool _onboarding;
+  final Analytics _analytics;
   final ProgramListCubit _list;
   final StartProgram _startProgram;
   final ChangeSchedule _changeSchedule;
@@ -96,11 +103,17 @@ class ProgramDetailCubit extends Cubit<ProgramDetailState> {
   /// Refused unless [access] is open.
   Future<void> start(Map<int, int> schedule) {
     if (access != ProgramAccess.open) return Future.value();
-    return _withProgram(
-      ProgramDetailAction.start,
-      (uid, program) =>
-          _startProgram((uid: uid, program: program, schedule: schedule)),
-    );
+    return _withProgram(ProgramDetailAction.start, (uid, program) async {
+      final result = await _startProgram((
+        uid: uid,
+        program: program,
+        schedule: schedule,
+      ));
+      if (result.isOk) {
+        unawaited(_analytics.programStart(program, onboarding: _onboarding));
+      }
+      return result;
+    });
   }
 
   /// Only for the active program, and refused unless [access] is open.

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../domain/cardio_session.dart';
 import '../domain/cardio_type.dart';
 import '../domain/cardio_usecases.dart';
@@ -110,6 +111,7 @@ class CardioFormCubit extends Cubit<CardioFormState> {
     required GetCurrentUser getCurrentUser,
     required WatchAuthUser watchAuthUser,
     required this._unit,
+    required this._analytics,
     this._initial,
     DateTime Function()? clock,
   }) : _getCurrentUser = getCurrentUser,
@@ -128,6 +130,7 @@ class CardioFormCubit extends Cubit<CardioFormState> {
   }
 
   final SaveCardioSession _saveSession;
+  final Analytics _analytics;
   final DeleteCardioSession _deleteSession;
   final GetCurrentUser _getCurrentUser;
   final DistanceUnit _unit;
@@ -217,7 +220,17 @@ class CardioFormCubit extends Cubit<CardioFormState> {
       CardioFormStatus.saving,
       CardioFormStatus.saved,
       CardioFormStatus.saveFailed,
-      (uid) => _saveSession((uid: uid, session: session, fields: fields)),
+      (uid) async {
+        final result = await _saveSession((
+          uid: uid,
+          session: session,
+          fields: fields,
+        ));
+        if (result.isOk && _initial == null) {
+          unawaited(_analytics.cardioLog(session.type));
+        }
+        return result;
+      },
     );
   }
 

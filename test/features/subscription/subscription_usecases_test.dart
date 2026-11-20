@@ -5,9 +5,6 @@ import 'package:forge_remote_config/forge_remote_config.dart';
 import 'package:get_workout/features/subscription/domain/paywall_layout.dart';
 import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
-import 'package:mocktail/mocktail.dart';
-
-class MockTelemetry extends Mock implements Telemetry {}
 
 void main() {
   group('GetOfferingHard', () {
@@ -129,38 +126,6 @@ void main() {
       expect(getLayout(), PaywallLayout.list);
       override.layout = null;
       expect(getLayout(), PaywallLayout.cards);
-    });
-  });
-
-  group('events', () {
-    late MockTelemetry telemetry;
-
-    setUpAll(() => registerFallbackValue(<String, Object>{}));
-
-    setUp(() {
-      telemetry = MockTelemetry();
-      when(() => telemetry.logEvent(any(), any())).thenAnswer((_) async {});
-    });
-
-    test('a view carries the layout', () async {
-      await LogPaywallView(telemetry)(PaywallLayout.cards);
-
-      verify(() => telemetry.logEvent('paywall_view', {'layout': 'b'}))
-          .called(1);
-    });
-
-    test('a purchase carries the plan and the layout', () async {
-      await LogPaywallPurchase(telemetry)(
-        plan: PlanPeriod.yearly,
-        layout: PaywallLayout.list,
-      );
-
-      verify(
-        () => telemetry.logEvent('paywall_purchase', {
-          'plan': 'yearly',
-          'layout': 'a',
-        }),
-      ).called(1);
     });
   });
 }

@@ -15,6 +15,7 @@ import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
+import '../../fake_analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -110,6 +111,7 @@ void main() {
   });
 
   LibraryCubit build() => LibraryCubit(
+    analytics: fakeAnalytics(),
     watchAuthUser: WatchAuthUser(auth),
     catalogue: catalogue,
     favorites: favorites,

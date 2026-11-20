@@ -8,6 +8,7 @@ import 'package:get_workout/features/steps/domain/steps_usecases.dart';
 import 'package:get_workout/features/steps/presentation/steps_cubit.dart';
 
 import 'steps_fakes.dart';
+import '../../fake_analytics.dart';
 
 /// Reports access as granted while reads see [permissionStatus], as when
 /// Android access is taken back between the check and the read; and holds
@@ -44,7 +45,7 @@ void main() {
     prompt = MemoryStepsPrompt();
     cubit = StepsCubit(
       getAccess: GetStepsAccess(health, prompt),
-      allowAccess: AllowStepsAccess(health, prompt),
+      allowAccess: AllowStepsAccess(health, prompt, fakeAnalytics()),
       getHistory: GetStepsHistory(health, clock: () => now),
       openSettings: OpenHealthSettings(health),
     );

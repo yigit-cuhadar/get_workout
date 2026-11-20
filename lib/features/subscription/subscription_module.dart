@@ -6,6 +6,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_it/get_it.dart';
 
+import '../analytics/domain/analytics.dart';
 import '../programs/domain/premium_status.dart' as programs;
 import 'data/unavailable_purchases_repository.dart';
 import 'domain/paywall_layout.dart';
@@ -66,7 +67,7 @@ const _freeMonth = WinBackOffer.free(
 
 /// Registers purchases on [backend] (null: unavailable), the session that
 /// keeps the store's user in step with the signed-in user, and the paywall.
-/// Needs `AuthModule`, `AccountModule` (telemetry) and a
+/// Needs `AuthModule`, `AnalyticsModule` and a
 /// `RemoteConfigRepository` with [remoteConfigDefaults].
 class SubscriptionModule implements FeatureModule {
   const SubscriptionModule({
@@ -96,9 +97,10 @@ class SubscriptionModule implements FeatureModule {
   static programs.PremiumStatus premiumStatus(GetIt sl) =>
       EntitlementPremium(sl());
 
-  /// The programs feature's premium action: the paywall.
+  /// The programs feature's premium action: the paywall, for a premium
+  /// program.
   static void showPaywall(BuildContext context) =>
-      unawaited(context.openPaywall());
+      unawaited(context.unlockPremium(PremiumFeature.premiumProgram));
 
   @override
   void register(GetIt sl) {
@@ -129,6 +131,7 @@ class SubscriptionModule implements FeatureModule {
           entitlement: sl(),
           recordAdAttribution: sl(),
           pastOnboarding: (uid) => pastOnboarding(sl, uid),
+          analytics: sl(),
         ),
         dispose: (session) => session.cancel(),
       )
@@ -138,8 +141,6 @@ class SubscriptionModule implements FeatureModule {
           kDebugMode ? sl<PaywallLayoutOverride>() : null,
         ),
       )
-      ..registerFactory(() => LogPaywallView(sl()))
-      ..registerFactory(() => LogPaywallPurchase(sl()))
       ..registerFactory(() => GetPaywallOffering(sl()))
       ..registerFactory(() => GetPremiumTrial(sl()))
       ..registerFactory(() => GetOfferingHard(sl()))
@@ -150,8 +151,7 @@ class SubscriptionModule implements FeatureModule {
           purchasePlan: sl(),
           restorePurchases: sl(),
           getLayout: sl(),
-          logView: sl(),
-          logPurchase: sl(),
+          analytics: sl(),
           isPremium: () => sl<EntitlementCubit>().isActive,
           moment: moment,
         ),

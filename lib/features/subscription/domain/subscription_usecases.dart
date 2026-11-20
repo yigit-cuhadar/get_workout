@@ -22,31 +22,6 @@ class GetPaywallLayout {
   }
 }
 
-/// The A/B test's activation event: the paywall showed its plans.
-class LogPaywallView {
-  const LogPaywallView(this._telemetry);
-  final Telemetry _telemetry;
-
-  Future<void> call(PaywallLayout layout) =>
-      _telemetry.logEvent('paywall_view', {'layout': layout.code});
-}
-
-/// The A/B test's goal: a plan bought, or its trial started, on the
-/// paywall. The plan is its period, the same on both stores (their product
-/// ids differ).
-class LogPaywallPurchase {
-  const LogPaywallPurchase(this._telemetry);
-  final Telemetry _telemetry;
-
-  Future<void> call({
-    required PlanPeriod plan,
-    required PaywallLayout layout,
-  }) => _telemetry.logEvent('paywall_purchase', {
-    'plan': plan.name,
-    'layout': layout.code,
-  });
-}
-
 /// The store's offering with yearly before monthly, as the paywall shows
 /// them whatever order the store gives, and its metadata.
 class GetPaywallOffering extends GetOffering {

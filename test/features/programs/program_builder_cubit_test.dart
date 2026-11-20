@@ -19,6 +19,7 @@ import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
+import '../../fake_analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -87,6 +88,7 @@ void main() {
     bool catalogueReady = true,
   }) async {
     final cubit = ProgramBuilderCubit(
+      analytics: fakeAnalytics(),
       programId: programId,
       getProgram: GetProgram(repository),
       saveProgram: SaveProgram(repository),
@@ -638,6 +640,7 @@ void main() {
 
     Future<ProgramBuilderCubit> open() async {
       final cubit = ProgramBuilderCubit(
+        analytics: fakeAnalytics(),
         programId: 'p1',
         getProgram: GetProgram(repository),
         saveProgram: SaveProgram(repository),

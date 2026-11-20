@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
@@ -109,6 +110,7 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
     required this._generateProgram,
     required this._saveProgram,
     required this._getCurrentUser,
+    required this._analytics,
   }) : super(const GeneratorPreviewState()) {
     _subscription = _catalogue.stream.listen(_onCatalogue);
     _onCatalogue(_catalogue.state);
@@ -119,6 +121,7 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
   final GenerateProgram _generateProgram;
   final SaveProgram _saveProgram;
   final GetCurrentUser _getCurrentUser;
+  final Analytics _analytics;
   late final StreamSubscription<ExerciseCatalogueState> _subscription;
   bool _generating = false;
 
@@ -330,6 +333,14 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
     ));
     _generating = false;
     if (isClosed) return;
+    if (result.isOk) {
+      unawaited(
+        _analytics.programGenerate(
+          goal: answers.goal,
+          days: answers.daysPerWeek,
+        ),
+      );
+    }
     emit(
       result.fold(
         (program) => GeneratorPreviewState(

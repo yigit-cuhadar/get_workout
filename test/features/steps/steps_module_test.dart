@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:get_workout/features/steps/domain/steps_usecases.dart';
 import 'package:get_workout/features/steps/presentation/steps_cubit.dart';
 import 'package:get_workout/features/steps/steps_module.dart';
+import '../../fake_analytics.dart';
 
 void main() {
   late GetIt sl;
@@ -32,6 +33,7 @@ void main() {
 
   test('registers the page and the Today use case', () {
     HealthModule.fake(FakeHealthSteps()).register(sl);
+    sl.registerSingleton(fakeAnalytics());
     const StepsModule().register(sl);
     expect(sl<GetTodaySteps>(), isA<GetTodaySteps>());
     final cubit = sl<StepsCubit>();

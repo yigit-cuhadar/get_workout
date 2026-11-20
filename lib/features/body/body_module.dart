@@ -130,6 +130,7 @@ class BodyModule implements FeatureModule {
           getCurrentUser: sl(),
           watchAuthUser: sl(),
           unit: unit,
+          analytics: sl(),
         ),
       )
       // The id of the entry summed up; null to choose it, the newest
@@ -154,6 +155,7 @@ class BodyModule implements FeatureModule {
           restorePhoto: sl(),
           getCurrentUser: sl(),
           watchAuthUser: sl(),
+          analytics: sl(),
         ),
       );
   }

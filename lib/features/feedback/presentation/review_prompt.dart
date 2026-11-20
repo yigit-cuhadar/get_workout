@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_review/forge_review.dart';
@@ -5,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../analytics/domain/analytics.dart';
 
 /// Whether the tab page at [context] is what the user sees: its tab is in
 /// front at [location], and nothing covers the tabs (a paywall, the
@@ -24,6 +27,7 @@ bool tabInFront(BuildContext context, String location) {
 Future<void> askForReview(BuildContext context, String feedbackRoute) async {
   final l10n = AppLocalizations.of(context);
   final cubit = context.read<ReviewPromptCubit>();
+  unawaited(context.read<Analytics>().reviewPrompt());
   final answer = await showReviewPrompt(
     context,
     ReviewPromptStrings(

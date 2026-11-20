@@ -34,6 +34,7 @@ class OnboardingPage extends StatelessWidget {
         uid: uid,
         initial: context.read<ProfileCubit>().state.profile,
         completeOnboarding: sl(),
+        analytics: sl(),
       ),
       child: const _OnboardingView(),
     );

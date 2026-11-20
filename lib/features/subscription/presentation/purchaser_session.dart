@@ -4,6 +4,8 @@ import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 
+import '../../analytics/domain/analytics.dart';
+
 /// Keeps the store's user equal to the signed-in user: [EntitlementCubit]
 /// identifies the uid (a guest's too; linking keeps it, so nothing changes)
 /// and resets when nobody is signed in. Until a switch succeeds the
@@ -12,13 +14,15 @@ import 'package:forge_purchases/forge_purchases.dart';
 /// Once a uid is identified (once per uid and launch), the install's ad
 /// attribution is applied to it for the store's targeting of paid traffic;
 /// the ad network is asked only while that user is not [pastOnboarding] and
-/// the install has no final answer yet.
+/// the install has no final answer yet. Its answer is the user's
+/// `acquisition`.
 class PurchaserSession {
   PurchaserSession({
     required WatchAuthUser watchAuthUser,
     required this._entitlement,
     required this._recordAdAttribution,
     required this._pastOnboarding,
+    required this._analytics,
     this.retryDelay = const Duration(seconds: 1),
     this.maxRetryDelay = const Duration(seconds: 30),
   }) : _nextDelay = retryDelay {
@@ -33,6 +37,7 @@ class PurchaserSession {
   final EntitlementCubit _entitlement;
   final RecordAdAttribution _recordAdAttribution;
   final Future<bool> Function(String uid) _pastOnboarding;
+  final Analytics _analytics;
   final _attributed = <String>{};
   late final StreamSubscription<String?> _users;
   Timer? _retry;
@@ -88,6 +93,9 @@ class PurchaserSession {
       return;
     }
     final result = await _recordAdAttribution(lookUp: lookUp);
+    if (result.valueOrNull case final searchAds?) {
+      unawaited(_analytics.acquisition(searchAds: searchAds));
+    }
     Log.d('purchases', 'Ad attribution: ${result.valueOrNull ?? result}');
   }
 

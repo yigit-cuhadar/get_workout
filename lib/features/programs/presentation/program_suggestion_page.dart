@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../analytics/domain/analytics.dart';
 import '../domain/catalogue_program.dart';
 import '../domain/catalogue_queries.dart';
 import '../domain/program_schedule.dart';
@@ -36,13 +37,21 @@ class ProgramSuggestionPage extends StatelessWidget {
   );
 }
 
-/// Goes on from the suggestion once [_beforeLeaving] is done.
+/// Goes on from the suggestion once [_beforeLeaving] is done, which
+/// completes onboarding: with the suggested [programId] when it was saved.
 class _Leave {
   const _Leave(this._beforeLeaving);
 
   final Future<void> Function(BuildContext context) _beforeLeaving;
 
-  static Future<void> to(BuildContext context, String location) async {
+  static Future<void> to(
+    BuildContext context,
+    String location, {
+    String? programId,
+  }) async {
+    unawaited(
+      context.read<Analytics>().onboardingComplete(programId: programId),
+    );
     await context.read<_Leave>()._beforeLeaving(context);
     if (context.mounted) context.go(location);
   }
@@ -82,6 +91,7 @@ class _SuggestionViewState extends State<_SuggestionView> {
     final free = state.recommended.where((r) => !r.program.premium).firstOrNull;
     if (free == null) return _leave();
     setState(() => _suggestion = free);
+    unawaited(context.read<Analytics>().onboardingStep(OnboardingStep.program));
   }
 
   void _leave() {
@@ -189,7 +199,13 @@ class _Suggestion extends StatelessWidget {
     final cubit = context.read<CatalogueDetailCubit>();
     // The user's copy opens rather than another one.
     if (cubit.existingCopyId case final id?) {
-      return unawaited(_Leave.to(context, Routes.program(id)));
+      return unawaited(
+        _Leave.to(
+          context,
+          Routes.program(id, onboarding: true),
+          programId: suggestion.program.id,
+        ),
+      );
     }
     cubit.copy(CopyIntent.keep);
   }
@@ -212,7 +228,11 @@ class _Suggestion extends StatelessWidget {
           case CopyStatus.copied:
             cubit.copyHandled();
             unawaited(
-              _Leave.to(context, Routes.program(state.copyId!, created: true)),
+              _Leave.to(
+                context,
+                Routes.program(state.copyId!, created: true, onboarding: true),
+                programId: suggestion.program.id,
+              ),
             );
           case CopyStatus.failed:
             cubit.copyHandled();

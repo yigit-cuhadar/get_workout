@@ -114,11 +114,14 @@ class ProgramsModule implements FeatureModule {
           saveProgram: sl(),
           startProgram: sl(),
           getCurrentUser: sl(),
+          analytics: sl(),
         ),
       )
-      ..registerFactoryParam<ProgramDetailCubit, String, void>(
-        (programId, _) => ProgramDetailCubit(
+      ..registerFactoryParam<ProgramDetailCubit, String, bool>(
+        (programId, onboarding) => ProgramDetailCubit(
           programId,
+          onboarding: onboarding,
+          analytics: sl(),
           list: sl(),
           startProgram: sl(),
           changeSchedule: sl(),
@@ -137,6 +140,7 @@ class ProgramsModule implements FeatureModule {
           getCurrentUser: sl(),
           watchAuthUser: sl(),
           catalogue: sl(),
+          analytics: sl(),
           weightUnit: unit,
         ),
       )
@@ -158,6 +162,7 @@ class ProgramsModule implements FeatureModule {
           catalogue: sl(),
           favorites: sl(),
           equipment: sl(),
+          analytics: sl(),
         ),
         instanceName: pickerLibrary,
       );

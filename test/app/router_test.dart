@@ -126,6 +126,9 @@ import 'body_stand_in.dart';
 import 'no_workout.dart';
 import 'progress_stand_ins.dart';
 import 'today_stand_ins.dart';
+import '../fake_analytics.dart';
+
+import 'package:get_workout/features/analytics/domain/analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -379,6 +382,7 @@ void main() {
       )
       ..registerFactoryParam<ProgramBuilderCubit, String?, WeightUnit>(
         (id, unit) => ProgramBuilderCubit(
+          analytics: fakeAnalytics(),
           programId: id,
           getProgram: GetProgram(programs),
           saveProgram: SaveProgram(programs),
@@ -393,6 +397,7 @@ void main() {
       )
       ..registerFactory(
         () => LibraryCubit(
+          analytics: fakeAnalytics(),
           watchAuthUser: WatchAuthUser(settingsAuth),
           catalogue: catalogue,
           favorites: favorites,
@@ -457,6 +462,7 @@ void main() {
       )
       ..registerFactoryParam<CatalogueDetailCubit, String, String>(
         (id, language) => CatalogueDetailCubit(
+          analytics: fakeAnalytics(),
           id,
           language: language,
           catalogue: sl(),
@@ -470,6 +476,7 @@ void main() {
       )
       ..registerLazySingleton(
         () => LibraryCubit(
+          analytics: fakeAnalytics(),
           watchAuthUser: WatchAuthUser(settingsAuth),
           catalogue: catalogue,
           favorites: favorites,
@@ -493,6 +500,8 @@ void main() {
       )
       ..registerFactoryParam<ExerciseDetailCubit, String, void>(
         (id, _) => ExerciseDetailCubit(
+          analytics: fakeAnalytics(),
+          from: ExerciseViewSource.library,
           id,
           catalogue: catalogue,
           equipment: equipment,
@@ -502,6 +511,7 @@ void main() {
       )
       ..registerFactoryParam<CustomExerciseFormCubit, CustomExercise?, void>(
         (exercise, _) => CustomExerciseFormCubit(
+          analytics: fakeAnalytics(),
           saveExercise: SaveCustomExercise(customExercises),
           getCurrentUser: GetCurrentUser(settingsAuth),
           watchAuthUser: WatchAuthUser(settingsAuth),
@@ -575,12 +585,11 @@ void main() {
     });
     sl.registerFactoryParam<PremiumPaywallCubit, PaywallMoment?, void>(
       (moment, _) => PremiumPaywallCubit(
+        analytics: Analytics(paywallTelemetry),
         getOffering: GetPaywallOffering(store),
         purchasePlan: PurchasePlan(store),
         restorePurchases: RestorePurchases(store),
         getLayout: GetPaywallLayout(remoteConfig),
-        logView: LogPaywallView(paywallTelemetry),
-        logPurchase: LogPaywallPurchase(paywallTelemetry),
         isPremium: () => entitlement.isActive,
         moment: moment,
       ),
@@ -588,6 +597,7 @@ void main() {
     sl.registerFactory(
       () => PremiumTrialCubit(GetPremiumTrial(GetPaywallOffering(store))),
     );
+    sl.registerSingleton(fakeAnalytics());
   }
 
   tearDown(() async {
@@ -608,6 +618,7 @@ void main() {
   Future<void> pumpApp(WidgetTester tester) => tester.pumpWidget(
     MultiBlocProvider(
       providers: [
+        RepositoryProvider.value(value: fakeAnalytics()),
         BlocProvider.value(value: auth),
         BlocProvider.value(value: settings),
         if (consent case final consent?)
@@ -1256,6 +1267,27 @@ void main() {
       await tester.pumpAndSettle();
       expect(selectedTab(tester), 1);
       expect(find.byType(ProgramsPage), findsOneWidget);
+    });
+
+    testWidgets('the screen in front is named by its route, a tab switch '
+        'and a pushed page included', (tester) async {
+      await startAsGuest(tester);
+      String? screen() =>
+          screenInFront(router.routerDelegate.currentConfiguration)?.name;
+
+      expect(screen(), 'today');
+      await tapTab(tester, 'Exercises');
+      expect(screen(), 'exercises');
+      unawaited(router.push(Routes.exercise('squat')));
+      await tester.pumpAndSettle();
+      expect(screen(), 'exercise_detail');
+      await tapTab(tester, 'Programs');
+      expect(screen(), 'programs');
+      await tapTab(tester, 'Exercises');
+      expect(screen(), 'exercise_detail');
+      router.go(Routes.catalogue);
+      await tester.pumpAndSettle();
+      expect(screen(), 'catalogue');
     });
 
     testWidgets('deep locations open inside their tab', (tester) async {
@@ -2447,12 +2479,17 @@ void main() {
       expect(find.byType(PaywallPage), findsNothing);
       expect(find.text('Welcome to Premium!'), findsOneWidget);
       expect(find.textContaining('Free trial until'), findsOneWidget);
-      verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'a'}))
-          .called(1);
+      verify(
+        () => paywallTelemetry.logEvent('paywall_view', {
+          'layout': 'a',
+          'moment': 'user',
+        }),
+      ).called(1);
       verify(
         () => paywallTelemetry.logEvent('paywall_purchase', {
           'plan': 'yearly',
           'layout': 'a',
+          'moment': 'user',
         }),
       ).called(1);
     });
@@ -2472,8 +2509,12 @@ void main() {
       await tester.tap(find.text('Monthly'));
       await tester.pump();
       expect(find.text('Subscribe'), findsOneWidget);
-      verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'b'}))
-          .called(1);
+      verify(
+        () => paywallTelemetry.logEvent('paywall_view', {
+          'layout': 'b',
+          'moment': 'user',
+        }),
+      ).called(1);
     });
 
     testWidgets('layout C shows one plan and links to the other', (
@@ -2492,8 +2533,12 @@ void main() {
       expect(find.text(r'$7.99 / month'), findsOneWidget);
       expect(find.text('See yearly plan'), findsOneWidget);
       expect(find.text('Subscribe'), findsOneWidget);
-      verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'c'}))
-          .called(1);
+      verify(
+        () => paywallTelemetry.logEvent('paywall_view', {
+          'layout': 'c',
+          'moment': 'user',
+        }),
+      ).called(1);
     });
 
     testWidgets('with large text the whole paywall scrolls', (tester) async {

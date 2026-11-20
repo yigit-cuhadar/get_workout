@@ -40,6 +40,7 @@ class FeedbackModule implements FeatureModule {
           sendFeedback: sl(),
           getCurrentUser: sl(),
           source: source,
+          analytics: sl(),
         ),
       );
   }

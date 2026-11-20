@@ -27,6 +27,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../app/review_prompt_stand_in.dart';
 import '../fixtures.dart';
+import '../../../fake_analytics.dart';
 
 class _MockWorkout extends MockCubit<ActiveWorkoutState>
     implements ActiveWorkoutCubit {}
@@ -130,6 +131,7 @@ void main() {
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
+          RepositoryProvider.value(value: fakeAnalytics()),
           BlocProvider<ActiveWorkoutCubit>.value(value: cubit),
           BlocProvider<RestTimerCubit>.value(value: timer),
           BlocProvider<SettingsCubit>.value(value: settings),

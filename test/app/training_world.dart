@@ -79,6 +79,9 @@ import '../features/body/body_fakes.dart' show FakeProfileRepository;
 import '../features/programs/fixtures.dart' show FixedPremium;
 import 'answered_consent.dart';
 import 'review_prompt_stand_in.dart';
+import '../fake_analytics.dart';
+
+import 'package:get_workout/features/analytics/domain/analytics.dart';
 
 /// Wednesday, 18:00: the day every flow runs on.
 final flowStart = DateTime(2026, 11, 11, 18);
@@ -263,6 +266,9 @@ class FakeWorkoutRepository extends LiveData implements WorkoutRepository {
 
   @override
   Future<Result<bool>> hasWorkouts(String uid) async => Ok(workouts.isNotEmpty);
+
+  @override
+  Future<Result<int>> countWorkouts(String uid) async => Ok(workouts.length);
 
   @override
   Future<Result<List<Workout>>> programWorkouts(
@@ -460,6 +466,7 @@ class TrainingWorld {
       ..devicePixelRatio = 3;
     addTearDown(tester.view.reset);
     addTearDown(sl.reset);
+    sl.registerSingleton(fakeAnalytics());
     _registerFallbacks();
     registerReviewPrompt();
 
@@ -548,6 +555,7 @@ class TrainingWorld {
       clock: _clock,
     );
     final workout = ActiveWorkoutCubit(
+      analytics: fakeAnalytics(),
       watchAuthUser: watchUser,
       loadLocal: LoadLocalWorkouts(local),
       keepLocal: KeepLocalWorkouts(local),
@@ -639,6 +647,7 @@ class TrainingWorld {
       )
       ..registerFactoryParam<CatalogueDetailCubit, String, String>(
         (id, language) => CatalogueDetailCubit(
+          analytics: fakeAnalytics(),
           id,
           language: language,
           catalogue: sl(),
@@ -652,6 +661,8 @@ class TrainingWorld {
       )
       ..registerFactoryParam<ProgramDetailCubit, String, void>(
         (id, _) => ProgramDetailCubit(
+          analytics: fakeAnalytics(),
+          onboarding: false,
           id,
           list: list,
           startProgram: startProgram,
@@ -665,6 +676,7 @@ class TrainingWorld {
       )
       ..registerFactoryParam<ProgramBuilderCubit, String?, WeightUnit>(
         (id, unit) => ProgramBuilderCubit(
+          analytics: fakeAnalytics(),
           programId: id,
           getProgram: GetProgram(programs),
           saveProgram: saveProgram,
@@ -679,6 +691,7 @@ class TrainingWorld {
       )
       ..registerFactory(
         () => LibraryCubit(
+          analytics: fakeAnalytics(),
           watchAuthUser: watchUser,
           catalogue: exerciseCatalogue,
           favorites: favorites,
@@ -691,6 +704,7 @@ class TrainingWorld {
       )
       ..registerFactoryParam<GeneratorPreviewCubit, GeneratorAnswers, void>(
         (answers, _) => GeneratorPreviewCubit(
+          analytics: fakeAnalytics(),
           answers,
           catalogue: exerciseCatalogue,
           generateProgram: const GenerateProgram(),
@@ -700,14 +714,13 @@ class TrainingWorld {
       )
       ..registerFactoryParam<PremiumPaywallCubit, PaywallMoment?, void>(
         (moment, _) => PremiumPaywallCubit(
+          analytics: Analytics(telemetry),
           getOffering: GetPaywallOffering(store),
           purchasePlan: PurchasePlan(store),
           restorePurchases: RestorePurchases(store),
           getLayout: GetPaywallLayout(
             FakeRemoteConfigRepository(SubscriptionModule.remoteConfigDefaults),
           ),
-          logView: LogPaywallView(telemetry),
-          logPurchase: LogPaywallPurchase(telemetry),
           isPremium: () => premium,
           moment: moment,
         ),
@@ -757,6 +770,7 @@ class TrainingWorld {
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
+          RepositoryProvider.value(value: fakeAnalytics()),
           BlocProvider.value(value: auth),
           BlocProvider.value(value: settingsCubit),
           answeredConsent(),

@@ -29,6 +29,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../app/review_prompt_stand_in.dart';
 import '../programs/fixtures.dart';
+import '../../fake_analytics.dart';
 
 class _WeekCubit extends MockCubit<TodayWeekState> implements TodayWeekCubit {}
 
@@ -180,6 +181,7 @@ void main() {
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
+          RepositoryProvider.value(value: fakeAnalytics()),
           BlocProvider<SettingsCubit>.value(value: settings),
           BlocProvider<EntitlementCubit>.value(value: entitlement),
           BlocProvider<ActiveWorkoutCubit>.value(value: workout),

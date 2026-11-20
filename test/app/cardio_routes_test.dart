@@ -39,6 +39,7 @@ import 'body_stand_in.dart';
 import 'no_workout.dart';
 import 'progress_stand_ins.dart';
 import 'today_stand_ins.dart';
+import '../fake_analytics.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -122,6 +123,7 @@ void main() {
       )
       ..registerFactoryParam<CardioFormCubit, CardioSession?, DistanceUnit>(
         (session, unit) => CardioFormCubit(
+          analytics: fakeAnalytics(),
           saveSession: SaveCardioSession(cardio),
           deleteSession: DeleteCardioSession(cardio),
           getCurrentUser: GetCurrentUser(sessionAuth),

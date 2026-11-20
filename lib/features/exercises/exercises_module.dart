@@ -4,6 +4,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:get_it/get_it.dart';
 
+import '../analytics/domain/analytics.dart';
 import 'data/firestore_custom_exercise_repository.dart';
 import 'data/firestore_exercise_repository.dart';
 import 'data/firestore_exercise_source.dart';
@@ -98,12 +99,15 @@ class ExercisesModule implements FeatureModule {
           catalogue: sl(),
           favorites: sl(),
           equipment: sl(),
+          analytics: sl(),
         ),
       )
       ..registerLazySingleton(() => CustomWriteRejectionsCubit(sl()))
-      ..registerFactoryParam<ExerciseDetailCubit, String, void>(
-        (exerciseId, _) => ExerciseDetailCubit(
+      ..registerFactoryParam<ExerciseDetailCubit, String, ExerciseViewSource>(
+        (exerciseId, from) => ExerciseDetailCubit(
           exerciseId,
+          from: from,
+          analytics: sl(),
           catalogue: sl(),
           equipment: sl(),
           getCurrentUser: sl(),
@@ -115,6 +119,7 @@ class ExercisesModule implements FeatureModule {
           saveExercise: sl(),
           getCurrentUser: sl(),
           watchAuthUser: sl(),
+          analytics: sl(),
           initial: exercise,
         ),
       );

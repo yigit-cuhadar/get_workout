@@ -28,6 +28,7 @@ import '../features/workout/fixtures.dart' as fixtures show workout;
 import '../features/workout/fixtures.dart' show exercise, lift;
 import 'review_prompt_stand_in.dart';
 import 'today_stand_ins.dart' show askedRestAlerts;
+import '../fake_analytics.dart';
 
 class MockProgramListCubit extends MockCubit<ProgramListState>
     implements ProgramListCubit {}
@@ -176,6 +177,7 @@ void main() {
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
+          RepositoryProvider.value(value: fakeAnalytics()),
           BlocProvider<ActiveWorkoutCubit>.value(value: workout),
           askedRestAlerts(),
           BlocProvider<EntitlementCubit>.value(value: entitlement),

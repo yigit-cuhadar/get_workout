@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 
+import '../../analytics/domain/analytics.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
@@ -163,6 +164,7 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
     required GetCurrentUser getCurrentUser,
     required WatchAuthUser watchAuthUser,
     required ExerciseCatalogueCubit catalogue,
+    required this._analytics,
     required this.weightUnit,
   }) : _uid = getCurrentUser()?.id,
        _getCurrentUser = getCurrentUser,
@@ -187,6 +189,7 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
 
   final String? programId;
   final WeightUnit weightUnit;
+  final Analytics _analytics;
   final GetProgram _getProgram;
   final SaveProgram _saveProgram;
   final GetCurrentUser _getCurrentUser;
@@ -500,6 +503,11 @@ class ProgramBuilderCubit extends Cubit<ProgramBuilderState> {
     if (isClosed || _closed) return;
     switch (result) {
       case Ok(:final value):
+        unawaited(
+          programId == null
+              ? _analytics.programCreate()
+              : _analytics.programEdit(),
+        );
         emit(
           state.copyWith(
             status: ProgramBuilderStatus.saved,

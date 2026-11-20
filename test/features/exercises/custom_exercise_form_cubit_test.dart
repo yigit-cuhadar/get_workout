@@ -11,6 +11,8 @@ import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/custom_exercise_form_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../fake_analytics.dart';
+
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockCustomExerciseRepository extends Mock
@@ -53,6 +55,7 @@ void main() {
 
   CustomExerciseFormCubit build([CustomExercise? initial]) =>
       CustomExerciseFormCubit(
+        analytics: fakeAnalytics(),
         saveExercise: SaveCustomExercise(repository),
         getCurrentUser: GetCurrentUser(auth),
         watchAuthUser: WatchAuthUser(auth),

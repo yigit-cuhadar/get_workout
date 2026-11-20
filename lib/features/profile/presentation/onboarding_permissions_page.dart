@@ -8,6 +8,7 @@ import 'package:forge_ui/forge_ui.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../account/presentation/consent_cubit.dart';
 import '../../account/presentation/consent_prompt.dart';
+import '../../analytics/domain/analytics.dart';
 import '../../notifications/domain/reminder_settings_changes.dart';
 import '../../notifications/presentation/notifications_cubit.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -58,6 +59,20 @@ class _StepsState extends State<_Steps> {
   void initState() {
     super.initState();
     _healthKnown = context.read<HealthAccessCubit>().load();
+  }
+
+  bool _permissionsLogged = false;
+
+  /// The page of a permission [prompt]; the first one shown is onboarding's
+  /// `permissions` step.
+  Widget _permissionStep(Widget prompt) {
+    if (!_permissionsLogged) {
+      _permissionsLogged = true;
+      unawaited(
+        context.read<Analytics>().onboardingStep(OnboardingStep.permissions),
+      );
+    }
+    return _StepPage(prompt);
   }
 
   void _go(_Step step) {
@@ -114,7 +129,7 @@ class _StepsState extends State<_Steps> {
       case _Step.consent:
         return _StepPage(AnalyticsConsentPrompt(onAnswer: _answerConsent));
       case _Step.reminders:
-        return _StepPage(
+        return _permissionStep(
           PermissionPrompt.ask(
             icon: ForgeIcons.notifications,
             title: l10n.onboardingRemindersTitle,
@@ -140,7 +155,7 @@ class _StepsState extends State<_Steps> {
             final store = Theme.of(context).platform == TargetPlatform.iOS
                 ? l10n.stepsStoreApple
                 : l10n.stepsStoreGoogle;
-            return _StepPage(
+            return _permissionStep(
               PermissionPrompt.ask(
                 icon: ForgeIcons.directionsWalk,
                 title: l10n.onboardingHealthTitle,

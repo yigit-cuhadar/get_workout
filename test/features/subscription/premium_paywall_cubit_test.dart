@@ -11,6 +11,8 @@ import 'package:get_workout/features/subscription/subscription_module.dart';
 import 'package:get_workout/l10n/app_localizations_en.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:get_workout/features/analytics/domain/analytics.dart';
+
 class MockTelemetry extends Mock implements Telemetry {}
 
 void main() {
@@ -33,12 +35,11 @@ void main() {
   PremiumPaywallCubit build(List<Plan> plans, {PaywallMoment? moment}) {
     store = FakePurchasesRepository(plans: plans, purchaseDelay: Duration.zero);
     return PremiumPaywallCubit(
+      analytics: Analytics(telemetry),
       getOffering: GetPaywallOffering(store),
       purchasePlan: PurchasePlan(store),
       restorePurchases: RestorePurchases(store),
       getLayout: GetPaywallLayout(config),
-      logView: LogPaywallView(telemetry),
-      logPurchase: LogPaywallPurchase(telemetry),
       isPremium: () => premium,
       moment: moment,
     );
@@ -93,7 +94,23 @@ void main() {
     await cubit.load();
     await cubit.load();
 
-    verify(() => telemetry.logEvent('paywall_view', {'layout': 'b'})).called(1);
+    verify(
+      () =>
+          telemetry.logEvent('paywall_view', {'layout': 'b', 'moment': 'user'}),
+    ).called(1);
+    await cubit.close();
+  });
+
+  test('a view at a moment names it', () async {
+    final cubit = build(fakePlans, moment: PaywallMoment.firstWorkout);
+    await cubit.load();
+
+    verify(
+      () => telemetry.logEvent('paywall_view', {
+        'layout': 'a',
+        'moment': 'first_workout',
+      }),
+    ).called(1);
     await cubit.close();
   });
 
@@ -118,8 +135,28 @@ void main() {
       () => telemetry.logEvent('paywall_purchase', {
         'plan': 'yearly',
         'layout': 'a',
+        'moment': 'user',
       }),
     ).called(1);
+    await cubit.close();
+  });
+
+  test('logs a restore with whether it found Premium', () async {
+    final cubit = build(fakePlans);
+    await store.configure();
+    await cubit.load();
+    await cubit.restore();
+    expect(cubit.state.outcome, PaywallOutcome.nothingToRestore);
+    verify(() => telemetry.logEvent('restore', {'premium': 'false'})).called(1);
+    await cubit.close();
+  });
+
+  test('logs the user closing it at its moment', () async {
+    final cubit = build(fakePlans, moment: PaywallMoment.onboarding);
+    cubit.dismissed();
+
+    verify(() => telemetry.logEvent('paywall_close', {'moment': 'onboarding'}))
+        .called(1);
     await cubit.close();
   });
 

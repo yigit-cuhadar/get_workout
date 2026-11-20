@@ -37,7 +37,7 @@ class StepsModule implements FeatureModule {
         () => const FileStepsPrompt(getApplicationSupportDirectory),
       )
       ..registerFactory(() => GetStepsAccess(sl(), sl()))
-      ..registerFactory(() => AllowStepsAccess(sl(), sl()))
+      ..registerFactory(() => AllowStepsAccess(sl(), sl(), sl()))
       ..registerFactory(() => GetStepsHistory(sl()))
       ..registerFactory(() => GetTodaySteps(sl()))
       ..registerFactory(() => HealthAccessCubit(sl(), sl(), sl()))

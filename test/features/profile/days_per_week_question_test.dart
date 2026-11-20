@@ -12,6 +12,7 @@ import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../component_harness.dart';
+import '../../fake_analytics.dart';
 
 class _SettingsCubit extends MockCubit<SettingsState>
     implements SettingsCubit {}
@@ -113,6 +114,7 @@ void main() {
   testWidgets('in onboarding the level just answered sets the recommendation; '
       'a tap on the tagged row picks it', (tester) async {
     final form = ProfileFormCubit.onboarding(
+      analytics: fakeAnalytics(),
       uid: 'uid',
       initial: const UserProfile(),
       completeOnboarding: _CompleteOnboarding(),

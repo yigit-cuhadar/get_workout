@@ -32,12 +32,15 @@ typedef WorkoutFinish = ({
   DateTime? at,
 });
 
-/// The stored workout, what it amounted to, and the exercises whose stats
-/// need rebuilding: those not confirmed by the server at finishing.
+/// The stored workout, what it amounted to, the exercises whose stats
+/// need rebuilding (those not confirmed by the server at finishing), and
+/// the user's finished workouts with it; null when the server could not
+/// count them.
 typedef FinishedWorkout = ({
   Workout workout,
   WorkoutSummary summary,
   Set<String> staleStats,
+  int? workoutCount,
 });
 
 /// [catalogue] has the live exercises by id.
@@ -145,6 +148,8 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
     if (!isStorable(workout)) {
       return const Err(ValidationFailure('invalid workout'));
     }
+    // Counted alongside, before this one is stored.
+    final counted = _repository.countWorkouts(params.uid);
     final read = await _repository.getStats(params.uid, workout.exerciseIds);
     if (read case Err(:final failure)) return Err(failure);
     final before = read.valueOrNull!;
@@ -207,6 +212,10 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
         previous: () => previous == null ? null : workoutTotals(previous),
       ),
       staleStats: stale,
+      workoutCount: switch (await counted) {
+        Ok(:final value) => value + 1,
+        Err() => null,
+      },
     ));
   }
 

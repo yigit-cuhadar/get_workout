@@ -7,6 +7,8 @@ import 'package:get_workout/features/account/domain/account_usecases.dart';
 import 'package:get_workout/features/account/presentation/delete_account_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../fake_analytics.dart';
+
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockAccountRepository extends Mock implements AccountRepository {}
@@ -66,7 +68,12 @@ void main() {
 
   DeleteAccountCubit build() => DeleteAccountCubit(
     getCurrentUser: GetCurrentUser(auth),
-    deleteAccount: DeleteUserAccount(account, local, telemetry),
+    deleteAccount: DeleteUserAccount(
+      account,
+      local,
+      telemetry,
+      fakeAnalytics(),
+    ),
     reauthenticate: Reauthenticate(auth),
     reauthenticateWithProvider: ReauthenticateWithProvider(auth),
     reauthenticateWithAppleCode: ReauthenticateWithAppleCode(auth),
