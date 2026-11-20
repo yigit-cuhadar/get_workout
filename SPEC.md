@@ -4461,8 +4461,7 @@ not in a separate dashboard tool.
   and no `first_workout_complete` (the count raced the save);
   `custom_exercise_create` missing when created from a search; and
   `notification_open`, a name Analytics reserves, never recorded (now
-  `notification_tap`). Not seen yet: `notification_tap` and
-  `custom_exercise_create` after the fix (next build), Android. Known
+  `notification_tap`); both seen after the fix. Not seen yet: Android. Known
   and left as is: `sign_up` fires when an email account is linked,
   before its address is verified; deleting an account resets Analytics,
   so the next guest is a new `first_open`; Save as program after a
