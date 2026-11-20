@@ -2646,7 +2646,7 @@ void main() {
     testWidgets('any other paywall stays closable', (tester) async {
       await openProfileAsFreeGuest(tester);
       store.metadata = const {dismissibleKey: false};
-      unawaited(router.push(Routes.paywallAt(PaywallMoment.firstWorkout)));
+      unawaited(router.push(Routes.paywallAt(PaywallMoment.workoutDone)));
       await tester.pumpAndSettle();
 
       await tester.tap(find.bySemanticsLabel('Close'));

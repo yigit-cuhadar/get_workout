@@ -74,9 +74,6 @@ enum Tip {
 
   /// The paywall at the end of onboarding.
   onboardingPaywall,
-
-  /// The paywall after the first workout's summary.
-  firstWorkoutPaywall,
 }
 
 const kgPerLb = 0.45359237;

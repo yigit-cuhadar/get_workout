@@ -125,13 +125,13 @@ void main() {
   });
 
   test('a view at a moment names it', () async {
-    final cubit = build(fakePlans, moment: PaywallMoment.firstWorkout);
+    final cubit = build(fakePlans, moment: PaywallMoment.workoutDone);
     await cubit.load();
 
     verify(
       () => telemetry.logEvent('paywall_view', {
         'layout': 'a',
-        'moment': 'first_workout',
+        'moment': 'workout_done',
       }),
     ).called(1);
     await cubit.close();
@@ -198,7 +198,7 @@ void main() {
 
   group('closable', () {
     test('always when opened by the user or at the first workout', () async {
-      for (final moment in [null, PaywallMoment.firstWorkout]) {
+      for (final moment in [null, PaywallMoment.workoutDone]) {
         final cubit = build(fakePlans, moment: moment);
         store.metadata = const {dismissibleKey: false};
         expect(cubit.closable, isTrue);

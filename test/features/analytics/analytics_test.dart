@@ -250,7 +250,7 @@ void main() {
     );
     await analytics.paywallView(
       layout: PaywallLayout.list,
-      moment: PaywallMoment.firstWorkout,
+      moment: PaywallMoment.workoutDone,
       offering: 'default',
     );
     await analytics.paywallPurchase(
@@ -266,7 +266,7 @@ void main() {
       ],
       [
         'paywall_view',
-        {'layout': 'a', 'moment': 'first_workout', 'offering': 'default'},
+        {'layout': 'a', 'moment': 'workout_done', 'offering': 'default'},
       ],
       [
         'paywall_purchase',

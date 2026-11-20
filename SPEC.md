@@ -33,8 +33,9 @@ App-wide decisions only. How each feature behaves is under Feature notes.
 - **Monetization** (owner's picks, 2026-11-19): freemium via RevenueCat with
   a soft paywall. Monthly 7.99 USD and yearly 39.99 USD (regional prices per
   store), a 7-day trial on yearly only. The paywall shows once at the end of
-  onboarding (after the program suggestion), once after the first workout's
-  summary, and whenever a Premium feature is touched or from Profile; it can
+  onboarding (after the program suggestion), after every workout's summary
+  of a free user (owner's pick, 2026-11-20; it was once, after the first
+  workout), and whenever a Premium feature is touched or from Profile; it can
   always be closed. Which paywall shows comes from RevenueCat offerings, not
   from app code, so that later, once ads run, installs attributed to ads
   (Apple Search Ads via AdServices, Play Install Referrer; an MMP only by a
@@ -1975,18 +1976,21 @@ the feature you are about to touch, and keep it true when you change it.
     one of these shows up.
 - **Paywall moments** (Monetization, 2026-11-19): besides a Premium
   feature (`requirePremium`) and Profile's card, the app offers the
-  paywall by itself twice, each once per user: `onboarding` when the
+  paywall by itself at two moments: once per user, `onboarding` when the
   program suggestion is left (whichever way: Start, See other programs,
   or nothing to suggest; the router passes it to `ProgramSuggestionPage`
-  so programs never imports subscription), and `firstWorkout` when the
-  summary of the user's first workout ever is left (Done, back, Edit or
-  Open programs; the paywall first, then the summary goes).
+  so programs never imports subscription); and every time, `workoutDone`
+  when any workout's summary is left by Done, back or Open programs (not
+  Edit, which goes on to fix the workout; owner's pick, 2026-11-20; it was
+  `firstWorkout`, once, after the first workout ever). The paywall first,
+  then the summary goes.
   `FinishWorkout` marks a summary `firstEver` when none of its exercises
   had stats and `hasWorkouts` (server, else cache) finds no stored
   workout; unreadable is not first. A moment shows only to a user known
   to be free whose settings have loaded (`paywallMomentDue`), and is
-  marked shown at once in `settings.seenTips` (`onboardingPaywall`,
-  `firstWorkoutPaywall`), so it follows the account across devices and
+  a once-per-user moment is marked shown at once in `settings.seenTips`
+  (`onboardingPaywall`; a stored `firstWorkoutPaywall` is ignored), so it
+  follows the account across devices and
   reinstalls. Premium, or a status still unknown, skips it unmarked.
 - **Hard paywall from the store setup**: the current RevenueCat
   offering's metadata, carried by Forge's `Offering.metadata`, decides
@@ -4341,7 +4345,7 @@ not in a separate dashboard tool.
     page. `steps_connect`: the answer to the system prompt; `granted` is
     whether steps can be read (iOS never tells a refusal).
   - `paywall_view` / `paywall_purchase` / `paywall_close`: `moment` is
-    `onboarding`, `first_workout`, `app_open`, or `user` for one the user
+    `onboarding`, `workout_done`, `app_open`, or `user` for one the user
     opened. `offering` (view only) is RevenueCat's offering id, left out
     when the store gives none (the fake).
     `paywall_close`: the user closing it without Premium.
