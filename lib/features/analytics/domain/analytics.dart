@@ -254,7 +254,7 @@ class Analytics {
   // Engagement.
 
   Future<void> notificationOpen(NotificationKind kind) =>
-      _log('notification_open', {'kind': kind.code});
+      _log('notification_tap', {'kind': kind.code});
 
   Future<void> reviewPrompt() => _log('review_prompt');
 

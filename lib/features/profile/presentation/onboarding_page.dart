@@ -22,10 +22,15 @@ class OnboardingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // The form belongs to whoever is signed in: a user change starts it over
-    // for the new user, once their profile has loaded.
+    // for the new user, once their profile has loaded. A user already past
+    // onboarding (signed in from it) gets no form: the router moves them on,
+    // and a form would log an onboarding start for them.
     final uid = context.select(
       (ProfileCubit cubit) =>
-          cubit.state.status == ProfileStatus.loaded ? cubit.state.uid : null,
+          cubit.state.status == ProfileStatus.loaded &&
+              !cubit.state.pastOnboarding
+          ? cubit.state.uid
+          : null,
     );
     if (uid == null) return const Scaffold(body: LoadingView());
     return BlocProvider(

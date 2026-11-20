@@ -268,7 +268,14 @@ class FakeWorkoutRepository extends LiveData implements WorkoutRepository {
   Future<Result<bool>> hasWorkouts(String uid) async => Ok(workouts.isNotEmpty);
 
   @override
-  Future<Result<int>> countWorkouts(String uid) async => Ok(workouts.length);
+  Future<Result<int>> countWorkouts(
+    String uid, {
+    required DateTime before,
+  }) async => Ok(
+    workouts.values
+        .where((w) => w.finishedAt?.isBefore(before) ?? false)
+        .length,
+  );
 
   @override
   Future<Result<List<Workout>>> programWorkouts(

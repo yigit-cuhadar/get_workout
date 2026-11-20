@@ -21,6 +21,7 @@ class AnalyticsModule implements FeatureModule {
           profile: sl(),
           entitlement: sl(),
           programs: sl(),
+          followUser: sl(),
           analytics: sl(),
         ),
         dispose: (session) => session.cancel(),

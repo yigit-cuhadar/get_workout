@@ -148,8 +148,11 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
     if (!isStorable(workout)) {
       return const Err(ValidationFailure('invalid workout'));
     }
-    // Counted alongside, before this one is stored.
-    final counted = _repository.countWorkouts(params.uid);
+    // Counted alongside; only those finished before this one.
+    final counted = _repository.countWorkouts(
+      params.uid,
+      before: workout.finishedAt!,
+    );
     final read = await _repository.getStats(params.uid, workout.exerciseIds);
     if (read case Err(:final failure)) return Err(failure);
     final before = read.valueOrNull!;
