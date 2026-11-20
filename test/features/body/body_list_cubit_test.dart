@@ -118,7 +118,7 @@ void main() {
     await pumpEventQueue();
   }
 
-  test('loads the signed-in user\'s entries with a 12-week range', () async {
+  test('loads the signed-in user\'s entries with a 2-week range', () async {
     await signIn();
     expect(cubit.state.status, BodyListStatus.loading);
 
@@ -126,7 +126,7 @@ void main() {
 
     expect(cubit.state.status, BodyListStatus.ready);
     expect(cubit.state.entries, [recent, old]);
-    expect(cubit.state.range, StrengthRange.weeks12);
+    expect(cubit.state.range, StrengthRange.weeks2);
   });
 
   test(
@@ -139,7 +139,7 @@ void main() {
       expect(cubit.state.olderLocked, isTrue);
 
       cubit.selectRange(StrengthRange.all);
-      expect(cubit.state.range, StrengthRange.weeks12);
+      expect(cubit.state.range, StrengthRange.weeks2);
 
       premium.controller.add(true);
       await pumpEventQueue();

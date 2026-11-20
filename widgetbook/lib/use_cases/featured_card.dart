@@ -244,7 +244,7 @@ Widget featuredPromptState(BuildContext context) {
           'Payment problem. Update your payment method',
       },
       titleTone: tone,
-      note: 'Program generator, 19 more programs and charts beyond 12 weeks.',
+      note: 'Program generator, 19 more programs and charts beyond 2 weeks.',
       moreActions: [
         if (tone != FeaturedTitleTone.muted)
           FeaturedAction('Manage subscription', () {}),
@@ -306,7 +306,7 @@ Widget featuredBandChart(BuildContext context) {
       form: FeaturedCardForm.band,
       eyebrow: 'Body',
       title: '82.4 kg',
-      titleAside: one ? null : '−3.9 kg in 12 weeks',
+      titleAside: one ? null : '−0.9 kg in 2 weeks',
       when: '19.5 % body fat · Nov 14',
       chart: one
           ? null
@@ -316,7 +316,7 @@ Widget featuredBandChart(BuildContext context) {
               lowLabel: '82.4',
               startLabel: 'Aug 26',
               endLabel: 'Nov 18',
-              semanticLabel: 'Weight, last 12 weeks',
+              semanticLabel: 'Weight, last 2 weeks',
             ),
       action: FeaturedAction('Log weight', () {}),
       moreActions: [FeaturedAction('Measurement day', () {})],

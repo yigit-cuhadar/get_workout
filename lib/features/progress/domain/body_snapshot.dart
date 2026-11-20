@@ -19,7 +19,7 @@ class BodySnapshot extends Equatable {
   /// The newest weigh-in.
   final WeightPoint? latest;
 
-  /// The weights of the last 12 weeks, oldest first.
+  /// The weights of the free charts' window, oldest first.
   final List<WeightPoint> weights;
 
   /// The newest entry's body fat that has one, with that entry's date.
@@ -55,7 +55,7 @@ BodySnapshot bodySnapshot(
   final latest = entries.where((entry) => entry.weightKg != null).firstOrNull;
   return BodySnapshot(
     latest: latest == null ? null : (date: latest.date, kg: latest.weightKg!),
-    weights: weightSeries(entries, range: StrengthRange.weeks12, now: now),
+    weights: weightSeries(entries, range: StrengthRange.free, now: now),
     latestBodyFat: latestBodyFat,
   );
 }

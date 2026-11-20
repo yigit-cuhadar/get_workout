@@ -23,6 +23,15 @@ void main() {
       ]);
     });
 
+    test("keeps the offering's metadata", () async {
+      final store = FakePurchasesRepository(plans: fakePlans)
+        ..metadata = const {'dismissible': false};
+
+      final offering = (await GetPaywallOffering(store)()).valueOrNull!;
+
+      expect(offering.metadata, {'dismissible': false});
+    });
+
     test('passes a failure through', () async {
       final result = await GetPaywallOffering(
         FakePurchasesRepository(plans: const []),

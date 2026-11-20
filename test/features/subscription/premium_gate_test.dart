@@ -1,22 +1,40 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_workout/app/router.dart';
+import 'package:get_workout/features/settings/domain/user_settings.dart';
+import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
+import 'package:get_workout/features/subscription/domain/paywall_moment.dart';
 import 'package:get_workout/features/subscription/presentation/premium.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockSettingsCubit extends MockCubit<SettingsState>
+    implements SettingsCubit {}
 
 void main() {
   late FakePurchasesRepository store;
+  late MockSettingsCubit settings;
+  String? paywallMoment;
   late EntitlementCubit entitlement;
   late GoRouter router;
   late ValueNotifier<int> refresh;
   bool? allowed;
   var redirectPaywall = false;
 
+  setUpAll(() => registerFallbackValue(Tip.effort));
+
   setUp(() {
+    paywallMoment = null;
+    settings = MockSettingsCubit();
+    when(
+      () => settings.state,
+    ).thenReturn(SettingsState(UserSettings.defaultsFor(null), loaded: true));
+    when(() => settings.tipSeen(any())).thenAnswer((_) async {});
     allowed = null;
     redirectPaywall = false;
     store = FakePurchasesRepository(
@@ -48,16 +66,29 @@ void main() {
         GoRoute(
           path: '/',
           builder: (context, _) => Scaffold(
-            body: TextButton(
-              onPressed: () async => allowed = await context.requirePremium(),
-              child: const Text('Open'),
+            body: Column(
+              children: [
+                TextButton(
+                  onPressed: () async =>
+                      allowed = await context.requirePremium(),
+                  child: const Text('Open'),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      context.paywallMoment(PaywallMoment.onboarding),
+                  child: const Text('Moment'),
+                ),
+              ],
             ),
           ),
         ),
         GoRoute(
           path: Routes.paywall,
           redirect: (_, _) => redirectPaywall ? '/elsewhere' : null,
-          builder: (context, _) => Scaffold(
+          builder: (context, state) => Scaffold(
+            key: ValueKey(
+              paywallMoment = state.uri.queryParameters['moment'] ?? 'none',
+            ),
             body: Column(
               children: [
                 TextButton(
@@ -81,8 +112,11 @@ void main() {
     );
     addTearDown(router.dispose);
     await tester.pumpWidget(
-      BlocProvider.value(
-        value: entitlement,
+      MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: entitlement),
+          BlocProvider<SettingsCubit>.value(value: settings),
+        ],
         child: MaterialApp.router(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -126,6 +160,51 @@ void main() {
     await store.purchase(fakePlans.first);
     await pumpEventQueue();
     expect(seen, [null, false, true]);
+  });
+
+  group('a paywall moment', () {
+    testWidgets('opens once for a free user and is marked shown', (
+      tester,
+    ) async {
+      await free(tester);
+      await tap(tester, 'Moment');
+
+      expect(find.text('Buy'), findsOneWidget);
+      expect(paywallMoment, 'onboarding');
+      verify(() => settings.tipSeen(Tip.onboardingPaywall)).called(1);
+    });
+
+    testWidgets('does not open once shown', (tester) async {
+      when(() => settings.state).thenReturn(
+        SettingsState(
+          UserSettings.defaultsFor(null)
+              .copyWith(seenTips: {Tip.onboardingPaywall}),
+          loaded: true,
+        ),
+      );
+      await free(tester);
+      await tap(tester, 'Moment');
+
+      expect(find.text('Buy'), findsNothing);
+      verifyNever(() => settings.tipSeen(any()));
+    });
+
+    testWidgets('does not open while Premium is unknown or owned', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tap(tester, 'Moment');
+      expect(find.text('Buy'), findsNothing);
+
+      await tester.runAsync(() async {
+        await entitlement.identify('u1');
+        await store.purchase(fakePlans.first);
+      });
+      await tester.pumpAndSettle();
+      await tap(tester, 'Moment');
+      expect(find.text('Buy'), findsNothing);
+      verifyNever(() => settings.tipSeen(any()));
+    });
   });
 
   testWidgets('unknown: no paywall, the user is asked to wait', (tester) async {

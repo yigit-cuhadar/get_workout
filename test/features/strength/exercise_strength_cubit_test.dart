@@ -115,7 +115,7 @@ void main() {
     for (final point in state.points) point.value,
   ];
 
-  test('records in order and the last 12 weeks of e1RM', () async {
+  test('records in order and the last 2 weeks of e1RM', () async {
     final cubit = await opened(value: squat);
     final state = cubit.state;
     expect(state.status, ExerciseStrengthStatus.ready);
@@ -124,8 +124,8 @@ void main() {
       (kind: RecordKind.bestE1rm, record: e1rm),
       (kind: RecordKind.heaviestWeight, record: heaviest),
     ]);
-    expect(state.range, StrengthRange.weeks12);
-    expect(state.rangeStart, DateTime(2026, 8, 20));
+    expect(state.range, StrengthRange.weeks2);
+    expect(state.rangeStart, DateTime(2026, 10, 29));
     expect(values(state), [116.5]);
     expect(state.sessions, [recentPoint]);
     expect(state.loggingType, LoggingType.weightReps);
@@ -162,7 +162,7 @@ void main() {
   test('a Premium range waits for Premium to arrive', () async {
     final cubit = await opened(value: squat);
     cubit.selectRange(StrengthRange.year1);
-    expect(cubit.state.range, StrengthRange.weeks12);
+    expect(cubit.state.range, StrengthRange.weeks2);
     expect(values(cubit.state), [116.5]);
 
     // The paywall closed before the status caught up.
@@ -174,7 +174,7 @@ void main() {
     // Premium ending falls back to the free range.
     premium.controller.add(false);
     await pumpEventQueue();
-    expect(cubit.state.range, StrengthRange.weeks12);
+    expect(cubit.state.range, StrengthRange.weeks2);
     await cubit.close();
   });
 
@@ -258,7 +258,7 @@ void main() {
 
     stats.add(squat);
     await pumpEventQueue();
-    expect(cubit.state.range, StrengthRange.weeks12);
+    expect(cubit.state.range, StrengthRange.weeks2);
     await cubit.close();
   });
 

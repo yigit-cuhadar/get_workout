@@ -154,7 +154,7 @@ class _ProgressViewState extends State<_ProgressView> {
   }
 }
 
-/// The latest weight in a featured band with its change over the last 12
+/// The latest weight in a featured band with its change over the last 2
 /// weeks beside it and the newest body fat under it, those weeks as a line
 /// with its highest and lowest weight and its first and last date, and the
 /// two ways to log; the whole card opens Body.
@@ -398,7 +398,7 @@ TextStyle _quiet(BuildContext context) =>
     Theme.of(context).textTheme.bodySmall!;
 
 /// The most recently trained exercise's latest estimated 1RM, its change
-/// over the last 12 weeks and those weeks as a line; opens the strength
+/// over the last 2 weeks and those weeks as a line; opens the strength
 /// list.
 class _StrengthCard extends StatelessWidget {
   const _StrengthCard();
@@ -454,7 +454,7 @@ class _StrengthCard extends StatelessWidget {
           final kg? when kg < 0 => false,
           _ => null,
         },
-        // A single e1RM in the 12 weeks has no trend.
+        // A single e1RM in the 2 weeks has no trend.
         chart: highlight.trend.length > 1
             ? TrendLine(values: highlight.trend)
             : null,

@@ -37,7 +37,7 @@ void main() {
     await openPaywall(tester);
 
     final yearly = tester.getTopLeft(find.text(r'$39.99 / year'));
-    final monthly = tester.getTopLeft(find.text(r'$4.99 / month'));
+    final monthly = tester.getTopLeft(find.text(r'$7.99 / month'));
     expect(yearly.dy, lessThan(monthly.dy));
     // The purchase button is the yearly plan's trial.
     expect(find.text('Start 7-day free trial'), findsOneWidget);

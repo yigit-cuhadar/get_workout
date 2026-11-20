@@ -56,7 +56,9 @@ import '../features/settings/presentation/warmup_settings_page.dart';
 import '../features/steps/presentation/steps_page.dart';
 import '../features/strength/presentation/exercise_strength_page.dart';
 import '../features/strength/presentation/strength_list_page.dart';
+import '../features/subscription/domain/paywall_moment.dart';
 import '../features/subscription/presentation/paywall_page.dart';
+import '../features/subscription/presentation/premium.dart';
 import '../features/today/presentation/today_page.dart';
 import '../features/volume/presentation/volume_page.dart';
 import '../features/workout/domain/workout.dart';
@@ -267,6 +269,10 @@ abstract final class Routes {
   /// Full-screen over the tabs; push it, it pops when done. Premium
   /// features go through `context.requirePremium()` instead.
   static const paywall = '/paywall';
+
+  /// The paywall the app shows by itself at [moment].
+  static String paywallAt(PaywallMoment moment) =>
+      '$paywall?moment=${moment.name}';
 }
 
 /// Whether [location] is past the start (splash, retry, onboarding and the
@@ -441,8 +447,12 @@ GoRouter buildRouter(
       ),
       GoRoute(
         path: Routes.afterOnboarding,
-        builder: (_, _) =>
-            const OnboardingPermissionsPage(next: ProgramSuggestionPage()),
+        builder: (_, _) => OnboardingPermissionsPage(
+          next: ProgramSuggestionPage(
+            beforeLeaving: (context) =>
+                context.paywallMoment(PaywallMoment.onboarding),
+          ),
+        ),
       ),
       GoRoute(
         path: Routes.workout,
@@ -472,8 +482,14 @@ GoRouter buildRouter(
       ),
       GoRoute(
         path: Routes.paywall,
-        pageBuilder: (context, state) =>
-            _overFlow(context, state, const PaywallPage()),
+        pageBuilder: (context, state) => _overFlow(
+          context,
+          state,
+          PaywallPage(
+            moment: PaywallMoment.values
+                .asNameMap()[state.uri.queryParameters['moment']],
+          ),
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => RepositoryProvider.value(

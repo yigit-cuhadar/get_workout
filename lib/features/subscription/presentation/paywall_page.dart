@@ -11,21 +11,26 @@ import '../../../app/legal_links.dart';
 import '../../../core/open_link.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/paywall_layout.dart';
+import '../domain/paywall_moment.dart';
 import 'premium_paywall_cubit.dart';
 import 'subscription_text.dart';
 
 /// The Premium paywall: Forge's [SubscriptionPlans] fed from
 /// [PremiumPaywallCubit]. Pops with true once the user has Premium, also
-/// when they already had it on opening.
+/// when they already had it on opening. Opened at [moment] (null: by the
+/// user), it may not be closable ([PremiumPaywallCubit.closable]): no close
+/// button, back or drag down.
 class PaywallPage extends StatefulWidget {
-  const PaywallPage({super.key});
+  const PaywallPage({super.key, this.moment});
+
+  final PaywallMoment? moment;
 
   @override
   State<PaywallPage> createState() => _PaywallPageState();
 }
 
 class _PaywallPageState extends State<PaywallPage> {
-  final _cubit = sl<PremiumPaywallCubit>()..load();
+  late final _cubit = sl<PremiumPaywallCubit>(param1: widget.moment)..load();
 
   @override
   void dispose() {
@@ -36,14 +41,14 @@ class _PaywallPageState extends State<PaywallPage> {
   @override
   Widget build(BuildContext context) => BlocProvider<PaywallCubit>.value(
     value: _cubit,
-    child: _PaywallView(_cubit.layout),
+    child: _PaywallView(_cubit),
   );
 }
 
 class _PaywallView extends StatefulWidget {
-  const _PaywallView(this.layout);
+  const _PaywallView(this.cubit);
 
-  final PaywallLayout layout;
+  final PremiumPaywallCubit cubit;
 
   @override
   State<_PaywallView> createState() => _PaywallViewState();
@@ -128,7 +133,10 @@ class _PaywallViewState extends State<_PaywallView> {
         ),
       ],
       child: BlocBuilder<PaywallCubit, PaywallState>(
-        builder: (context, state) => _plans(context, l10n, state),
+        builder: (context, state) => PopScope(
+          canPop: widget.cubit.closable,
+          child: _plans(context, l10n, state),
+        ),
       ),
     );
   }
@@ -138,8 +146,8 @@ class _PaywallViewState extends State<_PaywallView> {
     AppLocalizations l10n,
     PaywallState state,
   ) {
-    final cubit = context.read<PaywallCubit>();
-    final layout = widget.layout;
+    final cubit = widget.cubit;
+    final layout = cubit.layout;
     final plans = state.plans;
     final selected = state.selected;
     final hasMonthly = plans.any((plan) => plan.period == PlanPeriod.monthly);
@@ -148,7 +156,7 @@ class _PaywallViewState extends State<_PaywallView> {
         ? plans[(plans.indexOf(selected!) + 1) % plans.length]
         : null;
     return SubscriptionPlans(
-      onClose: () => _close(null, premium: false),
+      onClose: cubit.closable ? () => _close(null, premium: false) : null,
       title: l10n.premiumTitle,
       benefits: [
         l10n.paywallBenefitGenerator,
@@ -210,12 +218,15 @@ class _PaywallViewState extends State<_PaywallView> {
           onAction: cubit.load,
         ),
         // Nothing more to do here: Premium unlocks by itself once approved.
+        // A paywall that cannot be closed waits for it.
         PaywallState(outcome: PaywallOutcome.pending) =>
           SubscriptionMessage.pending(
             title: l10n.paywallPendingTitle,
             message: l10n.paywallPending,
-            actionLabel: l10n.paywallGotIt,
-            onAction: () => _close(null, premium: false),
+            actionLabel: cubit.closable ? l10n.paywallGotIt : null,
+            onAction: cubit.closable
+                ? () => _close(null, premium: false)
+                : null,
           ),
         _ => null,
       },

@@ -34,21 +34,21 @@ void main() {
       expect(highlight?.e1rmKg, 100);
     });
 
-    test('changes since the first e1RM of the last 12 weeks', () {
+    test('changes since the first e1RM of the last 2 weeks', () {
       final highlight = strengthHighlight({
         'bench': stats([
-          // Before the 12 weeks: not the start.
-          (DateTime(2026, 8, 1), 90),
-          (DateTime(2026, 9, 18), 101),
+          // Before the 2 weeks, from midnight of October 30: not the start.
+          (DateTime(2026, 10, 29, 23), 90),
+          (DateTime(2026, 10, 30), 101),
           (DateTime(2026, 11, 13), 104),
         ]),
       }, now: now);
 
-      expect(highlight?.change, (kg: 3.0, weeks: 8));
+      expect(highlight?.change, (kg: 3.0, weeks: 2));
       expect(highlight?.trend, [101, 104]);
     });
 
-    test('one e1RM in the 12 weeks has no change', () {
+    test('one e1RM in the 2 weeks has no change', () {
       final highlight = strengthHighlight({
         'bench': stats([
           (DateTime(2026, 8, 1), 90),
@@ -114,13 +114,13 @@ void main() {
       measurements: kg == null ? const {BodyMeasurement.waist: 80} : const {},
     );
 
-    test('the latest weight, 12 weeks of them and the newest body fat', () {
+    test('the latest weight, 2 weeks of them and the newest body fat', () {
       // Newest first, as the list holds them.
       final entries = [
         entry('e4', DateTime(2026, 11, 12), kg: 80),
         entry('e3', DateTime(2026, 11, 3)),
-        entry('e2', DateTime(2026, 10, 1), kg: 82),
-        entry('e1', DateTime(2026, 8, 1), kg: 85),
+        entry('e2', DateTime(2026, 10, 31), kg: 82),
+        entry('e1', DateTime(2026, 10, 1), kg: 85),
       ];
 
       final snapshot = bodySnapshot(entries, const {
@@ -129,11 +129,11 @@ void main() {
       }, now: now);
 
       expect(snapshot.latest, (date: DateTime(2026, 11, 12), kg: 80.0));
-      // Over the 12 weeks' weights, not since the weigh-in before.
-      expect(snapshot.change, (kg: -2.0, weeks: 6));
-      // 1 August is more than 12 weeks back.
+      // Over the 2 weeks' weights, not since the weigh-in before.
+      expect(snapshot.change, (kg: -2.0, weeks: 2));
+      // 1 October is more than 2 weeks back.
       expect(snapshot.weights, [
-        (date: DateTime(2026, 10, 1), kg: 82.0),
+        (date: DateTime(2026, 10, 31), kg: 82.0),
         (date: DateTime(2026, 11, 12), kg: 80.0),
       ]);
       expect(snapshot.latestBodyFat, (

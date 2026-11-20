@@ -181,8 +181,8 @@ void main() {
       );
       expect(chartStart(StrengthRange.all, now, const []), isNull);
       expect(
-        chartStart(StrengthRange.weeks12, now, [DateTime(2020)]),
-        StrengthRange.weeks12.start(now),
+        chartStart(StrengthRange.weeks2, now, [DateTime(2020)]),
+        StrengthRange.weeks2.start(now),
       );
     });
 

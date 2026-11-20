@@ -319,12 +319,13 @@ void main() {
         trial: const OfferPeriod(7, PeriodUnit.day),
       );
       expect(find.byType(FeaturedCard), findsNothing);
+      expect(find.byType(PlanCard), findsOneWidget);
       expect(find.text('GetWorkout Premium'), findsOneWidget);
       expect(find.widgetWithText(ForgeTag, '7 days free'), findsOneWidget);
       expect(tester.widget<BenefitList>(find.byType(BenefitList)).lines, [
         'Program generator',
         '19 more ready-made programs',
-        'Charts beyond 12 weeks',
+        'Charts beyond 2 weeks',
       ]);
       expect(find.widgetWithText(ForgeButton, 'Get Premium'), findsOneWidget);
     });

@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:forge_purchases/forge_purchases.dart';
 
 import '../domain/paywall_layout.dart';
+import '../domain/paywall_moment.dart';
 import '../domain/subscription_usecases.dart';
 
 /// The package's paywall in this session's [layout]; given
 /// [GetPaywallOffering], the yearly plan comes first and is selected. Logs the A/B test's events:
 /// a view once the plans first show to a user without Premium (a
-/// subscriber's paywall closes at once), and each purchase.
+/// subscriber's paywall closes at once), and each purchase. Opened at
+/// [moment] (null: by the user), see [closable].
 class PremiumPaywallCubit extends PaywallCubit {
   PremiumPaywallCubit({
     required super.getOffering,
@@ -18,7 +20,19 @@ class PremiumPaywallCubit extends PaywallCubit {
     required this._logView,
     required this._logPurchase,
     required this._isPremium,
+    this.moment,
   }) : layout = getLayout();
+
+  final PaywallMoment? moment;
+
+  /// Whether the user can close the paywall. Always, but at the onboarding
+  /// moment, where the offering's metadata decides ([offeringDismissible]):
+  /// not until it is known, and always when it could not be loaded.
+  bool get closable =>
+      moment != PaywallMoment.onboarding ||
+      state.status == PaywallStatus.loadFailed ||
+      state.status != PaywallStatus.loading &&
+          offeringDismissible(state.metadata);
 
   /// Read once, when the paywall opens.
   final PaywallLayout layout;

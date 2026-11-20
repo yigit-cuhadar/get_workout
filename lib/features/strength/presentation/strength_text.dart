@@ -90,7 +90,7 @@ extension StrengthText on AppLocalizations {
   }
 
   String rangeName(StrengthRange range) => switch (range) {
-    StrengthRange.weeks12 => strengthRange12Weeks,
+    StrengthRange.weeks2 => strengthRange2Weeks,
     StrengthRange.months6 => strengthRange6Months,
     StrengthRange.year1 => strengthRange1Year,
     StrengthRange.all => strengthRangeAll,

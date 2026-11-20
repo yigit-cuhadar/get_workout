@@ -171,6 +171,7 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
           ).complete(on: CalendarDate.of(workout.startedAt))
         : null;
     final previous = await _previousOfDay(params.uid, workout);
+    final firstEver = await _firstEver(params.uid, before);
     final saved = await _repository.saveWorkout(
       params.uid,
       workout,
@@ -191,6 +192,7 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
     return Ok((
       workout: workout,
       summary: summary.copyWith(
+        firstEver: firstEver,
         programWeek: () =>
             active != null &&
                 known != null &&
@@ -206,6 +208,14 @@ class FinishWorkout implements UseCase<FinishedWorkout, WorkoutFinish> {
       ),
       staleStats: stale,
     ));
+  }
+
+  /// Whether a workout whose exercises' stats were [before] is the user's
+  /// first: none of them was done before and no workout is stored yet.
+  /// False when that cannot be read.
+  Future<bool> _firstEver(String uid, Map<String, StatsRead> before) async {
+    if (before.values.any((read) => read.stats != null)) return false;
+    return (await _repository.hasWorkouts(uid)).valueOrNull == false;
   }
 
   /// The latest workout of [workout]'s program day before it; null for a

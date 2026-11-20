@@ -90,6 +90,10 @@ abstract interface class WorkoutRepository {
     List<String> exerciseIds,
   );
 
+  /// Whether the user has any finished workout: from the server when it
+  /// answers quickly, else from the device's cache.
+  Future<Result<bool>> hasWorkouts(String uid);
+
   /// The finished workouts of program [programId], from the server when it
   /// answers quickly, else from the device's cache.
   Future<Result<List<Workout>>> programWorkouts(String uid, String programId);

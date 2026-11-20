@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
@@ -17,15 +19,33 @@ import 'program_text.dart';
 
 /// After onboarding: the free ready-made program that suits the user best,
 /// with why, to save among the user's programs, or the catalogue.
-/// Straight to Today when there is nothing to suggest.
+/// Straight to Today when there is nothing to suggest. Whichever way it is
+/// left, [beforeLeaving] runs first (the app's onboarding paywall).
 class ProgramSuggestionPage extends StatelessWidget {
-  const ProgramSuggestionPage({super.key});
+  const ProgramSuggestionPage({super.key, required this.beforeLeaving});
+
+  final Future<void> Function(BuildContext context) beforeLeaving;
 
   @override
   Widget build(BuildContext context) => BlocProvider.value(
     value: sl<ProgramCatalogueCubit>(),
-    child: const _SuggestionView(),
+    child: RepositoryProvider.value(
+      value: _Leave(beforeLeaving),
+      child: const _SuggestionView(),
+    ),
   );
+}
+
+/// Goes on from the suggestion once [_beforeLeaving] is done.
+class _Leave {
+  const _Leave(this._beforeLeaving);
+
+  final Future<void> Function(BuildContext context) _beforeLeaving;
+
+  static Future<void> to(BuildContext context, String location) async {
+    await context.read<_Leave>()._beforeLeaving(context);
+    if (context.mounted) context.go(location);
+  }
 }
 
 class _SuggestionView extends StatefulWidget {
@@ -66,7 +86,7 @@ class _SuggestionViewState extends State<_SuggestionView> {
 
   void _leave() {
     _left = true;
-    context.go(Routes.today);
+    unawaited(_Leave.to(context, Routes.today));
   }
 
   @override
@@ -144,7 +164,8 @@ class _Layout extends StatelessWidget {
                 start,
                 ForgeButton(
                   label: l10n.suggestionSeeOthers,
-                  onPressed: () => context.go(Routes.catalogue),
+                  onPressed: () =>
+                      unawaited(_Leave.to(context, Routes.catalogue)),
                   variant: ForgeButtonVariant.text,
                 ),
               ],
@@ -168,7 +189,7 @@ class _Suggestion extends StatelessWidget {
     final cubit = context.read<CatalogueDetailCubit>();
     // The user's copy opens rather than another one.
     if (cubit.existingCopyId case final id?) {
-      return context.go(Routes.program(id));
+      return unawaited(_Leave.to(context, Routes.program(id)));
     }
     cubit.copy(CopyIntent.keep);
   }
@@ -190,7 +211,9 @@ class _Suggestion extends StatelessWidget {
         switch (state.copyStatus) {
           case CopyStatus.copied:
             cubit.copyHandled();
-            context.go(Routes.program(state.copyId!, created: true));
+            unawaited(
+              _Leave.to(context, Routes.program(state.copyId!, created: true)),
+            );
           case CopyStatus.failed:
             cubit.copyHandled();
             showForgeSnackbar(

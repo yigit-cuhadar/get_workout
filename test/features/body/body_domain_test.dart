@@ -96,20 +96,20 @@ void main() {
         (date: DateTime(2026, 5, 1), kg: 84.0),
         (date: DateTime(2026, 11, 10), kg: 80.0),
       ]);
-      expect(weightSeries(entries, range: StrengthRange.weeks12, now: now), [
+      expect(weightSeries(entries, range: StrengthRange.weeks2, now: now), [
         (date: DateTime(2026, 11, 10), kg: 80.0),
       ]);
     });
 
     test('tells whether entries lie before the range', () {
       expect(
-        hasEntryBefore(entries, range: StrengthRange.weeks12, now: now),
+        hasEntryBefore(entries, range: StrengthRange.weeks2, now: now),
         isTrue,
       );
       expect(
         hasEntryBefore(
-          entries.sublist(0, 2),
-          range: StrengthRange.weeks12,
+          entries.sublist(0, 1),
+          range: StrengthRange.weeks2,
           now: now,
         ),
         isFalse,

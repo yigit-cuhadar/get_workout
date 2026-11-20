@@ -10,7 +10,7 @@ import 'premium_trial_cubit.dart';
 import 'subscription_summary.dart';
 import 'subscription_text.dart';
 
-/// The Profile tab's Premium card. For a free user a plain card: Premium's
+/// The Profile tab's Premium card. For a free user a [PlanCard]: Premium's
 /// name with the store's trial as a tag, its benefits checked and Get
 /// Premium (the paywall); needs a [PremiumTrialCubit] above. Otherwise a
 /// [FeaturedCard] prompt: the user's state as the title over what Premium
@@ -54,50 +54,18 @@ class _FreeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final trial = context.watch<PremiumTrialCubit>().state;
-    final style = ForgeStyle.of(context);
-    // Profile's other cards: a plain surface card.
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: style.colors.surface,
-        borderRadius: BorderRadius.circular(style.radii.lg),
-        border: style.cardBorder == 0
-            ? null
-            : Border.all(color: style.colors.line, width: style.cardBorder),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(Gap.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: Gap.md,
-          children: [
-            // The tag goes under the title when both do not fit (larger
-            // text).
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: Gap.sm,
-              runSpacing: Gap.xs,
-              children: [
-                Semantics(
-                  header: true,
-                  child: Text(
-                    l10n.premiumTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                if (trial != null)
-                  ForgeTag(l10n.paywallCardTrial(l10n.offerPeriod(trial))),
-              ],
-            ),
-            BenefitList.checked([
-              l10n.paywallBenefitGenerator,
-              l10n.paywallBenefitPrograms,
-              l10n.paywallBenefitCharts,
-            ]),
-            ForgeButton(label: l10n.premiumGet, onPressed: context.openPaywall),
-          ],
-        ),
-      ),
+    return PlanCard(
+      title: l10n.premiumTitle,
+      tag: trial == null
+          ? null
+          : l10n.paywallCardTrial(l10n.offerPeriod(trial)),
+      benefits: [
+        l10n.paywallBenefitGenerator,
+        l10n.paywallBenefitPrograms,
+        l10n.paywallBenefitCharts,
+      ],
+      actionLabel: l10n.premiumGet,
+      onAction: context.openPaywall,
     );
   }
 }

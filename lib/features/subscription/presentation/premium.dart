@@ -10,6 +10,8 @@ import '../../../app/router.dart';
 import '../../../core/open_link.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../programs/domain/premium_status.dart' as programs;
+import '../../settings/presentation/settings_cubit.dart';
+import '../domain/paywall_moment.dart';
 
 /// Whether the signed-in user has Premium. [unknown] while it resolves:
 /// never show a paywall or a lock then.
@@ -69,19 +71,42 @@ extension PremiumGate on BuildContext {
   }
 
   /// Opens the paywall unless one is already open, and tells whether the
-  /// user has Premium afterwards. The only way the app opens it.
-  Future<bool> openPaywall() async {
+  /// user has Premium afterwards. The only way the app opens it; [moment]
+  /// when the app offers it by itself.
+  Future<bool> openPaywall({PaywallMoment? moment}) async {
     final router = GoRouter.of(this);
     if (_paywallOpen[router] ?? false) return false;
     _paywallOpen[router] = true;
     final bool? unlocked;
     try {
-      unlocked = await _pushPaywall(router);
+      unlocked = await _pushPaywall(
+        router,
+        moment == null ? Routes.paywall : Routes.paywallAt(moment),
+      );
     } finally {
       _paywallOpen[router] = false;
     }
     // The paywall pops with true before the cubit may have caught up.
     return unlocked == true || (mounted && read<EntitlementCubit>().isActive);
+  }
+
+  /// Shows the paywall at [moment] if it is due ([paywallMomentDue]) and
+  /// marks it shown, so it never shows again for this user; completes once
+  /// it closed, at once when not due.
+  Future<void> paywallMoment(PaywallMoment moment) async {
+    final settings = read<SettingsCubit>();
+    final due = paywallMomentDue(
+      moment,
+      premium: switch (premiumStatusOf(read<EntitlementCubit>().state)) {
+        PremiumStatus.unknown => null,
+        PremiumStatus.free => false,
+        PremiumStatus.premium => true,
+      },
+      seen: settings.state.loaded ? settings.state.settings.seenTips : null,
+    );
+    if (!due) return;
+    unawaited(settings.tipSeen(moment.tip));
+    await openPaywall(moment: moment);
   }
 
   /// Opens the store's page for managing the subscription.
@@ -99,13 +124,13 @@ extension PremiumGate on BuildContext {
 /// call until the paywall has left the page stack.
 final _paywallOpen = Expando<bool>();
 
-/// Pushes the paywall on [router] and completes once that push has left
-/// the page stack: with its result when popped, with null when a `go` (a
+/// Pushes the paywall at [location] on [router] and completes once that
+/// push has left the page stack: with its result when popped, with null when a `go` (a
 /// notification tap, a tab switch, a redirect) removed it, or when the push
 /// never reached the stack because a later navigation replaced it before it
 /// was parsed. go_router completes the push itself only on a pop, and not
 /// even then once a refresh has rebuilt the stack.
-Future<bool?> _pushPaywall(GoRouter router) {
+Future<bool?> _pushPaywall(GoRouter router, String location) {
   final provider = router.routeInformationProvider;
   final delegate = router.routerDelegate;
   final closed = Completer<bool?>();
@@ -115,7 +140,7 @@ Future<bool?> _pushPaywall(GoRouter router) {
 
   // The push's own navigation: set before the push returns, and pending
   // while it is still the provider's value.
-  final pushed = router.push<bool>(Routes.paywall);
+  final pushed = router.push<bool>(location);
   final navigation = provider.value.state;
   final completer = navigation is RouteInformationState
       ? navigation.completer

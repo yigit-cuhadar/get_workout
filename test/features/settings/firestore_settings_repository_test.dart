@@ -452,6 +452,18 @@ void main() {
       });
     });
 
+    test('the paywall moments are kept as tips', () async {
+      await repository.markTipSeen('u1', Tip.onboardingPaywall);
+      await repository.markTipSeen('u1', Tip.firstWorkoutPaywall);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored['seenTips'], ['onboardingPaywall', 'firstWorkoutPaywall']);
+      expect((await repository.watchSettings('u1').first).seenTips, {
+        Tip.onboardingPaywall,
+        Tip.firstWorkoutPaywall,
+      });
+    });
+
     test('missing ones read as warm-ups on and no tip seen', () async {
       await user().set({
         'settings': {'weightUnit': 'kg'},

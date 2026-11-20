@@ -3,6 +3,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_remote_config/forge_remote_config.dart';
 import 'package:get_workout/features/subscription/domain/paywall_layout.dart';
+import 'package:get_workout/features/subscription/domain/paywall_moment.dart';
 import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
 import 'package:get_workout/features/subscription/subscription_module.dart';
@@ -27,7 +28,7 @@ void main() {
     when(() => telemetry.logEvent(any(), any())).thenAnswer((_) async {});
   });
 
-  PremiumPaywallCubit build(List<Plan> plans) {
+  PremiumPaywallCubit build(List<Plan> plans, {PaywallMoment? moment}) {
     store = FakePurchasesRepository(plans: plans, purchaseDelay: Duration.zero);
     return PremiumPaywallCubit(
       getOffering: GetPaywallOffering(store),
@@ -37,6 +38,7 @@ void main() {
       logView: LogPaywallView(telemetry),
       logPurchase: LogPaywallPurchase(telemetry),
       isPremium: () => premium,
+      moment: moment,
     );
   }
 
@@ -130,5 +132,42 @@ void main() {
 
     verifyNever(() => telemetry.logEvent('paywall_purchase', any()));
     await cubit.close();
+  });
+
+  group('closable', () {
+    test('always when opened by the user or at the first workout', () async {
+      for (final moment in [null, PaywallMoment.firstWorkout]) {
+        final cubit = build(fakePlans, moment: moment);
+        store.metadata = const {dismissibleKey: false};
+        expect(cubit.closable, isTrue);
+        await cubit.load();
+        expect(cubit.closable, isTrue);
+        await cubit.close();
+      }
+    });
+
+    test(
+      'at onboarding, not while loading, then as the offering says',
+      () async {
+        final cubit = build(fakePlans, moment: PaywallMoment.onboarding);
+        expect(cubit.closable, isFalse);
+        await cubit.load();
+        expect(cubit.closable, isTrue);
+
+        store.metadata = const {dismissibleKey: false};
+        await cubit.load();
+        expect(cubit.closable, isFalse);
+        await cubit.close();
+      },
+    );
+
+    test('at onboarding, when the plans could not be loaded', () async {
+      final cubit = build(const [], moment: PaywallMoment.onboarding);
+      await cubit.load();
+
+      expect(cubit.state.status, PaywallStatus.loadFailed);
+      expect(cubit.closable, isTrue);
+      await cubit.close();
+    });
   });
 }

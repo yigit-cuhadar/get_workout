@@ -16,7 +16,11 @@ void main() {
   late StreamController<BodyListState> states;
   late DateTime now;
 
-  final august = BodyEntry(id: 'a', date: DateTime(2026, 8, 25), weightKg: 85);
+  final october = BodyEntry(
+    id: 'a',
+    date: DateTime(2026, 10, 31),
+    weightKg: 85,
+  );
   final november = BodyEntry(
     id: 'n',
     date: DateTime(2026, 11, 10),
@@ -24,7 +28,7 @@ void main() {
   );
   final ready = BodyListState(
     status: BodyListStatus.ready,
-    entries: [november, august],
+    entries: [november, october],
   );
 
   setUp(() {
@@ -39,7 +43,7 @@ void main() {
   ProgressBodyCubit build() =>
       ProgressBodyCubit(bodyList: bodyList, clock: () => now);
 
-  test('follows the body list as a snapshot of its last 12 weeks', () async {
+  test('follows the body list as a snapshot of its last 2 weeks', () async {
     final cubit = build();
     expect(cubit.state, const ProgressBodyState());
 
@@ -54,7 +58,7 @@ void main() {
         snapshot: BodySnapshot(
           latest: (date: DateTime(2026, 11, 10), kg: 80.0),
           weights: [
-            (date: DateTime(2026, 8, 25), kg: 85.0),
+            (date: DateTime(2026, 10, 31), kg: 85.0),
             (date: DateTime(2026, 11, 10), kg: 80.0),
           ],
         ),
@@ -63,14 +67,14 @@ void main() {
     await cubit.close();
   });
 
-  test('refreshNow moves the 12 weeks on to today', () async {
+  test('refreshNow moves the 2 weeks on to today', () async {
     final cubit = build();
     when(() => bodyList.state).thenReturn(ready);
     states.add(ready);
     await pumpEventQueue();
     expect(cubit.state.snapshot.weights, hasLength(2));
 
-    // A week later 25 August is more than 12 weeks back.
+    // A week later 31 October is more than 2 weeks back.
     now = DateTime(2026, 11, 20, 8);
     cubit.refreshNow();
 

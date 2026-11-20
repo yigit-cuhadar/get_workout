@@ -95,6 +95,7 @@ import 'package:get_workout/features/settings/domain/settings_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
+import 'package:get_workout/features/subscription/domain/paywall_moment.dart';
 import 'package:get_workout/features/subscription/presentation/paywall_page.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
 import 'package:get_workout/features/subscription/presentation/premium_trial_cubit.dart';
@@ -570,8 +571,8 @@ void main() {
       when(health.openSettings).thenAnswer((_) async {});
       return health;
     });
-    sl.registerFactory(
-      () => PremiumPaywallCubit(
+    sl.registerFactoryParam<PremiumPaywallCubit, PaywallMoment?, void>(
+      (moment, _) => PremiumPaywallCubit(
         getOffering: GetPaywallOffering(store),
         purchasePlan: PurchasePlan(store),
         restorePurchases: RestorePurchases(store),
@@ -579,6 +580,7 @@ void main() {
         logView: LogPaywallView(paywallTelemetry),
         logPurchase: LogPaywallPurchase(paywallTelemetry),
         isPremium: () => entitlement.isActive,
+        moment: moment,
       ),
     );
     sl.registerFactory(
@@ -2424,7 +2426,7 @@ void main() {
 
       await tapVisible(tester, 'Get Premium');
       expect(find.byType(PaywallPage), findsOneWidget);
-      expect(find.text(r'$4.99 / month'), findsOneWidget);
+      expect(find.text(r'$7.99 / month'), findsOneWidget);
       expect(find.text(r'$39.99 / year'), findsOneWidget);
       expect(find.text('Best value'), findsOneWidget);
       expect(find.text('Restore purchases'), findsOneWidget);
@@ -2451,7 +2453,7 @@ void main() {
       remoteConfig.values['paywall_layout'] = 'b';
 
       await tapVisible(tester, 'Get Premium');
-      expect(find.text(r'$4.99'), findsOneWidget);
+      expect(find.text(r'$7.99'), findsOneWidget);
       expect(find.text(r'$39.99'), findsOneWidget);
       expect(find.text('7 days free'), findsOneWidget);
       expect(find.text(r'$39.99 / year'), findsNothing);
@@ -2475,10 +2477,10 @@ void main() {
       expect(find.text('Yearly · 7 days free'), findsOneWidget);
       expect(find.text(r'$39.99 / year'), findsOneWidget);
       expect(find.text(r'That is $3.33 a month.'), findsOneWidget);
-      expect(find.text(r'$4.99 / month'), findsNothing);
+      expect(find.text(r'$7.99 / month'), findsNothing);
 
       await tapVisible(tester, 'See monthly plan');
-      expect(find.text(r'$4.99 / month'), findsOneWidget);
+      expect(find.text(r'$7.99 / month'), findsOneWidget);
       expect(find.text('See yearly plan'), findsOneWidget);
       expect(find.text('Subscribe'), findsOneWidget);
       verify(() => paywallTelemetry.logEvent('paywall_view', {'layout': 'c'}))
@@ -2552,6 +2554,54 @@ void main() {
 
       expect(find.byType(PaywallPage), findsNothing);
       expect(find.text('You have Premium.'), findsOneWidget);
+    });
+
+    testWidgets('the onboarding paywall is hard when the offering says so', (
+      tester,
+    ) async {
+      await openProfileAsFreeGuest(tester);
+      store.metadata = const {dismissibleKey: false};
+      unawaited(router.push(Routes.paywallAt(PaywallMoment.onboarding)));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PaywallPage), findsOneWidget);
+      expect(find.bySemanticsLabel('Close'), findsNothing);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(PaywallPage), findsOneWidget);
+
+      await tapVisible(tester, 'Start 7-day free trial');
+      expect(find.byType(PaywallPage), findsNothing);
+    });
+
+    testWidgets('a hard paywall waits for a pending purchase', (tester) async {
+      await openProfileAsFreeGuest(tester);
+      store.metadata = const {dismissibleKey: false};
+      unawaited(router.push(Routes.paywallAt(PaywallMoment.onboarding)));
+      await tester.pumpAndSettle();
+      store.failure = const PurchaseFailure(PurchaseFailureReason.pending);
+
+      await tapVisible(tester, 'Start 7-day free trial');
+      expect(find.textContaining('waiting for approval'), findsOneWidget);
+      expect(find.text('Got it'), findsNothing);
+      expect(find.bySemanticsLabel('Close'), findsNothing);
+
+      store
+        ..failure = null
+        ..approvePending();
+      await tester.pumpAndSettle();
+      expect(find.byType(PaywallPage), findsNothing);
+    });
+
+    testWidgets('any other paywall stays closable', (tester) async {
+      await openProfileAsFreeGuest(tester);
+      store.metadata = const {dismissibleKey: false};
+      unawaited(router.push(Routes.paywallAt(PaywallMoment.firstWorkout)));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('Close'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PaywallPage), findsNothing);
     });
 
     testWidgets('the paywall closes at once for a subscriber', (tester) async {

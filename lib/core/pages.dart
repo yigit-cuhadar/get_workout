@@ -180,7 +180,7 @@ class _AskingSwipeState extends State<_AskingSwipe> {
 }
 
 /// A page opened over the flow as an iOS sheet: dragging it down closes
-/// it, also from its primary scroll view's top.
+/// it, also from its primary scroll view's top, unless the page cannot pop.
 class SheetPage<T> extends Page<T> {
   const SheetPage({super.key, required this.child});
 
@@ -205,6 +205,10 @@ class _SheetRoute<T> extends CupertinoSheetRoute<T> {
   // go_router's own pages always do.
   @override
   bool get fullscreenDialog => true;
+
+  // A page that cannot pop (PopScope) cannot be dragged down either.
+  @override
+  bool get enableDrag => popDisposition != RoutePopDisposition.doNotPop;
 }
 
 /// A page that rises from the bottom over everything, full screen, and

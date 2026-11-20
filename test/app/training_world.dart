@@ -51,6 +51,7 @@ import 'package:get_workout/features/settings/domain/settings_repository.dart';
 import 'package:get_workout/features/settings/domain/settings_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
+import 'package:get_workout/features/subscription/domain/paywall_moment.dart';
 import 'package:get_workout/features/subscription/domain/subscription_usecases.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
 import 'package:get_workout/features/subscription/presentation/premium_trial_cubit.dart';
@@ -258,6 +259,9 @@ class FakeWorkoutRepository extends LiveData implements WorkoutRepository {
     String uid,
     List<String> exerciseIds,
   ) => throw UnimplementedError();
+
+  @override
+  Future<Result<bool>> hasWorkouts(String uid) async => Ok(workouts.isNotEmpty);
 
   @override
   Future<Result<List<Workout>>> programWorkouts(
@@ -692,8 +696,8 @@ class TrainingWorld {
           getCurrentUser: currentUser,
         ),
       )
-      ..registerFactory(
-        () => PremiumPaywallCubit(
+      ..registerFactoryParam<PremiumPaywallCubit, PaywallMoment?, void>(
+        (moment, _) => PremiumPaywallCubit(
           getOffering: GetPaywallOffering(store),
           purchasePlan: PurchasePlan(store),
           restorePurchases: RestorePurchases(store),
@@ -703,6 +707,7 @@ class TrainingWorld {
           logView: LogPaywallView(telemetry),
           logPurchase: LogPaywallPurchase(telemetry),
           isPremium: () => premium,
+          moment: moment,
         ),
       )
       ..registerFactory(

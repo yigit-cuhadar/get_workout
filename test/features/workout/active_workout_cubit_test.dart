@@ -150,6 +150,8 @@ void main() {
         .thenAnswer((_) async => const Ok({}));
     when(() => repository.programWorkouts(any(), any()))
         .thenAnswer((_) async => const Ok([]));
+    when(() => repository.hasWorkouts(any()))
+        .thenAnswer((_) async => const Ok(true));
     when(
       () => repository.saveWorkout(
         any(),
