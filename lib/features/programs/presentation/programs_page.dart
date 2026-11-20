@@ -120,7 +120,8 @@ class _Programs extends StatelessWidget {
         else ...[
           BlocProvider(
             key: ValueKey(active.id),
-            create: (_) => sl<ProgramDetailCubit>(param1: active.id),
+            create: (_) =>
+                sl<ProgramDetailCubit>(param1: active.id, param2: false),
             child: _ActiveProgram(state, active, premium: premium),
           ),
           // Kept, not stopped: it carries on once premium is back.

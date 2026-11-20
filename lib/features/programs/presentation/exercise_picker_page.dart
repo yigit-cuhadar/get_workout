@@ -7,6 +7,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../analytics/domain/analytics.dart';
 import '../../exercises/domain/exercise.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../exercises/presentation/exercise_detail_cubit.dart';
@@ -148,7 +149,10 @@ class ExercisePickerPage extends StatelessWidget {
         ),
         if (exerciseId != null)
           BlocProvider(
-            create: (_) => sl<ExerciseDetailCubit>(param1: exerciseId),
+            create: (_) => sl<ExerciseDetailCubit>(
+              param1: exerciseId,
+              param2: ExerciseViewSource.catalogue,
+            ),
           ),
       ],
       child: _PickerView(
