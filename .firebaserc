@@ -6,12 +6,19 @@
   "targets": {
     "getworkout-dev": {
       "hosting": {
-        "admin": ["getworkout-dev"]
+        "admin": [
+          "getworkout-dev"
+        ]
       }
     },
     "getworkout-prod": {
       "hosting": {
-        "legal": ["getworkout-prod"]
+        "legal": [
+          "getworkout-prod"
+        ],
+        "admin": [
+          "getworkout-admin"
+        ]
       }
     }
   }
