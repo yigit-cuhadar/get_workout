@@ -4,7 +4,7 @@ import { Timestamp, getFirestore } from "firebase-admin/firestore";
 import { firebaseAccountStore } from "../delete_account";
 import { revenueCatApiKey } from "../dashboard/revenuecat_metrics";
 import { revenueCatGrants } from "./revenuecat_customers";
-import { AuthUser, UserDirectory, UsersDeps } from "./users";
+import { AuthUser, DeviceDoc, UserDirectory, UsersDeps } from "./users";
 
 const millisOf = (value: string | undefined): number | null => {
   const millis = value ? Date.parse(value) : NaN;
@@ -40,6 +40,8 @@ export const firebaseUserDirectory = (): UserDirectory => {
       throw error;
     }
   };
+  const devices = (uid: string) =>
+    db.collection(`users/${uid}/devices`).orderBy("lastSeenAt", "desc");
   const lastWorkout = async (uid: string) => {
     const latest = await db
       .collection(`users/${uid}/workouts`)
@@ -90,6 +92,29 @@ export const firebaseUserDirectory = (): UserDirectory => {
       const last = await Promise.all(uids.map(lastWorkout));
       return new Map(
         uids.flatMap((uid, i) => (last[i] === null ? [] : [[uid, last[i]]])),
+      );
+    },
+    async devices(uid) {
+      const docs = await devices(uid).get();
+      return docs.docs.map(
+        (doc): DeviceDoc => ({
+          model: doc.get("model") ?? "",
+          platform: doc.get("platform") ?? "",
+          osVersion: doc.get("osVersion") ?? "",
+          appVersion: doc.get("appVersion") ?? "",
+          lastSeenMillis: timestampMillis(doc.get("lastSeenAt")),
+        }),
+      );
+    },
+    async lastPlatforms(uids) {
+      const latest = await Promise.all(
+        uids.map((uid) => devices(uid).limit(1).get()),
+      );
+      return new Map(
+        uids.flatMap((uid, i): [string, string][] => {
+          const platform = latest[i].docs[0]?.get("platform");
+          return typeof platform === "string" ? [[uid, platform]] : [];
+        }),
       );
     },
     async activity(uid) {

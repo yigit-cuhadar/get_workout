@@ -40,6 +40,7 @@ UserRow _row(String uid) => UserRow(
   premium: false,
   signedUp: _signedUp,
   lastWorkout: null,
+  platform: null,
 );
 
 UserDetail _detail({bool admin = false}) => UserDetail(
@@ -54,6 +55,7 @@ UserDetail _detail({bool admin = false}) => UserDetail(
   workouts: 0,
   lastWorkout: null,
   activeProgram: null,
+  devices: const [],
   revenueCat: null,
   revenueCatState: RevenueCatState.noCustomer,
 );
@@ -117,6 +119,7 @@ void main() {
             'premium': false,
             'signedUpMillis': _signedUp.millisecondsSinceEpoch,
             'lastWorkoutMillis': null,
+            'platform': 'android',
           },
         ],
         'next': {'createdAtMillis': 5, 'uid': 'u1'},
@@ -126,6 +129,7 @@ void main() {
       )).valueOrNull!;
       expect(page.users.single.guest, isTrue);
       expect(page.users.single.signedUp, _signedUp);
+      expect(page.users.single.platform, 'android');
       expect(page.next, const UserCursor(createdAtMillis: 5, uid: 'u1'));
       verify(
         () => callable.call<Object?>({
@@ -155,6 +159,15 @@ void main() {
           'lastWorkoutMillis': 8,
           'activeProgram': 'PPL',
         },
+        'devices': [
+          {
+            'model': 'iPhone15,2',
+            'platform': 'ios',
+            'osVersion': '18.1',
+            'appVersion': '1.0.0+12',
+            'lastSeenMillis': 9,
+          },
+        ],
         'revenueCat': {
           'premium': {'expiresAtMillis': never},
           'subscriptions': [
@@ -167,12 +180,6 @@ void main() {
               'autoRenewal': 'will_not_renew',
             },
           ],
-          'lastSeen': {
-            'atMillis': 9,
-            'platform': 'iOS',
-            'platformVersion': '18.1',
-            'appVersion': '1.0.0',
-          },
         },
         'revenueCatState': 'ok',
       });
@@ -187,7 +194,15 @@ void main() {
       expect(customer.premiumEnds, isNull);
       expect(customer.promotional!.periodEnds, isNull);
       expect(customer.storeSubscription, isNull);
-      expect(customer.lastSeen.platform, 'iOS');
+      expect(user.devices, [
+        UserDevice(
+          model: 'iPhone15,2',
+          platform: 'ios',
+          osVersion: '18.1',
+          appVersion: '1.0.0+12',
+          lastSeen: DateTime.fromMillisecondsSinceEpoch(9, isUtc: true),
+        ),
+      ]);
     });
 
     test('grants by duration name and returns the end', () async {

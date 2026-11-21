@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-/// The app and device a message is sent from; empty where unknown.
+/// The app and device the app runs on; empty where unknown.
 class DeviceDetails {
   const DeviceDetails({
     this.appVersion = '',

@@ -8,6 +8,7 @@ import { NEVER_EXPIRES_MS } from "../revenuecat_webhook";
 import { Customer, PremiumGrants, RevenueCatError } from "./revenuecat_customers";
 import {
   AuthUser,
+  DeviceDoc,
   PAGE_SIZE,
   Reason,
   ServerPremium,
@@ -44,12 +45,14 @@ const user = (uid: string, overrides: Partial<AuthUser> = {}): AuthUser => ({
 const customer: Customer = {
   premium: { expiresAtMillis: now + day },
   subscriptions: [],
-  lastSeen: {
-    atMillis: now,
-    platform: "iOS",
-    platformVersion: "18.1",
-    appVersion: "1.0.0",
-  },
+};
+
+const iphone: DeviceDoc = {
+  model: "iPhone15,2",
+  platform: "ios",
+  osVersion: "18.1",
+  appVersion: "1.0.0+12",
+  lastSeenMillis: now,
 };
 
 /** Auth, Firestore and RevenueCat in memory, recording every change. */
@@ -58,6 +61,7 @@ function fakeDeps(
   options: {
     premium?: Map<string, ServerPremium>;
     workouts?: Map<string, number>;
+    platforms?: Map<string, string>;
     customer?: () => Promise<Customer | null>;
     grantError?: Error;
   } = {},
@@ -84,6 +88,8 @@ function fakeDeps(
       lastWorkoutMillis: now - day,
       activeProgram: "Push pull legs",
     }),
+    devices: async () => [iphone],
+    lastPlatforms: async () => options.platforms ?? new Map(),
   };
   const grants: PremiumGrants = {
     customer: options.customer ?? (async () => customer),
@@ -157,6 +163,7 @@ describe("listUsers", () => {
         ["u01", premium(now - 1)],
       ]),
       workouts: new Map([["u00", now - day]]),
+      platforms: new Map([["u00", "android"]]),
     });
 
     const first = await listUsers(caller(), {}, deps);
@@ -166,6 +173,8 @@ describe("listUsers", () => {
     assert.equal(first.users[0].lastWorkoutMillis, now - day);
     assert.equal(first.users[1].premium, false, "expired");
     assert.equal(first.users[1].lastWorkoutMillis, null);
+    assert.equal(first.users[0].platform, "android");
+    assert.equal(first.users[1].platform, null);
     assert.deepEqual(first.next, {
       createdAtMillis: now - (PAGE_SIZE - 1),
       uid: `u${PAGE_SIZE - 1}`,
@@ -250,6 +259,7 @@ describe("getUser", () => {
     assert.equal(detail.guest, false);
     assert.deepEqual(detail.server, premium(now + day));
     assert.equal(detail.activity.activeProgram, "Push pull legs");
+    assert.deepEqual(detail.devices, [iphone]);
     assert.deepEqual(detail.revenueCat, customer);
     assert.equal(detail.revenueCatState, "ok");
   });

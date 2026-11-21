@@ -139,6 +139,7 @@ class CallableAdminUserRepository implements AdminUserRepository {
     premium: data['premium'] == true,
     signedUp: _date(data['signedUpMillis']) ?? DateTime.utc(1970),
     lastWorkout: _date(data['lastWorkoutMillis']),
+    platform: _text(data['platform']),
   );
 
   static UserDetail _detail(Map<Object?, Object?> data) {
@@ -168,6 +169,16 @@ class CallableAdminUserRepository implements AdminUserRepository {
       workouts: (activity['workouts'] as num? ?? 0).toInt(),
       lastWorkout: _date(activity['lastWorkoutMillis']),
       activeProgram: _text(activity['activeProgram']),
+      devices: [
+        for (final d in _list(data['devices']))
+          UserDevice(
+            model: _text(d['model']) ?? '',
+            platform: _text(d['platform']) ?? '',
+            osVersion: _text(d['osVersion']) ?? '',
+            appVersion: _text(d['appVersion']) ?? '',
+            lastSeen: _date(d['lastSeenMillis']),
+          ),
+      ],
       revenueCat: state == RevenueCatState.ok
           ? _customer(_map(data['revenueCat']))
           : null,
@@ -177,7 +188,6 @@ class CallableAdminUserRepository implements AdminUserRepository {
 
   static RevenueCatCustomer _customer(Map<Object?, Object?> data) {
     final premium = data['premium'];
-    final seen = _map(data['lastSeen']);
     return RevenueCatCustomer(
       premium: premium is Map,
       premiumEnds: premium is Map ? _date(premium['expiresAtMillis']) : null,
@@ -192,12 +202,6 @@ class CallableAdminUserRepository implements AdminUserRepository {
             autoRenewal: '${s['autoRenewal']}',
           ),
       ],
-      lastSeen: LastSeenDevice(
-        at: _date(seen['atMillis']),
-        platform: _text(seen['platform']),
-        platformVersion: _text(seen['platformVersion']),
-        appVersion: _text(seen['appVersion']),
-      ),
     );
   }
 }

@@ -342,7 +342,6 @@ class _DevicesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final seen = user.revenueCat?.lastSeen;
     final label = Theme.of(context).textTheme.labelMedium;
     Widget row(List<Widget> cells) => Row(
       spacing: Gap.sm,
@@ -350,11 +349,8 @@ class _DevicesSection extends StatelessWidget {
     );
     return SectionCard.plain(
       title: 'Devices',
-      child: seen == null || seen.isEmpty
-          ? Text(switch (user.revenueCatState) {
-              RevenueCatState.failed => 'Unknown: RevenueCat did not answer.',
-              _ => 'No device has reported yet.',
-            })
+      child: user.devices.isEmpty
+          ? const Text('No device has reported yet.')
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: Gap.sm,
@@ -368,13 +364,17 @@ class _DevicesSection extends StatelessWidget {
                   ])
                     Text(title, style: label),
                 ]),
-                const Divider(),
-                row([
-                  Text(seen.platform ?? '—'),
-                  Text(seen.platformVersion ?? '—'),
-                  Text(seen.appVersion ?? '—'),
-                  Text(userDateLabel(seen.at)),
-                ]),
+                for (final device in user.devices) ...[
+                  const Divider(),
+                  row([
+                    Text(device.model),
+                    Text(
+                      '${platformLabel(device.platform)} ${device.osVersion}',
+                    ),
+                    Text(device.appVersion),
+                    Text(userDateLabel(device.lastSeen)),
+                  ]),
+                ],
               ],
             ),
     );

@@ -27,6 +27,13 @@ String providerLabel(String provider) => switch (provider) {
   _ => provider,
 };
 
+String platformLabel(String? platform) => switch (platform) {
+  'ios' => 'iOS',
+  'android' => 'Android',
+  null => '—',
+  _ => platform,
+};
+
 String storeLabel(String store) => switch (store) {
   'app_store' => 'App Store',
   'play_store' => 'Google Play',

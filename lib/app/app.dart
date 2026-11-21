@@ -11,6 +11,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 
+import '../features/devices/presentation/device_session.dart';
 import '../features/body/body_module.dart';
 import '../features/account/presentation/consent_cubit.dart';
 import '../features/account/presentation/delete_account_cubit.dart';
@@ -77,6 +78,8 @@ class _AppState extends State<App> {
     _analytics = sl<Analytics>();
     // Created now so the user properties follow from the first auth event.
     sl<AnalyticsSession>();
+    // Created now so the device is recorded from the first auth event.
+    sl<DeviceSession>();
     _router.routerDelegate.addListener(_logScreen);
     final rest = sl<RestTimerCubit>();
     BodyModule.startPhotoBackup(sl);

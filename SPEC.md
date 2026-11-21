@@ -265,6 +265,22 @@ measurement day fills all three.
 
 **`users/{uid}/pushTokens/{token}`**: `platform`, `updatedAt`.
 
+**`users/{uid}/devices/{installId}`** (the admin panel's Devices; written
+by the app, read by admins, never read back): `model` ("iPhone15,2",
+"Google Pixel 8"), `platform` (`ios` \| `android`), `osVersion`,
+`appVersion` ("1.0.0+12"), each string at most 100 characters, and
+`lastSeenAt` (server time). `installId` is 32 lowercase hex characters,
+random, made on the install's first run and kept in the app's support
+directory (`install_id`; it survives updates, a reinstall gets a new one).
+The owner may only create or update their own, validated (`isDevice`);
+account deletion removes them with the rest of `users/{uid}`. The app
+(`lib/features/devices`, `DeviceSession`) records the device for each
+signed-in user at launch and after every sign-in or account switch, but
+writes only when the user, model, platform, OS version or app version
+changed since this install last wrote, or that was 24 hours ago or more
+(the last write is kept in `device_record.json`), so "last seen" is right
+to the day.
+
 **`users/{uid}/feedback/{id}`** (Help & feedback): `uid` (equal to the
 path's), `email?` (where to reply, 3-254 characters; absent when left
 empty), `message` (1-2000 characters), `source` (`profile` \| `rating`),
@@ -355,12 +371,15 @@ only, JPEG, max 5 MB.
   RevenueCat's HTTP status or null; 403 is a key without the permission).
   - `adminListUsers` `{cursor?: {createdAtMillis, uid}}` → `{users, next}`:
     25 Auth users per page, newest sign-up first (ties by uid), each
-    `{uid, email, guest, premium, signedUpMillis, lastWorkoutMillis}`.
+    `{uid, email, guest, premium, signedUpMillis, lastWorkoutMillis,
+    platform}`.
     Auth lists in no useful order, so every user is listed and sorted on
     each call (fine to tens of thousands; `users/{uid}` has no sign-up time
     and is missing for a user who never wrote). `premium` is
     `entitlements/{uid}` active now; the last workout is the latest
-    `finishedAt` of `users/{uid}/workouts`.
+    `finishedAt` of `users/{uid}/workouts`; `platform` that of the
+    device last seen (`users/{uid}/devices`, newest `lastSeenAt`): one
+    query per user, 25 per page, like the last workout.
   - `adminFindUser` `{query}` → `{uid}`: an exact email when it has an
     `@`, else a uid.
   - `adminGetUser` `{uid}` → Auth (email, sign-in providers, `admin`
@@ -369,8 +388,8 @@ only, JPEG, max 5 MB.
     count and latest `finishedAt`, the active program's name
     (`users/{uid}/programs/{activeProgram.programId}`), and RevenueCat's
     customer (`premium` active entitlement, subscriptions with store,
-    status and period end, and the last seen platform, OS version, app
-    version and time, shown as Devices). RevenueCat failing leaves the
+    status and period end), and every `users/{uid}/devices` document,
+    last seen first, shown as Devices. RevenueCat failing leaves the
     rest (`revenueCatState` `failed`; `no-customer` when it never saw the
     uid). The Premium tag follows RevenueCat, else the server's record.
   - `adminGrantPremium` `{uid, duration}` (`week` \| `month` \| `year` \|

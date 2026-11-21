@@ -40,6 +40,16 @@ export interface ServerPremium {
   lastEventMillis: number | null;
 }
 
+/** `users/{uid}/devices/{installId}`, which the app writes. */
+export interface DeviceDoc {
+  model: string;
+  /** `ios` or `android`. */
+  platform: string;
+  osVersion: string;
+  appVersion: string;
+  lastSeenMillis: number | null;
+}
+
 export interface Activity {
   workouts: number;
   lastWorkoutMillis: number | null;
@@ -59,6 +69,10 @@ export interface UserDirectory {
   /** The latest workout's `finishedAt` by uid; none left out. */
   lastWorkouts(uids: string[]): Promise<Map<string, number>>;
   activity(uid: string): Promise<Activity>;
+  /** The user's devices, last seen first. */
+  devices(uid: string): Promise<DeviceDoc[]>;
+  /** The platform of the device last seen, by uid; none left out. */
+  lastPlatforms(uids: string[]): Promise<Map<string, string>>;
 }
 
 export interface UsersDeps {
@@ -77,6 +91,8 @@ export interface UserRow {
   premium: boolean;
   signedUpMillis: number;
   lastWorkoutMillis: number | null;
+  /** The platform of the device last seen. */
+  platform: string | null;
 }
 
 /** Where the next page starts: after this sign-up. */
@@ -95,6 +111,7 @@ export interface UserDetail {
   lastActiveMillis: number | null;
   server: ServerPremium | null;
   activity: Activity;
+  devices: DeviceDoc[];
   /** Null unless [revenueCatState] is `ok`. */
   revenueCat: Customer | null;
   revenueCatState: "ok" | "no-customer" | "failed";
@@ -208,9 +225,10 @@ export async function listUsers(
   const rest = cursor ? sorted.filter((u) => after(u, cursor)) : sorted;
   const page = rest.slice(0, PAGE_SIZE);
   const uids = page.map((u) => u.uid);
-  const [premium, workouts] = await Promise.all([
+  const [premium, workouts, platforms] = await Promise.all([
     deps.directory.serverPremium(uids),
     deps.directory.lastWorkouts(uids),
+    deps.directory.lastPlatforms(uids),
   ]);
   const last = page.at(-1);
   return {
@@ -221,6 +239,7 @@ export async function listUsers(
       premium: isPremium(premium.get(u.uid), deps.nowMillis),
       signedUpMillis: u.createdAtMillis,
       lastWorkoutMillis: workouts.get(u.uid) ?? null,
+      platform: platforms.get(u.uid) ?? null,
     })),
     next:
       rest.length > PAGE_SIZE && last
@@ -258,9 +277,10 @@ export async function getUser(
   admin(auth);
   const uid = uidOf(input(data));
   const user = await existing(deps, uid);
-  const [server, activity, revenueCat] = await Promise.all([
+  const [server, activity, devices, revenueCat] = await Promise.all([
     deps.directory.serverPremium([uid]),
     deps.directory.activity(uid),
+    deps.directory.devices(uid),
     deps.grants.customer(uid).then(
       (customer) => ({ customer, failed: false }),
       (error: unknown) => {
@@ -279,6 +299,7 @@ export async function getUser(
     lastActiveMillis: user.lastActiveAtMillis,
     server: server.get(uid) ?? null,
     activity,
+    devices,
     revenueCat: revenueCat.customer,
     revenueCatState: revenueCat.failed
       ? "failed"

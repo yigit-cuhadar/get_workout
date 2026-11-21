@@ -39,6 +39,7 @@ class UserRow extends Equatable {
     required this.premium,
     required this.signedUp,
     required this.lastWorkout,
+    required this.platform,
   });
 
   final String uid;
@@ -52,6 +53,9 @@ class UserRow extends Equatable {
   final DateTime signedUp;
   final DateTime? lastWorkout;
 
+  /// `ios` or `android`: the device last seen; null before any.
+  final String? platform;
+
   @override
   List<Object?> get props => [
     uid,
@@ -60,6 +64,7 @@ class UserRow extends Equatable {
     premium,
     signedUp,
     lastWorkout,
+    platform,
   ];
 }
 
@@ -136,24 +141,30 @@ class StoreSubscription extends Equatable {
   ];
 }
 
-/// The device the app last reported to RevenueCat from.
-class LastSeenDevice extends Equatable {
-  const LastSeenDevice({
-    required this.at,
+/// A device the app runs on, as it records itself
+/// (`users/{uid}/devices/{installId}`).
+class UserDevice extends Equatable {
+  const UserDevice({
+    required this.model,
     required this.platform,
-    required this.platformVersion,
+    required this.osVersion,
     required this.appVersion,
+    required this.lastSeen,
   });
 
-  final DateTime? at;
-  final String? platform;
-  final String? platformVersion;
-  final String? appVersion;
+  /// "iPhone15,2", "Google Pixel 8".
+  final String model;
 
-  bool get isEmpty => at == null && platform == null && appVersion == null;
+  /// `ios` or `android`.
+  final String platform;
+  final String osVersion;
+
+  /// "1.2.0+14".
+  final String appVersion;
+  final DateTime? lastSeen;
 
   @override
-  List<Object?> get props => [at, platform, platformVersion, appVersion];
+  List<Object?> get props => [model, platform, osVersion, appVersion, lastSeen];
 }
 
 /// What RevenueCat knows of the user.
@@ -162,7 +173,6 @@ class RevenueCatCustomer extends Equatable {
     required this.premium,
     required this.premiumEnds,
     required this.subscriptions,
-    required this.lastSeen,
   });
 
   /// Whether the `premium` entitlement is active.
@@ -171,7 +181,6 @@ class RevenueCatCustomer extends Equatable {
   /// When it ends; null while [premium] never ends.
   final DateTime? premiumEnds;
   final List<StoreSubscription> subscriptions;
-  final LastSeenDevice lastSeen;
 
   /// The store subscription giving access, else the first one.
   StoreSubscription? get storeSubscription {
@@ -184,7 +193,7 @@ class RevenueCatCustomer extends Equatable {
       subscriptions.where((s) => s.promotional && s.givesAccess).firstOrNull;
 
   @override
-  List<Object?> get props => [premium, premiumEnds, subscriptions, lastSeen];
+  List<Object?> get props => [premium, premiumEnds, subscriptions];
 }
 
 enum RevenueCatState {
@@ -211,6 +220,7 @@ class UserDetail extends Equatable {
     required this.workouts,
     required this.lastWorkout,
     required this.activeProgram,
+    required this.devices,
     required this.revenueCat,
     required this.revenueCatState,
   });
@@ -233,6 +243,9 @@ class UserDetail extends Equatable {
   final DateTime? lastWorkout;
   final String? activeProgram;
 
+  /// Last seen first.
+  final List<UserDevice> devices;
+
   /// Set when [revenueCatState] is [RevenueCatState.ok].
   final RevenueCatCustomer? revenueCat;
   final RevenueCatState revenueCatState;
@@ -252,6 +265,7 @@ class UserDetail extends Equatable {
     workouts,
     lastWorkout,
     activeProgram,
+    devices,
     revenueCat,
     revenueCatState,
   ];

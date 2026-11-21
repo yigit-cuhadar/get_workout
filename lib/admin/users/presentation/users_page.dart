@@ -15,8 +15,8 @@ const usersPageWidth = 1280.0;
 const _searchWidth = 520.0;
 
 /// The columns' shares of a row: email, user ID, Premium, signed up, last
-/// workout, Open.
-const _columns = [16, 10, 5, 6, 6, 3];
+/// workout, platform, Open.
+const _columns = [16, 10, 5, 6, 6, 4, 3];
 
 /// Users: find one by email or user ID, over the latest sign-ups with Load
 /// more. The [UsersCubit] comes from the section's route.
@@ -130,6 +130,7 @@ class _LatestSection extends StatelessWidget {
                   'Premium',
                   'Signed up',
                   'Last workout',
+                  'Platform',
                   '',
                 ])
                   Text(title, style: Theme.of(context).textTheme.labelMedium),
@@ -150,6 +151,7 @@ class _LatestSection extends StatelessWidget {
                   ),
                   Text(userDateLabel(user.signedUp)),
                   Text(userDateLabel(user.lastWorkout)),
+                  Text(platformLabel(user.platform)),
                   Align(
                     alignment: AlignmentDirectional.centerStart,
                     child: ForgeButton(

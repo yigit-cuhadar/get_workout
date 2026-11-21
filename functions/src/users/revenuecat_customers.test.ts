@@ -58,7 +58,7 @@ describe("entitlementIdIn", () => {
 });
 
 describe("parseCustomer", () => {
-  test("reads Premium, subscriptions and the last seen device", () => {
+  test("reads Premium and the subscriptions", () => {
     assert.deepEqual(
       parseCustomer(customerBody, subscriptionsBody, "entl_premium"),
       {
@@ -73,12 +73,6 @@ describe("parseCustomer", () => {
             autoRenewal: "will_not_renew",
           },
         ],
-        lastSeen: {
-          atMillis: 1_700_000_000_000,
-          platform: "iOS",
-          platformVersion: "18.1",
-          appVersion: "1.0.0",
-        },
       },
     );
   });
@@ -87,7 +81,6 @@ describe("parseCustomer", () => {
     const customer = parseCustomer({}, {}, "entl_premium");
     assert.equal(customer.premium, null);
     assert.deepEqual(customer.subscriptions, []);
-    assert.equal(customer.lastSeen.platform, null);
   });
 });
 

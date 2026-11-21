@@ -32,13 +32,6 @@ export interface Customer {
   /** The `premium` entitlement while active; `expiresAtMillis` null never ends. */
   premium: { expiresAtMillis: number | null } | null;
   subscriptions: Subscription[];
-  /** The device the app last reported from. */
-  lastSeen: {
-    atMillis: number | null;
-    platform: string | null;
-    platformVersion: string | null;
-    appVersion: string | null;
-  };
 }
 
 /** Promotional Premium in RevenueCat for a Firebase uid. */
@@ -81,8 +74,7 @@ export function parseCustomer(
   subscriptions: unknown,
   premiumId: string,
 ): Customer {
-  const body = asObject(customer);
-  const premium = items(body.active_entitlements).find(
+  const premium = items(asObject(customer).active_entitlements).find(
     (e) => e.entitlement_id === premiumId,
   );
   return {
@@ -95,12 +87,6 @@ export function parseCustomer(
       periodEndsAtMillis: millis(s.current_period_ends_at),
       autoRenewal: text(s.auto_renewal_status) ?? "unknown",
     })),
-    lastSeen: {
-      atMillis: millis(body.last_seen_at),
-      platform: text(body.last_seen_platform),
-      platformVersion: text(body.last_seen_platform_version),
-      appVersion: text(body.last_seen_app_version),
-    },
   };
 }
 
