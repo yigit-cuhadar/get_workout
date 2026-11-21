@@ -93,7 +93,7 @@ export interface ReportSource {
   cohorts(weeks: DayRange, last: string): Promise<CohortRow[]>;
   /** The INITIAL_PURCHASE and RENEWAL events received. */
   revenueEvents(): Promise<RevenueEventRow[]>;
-  /** MRR of the latest revenue snapshot on or before [day], else null. */
+  /** MRR of the latest revenue snapshot in the week up to [day], else null. */
   mrrOn(day: string): Promise<number | null>;
 }
 

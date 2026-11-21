@@ -1,7 +1,7 @@
 import { BigQuery } from "@google-cloud/bigquery";
 import { FieldPath, Firestore } from "firebase-admin/firestore";
 
-import { DayRange, suffixOf } from "./dates";
+import { addDays, DayRange, suffixOf } from "./dates";
 import {
   CohortRow,
   CrashCounts,
@@ -182,6 +182,9 @@ export async function eventDays(
     : { first: days[0], last: days[days.length - 1] };
 }
 
+/** How many days back a revenue snapshot still stands for a day. */
+const snapshotReach = 7;
+
 /** [ReportSource] on BigQuery and Firestore. */
 export function warehouseSource(
   bigQuery: BigQuery,
@@ -286,11 +289,11 @@ export function warehouseSource(
     async mrrOn(day) {
       const snapshot = await db
         .collection("dashboardRevenue")
+        .where(FieldPath.documentId(), ">=", addDays(day, -snapshotReach))
         .where(FieldPath.documentId(), "<=", day)
-        .orderBy(FieldPath.documentId(), "desc")
-        .limit(1)
         .get();
-      const mrr = snapshot.docs[0]?.get("mrr");
+      // Ascending on purpose: a descending id query needs an index.
+      const mrr = snapshot.docs.at(-1)?.get("mrr");
       return typeof mrr === "number" ? mrr : null;
     },
   };
