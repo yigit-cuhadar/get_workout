@@ -41,6 +41,9 @@ rules_version = '2';
 //                            closed
 //   users/*/feedback/{id}/   admin claim (written only by the       allow deny
 //     replies/{requestId}    sendSupportReply function)
+//   users/{uid}/devices/{id} owner: create/update only, validated  deny  allow
+//                            below, id 32 lowercase hex
+//   users/*/devices/{id}     admin claim                            allow deny
 //   users/{uid}              owner (writes validated, see below)    allow allow
 //   users/{uid}/**           owner                                  allow allow
 //   users/{uid}/**           anyone else                            deny  deny
@@ -405,6 +408,19 @@ service cloud.firestore {
         && data.createdAt == request.time;
     }
 
+    // Mirrors FirestoreDeviceRepository.toMap in lib/features/devices.
+    function isDevice(data) {
+      return data.keys().hasAll(['model', 'platform', 'osVersion',
+          'appVersion', 'lastSeenAt'])
+        && data.keys().hasOnly(['model', 'platform', 'osVersion',
+          'appVersion', 'lastSeenAt'])
+        && data.platform in ['ios', 'android']
+        && isFeedbackDetail(data.model)
+        && isFeedbackDetail(data.osVersion)
+        && isFeedbackDetail(data.appVersion)
+        && data.lastSeenAt == request.time;
+    }
+
     // A user's own data, guest or not.
     match /users/{uid} {
       allow read, delete: if isOwner(uid);
@@ -454,10 +470,20 @@ service cloud.firestore {
         allow create: if isOwner(uid) && isFeedback(uid, request.resource.data);
       }
 
+      // This install of the app, for the admin panel; written by the app
+      // (FirestoreDeviceRepository), never read back. Only reachable here,
+      // the rule below excludes it.
+      match /devices/{installId} {
+        allow read: if isAdmin();
+        allow create, update: if isOwner(uid)
+          && installId.matches('^[0-9a-f]{32}$')
+          && isDevice(request.resource.data);
+      }
+
       // Every other subcollection, at any depth, as before.
       match /{collection}/{document=**} {
         allow read, write: if isOwner(uid)
-          && !(collection in ['cardio', 'bodyEntries', 'programs', 'workouts', 'exerciseStats', 'customExercises', 'feedback']);
+          && !(collection in ['cardio', 'bodyEntries', 'programs', 'workouts', 'exerciseStats', 'customExercises', 'feedback', 'devices']);
       }
     }
 

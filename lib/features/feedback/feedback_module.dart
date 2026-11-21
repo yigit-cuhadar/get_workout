@@ -4,7 +4,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_review/forge_review.dart';
 import 'package:get_it/get_it.dart';
 
-import 'data/device_details.dart';
+import '../../core/device_details.dart';
 import 'data/firestore_feedback_repository.dart';
 import 'domain/feedback.dart';
 import 'domain/feedback_repository.dart';
