@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../../access/domain/access_usecases.dart';
+import '../../shell/request_id.dart';
 import '../../shell/retrying_listener.dart';
 import '../domain/announcement.dart';
 import '../domain/announcement_admin_usecases.dart';
@@ -148,9 +149,7 @@ class AnnouncementsCubit extends Cubit<AnnouncementsState> {
     final draft = state.draft.trimmed;
     final last = state.lastAttempt;
     final AnnouncementRequest request = (
-      id: last != null && last.draft == draft
-          ? last.id
-          : newAnnouncementRequestId(),
+      id: last != null && last.draft == draft ? last.id : newRequestId(),
       draft: draft,
     );
     emit(

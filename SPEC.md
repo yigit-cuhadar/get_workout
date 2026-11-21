@@ -270,12 +270,22 @@ path's), `email?` (where to reply, 3-254 characters; absent when left
 empty), `message` (1-2000 characters), `source` (`profile` \| `rating`),
 `appVersion` ("1.0.0+1"), `platform` (`ios` \| `android`), `osVersion`,
 `deviceModel`, `locale` (the device's, "en-GB"; each detail a string of at
-most 100, empty when unreadable), `status` (`open` \| `closed`),
-`createdAt` (server time). The owner, guests included, may only create
-them (validated, `status` open); nobody reads them back but admins, who
-read them as the collection group `feedback` (index on `status`,
-`createdAt` descending in `firestore.indexes.json`) and change only
-`status`. Deleting the account deletes them with the rest of `users/{uid}`.
+most 100, empty when unreadable), `status` (`open` \| `replied` \|
+`closed`; the admin panel shows `open` as New), `createdAt` (server
+time), and once replied to `lastReplyAt` (server time, written by
+`sendSupportReply`). The owner, guests included, may only create them
+(validated, `status` open); nobody reads them back but admins, who read
+them as the collection group `feedback` (index on `status`, `createdAt`
+descending in `firestore.indexes.json`) and change only `status`: to
+`open` or `closed`, or to `replied` when `lastReplyAt` is set (reopening a
+replied thread). Deleting the account deletes them with the rest of
+`users/{uid}`.
+
+**`users/{uid}/feedback/{id}/replies/{requestId}`** (support replies):
+`message`, `to`, `subject`, `status` (`sending`, `sent`, `failed`),
+`sentBy` (uid), `sentByEmail` (the admin's, or null), `requestedAt`, and
+once sent `sentAt` and `messageId` (the SMTP Message-ID). Written only by
+`sendSupportReply`; readable by admins.
 
 ### Server-written
 
@@ -343,6 +353,28 @@ only, JPEG, max 5 MB.
   refused; nothing was sent) and `outcome-unknown` (`unknown`, FCM may have
   taken it). A request left `sending` stays refused as in progress;
   different text gets a new id.
+- `sendSupportReply` (callable, `functions/src/send_support_reply.ts`,
+  secret `SUPPORT_GMAIL_APP_PASSWORD`, the Gmail app password of
+  getworkout.support@gmail.com) → for a caller with the `admin` claim,
+  input `{requestId, threadPath, message, close?}` (`threadPath`
+  `users/{uid}/feedback/{id}`, `message` trimmed, 1-5000): in a
+  transaction reads the thread and claims `{thread}/replies/{requestId}`
+  as `sending`, emails the reply through Gmail SMTP (smtp.gmail.com:465)
+  from getworkout.support@gmail.com to the thread's `email`, subject
+  "Re: Your message to GetWorkout", the reply above "You wrote:" and the
+  user's message quoted with "> ", then in one batch records the reply
+  `sent` and sets the thread `replied` (`closed` with `close`) and
+  `lastReplyAt`. Idempotent per request id like `sendAnnouncement`: only
+  an SMTP reply code or a failure before the mail is handed over (`EAUTH`,
+  `EDNS`, `EENVELOPE`) records it `failed`; timeouts and dropped
+  connections leave it `sending`, never sent again. Returns `{id,
+  messageId, alreadySent}`. Refusals carry `details.reason`: `not-admin`
+  (`permission-denied`), `invalid-input` (`invalid-argument`, with
+  `details.field`), `no-thread` (`not-found`), `no-email`
+  (`failed-precondition`, the sender left no email), `request-id-reused`
+  (`invalid-argument`), `in-progress` (`already-exists`, with
+  `details.requestedAt`), `send-failed` (`internal`) and `outcome-unknown`
+  (`unknown`).
 
 Admin access is a custom claim set by `tool/set_admin.sh`, using the project
 owner's gcloud access token passed in `GOOGLE_ACCESS_TOKEN`.
@@ -4131,12 +4163,28 @@ the feature you are about to touch, and keep it true when you change it.
   stopping the message; a write the rules refuse after that is only
   logged (the form checks what the rules check). No email or push
   notification of new messages (owner's choice).
-- **Admin panel › Feedback** (`lib/admin/feedback`, `/feedback`, in the
-  nav after Announcements): Open or Closed (Open first), the latest 100 of
-  that status, newest first, live; each card shows the message (selectable),
-  sent time, reply email (with Copy email) or "none", source, user id,
-  app version, platform, OS version, device model and locale, and Close or
-  Reopen, which moves it to the other list. Stream errors retry like the
+- **Admin panel › Support inbox** (`lib/admin/support`, `/support`,
+  boards T1-T4 A): two panes. Left: Open (New and Replied threads) and
+  Closed chips with their counts, the latest 100 of each, newest first,
+  live; a row shows the reply email (bold while New) or "No reply email",
+  when it came in ("Just now", "5m ago", "2h ago", "Yesterday", "Nov 18"),
+  the message on one line and its status tag. Right: the picked thread
+  (it stays open when it moves to the other list) with its status and
+  Close (Reopen when closed: back to New, or Replied once replied to);
+  the message with its time and a foot line of source, app version,
+  platform and OS, device, locale and user id; the replies indented
+  under it ("Reply from getworkout.support@gmail.com", time, text, "Sent
+  by <admin email> · emailed to <address>"; a reply still sending says
+  so, and after 5 minutes that it may not have been emailed); then the
+  reply box: "Reply by email to <address> from
+  getworkout.support@gmail.com · subject “Re: Your message to GetWorkout”",
+  the text (at most 5000), Send and close and Send reply (both through
+  `sendSupportReply`). A failed send keeps the text and says why; sending
+  the same text again reuses the request id, so it is never emailed
+  twice. A sender with no email gets the note "No reply email. This person
+  left the email field empty, so a reply cannot be sent. Close the thread
+  once it is handled." in place of the box. The menu's Support inbox entry
+  shows the count of New threads (none at 0). Stream errors retry like the
   other lists.
 - **Review prompt** (forge_review; canvas rows R1, R2; first-ask rule
   changed by the owner 2026-11-20): two kinds of moment. Every workout

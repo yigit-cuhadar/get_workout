@@ -13,12 +13,12 @@ import 'dashboard/presentation/dashboard_page.dart';
 import 'exercises/presentation/exercise_editor_page.dart';
 import 'exercises/presentation/exercise_list_cubit.dart';
 import 'exercises/presentation/exercise_list_page.dart';
-import 'feedback/presentation/feedback_admin_page.dart';
 import 'programs/presentation/program_editor_page.dart';
 import 'programs/presentation/program_list_cubit.dart';
 import 'programs/presentation/program_list_page.dart';
 import 'shell/admin_shell.dart';
 import 'shell/coming_soon_page.dart';
+import 'support/presentation/support_inbox_page.dart';
 
 abstract final class AdminRoutes {
   static const signIn = '/sign-in';
@@ -32,7 +32,7 @@ abstract final class AdminRoutes {
   static const newProgram = '$programs/new';
   static String program(String id) => '$programs/$id';
   static const announcements = '/announcements';
-  static const feedback = '/feedback';
+  static const supportInbox = '/support';
   static const appSettings = '/app-settings';
 }
 
@@ -59,20 +59,24 @@ String? adminRedirect(AccessState access, Uri location) {
 }
 
 /// A page of the left menu: the [group] whose heading it sits under (none
-/// for Dashboard), its [label], the [path] it opens and the [route] that
-/// serves it with its subpages. The menu lists the sections in order with a
+/// for Dashboard), its [label], a live [count] beside it, the [path] it
+/// opens and the [route] that serves it with its subpages. The menu lists the sections in order with a
 /// heading wherever the group changes; the router serves their routes
 /// inside the menu's shell.
 class AdminSection {
   const AdminSection({
     this.group,
     required this.label,
+    this.count,
     required this.path,
     required this.route,
   });
 
   final String? group;
   final String label;
+
+  /// Shown at the end of the entry, such as the inbox's New threads.
+  final Widget? count;
   final String path;
   final RouteBase route;
 
@@ -100,14 +104,14 @@ final adminSections = [
       builder: (_, _) => const ComingSoonPage(title: 'Users'),
     ),
   ),
-  // The feedback page until the inbox replaces it.
   AdminSection(
     group: 'People',
     label: 'Support inbox',
-    path: AdminRoutes.feedback,
+    count: const NewThreadCount(),
+    path: AdminRoutes.supportInbox,
     route: GoRoute(
-      path: AdminRoutes.feedback,
-      builder: (_, _) => const FeedbackAdminPage(),
+      path: AdminRoutes.supportInbox,
+      builder: (_, _) => const SupportInboxPage(),
     ),
   ),
   AdminSection(

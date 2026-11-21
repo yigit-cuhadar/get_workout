@@ -17,9 +17,13 @@ void main() {
     );
   });
 
-  test('Support inbox opens the feedback page for now', () {
+  test('Support inbox opens the inbox and alone carries a count', () {
     final inbox = adminSections.singleWhere((s) => s.label == 'Support inbox');
-    expect(inbox.path, AdminRoutes.feedback);
+    expect(inbox.path, AdminRoutes.supportInbox);
+    expect(
+      [for (final section in adminSections) section.count != null],
+      [for (final section in adminSections) section == inbox],
+    );
   });
 
   group('opens', () {

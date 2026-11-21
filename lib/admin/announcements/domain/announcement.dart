@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:forge_core/forge_core.dart';
 
 import '../../../features/exercises/domain/content_rules.dart';
@@ -136,18 +134,6 @@ class SentAnnouncement extends Equatable {
 /// A request to send [draft] under the request [id]: the server sends an id
 /// once, so a retry after an unclear failure never sends twice.
 typedef AnnouncementRequest = ({String id, AnnouncementDraft draft});
-
-/// A new request id, as `sendAnnouncement` accepts it: 20 random letters
-/// and digits.
-String newAnnouncementRequestId() {
-  const alphabet =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  final random = Random.secure();
-  return String.fromCharCodes([
-    for (var i = 0; i < 20; i++)
-      alphabet.codeUnitAt(random.nextInt(alphabet.length)),
-  ]);
-}
 
 /// `sendAnnouncement` cannot be called: it is not deployed to this project,
 /// or deployed without permission to call it. Nothing was sent.
