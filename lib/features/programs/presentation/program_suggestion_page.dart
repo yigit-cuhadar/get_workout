@@ -15,13 +15,17 @@ import '../domain/catalogue_queries.dart';
 import '../domain/program_schedule.dart';
 import 'catalogue_detail_cubit.dart';
 import 'catalogue_text.dart';
+import 'premium_prompt.dart';
 import 'program_catalogue_cubit.dart';
 import 'program_text.dart';
 
-/// After onboarding: the free ready-made program that suits the user best,
-/// with why, to save among the user's programs, or the catalogue.
-/// Straight to Today when there is nothing to suggest. Whichever way it is
-/// left, [beforeLeaving] runs first (the app's onboarding paywall).
+/// After onboarding: the ready-made program that suits the user best, with
+/// why, to save among the user's programs, or the catalogue. A premium one
+/// a user without Premium starts through the paywall, and is saved once
+/// subscribed; closing the paywall passes the suggestion. Straight to
+/// Today when there is nothing to suggest. Whichever way it is left,
+/// [beforeLeaving] runs first (the app's onboarding paywall), unless the
+/// user has just closed the paywall.
 class ProgramSuggestionPage extends StatelessWidget {
   const ProgramSuggestionPage({super.key, required this.beforeLeaving});
 
@@ -32,7 +36,7 @@ class ProgramSuggestionPage extends StatelessWidget {
     value: sl<ProgramCatalogueCubit>(),
     child: RepositoryProvider.value(
       value: _Leave(beforeLeaving),
-      child: const _SuggestionView(),
+      child: _SuggestionView(sl<PremiumPrompt>()),
     ),
   );
 }
@@ -44,21 +48,26 @@ class _Leave {
 
   final Future<void> Function(BuildContext context) _beforeLeaving;
 
+  /// Without [paywall], [_beforeLeaving] is skipped: the user has just
+  /// closed the paywall.
   static Future<void> to(
     BuildContext context,
     String location, {
     String? programId,
+    bool paywall = true,
   }) async {
     unawaited(
       context.read<Analytics>().onboardingComplete(programId: programId),
     );
-    await context.read<_Leave>()._beforeLeaving(context);
+    if (paywall) await context.read<_Leave>()._beforeLeaving(context);
     if (context.mounted) context.go(location);
   }
 }
 
 class _SuggestionView extends StatefulWidget {
-  const _SuggestionView();
+  const _SuggestionView(this.premium);
+
+  final PremiumPrompt premium;
 
   @override
   State<_SuggestionView> createState() => _SuggestionViewState();
@@ -88,9 +97,9 @@ class _SuggestionViewState extends State<_SuggestionView> {
     }
     // Recommendations would not yet be judged by the equipment.
     if (state.programs.isNotEmpty && state.profile.equipment == null) return;
-    final free = state.recommended.where((r) => !r.program.premium).firstOrNull;
-    if (free == null) return _leave();
-    setState(() => _suggestion = free);
+    final best = state.recommended.firstOrNull;
+    if (best == null) return _leave();
+    setState(() => _suggestion = best);
     unawaited(context.read<Analytics>().onboardingStep(OnboardingStep.program));
   }
 
@@ -108,7 +117,7 @@ class _SuggestionViewState extends State<_SuggestionView> {
       child: suggestion == null
           ? _Layout(
               title: const SkeletonBar(widthFactor: 0.6, height: 22),
-              card: FeaturedCard.loading(eyebrow: l10n.suggestionEyebrow),
+              card: FeaturedCard.loading(eyebrow: l10n.catalogueRecommended),
               start: ForgeButton(
                 label: l10n.catalogueStart,
                 onPressed: null,
@@ -120,7 +129,7 @@ class _SuggestionViewState extends State<_SuggestionView> {
                 param1: suggestion.program.id,
                 param2: Localizations.localeOf(context).languageCode,
               ),
-              child: _Suggestion(suggestion),
+              child: _Suggestion(suggestion, widget.premium),
             ),
     );
   }
@@ -188,10 +197,42 @@ class _Layout extends StatelessWidget {
 }
 
 /// The suggested program, why, and Start this program.
-class _Suggestion extends StatelessWidget {
-  const _Suggestion(this.suggestion);
+class _Suggestion extends StatefulWidget {
+  const _Suggestion(this.suggestion, this.premium);
 
   final Recommendation suggestion;
+  final PremiumPrompt premium;
+
+  @override
+  State<_Suggestion> createState() => _SuggestionState();
+}
+
+class _SuggestionState extends State<_Suggestion> {
+  /// Premium was bought from Start: it saves once the program unlocks.
+  bool _startWhenReady = false;
+
+  Recommendation get suggestion => widget.suggestion;
+
+  /// The paywall for a locked program: subscribed, it saves once it
+  /// unlocks; closed, the suggestion is passed.
+  Future<void> _unlock() async {
+    final unlocked = await widget.premium.show(context);
+    if (!mounted) return;
+    if (!unlocked) return _Leave.to(context, Routes.today, paywall: false);
+    setState(() => _startWhenReady = true);
+    _startIfReady(context.read<CatalogueDetailCubit>().state);
+  }
+
+  void _startIfReady(CatalogueDetailState state) {
+    if (!_startWhenReady || !_ready(state)) return;
+    setState(() => _startWhenReady = false);
+    _start(context);
+  }
+
+  static bool _ready(CatalogueDetailState state) =>
+      state.status == CatalogueDetailStatus.ready &&
+      state.useStatus == UseStatus.ready &&
+      state.copyStatus == CopyStatus.idle;
 
   /// Saves a copy among the user's programs without starting it; the
   /// program page it opens starts it.
@@ -221,8 +262,11 @@ class _Suggestion extends StatelessWidget {
     );
     return BlocConsumer<CatalogueDetailCubit, CatalogueDetailState>(
       listenWhen: (previous, current) =>
-          previous.copyStatus != current.copyStatus,
+          previous.copyStatus != current.copyStatus ||
+          previous.status != current.status ||
+          previous.useStatus != current.useStatus,
       listener: (context, state) {
+        _startIfReady(state);
         final cubit = context.read<CatalogueDetailCubit>();
         switch (state.copyStatus) {
           case CopyStatus.copied:
@@ -257,6 +301,7 @@ class _Suggestion extends StatelessWidget {
         final ready =
             state.status == CatalogueDetailStatus.ready &&
             state.useStatus == UseStatus.ready;
+        final locked = state.status == CatalogueDetailStatus.locked;
         return _Layout(
           title: Text(
             l10n.suggestionTitle,
@@ -264,8 +309,11 @@ class _Suggestion extends StatelessWidget {
           ),
           card: FeaturedCard(
             form: FeaturedCardForm.outline,
-            eyebrow: l10n.suggestionEyebrow,
+            eyebrow: program.premium
+                ? l10n.catalogueRecommended
+                : l10n.suggestionEyebrow,
             title: program.text(language).name,
+            premiumTag: locked ? l10n.cataloguePremium : null,
             line: FeaturedLine(
               l10n.catalogueRowFacts(program),
               data: switch (program.minutes) {
@@ -295,10 +343,15 @@ class _Suggestion extends StatelessWidget {
             label: l10n.catalogueStart,
             size: ForgeButtonSize.large,
             loading:
+                _startWhenReady ||
                 state.copyStatus == CopyStatus.copying ||
                 (state.status == CatalogueDetailStatus.ready &&
                     state.useStatus == UseStatus.waiting),
-            onPressed: ready ? () => _start(context) : null,
+            onPressed: locked
+                ? () => unawaited(_unlock())
+                : ready
+                ? () => _start(context)
+                : null,
           ),
         );
       },

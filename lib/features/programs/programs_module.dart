@@ -42,7 +42,7 @@ class ProgramsModule implements FeatureModule {
 
   /// What a premium call to action does: the subscription feature's
   /// paywall, passed in bootstrap.
-  final void Function(BuildContext context) showPremium;
+  final Future<bool> Function(BuildContext context) showPremium;
 
   /// Reports nothing done.
   static CompletedDays nothingDone(GetIt _) => const NoCompletedDays();

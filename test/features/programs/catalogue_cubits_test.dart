@@ -302,36 +302,177 @@ void main() {
       expect(catalogue.state.visible, [free]);
     });
 
-    test('recommends from the profile and the equipment', () async {
-      premiumStatus.controller.add(true);
+    test('recommendations follow the profile and the equipment', () async {
       cards.add([free, paid]);
       profile.add(
         const UserProfile(
           goal: Goal.getStronger,
           level: Level.advanced,
+          daysPerWeek: 5,
+        ),
+      );
+      await pumpEventQueue();
+      // A beginner program is two levels below.
+      expect(catalogue.state.recommended.map((r) => r.program), [paid]);
+
+      profile.add(
+        const UserProfile(
+          goal: Goal.buildMuscle,
+          level: Level.beginner,
+          daysPerWeek: 3,
+        ),
+      );
+      await pumpEventQueue();
+      expect(catalogue.state.recommended.map((r) => r.program), [free]);
+
+      profile.add(
+        const UserProfile(
+          goal: Goal.buildMuscle,
+          level: Level.intermediate,
           daysPerWeek: 4,
         ),
       );
       await pumpEventQueue();
-      expect(catalogue.state.recommended.map((r) => r.program), [paid, free]);
+      expect(catalogue.state.recommended.map((r) => r.program), [free, paid]);
+
+      owned.add(EquipmentProfile.fullGym.equipment);
+      await pumpEventQueue();
+      expect(catalogue.state.recommended.map((r) => r.program), [paid]);
 
       owned.add({Equipment.dumbbell, Equipment.bench});
       await pumpEventQueue();
       expect(catalogue.state.recommended.map((r) => r.program), [free]);
     });
 
-    test('puts free programs first until premium is known', () async {
-      cards.add([free, paid]);
-      profile.add(
-        const UserProfile(
-          goal: Goal.getStronger,
-          level: Level.advanced,
-          daysPerWeek: 4,
-        ),
-      );
+    test('a program left out of the recommendations makes room', () async {
+      final other = card('pr_other', order: 3);
+      cards.add([free, paid, other]);
+      profile.add(const UserProfile(goal: Goal.buildMuscle));
       await pumpEventQueue();
 
-      expect(catalogue.state.recommended.map((r) => r.program), [free, paid]);
+      // Without it the goal's other program (3) leads the related one (1).
+      expect(catalogue.state.recommendedWithout(free).map((r) => r.program), [
+        other,
+        paid,
+      ]);
+    });
+
+    group('default filter', () {
+      test(
+        'opening the catalogue chooses the user\'s equipment type',
+        () async {
+          cards.add([free, paid]);
+          owned.add({Equipment.dumbbell});
+          await pumpEventQueue();
+
+          catalogue.openCatalogue();
+
+          expect(
+            catalogue.state.filter,
+            const CatalogueFilter(profiles: {EquipmentProfile.dumbbells}),
+          );
+          expect(catalogue.state.filterCount, 1);
+          expect(catalogue.state.recommending, isTrue);
+          expect(catalogue.state.visible, [free]);
+        },
+      );
+
+      test('it is chosen again on every open', () async {
+        owned.add(EquipmentProfile.fullGym.equipment);
+        await pumpEventQueue();
+        catalogue
+          ..openCatalogue()
+          ..clearFilters()
+          ..toggleLevel(Level.advanced);
+
+        catalogue.openCatalogue();
+
+        expect(
+          catalogue.state.filter,
+          const CatalogueFilter(profiles: {EquipmentProfile.fullGym}),
+        );
+      });
+
+      test('while the equipment is unknown, it waits for it', () async {
+        catalogue.openCatalogue();
+        expect(catalogue.state.filter, const CatalogueFilter());
+
+        owned.add(const {});
+        await pumpEventQueue();
+        expect(
+          catalogue.state.filter,
+          const CatalogueFilter(profiles: {EquipmentProfile.bodyweight}),
+        );
+      });
+
+      test('a filter chosen first wins over the late equipment', () async {
+        catalogue
+          ..openCatalogue()
+          ..toggleGoal(Goal.loseFat);
+
+        owned.add(const {});
+        await pumpEventQueue();
+        expect(
+          catalogue.state.filter,
+          const CatalogueFilter(goals: {Goal.loseFat}),
+        );
+      });
+
+      test('a new equipment type moves an untouched default', () async {
+        owned.add(const {Equipment.resistanceBand});
+        await pumpEventQueue();
+        catalogue.openCatalogue();
+
+        owned.add(EquipmentProfile.fullGym.equipment);
+        await pumpEventQueue();
+        expect(
+          catalogue.state.filter,
+          const CatalogueFilter(profiles: {EquipmentProfile.fullGym}),
+        );
+        expect(catalogue.state.recommending, isTrue);
+
+        catalogue.toggleLevel(Level.advanced);
+        owned.add(const {Equipment.resistanceBand});
+        await pumpEventQueue();
+        expect(
+          catalogue.state.filter,
+          const CatalogueFilter(
+            profiles: {EquipmentProfile.fullGym},
+            levels: {Level.advanced},
+          ),
+        );
+      });
+
+      test('Clear removes it; the recommendations stay', () async {
+        owned.add(const {});
+        await pumpEventQueue();
+        catalogue
+          ..openCatalogue()
+          ..clearFilters();
+
+        expect(catalogue.state.filtering, isFalse);
+        expect(catalogue.state.recommending, isTrue);
+      });
+
+      test('any other filter or a search hides the recommendations', () async {
+        owned.add(const {});
+        await pumpEventQueue();
+        catalogue
+          ..openCatalogue()
+          ..toggleLevel(Level.beginner);
+        expect(catalogue.state.recommending, isFalse);
+
+        catalogue
+          ..toggleLevel(Level.beginner)
+          ..toggleProfile(EquipmentProfile.bands);
+        expect(catalogue.state.recommending, isFalse);
+
+        catalogue
+          ..clearFilters()
+          ..openCatalogue()
+          ..search('push');
+        expect(catalogue.state.recommending, isFalse);
+      });
     });
 
     test(

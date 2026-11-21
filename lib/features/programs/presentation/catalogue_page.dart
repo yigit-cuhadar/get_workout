@@ -11,15 +11,17 @@ import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../profile/presentation/profile_questions.dart';
 import '../domain/catalogue_program.dart';
+import '../domain/catalogue_queries.dart';
 import '../domain/program.dart';
 import 'catalogue_text.dart';
 import 'program_catalogue_cubit.dart';
 import 'program_list_cubit.dart';
 
 /// The ready-made programs: a search by name, the filters as one sideways
-/// line of chips, then while neither filters nor a search are on the
-/// user's active program when it is a copy of one (which opens the copy),
-/// the best match and the count; then every program as a list row.
+/// line of chips (the user's equipment type chosen on every open), then
+/// while no search and no filter but that one are on the user's active
+/// program when it is a copy of one (which opens the copy), up to three
+/// recommendations and the count; then every other program as a list row.
 class CataloguePage extends StatelessWidget {
   const CataloguePage({super.key});
 
@@ -66,6 +68,12 @@ class _CatalogueView extends StatefulWidget {
 class _CatalogueViewState extends State<_CatalogueView> {
   late final _cubit = context.read<ProgramCatalogueCubit>();
   late final _search = TextEditingController(text: _cubit.state.query);
+
+  @override
+  void initState() {
+    super.initState();
+    _cubit.openCatalogue();
+  }
 
   @override
   void dispose() {
@@ -129,21 +137,25 @@ class _CatalogueViewState extends State<_CatalogueView> {
   List<Widget> _programs(BuildContext context, ProgramCatalogueState state) {
     final l10n = AppLocalizations.of(context);
     final language = Localizations.localeOf(context).languageCode;
-    final plain = !state.filtering && !state.searching;
+    final plain = state.recommending;
     final active = context.select(
       (ProgramListCubit cubit) => _activeCopyOf(cubit.state),
     );
     final copy = plain ? active : null;
     final source = copy == null ? null : state.program(copy.sourceId);
-    final shown = [
-      for (final program in state.shown(language))
-        if (program != source) program,
+    // The active program already leads the page: the next best takes its
+    // place.
+    final recommended = plain
+        ? state.recommendedWithout(source)
+        : const <Recommendation>[];
+    final matched = state.shown(language);
+    final above = {source, for (final r in recommended) r.program};
+    final rest = [
+      for (final program in matched)
+        if (!above.contains(program)) program,
     ];
-    // The active program already leads the page: recommend the next one.
-    final best = plain
-        ? state.recommended.where((r) => r.program != source).firstOrNull
-        : null;
-    final free = state.programs.where((program) => !program.premium).length;
+    // The count follows the default filter, as the list below does.
+    final free = matched.where((program) => !program.premium).length;
     return [
       _FilterChips(state),
       if (state.filtering)
@@ -192,16 +204,17 @@ class _CatalogueViewState extends State<_CatalogueView> {
         ),
         const SizedBox(height: Gap.sm),
       ],
-      if (best != null) ...[
+      if (recommended.isNotEmpty) ...[
+        SectionLabel(l10n.catalogueRecommended),
         ListRowCard(
           children: [
-            _row(
-              context,
-              state,
-              best.program,
-              recommended: true,
-              match: best.reasons.isEmpty ? null : l10n.matchText(best.reasons),
-            ),
+            for (final r in recommended)
+              _row(
+                context,
+                state,
+                r.program,
+                match: r.reasons.isEmpty ? null : l10n.matchText(r.reasons),
+              ),
           ],
         ),
         const SizedBox(height: Gap.sm),
@@ -211,14 +224,15 @@ class _CatalogueViewState extends State<_CatalogueView> {
           padding: const EdgeInsets.fromLTRB(Gap.xs, 0, Gap.xs, Gap.sm),
           child: Text(
             state.premium == true
-                ? l10n.catalogueCount(state.programs.length)
-                : l10n.catalogueCountFree(state.programs.length, free),
+                ? l10n.catalogueCount(matched.length)
+                : l10n.catalogueCountFree(matched.length, free),
             style: Theme.of(context).textTheme.bodySmall!
                 .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
           ),
         ),
-      if (source != null) SectionLabel(l10n.catalogueAllPrograms),
-      if (shown.isEmpty)
+      if (rest.isNotEmpty && (source != null || recommended.isNotEmpty))
+        SectionLabel(l10n.catalogueAllPrograms),
+      if (matched.isEmpty)
         EmptyView(
           icon: ForgeIcons.search,
           title: l10n.catalogueNoMatch,
@@ -240,11 +254,9 @@ class _CatalogueViewState extends State<_CatalogueView> {
               ),
           ],
         )
-      else
+      else if (rest.isNotEmpty)
         ListRowCard(
-          children: [
-            for (final program in shown) _row(context, state, program),
-          ],
+          children: [for (final program in rest) _row(context, state, program)],
         ),
     ];
   }
@@ -255,7 +267,6 @@ class _CatalogueViewState extends State<_CatalogueView> {
     BuildContext context,
     ProgramCatalogueState state,
     CatalogueProgram program, {
-    bool recommended = false,
     String? match,
     String? facts,
     String? copyId,
@@ -272,7 +283,6 @@ class _CatalogueViewState extends State<_CatalogueView> {
       fits: state.profile.suits(program),
       active: copyId != null,
       locked: program.premium && state.premium == false,
-      recommended: recommended,
       match: match,
       onTap: () => context.go(
         copyId == null
@@ -283,9 +293,10 @@ class _CatalogueViewState extends State<_CatalogueView> {
   }
 }
 
-/// The filters as one sideways line: Only my equipment, then for Level,
-/// Days per week, Goal and Equipment each chosen value, removable, or the
-/// filter's name with ▾ while none is chosen, which opens the sheet.
+/// The filters as one sideways line: first every chosen value of Level,
+/// Days per week, Goal and Equipment, removable; then Only my equipment
+/// and the name with ▾ of each filter with none chosen, which opens the
+/// sheet.
 class _FilterChips extends StatelessWidget {
   const _FilterChips(this.state);
 
@@ -298,22 +309,54 @@ class _FilterChips extends StatelessWidget {
     final filter = state.filter;
     final equipmentKnown = state.profile.equipment != null;
     void open() => showCatalogueFilters(context);
-    List<Widget> chips<T>({
+    final chosenChips = <Widget>[];
+    final menuChips = <Widget>[];
+    void chips<T>({
       required String name,
       required List<T> chosen,
       required String Function(T value) labelOf,
       required ValueChanged<T> onRemove,
-    }) => chosen.isEmpty
-        ? [ForgeChip.menu(label: name, onPressed: open)]
-        : [
-            for (final value in chosen)
-              ForgeChip.removable(
-                label: labelOf(value),
-                removeHint: l10n.catalogueRemoveFilter,
-                onRemoved: () => onRemove(value),
-              ),
-          ];
+    }) {
+      if (chosen.isEmpty) {
+        menuChips.add(ForgeChip.menu(label: name, onPressed: open));
+      }
+      for (final value in chosen) {
+        chosenChips.add(
+          ForgeChip.removable(
+            label: labelOf(value),
+            removeHint: l10n.catalogueRemoveFilter,
+            onRemoved: () => onRemove(value),
+          ),
+        );
+      }
+    }
+
+    chips(
+      name: l10n.catalogueFilterLevel,
+      chosen: [...Level.values.where(filter.levels.contains)],
+      labelOf: l10n.levelName,
+      onRemove: cubit.toggleLevel,
+    );
+    chips(
+      name: l10n.catalogueFilterDays,
+      chosen: [...filter.daysPerWeek]..sort(),
+      labelOf: l10n.programDayCount,
+      onRemove: cubit.toggleDays,
+    );
+    chips(
+      name: l10n.catalogueFilterGoal,
+      chosen: [...Goal.values.where(filter.goals.contains)],
+      labelOf: l10n.goalName,
+      onRemove: cubit.toggleGoal,
+    );
+    chips(
+      name: l10n.catalogueFilterEquipment,
+      chosen: [...EquipmentProfile.values.where(filter.profiles.contains)],
+      labelOf: l10n.presetName,
+      onRemove: cubit.toggleProfile,
+    );
     final all = [
+      ...chosenChips,
       // Unknown equipment fits nothing yet; the sheet says why.
       ForgeChip(
         label: l10n.catalogueFitsMyEquipment,
@@ -323,30 +366,7 @@ class _FilterChips extends StatelessWidget {
             ? () => cubit.setFitsMyEquipment(!filter.fitsMyEquipment)
             : open,
       ),
-      ...chips(
-        name: l10n.catalogueFilterLevel,
-        chosen: [...Level.values.where(filter.levels.contains)],
-        labelOf: l10n.levelName,
-        onRemove: cubit.toggleLevel,
-      ),
-      ...chips(
-        name: l10n.catalogueFilterDays,
-        chosen: [...filter.daysPerWeek]..sort(),
-        labelOf: l10n.programDayCount,
-        onRemove: cubit.toggleDays,
-      ),
-      ...chips(
-        name: l10n.catalogueFilterGoal,
-        chosen: [...Goal.values.where(filter.goals.contains)],
-        labelOf: l10n.goalName,
-        onRemove: cubit.toggleGoal,
-      ),
-      ...chips(
-        name: l10n.catalogueFilterEquipment,
-        chosen: [...EquipmentProfile.values.where(filter.profiles.contains)],
-        labelOf: l10n.presetName,
-        onRemove: cubit.toggleProfile,
-      ),
+      ...menuChips,
     ];
     // The line runs to the screen's edge.
     return SingleChildScrollView(

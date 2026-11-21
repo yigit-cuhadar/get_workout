@@ -255,6 +255,32 @@ enum EquipmentProfile implements Coded {
     }
     return null;
   }
+
+  /// The user's equipment type: the preset that is exactly [owned], else
+  /// the most similar one, by the items both have over the items either
+  /// has, so a preset with much more than [owned] scores low too (ties to
+  /// the smaller preset, then the earlier one); bodyweight when none
+  /// shares any. Bodyweight itself is always owned and never counts.
+  static EquipmentProfile typeOf(Set<Equipment> owned) {
+    if (matching(owned) case final preset?) return preset;
+    final items = owned.difference(const {Equipment.bodyweight});
+    var best = bodyweight;
+    var (bestShared, bestUnion) = (0, 1);
+    for (final preset in values) {
+      final equipment = preset.equipment;
+      final shared = equipment.where(items.contains).length;
+      if (shared == 0) continue;
+      final union = equipment.union(items).length;
+      // shared / union compared without division.
+      final byScore = (shared * bestUnion).compareTo(bestShared * union);
+      if (byScore > 0 ||
+          (byScore == 0 && equipment.length < best.equipment.length)) {
+        best = preset;
+        (bestShared, bestUnion) = (shared, union);
+      }
+    }
+    return best;
+  }
 }
 
 /// Whether users see an exercise. Exercises are never deleted, only retired.

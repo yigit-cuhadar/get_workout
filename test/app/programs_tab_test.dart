@@ -58,7 +58,7 @@ void main() {
     final detail = MockProgramDetailCubit();
     when(() => detail.state).thenReturn(const ProgramDetailState());
     sl
-      ..registerSingleton(PremiumPrompt((_) {}))
+      ..registerSingleton(PremiumPrompt((_) async => false))
       ..registerFactoryParam<ProgramDetailCubit, String, void>(
         (_, _) => detail,
       );

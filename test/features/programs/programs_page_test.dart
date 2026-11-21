@@ -100,7 +100,12 @@ void main() {
     when(list.refreshNow).thenReturn(null);
     sl
       ..registerSingleton<ProgramListCubit>(list)
-      ..registerSingleton(PremiumPrompt((_) => paywalls++))
+      ..registerSingleton(
+        PremiumPrompt((_) async {
+          paywalls++;
+          return false;
+        }),
+      )
       ..registerFactoryParam<ProgramDetailCubit, String, void>(
         (_, _) => detail,
       );

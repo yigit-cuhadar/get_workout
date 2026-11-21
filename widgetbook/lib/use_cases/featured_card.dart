@@ -64,6 +64,23 @@ Widget featuredOutlineDays(BuildContext context) => _page(
   ),
 );
 
+@widgetbook.UseCase(name: 'Outline · days · premium', type: FeaturedCard)
+Widget featuredOutlineDaysPremium(BuildContext context) => _page(
+  const FeaturedCard(
+    form: FeaturedCardForm.outline,
+    eyebrow: 'Recommended for you',
+    title: 'Upper Lower Strength',
+    premiumTag: 'Premium',
+    line: FeaturedLine('4 days · Intermediate · 12 weeks', data: '~61 min'),
+    rows: [
+      ListRow(title: 'Upper Heavy · 6 exercises', leading: ForgeTag('Mon')),
+      ListRow(title: 'Lower Heavy · 5 exercises', leading: ForgeTag('Tue')),
+      ListRow(title: 'Upper Volume · 7 exercises', leading: ForgeTag('Thu')),
+      ListRow(title: 'Lower Volume · 6 exercises', leading: ForgeTag('Fri')),
+    ],
+  ),
+);
+
 @widgetbook.UseCase(name: 'Header band', type: FeaturedCard)
 Widget featuredBand(BuildContext context) => _page(
   FeaturedCard(

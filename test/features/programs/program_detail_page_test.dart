@@ -101,7 +101,12 @@ void main() {
     when(() => list.resolveMissed(any())).thenAnswer((_) async {});
     sl
       ..registerSingleton<ProgramListCubit>(list)
-      ..registerSingleton(PremiumPrompt((_) => paywalls++))
+      ..registerSingleton(
+        PremiumPrompt((_) async {
+          paywalls++;
+          return false;
+        }),
+      )
       ..registerFactoryParam<ProgramDetailCubit, String, void>(
         (_, _) => detail,
       );

@@ -160,35 +160,239 @@ void main() {
     });
   });
 
+  group('equipment type', () {
+    test('a set equal to a preset is that preset', () {
+      for (final preset in EquipmentProfile.values) {
+        expect(EquipmentProfile.typeOf(preset.equipment), preset);
+      }
+    });
+
+    test('a custom set is the most similar preset', () {
+      // 3 of 5 items with the home gym, 1 of 4 with dumbbells.
+      expect(
+        EquipmentProfile.typeOf(const {
+          Equipment.barbell,
+          Equipment.plate,
+          Equipment.dumbbell,
+        }),
+        EquipmentProfile.homeGym,
+      );
+      // The full gym shares all three but has far more; dumbbells share 2
+      // of 3.
+      expect(
+        EquipmentProfile.typeOf(const {
+          Equipment.dumbbell,
+          Equipment.bench,
+          Equipment.resistanceBand,
+        }),
+        EquipmentProfile.dumbbells,
+      );
+      // A gym missing one item is still a gym.
+      expect(
+        EquipmentProfile.typeOf(
+          EquipmentProfile.fullGym.equipment.difference(const {
+            Equipment.cable,
+          }),
+        ),
+        EquipmentProfile.fullGym,
+      );
+    });
+
+    test('a tie goes to the smaller preset', () {
+      // Shares 1 with the full gym, the home gym and dumbbells.
+      expect(
+        EquipmentProfile.typeOf(const {Equipment.dumbbell}),
+        EquipmentProfile.dumbbells,
+      );
+      // Shares 1 with the full gym, the home gym and bodyweight.
+      expect(
+        EquipmentProfile.typeOf(const {Equipment.pullUpBar}),
+        EquipmentProfile.bodyweight,
+      );
+    });
+
+    test('nothing shared, or nothing owned, is bodyweight', () {
+      expect(EquipmentProfile.typeOf(const {}), EquipmentProfile.bodyweight);
+      expect(
+        EquipmentProfile.typeOf(const {Equipment.bodyweight}),
+        EquipmentProfile.bodyweight,
+      );
+    });
+  });
+
   group('recommendPrograms', () {
     List<String> recommend(
       List<CatalogueProgram> programs,
-      TrainingProfile profile, {
-      bool freeFirst = false,
-    }) => [
-      for (final r in recommendPrograms(
-        programs,
-        profile,
-        freeFirst: freeFirst,
-      ))
-        r.program.id,
-    ];
+      TrainingProfile profile,
+    ) => [for (final r in recommendPrograms(programs, profile)) r.program.id];
 
-    test('recommends nothing without answers', () {
-      expect(recommend([card('a')], const TrainingProfile()), isEmpty);
+    const dumbbells = {Equipment.dumbbell, Equipment.bench};
+
+    test('never another equipment type, with less or more equipment', () {
+      final programs = [
+        card('gym', profile: EquipmentProfile.fullGym),
+        card('bands', profile: EquipmentProfile.bands),
+        card('home', profile: EquipmentProfile.homeGym),
+        card('fits'),
+      ];
+
+      expect(recommend(programs, const TrainingProfile(equipment: dumbbells)), [
+        'fits',
+      ]);
     });
 
-    test('scores goal 3, level 2 and days 2; ties keep catalogue order', () {
+    test('a custom set recommends its closest preset\'s programs', () {
       final programs = [
+        card('dumbbells'),
+        card('home', profile: EquipmentProfile.homeGym),
+      ];
+
+      expect(
+        recommend(
+          programs,
+          const TrainingProfile(
+            equipment: {Equipment.barbell, Equipment.plate, Equipment.dumbbell},
+          ),
+        ),
+        ['home'],
+      );
+    });
+
+    test('no equipment recommends bodyweight programs', () {
+      final programs = [
+        card('dumbbells'),
+        card('bodyweight', profile: EquipmentProfile.bodyweight),
+      ];
+
+      expect(recommend(programs, const TrainingProfile(equipment: {})), [
+        'bodyweight',
+      ]);
+    });
+
+    test('never more than one level from the user\'s', () {
+      final programs = [
+        card('beginner'),
+        card('intermediate', level: Level.intermediate),
+        card('advanced', level: Level.advanced),
+      ];
+
+      expect(
+        recommend(programs, const TrainingProfile(level: Level.beginner)),
+        ['beginner', 'intermediate'],
+      );
+      expect(
+        recommend(programs, const TrainingProfile(level: Level.advanced)),
+        ['advanced', 'intermediate'],
+      );
+      expect(
+        recommend(programs, const TrainingProfile(level: Level.intermediate)),
+        ['intermediate', 'beginner', 'advanced'],
+      );
+    });
+
+    test('never more than one day from the user\'s', () {
+      final programs = [
+        card('2', daysPerWeek: 2),
+        card('3'),
+        card('4', daysPerWeek: 4),
+        card('5', daysPerWeek: 5),
+        card('6', daysPerWeek: 6),
+      ];
+
+      expect(recommend(programs, const TrainingProfile(daysPerWeek: 4)), [
+        '4',
+        '3',
+        '5',
+      ]);
+    });
+
+    test('goal: 3 for the same, 1 for a related one, 0 otherwise', () {
+      List<int> scores(Goal user) {
+        final programs = [
+          for (final goal in Goal.values) card(goal.code, goal: goal),
+        ];
+        final ranked = recommend(programs, TrainingProfile(goal: user));
+        return [for (final goal in Goal.values) ranked.indexOf(goal.code)];
+      }
+
+      // By rank: the same goal, the related one, then the other two in
+      // catalogue order (only three are returned).
+      expect(scores(Goal.buildMuscle), [0, 1, 2, -1]);
+      expect(scores(Goal.getStronger), [1, 0, 2, -1]);
+      expect(scores(Goal.loseFat), [2, -1, 0, 1]);
+      expect(scores(Goal.generalFitness), [2, -1, 1, 0]);
+    });
+
+    test('a related goal (1) outranks no match (0)', () {
+      final programs = [
+        card('other', goal: Goal.loseFat),
+        card('related', goal: Goal.getStronger),
+      ];
+
+      expect(
+        recommend(programs, const TrainingProfile(goal: Goal.buildMuscle)),
+        ['related', 'other'],
+      );
+    });
+
+    test('level: 2 for the same, 1 for one below, 0 for one above', () {
+      final programs = [
+        card('above', level: Level.advanced, goal: Goal.loseFat),
+        card('below', goal: Goal.loseFat),
+        card('same', level: Level.intermediate, goal: Goal.loseFat),
+      ];
+
+      expect(
+        recommend(programs, const TrainingProfile(level: Level.intermediate)),
+        ['same', 'below', 'above'],
+      );
+      // One below (1) ties a related goal (1); above (0) ties nothing.
+      expect(
+        recommend(
+          [
+            card('above', level: Level.advanced, goal: Goal.loseFat),
+            card('related', level: Level.advanced, goal: Goal.getStronger),
+            card('below', goal: Goal.loseFat),
+          ],
+          const TrainingProfile(
+            goal: Goal.buildMuscle,
+            level: Level.intermediate,
+          ),
+        ),
+        ['related', 'below', 'above'],
+      );
+    });
+
+    test('days: 2 for the same, 1 for a day more or fewer', () {
+      final programs = [
+        card('more', daysPerWeek: 4),
+        card('same'),
+        card('fewer', daysPerWeek: 2),
+      ];
+
+      expect(recommend(programs, const TrainingProfile(daysPerWeek: 3)), [
+        'same',
+        'more',
+        'fewer',
+      ]);
+    });
+
+    test('the weights add up: goal 3 beats level 2 or days 2', () {
+      final programs = [
+        card(
+          'level+days',
+          goal: Goal.loseFat,
+          level: Level.intermediate,
+          daysPerWeek: 4,
+        ),
+        card('goal', level: Level.advanced, daysPerWeek: 5),
         card(
           'level',
           goal: Goal.loseFat,
           level: Level.intermediate,
           daysPerWeek: 5,
         ),
-        card('goal', daysPerWeek: 5),
-        card('level+days', goal: Goal.loseFat, level: Level.intermediate),
-        card('goal2', daysPerWeek: 5),
+        card('goal+days', level: Level.advanced, daysPerWeek: 4),
       ];
 
       expect(
@@ -197,23 +401,77 @@ void main() {
           const TrainingProfile(
             goal: Goal.buildMuscle,
             level: Level.intermediate,
-            daysPerWeek: 3,
+            daysPerWeek: 4,
           ),
         ),
-        ['level+days', 'goal', 'goal2'],
+        // 5 (3+2), then 4 (2+2) and 4 (3+1) in catalogue order, before 3.
+        ['goal+days', 'level+days', 'goal'],
       );
     });
 
-    test('says why', () {
+    test('ties keep catalogue order; premium makes no difference', () {
+      final programs = [
+        card('a', premium: true),
+        card('b'),
+        card('c', premium: true),
+        card('d'),
+      ];
+
+      expect(
+        recommend(programs, const TrainingProfile(goal: Goal.buildMuscle)),
+        ['a', 'b', 'c'],
+      );
+    });
+
+    test('at most $recommendedCount; fewer when fewer are left', () {
+      final programs = [for (var i = 0; i < 5; i++) card('p$i', order: i)];
+
+      expect(
+        recommend(programs, const TrainingProfile(goal: Goal.buildMuscle)),
+        hasLength(recommendedCount),
+      );
+      expect(
+        recommend([
+          card('fits'),
+          card('far', daysPerWeek: 6),
+        ], const TrainingProfile(daysPerWeek: 3)),
+        ['fits'],
+      );
+      expect(
+        recommend([
+          card('far', daysPerWeek: 6),
+        ], const TrainingProfile(daysPerWeek: 3)),
+        isEmpty,
+      );
+    });
+
+    test('unknown answers leave nothing out and score nothing', () {
+      final programs = [
+        card('gym', level: Level.advanced, profile: EquipmentProfile.fullGym),
+        card('six', daysPerWeek: 6, goal: Goal.loseFat),
+        card('bands', profile: EquipmentProfile.bands),
+      ];
+
+      expect(recommend(programs, const TrainingProfile()), [
+        'gym',
+        'six',
+        'bands',
+      ]);
+      expect(
+        recommendPrograms(programs, const TrainingProfile()).first.reasons,
+        isEmpty,
+      );
+    });
+
+    test('names only exact matches, and the equipment once known', () {
       expect(
         recommendPrograms(
-          freeFirst: false,
           [card('a')],
           const TrainingProfile(
             goal: Goal.buildMuscle,
             level: Level.beginner,
             daysPerWeek: 3,
-            equipment: {Equipment.dumbbell, Equipment.bench},
+            equipment: dumbbells,
           ),
         ),
         [
@@ -225,76 +483,22 @@ void main() {
           ]),
         ],
       );
-    });
-
-    test('a day more or less counts, but is no reason to name', () {
+      // A related goal, one level below and a day more: no reason to name.
       expect(
         recommendPrograms(
-          [card('near', daysPerWeek: 4), card('far', daysPerWeek: 6)],
-          const TrainingProfile(daysPerWeek: 3),
-          freeFirst: false,
-        ),
-        [Recommendation(card('near', daysPerWeek: 4), const [])],
-      );
-    });
-
-    test('never a harder program, nor one needing equipment the user '
-        'lacks', () {
-      final programs = [
-        card('hard', level: Level.advanced),
-        card(
-          'gym',
-          equipment: const [Equipment.cable],
-          profile: EquipmentProfile.fullGym,
-        ),
-        card('easy'),
-      ];
-
-      expect(
-        recommend(
-          programs,
+          [card('near', goal: Goal.getStronger, daysPerWeek: 4)],
           const TrainingProfile(
             goal: Goal.buildMuscle,
             level: Level.intermediate,
-            equipment: {Equipment.dumbbell, Equipment.bench},
+            daysPerWeek: 3,
           ),
         ),
-        ['easy'],
-      );
-    });
-
-    test('an unanswered level counts as beginner, claiming no match', () {
-      final programs = [card('hard', level: Level.intermediate), card('easy')];
-
-      expect(
-        recommendPrograms(
-          programs,
-          const TrainingProfile(goal: Goal.buildMuscle),
-          freeFirst: false,
-        ),
         [
-          Recommendation(card('easy'), const [MatchReason.goal]),
+          Recommendation(
+            card('near', goal: Goal.getStronger, daysPerWeek: 4),
+            const [],
+          ),
         ],
-      );
-    });
-
-    test('free programs first for a user without premium', () {
-      final programs = [
-        card('paid', premium: true, daysPerWeek: 3),
-        card('free', daysPerWeek: 4),
-      ];
-      const profile = TrainingProfile(goal: Goal.buildMuscle, daysPerWeek: 3);
-
-      expect(recommend(programs, profile), ['paid', 'free']);
-      expect(recommend(programs, profile, freeFirst: true), ['free', 'paid']);
-    });
-
-    test('recommends at most $recommendedCount', () {
-      final programs = [for (var i = 0; i < 5; i++) card('p$i', order: i)];
-
-      expect(
-        recommend(programs, const TrainingProfile(goal: Goal.buildMuscle)),
-        hasLength(recommendedCount),
       );
     });
   });
