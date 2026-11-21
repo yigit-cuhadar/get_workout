@@ -1215,7 +1215,8 @@ Decisions (the canvases they were drawn on are deleted):
   logging.", Add exercises); a card's "Last time" shows the best working
   set (heaviest, then most reps); the progression hint shows when every
   working set last time reached the top of the rep range (weight × reps
-  with a range), one weight step up (2.5 kg / 5 lb), and a tap fills every
+  with a range), one step up: the exercise's `incrementKg` (in lb rounded
+  to 2.5 lb, at least 2.5), else 2.5 kg / 5 lb; a tap fills every
   working set not done yet, then it goes; the rest panel's line is "next:
   set 4 · 82.5 × 8", the exercise named when it changes, using the panel's
   width; the RIR and RPE question titles are just "RIR" and "RPE"; answer
