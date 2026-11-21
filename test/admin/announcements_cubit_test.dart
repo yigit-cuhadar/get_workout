@@ -185,11 +185,20 @@ void main() {
     expect(cubit.state.accessRefreshed, isFalse);
   });
 
-  test('an edit after a send goes back to editing', () async {
+  test("an edit keeps the last send's outcome until the next send", () async {
     fill();
     await cubit.send();
     cubit.setTitle('Next');
-    expect(cubit.state.status, AnnouncementSendStatus.editing);
+    expect(cubit.state.status, AnnouncementSendStatus.sent);
+    expect(cubit.state.sent, sent);
+
+    when(
+      () => repository.send(any()),
+    ).thenAnswer((_) async => const Err(AnnouncementOutcomeUnknownFailure()));
+    cubit.setBody('Body');
+    await cubit.send();
+    cubit.setBody('Other body');
+    expect(cubit.state.failure, isA<AnnouncementOutcomeUnknownFailure>());
     expect(cubit.state.sent, isNull);
   });
 }
