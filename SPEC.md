@@ -265,17 +265,43 @@ measurement day fills all three.
 
 **`users/{uid}/pushTokens/{token}`**: `platform`, `updatedAt`.
 
+**`users/{uid}/devices/{installId}`** (the admin panel's Devices; written
+by the app, read by admins, never read back): `model` ("iPhone15,2",
+"Google Pixel 8"), `platform` (`ios` \| `android`), `osVersion`,
+`appVersion` ("1.0.0+12"), each string at most 100 characters, and
+`lastSeenAt` (server time). `installId` is 32 lowercase hex characters,
+random, made on the install's first run and kept in the app's support
+directory (`install_id`; it survives updates, a reinstall gets a new one).
+The owner may only create or update their own, validated (`isDevice`);
+account deletion removes them with the rest of `users/{uid}`. The app
+(`lib/features/devices`, `DeviceSession`) records the device for each
+signed-in user at launch and after every sign-in or account switch, but
+writes only when the user, model, platform, OS version or app version
+changed since this install last wrote, or that was 24 hours ago or more
+(the last write is kept in `device_record.json`), so "last seen" is right
+to the day.
+
 **`users/{uid}/feedback/{id}`** (Help & feedback): `uid` (equal to the
 path's), `email?` (where to reply, 3-254 characters; absent when left
 empty), `message` (1-2000 characters), `source` (`profile` \| `rating`),
 `appVersion` ("1.0.0+1"), `platform` (`ios` \| `android`), `osVersion`,
 `deviceModel`, `locale` (the device's, "en-GB"; each detail a string of at
-most 100, empty when unreadable), `status` (`open` \| `closed`),
-`createdAt` (server time). The owner, guests included, may only create
-them (validated, `status` open); nobody reads them back but admins, who
-read them as the collection group `feedback` (index on `status`,
-`createdAt` descending in `firestore.indexes.json`) and change only
-`status`. Deleting the account deletes them with the rest of `users/{uid}`.
+most 100, empty when unreadable), `status` (`open` \| `replied` \|
+`closed`; the admin panel shows `open` as New), `createdAt` (server
+time), and once replied to `lastReplyAt` (server time, written by
+`sendSupportReply`). The owner, guests included, may only create them
+(validated, `status` open); nobody reads them back but admins, who read
+them as the collection group `feedback` (index on `status`, `createdAt`
+descending in `firestore.indexes.json`) and change only `status`: to
+`open` or `closed`, or to `replied` when `lastReplyAt` is set (reopening a
+replied thread). Deleting the account deletes them with the rest of
+`users/{uid}`.
+
+**`users/{uid}/feedback/{id}/replies/{requestId}`** (support replies):
+`message`, `to`, `subject`, `status` (`sending`, `sent`, `failed`),
+`sentBy` (uid), `sentByEmail` (the admin's, or null), `requestedAt`, and
+once sent `sentAt` and `messageId` (the SMTP Message-ID). Written only by
+`sendSupportReply`; readable by admins.
 
 ### Server-written
 
@@ -343,6 +369,101 @@ only, JPEG, max 5 MB.
   refused; nothing was sent) and `outcome-unknown` (`unknown`, FCM may have
   taken it). A request left `sending` stays refused as in progress;
   different text gets a new id.
+- `sendSupportReply` (callable, `functions/src/send_support_reply.ts`,
+  secret `SUPPORT_GMAIL_APP_PASSWORD`, the Gmail app password of
+  getworkout.support@gmail.com) → for a caller with the `admin` claim,
+  input `{requestId, threadPath, message, close?}` (`threadPath`
+  `users/{uid}/feedback/{id}`, `message` trimmed, 1-5000): in a
+  transaction reads the thread and claims `{thread}/replies/{requestId}`
+  as `sending`, emails the reply through Gmail SMTP (smtp.gmail.com:465)
+  from getworkout.support@gmail.com to the thread's `email`, subject
+  "Re: Your message to GetWorkout", the reply above "You wrote:" and the
+  user's message quoted with "> ", then in one batch records the reply
+  `sent` and sets the thread `replied` (`closed` with `close`) and
+  `lastReplyAt`. Idempotent per request id like `sendAnnouncement`: only
+  an SMTP reply code or a failure before the mail is handed over (`EAUTH`,
+  `EDNS`, `EENVELOPE`) records it `failed`; timeouts and dropped
+  connections leave it `sending`, never sent again. Returns `{id,
+  messageId, alreadySent}`. Refusals carry `details.reason`: `not-admin`
+  (`permission-denied`), `invalid-input` (`invalid-argument`, with
+  `details.field`), `no-thread` (`not-found`), `no-email`
+  (`failed-precondition`, the sender left no email), `request-id-reused`
+  (`invalid-argument`), `in-progress` (`already-exists`, with
+  `details.requestedAt`), `send-failed` (`internal`) and `outcome-unknown`
+  (`unknown`).
+- The panel's Users pages (callables in `functions/src/users/`, logic in
+  `users.ts`, Admin SDK in `directory.ts`, RevenueCat in
+  `revenuecat_customers.ts`; `lib/admin/users`, `/users` and
+  `/users/:uid`). Each needs the `admin` claim (`not-admin`,
+  `permission-denied`) and binds `REVENUECAT_API_KEY`. Refusals carry
+  `details.reason`: `invalid-input` (`invalid-argument`, with
+  `details.field`), `user-not-found` (`not-found`), `own-account`
+  (`failed-precondition`: an admin cannot demote or delete themself from
+  the panel) and `revenuecat-failed` (`unavailable`, `details.status`
+  RevenueCat's HTTP status or null; 403 is a key without the permission).
+  - `adminListUsers` `{cursor?: {createdAtMillis, uid}}` → `{users, next}`:
+    25 Auth users per page, newest sign-up first (ties by uid), each
+    `{uid, email, guest, premium, signedUpMillis, lastWorkoutMillis,
+    platform}`.
+    Auth lists in no useful order, so every user is listed and sorted on
+    each call (fine to tens of thousands; `users/{uid}` has no sign-up time
+    and is missing for a user who never wrote). `premium` is
+    `entitlements/{uid}` active now; the last workout is the latest
+    `finishedAt` of `users/{uid}/workouts`; `platform` that of the
+    device last seen (`users/{uid}/devices`, newest `lastSeenAt`): one
+    query per user, 25 per page, like the last workout.
+  - `adminFindUser` `{query}` → `{uid}`: an exact email when it has an
+    `@`, else a uid.
+  - `adminGetUser` `{uid}` → Auth (email, sign-in providers, `admin`
+    claim, creation time, last token refresh as "last opened the app"),
+    `entitlements/{uid}` (`lastEventMs` is "last change"), the workouts'
+    count and latest `finishedAt`, the active program's name
+    (`users/{uid}/programs/{activeProgram.programId}`), and RevenueCat's
+    customer (`premium` active entitlement, subscriptions with store,
+    status and period end), and every `users/{uid}/devices` document,
+    last seen first, shown as Devices. RevenueCat failing leaves the
+    rest (`revenueCatState` `failed`; `no-customer` when it never saw the
+    uid). The Premium tag follows RevenueCat, else the server's record.
+  - `adminGrantPremium` `{uid, duration}` (`week` \| `month` \| `year` \|
+    `lifetime`) → `{expiresAtMillis}`: RevenueCat's promotional
+    `premium` (API v2 `grant_entitlement`, the entitlement's id looked up
+    by its lookup key) until now + 7 days, a UTC calendar month or year,
+    or 9999-12-31 for lifetime. `adminRevokePremium` `{uid}` ends every
+    promotional grant (`revoke_granted_entitlement`); the panel offers it
+    only while RevenueCat shows one. A store subscription is never touched.
+  - `adminSetAdmin` `{uid, admin}` sets or removes the claim, keeping the
+    others; it reaches the user's token within an hour.
+  - `adminDeleteUser` `{uid}` runs `deleteUserData`, the same steps as
+    `deleteAccount` after its checks. It cannot revoke Apple's tokens (no
+    fresh Apple code) or cancel a store subscription; the confirm (U4 B)
+    says the latter.
+  - The password reset email is not a callable: the panel sends Firebase
+    Auth's own (forge_auth `SendPasswordReset`), offered only for an
+    account with email and password.
+- `appSettingsGet`, `appSettingsPublish`, `appSettingsHistory`
+  (callables, `functions/src/app_settings`), admin claim only, the app's
+  Remote Config template through the Admin SDK. Only the keys of the app's
+  Remote Config defaults are read and written (`KEYS`); a key may sit at
+  the top level or in a parameter group. Get → `{etag, version, keys}`, each
+  key's default and its conditional values as `{kind: value|inAppDefault|
+  experiment|rollout|personalization}` (an absent parameter is
+  `inAppDefault`). Publish `{etag, changes: {key: string|null},
+  restoring?}` → the new version: refused as `stale`
+  (`failed-precondition`) when the template's etag is no longer the one
+  loaded, or when Remote Config refuses the publish's If-Match; checks
+  every value (`paywall_layout` a, b or c; `maintenance` true or false;
+  versions empty or 1-4 dot-separated numbers; the message at most 300
+  characters; `invalid-input` with `details.field`); a key whose default is
+  an experiment, rollout or personalization is refused as `locked`. It
+  writes only the changed keys' default values (null: use in-app default;
+  a missing parameter is added at the top level with its value type) and
+  keeps their conditional values, every other parameter, the groups and
+  the conditions; validates, then publishes with the description
+  `Admin panel · <email>[ · restores version N]`, which the history reads
+  back as who published (the Admin SDK's own user is the service
+  account). History → the latest 20 versions, newest first, each with the
+  parameters (all of them) and whether the conditions changed since the
+  version before, and its default values of the known keys.
 
 Admin access is a custom claim set by `tool/set_admin.sh`, using the project
 owner's gcloud access token passed in `GOOGLE_ACCESS_TOKEN`.
@@ -541,10 +662,10 @@ Group 12, analytics (owner's plan, 2026-11-20; before the admin panel rework)
 
 Group 13, admin panel rework (owner's picks, 2026-11-21; each project keeps
 its own panel; every page drawn on a canvas and picked before it is built)
-- [ ] Panel look — the shell and every existing page (Exercises, Programs, Announcements, Feedback) redrawn in the Dashboard's look and rebuilt — the owner picked each page from the canvas
-- [ ] Users — find a user by email or uid; Premium state, sign-up date, last workout, devices; grant or revoke promotional Premium through RevenueCat (a week, a month, a year, lifetime), delete the account (confirmed, as the app does), send a password reset email, grant or revoke admin — every action works on dev
-- [ ] Support inbox — feedback as threads with a status; a reply is emailed from getworkout.support@gmail.com (Gmail SMTP, app password in the Functions secret) and kept on the thread — a reply reaches the sender's inbox
-- [ ] App settings — the app's Remote Config keys (paywall layout, app gate) shown and edited; saving shows old and new side by side, publishing needs a confirm, an earlier version can be restored — a change reaches the app after its next fetch
+- [x] Panel look — the shell and every existing page (Exercises, Programs, Announcements, Feedback) redrawn in the Dashboard's look and rebuilt — the owner picked each page from the canvas
+- [x] Users — find a user by email or uid; Premium state, sign-up date, last workout, devices; grant or revoke promotional Premium through RevenueCat (a week, a month, a year, lifetime), delete the account (confirmed, as the app does), send a password reset email, grant or revoke admin — every action works on dev
+- [x] Support inbox — feedback as threads with a status; a reply is emailed from getworkout.support@gmail.com (Gmail SMTP, app password in the Functions secret) and kept on the thread — a reply reaches the sender's inbox
+- [x] App settings — the app's Remote Config keys (paywall layout, app gate) shown and edited; saving shows old and new side by side, publishing needs a confirm, an earlier version can be restored — a change reaches the app after its next fetch
 
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
@@ -4131,13 +4252,60 @@ the feature you are about to touch, and keep it true when you change it.
   stopping the message; a write the rules refuse after that is only
   logged (the form checks what the rules check). No email or push
   notification of new messages (owner's choice).
-- **Admin panel › Feedback** (`lib/admin/feedback`, `/feedback`, in the
-  nav after Announcements): Open or Closed (Open first), the latest 100 of
-  that status, newest first, live; each card shows the message (selectable),
-  sent time, reply email (with Copy email) or "none", source, user id,
-  app version, platform, OS version, device model and locale, and Close or
-  Reopen, which moves it to the other list. Stream errors retry like the
+- **Admin panel › Support inbox** (`lib/admin/support`, `/support`,
+  boards T1-T4 A): two panes. Left: Open (New and Replied threads) and
+  Closed chips with their counts, the latest 100 of each, newest first,
+  live; a row shows the reply email (bold while New) or "No reply email",
+  when it came in ("Just now", "5m ago", "2h ago", "Yesterday", "Nov 18"),
+  the message on one line and its status tag. Right: the picked thread
+  (it stays open when it moves to the other list) with its status and
+  Close (Reopen when closed: back to New, or Replied once replied to);
+  the message with its time and a foot line of source, app version,
+  platform and OS, device, locale and user id; the replies indented
+  under it ("Reply from getworkout.support@gmail.com", time, text, "Sent
+  by <admin email> · emailed to <address>"; a reply still sending says
+  so, and after 5 minutes that it may not have been emailed); then the
+  reply box: "Reply by email to <address> from
+  getworkout.support@gmail.com · subject “Re: Your message to GetWorkout”",
+  the text (at most 5000), Send and close and Send reply (both through
+  `sendSupportReply`). A failed send keeps the text and says why; sending
+  the same text again reuses the request id, so it is never emailed
+  twice. A sender with no email gets the note "No reply email. This person
+  left the email field empty, so a reply cannot be sent. Close the thread
+  once it is handled." in place of the box. The menu's Support inbox entry
+  shows the count of New threads (none at 0). Stream errors retry like the
   other lists.
+- **Admin panel › App settings** (`lib/admin/app_settings`,
+  `/app-settings`; boards C1-C3 A): one page of the keys in two cards,
+  Paywall (`paywall_layout`, a choice of a list, b cards, c one plan; it
+  stays editable while its A/B test runs, owner's pick 2026-11-21, with
+  the line "A change also reaches users outside its A/B test." under its
+  description, since A/B Testing's experiments are not in the template) and
+  Update and maintenance (`maintenance` a switch, `maintenance_message`
+  text, the four version keys text checked as versions), under the line
+  "Remote Config · version N, published <date> by <who> · apps fetch
+  within 12 hours". A key using the in-app default shows the app's
+  default; editing it publishes an explicit value. A changed field shows
+  "Changed" and "was <old>"; setting it back removes the change. A key's
+  conditional values (A/B tests, language conditions) are listed
+  read-only under its description and never written; a default set by an
+  experiment, rollout or personalization shows as such with no input.
+  With changes, a bar at the foot: "N unpublished changes", Discard and
+  Review and publish, which opens the confirm: Key / Now / After
+  publishing for the changed keys only, "This becomes version N+1. Apps
+  pick it up at their next fetch, within 12 hours. Version N stays in
+  History and can be restored.", Cancel and Publish. History (a button
+  beside the title) opens a 400px panel on the right: the latest 20
+  versions with date, who (the admin's email, or "Firebase console") and
+  the parameters changed ("conditions" when they changed); the newest is
+  Current. Opening an older one shows what restoring it would change in
+  these keys (defaults only; conditional values and other parameters stay)
+  and "Restore version N", which leads to the same confirm and publishes
+  those defaults as a new version. After a publish the page reloads (the
+  history too when open), keeping edits that still differ. A publish
+  refused as stale says the config changed since loading and offers
+  Reload; the edits stay, compared against the reloaded values. A
+  permission refusal refreshes the token like Announcements.
 - **Review prompt** (forge_review; canvas rows R1, R2; first-ask rule
   changed by the owner 2026-11-20): two kinds of moment. Every workout
   summary counts once on the device (by workout id); every app open

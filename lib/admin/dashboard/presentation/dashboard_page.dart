@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
-import '../../shell/admin_nav.dart';
 import '../domain/dashboard.dart';
 import 'dashboard_cubit.dart';
 import 'dashboard_format.dart';
@@ -42,10 +41,7 @@ class _DashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        actions: const [AdminNav()],
-      ),
+      appBar: AppBar(title: const Text('Dashboard')),
       body: BlocBuilder<DashboardCubit, DashboardState>(
         builder: (context, state) => Align(
           alignment: Alignment.topCenter,

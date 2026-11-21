@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:forge_core/forge_core.dart';
 
 import '../../../features/exercises/domain/content_rules.dart';
@@ -66,6 +64,9 @@ class AnnouncementDraft extends Equatable {
 /// Where a recorded announcement stands; [unknown] for a status this panel
 /// does not know.
 enum AnnouncementStatus { sending, sent, failed, unknown }
+
+/// How many of the latest announcements the history shows.
+const announcementHistoryLength = 50;
 
 /// How long a send may take before a request still `sending` is taken as
 /// one whose outcome is unknown (the function died, or FCM did not say).
@@ -136,18 +137,6 @@ class SentAnnouncement extends Equatable {
 /// A request to send [draft] under the request [id]: the server sends an id
 /// once, so a retry after an unclear failure never sends twice.
 typedef AnnouncementRequest = ({String id, AnnouncementDraft draft});
-
-/// A new request id, as `sendAnnouncement` accepts it: 20 random letters
-/// and digits.
-String newAnnouncementRequestId() {
-  const alphabet =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  final random = Random.secure();
-  return String.fromCharCodes([
-    for (var i = 0; i < 20; i++)
-      alphabet.codeUnitAt(random.nextInt(alphabet.length)),
-  ]);
-}
 
 /// `sendAnnouncement` cannot be called: it is not deployed to this project,
 /// or deployed without permission to call it. Nothing was sent.

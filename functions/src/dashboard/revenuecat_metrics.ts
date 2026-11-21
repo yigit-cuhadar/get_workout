@@ -1,10 +1,18 @@
 import { defineSecret } from "firebase-functions/params";
 
-/** A RevenueCat API v2 secret key with `charts_metrics:overview:read`. */
+/**
+ * A RevenueCat API v2 secret key with `charts_metrics:overview:read`, and
+ * for the panel's Users page `customer_information:customers:read_write`,
+ * `customer_information:subscriptions:read` and
+ * `project_configuration:entitlements:read`.
+ */
 export const revenueCatApiKey = defineSecret("REVENUECAT_API_KEY");
 
-const OVERVIEW_URL =
-  "https://api.revenuecat.com/v2/projects/proj994e814e/metrics/overview";
+/** The app's one RevenueCat project, as API v2 addresses it. */
+export const REVENUECAT_PROJECT_URL =
+  "https://api.revenuecat.com/v2/projects/proj994e814e";
+
+const OVERVIEW_URL = `${REVENUECAT_PROJECT_URL}/metrics/overview`;
 
 /**
  * RevenueCat's overview metrics: subscriptions and trials now, the rest

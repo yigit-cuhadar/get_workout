@@ -7,7 +7,7 @@ import 'package:forge_firebase/forge_firebase.dart';
 
 import '../domain/feedback.dart';
 import '../domain/feedback_repository.dart';
-import 'device_details.dart';
+import '../../../core/device_details.dart';
 
 /// Messages live in `users/{uid}/feedback/{id}`, so deleting the account
 /// deletes them; the admin panel reads them across users.

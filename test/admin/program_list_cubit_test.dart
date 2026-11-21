@@ -77,6 +77,8 @@ void main() {
     expect(cubit.state.health!.errors, [
       'live programs: 2 free and 1 premium, needs 6 and 19',
     ]);
+    expect(cubit.state.health!.liveFree, 2);
+    expect(cubit.state.health!.livePremium, 1);
     cards.add([basics, card(programJson(id: 'pr_copy', name: 'basics copy'))]);
     await pumpEventQueue();
     expect(

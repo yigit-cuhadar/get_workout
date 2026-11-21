@@ -15,6 +15,7 @@ import '../features/analytics/analytics_module.dart';
 import '../features/calculators/calculators_module.dart';
 import '../features/calendar/calendar_module.dart';
 import '../features/cardio/cardio_module.dart';
+import '../features/devices/devices_module.dart';
 import '../features/exercises/exercises_module.dart';
 import '../features/feedback/feedback_module.dart';
 import '../features/generator/generator_module.dart';
@@ -90,6 +91,7 @@ Future<void> bootstrap(AppEnv env, FirebaseOptions options) async {
     const StepsModule(),
     const BodyModule(),
     const FeedbackModule(),
+    const DevicesModule(),
     const ReviewModule(rules: FeedbackModule.reviewRules),
     SubscriptionModule(
       backend: purchasesBackend(

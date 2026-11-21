@@ -124,18 +124,31 @@ List<String> programWarnings(
 /// takes edits to several programs. The weekly-set warnings need every
 /// program's days, so each program's editor shows its own.
 class CatalogueHealth extends Equatable {
-  const CatalogueHealth(this.errors);
+  const CatalogueHealth(
+    this.errors, {
+    required this.liveFree,
+    required this.livePremium,
+  });
 
-  factory CatalogueHealth.of(List<ProgramRecord> cards) => CatalogueHealth(
-    checkCatalogue([
-      for (final card in cards) ProgramEntry(card.json),
-    ], const {}).errors,
-  );
+  factory CatalogueHealth.of(List<ProgramRecord> cards) {
+    final entries = [for (final card in cards) ProgramEntry(card.json)];
+    final live = entries.where((entry) => entry.isLive);
+    final premium = live.where((entry) => entry.isPremium).length;
+    return CatalogueHealth(
+      checkCatalogue(entries, const {}).errors,
+      liveFree: live.length - premium,
+      livePremium: premium,
+    );
+  }
 
   final List<String> errors;
+
+  /// Live programs anyone can read, and those only premium users can.
+  final int liveFree;
+  final int livePremium;
 
   bool get isHealthy => errors.isEmpty;
 
   @override
-  List<Object?> get props => [errors];
+  List<Object?> get props => [errors, liveFree, livePremium];
 }

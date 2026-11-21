@@ -20,9 +20,6 @@ class CallableAdminAnnouncementRepository
 
   static const function = 'sendAnnouncement';
 
-  /// How many of the latest announcements the history shows.
-  static const historyLength = 50;
-
   /// `details.reason` values of the function's refusals.
   static const _notAdmin = 'not-admin';
   static const _inProgress = 'in-progress';
@@ -35,7 +32,7 @@ class CallableAdminAnnouncementRepository
   Stream<List<Announcement>> watchHistory() => _firestore
       .collection('announcements')
       .orderBy('requestedAt', descending: true)
-      .limit(historyLength)
+      .limit(announcementHistoryLength)
       .snapshots()
       .map(
         (snapshot) => [
