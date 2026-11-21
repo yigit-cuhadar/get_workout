@@ -27,6 +27,9 @@ function fakeFirestore(failingPath?: string) {
     async delete() {
       data.delete(path);
     },
+    async set(document: DocumentData) {
+      data.set(path, document);
+    },
   });
   type Ref = ReturnType<typeof ref>;
   const db = {
@@ -164,6 +167,26 @@ describe("firebaseEntitlementStore", () => {
     await store.delete("u1");
     await store.delete("u1");
     assert.equal(data.size, 0);
+  });
+
+  test("record sets revenueEvents/{id}", async () => {
+    const { db, data } = fakeFirestore();
+    const store = firebaseEntitlementStore(db, fakeAuth([]));
+    const record = {
+      type: "RENEWAL",
+      periodType: "NORMAL",
+      isTrialConversion: true,
+      appUserId: "u1",
+      productId: "p",
+      store: "APP_STORE",
+      environment: "PRODUCTION",
+      atMillis: 5,
+      priceUsd: 39.99,
+    };
+    await store.record("evt-1", record);
+    await store.record("evt-1", record);
+    assert.deepEqual(data.get("revenueEvents/evt-1"), record);
+    assert.equal(data.size, 1);
   });
 
   describe("a TRANSFER through the webhook", () => {

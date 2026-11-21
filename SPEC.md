@@ -471,6 +471,10 @@ Where it stands (2026-11-18, end of Group 11):
   health cardio sessions), studio #119; Forge v0.22.0–v0.22.2. Every answer
   is a row of the canvas https://claude.ai/artifact/UdSCdEHtjQ17AMTiDD9qAR
   (codes in each PR body) and is written into the Design bullets.
+- Health access is one system prompt for steps, workouts and heart rate
+  (Forge v0.50.0): asking for workouts right after the steps sheet closed
+  never answered on iOS and hung onboarding's health step (2026-11-21).
+  Checked on a fresh simulator: one sheet, Allow moves on.
 - Owner to do: the Play Console Health apps declaration must list
   exercise, distance, total calories burned and heart rate (#118 reads
   cardio from Health Connect).
@@ -4370,9 +4374,68 @@ not in a separate dashboard tool.
   policy states. Google Analytics' own retention is 14 months for event
   and user data on both properties (prod 565341735, dev 565325900, account
   "Default Account for Firebase" 146870395).
-- **Reports**: the admin panel's Dashboard reads BigQuery and RevenueCat's
-  metrics through an admin-only callable, never from the browser
-  directly. What it shows is drawn and picked before it is built.
+- **Reports** (owner's picks, 2026-11-21, canvas
+  https://claude.ai/artifact/DNxPob6inYxQPTGwLVC6mJ): the admin panel's
+  Dashboard reads BigQuery and RevenueCat's metrics through admin-only
+  functions, never from the browser directly.
+  - Each project has its own panel: the prod panel shows prod data, the
+    dev panel dev data. The panel opens on Dashboard, first in the menu.
+  - One page: ten tiles on top (daily and monthly active users, new
+    users, onboarding completed, first workout, workouts completed, trial
+    starts, paid conversion, MRR, crash-free users), then Growth, Funnel,
+    Retention, Revenue, Usage and Quality sections.
+  - Period: 7, 30 or 90 days, or a custom date range; every tile shows
+    its change against the period just before.
+  - Funnel (install → onboarding → first workout → paywall → trial →
+    paid) switches between bars and a table; Retention (day 1/7/30 by
+    weekly install cohort) between the cohort table and curves.
+  - Data: a nightly function queries BigQuery for the preset periods and
+    stores the results in Firestore, which the page reads at once; a
+    custom range is queried live by a callable. Revenue comes from
+    RevenueCat's API v2 overview metrics.
+  - Datasets: the 14-month expiry is set as the default partition
+    expiration of `firebase_crashlytics` and `firebase_sessions` on dev
+    and prod (2026-11-21); `analytics_<property>` (daily `events_` tables)
+    gets a 14-month default table expiration once its first export lands.
+- **Dashboard functions** (`functions/src/dashboard`, not deployed yet):
+  `revenueCatWebhook` also keeps every event it reads in
+  `revenueEvents/{event id}` (type, period type, `isTrialConversion` on
+  renewals, the uid, product, store, environment, time, USD price).
+  `dashboardNightly` (09:00 Europe/Istanbul) and the admin-only
+  `dashboardRefresh` store `dashboard/p7`, `p30`, `p90` (ranges ending at
+  the latest `events_` day), `dashboard/retention` (8 complete weekly
+  install cohorts, day 1/7/30), `dashboard/revenue` with a daily copy in
+  `dashboardRevenue/{day}` (RevenueCat's overview metrics, prod only:
+  RevenueCat has one project, so the dev panel shows no revenue, owner's
+  pick 2026-11-21) and `dashboard/status` (`ok`,
+  `no-data` before the first export, or `error` naming the parts that
+  failed; the others are still written). The admin-only `dashboardRange`
+  answers a custom range of at most 366 days. Admins read `dashboard`;
+  `revenueEvents` and `dashboardRevenue` stay server-only. Trials and
+  paid purchases count production events on prod and sandbox ones too on
+  dev; they join Analytics through the user id (the uid, which is also
+  RevenueCat's app user id). Users in crash-free and top issues are
+  Crashlytics installations against Analytics' active app instances.
+  Deploying needs the `REVENUECAT_API_KEY` Functions secret (a v2 key
+  with `charts_metrics:overview:read`) on both projects. MRR of a past
+  day is the latest snapshot in the week up to it, read ascending (a
+  descending id query needs an index). Deleting an account clears the uid
+  from its `revenueEvents` (sums kept, owner's pick 2026-11-21), before
+  and once more after the sign-in goes.
+- **Dashboard page** (`lib/admin/dashboard`, `/dashboard`, the panel's
+  landing page): reads every `dashboard` document once on open and again
+  after Refresh now (`dashboardRefresh`, client timeout 540 s); Custom…
+  picks a range in the 14 months up to the last day and asks
+  `dashboardRange` (timeout 300 s; longer than 366 days is refused before
+  asking). Before the first export (no reports, status missing or
+  `no-data`) it shows "No data yet" and the revenue snapshot only. Tile
+  changes: counts in whole percent (nothing when the previous period is
+  unknown or zero), shares in points to one decimal; a change that rounds
+  to zero is muted. Growth is one Forge line chart per series; Retention
+  curves are one `MultiSeriesChart.shared`, day 1/7/30 on a shared percent
+  scale with 0/25/50% gridlines (D8 A, owner's pick 2026-11-21, Forge
+  v0.50.0). The most started program
+  shows its id. The Funnel and Retention toggles live as long as the page.
 - **Held until the answer is known** (Forge v0.49.0): a new install
   collects only once the user's stored answer is read, and Analytics drops
   what comes before, so `FirebaseTelemetry` holds events and screens (at
@@ -4386,12 +4449,26 @@ not in a separate dashboard tool.
   `weight_log`, `premium_lock_tap`, `paywall_view` (`layout`, `moment`,
   `offering`), `paywall_close`, `restore`, `program_start`,
   `workout_start`, `rest_skip`, `workout_complete` (with `workout_count`),
-  `first_workout_complete`, `review_prompt`. Not yet seen: the account
-  events, `program_generate`/`create`/`edit`, `workout_discard`,
-  `personal_record`, `measurement_day_save`, `cardio_log`,
-  `custom_exercise_create`, `steps_connect`, `notification_open`,
-  `feedback_send`, `manage_subscription`, Android. Every `app_exception`
-  seen came from the Programs tab crash fixed in #183. Symbol upload works:
+  `first_workout_complete`, `review_prompt`. Second pass (2026-11-21,
+  dev, the Analytics log of the simulator): `sign_up`, `login`,
+  `sign_out`, `account_delete` (collection pauses and resumes for each
+  new user, the user id and properties follow), `steps_connect`,
+  `paywall_purchase`, `program_generate`, `program_create`,
+  `program_edit`, `workout_discard`, `personal_record`,
+  `measurement_day_save`, `cardio_log`, `feedback_send`,
+  `manage_subscription`. It found and #188 fixed: `login` sent under the
+  discarded guest's id; `onboarding_start` logged for an onboarded user
+  signing in from onboarding; a first workout logged `workout_count: 2`
+  and no `first_workout_complete` (the count raced the save);
+  `custom_exercise_create` missing when created from a search; and
+  `notification_open`, a name Analytics reserves, never recorded (now
+  `notification_tap`); both seen after the fix. Not seen yet: Android. Known
+  and left as is: `sign_up` fires when an email account is linked,
+  before its address is verified; deleting an account resets Analytics,
+  so the next guest is a new `first_open`; Save as program after a
+  workout logs no `program_create` (only the builder's save does).
+  Every `app_exception` seen came from the Programs tab crash fixed in
+  #183 (Crashlytics', a reserved name). Symbol upload works:
   the Runner's `flutterfire upload-crashlytics-symbols` phase reads
   `firebase.json` (Debug/Profile → dev app, Release → prod app) and a
   release build validated and uploaded its dSYMs to getworkout-prod.

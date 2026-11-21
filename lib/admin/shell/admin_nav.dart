@@ -12,6 +12,7 @@ class AdminNav extends StatelessWidget {
   const AdminNav({super.key});
 
   static const _lists = [
+    ('Dashboard', AdminRoutes.dashboard),
     ('Exercises', AdminRoutes.exercises),
     ('Programs', AdminRoutes.programs),
     ('Announcements', AdminRoutes.announcements),

@@ -91,15 +91,10 @@ void main() {
       );
     });
 
-    test('asks for workouts too once steps may be read', () async {
+    test('asks for workouts in the same request as steps', () async {
+      health.workoutsPermissionStatus = HealthPermission.denied;
       await AllowStepsAccess(health, prompt, fakeAnalytics())();
       expect(health.workoutsPermissionStatus, HealthPermission.granted);
-    });
-
-    test('a steps refusal does not ask for workouts', () async {
-      health.grantOnRequest = HealthPermission.denied;
-      await AllowStepsAccess(health, prompt, fakeAnalytics())();
-      expect(health.workoutsPermissionStatus, HealthPermission.denied);
     });
 
     test('asks even when the marker cannot be written', () async {
