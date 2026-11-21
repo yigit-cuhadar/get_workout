@@ -4516,5 +4516,42 @@ not in a separate dashboard tool.
   - C3 A: a history panel on the right lists versions (time, who, keys
     changed); an opened version shows what restoring changes, and Restore
     leads to C2's confirm.
+- **Rework, batch 2** (owner's picks, 2026-11-21, canvas
+  https://claude.ai/artifact/UJtdhzsgjvYbztAkNpArUb):
+  - E1 B: the Exercises list has its filters (status with counts, main
+    muscle, equipment, sort) in a column on the left, search and the table
+    on the right; Programs follows it.
+  - E2 A: library health is a one-line summary above the table; Details
+    opens the full list in a dialog.
+  - E3 C: the exercise editor puts each section on its own tab; a tab
+    with a problem carries a mark.
+  - E4 A: separate Save (stays Live), Save as draft and Retire buttons in
+    the save bar, the status as a tag in the header; Programs the same.
+  - E5 A: blocking problems are summed up in a card at the top; a line
+    opens its tab and field; messages also stay under the fields.
+  - E6 A: text lists (Aliases, Setup, Execution, Mistakes, Cues) stay one
+    field per item with up, down and remove.
+  - P1 A: Programs is a table like Exercises, with a catalogue health line
+    ("live: 6 free, 19 premium").
+  - P2 B: the program editor's computed values (days a week, equipment,
+    minutes, weekly sets, warnings) sit in a summary panel on the right.
+  - P3 A: a day's exercises are table rows (sets, reps or time, rest,
+    actions), a bracket marking a superset.
+  - A1 A: Announcements has the form on the left and the history on the
+    right.
+  - A2 B: sending confirms in a dialog showing the text, with "I
+    understand it cannot be recalled" to tick.
+  - A3 A: the send's result stays in a box under the form.
+- Asked with the builds (2026-11-21): the app records its devices
+  (model, OS, app version, last seen) so a user's page lists them all;
+  `paywall_layout` stays editable with a line saying a change also
+  reaches users outside its A/B test; the owner adds RevenueCat write
+  permissions to the existing v2 key.
+- Decided while building the inbox: the reply email quotes the user's
+  message under "You wrote:"; the sender is the bare
+  getworkout.support@gmail.com; a closed thread offers Reopen and keeps
+  the reply box (sending reopens it as Replied); with no thread picked the
+  right pane says "Pick a thread to read it and reply."; statuses use the
+  existing muted tag kinds.
 - The Gmail app password for support replies is in the keychain as
   `SUPPORT_GMAIL_APP_PASSWORD`.
