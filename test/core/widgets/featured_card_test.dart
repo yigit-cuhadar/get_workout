@@ -10,6 +10,28 @@ void main() {
       .widget<ForgeButton>(find.widgetWithText(ForgeButton, label))
       .variant;
 
+  testWidgets('an outline carries the Premium tag under its title', (
+    tester,
+  ) async {
+    await pumpComponent(
+      tester,
+      const FeaturedCard(
+        form: FeaturedCardForm.outline,
+        eyebrow: 'Recommended for you',
+        title: 'Upper Lower Strength',
+        premiumTag: 'Premium',
+        line: FeaturedLine('4 days · Intermediate · 12 weeks'),
+      ),
+    );
+
+    final tag = find.widgetWithText(ForgeTag, 'Premium');
+    expect(tester.widget<ForgeTag>(tag).kind, ForgeTagKind.premium);
+    expect(
+      tester.getTopLeft(tag).dy,
+      greaterThan(tester.getTopLeft(find.text('Upper Lower Strength')).dy),
+    );
+  });
+
   testWidgets('a block starts from its featured button and opens on a tap', (
     tester,
   ) async {

@@ -72,9 +72,27 @@ class ProgramCatalogueState extends Equatable {
   /// How many filter values are on.
   int get filterCount => filter.activeCount(profile.equipment);
 
-  /// Free programs first unless the user is known to have premium.
-  List<Recommendation> get recommended =>
-      recommendPrograms(programs, profile, freeFirst: premium != true);
+  List<Recommendation> get recommended => recommendedWithout(null);
+
+  /// [recommended] without [program] (the active program's source), the
+  /// next best in its place.
+  List<Recommendation> recommendedWithout(CatalogueProgram? program) =>
+      recommendPrograms([
+        for (final each in programs)
+          if (each != program) each,
+      ], profile);
+
+  /// The filter the catalogue opens with: the user's equipment type alone;
+  /// null while the equipment is unknown.
+  CatalogueFilter? get defaultFilter => switch (profile.equipment) {
+    null => null,
+    final owned => CatalogueFilter(profiles: {EquipmentProfile.typeOf(owned)}),
+  };
+
+  /// Whether the catalogue shows its recommendations: no search, and no
+  /// filter or only [defaultFilter].
+  bool get recommending =>
+      !searching && (!filtering || filter == defaultFilter);
 
   /// The days per week the programs have, for the filter.
   List<int> get dayOptions =>
@@ -165,6 +183,7 @@ class ProgramCatalogueCubit extends Cubit<ProgramCatalogueState> {
   late final StreamSubscription<bool?> _premiumSubscription;
   late final StreamSubscription<Object?> _profileSubscription;
   late final StreamSubscription<Object?> _equipmentSubscription;
+  bool _defaultPending = false;
 
   /// Listens again at once after a failure.
   void retry() {
@@ -197,10 +216,26 @@ class ProgramCatalogueCubit extends Cubit<ProgramCatalogueState> {
 
   void clearFilters() => _setFilter(const CatalogueFilter());
 
+  /// Sets [ProgramCatalogueState.defaultFilter], each time the catalogue
+  /// page opens; while the equipment is unknown, once it is known unless
+  /// the filters change first.
+  void openCatalogue() {
+    _defaultPending = true;
+    _applyDefaultFilter();
+  }
+
   void search(String query) => emit(state.copyWith(query: query));
 
-  void _setFilter(CatalogueFilter filter) =>
-      emit(state.copyWith(filter: filter));
+  void _setFilter(CatalogueFilter filter) {
+    _defaultPending = false;
+    emit(state.copyWith(filter: filter));
+  }
+
+  void _applyDefaultFilter() {
+    final filter = state.defaultFilter;
+    if (!_defaultPending || filter == null) return;
+    _setFilter(filter);
+  }
 
   static Set<T> _toggled<T>(Set<T> values, T value) => values.contains(value)
       ? ({...values}..remove(value))
@@ -218,6 +253,7 @@ class ProgramCatalogueCubit extends Cubit<ProgramCatalogueState> {
         ),
       ),
     );
+    _applyDefaultFilter();
   }
 
   @override

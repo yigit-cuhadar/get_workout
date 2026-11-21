@@ -4,5 +4,6 @@ import 'package:flutter/material.dart';
 class PremiumPrompt {
   const PremiumPrompt(this.show);
 
-  final void Function(BuildContext context) show;
+  /// Completes with whether the user has Premium afterwards.
+  final Future<bool> Function(BuildContext context) show;
 }

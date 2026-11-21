@@ -46,7 +46,7 @@ void main() {
       ProgramsModule(
         completedDays: WorkoutModule.completedDays,
         premium: (_) => const FixedPremium(false),
-        showPremium: (_) {},
+        showPremium: (_) async => false,
       ),
       const VolumeModule(),
       HealthModule.fake(FakeHealthSteps()),

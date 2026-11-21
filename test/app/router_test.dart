@@ -371,7 +371,7 @@ void main() {
     when(() => programs.rejectedWrites).thenAnswer((_) => const Stream.empty());
     when(() => programs.createProgram(any(), any()))
         .thenAnswer((_) async => const Ok('p1'));
-    sl.registerSingleton(PremiumPrompt((_) {}));
+    sl.registerSingleton(PremiumPrompt((_) async => false));
     // "Add to program" without programs, and the builder it opens.
     sl
       ..registerFactory(

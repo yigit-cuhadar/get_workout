@@ -66,25 +66,41 @@ Widget programRecommended(BuildContext context) => _page([
 ]);
 
 @widgetbook.UseCase(name: 'Recommended for you · rows', type: ProgramCard)
-Widget programRecommendedRows(BuildContext context) => _page([
-  ListRowCard(
-    children: [
-      ProgramCard.row(
-        name: 'Push Pull Legs',
-        facts: '3 days · Intermediate · 8 weeks',
-        recommended: true,
-        match: 'Matches your goal and level',
-        onTap: () {},
+Widget programRecommendedRows(BuildContext context) => Column(
+  crossAxisAlignment: CrossAxisAlignment.stretch,
+  children: [
+    const Padding(
+      padding: EdgeInsets.fromLTRB(Gap.md, Gap.md, Gap.md, 0),
+      child: SectionLabel('Recommended for you'),
+    ),
+    _page([
+      ListRowCard(
+        children: [
+          ProgramCard.row(
+            name: 'Upper/Lower 4-Day',
+            facts: '4 days · Intermediate · 10 weeks',
+            fits: true,
+            match: 'Matches your goal, level, days and equipment',
+            onTap: () {},
+          ),
+          ProgramCard.row(
+            name: 'Glute Focus 4-Day',
+            facts: '4 days · Intermediate · 10 weeks',
+            locked: true,
+            match: 'Matches your level, days and equipment',
+            onTap: () {},
+          ),
+          ProgramCard.row(
+            name: 'Full Body Basics',
+            facts: '3 days · Beginner · 6 weeks',
+            match: 'Matches your equipment',
+            onTap: () {},
+          ),
+        ],
       ),
-      ProgramCard.row(
-        name: 'Full Body Basics',
-        facts: '3 days · Beginner · 6 weeks',
-        recommended: true,
-        onTap: () {},
-      ),
-    ],
-  ),
-]);
+    ]),
+  ],
+);
 
 @widgetbook.UseCase(name: 'Row · fits and locked', type: ProgramCard)
 Widget programRowTags(BuildContext context) => _page([

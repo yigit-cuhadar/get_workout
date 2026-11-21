@@ -99,7 +99,7 @@ class FeaturedStat {
 
 /// The one featured card of a screen in its [form]: an [eyebrow] (with a
 /// lock when [locked]) over the [title] on one line and a band's
-/// [titleAside], then a
+/// [titleAside] (with the [premiumTag] under it), then a
 /// band's [progress] (in [progressSegments] under [progressLabel] and
 /// [progressDetail]), the
 /// [line], a [note], the summary's four [stats] and its buttons, and a
@@ -120,6 +120,7 @@ class FeaturedCard extends StatelessWidget {
     this.origin,
     this.onOrigin,
     this.locked = false,
+    this.premiumTag,
     this.line,
     this.note,
     this.stats = const [],
@@ -170,6 +171,7 @@ class FeaturedCard extends StatelessWidget {
        origin = null,
        onOrigin = null,
        locked = false,
+       premiumTag = null,
        line = null,
        note = null,
        stats = const [],
@@ -198,6 +200,7 @@ class FeaturedCard extends StatelessWidget {
        onOrigin = null,
        when = null,
        locked = false,
+       premiumTag = null,
        line = null,
        stats = const [],
        action = null,
@@ -226,6 +229,7 @@ class FeaturedCard extends StatelessWidget {
       origin = null,
       onOrigin = null,
       locked = false,
+      premiumTag = null,
       line = null,
       note = null,
       stats = const [],
@@ -256,6 +260,7 @@ class FeaturedCard extends StatelessWidget {
       origin = null,
       onOrigin = null,
       locked = false,
+      premiumTag = null,
       line = null,
       note = null,
       stats = const [],
@@ -294,6 +299,10 @@ class FeaturedCard extends StatelessWidget {
   final String? origin;
   final VoidCallback? onOrigin;
   final bool locked;
+
+  /// The Premium tag under the title, with this label: a premium program
+  /// suggested to a user without Premium.
+  final String? premiumTag;
   final FeaturedLine? line;
 
   /// A line of explanation: why a copy is locked, what an empty band
@@ -499,6 +508,11 @@ class FeaturedCard extends StatelessWidget {
                       aside: titleAside,
                       asideStyle: style.data.copyWith(color: headQuiet),
                     ),
+                  ),
+                if (premiumTag case final label?)
+                  Padding(
+                    padding: const EdgeInsets.only(top: Gap.xs),
+                    child: ForgeTag(label, kind: ForgeTagKind.premium),
                   ),
                 if (when case final at?)
                   Text(at, style: text.bodyLarge!.copyWith(color: headQuiet)),

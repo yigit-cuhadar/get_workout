@@ -642,7 +642,7 @@ class TrainingWorld {
 
     sl
       ..registerSingleton<ProgramListCubit>(list)
-      ..registerSingleton(PremiumPrompt((_) {}))
+      ..registerSingleton(PremiumPrompt((_) async => false))
       ..registerLazySingleton(
         () => ProgramCatalogueCubit(
           watchAuthUser: watchUser,

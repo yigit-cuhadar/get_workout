@@ -114,57 +114,64 @@ class Recommendation extends Equatable {
 /// How many programs [recommendPrograms] returns at most.
 const recommendedCount = 3;
 
-/// The programs that suit [profile] best, at most [recommendedCount].
+/// The programs that suit [profile] best, at most [recommendedCount], by
+/// score with ties in catalogue order.
 ///
-/// A program that needs equipment the user lacks, or is of a higher level
-/// than theirs (beginner while unanswered), is never recommended. The rest
-/// score 3 for the user's goal, 2 for their level, 2 for their days per
-/// week and 1 for a day more or less; a program scoring nothing is left
-/// out. With [freeFirst] (a user without premium) free programs come before
-/// premium ones; within that, by score, ties in catalogue order.
+/// A program is left out when its equipment profile is not the user's
+/// equipment type ([EquipmentProfile.typeOf]), its level is more than one
+/// step from theirs, or its days per week differ from theirs by more than
+/// one. The rest score 3 for the user's goal (1 for a related one), 2 for
+/// their level (1 for one level below), 2 for their days per week (1 for
+/// a day more or fewer). An unanswered part leaves nothing out and scores
+/// nothing.
 List<Recommendation> recommendPrograms(
   List<CatalogueProgram> programs,
-  TrainingProfile profile, {
-  required bool freeFirst,
-}) {
+  TrainingProfile profile,
+) {
   final owned = profile.equipment;
-  final level = profile.level;
-  final ceiling = level ?? Level.beginner;
-  final days = profile.daysPerWeek;
+  final type = owned == null ? null : EquipmentProfile.typeOf(owned);
+  final (goal, level, days) = (
+    profile.goal,
+    profile.level,
+    profile.daysPerWeek,
+  );
   final scored = <(int, Recommendation)>[];
   for (final program in programs) {
-    if (owned != null && !program.fits(owned)) continue;
-    if (program.level.index > ceiling.index) continue;
+    if (type != null && program.equipmentProfile != type) continue;
+    final levelGap = level == null ? null : program.level.index - level.index;
+    if (levelGap != null && levelGap.abs() > 1) continue;
     final dayGap = days == null ? null : (program.daysPerWeek - days).abs();
-    final reasons = [
-      if (program.goal == profile.goal) MatchReason.goal,
-      if (program.level == level) MatchReason.level,
-      if (dayGap == 0) MatchReason.days,
-    ];
+    if (dayGap != null && dayGap > 1) continue;
     final score =
-        (reasons.contains(MatchReason.goal) ? 3 : 0) +
-        (reasons.contains(MatchReason.level) ? 2 : 0) +
+        switch (goal) {
+          null => 0,
+          _ when program.goal == goal => 3,
+          final goal when _related(goal, program.goal) => 1,
+          _ => 0,
+        } +
+        switch (levelGap) {
+          0 => 2,
+          -1 => 1,
+          _ => 0,
+        } +
         switch (dayGap) {
           0 => 2,
           1 => 1,
           _ => 0,
         };
-    if (score == 0) continue;
     scored.add((
       score,
       Recommendation(program, [
-        ...reasons,
-        if (owned != null) MatchReason.equipment,
+        if (goal != null && program.goal == goal) MatchReason.goal,
+        if (levelGap == 0) MatchReason.level,
+        if (dayGap == 0) MatchReason.days,
+        if (type != null) MatchReason.equipment,
       ]),
     ));
   }
-  int tier((int, Recommendation) entry) =>
-      freeFirst && entry.$2.program.premium ? 1 : 0;
   // Indexes break ties, keeping catalogue order.
   final ranked = scored.indexed.toList()
     ..sort((a, b) {
-      final byTier = tier(a.$2).compareTo(tier(b.$2));
-      if (byTier != 0) return byTier;
       final byScore = b.$2.$1.compareTo(a.$2.$1);
       return byScore != 0 ? byScore : a.$1.compareTo(b.$1);
     });
@@ -172,4 +179,12 @@ List<Recommendation> recommendPrograms(
     for (final (_, (_, recommendation)) in ranked.take(recommendedCount))
       recommendation,
   ];
+}
+
+/// Goals one point apart: building muscle and getting stronger, losing fat
+/// and general fitness.
+bool _related(Goal a, Goal b) {
+  final pair = {a, b};
+  return pair.containsAll(const {Goal.buildMuscle, Goal.getStronger}) ||
+      pair.containsAll(const {Goal.loseFat, Goal.generalFitness});
 }

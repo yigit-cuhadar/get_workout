@@ -98,9 +98,9 @@ class SubscriptionModule implements FeatureModule {
       EntitlementPremium(sl());
 
   /// The programs feature's premium action: the paywall, for a premium
-  /// program.
-  static void showPaywall(BuildContext context) =>
-      unawaited(context.unlockPremium(PremiumFeature.premiumProgram));
+  /// program; whether the user has Premium afterwards.
+  static Future<bool> showPaywall(BuildContext context) =>
+      context.unlockPremium(PremiumFeature.premiumProgram);
 
   @override
   void register(GetIt sl) {
