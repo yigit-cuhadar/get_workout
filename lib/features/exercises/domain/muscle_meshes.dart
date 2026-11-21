@@ -1,15 +1,11 @@
 import 'vocabulary.dart';
 
-/// Mesh names of the body model: `<name>_left` and `<name>_right` per muscle,
-/// except the single meshes `abdominal` and `oblique`. The body itself is the
-/// mesh `none`, which belongs to no muscle.
+/// Mesh names of the body model: `<code>_left` and `<code>_right` per muscle,
+/// except the single mesh `abdominal`. The body itself is the mesh `none`,
+/// which belongs to no muscle.
 extension MuscleMeshes on Muscle {
-  List<String> get meshNames => switch (this) {
-    Muscle.abdominal || Muscle.oblique => [code],
-    _ => ['${_meshBase}_left', '${_meshBase}_right'],
-  };
-
-  String get _meshBase => this == Muscle.forearm ? 'wrist' : code;
+  List<String> get meshNames =>
+      this == Muscle.abdominal ? [code] : ['${code}_left', '${code}_right'];
 }
 
 final _muscleByMesh = {

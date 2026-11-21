@@ -20,7 +20,6 @@ extension VocabularyLabels on AppLocalizations {
     Muscle.oblique => muscleOblique,
     Muscle.erector => muscleErector,
     Muscle.glute => muscleGlute,
-    Muscle.hipFlexor => muscleHipFlexor,
     Muscle.abductor => muscleAbductor,
     Muscle.adductor => muscleAdductor,
     Muscle.quads => muscleQuads,

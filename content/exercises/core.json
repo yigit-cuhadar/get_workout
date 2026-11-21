@@ -117,8 +117,7 @@
       "pull_up_bar"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [
       "forearm",
@@ -171,9 +170,7 @@
     "mainMuscles": [
       "abdominal"
     ],
-    "secondaryMuscles": [
-      "hip_flexor"
-    ],
+    "secondaryMuscles": [],
     "family": "sit_up",
     "familyRank": 1,
     "pinnedAlternatives": [],
@@ -219,8 +216,7 @@
       "oblique"
     ],
     "secondaryMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "family": "russian_twist",
     "familyRank": 1,
@@ -315,8 +311,7 @@
       "bodyweight"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [
       "front_delt",
@@ -417,9 +412,7 @@
       "abdominal",
       "oblique"
     ],
-    "secondaryMuscles": [
-      "hip_flexor"
-    ],
+    "secondaryMuscles": [],
     "family": "bicycle_crunch",
     "familyRank": 1,
     "pinnedAlternatives": [],
@@ -515,8 +508,7 @@
       "bodyweight"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [],
     "family": "leg_raise",
@@ -567,7 +559,6 @@
       "abdominal"
     ],
     "secondaryMuscles": [
-      "hip_flexor",
       "oblique"
     ],
     "family": "dead_bug",
@@ -666,9 +657,7 @@
     "mainMuscles": [
       "abdominal"
     ],
-    "secondaryMuscles": [
-      "hip_flexor"
-    ],
+    "secondaryMuscles": [],
     "family": "reverse_crunch",
     "familyRank": 1,
     "pinnedAlternatives": [],
@@ -711,7 +700,6 @@
       "bodyweight"
     ],
     "mainMuscles": [
-      "hip_flexor",
       "abdominal"
     ],
     "secondaryMuscles": [
@@ -762,8 +750,7 @@
       "bodyweight"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [],
     "family": "sit_up",
@@ -913,8 +900,7 @@
       "pull_up_bar"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [
       "forearm"
@@ -961,8 +947,7 @@
       "dip_station"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [],
     "family": "leg_raise",
@@ -1010,8 +995,7 @@
       "pull_up_bar"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [
       "lat",
@@ -1022,7 +1006,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 154,
+    "popularity": 153,
     "l10n": {
       "en": {
         "name": "Toes-to-Bar",
@@ -1070,7 +1054,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 162,
+    "popularity": 161,
     "l10n": {
       "en": {
         "name": "Decline Crunch",
@@ -1109,15 +1093,13 @@
     "mainMuscles": [
       "abdominal"
     ],
-    "secondaryMuscles": [
-      "hip_flexor"
-    ],
+    "secondaryMuscles": [],
     "family": "hollow_hold",
     "familyRank": 1,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 172,
+    "popularity": 171,
     "l10n": {
       "en": {
         "name": "Hollow Body Hold",
@@ -1158,16 +1140,14 @@
     "mainMuscles": [
       "abdominal"
     ],
-    "secondaryMuscles": [
-      "hip_flexor"
-    ],
+    "secondaryMuscles": [],
     "family": "sit_up",
     "familyRank": 2,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 183,
+    "popularity": 182,
     "l10n": {
       "en": {
         "name": "Decline Sit-Up",
@@ -1215,7 +1195,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 186,
+    "popularity": 185,
     "l10n": {
       "en": {
         "name": "Machine Crunch",
@@ -1266,7 +1246,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 193,
+    "popularity": 192,
     "l10n": {
       "en": {
         "name": "High Plank",
@@ -1314,7 +1294,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 207,
+    "popularity": 206,
     "l10n": {
       "en": {
         "name": "Stability Ball Crunch",
@@ -1353,7 +1333,6 @@
       "dip_station"
     ],
     "mainMuscles": [
-      "hip_flexor",
       "abdominal"
     ],
     "secondaryMuscles": [
@@ -1365,7 +1344,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 218,
+    "popularity": 217,
     "l10n": {
       "en": {
         "name": "L-Sit",
@@ -1407,7 +1386,6 @@
       "abdominal"
     ],
     "secondaryMuscles": [
-      "hip_flexor",
       "lat",
       "oblique"
     ],
@@ -1416,7 +1394,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 229,
+    "popularity": 228,
     "l10n": {
       "en": {
         "name": "Dragon Flag",
@@ -1469,7 +1447,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2,
-    "popularity": 239,
+    "popularity": 238,
     "l10n": {
       "en": {
         "name": "Dumbbell Side Bend",
@@ -1516,7 +1494,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 253,
+    "popularity": 252,
     "l10n": {
       "en": {
         "name": "Heel Touch",
@@ -1566,7 +1544,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 257,
+    "popularity": 256,
     "l10n": {
       "en": {
         "name": "Plank Shoulder Tap",
@@ -1615,7 +1593,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 265,
+    "popularity": 264,
     "l10n": {
       "en": {
         "name": "Landmine Rotation",
@@ -1666,7 +1644,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 279,
+    "popularity": 278,
     "l10n": {
       "en": {
         "name": "Lying Windshield Wiper",
@@ -1714,7 +1692,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 291,
+    "popularity": 290,
     "l10n": {
       "en": {
         "name": "Side Plank Hip Dip",
@@ -1763,7 +1741,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 306,
+    "popularity": 305,
     "l10n": {
       "en": {
         "name": "Weighted Plank",
@@ -1810,7 +1788,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 321,
+    "popularity": 320,
     "l10n": {
       "en": {
         "name": "Kneeling Side Plank",
@@ -1858,7 +1836,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 328,
+    "popularity": 327,
     "l10n": {
       "en": {
         "name": "Band Pallof Press",
@@ -1899,15 +1877,14 @@
     ],
     "secondaryMuscles": [
       "lat",
-      "oblique",
-      "hip_flexor"
+      "oblique"
     ],
     "family": "rollout",
     "familyRank": 5,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 339,
+    "popularity": 338,
     "l10n": {
       "en": {
         "name": "Standing Ab Wheel Rollout",
@@ -1956,7 +1933,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 346,
+    "popularity": 345,
     "l10n": {
       "en": {
         "name": "Rotary Torso Machine",
@@ -1999,7 +1976,6 @@
       "abdominal"
     ],
     "secondaryMuscles": [
-      "hip_flexor",
       "lat",
       "forearm"
     ],
@@ -2008,7 +1984,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 355,
+    "popularity": 354,
     "l10n": {
       "en": {
         "name": "Hanging Windshield Wiper",
@@ -2056,8 +2032,7 @@
       "oblique"
     ],
     "secondaryMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "family": "russian_twist",
     "familyRank": 2,
@@ -2065,7 +2040,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 363,
+    "popularity": 362,
     "l10n": {
       "en": {
         "name": "Plate Russian Twist",
@@ -2114,7 +2089,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 371,
+    "popularity": 370,
     "l10n": {
       "en": {
         "name": "Band Woodchop",
@@ -2164,7 +2139,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 378,
+    "popularity": 376,
     "l10n": {
       "en": {
         "name": "Low-to-High Cable Woodchop",
@@ -2214,7 +2189,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 386,
+    "popularity": 383,
     "l10n": {
       "en": {
         "name": "Stability Ball Rollout",
@@ -2263,7 +2238,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 394,
+    "popularity": 391,
     "l10n": {
       "en": {
         "name": "Ab Wheel Wall Rollout",
@@ -2311,7 +2286,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 405,
+    "popularity": 402,
     "l10n": {
       "en": {
         "name": "Ab Wheel Diagonal Rollout",
@@ -2361,7 +2336,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 407,
+    "popularity": 404,
     "l10n": {
       "en": {
         "name": "Stir the Pot",
@@ -2398,8 +2373,7 @@
       "stability_ball"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [],
     "family": "knee_tuck",
@@ -2407,7 +2381,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 408,
+    "popularity": 405,
     "l10n": {
       "en": {
         "name": "Stability Ball Knee Tuck",
@@ -2446,8 +2420,7 @@
       "suspension_trainer"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [],
     "family": "knee_tuck",
@@ -2455,7 +2428,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 409,
+    "popularity": 406,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Knee Tuck",
@@ -2495,8 +2468,7 @@
       "stability_ball"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [],
     "family": "knee_tuck",
@@ -2504,7 +2476,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 410,
+    "popularity": 407,
     "l10n": {
       "en": {
         "name": "Stability Ball Pike",
@@ -2541,8 +2513,7 @@
       "suspension_trainer"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [
       "front_delt"
@@ -2552,7 +2523,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 412,
+    "popularity": 409,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Pike",
@@ -2591,8 +2562,7 @@
       "back_extension_bench"
     ],
     "mainMuscles": [
-      "abdominal",
-      "hip_flexor"
+      "abdominal"
     ],
     "secondaryMuscles": [
       "quads"
@@ -2602,7 +2572,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 280,
+    "popularity": 279,
     "l10n": {
       "en": {
         "name": "GHD Sit-Up",
@@ -2655,7 +2625,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 360,
+    "popularity": 359,
     "l10n": {
       "en": {
         "name": "45-Degree Side Bend",

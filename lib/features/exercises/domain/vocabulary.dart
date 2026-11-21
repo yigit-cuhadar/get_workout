@@ -27,7 +27,7 @@ enum LoggingType implements Coded {
   final String code;
 }
 
-/// The 19 muscle groups of the body model.
+/// The 18 muscle groups of the body model.
 enum Muscle implements Coded {
   pec('pec'),
   lat('lat'),
@@ -42,7 +42,6 @@ enum Muscle implements Coded {
   oblique('oblique'),
   erector('erector'),
   glute('glute'),
-  hipFlexor('hip_flexor'),
   abductor('abductor'),
   adductor('adductor'),
   quads('quads'),

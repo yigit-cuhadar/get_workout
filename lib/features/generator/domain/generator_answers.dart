@@ -22,7 +22,7 @@ enum EasyArea {
   shoulders({Muscle.frontDelt, Muscle.midDelt, Muscle.rearDelt}),
   elbows({Muscle.biceps, Muscle.triceps, Muscle.forearm}),
   lowerBack({Muscle.erector}),
-  hips({Muscle.hipFlexor, Muscle.abductor, Muscle.adductor}),
+  hips({Muscle.abductor, Muscle.adductor}),
   knees({Muscle.quads});
 
   const EasyArea(this.muscles);

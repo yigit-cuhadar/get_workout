@@ -339,7 +339,7 @@ service cloud.firestore {
     function muscles() {
       return ['pec', 'lat', 'trap', 'front_delt', 'mid_delt', 'rear_delt',
         'biceps', 'triceps', 'forearm', 'abdominal', 'oblique', 'erector',
-        'glute', 'hip_flexor', 'abductor', 'adductor', 'quads', 'hamstring',
+        'glute', 'abductor', 'adductor', 'quads', 'hamstring',
         'calf'];
     }
 

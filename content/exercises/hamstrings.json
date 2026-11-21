@@ -422,7 +422,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 171,
+    "popularity": 170,
     "l10n": {
       "en": {
         "name": "Good Morning",
@@ -478,7 +478,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 5,
-    "popularity": 182,
+    "popularity": 181,
     "l10n": {
       "en": {
         "name": "Rack Pull",
@@ -535,7 +535,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 192,
+    "popularity": 191,
     "l10n": {
       "en": {
         "name": "Nordic Hamstring Curl",
@@ -588,7 +588,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 205,
+    "popularity": 204,
     "l10n": {
       "en": {
         "name": "Bodyweight Single-Leg Romanian Deadlift",
@@ -646,7 +646,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2,
-    "popularity": 216,
+    "popularity": 215,
     "l10n": {
       "en": {
         "name": "Dumbbell Single-Leg Romanian Deadlift",
@@ -695,7 +695,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 227,
+    "popularity": 226,
     "l10n": {
       "en": {
         "name": "Stability Ball Leg Curl",
@@ -753,7 +753,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 238,
+    "popularity": 237,
     "l10n": {
       "en": {
         "name": "Kettlebell Deadlift",
@@ -802,7 +802,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 251,
+    "popularity": 250,
     "l10n": {
       "en": {
         "name": "Glute-Ham Raise",
@@ -851,7 +851,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 263,
+    "popularity": 262,
     "l10n": {
       "en": {
         "name": "Hamstring Walkout",
@@ -902,7 +902,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 277,
+    "popularity": 276,
     "l10n": {
       "en": {
         "name": "Bodyweight Good Morning",
@@ -952,7 +952,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 289,
+    "popularity": 288,
     "l10n": {
       "en": {
         "name": "Band Good Morning",
@@ -999,7 +999,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 304,
+    "popularity": 303,
     "l10n": {
       "en": {
         "name": "Band Leg Curl",
@@ -1048,7 +1048,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 319,
+    "popularity": 318,
     "l10n": {
       "en": {
         "name": "Dumbbell Leg Curl",
@@ -1097,7 +1097,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 337,
+    "popularity": 336,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Leg Curl",
@@ -1151,7 +1151,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 354,
+    "popularity": 353,
     "l10n": {
       "en": {
         "name": "Stiff-Leg Deadlift",
@@ -1208,7 +1208,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2,
-    "popularity": 369,
+    "popularity": 368,
     "l10n": {
       "en": {
         "name": "Kickstand Romanian Deadlift",
@@ -1260,7 +1260,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2.5,
-    "popularity": 385,
+    "popularity": 382,
     "l10n": {
       "en": {
         "name": "Landmine Romanian Deadlift",

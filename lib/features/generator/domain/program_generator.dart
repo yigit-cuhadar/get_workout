@@ -191,7 +191,6 @@ const musclePriority = [
   Muscle.oblique,
   Muscle.erector,
   Muscle.forearm,
-  Muscle.hipFlexor,
   Muscle.abductor,
   Muscle.adductor,
 ];
