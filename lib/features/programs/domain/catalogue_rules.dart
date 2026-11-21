@@ -26,7 +26,7 @@ const summarySentences = (min: 1, max: 2);
 
 // The catalogue's split of live programs (SPEC.md, "Monetization").
 const freePrograms = 6;
-const premiumPrograms = 19;
+const premiumPrograms = 23;
 
 /// The muscles whose weekly sets are held against [weeklySetBands].
 const majorMuscles = {

@@ -24,7 +24,7 @@
       "erector"
     ],
     "family": "squat",
-    "familyRank": 7,
+    "familyRank": 8,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 180,
@@ -262,7 +262,7 @@
       "hamstring"
     ],
     "family": "split_squat",
-    "familyRank": 2,
+    "familyRank": 3,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
@@ -318,7 +318,7 @@
       "erector"
     ],
     "family": "squat",
-    "familyRank": 8,
+    "familyRank": 9,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 180,
@@ -583,7 +583,7 @@
       "adductor"
     ],
     "family": "squat",
-    "familyRank": 5,
+    "familyRank": 6,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
@@ -716,7 +716,7 @@
         ],
         "execution": [
           "Drive through the top foot to stand up on the bench.",
-          "Step down slowly with the same leg leading back."
+          "Lower the free leg to the floor slowly, controlling the descent with the top leg."
         ],
         "mistakes": [
           "Pushing off the bottom foot.",
@@ -859,7 +859,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 120,
+    "popularity": 121,
     "l10n": {
       "en": {
         "name": "Step-Up",
@@ -917,12 +917,12 @@
       "erector"
     ],
     "family": "squat",
-    "familyRank": 6,
+    "familyRank": 7,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 5,
-    "popularity": 135,
+    "popularity": 136,
     "l10n": {
       "en": {
         "name": "Box Squat",
@@ -971,7 +971,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 144,
+    "popularity": 146,
     "l10n": {
       "en": {
         "name": "Lateral Lunge",
@@ -1028,7 +1028,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 149,
+    "popularity": 152,
     "l10n": {
       "en": {
         "name": "Dumbbell Reverse Lunge",
@@ -1077,7 +1077,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 5,
-    "popularity": 159,
+    "popularity": 163,
     "l10n": {
       "en": {
         "name": "Single-Leg Leg Press",
@@ -1121,12 +1121,12 @@
       "abdominal"
     ],
     "family": "squat",
-    "familyRank": 4,
+    "familyRank": 5,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2.5,
-    "popularity": 168,
+    "popularity": 173,
     "l10n": {
       "en": {
         "name": "Landmine Squat",
@@ -1175,7 +1175,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 178,
+    "popularity": 184,
     "l10n": {
       "en": {
         "name": "Curtsy Lunge",
@@ -1227,7 +1227,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 189,
+    "popularity": 196,
     "l10n": {
       "en": {
         "name": "Barbell Reverse Lunge",
@@ -1282,13 +1282,12 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 202,
+    "popularity": 211,
     "l10n": {
       "en": {
         "name": "Dumbbell Sumo Squat",
         "aliases": [
-          "Plie Squat",
-          "Sumo Goblet Squat"
+          "Plie Squat"
         ],
         "setup": [
           "Stand with feet wide and toes turned out.",
@@ -1330,7 +1329,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 213,
+    "popularity": 223,
     "l10n": {
       "en": {
         "name": "Sissy Squat",
@@ -1380,7 +1379,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 224,
+    "popularity": 235,
     "l10n": {
       "en": {
         "name": "Pistol Squat",
@@ -1435,7 +1434,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 235,
+    "popularity": 246,
     "l10n": {
       "en": {
         "name": "Lateral Step-Up",
@@ -1489,7 +1488,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2,
-    "popularity": 248,
+    "popularity": 259,
     "l10n": {
       "en": {
         "name": "Goblet Lateral Lunge",
@@ -1534,7 +1533,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 260,
+    "popularity": 270,
     "l10n": {
       "en": {
         "name": "Reverse Nordic",
@@ -1582,7 +1581,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 275,
+    "popularity": 285,
     "l10n": {
       "en": {
         "name": "Band Leg Extension",
@@ -1629,7 +1628,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 286,
+    "popularity": 296,
     "l10n": {
       "en": {
         "name": "Spanish Squat",
@@ -1677,7 +1676,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 301,
+    "popularity": 311,
     "l10n": {
       "en": {
         "name": "Skater Squat",
@@ -1691,7 +1690,7 @@
           "Drive back up."
         ],
         "mistakes": [
-          "Front heel lifting.",
+          "Standing heel lifting.",
           "Dropping fast."
         ],
         "cues": [
@@ -1725,7 +1724,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 316,
+    "popularity": 326,
     "l10n": {
       "en": {
         "name": "Assisted Pistol Squat",
@@ -1775,12 +1774,12 @@
       "trap"
     ],
     "family": "squat",
-    "familyRank": 9,
+    "familyRank": 10,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 333,
+    "popularity": 342,
     "l10n": {
       "en": {
         "name": "Overhead Squat",
@@ -1835,7 +1834,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 4,
-    "popularity": 350,
+    "popularity": 358,
     "l10n": {
       "en": {
         "name": "Kettlebell Front Squat",
@@ -1856,6 +1855,113 @@
         ],
         "cues": [
           "Tall chest"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_dumbbell_front_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "squat",
+    "position": "standing",
+    "grip": "neutral",
+    "equipment": [
+      "dumbbell"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "adductor"
+    ],
+    "family": "squat",
+    "familyRank": 4,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2,
+    "popularity": 230,
+    "l10n": {
+      "en": {
+        "name": "Dumbbell Front Squat",
+        "aliases": [
+          "DB Front Squat"
+        ],
+        "setup": [
+          "Stand with your feet shoulder-width apart.",
+          "Rest a dumbbell on the front of each shoulder with your elbows pointing forward."
+        ],
+        "execution": [
+          "Squat down while keeping your chest up and elbows high.",
+          "Drive through your whole foot to stand."
+        ],
+        "mistakes": [
+          "Elbows dropping and the torso tipping forward.",
+          "Knees caving in."
+        ],
+        "cues": [
+          "Elbows up",
+          "Sit between your heels"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_smith_machine_split_squat",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "unilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "lunge",
+    "position": "standing",
+    "grip": "overhand",
+    "equipment": [
+      "smith_machine"
+    ],
+    "mainMuscles": [
+      "quads",
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "adductor",
+      "hamstring"
+    ],
+    "family": "split_squat",
+    "familyRank": 2,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 2.5,
+    "popularity": 210,
+    "l10n": {
+      "en": {
+        "name": "Smith Machine Split Squat",
+        "aliases": [
+          "Smith Split Squat"
+        ],
+        "setup": [
+          "Set the bar at shoulder height and step under it so it rests on your upper back.",
+          "Unrack it and take a long stance, one foot forward and one back on its toes."
+        ],
+        "execution": [
+          "Lower your back knee toward the floor, keeping your front shin fairly upright.",
+          "Drive through the front foot to stand, then switch legs after the set."
+        ],
+        "mistakes": [
+          "Stance too short, so the front heel lifts.",
+          "Pushing off the back foot."
+        ],
+        "cues": [
+          "Down, not forward"
         ]
       }
     }

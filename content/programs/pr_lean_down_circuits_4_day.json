@@ -22,13 +22,13 @@
     "other"
   ],
   "minutes": {
-    "min": 30,
-    "max": 33
+    "min": 26,
+    "max": 30
   },
   "dayList": [
     {
       "name": "Lower Circuits",
-      "exercises": 10
+      "exercises": 8
     },
     {
       "name": "Upper Circuits",
@@ -36,11 +36,11 @@
     },
     {
       "name": "Full Body Circuits A",
-      "exercises": 8
+      "exercises": 7
     },
     {
       "name": "Full Body Circuits B",
-      "exercises": 10
+      "exercises": 9
     }
   ],
   "l10n": {
@@ -74,14 +74,6 @@
           "sets": 3,
           "repMin": 12,
           "repMax": 15,
-          "restS": 0,
-          "group": "A"
-        },
-        {
-          "exerciseId": "ex_cable_crunch",
-          "sets": 3,
-          "repMin": 15,
-          "repMax": 20,
           "restS": 90,
           "group": "A"
         },
@@ -121,14 +113,6 @@
           "sets": 3,
           "repMin": 10,
           "repMax": 15,
-          "restS": 0,
-          "group": "C"
-        },
-        {
-          "exerciseId": "ex_dead_bug",
-          "sets": 3,
-          "repMin": 10,
-          "repMax": 12,
           "restS": 60,
           "group": "C"
         }
@@ -268,19 +252,11 @@
           "group": "B"
         },
         {
-          "exerciseId": "ex_mountain_climber",
+          "exerciseId": "ex_jumping_jack",
           "sets": 3,
-          "repMin": 20,
-          "repMax": 30,
-          "restS": 0,
-          "group": "B"
-        },
-        {
-          "exerciseId": "ex_plank",
-          "sets": 3,
-          "durationS": 40,
           "restS": 60,
-          "group": "B"
+          "group": "B",
+          "durationS": 30
         }
       ]
     },
@@ -352,14 +328,6 @@
         },
         {
           "exerciseId": "ex_bicycle_crunch",
-          "sets": 3,
-          "repMin": 16,
-          "repMax": 20,
-          "restS": 0,
-          "group": "C"
-        },
-        {
-          "exerciseId": "ex_plank_shoulder_tap",
           "sets": 3,
           "repMin": 16,
           "repMax": 20,

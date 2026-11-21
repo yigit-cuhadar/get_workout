@@ -124,7 +124,7 @@
       "ex_tibialis_raise"
     ],
     "defaultRestS": 45,
-    "popularity": 126,
+    "popularity": 127,
     "l10n": {
       "en": {
         "name": "Bodyweight Calf Raise",
@@ -174,7 +174,7 @@
       "ex_tibialis_raise"
     ],
     "defaultRestS": 45,
-    "popularity": 141,
+    "popularity": 143,
     "l10n": {
       "en": {
         "name": "Single-Leg Calf Raise",
@@ -222,7 +222,7 @@
     ],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 157,
+    "popularity": 161,
     "l10n": {
       "en": {
         "name": "Leg Press Calf Raise",
@@ -273,7 +273,7 @@
     ],
     "defaultRestS": 45,
     "incrementKg": 2,
-    "popularity": 165,
+    "popularity": 169,
     "l10n": {
       "en": {
         "name": "Dumbbell Single-Leg Calf Raise",
@@ -321,7 +321,7 @@
     ],
     "defaultRestS": 60,
     "incrementKg": 5,
-    "popularity": 197,
+    "popularity": 205,
     "l10n": {
       "en": {
         "name": "Smith Machine Calf Raise",
@@ -366,7 +366,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 242,
+    "popularity": 253,
     "l10n": {
       "en": {
         "name": "Tibialis Raise",
@@ -417,7 +417,7 @@
     ],
     "defaultRestS": 45,
     "incrementKg": 2,
-    "popularity": 269,
+    "popularity": 279,
     "l10n": {
       "en": {
         "name": "Seated Dumbbell Calf Raise",
@@ -464,7 +464,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 295,
+    "popularity": 305,
     "l10n": {
       "en": {
         "name": "Pogo Hop",
@@ -484,6 +484,7 @@
           "Bending the knees a lot.",
           "Landing on the heels."
         ],
+        "safety": "Build the volume gradually to protect your Achilles tendons.",
         "cues": [
           "Quick, springy contacts"
         ]
@@ -512,7 +513,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 326,
+    "popularity": 335,
     "l10n": {
       "en": {
         "name": "Band Calf Press",
@@ -562,7 +563,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 344,
+    "popularity": 150,
     "l10n": {
       "en": {
         "name": "Jump Rope",

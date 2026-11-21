@@ -1,0 +1,236 @@
+{
+  "id": "pr_beginner_fat_loss_circuits_3_day",
+  "status": "live",
+  "premium": true,
+  "order": 26,
+  "level": "beginner",
+  "goal": "lose_fat",
+  "equipmentProfile": "dumbbells",
+  "daysPerWeek": 3,
+  "lengthWeeks": 8,
+  "equipment": [
+    "dumbbell",
+    "bench",
+    "bodyweight"
+  ],
+  "minutes": {
+    "min": 25,
+    "max": 27
+  },
+  "dayList": [
+    {
+      "name": "Circuit Day 1",
+      "exercises": 8
+    },
+    {
+      "name": "Circuit Day 2",
+      "exercises": 8
+    },
+    {
+      "name": "Circuit Day 3",
+      "exercises": 7
+    }
+  ],
+  "l10n": {
+    "en": {
+      "name": "Beginner Fat-Loss Circuits 3-Day",
+      "summary": "Three short full-body circuits a week with dumbbells, a bench and your own bodyweight, each finished with easy cardio moves. A gentle start that keeps you moving and pairs well with sensible eating."
+    }
+  },
+  "days": [
+    {
+      "name": "Circuit Day 1",
+      "items": [
+        {
+          "exerciseId": "ex_goblet_squat",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_push_up",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_one_arm_dumbbell_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 120,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_romanian_deadlift",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_dead_bug",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_jumping_jack",
+          "sets": 2,
+          "durationS": 30,
+          "restS": 0,
+          "group": "C"
+        },
+        {
+          "exerciseId": "ex_plank",
+          "sets": 2,
+          "durationS": 30,
+          "restS": 90,
+          "group": "C"
+        }
+      ]
+    },
+    {
+      "name": "Circuit Day 2",
+      "items": [
+        {
+          "exerciseId": "ex_dumbbell_reverse_lunge",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_bench_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_chest_supported_dumbbell_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 120,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_leg_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_bicycle_crunch",
+          "sets": 2,
+          "repMin": 16,
+          "repMax": 20,
+          "restS": 120,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_high_knees",
+          "sets": 2,
+          "durationS": 30,
+          "restS": 0,
+          "group": "C"
+        },
+        {
+          "exerciseId": "ex_kneeling_side_plank",
+          "sets": 2,
+          "durationS": 20,
+          "restS": 90,
+          "group": "C"
+        }
+      ]
+    },
+    {
+      "name": "Circuit Day 3",
+      "items": [
+        {
+          "exerciseId": "ex_kickstand_romanian_deadlift",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_incline_dumbbell_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_bent_over_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 120,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_curl",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 0,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_dumbbell_overhead_triceps_extension",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 120,
+          "group": "B"
+        },
+        {
+          "exerciseId": "ex_mountain_climber",
+          "sets": 2,
+          "repMin": 20,
+          "repMax": 30,
+          "restS": 0,
+          "group": "C"
+        },
+        {
+          "exerciseId": "ex_jumping_jack",
+          "sets": 2,
+          "durationS": 30,
+          "restS": 90,
+          "group": "C"
+        }
+      ]
+    }
+  ]
+}

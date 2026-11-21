@@ -112,6 +112,7 @@
           "Bending the knees more and turning it into a squat.",
           "Rounding the back to reach lower."
         ],
+        "safety": "Keep a flat back; reduce the weight as soon as your back starts to round.",
         "cues": [
           "Hips back",
           "Bar close to the legs"
@@ -422,7 +423,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 170,
+    "popularity": 175,
     "l10n": {
       "en": {
         "name": "Good Morning",
@@ -478,7 +479,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 5,
-    "popularity": 181,
+    "popularity": 187,
     "l10n": {
       "en": {
         "name": "Rack Pull",
@@ -535,7 +536,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 191,
+    "popularity": 198,
     "l10n": {
       "en": {
         "name": "Nordic Hamstring Curl",
@@ -588,7 +589,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 204,
+    "popularity": 213,
     "l10n": {
       "en": {
         "name": "Bodyweight Single-Leg Romanian Deadlift",
@@ -646,7 +647,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2,
-    "popularity": 215,
+    "popularity": 225,
     "l10n": {
       "en": {
         "name": "Dumbbell Single-Leg Romanian Deadlift",
@@ -695,7 +696,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 226,
+    "popularity": 237,
     "l10n": {
       "en": {
         "name": "Stability Ball Leg Curl",
@@ -753,7 +754,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 237,
+    "popularity": 248,
     "l10n": {
       "en": {
         "name": "Kettlebell Deadlift",
@@ -802,7 +803,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 250,
+    "popularity": 261,
     "l10n": {
       "en": {
         "name": "Glute-Ham Raise",
@@ -822,6 +823,7 @@
           "Bending at the hips.",
           "Swinging up."
         ],
+        "safety": "Start with a few reps; this exercise causes heavy soreness at first.",
         "cues": [
           "Knees drive into the pad"
         ]
@@ -851,7 +853,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 262,
+    "popularity": 272,
     "l10n": {
       "en": {
         "name": "Hamstring Walkout",
@@ -902,13 +904,11 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 276,
+    "popularity": 286,
     "l10n": {
       "en": {
         "name": "Bodyweight Good Morning",
-        "aliases": [
-          "Hip Hinge"
-        ],
+        "aliases": [],
         "setup": [
           "Stand with feet hip-width apart.",
           "Place your hands behind your head or across your chest."
@@ -952,7 +952,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 288,
+    "popularity": 298,
     "l10n": {
       "en": {
         "name": "Band Good Morning",
@@ -999,7 +999,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 303,
+    "popularity": 313,
     "l10n": {
       "en": {
         "name": "Band Leg Curl",
@@ -1048,7 +1048,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 318,
+    "popularity": 328,
     "l10n": {
       "en": {
         "name": "Dumbbell Leg Curl",
@@ -1097,7 +1097,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 336,
+    "popularity": 345,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Leg Curl",
@@ -1151,7 +1151,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 353,
+    "popularity": 180,
     "l10n": {
       "en": {
         "name": "Stiff-Leg Deadlift",
@@ -1208,7 +1208,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 2,
-    "popularity": 368,
+    "popularity": 375,
     "l10n": {
       "en": {
         "name": "Kickstand Romanian Deadlift",
@@ -1260,7 +1260,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2.5,
-    "popularity": 382,
+    "popularity": 389,
     "l10n": {
       "en": {
         "name": "Landmine Romanian Deadlift",

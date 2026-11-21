@@ -52,7 +52,7 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   subscribe, and again if Premium lapses; Restore stays on it. Anything
   not known (the entitlement or the offering: loading, offline, an
   error) lets the user in until it is known or the next open.
-  Premium = the program generator, 19 of 25 ready-made programs, history
+  Premium = the program generator, 23 of 29 ready-made programs, history
   in charts beyond 2 weeks (every window that was 12 weeks free is now 2
   weeks: the strength and body charts; the Progress cards' lines show 2
   weeks for everyone, Premium too, longer history living on the chart
@@ -118,9 +118,11 @@ Stored as these string codes.
   tibialis → `calf`, rotator cuff → `rear_delt`, brachioradialis →
   `forearm`). Hip flexors have no group (`hip_flexor` was removed
   2026-11-20 with the new body model): exercises that also train another
-  main muscle dropped it, and the three whose only main muscle it was are
-  retired. Readers skip codes they do not know, so old documents that still
-  list `hip_flexor` load without it.
+  main muscle dropped it; of the three whose only main muscle it was, the
+  kneeling hip flexor stretch came back under `quads` (rectus femoris,
+  owner's pick 2026-11-21) and cable hip flexion and the band supine march
+  stay retired. Readers skip codes they do not know, so old documents that
+  still list `hip_flexor` load without it.
 - **equipment** (25): `barbell`, `ez_bar`, `trap_bar`, `dumbbell`,
   `kettlebell`, `plate`, `cable`, `machine`, `smith_machine`, `bench`, `box`,
   `back_extension_bench`, `pull_up_bar`, `dip_station`, `resistance_band`,
@@ -514,7 +516,7 @@ Group 6, progress
 - [x] Today tab — next workout and week strip, quick actions, volume card, steps card
 
 Group 7, programs for everyone
-- [x] Catalog — 25 ready-made programs (6 free), filters, detail, premium lock, admin program editor
+- [x] Catalog — 29 ready-made programs (6 free), filters, detail, premium lock, admin program editor
 - [x] Program generator (Premium) — questions (goal, level, days, session length, equipment, focus muscles, excluded exercises, area to go easy on, preferred split), preview, save as an editable program
 
 Group 8, body and extras
@@ -2838,14 +2840,25 @@ the feature you are about to touch, and keep it true when you change it.
   are front-delt exercises) and bodyweight × forearm (dead hang, false grip
   hang). The script exits non-zero on a shortfall, and
   `test/tool/content_coverage_test.dart` runs the rule on the content files
-  in CI. Seed after the audit: 416 exercises, 412 live (276 beginner, 104
-  intermediate, 32 advanced); doable per profile: full gym 412, home gym
-  239, dumbbells 179, bodyweight 122, bands 139. Hammer curls have main
+  in CI. Seed after the content review of 2026-11-21: 422 exercises, 419
+  live (283 beginner, 104 intermediate, 32 advanced); doable per profile:
+  full gym 419, home gym 244, dumbbells 183, bodyweight 125, bands 142. Hammer curls have main
   muscles biceps and forearm (brachioradialis is filed under forearm), and
   pike and handstand presses list mid delt as secondary like every other
   overhead press. The weekly-set warnings of the arm focus, glute focus,
   calisthenics and kettlebell programs stay: each is a focus or
-  equipment-limited program whose summary says so.
+  equipment-limited program whose summary says so, as do Bodyweight
+  Progressions' side delts and biceps.
+- **Content review** (2026-11-21, owner's picks): safety lines on the heavy
+  barbell lifts and the jumps, aliases that named another exercise
+  removed, text matched to the fields; jumping jack, high knees, barbell
+  glute bridge, dumbbell front squat, seated cable fly and Smith machine
+  split squat added; jump rope, stiff-leg deadlift, machine biceps curl and
+  Bayesian curl moved up the popularity order. Lean-Down Circuits 4-Day
+  lost three core items (abs 36 → 21 weekly sets). Four premium programs
+  were added for catalogue gaps: Beginner Fat-Loss Circuits 3-Day,
+  Beginner Upper/Lower 4-Day, Bodyweight Progressions 3-Day (intermediate)
+  and Home Gym Upper/Lower 4-Day (intermediate).
 - **3D model**: our own renderer, written in Dart, built first because it is
   the riskiest part. Source model has 36 meshes: 18 muscle groups (left/right
   split except abdominal) plus the body. `body_female.glb` has the
@@ -3045,7 +3058,7 @@ the feature you are about to touch, and keep it true when you change it.
   fits the program's equipment profile (through `equipment` or an
   alternative set) and is at most one level above the program (no advanced
   exercise in a beginner program); `equipment[]` is computed from the
-  exercises' primary equipment; live programs are exactly 6 free and 19
+  exercises' primary equipment; live programs are exactly 6 free and 23
   premium. Weekly sets per major muscle (pec, lat, mid delt, biceps,
   triceps, glute, quads, hamstrings) are warned about outside 6-12 for
   beginner, 10-18 for intermediate and 12-20 for advanced programs. These
@@ -3125,7 +3138,9 @@ the feature you are about to touch, and keep it true when you change it.
   session of 30/45/60/75/90 minutes (60 preselected), equipment (presets or
   items), up to 3 focus muscles, exercises to leave out (from the picker),
   one area to go easy on (shoulders, elbows, lower back, hips or knees, each
-  a set of muscles) and the split; goal, level, days and equipment are
+  a set of muscles; hips is abductors and adductors only since hip flexors
+  have no muscle group, so leg raises are not left out for it, which the
+  owner accepted on 2026-11-21) and the split; goal, level, days and equipment are
   prefilled from the profile. Splits: full body, upper/lower, push/pull/legs
   (3+ days; 4 adds an upper day, 5 upper and lower); "best for my days" is
   full body for 2-3 days, upper/lower for 4, push/pull/legs for 5-6
@@ -3190,7 +3205,7 @@ the feature you are about to touch, and keep it true when you change it.
   `minutes` are computed from the days on save and shown read-only, so they
   always match the rules. Every save, drafts included, must pass
   `programProblems` and have an unused id and a unique name and order, as
-  the import rejects an invalid file whatever its status; the 6 free / 19
+  the import rejects an invalid file whatever its status; the 6 free / 23
   premium split of live programs shows as catalogue health and never
   blocks, nor do the weekly-set warnings. The picker offers live exercises;
   a new item takes the builder's defaults and the exercise's rest. A save

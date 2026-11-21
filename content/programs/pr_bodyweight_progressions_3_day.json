@@ -1,0 +1,188 @@
+{
+  "id": "pr_bodyweight_progressions_3_day",
+  "status": "live",
+  "premium": true,
+  "order": 28,
+  "level": "intermediate",
+  "goal": "general_fitness",
+  "equipmentProfile": "bodyweight",
+  "daysPerWeek": 3,
+  "lengthWeeks": 10,
+  "equipment": [
+    "pull_up_bar",
+    "dip_station",
+    "bodyweight"
+  ],
+  "minutes": {
+    "min": 35,
+    "max": 37
+  },
+  "dayList": [
+    {
+      "name": "Push and Legs",
+      "exercises": 6
+    },
+    {
+      "name": "Pull and Legs",
+      "exercises": 6
+    },
+    {
+      "name": "Full Body",
+      "exercises": 7
+    }
+  ],
+  "l10n": {
+    "en": {
+      "name": "Bodyweight Progressions 3-Day",
+      "summary": "The step between the basics and advanced calisthenics: full pull-ups, dips, single-leg squats and harder push-up variations on a pull-up bar and dip bars. Side delts and biceps get less direct work, since bodyweight training has few ways to load them."
+    }
+  },
+  "days": [
+    {
+      "name": "Push and Legs",
+      "items": [
+        {
+          "exerciseId": "ex_push_up",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 15,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_chest_dip",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_pike_push_up",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_skater_squat",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_bodyweight_single_leg_romanian_deadlift",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_hollow_body_hold",
+          "sets": 3,
+          "durationS": 20,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Pull and Legs",
+      "items": [
+        {
+          "exerciseId": "ex_pull_up",
+          "sets": 4,
+          "repMin": 4,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_chin_up",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_prone_y_raise",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_cossack_squat",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_bodyweight_good_morning",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_hanging_knee_raise",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Full Body",
+      "items": [
+        {
+          "exerciseId": "ex_pull_up",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 8,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_diamond_push_up",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_wide_grip_push_up",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 75
+        },
+        {
+          "exerciseId": "ex_reverse_lunge",
+          "sets": 4,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_hamstring_walkout",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_single_leg_calf_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_side_plank",
+          "sets": 2,
+          "durationS": 30,
+          "restS": 45
+        }
+      ]
+    }
+  ]
+}
