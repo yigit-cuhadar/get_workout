@@ -103,6 +103,19 @@ export async function deleteAccountOf(
       );
     }
   }
+  await deleteUserData(uid, store);
+  logger.info("account deleted", { uid });
+}
+
+/**
+ * Deletes [uid]'s data, files and sign-in, the sign-in last, so after a
+ * partial failure a call again finishes; every step succeeds when there is
+ * nothing left. Also behind the panel's `adminDeleteUser`.
+ */
+export async function deleteUserData(
+  uid: string,
+  store: AccountStore,
+): Promise<void> {
   await Promise.all([
     store.deleteUserDocuments(uid),
     store.deleteEntitlement(uid),
@@ -132,7 +145,6 @@ export async function deleteAccountOf(
       });
     }
   }
-  logger.info("account deleted", { uid });
 }
 
 /** The part of a Storage bucket [deleteUserFiles] uses. */

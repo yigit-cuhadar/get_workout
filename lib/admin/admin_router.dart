@@ -19,12 +19,16 @@ import 'programs/presentation/program_list_cubit.dart';
 import 'programs/presentation/program_list_page.dart';
 import 'shell/admin_shell.dart';
 import 'shell/coming_soon_page.dart';
+import 'users/presentation/user_page.dart';
+import 'users/presentation/users_cubit.dart';
+import 'users/presentation/users_page.dart';
 
 abstract final class AdminRoutes {
   static const signIn = '/sign-in';
   static const access = '/access';
   static const dashboard = '/dashboard';
   static const users = '/users';
+  static String user(String uid) => '$users/${Uri.encodeComponent(uid)}';
   static const exercises = '/exercises';
   static const newExercise = '$exercises/new';
   static String exercise(String id) => '$exercises/$id';
@@ -95,9 +99,26 @@ final adminSections = [
     group: 'People',
     label: 'Users',
     path: AdminRoutes.users,
-    route: GoRoute(
-      path: AdminRoutes.users,
-      builder: (_, _) => const ComingSoonPage(title: 'Users'),
+    // The list lives while a user's page is open, so the sign-ups loaded
+    // survive a trip to one.
+    route: ShellRoute(
+      builder: (_, _, child) =>
+          BlocProvider(create: (_) => sl<UsersCubit>()..load(), child: child),
+      routes: [
+        GoRoute(
+          path: AdminRoutes.users,
+          builder: (_, _) => const UsersPage(),
+          routes: [
+            GoRoute(
+              path: ':uid',
+              builder: (_, state) => UserPage(
+                key: ValueKey(state.pathParameters['uid']),
+                uid: state.pathParameters['uid']!,
+              ),
+            ),
+          ],
+        ),
+      ],
     ),
   ),
   // The feedback page until the inbox replaces it.
