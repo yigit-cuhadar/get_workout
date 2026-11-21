@@ -8,11 +8,12 @@ import '../domain/announcement.dart';
 import '../domain/announcement_admin_usecases.dart';
 
 enum AnnouncementSendStatus {
+  /// Nothing sent yet.
   editing,
   sending,
 
-  /// The last send went through ([AnnouncementsState.sent]); the form is
-  /// empty again.
+  /// The last send went through ([AnnouncementsState.sent]); the form was
+  /// emptied.
   sent,
   failed,
 }
@@ -134,11 +135,12 @@ class AnnouncementsCubit extends Cubit<AnnouncementsState> {
 
   void setBody(String body) => _edit(state.draft.copyWith(body: body));
 
-  /// Not while sending: the form is locked then.
+  /// Not while sending: the form is locked then. The last send's outcome
+  /// stays until the next send.
   void _edit(AnnouncementDraft draft) {
     if (state.status == AnnouncementSendStatus.sending) return;
     if (draft == state.draft) return;
-    emit(state.copyWith(draft: draft, status: AnnouncementSendStatus.editing));
+    emit(state.copyWith(draft: draft));
   }
 
   /// Sends the draft once; a call while a send is underway does nothing.

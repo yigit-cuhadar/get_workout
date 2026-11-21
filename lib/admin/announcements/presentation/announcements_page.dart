@@ -4,13 +4,22 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../../features/exercises/domain/content_rules.dart';
-import '../../shell/admin_form.dart';
 import '../../shell/admin_text.dart';
 import '../domain/announcement.dart';
 import 'announcements_cubit.dart';
+import 'send_confirm_dialog.dart';
+
+/// The widest the page grows on a desktop screen, as the Dashboard.
+const _maxPageWidth = 1280.0;
+
+/// The form's width beside the history (A1 board).
+const _formWidth = 460.0;
+
+/// From this width the form and the history sit side by side.
+const _twoColumnWidth = 840.0;
 
 /// Writes a push announcement, sends it after a confirmation, and lists
-/// the ones sent before.
+/// the ones sent before: the form on the left, the history on the right.
 class AnnouncementsPage extends StatelessWidget {
   const AnnouncementsPage({super.key});
 
@@ -24,86 +33,152 @@ class AnnouncementsPage extends StatelessWidget {
 /// A request left `sending` too long ([isStaleSending]).
 const _outcomeUnknown = 'Unknown — check a device before sending again';
 
-/// What the panel says about a failed send at [now]. Only a failure after
+/// How a send's outcome reads, and the colour role of its box.
+typedef _Outcome = ({String title, String? message, Color role});
+
+/// What the panel says about the last send at [now]. Only a failure after
 /// which nothing was sent says sending again may send it.
-String _sendFailureMessage(
+_Outcome? _outcome(AnnouncementsState state, ForgePalette p, DateTime now) =>
+    switch (state) {
+      AnnouncementsState(sent: SentAnnouncement(alreadySent: true)) => (
+        title: 'Already sent',
+        message: 'This announcement was sent before; it was not sent again.',
+        role: p.success,
+      ),
+      AnnouncementsState(status: AnnouncementSendStatus.sent) => (
+        title: 'Sent',
+        message: null,
+        role: p.success,
+      ),
+      AnnouncementsState(failure: final failure?) => _failure(
+        failure,
+        accessRefreshed: state.accessRefreshed,
+        p: p,
+        now: now,
+      ),
+      _ => null,
+    };
+
+_Outcome _failure(
   Failure failure, {
   required bool accessRefreshed,
+  required ForgePalette p,
   required DateTime now,
 }) => switch (failure) {
-  PermissionFailure() when accessRefreshed =>
-    'Refused, but this account still has admin access and its token is '
-        'now refreshed. Send again.',
-  PermissionFailure() => 'Refused: this account has no current admin claim.',
-  AnnouncementsUnavailableFailure() =>
-    'Sending is not available: the sendAnnouncement function is not '
-        'deployed to this project. Nothing was sent.',
+  PermissionFailure() when accessRefreshed => (
+    title: 'Refused',
+    message:
+        'This account still has admin access and its token is now '
+        'refreshed. Send again.',
+    role: p.danger,
+  ),
+  PermissionFailure() => (
+    title: 'Refused',
+    message: 'This account has no current admin claim.',
+    role: p.danger,
+  ),
+  AnnouncementsUnavailableFailure() => (
+    title: 'Sending is not available',
+    message:
+        'The sendAnnouncement function is not deployed to this project. '
+        'Nothing was sent.',
+    role: p.danger,
+  ),
   AnnouncementInProgressFailure(:final requestedAt)
       when isStaleSending(requestedAt, now) =>
-    '$_outcomeUnknown. This announcement may or may not have reached '
-        'devices, and it will not be sent again.',
-  AnnouncementInProgressFailure() =>
-    'This announcement is being sent right now. Check the history '
+    (
+      title: 'Outcome unknown',
+      message:
+          '$_outcomeUnknown. This announcement may or may not have reached '
+          'devices, and it will not be sent again.',
+      role: p.danger,
+    ),
+  AnnouncementInProgressFailure() => (
+    title: 'Being sent',
+    message:
+        'This announcement is being sent right now. Check the history '
         'before sending again.',
-  AnnouncementNotSentFailure() =>
-    'FCM refused it, so nothing was sent. You can send it again.',
-  AnnouncementOutcomeUnknownFailure() =>
-    'FCM did not say whether it took the announcement: it may or may '
+    role: p.info,
+  ),
+  AnnouncementNotSentFailure() => (
+    title: 'Not sent',
+    message: 'FCM refused it, so nothing was sent. You can send it again.',
+    role: p.danger,
+  ),
+  AnnouncementOutcomeUnknownFailure() => (
+    title: 'Outcome unknown',
+    message:
+        'FCM did not say whether it took the announcement: it may or may '
         'not reach devices. Check a device; the same text will not be '
         'sent again.',
-  NetworkFailure() =>
-    'No connection to Firebase; it may or may not have been sent. '
+    role: p.danger,
+  ),
+  NetworkFailure() => (
+    title: 'No connection',
+    message:
+        'No connection to Firebase; it may or may not have been sent. '
         'Sending the same text again never sends it twice.',
-  ValidationFailure(:final message) => 'Refused: $message',
-  _ =>
-    '${failureMessage(failure)} It may or may not have been sent; '
+    role: p.danger,
+  ),
+  ValidationFailure(:final message) => (
+    title: 'Refused',
+    message: message,
+    role: p.danger,
+  ),
+  _ => (
+    title: 'Failed',
+    message:
+        '${failureMessage(failure)} It may or may not have been sent; '
         'sending the same text again never sends it twice.',
+    role: p.danger,
+  ),
 };
+
+/// A soft fill of [role] and an ink for text on it, as Forge's tags tint.
+(Color fill, Color ink) _tint(ForgePalette p, Color role) =>
+    (Color.lerp(p.surface, role, 0.16)!, Color.lerp(p.ink, role, 0.7)!);
 
 class _AnnouncementsView extends StatelessWidget {
   const _AnnouncementsView();
 
-  void _show(BuildContext context, String message) =>
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(message)));
-
   @override
   Widget build(BuildContext context) {
+    final colors = ForgeStyle.of(context).colors;
     return Scaffold(
       appBar: AppBar(title: const Text('Announcements')),
-      body: BlocListener<AnnouncementsCubit, AnnouncementsState>(
-        listenWhen: (previous, state) => previous.status != state.status,
-        listener: (context, state) {
-          switch (state) {
-            case AnnouncementsState(sent: SentAnnouncement(alreadySent: true)):
-              _show(context, 'Already sent before; not sent again.');
-            case AnnouncementsState(status: AnnouncementSendStatus.sent):
-              _show(context, 'Sent.');
-            case AnnouncementsState(failure: final failure?):
-              _show(
-                context,
-                _sendFailureMessage(
-                  failure,
-                  accessRefreshed: state.accessRefreshed,
-                  now: DateTime.now(),
-                ),
-              );
-            default:
-          }
-        },
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: maxFormWidth),
-            child: ListView(
-              padding: const EdgeInsets.all(Gap.md),
-              children: const [
-                _Form(),
-                SizedBox(height: Gap.md),
-                _History(),
-              ],
-            ),
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _maxPageWidth),
+          child: ListView(
+            padding: const EdgeInsets.all(Gap.md),
+            children: [
+              Text(
+                'Push notifications to every user who allowed them',
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: colors.inkMuted),
+              ),
+              const SizedBox(height: Gap.md),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth < _twoColumnWidth) {
+                    return const Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      spacing: Gap.md,
+                      children: [_Form(), _History()],
+                    );
+                  }
+                  return const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: Gap.md,
+                    children: [
+                      SizedBox(width: _formWidth, child: _Form()),
+                      Expanded(child: _History()),
+                    ],
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ),
@@ -116,39 +191,9 @@ class _Form extends StatelessWidget {
 
   Future<void> _confirmThenSend(BuildContext context) async {
     final cubit = context.read<AnnouncementsCubit>();
-    final draft = cubit.state.draft.trimmed;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Send this announcement to every user?'),
-        content: SizedBox(
-          width: maxFormWidth / 2,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'It notifies every user of the "${draft.locale}" app '
-                'language who allowed notifications, right away. A sent '
-                'announcement cannot be recalled or edited.',
-              ),
-              const SizedBox(height: Gap.md),
-              Text(draft.title, style: Theme.of(context).textTheme.titleSmall),
-              Text(draft.body),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Send to everyone'),
-          ),
-        ],
-      ),
+      builder: (_) => SendConfirmDialog(draft: cubit.state.draft.trimmed),
     );
     if (confirmed ?? false) await cubit.send();
   }
@@ -157,58 +202,66 @@ class _Form extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<AnnouncementsCubit>();
     final state = context.watch<AnnouncementsCubit>().state;
+    final colors = ForgeStyle.of(context).colors;
     final draft = state.draft;
     final sending = state.status == AnnouncementSendStatus.sending;
-    return FormSection(
+    final outcome = _outcome(state, colors, DateTime.now());
+    return SectionCard.plain(
       title: 'New announcement',
-      children: [
-        const Text(
-          'A push notification to every device that allowed notifications, '
-          'for its language. Tapping it opens Today. iOS devices get none '
-          'until push is set up for iOS.',
-        ),
-        DropdownButtonFormField<String>(
-          initialValue: draft.locale,
-          decoration: const InputDecoration(labelText: 'Language'),
-          items: [
-            for (final language in languages)
-              DropdownMenuItem(value: language, child: Text(language)),
-          ],
-          onChanged: sending
-              ? null
-              : (locale) {
-                  if (locale != null) cubit.setLocale(locale);
-                },
-        ),
-        _CountedField(
-          key: ValueKey(('title', state.formVersion)),
-          label: 'Title',
-          value: draft.title,
-          length: draft.trimmed.title.length,
-          max: AnnouncementLimits.title,
-          enabled: !sending,
-          onChanged: cubit.setTitle,
-        ),
-        _CountedField(
-          key: ValueKey(('body', state.formVersion)),
-          label: 'Body',
-          value: draft.body,
-          length: draft.trimmed.body.length,
-          max: AnnouncementLimits.body,
-          enabled: !sending,
-          multiline: true,
-          onChanged: cubit.setBody,
-        ),
-        if (sending) const LinearProgressIndicator(),
-        Align(
-          alignment: Alignment.centerRight,
-          child: FilledButton.icon(
-            onPressed: state.canSend ? () => _confirmThenSend(context) : null,
-            icon: const Icon(Icons.campaign_outlined),
-            label: Text(sending ? 'Sending...' : 'Send...'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: Gap.md,
+        children: [
+          Text(
+            'A push notification to every device that allowed '
+            'notifications, for its language. Tapping it opens Today. iOS '
+            'devices get none until push is set up for iOS.',
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colors.inkMuted),
           ),
-        ),
-      ],
+          DropdownButtonFormField<String>(
+            initialValue: draft.locale,
+            decoration: const InputDecoration(labelText: 'Language'),
+            items: [
+              for (final language in languages)
+                DropdownMenuItem(value: language, child: Text(language)),
+            ],
+            onChanged: sending
+                ? null
+                : (locale) {
+                    if (locale != null) cubit.setLocale(locale);
+                  },
+          ),
+          _CountedField(
+            key: ValueKey(('title', state.formVersion)),
+            label: 'Title',
+            value: draft.title,
+            length: draft.trimmed.title.length,
+            max: AnnouncementLimits.title,
+            enabled: !sending,
+            onChanged: cubit.setTitle,
+          ),
+          _CountedField(
+            key: ValueKey(('body', state.formVersion)),
+            label: 'Body',
+            value: draft.body,
+            length: draft.trimmed.body.length,
+            max: AnnouncementLimits.body,
+            enabled: !sending,
+            multiline: true,
+            onChanged: cubit.setBody,
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: ForgeButton(
+              label: sending ? 'Sending…' : 'Send…',
+              loading: sending,
+              onPressed: state.canSend ? () => _confirmThenSend(context) : null,
+            ),
+          ),
+          if (outcome != null) _OutcomeBox(outcome),
+        ],
+      ),
     );
   }
 }
@@ -241,6 +294,7 @@ class _CountedField extends StatelessWidget {
     return TextFormField(
       initialValue: value,
       enabled: enabled,
+      minLines: multiline ? 3 : 1,
       maxLines: multiline ? null : 1,
       decoration: InputDecoration(
         labelText: label,
@@ -255,6 +309,41 @@ class _CountedField extends StatelessWidget {
   }
 }
 
+/// The last send's outcome, kept under the form until the next send.
+class _OutcomeBox extends StatelessWidget {
+  const _OutcomeBox(this.outcome);
+
+  final _Outcome outcome;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    final text = Theme.of(context).textTheme;
+    final (fill, ink) = _tint(style.colors, outcome.role);
+    return Semantics(
+      liveRegion: true,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: BorderRadius.circular(style.radii.md),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(Gap.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: Gap.xs,
+            children: [
+              Text(outcome.title, style: text.titleSmall?.copyWith(color: ink)),
+              if (outcome.message case final message?)
+                Text(message, style: text.bodyMedium?.copyWith(color: ink)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _History extends StatelessWidget {
   const _History();
 
@@ -262,30 +351,46 @@ class _History extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<AnnouncementsCubit>();
     final state = context.watch<AnnouncementsCubit>().state;
+    final colors = ForgeStyle.of(context).colors;
     final history = state.history;
     final failure = state.historyFailure;
-    return FormSection(
+    return SectionCard.plain(
       title: 'Sent before',
-      children: [
-        if (failure != null)
-          ListTile(
-            leading: const Icon(Icons.error_outline),
-            title: Text(
-              history == null
-                  ? failureMessage(failure)
-                  : 'Live updates stopped: ${failureMessage(failure)} '
-                        'Retrying automatically.',
+      note: 'Latest $announcementHistoryLength',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (failure != null)
+            Row(
+              spacing: Gap.sm,
+              children: [
+                Expanded(
+                  child: Text(
+                    history == null
+                        ? failureMessage(failure)
+                        : 'Live updates stopped: ${failureMessage(failure)} '
+                              'Retrying automatically.',
+                    style: TextStyle(color: colors.danger),
+                  ),
+                ),
+                ForgeButton(
+                  label: 'Retry now',
+                  variant: ForgeButtonVariant.outline,
+                  size: ForgeButtonSize.small,
+                  onPressed: cubit.retryHistory,
+                ),
+              ],
             ),
-            trailing: TextButton(
-              onPressed: cubit.retryHistory,
-              child: const Text('Retry now'),
-            ),
-          ),
-        if (history == null && failure == null) const LoadingView(),
-        if (history != null && history.isEmpty) const Text('Nothing sent yet.'),
-        for (final announcement in history ?? const <Announcement>[])
-          _HistoryRow(announcement),
-      ],
+          if (history == null && failure == null) const LoadingView(),
+          if (history != null && history.isEmpty)
+            Text('Nothing sent yet.', style: TextStyle(color: colors.inkMuted)),
+          for (final (i, announcement)
+              in (history ?? const <Announcement>[]).indexed) ...[
+            if (i > 0 || failure != null) const Divider(height: Gap.lg),
+            _HistoryRow(announcement),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -297,28 +402,64 @@ class _HistoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final colors = ForgeStyle.of(context).colors;
     final a = announcement;
-    final (status, color) = switch (a.status) {
-      _ when a.outcomeUnknownAt(DateTime.now()) => (
-        _outcomeUnknown,
-        scheme.error,
-      ),
-      AnnouncementStatus.sent => ('Sent', scheme.primary),
-      AnnouncementStatus.sending => ('Sending', scheme.tertiary),
-      AnnouncementStatus.failed => ('Failed, not sent', scheme.error),
-      AnnouncementStatus.unknown => ('Unknown', scheme.outline),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: Gap.xs,
+      children: [
+        Text(a.title, style: text.titleSmall),
+        Text(a.body, style: text.bodyMedium?.copyWith(color: colors.inkMuted)),
+        Text(
+          '${a.locale} · ${dateTimeLabel(a.sentAt ?? a.requestedAt)} · '
+          'by ${a.sentBy}',
+          style: text.bodySmall?.copyWith(color: colors.inkMuted),
+        ),
+        _StatusTag(a),
+      ],
+    );
+  }
+}
+
+/// Where [announcement] stands, as a tag; a failed or unknown outcome on a
+/// danger tint, wrapping its longer label.
+class _StatusTag extends StatelessWidget {
+  const _StatusTag(this.announcement);
+
+  final Announcement announcement;
+
+  @override
+  Widget build(BuildContext context) {
+    final a = announcement;
+    // A null kind is drawn on a danger tint.
+    final (label, kind) = switch (a.status) {
+      _ when a.outcomeUnknownAt(DateTime.now()) => (_outcomeUnknown, null),
+      AnnouncementStatus.failed => ('Failed, not sent', null),
+      AnnouncementStatus.sent => ('Sent', ForgeTagKind.record),
+      AnnouncementStatus.sending => ('Sending', ForgeTagKind.source),
+      AnnouncementStatus.unknown => ('Unknown', ForgeTagKind.neutral),
     };
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(a.title),
-      subtitle: Text(
-        '${a.body}\n'
-        '${a.locale} · ${dateTimeLabel(a.sentAt ?? a.requestedAt)} · '
-        'by ${a.sentBy}',
+    if (kind != null) return ForgeTag(label, kind: kind);
+    // Forge's tags have no danger kind and stay on one line.
+    final style = ForgeStyle.of(context);
+    final (fill, ink) = _tint(style.colors, style.colors.danger);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(style.radii.sm),
       ),
-      isThreeLine: true,
-      trailing: Text(status, style: TextStyle(color: color)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Gap.sm,
+          vertical: Gap.xs,
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: ink, fontWeight: FontWeight.w600),
+        ),
+      ),
     );
   }
 }

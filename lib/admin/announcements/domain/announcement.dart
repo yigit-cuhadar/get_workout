@@ -65,6 +65,9 @@ class AnnouncementDraft extends Equatable {
 /// does not know.
 enum AnnouncementStatus { sending, sent, failed, unknown }
 
+/// How many of the latest announcements the history shows.
+const announcementHistoryLength = 50;
+
 /// How long a send may take before a request still `sending` is taken as
 /// one whose outcome is unknown (the function died, or FCM did not say).
 const staleSendingAfter = Duration(minutes: 5);
