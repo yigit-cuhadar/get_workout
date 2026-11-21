@@ -418,6 +418,31 @@ void main() {
         );
       });
 
+      test('a new equipment type moves an untouched default', () async {
+        owned.add(const {Equipment.resistanceBand});
+        await pumpEventQueue();
+        catalogue.openCatalogue();
+
+        owned.add(EquipmentProfile.fullGym.equipment);
+        await pumpEventQueue();
+        expect(
+          catalogue.state.filter,
+          const CatalogueFilter(profiles: {EquipmentProfile.fullGym}),
+        );
+        expect(catalogue.state.recommending, isTrue);
+
+        catalogue.toggleLevel(Level.advanced);
+        owned.add(const {Equipment.resistanceBand});
+        await pumpEventQueue();
+        expect(
+          catalogue.state.filter,
+          const CatalogueFilter(
+            profiles: {EquipmentProfile.fullGym},
+            levels: {Level.advanced},
+          ),
+        );
+      });
+
       test('Clear removes it; the recommendations stay', () async {
         owned.add(const {});
         await pumpEventQueue();

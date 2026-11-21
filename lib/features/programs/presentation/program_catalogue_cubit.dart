@@ -241,8 +241,10 @@ class ProgramCatalogueCubit extends Cubit<ProgramCatalogueState> {
       ? ({...values}..remove(value))
       : {...values, value};
 
+  /// A new equipment type moves an untouched default filter along with it.
   void _updateProfile() {
     final profile = _profile.state.profile;
+    final previousDefault = state.defaultFilter;
     emit(
       state.copyWith(
         profile: TrainingProfile(
@@ -253,6 +255,13 @@ class ProgramCatalogueCubit extends Cubit<ProgramCatalogueState> {
         ),
       ),
     );
+    final filter = state.defaultFilter;
+    if (filter != null &&
+        previousDefault != null &&
+        state.filter == previousDefault &&
+        filter != previousDefault) {
+      emit(state.copyWith(filter: filter));
+    }
     _applyDefaultFilter();
   }
 

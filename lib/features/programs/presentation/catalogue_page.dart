@@ -154,7 +154,8 @@ class _CatalogueViewState extends State<_CatalogueView> {
       for (final program in matched)
         if (!above.contains(program)) program,
     ];
-    final free = state.programs.where((program) => !program.premium).length;
+    // The count follows the default filter, as the list below does.
+    final free = matched.where((program) => !program.premium).length;
     return [
       _FilterChips(state),
       if (state.filtering)
@@ -223,8 +224,8 @@ class _CatalogueViewState extends State<_CatalogueView> {
           padding: const EdgeInsets.fromLTRB(Gap.xs, 0, Gap.xs, Gap.sm),
           child: Text(
             state.premium == true
-                ? l10n.catalogueCount(state.programs.length)
-                : l10n.catalogueCountFree(state.programs.length, free),
+                ? l10n.catalogueCount(matched.length)
+                : l10n.catalogueCountFree(matched.length, free),
             style: Theme.of(context).textTheme.bodySmall!
                 .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
           ),
