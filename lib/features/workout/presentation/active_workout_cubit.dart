@@ -1147,6 +1147,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
       exercise,
       state.stats[exercise.exerciseId]?.last,
       unit,
+      incrementKg: knownExercises[exercise.exerciseId]?.incrementKg,
     );
     return suggested != null && progressionOpen(exercise, suggested.kg)
         ? suggested

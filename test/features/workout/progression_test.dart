@@ -61,6 +61,32 @@ void main() {
       expect(progression(squat, last([lift(80, 8), lift(80, 7)]), kg), isNull);
     });
 
+    test("steps by the exercise's increment when it has one", () {
+      final sets = last([lift(20, 8)]);
+      expect(progression(squat, sets, kg, incrementKg: 1.25), (
+        kg: 21.25,
+        reps: 8,
+      ));
+      expect(progression(squat, sets, kg, incrementKg: 5), (kg: 25.0, reps: 8));
+      expect(progression(squat, sets, kg, incrementKg: 0), (kg: 22.5, reps: 8));
+    });
+
+    test('in lb the increment rounds to 2.5 lb, at least 2.5', () {
+      // 100 lb lifted, typed in lb.
+      final sets = last([lift(WeightUnit.lb.toKg(100), 8)]);
+      double lbOf(({double kg, int reps})? p) =>
+          WeightUnit.lb.shownFromKg(p!.kg);
+      expect(
+        lbOf(progression(squat, sets, WeightUnit.lb, incrementKg: 2.5)),
+        105,
+      );
+      expect(
+        lbOf(progression(squat, sets, WeightUnit.lb, incrementKg: 1.25)),
+        102.5,
+      );
+      expect(lbOf(progression(squat, sets, WeightUnit.lb)), 105);
+    });
+
     test('ignores warm-ups', () {
       expect(
         progression(

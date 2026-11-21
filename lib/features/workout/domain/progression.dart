@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../../exercises/domain/vocabulary.dart';
 import '../../programs/domain/program.dart';
 import '../../settings/domain/user_settings.dart';
@@ -28,14 +30,17 @@ int _compare(WorkoutSet a, WorkoutSet b, LoggingType type) {
 }
 
 /// A heavier load for [exercise] when [last] time every working set
-/// reached the top of its program rep range: the heaviest of them one
-/// weight step of [unit] up, in kg, with the [reps] they hit. Only for
-/// exercises lifting a load for reps with a rep range; null otherwise.
+/// reached the top of its program rep range: the heaviest of them one step
+/// up, in kg, with the [reps] they hit. The step is the exercise's
+/// [incrementKg] (in lb rounded to 2.5 lb, at least 2.5), else [unit]'s
+/// weight step. Only for exercises lifting a load for reps with a rep
+/// range; null otherwise.
 ({double kg, int reps})? progression(
   WorkoutExercise exercise,
   LastSession? last,
-  WeightUnit unit,
-) {
+  WeightUnit unit, {
+  double? incrementKg,
+}) {
   final top = exercise.goal?.repMax;
   if (exercise.loggingType != LoggingType.weightReps ||
       top == null ||
@@ -57,9 +62,21 @@ int _compare(WorkoutSet a, WorkoutSet b, LoggingType type) {
       .map((set) => set.weightKg!)
       .reduce((a, b) => a > b ? a : b);
   return (
-    kg: unit.toKg(unit.shownFromKg(heaviest) + unit.weightStep),
+    kg: unit.toKg(unit.shownFromKg(heaviest) + _step(unit, incrementKg)),
     reps: top,
   );
+}
+
+/// One progression step in [unit]: see [progression].
+double _step(WeightUnit unit, double? incrementKg) {
+  if (incrementKg == null || incrementKg <= 0) return unit.weightStep;
+  return switch (unit) {
+    WeightUnit.kg => incrementKg,
+    WeightUnit.lb => math.max(
+      2.5,
+      (unit.fromKg(incrementKg) / 2.5).round() * 2.5,
+    ),
+  };
 }
 
 /// Whether a working set of [exercise] not done yet lifts less than [kg]
