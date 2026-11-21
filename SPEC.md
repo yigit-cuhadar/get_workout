@@ -2851,11 +2851,12 @@ the feature you are about to touch, and keep it true when you change it.
   Progressions' side delts and biceps.
 - **Content review** (2026-11-21, owner's picks): safety lines on the heavy
   barbell lifts and the jumps, aliases that named another exercise
-  removed, text matched to the fields; jumping jack, high knees, barbell
+  removed, text matched to the fields, front delt added to the stability ball
+  pike's secondary muscles; jumping jack, high knees, barbell
   glute bridge, dumbbell front squat, seated cable fly and Smith machine
   split squat added; jump rope, stiff-leg deadlift, machine biceps curl and
-  Bayesian curl moved up the popularity order. Lean-Down Circuits 4-Day
-  lost three core items (abs 36 → 21 weekly sets). Four premium programs
+  Bayesian curl (and the revived stretch) moved up the popularity order. Lean-Down Circuits 4-Day
+  lost five core items and gained jumping jacks (abs 36 → 21 weekly sets). Four premium programs
   were added for catalogue gaps: Beginner Fat-Loss Circuits 3-Day,
   Beginner Upper/Lower 4-Day, Bodyweight Progressions 3-Day (intermediate)
   and Home Gym Upper/Lower 4-Day (intermediate).
@@ -4741,7 +4742,7 @@ not in a separate dashboard tool.
   - E6 A: text lists (Aliases, Setup, Execution, Mistakes, Cues) stay one
     field per item with up, down and remove.
   - P1 A: Programs is a table like Exercises, with a catalogue health line
-    ("live: 6 free, 19 premium").
+    ("live: 6 free, 23 premium").
   - P2 B: the program editor's computed values (days a week, equipment,
     minutes, weekly sets, warnings) sit in a summary panel on the right.
   - P3 A: a day's exercises are table rows (sets, reps or time, rest,

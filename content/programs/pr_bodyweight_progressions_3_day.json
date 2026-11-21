@@ -42,18 +42,18 @@
       "name": "Push and Legs",
       "items": [
         {
-          "exerciseId": "ex_push_up",
-          "sets": 4,
-          "repMin": 8,
-          "repMax": 15,
-          "restS": 90
-        },
-        {
           "exerciseId": "ex_chest_dip",
           "sets": 3,
           "repMin": 6,
           "repMax": 10,
           "restS": 120
+        },
+        {
+          "exerciseId": "ex_push_up",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 15,
+          "restS": 90
         },
         {
           "exerciseId": "ex_pike_push_up",
