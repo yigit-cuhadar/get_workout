@@ -4164,7 +4164,10 @@ the feature you are about to touch, and keep it true when you change it.
   other lists.
 - **Admin panel › App settings** (`lib/admin/app_settings`,
   `/app-settings`; boards C1-C3 A): one page of the keys in two cards,
-  Paywall (`paywall_layout`, a choice of a list, b cards, c one plan) and
+  Paywall (`paywall_layout`, a choice of a list, b cards, c one plan; it
+  stays editable while its A/B test runs, owner's pick 2026-11-21, with
+  the line "A change also reaches users outside its A/B test." under its
+  description, since A/B Testing's experiments are not in the template) and
   Update and maintenance (`maintenance` a switch, `maintenance_message`
   text, the four version keys text checked as versions), under the line
   "Remote Config · version N, published <date> by <who> · apps fetch

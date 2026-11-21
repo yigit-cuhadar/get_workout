@@ -51,6 +51,12 @@ const _descriptions = {
       'Below this version the Android app offers an update once.',
 };
 
+/// A warning on its own line under a key's description (owner's pick:
+/// the paywall layout stays editable while its A/B test runs).
+const _warnings = {
+  'paywall_layout': 'A change also reaches users outside its A/B test.',
+};
+
 const _choiceLabels = {'a': 'list', 'b': 'cards', 'c': 'one plan'};
 
 String _groupTitle(SettingGroup group) => switch (group) {
@@ -322,6 +328,8 @@ class _SettingRow extends StatelessWidget {
             children: [
               Text(spec.key, style: theme.textTheme.titleSmall),
               Text(_descriptions[spec.key] ?? '', style: muted),
+              if (_warnings[spec.key] case final warning?)
+                Text(warning, style: muted),
               if (setting.conditional.isNotEmpty) ...[
                 const SizedBox(height: Gap.xs),
                 Text(
