@@ -210,23 +210,54 @@ class RetentionSection extends StatelessWidget {
                     ],
                   )
                 else
-                  for (final (title, share) in [
-                    ('Day 1', (Cohort c) => c.d1),
-                    ('Day 7', (Cohort c) => c.d7),
-                    ('Day 30', (Cohort c) => c.d30),
-                  ])
-                    // The cohorts whose share is known, by install week.
-                    _LineOverTime(
-                      title: title,
-                      points: [
-                        for (final c in cohorts)
-                          if (share(c) case final value?)
-                            (day: c.week, value: value),
-                      ],
-                      format: shareLabel,
-                    ),
+                  _RetentionCurves(cohorts: cohorts),
               ],
             ),
+    );
+  }
+}
+
+/// Day 1, 7 and 30 retention by install week on one percent scale; a
+/// cohort counts on a day once that day is complete.
+class _RetentionCurves extends StatelessWidget {
+  const _RetentionCurves({required this.cohorts});
+
+  final List<Cohort> cohorts;
+
+  @override
+  Widget build(BuildContext context) {
+    final first = cohorts.first.week;
+    final last = cohorts.last.week;
+    return MultiSeriesChart.shared(
+      title: 'Retention curves',
+      series: [
+        for (final (label, look, share) in [
+          ('Day 1', SeriesLook.accent, (Cohort c) => c.d1),
+          ('Day 7', SeriesLook.info, (Cohort c) => c.d7),
+          ('Day 30', SeriesLook.success, (Cohort c) => c.d30),
+        ])
+          ChartSeries(
+            label: label,
+            points: [
+              for (final c in cohorts)
+                if (share(c) case final value?) (day: c.week, value: value),
+            ],
+            format: shareLabel,
+            look: look,
+          ),
+      ],
+      gridlines: [
+        for (final value in [0.0, 0.25, 0.5])
+          (value: value, label: shareLabel(value)),
+      ],
+      from: first,
+      to: last,
+      dateLabel: dayLabel,
+      startLabel: shortDayLabel(first),
+      endLabel: shortDayLabel(last),
+      semanticLabel:
+          'Day 1, 7 and 30 retention by install week from '
+          '${dayLabel(first)} to ${dayLabel(last)}',
     );
   }
 }

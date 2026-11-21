@@ -43,7 +43,7 @@ class GetStepsAccess implements UseCase<StepsAccess, NoParams> {
 }
 
 /// The user said yes in the app: remembers that they were asked here, then
-/// shows the system's prompt where it still can, for steps and then for
+/// shows the system's prompt where it still can, one sheet for steps and
 /// workouts (the Cardio page's sessions). Only the steps answer counts: a
 /// workouts refusal leaves the steps as they are. The answer is a
 /// `steps_connect`, granted when steps can be read: iOS never tells a
@@ -62,12 +62,6 @@ class AllowStepsAccess implements UseCase<StepsAccess, NoParams> {
     final steps = (await _health.requestPermission()).map(_access);
     if (steps.valueOrNull case final access?) {
       await _analytics.stepsConnect(granted: access.readable);
-    }
-    if (steps case Ok(value: StepsAccess.granted || StepsAccess.undetermined)) {
-      if ((await _health.requestWorkoutsPermission()).failureOrNull
-          case final failure?) {
-        Log.e('steps', 'workouts not asked: ${failure.message}');
-      }
     }
     return steps;
   }
