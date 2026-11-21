@@ -60,16 +60,30 @@ class BodyModelCubit extends Cubit<BodyModelState> {
 
   final Future<Model3D> Function(Sex sex) _loadModel;
   late final UserStreamFollower<Sex?> _follower;
-  final _models = <Sex, Model3D>{};
+  final _models = <Sex, Future<Model3D>>{};
   Sex _sex = Sex.male;
   bool _started = false;
-  bool _loading = false;
 
   /// Starts loading the current model unless it is loaded or loading; after
   /// a failure, tries again.
   Future<void> load() async {
     _started = true;
     await _show();
+  }
+
+  /// The model for [sex], whoever is signed in (the sex question shows
+  /// both); loaded once and shared with [load].
+  Future<Model3D> modelFor(Sex sex) => _models[sex] ??= _fetch(sex);
+
+  Future<Model3D> _fetch(Sex sex) async {
+    try {
+      return await _loadModel(sex);
+    } catch (error, stack) {
+      Log.e('model', 'Body model failed to load', error, stack);
+      // Gone, so the next ask tries again.
+      _models.remove(sex)?.ignore();
+      rethrow;
+    }
   }
 
   void _setSex(Sex sex) {
@@ -80,26 +94,14 @@ class BodyModelCubit extends Cubit<BodyModelState> {
 
   Future<void> _show() async {
     final sex = _sex;
-    if (_models[sex] case final model?) {
-      emit(BodyModelReady(model));
-      return;
-    }
-    if (_loading) return;
-    _loading = true;
-    if (state is! BodyModelLoading) emit(const BodyModelLoading());
+    final model = modelFor(sex);
+    if (state is BodyModelFailed) emit(const BodyModelLoading());
     try {
-      final model = await _loadModel(sex);
-      _models[sex] = model;
-    } catch (error, stack) {
-      Log.e('model', 'Body model failed to load', error, stack);
-      _loading = false;
+      final loaded = await model;
+      if (!isClosed && sex == _sex) emit(BodyModelReady(loaded));
+    } catch (_) {
       if (!isClosed && sex == _sex) emit(const BodyModelFailed());
-      return;
     }
-    _loading = false;
-    if (isClosed) return;
-    // The sex may have changed while this one loaded.
-    await _show();
   }
 
   @override

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/widgets/muscle_model.dart';
 import '../../../core/widgets/onboarding_question.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/vocabulary.dart';
+import '../../exercises/presentation/body_model_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -240,12 +243,7 @@ class ProfileQuestion extends StatelessWidget {
             onPreset: cubit.applyPreset,
             onEquipment: cubit.setEquipment,
           ),
-          ProfileField.sex => OnboardingChoices(
-            values: Sex.values,
-            selected: state.answers.sex,
-            title: l10n.sexName,
-            onChanged: cubit.setSex,
-          ),
+          ProfileField.sex => _SexAnswer(state.answers.sex),
           ProfileField.birthYear => _BirthYearAnswer(state.answers.birthYear),
           ProfileField.height => _HeightAnswer(state.answers.heightCm),
           ProfileField.weight => _WeightAnswer(field, state.answers.weightKg),
@@ -898,6 +896,72 @@ class _EntrySheetState extends State<_EntrySheet> {
               errorText: _error,
             )
           : _pair(fields),
+    );
+  }
+}
+
+/// The two body models side by side, each turning slowly; a tap on one
+/// answers (M1 C, M2 A).
+class _SexAnswer extends StatelessWidget {
+  const _SexAnswer(this.selected);
+
+  final Sex? selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final cubit = context.read<ProfileFormCubit>();
+    const values = Sex.values;
+    final index = selected == null ? -1 : values.indexOf(selected!);
+    return ChoiceGrid.pictures(
+      options: [
+        for (final sex in values)
+          ChoiceOption(label: l10n.sexName(sex), picture: _TurningBody(sex)),
+      ],
+      selected: index < 0 ? null : index,
+      onSelected: (i) => cubit.setSex(values[i]),
+    );
+  }
+}
+
+class _TurningBody extends StatefulWidget {
+  const _TurningBody(this.sex);
+
+  final Sex sex;
+
+  @override
+  State<_TurningBody> createState() => _TurningBodyState();
+}
+
+class _TurningBodyState extends State<_TurningBody> {
+  late final Future<Model3D> _model = context.read<BodyModelCubit>().modelFor(
+    widget.sex,
+  );
+  // Closer than the default framing, so the body fills the tall tile.
+  final _camera = ModelViewerController(zoom: 1.5);
+
+  @override
+  void dispose() {
+    _camera.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = ForgeStyle.of(context).colors;
+    return FutureBuilder(
+      future: _model,
+      builder: (context, snapshot) => switch (snapshot.data) {
+        final model? => ModelViewer(
+          model: model,
+          controller: _camera,
+          interactive: false,
+          autoTurn: true,
+          baseColor: muscleModelBase(p),
+        ),
+        // Still loading, or failed: the label answers on its own.
+        null => const SizedBox.expand(),
+      },
     );
   }
 }
