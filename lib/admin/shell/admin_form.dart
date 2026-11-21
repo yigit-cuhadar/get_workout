@@ -77,41 +77,6 @@ class FieldProblems extends StatelessWidget {
   }
 }
 
-/// Every problem of a form, above it.
-class ProblemSummary extends StatelessWidget {
-  const ProblemSummary({
-    super.key,
-    required this.title,
-    required this.messages,
-  });
-
-  final String title;
-  final List<String> messages;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Card(
-      color: scheme.errorContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(Gap.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium
-                  ?.copyWith(color: scheme.onErrorContainer),
-            ),
-            for (final message in messages)
-              Text(message, style: TextStyle(color: scheme.onErrorContainer)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class TextInput extends StatelessWidget {
   const TextInput({
     super.key,
@@ -208,6 +173,7 @@ class CodePicker<T extends Coded> extends StatelessWidget {
       children: [
         DropdownButtonFormField<T?>(
           initialValue: value,
+          isExpanded: true,
           decoration: InputDecoration(labelText: label),
           items: [
             if (optional || value == null)

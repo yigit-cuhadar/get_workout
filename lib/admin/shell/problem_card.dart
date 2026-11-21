@@ -86,11 +86,14 @@ class FieldAnchors {
   Widget anchor(String field, Widget child) =>
       Focus(focusNode: _node(field), child: child);
 
+  /// Whether the input of [field] is on screen now.
+  bool shows(String field) => _nodes[field]?.context?.mounted ?? false;
+
   /// Scrolls to [field] and focuses it; does nothing when it is not shown.
   void open(String field) {
     final node = _nodes[field];
     final context = node?.context;
-    if (node == null || context == null) return;
+    if (node == null || context == null || !context.mounted) return;
     Scrollable.ensureVisible(
       context,
       alignment: 0.2,
