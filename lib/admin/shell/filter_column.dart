@@ -5,11 +5,13 @@ import 'package:forge_ui/forge_ui.dart';
 const filterColumnWidth = 240.0;
 
 /// A list page's filters in a card on the left of its table: each child is
-/// a [FilterRadios] or a [FilterDropdown].
+/// a [FilterRadios], a [FilterDropdown] or a [FilterSwitch]. With
+/// [onClear], the header offers "Clear filters".
 class FilterColumn extends StatelessWidget {
-  const FilterColumn({super.key, required this.children});
+  const FilterColumn({super.key, required this.children, this.onClear});
 
   final List<Widget> children;
+  final VoidCallback? onClear;
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +20,8 @@ class FilterColumn extends StatelessWidget {
       child: SingleChildScrollView(
         child: SectionCard.plain(
           title: 'Filters',
+          actionLabel: onClear == null ? null : 'Clear filters',
+          onAction: onClear,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: Gap.md,
@@ -107,6 +111,35 @@ class FilterDropdown<T> extends StatelessWidget {
           onChanged: onChanged,
         ),
       ],
+    );
+  }
+}
+
+/// A filter that is on or off.
+class FilterSwitch extends StatelessWidget {
+  const FilterSwitch({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return MergeSemantics(
+      child: Row(
+        spacing: Gap.sm,
+        children: [
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.labelLarge),
+          ),
+          ForgeSwitch(value: value, onChanged: onChanged),
+        ],
+      ),
     );
   }
 }

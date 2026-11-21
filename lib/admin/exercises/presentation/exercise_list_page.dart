@@ -9,6 +9,7 @@ import '../../shell/admin_text.dart';
 import '../../shell/filter_column.dart';
 import '../../shell/page_header.dart';
 import '../../shell/status_tag.dart';
+import '../../shell/table_sort.dart';
 import '../domain/exercise_admin_usecases.dart';
 import '../domain/exercise_draft.dart';
 import 'exercise_list_cubit.dart';
@@ -60,7 +61,7 @@ class ExerciseListPage extends StatelessWidget {
                           ),
                   )
                 else ...[
-                  if (failure != null)
+                  if (failure ?? state.programsFailure case final failure?)
                     MaterialBanner(
                       content: Text(
                         'Live updates stopped: ${failureMessage(failure)} '
@@ -104,6 +105,7 @@ class _Filters extends StatelessWidget {
     final cubit = context.read<ExerciseListCubit>();
     final counts = state.counts;
     return FilterColumn(
+      onClear: state.hasFilters ? cubit.clearFilters : null,
       children: [
         FilterRadios<ExerciseStatus>(
           label: 'Status',
@@ -130,14 +132,49 @@ class _Filters extends StatelessWidget {
           selected: state.equipment,
           onChanged: cubit.filterEquipment,
         ),
-        FilterDropdown<ExerciseSort>(
-          label: 'Sort',
-          options: const [
-            (value: ExerciseSort.popularity, label: 'Popularity'),
-            (value: ExerciseSort.name, label: 'Name'),
+        FilterDropdown<Level>(
+          label: 'Level',
+          options: _anyOf(Level.values),
+          selected: state.level,
+          onChanged: cubit.filterLevel,
+        ),
+        FilterDropdown<Mechanic>(
+          label: 'Mechanic',
+          options: _anyOf(Mechanic.values),
+          selected: state.mechanic,
+          onChanged: cubit.filterMechanic,
+        ),
+        FilterDropdown<MovementPattern>(
+          label: 'Movement pattern',
+          options: _anyOf(MovementPattern.values),
+          selected: state.movementPattern,
+          onChanged: cubit.filterMovementPattern,
+        ),
+        FilterDropdown<LoggingType>(
+          label: 'Logging type',
+          options: _anyOf(LoggingType.values),
+          selected: state.loggingType,
+          onChanged: cubit.filterLoggingType,
+        ),
+        FilterDropdown<Muscle>(
+          label: 'Secondary muscle',
+          options: _anyOf(Muscle.values),
+          selected: state.secondaryMuscle,
+          onChanged: cubit.filterSecondaryMuscle,
+        ),
+        FilterDropdown<String>(
+          label: 'Family',
+          options: [
+            (value: null, label: 'Any'),
+            for (final family in state.families) (value: family, label: family),
           ],
-          selected: state.sort,
-          onChanged: (sort) => cubit.sortBy(sort!),
+          selected: state.family,
+          onChanged: cubit.filterFamily,
+        ),
+        FilterSwitch(
+          label: 'Problems only · ${state.problemCount}',
+          value: state.problemsOnly,
+          onChanged: cubit.showProblemsOnly,
         ),
       ],
     );
@@ -274,7 +311,7 @@ class _Table extends StatelessWidget {
               ],
             ),
             const SizedBox(height: Gap.md),
-            const _HeaderRow(),
+            _HeaderRow(state: state),
             const Divider(height: 1),
             Expanded(
               child: visible.isEmpty
@@ -324,27 +361,33 @@ class _SearchState extends State<_Search> {
   );
 }
 
-/// Column widths of the table, as flex factors.
+/// The table's columns with their widths, as flex factors.
 const _columns = [
-  ('Name', 3),
-  ('Id', 3),
-  ('Status', 1),
-  ('Main muscles', 2),
-  ('Equipment', 3),
-  ('Family / rank', 2),
-  ('Popularity', 1),
-  ('Updated', 2),
+  ('Name', 3, ExerciseColumn.name),
+  ('Id', 3, ExerciseColumn.id),
+  ('Status', 1, ExerciseColumn.status),
+  ('Main muscles', 2, ExerciseColumn.mainMuscles),
+  ('Equipment', 3, ExerciseColumn.equipment),
+  ('Family / rank', 2, ExerciseColumn.family),
+  ('Popularity', 1, ExerciseColumn.popularity),
+  ('Updated', 2, ExerciseColumn.updated),
 ];
 
 class _HeaderRow extends StatelessWidget {
-  const _HeaderRow();
+  const _HeaderRow({required this.state});
+
+  final ExerciseListState state;
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelMedium
-        ?.copyWith(color: ForgeStyle.of(context).colors.inkMuted);
+    final cubit = context.read<ExerciseListCubit>();
     return _Cells([
-      for (final (label, _) in _columns) Text(label, style: style),
+      for (final (label, _, column) in _columns)
+        SortHeader(
+          label: label,
+          ascending: state.sortColumn == column ? state.ascending : null,
+          onTap: () => cubit.sortBy(column),
+        ),
     ]);
   }
 }

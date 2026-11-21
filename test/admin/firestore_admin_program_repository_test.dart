@@ -117,6 +117,35 @@ void main() {
     expect(records.first.daysPerWeek, 2);
   });
 
+  test('watchAll emits every program with its days, again on a change of '
+      'either, and drops a deleted one', () async {
+    await seedImported();
+    await card('pr_old').set({
+      ...cardOf(programJson(id: 'pr_old', status: 'retired'))..remove('id'),
+      'updatedAt': importedAt,
+    });
+    final emitted = <List<ProgramRecord>>[];
+    final listener = repository.watchAll().listen(emitted.add);
+    addTearDown(listener.cancel);
+    await pumpEventQueue();
+
+    var records = {for (final r in emitted.last) r.id: r};
+    expect(records.keys, unorderedEquals([id, 'pr_old']));
+    expect(records[id]!.draft, ProgramDraft.fromJson(programJson()));
+    expect(records[id]!.version.detail, importedAt.toDate());
+    // A card without a detail has no days.
+    expect(records['pr_old']!.draft.days, isEmpty);
+
+    await detail().update({'days': <Object?>[]});
+    await pumpEventQueue();
+    records = {for (final r in emitted.last) r.id: r};
+    expect(records[id]!.draft.days, isEmpty);
+
+    await card('pr_old').delete();
+    await pumpEventQueue();
+    expect([for (final r in emitted.last) r.id], [id]);
+  });
+
   group('create', () {
     test('writes the card and the detail as the import does', () async {
       final json = programJson();

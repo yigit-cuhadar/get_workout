@@ -19,6 +19,13 @@ class WatchProgramCards {
   Stream<List<ProgramRecord>> call() => _repository.watchCards();
 }
 
+class WatchPrograms {
+  const WatchPrograms(this._repository);
+  final AdminProgramRepository _repository;
+
+  Stream<List<ProgramRecord>> call() => _repository.watchAll();
+}
+
 class LoadProgramRecord implements UseCase<ProgramRecord, String> {
   const LoadProgramRecord(this._repository);
   final AdminProgramRepository _repository;
@@ -117,6 +124,32 @@ List<String> programWarnings(
       warning.startsWith(prefix) ? warning.substring(prefix.length) : warning,
   ];
 }
+
+/// Ids of [programs] (each with its days) that break a catalogue rule
+/// ([validateCatalogueProgram]) or get a weekly-sets warning
+/// ([programWarnings]), as each one's editor would show.
+Set<String> programsWithProblems(
+  List<ProgramRecord> programs,
+  Map<String, ExerciseEntry> exercises,
+) => {
+  for (final program in programs)
+    if (validateCatalogueProgram(
+          program.draft,
+          exercises: exercises,
+          catalogue: programs,
+          isNew: false,
+        ).isNotEmpty ||
+        programWarnings(program.draft, exercises).isNotEmpty)
+      program.id,
+};
+
+/// Every exercise the days of [programs] use, whatever the program's
+/// status.
+Set<String> exerciseIdsInPrograms(List<ProgramRecord> programs) => {
+  for (final program in programs)
+    for (final day in program.draft.days)
+      for (final item in day.items) item.exerciseId,
+};
 
 /// What the catalogue-wide rules say about the loaded cards: unique ids,
 /// names and orders, and the split of live programs into free and premium.

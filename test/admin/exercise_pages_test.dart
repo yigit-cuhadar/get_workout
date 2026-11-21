@@ -14,6 +14,8 @@ import 'package:get_workout/admin/exercises/presentation/exercise_editor_cubit.d
 import 'package:get_workout/admin/exercises/presentation/exercise_editor_page.dart';
 import 'package:get_workout/admin/exercises/presentation/exercise_list_cubit.dart';
 import 'package:get_workout/admin/exercises/presentation/exercise_list_page.dart';
+import 'package:get_workout/admin/programs/domain/admin_program_repository.dart';
+import 'package:get_workout/admin/programs/domain/program_admin_usecases.dart';
 import 'package:get_workout/features/exercises/domain/content_rules.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -22,6 +24,8 @@ import 'fixtures.dart';
 class MockRepository extends Mock implements AdminExerciseRepository {}
 
 class MockAccessRepository extends Mock implements AdminAccessRepository {}
+
+class MockProgramRepository extends Mock implements AdminProgramRepository {}
 
 void main() {
   late MockRepository repository;
@@ -63,8 +67,11 @@ void main() {
   testWidgets('the list filters by status from the filter column', (
     tester,
   ) async {
+    final programs = MockProgramRepository();
+    when(programs.watchAll).thenAnswer((_) => Stream.value([]));
     final cubit = ExerciseListCubit(
       watchExerciseRecords: WatchExerciseRecords(repository),
+      watchPrograms: WatchPrograms(programs),
     );
     addTearDown(cubit.close);
     await pumpPage(
@@ -82,6 +89,29 @@ void main() {
 
     expect(find.text('Showing 0 of 2'), findsOneWidget);
     expect(find.text('No results'), findsOneWidget);
+
+    await tester.tap(find.text('Clear filters'));
+    await tester.pump();
+    expect(find.text('Showing 2 of 2'), findsOneWidget);
+
+    // No program uses either exercise.
+    expect(find.text('Problems only · 2'), findsOneWidget);
+    await tester.ensureVisible(find.byType(ForgeSwitch));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(ForgeSwitch));
+    await tester.pump();
+    expect(cubit.state.problemsOnly, isTrue);
+
+    await tester.tap(find.text('Name'));
+    await tester.pump();
+    await tester.tap(find.text('Name'));
+    await tester.pump();
+    expect(find.byIcon(Icons.arrow_downward), findsOneWidget);
+    final curlTop = tester.getTopLeft(find.text('Curl')).dy;
+    expect(
+      curlTop,
+      greaterThan(tester.getTopLeft(find.text('Dumbbell Press')).dy),
+    );
   });
 
   testWidgets('a problem line opens its tab and focuses its field', (
