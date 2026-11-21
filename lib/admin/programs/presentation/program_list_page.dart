@@ -7,7 +7,6 @@ import '../../../features/exercises/domain/vocabulary.dart';
 import '../../../features/programs/domain/catalogue_program.dart';
 import '../../../features/programs/domain/catalogue_rules.dart';
 import '../../admin_router.dart';
-import '../../shell/admin_nav.dart';
 import '../../shell/admin_text.dart';
 import '../domain/program_admin_usecases.dart';
 import '../domain/program_draft.dart';
@@ -25,10 +24,7 @@ class ProgramListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Programs'),
-        actions: const [AdminNav()],
-      ),
+      appBar: AppBar(title: const Text('Programs')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go(AdminRoutes.newProgram),
         icon: const Icon(Icons.add),

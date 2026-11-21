@@ -5,7 +5,6 @@ import 'package:forge_ui/forge_ui.dart';
 
 import '../../../features/exercises/domain/content_rules.dart';
 import '../../shell/admin_form.dart';
-import '../../shell/admin_nav.dart';
 import '../../shell/admin_text.dart';
 import '../domain/announcement.dart';
 import 'announcements_cubit.dart';
@@ -72,10 +71,7 @@ class _AnnouncementsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Announcements'),
-        actions: const [AdminNav()],
-      ),
+      appBar: AppBar(title: const Text('Announcements')),
       body: BlocListener<AnnouncementsCubit, AnnouncementsState>(
         listenWhen: (previous, state) => previous.status != state.status,
         listener: (context, state) {

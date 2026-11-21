@@ -5,7 +5,6 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../shell/admin_form.dart';
-import '../../shell/admin_nav.dart';
 import '../../shell/admin_text.dart';
 import '../domain/feedback_entry.dart';
 import 'feedback_admin_cubit.dart';
@@ -29,10 +28,7 @@ class _FeedbackView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<FeedbackAdminCubit>();
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Feedback'),
-        actions: const [AdminNav()],
-      ),
+      appBar: AppBar(title: const Text('Feedback')),
       body: BlocConsumer<FeedbackAdminCubit, FeedbackAdminState>(
         listenWhen: (previous, current) =>
             current.updateFailure != null &&

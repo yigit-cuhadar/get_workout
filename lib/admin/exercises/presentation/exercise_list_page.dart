@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../features/exercises/domain/vocabulary.dart';
 import '../../admin_router.dart';
-import '../../shell/admin_nav.dart';
 import '../../shell/admin_text.dart';
 import '../domain/exercise_admin_usecases.dart';
 import '../domain/exercise_draft.dart';
@@ -22,10 +21,7 @@ class ExerciseListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Exercises'),
-        actions: const [AdminNav()],
-      ),
+      appBar: AppBar(title: const Text('Exercises')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go(AdminRoutes.newExercise),
         icon: const Icon(Icons.add),
