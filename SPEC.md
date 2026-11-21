@@ -2486,6 +2486,17 @@ the feature you are about to touch, and keep it true when you change it.
 
 ### App shell, settings and onboarding
 
+- **Sex question with body models** (owner's picks, 2026-11-21, canvas
+  https://claude.ai/artifact/VnbgAYxxJhGez21s5Dhp6L): the question shows
+  the male and female body models side by side as two cards, each model
+  turning slowly, with a radio and its label under it (M1 C); the picked
+  card takes the selected row's look, accent-soft ground and a filled
+  radio (M2 A). Built as a picture-tiles form of Forge `ChoiceGrid` with a
+  slow auto-turn in `forge_model_viewer`. Your profile › Sex uses the same
+  question. Every screen showing the body model shows the user's: female
+  for a user who answered female, male otherwise (`BodyModelCubit`). The
+  models' Blender sources are `design/models/*.blend`.
+
 - **Navigation** (owner, 2026-11-13): five tabs, Today / Programs /
   Exercises / Progress / Profile, in a Material `NavigationBar` (icons
   `today_outlined`, `event_note_outlined`, `fitness_center`,
