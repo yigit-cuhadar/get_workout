@@ -18,7 +18,6 @@ import 'programs/presentation/program_editor_page.dart';
 import 'programs/presentation/program_list_cubit.dart';
 import 'programs/presentation/program_list_page.dart';
 import 'shell/admin_shell.dart';
-import 'shell/coming_soon_page.dart';
 import 'support/presentation/support_inbox_page.dart';
 import 'users/presentation/user_page.dart';
 import 'users/presentation/users_cubit.dart';
