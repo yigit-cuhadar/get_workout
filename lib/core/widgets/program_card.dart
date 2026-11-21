@@ -23,9 +23,9 @@ class ProgramCard extends StatelessWidget {
        _row = false;
 
   /// The catalogue's list row: the [name] with an Active tag when it is
-  /// [active] and a Fits you or Premium tag, the [facts] under it and,
-  /// where it applies, a recommended row's
-  /// [match]; a chevron unless [locked]. Put rows in a ListRowCard.
+  /// [active] and a Fits you or Premium tag, the [facts] under it and a
+  /// recommended row's [match] (its section names it, so no eyebrow); a
+  /// chevron unless [locked]. Put rows in a ListRowCard.
   const ProgramCard.row({
     super.key,
     required this.name,
@@ -33,11 +33,10 @@ class ProgramCard extends StatelessWidget {
     this.fits = false,
     this.active = false,
     this.locked = false,
-    this.recommended = false,
     this.match,
     required this.onTap,
-  }) : assert(match == null || recommended),
-       tags = const [],
+  }) : tags = const [],
+       recommended = false,
        _row = true;
 
   final String name;
@@ -104,14 +103,6 @@ class ProgramCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: 1,
                   children: [
-                    if (eyebrow != null)
-                      Text(
-                        eyebrow,
-                        style: text.labelMedium!.copyWith(
-                          fontWeight: FontWeight.w400,
-                          color: p.inkMuted,
-                        ),
-                      ),
                     Row(
                       spacing: Gap.xs,
                       children: [

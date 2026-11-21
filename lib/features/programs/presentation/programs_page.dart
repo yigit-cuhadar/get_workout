@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
@@ -383,7 +385,7 @@ class _ProgramActions {
 
   bool _locked() {
     if (state.access(program) != ProgramAccess.locked) return false;
-    premium.show(context);
+    unawaited(premium.show(context));
     return true;
   }
 

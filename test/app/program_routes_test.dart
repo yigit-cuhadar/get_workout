@@ -185,7 +185,7 @@ void main() {
     when(() => repository.getProgram('u1', 'p1'))
         .thenAnswer((_) async => Ok(stored));
     sl
-      ..registerSingleton(PremiumPrompt((_) {}))
+      ..registerSingleton(PremiumPrompt((_) async => false))
       ..registerLazySingleton(
         () => ProgramListCubit(
           firstWeekday: DateTime.monday,

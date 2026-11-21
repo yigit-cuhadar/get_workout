@@ -80,7 +80,12 @@ void main() {
       ..registerFactoryParam<CatalogueDetailCubit, String, String>(
         (_, _) => detail,
       )
-      ..registerSingleton(PremiumPrompt((_) => paywalls++));
+      ..registerSingleton(
+        PremiumPrompt((_) async {
+          paywalls++;
+          return false;
+        }),
+      );
   });
 
   setUpAll(() => registerFallbackValue(CopyIntent.keep));

@@ -345,7 +345,7 @@ class _DetailActions {
 
   bool _locked() {
     if (list.access(program) != ProgramAccess.locked) return false;
-    premium.show(context);
+    unawaited(premium.show(context));
     return true;
   }
 

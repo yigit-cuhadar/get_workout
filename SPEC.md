@@ -1768,6 +1768,19 @@ Decisions (the canvases they were drawn on are deleted):
   https://claude.ai/artifact/Amg5tFCLKJ8uWExrsVeMBZ): DW1 C (an info line
   under the question and a Recommended tag on the row), DW2 A (nothing
   preselected), DW3 A (beginner 3, intermediate 4, advanced 5 days).
+- Program önerileri (owner's picks, 2026-11-21, canvas
+  https://claude.ai/artifact/GXnoUesKKgM9SRiYhLgc6Y): S1 the weights stay
+  goal 3, level 2, days 2; S2 one level below the user's scores 1, one
+  above 0; S3 a day more or fewer scores 1; S4 a related goal scores 1;
+  S5 the catalogue opens filtered to the user's equipment type; S6 a
+  custom equipment set is the preset sharing the most with it; S7 as many
+  as remain show, up to 3. R1 A one "Recommended for you" section of up
+  to three rows; R2 A the recommended are not repeated under "All
+  programs"; R3 A chosen filter chips lead the chip line; R4 B the
+  default filter shows "1 filter on · Clear"; R5 A the onboarding
+  suggestion is the best match even when premium, with the Premium tag,
+  Start through the paywall. Added by the owner: closing that paywall
+  passes the suggestion without a second (onboarding) paywall.
 ## Open questions
 
 - Google sign-in is offered next to email (`socialProviders` in
@@ -2706,14 +2719,21 @@ the feature you are about to touch, and keep it true when you change it.
   asked; Android refused asks again) and otherwise opens the store's or
   the app's settings (iOS once asked; Android still refused after
   asking); Skip moves on. Then the suggestion: "Your plan is ready",
-  the FeaturedCard outline ("Recommended for you · free", the name,
+  the FeaturedCard outline ("Recommended for you · free", or "Recommended
+  for you" and the Premium tag under the name for a premium program
+  while the user has no Premium (R5 A), the name,
   "3 days · Intermediate · 8 weeks" with the session time, each day as a
   row with its suggested weekday tag), "Why this one" (the user's goal,
   days and equipment set that the program matches in one sentence, an
   unmatched answer left out, then the catalogue summary, ON10, CK1), and at the bottom Start this program (saves a copy among the
   user's programs without starting it and opens its page; the user's
   existing copy opens instead, SG1) and See other programs; no
-  "Not now" (ON8); while it is chosen the card's loading form and a
+  "Not now" (ON8). On a locked premium program Start opens the paywall
+  (`PremiumPrompt`, which tells whether the user has Premium after it):
+  subscribed, Start spins until the program unlocks, then saves it and
+  goes on as above; closed without subscribing, the suggestion is passed
+  like leaving it (onboarding completes, Today, nothing saved) without the
+  onboarding paywall, since one was just closed (owner, 2026-11-21); while it is chosen the card's loading form and a
   disabled Start. The page frame, the
   question layout and the radio answers are shared with the generator
   (`QuestionScaffold`, `QuestionLayout`, `ChoiceAnswer` in
@@ -3089,18 +3109,39 @@ the feature you are about to touch, and keep it true when you change it.
   name and exercise count, computed from the days like `minutes`) lets a
   locked premium program list its days. An
   exercise opened from a ready-made program opens its alternatives and
-  variations inside the Programs tab. Recommended for you: never a program
-  above the user's level (beginner while unanswered) or needing equipment
-  they lack (a program fits when the user owns all its primary `equipment`
-  or all of its equipment profile; an unknown code or a missing list is
-  not owned); while their equipment is unknown nothing is claimed to match
-  it and "Fits my equipment" filters nothing. The rest score 3 for the
-  goal, 2 for the level, 2 for the days per week (1 for a day more or
-  less); the top 3 show, ties in catalogue order, free programs first
-  unless the user is known to have premium. After onboarding the best
-  free recommendation is offered (save it, or browse); with none, or
-  the catalogue offline, onboarding lands on Today, and so does signing in
-  from onboarding to an account already onboarded.
+  variations inside the Programs tab. A program fits the user's equipment
+  ("Only my equipment") when they own all its primary `equipment` or all
+  of its equipment profile (an unknown code or a missing list is not
+  owned); while their equipment is unknown "Only my equipment" filters
+  nothing.
+  **Recommended for you** (`recommendPrograms`, owner's rules,
+  2026-11-21, S1–S7 on the canvas under Design):
+  - The user's equipment type (`EquipmentProfile.typeOf`): the preset
+    equal to their owned equipment; otherwise the preset sharing the most
+    items with it, ties to the smaller preset, then enum order; nothing
+    shared (or nothing owned) is bodyweight (S6). Since the full gym holds
+    every item, a custom set in effect resolves to the smallest preset
+    holding all of it, else the full gym.
+  - Never recommended: a program whose `equipmentProfile` is not that type
+    (less or more equipment alike); a level more than one step from the
+    user's (beginner and advanced never meet); days per week more than one
+    from the user's. An unknown answer (old profiles) skips its
+    elimination and scores 0.
+  - Score: goal 3 for the same, 1 for a related one (build muscle ↔ get
+    stronger, lose fat ↔ general fitness; S4), else 0; level 2 for the
+    same, 1 for one level below the user's, 0 for one above (S2); days 2
+    for the same, 1 for one more or fewer (S3) (S1: these weights).
+  - Ranked by score alone (no free/premium split), ties in catalogue
+    order, at most 3; fewer, or none, when fewer are left (S7).
+  - The match line ("Matches your …") names only exact matches: goal,
+    level, days; the equipment whenever it is known.
+  - Live: the recommendations derive from the profile and the equipment
+    (`ProgramCatalogueState.recommended`), so any change to the goal,
+    level, days or equipment recomputes them.
+  After onboarding the best recommendation is offered, premium or not (R5
+  A; save it, or browse); with none, or the catalogue offline, onboarding
+  lands on Today, and so does signing in from onboarding to an account
+  already onboarded.
   `ProgramsModule` takes the premium status and the premium action as
   parameters, so programs never import the subscription feature; bootstrap
   passes `SubscriptionModule.premiumStatus` (the app-level
@@ -3115,13 +3156,26 @@ the feature you are about to touch, and keep it true when you change it.
   Level, Days per week, Goal and Equipment each chosen value as a
   removable chip (removing it turns that value off) or, with none chosen,
   the filter's name with ▾; a chip opens the filters sheet (no filter
-  action in the app bar). While filtering, "n filters on" (each chosen
-  value counts one, `CatalogueFilter.activeCount`) and Clear. Otherwise
-  the best recommendation as one row and the count, then every program
-  as ProgramCard's row form: name with Fits you (`TrainingProfile.suits`:
+  action in the app bar). Chosen values lead the chip line, before Only
+  my equipment and the unset filters (R3 A). Every time the page opens
+  the Equipment filter is set to the user's equipment type alone
+  (`ProgramCatalogueCubit.openCatalogue`, S5), replacing the filters of
+  the last visit; while the equipment is unknown it is set once known,
+  unless the user changed a filter first; never on the onboarding
+  suggestion, whose recommendations ignore the filter. It is a normal
+  filter: it counts in "n filters on" (each chosen value counts one,
+  `CatalogueFilter.activeCount`) and Clear removes it (R4 B). With no
+  search and no filter but that default (or none), the page shows the
+  user's active copy, then "Recommended for you" (a SectionLabel over one
+  card of up to 3 ProgramCard rows, each with its match line and no
+  eyebrow; no section when there are none; the active program's source
+  stays out and the next best takes its place; R1 A), then the count,
+  "All programs" and the other programs in catalogue order, none of the
+  recommended repeated (R2 A). A search or any other filter hides the
+  active copy, the section and the count, and lists every match. Rows
+  are ProgramCard's row form: name with Fits you (`TrainingProfile.suits`:
   the user's goal, level and days per week) or the Premium tag while
-  locked, "days · level · length". The post-onboarding suggestion shows
-  ProgramCard's card form.
+  locked, "days · level · length".
 - **Copies of premium programs** (decided by the user, 2026-11-11): a copy
   of a premium ready-made program is marked `premium: true` and keeps the
   mark through edits and duplicates. Without premium it stays visible and
