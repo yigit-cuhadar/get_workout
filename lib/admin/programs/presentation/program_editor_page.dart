@@ -14,6 +14,7 @@ import '../../admin_router.dart';
 import '../../shell/admin_form.dart';
 import '../../shell/admin_text.dart';
 import '../../shell/editor_status.dart';
+import '../../shell/save_bar.dart';
 import 'program_editor_cubit.dart';
 
 /// Creates a ready-made program ([id] null) or edits one: its card, its
@@ -124,18 +125,21 @@ class _EditorView extends StatelessWidget {
                   ],
                 ),
               Expanded(child: _Form(state: state)),
-              const Divider(height: 1),
-              StatusActions(
-                noun: 'program',
-                liveEffect: "It appears in every user's catalogue.",
-                hiddenEffect:
-                    "It leaves every user's catalogue; copies users "
-                    'already made stay theirs.',
-                stored: stored?.status,
-                saving: state.status == EditorStatus.saving,
-                canSave: state.canSave,
-                onSave: cubit.save,
-                onSaveAs: cubit.saveAs,
+              Padding(
+                padding: const EdgeInsets.all(Gap.md),
+                child: SaveBar(
+                  noun: 'program',
+                  liveEffect: "It appears in every user's catalogue.",
+                  hiddenEffect:
+                      "It leaves every user's catalogue; copies users "
+                      'already made stay theirs.',
+                  stored: stored?.status,
+                  dirty: state.isDirty,
+                  saving: state.status == EditorStatus.saving,
+                  canSave: state.canSave,
+                  onSave: cubit.save,
+                  onSaveAs: cubit.saveAs,
+                ),
               ),
             ],
           ),
