@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 # Builds the admin panel (lib/main_admin.dart) for the web and deploys it to
-# Firebase Hosting of the dev project. prod's hosting serves the legal pages
-# (target `legal`, see firebase.json).
+# the project's Firebase Hosting target `admin`: getworkout-dev.web.app on
+# dev, getworkout-admin.web.app on prod (whose default site serves the legal
+# pages, target `legal`).
 set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-Usage: tool/deploy_admin.sh dev
+Usage: tool/deploy_admin.sh <dev|prod>
 
-Builds in profile mode, which uses the dev Firebase project, and deploys to
-getworkout-dev. Needs the Firebase CLI signed in to an account with access.
+dev builds in profile mode, which uses the dev Firebase project; prod builds
+in release mode, which uses prod. Needs the Firebase CLI signed in to an
+account with access.
 USAGE
   exit 2
 }
@@ -17,6 +19,7 @@ USAGE
 [[ $# -eq 1 ]] || usage
 case $1 in
   dev) project=getworkout-dev mode=--profile ;;
+  prod) project=getworkout-prod mode=--release ;;
   *) usage ;;
 esac
 
