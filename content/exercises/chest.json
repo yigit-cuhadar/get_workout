@@ -367,7 +367,7 @@
       "front_delt"
     ],
     "family": "chest_fly",
-    "familyRank": 3,
+    "familyRank": 4,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
@@ -424,7 +424,7 @@
       "front_delt"
     ],
     "family": "chest_fly",
-    "familyRank": 5,
+    "familyRank": 6,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
@@ -1024,12 +1024,12 @@
       "front_delt"
     ],
     "family": "chest_fly",
-    "familyRank": 4,
+    "familyRank": 5,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 127,
+    "popularity": 128,
     "l10n": {
       "en": {
         "name": "Low-to-High Cable Fly",
@@ -1084,7 +1084,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 130,
+    "popularity": 131,
     "l10n": {
       "en": {
         "name": "Incline Smith Machine Press",
@@ -1132,12 +1132,12 @@
       "front_delt"
     ],
     "family": "chest_fly",
-    "familyRank": 6,
+    "familyRank": 7,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 143,
+    "popularity": 145,
     "l10n": {
       "en": {
         "name": "Incline Dumbbell Fly",
@@ -1188,7 +1188,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 167,
+    "popularity": 172,
     "l10n": {
       "en": {
         "name": "Clap Push-Up",
@@ -1242,7 +1242,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 172,
+    "popularity": 177,
     "l10n": {
       "en": {
         "name": "Band Chest Press",
@@ -1294,7 +1294,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 176,
+    "popularity": 182,
     "l10n": {
       "en": {
         "name": "Explosive Push-Up",
@@ -1348,7 +1348,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2.5,
-    "popularity": 187,
+    "popularity": 194,
     "l10n": {
       "en": {
         "name": "Cable Chest Press",
@@ -1399,7 +1399,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 416,
+    "popularity": 422,
     "l10n": {
       "en": {
         "name": "Weighted Push-Up",
@@ -1454,7 +1454,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2,
-    "popularity": 203,
+    "popularity": 212,
     "l10n": {
       "en": {
         "name": "Decline Dumbbell Press",
@@ -1506,7 +1506,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 211,
+    "popularity": 221,
     "l10n": {
       "en": {
         "name": "Dumbbell Floor Press",
@@ -1559,7 +1559,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 222,
+    "popularity": 233,
     "l10n": {
       "en": {
         "name": "Dumbbell Squeeze Press",
@@ -1613,7 +1613,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 229,
+    "popularity": 240,
     "l10n": {
       "en": {
         "name": "Barbell Floor Press",
@@ -1663,7 +1663,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 233,
+    "popularity": 244,
     "l10n": {
       "en": {
         "name": "Band Chest Fly",
@@ -1715,7 +1715,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 244,
+    "popularity": 255,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Chest Press",
@@ -1767,7 +1767,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 258,
+    "popularity": 268,
     "l10n": {
       "en": {
         "name": "Archer Push-Up",
@@ -1818,7 +1818,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 271,
+    "popularity": 281,
     "l10n": {
       "en": {
         "name": "Ring Dip",
@@ -1866,7 +1866,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 283,
+    "popularity": 293,
     "l10n": {
       "en": {
         "name": "Scapular Push-Up",
@@ -1919,7 +1919,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 291,
+    "popularity": 301,
     "l10n": {
       "en": {
         "name": "Ring Push-Up",
@@ -1967,7 +1967,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 1.25,
-    "popularity": 297,
+    "popularity": 307,
     "l10n": {
       "en": {
         "name": "Svend Press",
@@ -2020,7 +2020,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 313,
+    "popularity": 323,
     "l10n": {
       "en": {
         "name": "One-Arm Push-Up",
@@ -2066,11 +2066,11 @@
       "abdominal"
     ],
     "family": "chest_fly",
-    "familyRank": 7,
+    "familyRank": 8,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 329,
+    "popularity": 338,
     "l10n": {
       "en": {
         "name": "Suspension Trainer Fly",
@@ -2122,7 +2122,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
-    "popularity": 347,
+    "popularity": 355,
     "l10n": {
       "en": {
         "name": "Pseudo Planche Push-Up",
@@ -2142,6 +2142,58 @@
         "safety": "Build up slowly; the forward lean puts heavy strain on wrists and elbows.",
         "cues": [
           "Shoulders ahead of hands"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_seated_cable_fly",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "isolation",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "isolation",
+    "position": "seated",
+    "grip": "neutral",
+    "equipment": [
+      "cable",
+      "bench"
+    ],
+    "mainMuscles": [
+      "pec"
+    ],
+    "secondaryMuscles": [
+      "front_delt"
+    ],
+    "family": "chest_fly",
+    "familyRank": 3,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 60,
+    "incrementKg": 2.5,
+    "popularity": 200,
+    "l10n": {
+      "en": {
+        "name": "Seated Cable Fly",
+        "aliases": [
+          "Seated Cable Chest Fly"
+        ],
+        "setup": [
+          "Set a bench upright between two pulleys set at shoulder height.",
+          "Sit with your back against the pad and hold a handle in each hand with a soft bend in the elbows."
+        ],
+        "execution": [
+          "Bring the handles together in a wide arc in front of your chest.",
+          "Open your arms slowly until you feel a stretch across the chest."
+        ],
+        "mistakes": [
+          "Bending the elbows and turning it into a press.",
+          "Letting the shoulders roll forward."
+        ],
+        "cues": [
+          "Hug a big tree"
         ]
       }
     }

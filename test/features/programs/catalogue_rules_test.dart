@@ -515,7 +515,7 @@ void main() {
   });
 
   group('checkCatalogue', () {
-    List<ProgramEntry> catalogue({int free = 6, int premium = 19}) => [
+    List<ProgramEntry> catalogue({int free = 6, int premium = 23}) => [
       for (var i = 0; i < free + premium; i++)
         ProgramEntry(
           validProgram(
@@ -527,13 +527,13 @@ void main() {
         ),
     ];
 
-    test('accepts 6 free and 19 premium live programs', () {
+    test('accepts 6 free and 23 premium live programs', () {
       expect(checkCatalogue(catalogue(), library).errors, isEmpty);
     });
 
-    test('needs exactly 6 free and 19 premium live programs', () {
-      expect(checkCatalogue(catalogue(free: 7, premium: 18), library).errors, [
-        'live programs: 7 free and 18 premium, needs 6 and 19',
+    test('needs exactly 6 free and 23 premium live programs', () {
+      expect(checkCatalogue(catalogue(free: 7, premium: 22), library).errors, [
+        'live programs: 7 free and 22 premium, needs 6 and 23',
       ]);
     });
 
@@ -561,7 +561,7 @@ void main() {
         'pr_p0: id "pr_p0" also used by pr_p0',
         'pr_p0: name "program 1" also used by pr_p1',
         'pr_p0: order "3" also used by pr_p2',
-        'live programs: 7 free and 19 premium, needs 6 and 19',
+        'live programs: 7 free and 23 premium, needs 6 and 23',
       ]);
     });
 

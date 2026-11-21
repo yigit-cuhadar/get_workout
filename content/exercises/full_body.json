@@ -335,6 +335,7 @@
           "Landing with straight, stiff legs.",
           "Knees caving on landing."
         ],
+        "safety": "Land softly with your knees bent and tracking over your toes.",
         "cues": [
           "Land quiet"
         ]
@@ -429,7 +430,7 @@
     ],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 133,
+    "popularity": 134,
     "l10n": {
       "en": {
         "name": "Medicine Ball Slam",
@@ -486,7 +487,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "incrementKg": 2.5,
-    "popularity": 142,
+    "popularity": 144,
     "l10n": {
       "en": {
         "name": "Hang Power Clean",
@@ -543,7 +544,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 180,
     "incrementKg": 2.5,
-    "popularity": 166,
+    "popularity": 171,
     "l10n": {
       "en": {
         "name": "Clean and Jerk",
@@ -601,7 +602,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 175,
+    "popularity": 181,
     "l10n": {
       "en": {
         "name": "Turkish Get-Up",
@@ -657,7 +658,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 4,
-    "popularity": 186,
+    "popularity": 193,
     "l10n": {
       "en": {
         "name": "Kettlebell Snatch",
@@ -675,6 +676,7 @@
           "Letting the bell flip over and bang the wrist.",
           "Pressing it up."
         ],
+        "safety": "Learn the swing and the clean first and start light; a bell that flips over the hand can hurt the wrist.",
         "cues": [
           "Punch through at the top"
         ]
@@ -710,7 +712,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 10,
-    "popularity": 198,
+    "popularity": 206,
     "l10n": {
       "en": {
         "name": "Sled Push",
@@ -761,7 +763,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 200,
+    "popularity": 208,
     "l10n": {
       "en": {
         "name": "Wall Ball",
@@ -813,7 +815,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 210,
+    "popularity": 219,
     "l10n": {
       "en": {
         "name": "Battle Rope Waves",
@@ -871,7 +873,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2,
-    "popularity": 221,
+    "popularity": 232,
     "l10n": {
       "en": {
         "name": "Suitcase Carry",
@@ -922,7 +924,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
-    "popularity": 232,
+    "popularity": 243,
     "l10n": {
       "en": {
         "name": "Broad Jump",
@@ -941,6 +943,7 @@
           "Landing with straight legs.",
           "Falling forward."
         ],
+        "safety": "Land softly with your knees bent and build the distance gradually.",
         "cues": [
           "Swing and stick it"
         ]
@@ -973,7 +976,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 243,
+    "popularity": 254,
     "l10n": {
       "en": {
         "name": "Tuck Jump",
@@ -990,6 +993,7 @@
           "Landing stiff.",
           "Rounding the back to reach the knees."
         ],
+        "safety": "Land softly on the balls of your feet with knees bent; skip it if you have knee or Achilles pain.",
         "cues": [
           "Knees up, soft landing"
         ]
@@ -1024,7 +1028,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 257,
+    "popularity": 267,
     "l10n": {
       "en": {
         "name": "Renegade Row",
@@ -1073,7 +1077,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 270,
+    "popularity": 280,
     "l10n": {
       "en": {
         "name": "Bear Crawl",
@@ -1125,7 +1129,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 282,
+    "popularity": 292,
     "l10n": {
       "en": {
         "name": "Dumbbell Snatch",
@@ -1177,7 +1181,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 296,
+    "popularity": 306,
     "l10n": {
       "en": {
         "name": "Split Jump",
@@ -1197,6 +1201,7 @@
           "Landing hard.",
           "Front knee caving."
         ],
+        "safety": "Land softly and keep the back knee off the floor; start with a few reps per side.",
         "cues": [
           "Switch and land soft"
         ]
@@ -1230,7 +1235,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 75,
-    "popularity": 312,
+    "popularity": 322,
     "l10n": {
       "en": {
         "name": "Lateral Bound",
@@ -1250,6 +1255,7 @@
           "Landing with the knee caving.",
           "Not sticking the landing."
         ],
+        "safety": "Start with short bounds you can stick before going for distance.",
         "cues": [
           "Stick each landing"
         ]
@@ -1289,7 +1295,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 328,
+    "popularity": 337,
     "l10n": {
       "en": {
         "name": "Dumbbell Overhead Carry",
@@ -1343,7 +1349,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 5,
-    "popularity": 346,
+    "popularity": 354,
     "l10n": {
       "en": {
         "name": "Trap Bar Carry",
@@ -1393,7 +1399,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 355,
+    "popularity": 362,
     "l10n": {
       "en": {
         "name": "Medicine Ball Chest Pass",
@@ -1445,7 +1451,7 @@
     ],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 363,
+    "popularity": 370,
     "l10n": {
       "en": {
         "name": "Medicine Ball Rotational Throw",
@@ -1502,7 +1508,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 180,
     "incrementKg": 2.5,
-    "popularity": 371,
+    "popularity": 378,
     "l10n": {
       "en": {
         "name": "Power Snatch",
@@ -1557,7 +1563,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 377,
+    "popularity": 384,
     "l10n": {
       "en": {
         "name": "Kettlebell Clean",
@@ -1608,7 +1614,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 384,
+    "popularity": 391,
     "l10n": {
       "en": {
         "name": "Kettlebell Front Rack Carry",
@@ -1666,7 +1672,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 4,
-    "popularity": 392,
+    "popularity": 399,
     "l10n": {
       "en": {
         "name": "Kettlebell Waiter's Walk",
@@ -1717,7 +1723,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 394,
+    "popularity": 401,
     "l10n": {
       "en": {
         "name": "Backward Sled Drag",
@@ -1769,7 +1775,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 395,
+    "popularity": 402,
     "l10n": {
       "en": {
         "name": "Forward Sled Drag",
@@ -1822,7 +1828,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 10,
-    "popularity": 396,
+    "popularity": 403,
     "l10n": {
       "en": {
         "name": "Sled Rope Pull",
@@ -1879,7 +1885,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 4,
-    "popularity": 300,
+    "popularity": 310,
     "l10n": {
       "en": {
         "name": "Single-Arm Kettlebell Swing",
@@ -1933,7 +1939,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 2.5,
-    "popularity": 398,
+    "popularity": 405,
     "l10n": {
       "en": {
         "name": "Zercher Carry",
@@ -1982,7 +1988,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 2.5,
-    "popularity": 399,
+    "popularity": 406,
     "l10n": {
       "en": {
         "name": "Plate Pinch Carry",
@@ -2033,7 +2039,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "incrementKg": 5,
-    "popularity": 400,
+    "popularity": 407,
     "l10n": {
       "en": {
         "name": "Trap Bar Jump",
@@ -2052,8 +2058,114 @@
           "Too much load.",
           "Landing stiff."
         ],
+        "safety": "Use no more than about a quarter of your trap bar deadlift and land with soft knees; stop the set when the jumps slow down.",
         "cues": [
           "Light and fast"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_jumping_jack",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "calf"
+    ],
+    "secondaryMuscles": [
+      "abductor",
+      "adductor",
+      "mid_delt",
+      "quads"
+    ],
+    "family": "jumping_jack",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 120,
+    "l10n": {
+      "en": {
+        "name": "Jumping Jack",
+        "aliases": [
+          "Star Jump"
+        ],
+        "setup": [
+          "Stand tall with your feet together.",
+          "Let your arms hang at your sides."
+        ],
+        "execution": [
+          "Jump your feet out wide while you swing your arms overhead.",
+          "Jump back to the start as your arms come down, and keep a steady rhythm."
+        ],
+        "mistakes": [
+          "Landing on flat feet.",
+          "Letting the knees cave in on landing."
+        ],
+        "cues": [
+          "Light and springy"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_high_knees",
+    "status": "live",
+    "loggingType": "duration",
+    "mechanic": "compound",
+    "laterality": "alternating",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "explosive",
+    "position": "standing",
+    "equipment": [
+      "bodyweight"
+    ],
+    "mainMuscles": [
+      "quads",
+      "calf"
+    ],
+    "secondaryMuscles": [
+      "abdominal",
+      "glute"
+    ],
+    "family": "high_knees",
+    "familyRank": 1,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 45,
+    "popularity": 160,
+    "l10n": {
+      "en": {
+        "name": "High Knees",
+        "aliases": [
+          "Running in Place",
+          "High Knee Run"
+        ],
+        "setup": [
+          "Stand tall with your feet hip-width apart.",
+          "Bend your elbows to about 90 degrees."
+        ],
+        "execution": [
+          "Run on the spot, driving one knee up to hip height at a time.",
+          "Stay on the balls of your feet and pump your arms with the legs."
+        ],
+        "mistakes": [
+          "Leaning back.",
+          "Knees staying low."
+        ],
+        "cues": [
+          "Knees to hips",
+          "Quick feet"
         ]
       }
     }

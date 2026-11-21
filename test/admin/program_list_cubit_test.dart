@@ -75,7 +75,7 @@ void main() {
 
   test('summarizes the catalogue health of the cards', () async {
     expect(cubit.state.health!.errors, [
-      'live programs: 2 free and 1 premium, needs 6 and 19',
+      'live programs: 2 free and 1 premium, needs 6 and 23',
     ]);
     expect(cubit.state.health!.liveFree, 2);
     expect(cubit.state.health!.livePremium, 1);

@@ -1,0 +1,236 @@
+{
+  "id": "pr_beginner_upper_lower_4_day",
+  "status": "live",
+  "premium": true,
+  "order": 27,
+  "level": "beginner",
+  "goal": "build_muscle",
+  "equipmentProfile": "full_gym",
+  "daysPerWeek": 4,
+  "lengthWeeks": 10,
+  "equipment": [
+    "dumbbell",
+    "cable",
+    "machine",
+    "bench",
+    "bodyweight"
+  ],
+  "minutes": {
+    "min": 25,
+    "max": 29
+  },
+  "dayList": [
+    {
+      "name": "Upper A",
+      "exercises": 6
+    },
+    {
+      "name": "Lower A",
+      "exercises": 6
+    },
+    {
+      "name": "Upper B",
+      "exercises": 6
+    },
+    {
+      "name": "Lower B",
+      "exercises": 6
+    }
+  ],
+  "l10n": {
+    "en": {
+      "name": "Beginner Upper/Lower 4-Day",
+      "summary": "Two upper-body and two lower-body sessions a week on machines, cables and dumbbells, so every muscle is trained twice with simple lifts. For beginners who can train four days and want more than a full-body plan."
+    }
+  },
+  "days": [
+    {
+      "name": "Upper A",
+      "items": [
+        {
+          "exerciseId": "ex_machine_chest_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_lat_pulldown",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_seated_cable_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_triceps_pushdown",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Lower A",
+      "items": [
+        {
+          "exerciseId": "ex_leg_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_dumbbell_romanian_deadlift",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_leg_extension",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_lying_leg_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_standing_calf_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dead_bug",
+          "sets": 2,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 45
+        }
+      ]
+    },
+    {
+      "name": "Upper B",
+      "items": [
+        {
+          "exerciseId": "ex_dumbbell_bench_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_chest_supported_dumbbell_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_machine_assisted_pull_up",
+          "sets": 2,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_machine_shoulder_press",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_cable_lateral_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Lower B",
+      "items": [
+        {
+          "exerciseId": "ex_goblet_squat",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_hip_thrust_machine",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_seated_leg_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_leg_extension",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_seated_calf_raise",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_cable_crunch",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    }
+  ]
+}

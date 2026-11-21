@@ -1,0 +1,244 @@
+{
+  "id": "pr_home_gym_upper_lower_4_day",
+  "status": "live",
+  "premium": true,
+  "order": 29,
+  "level": "intermediate",
+  "goal": "build_muscle",
+  "equipmentProfile": "home_gym",
+  "daysPerWeek": 4,
+  "lengthWeeks": 10,
+  "equipment": [
+    "barbell",
+    "dumbbell",
+    "bench",
+    "pull_up_bar",
+    "bodyweight"
+  ],
+  "minutes": {
+    "min": 31,
+    "max": 47
+  },
+  "dayList": [
+    {
+      "name": "Upper 1",
+      "exercises": 6
+    },
+    {
+      "name": "Lower 1",
+      "exercises": 6
+    },
+    {
+      "name": "Upper 2",
+      "exercises": 8
+    },
+    {
+      "name": "Lower 2",
+      "exercises": 5
+    }
+  ],
+  "l10n": {
+    "en": {
+      "name": "Home Gym Upper/Lower 4-Day",
+      "summary": "Two upper-body and two lower-body sessions a week for a home gym with a barbell, a rack, dumbbells, a bench and a pull-up bar. Heavy barbell lifts lead three of the four days and dumbbell work fills in the rest."
+    }
+  },
+  "days": [
+    {
+      "name": "Upper 1",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_bench_press",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_barbell_row",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_shoulder_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_chin_up",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 4,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_overhead_triceps_extension",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Lower 1",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_back_squat",
+          "sets": 4,
+          "repMin": 6,
+          "repMax": 8,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_romanian_deadlift",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 150
+        },
+        {
+          "exerciseId": "ex_bulgarian_split_squat",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_leg_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_single_leg_calf_raise",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_hanging_knee_raise",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 15,
+          "restS": 60
+        }
+      ]
+    },
+    {
+      "name": "Upper 2",
+      "items": [
+        {
+          "exerciseId": "ex_incline_dumbbell_press",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_pull_up",
+          "sets": 3,
+          "repMin": 6,
+          "repMax": 10,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_one_arm_dumbbell_row",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 90
+        },
+        {
+          "exerciseId": "ex_dumbbell_fly",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_lateral_raise",
+          "sets": 5,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_bent_over_dumbbell_reverse_fly",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_dumbbell_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 0,
+          "group": "A"
+        },
+        {
+          "exerciseId": "ex_dumbbell_lying_triceps_extension",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60,
+          "group": "A"
+        }
+      ]
+    },
+    {
+      "name": "Lower 2",
+      "items": [
+        {
+          "exerciseId": "ex_barbell_deadlift",
+          "sets": 3,
+          "repMin": 5,
+          "repMax": 6,
+          "restS": 180
+        },
+        {
+          "exerciseId": "ex_barbell_hip_thrust",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "restS": 120
+        },
+        {
+          "exerciseId": "ex_dumbbell_leg_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "restS": 60
+        },
+        {
+          "exerciseId": "ex_seated_dumbbell_calf_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "restS": 45
+        },
+        {
+          "exerciseId": "ex_plank",
+          "sets": 3,
+          "durationS": 45,
+          "restS": 45
+        }
+      ]
+    }
+  ]
+}

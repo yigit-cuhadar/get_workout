@@ -22,7 +22,7 @@
       "adductor"
     ],
     "family": "hip_thrust",
-    "familyRank": 8,
+    "familyRank": 9,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 120,
@@ -333,8 +333,7 @@
         "name": "Band Lateral Walk",
         "aliases": [
           "Lateral Band Walk",
-          "Side Band Walk",
-          "Crab Walk"
+          "Side Band Walk"
         ],
         "setup": [
           "Place a mini band around your legs above the knees or at the ankles.",
@@ -476,7 +475,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 124,
+    "popularity": 125,
     "l10n": {
       "en": {
         "name": "Fire Hydrant",
@@ -526,7 +525,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 2,
-    "popularity": 131,
+    "popularity": 132,
     "l10n": {
       "en": {
         "name": "Dumbbell Hip Thrust",
@@ -575,7 +574,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 139,
+    "popularity": 141,
     "l10n": {
       "en": {
         "name": "Glute Kickback Machine",
@@ -624,7 +623,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 148,
+    "popularity": 151,
     "l10n": {
       "en": {
         "name": "Side-Lying Leg Raise",
@@ -676,7 +675,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 5,
-    "popularity": 155,
+    "popularity": 158,
     "l10n": {
       "en": {
         "name": "Cable Pull-Through",
@@ -725,7 +724,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 163,
+    "popularity": 167,
     "l10n": {
       "en": {
         "name": "Monster Walk",
@@ -778,7 +777,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 173,
+    "popularity": 178,
     "l10n": {
       "en": {
         "name": "Copenhagen Plank",
@@ -797,7 +796,7 @@
           "Letting the hips drop.",
           "Rolling forward."
         ],
-        "safety": "Start with the short version on the knee if the groin feels strained.",
+        "safety": "Start with the short-lever version on the knee; stop if you feel groin pain.",
         "cues": [
           "Squeeze the top leg down"
         ]
@@ -830,7 +829,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 184,
+    "popularity": 191,
     "l10n": {
       "en": {
         "name": "Cossack Squat",
@@ -876,12 +875,12 @@
       "quads"
     ],
     "family": "hip_thrust",
-    "familyRank": 7,
+    "familyRank": 8,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 5,
-    "popularity": 194,
+    "popularity": 202,
     "l10n": {
       "en": {
         "name": "Smith Machine Hip Thrust",
@@ -929,7 +928,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "incrementKg": 5,
-    "popularity": 208,
+    "popularity": 217,
     "l10n": {
       "en": {
         "name": "Hip Thrust Machine",
@@ -978,7 +977,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 219,
+    "popularity": 229,
     "l10n": {
       "en": {
         "name": "Frog Pump",
@@ -1026,7 +1025,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 230,
+    "popularity": 241,
     "l10n": {
       "en": {
         "name": "Banded Glute Bridge",
@@ -1074,7 +1073,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 240,
+    "popularity": 251,
     "l10n": {
       "en": {
         "name": "Cable Hip Abduction",
@@ -1122,7 +1121,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 246,
+    "popularity": 257,
     "l10n": {
       "en": {
         "name": "Cable Hip Adduction",
@@ -1173,7 +1172,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 5,
-    "popularity": 254,
+    "popularity": 264,
     "l10n": {
       "en": {
         "name": "Reverse Hyperextension Machine",
@@ -1222,7 +1221,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 266,
+    "popularity": 276,
     "l10n": {
       "en": {
         "name": "Band Glute Kickback",
@@ -1266,11 +1265,11 @@
       "quads"
     ],
     "family": "hip_thrust",
-    "familyRank": 9,
+    "familyRank": 10,
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 273,
+    "popularity": 283,
     "l10n": {
       "en": {
         "name": "Single-Leg Hip Thrust",
@@ -1324,7 +1323,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "incrementKg": 4,
-    "popularity": 284,
+    "popularity": 294,
     "l10n": {
       "en": {
         "name": "Goblet Cossack Squat",
@@ -1376,7 +1375,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 292,
+    "popularity": 302,
     "l10n": {
       "en": {
         "name": "Short-Lever Copenhagen Plank",
@@ -1423,7 +1422,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 298,
+    "popularity": 308,
     "l10n": {
       "en": {
         "name": "Side-Lying Hip Adduction",
@@ -1472,7 +1471,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 307,
+    "popularity": 317,
     "l10n": {
       "en": {
         "name": "Standing Band Hip Abduction",
@@ -1519,7 +1518,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 314,
+    "popularity": 324,
     "l10n": {
       "en": {
         "name": "Seated Band Abduction",
@@ -1566,7 +1565,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 322,
+    "popularity": 331,
     "l10n": {
       "en": {
         "name": "Banded Clamshell",
@@ -1614,7 +1613,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 331,
+    "popularity": 340,
     "l10n": {
       "en": {
         "name": "Side Plank Leg Raise",
@@ -1664,7 +1663,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 340,
+    "popularity": 349,
     "l10n": {
       "en": {
         "name": "Bench Reverse Hyperextension",
@@ -1712,7 +1711,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 60,
-    "popularity": 348,
+    "popularity": 356,
     "l10n": {
       "en": {
         "name": "Band Pull-Through",
@@ -1757,7 +1756,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 357,
+    "popularity": 364,
     "l10n": {
       "en": {
         "name": "Band Hip Adduction",
@@ -1802,7 +1801,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 365,
+    "popularity": 372,
     "l10n": {
       "en": {
         "name": "Medicine Ball Adductor Squeeze",
@@ -1850,7 +1849,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "incrementKg": 2.5,
-    "popularity": 413,
+    "popularity": 420,
     "l10n": {
       "en": {
         "name": "Cable Hip Flexion",
@@ -1899,7 +1898,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 414,
+    "popularity": 421,
     "l10n": {
       "en": {
         "name": "Band Supine March",
@@ -1948,13 +1947,11 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 45,
-    "popularity": 386,
+    "popularity": 393,
     "l10n": {
       "en": {
         "name": "Glute Medius Wall Press",
-        "aliases": [
-          "Standing Hip Hike Wall Press"
-        ],
+        "aliases": [],
         "setup": [
           "Stand side-on to a wall with the near knee bent and pressed into the wall at hip height.",
           "Stand tall on the outer leg."
@@ -1969,6 +1966,58 @@
         ],
         "cues": [
           "Stand tall, press firm"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ex_barbell_glute_bridge",
+    "status": "live",
+    "loggingType": "weight_reps",
+    "mechanic": "compound",
+    "laterality": "bilateral",
+    "level": "beginner",
+    "force": "push",
+    "movementPattern": "hinge",
+    "position": "supine",
+    "grip": "overhand",
+    "equipment": [
+      "barbell"
+    ],
+    "mainMuscles": [
+      "glute"
+    ],
+    "secondaryMuscles": [
+      "hamstring",
+      "adductor"
+    ],
+    "family": "hip_thrust",
+    "familyRank": 7,
+    "pinnedAlternatives": [],
+    "excludedAlternatives": [],
+    "defaultRestS": 90,
+    "incrementKg": 5,
+    "popularity": 140,
+    "l10n": {
+      "en": {
+        "name": "Barbell Glute Bridge",
+        "aliases": [
+          "Loaded Glute Bridge"
+        ],
+        "setup": [
+          "Sit on the floor with a padded barbell over your hips.",
+          "Lie back with your knees bent and your feet flat, about hip-width apart."
+        ],
+        "execution": [
+          "Drive through your heels and lift your hips until your body is straight from shoulders to knees.",
+          "Squeeze your glutes at the top, then lower the bar to the floor with control."
+        ],
+        "mistakes": [
+          "Arching the lower back at the top.",
+          "Pushing through the toes."
+        ],
+        "cues": [
+          "Ribs down, squeeze"
         ]
       }
     }

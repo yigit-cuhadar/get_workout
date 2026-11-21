@@ -1,7 +1,7 @@
 [
   {
     "id": "ex_kneeling_hip_flexor_stretch",
-    "status": "retired",
+    "status": "live",
     "loggingType": "duration",
     "mechanic": "isolation",
     "laterality": "unilateral",
@@ -21,7 +21,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 415,
+    "popularity": 190,
     "l10n": {
       "en": {
         "name": "Kneeling Hip Flexor Stretch",
@@ -71,7 +71,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 177,
+    "popularity": 183,
     "l10n": {
       "en": {
         "name": "Pigeon Stretch",
@@ -121,7 +121,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 188,
+    "popularity": 195,
     "l10n": {
       "en": {
         "name": "Cat-Cow",
@@ -171,7 +171,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 201,
+    "popularity": 209,
     "l10n": {
       "en": {
         "name": "Standing Hamstring Stretch",
@@ -220,7 +220,7 @@
     ],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 212,
+    "popularity": 222,
     "l10n": {
       "en": {
         "name": "Child's Pose",
@@ -271,7 +271,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 223,
+    "popularity": 234,
     "l10n": {
       "en": {
         "name": "World's Greatest Stretch",
@@ -317,7 +317,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 234,
+    "popularity": 245,
     "l10n": {
       "en": {
         "name": "Butterfly Stretch",
@@ -366,7 +366,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 247,
+    "popularity": 258,
     "l10n": {
       "en": {
         "name": "Doorway Chest Stretch",
@@ -413,7 +413,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 259,
+    "popularity": 269,
     "l10n": {
       "en": {
         "name": "Couch Stretch",
@@ -458,7 +458,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 274,
+    "popularity": 284,
     "l10n": {
       "en": {
         "name": "Wall Calf Stretch",
@@ -508,7 +508,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 285,
+    "popularity": 295,
     "l10n": {
       "en": {
         "name": "90/90 Hip Switch",
@@ -558,7 +558,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 299,
+    "popularity": 309,
     "l10n": {
       "en": {
         "name": "Thoracic Open Book",
@@ -605,7 +605,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 308,
+    "popularity": 318,
     "l10n": {
       "en": {
         "name": "Wrist Flexor Stretch",
@@ -652,7 +652,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 315,
+    "popularity": 325,
     "l10n": {
       "en": {
         "name": "Wrist Extensor Stretch",
@@ -704,7 +704,7 @@
     ],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 323,
+    "popularity": 332,
     "l10n": {
       "en": {
         "name": "Arm Circles",
@@ -752,7 +752,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 332,
+    "popularity": 341,
     "l10n": {
       "en": {
         "name": "Band Shoulder Pass-Through",
@@ -800,7 +800,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 341,
+    "popularity": 350,
     "l10n": {
       "en": {
         "name": "Frog Stretch",
@@ -847,7 +847,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 349,
+    "popularity": 357,
     "l10n": {
       "en": {
         "name": "Cross-Body Shoulder Stretch",
@@ -894,7 +894,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 358,
+    "popularity": 365,
     "l10n": {
       "en": {
         "name": "Overhead Triceps Stretch",
@@ -948,7 +948,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "incrementKg": 1,
-    "popularity": 366,
+    "popularity": 373,
     "l10n": {
       "en": {
         "name": "Jefferson Curl",
@@ -998,7 +998,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 373,
+    "popularity": 380,
     "l10n": {
       "en": {
         "name": "Deep Squat Hold",
@@ -1045,7 +1045,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 379,
+    "popularity": 386,
     "l10n": {
       "en": {
         "name": "Knee-to-Wall Ankle Mobilization",
@@ -1092,7 +1092,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 387,
+    "popularity": 394,
     "l10n": {
       "en": {
         "name": "Cobra Stretch",
@@ -1141,7 +1141,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 401,
+    "popularity": 408,
     "l10n": {
       "en": {
         "name": "Supine Hamstring Band Stretch",
@@ -1189,7 +1189,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 15,
-    "popularity": 330,
+    "popularity": 339,
     "l10n": {
       "en": {
         "name": "Lying Spinal Twist",
@@ -1239,7 +1239,7 @@
     "pinnedAlternatives": [],
     "excludedAlternatives": [],
     "defaultRestS": 30,
-    "popularity": 249,
+    "popularity": 260,
     "l10n": {
       "en": {
         "name": "Inchworm",

@@ -35,9 +35,9 @@ void main() {
     );
 
     expect(report.errors, isEmpty);
-    expect(report.programs, hasLength(25));
+    expect(report.programs, hasLength(29));
     final live = report.programs.where((p) => p.isLive);
-    expect(live.where((p) => p.isPremium), hasLength(19));
+    expect(live.where((p) => p.isPremium), hasLength(23));
     expect(live.where((p) => !p.isPremium), hasLength(6));
   });
 
@@ -48,7 +48,7 @@ void main() {
     );
     final loggingTypes = liveLoggingTypes(report.library);
 
-    expect(report.programs, hasLength(25));
+    expect(report.programs, hasLength(29));
     for (final p in report.programs) {
       final result = validateProgram(p.program, loggingTypes);
       expect(result.isValid, isTrue, reason: '${p.id}: $result');
