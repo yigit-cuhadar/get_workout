@@ -1773,7 +1773,10 @@ Decisions (the canvases they were drawn on are deleted):
   goal 3, level 2, days 2; S2 one level below the user's scores 1, one
   above 0; S3 a day more or fewer scores 1; S4 a related goal scores 1;
   S5 the catalogue opens filtered to the user's equipment type; S6 a
-  custom equipment set is the preset sharing the most with it; S7 as many
+  custom equipment set is the most similar preset (first built as the
+  preset sharing the most items, which always made it the full gym; the
+  owner then picked similarity, so a full gym user never gets home or
+  outdoor programs and a dumbbell user never gets the gym's); S7 as many
   as remain show, up to 3. R1 A one "Recommended for you" section of up
   to three rows; R2 A the recommended are not repeated under "All
   programs"; R3 A chosen filter chips lead the chip line; R4 B the
@@ -3117,11 +3120,11 @@ the feature you are about to touch, and keep it true when you change it.
   **Recommended for you** (`recommendPrograms`, owner's rules,
   2026-11-21, S1–S7 on the canvas under Design):
   - The user's equipment type (`EquipmentProfile.typeOf`): the preset
-    equal to their owned equipment; otherwise the preset sharing the most
-    items with it, ties to the smaller preset, then enum order; nothing
-    shared (or nothing owned) is bodyweight (S6). Since the full gym holds
-    every item, a custom set in effect resolves to the smallest preset
-    holding all of it, else the full gym.
+    equal to their owned equipment; otherwise the most similar preset:
+    items both have over items either has (bodyweight left out), so a
+    preset with much more than the set scores low too; ties to the
+    smaller preset, then enum order; nothing shared (or nothing owned) is
+    bodyweight (S6).
   - Never recommended: a program whose `equipmentProfile` is not that type
     (less or more equipment alike); a level more than one step from the
     user's (beginner and advanced never meet); days per week more than one

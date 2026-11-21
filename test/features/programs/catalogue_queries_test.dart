@@ -167,8 +167,8 @@ void main() {
       }
     });
 
-    test('a custom set is the preset sharing the most with it', () {
-      // Shares 3 with the home gym, 2 with dumbbells.
+    test('a custom set is the most similar preset', () {
+      // 3 of 5 items with the home gym, 1 of 4 with dumbbells.
       expect(
         EquipmentProfile.typeOf(const {
           Equipment.barbell,
@@ -177,12 +177,23 @@ void main() {
         }),
         EquipmentProfile.homeGym,
       );
+      // The full gym shares all three but has far more; dumbbells share 2
+      // of 3.
       expect(
         EquipmentProfile.typeOf(const {
-          Equipment.cable,
-          Equipment.machine,
           Equipment.dumbbell,
+          Equipment.bench,
+          Equipment.resistanceBand,
         }),
+        EquipmentProfile.dumbbells,
+      );
+      // A gym missing one item is still a gym.
+      expect(
+        EquipmentProfile.typeOf(
+          EquipmentProfile.fullGym.equipment.difference(const {
+            Equipment.cable,
+          }),
+        ),
         EquipmentProfile.fullGym,
       );
     });

@@ -257,21 +257,26 @@ enum EquipmentProfile implements Coded {
   }
 
   /// The user's equipment type: the preset that is exactly [owned], else
-  /// the one sharing the most items with it (ties to the smaller preset,
-  /// then the earlier one); bodyweight when none shares any.
+  /// the most similar one, by the items both have over the items either
+  /// has, so a preset with much more than [owned] scores low too (ties to
+  /// the smaller preset, then the earlier one); bodyweight when none
+  /// shares any. Bodyweight itself is always owned and never counts.
   static EquipmentProfile typeOf(Set<Equipment> owned) {
     if (matching(owned) case final preset?) return preset;
+    final items = owned.difference(const {Equipment.bodyweight});
     var best = bodyweight;
-    var bestShared = 0;
+    var (bestShared, bestUnion) = (0, 1);
     for (final preset in values) {
       final equipment = preset.equipment;
-      final shared = equipment.where(owned.contains).length;
-      if (shared > bestShared ||
-          (shared == bestShared &&
-              shared > 0 &&
-              equipment.length < best.equipment.length)) {
+      final shared = equipment.where(items.contains).length;
+      if (shared == 0) continue;
+      final union = equipment.union(items).length;
+      // shared / union compared without division.
+      final byScore = (shared * bestUnion).compareTo(bestShared * union);
+      if (byScore > 0 ||
+          (byScore == 0 && equipment.length < best.equipment.length)) {
         best = preset;
-        bestShared = shared;
+        (bestShared, bestUnion) = (shared, union);
       }
     }
     return best;
