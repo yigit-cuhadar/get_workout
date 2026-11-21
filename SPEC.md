@@ -4484,3 +4484,74 @@ not in a separate dashboard tool.
   Debug builds make no dSYM, so the dev console lists those as missing;
   that only affects simulator crash reports.
 
+
+### Admin panel
+
+- **Rework, batch 1** (owner's picks, 2026-11-21, canvas
+  https://claude.ai/artifact/7RmvEGrnT11YfeSrT9BTjm):
+  - S1 A: a left menu in groups: Dashboard; People (Users, Support inbox
+    with its count of New threads); Content (Exercises, Programs,
+    Announcements); App (App settings); the admin's email and Sign out at
+    its foot. Support inbox replaces the Feedback page.
+  - U1 B: Users has the email/uid search over a table of the latest
+    sign-ups with Load more.
+  - U2 B: a user's page keeps every action in one panel on the right
+    (Premium grant/revoke, password reset, admin grant/revoke, delete).
+  - U3 A: granting Premium is a dialog with 1 week, 1 month, 1 year and
+    Lifetime, each showing its end date, then Grant Premium.
+  - U4 B: deleting an account is confirmed by ticking "I understand".
+  - T1 A: the inbox is two panes, threads on the left, the open thread
+    with its details and reply box on the right.
+  - T2 A: a thread is New, Replied (set by sending a reply) or Closed.
+  - T3 A: the reply box sits under the thread, showing to, from and
+    subject, with Send reply and Send and close.
+  - T4 A: a sender with no email gets no reply box but a note saying why,
+    and only Close.
+  - C1 A: App settings is one page of grouped keys (Paywall; Update and
+    maintenance) edited in place, changed fields show their old value,
+    and a bar offers Discard and Review and publish.
+  - C2 A: publishing confirms in a dialog listing only the changed keys
+    (Key / Now / After publishing), the new version number and that apps
+    get it within 12 hours.
+  - C3 A: a history panel on the right lists versions (time, who, keys
+    changed); an opened version shows what restoring changes, and Restore
+    leads to C2's confirm.
+- **Rework, batch 2** (owner's picks, 2026-11-21, canvas
+  https://claude.ai/artifact/UJtdhzsgjvYbztAkNpArUb):
+  - E1 B: the Exercises list has its filters (status with counts, main
+    muscle, equipment, sort) in a column on the left, search and the table
+    on the right; Programs follows it.
+  - E2 A: library health is a one-line summary above the table; Details
+    opens the full list in a dialog.
+  - E3 C: the exercise editor puts each section on its own tab; a tab
+    with a problem carries a mark.
+  - E4 A: separate Save (stays Live), Save as draft and Retire buttons in
+    the save bar, the status as a tag in the header; Programs the same.
+  - E5 A: blocking problems are summed up in a card at the top; a line
+    opens its tab and field; messages also stay under the fields.
+  - E6 A: text lists (Aliases, Setup, Execution, Mistakes, Cues) stay one
+    field per item with up, down and remove.
+  - P1 A: Programs is a table like Exercises, with a catalogue health line
+    ("live: 6 free, 19 premium").
+  - P2 B: the program editor's computed values (days a week, equipment,
+    minutes, weekly sets, warnings) sit in a summary panel on the right.
+  - P3 A: a day's exercises are table rows (sets, reps or time, rest,
+    actions), a bracket marking a superset.
+  - A1 A: Announcements has the form on the left and the history on the
+    right.
+  - A2 B: sending confirms in a dialog showing the text, with "I
+    understand it cannot be recalled" to tick.
+  - A3 A: the send's result stays in a box under the form.
+- Asked with the builds (2026-11-21): the app records its devices
+  (model, OS, app version, last seen) so a user's page lists them all;
+  `paywall_layout` stays editable with a line saying a change also
+  reaches users outside its A/B test; the owner adds RevenueCat write
+  permissions to the existing v2 key.
+- Decided while building the inbox: the reply email quotes the user's
+  message under "You wrote:"; the sender is the bare
+  getworkout.support@gmail.com; a closed thread offers Reopen and keeps
+  the reply box (sending reopens it as Replied); with no thread picked the
+  right pane says "Pick a thread to read it and reply."; statuses use the
+  existing muted tag kinds.
+- The Gmail app password for support replies is in the keychain as
+  `SUPPORT_GMAIL_APP_PASSWORD`.
