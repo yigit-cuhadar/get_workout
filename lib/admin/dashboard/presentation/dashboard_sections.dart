@@ -244,10 +244,12 @@ class RevenueSection extends StatelessWidget {
     final r = revenue;
     return SectionCard.plain(
       title: 'Revenue',
-      note: env.isProd
-          ? null
-          : 'RevenueCat has one project: these are production numbers',
-      child: r == null
+      child: !env.isProd
+          ? const Text(
+              'RevenueCat has one project, so revenue is shown on the '
+              'production panel only.',
+            )
+          : r == null
           ? const Text('No revenue snapshot stored yet.')
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -22,17 +22,25 @@ export const TIME_ZONE = "Europe/Istanbul";
 const LOCATION = "EU";
 
 /** Each project's Analytics export and the purchases that count there. */
-const PROJECTS: Record<string, { analytics: string; environments: string[] }> =
-  {
-    "getworkout-dev": {
-      analytics: "analytics_565325900",
-      environments: ["PRODUCTION", "SANDBOX"],
-    },
-    "getworkout-prod": {
-      analytics: "analytics_565341735",
-      environments: ["PRODUCTION"],
-    },
-  };
+/**
+ * RevenueCat has one project, so only prod takes its overview; dev's
+ * panel would otherwise show production revenue as its own.
+ */
+const PROJECTS: Record<
+  string,
+  { analytics: string; environments: string[]; revenue: boolean }
+> = {
+  "getworkout-dev": {
+    analytics: "analytics_565325900",
+    environments: ["PRODUCTION", "SANDBOX"],
+    revenue: false,
+  },
+  "getworkout-prod": {
+    analytics: "analytics_565341735",
+    environments: ["PRODUCTION"],
+    revenue: true,
+  },
+};
 
 const CRASHLYTICS = "firebase_crashlytics";
 

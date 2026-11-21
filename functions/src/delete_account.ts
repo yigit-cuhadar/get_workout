@@ -1,7 +1,11 @@
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
-import { CallableRequest, HttpsError, onCall } from "firebase-functions/v2/https";
+import {
+  CallableRequest,
+  HttpsError,
+  onCall,
+} from "firebase-functions/v2/https";
 import { logger } from "firebase-functions/v2";
 
 import {
@@ -32,6 +36,11 @@ export interface AccountStore {
   deleteUserDocuments(uid: string): Promise<void>;
   /** `entitlements/{uid}`. */
   deleteEntitlement(uid: string): Promise<void>;
+  /**
+   * Clears the uid from the user's `revenueEvents`, which the Dashboard
+   * keeps for its revenue sums.
+   */
+  unlinkRevenueEvents(uid: string): Promise<void>;
   /** Everything in Storage under `users/{uid}/`. */
   deleteFiles(uid: string): Promise<void>;
   deleteAuthUser(uid: string): Promise<void>;
@@ -97,6 +106,7 @@ export async function deleteAccountOf(
   await Promise.all([
     store.deleteUserDocuments(uid),
     store.deleteEntitlement(uid),
+    store.unlinkRevenueEvents(uid),
     store.deleteFiles(uid),
   ]);
   try {
@@ -108,15 +118,19 @@ export async function deleteAccountOf(
     });
   }
   // A RevenueCat event that found the user just before the sign-in went may
-  // have written the entitlement again; the webhook skips users Auth no
-  // longer has, so deleting it once more now leaves nothing behind.
-  try {
-    await store.deleteEntitlement(uid);
-  } catch (error) {
-    logger.error("entitlement left after deletion", {
-      uid,
-      error: String(error),
-    });
+  // have written the entitlement or a revenue event again; the webhook
+  // skips users Auth no longer has, so one more pass leaves nothing behind.
+  const late = await Promise.allSettled([
+    store.deleteEntitlement(uid),
+    store.unlinkRevenueEvents(uid),
+  ]);
+  for (const result of late) {
+    if (result.status === "rejected") {
+      logger.error("data left after deletion", {
+        uid,
+        error: String(result.reason),
+      });
+    }
   }
   logger.info("account deleted", { uid });
 }
@@ -159,6 +173,16 @@ export const firebaseAccountStore = (): AccountStore => ({
   },
   async deleteEntitlement(uid) {
     await getFirestore().collection("entitlements").doc(uid).delete();
+  },
+  async unlinkRevenueEvents(uid) {
+    const db = getFirestore();
+    const events = await db
+      .collection("revenueEvents")
+      .where("appUserId", "==", uid)
+      .get();
+    await Promise.all(
+      events.docs.map((doc) => doc.ref.update({ appUserId: null })),
+    );
   },
   deleteFiles: (uid) => deleteUserFiles(() => getStorage().bucket(), uid),
   async deleteAuthUser(uid) {

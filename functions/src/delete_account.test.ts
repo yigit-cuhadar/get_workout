@@ -24,7 +24,6 @@ function fakeApple(error?: Error) {
   return { revoke, revoked };
 }
 
-
 type Auth = Parameters<typeof deleteAccountOf>[0];
 
 /** Deletes without an Apple code. */
@@ -48,6 +47,7 @@ function fakeStore(failing: string[] = []) {
   const store: AccountStore = {
     deleteUserDocuments: step("documents"),
     deleteEntitlement: step("entitlement"),
+    unlinkRevenueEvents: step("revenue"),
     deleteFiles: step("files"),
     deleteAuthUser: step("auth"),
   };
@@ -55,26 +55,27 @@ function fakeStore(failing: string[] = []) {
 }
 
 describe("deleteAccountOf", () => {
-  test("deletes documents, entitlement and files, then the sign-in", async () => {
+  test("deletes documents, entitlement, files and revenue links, then the sign-in", async () => {
     const { store, done } = fakeStore();
     await deleteOf(caller("password", now - 10), store, now);
-    assert.deepEqual(done.slice(0, 3).sort(), [
+    assert.deepEqual(done.slice(0, 4).sort(), [
       "documents u1",
       "entitlement u1",
       "files u1",
+      "revenue u1",
     ]);
-    assert.equal(done[3], "auth u1");
+    assert.equal(done[4], "auth u1");
   });
 
-  test("deletes the entitlement again after the sign-in", async () => {
+  test("clears the entitlement and revenue links again after the sign-in", async () => {
     // A webhook event that found the user before the sign-in went may have
-    // written it again.
+    // written them again.
     const { store, done } = fakeStore();
     await deleteOf(caller("password", now), store, now);
-    assert.equal(done[4], "entitlement u1");
+    assert.deepEqual(done.slice(5).sort(), ["entitlement u1", "revenue u1"]);
   });
 
-  test("an entitlement left at the end does not fail the deletion", async () => {
+  test("data left at the end does not fail the deletion", async () => {
     const { store, done } = fakeStore();
     let calls = 0;
     store.deleteEntitlement = async (uid) => {
@@ -82,7 +83,8 @@ describe("deleteAccountOf", () => {
       done.push(`entitlement ${uid}`);
     };
     await deleteOf(caller("password", now), store, now);
-    assert.equal(done.at(-1), "auth u1");
+    assert.equal(done[4], "auth u1");
+    assert.equal(done.length, 6);
   });
 
   test("refuses a caller who is not signed in", async () => {
@@ -108,14 +110,12 @@ describe("deleteAccountOf", () => {
   test("a guest is deleted whenever it signed in", async () => {
     const { store, done } = fakeStore();
     await deleteOf(caller("anonymous", 0), store, now);
-    assert.equal(done.length, 5);
+    assert.equal(done.length, 7);
   });
 
   test("keeps the sign-in when data is left, so a retry can finish", async () => {
     const { store, done } = fakeStore(["files"]);
-    await assert.rejects(
-      deleteOf(caller("password", now), store, now),
-    );
+    await assert.rejects(deleteOf(caller("password", now), store, now));
     assert.ok(!done.includes("auth u1"));
   });
 
@@ -128,7 +128,7 @@ describe("deleteAccountOf", () => {
         (error.details as { reason: string }).reason ===
           Reason.signInNotDeleted,
     );
-    assert.equal(done.length, 3);
+    assert.equal(done.length, 4);
   });
 });
 
@@ -147,7 +147,7 @@ describe("deleteAccountOf with an Apple code", () => {
       now,
     );
     assert.deepEqual(apple.revoked, ["code-1"]);
-    assert.equal(done.length, 5);
+    assert.equal(done.length, 7);
   });
 
   test("a refused revocation logs Apple's answer, deleting nothing", async (t) => {
@@ -208,7 +208,7 @@ describe("deleteAccountOf with an Apple code", () => {
       now,
     );
     assert.deepEqual(apple.revoked, []);
-    assert.equal(done.length, 5);
+    assert.equal(done.length, 7);
   });
 
   test("a code that is not a string is refused, deleting nothing", async () => {

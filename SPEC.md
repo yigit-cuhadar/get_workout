@@ -1638,9 +1638,8 @@ Decisions (the canvases they were drawn on are deleted):
   the call never returns, so the page stays (Skip still works);
   `steps_connect {granted: true}` is logged. Likely the second
   `requestAuthorization` right after the first sheet closes. Not yet
-  seen on a device. Fix to decide: one request for steps, workouts and
-  heart rate together (a `forge_health` change) or not waiting for the
-  workouts answer.
+  seen on a device. Owner's pick (2026-11-21): one request for steps,
+  workouts and heart rate together, a `forge_health` change.
 - Google sign-in is offered next to email (`socialProviders` in
   `lib/app/router.dart`); both providers are enabled in both Firebase
   projects. It runs through Firebase Auth's browser flow, so iOS returns
@@ -4411,8 +4410,9 @@ not in a separate dashboard tool.
   `dashboardRefresh` store `dashboard/p7`, `p30`, `p90` (ranges ending at
   the latest `events_` day), `dashboard/retention` (8 complete weekly
   install cohorts, day 1/7/30), `dashboard/revenue` with a daily copy in
-  `dashboardRevenue/{day}` (RevenueCat's overview metrics; the one
-  RevenueCat project serves both panels) and `dashboard/status` (`ok`,
+  `dashboardRevenue/{day}` (RevenueCat's overview metrics, prod only:
+  RevenueCat has one project, so the dev panel shows no revenue, owner's
+  pick 2026-11-21) and `dashboard/status` (`ok`,
   `no-data` before the first export, or `error` naming the parts that
   failed; the others are still written). The admin-only `dashboardRange`
   answers a custom range of at most 366 days. Admins read `dashboard`;
@@ -4422,7 +4422,11 @@ not in a separate dashboard tool.
   RevenueCat's app user id). Users in crash-free and top issues are
   Crashlytics installations against Analytics' active app instances.
   Deploying needs the `REVENUECAT_API_KEY` Functions secret (a v2 key
-  with `charts_metrics:overview:read`) on both projects.
+  with `charts_metrics:overview:read`) on both projects. MRR of a past
+  day is the latest snapshot in the week up to it, read ascending (a
+  descending id query needs an index). Deleting an account clears the uid
+  from its `revenueEvents` (sums kept, owner's pick 2026-11-21), before
+  and once more after the sign-in goes.
 - **Dashboard page** (`lib/admin/dashboard`, `/dashboard`, the panel's
   landing page): reads every `dashboard` document once on open and again
   after Refresh now (`dashboardRefresh`, client timeout 540 s); Custom…
@@ -4432,8 +4436,10 @@ not in a separate dashboard tool.
   `no-data`) it shows "No data yet" and the revenue snapshot only. Tile
   changes: counts in whole percent (nothing when the previous period is
   unknown or zero), shares in points to one decimal; a change that rounds
-  to zero is muted. Growth and Retention curves are one Forge line chart
-  per series (Forge has no multi-line chart). The most started program
+  to zero is muted. Growth is one Forge line chart per series; Retention
+  curves are to be one chart, day 1/7/30 on a shared percent scale (D8 A,
+  owner's pick 2026-11-21, a new Forge chart), one chart per series until
+  then. The most started program
   shows its id. The Funnel and Retention toggles live as long as the page.
 - **Held until the answer is known** (Forge v0.49.0): a new install
   collects only once the user's stored answer is read, and Analytics drops

@@ -102,6 +102,16 @@ describe("refreshDashboard", () => {
     );
   });
 
+  test("without a RevenueCat overview no revenue is written", async () => {
+    const { deps, written } = fakeDeps({ fetchRevenue: null });
+    const status = await refreshDashboard(deps);
+    assert.equal(status.state, "ok");
+    assert.ok(!written.has("dashboard/revenue"));
+    assert.ok(
+      ![...written.keys()].some((k) => k.startsWith("dashboardRevenue/")),
+    );
+  });
+
   test("a failing part is named and the others are still written", async () => {
     const { deps, written } = fakeDeps({
       fetchRevenue: async () => {
