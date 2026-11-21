@@ -215,24 +215,35 @@ void main() {
       final used = record(validJson(popularity: 5, family: 'db_press'));
       records.add([press, curl, broken, sameName, row, dip, used]);
       await pumpEventQueue();
-      cubit.showProblemsOnly(true);
-      // Until the programs arrive, only the health counts: an invalid
-      // document and both exercises a name clash names.
+      cubit.showUnusedOnly(true);
+      // Until the programs arrive, nothing counts as unused.
+      expect(visible(), isEmpty);
+      cubit
+        ..showUnusedOnly(false)
+        ..showProblemsOnly(true);
+      // An invalid document and both exercises a name clash names.
       expect(visible(), ['ex_curl', 'ex_gap', 'ex_curl_copy']);
 
       // A program uses ex_dumbbell_press and the curl. ex_press and the
       // row (a draft) are used by none; a retired exercise never counts as
-      // unused.
+      // unused. Being unused is not a problem.
       programs.add([programRecord(programJson())]);
       await pumpEventQueue();
-      expect(visible(), [
-        'ex_press',
-        'ex_curl',
-        'ex_gap',
-        'ex_row',
-        'ex_curl_copy',
-      ]);
-      expect(cubit.state.problemCount, 5);
+      expect(visible(), ['ex_curl', 'ex_gap', 'ex_curl_copy']);
+      expect(cubit.state.problemCount, 3);
+
+      cubit
+        ..showProblemsOnly(false)
+        ..showUnusedOnly(true);
+      expect(visible(), ['ex_press', 'ex_gap', 'ex_row', 'ex_curl_copy']);
+      expect(cubit.state.unusedCount, 4);
+
+      // The switches combine, and Clear filters resets both.
+      cubit.showProblemsOnly(true);
+      expect(visible(), ['ex_gap', 'ex_curl_copy']);
+      cubit.clearFilters();
+      expect(cubit.state.problemsOnly, isFalse);
+      expect(cubit.state.unusedOnly, isFalse);
     },
   );
 
@@ -250,8 +261,7 @@ void main() {
       contains(startsWith('family curl has repeated ranks')),
     );
     cubit.showProblemsOnly(true);
-    // The press is used by no program.
-    expect(visible(), ['ex_press', 'ex_curl', 'ex_curl_two']);
+    expect(visible(), ['ex_curl', 'ex_curl_two']);
   });
 
   test('a programs stream failure is kept apart', () async {

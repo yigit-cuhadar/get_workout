@@ -176,6 +176,11 @@ class _Filters extends StatelessWidget {
           value: state.problemsOnly,
           onChanged: cubit.showProblemsOnly,
         ),
+        FilterSwitch(
+          label: 'Unused by programs · ${state.unusedCount}',
+          value: state.unusedOnly,
+          onChanged: cubit.showUnusedOnly,
+        ),
       ],
     );
   }

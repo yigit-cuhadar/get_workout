@@ -94,13 +94,16 @@ void main() {
     await tester.pump();
     expect(find.text('Showing 2 of 2'), findsOneWidget);
 
-    // No program uses either exercise.
-    expect(find.text('Problems only · 2'), findsOneWidget);
-    await tester.ensureVisible(find.byType(ForgeSwitch));
+    // No program uses either exercise; the library health flags neither.
+    expect(find.text('Problems only · 0'), findsOneWidget);
+    expect(find.text('Unused by programs · 2'), findsOneWidget);
+    final unused = find.byType(ForgeSwitch).last;
+    await tester.ensureVisible(unused);
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(ForgeSwitch));
+    await tester.tap(unused);
     await tester.pump();
-    expect(cubit.state.problemsOnly, isTrue);
+    expect(cubit.state.unusedOnly, isTrue);
+    expect(find.text('Showing 2 of 2'), findsOneWidget);
 
     await tester.tap(find.text('Name'));
     await tester.pump();

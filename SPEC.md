@@ -4777,15 +4777,18 @@ not in a separate dashboard tool.
   in the filter column, combined (AND), each dropdown with Any, and
   "Clear filters" in its header when any is set (search and sort stay):
   - Exercises: Level, Mechanic, Movement pattern, Logging type, Secondary
-    muscle, Family, and a "Problems only" switch with its count.
+    muscle, Family, a "Problems only" switch and an "Unused by programs"
+    switch, each with its count (owner's pick A, 2026-11-21: unused
+    exercises outnumbered the real problems about 250 to 2).
   - Programs: Access (All/Free/Premium with counts), Level, Goal, Days per
     week, Equipment profile, and "Problems only" with its count.
 - Decided while building them: Exercises "Problems only" is an exercise
   the library health concerns (an invalid document, which covers every
   missing required field; one an error or warning names by id; a live
   member of a family a finding is about; library-wide findings such as
-  coverage or an unused popularity name none) or one no program of any
-  status uses; a retired exercise never counts as unused. Programs
+  coverage or an unused popularity name none). "Unused by programs" is
+  one no program of any status uses; a retired exercise never counts as
+  unused. Programs
   "Problems only" is a program the editor would show a catalogue rule
   problem or a weekly-sets warning for. Both lists read every program's
   days, one listener per program's `detail/main` (a collection group

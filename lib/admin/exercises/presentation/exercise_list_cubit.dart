@@ -40,6 +40,7 @@ class ExerciseListState extends Equatable {
     this.secondaryMuscle,
     this.family,
     this.problemsOnly = false,
+    this.unusedOnly = false,
     this.sortColumn,
     this.ascending = true,
   });
@@ -74,6 +75,9 @@ class ExerciseListState extends Equatable {
   /// Only exercises with a [hasProblem].
   final bool problemsOnly;
 
+  /// Only exercises that are [isUnused].
+  final bool unusedOnly;
+
   /// The column the table is sorted by; null for the default order, by
   /// popularity.
   final ExerciseColumn? sortColumn;
@@ -91,11 +95,14 @@ class ExerciseListState extends Equatable {
       if (record.draft.family.isNotEmpty) record.draft.family,
   }.toList()..sort();
 
-  /// Whether [record] breaks a rule or has a warning of the library health,
-  /// which includes a missing required field, or is used by no program.
-  /// A retired exercise is not expected in a program.
-  bool hasProblem(ExerciseRecord record) {
-    if (health?.flaggedIds.contains(record.id) ?? false) return true;
+  /// Whether a finding of the library health concerns [record], which
+  /// includes a missing required field.
+  bool hasProblem(ExerciseRecord record) =>
+      health?.flaggedIds.contains(record.id) ?? false;
+
+  /// Whether no program, whatever its status, uses [record]; false until
+  /// the programs arrive. A retired exercise is not expected in a program.
+  bool isUnused(ExerciseRecord record) {
     final used = usedIds;
     return used != null &&
         record.draft.status != ExerciseStatus.retired &&
@@ -104,6 +111,9 @@ class ExerciseListState extends Equatable {
 
   /// Documents with a [hasProblem], before filtering.
   int get problemCount => records?.where(hasProblem).length ?? 0;
+
+  /// Documents that are [isUnused], before filtering.
+  int get unusedCount => records?.where(isUnused).length ?? 0;
 
   bool get hasFilters =>
       status != null ||
@@ -115,7 +125,8 @@ class ExerciseListState extends Equatable {
       loggingType != null ||
       secondaryMuscle != null ||
       family != null ||
-      problemsOnly;
+      problemsOnly ||
+      unusedOnly;
 
   /// [records] matching the search and every filter, sorted by
   /// [sortColumn], ties and the default by popularity.
@@ -144,6 +155,7 @@ class ExerciseListState extends Equatable {
       }
       if (family != null && draft.family != family) return false;
       if (problemsOnly && !hasProblem(record)) return false;
+      if (unusedOnly && !isUnused(record)) return false;
       if (needle.isEmpty) return true;
       return [
         draft.id,
@@ -215,6 +227,7 @@ class ExerciseListState extends Equatable {
     Muscle? Function()? secondaryMuscle,
     String? Function()? family,
     bool? problemsOnly,
+    bool? unusedOnly,
     ExerciseColumn? sortColumn,
     bool? ascending,
   }) => ExerciseListState(
@@ -240,6 +253,7 @@ class ExerciseListState extends Equatable {
         : this.secondaryMuscle,
     family: family != null ? family() : this.family,
     problemsOnly: problemsOnly ?? this.problemsOnly,
+    unusedOnly: unusedOnly ?? this.unusedOnly,
     sortColumn: sortColumn ?? this.sortColumn,
     ascending: ascending ?? this.ascending,
   );
@@ -274,6 +288,7 @@ class ExerciseListState extends Equatable {
     secondaryMuscle,
     family,
     problemsOnly,
+    unusedOnly,
     sortColumn,
     ascending,
   ];
@@ -353,6 +368,8 @@ class ExerciseListCubit extends Cubit<ExerciseListState> {
       emit(state.copyWith(family: () => family));
 
   void showProblemsOnly(bool on) => emit(state.copyWith(problemsOnly: on));
+
+  void showUnusedOnly(bool on) => emit(state.copyWith(unusedOnly: on));
 
   void clearFilters() => emit(state.withoutFilters());
 
