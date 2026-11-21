@@ -586,9 +586,9 @@ Where it stands (2026-11-18, end of Group 11):
   Forge sheet (Profile › Weight).
 - Every ForgeMenu item in the app has an icon (checked 2026-11-16); menus
   built later get theirs as they are built.
-- Content: getworkout-dev has the ready-made `dayList`; getworkout-prod has
-  no content at all yet (a dry-run on 2026-11-16 would create all 466
-  documents), so the first prod import belongs to Release.
+- Content: both projects hold the same 466 documents (416 exercises, 25
+  programs); the first prod import ran on 2026-11-21 at the owner's ask,
+  with prod's rules from #185.
 - İlerleme: done, checked on the iOS simulator and approved by the owner
   (2026-11-16); merged as #116 (Weekly volume, Strength, Strength list,
   with the stats data change), #117 (Body overview, Body compare,
