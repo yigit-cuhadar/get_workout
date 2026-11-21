@@ -63,6 +63,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>GetWorkout uses the camera for your progress photos. They stay private in the app and are never saved to your photo library.</string>
 	<!-- The workout in progress on the lock screen (RestTimer extension). -->
@@ -74,6 +76,8 @@
 	</array>
 	<key>NSHealthShareUsageDescription</key>
 	<string>GetWorkout reads your steps, workouts and heart rate from Apple Health to show your activity. It never writes to Apple Health.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>GetWorkout only reads from Apple Health to show your activity. It does not save or change any of your Apple Health data.</string>
 	<key>FlutterDeepLinkingEnabled</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
