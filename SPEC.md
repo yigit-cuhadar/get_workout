@@ -530,7 +530,7 @@ Where it stands (2026-11-18, end of Group 11):
 - Both studios' links match main again (published 2026-11-18 from a
   session: they belong to the owner's account, so a session publishes
   them directly). Owner to do: the Play Console Health declaration
-  (above); the female body model before release.
+  (above).
 - Small: the Forge Widgetbook use case "ListRow · Info hint" is broken.
 
 Group 12, analytics (owner's plan, 2026-11-20; before the admin panel rework)
@@ -1681,8 +1681,10 @@ Decisions (the canvases they were drawn on are deleted):
   `<code>_left`/`<code>_right`, the single `abdominal`, and the body
   `none`. The 4-view drawings the Tripo models were generated from are in
   `design/body_models/{male,female}/{front,right,back,left}.png`.
-  Open: the female model is being corrected by the owner and is not in the
-  app yet; picking the model by the profile's sex is not built. The
+  `body_female.glb` (2026-11-21) is the owner's hand-corrected female
+  model with the same 36 part names; it ships in the assets but the app
+  still always loads the male model: picking the model by the profile's
+  sex is not built. The
   exercise import and `firestore.rules` (without `hip_flexor`) still have
   to be run and deployed on dev and prod.
 - Subscriptions (2026-11-20). App Store: group "GetWorkout Premium" with
@@ -2702,8 +2704,8 @@ the feature you are about to touch, and keep it true when you change it.
   equipment-limited program whose summary says so.
 - **3D model**: our own renderer, written in Dart, built first because it is
   the riskiest part. Source model has 36 meshes: 18 muscle groups (left/right
-  split except abdominal) plus the body. A female model with the
-  same mesh names is required before release; the user supplies it. The
+  split except abdominal) plus the body. `body_female.glb` has the
+  same mesh names; the app loads only the male model for now. The
   exercise page shows it twice, front and back side by side with the worked
   muscles coloured, both fixed (`interactive: false`, the back through a
   camera at yaw π) so the page scrolls over them; two CPU-rendered viewers

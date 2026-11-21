@@ -22,18 +22,21 @@ void main() {
     expect(muscleOfMesh('wrist_left'), isNull);
   });
 
-  test('covers exactly the muscle meshes of the body model', () async {
-    final model = await Model3D.fromGlb(
-      File('assets/models/body_male.glb').readAsBytesSync(),
-    );
-    final muscleMeshes = model.partNames.where((name) => name != 'none');
+  for (final asset in ['body_male', 'body_female']) {
+    test('covers exactly the muscle meshes of $asset', () async {
+      final model = await Model3D.fromGlb(
+        File('assets/models/$asset.glb').readAsBytesSync(),
+      );
+      final muscleMeshes = model.partNames.where((name) => name != 'none');
 
-    expect(
-      Muscle.values.expand((muscle) => muscle.meshNames).toSet(),
-      muscleMeshes.toSet(),
-    );
-    for (final mesh in muscleMeshes) {
-      expect(muscleOfMesh(mesh)!.meshNames, contains(mesh));
-    }
-  });
+      expect(model.partNames, contains('none'));
+      expect(
+        Muscle.values.expand((muscle) => muscle.meshNames).toSet(),
+        muscleMeshes.toSet(),
+      );
+      for (final mesh in muscleMeshes) {
+        expect(muscleOfMesh(mesh)!.meshNames, contains(mesh));
+      }
+    });
+  }
 }
