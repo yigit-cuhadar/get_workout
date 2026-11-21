@@ -440,6 +440,30 @@ only, JPEG, max 5 MB.
   - The password reset email is not a callable: the panel sends Firebase
     Auth's own (forge_auth `SendPasswordReset`), offered only for an
     account with email and password.
+- `appSettingsGet`, `appSettingsPublish`, `appSettingsHistory`
+  (callables, `functions/src/app_settings`), admin claim only, the app's
+  Remote Config template through the Admin SDK. Only the keys of the app's
+  Remote Config defaults are read and written (`KEYS`); a key may sit at
+  the top level or in a parameter group. Get → `{etag, version, keys}`, each
+  key's default and its conditional values as `{kind: value|inAppDefault|
+  experiment|rollout|personalization}` (an absent parameter is
+  `inAppDefault`). Publish `{etag, changes: {key: string|null},
+  restoring?}` → the new version: refused as `stale`
+  (`failed-precondition`) when the template's etag is no longer the one
+  loaded, or when Remote Config refuses the publish's If-Match; checks
+  every value (`paywall_layout` a, b or c; `maintenance` true or false;
+  versions empty or 1-4 dot-separated numbers; the message at most 300
+  characters; `invalid-input` with `details.field`); a key whose default is
+  an experiment, rollout or personalization is refused as `locked`. It
+  writes only the changed keys' default values (null: use in-app default;
+  a missing parameter is added at the top level with its value type) and
+  keeps their conditional values, every other parameter, the groups and
+  the conditions; validates, then publishes with the description
+  `Admin panel · <email>[ · restores version N]`, which the history reads
+  back as who published (the Admin SDK's own user is the service
+  account). History → the latest 20 versions, newest first, each with the
+  parameters (all of them) and whether the conditions changed since the
+  version before, and its default values of the known keys.
 
 Admin access is a custom claim set by `tool/set_admin.sh`, using the project
 owner's gcloud access token passed in `GOOGLE_ACCESS_TOKEN`.
@@ -4251,6 +4275,37 @@ the feature you are about to touch, and keep it true when you change it.
   once it is handled." in place of the box. The menu's Support inbox entry
   shows the count of New threads (none at 0). Stream errors retry like the
   other lists.
+- **Admin panel › App settings** (`lib/admin/app_settings`,
+  `/app-settings`; boards C1-C3 A): one page of the keys in two cards,
+  Paywall (`paywall_layout`, a choice of a list, b cards, c one plan; it
+  stays editable while its A/B test runs, owner's pick 2026-11-21, with
+  the line "A change also reaches users outside its A/B test." under its
+  description, since A/B Testing's experiments are not in the template) and
+  Update and maintenance (`maintenance` a switch, `maintenance_message`
+  text, the four version keys text checked as versions), under the line
+  "Remote Config · version N, published <date> by <who> · apps fetch
+  within 12 hours". A key using the in-app default shows the app's
+  default; editing it publishes an explicit value. A changed field shows
+  "Changed" and "was <old>"; setting it back removes the change. A key's
+  conditional values (A/B tests, language conditions) are listed
+  read-only under its description and never written; a default set by an
+  experiment, rollout or personalization shows as such with no input.
+  With changes, a bar at the foot: "N unpublished changes", Discard and
+  Review and publish, which opens the confirm: Key / Now / After
+  publishing for the changed keys only, "This becomes version N+1. Apps
+  pick it up at their next fetch, within 12 hours. Version N stays in
+  History and can be restored.", Cancel and Publish. History (a button
+  beside the title) opens a 400px panel on the right: the latest 20
+  versions with date, who (the admin's email, or "Firebase console") and
+  the parameters changed ("conditions" when they changed); the newest is
+  Current. Opening an older one shows what restoring it would change in
+  these keys (defaults only; conditional values and other parameters stay)
+  and "Restore version N", which leads to the same confirm and publishes
+  those defaults as a new version. After a publish the page reloads (the
+  history too when open), keeping edits that still differ. A publish
+  refused as stale says the config changed since loading and offers
+  Reload; the edits stay, compared against the reloaded values. A
+  permission refusal refreshes the token like Announcements.
 - **Review prompt** (forge_review; canvas rows R1, R2; first-ask rule
   changed by the owner 2026-11-20): two kinds of moment. Every workout
   summary counts once on the device (by workout id); every app open

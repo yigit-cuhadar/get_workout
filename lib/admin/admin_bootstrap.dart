@@ -6,6 +6,7 @@ import 'package:forge_core/forge_core.dart';
 import 'access/access_module.dart';
 import 'admin_app.dart';
 import 'announcements/announcement_admin_module.dart';
+import 'app_settings/app_settings_admin_module.dart';
 import 'dashboard/dashboard_admin_module.dart';
 import 'exercises/exercise_admin_module.dart';
 import 'programs/program_admin_module.dart';
@@ -29,6 +30,7 @@ Future<void> bootstrapAdmin(AppEnv env, FirebaseOptions options) async {
     ProgramAdminModule(),
     AnnouncementAdminModule(),
     SupportAdminModule(),
+    AppSettingsAdminModule(),
   ]);
   runApp(AdminApp(env: env, projectId: options.projectId));
 }

@@ -9,6 +9,7 @@ import 'access/presentation/access_cubit.dart';
 import 'access/presentation/access_page.dart';
 import 'access/presentation/sign_in_page.dart';
 import 'announcements/presentation/announcements_page.dart';
+import 'app_settings/presentation/app_settings_page.dart';
 import 'dashboard/presentation/dashboard_page.dart';
 import 'exercises/presentation/exercise_editor_page.dart';
 import 'exercises/presentation/exercise_list_cubit.dart';
@@ -205,7 +206,7 @@ final adminSections = [
     path: AdminRoutes.appSettings,
     route: GoRoute(
       path: AdminRoutes.appSettings,
-      builder: (_, _) => const ComingSoonPage(title: 'App settings'),
+      builder: (_, _) => const AppSettingsPage(),
     ),
   ),
 ];
