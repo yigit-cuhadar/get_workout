@@ -662,10 +662,10 @@ Group 12, analytics (owner's plan, 2026-11-20; before the admin panel rework)
 
 Group 13, admin panel rework (owner's picks, 2026-11-21; each project keeps
 its own panel; every page drawn on a canvas and picked before it is built)
-- [ ] Panel look — the shell and every existing page (Exercises, Programs, Announcements, Feedback) redrawn in the Dashboard's look and rebuilt — the owner picked each page from the canvas
-- [ ] Users — find a user by email or uid; Premium state, sign-up date, last workout, devices; grant or revoke promotional Premium through RevenueCat (a week, a month, a year, lifetime), delete the account (confirmed, as the app does), send a password reset email, grant or revoke admin — every action works on dev
-- [ ] Support inbox — feedback as threads with a status; a reply is emailed from getworkout.support@gmail.com (Gmail SMTP, app password in the Functions secret) and kept on the thread — a reply reaches the sender's inbox
-- [ ] App settings — the app's Remote Config keys (paywall layout, app gate) shown and edited; saving shows old and new side by side, publishing needs a confirm, an earlier version can be restored — a change reaches the app after its next fetch
+- [x] Panel look — the shell and every existing page (Exercises, Programs, Announcements, Feedback) redrawn in the Dashboard's look and rebuilt — the owner picked each page from the canvas
+- [x] Users — find a user by email or uid; Premium state, sign-up date, last workout, devices; grant or revoke promotional Premium through RevenueCat (a week, a month, a year, lifetime), delete the account (confirmed, as the app does), send a password reset email, grant or revoke admin — every action works on dev
+- [x] Support inbox — feedback as threads with a status; a reply is emailed from getworkout.support@gmail.com (Gmail SMTP, app password in the Functions secret) and kept on the thread — a reply reaches the sender's inbox
+- [x] App settings — the app's Remote Config keys (paywall layout, app gate) shown and edited; saving shows old and new side by side, publishing needs a confirm, an earlier version can be restored — a change reaches the app after its next fetch
 
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
