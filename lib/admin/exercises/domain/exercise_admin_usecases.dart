@@ -1,6 +1,7 @@
 import 'package:forge_core/forge_core.dart';
 
 import '../../../features/exercises/domain/content_rules.dart';
+import '../../../features/exercises/domain/vocabulary.dart';
 import 'admin_exercise_repository.dart';
 import 'exercise_draft.dart';
 
@@ -75,21 +76,43 @@ class LibraryHealth extends Equatable {
     required this.errors,
     required this.warnings,
     required this.invalidIds,
+    required this.flaggedIds,
   });
 
   factory LibraryHealth.of(List<ExerciseRecord> records) {
     final check = checkLibrary([
       for (final record in records) ExerciseEntry(record.json),
     ]);
+    final invalidIds = [
+      for (final record in records)
+        if (exerciseProblems(record.json).isNotEmpty) record.id,
+    ];
+    final findings = [...check.errors, ...check.warnings];
+    final named = {
+      for (final finding in findings)
+        for (final match in _idInText.allMatches(finding)) match[0]!,
+    };
     return LibraryHealth(
       errors: check.errors,
       warnings: check.warnings,
-      invalidIds: [
+      invalidIds: invalidIds,
+      flaggedIds: {
+        ...invalidIds,
         for (final record in records)
-          if (exerciseProblems(record.json).isNotEmpty) record.id,
-      ],
+          if (named.contains(record.id) ||
+              (record.draft.status == ExerciseStatus.live &&
+                  record.draft.family.isNotEmpty &&
+                  findings.any(
+                    (finding) =>
+                        finding.startsWith('family ${record.draft.family} '),
+                  )))
+            record.id,
+      },
     );
   }
+
+  /// An exercise id inside a finding: `idPattern` without its anchors.
+  static final _idInText = RegExp(r'ex_[a-z0-9]+(?:_[a-z0-9]+)*');
 
   /// Broken library-wide rules: popularity and family ranks of live
   /// exercises, coverage minimums, names, references.
@@ -100,8 +123,14 @@ class LibraryHealth extends Equatable {
   /// console; the import would reject them too.
   final List<String> invalidIds;
 
+  /// Exercises a finding concerns: the [invalidIds], those an error or a
+  /// warning names, and the live members of a family one is about. Findings
+  /// about the library as a whole (coverage, an unused popularity) concern
+  /// none.
+  final Set<String> flaggedIds;
+
   bool get isHealthy => errors.isEmpty && invalidIds.isEmpty;
 
   @override
-  List<Object?> get props => [errors, warnings, invalidIds];
+  List<Object?> get props => [errors, warnings, invalidIds, flaggedIds];
 }

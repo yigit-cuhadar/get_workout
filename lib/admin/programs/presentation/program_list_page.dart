@@ -11,6 +11,7 @@ import '../../shell/admin_text.dart';
 import '../../shell/filter_column.dart';
 import '../../shell/page_header.dart';
 import '../../shell/status_tag.dart';
+import '../../shell/table_sort.dart';
 import '../domain/program_admin_usecases.dart';
 import '../domain/program_draft.dart';
 import 'access_tag.dart';
@@ -19,8 +20,8 @@ import 'program_list_cubit.dart';
 /// The width of the search field above the table.
 const _searchWidth = 320.0;
 
-/// Every ready-made program of every status, by catalogue order: the
-/// catalogue's health in one line, the filters in a column on the left,
+/// Every ready-made program of every status, by catalogue order until a
+/// column header sorts it: the catalogue's health in one line, the filters in a column on the left,
 /// search and the table on the right. Needs `ProgramListCubit` above it.
 class ProgramListPage extends StatelessWidget {
   const ProgramListPage({super.key});
@@ -36,8 +37,9 @@ class ProgramListPage extends StatelessWidget {
             title: 'Programs',
             subtitle: records == null
                 ? 'Updates live'
-                : '${records.length} ready-made programs, by catalogue '
-                      'order · updates live',
+                : '${records.length} ready-made programs'
+                      '${state.sortColumn == null ? ', by catalogue order' : ''}'
+                      ' · updates live',
             trailing: [
               ForgeButton(
                 label: 'New program',
@@ -64,7 +66,7 @@ class ProgramListPage extends StatelessWidget {
                           ),
                   )
                 else ...[
-                  if (failure != null)
+                  if (failure ?? state.exercisesFailure case final failure?)
                     MaterialBanner(
                       content: Text(
                         'Live updates stopped: ${failureMessage(failure)} '
@@ -105,8 +107,11 @@ class _Filters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<ProgramListCubit>();
     final counts = state.counts;
+    final access = state.accessCounts;
     return FilterColumn(
+      onClear: state.hasFilters ? cubit.clearFilters : null,
       children: [
         FilterRadios<ExerciseStatus>(
           label: 'Status',
@@ -119,11 +124,59 @@ class _Filters extends StatelessWidget {
               ),
           ],
           selected: state.status,
-          onChanged: context.read<ProgramListCubit>().filterStatus,
+          onChanged: cubit.filterStatus,
+        ),
+        FilterRadios<bool>(
+          label: 'Access',
+          options: [
+            (value: null, label: 'All · ${state.records?.length ?? 0}'),
+            (value: false, label: 'Free · ${access[false]}'),
+            (value: true, label: 'Premium · ${access[true]}'),
+          ],
+          selected: state.premium,
+          onChanged: cubit.filterAccess,
+        ),
+        FilterDropdown<Level>(
+          label: 'Level',
+          options: _anyOf(Level.values),
+          selected: state.level,
+          onChanged: cubit.filterLevel,
+        ),
+        FilterDropdown<Goal>(
+          label: 'Goal',
+          options: _anyOf(Goal.values),
+          selected: state.goal,
+          onChanged: cubit.filterGoal,
+        ),
+        FilterDropdown<int>(
+          label: 'Days per week',
+          options: [
+            (value: null, label: 'Any'),
+            for (final days in state.daysPerWeekValues)
+              (value: days, label: '$days'),
+          ],
+          selected: state.daysPerWeek,
+          onChanged: cubit.filterDaysPerWeek,
+        ),
+        FilterDropdown<EquipmentProfile>(
+          label: 'Equipment profile',
+          options: _anyOf(EquipmentProfile.values),
+          selected: state.equipmentProfile,
+          onChanged: cubit.filterEquipmentProfile,
+        ),
+        FilterSwitch(
+          label: 'Problems only · ${state.problemIds.length}',
+          value: state.problemsOnly,
+          onChanged: cubit.showProblemsOnly,
         ),
       ],
     );
   }
+
+  static List<FilterOption<T>> _anyOf<T extends Coded>(List<T> values) => [
+    (value: null, label: 'Any'),
+    for (final value in values) (value: value, label: codeLabel(value)),
+  ];
 }
 
 /// The catalogue's health and its split of live programs in one line;
@@ -247,7 +300,7 @@ class _Table extends StatelessWidget {
               ],
             ),
             const SizedBox(height: Gap.md),
-            const _HeaderRow(),
+            _HeaderRow(state: state),
             const Divider(height: 1),
             Expanded(
               child: visible.isEmpty
@@ -297,29 +350,35 @@ class _SearchState extends State<_Search> {
   );
 }
 
-/// Column widths of the table, as flex factors.
+/// The table's columns with their widths, as flex factors.
 const _columns = [
-  ('Order', 1),
-  ('Name', 3),
-  ('Id', 3),
-  ('Status', 1),
-  ('Access', 1),
-  ('Days', 1),
-  ('Level', 2),
-  ('Goal', 2),
-  ('Equipment profile', 2),
-  ('Updated', 2),
+  ('Order', 1, ProgramColumn.order),
+  ('Name', 3, ProgramColumn.name),
+  ('Id', 3, ProgramColumn.id),
+  ('Status', 1, ProgramColumn.status),
+  ('Access', 1, ProgramColumn.access),
+  ('Days', 1, ProgramColumn.days),
+  ('Level', 2, ProgramColumn.level),
+  ('Goal', 2, ProgramColumn.goal),
+  ('Equipment profile', 2, ProgramColumn.equipmentProfile),
+  ('Updated', 2, ProgramColumn.updated),
 ];
 
 class _HeaderRow extends StatelessWidget {
-  const _HeaderRow();
+  const _HeaderRow({required this.state});
+
+  final ProgramListState state;
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelMedium
-        ?.copyWith(color: ForgeStyle.of(context).colors.inkMuted);
+    final cubit = context.read<ProgramListCubit>();
     return _Cells([
-      for (final (label, _) in _columns) Text(label, style: style),
+      for (final (label, _, column) in _columns)
+        SortHeader(
+          label: label,
+          ascending: state.sortColumn == column ? state.ascending : null,
+          onTap: () => cubit.sortBy(column),
+        ),
     ]);
   }
 }

@@ -8,7 +8,8 @@ import 'domain/exercise_admin_usecases.dart';
 import 'presentation/exercise_editor_cubit.dart';
 import 'presentation/exercise_list_cubit.dart';
 
-/// Registers the panel's exercise list and editor.
+/// Registers the panel's exercise list and editor. Needs the program
+/// module's `WatchPrograms`.
 class ExerciseAdminModule implements FeatureModule {
   const ExerciseAdminModule();
 
@@ -22,7 +23,10 @@ class ExerciseAdminModule implements FeatureModule {
       ..registerFactory(() => LoadExerciseRecord(sl()))
       ..registerFactory(() => CreateExercise(sl()))
       ..registerFactory(() => UpdateExercise(sl()))
-      ..registerFactory(() => ExerciseListCubit(watchExerciseRecords: sl()))
+      ..registerFactory(
+        () =>
+            ExerciseListCubit(watchExerciseRecords: sl(), watchPrograms: sl()),
+      )
       // The id to edit, or null for a new exercise.
       ..registerFactoryParam<ExerciseEditorCubit, String?, void>(
         (id, _) => ExerciseEditorCubit(

@@ -38,16 +38,64 @@ class FirestoreAdminProgramRepository implements AdminProgramRepository {
           for (final doc in snapshot.docs) _record(doc.id, doc.data(), null),
         ],
       )
-      .transform(
-        StreamTransformer.fromHandlers(
-          handleError: (error, stack, sink) {
-            final failure =
-                mapFirebaseError(error) ?? UnknownFailure('$error', error);
-            Log.e('admin', failure.message, error, stack);
-            sink.addError(failure, stack);
-          },
-        ),
-      );
+      .transform(_failures());
+
+  /// Listens to the cards and to the detail of each card. A collection
+  /// group query on `detail` would need a rule for it; one listener per
+  /// program needs none.
+  @override
+  Stream<List<ProgramRecord>> watchAll() {
+    final controller = StreamController<List<ProgramRecord>>();
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? cardsListener;
+    final detailListeners =
+        <String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>{};
+    var cards = <String, Map<String, Object?>>{};
+    // A key is present once that detail arrived; its value is null when
+    // there is no detail.
+    final details = <String, Map<String, Object?>?>{};
+
+    void emitWhenComplete() {
+      if (!cards.keys.every(details.containsKey)) return;
+      controller.add([
+        for (final MapEntry(key: id, value: card) in cards.entries)
+          _record(id, card, details[id]),
+      ]);
+    }
+
+    controller
+      ..onListen = () {
+        cardsListener = _programs.snapshots().listen((snapshot) {
+          cards = {for (final doc in snapshot.docs) doc.id: doc.data()};
+          for (final id in detailListeners.keys.toList()) {
+            if (cards.containsKey(id)) continue;
+            unawaited(detailListeners.remove(id)!.cancel());
+            details.remove(id);
+          }
+          for (final id in cards.keys) {
+            detailListeners[id] ??= _detail(id).snapshots().listen((doc) {
+              details[id] = doc.data();
+              emitWhenComplete();
+            }, onError: controller.addError);
+          }
+          emitWhenComplete();
+        }, onError: controller.addError);
+      }
+      ..onCancel = () => Future.wait([
+        ?cardsListener?.cancel(),
+        for (final listener in detailListeners.values) listener.cancel(),
+      ]);
+    return controller.stream.transform(_failures());
+  }
+
+  static StreamTransformer<List<ProgramRecord>, List<ProgramRecord>>
+  _failures() => StreamTransformer.fromHandlers(
+    handleError: (error, stack, sink) {
+      final failure =
+          mapFirebaseError(error) ?? UnknownFailure('$error', error);
+      Log.e('admin', failure.message, error, stack);
+      sink.addError(failure, stack);
+    },
+  );
 
   @override
   Future<Result<ProgramRecord>> load(String id) =>

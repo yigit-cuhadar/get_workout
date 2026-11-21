@@ -4766,3 +4766,32 @@ not in a separate dashboard tool.
   existing muted tag kinds.
 - The Gmail app password for support replies is in the keychain as
   `SUPPORT_GMAIL_APP_PASSWORD`.
+- **Table sorting and filters** (owner's picks, 2026-11-21, no drawing):
+  every column header of Exercises and Programs sorts by it, a second
+  click flips the direction, the active column shows an up/down arrow;
+  this replaces the Exercises Sort dropdown. Until a header is clicked
+  the order stays popularity (Exercises) and catalogue order (Programs).
+  Numbers sort numerically and dates by time, codes by their label,
+  lists by their first value, Family / rank by family then rank; blanks
+  are last either way, ties fall back to the default order. New filters
+  in the filter column, combined (AND), each dropdown with Any, and
+  "Clear filters" in its header when any is set (search and sort stay):
+  - Exercises: Level, Mechanic, Movement pattern, Logging type, Secondary
+    muscle, Family, a "Problems only" switch and an "Unused by programs"
+    switch, each with its count (owner's pick A, 2026-11-21: unused
+    exercises outnumbered the real problems about 250 to 2).
+  - Programs: Access (All/Free/Premium with counts), Level, Goal, Days per
+    week, Equipment profile, and "Problems only" with its count.
+- Decided while building them: Exercises "Problems only" is an exercise
+  the library health concerns (an invalid document, which covers every
+  missing required field; one an error or warning names by id; a live
+  member of a family a finding is about; library-wide findings such as
+  coverage or an unused popularity name none). "Unused by programs" is
+  one no program of any status uses; a retired exercise never counts as
+  unused. Programs
+  "Problems only" is a program the editor would show a catalogue rule
+  problem or a weekly-sets warning for. Both lists read every program's
+  days, one listener per program's `detail/main` (a collection group
+  query would need a new rule); the Programs list also reads the exercise
+  library for the rules. The Programs subtitle says "by catalogue order"
+  only while no header sorts it.

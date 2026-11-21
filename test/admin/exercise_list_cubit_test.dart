@@ -7,16 +7,24 @@ import 'package:get_workout/admin/exercises/domain/admin_exercise_repository.dar
 import 'package:get_workout/admin/exercises/domain/exercise_admin_usecases.dart';
 import 'package:get_workout/admin/exercises/domain/exercise_draft.dart';
 import 'package:get_workout/admin/exercises/presentation/exercise_list_cubit.dart';
+import 'package:get_workout/admin/programs/domain/admin_program_repository.dart';
+import 'package:get_workout/admin/programs/domain/program_admin_usecases.dart';
+import 'package:get_workout/admin/programs/domain/program_draft.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
+import 'program_fixtures.dart';
 
 class MockRepository extends Mock implements AdminExerciseRepository {}
 
+class MockProgramRepository extends Mock implements AdminProgramRepository {}
+
 void main() {
   late MockRepository repository;
+  late MockProgramRepository programRepository;
   late StreamController<List<ExerciseRecord>> records;
+  late StreamController<List<ProgramRecord>> programs;
   late ExerciseListCubit cubit;
 
   final press = record(validJson(id: 'ex_press', name: 'Press'));
@@ -57,11 +65,16 @@ void main() {
 
   setUp(() async {
     repository = MockRepository();
+    programRepository = MockProgramRepository();
     records = StreamController();
+    programs = StreamController();
     when(() => repository.watchAll()).thenAnswer((_) => records.stream);
-    // No retry fires during a test: [records] can be listened to only once.
+    when(() => programRepository.watchAll()).thenAnswer((_) => programs.stream);
+    // No retry fires during a test: the streams can be listened to only
+    // once.
     cubit = ExerciseListCubit(
       watchExerciseRecords: WatchExerciseRecords(repository),
+      watchPrograms: WatchPrograms(programRepository),
       firstRetryDelay: const Duration(hours: 1),
     );
     records.add([dip, row, curl, press]);
@@ -81,9 +94,53 @@ void main() {
     });
   });
 
-  test('sorts by name', () {
-    cubit.sortBy(ExerciseSort.name);
+  test('sorts by a column, flipping on a second tap', () {
+    cubit.sortBy(ExerciseColumn.name);
     expect(visible(), ['ex_curl', 'ex_dip', 'ex_press', 'ex_row']);
+    expect(cubit.state.ascending, isTrue);
+
+    cubit.sortBy(ExerciseColumn.name);
+    expect(visible(), ['ex_row', 'ex_press', 'ex_dip', 'ex_curl']);
+    expect(cubit.state.ascending, isFalse);
+
+    // Another column starts ascending.
+    cubit.sortBy(ExerciseColumn.family);
+    expect(cubit.state.ascending, isTrue);
+    expect(visible(), ['ex_curl', 'ex_dip', 'ex_press', 'ex_row']);
+  });
+
+  test('sorts numbers with blanks last either way', () async {
+    final unranked = record(
+      validJson(id: 'ex_unranked', name: 'Unranked')..remove('popularity'),
+    );
+    records.add([unranked, row, curl, press]);
+    await pumpEventQueue();
+
+    cubit.sortBy(ExerciseColumn.popularity);
+    expect(visible(), ['ex_press', 'ex_curl', 'ex_row', 'ex_unranked']);
+    cubit.sortBy(ExerciseColumn.popularity);
+    expect(visible(), ['ex_row', 'ex_curl', 'ex_press', 'ex_unranked']);
+  });
+
+  test('sorts codes by label, lists by their first, ties by popularity', () {
+    // Draft, Live, Live, Retired; the two live ones by popularity.
+    cubit.sortBy(ExerciseColumn.status);
+    expect(visible(), ['ex_row', 'ex_press', 'ex_curl', 'ex_dip']);
+
+    // Biceps before pec; the three pressing ones by popularity.
+    cubit.sortBy(ExerciseColumn.mainMuscles);
+    expect(visible(), ['ex_curl', 'ex_press', 'ex_row', 'ex_dip']);
+  });
+
+  test('sorts dates by time', () async {
+    final older = record(
+      validJson(id: 'ex_old', name: 'Old', popularity: 2, family: 'old'),
+      updatedAt: DateTime.utc(2025),
+    );
+    records.add([press, older]);
+    await pumpEventQueue();
+    cubit.sortBy(ExerciseColumn.updated);
+    expect(visible(), ['ex_old', 'ex_press']);
   });
 
   test('searches name, alias and id', () {
@@ -93,6 +150,125 @@ void main() {
     expect(visible(), ['ex_dip']);
     cubit.search('ex_ro');
     expect(visible(), ['ex_row']);
+  });
+
+  test('filters by every code, family, and combines filters', () async {
+    final squat = record(
+      validJson(id: 'ex_squat', name: 'Squat', popularity: 4, family: 'squat')
+        ..['level'] = 'advanced'
+        ..['mechanic'] = 'isolation'
+        ..['movementPattern'] = 'squat'
+        ..['loggingType'] = 'reps',
+    );
+    records.add([squat, curl, press]);
+    await pumpEventQueue();
+
+    cubit.filterLevel(Level.advanced);
+    expect(visible(), ['ex_squat']);
+    cubit.filterLevel(null);
+    cubit.filterMechanic(Mechanic.isolation);
+    expect(visible(), ['ex_squat']);
+    cubit.filterMechanic(null);
+    cubit.filterMovementPattern(MovementPattern.squat);
+    expect(visible(), ['ex_squat']);
+    cubit.filterMovementPattern(null);
+    cubit.filterLoggingType(LoggingType.reps);
+    expect(visible(), ['ex_squat']);
+    cubit.filterLoggingType(null);
+    cubit.filterSecondaryMuscle(Muscle.forearm);
+    expect(visible(), ['ex_curl']);
+    cubit.filterSecondaryMuscle(null);
+    expect(cubit.state.families, ['curl', 'dumbbell_press', 'squat']);
+    cubit.filterFamily('curl');
+    expect(visible(), ['ex_curl']);
+
+    // Filters combine.
+    cubit.filterLevel(Level.advanced);
+    expect(visible(), isEmpty);
+    expect(cubit.state.hasFilters, isTrue);
+
+    cubit
+      ..search('pr')
+      ..sortBy(ExerciseColumn.name)
+      ..clearFilters();
+    expect(cubit.state.hasFilters, isFalse);
+    // The search and the sort stay.
+    expect(visible(), ['ex_press']);
+    expect(cubit.state.sortColumn, ExerciseColumn.name);
+  });
+
+  test(
+    'problems only: health findings and exercises no program uses',
+    () async {
+      final broken = record(
+        validJson(id: 'ex_gap', name: 'Gap', popularity: 3, family: 'gap')
+          ..['secondaryMuscles'] = ['pec'],
+      );
+      final sameName = record(
+        validJson(
+          id: 'ex_curl_copy',
+          name: 'curl',
+          popularity: 4,
+          family: 'cc',
+        ),
+      );
+      final used = record(validJson(popularity: 5, family: 'db_press'));
+      records.add([press, curl, broken, sameName, row, dip, used]);
+      await pumpEventQueue();
+      cubit.showUnusedOnly(true);
+      // Until the programs arrive, nothing counts as unused.
+      expect(visible(), isEmpty);
+      cubit
+        ..showUnusedOnly(false)
+        ..showProblemsOnly(true);
+      // An invalid document and both exercises a name clash names.
+      expect(visible(), ['ex_curl', 'ex_gap', 'ex_curl_copy']);
+
+      // A program uses ex_dumbbell_press and the curl. ex_press and the
+      // row (a draft) are used by none; a retired exercise never counts as
+      // unused. Being unused is not a problem.
+      programs.add([programRecord(programJson())]);
+      await pumpEventQueue();
+      expect(visible(), ['ex_curl', 'ex_gap', 'ex_curl_copy']);
+      expect(cubit.state.problemCount, 3);
+
+      cubit
+        ..showProblemsOnly(false)
+        ..showUnusedOnly(true);
+      expect(visible(), ['ex_press', 'ex_gap', 'ex_row', 'ex_curl_copy']);
+      expect(cubit.state.unusedCount, 4);
+
+      // The switches combine, and Clear filters resets both.
+      cubit.showProblemsOnly(true);
+      expect(visible(), ['ex_gap', 'ex_curl_copy']);
+      cubit.clearFilters();
+      expect(cubit.state.problemsOnly, isFalse);
+      expect(cubit.state.unusedOnly, isFalse);
+    },
+  );
+
+  test('problems only: live members of a family a finding is about', () async {
+    // Two live curls both rank 1.
+    final second = record(
+      validJson(id: 'ex_curl_two', name: 'Curl Two', popularity: 3)
+        ..['family'] = 'curl',
+    );
+    records.add([press, curl, second]);
+    programs.add([]);
+    await pumpEventQueue();
+    expect(
+      cubit.state.health!.errors,
+      contains(startsWith('family curl has repeated ranks')),
+    );
+    cubit.showProblemsOnly(true);
+    expect(visible(), ['ex_curl', 'ex_curl_two']);
+  });
+
+  test('a programs stream failure is kept apart', () async {
+    programs.addError(const NetworkFailure());
+    await pumpEventQueue();
+    expect(cubit.state.programsFailure, isA<NetworkFailure>());
+    expect(cubit.state.failure, isNull);
   });
 
   test('filters by status, main muscle and equipment', () {
@@ -154,12 +330,15 @@ void main() {
         streams.add(stream);
         return stream.stream;
       });
+      when(() => programRepository.watchAll())
+          .thenAnswer((_) => const Stream.empty());
     });
 
     test('listens again, waiting longer after each failure in a row', () {
       fakeAsync((async) {
         final cubit = ExerciseListCubit(
           watchExerciseRecords: WatchExerciseRecords(repository),
+          watchPrograms: WatchPrograms(programRepository),
         );
         async.flushMicrotasks();
         streams.last.addError(const NetworkFailure());
@@ -196,6 +375,7 @@ void main() {
       fakeAsync((async) {
         final cubit = ExerciseListCubit(
           watchExerciseRecords: WatchExerciseRecords(repository),
+          watchPrograms: WatchPrograms(programRepository),
         );
         async.flushMicrotasks();
         streams.last.addError(const NetworkFailure());

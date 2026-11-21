@@ -11,6 +11,11 @@ abstract interface class AdminProgramRepository {
   /// are [Failure]s.
   Stream<List<ProgramRecord>> watchCards();
 
+  /// Every program with its days, again whenever a card or its days change;
+  /// the first list waits until every program's days have arrived. Errors
+  /// are [Failure]s.
+  Stream<List<ProgramRecord>> watchAll();
+
   /// The card and its days as the server holds them now; [NotFoundFailure]
   /// when there is no card.
   Future<Result<ProgramRecord>> load(String id);

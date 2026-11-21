@@ -21,10 +21,13 @@ class ProgramAdminModule implements FeatureModule {
         () => FirestoreAdminProgramRepository(FirebaseFirestore.instance),
       )
       ..registerFactory(() => WatchProgramCards(sl()))
+      ..registerFactory(() => WatchPrograms(sl()))
       ..registerFactory(() => LoadProgramRecord(sl()))
       ..registerFactory(() => CreateProgram(sl()))
       ..registerFactory(() => UpdateProgram(sl()))
-      ..registerFactory(() => ProgramListCubit(watchProgramCards: sl()))
+      ..registerFactory(
+        () => ProgramListCubit(watchPrograms: sl(), watchExerciseRecords: sl()),
+      )
       // The id to edit, or null for a new program.
       ..registerFactoryParam<ProgramEditorCubit, String?, void>(
         (id, _) => ProgramEditorCubit(

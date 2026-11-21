@@ -53,6 +53,7 @@ void main() {
     cards = StreamController.broadcast();
     library = StreamController.broadcast();
     when(() => repository.watchCards()).thenAnswer((_) => cards.stream);
+    when(() => repository.watchAll()).thenAnswer((_) => cards.stream);
     when(() => repository.load(id)).thenAnswer((_) async => Ok(basics));
     when(() => exerciseRepository.watchAll()).thenAnswer((_) => library.stream);
   });
@@ -78,7 +79,8 @@ void main() {
     tester,
   ) async {
     final cubit = ProgramListCubit(
-      watchProgramCards: WatchProgramCards(repository),
+      watchPrograms: WatchPrograms(repository),
+      watchExerciseRecords: WatchExerciseRecords(exerciseRepository),
     );
     addTearDown(cubit.close);
     await pumpPage(
@@ -86,6 +88,7 @@ void main() {
       BlocProvider.value(value: cubit, child: const ProgramListPage()),
     );
     cards.add([basics, strength]);
+    library.add(exerciseRecords);
     await tester.pumpAndSettle();
 
     expect(find.text('Showing 2 of 2'), findsOneWidget);
@@ -100,6 +103,41 @@ void main() {
 
     expect(find.text('Showing 0 of 2'), findsOneWidget);
     expect(find.text('No results'), findsOneWidget);
+
+    await tester.tap(find.text('Clear filters'));
+    await tester.pump();
+    expect(find.text('Showing 2 of 2'), findsOneWidget);
+    expect(find.text('Clear filters'), findsNothing);
+  });
+
+  testWidgets('a column header sorts the list and shows the direction', (
+    tester,
+  ) async {
+    final cubit = ProgramListCubit(
+      watchPrograms: WatchPrograms(repository),
+      watchExerciseRecords: WatchExerciseRecords(exerciseRepository),
+    );
+    addTearDown(cubit.close);
+    await pumpPage(
+      tester,
+      BlocProvider.value(value: cubit, child: const ProgramListPage()),
+    );
+    cards.add([basics, strength]);
+    library.add(exerciseRecords);
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.arrow_upward), findsNothing);
+    await tester.tap(find.text('Order'));
+    await tester.pump();
+    expect(find.byIcon(Icons.arrow_upward), findsOneWidget);
+    await tester.tap(find.text('Order'));
+    await tester.pump();
+    expect(find.byIcon(Icons.arrow_downward), findsOneWidget);
+    final top = tester.getTopLeft(find.text('Strength')).dy;
+    expect(top, lessThan(tester.getTopLeft(find.text('Dumbbell Basics')).dy));
+
+    // Both fixtures get weekly-set warnings.
+    expect(find.text('Problems only · 2'), findsOneWidget);
   });
 
   testWidgets('the editor sums up the days on the right, and a problem line '
