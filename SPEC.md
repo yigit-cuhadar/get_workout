@@ -4484,3 +4484,37 @@ not in a separate dashboard tool.
   Debug builds make no dSYM, so the dev console lists those as missing;
   that only affects simulator crash reports.
 
+
+### Admin panel
+
+- **Rework, batch 1** (owner's picks, 2026-11-21, canvas
+  https://claude.ai/artifact/7RmvEGrnT11YfeSrT9BTjm):
+  - S1 A: a left menu in groups: Dashboard; People (Users, Support inbox
+    with its count of New threads); Content (Exercises, Programs,
+    Announcements); App (App settings); the admin's email and Sign out at
+    its foot. Support inbox replaces the Feedback page.
+  - U1 B: Users has the email/uid search over a table of the latest
+    sign-ups with Load more.
+  - U2 B: a user's page keeps every action in one panel on the right
+    (Premium grant/revoke, password reset, admin grant/revoke, delete).
+  - U3 A: granting Premium is a dialog with 1 week, 1 month, 1 year and
+    Lifetime, each showing its end date, then Grant Premium.
+  - U4 B: deleting an account is confirmed by ticking "I understand".
+  - T1 A: the inbox is two panes, threads on the left, the open thread
+    with its details and reply box on the right.
+  - T2 A: a thread is New, Replied (set by sending a reply) or Closed.
+  - T3 A: the reply box sits under the thread, showing to, from and
+    subject, with Send reply and Send and close.
+  - T4 A: a sender with no email gets no reply box but a note saying why,
+    and only Close.
+  - C1 A: App settings is one page of grouped keys (Paywall; Update and
+    maintenance) edited in place, changed fields show their old value,
+    and a bar offers Discard and Review and publish.
+  - C2 A: publishing confirms in a dialog listing only the changed keys
+    (Key / Now / After publishing), the new version number and that apps
+    get it within 12 hours.
+  - C3 A: a history panel on the right lists versions (time, who, keys
+    changed); an opened version shows what restoring changes, and Restore
+    leads to C2's confirm.
+- The Gmail app password for support replies is in the keychain as
+  `SUPPORT_GMAIL_APP_PASSWORD`.
