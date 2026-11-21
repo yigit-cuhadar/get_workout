@@ -471,6 +471,10 @@ Where it stands (2026-11-18, end of Group 11):
   health cardio sessions), studio #119; Forge v0.22.0–v0.22.2. Every answer
   is a row of the canvas https://claude.ai/artifact/UdSCdEHtjQ17AMTiDD9qAR
   (codes in each PR body) and is written into the Design bullets.
+- Health access is one system prompt for steps, workouts and heart rate
+  (Forge v0.50.0): asking for workouts right after the steps sheet closed
+  never answered on iOS and hung onboarding's health step (2026-11-21).
+  Checked on a fresh simulator: one sheet, Allow moves on.
 - Owner to do: the Play Console Health apps declaration must list
   exercise, distance, total calories burned and heart rate (#118 reads
   cardio from Health Connect).
@@ -1631,15 +1635,6 @@ Decisions (the canvases they were drawn on are deleted):
   preselected), DW3 A (beginner 3, intermediate 4, advanced 5 days).
 ## Open questions
 
-- **Bug, onboarding's health step hangs after access is given**
-  (simulator, 2026-11-21): Connect Apple Health shows HealthKit's sheet
-  for steps; after Allow, `AllowStepsAccess` asks for workouts and heart
-  rate at once (`requestWorkoutsPermission`), no second sheet shows and
-  the call never returns, so the page stays (Skip still works);
-  `steps_connect {granted: true}` is logged. Likely the second
-  `requestAuthorization` right after the first sheet closes. Not yet
-  seen on a device. Owner's pick (2026-11-21): one request for steps,
-  workouts and heart rate together, a `forge_health` change.
 - Google sign-in is offered next to email (`socialProviders` in
   `lib/app/router.dart`); both providers are enabled in both Firebase
   projects. It runs through Firebase Auth's browser flow, so iOS returns
@@ -4437,9 +4432,9 @@ not in a separate dashboard tool.
   changes: counts in whole percent (nothing when the previous period is
   unknown or zero), shares in points to one decimal; a change that rounds
   to zero is muted. Growth is one Forge line chart per series; Retention
-  curves are to be one chart, day 1/7/30 on a shared percent scale (D8 A,
-  owner's pick 2026-11-21, a new Forge chart), one chart per series until
-  then. The most started program
+  curves are one `MultiSeriesChart.shared`, day 1/7/30 on a shared percent
+  scale with 0/25/50% gridlines (D8 A, owner's pick 2026-11-21, Forge
+  v0.50.0). The most started program
   shows its id. The Funnel and Retention toggles live as long as the page.
 - **Held until the answer is known** (Forge v0.49.0): a new install
   collects only once the user's stored answer is read, and Analytics drops
