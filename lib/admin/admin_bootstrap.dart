@@ -8,8 +8,8 @@ import 'admin_app.dart';
 import 'announcements/announcement_admin_module.dart';
 import 'dashboard/dashboard_admin_module.dart';
 import 'exercises/exercise_admin_module.dart';
-import 'feedback/feedback_admin_module.dart';
 import 'programs/program_admin_module.dart';
+import 'support/support_admin_module.dart';
 
 /// Composition root of the admin panel; the mobile app's is
 /// `lib/app/bootstrap.dart`, and the two share no registrations.
@@ -26,7 +26,7 @@ Future<void> bootstrapAdmin(AppEnv env, FirebaseOptions options) async {
     ExerciseAdminModule(),
     ProgramAdminModule(),
     AnnouncementAdminModule(),
-    FeedbackAdminModule(),
+    SupportAdminModule(),
   ]);
   runApp(AdminApp(env: env, projectId: options.projectId));
 }

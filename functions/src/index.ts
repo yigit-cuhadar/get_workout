@@ -13,3 +13,4 @@ export { dashboardRefresh } from "./dashboard/dashboard_refresh";
 export { deleteAccount } from "./delete_account";
 export { revenueCatWebhook } from "./revenuecat_webhook";
 export { sendAnnouncement } from "./send_announcement";
+export { sendSupportReply } from "./send_support_reply";

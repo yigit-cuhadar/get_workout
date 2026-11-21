@@ -3,6 +3,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/admin/announcements/domain/admin_announcement_repository.dart';
 import 'package:get_workout/admin/announcements/domain/announcement.dart';
 import 'package:get_workout/admin/announcements/domain/announcement_admin_usecases.dart';
+import 'package:get_workout/admin/shell/request_id.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockRepository extends Mock implements AdminAnnouncementRepository {}
@@ -72,7 +73,7 @@ void main() {
   });
 
   test('request ids are 20 random letters and digits', () {
-    final ids = {for (var i = 0; i < 100; i++) newAnnouncementRequestId()};
+    final ids = {for (var i = 0; i < 100; i++) newRequestId()};
     expect(ids, hasLength(100));
     for (final id in ids) {
       expect(id, matches(RegExp(r'^[A-Za-z0-9]{20}$')));

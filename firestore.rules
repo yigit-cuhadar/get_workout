@@ -37,7 +37,10 @@ rules_version = '2';
 //   users/{uid}/feedback/{id} owner: create only, validated below   deny  allow
 //   users/*/feedback/{id}    admin claim (also as a collection      allow update
 //                            group): update changes status only,          status
-//                            to open or closed
+//                            to open, replied (once replied to) or
+//                            closed
+//   users/*/feedback/{id}/   admin claim (written only by the       allow deny
+//     replies/{requestId}    sendSupportReply function)
 //   users/{uid}              owner (writes validated, see below)    allow allow
 //   users/{uid}/**           owner                                  allow allow
 //   users/{uid}/**           anyone else                            deny  deny
@@ -167,7 +170,12 @@ rules_version = '2';
 // | read, list, update or delete of the owner's own messages       | deny   |
 // | admin: read, list (collection group `feedback`)                | allow  |
 // | admin: update changing only status, to "open" or "closed"      | allow  |
+// | ... to "replied" when the message has lastReplyAt              | allow  |
+// | ... to "replied" without lastReplyAt, or to any other status   | deny   |
 // | admin: update of any other field; create; delete               | deny   |
+// | admin: read, list the message's replies                        | allow  |
+// | anyone, admins and the owner included: write a reply; the      | deny   |
+// | owner: read a reply                                            |        |
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -482,12 +490,19 @@ service cloud.firestore {
     }
 
     // Every user's feedback, also as the admin panel's collection-group
-    // query; admins only close and reopen.
+    // query; admins only close and reopen. Status open is shown as New;
+    // replied and lastReplyAt are set by the sendSupportReply function.
     match /{path=**}/feedback/{id} {
       allow read: if isAdmin();
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
-        && request.resource.data.status in ['open', 'closed'];
+        && (request.resource.data.status in ['open', 'closed']
+          || (request.resource.data.status == 'replied' && 'lastReplyAt' in resource.data));
+
+      // The replies sent by email, written only by sendSupportReply.
+      match /replies/{requestId} {
+        allow read: if isAdmin();
+      }
     }
 
     // The history of sent announcements, written only by the

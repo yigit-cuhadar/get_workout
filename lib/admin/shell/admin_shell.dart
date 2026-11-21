@@ -108,6 +108,7 @@ class _Entry extends StatelessWidget {
     return ListTile(
       dense: true,
       title: Text(section.label),
+      trailing: section.count,
       selected: selected,
       selectedColor: scheme.onSecondaryContainer,
       selectedTileColor: scheme.secondaryContainer,
