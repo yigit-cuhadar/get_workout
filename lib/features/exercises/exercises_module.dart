@@ -13,6 +13,7 @@ import 'domain/custom_exercise.dart';
 import 'domain/custom_exercise_repository.dart';
 import 'domain/exercise_repository.dart';
 import 'domain/exercise_usecases.dart';
+import '../profile/domain/user_profile.dart';
 import 'domain/user_library_repository.dart';
 import 'presentation/body_model_cubit.dart';
 import 'presentation/custom_exercise_form_cubit.dart';
@@ -29,7 +30,10 @@ import 'presentation/library_cubit.dart';
 class ExercisesModule implements FeatureModule {
   const ExercisesModule();
 
-  static const _bodyModelAsset = 'assets/models/body_male.glb';
+  static String _bodyModelAsset(Sex sex) => switch (sex) {
+    Sex.male => 'assets/models/body_male.glb',
+    Sex.female => 'assets/models/body_female.glb',
+  };
 
   @override
   void register(GetIt sl) {
@@ -88,9 +92,11 @@ class ExercisesModule implements FeatureModule {
       )
       ..registerLazySingleton(
         () => BodyModelCubit(
-          () => rootBundle
-              .load(_bodyModelAsset)
+          loadModel: (sex) => rootBundle
+              .load(_bodyModelAsset(sex))
               .then((data) => Model3D.fromGlb(data.buffer.asUint8List())),
+          watchAuthUser: sl(),
+          watchProfile: sl(),
         ),
       )
       ..registerLazySingleton(
