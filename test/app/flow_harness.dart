@@ -69,6 +69,8 @@ import '../fake_analytics.dart';
 
 import 'package:get_workout/features/analytics/domain/analytics.dart';
 
+import '../fake_body_model.dart';
+
 class MockAuth extends Mock implements AuthRepository {}
 
 class MockAccount extends Mock implements AccountRepository {}
@@ -306,7 +308,7 @@ class FlowApp {
       watchEquipment: WatchOwnedEquipment(userLibrary),
       saveEquipment: SaveOwnedEquipment(userLibrary),
     );
-    bodyModel = BodyModelCubit(() async => throw const FormatException());
+    bodyModel = failingBodyModel();
     _registerPrograms(userLibrary);
     profiles = MockProfiles();
     when(() => profiles.watchProfile(any())).thenAnswer((_) {

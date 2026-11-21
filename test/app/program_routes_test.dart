@@ -52,6 +52,7 @@ import 'answered_consent.dart';
 import 'no_workout.dart';
 import 'today_stand_ins.dart';
 import '../fake_analytics.dart';
+import '../fake_body_model.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -244,7 +245,7 @@ void main() {
       );
     registerTodayStandIns();
 
-    final bodyModel = BodyModelCubit(() async => throw const FormatException());
+    final bodyModel = failingBodyModel();
     addTearDown(bodyModel.close);
     await tester.pumpWidget(
       MultiBlocProvider(

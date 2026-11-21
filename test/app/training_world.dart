@@ -20,7 +20,6 @@ import 'package:get_workout/features/exercises/domain/exercise_repository.dart';
 import 'package:get_workout/features/exercises/domain/exercise_usecases.dart';
 import 'package:get_workout/features/exercises/domain/user_library_repository.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
-import 'package:get_workout/features/exercises/presentation/body_model_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
@@ -82,6 +81,8 @@ import 'review_prompt_stand_in.dart';
 import '../fake_analytics.dart';
 
 import 'package:get_workout/features/analytics/domain/analytics.dart';
+
+import '../fake_body_model.dart';
 
 /// Wednesday, 18:00: the day every flow runs on.
 final flowStart = DateTime(2026, 11, 11, 18);
@@ -540,7 +541,7 @@ class TrainingWorld {
       watchEquipment: WatchOwnedEquipment(library),
       saveEquipment: SaveOwnedEquipment(library),
     );
-    final bodyModel = BodyModelCubit(() async => throw const FormatException());
+    final bodyModel = failingBodyModel();
     final entitlement = _EntitlementStandIn();
     when(() => entitlement.state).thenReturn(
       premium

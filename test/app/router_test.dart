@@ -130,6 +130,8 @@ import '../fake_analytics.dart';
 
 import 'package:get_workout/features/analytics/domain/analytics.dart';
 
+import '../fake_body_model.dart';
+
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 class _NotificationsStandIn extends MockCubit<NotificationsState>
@@ -356,7 +358,7 @@ void main() {
       watchEquipment: WatchOwnedEquipment(userLibrary),
       saveEquipment: SaveOwnedEquipment(userLibrary),
     );
-    bodyModel = BodyModelCubit(() async => throw const FormatException());
+    bodyModel = failingBodyModel();
     // Programs are covered by their own tests; here the user has none.
     final programAuth = MockAuthRepository();
     when(programAuth.watchUser).thenAnswer((_) => Stream.value(guest));
