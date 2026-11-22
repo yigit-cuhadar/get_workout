@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../shell/admin_text.dart';
+import '../../shell/publishing.dart';
 import '../domain/generator_rules.dart';
 import 'generator_rules_cubit.dart';
 
@@ -52,113 +53,71 @@ class HistoryPanel extends StatelessWidget {
     final failure = state.historyFailure;
     final current = state.loaded?.version;
     final restoring = state.restores;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return HistoryPane(
+      onClose: cubit.closeHistory,
+      onRetry: cubit.retryHistory,
+      loaded: history != null,
+      failure: failure == null ? null : failureMessage(failure),
+      intro:
+          'Pick a version to restore it: its rules go into the draft, and '
+          'Review and publish shows what that changes.',
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.sm, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text('History', style: theme.textTheme.titleMedium),
-              ),
-              IconButton(
-                tooltip: 'Close',
-                onPressed: cubit.closeHistory,
-                icon: const Icon(Icons.close),
-              ),
-            ],
+        if (state.restoreFailure case final failure?)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.error_outline),
+            title: Text('The version did not load. ${failureMessage(failure)}'),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Gap.md),
-          child: Text(
-            'Pick a version to restore it: its rules go into the draft, '
-            'and Review and publish shows what that changes.',
-            style: muted,
-          ),
-        ),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(Gap.md),
-            children: [
-              if (failure != null)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.error_outline),
-                  title: Text(failureMessage(failure)),
-                  trailing: TextButton(
-                    onPressed: cubit.retryHistory,
-                    child: const Text('Retry'),
-                  ),
-                ),
-              if (state.restoreFailure case final failure?)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.error_outline),
-                  title: Text(
-                    'The version did not load. ${failureMessage(failure)}',
-                  ),
-                ),
-              if (history == null && failure == null) const LoadingView(),
-              if (history != null && history.isEmpty)
-                Text('No versions yet.', style: muted),
-              for (final entry in history ?? const <StoredRules>[])
-                Card(
-                  child: InkWell(
-                    onTap: entry.version == current || state.publishing
-                        ? null
-                        : () => _restore(context, entry),
-                    child: Padding(
-                      padding: const EdgeInsets.all(Gap.md),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: Gap.xs,
-                        children: [
-                          Row(
-                            spacing: Gap.xs,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Version ${entry.version}',
-                                  style: theme.textTheme.titleSmall,
-                                ),
-                              ),
-                              if (entry.version == current)
-                                const ForgeTag(
-                                  'Current',
-                                  kind: ForgeTagKind.record,
-                                ),
-                              if (entry.version == restoring)
-                                const ForgeTag(
-                                  'In the draft',
-                                  kind: ForgeTagKind.category,
-                                ),
-                              if (entry.version == state.restoreLoading)
-                                const SizedBox.square(
-                                  dimension: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                            ],
+        if (history != null && history.isEmpty)
+          Text('No versions yet.', style: muted),
+        for (final entry in history ?? const <StoredRules>[])
+          Card(
+            child: InkWell(
+              onTap: entry.version == current || state.publishing
+                  ? null
+                  : () => _restore(context, entry),
+              child: Padding(
+                padding: const EdgeInsets.all(Gap.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: Gap.xs,
+                  children: [
+                    Row(
+                      spacing: Gap.xs,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Version ${entry.version}',
+                            style: theme.textTheme.titleSmall,
                           ),
-                          Text(
-                            '${dateTimeLabel(entry.publishedAt)} · '
-                            '${entry.publishedByEmail ?? 'content import'}',
-                            style: muted,
+                        ),
+                        if (entry.version == current)
+                          const ForgeTag('Current', kind: ForgeTagKind.record),
+                        if (entry.version == restoring)
+                          const ForgeTag(
+                            'In the draft',
+                            kind: ForgeTagKind.category,
                           ),
-                          if (entry.note case final note?) Text(note),
-                          if (entry.restores case final restores?)
-                            Text('Restores version $restores', style: muted),
-                        ],
-                      ),
+                        if (entry.version == state.restoreLoading)
+                          const SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                      ],
                     ),
-                  ),
+                    Text(
+                      '${dateTimeLabel(entry.publishedAt)} · '
+                      '${entry.publishedByEmail ?? 'content import'}',
+                      style: muted,
+                    ),
+                    if (entry.note case final note?) Text(note),
+                    if (entry.restores case final restores?)
+                      Text('Restores version $restores', style: muted),
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
-        ),
       ],
     );
   }

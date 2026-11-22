@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +7,7 @@ import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/admin/generator/domain/generator_rules.dart';
 import 'package:get_workout/admin/generator/domain/rules_changes.dart';
 import 'package:get_workout/admin/generator/presentation/generator_rules_cubit.dart';
+import 'package:get_workout/admin/generator/presentation/rules_text.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'generator_fixtures.dart';
@@ -54,7 +57,7 @@ void main() {
         expect(state.loaded?.version, 3);
         expect(state.draft, seed);
         expect(state.hasChanges, isFalse);
-        expect(state.canReview, isFalse);
+        expect(state.canPublish, isFalse);
       },
     );
 
@@ -97,7 +100,7 @@ void main() {
       cubit
         ..setValue(_rest, 165)
         ..setValue(['volume', 'cap', 'beginner'], 16);
-      expect(cubit.state.changes.map((c) => c.where), [
+      expect(wheres(cubit.state), [
         'Dosing · Build muscle · Primary · rest',
         'Volume · cap · Beginner',
       ]);
@@ -123,7 +126,7 @@ void main() {
       final count = seed.templates.length;
       cubit.addTemplate();
       expect(cubit.state.openTemplate, count);
-      expect(cubit.state.changes.single.where, 'Template new_template added');
+      expect(wheres(cubit.state).single, 'Template new_template added');
 
       cubit.setDays(count, 5);
       expect(cubit.state.valueAt(['templates', count, 'days']), 5);
@@ -201,7 +204,7 @@ void main() {
         expect(cubit.state.problemsAt(_rest), [
           'must be a whole number from 0 to 600',
         ]);
-        expect(cubit.state.canReview, isFalse);
+        expect(cubit.state.canPublish, isFalse);
         cubit.close();
       });
     });
@@ -269,17 +272,20 @@ void main() {
           .thenAnswer((_) async => const Err(GeneratorRulesStaleFailure()));
       final cubit = await reviewed();
       await cubit.publish('');
-      expect(cubit.state.publishFailure, isA<GeneratorRulesStaleFailure>());
+      expect(cubit.state.stale, isTrue);
       expect(cubit.state.hasChanges, isTrue);
+      cubit.setValue(['volume', 'cap', 'advanced'], 21);
+      expect(cubit.state.stale, isTrue);
+      cubit.setValue(['volume', 'cap', 'advanced'], 22);
 
       final theirs = seed.set(['volume', 'cap', 'beginner'], 18);
       when(() => repository.load())
           .thenAnswer((_) async => Ok(storedRules(version: 4, rules: theirs)));
       await cubit.load();
       expect(cubit.state.loaded?.version, 4);
-      expect(cubit.state.publishFailure, isNull);
+      expect(cubit.state.stale, isFalse);
       expect(cubit.state.draft, seed.set(_rest, 165));
-      expect(cubit.state.changes.map((c) => c.where), [
+      expect(wheres(cubit.state), [
         'Dosing · Build muscle · Primary · rest',
         'Volume · cap · Beginner',
       ]);
@@ -338,7 +344,7 @@ void main() {
       await cubit.restore(2);
       expect(cubit.state.draft, older);
       expect(cubit.state.restores, 2);
-      expect(cubit.state.changes.single.after, '120 s');
+      expect(cubit.state.changes.single.after, 120);
 
       await cubit.review();
       await cubit.publish('');
@@ -354,6 +360,116 @@ void main() {
       await cubit.restore(2);
       cubit.setValue(['volume', 'cap', 'beginner'], 16);
       expect(cubit.state.restores, isNull);
+    });
+  });
+
+  group('review fixes', () {
+    test('a new template stays new while its id is typed', () async {
+      final cubit = await loadedCubit();
+      cubit.addTemplate();
+      final t = cubit.state.openTemplate!;
+      for (final id in ['f', 'full_body_3', 'full_body_3_home']) {
+        cubit.setValue(['templates', t, 'id'], id);
+        expect(cubit.state.newTemplates, {t});
+        expect(cubit.state.changes.map((c) => c.kind), [ChangeKind.added]);
+        expect(cubit.state.wasAt(['templates', t, 'days']), isNull);
+      }
+    });
+
+    test('a structural edit drops the last check at once', () async {
+      when(() => repository.check(any())).thenAnswer(
+        (_) async => const Ok(
+          RulesCheck(problems: ['grouping[1].size: must be a whole number']),
+        ),
+      );
+      final cubit = await loadedCubit();
+      cubit.setValue(['grouping', 1, 'size'], 9);
+      await cubit.checkDraft();
+      expect(cubit.state.problems, isNotEmpty);
+
+      cubit.moveItem(['grouping'], 1, 0);
+      expect(cubit.state.problems, isEmpty);
+      expect(cubit.state.checkDue, isTrue);
+      expect(cubit.state.canPublish, isFalse);
+    });
+
+    test(
+      'a value edit leaves publishing to a check of the new draft',
+      () async {
+        final cubit = await loadedCubit();
+        cubit.setValue(_rest, 160);
+        await cubit.checkDraft();
+        expect(cubit.state.canPublish, isTrue);
+        cubit.setValue(_rest, 165);
+        expect(cubit.state.canPublish, isFalse);
+        expect(cubit.state.checkDue, isTrue);
+      },
+    );
+
+    test('a slow check answer after a newer one is ignored', () async {
+      final slow = Completer<Result<RulesCheck>>();
+      final first = seed.set(_rest, 160);
+      when(() => repository.check(first)).thenAnswer((_) => slow.future);
+      final cubit = await loadedCubit();
+      cubit.setValue(_rest, 160);
+      final pending = cubit.checkDraft();
+      cubit.setValue(_rest, 165);
+      await cubit.checkDraft();
+      slow.complete(
+        const Ok(RulesCheck(problems: ['dosing.build_muscle: stale'])),
+      );
+      await pending;
+      expect(cubit.state.problems, isEmpty);
+      expect(cubit.state.draftChecked, isTrue);
+    });
+
+    test('the published findings of an old version are not shown', () async {
+      when(() => repository.check(seed))
+          .thenAnswer((_) async => const Ok(RulesCheck(findings: [_finding])));
+      final cubit = await loadedCubit();
+      cubit.setValue(_rest, 165);
+      await cubit.review();
+      expect(cubit.state.loadedFindings, [_finding]);
+
+      when(() => repository.load()).thenAnswer(
+        (_) async => Ok(storedRules(version: 4, rules: seed.set(_rest, 120))),
+      );
+      await cubit.load();
+      expect(cubit.state.loadedFindings, isNull);
+    });
+
+    test('closing the cubit cancels the pending check', () {
+      fakeAsync((async) {
+        final cubit = makeCubit(repository)..load();
+        async.flushMicrotasks();
+        cubit
+          ..setValue(_rest, 165)
+          ..close();
+        async.elapse(const Duration(seconds: 2));
+        verifyNever(() => repository.check(any()));
+      });
+    });
+
+    test('publish stays publishing until the new version is loaded', () async {
+      final draft = seed.set(_rest, 165);
+      final reload = Completer<Result<StoredRules>>();
+      when(() => repository.publish(any())).thenAnswer((_) async {
+        when(() => repository.load()).thenAnswer((_) => reload.future);
+        return const Ok(4);
+      });
+      final cubit = await loadedCubit();
+      cubit.setValue(_rest, 165);
+      await cubit.review();
+      final publishing = cubit.publish('');
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.publishing, isTrue);
+      expect(cubit.state.canPublish, isFalse);
+
+      reload.complete(Ok(storedRules(version: 4, rules: draft)));
+      await publishing;
+      expect(cubit.state.publishStatus, PublishStatus.published);
+      expect(cubit.state.loaded?.version, 4);
+      verify(() => repository.publish(any())).called(1);
     });
   });
 }

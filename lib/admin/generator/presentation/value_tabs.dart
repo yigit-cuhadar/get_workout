@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 
@@ -6,6 +6,7 @@ import '../../../features/exercises/domain/vocabulary.dart';
 import '../../shell/admin_form.dart';
 import '../../shell/admin_text.dart';
 import 'generator_rules_cubit.dart';
+import 'generator_sizes.dart';
 import 'rule_fields.dart';
 
 /// The weekly sets aimed for per muscle and level, and the cap per level.
@@ -91,7 +92,7 @@ class SelectionTab extends StatelessWidget {
                       ['selection', 'tier', tier.code],
                       label: codeLabel(tier),
                       decimal: true,
-                      width: 120,
+                      width: GeneratorSizes.labelled,
                     ),
               ],
             ),
@@ -140,7 +141,7 @@ class SelectionTab extends StatelessWidget {
                     ['selection', key],
                     label: label,
                     decimal: true,
-                    width: 120,
+                    width: GeneratorSizes.labelled,
                   ),
                   Expanded(
                     child: Padding(
@@ -223,7 +224,7 @@ class _GoalExtras extends StatelessWidget {
             spacing: Gap.md,
             children: [
               SizedBox(
-                width: 200,
+                width: GeneratorSizes.wide,
                 child: DropdownButtonFormField<Goal>(
                   initialValue: goal,
                   isExpanded: true,
@@ -241,7 +242,7 @@ class _GoalExtras extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 220,
+                width: GeneratorSizes.wide,
                 child: DropdownButtonFormField<Equipment>(
                   initialValue: equipment,
                   isExpanded: true,
@@ -262,7 +263,7 @@ class _GoalExtras extends StatelessWidget {
                 [..._path, goal.code, equipment.code],
                 label: 'Score',
                 decimal: true,
-                width: 100,
+                width: GeneratorSizes.short,
               ),
               IconButton(
                 tooltip: 'Remove',
@@ -314,12 +315,12 @@ class AreasTab extends StatelessWidget {
                 RuleNumber(
                   ['focus', 'extraSets'],
                   label: 'Extra sets',
-                  width: 120,
+                  width: GeneratorSizes.labelled,
                 ),
                 RuleNumber(
                   ['focus', 'max'],
                   label: 'Areas a user may pick',
-                  width: 180,
+                  width: GeneratorSizes.wide,
                 ),
               ],
             ),
@@ -342,7 +343,7 @@ class AreasTab extends StatelessWidget {
             const RuleNumber(
               ['skip', 'max'],
               label: 'Areas a user may leave out',
-              width: 220,
+              width: GeneratorSizes.wide,
             ),
           ],
         ),
@@ -352,7 +353,7 @@ class AreasTab extends StatelessWidget {
             RuleNumber(
               ['time', 'setupS'],
               label: 'Setup per exercise (s)',
-              width: 200,
+              width: GeneratorSizes.wide,
             ),
             _SessionMinutes(),
           ],
@@ -368,7 +369,7 @@ class AreasTab extends StatelessWidget {
                   RuleNumber(
                     ['lengthWeeks', level.code],
                     label: codeLabel(level),
-                    width: 120,
+                    width: GeneratorSizes.labelled,
                   ),
               ],
             ),

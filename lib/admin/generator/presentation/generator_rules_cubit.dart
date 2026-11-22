@@ -7,9 +7,12 @@ import '../../access/domain/access_usecases.dart';
 import '../domain/generator_rules.dart';
 import '../domain/generator_rules_usecases.dart';
 import '../domain/rules_changes.dart';
+import 'rules_text.dart';
 
 enum PublishStatus {
   idle,
+
+  /// Publishing, and loading the version it made.
   publishing,
 
   /// The last publish went through ([GeneratorRulesState.published]).
@@ -23,6 +26,7 @@ class GeneratorRulesState extends Equatable {
     this.loadFailure,
     this.loading = false,
     this.draft,
+    this.newTemplates = const {},
     this.restoring,
     this.check,
     this.checked,
@@ -35,6 +39,7 @@ class GeneratorRulesState extends Equatable {
     this.publishFailure,
     this.accessRefreshed = false,
     this.published,
+    this.stale = false,
     this.historyOpen = false,
     this.history,
     this.historyFailure,
@@ -53,6 +58,10 @@ class GeneratorRulesState extends Equatable {
 
   /// The rules every tab edits; null while none are loaded.
   final GeneratorRules? draft;
+
+  /// The indices of the draft's templates added in it: new whatever their
+  /// id, so typing an id never turns one into an edit of another.
+  final Set<int> newTemplates;
 
   /// The version a restore put into [draft], with its rules.
   final StoredRules? restoring;
@@ -78,6 +87,10 @@ class GeneratorRulesState extends Equatable {
   /// The version the last publish made.
   final int? published;
 
+  /// A publish was refused because someone else published meanwhile; until
+  /// the rules are reloaded.
+  final bool stale;
+
   final bool historyOpen;
 
   /// The latest versions, newest first; null until loaded.
@@ -99,9 +112,13 @@ class GeneratorRulesState extends Equatable {
 
   GeneratorRules? get rules => loaded?.rules;
 
-  /// Every changed value of [draft] against [rules].
+  /// Every change of [draft] against [rules].
   late final List<RulesChange> changes = switch ((rules, draft)) {
-    (final rules?, final draft?) => rulesChanges(rules, draft),
+    (final rules?, final draft?) => rulesChanges(
+      rules,
+      draft,
+      newTemplates: newTemplates,
+    ),
     _ => const [],
   };
 
@@ -110,7 +127,7 @@ class GeneratorRulesState extends Equatable {
   /// The tabs with changes, in tab order.
   late final List<RulesTab> changedTabs = [
     for (final tab in RulesTab.values)
-      if (changes.any((change) => change.tab == tab)) tab,
+      if (changes.any((change) => tabOf(change.path) == tab)) tab,
   ];
 
   /// The validator's problems with the last checked draft.
@@ -120,11 +137,15 @@ class GeneratorRulesState extends Equatable {
   ];
 
   late final Set<RulesTab> problemTabs = {
-    for (final problem in problems) ?problem.tab,
+    for (final problem in problems) ?tabOf(problem.path),
   };
 
   /// Whether [check] is of the draft as it is now.
   bool get draftChecked => check != null && checked == draft;
+
+  /// Whether the draft's check is still to come: waiting for the pause
+  /// after an edit, or asked.
+  bool get checkDue => hasChanges && !draftChecked && checkFailure == null;
 
   /// The version this draft restores: a restore not edited since.
   int? get restores => switch (restoring) {
@@ -134,10 +155,15 @@ class GeneratorRulesState extends Equatable {
 
   bool get publishing => publishStatus == PublishStatus.publishing;
 
-  bool get canReview =>
-      draft != null && hasChanges && problems.isEmpty && !publishing;
-
-  bool get canPublish => canReview && draftChecked;
+  /// Whether the changes may be reviewed and published: the server checked
+  /// this very draft and found no problem.
+  bool get canPublish =>
+      draft != null &&
+      hasChanges &&
+      draftChecked &&
+      !checking &&
+      problems.isEmpty &&
+      !publishing;
 
   /// The template open on the Templates tab; null when there is none.
   int? get openTemplate =>
@@ -159,7 +185,12 @@ class GeneratorRulesState extends Equatable {
   String? wasAt(RulesPath path) {
     final (draft, rules) = (this.draft, this.rules);
     if (draft == null || rules == null) return null;
-    final loadedPath = loadedPathOf(draft, rules, path);
+    final loadedPath = loadedPathOf(
+      draft,
+      rules,
+      path,
+      newTemplates: newTemplates,
+    );
     if (loadedPath == null ||
         !rules.has(loadedPath.sublist(0, loadedPath.length - 1))) {
       return null;
@@ -187,6 +218,7 @@ class GeneratorRulesState extends Equatable {
     Failure? Function()? loadFailure,
     bool? loading,
     GeneratorRules? draft,
+    Set<int>? newTemplates,
     StoredRules? Function()? restoring,
     RulesCheck? Function()? check,
     GeneratorRules? Function()? checked,
@@ -199,6 +231,7 @@ class GeneratorRulesState extends Equatable {
     Failure? publishFailure,
     bool? accessRefreshed,
     int? published,
+    bool? stale,
     bool? historyOpen,
     List<StoredRules>? history,
     Failure? Function()? historyFailure,
@@ -213,6 +246,7 @@ class GeneratorRulesState extends Equatable {
     loadFailure: loadFailure != null ? loadFailure() : this.loadFailure,
     loading: loading ?? this.loading,
     draft: draft ?? this.draft,
+    newTemplates: newTemplates ?? this.newTemplates,
     restoring: restoring != null ? restoring() : this.restoring,
     check: check != null ? check() : this.check,
     checked: checked != null ? checked() : this.checked,
@@ -232,6 +266,7 @@ class GeneratorRulesState extends Equatable {
         ? this.accessRefreshed
         : accessRefreshed ?? false,
     published: publishStatus == null ? this.published : published,
+    stale: stale ?? this.stale,
     historyOpen: historyOpen ?? this.historyOpen,
     history: history ?? this.history,
     historyFailure: historyFailure != null
@@ -255,6 +290,7 @@ class GeneratorRulesState extends Equatable {
     loadFailure,
     loading,
     draft,
+    newTemplates,
     restoring,
     check,
     checked,
@@ -267,6 +303,7 @@ class GeneratorRulesState extends Equatable {
     publishFailure,
     accessRefreshed,
     published,
+    stale,
     historyOpen,
     history,
     historyFailure,
@@ -302,8 +339,8 @@ class GeneratorRulesCubit extends Cubit<GeneratorRulesState> {
 
   Timer? _checkTimer;
 
-  /// Counts the draft checks asked for; only the latest one's answer
-  /// counts.
+  /// Counts the edits and the checks asked for: only the answer to the
+  /// latest check of the current draft counts.
   int _checkTurn = 0;
 
   @override
@@ -322,15 +359,19 @@ class GeneratorRulesCubit extends Cubit<GeneratorRulesState> {
     switch (result) {
       case Ok(value: final loaded):
         final keep = state.hasChanges ? state.draft : null;
-        final draft = keep ?? loaded.rules;
         emit(
           GeneratorRulesState(
             loaded: loaded,
-            draft: draft,
+            draft: keep ?? loaded.rules,
+            newTemplates: keep == null ? const {} : state.newTemplates,
             restoring: keep == null ? null : state.restoring,
             check: keep == null ? null : state.check,
             checked: keep == null ? null : state.checked,
             publishedFindings: state.publishedFindings,
+            // A publish waits for this load before it says it is done.
+            publishStatus: state.publishing
+                ? PublishStatus.publishing
+                : PublishStatus.idle,
             historyOpen: state.historyOpen,
             history: state.history,
             tab: state.tab,
@@ -355,7 +396,7 @@ class GeneratorRulesCubit extends Cubit<GeneratorRulesState> {
 
   /// Opens the tab of [problem], with its template and day, or its goal.
   void openProblem(RulesProblem problem) {
-    final tab = problem.tab;
+    final tab = tabOf(problem.path);
     if (tab == null) return;
     emit(switch (problem.path) {
       ['templates', final int t, 'dayList', final int d, ...] => state.copyWith(
@@ -381,19 +422,19 @@ class GeneratorRulesCubit extends Cubit<GeneratorRulesState> {
       _edit((rules) => rules.set(path, value));
 
   void addItem(RulesPath list, Object? value) =>
-      _edit((rules) => rules.add(list, value));
+      _edit((rules) => rules.add(list, value), structural: true);
 
   void removeItem(RulesPath list, int index) =>
-      _edit((rules) => rules.removeAt(list, index));
+      _edit((rules) => rules.removeAt(list, index), structural: true);
 
   void moveItem(RulesPath list, int from, int to) =>
-      _edit((rules) => rules.move(list, from, to));
+      _edit((rules) => rules.move(list, from, to), structural: true);
 
   /// Adds a template of the open template's split (the first split when
   /// none is open) and opens it.
   void addTemplate() {
     final draft = state.draft;
-    if (draft == null) return;
+    if (draft == null || state.publishing) return;
     final split = switch (state.openTemplate) {
       final open? => draft.at(['templates', open, 'split']),
       null => draft.at(['splits', 0, 'id']),
@@ -401,31 +442,39 @@ class GeneratorRulesCubit extends Cubit<GeneratorRulesState> {
     final template = draft.templates.length;
     _edit(
       (rules) => rules.add(['templates'], newTemplate(rules, split: '$split')),
+      structural: true,
+      newTemplates: {...state.newTemplates, template},
     );
     emit(state.copyWith(tab: RulesTab.templates, template: template, day: 0));
   }
 
   void removeTemplate(int template) {
-    _edit((rules) => rules.removeAt(['templates'], template));
+    if (state.publishing) return;
+    _edit(
+      (rules) => rules.removeAt(['templates'], template),
+      structural: true,
+      newTemplates: {
+        for (final t in state.newTemplates)
+          if (t != template) t > template ? t - 1 : t,
+      },
+    );
     emit(state.copyWith(template: template == 0 ? 0 : template - 1, day: 0));
   }
 
   /// Sets [template]'s days a week to [days], adding days at the end or
   /// removing the last ones.
-  void setDays(int template, int days) {
-    _edit((rules) {
-      final path = ['templates', template, 'dayList'];
-      final count = (rules.at(path) as List?)?.length ?? 0;
-      return rules
-          .set(['templates', template, 'days'], days)
-          .updateList(
-            path,
-            (list) => count > days
-                ? list.sublist(0, days)
-                : [...list, for (var d = count; d < days; d++) newDay(d)],
-          );
-    });
-  }
+  void setDays(int template, int days) => _edit((rules) {
+    final path = ['templates', template, 'dayList'];
+    final count = (rules.at(path) as List?)?.length ?? 0;
+    return rules
+        .set(['templates', template, 'days'], days)
+        .updateList(
+          path,
+          (list) => count > days
+              ? list.sublist(0, days)
+              : [...list, for (var d = count; d < days; d++) newDay(d)],
+        );
+  }, structural: true);
 
   /// Takes the draft back to the loaded rules.
   void discard() {
@@ -436,31 +485,41 @@ class GeneratorRulesCubit extends Cubit<GeneratorRulesState> {
     emit(
       state.copyWith(
         draft: rules,
+        newTemplates: const {},
         restoring: () => null,
         check: () => null,
         checked: () => null,
         checking: false,
         checkFailure: () => null,
-        publishStatus: PublishStatus.idle,
       ),
     );
   }
 
-  void _edit(GeneratorRules Function(GeneratorRules rules) change) {
+  /// Applies [change] to the draft and checks it a moment later. A
+  /// [structural] change (an item added, removed or moved) drops the last
+  /// check at once: its problems name places that have moved.
+  void _edit(
+    GeneratorRules Function(GeneratorRules rules) change, {
+    bool structural = false,
+    Set<int>? newTemplates,
+  }) {
     final draft = state.draft;
     if (draft == null || state.publishing) return;
     final edited = change(draft);
-    final unchanged = edited == state.rules;
+    // A check of an earlier draft is answered for nothing.
+    _checkTurn++;
     _checkTimer?.cancel();
-    if (unchanged) _checkTurn++;
+    final templates = newTemplates ?? state.newTemplates;
+    final unchanged = templates.isEmpty && edited == state.rules;
+    final drop = unchanged || structural;
     emit(
       state.copyWith(
         draft: edited,
-        publishStatus: PublishStatus.idle,
+        newTemplates: templates,
         // The loaded rules passed the server's check when published.
-        check: unchanged ? () => null : null,
-        checked: unchanged ? () => null : null,
-        checking: unchanged ? false : null,
+        check: drop ? () => null : null,
+        checked: drop ? () => null : null,
+        checking: false,
         checkFailure: () => null,
       ),
     );
@@ -533,7 +592,8 @@ class GeneratorRulesCubit extends Cubit<GeneratorRulesState> {
   }
 
   /// Publishes the draft onto the loaded version with [note], then loads
-  /// the new version, and the history when it is open.
+  /// the new version (still publishing until it is in), and the history
+  /// when it is open.
   Future<void> publish(String note) async {
     final (loaded, draft) = (state.loaded, state.draft);
     if (loaded == null || draft == null || !state.canPublish) return;
@@ -549,6 +609,8 @@ class GeneratorRulesCubit extends Cubit<GeneratorRulesState> {
     if (isClosed) return;
     switch (result) {
       case Ok(value: final version):
+        await load();
+        if (isClosed) return;
         emit(
           state.copyWith(
             publishStatus: PublishStatus.published,
@@ -556,8 +618,15 @@ class GeneratorRulesCubit extends Cubit<GeneratorRulesState> {
             restoring: () => null,
           ),
         );
-        await load();
         if (state.historyOpen) await _loadHistory();
+      case Err(failure: final GeneratorRulesStaleFailure failure):
+        emit(
+          state.copyWith(
+            publishStatus: PublishStatus.failed,
+            publishFailure: failure,
+            stale: true,
+          ),
+        );
       case Err(failure: final GeneratorRulesInvalidFailure failure):
         emit(
           state.copyWith(
@@ -624,7 +693,7 @@ class GeneratorRulesCubit extends Cubit<GeneratorRulesState> {
     switch (result) {
       case Ok(value: StoredRules(rules: final rules?) && final stored):
         emit(state.copyWith(restoreLoading: () => null));
-        _edit((_) => rules);
+        _edit((_) => rules, structural: true, newTemplates: const {});
         emit(state.copyWith(restoring: () => stored));
       case Ok():
         emit(

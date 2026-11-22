@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -8,15 +8,15 @@ import '../../shell/admin_form.dart';
 import '../../shell/admin_text.dart';
 import '../domain/generator_rules.dart';
 import 'generator_rules_cubit.dart';
-
-/// The width of a number in a table cell.
-const numberWidth = 64.0;
+import 'generator_sizes.dart';
 
 final _decimal = RegExp(r'^-?\d*\.?\d*');
 
-/// A number typed in. The text follows [value] when it changes from
-/// elsewhere (a discard, a restore, a moved row) and is left alone while
-/// it already reads as [value]; [blank] is what empty text counts as.
+/// A number typed in. Only text that reads as a number is written: while
+/// it does not ("", "-", "1."), the text stays and the value is kept. Empty
+/// text writes [blank] (shown as the hint) or, when [optional], removes the
+/// value. The text follows [value] when that changes elsewhere (a discard,
+/// a restore, a moved row).
 class NumberBox extends StatefulWidget {
   const NumberBox({
     super.key,
@@ -25,7 +25,8 @@ class NumberBox extends StatefulWidget {
     this.decimal = false,
     this.label,
     this.blank,
-    this.width = numberWidth,
+    this.optional = false,
+    this.width = GeneratorSizes.number,
   });
 
   final num? value;
@@ -35,6 +36,7 @@ class NumberBox extends StatefulWidget {
   final bool decimal;
   final String? label;
   final num? blank;
+  final bool optional;
   final double? width;
 
   @override
@@ -48,13 +50,23 @@ class _NumberBoxState extends State<NumberBox> {
       value == null || value == widget.blank ? '' : '$value';
 
   num? _parse(String text) =>
-      (widget.decimal ? num.tryParse(text) : int.tryParse(text)) ??
-      (text.isEmpty ? widget.blank : null);
+      widget.decimal ? num.tryParse(text) : int.tryParse(text);
+
+  void _changed(String text) {
+    if (_parse(text) case final number?) {
+      widget.onChanged(number);
+    } else if (text.isEmpty && (widget.blank != null || widget.optional)) {
+      widget.onChanged(widget.blank);
+    }
+  }
 
   @override
   void didUpdateWidget(NumberBox old) {
     super.didUpdateWidget(old);
-    if (_parse(_text.text) != (widget.value ?? widget.blank)) {
+    final value = widget.value ?? widget.blank;
+    if (widget.value != old.value &&
+        (_parse(_text.text) ?? (_text.text.isEmpty ? widget.blank : null)) !=
+            value) {
       _text.text = _format(widget.value);
     }
   }
@@ -85,7 +97,7 @@ class _NumberBoxState extends State<NumberBox> {
         else
           FilteringTextInputFormatter.digitsOnly,
       ],
-      onChanged: (text) => widget.onChanged(_parse(text)),
+      onChanged: _changed,
     ),
   );
 }
@@ -189,13 +201,17 @@ class RuleNumber extends StatelessWidget {
     this.label,
     this.decimal = false,
     this.blank,
-    this.width = numberWidth,
+    this.optional = false,
+    this.width = GeneratorSizes.number,
   });
 
   final RulesPath path;
   final String? label;
   final bool decimal;
   final num? blank;
+
+  /// Empty text removes the value.
+  final bool optional;
   final double? width;
 
   @override
@@ -210,6 +226,7 @@ class RuleNumber extends StatelessWidget {
         label: label,
         decimal: decimal,
         blank: blank,
+        optional: optional,
         width: width,
         onChanged: (number) => cubit.setValue(
           path,
@@ -233,7 +250,7 @@ class RuleRange extends StatelessWidget {
     final value = context.watch<GeneratorRulesCubit>().state.valueAt(path);
     final range = value is List ? value : const [];
     Widget end(int i) => NumberBox(
-      width: numberWidth * 0.75,
+      width: GeneratorSizes.rangeEnd,
       value: switch (range.elementAtOrNull(i)) {
         final num n => n,
         _ => null,
@@ -287,9 +304,10 @@ class RuleText extends StatelessWidget {
   }
 }
 
-/// The codes at [path] of the draft as chips, kept in vocabulary order.
-/// With [every], no code selected means every one (the field is absent),
-/// offered as its own first chip.
+/// The codes at [path] of the draft as chips, in vocabulary order. The
+/// stored order is kept: a ticked code goes at the end, an unticked one
+/// leaves its place. With [every], no code selected means every one (the
+/// field is absent), offered as its own first chip.
 class RuleCodes<T extends Coded> extends StatelessWidget {
   const RuleCodes(
     this.path, {
@@ -314,7 +332,10 @@ class RuleCodes<T extends Coded> extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<GeneratorRulesCubit>();
     final value = context.watch<GeneratorRulesCubit>().state.valueAt(path);
-    final selected = {if (value is List) ...value};
+    final stored = [
+      if (value is List)
+        for (final code in value) '$code',
+    ];
     final every = this.every;
     void set(List<String> codes) => cubit.setValue(
       path,
@@ -340,10 +361,11 @@ class RuleCodes<T extends Coded> extends StatelessWidget {
               for (final code in values)
                 FilterChip(
                   label: Text(codeLabel(code)),
-                  selected: selected.contains(code.code),
+                  selected: stored.contains(code.code),
                   onSelected: (on) => set([
-                    for (final v in values)
-                      if (v == code ? on : selected.contains(v.code)) v.code,
+                    for (final v in stored)
+                      if (v != code.code) v,
+                    if (on) code.code,
                   ]),
                 ),
             ],

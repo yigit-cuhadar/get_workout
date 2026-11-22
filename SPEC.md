@@ -822,7 +822,7 @@ Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature note
 - [ ] Generator callables — `generateProgram`, the rules callables, `generator/options`, Firestore rules, deployed to dev — a Premium user gets a program, a free one is refused
 - [ ] Generator in the app — the nine questions, the server call, preview, save; the on-device engine and the leave-out picker go — a program is generated, edited and saved on the simulator; offline says so
 - [x] Admin, exercise fields — generator tier and stress areas in the exercise editor, as table columns and filters
-- [ ] Admin, generator rules — splits and templates, dosing, volume, selection, focus; review and publish, version history and restore — a published change shows in the next generated program
+- [x] Admin, generator rules — splits and templates, dosing, volume, selection, focus; review and publish, version history and restore — a published change shows in the next generated program
 - [ ] Admin, generator simulator — answers in, the program out with why each exercise was picked, with the published or the unpublished rules
 - [ ] Generator on prod — functions, rules and content deployed, checked with a Premium account
 
@@ -5200,3 +5200,41 @@ not in a separate dashboard tool.
   query would need a new rule); the Programs list also reads the exercise
   library for the rules. The Programs subtitle says "by catalogue order"
   only while no header sorts it.
+- **Generator** (`lib/admin/generator`; AG1 A, AG2 A, AG5 picks under
+  Programs › "Program generator, rebuild"): one draft of `generator/rules`
+  edited over five tabs, Templates, Dosing, Volume, Selection and Areas
+  (the Simulator tab comes with the simulator feature); switching tabs
+  keeps the edits. The header reads "Version N · published <date> by
+  <email>"; with changes a bar says "n unpublished changes · <tabs>" with
+  Discard, History and Review and publish (History sits in the header
+  without changes). A changed field shows its old value under it ("was
+  150"); templates and splits are matched by id, and a template added in
+  the draft stays new whatever id it is given, its id editable only then.
+  Splits are edited where the template list groups by them: each split
+  heading has a menu (edit in a dialog, move, remove while no template
+  uses it), and New split sits under New template. The server is the only
+  validator: `generatorRulesCheck` runs a second after the last edit
+  (and before the review); its problems sit in a card at the top (a line
+  opens its tab, template and day, or goal), mark their tabs and show
+  under the fields whose path they match. An edit that adds, removes or
+  moves an item drops the previous problems at once; Review and publish
+  waits for a check of the current draft without problems ("Checking…"
+  meanwhile). The review lists every change (Where / Now / After
+  publishing, a template's changed slot as one line), the check's
+  findings for the draft against the loaded version's own (checked once
+  per version) as counts of standard answers with no program, a target
+  muscle without direct work and a day under half the session (warnings
+  only, with the list of answers), an optional note (at most 300) and
+  "Publish version N+1"; the page stays publishing until the new version
+  is loaded. A `stale` refusal keeps the draft and shows a banner with
+  Reload until the rules are reloaded, then the draft is compared with
+  the new version. History lists the last 20 versions; picking one puts
+  its rules into the draft (asking first when there are changes), and
+  the publish says it restores that version while the draft is unedited
+  since. Leaving the page with changes asks first (`GoRoute.onExit`), and
+  the browser asks before the tab is closed or reloaded (`beforeunload`).
+  With no rules published (version 0) every tab says the content import
+  seeds them and nothing is editable. Number fields write only text that
+  reads as a number; scores take negative numbers; chip lists keep their
+  stored order. App settings shares the publish bar, the change table
+  and the history pane (`lib/admin/shell/publishing.dart`).

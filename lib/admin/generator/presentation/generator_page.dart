@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -7,23 +7,24 @@ import 'package:intl/intl.dart';
 import '../../shell/admin_text.dart';
 import '../../shell/page_header.dart';
 import '../../shell/problem_card.dart';
+import '../../shell/publishing.dart';
+import '../../shell/unload_guard.dart';
 import '../domain/generator_rules.dart';
 import '../domain/rules_changes.dart';
 import 'dosing_tab.dart';
 import 'generator_rules_cubit.dart';
 import 'history_panel.dart';
 import 'review_dialog.dart';
+import 'rules_text.dart';
 import 'templates_tab.dart';
 import 'value_tabs.dart';
-
-/// The history panel's width, as App settings has it.
-const _historyWidth = 400.0;
 
 final _date = DateFormat('d MMM y');
 
 /// The generator's rules: the version line, the unpublished-changes bar and
 /// a tab per part of the rules, all editing one draft (AG1 A). Its state
-/// answers whether the page may be left ([mayLeave]).
+/// answers whether the page may be left ([mayLeave]), and the browser asks
+/// before the tab closes while there are unpublished changes.
 class GeneratorPage extends StatefulWidget {
   const GeneratorPage({super.key});
 
@@ -33,9 +34,11 @@ class GeneratorPage extends StatefulWidget {
 
 class GeneratorPageState extends State<GeneratorPage> {
   late final _cubit = sl<GeneratorRulesCubit>()..load();
+  late final _unloadGuard = sl<UnloadGuard>();
 
   @override
   void dispose() {
+    _unloadGuard.active = false;
     _cubit.close();
     super.dispose();
   }
@@ -69,12 +72,15 @@ class GeneratorPageState extends State<GeneratorPage> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      BlocProvider.value(value: _cubit, child: const _GeneratorView());
+  Widget build(BuildContext context) => BlocProvider.value(
+    value: _cubit,
+    child: BlocListener<GeneratorRulesCubit, GeneratorRulesState>(
+      listenWhen: (previous, state) => previous.hasChanges != state.hasChanges,
+      listener: (_, state) => _unloadGuard.active = state.hasChanges,
+      child: const _GeneratorView(),
+    ),
+  );
 }
-
-String _changeCount(int count) =>
-    '$count unpublished ${count == 1 ? 'change' : 'changes'}';
 
 String _versionLine(StoredRules loaded) => loaded.version == 0
     ? 'No rules published yet'
@@ -164,7 +170,7 @@ class _GeneratorView extends StatelessWidget {
             const Expanded(child: _Rules()),
             if (historyOpen) ...[
               const VerticalDivider(width: 1),
-              const SizedBox(width: _historyWidth, child: HistoryPanel()),
+              const SizedBox(width: historyWidth, child: HistoryPanel()),
             ],
           ],
         ),
@@ -203,7 +209,7 @@ class _Rules extends StatelessWidget {
             title: 'Generator',
             subtitle: _versionLine(loaded),
             trailing: [
-              if (state.checking)
+              if (state.checking || state.checkDue)
                 const Padding(
                   padding: EdgeInsets.only(top: Gap.sm),
                   child: Text('Checking…'),
@@ -227,7 +233,7 @@ class _Rules extends StatelessWidget {
                 child: const Text('Retry'),
               ),
             ),
-          if (state.publishFailure is GeneratorRulesStaleFailure)
+          if (state.stale)
             MaterialBanner(
               content: const Text(
                 'Not published: someone else published a new version of the '
@@ -266,47 +272,18 @@ class _ChangesBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<GeneratorRulesCubit>();
-    return Material(
-      color: Theme.of(context).colorScheme.surfaceContainer,
-      borderRadius: BorderRadius.circular(ForgeStyle.of(context).radii.md),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Gap.md,
-          vertical: Gap.sm,
+    return PublishBar(
+      count: state.changes.length,
+      where: state.changedTabs.map((tab) => tab.label).join(', '),
+      publishing: state.publishing,
+      onDiscard: cubit.discard,
+      onReview: state.canPublish ? () => showReviewDialog(context) : null,
+      actions: [
+        OutlinedButton(
+          onPressed: state.historyOpen ? cubit.closeHistory : cubit.openHistory,
+          child: const Text('History'),
         ),
-        child: Row(
-          spacing: Gap.sm,
-          children: [
-            Expanded(
-              child: Text(
-                state.publishing
-                    ? 'Publishing…'
-                    : [
-                        _changeCount(state.changes.length),
-                        state.changedTabs.map((tab) => tab.label).join(', '),
-                      ].join(' · '),
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ),
-            OutlinedButton(
-              onPressed: state.publishing ? null : cubit.discard,
-              child: const Text('Discard'),
-            ),
-            OutlinedButton(
-              onPressed: state.historyOpen
-                  ? cubit.closeHistory
-                  : cubit.openHistory,
-              child: const Text('History'),
-            ),
-            FilledButton(
-              onPressed: state.canReview
-                  ? () => showReviewDialog(context)
-                  : null,
-              child: const Text('Review and publish'),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
@@ -370,7 +347,7 @@ class _TabsState extends State<_Tabs> with SingleTickerProviderStateMixin {
                         (
                           label: _problemLabel(draft, problem),
                           message: problem.message,
-                          onOpen: problem.tab == null
+                          onOpen: tabOf(problem.path) == null
                               ? null
                               : () => cubit.openProblem(problem),
                         ),
@@ -404,7 +381,7 @@ class _TabsState extends State<_Tabs> with SingleTickerProviderStateMixin {
 /// Where a problem is, starting with its tab.
 String _problemLabel(GeneratorRules draft, RulesProblem problem) {
   final place = placeOf(draft, problem.path);
-  return switch (problem.tab) {
+  return switch (tabOf(problem.path)) {
     final tab? when !place.startsWith(tab.label) => '${tab.label} · $place',
     _ => place,
   };

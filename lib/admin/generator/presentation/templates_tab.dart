@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 
@@ -6,16 +6,15 @@ import '../../../features/exercises/domain/vocabulary.dart';
 import '../../shell/admin_form.dart';
 import '../../shell/admin_text.dart';
 import '../domain/generator_rules.dart';
-import '../domain/rules_changes.dart';
 import 'generator_rules_cubit.dart';
+import 'generator_sizes.dart';
+import 'pick_dialog.dart';
 import 'rule_fields.dart';
+import 'rules_text.dart';
+import 'split_dialog.dart';
 
-/// The width of the template list on the AG2 board.
-const _listWidth = 260.0;
-
-/// The longest split or day name, and split info, as the rules allow.
+/// The longest day name, as the rules allow.
 const _maxName = 40;
-const _maxInfo = 200;
 
 /// The splits with their templates on the left, the open template on the
 /// right: its fields, a tab per day and the day's slots (AG2 A).
@@ -31,7 +30,7 @@ class TemplatesTab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: Gap.md,
       children: [
-        const SizedBox(width: _listWidth, child: _TemplateList()),
+        const SizedBox(width: GeneratorSizes.list, child: _TemplateList()),
         Expanded(
           child: Card(
             child: Padding(
@@ -46,11 +45,6 @@ class TemplatesTab extends StatelessWidget {
     );
   }
 }
-
-String _splitName(Map<Object?, Object?> split) => switch (split) {
-  {'l10n': {'en': {'name': final String name}}} when name.isNotEmpty => name,
-  _ => '${split['id']}',
-};
 
 /// The splits in the order the app offers them, each with its templates,
 /// then New template and New split.
@@ -119,7 +113,7 @@ class _TemplateList extends StatelessWidget {
               label: const Text('New template'),
             ),
             TextButton.icon(
-              onPressed: () => _editSplit(context, null),
+              onPressed: () => editSplit(context, null),
               icon: const Icon(Icons.add),
               label: const Text('New split'),
             ),
@@ -160,7 +154,7 @@ class _SplitHeading extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  _splitName(split),
+                  splitName(split),
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
               ),
@@ -170,7 +164,7 @@ class _SplitHeading extends StatelessWidget {
                 onSelected: (action) => action(),
                 itemBuilder: (context) => [
                   PopupMenuItem(
-                    value: () => _editSplit(context, index),
+                    value: () => editSplit(context, index),
                     child: const Text('Edit split'),
                   ),
                   PopupMenuItem(
@@ -196,120 +190,12 @@ class _SplitHeading extends StatelessWidget {
               ),
             ],
           ),
-          if (state.wasAt([...path, 'l10n']) case final was?) WasText(was),
+          WasText(state.wasAt([...path, 'l10n', 'en', 'name'])),
+          if (state.wasAt([...path, 'l10n', 'en', 'info']) case final info?)
+            WasText('info: $info'),
           FieldProblems(problems),
         ],
       ),
-    );
-  }
-}
-
-/// Edits split [index] (null: a new one) in a dialog; its id only while it
-/// is new.
-Future<void> _editSplit(BuildContext context, int? index) async {
-  final cubit = context.read<GeneratorRulesCubit>();
-  final state = cubit.state;
-  final draft = state.draft!;
-  final split = index == null ? null : draft.splits[index];
-  final isNew = split == null || state.rules?.splitIndex(split['id']) == null;
-  final edited = await showDialog<JsonMap>(
-    context: context,
-    builder: (_) => _SplitDialog(split: split, idEditable: isNew),
-  );
-  if (edited == null) return;
-  if (index == null) {
-    cubit.addItem(['splits'], edited);
-  } else {
-    cubit.setValue(['splits', index], edited);
-  }
-}
-
-class _SplitDialog extends StatefulWidget {
-  const _SplitDialog({required this.split, required this.idEditable});
-
-  final JsonMap? split;
-  final bool idEditable;
-
-  @override
-  State<_SplitDialog> createState() => _SplitDialogState();
-}
-
-class _SplitDialogState extends State<_SplitDialog> {
-  late final JsonMap _split = widget.split ?? {'id': '', 'l10n': {}};
-  late final Map<Object?, Object?> _l10n =
-      _split['l10n'] as Map<Object?, Object?>? ?? {};
-  late final Map<Object?, Object?> _en =
-      _l10n['en'] as Map<Object?, Object?>? ?? {};
-  late final _id = TextEditingController(text: '${_split['id'] ?? ''}');
-  late final _name = TextEditingController(text: '${_en['name'] ?? ''}');
-  late final _info = TextEditingController(text: '${_en['info'] ?? ''}');
-
-  @override
-  void dispose() {
-    _id.dispose();
-    _name.dispose();
-    _info.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.split == null ? 'New split' : 'Edit split'),
-      content: SizedBox(
-        width: maxFormWidth / 2,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: Gap.sm,
-          children: [
-            TextField(
-              controller: _id,
-              enabled: widget.idEditable,
-              decoration: const InputDecoration(
-                labelText: 'Id',
-                helperText:
-                    'Lower case letters, digits and _; fixed once '
-                    'published.',
-              ),
-            ),
-            TextField(
-              controller: _name,
-              maxLength: _maxName,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                helperText: 'Saved programs are named "<name>, n days".',
-              ),
-            ),
-            TextField(
-              controller: _info,
-              maxLength: _maxInfo,
-              maxLines: null,
-              decoration: const InputDecoration(
-                labelText: 'Info',
-                helperText: 'One line under the split in the app.',
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, <String, Object?>{
-            ..._split,
-            'id': _id.text.trim(),
-            'l10n': {
-              ..._l10n,
-              'en': {..._en, 'name': _name.text, 'info': _info.text},
-            },
-          }),
-          child: const Text('Done'),
-        ),
-      ],
     );
   }
 }
@@ -352,7 +238,7 @@ class _TemplateEditor extends StatelessWidget {
     final draft = state.draft!;
     final path = ['templates', index];
     final id = draft.at([...path, 'id']);
-    final isNew = state.rules?.templateIndex(id) == null;
+    final isNew = state.newTemplates.contains(index);
     final days = (draft.at([...path, 'dayList']) as List?) ?? const [];
     final day = state.openDay;
     return Column(
@@ -365,12 +251,16 @@ class _TemplateEditor extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.start,
           children: [
             SizedBox(
-              width: 220,
+              width: GeneratorSizes.wide,
               child: RuleText([...path, 'id'], label: 'Id', enabled: isNew),
             ),
-            SizedBox(width: 240, child: _SplitPicker(index)),
-            SizedBox(width: 140, child: _DaysPicker(index)),
-            RuleNumber([...path, 'priority'], label: 'Priority', width: 100),
+            SizedBox(width: GeneratorSizes.split, child: _SplitPicker(index)),
+            SizedBox(width: GeneratorSizes.medium, child: _DaysPicker(index)),
+            RuleNumber(
+              [...path, 'priority'],
+              label: 'Priority',
+              width: GeneratorSizes.short,
+            ),
           ],
         ),
         RuleCodes([...path, 'levels'], label: 'Levels', values: Level.values),
@@ -470,7 +360,7 @@ class _SplitPicker extends StatelessWidget {
             for (final split in splits)
               DropdownMenuItem(
                 value: split['id'],
-                child: Text(_splitName(split)),
+                child: Text(splitName(split)),
               ),
           ],
           onChanged: (id) => cubit.setValue(path, id),
@@ -484,13 +374,23 @@ class _SplitPicker extends StatelessWidget {
 
 /// Days a week, 2-6: adds days at the end or removes the last ones,
 /// asking first when one has slots.
-class _DaysPicker extends StatelessWidget {
+class _DaysPicker extends StatefulWidget {
   const _DaysPicker(this.template);
 
   final int template;
 
   @override
+  State<_DaysPicker> createState() => _DaysPickerState();
+}
+
+class _DaysPickerState extends State<_DaysPicker> {
+  /// Counts the cancelled changes, so the dropdown shows the draft's value
+  /// again.
+  int _cancelled = 0;
+
+  @override
   Widget build(BuildContext context) {
+    final template = widget.template;
     final cubit = context.read<GeneratorRulesCubit>();
     final state = context.watch<GeneratorRulesCubit>().state;
     final path = ['templates', template, 'days'];
@@ -515,6 +415,7 @@ class _DaysPicker extends StatelessWidget {
                 'their slots leave the template.',
             action: 'Remove',
           )) {
+        if (mounted) setState(() => _cancelled++);
         return;
       }
       cubit.setDays(template, days);
@@ -524,7 +425,7 @@ class _DaysPicker extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DropdownButtonFormField<int>(
-          key: ValueKey((template, value)),
+          key: ValueKey((template, value, _cancelled)),
           initialValue: value is int && value >= 2 && value <= 6 ? value : null,
           isExpanded: true,
           decoration: const InputDecoration(
@@ -586,7 +487,7 @@ class _DayEditor extends StatelessWidget {
                   _PickCell(slot),
                   _PriorityCell(slot),
                   SizedBox(
-                    width: 100,
+                    width: GeneratorSizes.short,
                     child: RuleText([...slot, 'key'], optional: true),
                   ),
                   Row(
@@ -630,7 +531,7 @@ class _DayEditor extends StatelessWidget {
           ),
         ),
         SizedBox(
-          width: 320,
+          width: GeneratorSizes.name,
           child: RuleText(
             [...dayPath, 'l10n', 'en', 'name'],
             label: 'Day name',
@@ -724,7 +625,7 @@ class _PickCell extends StatelessWidget {
     final pick = state.valueAt(path);
     final labels = pickLabels(pick);
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 260),
+      constraints: const BoxConstraints(maxWidth: GeneratorSizes.list),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -764,132 +665,6 @@ class _PickCell extends StatelessWidget {
           FieldProblems(state.problemsAt(path)),
         ],
       ),
-    );
-  }
-}
-
-/// Edits a slot's pick: patterns, muscles and mechanic, and pops it.
-class PickDialog extends StatefulWidget {
-  const PickDialog({super.key, required this.pick});
-
-  final JsonMap pick;
-
-  @override
-  State<PickDialog> createState() => _PickDialogState();
-}
-
-class _PickDialogState extends State<PickDialog> {
-  late final _patterns = {
-    ...?(widget.pick['patterns'] as List?)?.map((code) => '$code'),
-  };
-  late final _muscles = {
-    ...?(widget.pick['muscles'] as List?)?.map((code) => '$code'),
-  };
-  late String? _mechanic = widget.pick['mechanic'] as String?;
-
-  Widget _chips<T extends Coded>(List<T> values, Set<String> selected) => Wrap(
-    spacing: Gap.xs,
-    runSpacing: Gap.xs,
-    children: [
-      for (final value in values)
-        FilterChip(
-          label: Text(codeLabel(value)),
-          selected: selected.contains(value.code),
-          onSelected: (on) => setState(
-            () => on ? selected.add(value.code) : selected.remove(value.code),
-          ),
-        ),
-    ],
-  );
-
-  /// [codes] in the order [key] had them, the new ones after in
-  /// vocabulary order, so an unchanged pick stays unchanged.
-  List<String> _ordered<T extends Coded>(
-    String key,
-    List<T> values,
-    Set<String> codes,
-  ) {
-    final before = [
-      for (final code in widget.pick[key] as List? ?? const []) '$code',
-    ];
-    return [
-      for (final code in before)
-        if (codes.contains(code)) code,
-      for (final value in values)
-        if (codes.contains(value.code) && !before.contains(value.code))
-          value.code,
-    ];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final label = Theme.of(context).textTheme.labelLarge;
-    return AlertDialog(
-      title: const Text('Picks an exercise with'),
-      content: SizedBox(
-        width: maxFormWidth * 0.66,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: Gap.sm,
-            children: [
-              const Hint(
-                'An exercise fits when its pattern is one of the patterns, '
-                'one of its main muscles is one of the muscles and its '
-                'mechanic is the mechanic, each only when given. Patterns or '
-                'muscles are needed.',
-              ),
-              Text('Movement patterns', style: label),
-              _chips(MovementPattern.values, _patterns),
-              Text('Main muscles', style: label),
-              _chips(Muscle.values, _muscles),
-              Text('Mechanic', style: label),
-              Wrap(
-                spacing: Gap.xs,
-                children: [
-                  for (final mechanic in [null, ...Mechanic.values])
-                    ChoiceChip(
-                      label: Text(
-                        mechanic == null ? 'Any' : codeLabel(mechanic),
-                      ),
-                      selected: _mechanic == mechanic?.code,
-                      onSelected: (_) =>
-                          setState(() => _mechanic = mechanic?.code),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () {
-            final pick = {...widget.pick}
-              ..remove('patterns')
-              ..remove('muscles')
-              ..remove('mechanic');
-            Navigator.pop(context, <String, Object?>{
-              ...pick,
-              if (_patterns.isNotEmpty)
-                'patterns': _ordered(
-                  'patterns',
-                  MovementPattern.values,
-                  _patterns,
-                ),
-              if (_muscles.isNotEmpty)
-                'muscles': _ordered('muscles', Muscle.values, _muscles),
-              'mechanic': ?_mechanic,
-            });
-          },
-          child: const Text('Done'),
-        ),
-      ],
     );
   }
 }

@@ -1,21 +1,13 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 import '../../shell/admin_text.dart';
+import '../../shell/publishing.dart';
 import '../domain/generator_rules.dart';
-import '../domain/rules_changes.dart';
 import 'generator_rules_cubit.dart';
-
-/// The width of the review on the AG5 board.
-const _dialogWidth = 640.0;
-
-/// The most the change table takes before it scrolls.
-const _changesHeight = 240.0;
-
-/// How many standard answers the check tries: every goal, level, days per
-/// week (2-6) and equipment preset.
-const standardAnswers = 300;
+import 'generator_sizes.dart';
+import 'rules_text.dart';
 
 /// What a finding of each kind says, after its count.
 const _kindLines = {
@@ -80,7 +72,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
     return AlertDialog(
       title: Text('Publish version $next of the generator rules'),
       content: SizedBox(
-        width: _dialogWidth,
+        width: GeneratorSizes.dialog,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -91,11 +83,24 @@ class _ReviewDialogState extends State<ReviewDialog> {
                 Text('Restores version $version.', style: muted),
               Text('WHAT CHANGES', style: heading),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: _changesHeight),
-                child: SingleChildScrollView(child: ChangeTable(state.changes)),
+                constraints: const BoxConstraints(
+                  maxHeight: GeneratorSizes.changesHeight,
+                ),
+                child: SingleChildScrollView(
+                  child: ChangeTable([
+                    for (final change in state.changes)
+                      if (changeLine(change, state.rules!, state.draft!) case (
+                        :final where,
+                        :final now,
+                        :final after,
+                      ))
+                        (where, now, after),
+                  ]),
+                ),
               ),
               Text(
-                'TRIED ON $standardAnswers STANDARD ANSWERS',
+                // The check's answer does not say how many it tried.
+                'TRIED ON STANDARD ANSWERS',
                 style: heading,
               ),
               _Tried(state),
@@ -248,52 +253,6 @@ class _Count extends StatelessWidget {
   }
 }
 
-/// Where / Now / After publishing.
-class ChangeTable extends StatelessWidget {
-  const ChangeTable(this.changes, {super.key});
-
-  final List<RulesChange> changes;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final heading = theme.textTheme.labelMedium?.copyWith(
-      color: ForgeStyle.of(context).colors.inkMuted,
-    );
-    Widget cell(String text, [TextStyle? style]) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: Gap.xs, horizontal: 2),
-      child: Text(text, style: style),
-    );
-    return Table(
-      columnWidths: const {
-        0: FlexColumnWidth(2),
-        1: FlexColumnWidth(),
-        2: FlexColumnWidth(),
-      },
-      border: TableBorder(
-        horizontalInside: BorderSide(color: theme.dividerColor),
-      ),
-      children: [
-        TableRow(
-          children: [
-            cell('Where', heading),
-            cell('Now', heading),
-            cell('After publishing', heading),
-          ],
-        ),
-        for (final change in changes)
-          TableRow(
-            children: [
-              cell(change.where),
-              cell(change.now),
-              cell(change.after, theme.textTheme.titleSmall),
-            ],
-          ),
-      ],
-    );
-  }
-}
-
 /// Every finding of the check: the answer, its kind and what it is.
 class FindingsDialog extends StatelessWidget {
   const FindingsDialog(this.findings, {super.key});
@@ -323,7 +282,7 @@ class FindingsDialog extends StatelessWidget {
     return AlertDialog(
       title: Text('$count answers with warnings'),
       content: SizedBox(
-        width: _dialogWidth * 1.4,
+        width: GeneratorSizes.dialog * 1.4,
         height: MediaQuery.sizeOf(context).height * 0.6,
         child: Column(
           children: [

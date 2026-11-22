@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
 
@@ -7,6 +7,7 @@ import '../../shell/admin_form.dart';
 import '../../shell/admin_text.dart';
 import '../domain/generator_rules.dart';
 import 'generator_rules_cubit.dart';
+import 'generator_sizes.dart';
 import 'rule_fields.dart';
 
 /// The dose of each slot role for one goal (AG1 A), and the grouping rules
@@ -91,7 +92,7 @@ class _DoseTable extends StatelessWidget {
                       ...dose,
                       'holdS',
                       level.code,
-                    ], width: numberWidth * 0.75),
+                    ], width: GeneratorSizes.rangeEnd),
                 ],
               ),
               RuleNumber([...dose, 'restS']),
@@ -204,14 +205,15 @@ class _GroupingRule extends StatelessWidget {
               children: [
                 RuleNumber(
                   [...path, 'sessionMax'],
+                  optional: true,
                   label: 'Sessions up to (min)',
-                  width: 160,
+                  width: GeneratorSizes.medium,
                 ),
                 _SizePicker([...path, 'size']),
                 RuleNumber(
                   [...path, 'restS'],
                   label: 'Rest after a round (s)',
-                  width: 160,
+                  width: GeneratorSizes.medium,
                 ),
               ],
             ),

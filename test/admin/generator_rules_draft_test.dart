@@ -1,8 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_workout/admin/generator/domain/generator_rules.dart';
 import 'package:get_workout/admin/generator/domain/rules_changes.dart';
+import 'package:get_workout/admin/generator/presentation/rules_text.dart';
 
 import 'generator_fixtures.dart';
+
+/// The changes from [before] to [after] as the review words them.
+List<ChangeLine> worded(
+  GeneratorRules before,
+  GeneratorRules after, {
+  Set<int> newTemplates = const {},
+}) => [
+  for (final change in rulesChanges(before, after, newTemplates: newTemplates))
+    changeLine(change, before, after),
+];
 
 void main() {
   final seed = seedRules();
@@ -62,13 +73,21 @@ void main() {
       ], 165);
       expect(rulesChanges(seed, draft), [
         const RulesChange(
-          path: ['dosing', 'build_muscle', 'primary', 'restS'],
+          ChangeKind.value,
+          beforePath: ['dosing', 'build_muscle', 'primary', 'restS'],
+          afterPath: ['dosing', 'build_muscle', 'primary', 'restS'],
+          before: 150,
+          after: 165,
+        ),
+      ]);
+      expect(worded(seed, draft), [
+        (
           where: 'Dosing · Build muscle · Primary · rest',
           now: '150 s',
           after: '165 s',
         ),
       ]);
-      expect(rulesChanges(seed, draft).single.tab, RulesTab.dosing);
+      expect(tabOf(rulesChanges(seed, draft).single.path), RulesTab.dosing);
     });
 
     test('ranges, absent targets and lists read as values', () {
@@ -79,7 +98,7 @@ void main() {
           .set(['focus', 'areas', 'arms'], ['biceps']);
       expect(
         [
-          for (final change in rulesChanges(seed, draft))
+          for (final change in worded(seed, draft))
             (change.where, change.now, change.after),
         ],
         [
@@ -108,7 +127,7 @@ void main() {
             },
           );
       expect(
-        [for (final c in rulesChanges(seed, draft)) (c.where, c.now, c.after)],
+        [for (final c in worded(seed, draft)) (c.where, c.now, c.after)],
         [
           ('Dosing · grouping · rule 1 · goals', 'Lose fat', 'every goal'),
           ('Dosing · grouping · rule 1 · size', '3', '4'),
@@ -124,16 +143,39 @@ void main() {
           .removeAt(['templates'], seedTemplate('body_part_5'))
           .add(['templates'], added);
       expect(
-        [for (final c in rulesChanges(seed, draft)) (c.where, c.now, c.after)],
+        [for (final c in worded(seed, draft)) (c.where, c.now, c.after)],
         [
           ('Template upper_lower_4 · priority', '10', '12'),
           ('Template new_template added', '—', 'added'),
           ('Template body_part_5 removed', 'there', '—'),
         ],
       );
-      expect(rulesChanges(seed, draft).map((c) => c.tab).toSet(), {
+      expect(rulesChanges(seed, draft).map((c) => tabOf(c.path)).toSet(), {
         RulesTab.templates,
       });
+    });
+
+    test('a new template stays new even with a published id', () {
+      final index = seed.templates.length;
+      final draft = seed.add(
+        ['templates'],
+        {...newTemplate(seed, split: 'full_body'), 'id': 'full_body_3'},
+      );
+      expect(worded(seed, draft, newTemplates: {index}), [
+        (where: 'Template full_body_3 added', now: '—', after: 'added'),
+      ]);
+      expect(
+        loadedPathOf(
+          draft,
+          seed,
+          ['templates', index, 'days'],
+          newTemplates: {index},
+        ),
+        isNull,
+      );
+      // Without the mark the second full_body_3 is matched to nothing
+      // either: each published template is matched once.
+      expect(worded(seed, draft).single.where, 'Template full_body_3 added');
     });
 
     test('a moved slot changes both places; a day name and extras', () {
@@ -151,7 +193,7 @@ void main() {
           ], 'Upper 1')
           .set(['templates', ul4, 'dayList', 1, 'extras'], ['quads']);
       final lines = [
-        for (final c in rulesChanges(seed, draft)) (c.where, c.now, c.after),
+        for (final c in worded(seed, draft)) (c.where, c.now, c.after),
       ];
       expect(lines, [
         ('Template upper_lower_4 · Upper 1 · name', 'Upper A', 'Upper 1'),
@@ -181,7 +223,7 @@ void main() {
           .add([...template, 'dayList'], newDay(4));
       final count =
           (seed.at([...template, 'dayList', 1, 'slots'])! as List).length;
-      final lines = [for (final c in rulesChanges(seed, draft)) c.where];
+      final lines = [for (final c in worded(seed, draft)) c.where];
       // The slots after the removed one each moved up a place.
       expect(lines, [
         'Template upper_lower_4 · days a week',
@@ -205,7 +247,7 @@ void main() {
             },
           );
       expect(
-        [for (final c in rulesChanges(seed, draft)) (c.where, c.now, c.after)],
+        [for (final c in worded(seed, draft)) (c.where, c.now, c.after)],
         [
           ('Split full_body · name', 'Full body', 'Whole body'),
           ('Split arms added', '—', 'added'),
@@ -224,7 +266,7 @@ void main() {
         'templates[$ul4].dayList[1].slots[2].pick: needs patterns or muscles',
       );
       expect(problem.message, 'needs patterns or muscles');
-      expect(problem.tab, RulesTab.templates);
+      expect(tabOf(problem.path), RulesTab.templates);
       expect(
         placeOf(seed, problem.path),
         'Template upper_lower_4 · Lower A · slot 3 · picks',
@@ -237,7 +279,10 @@ void main() {
         ),
         'Dosing · Build muscle · Primary · sets · Beginner · min',
       );
-      expect(RulesProblem.parse('rules.extra: unknown field').tab, isNull);
+      expect(
+        tabOf(RulesProblem.parse('rules.extra: unknown field').path),
+        isNull,
+      );
     });
 
     test('concern a field by prefix, or exactly', () {

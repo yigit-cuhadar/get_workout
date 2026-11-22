@@ -6,6 +6,7 @@ import 'package:get_workout/admin/generator/domain/generator_rules.dart';
 import 'package:get_workout/admin/generator/domain/generator_rules_repository.dart';
 import 'package:get_workout/admin/generator/domain/generator_rules_usecases.dart';
 import 'package:get_workout/admin/generator/presentation/generator_rules_cubit.dart';
+import 'package:get_workout/admin/generator/presentation/rules_text.dart';
 import 'package:mocktail/mocktail.dart';
 
 /// The seed rules (`content/generator/rules.json`), complete and valid.
@@ -39,3 +40,9 @@ GeneratorRulesCubit makeCubit(
   loadGeneratorRulesHistory: LoadGeneratorRulesHistory(repository),
   checkAdminAccess: access ?? MockCheckAdminAccess(),
 );
+
+/// Where each of [state]'s changes is, as the review words it.
+List<String> wheres(GeneratorRulesState state) => [
+  for (final change in state.changes)
+    changeLine(change, state.rules!, state.draft!).where,
+];
