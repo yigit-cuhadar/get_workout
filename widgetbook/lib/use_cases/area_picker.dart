@@ -10,6 +10,23 @@ final Future<Model3D> _body = rootBundle
     .load('packages/get_workout/assets/models/body_male.glb')
     .then((data) => Model3D.fromGlb(data.buffer.asUint8List()));
 
+/// The muscles of each area, as `generator/options` gives them.
+const _areas = {
+  FocusArea.chest: {Muscle.pec},
+  FocusArea.back: {Muscle.lat, Muscle.trap, Muscle.erector},
+  FocusArea.shoulders: {Muscle.frontDelt, Muscle.midDelt, Muscle.rearDelt},
+  FocusArea.arms: {Muscle.biceps, Muscle.triceps, Muscle.forearm},
+  FocusArea.core: {Muscle.abdominal, Muscle.oblique},
+  FocusArea.glutes: {Muscle.glute},
+  FocusArea.legs: {
+    Muscle.quads,
+    Muscle.hamstring,
+    Muscle.calf,
+    Muscle.adductor,
+    Muscle.abductor,
+  },
+};
+
 /// The picker as a page holds it: the model view fills its height, the
 /// list keeps its own.
 Widget _framed(
@@ -52,6 +69,7 @@ class _FocusState extends State<_Focus> {
     (model) => AreaPicker(
       view: _view,
       onView: (view) => setState(() => _view = view),
+      areas: _areas,
       model: model,
       onRetryModel: () {},
       picked: _picked,
@@ -85,6 +103,7 @@ Widget areaPickerLeaveOut(BuildContext context) => _framed(
   (model) => AreaPicker.leaveOut(
     view: AreaView.model,
     onView: (_) {},
+    areas: _areas,
     model: model,
     onRetryModel: () {},
     picked: const {FocusArea.legs},
@@ -100,11 +119,45 @@ Widget areaPickerLeaveOutList(BuildContext context) => _framed(
   (model) => AreaPicker.leaveOut(
     view: AreaView.list,
     onView: (_) {},
+    areas: _areas,
     model: model,
     onRetryModel: () {},
     picked: const {FocusArea.legs},
     max: 3,
     onToggle: (_) {},
     focus: const {FocusArea.shoulders},
+  ),
+);
+
+@widgetbook.UseCase(name: 'Model failed', type: AreaPicker)
+Widget areaPickerModelFailed(BuildContext context) => Padding(
+  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+  child: SizedBox(
+    height: 480,
+    child: AreaPicker(
+      view: AreaView.model,
+      onView: (_) {},
+      areas: _areas,
+      model: const BodyModelFailed(),
+      onRetryModel: () {},
+      picked: const {FocusArea.chest},
+      max: 2,
+      onToggle: (_) {},
+    ),
+  ),
+);
+
+@widgetbook.UseCase(name: 'Without the area maps', type: AreaPicker)
+Widget areaPickerListOnly(BuildContext context) => SingleChildScrollView(
+  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+  child: AreaPicker(
+    view: AreaView.model,
+    onView: (_) {},
+    areas: null,
+    model: const BodyModelLoading(),
+    onRetryModel: () {},
+    picked: const {FocusArea.chest},
+    max: 2,
+    onToggle: (_) {},
   ),
 );

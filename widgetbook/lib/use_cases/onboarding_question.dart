@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:get_workout/core/widgets/muscle_model.dart';
 import 'package:get_workout/core/widgets/onboarding_question.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/profile/presentation/profile_questions.dart';
@@ -26,6 +27,21 @@ Widget eyebrowOnboardingQuestion(BuildContext context) => OnboardingQuestion(
       title: (minutes) => '$minutes minutes',
       onChanged: (_) {},
     ),
+  ),
+  actionLabel: 'Continue',
+  onAction: () {},
+);
+
+@widgetbook.UseCase(name: 'Answer filling the page', type: OnboardingQuestion)
+Widget filledOnboardingQuestion(BuildContext context) => OnboardingQuestion(
+  step: 2,
+  count: 6,
+  onBack: () {},
+  body: const OnboardingQuestionBody.filled(
+    eyebrow: 'Generate a program',
+    title: 'Any areas to focus on?',
+    info: 'They get more sets. Tap up to 2, or none.',
+    answer: MuscleModel.loading(),
   ),
   actionLabel: 'Continue',
   onAction: () {},

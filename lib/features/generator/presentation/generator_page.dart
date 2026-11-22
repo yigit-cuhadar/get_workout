@@ -179,11 +179,14 @@ class _Page extends StatelessWidget {
     final options = state.options!;
     final eyebrow = l10n.generatorTitle;
     final model = context.watch<BodyModelCubit>();
+    // Without the server's area maps only the list is offered.
+    AreaView viewWith(Map<FocusArea, Set<Muscle>>? map) =>
+        map == null ? AreaView.list : areaView;
     OnboardingQuestionBody areas({
       required String title,
       required String info,
       required AreaPicker picker,
-    }) => areaView == AreaView.model
+    }) => picker.areas != null && areaView == AreaView.model
         ? OnboardingQuestionBody.filled(
             eyebrow: eyebrow,
             title: title,
@@ -215,12 +218,13 @@ class _Page extends StatelessWidget {
       ),
       GeneratorStep.focus => areas(
         title: l10n.generatorQuestionFocus,
-        info: areaView == AreaView.model
+        info: viewWith(options.focusAreas) == AreaView.model
             ? l10n.generatorFocusModelInfo(options.maxFocusAreas)
             : l10n.generatorFocusInfo(options.maxFocusAreas),
         picker: AreaPicker(
-          view: areaView,
+          view: viewWith(options.focusAreas),
           onView: onAreaView,
+          areas: options.focusAreas,
           model: model.state,
           onRetryModel: model.load,
           picked: state.focus,
@@ -230,12 +234,13 @@ class _Page extends StatelessWidget {
       ),
       GeneratorStep.skip => areas(
         title: l10n.generatorQuestionSkip,
-        info: areaView == AreaView.model
+        info: viewWith(options.skipAreas) == AreaView.model
             ? l10n.generatorSkipModelInfo(options.maxSkipAreas)
             : l10n.generatorSkipInfo(options.maxSkipAreas),
         picker: AreaPicker.leaveOut(
-          view: areaView,
+          view: viewWith(options.skipAreas),
           onView: onAreaView,
+          areas: options.skipAreas,
           model: model.state,
           onRetryModel: model.load,
           picked: state.skip,

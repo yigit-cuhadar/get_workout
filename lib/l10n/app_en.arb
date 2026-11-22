@@ -1596,6 +1596,7 @@
   "generatorUnavailableTitle": "Not available right now",
   "generatorUnavailable": "The program generator is being updated. Try again in a while.",
   "generatorFailed": "Couldn't build the program",
+  "generatorRegenerateFailed": "Couldn't build a new program. Try again.",
   "generatorChangeAnswers": "Change answers",
   "generatorPreviewTitle": "Your program",
   "generatorHeading": "{split} · {days, plural, =1{1 day} other{{days} days}}",

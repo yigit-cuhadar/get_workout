@@ -820,7 +820,7 @@ its own panel; every page drawn on a canvas and picked before it is built)
 Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature notes › Programs, "Program generator, rebuild")
 - [x] Generator engine and rules — the engine in `functions/src/generator`, the rules seed `content/generator/rules.json`, `generatorTier` and `stressAreas` on every exercise — standard answers give programs the owner accepts from a printed set
 - [ ] Generator callables — `generateProgram`, the rules callables, `generator/options`, Firestore rules, deployed to dev — a Premium user gets a program, a free one is refused
-- [ ] Generator in the app — the nine questions, the server call, preview, save; the on-device engine and the leave-out picker go — a program is generated, edited and saved on the simulator; offline says so
+- [ ] Generator in the app — the profile page plus one page per new question (five to seven pages), the server call, preview, save; the on-device engine and the leave-out picker go — a program is generated, edited and saved on the simulator; offline says so
 - [x] Admin, exercise fields — generator tier and stress areas in the exercise editor, as table columns and filters
 - [x] Admin, generator rules — splits and templates, dosing, volume, selection, focus; review and publish, version history and restore — a published change shows in the next generated program
 - [ ] Admin, generator simulator — answers in, the program out with why each exercise was picked, with the published or the unpublished rules
@@ -1175,7 +1175,7 @@ Decisions (the canvases they were drawn on are deleted):
   with the rows, and once they have gone a selected chip between the
   pill and the filter button names them ("5 filters", "Chest · Main"), a
   tap on it scrolling back to the top (ForgeSearchField summary, Forge
-  v0.33.0) (Y1 A). The exercise picker's Add and Leave out forms open from
+  v0.33.0) (Y1 A). The exercise picker's Add form opens from
   the root navigator, so from inside a tab the iOS sheet (and Android's
   full-screen dialog) covers the tab bar too; Swap and Replace stay pushed
   in their tab, at `…/swap` (Y2 B). The analytics consent page stays a
@@ -1563,8 +1563,7 @@ Decisions (the canvases they were drawn on are deleted):
   programs asks "No programs yet" first; not found is one untitled line.
   Exercise picker: "Add exercises" with close, the count bar ("None
   chosen", "3 chosen", at the limit "2 chosen · 40 is the most" with the
-  other rows greyed and not tappable) and "Add 3 exercises"; the
-  generator's is "Leave out exercises" / "Leave out 3 exercises"; no
+  other rows greyed and not tappable) and "Add 3 exercises"; no
   match offers Create custom exercise ("…it is added here once saved"),
   which comes back chosen (single choice: picked at once), and with a
   filter on the list's filter form; Swap ("Swap Bench Press", back) and
@@ -1640,15 +1639,13 @@ Decisions (the canvases they were drawn on are deleted):
   Clear search while searching, "Remove a filter to see more programs."
   and Clear filters while filtering; the filter sheet is a
   ForgeBottomSheet (a switch row, chip groups, Clear, Done).
-- Generator questions (owner's picks, 2026-11-15; the goal question is
-  onboarding's since CK2, 2026-11-17): full screen above the
-  tabs (pushed; Back on the first question returns); the OnboardingQuestion
-  page with the mono "n / 9" counter after the progress (onboarding too)
-  and "Generate a program" over each question; Continue, "Create my
-  program" on the last; the equipment answer is the OnboardingQuestion
-  question's (one radio row per set; see Onboarding, L3); focus muscles
-  as chips under "Focus muscles (2 of 3)"; left-out exercises as rows with
-  × and a secondary "Add exercises to leave out".
+- Generator questions (owner's picks, 2026-11-15, rebuilt 2026-11-22):
+  full screen above the tabs (pushed; Back on the first page returns);
+  the OnboardingQuestion page with the mono "n / N" counter after the
+  progress, N the pages that show (onboarding too), and "Generate a
+  program" over each question; Continue, "Create my program" on the last.
+  The pages and their answers: Feature notes › Programs, "Program
+  generator, rebuild" (G1-G5).
 - Program builder (owner's picks, 2026-11-15): the name, then "Length in
   weeks (optional)" with "Leave empty to run until you stop it" under it;
   the day chips (selected: accent fill and border, no check, a ⋯ at its
@@ -2756,7 +2753,7 @@ the feature you are about to touch, and keep it true when you change it.
   transition. go_router's page for a `builder` route had none either, so
   no swipe: its MaterialApp check looks for `material_ui`'s class, not
   Flutter's; every pushed route has a `pageBuilder` now. Pages over the
-  flow (the paywall, the exercise picker's Add and Leave out forms) are an
+  flow (the paywall, the exercise picker's Add form) are an
   iOS sheet (`SheetPage`) that a drag down closes, from its list's top
   too, and keep close; on Android a full-screen dialog. A page that
   refuses to pop (unsaved changes, `PopScope`) still follows the edge
@@ -3048,18 +3045,10 @@ the feature you are about to touch, and keep it true when you change it.
   `tool/src/content_coverage.dart`): prints the live library by main and
   secondary muscle, equipment, equipment profile, level and pattern, the
   exercises without an alternative or variation, single-member families,
-  near-duplicate names and text defects. Acceptance rule, from the
-  generator since the SPEC gave no number: in every equipment profile,
-  every muscle (any can be a focus) has at least `maxExercisesPerMuscle`
-  (3, the most exercises a generated day gives one muscle, never repeating
-  one) main-muscle exercises the generator may give a beginner, the
-  smallest pool: level at most intermediate, not mobility or explosive,
-  fitting through `equipment` or an alternative set. Exceptions, 2 each:
-  bodyweight × mid delt (prone Y raise and the wall isometric; the presses
-  are front-delt exercises) and bodyweight × forearm (dead hang, false grip
-  hang). The script exits non-zero on a shortfall, and
-  `test/tool/content_coverage_test.dart` runs the rule on the content files
-  in CI. Seed after the content review of 2026-11-21: 422 exercises, 419
+  near-duplicate names and text defects, and exits non-zero only when the
+  files do not validate. Its acceptance rule for the on-device generator
+  went with that generator (Group 14); the server's rules are checked by
+  `generatorRulesCheck`. Seed after the content review of 2026-11-21: 422 exercises, 419
   live (283 beginner, 104 intermediate, 32 advanced); doable per profile:
   full gym 419, home gym 244, dumbbells 183, bodyweight 125, bands 142. Hammer curls have main
   muscles biceps and forearm (brachioradialis is filed under forearm), and
@@ -3156,11 +3145,11 @@ the feature you are about to touch, and keep it true when you change it.
   the exercise picker (`ExercisePickerPage`,
   for programs, the generator, the workout and workout history) uses it
   with its own cubit and no sections. The picker's route (`…/pick`) takes
-  `max`, `multiple` and a `form` (`add`, `leaveOut`, `swap`, `replace`,
-  with `exercise` and, for swap, `logged`); Add and Leave out open there
-  from the root navigator, over the tab bar, while Swap and Replace open
-  at the sibling `…/swap` inside their tab; each place declares the most
-  its list holds (40 a workout, 20 a program day or a leave-out pick).
+  `max`, `multiple` and a `form` (`add`, `swap`, `replace`, with
+  `exercise` and, for swap, `logged`); Add opens there from the root
+  navigator, over the tab bar, while Swap and Replace open at the sibling
+  `…/swap` inside their tab; each place declares the most its list holds
+  (40 a workout, 20 a program day).
   `pickSwap` and `pickReplacement` open the Swap and Replace forms and
   return the picked exercise. "Create custom exercise" opens the form
   above the picker (`…/pick/new?name=`), which pops with the new id; the
@@ -3386,73 +3375,7 @@ the feature you are about to touch, and keep it true when you change it.
   bought; `ActiveWorkoutCubit` refuses it too. A workout in progress from
   it can always be finished; free workouts are never gated. The gate is client-side only: the copy lives in the user's
   own collection, and the rules only check that `premium` is a boolean.
-- **Program generator** (`lib/features/generator`): pure Dart on the device,
-  the same program for the same answers, library and seed; Regenerate takes
-  the next seed. Questions: goal, level, 2-6 days (onboarding's range),
-  session of 30/45/60/75/90 minutes (60 preselected), equipment (presets or
-  items), up to 3 focus muscles, exercises to leave out (from the picker),
-  one area to go easy on (shoulders, elbows, lower back, hips or knees, each
-  a set of muscles; hips is abductors and adductors only since hip flexors
-  have no muscle group, so leg raises are not left out for it, which the
-  owner accepted on 2026-11-21) and the split; goal, level, days and equipment are
-  prefilled from the profile. Splits: full body, upper/lower, push/pull/legs
-  (3+ days; 4 adds an upper day, 5 upper and lower); "best for my days" is
-  full body for 2-3 days, upper/lower for 4, push/pull/legs for 5-6
-  (upper/lower for beginners). Weekly targets: 10/14/18 sets by level for
-  the catalogue's major muscles (inside the 10-20 band and each level's
-  catalogue band), half for calves and abs, +4 (at most 20) for a focus
-  muscle, none for the area to go easy on (which wins over focus); other
-  muscles are worked only through these exercises, and no trained muscle
-  passes 20. Exercises: live catalogue ones only (a custom one has no
-  level), fitting the equipment through `equipment` or an alternative set,
-  at most one level above the user (the catalogue rule), never mobility or
-  explosive patterns, never left-out ones, never with the area's muscles as
-  main muscles and, where another fits, not as secondary ones either;
-  compound first for quads, pecs, lats, hamstrings and glutes, isolation
-  first for the rest. Each day's next exercise goes to the muscle furthest
-  short of what it still needs that week (secondary work counts), so short
-  sessions share the time fairly. Reps: strength 4-6 (isolation 8-12; exercises without
-  a load get the muscle range), muscle 6-10 / 10-15, fat loss 10-15 / 12-15
-  with rests capped at 60 s, general 8-12 / 10-15; timed exercises 30/40/45 s
-  by level; rest is the exercise's default. 2-5 sets an exercise (4 at most
-  for beginners), up to 10 exercises a day, each day within the session by
-  `estimateDay`; weekly sets reach the targets as far as the days and
-  sessions allow. Answers that give no program (days out of range, a split
-  needing more days, a day no exercise fits) get a typed reason, not an
-  empty program; a trained muscle no exercise of the week works directly
-  (none fits, or none fitted the sessions) is named on the preview.
-  Saved as the user's own (`origin: generated`, "<split>, <n> days", days
-  "Upper A", ...), editable like any other and never marked `premium`:
-  Premium gates the generator, not the programs it made. Its entry is on
-  the Programs tab for everyone, locked when free, and opens through
-  `requirePremium()`; it is a feature of its own, so the programs feature
-  still never imports the subscription one (the tab only shows its entry).
-  Layout (UX pass, 2026-11-13): the questions are laid out as onboarding's
-  (one per page, Back and the progress segments with "n / 9" in the app
-  bar, "Generate a program" above the question, the answer near the
-  thumb, Continue or "Create my program" at the bottom; Back on the first
-  question leaves), full screen above the tabs (`/generate`). The preview: split and summary, the uncovered muscles
-  as a card, a Weekly sets card with each target muscle as a plain bar
-  filled to its own target (full once met) and "x of target", then the days as the
-  program page's day cards (`ProgramDayCard`, without ▶), the first open
-  and again after Regenerate; Regenerate and Save fixed at the bottom.
-  Design phase (2026-11-17): "Upper/lower · 4 days" over "Build muscle ·
-  Intermediate · 60 min"; uncovered muscles as NoticeBanner's one-line form; Weekly sets
-  as a SectionCard with "n total" and a VolumeBand "n sets" per target
-  muscle (GP-Q4, replacing "x of target"); each exercise "3 × 6–8" in mono with
-  ⋯: Swap for a similar one (the picker's Swap form, `/generate/pick`;
-  sets, rest and the kept mark stay, an exercise already on the day is
-  ignored) (GP-Q2), Keep when regenerating (history icon, ticked; the row
-  shows an accent "Kept" after its reps) (GP-Q1), Change sets and reps (the builder's targets
-  sheet, `ItemTargetsSheet`) (GP-Q3), Remove (not the day's last).
-  Regenerate keeps the kept items on their day as they are: they count
-  towards the targets and no pass trims them; one gone from the library
-  is dropped. Edits recount the weekly sets and uncovered muscles. While
-  building, a "Building your program" card and both buttons off; Save
-  reads "Save program".
-- **Program generator, rebuild** (owner's picks, 2026-11-22; Group 14.
-  Until its app feature is merged the note above describes the app; this
-  one replaces it then):
+- **Program generator, rebuild** (owner's picks, 2026-11-22; Group 14):
   - Decisions: a rule-based engine on the server, no LLM; every rule
     editable in the admin panel, with a simulator; the entry stays on the
     Programs tab, Premium only, and onboarding keeps suggesting a
@@ -3475,8 +3398,9 @@ the feature you are about to touch, and keep it true when you change it.
     of rows with tick boxes and Front / Back on the model; the picked
     areas sit under the model as chips with the count (G2, the owner's
     own answer; G4 A); the areas to leave out are a page of their own
-    after focus, on the same model and list, a left-out area hatched, an
-    area in focus not selectable there (G5 A); the sensitive areas
+    after focus, on the same model and list, a left-out area in a muted
+    tone (the drawing hatched it; the model takes one flat colour per
+    muscle), an area in focus not selectable there (G5 A); the sensitive areas
     question opens with a "No sensitive areas" row, selected until an
     area is ticked (G3 A). Decided by the Architect: the equipment style
     question shows only when the user's equipment has both a machine
@@ -3509,6 +3433,54 @@ the feature you are about to touch, and keep it true when you change it.
   - The owner accepted the printed set of sample programs on 2026-11-22
     (https://claude.ai/artifact/7aNE5piW85CXo1Bg6UGVu6); ratings, templates
     and numbers are tuned later from the admin panel.
+  - The app (`lib/features/generator`; its entry is on the Programs tab
+    for everyone, locked when free, and opens through `requirePremium()`;
+    the programs feature never imports the subscription one):
+    - The questions load `generator/options` first: a loading page, or
+      an error with Retry (offline; "Not available yet" while nothing is
+      published; a failure). Pages, at `/generate`: the profile summary
+      (goal, level, days per week and equipment, prefilled from the
+      profile and the owned equipment; a row opens its question at
+      `/generate/profile/<field>`, and the answer counts for this program
+      only, never the profile), session length (`sessionMinutes`, 60
+      when offered, else the middle one), focus areas, areas to leave
+      out, sensitive areas, then the equipment style and the split only
+      when they apply (Design picks): five to seven pages. A page that
+      stops applying while on screen (the options change) gives way to
+      the nearest one before it.
+    - The area pickers paint and pick with the options' area maps:
+      `focusAreas` on the focus page, `skipAreas` on the leave-out page;
+      a tap on a muscle picks the first area (in vocabulary order) of
+      that page's map holding it, a muscle in none does nothing. Focus
+      areas are painted in the heat colour, left-out ones in a muted
+      neutral. Without the maps (an older options document) only the
+      list is offered. A focus area cannot be left out; picking a
+      left-out area as focus takes it out. The most areas are
+      `maxFocusAreas` and `maxSkipAreas`.
+    - The preview (`/generate/preview`) calls `generateProgram` with the
+      answers, seed 0 and `lang` (the app's language): a "Building your
+      program" card meanwhile. The first program's failures fill the
+      page: offline ("You're offline", Retry), not premium (asked again
+      by itself after 2, 4 and 8 s, as the entitlement may not have
+      reached the server, then a message with Retry), no template or no
+      exercises ("No program fits these answers", Change answers back to
+      the questions), no rules ("Not available right now", Retry),
+      anything else a failure with Retry. Regenerate sends the next seed
+      and the kept items per day; one that fails (after the same Premium
+      retries) leaves the program on screen and says so in a snackbar.
+      Kept items are sent only as the server takes them, and their
+      target weights, which the server does not take, are put back on
+      the same exercise of the same day. An edited item enters the
+      program only once valid; the targets sheet shows the issues until
+      then. The heading is "<split name> · n days"; the weekly sets are
+      counted by the app, every muscle the week works, busiest first; the
+      uncovered banner shows the server's `uncovered`, and after any edit
+      the `targeted` muscles no exercise of the week works as a main
+      muscle. When the exercise library failed to load the page says so
+      with Retry. Save stores "<split name>, n days" with the server's
+      day names and `lengthWeeks` (`origin: generated`, never `premium`)
+      and opens it; every program the server returns logs
+      `program_generate` (goal, days).
   - Engine (`functions/src/generator/engine.ts`, pure: answers, rules,
     exercises, seed and kept items in; the same inputs give the same
     program):

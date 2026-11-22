@@ -100,7 +100,26 @@ final options = GeneratorOptions(
   sessionMinutes: const [30, 45, 60, 75, 90],
   maxFocusAreas: 2,
   maxSkipAreas: 3,
+  focusAreas: areas,
+  skipAreas: areas,
 );
+
+/// Every muscle in one area, as the rules' seed has them.
+const areas = {
+  FocusArea.chest: {Muscle.pec},
+  FocusArea.back: {Muscle.lat, Muscle.trap, Muscle.erector},
+  FocusArea.shoulders: {Muscle.frontDelt, Muscle.midDelt, Muscle.rearDelt},
+  FocusArea.arms: {Muscle.biceps, Muscle.triceps, Muscle.forearm},
+  FocusArea.core: {Muscle.abdominal, Muscle.oblique},
+  FocusArea.glutes: {Muscle.glute},
+  FocusArea.legs: {
+    Muscle.quads,
+    Muscle.hamstring,
+    Muscle.calf,
+    Muscle.adductor,
+    Muscle.abductor,
+  },
+};
 
 /// An item of [exerciseId], 3 × 8-12.
 ProgramItem item(String exerciseId, {int sets = 3}) => ProgramItem(
@@ -114,6 +133,7 @@ ProgramItem item(String exerciseId, {int sets = 3}) => ProgramItem(
 /// A program as the server makes it, [days] of item ids.
 GeneratedProgram generated(
   List<List<String>> days, {
+  Set<Muscle> targeted = const {},
   Set<Muscle> uncovered = const {},
 }) => GeneratedProgram(
   splitName: 'Full body',
@@ -125,6 +145,7 @@ GeneratedProgram generated(
         items: [for (final id in ids) item(id)],
       ),
   ],
+  targeted: targeted,
   uncovered: uncovered,
 );
 

@@ -40,6 +40,13 @@ void main() {
       ['squat', 'bench'],
       ['row', 'bench'],
     ],
+    targeted: {
+      Muscle.quads,
+      Muscle.pec,
+      Muscle.lat,
+      Muscle.calf,
+      Muscle.biceps,
+    },
     uncovered: {Muscle.calf, Muscle.biceps},
   );
 
@@ -60,6 +67,7 @@ void main() {
     libraries = StreamController<ExerciseCatalogueState>.broadcast();
     when(() => catalogue.stream).thenAnswer((_) => libraries.stream);
     when(() => catalogue.state).thenReturn(CatalogueReady(library));
+    when(() => catalogue.retry()).thenAnswer((_) async {});
     telemetry = RecordingTelemetry();
   });
 
@@ -175,20 +183,53 @@ void main() {
       expect(generator.requests, hasLength(2));
     });
 
-    test('of Regenerate asks again with its seed and kept items', () async {
-      final cubit = await ready();
-      cubit.toggleKept(1, 0);
-      generator.answer = (_) => const Err(NetworkFailure());
-      await cubit.regenerate();
-      expect(cubit.state.status, PreviewStatus.offline);
-      generator.answer = (_) => Ok(first);
-      await cubit.retry();
-      final request = generator.requests.last;
-      expect(request.seed, 1);
-      expect(request.kept, [
-        <ProgramItem>[],
-        [item('row')],
-      ]);
+    test(
+      'of Regenerate keeps the program, and Regenerate works again',
+      () async {
+        final cubit = await ready();
+        cubit
+          ..toggleKept(1, 0)
+          ..swapItem(0, 0, 'raise');
+        final before = cubit.state;
+        generator.answer = (_) => const Err(NetworkFailure());
+        await cubit.regenerate();
+        expect(cubit.state.status, PreviewStatus.ready);
+        expect(cubit.state.program, before.program);
+        expect(cubit.state.kept, before.kept);
+        expect(cubit.state.uncovered, before.uncovered);
+        expect(cubit.state.seed, 0);
+        expect(cubit.state.regenerateFailure, isA<NetworkFailure>());
+        cubit.regenerateFailureShown();
+        expect(cubit.state.regenerateFailure, isNull);
+
+        generator.answer = (_) => Ok(first);
+        await cubit.regenerate();
+        final request = generator.requests.last;
+        expect(request.seed, 1);
+        expect(request.kept, [
+          <ProgramItem>[],
+          [item('row')],
+        ]);
+        expect(cubit.state.seed, 1);
+      },
+    );
+
+    test('of Regenerate without Premium retries, then keeps the program', () {
+      fakeAsync((async) {
+        final cubit = build();
+        async.flushMicrotasks();
+        generator.answer = (_) =>
+            const Err(GenerationRefused(GenerationRefusal.notPremium, ''));
+        unawaited(cubit.regenerate());
+        async
+          ..flushMicrotasks()
+          ..elapse(const Duration(seconds: 14));
+        expect(generator.requests, hasLength(5));
+        expect(cubit.state.program, first);
+        expect(cubit.state.regenerateFailure, isA<GenerationRefused>());
+        unawaited(cubit.close());
+        async.flushMicrotasks();
+      });
     });
   });
 
@@ -219,6 +260,55 @@ void main() {
       unawaited(cubit.close());
       async.flushMicrotasks();
     });
+  });
+
+  test('closing cancels a pending retry', () {
+    fakeAsync((async) {
+      generator.answer = (_) =>
+          const Err(GenerationRefused(GenerationRefusal.notPremium, ''));
+      final cubit = build();
+      async.flushMicrotasks();
+      final states = <GeneratorPreviewState>[];
+      cubit.stream.listen(states.add);
+      unawaited(cubit.close());
+      async
+        ..flushMicrotasks()
+        ..elapse(const Duration(minutes: 1));
+      expect(generator.requests, hasLength(1));
+      expect(states, isEmpty);
+    });
+  });
+
+  test('a library that failed shows so, and Retry loads it again', () async {
+    when(() => catalogue.state)
+        .thenReturn(const CatalogueFailed(NetworkFailure()));
+    final cubit = await ready();
+    expect(cubit.state.libraryFailed, true);
+    expect(cubit.state.status, PreviewStatus.ready);
+    await cubit.retryLibrary();
+    verify(() => catalogue.retry()).called(1);
+    when(() => catalogue.state).thenReturn(CatalogueReady(library));
+    libraries.add(CatalogueReady(library));
+    await pumpEventQueue();
+    expect(cubit.state.libraryFailed, false);
+  });
+
+  test('a kept item keeps its target weight through Regenerate', () async {
+    final cubit = await ready();
+    cubit
+      ..toggleKept(0, 1)
+      ..editItem(0, 1, (item) => item.copyWith(targetKg: () => 60));
+    generator.answer = (_) => Ok(
+      generated([
+        ['row', 'bench'],
+        ['bench'],
+      ]),
+    );
+    await cubit.regenerate();
+    final days = cubit.state.program!.days;
+    expect(days[0].items[1], item('bench').copyWith(targetKg: () => 60));
+    // Only the kept one, on its own day.
+    expect(days[1].items.single.targetKg, isNull);
   });
 
   test('Regenerate sends the next seed and the kept items per day', () async {
@@ -258,13 +348,41 @@ void main() {
       expect(cubit.state.program!.days.first.items.first.exerciseId, 'raise');
     });
 
-    test('recount the uncovered muscles the server named', () async {
+    test('recount the uncovered muscles from the targeted ones', () async {
       final cubit = await ready();
       expect(cubit.state.uncovered, {Muscle.calf, Muscle.biceps});
+      // The only squat goes: quads join the banner.
       cubit.swapItem(0, 0, 'raise');
-      expect(cubit.state.uncovered, {Muscle.biceps});
-      cubit.swapItem(0, 0, 'squat');
-      expect(cubit.state.uncovered, {Muscle.calf, Muscle.biceps});
+      expect(cubit.state.uncovered, {Muscle.quads, Muscle.biceps});
+      cubit.removeItem(1, 0);
+      expect(cubit.state.uncovered, {Muscle.quads, Muscle.lat, Muscle.biceps});
+    });
+
+    test('sets and reps that are not valid stay out of the program', () async {
+      final cubit = await ready();
+      cubit.editItem(0, 0, (item) => item.copyWith(sets: 0));
+      expect(cubit.state.program, first);
+      expect(cubit.state.itemAt(0, 0)!.sets, 0);
+      cubit.editItem(0, 0, (item) => item.copyWith(repMax: () => null));
+      expect(
+        cubit.state.itemAt(0, 0),
+        item('squat', sets: 0).copyWith(repMax: () => null),
+      );
+      // Valid again: it enters the program.
+      cubit
+        ..editItem(0, 0, (item) => item.copyWith(sets: 4))
+        ..editItem(0, 0, (item) => item.copyWith(repMax: () => 10));
+      expect(cubit.state.draft, isNull);
+      expect(
+        cubit.state.program!.days.first.items.first,
+        item('squat', sets: 4).copyWith(repMax: () => 10),
+      );
+
+      cubit
+        ..editItem(0, 0, (item) => item.copyWith(sets: 0))
+        ..discardDraft();
+      expect(cubit.state.draft, isNull);
+      expect(cubit.state.itemAt(0, 0)!.sets, 4);
     });
 
     test(

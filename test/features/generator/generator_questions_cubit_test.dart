@@ -221,6 +221,39 @@ void main() {
       expect(cubit.state.steps, hasLength(7));
     });
 
+    test('step back to the nearest page when the one on screen goes', () async {
+      final options$ = StreamController<GeneratorOptions>();
+      repository.watch = () => options$.stream;
+      final cubit = await build(days: 3);
+      options$.add(options);
+      await pumpEventQueue();
+      while (cubit.state.step != GeneratorStep.split) {
+        cubit.next();
+      }
+
+      // Only full body fits three days now: no split question.
+      options$.add(
+        GeneratorOptions(
+          splits: options.splits.where((s) => s.id != 'ppl').toList(),
+          sessionMinutes: options.sessionMinutes,
+          maxFocusAreas: 2,
+          maxSkipAreas: 3,
+        ),
+      );
+      await pumpEventQueue();
+      expect(cubit.state.step, GeneratorStep.sensitive);
+      expect(cubit.state.steps.indexOf(cubit.state.step), 4);
+      expect(cubit.state.steps, hasLength(5));
+      expect(cubit.state.isLast, true);
+      cubit.next();
+      expect(cubit.state.step, GeneratorStep.sensitive);
+      expect(cubit.back(), true);
+      expect(cubit.state.step, GeneratorStep.skip);
+      cubit.next();
+      expect(cubit.state.step, GeneratorStep.sensitive);
+      await options$.close();
+    });
+
     test('go forward and back, and end on the last one', () async {
       final cubit = await build(days: 3);
       expect(cubit.back(), false);

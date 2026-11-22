@@ -98,12 +98,32 @@ class ServerGeneratorRepository implements GeneratorRepository {
         'split': ?answers.splitId,
       },
       'seed': request.seed,
-      if (request.kept.any((day) => day.isNotEmpty))
+      if (request.kept.any((day) => day.any(_keepable)))
         'kept': [
-          for (final day in request.kept) [for (final item in day) _kept(item)],
+          for (final day in request.kept)
+            [
+              for (final item in day)
+                if (_keepable(item)) _kept(item),
+            ],
         ],
       'lang': request.language,
     };
+  }
+
+  /// Whether the server takes [item] as a kept one
+  /// (`functions/src/generator/generation.ts`, `keptItem`).
+  static bool _keepable(ProgramItem item) {
+    bool within(int? value, int min, int max) =>
+        value != null && value >= min && value <= max;
+    final reps = item.repMin != null || item.repMax != null;
+    return item.exerciseId.isNotEmpty &&
+        within(item.sets, 1, 10) &&
+        within(item.restS, 0, 600) &&
+        (item.durationS != null
+            ? !reps && within(item.durationS, 5, 3600)
+            : within(item.repMin, 1, 100) &&
+                  within(item.repMax, 1, 100) &&
+                  item.repMin! <= item.repMax!);
   }
 
   /// A kept item with only the fields the server takes.
@@ -123,8 +143,7 @@ class ServerGeneratorRepository implements GeneratorRepository {
   static GeneratedProgram programFrom(Object? data) {
     final program = _map(data)['program'];
     final days = _map(program)['days'];
-    final uncovered = _map(data)['uncovered'];
-    if (days is! List || days.isEmpty || uncovered is! List) {
+    if (days is! List || days.isEmpty) {
       throw const FormatException('generateProgram: no days');
     }
     return GeneratedProgram(
@@ -140,23 +159,37 @@ class ServerGeneratorRepository implements GeneratorRepository {
             },
           ),
       ],
-      uncovered: {
-        for (final code in uncovered)
-          Muscle.values.byCode(code) ??
-              (throw FormatException('generateProgram: muscle $code')),
-      },
+      targeted: _muscles(_map(data)['targeted']),
+      uncovered: _muscles(_map(data)['uncovered']),
     );
   }
+
+  static Set<Muscle> _muscles(Object? codes) => switch (codes) {
+    final List<Object?> codes => {
+      for (final code in codes)
+        Muscle.values.byCode(code) ??
+            (throw FormatException('generateProgram: muscle $code')),
+    },
+    _ => throw const FormatException('generateProgram: no muscles'),
+  };
 
   static ProgramItem _item(Object? data) {
     final item = _map(data);
     final group = item['group'];
+    final repMin = _optionalInt(item['repMin']);
+    final repMax = _optionalInt(item['repMax']);
+    final durationS = _optionalInt(item['durationS']);
+    // A duration or a rep range, never both or neither.
+    if ((durationS != null) == (repMin != null || repMax != null) ||
+        (durationS == null && (repMin == null || repMax == null))) {
+      throw const FormatException('generateProgram: reps or a duration');
+    }
     return ProgramItem(
       exerciseId: _string(item['exerciseId']),
       sets: _int(item['sets']),
-      repMin: _optionalInt(item['repMin']),
-      repMax: _optionalInt(item['repMax']),
-      durationS: _optionalInt(item['durationS']),
+      repMin: repMin,
+      repMax: repMax,
+      durationS: durationS,
       restS: _int(item['restS']),
       group: group == null ? null : _string(group),
     );
@@ -198,6 +231,8 @@ class ServerGeneratorRepository implements GeneratorRepository {
       return null;
     }
     return GeneratorOptions(
+      focusAreas: _areas(data['focusAreas']),
+      skipAreas: _areas(data['skipAreas']),
       splits: [
         if (data['splits'] case final List<Object?> splits)
           for (final split in splits) ?_split(split),
@@ -206,6 +241,20 @@ class ServerGeneratorRepository implements GeneratorRepository {
       maxFocusAreas: maxFocus,
       maxSkipAreas: maxSkip,
     );
+  }
+
+  /// Area code → muscle codes; unknown codes are left out. Null when not a
+  /// map.
+  static Map<FocusArea, Set<Muscle>>? _areas(Object? data) {
+    if (data is! Map) return null;
+    return {
+      for (final MapEntry(:key, :value) in data.entries)
+        if ((FocusArea.values.byCode(key), value) case (
+          final area?,
+          final List<Object?> codes,
+        ))
+          area: {for (final code in codes) ?Muscle.values.byCode(code)},
+    };
   }
 
   static GeneratorSplit? _split(Object? data) {
@@ -256,7 +305,19 @@ class ServerGeneratorRepository implements GeneratorRepository {
     if (error is! FirebaseFunctionsException) return mapFirebaseError(error);
     final details = error.details;
     final reason = details is Map ? _reasons[details['reason']] : null;
-    if (reason == null) return mapFirebaseError(error);
-    return GenerationRefused(reason, error.message ?? error.code, cause: error);
+    if (reason != null) {
+      return GenerationRefused(
+        reason,
+        error.message ?? error.code,
+        cause: error,
+      );
+    }
+    return switch (error.code) {
+      // The iOS SDK reports no connection as `unknown`.
+      'unknown' ||
+      'unavailable' ||
+      'deadline-exceeded' => NetworkFailure(error.message ?? error.code, error),
+      _ => mapFirebaseError(error),
+    };
   }
 }

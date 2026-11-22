@@ -7,18 +7,19 @@ import 'package:get_workout/features/programs/domain/program.dart';
 import 'fixtures.dart';
 
 void main() {
-  group('focusAreaMuscles', () {
-    test('holds every muscle in exactly one area', () {
-      final all = [for (final muscles in focusAreaMuscles.values) ...muscles];
-      expect(all, hasLength(Muscle.values.length));
-      expect(all.toSet(), Muscle.values.toSet());
-      expect(focusAreaMuscles.keys, FocusArea.values);
+  group('areaOf', () {
+    test('names the area holding a muscle', () {
+      expect(areaOf(Muscle.rearDelt, areas), FocusArea.shoulders);
+      expect(areaOf(Muscle.abductor, areas), FocusArea.legs);
     });
 
-    test('names the area of a muscle', () {
-      expect(focusAreaOf(Muscle.rearDelt), FocusArea.shoulders);
-      expect(focusAreaOf(Muscle.erector), FocusArea.back);
-      expect(focusAreaOf(Muscle.abductor), FocusArea.legs);
+    test('takes the first area in order; none holds nothing', () {
+      const overlapping = {
+        FocusArea.legs: {Muscle.glute, Muscle.quads},
+        FocusArea.glutes: {Muscle.glute},
+      };
+      expect(areaOf(Muscle.glute, overlapping), FocusArea.glutes);
+      expect(areaOf(Muscle.pec, overlapping), isNull);
     });
   });
 
@@ -105,16 +106,16 @@ void main() {
       ]);
     });
 
-    test('names the uncovered muscles no exercise works as a main one', () {
+    test('names the targeted muscles no exercise works as a main one', () {
       final program = generated(
         [
           ['squat'],
         ],
-        uncovered: {Muscle.calf, Muscle.quads},
+        targeted: {Muscle.calf, Muscle.quads},
       );
-      expect(program.stillUncovered(const {}), {Muscle.calf, Muscle.quads});
+      expect(program.untrained(const {}), {Muscle.calf, Muscle.quads});
       expect(
-        program.stillUncovered({
+        program.untrained({
           'squat': lift('squat', [Muscle.quads]),
         }),
         {Muscle.calf},

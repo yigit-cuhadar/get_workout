@@ -53,6 +53,8 @@ class GeneratorOptions extends Equatable {
     required this.sessionMinutes,
     required this.maxFocusAreas,
     required this.maxSkipAreas,
+    this.focusAreas,
+    this.skipAreas,
   });
 
   /// In the order the split question lists them.
@@ -60,6 +62,13 @@ class GeneratorOptions extends Equatable {
   final List<int> sessionMinutes;
   final int maxFocusAreas;
   final int maxSkipAreas;
+
+  /// The muscles of each area the server gives more sets; null from an
+  /// options document older than the maps.
+  final Map<FocusArea, Set<Muscle>>? focusAreas;
+
+  /// The muscles each area to leave out leaves out; null as [focusAreas].
+  final Map<FocusArea, Set<Muscle>>? skipAreas;
 
   /// The splits with a template for [days], [level] and [goal].
   List<GeneratorSplit> splitsFitting(int days, Level level, Goal goal) => [
@@ -79,5 +88,14 @@ class GeneratorOptions extends Equatable {
     sessionMinutes,
     maxFocusAreas,
     maxSkipAreas,
+    focusAreas,
+    skipAreas,
   ];
 }
+
+/// The area of [areas] that holds [muscle], the first in [FocusArea]
+/// order when several do; null when none does.
+FocusArea? areaOf(Muscle muscle, Map<FocusArea, Set<Muscle>> areas) => [
+  for (final area in FocusArea.values)
+    if (areas[area]?.contains(muscle) ?? false) area,
+].firstOrNull;

@@ -58,6 +58,7 @@ Map<String, Object?> response({List<Object?>? days}) => {
   'split': 'upper_lower',
   'template': 'ul_4',
   'weeklySets': {'pec': 3},
+  'targeted': ['pec', 'calf'],
   'uncovered': ['calf'],
   'rulesVersion': 2,
 };
@@ -179,10 +180,76 @@ void main() {
       answer(response());
       await repository.generate(request(seed: 1));
       verify(
-        () => callable.call<Object?>(
-          ServerGeneratorRepository.requestData(request(seed: 1)),
-        ),
+        () => callable.call<Object?>({
+          'answers': {
+            'goal': 'build_muscle',
+            'level': 'intermediate',
+            'daysPerWeek': 3,
+            'sessionMinutes': 60,
+            'equipment': [
+              for (final item in Equipment.values)
+                if (item != Equipment.bodyweight) item.code,
+            ],
+            'focus': <String>[],
+            'skip': <String>[],
+            'sensitive': <String>[],
+            'equipmentStyle': 'any',
+          },
+          'seed': 1,
+          'lang': 'en',
+        }),
       ).called(1);
+    });
+
+    test('leaves out kept items the server would refuse', () {
+      const good = ProgramItem(
+        exerciseId: 'row',
+        sets: 3,
+        repMin: 8,
+        repMax: 10,
+        restS: 90,
+      );
+      final data = ServerGeneratorRepository.requestData(
+        request(
+          kept: [
+            [
+              good,
+              good.copyWith(exerciseId: 'a', sets: 0),
+              good.copyWith(exerciseId: 'b', sets: 11),
+              good.copyWith(exerciseId: 'c', repMin: () => null),
+              good.copyWith(exerciseId: 'd', repMin: () => 12),
+              good.copyWith(exerciseId: 'e', repMax: () => 101),
+              good.copyWith(exerciseId: 'f', restS: 601),
+              good.copyWith(exerciseId: 'g', durationS: () => 30),
+              const ProgramItem(
+                exerciseId: 'h',
+                sets: 3,
+                durationS: 4,
+                restS: 60,
+              ),
+            ],
+          ],
+        ),
+      );
+      expect(data['kept'], [
+        [
+          {
+            'exerciseId': 'row',
+            'sets': 3,
+            'restS': 90,
+            'repMin': 8,
+            'repMax': 10,
+          },
+        ],
+      ]);
+      final none = ServerGeneratorRepository.requestData(
+        request(
+          kept: [
+            [good.copyWith(sets: 0)],
+          ],
+        ),
+      );
+      expect(none, isNot(contains('kept')));
     });
   });
 
@@ -192,6 +259,7 @@ void main() {
       final program = (await repository.generate(request())).valueOrNull!;
       expect(program.splitName, 'Upper/lower');
       expect(program.lengthWeeks, 8);
+      expect(program.targeted, {Muscle.pec, Muscle.calf});
       expect(program.uncovered, {Muscle.calf});
       expect(program.days.single.name, 'Upper A');
       expect(program.days.single.items, const [
@@ -270,6 +338,53 @@ void main() {
         ),
       ),
       (
+        'an item with a duration and reps',
+        response(
+          days: [
+            {
+              'name': 'A',
+              'items': [
+                {
+                  'exerciseId': 'x',
+                  'sets': 2,
+                  'durationS': 30,
+                  'repMin': 8,
+                  'repMax': 10,
+                  'restS': 60,
+                },
+              ],
+            },
+          ],
+        ),
+      ),
+      (
+        'an item with neither a duration nor reps',
+        response(
+          days: [
+            {
+              'name': 'A',
+              'items': [
+                {'exerciseId': 'x', 'sets': 2, 'restS': 60},
+              ],
+            },
+          ],
+        ),
+      ),
+      (
+        'an item with half a rep range',
+        response(
+          days: [
+            {
+              'name': 'A',
+              'items': [
+                {'exerciseId': 'x', 'sets': 2, 'repMin': 8, 'restS': 60},
+              ],
+            },
+          ],
+        ),
+      ),
+      ('no targeted muscles', {...response()}..remove('targeted')),
+      (
         'an unknown muscle',
         {
           ...response(),
@@ -288,15 +403,15 @@ void main() {
   });
 
   group('a refusal', () {
-    for (final (reason, refusal) in [
-      ('not-premium', GenerationRefusal.notPremium),
-      ('no-rules', GenerationRefusal.noRules),
-      ('no-template', GenerationRefusal.noTemplate),
-      ('no-exercises', GenerationRefusal.noExercises),
-      ('invalid-input', GenerationRefusal.invalidInput),
+    for (final (code, reason, refusal) in [
+      ('permission-denied', 'not-premium', GenerationRefusal.notPremium),
+      ('invalid-argument', 'invalid-input', GenerationRefusal.invalidInput),
+      ('failed-precondition', 'no-rules', GenerationRefusal.noRules),
+      ('failed-precondition', 'no-template', GenerationRefusal.noTemplate),
+      ('failed-precondition', 'no-exercises', GenerationRefusal.noExercises),
     ]) {
-      test('$reason is typed', () async {
-        refuse(FunctionsError('failed-precondition', reason: reason));
+      test('$code with $reason is typed', () async {
+        refuse(FunctionsError(code, reason: reason));
         expect(
           (await repository.generate(request())).failureOrNull,
           isA<GenerationRefused>().having((f) => f.refusal, 'refusal', refusal),
@@ -304,18 +419,19 @@ void main() {
       });
     }
 
-    test('without a reason is the usual Firebase failure', () async {
-      refuse(FunctionsError('unavailable'));
-      expect(
-        (await repository.generate(request())).failureOrNull,
-        isA<NetworkFailure>(),
-      );
-      refuse(FunctionsError('internal'));
-      expect(
-        (await repository.generate(request())).failureOrNull,
-        isA<UnknownFailure>(),
-      );
-    });
+    for (final (code, failure) in [
+      // The iOS SDK reports no connection as `unknown`.
+      ('unknown', isA<NetworkFailure>()),
+      ('unavailable', isA<NetworkFailure>()),
+      ('deadline-exceeded', isA<NetworkFailure>()),
+      ('unauthenticated', isA<PermissionFailure>()),
+      ('internal', isA<UnknownFailure>()),
+    ]) {
+      test('$code without a reason is mapped', () async {
+        refuse(FunctionsError(code));
+        expect((await repository.generate(request())).failureOrNull, failure);
+      });
+    }
   });
 
   group('the options', () {
@@ -348,6 +464,11 @@ void main() {
       'sessionMinutes': [30, 45, 60],
       'maxFocusAreas': 2,
       'maxSkipAreas': 3,
+      'focusAreas': {
+        'chest': ['pec', 'wings'],
+        'legs': ['quads', 'glute'],
+        'tail': ['calf'],
+      },
       'newField': 'ignored',
     };
 
@@ -376,6 +497,10 @@ void main() {
           sessionMinutes: [30, 45, 60],
           maxFocusAreas: 2,
           maxSkipAreas: 3,
+          focusAreas: {
+            FocusArea.chest: {Muscle.pec},
+            FocusArea.legs: {Muscle.quads, Muscle.glute},
+          },
         ),
       );
     });

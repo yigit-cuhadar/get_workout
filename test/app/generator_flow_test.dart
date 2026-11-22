@@ -156,6 +156,15 @@ void main() {
     await tapText(tester, 'Retry');
     expect(find.text('Full body · 4 days'), findsOneWidget);
 
+    // A Regenerate that fails leaves the program on screen.
+    app.generator.answer = (_) => const Err(NetworkFailure());
+    await tapText(tester, 'Regenerate');
+    expect(
+      find.text('Connect to the internet to generate a program.'),
+      findsOneWidget,
+    );
+    expect(find.text('Full body · 4 days'), findsOneWidget);
+
     await app.stop(tester);
   });
 

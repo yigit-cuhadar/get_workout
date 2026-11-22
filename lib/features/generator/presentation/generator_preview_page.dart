@@ -57,8 +57,19 @@ class _PreviewView extends StatelessWidget {
     final answers = cubit.answers;
     return BlocConsumer<GeneratorPreviewCubit, GeneratorPreviewState>(
       listenWhen: (previous, current) =>
-          previous.saveStatus != current.saveStatus,
+          previous.saveStatus != current.saveStatus ||
+          previous.regenerateFailure != current.regenerateFailure,
       listener: (context, state) {
+        if (state.regenerateFailure case final failure?) {
+          showForgeSnackbar(
+            context,
+            message: failure is NetworkFailure
+                ? l10n.generatorOffline
+                : l10n.generatorRegenerateFailed,
+            error: true,
+          );
+          cubit.regenerateFailureShown();
+        }
         switch (state.saveStatus) {
           case SaveStatus.saved:
             context.go(Routes.program(state.savedId!, created: true));
@@ -98,6 +109,20 @@ class _PreviewView extends StatelessWidget {
         return Scaffold(
           appBar: ForgeAppBar(title: l10n.generatorPreviewTitle),
           body: switch (state.status) {
+            // The rows need the library to be named.
+            PreviewStatus.building ||
+            PreviewStatus.ready when state.libraryFailed => ListView(
+              padding: padding,
+              children: [
+                ErrorView(
+                  title: l10n.libraryLoadFailed,
+                  message: l10n.loadFailedDetail,
+                  retryLabel: l10n.retry,
+                  onRetry: cubit.retryLibrary,
+                  card: true,
+                ),
+              ],
+            ),
             PreviewStatus.building => ListView(
               padding: padding,
               children: [
@@ -154,30 +179,31 @@ class _PreviewView extends StatelessWidget {
           // Off while the program is being built, and Regenerate while it
           // is saved.
           bottomNavigationBar: switch (state.status) {
-            PreviewStatus.building ||
-            PreviewStatus.ready => ForgeBottomActionBar.sideBySide(
-              secondary: ForgeButton(
-                label: l10n.generatorRegenerate,
-                variant: ForgeButtonVariant.secondary,
-                size: ForgeButtonSize.large,
-                onPressed: ready && state.saveStatus == SaveStatus.idle
-                    ? cubit.regenerate
-                    : null,
+            PreviewStatus.building || PreviewStatus.ready
+                when !state.libraryFailed =>
+              ForgeBottomActionBar.sideBySide(
+                secondary: ForgeButton(
+                  label: l10n.generatorRegenerate,
+                  variant: ForgeButtonVariant.secondary,
+                  size: ForgeButtonSize.large,
+                  onPressed: ready && state.saveStatus == SaveStatus.idle
+                      ? cubit.regenerate
+                      : null,
+                ),
+                primary: ForgeButton(
+                  label: l10n.generatorSave,
+                  size: ForgeButtonSize.large,
+                  loading: saving,
+                  onPressed: ready
+                      ? () => cubit.save(
+                          name: l10n.generatorProgramName(
+                            program.splitName,
+                            program.days.length,
+                          ),
+                        )
+                      : null,
+                ),
               ),
-              primary: ForgeButton(
-                label: l10n.generatorSave,
-                size: ForgeButtonSize.large,
-                loading: saving,
-                onPressed: ready
-                    ? () => cubit.save(
-                        name: l10n.generatorProgramName(
-                          program.splitName,
-                          program.days.length,
-                        ),
-                      )
-                    : null,
-              ),
-            ),
             _ => null,
           },
         );
@@ -461,7 +487,7 @@ class _ItemRow extends StatelessWidget {
             targets: _PreviewItemTargets(cubit, day, index, unit),
           ),
         ),
-      ),
+      ).then((_) => cubit.discardDraft()),
     );
   }
 }
@@ -478,16 +504,14 @@ class _PreviewItemTargets implements ItemTargets {
   @override
   final WeightUnit weightUnit;
 
+  /// The item with the change not valid yet, if there is one.
   @override
-  ProgramItem get item => _cubit.state.program!.days[_day].items[_index];
+  ProgramItem get item => _cubit.state.itemAt(_day, _index)!;
 
   @override
   Set<ItemIssue> watchIssues(BuildContext context) =>
       context.select((GeneratorPreviewCubit cubit) {
-        final item = cubit.state.program?.days
-            .elementAtOrNull(_day)
-            ?.items
-            .elementAtOrNull(_index);
+        final item = cubit.state.itemAt(_day, _index);
         return item == null
             ? const <ItemIssue>{}
             : validateItem(item, cubit.loggingTypeOf(item.exerciseId));

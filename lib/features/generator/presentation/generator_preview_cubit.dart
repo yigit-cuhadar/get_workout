@@ -12,6 +12,7 @@ import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/domain/program_editing.dart';
 import '../../programs/domain/program_usecases.dart';
+import '../../programs/domain/program_validation.dart';
 import '../../programs/domain/program_volume.dart';
 import '../domain/generated_program.dart';
 import '../domain/generator_answers.dart';
@@ -39,6 +40,10 @@ enum PreviewStatus {
 
 enum SaveStatus { idle, saving, saved, failed }
 
+/// An item being changed in the targets sheet that is not valid yet: it
+/// stays out of the program until it is.
+typedef ItemDraft = ({int day, int index, ProgramItem item});
+
 class GeneratorPreviewState extends Equatable {
   const GeneratorPreviewState({
     this.status = PreviewStatus.building,
@@ -46,6 +51,9 @@ class GeneratorPreviewState extends Equatable {
     this.seed = 0,
     this.kept = const {},
     this.uncovered = const {},
+    this.draft,
+    this.regenerateFailure,
+    this.libraryFailed = false,
     this.saveStatus = SaveStatus.idle,
     this.savedId,
     this.saveFailure,
@@ -63,9 +71,16 @@ class GeneratorPreviewState extends Equatable {
   /// on a day once).
   final Set<(int, String)> kept;
 
-  /// The server's uncovered muscles that no exercise of the week on screen
-  /// works as a main muscle.
+  /// The muscles the banner names: the server's uncovered ones, after an
+  /// edit the targeted ones no exercise of the week works as a main muscle.
   final Set<Muscle> uncovered;
+  final ItemDraft? draft;
+
+  /// Why the last Regenerate made no program; [program] is the one before.
+  final Failure? regenerateFailure;
+
+  /// The exercise library could not be loaded: rows cannot be named.
+  final bool libraryFailed;
   final SaveStatus saveStatus;
 
   /// The stored program, once saved.
@@ -78,10 +93,20 @@ class GeneratorPreviewState extends Equatable {
   bool isKept(int day, ProgramItem item) =>
       kept.contains((day, item.exerciseId));
 
+  /// The item at [index] of [day] as the targets sheet shows it.
+  ProgramItem? itemAt(int day, int index) => switch (draft) {
+    (day: final d, index: final i, :final item) when d == day && i == index =>
+      item,
+    _ => program?.days.elementAtOrNull(day)?.items.elementAtOrNull(index),
+  };
+
   GeneratorPreviewState copyWith({
     GeneratedProgram? program,
     Set<(int, String)>? kept,
     Set<Muscle>? uncovered,
+    ItemDraft? Function()? draft,
+    Failure? Function()? regenerateFailure,
+    bool? libraryFailed,
     SaveStatus? saveStatus,
     String? savedId,
     Failure? Function()? saveFailure,
@@ -91,6 +116,11 @@ class GeneratorPreviewState extends Equatable {
     seed: seed,
     kept: kept ?? this.kept,
     uncovered: uncovered ?? this.uncovered,
+    draft: draft != null ? draft() : this.draft,
+    regenerateFailure: regenerateFailure != null
+        ? regenerateFailure()
+        : this.regenerateFailure,
+    libraryFailed: libraryFailed ?? this.libraryFailed,
     saveStatus: saveStatus ?? this.saveStatus,
     savedId: savedId ?? this.savedId,
     saveFailure: saveFailure != null ? saveFailure() : this.saveFailure,
@@ -103,6 +133,9 @@ class GeneratorPreviewState extends Equatable {
     seed,
     kept,
     uncovered,
+    draft,
+    regenerateFailure,
+    libraryFailed,
     saveStatus,
     savedId,
     saveFailure,
@@ -113,7 +146,8 @@ class GeneratorPreviewState extends Equatable {
 /// Regenerate with the next seed and the kept items, edited item by item,
 /// and stored as one of the user's programs. A server that does not see
 /// Premium yet is asked again after [retryDelay], twice and four times as
-/// long, before the page says so.
+/// long, before the page says so. A Regenerate that fails leaves the
+/// program before it on screen.
 class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
   GeneratorPreviewCubit(
     this.answers, {
@@ -125,7 +159,7 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
     required this._analytics,
     this.retryDelay = const Duration(seconds: 2),
   }) : super(const GeneratorPreviewState()) {
-    _subscription = _catalogue.stream.listen((_) => _recount());
+    _subscription = _catalogue.stream.listen((_) => _onLibrary());
     unawaited(_generate(0, const {}));
   }
 
@@ -143,10 +177,8 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
   final Analytics _analytics;
   late final StreamSubscription<ExerciseCatalogueState> _subscription;
 
-  /// What the request on its way was made from: the program the kept items
-  /// are on and the kept items.
-  GeneratedProgram? _base;
-  Set<(int, String)> _baseKept = const {};
+  /// The program as the server made it; one that differs was edited.
+  GeneratedProgram? _served;
   int _retries = 0;
   Timer? _retryTimer;
 
@@ -156,48 +188,72 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
         state.saveStatus != SaveStatus.idle) {
       return;
     }
-    _base = state.program;
     _retries = 0;
-    await _generate(state.seed + 1, state.kept);
+    await _generate(
+      state.seed + 1,
+      state.kept,
+      before: state.copyWith(draft: () => null, regenerateFailure: () => null),
+    );
   }
 
-  /// Asks again after a failure, with what the failed request asked for.
+  /// Asks again after the first program failed.
   Future<void> retry() async {
     if (state.status == PreviewStatus.building ||
         state.status == PreviewStatus.ready) {
       return;
     }
     _retries = 0;
-    await _generate(state.seed, _baseKept);
+    await _generate(state.seed, const {});
   }
 
-  Future<void> _generate(int seed, Set<(int, String)> kept) async {
+  /// The page has shown the failed Regenerate.
+  void regenerateFailureShown() =>
+      emit(state.copyWith(regenerateFailure: () => null));
+
+  /// Loads the exercise library again after it failed.
+  Future<void> retryLibrary() => _catalogue.retry();
+
+  /// [before] is the state a Regenerate started from, shown again when it
+  /// fails.
+  Future<void> _generate(
+    int seed,
+    Set<(int, String)> kept, {
+    GeneratorPreviewState? before,
+  }) async {
     _retryTimer?.cancel();
     _retryTimer = null;
-    _baseKept = kept;
-    final base = _base;
-    emit(GeneratorPreviewState(seed: seed, kept: kept));
+    final keptItems = [
+      for (final (i, day)
+          in (before?.program?.days ?? const <ProgramDay>[]).indexed)
+        [
+          for (final item in day.items)
+            if (kept.contains((i, item.exerciseId))) item,
+        ],
+    ];
+    emit(
+      GeneratorPreviewState(
+        seed: seed,
+        kept: kept,
+        libraryFailed: _libraryFailed,
+      ),
+    );
     final result = await _generateProgram((
       answers: answers,
       seed: seed,
-      kept: [
-        for (final (i, day) in (base?.days ?? const <ProgramDay>[]).indexed)
-          [
-            for (final item in day.items)
-              if (kept.contains((i, item.exerciseId))) item,
-          ],
-      ],
+      kept: keptItems,
       language: language,
     ));
     if (isClosed) return;
     switch (result) {
-      case Ok(value: final program):
+      case Ok(value: final made):
         unawaited(
           _analytics.programGenerate(
             goal: answers.goal,
             days: answers.daysPerWeek,
           ),
         );
+        final program = _withTargets(made, keptItems);
+        _served = program;
         emit(
           GeneratorPreviewState(
             status: PreviewStatus.ready,
@@ -208,7 +264,8 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
                 for (final item in day.items)
                   if (kept.contains((i, item.exerciseId))) (i, item.exerciseId),
             },
-            uncovered: program.stillUncovered(_exercises),
+            uncovered: program.uncovered,
+            libraryFailed: _libraryFailed,
           ),
         );
       case Err(:final failure):
@@ -219,9 +276,17 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
           _retryTimer = Timer(retryDelay * (1 << _retries), () {
             _retryTimer = null;
             _retries++;
-            unawaited(_generate(seed, kept));
+            unawaited(_generate(seed, kept, before: before));
           });
           return;
+        }
+        if (before != null) {
+          return emit(
+            before.copyWith(
+              regenerateFailure: () => failure,
+              libraryFailed: _libraryFailed,
+            ),
+          );
         }
         emit(
           GeneratorPreviewState(
@@ -237,11 +302,33 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
               _ => PreviewStatus.failure,
             },
             seed: seed,
-            kept: kept,
+            libraryFailed: _libraryFailed,
           ),
         );
     }
   }
+
+  /// [program] with each [kept] item's target weight back on the item of
+  /// the same exercise on its day; the server takes no targets.
+  static GeneratedProgram _withTargets(
+    GeneratedProgram program,
+    List<List<ProgramItem>> kept,
+  ) => program.withDays([
+    for (final (i, day) in program.days.indexed)
+      day.copyWith(
+        items: [
+          for (final item in day.items)
+            switch (kept
+                .elementAtOrNull(i)
+                ?.where((k) => k.exerciseId == item.exerciseId)
+                .firstOrNull
+                ?.targetKg) {
+              final kg? => item.copyWith(targetKg: () => kg),
+              null => item,
+            },
+        ],
+      ),
+  ]);
 
   /// Keeps the item at [index] of [day] through Regenerate, or stops.
   void toggleKept(int day, int index) {
@@ -281,19 +368,30 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
     );
   }
 
-  /// [change] applied to the item at [index] of [day].
+  /// [change] applied to the item at [index] of [day], as the targets
+  /// sheet shows it. Only a valid item enters the program; one that is not
+  /// valid yet is kept as the [GeneratorPreviewState.draft].
   void editItem(
     int day,
     int index,
     ProgramItem Function(ProgramItem item) change,
   ) {
-    final item = _itemAt(day, index);
+    final item = state.itemAt(day, index);
     if (item == null || !_editable) return;
+    final changed = change(item);
+    if (validateItem(changed, loggingTypeOf(changed.exerciseId)).isNotEmpty) {
+      return emit(
+        state.copyWith(draft: () => (day: day, index: index, item: changed)),
+      );
+    }
     _changeItems(day, [
       for (final (i, other) in state.program!.days[day].items.indexed)
-        i == index ? change(other) : other,
+        i == index ? changed : other,
     ]);
   }
+
+  /// The targets sheet closed: a change not valid yet is dropped.
+  void discardDraft() => emit(state.copyWith(draft: () => null));
 
   /// Takes the item at [index] off [day]; the last one of a day stays. A
   /// group left with one item dissolves.
@@ -332,6 +430,12 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
     _ => const {},
   };
 
+  bool get _libraryFailed => _catalogue.state is CatalogueFailed;
+
+  /// The banner's muscles for [program]: the server's until it is edited.
+  Set<Muscle> _uncoveredOf(GeneratedProgram program) =>
+      program == _served ? program.uncovered : program.untrained(_exercises);
+
   void _changeItems(
     int day,
     List<ProgramItem> items, {
@@ -346,16 +450,21 @@ class GeneratorPreviewCubit extends Cubit<GeneratorPreviewState> {
       state.copyWith(
         program: changed,
         kept: kept,
-        uncovered: changed.stillUncovered(_exercises),
+        draft: () => null,
+        uncovered: _uncoveredOf(changed),
       ),
     );
   }
 
-  /// The library changed: the uncovered muscles are counted again.
-  void _recount() {
+  /// The library changed: whether it failed, and the uncovered muscles.
+  void _onLibrary() {
     final program = state.program;
-    if (program == null) return;
-    emit(state.copyWith(uncovered: program.stillUncovered(_exercises)));
+    emit(
+      state.copyWith(
+        libraryFailed: _libraryFailed,
+        uncovered: program == null ? null : _uncoveredOf(program),
+      ),
+    );
   }
 
   /// Stores the program on screen named [name].

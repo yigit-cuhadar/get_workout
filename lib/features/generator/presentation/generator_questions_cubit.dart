@@ -229,7 +229,7 @@ class GeneratorQuestionsCubit extends Cubit<GeneratorQuestionsState> {
   /// Keeps the answers the new [options] still offer.
   void _onOptions(GeneratorOptions options) {
     final minutes = state.sessionMinutes;
-    emit(
+    _emitPages(
       state.copyWith(
         status: OptionsStatus.ready,
         options: options,
@@ -255,11 +255,12 @@ class GeneratorQuestionsCubit extends Cubit<GeneratorQuestionsState> {
 
   /// Fills the profile answers not given yet, e.g. once the profile has
   /// loaded.
-  void prefill(GeneratorPrefill prefill) => emit(_prefilled(state, prefill));
+  void prefill(GeneratorPrefill prefill) =>
+      _emitPages(_prefilled(state, prefill));
 
   /// The profile answers of [answers] for this program, from a question
   /// opened on the first page.
-  void changeProfile(UserProfile answers) => emit(
+  void changeProfile(UserProfile answers) => _emitPages(
     state.copyWith(
       goal: answers.goal,
       level: answers.level,
@@ -267,6 +268,19 @@ class GeneratorQuestionsCubit extends Cubit<GeneratorQuestionsState> {
       equipment: answers.equipment?.difference(const {Equipment.bodyweight}),
     ),
   );
+
+  /// [next] with its page list recomputed: a page that no longer shows
+  /// gives way to the nearest one before it.
+  void _emitPages(GeneratorQuestionsState next) {
+    final steps = next.steps;
+    emit(
+      steps.contains(next.step)
+          ? next
+          : next.copyWith(
+              step: steps.lastWhere((step) => step.index < next.step.index),
+            ),
+    );
+  }
 
   /// To the next page, once this one is answered.
   void next() {

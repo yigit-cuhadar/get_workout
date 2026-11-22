@@ -10,6 +10,7 @@ class GeneratedProgram extends Equatable {
     required this.splitName,
     required this.lengthWeeks,
     required this.days,
+    this.targeted = const {},
     this.uncovered = const {},
   });
 
@@ -20,26 +21,30 @@ class GeneratedProgram extends Equatable {
   /// Named by the server ("Upper A").
   final List<ProgramDay> days;
 
-  /// Muscles with a weekly target that no exercise of the week, as
-  /// generated, works as a main muscle.
+  /// Muscles with a weekly target for the answers.
+  final Set<Muscle> targeted;
+
+  /// The [targeted] muscles no exercise of the week, as generated, works
+  /// as a main muscle.
   final Set<Muscle> uncovered;
 
   GeneratedProgram withDays(List<ProgramDay> days) => GeneratedProgram(
     splitName: splitName,
     lengthWeeks: lengthWeeks,
     days: days,
+    targeted: targeted,
     uncovered: uncovered,
   );
 
-  /// The [uncovered] muscles that still no exercise of [days] works as a
-  /// main muscle, the exercises looked up in [exercises].
-  Set<Muscle> stillUncovered(Map<String, Exercise> exercises) {
+  /// The [targeted] muscles no exercise of [days] works as a main muscle,
+  /// the exercises looked up in [exercises]: [uncovered] after an edit.
+  Set<Muscle> untrained(Map<String, Exercise> exercises) {
     final trained = {
       for (final day in days)
         for (final item in day.items)
           ...?exercises[item.exerciseId]?.mainMuscles,
     };
-    return uncovered.difference(trained);
+    return targeted.difference(trained);
   }
 
   /// The program to store: the user's own, editable like any other.
@@ -51,5 +56,11 @@ class GeneratedProgram extends Equatable {
   );
 
   @override
-  List<Object?> get props => [splitName, lengthWeeks, days, uncovered];
+  List<Object?> get props => [
+    splitName,
+    lengthWeeks,
+    days,
+    targeted,
+    uncovered,
+  ];
 }

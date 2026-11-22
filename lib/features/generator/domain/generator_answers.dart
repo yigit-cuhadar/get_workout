@@ -2,29 +2,6 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../exercises/domain/vocabulary.dart';
 
-/// The muscles of each [FocusArea], for picking areas on the body model:
-/// every muscle in exactly one area. The server keeps its own maps.
-const focusAreaMuscles = <FocusArea, Set<Muscle>>{
-  FocusArea.chest: {Muscle.pec},
-  FocusArea.back: {Muscle.lat, Muscle.trap, Muscle.erector},
-  FocusArea.shoulders: {Muscle.frontDelt, Muscle.midDelt, Muscle.rearDelt},
-  FocusArea.arms: {Muscle.biceps, Muscle.triceps, Muscle.forearm},
-  FocusArea.core: {Muscle.abdominal, Muscle.oblique},
-  FocusArea.glutes: {Muscle.glute},
-  FocusArea.legs: {
-    Muscle.quads,
-    Muscle.hamstring,
-    Muscle.calf,
-    Muscle.adductor,
-    Muscle.abductor,
-  },
-};
-
-/// The area [muscle] belongs to.
-FocusArea focusAreaOf(Muscle muscle) => focusAreaMuscles.entries
-    .firstWhere((entry) => entry.value.contains(muscle))
-    .key;
-
 const _machineKinds = {
   Equipment.machine,
   Equipment.cable,
