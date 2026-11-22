@@ -654,6 +654,31 @@ Where it stands (2026-11-18, end of Group 11):
      on the owner's iPhone.)
   5. An Android round: Google sign-in, Health Connect, the launch screen.
   6. Release: the first prod content import, then the store automation.
+- App Store listing (2026-11-22, owner's picks; screenshot canvas
+  https://claude.ai/artifact/EbzyhQps5J6xmubwaEjA48, copy from an ASO study of
+  Strong, Hevy, Fitbod, JEFIT and others):
+  - Name "GetWorkout: Gym & Fitness Log", subtitle "Workout tracker &
+    programs", keywords "fitness,workout,exercise,lifting,training,
+    bodybuilding,muscle,body,plan,strength,weight,planner,log", promotional
+    text with "workout plan", description led by exercises and programs
+    (the 3D body is one line). Health & Fitness, Lifestyle; age 13+ (the
+    terms' minimum); copyright "2026 Yiğit Çuhadar"; release type manual.
+  - Screenshots: 7 at 1320x2868, dark band with a white two-line caption over
+    a framed phone (SS1 C, layout kept over alternating/tilted/frameless in
+    SS5): Exercises model, Workout logger, Programs, Weekly volume, Body,
+    Today, Strength. Captured from the dev app over `tool/seed_demo.dart`
+    data (plus six months of weigh-ins) with the debug banner hidden locally.
+    The paywall capture is both subscriptions' review screenshot.
+  - App Privacy published: 16 types, all linked, none tracking (data
+    inventory in the legal review). Custom EULA = the Terms text, all
+    territories. Review notes: guest sign-in, no demo account.
+  - Sold only in English-first countries (US, UK, Canada, Australia, New
+    Zealand, Ireland), not in new territories; others open as the app gets
+    their language. iPhone only (#216); iPads use compatibility mode.
+  - TestFlight builds: 1.0.0 (1), 1.0.0 (2) (privacy manifest, iPhone only,
+    23 programs). Still to do before submission: the prod entitlement after
+    the sandbox renewal, restore, renewal and expiry on TestFlight; then
+    submit the version with both subscriptions, manual release.
 - Both studios' links match main again (published 2026-11-18 from a
   session: they belong to the owner's account, so a session publishes
   them directly). Owner to do: the Play Console Health declaration
