@@ -78,7 +78,7 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   notes › Analytics). No age gate, health notice or data
   export (the user accepted the EU risk). Remote Config (the paywall A/B
   test, the update and maintenance gate) sends the Firebase installation ID for every user, consent or not.
-- **Cloud Functions** (`functions/`): TypeScript, Node 22, 2nd gen, all in
+- **Cloud Functions** (`functions/`): TypeScript, Node 24, 2nd gen, all in
   `europe-west1` (`src/config.ts`, set once with `setGlobalOptions`; the
   app's one Dart constant `functionsRegion` in
   `lib/app/functions_region.dart`, used by the app and the admin panel,
