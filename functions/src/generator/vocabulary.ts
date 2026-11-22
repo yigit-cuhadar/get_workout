@@ -108,8 +108,6 @@ export const EQUIPMENT_STYLES = ["any", "machines", "free_weights"] as const;
 
 export const SLOT_ROLES = ["primary", "secondary", "accessory", "core"] as const;
 
-export const GROUPING_STYLES = ["superset", "circuit"] as const;
-
 /** Logging types whose sets are held for a time. */
 export const TIMED_LOGGING_TYPES = ["duration", "weight_duration"] as const;
 

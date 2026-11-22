@@ -109,6 +109,9 @@ const SECONDS_PER_REP = 3;
 /** A day never drops below this many exercises to fit the session. */
 const MIN_EXERCISES = 3;
 
+/** The most items the app stores on a day (`ProgramLimits`). */
+const MAX_ITEMS = 20;
+
 /**
  * The app's `estimateDay`, in seconds: per set its work (3 s a rep at the
  * middle of the range, or the hold) plus rest; in a group, rest follows
@@ -124,9 +127,14 @@ export function estimateDayS(items: Item[]): number {
     );
   let seconds = 0;
   for (let start = 0; start < items.length; ) {
-    const group = items[start].group;
+    // Stored items may carry a null group; it is no group, as in the app.
+    const group = items[start].group ?? undefined;
     let end = start + 1;
-    while (group !== undefined && end < items.length && items[end].group === group) {
+    while (
+      group !== undefined &&
+      end < items.length &&
+      items[end].group === group
+    ) {
       end++;
     }
     const members = items.slice(start, end);
@@ -182,7 +190,6 @@ export function templateFor(
 
 interface Placed {
   role: SlotRole;
-  priority: number;
   /** The slot's place in the template; extras come after every slot. */
   order: number;
   exercise: Exercise;
@@ -239,9 +246,13 @@ export function generate(input: Input): Result {
         equipmentScore(e) !== undefined,
     )
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const popularities = input.exercises.map((e) => e.popularity);
-  const leastPopular = Math.max(0, ...popularities);
-  const mostPopular = Math.min(leastPopular, ...popularities);
+  /** Each exercise's place in the popularity order, 0 the best known. */
+  const popularityPlace = new Map(
+    [...input.exercises]
+      .sort((a, b) => a.popularity - b.popularity || (a.id < b.id ? -1 : 1))
+      .map((e, place) => [e.id, place]),
+  );
+  const lastPlace = Math.max(1, input.exercises.length - 1);
 
   const focusMuscles = new Set(
     answers.focus.flatMap((area) => rules.focus.areas[area] ?? []),
@@ -376,12 +387,8 @@ export function generate(input: Input): Result {
         equipment: equipmentScore(exercise) ?? 0,
         // Cubed, so the few best known stand well clear of the rest.
         popularity:
-          leastPopular === mostPopular
-            ? 0
-            : selection.popularity *
-              ((leastPopular - exercise.popularity) /
-                (leastPopular - mostPopular)) **
-                3,
+          selection.popularity *
+          (1 - (popularityPlace.get(exercise.id) ?? lastPlace) / lastPlace) ** 3,
         variety: selection.variety * rand(),
       };
       if (LEVELS.indexOf(exercise.level as Level) > levelIndex) {
@@ -422,12 +429,10 @@ export function generate(input: Input): Result {
           .slice(1, 4)
           .map((s) => ({ exerciseId: s.exercise.id, score: s.total })),
       };
-      if (slot.key !== undefined && !shared) keyed.set(slot.key, exercise);
     }
     const { item, maxSets } = dose(exercise, slot.role);
     return {
       role: slot.role,
-      priority: slot.priority,
       order,
       exercise,
       item,
@@ -443,9 +448,11 @@ export function generate(input: Input): Result {
     };
   };
 
-  // Kept items take the first slot of their day they fit, or stand as extra.
+  // Kept items take the first slot of their day they fit, or stand as
+  // extra: their exercise, sets and reps stay, whatever the session; rest
+  // and grouping are the role's, as for any slot.
   days.forEach((day, d) => {
-    (input.kept?.[d] ?? []).forEach((kept, i) => {
+    (input.kept?.[d] ?? []).slice(0, MAX_ITEMS).forEach((kept, i) => {
       const exercise = library.get(kept.exerciseId);
       if (!exercise || day.placed.some((p) => p.exercise.id === exercise.id)) {
         return;
@@ -455,13 +462,20 @@ export function generate(input: Input): Result {
       );
       const slot = order < 0 ? undefined : day.template.slots[order];
       if (slot) day.tried.add(order);
+      if (slot?.key !== undefined && !keyed.has(slot.key)) {
+        keyed.set(slot.key, exercise);
+      }
       const role = slot?.role ?? "accessory";
       const priority = slot?.priority ?? 1;
-      const item = { ...kept };
-      delete item.group;
+      const item: Item = {
+        exerciseId: kept.exerciseId,
+        sets: kept.sets,
+        restS: rules.dosing[answers.goal][role].restS,
+      };
+      if (kept.durationS !== undefined) item.durationS = kept.durationS;
+      else [item.repMin, item.repMax] = [kept.repMin, kept.repMax];
       day.placed.push({
         role,
-        priority,
         order: slot ? order : day.template.slots.length + i,
         exercise,
         item,
@@ -472,19 +486,22 @@ export function generate(input: Input): Result {
     });
   });
 
-  /** Adds [placed] to [day] unless the session or a muscle's cap has no
-   * room for it. */
+  /** Adds [placed] to [day] unless the day, the session or a muscle's cap
+   * has no room for it. */
   const addIfRoom = (day: Day, placed: Placed) => {
     const sets = weekly();
     if (
+      day.placed.length >= MAX_ITEMS ||
       placed.exercise.mainMuscles.some(
         (m) => (sets[m] ?? 0) + placed.item.sets > cap(m),
       )
     ) {
-      return;
+      return false;
     }
     day.placed.push(placed);
-    if (cost(day) > budget) day.placed.pop();
+    if (cost(day) <= budget) return true;
+    day.placed.pop();
+    return false;
   };
 
   /** A slot for a focus muscle counts one priority higher. */
@@ -503,8 +520,16 @@ export function generate(input: Input): Result {
         day.tried.add(order);
         const placed = place(day, slot, order);
         if (!placed) return;
-        if (priority === 1) day.placed.push(placed);
-        else addIfRoom(day, placed);
+        if (priority === 1) {
+          if (day.placed.length >= MAX_ITEMS) return;
+          day.placed.push(placed);
+        } else if (!addIfRoom(day, placed)) {
+          return;
+        }
+        // Only a slot that stays hands its exercise to the key's others.
+        if (slot.key !== undefined && !keyed.has(slot.key)) {
+          keyed.set(slot.key, placed.exercise);
+        }
       });
     }
   };
@@ -608,6 +633,8 @@ export function generate(input: Input): Result {
   }
 
   const split = rules.splits.find((s) => s.id === template.split);
+  const text = <T>(l10n: { [lang: string]: T }) =>
+    Object.hasOwn(l10n, lang) ? l10n[lang] : l10n.en;
   const weeklySets = weekly();
   const trained = new Set(
     days.flatMap((day) => day.placed.flatMap((p) => p.exercise.mainMuscles)),
@@ -615,10 +642,10 @@ export function generate(input: Input): Result {
   const value: Generated = {
     split: template.split,
     template: template.id,
-    splitName: (split?.l10n[lang] ?? split?.l10n.en)?.name ?? template.split,
+    splitName: split ? text(split.l10n).name : template.split,
     lengthWeeks: rules.lengthWeeks[answers.level],
     days: days.map((day) => ({
-      name: (day.template.l10n[lang] ?? day.template.l10n.en).name,
+      name: text(day.template.l10n).name,
       items: layout(day),
     })),
     weeklySets,

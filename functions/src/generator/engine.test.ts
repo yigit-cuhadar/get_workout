@@ -261,6 +261,42 @@ describe("the seed rules with the content library", () => {
     assert.equal(again?.repMin, kept[0][0].repMin);
   });
 
+  test("a kept item of a circuit gets the rest of its new place", () => {
+    const circuits = program({ goal: "lose_fat" });
+    const inCircuit = circuits.days[0].items.find((item) => item.restS === 0);
+    assert.ok(inCircuit);
+    const again = program({}, { kept: [[inCircuit]] }).days[0].items.find(
+      (item) => item.exerciseId === inCircuit.exerciseId,
+    );
+    assert.ok(again && again.group === undefined && again.restS > 0);
+  });
+
+  test("a kept squat is still the one the strength template repeats", () => {
+    const strength = { goal: "get_stronger", daysPerWeek: 3 } as const;
+    const squat = program(strength).days[0].items[0];
+    for (const seed of [1, 2, 3]) {
+      const value = program(strength, { seed, kept: [[squat]] });
+      assert.equal(value.days[2].items[0].exerciseId, squat.exerciseId);
+    }
+  });
+
+  test("an unknown language falls back to English names", () => {
+    for (const lang of ["tr", "constructor", "toString"]) {
+      const value = program({}, { lang });
+      assert.equal(value.splitName, "Upper / Lower");
+      assert.equal(value.days[0].name, "Upper A");
+    }
+  });
+
+  test("the order the exercises arrive in does not change the program", () => {
+    const reversed = generate({
+      answers: answers(),
+      rules: seed,
+      exercises: [...library].reverse(),
+    });
+    assert.deepEqual(reversed, { ok: true, value: program() });
+  });
+
   test("explain adds why each item was picked", () => {
     const value = program({}, { explain: true });
     assert.ok(value.trace);
@@ -290,10 +326,16 @@ describe("generate, with small rules", () => {
     stressAreas: [],
     ...changes,
   });
-  /** The seed with one template of [slots] for two days a week. */
-  const rules = (slots: Slot[]): Rules => ({
+  /** The seed with one template of [slots] for two days a week; the seed
+   * and the popularity never decide. */
+  const rules = (
+    slots: Slot[],
+    selection: Partial<Rules["selection"]> = {},
+    extras: string[] = [],
+  ): Rules => ({
     ...seed,
-    selection: { ...seed.selection, variety: 0 },
+    selection: { ...seed.selection, variety: 0, popularity: 0, ...selection },
+    grouping: [],
     templates: [
       {
         id: "t",
@@ -304,7 +346,7 @@ describe("generate, with small rules", () => {
         dayList: [0, 1].map(() => ({
           l10n: { en: { name: "Day" } },
           slots,
-          extras: [],
+          extras,
         })),
       },
     ],
@@ -323,16 +365,177 @@ describe("generate, with small rules", () => {
     return result.value.days.map((day) => day.items);
   };
 
+  const firstOfEachDay = (r: Rules, exercises: Exercise[]) =>
+    run(r, exercises).map((items) => items[0].exerciseId);
+
   test("the higher tier wins, and a repeat in the week loses to a fresh one", () => {
-    const days = run(rules([{ ...squat, priority: 1 }]), [
+    const r = rules([{ ...squat, priority: 1 }], { family: 0 });
+    const staples = [
       ex("a", { generatorTier: "staple" }),
       ex("b", { generatorTier: "staple" }),
-      ex("c"),
-    ]);
+    ];
+    assert.deepEqual(firstOfEachDay(r, [...staples, ex("c")]), ["a", "b"]);
+    // With no penalty the best one comes back.
     assert.deepEqual(
-      days.map((items) => items[0].exerciseId),
-      ["a", "b"],
+      firstOfEachDay(rules([{ ...squat, priority: 1 }], { family: 0, repeat: 0 }), [
+        ...staples,
+        ex("c"),
+      ]),
+      ["a", "a"],
     );
+  });
+
+  test("a family used in the week loses to another family", () => {
+    const exercises = [
+      ex("a", { generatorTier: "staple", family: "f" }),
+      ex("b", { generatorTier: "staple", family: "f" }),
+      ex("c", { generatorTier: "staple", family: "g" }),
+    ];
+    const slot = [{ ...squat, priority: 1 }];
+    assert.deepEqual(firstOfEachDay(rules(slot), exercises), ["a", "c"]);
+    assert.deepEqual(firstOfEachDay(rules(slot, { family: 0 }), exercises), ["a", "b"]);
+  });
+
+  test("a second exercise of a family on one day only when nothing else fits", () => {
+    const twice = [
+      { ...squat, priority: 1 },
+      { ...squat, role: "secondary" as const, priority: 1 },
+    ];
+    const family = [
+      ex("a", { generatorTier: "staple", family: "f" }),
+      ex("b", { generatorTier: "staple", family: "f" }),
+    ];
+    assert.deepEqual(
+      run(rules(twice), [...family, ex("c", { family: "g" })])[0].map(
+        (item) => item.exerciseId,
+      ),
+      ["a", "c"],
+    );
+    assert.equal(run(rules(twice), family)[0].length, 2);
+  });
+
+  test("names the targeted muscles nothing trains directly", () => {
+    const result = generate({
+      answers: answers({ daysPerWeek: 2, equipment: [] }),
+      rules: rules([{ ...squat, priority: 1 }]),
+      exercises: [ex("a")],
+    });
+    assert.ok(result.ok);
+    assert.ok(result.value.uncovered.includes("pec"));
+    assert.ok(!result.value.uncovered.includes("quads"));
+  });
+
+  describe("focus", () => {
+    const curl = ex("curl", {
+      mechanic: "isolation",
+      movementPattern: "isolation",
+      mainMuscles: ["biceps"],
+    });
+    const calf = ex("calf", {
+      mechanic: "isolation",
+      movementPattern: "isolation",
+      mainMuscles: ["calf"],
+    });
+    const accessory = (muscle: string, priority: number): Slot => ({
+      role: "accessory",
+      pick: { muscles: [muscle] },
+      priority,
+    });
+    const arms = { focus: ["arms"] };
+
+    test("a focus muscle gets extra work on the days listing it", () => {
+      const r = rules([{ ...squat, priority: 1 }], {}, ["biceps"]);
+      const ids = (changes: Partial<Answers>) =>
+        run(r, [ex("a"), curl], changes).flat().map((item) => item.exerciseId);
+      assert.ok(!ids({}).includes("curl"));
+      assert.ok(ids(arms).includes("curl"));
+    });
+
+    test("its target and cap rise by the extra sets", () => {
+      const r = rules([accessory("biceps", 1)]);
+      const total = (changes: Partial<Answers>) =>
+        run(r, [curl], changes)
+          .flat()
+          .reduce((sum, item) => sum + item.sets, 0);
+      // One slot a day, capped by the role's most sets either way, so the
+      // cap is lowered until it binds.
+      const capped: Rules = {
+        ...r,
+        volume: { ...r.volume, cap: { ...r.volume.cap, intermediate: 5 } },
+      };
+      const sets = (changes: Partial<Answers>) =>
+        run(capped, [curl], changes)
+          .flat()
+          .reduce((sum, item) => sum + item.sets, 0);
+      assert.equal(sets({}), 5);
+      assert.equal(sets(arms), Math.min(5 + seed.focus.extraSets, total(arms)));
+    });
+
+    test("it comes first inside its role", () => {
+      const r = rules([accessory("calf", 1), accessory("biceps", 1)]);
+      const order = (changes: Partial<Answers>) =>
+        run(r, [calf, curl], changes)[0].map((item) => item.exerciseId);
+      assert.deepEqual(order({}), ["calf", "curl"]);
+      assert.deepEqual(order(arms), ["curl", "calf"]);
+    });
+
+    test("a session too short drops other work before it", () => {
+      const slots = [
+        ...[1, 2, 3, 4].map(() => ({ ...squat, priority: 1 })),
+        accessory("biceps", 2),
+      ];
+      const exercises = [...["a", "b", "c", "d", "e"].map((id) => ex(id)), curl];
+      const ids = run(rules(slots), exercises, {
+        ...arms,
+        sessionMinutes: 10,
+      })[0].map((item) => item.exerciseId);
+      assert.equal(ids.length, 3);
+      assert.ok(ids.includes("curl"));
+    });
+  });
+
+  test("grouped slots rest once a round and never pair one main muscle", () => {
+    const accessory = (muscle: string): Slot => ({
+      role: "accessory",
+      pick: { muscles: [muscle] },
+      priority: 1,
+    });
+    const iso = (id: string, muscle: string) =>
+      ex(id, { mechanic: "isolation", movementPattern: "isolation", mainMuscles: [muscle] });
+    const r: Rules = {
+      ...rules([accessory("biceps"), accessory("biceps"), accessory("calf")]),
+      grouping: [{ roles: ["accessory"], size: 2, restS: 50 }],
+    };
+    const [day] = run(r, [iso("b1", "biceps"), iso("b2", "biceps"), iso("c1", "calf"), iso("c2", "calf")]);
+    assert.deepEqual(
+      day.map((item) => [item.group, item.restS]),
+      [
+        [undefined, seed.dosing.build_muscle.accessory.restS],
+        ["A", 0],
+        ["A", 50],
+      ],
+    );
+  });
+
+  test("a day never has more than twenty items", () => {
+    const slots = Array.from({ length: 20 }, () => ({ ...squat, priority: 1 }));
+    const exercises = [
+      ...Array.from({ length: 30 }, (_, i) => ex(`s${String(i).padStart(2, "0")}`)),
+      ex("curl", { mechanic: "isolation", movementPattern: "isolation", mainMuscles: ["biceps"] }),
+    ];
+    const r: Rules = {
+      ...rules(slots, {}, ["biceps"]),
+      volume: { ...seed.volume, cap: { ...seed.volume.cap, intermediate: 40 } },
+    };
+    const kept = [[{ exerciseId: "curl", sets: 2, repMin: 8, repMax: 12, restS: 60 }]];
+    const result = generate({
+      answers: answers({ daysPerWeek: 2, equipment: [], sessionMinutes: 240, focus: ["arms"] }),
+      rules: { ...r, time: { ...r.time, sessionMinutes: [240] } },
+      exercises,
+      kept,
+    });
+    assert.ok(result.ok);
+    for (const day of result.value.days) assert.ok(day.items.length <= 20);
   });
 
   test("a fallback exercise only fills a priority 1 slot", () => {

@@ -4111,7 +4111,6 @@
       "goals": [
         "lose_fat"
       ],
-      "style": "circuit",
       "roles": [
         "accessory",
         "core"
@@ -4121,7 +4120,6 @@
     },
     {
       "sessionMax": 30,
-      "style": "superset",
       "roles": [
         "accessory",
         "core"

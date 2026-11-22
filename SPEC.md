@@ -193,7 +193,7 @@ Firestore. Timestamps are server timestamps; ids are generated on the client.
 | `incrementKg` | number? | Step for "add weight"; the import stores a double, but a web client (the admin panel) stores a whole number as an integer, so readers accept int or double and hashing treats `2` and `2.0` alike |
 | `popularity` | int | Lower sorts first |
 | `generatorTier` | code | Read only by the program generator; a document without it counts as `standard` |
-| `stressAreas` | code[] | 0-5 sensitiveArea codes: the generator never gives this exercise to a user who marked one of them. Absent is none |
+| `stressAreas` | code[]? | 1-5 sensitiveArea codes: the generator never gives this exercise to a user who marked one of them. Absent is none |
 | `l10n.<lang>` | map | `name`, `aliases[]`, `setup[]`, `execution[]`, `mistakes[]`, `safety?`, `cues[]` |
 | `updatedAt` | timestamp | Clients sync incrementally on this |
 | `contentHash` | string | SHA-256 of the stored content, written by the import; a mismatch marks a document edited elsewhere |
@@ -354,15 +354,16 @@ never changed afterwards. Seeded from `content/generator/rules.json`.
 
 `rules`:
 
-- `splits[]`: `id`, `l10n.<lang>.{name, info}`. What the split question
-  offers, in this order.
+- `splits[]`: `id`, `l10n.<lang>.{name, info}` (a name of at most 40
+  characters: the program is saved as "<name>, n days"). What the split
+  question offers, in this order.
 - `templates[]`: `id`, `split` (a split id), `days` (2-6, the days per
   week it is for), `levels[]`, `goals[]?` (absent: every goal), `priority`
   (int; the highest fitting one is used), `dayList[]` (exactly `days`
   entries).
-  - `dayList[]`: `l10n.<lang>.name` ("Upper A"), `slots[]` (1-20, in
-    training order), `extras[]` (muscles extra focus work may be added
-    for on this day).
+  - `dayList[]`: `l10n.<lang>.name` ("Upper A", at most 40 characters,
+    the app's day name), `slots[]` (1-20, in training order), `extras[]`
+    (muscles extra focus work may be added for on this day).
   - `slots[]`: `role` (slotRole), `pick` (`patterns[]?`, `muscles[]?`,
     `mechanic?`; an exercise fits when its pattern is one of `patterns`,
     one of its main muscles is in `muscles` and its mechanic is
@@ -375,12 +376,14 @@ never changed afterwards. Seeded from `content/generator/rules.json`.
   (`[min, max]`, those logged without), `holdS.<level>` (timed ones),
   `restS`.
 - `grouping[]`: `goals[]?`, `sessionMax?` (minutes; applies to sessions
-  up to it), `style` (`superset` \| `circuit`), `roles[]`, `size` (2-4),
+  up to it), `roles[]`, `size` (2-4: two make supersets, more circuits),
   `restS` (after each round). The first entry fitting the answers
   applies; none means straight sets.
-- `volume.targets.<level>.<muscle>`: weekly direct sets aimed for (0 or
-  absent: the muscle is only trained through other exercises);
-  `volume.cap.<level>`: added sets never take a muscle above it.
+- `volume.targets.<level>.<muscle>`: weekly sets aimed for, counted as
+  the app counts them (1 per main, 0.5 per secondary muscle; 0 or absent:
+  the muscle is only trained through other exercises);
+  `volume.cap.<level>`: added sets and slots never take a muscle above
+  it.
 - `focus`: `areas.<focusArea>` (muscle[]), `extraSets` (weekly sets a
   focus muscle's target and cap rise by), `max` (areas a user may pick).
 - `selection`: `tier.<generatorTier>` (score; `never` has none),
@@ -3453,8 +3456,8 @@ the feature you are about to touch, and keep it true when you change it.
        is not on the day yet. The score adds the tier, the best
        equipment set the user has (a set scores as its first item, plus
        the goal's extra for it), `aboveLevel`, `repeat` or `family` for
-       what the week's other days already use, the popularity (the cube
-       of its place in the popularity order, so the few best known stand
+       what the week's other days already use, the popularity (by its
+       place in the popularity order, cubed, so the few best known stand
        clear) and the seed's share; a second exercise of a family on one
        day only when nothing else fits. A `fallback` exercise only fills
        a priority 1 slot. Slots sharing a `key` take the first one's
@@ -3468,7 +3471,8 @@ the feature you are about to touch, and keep it true when you change it.
        `test/fixtures/estimate_vectors.json`) plus `setupS` per exercise,
        with the grouping below applied.
     6. Order of work: priority 1 slots (a session too short for them
-       loses the last, down to three exercises); priority 2 slots while
+       loses the last ones that are not focus work, down to three
+       exercises); priority 2 slots while
        the session and the caps have room; sets added one at a time to
        the slot whose main muscle is furthest below its weekly target (1
        per main, 0.5 per secondary muscle, as the app counts), within
@@ -3483,8 +3487,11 @@ the feature you are about to touch, and keep it true when you change it.
        template's order. The first fitting `grouping` rule joins
        neighbouring slots of its roles into supersets or circuits (rest
        only after the round), never two with the same first main muscle.
-    9. Kept items (Regenerate) take the first slot of their day they fit,
-       or stand as extra; their exercise, sets and reps stay.
+    9. Kept items (Regenerate) take the first slot of their day they fit
+       (handing their exercise to the slot's `key`), or stand as extra;
+       their exercise, sets and reps stay, even when the day then runs
+       past the session; rest and grouping are set as for any slot.
+    A day never has more than 20 items, the app's limit.
     The result names the muscles with a target and no direct work
     (`uncovered`); with `explain`, each item's slot, score parts and the
     next best candidates.
@@ -3500,7 +3507,9 @@ the feature you are about to touch, and keep it true when you change it.
     86 never, among them every mobility, explosive and carry exercise)
     and reviewed by the owner in the admin panel. The content rules
     accept both as optional; the panel's draft carries them until its
-    editor has the fields.
+    editor has the fields. Deploy the panel before importing them: an
+    older panel reports `generatorTier` as an unknown field on every
+    exercise.
   - Rules: one document, versioned (`generator/rules`, Data model); the
     panel edits a draft, checks it on the server and publishes it, as App
     settings does; the validator lives only in the function

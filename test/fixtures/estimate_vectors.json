@@ -126,5 +126,26 @@
   {
     "items": [],
     "seconds": 0
+  },
+  {
+    "items": [
+      {
+        "exerciseId": "a",
+        "sets": 3,
+        "repMin": 8,
+        "repMax": 12,
+        "restS": 90,
+        "group": null
+      },
+      {
+        "exerciseId": "b",
+        "sets": 2,
+        "repMin": 10,
+        "repMax": 10,
+        "restS": 60,
+        "group": null
+      }
+    ],
+    "seconds": 540
   }
 ]

@@ -8,7 +8,6 @@ import {
   FOCUS_AREAS,
   GENERATOR_TIERS,
   GOALS,
-  GROUPING_STYLES,
   Goal,
   LEVELS,
   Level,
@@ -68,7 +67,6 @@ export interface Dose {
 export interface Grouping {
   goals?: Goal[];
   sessionMax?: number;
-  style: string;
   roles: SlotRole[];
   size: number;
   restS: number;
@@ -133,6 +131,10 @@ const ID = /^[a-z][a-z0-9_]{0,39}$/;
 const MAX_SLOTS = 20;
 const MAX_TEXT = 200;
 
+/** A split's name heads the program's ("<name>, 4 days", at most 60), a
+ * day's name is stored as it is: the app's `ProgramLimits`. */
+const MAX_NAME = 40;
+
 type Json = { [key: string]: unknown };
 
 const isObject = (value: unknown): value is Json =>
@@ -169,9 +171,9 @@ export function rulesProblems(value: unknown): string[] {
       err(path, `must be a number from ${min} to ${max}`);
     }
   };
-  const text = (path: string, v: unknown) => {
-    if (typeof v !== "string" || v.trim() === "" || v.length > MAX_TEXT) {
-      err(path, `must be a text of 1 to ${MAX_TEXT} characters`);
+  const text = (path: string, v: unknown, max: number) => {
+    if (typeof v !== "string" || v.trim() === "" || v.length > max) {
+      err(path, `must be a text of 1 to ${max} characters`);
     }
   };
   const id = (path: string, v: unknown): v is string => {
@@ -242,7 +244,13 @@ export function rulesProblems(value: unknown): string[] {
     for (const [lang, entry] of Object.entries(v)) {
       const map = object(`${path}.${lang}`, entry, fields);
       if (!map) continue;
-      for (const field of fields) text(`${path}.${lang}.${field}`, map[field]);
+      for (const field of fields) {
+        text(
+          `${path}.${lang}.${field}`,
+          map[field],
+          field === "name" ? MAX_NAME : MAX_TEXT,
+        );
+      }
     }
   };
 
@@ -368,7 +376,6 @@ export function rulesProblems(value: unknown): string[] {
     const grouping = object(path, entry, [
       "goals",
       "sessionMax",
-      "style",
       "roles",
       "size",
       "restS",
@@ -380,7 +387,6 @@ export function rulesProblems(value: unknown): string[] {
     if (grouping.sessionMax !== undefined) {
       int(`${path}.sessionMax`, grouping.sessionMax, 1, 600);
     }
-    code(`${path}.style`, grouping.style, GROUPING_STYLES);
     codes(`${path}.roles`, grouping.roles, SLOT_ROLES, 1);
     int(`${path}.size`, grouping.size, 2, 4);
     int(`${path}.restS`, grouping.restS, 0, 600);

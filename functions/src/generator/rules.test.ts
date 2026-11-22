@@ -89,6 +89,20 @@ describe("rulesProblems", () => {
     );
   });
 
+  test("names fit what the app stores", () => {
+    assert.deepEqual(
+      problemsAfter((r) => {
+        r.templates[0].dayList[0].l10n.en.name = "x".repeat(41);
+        r.splits[0].l10n.en.name = "x".repeat(41);
+        r.splits[0].l10n.en.info = "x".repeat(200);
+      }),
+      [
+        "splits[0].l10n.en.name: must be a text of 1 to 40 characters",
+        "templates[0].dayList[0].l10n.en.name: must be a text of 1 to 40 characters",
+      ],
+    );
+  });
+
   test("ids are used once", () => {
     assert.deepEqual(
       problemsAfter((r) => {
