@@ -835,14 +835,16 @@ Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature note
 - [x] Admin, exercise fields — generator tier and stress areas in the exercise editor, as table columns and filters
 - [x] Admin, generator rules — splits and templates, dosing, volume, selection, focus; review and publish, version history and restore — a published change shows in the next generated program
 - [x] Admin, generator simulator — answers in, the program out with why each exercise was picked, with the published or the unpublished rules
-- [ ] Generator on prod — functions, rules and content deployed, checked with a Premium account
+- [x] Generator on prod — functions, rules and content deployed, checked with a Premium account
 
 Where Group 14 stands (2026-11-22): everything is merged (#221, #222, #224-#230). Dev and prod both have the five generator functions, the Firestore rule, the admin panel, the rated exercises and rules version 1 (seeded by the import). Left:
-- Generator on prod is unticked until a Premium account has generated a program on prod (the app, or the panel's Simulator); the store build still has the on-device engine, the new flow ships with the next build.
-- Not yet tried anywhere but in tests: publishing a rules change, the history and restore, the tab-close warning, the app's offline state on a device; the Volume, Selection and Areas tabs were not opened in a browser.
-- GetWorkout Studio's published link does not yet match `design/studio.html` (the generator boards and the AreaPicker card): publish it.
+- Generator on prod checked 2026-11-22 through the panel's Simulator (published v1, intermediate build-muscle 4 days 60 min, full gym): Upper / Lower, 10 weeks, nothing uncovered. The call passed as an admin, so a Premium non-admin user on prod is first seen with the next store build, which carries the new flow (the current store build still has the on-device engine).
+- Checked 2026-11-22 on dev: the Volume, Selection and Areas tabs open and render; an edit shows "was 8" and blocks saving when out of range; Review and publish lists the change and the standard-answer warnings; version 2 published, History listed both, version 1 restored into the draft and published as version 3 (dev now runs version 1's rules); the tab-close listener cancels `beforeunload` while there are changes (the in-app browser shows no dialog, so the browser's own question is still unseen). The app on the simulator generated a 4-day Upper/Lower program in about 10 s.
+- Not yet tried: the app's offline state on a device (the simulator shares the Mac's network).
+- Panel at about 800 px wide: with History open the main column is squeezed so the draft banner wraps one letter per line and the title breaks; an out-of-range error widens its whole column.
+- For the owner: even the seed rules leave 69 of the 140 standard answers with a target muscle without direct work and 83 with a day under half the session (the publish dialog's warnings); the simulator's intermediate Upper/Lower gave glutes 21 sets, above the 20 band.
+- GetWorkout Studio's published link does not yet match `design/studio.html` (the generator boards and the AreaPicker card): publish it from the owner's account (a session on another account cannot open the artifact).
 - The first rating of the exercises and the seed rules are the Architect's; the owner tunes them in the panel.
-- Worktrees `apps/get_workout-gen-*` and `apps/get_workout-engine` and their merged branches can be removed.
 
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
