@@ -819,12 +819,19 @@ its own panel; every page drawn on a canvas and picked before it is built)
 
 Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature notes › Programs, "Program generator, rebuild")
 - [x] Generator engine and rules — the engine in `functions/src/generator`, the rules seed `content/generator/rules.json`, `generatorTier` and `stressAreas` on every exercise — standard answers give programs the owner accepts from a printed set
-- [ ] Generator callables — `generateProgram`, the rules callables, `generator/options`, Firestore rules, deployed to dev — a Premium user gets a program, a free one is refused
-- [ ] Generator in the app — the profile page plus one page per new question (five to seven pages), the server call, preview, save; the on-device engine and the leave-out picker go — a program is generated, edited and saved on the simulator; offline says so
+- [x] Generator callables — `generateProgram`, the rules callables, `generator/options`, Firestore rules, deployed to dev — a Premium user gets a program, a free one is refused
+- [x] Generator in the app — the profile page plus one page per new question (five to seven pages), the server call, preview, save; the on-device engine and the leave-out picker go — a program is generated, edited and saved on the simulator; offline says so
 - [x] Admin, exercise fields — generator tier and stress areas in the exercise editor, as table columns and filters
 - [x] Admin, generator rules — splits and templates, dosing, volume, selection, focus; review and publish, version history and restore — a published change shows in the next generated program
 - [x] Admin, generator simulator — answers in, the program out with why each exercise was picked, with the published or the unpublished rules
 - [ ] Generator on prod — functions, rules and content deployed, checked with a Premium account
+
+Where Group 14 stands (2026-11-22): everything is merged (#221, #222, #224-#230). Dev and prod both have the five generator functions, the Firestore rule, the admin panel, the rated exercises and rules version 1 (seeded by the import). Left:
+- Generator on prod is unticked until a Premium account has generated a program on prod (the app, or the panel's Simulator); the store build still has the on-device engine, the new flow ships with the next build.
+- Not yet tried anywhere but in tests: publishing a rules change, the history and restore, the tab-close warning, the app's offline state on a device; the Volume, Selection and Areas tabs were not opened in a browser.
+- GetWorkout Studio's published link does not yet match `design/studio.html` (the generator boards and the AreaPicker card): publish it.
+- The first rating of the exercises and the seed rules are the Architect's; the owner tunes them in the panel.
+- Worktrees `apps/get_workout-gen-*` and `apps/get_workout-engine` and their merged branches can be removed.
 
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
