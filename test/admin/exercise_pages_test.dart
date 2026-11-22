@@ -17,6 +17,7 @@ import 'package:get_workout/admin/exercises/presentation/exercise_list_page.dart
 import 'package:get_workout/admin/programs/domain/admin_program_repository.dart';
 import 'package:get_workout/admin/programs/domain/program_admin_usecases.dart';
 import 'package:get_workout/features/exercises/domain/content_rules.dart';
+import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
@@ -60,12 +61,8 @@ void main() {
       ...allowedKeys.difference({'l10n'}),
       for (final key in allowedTextKeys) 'l10n.en.$key',
     };
-    // Status is set by the save bar, not a field. The generator's fields
-    // have no input yet: the draft carries them.
-    expect(
-      exerciseEditorFields.keys.toSet(),
-      known.difference({'status', 'generatorTier', 'stressAreas'}),
-    );
+    // Status is set by the save bar, not a field.
+    expect(exerciseEditorFields.keys.toSet(), known.difference({'status'}));
   });
 
   testWidgets('the list filters by status from the filter column', (
@@ -121,19 +118,69 @@ void main() {
     );
   });
 
+  void registerEditor() =>
+      sl.registerFactoryParam<ExerciseEditorCubit, String?, void>(
+        (id, _) => ExerciseEditorCubit(
+          id: id,
+          loadExerciseRecord: LoadExerciseRecord(repository),
+          watchExerciseRecords: WatchExerciseRecords(repository),
+          createExercise: CreateExercise(repository),
+          updateExercise: UpdateExercise(repository),
+          checkAdminAccess: CheckAdminAccess(MockAccessRepository()),
+        ),
+      );
+
+  testWidgets('the Generator tab edits the tier and the stress areas', (
+    tester,
+  ) async {
+    registerEditor();
+    addTearDown(sl.reset);
+    await pumpPage(tester, const ExerciseEditorPage(id: 'ex_dumbbell_press'));
+    library.add([press, curl]);
+    await tester.pumpAndSettle();
+
+    // The test font's wide glyphs push the last tab out of the bar.
+    await tester.ensureVisible(find.text('Generator'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Generator'));
+    await tester.pumpAndSettle();
+
+    for (final meaning in [
+      'A first choice for its slot.',
+      'A good alternative.',
+      'Only when nothing better fits the equipment.',
+      'The generator does not use it.',
+    ]) {
+      expect(find.text(meaning), findsOneWidget);
+    }
+    expect(find.byType(RadioMark), findsNWidgets(4));
+    // The press has no tier yet.
+    expect(find.text('Not rated: counts as standard.'), findsOneWidget);
+    expect(find.byType(FilterChip), findsNWidgets(5));
+
+    final cubit = BlocProvider.of<ExerciseEditorCubit>(
+      tester.element(find.text('Stress areas')),
+    );
+    await tester.tap(find.text('Fallback'));
+    await tester.pump();
+    expect(cubit.state.draft.generatorTier, GeneratorTier.fallback);
+    expect(find.text('Not rated: counts as standard.'), findsNothing);
+
+    await tester.tap(find.text('Knees'));
+    await tester.pump();
+    await tester.tap(find.text('Elbows and wrists'));
+    await tester.pump();
+    expect(cubit.state.draft.stressAreas, [
+      SensitiveArea.elbowsWrists,
+      SensitiveArea.knees,
+    ]);
+    expect(cubit.state.isDirty, isTrue);
+  });
+
   testWidgets('a problem line opens its tab and focuses its field', (
     tester,
   ) async {
-    sl.registerFactoryParam<ExerciseEditorCubit, String?, void>(
-      (id, _) => ExerciseEditorCubit(
-        id: id,
-        loadExerciseRecord: LoadExerciseRecord(repository),
-        watchExerciseRecords: WatchExerciseRecords(repository),
-        createExercise: CreateExercise(repository),
-        updateExercise: UpdateExercise(repository),
-        checkAdminAccess: CheckAdminAccess(MockAccessRepository()),
-      ),
-    );
+    registerEditor();
     addTearDown(sl.reset);
     await pumpPage(tester, const ExerciseEditorPage(id: 'ex_dumbbell_press'));
     library.add([press, curl]);

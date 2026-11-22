@@ -254,6 +254,60 @@ void main() {
       ]);
     });
 
+    test('saves the generator tier and stress areas', () async {
+      final cubit = await open('ex_dumbbell_press');
+      cubit.change((d) => d.copyWith(generatorTier: GeneratorTier.staple));
+      expect(cubit.state.isDirty, isTrue);
+      cubit.change(
+        (d) => d.copyWith(
+          stressAreas: [SensitiveArea.shoulders, SensitiveArea.elbowsWrists],
+        ),
+      );
+
+      await cubit.save();
+
+      final saved =
+          verify(
+                () =>
+                    repository.update(captureAny(), loadedUpdatedAt: loadedAt),
+              ).captured.single
+              as ExerciseDraft;
+      expect(saved.toJson(), {
+        ...press.draft.toJson(),
+        'generatorTier': 'staple',
+        'stressAreas': ['shoulders', 'elbows_wrists'],
+      });
+      expect(cubit.state.status, EditorStatus.saved);
+      expect(cubit.state.isDirty, isFalse);
+    });
+
+    test('cleared stress areas are left out of what is written', () async {
+      when(() => repository.load('ex_dumbbell_press')).thenAnswer(
+        (_) async => Ok(
+          record(
+            validJson()
+              ..['generatorTier'] = 'fallback'
+              ..['stressAreas'] = ['knees'],
+            updatedAt: loadedAt,
+          ),
+        ),
+      );
+      final cubit = await open('ex_dumbbell_press');
+      cubit.change((d) => d.copyWith(stressAreas: []));
+      expect(cubit.state.isDirty, isTrue);
+
+      await cubit.save();
+
+      final saved =
+          verify(
+                () =>
+                    repository.update(captureAny(), loadedUpdatedAt: loadedAt),
+              ).captured.single
+              as ExerciseDraft;
+      expect(saved.toJson(), isNot(contains('stressAreas')));
+      expect(saved.toJson()['generatorTier'], 'fallback');
+    });
+
     test('an unweighted logging type drops the increment', () async {
       final cubit = await open('ex_dumbbell_press');
       cubit.change((d) => d.copyWith(loggingType: LoggingType.reps));
