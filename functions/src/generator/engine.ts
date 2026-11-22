@@ -512,18 +512,18 @@ export function generate(input: Input): Result {
     });
   });
 
+  /** Whether [placed] would take one of its main muscles past its cap. */
+  const overCap = (placed: Placed) => {
+    const sets = weekly();
+    return placed.exercise.mainMuscles.some(
+      (m) => (sets[m] ?? 0) + placed.item.sets > cap(m),
+    );
+  };
+
   /** Adds [placed] to [day] unless the day, the session or a muscle's cap
    * has no room for it. */
   const addIfRoom = (day: Day, placed: Placed) => {
-    const sets = weekly();
-    if (
-      day.placed.length >= MAX_ITEMS ||
-      placed.exercise.mainMuscles.some(
-        (m) => (sets[m] ?? 0) + placed.item.sets > cap(m),
-      )
-    ) {
-      return false;
-    }
+    if (day.placed.length >= MAX_ITEMS || overCap(placed)) return false;
     day.placed.push(placed);
     if (cost(day) <= budget) return true;
     day.placed.pop();
@@ -644,6 +644,17 @@ export function generate(input: Input): Result {
       day.placed.splice(day.placed.indexOf(last), 1);
     }
   }
+  // Days repeated for a left-out area can stack a muscle past its cap:
+  // the latest days give up such slots while they keep their few exercises.
+  for (const day of [...days].reverse()) {
+    for (const placed of inOrder(day).reverse()) {
+      if (placed.fixed || day.placed.length <= MIN_EXERCISES) continue;
+      const sets = weekly();
+      if (placed.exercise.mainMuscles.some((m) => (sets[m] ?? 0) > cap(m))) {
+        day.placed.splice(day.placed.indexOf(placed), 1);
+      }
+    }
+  }
   // Focus muscles get their sets before the session fills up.
   raise(false, focusMuscles);
   fill(2);
@@ -651,6 +662,24 @@ export function generate(input: Input): Result {
   raise(false);
   addFocusWork();
   fill(3);
+  raise(false);
+  // A targeted muscle no slot trains directly (its slots sat on days that
+  // gave their place away, or nothing fitted them) gets one accessory
+  // exercise on the shortest day that has room.
+  for (const muscle of MUSCLES) {
+    if (target(muscle) <= 0) continue;
+    if (days.some((d) => d.placed.some((p) => p.exercise.mainMuscles.includes(muscle)))) {
+      continue;
+    }
+    for (const day of [...days].sort((a, b) => cost(a) - cost(b))) {
+      const placed = place(
+        day,
+        { role: "accessory", pick: { muscles: [muscle] }, priority: 2 },
+        day.template.slots.length + 200 + day.placed.length,
+      );
+      if (placed && addIfRoom(day, placed)) break;
+    }
+  }
   raise(false);
   raise(true);
 
