@@ -60,8 +60,12 @@ void main() {
       ...allowedKeys.difference({'l10n'}),
       for (final key in allowedTextKeys) 'l10n.en.$key',
     };
-    // Status is set by the save bar, not a field.
-    expect(exerciseEditorFields.keys.toSet(), known.difference({'status'}));
+    // Status is set by the save bar, not a field. The generator's fields
+    // have no input yet: the draft carries them.
+    expect(
+      exerciseEditorFields.keys.toSet(),
+      known.difference({'status', 'generatorTier', 'stressAreas'}),
+    );
   });
 
   testWidgets('the list filters by status from the filter column', (
