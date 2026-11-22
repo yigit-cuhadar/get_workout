@@ -40,6 +40,8 @@ void main() {
     expect(tsList(source, 'MECHANICS'), codes(Mechanic.values));
     expect(tsList(source, 'GENERATOR_TIERS'), codes(GeneratorTier.values));
     expect(tsList(source, 'SENSITIVE_AREAS'), codes(SensitiveArea.values));
+    expect(tsList(source, 'FOCUS_AREAS'), codes(FocusArea.values));
+    expect(tsList(source, 'EQUIPMENT_STYLES'), codes(EquipmentStyle.values));
   });
 
   test('its logging types are the app\'s', () {
@@ -75,6 +77,10 @@ void main() {
       for (final profile in EquipmentProfile.values)
         profile.code: {for (final e in profile.equipment) e.code},
     });
+  });
+
+  test('its slot roles are the admin panel\'s', () {
+    expect(tsList(source, 'SLOT_ROLES'), codes(SlotRole.values));
   });
 
   test('its days per week are onboarding\'s', () {

@@ -9,6 +9,7 @@ import 'announcements/announcement_admin_module.dart';
 import 'app_settings/app_settings_admin_module.dart';
 import 'dashboard/dashboard_admin_module.dart';
 import 'exercises/exercise_admin_module.dart';
+import 'generator/generator_admin_module.dart';
 import 'programs/program_admin_module.dart';
 import 'support/support_admin_module.dart';
 import 'users/user_admin_module.dart';
@@ -28,6 +29,7 @@ Future<void> bootstrapAdmin(AppEnv env, FirebaseOptions options) async {
     UserAdminModule(),
     ExerciseAdminModule(),
     ProgramAdminModule(),
+    GeneratorAdminModule(),
     AnnouncementAdminModule(),
     SupportAdminModule(),
     AppSettingsAdminModule(),
