@@ -86,6 +86,39 @@ void main() {
     await stub.server.close(force: true);
   });
 
+  group('getDocument', () {
+    test('returns the fields, or null when there is no document', () async {
+      stub.responses.addAll([
+        (
+          200,
+          _document('u', {
+            'name': {'stringValue': 'x'},
+          }),
+        ),
+        (200, _document('v', null)),
+        (404, _error(404, 'NOT_FOUND')),
+      ]);
+
+      expect(await firestore.getDocument('users/u'), {
+        'name': {'stringValue': 'x'},
+      });
+      expect(await firestore.getDocument('users/v'), isEmpty);
+      expect(await firestore.getDocument('users/w'), isNull);
+      expect(
+        stub.requests.first.uri.path,
+        '/v1/projects/demo/databases/(default)/documents/users/u',
+      );
+    });
+
+    test('fails on other errors', () async {
+      stub.responses.add((403, _error(403, 'PERMISSION_DENIED')));
+      final error = await _thrown<FirestoreApiException>(
+        firestore.getDocument('users/u'),
+      );
+      expect(error.status, 403);
+    });
+  });
+
   group('listDocuments', () {
     test('follows nextPageToken and keeps documents without fields', () async {
       stub.responses.addAll([

@@ -112,6 +112,19 @@ class FirestoreRest {
     return result;
   }
 
+  /// The raw REST `fields` of the document at [path] (below `documents/`),
+  /// or null when there is none.
+  Future<Map<String, Object?>?> getDocument(String path) async {
+    final uri = _base.replace(path: '/v1/$databasePath/documents/$path');
+    try {
+      final document = await _send('GET', uri);
+      return document['fields'] as Map<String, Object?>? ?? const {};
+    } on FirestoreApiException catch (e) {
+      if (e.status == HttpStatus.notFound) return null;
+      rethrow;
+    }
+  }
+
   /// Applies [writes] atomically in one `documents:commit` call.
   Future<void> commit(List<Map<String, Object?>> writes) async {
     final uri = _base.replace(path: '/v1/$databasePath/documents:commit');
