@@ -1613,7 +1613,7 @@
   "generatorSwap": "Swap for a similar one",
   "generatorKeep": "Keep when regenerating",
   "generatorChangeTargets": "Change sets and reps",
-  "generatorUncovered": "No exercise fits your answers for: {muscles}",
+  "generatorUncovered": "No exercise trains these directly: {muscles}",
   "@generatorUncovered": {"placeholders": {"muscles": {"type": "String"}}},
   "generatorWeeklySets": "Weekly sets",
   "generatorRegenerate": "Regenerate",
