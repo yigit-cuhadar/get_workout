@@ -119,6 +119,40 @@ void main() {
     await app.stop(tester);
   });
 
+  testWidgets('the first Start on a device that already notifies asks '
+      'nothing and turns rest alerts on', (tester) async {
+    final app =
+        TrainingWorld(
+            exercises: exercises,
+            settings: UserSettings(
+              weightUnit: WeightUnit.kg,
+              lengthUnit: LengthUnit.cm,
+              warmups: const WarmupSettings(scheme: WarmupScheme.off),
+              seenTips: Tip.values.toSet(),
+            ),
+          )
+          ..notificationsAskedHere = false
+          ..notificationsAllowed = true;
+    app.programs
+      ..add(upperLower)
+      ..active = ActiveProgram(
+        programId: 'p1',
+        schedule: const {1: 0, 3: 1},
+        nextDayIndex: 1,
+        nextDate: dateOf(flowStart),
+        startedAt: DateTime(2026, 11, 2),
+      );
+    await app.start(tester);
+
+    await tapText(tester, 'Start Lower');
+    expect(find.text('Get alerts when rest ends?'), findsNothing);
+    expect(find.byType(WorkoutPage), findsOneWidget);
+    expect(app.savedSettings?.restTimer.notify, isTrue);
+    expect(app.notificationsAskedHere, isTrue);
+
+    await app.stop(tester);
+  });
+
   testWidgets('a workout left open 4 h ends at its last set, its summary '
       'offering Edit', (tester) async {
     final app = world(restTimer: false);

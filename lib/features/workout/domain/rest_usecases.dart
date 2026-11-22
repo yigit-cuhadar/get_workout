@@ -13,21 +13,38 @@ typedef RestNotice = ({
   RestAlert alert,
 });
 
-/// Whether to ask the user, in the app, about the rest notification, given
-/// their [wish]: never after a no, never twice on one device, and not
-/// when they said yes and this device already allows it. The device itself
-/// is only asked once they answer ([AllowRestNotifications]), never on its
-/// own. A failure to tell asks nothing.
+/// What to do about the rest notification as a workout starts.
+enum RestNotifyAsk {
+  /// Nothing to ask.
+  none,
+
+  /// Ask the user in the app.
+  ask,
+
+  /// Take it as a yes without asking: the user never answered and this
+  /// device already allows notifications (e.g. from onboarding).
+  allow,
+}
+
+/// What to do about the rest notification, given the user's [wish]: never
+/// ask after a no, nor twice on one device, nor when they said yes and this
+/// device already allows it; with no wish on a device that already allows
+/// it, a yes without asking. The device itself is only asked once they
+/// answer ([AllowRestNotifications]), never on its own. A failure to tell
+/// whether the device was asked asks nothing.
 class ShouldAskRestNotifications {
   const ShouldAskRestNotifications(this._notifications);
   final RestNotifications _notifications;
 
-  Future<bool> call(bool? wish) async {
-    if (wish == false) return false;
+  Future<RestNotifyAsk> call(bool? wish) async {
+    if (wish == false) return RestNotifyAsk.none;
     final asked = await _notifications.askedHere();
-    if (asked.valueOrNull != false) return false;
-    if (wish == null) return true;
-    return (await _notifications.allowed()).valueOrNull == false;
+    if (asked.valueOrNull != false) return RestNotifyAsk.none;
+    final allowed = (await _notifications.allowed()).valueOrNull;
+    if (wish == null) {
+      return allowed == true ? RestNotifyAsk.allow : RestNotifyAsk.ask;
+    }
+    return allowed == false ? RestNotifyAsk.ask : RestNotifyAsk.none;
   }
 }
 
