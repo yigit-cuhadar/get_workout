@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:get_workout/features/calendar/presentation/calendar_marks.dart';

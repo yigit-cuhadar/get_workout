@@ -361,14 +361,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.8"
-  cupertino_icons:
-    dependency: transitive
-    description:
-      name: cupertino_icons
-      sha256: "41e005c33bd814be4d3096aff55b1908d419fde52ca656c8c47719ec745873cd"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.9"
   cupertino_ui:
     dependency: transitive
     description:
@@ -745,8 +737,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_app_gate"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -754,8 +746,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_auth"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -763,8 +755,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_camera"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -772,8 +764,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_core"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -781,8 +773,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_firebase"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -790,8 +782,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_health"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -799,8 +791,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_model_viewer"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.1"
@@ -808,8 +800,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_notifications"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -817,8 +809,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_purchases"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -826,8 +818,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_remote_config"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -835,8 +827,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/forge_review"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -844,8 +836,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_ui"
-      ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
-      resolved-ref: "5c55f12219fef4ebfea54cbadf239acb58681494"
+      ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
+      resolved-ref: fdd77d56fffa41fa693f37854a34d524bd1dee67
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -863,7 +855,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.0.0+1"
+    version: "1.0.0+2"
   glob:
     dependency: transitive
     description:
@@ -892,10 +884,10 @@ packages:
     dependency: transitive
     description:
       name: health
-      sha256: "8dd9625c9c26379a5753ad24c33af1d3dc5ce1f36f19c03e17c676c2f8fdbb80"
+      sha256: "683d15fdde49a942bacce871faf3090bda3c1f5dad995725337aeb1dfd348e6d"
       url: "https://pub.dev"
     source: hosted
-    version: "13.3.2"
+    version: "14.0.0"
   hooks:
     dependency: transitive
     description:
@@ -1040,6 +1032,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.0"
+  listen:
+    dependency: transitive
+    description:
+      name: listen
+      sha256: "47501a08016a43fcad79252439d723f50f14f88fa7bfd8a177e0a417e5c9e1f2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   logging:
     dependency: transitive
     description:
@@ -1065,13 +1065,13 @@ packages:
     source: hosted
     version: "0.13.0"
   material_ui:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: material_ui
-      sha256: "474c135fd46b56ff1d35ca982155e8863d28fbc6464d1192acf4ee53a738680e"
+      sha256: a6b19012df437a356cbc01f8ea22a105e07194c47c9a6009da0032a0ce35c4ab
       url: "https://pub.dev"
     source: hosted
-    version: "1.11.0"
+    version: "1.11.1"
   meta:
     dependency: transitive
     description:
@@ -1449,10 +1449,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: "2a122cbe059f8b610d3a5415f42e255b6c17b1f21eee1d960f31080237fb4f11"
+      sha256: "0a10344e901e5b2e63819567951cb6a06673ed6b84f40462188ff5a0c41f371f"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.12"
+    version: "0.7.14"
   timezone:
     dependency: transitive
     description:
@@ -1545,10 +1545,10 @@ packages:
     dependency: transitive
     description:
       name: vector_math
-      sha256: "1d774bbdf6b72a0b12122fc1560c9c2d2a67db5a4a4cc2bd8a5c990ab20e3188"
+      sha256: fa49e1674cb84acb900141714e6c6e1f9ae099827c24d141430ff6819db4e1bc
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.0"
+    version: "2.4.4"
   vm_service:
     dependency: transitive
     description:
@@ -1670,5 +1670,5 @@ packages:
     source: hosted
     version: "3.1.4"
 sdks:
-  dart: ">=3.13.1 <4.0.0"
-  flutter: ">=3.47.0"
+  dart: ">=3.14.0 <4.0.0"
+  flutter: ">=3.50.0"

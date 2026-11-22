@@ -17,6 +17,9 @@ analyzer:
     - linux/**
     - third_party/**
     - widgetbook/**
+    # Flutter's gen-l10n still emits the deprecated flutter_localizations
+    # delegates under 3.50.
+    - lib/l10n/app_localizations*.dart
 
 linter:
   rules:

@@ -10,7 +10,7 @@ import 'package:get_workout/features/progress/domain/progress_usecases.dart';
 import 'package:get_workout/features/progress/presentation/progress_page.dart';
 import 'package:get_workout/features/progress/presentation/progress_strength_cubit.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';

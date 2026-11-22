@@ -1,5 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
@@ -69,7 +69,7 @@ void main() {
   late _DetailCubit detail;
   late int paywalls;
 
-  setUp(() {
+  setUp(() async {
     paywalls = 0;
     detail = _DetailCubit();
     when(() => detail.copy(any(), schedule: any(named: 'schedule')))
@@ -142,7 +142,7 @@ void main() {
     addTearDown(router.dispose);
     // The page provides the app-wide catalogue itself.
     if (sl.isRegistered<ProgramCatalogueCubit>()) {
-      sl.unregister<ProgramCatalogueCubit>();
+      await sl.unregister<ProgramCatalogueCubit>();
     }
     sl.registerSingleton<ProgramCatalogueCubit>(catalogue);
     await tester.pumpWidget(
@@ -163,8 +163,11 @@ void main() {
     await tester.pump();
   }
 
-  Future<void> settle(WidgetTester tester) =>
-      tester.pump(const Duration(seconds: 1));
+  // A route change lands a frame after the tap, then its transition runs.
+  Future<void> settle(WidgetTester tester) async {
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+  }
 
   CatalogueDetailState ready({UseStatus useStatus = UseStatus.ready}) =>
       CatalogueDetailState(

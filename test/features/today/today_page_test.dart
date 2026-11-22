@@ -1,5 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
@@ -219,7 +219,7 @@ void main() {
 
   testWidgets('opened on a third day, Today asks for a review; Not really '
       'leads to the feedback form', (tester) async {
-    sl.unregister<ReviewPromptCubit>();
+    await sl.unregister<ReviewPromptCubit>();
     review = registerReviewPrompt(
       history: ReviewHistory(openDays: 2, lastOpenDay: DateTime(2000)),
     );
@@ -236,7 +236,7 @@ void main() {
 
   testWidgets('a day already counted asks nothing', (tester) async {
     final now = DateTime.now();
-    sl.unregister<ReviewPromptCubit>();
+    await sl.unregister<ReviewPromptCubit>();
     review = registerReviewPrompt(
       history: ReviewHistory(
         openDays: 2,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:forge_ui/forge_ui.dart';
 
 /// One row of a [CalculatorResult]: its [label] and [value], and a muted
