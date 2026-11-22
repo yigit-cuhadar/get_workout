@@ -3562,7 +3562,13 @@ the feature you are about to touch, and keep it true when you change it.
        (handing their exercise to the slot's `key`), or stand as extra;
        their exercise, sets and reps stay, even when the day then runs
        past the session; rest and grouping are set as for any slot.
-    A day never has more than 20 items, the app's limit.
+    A day never has more than 20 items, the app's limit. Two late
+    passes keep an unusual week sound: when repeated days stack a muscle
+    past its cap, the latest days give up such priority 1 slots while
+    they keep three exercises; and a targeted muscle nothing trains
+    directly (its slots sat on days that gave their place away, or
+    nothing fitted them) gets one accessory exercise on the shortest day
+    with room.
     The result names the muscles with a target and no direct work
     (`uncovered`); with `explain`, each item's slot, score parts and the
     next best candidates.

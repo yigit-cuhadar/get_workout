@@ -213,6 +213,23 @@ describe("the seed rules with the content library", () => {
     );
   });
 
+  test("without legs the abs and glutes still get direct work, inside the caps", () => {
+    const value = program({ skip: ["legs"], focus: ["chest"] });
+    assert.ok(!value.uncovered.includes("abdominal"));
+    assert.ok(!value.uncovered.includes("glute"));
+    const cap = seed.volume.cap.intermediate;
+    const direct: { [m: string]: number } = {};
+    for (const day of value.days) {
+      for (const item of day.items) {
+        for (const m of exercise(item.exerciseId).mainMuscles) {
+          direct[m] = (direct[m] ?? 0) + item.sets;
+        }
+      }
+    }
+    // Four upper days at their fewest sets would give the lats 24.
+    assert.ok(direct.lat < 24 && direct.lat <= cap + 3, `lat ${direct.lat}`);
+  });
+
   test("leaving out every area a template trains is refused", () => {
     const r: Rules = { ...seed, skip: { ...seed.skip, max: 6 } };
     assert.deepEqual(
@@ -495,8 +512,12 @@ describe("generate, with small rules", () => {
       const r = rules([{ ...squat, priority: 1 }], {}, ["biceps"]);
       const ids = (changes: Partial<Answers>) =>
         run(r, [ex("a"), curl], changes).flat().map((item) => item.exerciseId);
-      assert.ok(!ids({}).includes("curl"));
-      assert.ok(ids(arms).includes("curl"));
+      // Without the focus the biceps get the one exercise every targeted
+      // muscle is owed; with it, one on each day listing them.
+      const curls = (changes: Partial<Answers>) =>
+        ids(changes).filter((id) => id === "curl").length;
+      assert.equal(curls({}), 1);
+      assert.equal(curls(arms), 2);
     });
 
     test("its target and cap rise by the extra sets", () => {
