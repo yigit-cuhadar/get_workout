@@ -1954,6 +1954,13 @@ Decisions (the canvases they were drawn on are deleted):
   suggestion is the best match even when premium, with the Premium tag,
   Start through the paywall. Added by the owner: closing that paywall
   passes the suggestion without a second (onboarding) paywall.
+- Test findings (2026-11-22), canvas
+  https://claude.ai/artifact/QuWYHPgfjm3cqTpV9eNai3: G1 B (cardio card says
+  No cardio this week. with Log cardio when Health is connected), G2 B
+  (confirm Log {weight}? when more than double the last set), G3 B
+  (ProgramCard name wraps beside its tags, Forge), G4 unchanged (Clear all
+  keeps its own row); the Next/Done keyboard bar above set entry is
+  removed (owner, Forge StepperField).
 ## Open questions
 
 - Google sign-in is offered next to email (`socialProviders` in
@@ -2954,6 +2961,11 @@ the feature you are about to touch, and keep it true when you change it.
   (`QuestionScaffold`, `QuestionLayout`, `ChoiceAnswer` in
   `lib/core/question_page.dart`; `EquipmentAnswer` in
   `profile_questions.dart`).
+  Finishing onboarding also logs the weight answer as the user's first
+  weigh-in, dated then (`CompleteOnboarding` through the body feature's
+  `LogWeighIn`, which saves it with `SaveBodyEntry`), so Body is not empty
+  afterwards; nothing is logged when the user already has a weigh-in that
+  day, so a retry never adds a second one.
 - **Days per week recommendation** (DW1 C, DW2 A, DW3 A; canvas under
   Design): "How many days a week can you train?" recommends the days most
   lifters at the user's level train (`Level.recommendedDaysPerWeek`:
@@ -3687,6 +3699,15 @@ the feature you are about to touch, and keep it true when you change it.
   Effort scale. Sets
   take a note of up to 200 characters. Durations are typed in seconds; a
   minutes and seconds input is left to the design phase.
+  Implausible weight (G2 B): Log set on a weight more than double the
+  reference asks first, a Forge dialog "Log 185 kg?" / "That's far more
+  than your last set (82.5 kg)." with Log 185 kg (logs it) and Fix the
+  weight (closes, the set stays unlogged), in the user's unit. The
+  reference is the closest done set of the same type and exercise before
+  it in this workout that has a weight, as hints follow (so a working set
+  is never held against a warm-up), else the same working set last time;
+  with neither, or a reference of 0, nothing is checked
+  (`implausibleWeightReference`, `set_logging.dart`). Unticking never asks.
 - **Workout screen**: shared by the workout in progress and editing a
   stored or past workout. One card per exercise, or per superset/circuit;
   only the card of the selected set is open (name, goal, last time, note,
@@ -3962,7 +3983,10 @@ the feature you are about to touch, and keep it true when you change it.
   S7; closing it is a Not now), before the workout opens (K3 B),
   only while the rest timer is on, unless they said no or said yes and the
   device already allows it; the system is asked only after "Allow", never
-  on its own. "Not now" is remembered on that device only (a marker file
+  on its own. With no answer yet on a device that already allows
+  notifications (e.g. allowed in onboarding), nothing is asked: Start
+  takes it as an "Allow" (the wish is stored on and the device marked
+  asked, as "Allow" would; `RestNotifyAsk.allow`). "Not now" is remembered on that device only (a marker file
   in app support), so other devices still ask; a device refusal leaves
   the wish, so devices that allow it still notify. "Allow" then asks, on
   Android, for exact alarms (without them the notification falls back to
@@ -4434,6 +4458,8 @@ the feature you are about to touch, and keep it true when you change it.
   Both sides of a pair (upper arm, forearm, thigh, calf) that are steps
   share one step with a Left and a Right field, skipped or cleared field
   by field as above; entry and compare show them on one row (L / R).
+  `LogWeighIn` logs a weight given elsewhere (onboarding's) as a quick
+  weigh-in dated now, unless that day already has a weigh-in.
 - **Body page** (UX pass, 2026-11-13; screen step 2026-11-16): two views
   behind one segmented control. Overview: three boxes, one chart (range
   control only with entries older than 2 weeks; 2 weeks free), Log
