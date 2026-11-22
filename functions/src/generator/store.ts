@@ -181,6 +181,7 @@ export async function checkRules(
               sessionMinutes: CHECK_MINUTES,
               equipment,
               focus: [],
+              skip: [],
               sensitive: [],
               equipmentStyle: "any",
             },

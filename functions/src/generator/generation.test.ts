@@ -82,6 +82,7 @@ const answers = (changes: { [key: string]: unknown } = {}) => ({
   sessionMinutes: 60,
   equipment: ["pull_up_bar"],
   focus: [],
+  skip: [],
   sensitive: [],
   equipmentStyle: "any",
   ...changes,
@@ -291,6 +292,19 @@ describe("generateFor", () => {
             ),
           }),
         },
+      ],
+      ["answers.skip", { answers: answers({ skip: ["wings"] }) }],
+      [
+        "answers.skip",
+        {
+          answers: answers({
+            skip: ["chest", "back", "arms", "legs"].slice(0, seed.skip.max + 1),
+          }),
+        },
+      ],
+      [
+        "answers.skip",
+        { answers: answers({ focus: ["legs"], skip: ["legs"] }) },
       ],
       ["answers.sensitive", { answers: answers({ sensitive: "knees" }) }],
       ["answers.equipmentStyle", { answers: answers({ equipmentStyle: "" }) }],

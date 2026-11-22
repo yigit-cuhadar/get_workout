@@ -348,7 +348,9 @@ readable by admins.
 
 **`generator/rules`** (the program generator's rules; Admin SDK only, no
 client reads or writes it): `version` (int, from 1), `publishedAt`,
-`publishedBy` (uid), `publishedByEmail`, `note?`, `rules` (below). Every
+`publishedBy` (uid, or `import` for the seed), `publishedByEmail`,
+`note?`, `restores?` (the version a restore brought back), `rules`
+(below). Every
 publish also stores the same document as `generator/rules/versions/{n}`,
 never changed afterwards. Seeded from `content/generator/rules.json`.
 
@@ -532,8 +534,8 @@ only, JPEG, max 5 MB.
   `{answers: {goal, level, daysPerWeek, sessionMinutes, equipment[],
   focus[], skip[], sensitive[], equipmentStyle, split?}, seed?, kept?,
   lang?}` →
-  `{program: {name, lengthWeeks, days[]}, weeklySets, uncovered[],
-  rulesVersion}`. The published rules are cached in the instance's
+  `{program: {name, lengthWeeks, days[]}, split, template, weeklySets,
+  uncovered[], rulesVersion, trace?}`. The published rules are cached in the instance's
   memory for 60 s, the live exercises for 5 minutes. Signed-in users with
   an active entitlement only
   (`permission-denied`, `details.reason` `not-premium`); an admin always

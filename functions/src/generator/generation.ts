@@ -150,6 +150,10 @@ export function parseGenerate(data: unknown, rules: Rules): GenerateRequest {
   if (focus.length > rules.focus.max) {
     throw invalid("answers.focus", "Too many focus areas.");
   }
+  const skip = codes("answers.skip", a.skip, FOCUS_AREAS);
+  if (skip.length > rules.skip.max || skip.some((s) => focus.includes(s))) {
+    throw invalid("answers.skip", "Too many areas left out, or one in focus.");
+  }
   if (
     a.split !== undefined &&
     !rules.splits.some((split) => split.id === a.split)
@@ -165,6 +169,7 @@ export function parseGenerate(data: unknown, rules: Rules): GenerateRequest {
       (item) => item !== "bodyweight",
     ),
     focus,
+    skip,
     sensitive: codes("answers.sensitive", a.sensitive, SENSITIVE_AREAS),
     equipmentStyle: code<EquipmentStyle>(
       "answers.equipmentStyle",
