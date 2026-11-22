@@ -821,7 +821,7 @@ Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature note
 - [x] Generator engine and rules — the engine in `functions/src/generator`, the rules seed `content/generator/rules.json`, `generatorTier` and `stressAreas` on every exercise — standard answers give programs the owner accepts from a printed set
 - [ ] Generator callables — `generateProgram`, the rules callables, `generator/options`, Firestore rules, deployed to dev — a Premium user gets a program, a free one is refused
 - [ ] Generator in the app — the nine questions, the server call, preview, save; the on-device engine and the leave-out picker go — a program is generated, edited and saved on the simulator; offline says so
-- [ ] Admin, exercise fields — generator tier and stress areas in the exercise editor, as table columns and filters
+- [x] Admin, exercise fields — generator tier and stress areas in the exercise editor, as table columns and filters
 - [ ] Admin, generator rules — splits and templates, dosing, volume, selection, focus; review and publish, version history and restore — a published change shows in the next generated program
 - [ ] Admin, generator simulator — answers in, the program out with why each exercise was picked, with the published or the unpublished rules
 - [ ] Generator on prod — functions, rules and content deployed, checked with a Premium account
@@ -3577,10 +3577,12 @@ the feature you are about to touch, and keep it true when you change it.
     exercise's facts (2026-11-22: 103 staple, 202 standard, 31 fallback,
     86 never, among them every mobility, explosive and carry exercise)
     and reviewed by the owner in the admin panel. The content rules
-    accept both as optional; the panel's draft carries them until its
-    editor has the fields. Deploy the panel before importing them: an
-    older panel reports `generatorTier` as an unknown field on every
-    exercise.
+    accept both as optional. The panel edits them on the exercise
+    editor's Generator tab (tapping the picked tier clears it: not rated
+    counts as standard) and lists the tier in the table, sorted by tier
+    order (staple, standard, fallback, never; not rated last), not by
+    label. Deploy the panel before importing them: an older panel
+    reports `generatorTier` as an unknown field on every exercise.
   - Rules: one document, versioned (`generator/rules`, Data model); the
     panel edits a draft, checks it on the server and publishes it, as App
     settings does; the validator lives only in the function

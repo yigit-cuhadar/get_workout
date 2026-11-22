@@ -264,6 +264,74 @@ void main() {
     expect(visible(), ['ex_curl', 'ex_curl_two']);
   });
 
+  group('generator tier', () {
+    ExerciseRecord rated(
+      String name,
+      int popularity,
+      String tier, {
+      String status = 'live',
+    }) => record(
+      validJson(
+        id: 'ex_${name.toLowerCase()}',
+        name: name,
+        status: status,
+        popularity: popularity,
+        family: name.toLowerCase(),
+      )..['generatorTier'] = tier,
+    );
+
+    // The press has no tier; the others one each.
+    setUp(() async {
+      records.add([
+        rated('Dip', 9, 'never'),
+        rated('Row', 3, 'fallback'),
+        rated('Curl', 2, 'staple'),
+        press,
+        rated('Fly', 5, 'standard'),
+      ]);
+      await pumpEventQueue();
+    });
+
+    test('filters by each tier and by not rated', () async {
+      final expected = {
+        GeneratorTier.staple: ['ex_curl'],
+        GeneratorTier.standard: ['ex_fly'],
+        GeneratorTier.fallback: ['ex_row'],
+        GeneratorTier.never: ['ex_dip'],
+      };
+      for (final MapEntry(key: tier, value: ids) in expected.entries) {
+        cubit.filterGeneratorTier((tier: tier));
+        expect(visible(), ids, reason: tier.code);
+      }
+      cubit.filterGeneratorTier((tier: null));
+      expect(visible(), ['ex_press']);
+      expect(cubit.state.hasFilters, isTrue);
+
+      // It combines with the other filters: of two staples the status
+      // filter keeps the live one. Clear filters resets it.
+      records.add([
+        rated('Curl', 2, 'staple'),
+        rated('Hang', 7, 'staple', status: 'retired'),
+        press,
+      ]);
+      await pumpEventQueue();
+      cubit.filterGeneratorTier((tier: GeneratorTier.staple));
+      expect(visible(), ['ex_curl', 'ex_hang']);
+      cubit.filterStatus(ExerciseStatus.live);
+      expect(visible(), ['ex_curl']);
+      cubit.clearFilters();
+      expect(cubit.state.generatorTier, isNull);
+      expect(visible(), hasLength(3));
+    });
+
+    test('sorts by the tier order, not rated last either way', () {
+      cubit.sortBy(ExerciseColumn.generatorTier);
+      expect(visible(), ['ex_curl', 'ex_fly', 'ex_row', 'ex_dip', 'ex_press']);
+      cubit.sortBy(ExerciseColumn.generatorTier);
+      expect(visible(), ['ex_dip', 'ex_row', 'ex_fly', 'ex_curl', 'ex_press']);
+    });
+  });
+
   test('a programs stream failure is kept apart', () async {
     programs.addError(const NetworkFailure());
     await pumpEventQueue();

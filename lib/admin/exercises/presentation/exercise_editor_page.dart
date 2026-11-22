@@ -24,7 +24,8 @@ enum ExerciseEditorTab {
   equipment('Equipment'),
   muscles('Muscles'),
   alternatives('Alternatives'),
-  text('Text (English)');
+  text('Text (English)'),
+  generator('Generator');
 
   const ExerciseEditorTab(this.label);
 
@@ -62,6 +63,16 @@ const exerciseEditorFields = <String, (ExerciseEditorTab, String)>{
   'l10n.en.mistakes': (ExerciseEditorTab.text, 'Mistakes'),
   'l10n.en.safety': (ExerciseEditorTab.text, 'Safety'),
   'l10n.en.cues': (ExerciseEditorTab.text, 'Cues'),
+  'generatorTier': (ExerciseEditorTab.generator, 'Generator tier'),
+  'stressAreas': (ExerciseEditorTab.generator, 'Stress areas'),
+};
+
+/// What a generator tier means, under its name.
+String _tierMeaning(GeneratorTier tier) => switch (tier) {
+  GeneratorTier.staple => 'A first choice for its slot.',
+  GeneratorTier.standard => 'A good alternative.',
+  GeneratorTier.fallback => 'Only when nothing better fits the equipment.',
+  GeneratorTier.never => 'The generator does not use it.',
 };
 
 /// Creates an exercise ([id] null) or edits one, a section per tab, with
@@ -676,6 +687,32 @@ class _Section extends StatelessWidget {
           ),
         ],
       ),
+      ExerciseEditorTab.generator => FormSection(
+        title: tab.label,
+        children: [
+          a(
+            'generatorTier',
+            _TierRadios(
+              value: draft.generatorTier,
+              problems: problems('generatorTier'),
+              onChanged: (v) => edit((d) => d.copyWith(generatorTier: v)),
+            ),
+          ),
+          a(
+            'stressAreas',
+            _CodeChips<SensitiveArea>(
+              label: 'Stress areas',
+              helper:
+                  'A user who marks one of these as sensitive never gets '
+                  'this exercise.',
+              values: SensitiveArea.values,
+              selected: draft.stressAreas,
+              problems: problems('stressAreas'),
+              onChanged: (v) => edit((d) => d.copyWith(stressAreas: v)),
+            ),
+          ),
+        ],
+      ),
     };
   }
 
@@ -758,11 +795,15 @@ class _CodeChips<T extends Coded> extends StatelessWidget {
     required this.values,
     required this.selected,
     required this.onChanged,
+    this.helper,
     this.onRemove,
     this.problems = const [],
   });
 
   final String label;
+
+  /// A line under the label on what the choice does.
+  final String? helper;
   final List<T> values;
   final List<T> selected;
   final ValueChanged<List<T>> onChanged;
@@ -787,6 +828,7 @@ class _CodeChips<T extends Coded> extends StatelessWidget {
               ),
           ],
         ),
+        if (helper case final helper?) _Helper(helper),
         const SizedBox(height: Gap.xs),
         Wrap(
           spacing: Gap.xs,
@@ -803,6 +845,77 @@ class _CodeChips<T extends Coded> extends StatelessWidget {
               ),
           ],
         ),
+        FieldProblems(problems),
+      ],
+    );
+  }
+}
+
+/// A muted line under a field's label.
+class _Helper extends StatelessWidget {
+  const _Helper(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    style: Theme.of(context).textTheme.bodySmall
+        ?.copyWith(color: ForgeStyle.of(context).colors.inkMuted),
+  );
+}
+
+/// The generator tier, one row per tier with its meaning; none is picked
+/// while the exercise is not rated, and tapping the picked one clears it.
+class _TierRadios extends StatelessWidget {
+  const _TierRadios({
+    required this.value,
+    required this.onChanged,
+    this.problems = const [],
+  });
+
+  final GeneratorTier? value;
+  final ValueChanged<GeneratorTier?> onChanged;
+  final List<String> problems;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Generator tier', style: text.labelLarge),
+        const _Helper(
+          'How good this exercise is for a generated program, judged among '
+          'exercises of its own equipment.',
+        ),
+        const SizedBox(height: Gap.xs),
+        for (final tier in GeneratorTier.values)
+          Semantics(
+            selected: tier == value,
+            child: InkWell(
+              onTap: () => onChanged(tier == value ? null : tier),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: Gap.xs),
+                child: Row(
+                  spacing: Gap.sm,
+                  children: [
+                    RadioMark(selected: tier == value),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(codeLabel(tier), style: text.labelLarge),
+                          _Helper(_tierMeaning(tier)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        if (value == null) const _Helper('Not rated: counts as standard.'),
         FieldProblems(problems),
       ],
     );

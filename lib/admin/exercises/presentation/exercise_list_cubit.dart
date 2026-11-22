@@ -18,9 +18,14 @@ enum ExerciseColumn {
   mainMuscles,
   equipment,
   family,
+  generatorTier,
   popularity,
   updated,
 }
+
+/// A generator tier filter's value: a tier, or `(tier: null)` for an
+/// exercise not rated.
+typedef TierFilter = ({GeneratorTier? tier});
 
 class ExerciseListState extends Equatable {
   const ExerciseListState({
@@ -39,6 +44,7 @@ class ExerciseListState extends Equatable {
     this.loggingType,
     this.secondaryMuscle,
     this.family,
+    this.generatorTier,
     this.problemsOnly = false,
     this.unusedOnly = false,
     this.sortColumn,
@@ -71,6 +77,7 @@ class ExerciseListState extends Equatable {
   final LoggingType? loggingType;
   final Muscle? secondaryMuscle;
   final String? family;
+  final TierFilter? generatorTier;
 
   /// Only exercises with a [hasProblem].
   final bool problemsOnly;
@@ -125,6 +132,7 @@ class ExerciseListState extends Equatable {
       loggingType != null ||
       secondaryMuscle != null ||
       family != null ||
+      generatorTier != null ||
       problemsOnly ||
       unusedOnly;
 
@@ -154,6 +162,9 @@ class ExerciseListState extends Equatable {
         return false;
       }
       if (family != null && draft.family != family) return false;
+      if (generatorTier case (:final tier) when draft.generatorTier != tier) {
+        return false;
+      }
       if (problemsOnly && !hasProblem(record)) return false;
       if (unusedOnly && !isUnused(record)) return false;
       if (needle.isEmpty) return true;
@@ -185,6 +196,8 @@ class ExerciseListState extends Equatable {
         0 => by((d) => d.familyRank),
         final families => families,
       },
+      // By the tier's order, staple first.
+      ExerciseColumn.generatorTier => by((d) => d.generatorTier?.index),
       ExerciseColumn.popularity => by((d) => d.popularity),
       ExerciseColumn.updated => compareBlanksLast(
         a.updatedAt,
@@ -226,6 +239,7 @@ class ExerciseListState extends Equatable {
     LoggingType? Function()? loggingType,
     Muscle? Function()? secondaryMuscle,
     String? Function()? family,
+    TierFilter? Function()? generatorTier,
     bool? problemsOnly,
     bool? unusedOnly,
     ExerciseColumn? sortColumn,
@@ -252,6 +266,7 @@ class ExerciseListState extends Equatable {
         ? secondaryMuscle()
         : this.secondaryMuscle,
     family: family != null ? family() : this.family,
+    generatorTier: generatorTier != null ? generatorTier() : this.generatorTier,
     problemsOnly: problemsOnly ?? this.problemsOnly,
     unusedOnly: unusedOnly ?? this.unusedOnly,
     sortColumn: sortColumn ?? this.sortColumn,
@@ -287,6 +302,7 @@ class ExerciseListState extends Equatable {
     loggingType,
     secondaryMuscle,
     family,
+    generatorTier,
     problemsOnly,
     unusedOnly,
     sortColumn,
@@ -366,6 +382,9 @@ class ExerciseListCubit extends Cubit<ExerciseListState> {
 
   void filterFamily(String? family) =>
       emit(state.copyWith(family: () => family));
+
+  void filterGeneratorTier(TierFilter? filter) =>
+      emit(state.copyWith(generatorTier: () => filter));
 
   void showProblemsOnly(bool on) => emit(state.copyWith(problemsOnly: on));
 

@@ -171,6 +171,17 @@ class _Filters extends StatelessWidget {
           selected: state.family,
           onChanged: cubit.filterFamily,
         ),
+        FilterDropdown<TierFilter>(
+          label: 'Generator tier',
+          options: [
+            (value: null, label: 'Any'),
+            for (final tier in GeneratorTier.values)
+              (value: (tier: tier), label: codeLabel(tier)),
+            (value: (tier: null), label: 'Not rated'),
+          ],
+          selected: state.generatorTier,
+          onChanged: cubit.filterGeneratorTier,
+        ),
         FilterSwitch(
           label: 'Problems only · ${state.problemCount}',
           value: state.problemsOnly,
@@ -374,6 +385,7 @@ const _columns = [
   ('Main muscles', 2, ExerciseColumn.mainMuscles),
   ('Equipment', 3, ExerciseColumn.equipment),
   ('Family / rank', 2, ExerciseColumn.family),
+  ('Tier', 1, ExerciseColumn.generatorTier),
   ('Popularity', 1, ExerciseColumn.popularity),
   ('Updated', 2, ExerciseColumn.updated),
 ];
@@ -420,6 +432,10 @@ class _ExerciseRow extends StatelessWidget {
           ].join(' | '),
         ),
         Text('${draft.family} / ${draft.familyRank ?? '-'}'),
+        Text(switch (draft.generatorTier) {
+          final tier? => codeLabel(tier),
+          null => '-',
+        }),
         Text('${draft.popularity ?? '-'}'),
         Text(dateTimeLabel(record.updatedAt)),
       ]),

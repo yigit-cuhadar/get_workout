@@ -6,6 +6,8 @@ import '../../features/exercises/domain/vocabulary.dart';
 /// A stored code as a label: `front_delt` → "Front delt". The app has no
 /// localized vocabulary names yet; the codes are the vocabulary.
 String codeLabel(Coded value) {
+  // A code its words alone misread.
+  if (value == SensitiveArea.elbowsWrists) return 'Elbows and wrists';
   final words = value.code.replaceAll('_', ' ');
   return words[0].toUpperCase() + words.substring(1);
 }
