@@ -165,6 +165,13 @@ void main() {
     await tester.pump();
     expect(cubit.state.draft.generatorTier, GeneratorTier.fallback);
     expect(find.text('Not rated: counts as standard.'), findsNothing);
+    // Tapping the picked tier clears it again.
+    await tester.tap(find.text('Fallback'));
+    await tester.pump();
+    expect(cubit.state.draft.generatorTier, isNull);
+    expect(find.text('Not rated: counts as standard.'), findsOneWidget);
+    await tester.tap(find.text('Fallback'));
+    await tester.pump();
 
     await tester.tap(find.text('Knees'));
     await tester.pump();

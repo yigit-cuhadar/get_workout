@@ -67,12 +67,12 @@ const exerciseEditorFields = <String, (ExerciseEditorTab, String)>{
   'stressAreas': (ExerciseEditorTab.generator, 'Stress areas'),
 };
 
-/// What each generator tier means, under its name.
-const _tierMeanings = {
-  GeneratorTier.staple: 'A first choice for its slot.',
-  GeneratorTier.standard: 'A good alternative.',
-  GeneratorTier.fallback: 'Only when nothing better fits the equipment.',
-  GeneratorTier.never: 'The generator does not use it.',
+/// What a generator tier means, under its name.
+String _tierMeaning(GeneratorTier tier) => switch (tier) {
+  GeneratorTier.staple => 'A first choice for its slot.',
+  GeneratorTier.standard => 'A good alternative.',
+  GeneratorTier.fallback => 'Only when nothing better fits the equipment.',
+  GeneratorTier.never => 'The generator does not use it.',
 };
 
 /// Creates an exercise ([id] null) or edits one, a section per tab, with
@@ -866,7 +866,7 @@ class _Helper extends StatelessWidget {
 }
 
 /// The generator tier, one row per tier with its meaning; none is picked
-/// while the exercise is not rated.
+/// while the exercise is not rated, and tapping the picked one clears it.
 class _TierRadios extends StatelessWidget {
   const _TierRadios({
     required this.value,
@@ -875,7 +875,7 @@ class _TierRadios extends StatelessWidget {
   });
 
   final GeneratorTier? value;
-  final ValueChanged<GeneratorTier> onChanged;
+  final ValueChanged<GeneratorTier?> onChanged;
   final List<String> problems;
 
   @override
@@ -894,7 +894,7 @@ class _TierRadios extends StatelessWidget {
           Semantics(
             selected: tier == value,
             child: InkWell(
-              onTap: () => onChanged(tier),
+              onTap: () => onChanged(tier == value ? null : tier),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: Gap.xs),
                 child: Row(
@@ -906,7 +906,7 @@ class _TierRadios extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(codeLabel(tier), style: text.labelLarge),
-                          _Helper(_tierMeanings[tier]!),
+                          _Helper(_tierMeaning(tier)),
                         ],
                       ),
                     ),

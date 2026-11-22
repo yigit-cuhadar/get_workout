@@ -118,7 +118,7 @@ class ExerciseDraft extends Equatable {
   final double? incrementKg;
   final int? popularity;
 
-  /// The generator's fields; the panel carries them until it edits them.
+  /// The generator's fields, edited on the editor's Generator tab.
   final GeneratorTier? generatorTier;
   final List<SensitiveArea> stressAreas;
   final String name;

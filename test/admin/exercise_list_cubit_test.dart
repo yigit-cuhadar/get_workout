@@ -265,10 +265,16 @@ void main() {
   });
 
   group('generator tier', () {
-    ExerciseRecord rated(String name, int popularity, String tier) => record(
+    ExerciseRecord rated(
+      String name,
+      int popularity,
+      String tier, {
+      String status = 'live',
+    }) => record(
       validJson(
         id: 'ex_${name.toLowerCase()}',
         name: name,
+        status: status,
         popularity: popularity,
         family: name.toLowerCase(),
       )..['generatorTier'] = tier,
@@ -286,7 +292,7 @@ void main() {
       await pumpEventQueue();
     });
 
-    test('filters by each tier and by not rated', () {
+    test('filters by each tier and by not rated', () async {
       final expected = {
         GeneratorTier.staple: ['ex_curl'],
         GeneratorTier.standard: ['ex_fly'],
@@ -301,12 +307,21 @@ void main() {
       expect(visible(), ['ex_press']);
       expect(cubit.state.hasFilters, isTrue);
 
-      // It combines with the other filters, and Clear filters resets it.
-      cubit.filterStatus(ExerciseStatus.retired);
-      expect(visible(), isEmpty);
+      // It combines with the other filters: of two staples the status
+      // filter keeps the live one. Clear filters resets it.
+      records.add([
+        rated('Curl', 2, 'staple'),
+        rated('Hang', 7, 'staple', status: 'retired'),
+        press,
+      ]);
+      await pumpEventQueue();
+      cubit.filterGeneratorTier((tier: GeneratorTier.staple));
+      expect(visible(), ['ex_curl', 'ex_hang']);
+      cubit.filterStatus(ExerciseStatus.live);
+      expect(visible(), ['ex_curl']);
       cubit.clearFilters();
       expect(cubit.state.generatorTier, isNull);
-      expect(visible(), hasLength(5));
+      expect(visible(), hasLength(3));
     });
 
     test('sorts by the tier order, not rated last either way', () {
