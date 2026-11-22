@@ -131,6 +131,7 @@ import '../fake_analytics.dart';
 import 'package:get_workout/features/analytics/domain/analytics.dart';
 
 import '../fake_body_model.dart';
+import '../features/body/body_fakes.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -539,7 +540,11 @@ void main() {
     });
     sl
       ..registerFactory(
-        () => CompleteOnboarding(profiles, SaveOwnedEquipment(userLibrary)),
+        () => CompleteOnboarding(
+          profiles,
+          SaveOwnedEquipment(userLibrary),
+          FakeLogWeighIn(),
+        ),
       )
       ..registerFactory(
         () => UpdateProfile(profiles, SaveOwnedEquipment(userLibrary)),

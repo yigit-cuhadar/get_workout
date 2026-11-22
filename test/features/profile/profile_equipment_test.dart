@@ -8,6 +8,8 @@ import 'package:get_workout/features/profile/data/firestore_profile_repository.d
 import 'package:get_workout/features/profile/domain/profile_usecases.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
 
+import '../body/body_fakes.dart';
+
 /// The profile and the exercise library share `profile.equipment` of
 /// `users/{uid}`; the library's repository is its only writer.
 void main() {
@@ -23,7 +25,11 @@ void main() {
     library = FirestoreUserLibraryRepository(firestore);
     final saveEquipment = SaveOwnedEquipment(library);
     updateProfile = UpdateProfile(profiles, saveEquipment);
-    completeOnboarding = CompleteOnboarding(profiles, saveEquipment);
+    completeOnboarding = CompleteOnboarding(
+      profiles,
+      saveEquipment,
+      FakeLogWeighIn(),
+    );
   });
 
   DocumentReference<Map<String, dynamic>> user() =>

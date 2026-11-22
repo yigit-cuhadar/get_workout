@@ -14,6 +14,7 @@ import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../fake_analytics.dart';
+import '../body/body_fakes.dart';
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
 
@@ -22,6 +23,7 @@ class MockUserLibraryRepository extends Mock implements UserLibraryRepository {}
 void main() {
   late MockProfileRepository profiles;
   late MockUserLibraryRepository library;
+  late FakeLogWeighIn logWeighIn;
 
   setUpAll(() {
     registerFallbackValue(const UserProfile());
@@ -35,6 +37,7 @@ void main() {
     telemetry = RecordingTelemetry();
     profiles = MockProfileRepository();
     library = MockUserLibraryRepository();
+    logWeighIn = FakeLogWeighIn();
     when(() => library.saveEquipment(any(), any()))
         .thenAnswer((_) async => const Ok(null));
     when(() => profiles.completeOnboarding(any(), any()))
@@ -51,6 +54,7 @@ void main() {
         completeOnboarding: CompleteOnboarding(
           profiles,
           SaveOwnedEquipment(library),
+          logWeighIn,
         ),
         now: () => DateTime(2026, 11, 11),
       );
@@ -286,6 +290,16 @@ void main() {
       await cubit.next();
 
       verify(() => library.saveEquipment('u1', {Equipment.dumbbell})).called(1);
+    });
+
+    test('the weight given is logged as the first weigh-in', () async {
+      final cubit = onboarding(complete);
+      await goTo(cubit, ProfileField.targetWeight);
+      expect(logWeighIn.logged, isEmpty);
+
+      await cubit.next();
+
+      expect(logWeighIn.logged, [(uid: 'u1', kg: 80.0)]);
     });
 
     test('a failed equipment save fails the completion', () async {

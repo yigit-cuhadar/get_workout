@@ -255,3 +255,14 @@ class BodyPhotoWorld {
     syncProfileWeight(repository, profiles),
   );
 }
+
+/// Records the weigh-ins logged instead of saving them.
+class FakeLogWeighIn implements LogWeighIn {
+  final logged = <WeighIn>[];
+
+  @override
+  Future<Result<void>> call(WeighIn params) async {
+    logged.add(params);
+    return const Ok(null);
+  }
+}

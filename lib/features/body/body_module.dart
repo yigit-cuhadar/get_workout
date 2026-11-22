@@ -92,6 +92,8 @@ class BodyModule implements FeatureModule {
       ..registerFactory(() => SyncProfileWeight(sl(), sl(), sl()))
       ..registerFactory(() => SaveBodyEntry(sl(), sl(), sl(), sl()))
       ..registerFactory(() => DeleteBodyEntry(sl(), sl(), sl(), sl()))
+      // For onboarding's weight.
+      ..registerFactory(() => LogWeighIn(sl(), sl()))
       ..registerFactory(() => const FindBaseline())
       // One list for the whole app: every body page shares it.
       ..registerLazySingleton(
