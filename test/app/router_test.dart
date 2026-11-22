@@ -2439,7 +2439,7 @@ void main() {
     testWidgets('a free user starts the yearly trial', (tester) async {
       await openProfileAsFreeGuest(tester);
       expect(find.text('7 days free'), findsOneWidget);
-      expect(find.text('19 more ready-made programs'), findsOneWidget);
+      expect(find.text('23 more ready-made programs'), findsOneWidget);
 
       await tapVisible(tester, 'Get Premium');
       expect(find.byType(PaywallPage), findsOneWidget);

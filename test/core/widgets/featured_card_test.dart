@@ -406,7 +406,7 @@ void main() {
         eyebrow: 'GetWorkout Premium',
         title: 'Payment problem. Update your payment method',
         titleTone: FeaturedTitleTone.danger,
-        note: 'Program generator, 19 more programs and charts.',
+        note: 'Program generator, 23 more programs and charts.',
         moreActions: [FeaturedAction('Manage subscription', () => managed++)],
       ),
     );
