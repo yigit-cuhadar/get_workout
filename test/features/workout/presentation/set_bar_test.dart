@@ -44,6 +44,7 @@ void main() {
   Future<void> pump(
     WidgetTester tester, {
     required WorkoutSet set,
+    List<WorkoutSet> before = const [],
     LoggingType type = LoggingType.weightReps,
     WeightUnit unit = WeightUnit.kg,
     bool plates = true,
@@ -83,10 +84,12 @@ void main() {
                 state: ActiveWorkoutState(
                   status: WorkoutStatus.active,
                   workout: workout('w', [
-                    exercise('Bench Press', [set], type: type),
+                    exercise('Bench Press', [...before, set], type: type),
                   ]),
-                  picked: (exercise: 0, set: 0),
-                  invalidSet: refused ? (exercise: 0, set: 0) : null,
+                  picked: (exercise: 0, set: before.length),
+                  invalidSet: refused
+                      ? (exercise: 0, set: before.length)
+                      : null,
                 ),
                 editor: editor,
                 loadPlates: plates ? _loadPlates : null,
@@ -238,6 +241,76 @@ void main() {
     );
     final fields = tester.widgetList<StepperField>(find.byType(StepperField));
     expect(fields.map((field) => field.invalid), [true, false]);
+  });
+
+  group('a weight more than double the set before', () {
+    Future<void> logHeavy(WidgetTester tester) async {
+      await pump(
+        tester,
+        before: [lift(40, 10)],
+        set: lift(403, 10, done: false),
+      );
+      await tester.tap(find.text('Log set'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('asks before it is logged', (tester) async {
+      await logHeavy(tester);
+
+      expect(find.text('Log 403 kg?'), findsOneWidget);
+      expect(
+        find.text("That's far more than your last set (40 kg)."),
+        findsOneWidget,
+      );
+      verifyNever(() => editor.toggleDone(any()));
+    });
+
+    testWidgets('is logged once confirmed', (tester) async {
+      await logHeavy(tester);
+      await tester.tap(find.text('Log 403 kg'));
+      await tester.pumpAndSettle();
+
+      verify(() => editor.toggleDone((exercise: 0, set: 1))).called(1);
+    });
+
+    testWidgets('is left unlogged to fix', (tester) async {
+      await logHeavy(tester);
+      await tester.tap(find.text('Fix the weight'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Log 403 kg?'), findsNothing);
+      verifyNever(() => editor.toggleDone(any()));
+    });
+
+    testWidgets('a plausible weight is logged without asking', (tester) async {
+      await pump(
+        tester,
+        before: [lift(40, 10)],
+        set: lift(80, 10, done: false),
+      );
+      await tester.tap(find.text('Log set'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ForgeDialog), findsNothing);
+      verify(() => editor.toggleDone((exercise: 0, set: 1))).called(1);
+    });
+
+    testWidgets('pounds are shown in pounds', (tester) async {
+      await pump(
+        tester,
+        unit: WeightUnit.lb,
+        before: [lift(WeightUnit.lb.toKg(100), 10)],
+        set: lift(WeightUnit.lb.toKg(250), 10, done: false),
+      );
+      await tester.tap(find.text('Log set'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Log 250 lb?'), findsOneWidget);
+      expect(
+        find.text("That's far more than your last set (100 lb)."),
+        findsOneWidget,
+      );
+    });
   });
 
   testWidgets("a done set's effort: rows with their meaning, no Skip", (

@@ -267,7 +267,13 @@ class SetBar extends StatelessWidget {
               editor: editor,
             ),
       done: set.done,
-      onLog: () => _toggle(context, ref),
+      onLog: () => _log(
+        context,
+        ref,
+        kg: type.logsWeight && !set.done ? set.weightKg ?? hint.weightKg : null,
+        lastTime: previous,
+        unit: unit,
+      ),
       rest: rest,
       onPlates: switch ((loadPlates, bar, set.weightKg ?? hint.weightKg)) {
         (final loadPlates?, final bar?, final kg?)
@@ -375,9 +381,54 @@ class SetBar extends StatelessWidget {
         onChanged(value == null ? '' : l10n.numberField(value)),
   );
 
-  void _toggle(BuildContext context, SetRef ref) {
+  /// Ticks or unticks the set; a tick at [kg] far above the set before it
+  /// asks first (see [implausibleWeightReference]).
+  Future<void> _log(
+    BuildContext context,
+    SetRef ref, {
+    required double? kg,
+    required WorkoutSet? lastTime,
+    required WeightUnit unit,
+  }) async {
     FocusScope.of(context).unfocus();
+    final exercise = state.workout!.exercises[ref.exercise];
+    final reference = kg == null
+        ? null
+        : implausibleWeightReference(exercise, ref.set, kg, lastTime: lastTime);
+    if (kg != null && reference != null) {
+      final confirmed = await _confirmWeight(context, kg, reference, unit);
+      if (!confirmed || !context.mounted) return;
+    }
     editor.toggleDone(ref);
+  }
+
+  Future<bool> _confirmWeight(
+    BuildContext context,
+    double kg,
+    double referenceKg,
+    WeightUnit unit,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final weight = l10n.liftedWeightText(kg, unit);
+    final confirmed = await showForgeDialog<bool>(
+      context: context,
+      builder: (dialog) => ForgeDialog(
+        title: l10n.workoutWeightCheckTitle(weight),
+        message: l10n.workoutWeightCheckBody(
+          l10n.liftedWeightText(referenceKg, unit),
+        ),
+        action: ForgeButton(
+          label: l10n.workoutWeightCheckLog(weight),
+          onPressed: () => Navigator.pop(dialog, true),
+        ),
+        cancel: ForgeButton(
+          label: l10n.workoutWeightCheckFix,
+          variant: ForgeButtonVariant.secondary,
+          onPressed: () => Navigator.pop(dialog, false),
+        ),
+      ),
+    );
+    return confirmed ?? false;
   }
 }
 
