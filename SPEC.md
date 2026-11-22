@@ -78,7 +78,7 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   notes › Analytics). No age gate, health notice or data
   export (the user accepted the EU risk). Remote Config (the paywall A/B
   test, the update and maintenance gate) sends the Firebase installation ID for every user, consent or not.
-- **Cloud Functions** (`functions/`): TypeScript, Node 22, 2nd gen, all in
+- **Cloud Functions** (`functions/`): TypeScript, Node 24, 2nd gen, all in
   `europe-west1` (`src/config.ts`, set once with `setGlobalOptions`; the
   app's one Dart constant `functionsRegion` in
   `lib/app/functions_region.dart`, used by the app and the admin panel,
@@ -87,6 +87,15 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   access as a parameter so `npm test` (lint, build, `node --test`) runs
   without an emulator; CI runs it. Deploying is the Architect's step
   (`firebase deploy --only functions --project <id>`), never an agent's.
+- **Dependencies** (owner's picks, 2026-11-22): everything current, upgraded
+  from an analysis. Flutter 3.50.1 (Dart 3.14) in the app, Forge and CI;
+  `health` 14; AGP, Gradle and Kotlin at their latest, targetSdk follows
+  Flutter's default (36 meets Play's rule); functions on Node 24 with
+  nodemailer 10 and TypeScript 6.0 (typescript-eslint does not support 7
+  yet); CI on actions/checkout and setup-node v7. `cupertino_icons` is
+  removed as unused. The `camera_avfoundation` override stays until
+  flutter/flutter#196204 is fixed; `equatable` stays at 2 in the app only
+  through the `cel` test dependency.
 - **Notifications**: local for rest end, workout reminders and measurement
   reminders; FCM topic push for announcements.
 - **UX pass** (2026-11-13, owner's call): before the design phase the
